@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 
+    ${APP_HOME} 指当前程序的总目录APP_HOME
+    node: 进程节点的名称， 默认为空
+    required： 被声明required的属性值不能为空
+    port: required  程序的管理Server的端口，用于关闭或者与监管系统进行数据交互
+    host:  程序的管理Server的地址; 默认为127.0.0.1。
+    lib:  加上额外的lib路径,多个路径用分号;隔开； 默认为空。  例如: ${APP_HOME}/lib/a.jar;${APP_HOME}/lib2/b.jar;
+-->
+<application port="6560" lib="">   
+    
+    <!-- 所有服务所需的资源 -->      
+    <resources>
+        <!--
+            远程client地址组资源.  注意:  remote的name值不能为LOCAL（不区分大小写）
+            protocol： 值只能是UDP TCP， 默认UDP
+        -->
+        <remote name="mygroup" protocol="UDP">
+            <!--
+                weight: 权重百分比。 不指定则平均。 weight之和必须<=100
+                [注: weight尚未实现]
+            -->
+            <address addr="127.0.0.1" port="7070" weight="30"/>
+            <address addr="127.0.0.1" port="7071" weight="30"/>
+            <address addr="127.0.0.1" port="7072" weight="40"/>
+        </remote>
+        <!-- 
+            全局的参数配置, 可以通过@Resource(name="property.xxxxxx") 进行注入, 被注解的字段类型只能是String、primitive class
+            如果name是system.property.开头的值将会在进程启动时进行System.setProperty("yyyy", "YYYYYY")操作。
+            load:  加载文件，多个用;隔开。
+            默认置入的system.property.的有：
+               System.setProperty("convert.bson.pool.size", "128");
+               System.setProperty("convert.json.pool.size", "128");
+               System.setProperty("convert.bson.writer.buffer.defsize", "4096");
+               System.setProperty("convert.json.writer.buffer.defsize", "4096");
+        -->
+        <properties load="config.properties">
+            <property name="system.property.yyyy" value="YYYYYY"/>
+            <property name="xxxxxx" value="XXXXXXXX"/>
+            <property name="xxxxxx" value="XXXXXXXX"/>
+            <property name="xxxxxx" value="XXXXXXXX"/>
+        </properties>
+    </resources> 
+    <!--
+        protocol: required  server所启动的协议，有HTTP、HTTPS、SNCP， 目前只支持HTTP、SNCP; 
+        host:  服务所占address ， 默认: 0.0.0.0
+        port:  服务所占端口 ，默认: 80
+        root:  如果是web类型服务，则包含页面  默认:{APP_HOME}/root
+        lib: server额外的class目录， 默认为空        
+        charset: 文本编码， 默认: UTF-8
+        backlog:  默认10K
+        threads： 线程总数， 默认: CPU核数*16
+        maxbody: request.body最大值， 默认: 64K
+        capacity: ByteBuffer的初始化大小， 默认: 8K
+        bufferPoolSize： ByteBuffer池的大小，默认: CPU核数*512
+        responsePoolSize： Response池的大小，默认: CPU核数*256
+        readTimeoutSecond: 读操作超时秒数， 默认0， 表示永久不超时
+        writeTimeoutSecond:  写操作超时秒数， 默认0， 表示永久不超时
+        
+        forwardproxy: 正向代理(支持CONNECT); 默认: false， 只有当protocol=HTTP/HTTPS才生效
+        sslkeypath: 当protocol==HTTPS时需要指定keypath路径， 默认值：{classpath}/ssl-keystore.jks  [注: 尚未实现]
+        sslkeypwd: 当protocol==HTTPS时需要指定keypassword路径                                      [注: 尚未实现]
+    -->
+    <server protocol="HTTP" host="127.0.0.1" port="6060" root="root" lib="" sslkeypath="" sslkeypwd=""> 
+        
+        <!-- 
+           加载所有的Service服务;
+           在同一个进程中所有LOCAL模式的Service， 同一个name的将共用同一个实例
+           autoload="true"  默认值. 自动加载以下目录（如果存在的话）下所有的Service类:
+                                 server.lib;    server.root/lib/*;    server.root/classes;    
+           autoload="false" 需要显著的指定Service类
+           includes： 当autoload="true"， 拉取类名与includes中的正则表达式匹配的类, 多个正则表达式用分号;隔开
+           excludes： 当autoload="true"， 排除类名与includes中的正则表达式匹配的类, 多个正则表达式用分号;隔开
+           remote：   远程地址组的名称, 默认为空， 即本地模式。                    
+                      当<services>指定remote值为非空非LOCAL(即远程模式)时， 所有service的remote值均默认是<services>指定remote值。
+                      当<services>指定remote值为空(即本地模式)时， 所有service的remote值均默认是LOCAL值。
+        -->
+        <services autoload="true" includes="" excludes="" remote="mygroup">
+            <!--
+               大部分的情况下， 存在多个节点环境中很多service节点配置都一致，为此提供group节点来方便配置。
+               remotenames: 远程模式Service的name名称集合， 多个用分号;隔开， 名称必须是在resources节点中定义的remote节点。
+               以下group节点例子等价于:
+                <service value="com.xxx.XXX0Service" name="LC001" remote="LOCAL"/>
+                <service value="com.xxx.XXX0Service" name="RT001" remote="RT001"/>
+                <service value="com.xxx.XXX0Service" name="RT002" remote="RT002"/>
+                <service value="com.xxx.XXX0Service" name="RT003" remote="RT003"/>
+            -->
+            <group remotenames="RT001;RT002;RT003">
+				<service value="com.xxx.XXX0Service"/>
+			</group>
+            
+            <!-- 显著加载指定的Service的接口类 -->
+            <service value="com.xxx.XXX1Service"/>
+            <!-- 
+               设定remote=LOCAL时 则表示该service为本地模式， 同时忽略<services>节点的remote值。
+               name表示被@Resource注入时指定的name
+               设定remote为非空非LOCAL且值在<resources>中有定义时 则表示该service为远程模式， 同时忽略<services>节点的remote值。
+            -->
+            <service value="com.xxx.XXX2Service" name="" remote="LOCAL"/>
+        </services>
+        <!-- 
+           加载所有的Servlet服务;
+           prefix:  servlet的ContextPath前缀 默认为空
+           autoload="true"  默认值. 自动加载以下目录（如果存在的话）下所有的Servlet类:
+                                 ${APP_HOME}/lib;    ${APP_HOME}/root/lib/*;    ${APP_HOME}/root/classes;   
+           autoload="false" 需要显著的指定Service类
+           includes： 当autoload="true"， 拉取类名与includes中的正则表达式匹配的类, 多个正则表达式用分号;隔开
+           excludes： 当autoload="true"， 排除类名与includes中的正则表达式匹配的类, 多个正则表达式用分号;隔开
+        -->
+        <servlets prefix="/pipes" autoload="true" includes="" excludes="">
+            <!-- 
+               当Server为HTTP、HTTP协议时，ResourceServlet才有效. 默认存在一个有默认属性的resource-servlet节点
+               webroot: web资源的根目录， 默认取server节点中的root值
+            -->
+            <resource-servlet webroot="root">
+                <!--
+                    资源缓存的配置, 默认存在一个含默认属性的caches节点
+                    limit:  资源缓存最大容量， 默认: 128M, 为0表示不缓存
+                    lengthmax: 可缓存的文件大小上限， 默认: 1M（超过1M的文件不会被缓存）
+                -->
+                <caches  limit="128M" lengthmax="1M" />
+                <!--
+                   支持类似nginx中的rewrite， 目前只支持静态资源对静态资源的跳转。
+                   type: 匹配的类型, 目前只支持location(匹配requestURI), 默认: location
+                   match: 匹配的正则表达式
+                   forward: 需跳转后的资源链接
+                   例如下面例子是将/xxx-yyy.html的页面全部跳转到/xxx.html
+                -->
+                <rewrite type="location" match="^/([^-]+)-[^-\.]+\.html(.*)" forward="/$1.html"/>
+            </resource-servlet>
+            <!-- 显著加载指定的Servlet -->
+            <servlet value="com.xxx.XXX1Servlet" />
+            <servlet value="com.xxx.XXX2Servlet" />
+            <servlet value="com.xxx.XXX3Servlet" />
+        </servlets>
+    </server>
+    
+    <server protocol="SNCP" host="127.0.0.1" port="7070" root="root" lib=""> 
+        <!--
+            参数完全同上
+        -->
+        <services autoload="true" includes="" excludes="" />
+    </server>
+</application>
