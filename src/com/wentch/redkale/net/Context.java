@@ -5,11 +5,12 @@
  */
 package com.wentch.redkale.net;
 
-import com.wentch.redkale.watch.WatchFactory;
-import java.net.InetSocketAddress;
-import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
-import java.util.concurrent.ExecutorService;
+import com.wentch.redkale.util.*;
+import com.wentch.redkale.watch.*;
+import java.net.*;
+import java.nio.*;
+import java.nio.charset.*;
+import java.util.concurrent.*;
 import java.util.logging.*;
 
 /**
@@ -24,9 +25,9 @@ public class Context {
 
     protected final ExecutorService executor;
 
-    protected final BufferPool bufferPool;
+    protected final ObjectPool<ByteBuffer> bufferPool;
 
-    protected final ResponsePool responsePool;
+    protected final ObjectPool<Response> responsePool;
 
     protected final PrepareServlet prepare;
 
@@ -44,7 +45,7 @@ public class Context {
 
     protected final WatchFactory watch;
 
-    public Context(long serverStartTime, Logger logger, ExecutorService executor, BufferPool bufferPool, ResponsePool responsePool,
+    public Context(long serverStartTime, Logger logger, ExecutorService executor, ObjectPool<ByteBuffer> bufferPool, ObjectPool<Response> responsePool,
             final int maxbody, Charset charset, InetSocketAddress address, final PrepareServlet prepare, final WatchFactory watch,
             final int readTimeoutSecond, final int writeTimeoutSecond) {
         this.serverStartTime = serverStartTime;

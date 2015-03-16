@@ -5,11 +5,11 @@
  */
 package com.wentch.redkale.net;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.channels.CompletionHandler;
+import java.io.*;
+import java.nio.*;
+import java.nio.channels.*;
 import java.util.concurrent.atomic.*;
-import java.util.logging.Level;
+import java.util.logging.*;
 
 /**
  *
@@ -28,10 +28,11 @@ public abstract class PrepareServlet<R extends Request, P extends Response<R>> i
         final int rs = request.readHeader(buffer);
         if (rs < 0) {
             response.context.offerBuffer(buffer);
-            illRequestCounter.incrementAndGet();
+            if (rs != Integer.MIN_VALUE) illRequestCounter.incrementAndGet();
             response.finish(true);
         } else if (rs == 0) {
             response.context.offerBuffer(buffer);
+            request.prepare();
             this.execute(request, response);
         } else {
             buffer.clear();
@@ -48,6 +49,7 @@ public abstract class PrepareServlet<R extends Request, P extends Response<R>> i
                         request.channel.read(buffer, buffer, this);
                     } else {
                         response.context.offerBuffer(buffer);
+                        request.prepare();
                         try {
                             execute(request, response);
                         } catch (Exception e) {

@@ -5,7 +5,7 @@
  */
 package com.wentch.redkale.net;
 
-import java.nio.ByteBuffer;
+import java.nio.*;
 import java.nio.channels.*;
 
 /**
@@ -53,7 +53,7 @@ public abstract class Response<R extends Request> {
         return ch;
     }
 
-    protected void recycle() {
+    protected boolean recycle() {
         boolean keepAlive = request.keepAlive;
         request.recycle();
         if (channel != null) {
@@ -67,6 +67,7 @@ public abstract class Response<R extends Request> {
                 channel = null;
             }
         }
+        return true;
     }
 
     protected void refuseAlive() {

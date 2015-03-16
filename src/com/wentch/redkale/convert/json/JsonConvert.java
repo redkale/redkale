@@ -5,10 +5,9 @@
  */
 package com.wentch.redkale.convert.json;
 
-import com.wentch.redkale.util.Utility;
-import com.wentch.redkale.util.ObjectPool;
-import com.wentch.redkale.convert.Convert;
-import java.lang.reflect.Type;
+import com.wentch.redkale.convert.*;
+import com.wentch.redkale.util.*;
+import java.lang.reflect.*;
 
 /**
  *
@@ -17,9 +16,9 @@ import java.lang.reflect.Type;
 @SuppressWarnings("unchecked")
 public final class JsonConvert extends Convert<JsonReader, JsonWriter> {
 
-    private static final ObjectPool<JsonReader> readerPool = new ObjectPool<>(Integer.getInteger("convert.json.pool.size", 16), JsonReader.class);
+    private static final ObjectPool<JsonReader> readerPool = JsonReader.createPool(Integer.getInteger("convert.json.pool.size", 16));
 
-    private static final ObjectPool<JsonWriter> writerPool = new ObjectPool<>(Integer.getInteger("convert.json.pool.size", 16), JsonWriter.class);
+    private static final ObjectPool<JsonWriter> writerPool = JsonWriter.createPool(Integer.getInteger("convert.json.pool.size", 16));
 
     protected JsonConvert(JsonFactory factory) {
         super(factory);

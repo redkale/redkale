@@ -5,17 +5,16 @@
  */
 package com.wentch.redkale.net.sncp;
 
-import com.wentch.redkale.convert.bson.BsonConvert;
-import com.wentch.redkale.convert.bson.BsonFactory;
-import com.wentch.redkale.net.ResponsePool;
-import com.wentch.redkale.net.BufferPool;
-import com.wentch.redkale.net.PrepareServlet;
-import com.wentch.redkale.net.Context;
-import com.wentch.redkale.watch.WatchFactory;
-import java.net.InetSocketAddress;
-import java.nio.charset.Charset;
-import java.util.concurrent.ExecutorService;
-import java.util.logging.Logger;
+import com.wentch.redkale.convert.bson.*;
+import com.wentch.redkale.net.*;
+import com.wentch.redkale.util.*;
+import com.wentch.redkale.watch.*;
+import java.net.*;
+import java.nio.*;
+import java.nio.charset.*;
+import java.util.*;
+import java.util.concurrent.*;
+import java.util.logging.*;
 
 /**
  *
@@ -23,14 +22,64 @@ import java.util.logging.Logger;
  */
 public final class SncpContext extends Context {
 
+    protected static class RequestEntry {
+
+        protected final long seqid;
+
+        protected final byte[] body;
+
+        protected final long time = System.currentTimeMillis();
+
+        private int received;
+
+        public RequestEntry(long seqid, byte[] body) {
+            this.seqid = seqid;
+            this.body = body;
+        }
+
+        public void add(ByteBuffer buffer, int pos) {
+            this.received += buffer.remaining();
+            buffer.get(body, pos, buffer.remaining());
+        }
+
+        public boolean isCompleted() {
+            return this.body.length <= this.received;
+        }
+
+    }
+
+    private final ConcurrentHashMap<Long, RequestEntry> requests = new ConcurrentHashMap<>();
+
     protected final BsonFactory bsonFactory;
 
-    public SncpContext(long serverStartTime, Logger logger, ExecutorService executor, BufferPool bufferPool,
-            ResponsePool responsePool, int maxbody, Charset charset, InetSocketAddress address,
+    public SncpContext(long serverStartTime, Logger logger, ExecutorService executor, ObjectPool<ByteBuffer> bufferPool,
+            ObjectPool<Response> responsePool, int maxbody, Charset charset, InetSocketAddress address,
             PrepareServlet prepare, WatchFactory watch, int readTimeoutSecond, int writeTimeoutSecond) {
         super(serverStartTime, logger, executor, bufferPool, responsePool, maxbody, charset,
                 address, prepare, watch, readTimeoutSecond, writeTimeoutSecond);
         this.bsonFactory = BsonFactory.root();
+    }
+
+    protected RequestEntry addRequestEntity(long seqid, byte[] bodys) {
+        RequestEntry entry = new RequestEntry(seqid, bodys);
+        requests.put(seqid, entry);
+        return entry;
+    }
+
+    protected void expireRequestEntry(long milliSecond) {
+        if (requests.size() < 32) return;
+        List<Long> seqids = new ArrayList<>();
+        long t = System.currentTimeMillis() - milliSecond;
+        requests.forEach((x, y) -> {
+            if (y.time < t) seqids.add(x);
+        });
+        for (long seqid : seqids) {
+            requests.remove(seqid);
+        }
+    }
+
+    protected RequestEntry getRequestEntity(long seqid) {
+        return requests.get(seqid);
     }
 
     protected WatchFactory getWatchFactory() {
@@ -41,7 +90,7 @@ public final class SncpContext extends Context {
         return executor;
     }
 
-    protected ResponsePool getResponsePool() {
+    protected ObjectPool<Response> getResponsePool() {
         return responsePool;
     }
 

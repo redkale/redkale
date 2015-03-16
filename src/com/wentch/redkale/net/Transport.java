@@ -5,10 +5,11 @@
  */
 package com.wentch.redkale.net;
 
-import com.wentch.redkale.watch.WatchFactory;
-import java.io.IOException;
+import com.wentch.redkale.util.*;
+import com.wentch.redkale.watch.*;
+import java.io.*;
 import java.net.*;
-import java.nio.ByteBuffer;
+import java.nio.*;
 import java.nio.channels.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
@@ -22,7 +23,7 @@ public final class Transport {
 
     protected SocketAddress[] remoteAddres;
 
-    protected BufferPool bufferPool;
+    protected ObjectPool<ByteBuffer> bufferPool;
 
     protected String name;
 
@@ -49,7 +50,13 @@ public final class Transport {
         this.group = g;
         AtomicLong createBufferCounter = watch == null ? new AtomicLong() : watch.createWatchNumber(Transport.class.getSimpleName() + "_" + protocol + ".Buffer.creatCounter");
         AtomicLong cycleBufferCounter = watch == null ? new AtomicLong() : watch.createWatchNumber(Transport.class.getSimpleName() + "_" + protocol + ".Buffer.cycleCounter");
-        this.bufferPool = new BufferPool(createBufferCounter, cycleBufferCounter, 8192, bufferPoolSize);
+        int rcapacity = 8192;
+        this.bufferPool = new ObjectPool<>(createBufferCounter, cycleBufferCounter, bufferPoolSize,
+                (Object... params) -> ByteBuffer.allocateDirect(rcapacity), (e) -> {
+                    if (e == null || e.isReadOnly() || e.capacity() != rcapacity) return false;
+                    e.clear();
+                    return true;
+                });
         this.remoteAddres = addresses;
     }
 

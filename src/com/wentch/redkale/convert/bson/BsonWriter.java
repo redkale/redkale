@@ -5,24 +5,24 @@
  */
 package com.wentch.redkale.convert.bson;
 
-import com.wentch.redkale.util.Utility;
-import com.wentch.redkale.util.Attribute;
-import com.wentch.redkale.convert.ConvertException;
-import com.wentch.redkale.convert.Reader;
-import com.wentch.redkale.convert.Writer;
-import com.wentch.redkale.util.ObjectPool.Poolable;
+import com.wentch.redkale.convert.*;
+import com.wentch.redkale.util.*;
 
 /**
  *
  * @author zhangjx
  */
-public final class BsonWriter implements Writer, Poolable {
+public final class BsonWriter implements Writer {
 
     private static final int defaultSize = Integer.getInteger("convert.bson.writer.buffer.defsize", 1024);
 
     protected int count;
 
     private byte[] content;
+
+    public static ObjectPool<BsonWriter> createPool(int max) {
+        return new ObjectPool<>(max, (Object... params) -> new BsonWriter(), (x) -> x.recycle());
+    }
 
     public byte[] toArray() {
         if (count == content.length) return content;
@@ -75,16 +75,12 @@ public final class BsonWriter implements Writer, Poolable {
         count += len;
     }
 
-    @Override
-    public void prepare() {
-    }
-
-    @Override
-    public void release() {
+    protected boolean recycle() {
         this.count = 0;
         if (this.content.length > defaultSize) {
             this.content = new byte[defaultSize];
         }
+        return true;
     }
 
     //------------------------------------------------------------------------

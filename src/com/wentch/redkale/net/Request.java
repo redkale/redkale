@@ -5,7 +5,7 @@
  */
 package com.wentch.redkale.net;
 
-import java.nio.ByteBuffer;
+import java.nio.*;
 import java.util.*;
 
 /**
@@ -29,7 +29,7 @@ public abstract class Request {
     }
 
     /**
-     * 返回值： -1：数据不合法； 0：解析完毕； >0: 需再读取的字节数。
+     * 返回值：Integer.MIN_VALUE: 帧数据； -1：数据不合法； 0：解析完毕； >0: 需再读取的字节数。
      *
      * @param buffer
      * @return
@@ -37,6 +37,8 @@ public abstract class Request {
     protected abstract int readHeader(ByteBuffer buffer);
 
     protected abstract void readBody(ByteBuffer buffer);
+
+    protected abstract void prepare();
 
     protected void recycle() {
         createtime = 0;

@@ -5,10 +5,10 @@
  */
 package com.wentch.redkale.net.sncp;
 
-import com.wentch.redkale.net.Response;
-import com.wentch.redkale.net.Context;
-import com.wentch.redkale.util.TwoLong;
-import java.nio.ByteBuffer;
+import com.wentch.redkale.net.*;
+import com.wentch.redkale.util.*;
+import java.nio.*;
+import java.util.concurrent.atomic.*;
 
 /**
  *
@@ -24,6 +24,10 @@ public final class SncpResponse extends Response<SncpRequest> {
 
     public static final int RETCODE_THROWEXCEPTION = 10011; //内部异常
 
+    public static ObjectPool<Response> createPool(AtomicLong creatCounter, AtomicLong cycleCounter, int max, Creator<Response> creator) {
+        return new ObjectPool<>(creatCounter, cycleCounter, max, creator, (x) -> ((SncpResponse) x).recycle());
+    }
+
     protected SncpResponse(Context context, SncpRequest request) {
         super(context, request);
     }
@@ -38,9 +42,10 @@ public final class SncpResponse extends Response<SncpRequest> {
         TwoLong actionid = request.getActionid();
         buffer.putLong(actionid.getFirst());
         buffer.putLong(actionid.getSecond());
-        buffer.put((byte) 0);
+        buffer.put((byte) 1); // frame count
+        buffer.put((byte) 0); //frame index
         buffer.putInt(retcode);
-        buffer.putChar((char) (bytes == null ? 0 : bytes.length));
+        buffer.putInt((bytes == null ? 0 : bytes.length));
         //---------------------body----------------------------------
         if (bytes != null) buffer.put(bytes);
         buffer.flip();

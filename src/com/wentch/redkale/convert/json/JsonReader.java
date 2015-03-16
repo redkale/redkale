@@ -5,24 +5,25 @@
  */
 package com.wentch.redkale.convert.json;
 
-import com.wentch.redkale.convert.ConvertException;
-import com.wentch.redkale.convert.DeMember;
-import com.wentch.redkale.convert.Reader;
-import com.wentch.redkale.util.ObjectPool.Poolable;
-import com.wentch.redkale.util.Utility;
-import java.util.concurrent.atomic.AtomicInteger;
+import com.wentch.redkale.convert.*;
+import com.wentch.redkale.util.*;
+import java.util.concurrent.atomic.*;
 
 /**
  *
  * @author zhangjx
  */
-public final class JsonReader implements Reader, Poolable {
+public final class JsonReader implements Reader {
 
     private int position = -1;
 
     private char[] text;
 
     private int limit;
+
+    public static ObjectPool<JsonReader> createPool(int max) {
+        return new ObjectPool<>(max, (Object... params) -> new JsonReader(), (x) -> x.recycle());
+    }
 
     public JsonReader() {
     }
@@ -53,19 +54,15 @@ public final class JsonReader implements Reader, Poolable {
         this.limit = start + len - 1;
     }
 
-    @Override
-    public void prepare() {
-    }
-
-    @Override
-    public void release() {
+    protected boolean recycle() {
         this.position = -1;
         this.limit = -1;
         this.text = null;
+        return true;
     }
 
     public void close() {
-        this.release();
+        this.recycle();
     }
 
     /**

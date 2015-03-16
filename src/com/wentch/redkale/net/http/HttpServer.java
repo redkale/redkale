@@ -5,12 +5,10 @@
  */
 package com.wentch.redkale.net.http;
 
-import com.wentch.redkale.util.AnyValue;
-import com.wentch.redkale.net.Server;
-import com.wentch.redkale.net.ResponsePool;
-import com.wentch.redkale.net.Context;
-import com.wentch.redkale.net.BufferPool;
-import com.wentch.redkale.watch.WatchFactory;
+import com.wentch.redkale.net.*;
+import com.wentch.redkale.util.*;
+import com.wentch.redkale.watch.*;
+import java.nio.*;
 import java.util.*;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.concurrent.atomic.*;
@@ -50,7 +48,13 @@ public final class HttpServer extends Server {
         final int port = this.address.getPort();
         AtomicLong createBufferCounter = watch == null ? new AtomicLong() : watch.createWatchNumber("HTTP_" + port + ".Buffer.creatCounter");
         AtomicLong cycleBufferCounter = watch == null ? new AtomicLong() : watch.createWatchNumber("HTTP_" + port + ".Buffer.cycleCounter");
-        BufferPool bufferPool = new BufferPool(createBufferCounter, cycleBufferCounter, Math.max(this.capacity, 8 * 1024), this.bufferPoolSize);
+        int rcapacity = Math.max(this.capacity, 8 * 1024);
+        ObjectPool<ByteBuffer> bufferPool = new ObjectPool<>(createBufferCounter, cycleBufferCounter, this.bufferPoolSize,
+                (Object... params) -> ByteBuffer.allocateDirect(rcapacity), (e) -> {
+                    if (e == null || e.isReadOnly() || e.capacity() != rcapacity) return false;
+                    e.clear();
+                    return true;
+                });
         HttpPrepareServlet prepare = new HttpPrepareServlet();
         this.servlets.entrySet().stream().forEach((en) -> {
             prepare.addHttpServlet(en.getKey().getKey(), en.getKey().getValue(), en.getValue());
@@ -58,10 +62,10 @@ public final class HttpServer extends Server {
         this.servlets.clear();
         AtomicLong createResponseCounter = watch == null ? new AtomicLong() : watch.createWatchNumber("HTTP_" + port + ".Response.creatCounter");
         AtomicLong cycleResponseCounter = watch == null ? new AtomicLong() : watch.createWatchNumber("HTTP_" + port + ".Response.cycleCounter");
-        HttpContext httpcontext = new HttpContext(this.serverStartTime, this.logger, executor, bufferPool,
-                new ResponsePool(createResponseCounter, cycleResponseCounter, this.responsePoolSize),
+        ObjectPool<Response> responsePool = HttpResponse.createPool(createResponseCounter, cycleResponseCounter, this.responsePoolSize, null);
+        HttpContext httpcontext = new HttpContext(this.serverStartTime, this.logger, executor, bufferPool, responsePool,
                 this.maxbody, this.charset, this.address, prepare, this.watch, this.readTimeoutSecond, this.writeTimeoutSecond, contextPath);
-        httpcontext.getResponsePool().setResponseFactory(() -> new HttpResponse(httpcontext, new HttpRequest(httpcontext, httpcontext.jsonFactory)));
+        responsePool.setCreator((Object... params) -> new HttpResponse(httpcontext, new HttpRequest(httpcontext, httpcontext.jsonFactory)));
         return httpcontext;
     }
 

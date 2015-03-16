@@ -4,58 +4,77 @@
  */
 package com.wentch.redkale.util;
 
-import java.util.Queue;
-import java.util.concurrent.ArrayBlockingQueue;
+import java.util.*;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.*;
+import java.util.function.*;
 
 /**
  *
  * @author zhangjx
  * @param <T>
  */
-public final class ObjectPool<T extends ObjectPool.Poolable> {
-
-    public static interface Poolable {
-
-        public void prepare();
-
-        public void release();
-    }
+public final class ObjectPool<T> {
 
     private final Queue<T> queue;
 
-    private final Creator<T> creator;
+    private Creator<T> creator;
 
-    public ObjectPool(Class<T> clazz) {
-        this(2, clazz);
+    private final Predicate<T> recycler;
+
+    private final AtomicLong creatCounter;
+
+    private final AtomicLong cycleCounter;
+
+    public ObjectPool(Class<T> clazz, Predicate<T> recycler) {
+        this(2, clazz, recycler);
     }
 
-    public ObjectPool(int max, Class<T> clazz) {
-        this(max, Creator.create(clazz));
+    public ObjectPool(int max, Class<T> clazz, Predicate<T> recycler) {
+        this(max, Creator.create(clazz), recycler);
     }
 
-    public ObjectPool(Creator<T> creator) {
-        this(2, creator);
+    public ObjectPool(Creator<T> creator, Predicate<T> recycler) {
+        this(2, creator, recycler);
     }
 
-    public ObjectPool(int max, Creator<T> creator) {
+    public ObjectPool(int max, Creator<T> creator, Predicate<T> recycler) {
+        this(null, null, max, creator, recycler);
+    }
+
+    public ObjectPool(AtomicLong creatCounter, AtomicLong cycleCounter, int max, Creator<T> creator, Predicate<T> recycler) {
+        this.creatCounter = creatCounter;
+        this.cycleCounter = cycleCounter;
         this.creator = creator;
+        this.recycler = recycler;
         this.queue = new ArrayBlockingQueue<>(Math.max(Runtime.getRuntime().availableProcessors() * 2, max));
+    }
+
+    public void setCreator(Creator<T> creator) {
+        this.creator = creator;
     }
 
     public T poll() {
         T result = queue.poll();
         if (result == null) {
+            if (creatCounter != null) creatCounter.incrementAndGet();
             result = this.creator.create();
-        } else {
-            result.prepare();
         }
         return result;
     }
 
     public void offer(final T e) {
-        if (e != null) {
-            e.release();
+        if (e != null && recycler.test(e)) {
+            if (cycleCounter != null) cycleCounter.incrementAndGet();
             queue.offer(e);
         }
+    }
+
+    public long getCreatCount() {
+        return creatCounter.longValue();
+    }
+
+    public long getCycleCount() {
+        return cycleCounter.longValue();
     }
 }

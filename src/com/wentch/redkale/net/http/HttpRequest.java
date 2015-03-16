@@ -5,11 +5,8 @@
  */
 package com.wentch.redkale.net.http;
 
-import com.wentch.redkale.convert.json.JsonFactory;
-import com.wentch.redkale.convert.json.JsonConvert;
-import com.wentch.redkale.net.AsyncConnection;
-import com.wentch.redkale.net.Request;
-import com.wentch.redkale.net.Context;
+import com.wentch.redkale.convert.json.*;
+import com.wentch.redkale.net.*;
 import com.wentch.redkale.util.AnyValue.DefaultAnyValue;
 import java.io.*;
 import java.net.*;
@@ -158,6 +155,10 @@ public final class HttpRequest extends Request {
         array.add(buffer, buffer.remaining());
     }
 
+    @Override
+    protected void prepare() {
+    }
+    
     private void parseBody() {
         if (this.boundary || array.isEmpty()) return;
         addParameter(array, 0, array.count());

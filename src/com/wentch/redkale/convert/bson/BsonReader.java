@@ -5,18 +5,15 @@
  */
 package com.wentch.redkale.convert.bson;
 
-import com.wentch.redkale.convert.ConvertException;
-import com.wentch.redkale.convert.DeMember;
-import com.wentch.redkale.convert.Reader;
-import com.wentch.redkale.util.ObjectPool.Poolable;
-import com.wentch.redkale.util.Utility;
-import java.util.concurrent.atomic.AtomicInteger;
+import com.wentch.redkale.convert.*;
+import com.wentch.redkale.util.*;
+import java.util.concurrent.atomic.*;
 
 /**
  *
  * @author zhangjx
  */
-public final class BsonReader implements Reader, Poolable {
+public final class BsonReader implements Reader {
 
     public static final short SIGN_OBJECTB = (short) 0xBB;
 
@@ -37,6 +34,10 @@ public final class BsonReader implements Reader, Poolable {
     public BsonReader() {
     }
 
+    public static ObjectPool<BsonReader> createPool(int max) {
+        return new ObjectPool<>(max, (Object... params) -> new BsonReader(), (x) -> x.recycle());
+    }
+
     public BsonReader(byte[] bytes) {
         setBytes(bytes, 0, bytes.length);
     }
@@ -55,19 +56,15 @@ public final class BsonReader implements Reader, Poolable {
         //this.limit = start + len - 1;
     }
 
-    @Override
-    public void prepare() {
-    }
-
-    @Override
-    public void release() {
+    protected boolean recycle() {
         this.position = -1;
         //this.limit = -1;
         this.content = null;
+        return true;
     }
 
     public void close() {
-        this.release();
+        this.recycle();
     }
 
     /**

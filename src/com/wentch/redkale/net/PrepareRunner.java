@@ -5,9 +5,10 @@
  */
 package com.wentch.redkale.net;
 
-import java.nio.ByteBuffer;
+import com.wentch.redkale.util.*;
+import java.nio.*;
 import java.nio.channels.*;
-import java.util.logging.Level;
+import java.util.logging.*;
 
 /**
  *
@@ -31,7 +32,7 @@ public final class PrepareRunner implements Runnable {
     @Override
     public void run() {
         final PrepareServlet prepare = context.prepare;
-        final ResponsePool responsePool = context.responsePool;
+        final ObjectPool<? extends Response> responsePool = context.responsePool;
         final ByteBuffer buffer = context.pollBuffer();
         if (data != null) {
             final Response response = responsePool.poll();

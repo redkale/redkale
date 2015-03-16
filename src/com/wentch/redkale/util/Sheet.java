@@ -33,13 +33,11 @@ public class Sheet<T> implements java.io.Serializable {
     }
 
     public static <E> Sheet<E> asSheet(Collection<E> data) {
-        return new Sheet<>(data.size(), data);
+        return data == null ? new Sheet<>() : new Sheet<>(data.size(), data);
     }
 
     public void copyTo(Sheet<T> copy) {
-        if (copy == null) {
-            return;
-        }
+        if (copy == null) return;
         copy.total = this.total;
         if (this.getRows() != null) {
             copy.setRows(new ArrayList<>(this.getRows()));

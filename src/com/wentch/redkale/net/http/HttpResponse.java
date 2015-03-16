@@ -6,9 +6,9 @@
 package com.wentch.redkale.net.http;
 
 import com.wentch.redkale.net.*;
+import com.wentch.redkale.util.*;
 import com.wentch.redkale.util.AnyValue.DefaultAnyValue;
 import com.wentch.redkale.util.AnyValue.Entry;
-import com.wentch.redkale.util.*;
 import java.io.*;
 import java.lang.reflect.*;
 import java.net.*;
@@ -17,6 +17,7 @@ import java.nio.channels.*;
 import java.nio.file.*;
 import java.text.*;
 import java.util.*;
+import java.util.concurrent.atomic.*;
 
 /**
  *
@@ -98,6 +99,10 @@ public final class HttpResponse extends Response<HttpRequest> {
 
     private final DefaultAnyValue header = new DefaultAnyValue();
 
+    public static ObjectPool<Response> createPool(AtomicLong creatCounter, AtomicLong cycleCounter, int max, Creator<Response> creator) {
+        return new ObjectPool<>(creatCounter, cycleCounter, max, creator, (x) -> ((HttpResponse) x).recycle());
+    }
+
     protected HttpResponse(HttpContext context, HttpRequest request) {
         super(context, request);
     }
@@ -108,14 +113,14 @@ public final class HttpResponse extends Response<HttpRequest> {
     }
 
     @Override
-    protected void recycle() {
+    protected boolean recycle() {
         this.status = 200;
         this.contentLength = -1;
         this.contentType = null;
         this.cookies = null;
         this.headsended = false;
         this.header.clear();
-        super.recycle();
+        return super.recycle();
     }
 
     protected String getHttpCode(int status) {
@@ -143,22 +148,22 @@ public final class HttpResponse extends Response<HttpRequest> {
         }
     }
 
-    public void sendJson(Object obj) {
+    public void finishJson(Object obj) {
         this.contentType = "text/plain; charset=utf-8";
-        sendString(request.convert.convertTo(obj));
+        finishString(request.convert.convertTo(obj));
     }
 
-    public void sendJson(Type type, Object obj) {
+    public void finishJson(Type type, Object obj) {
         this.contentType = "text/plain; charset=utf-8";
-        sendString(request.convert.convertTo(type, obj));
+        finishString(request.convert.convertTo(type, obj));
     }
 
-    public void sendJson(Object... objs) {
+    public void finishJson(Object... objs) {
         this.contentType = "text/plain; charset=utf-8";
-        sendString(request.convert.convertTo(objs));
+        finishString(request.convert.convertTo(objs));
     }
 
-    public void sendString(String obj) {
+    public void finishString(String obj) {
         if (obj == null) obj = "null";
         if (context.getCharset() == null) {
             final char[] chars = Utility.charArray(obj);
@@ -186,16 +191,16 @@ public final class HttpResponse extends Response<HttpRequest> {
             headbuf.flip();
             super.send(headbuf, headbuf, finishHandler);
         } else {
-            sendString(message);
+            finishString(message);
         }
     }
 
     public void finish304() {
-        finish(buffer304.duplicate());
+        super.finish(buffer304.duplicate());
     }
 
     public void finish404() {
-        finish(buffer404.duplicate());
+        super.finish(buffer404.duplicate());
     }
 
     @Override
@@ -213,11 +218,11 @@ public final class HttpResponse extends Response<HttpRequest> {
         }
     }
 
-    public <A> void send(File file) throws IOException {
-        send(file, null);
+    public <A> void finish(File file) throws IOException {
+        finishFile(file, null);
     }
 
-    protected <A> void send(final File file, final ByteBuffer fileBody) throws IOException {
+    protected <A> void finishFile(final File file, final ByteBuffer fileBody) throws IOException {
         if (file == null || !file.isFile() || !file.canRead()) {
             finish404();
             return;
@@ -250,7 +255,7 @@ public final class HttpResponse extends Response<HttpRequest> {
         ByteBuffer buffer = createHeader();
         buffer.flip();
         if (fileBody == null) {
-            send(buffer, file, start, len);
+            HttpResponse.this.finishFile(buffer, file, start, len);
         } else {
             final ByteBuffer body = fileBody.duplicate().asReadOnlyBuffer();
             if (start >= 0) {
@@ -276,11 +281,11 @@ public final class HttpResponse extends Response<HttpRequest> {
         }
     }
 
-    protected <A> void send(ByteBuffer buffer, File file) throws IOException {
-        send(buffer, file, -1L, -1L);
+    protected <A> void finishFile(ByteBuffer buffer, File file) throws IOException {
+        finishFile(buffer, file, -1L, -1L);
     }
 
-    protected <A> void send(ByteBuffer buffer, File file, long offset, long length) throws IOException {
+    protected <A> void finishFile(ByteBuffer buffer, File file, long offset, long length) throws IOException {
         send(buffer, buffer, new TransferFileHandler(AsynchronousFileChannel.open(file.toPath(), options, ((HttpContext) context).getExecutor()), offset, length));
     }
 

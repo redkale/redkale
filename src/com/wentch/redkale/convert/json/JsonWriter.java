@@ -5,10 +5,8 @@
  */
 package com.wentch.redkale.convert.json;
 
-import com.wentch.redkale.util.Attribute;
-import com.wentch.redkale.util.Utility;
-import com.wentch.redkale.convert.Writer;
-import com.wentch.redkale.util.ObjectPool.Poolable;
+import com.wentch.redkale.convert.*;
+import com.wentch.redkale.util.*;
 
 /**
  *
@@ -16,7 +14,7 @@ import com.wentch.redkale.util.ObjectPool.Poolable;
  *
  * @author zhangjx
  */
-public final class JsonWriter implements Writer, Poolable {
+public final class JsonWriter implements Writer {
 
     private static final char[] CHARS_TUREVALUE = "true".toCharArray();
 
@@ -27,6 +25,10 @@ public final class JsonWriter implements Writer, Poolable {
     protected int count;
 
     private char[] content;
+
+    public static ObjectPool<JsonWriter> createPool(int max) {
+        return new ObjectPool<>(max, (Object... params) -> new JsonWriter(), (x) -> x.recycle());
+    }
 
     public JsonWriter() {
         this(defaultSize);
@@ -87,16 +89,12 @@ public final class JsonWriter implements Writer, Poolable {
         if (quote) content[count++] = '"';
     }
 
-    @Override
-    public void prepare() {
-    }
-
-    @Override
-    public void release() {
+    protected boolean recycle() {
         this.count = 0;
         if (this.content.length > defaultSize) {
             this.content = new char[defaultSize];
         }
+        return true;
     }
 
     public char[] toArray() {

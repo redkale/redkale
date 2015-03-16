@@ -288,7 +288,7 @@ public final class HttpResourceServlet extends HttpServlet {
             if (range == null) {
                 buffer.put(header);
                 buffer.flip();
-                response.send(buffer, file);
+                response.finishFile(buffer, file);
                 return;
             }
             range = range.substring("bytes=".length());
@@ -300,7 +300,7 @@ public final class HttpResourceServlet extends HttpServlet {
             buffer.flip();
             final ByteBuffer body = this.content;
             if (body == null) {
-                response.send(buffer, file, start, end > 0 ? clen : end);
+                response.finishFile(buffer, file, start, end > 0 ? clen : end);
             } else {
                 final ByteBuffer body2 = body.duplicate();
                 body2.position((int) (this.header.length + start));

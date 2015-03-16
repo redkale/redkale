@@ -5,10 +5,9 @@
  */
 package com.wentch.redkale.convert.bson;
 
-import com.wentch.redkale.convert.Convert;
-import com.wentch.redkale.convert.Factory;
-import com.wentch.redkale.util.ObjectPool;
-import java.lang.reflect.Type;
+import com.wentch.redkale.convert.*;
+import com.wentch.redkale.util.*;
+import java.lang.reflect.*;
 
 /**
  *
@@ -16,9 +15,9 @@ import java.lang.reflect.Type;
  */
 public final class BsonConvert extends Convert<BsonReader, BsonWriter> {
 
-    private static final ObjectPool<BsonReader> readerPool = new ObjectPool<>(Integer.getInteger("convert.bson.pool.size", 16), BsonReader.class);
+    private static final ObjectPool<BsonReader> readerPool = BsonReader.createPool(Integer.getInteger("convert.bson.pool.size", 16));
 
-    private static final ObjectPool<BsonWriter> writerPool = new ObjectPool<>(Integer.getInteger("convert.bson.pool.size", 16), BsonWriter.class);
+    private static final ObjectPool<BsonWriter> writerPool = BsonWriter.createPool(Integer.getInteger("convert.bson.pool.size", 16));
 
     protected BsonConvert(Factory<BsonReader, BsonWriter> factory) {
         super(factory);

@@ -5,19 +5,16 @@
  */
 package com.wentch.redkale.net.http;
 
-import com.wentch.redkale.convert.json.JsonConvert;
-import com.wentch.redkale.convert.json.JsonFactory;
-import com.wentch.redkale.net.PrepareServlet;
-import com.wentch.redkale.net.ResponsePool;
-import com.wentch.redkale.net.Context;
-import com.wentch.redkale.net.BufferPool;
-import com.wentch.redkale.util.Utility;
-import com.wentch.redkale.watch.WatchFactory;
-import java.net.InetSocketAddress;
-import java.nio.charset.Charset;
-import java.security.SecureRandom;
-import java.util.concurrent.ExecutorService;
-import java.util.logging.Logger;
+import com.wentch.redkale.convert.json.*;
+import com.wentch.redkale.net.*;
+import com.wentch.redkale.util.*;
+import com.wentch.redkale.watch.*;
+import java.net.*;
+import java.nio.*;
+import java.nio.charset.*;
+import java.security.*;
+import java.util.concurrent.*;
+import java.util.logging.*;
 
 /**
  *
@@ -31,8 +28,8 @@ public final class HttpContext extends Context {
 
     protected final SecureRandom random = new SecureRandom();
 
-    public HttpContext(long serverStartTime, Logger logger, ExecutorService executor, BufferPool bufferPool,
-            ResponsePool responsePool, int maxbody, Charset charset, InetSocketAddress address,
+    public HttpContext(long serverStartTime, Logger logger, ExecutorService executor, ObjectPool<ByteBuffer> bufferPool,
+            ObjectPool<Response> responsePool, int maxbody, Charset charset, InetSocketAddress address,
             PrepareServlet prepare, WatchFactory watch, int readTimeoutSecond, int writeTimeoutSecond, String contextPath) {
         super(serverStartTime, logger, executor, bufferPool, responsePool, maxbody, charset,
                 address, prepare, watch, readTimeoutSecond, writeTimeoutSecond);
@@ -59,7 +56,7 @@ public final class HttpContext extends Context {
         return executor;
     }
 
-    protected ResponsePool getResponsePool() {
+    protected ObjectPool<Response> getResponsePool() {
         return responsePool;
     }
 
