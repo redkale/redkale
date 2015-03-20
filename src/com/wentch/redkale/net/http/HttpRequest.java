@@ -131,7 +131,7 @@ public final class HttpRequest extends Request {
                     break;
                 case "Connection":
                     this.connection = value;
-                    this.keepAlive = "Keep-Alive".equalsIgnoreCase(value);
+                    this.setKeepAlive("Keep-Alive".equalsIgnoreCase(value));
                     break;
                 default:
                     header.addValue(name, value);
@@ -158,7 +158,7 @@ public final class HttpRequest extends Request {
     @Override
     protected void prepare() {
     }
-    
+
     private void parseBody() {
         if (this.boundary || array.isEmpty()) return;
         addParameter(array, 0, array.count());
@@ -198,6 +198,22 @@ public final class HttpRequest extends Request {
             lasted = b;
         }
         return true;
+    }
+
+    @Override
+    protected void setProperty(String name, Object value) {
+        super.setProperty(name, value);
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    protected <T> T getProperty(String name) {
+        return super.getProperty(name);
+    }
+
+    @Override
+    protected void removeProperty(String name) {
+        super.removeProperty(name);
     }
 
     @Override

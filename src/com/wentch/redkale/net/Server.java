@@ -5,16 +5,16 @@
  */
 package com.wentch.redkale.net;
 
-import com.wentch.redkale.util.AnyValue;
-import com.wentch.redkale.watch.WatchFactory;
+import com.wentch.redkale.util.*;
+import com.wentch.redkale.watch.*;
 import java.io.*;
-import java.lang.reflect.Method;
+import java.lang.reflect.*;
 import java.net.*;
-import java.nio.charset.Charset;
+import java.nio.charset.*;
 import java.text.*;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.*;
 import java.util.logging.*;
 
 /**
@@ -108,7 +108,7 @@ public abstract class Server {
     public void start() throws IOException {
         this.context = this.createContext();
         this.context.prepare.init(this.context, config);
-        this.watch.inject(this.context.prepare);
+        if (this.watch != null) this.watch.inject(this.context.prepare);
         this.transport = ProtocolServer.create(this.protocol, context);
         this.transport.open();
         transport.setOption(StandardSocketOptions.SO_REUSEADDR, true);

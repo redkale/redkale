@@ -5,11 +5,10 @@
  */
 package com.wentch.redkale.net.http;
 
-import com.wentch.redkale.net.Context;
-import com.wentch.redkale.util.AnyValue;
+import com.wentch.redkale.net.*;
+import com.wentch.redkale.util.*;
 import java.io.*;
 import java.nio.*;
-import java.nio.channels.*;
 import java.nio.file.*;
 import static java.nio.file.StandardWatchEventKinds.*;
 import java.util.*;
@@ -169,7 +168,6 @@ public final class HttpResourceServlet extends HttpServlet {
         }
         if (uri.length() == 0 || uri.equals("/")) uri = "/index.html";
         //System.out.println(request);
-        response.skipHeader();
         FileEntry entry = watcher == null ? createFileEntry(uri) : files.get(uri);
         if (entry == null) {
             entry = createFileEntry(uri);
@@ -178,14 +176,14 @@ public final class HttpResourceServlet extends HttpServlet {
         if (entry == null) {
             response.finish404();
         } else {
-            entry.send(request, response);
+            response.finishFile(entry.file, entry.content);
         }
     }
 
     private FileEntry createFileEntry(String uri) {
         File file = new File(root, uri);
         if (!file.isFile() || !file.canRead()) return null;
-        FileEntry en = new FileEntry(this, uri, file);
+        FileEntry en = new FileEntry(this, file);
         if (watcher == null) return en;
         try {
             Path p = file.getParentFile().toPath();
@@ -198,43 +196,26 @@ public final class HttpResourceServlet extends HttpServlet {
 
     private static final class FileEntry {
 
-        private final LongAdder counter = new LongAdder();
-
-        private final File file;
+        final File file;
 
         private final HttpResourceServlet servlet;
 
-        private final String uri;
+        ByteBuffer content;
 
-        private String mimeType;
-
-        private long length;
-
-        private String etag;
-
-        private byte[] header;
-
-        private ByteBuffer content;
-
-        public FileEntry(final HttpResourceServlet servlet, String uri, File file) {
+        public FileEntry(final HttpResourceServlet servlet, File file) {
             this.servlet = servlet;
-            this.uri = uri;
             this.file = file;
-            this.mimeType = MimeType.getByFilename(file.getName());
-            if (this.mimeType == null) this.mimeType = "application/octet-stream";
             update();
         }
 
         public void update() {
-            this.length = file.length();
-            this.etag = file.lastModified() + "-" + this.length;
-            this.header = ("HTTP/1.1 200 OK\r\nContent-Type:" + mimeType + "\r\nETag:" + etag + (servlet.ranges != null && servlet.ranges.test(uri) ? "\r\nAccept-Ranges:bytes" : "") + "\r\nContent-Length:" + length + "\r\n\r\n").getBytes();
             if (this.content != null) {
                 this.servlet.cachedLength.add(0L - this.content.remaining());
                 this.content = null;
             }
-            if (this.length > this.servlet.cachelengthmax) return;
-            if (this.servlet.cachedLength.longValue() + this.length > this.servlet.cachelimit) return;
+            long length = this.file.length();
+            if (length > this.servlet.cachelengthmax) return;
+            if (this.servlet.cachedLength.longValue() + length > this.servlet.cachelimit) return;
             try {
                 FileInputStream in = new FileInputStream(file);
                 ByteArrayOutputStream out = new ByteArrayOutputStream((int) file.length());
@@ -244,9 +225,9 @@ public final class HttpResourceServlet extends HttpServlet {
                     out.write(bytes, 0, pos);
                 }
                 in.close();
-                ByteBuffer buf = ByteBuffer.allocateDirect((int) (this.header.length + file.length()));
-                buf.put(this.header);
-                buf.put(out.toByteArray());
+                byte[] bs = out.toByteArray();
+                ByteBuffer buf = ByteBuffer.allocateDirect(bs.length);
+                buf.put(bs);
                 buf.flip();
                 this.content = buf.asReadOnlyBuffer();
                 this.servlet.cachedLength.add(this.content.remaining());
@@ -265,64 +246,5 @@ public final class HttpResourceServlet extends HttpServlet {
             return this.content == null ? 0L : this.content.remaining();
         }
 
-        public void send(HttpRequest request, final HttpResponse response) throws IOException {
-            counter.increment();
-            final String match = request.getHeader("If-None-Match");
-            if (match != null && this.etag.equals(match)) {
-                response.finish304();
-                return;
-            }
-            final boolean acceptRange = (servlet.ranges != null && servlet.ranges.test(request.getRequestURI()));
-            String range = acceptRange ? request.getHeader("Range") : null;
-            if (acceptRange) {
-                String ifRange = request.getHeader("If-Range");
-                if (ifRange != null && !this.etag.equals(ifRange)) range = null;
-            }
-            if (content != null && range == null) {
-                response.finish(content.duplicate());
-                return;
-            }
-            final HttpContext context = response.getContext();
-            final ByteBuffer buffer = context.pollBuffer();
-            if (range != null && (!range.startsWith("bytes=") || range.indexOf(',') >= 0)) range = null;
-            if (range == null) {
-                buffer.put(header);
-                buffer.flip();
-                response.finishFile(buffer, file);
-                return;
-            }
-            range = range.substring("bytes=".length());
-            int pos = range.indexOf('-');
-            final long start = pos == 0 ? 0 : Integer.parseInt(range.substring(0, pos));
-            final long end = (pos == range.length() - 1) ? -1 : Long.parseLong(range.substring(pos + 1));
-            long clen = end > 0 ? (end - start + 1) : (file.length() - start);
-            buffer.put(("HTTP/1.1 206 Partial Content\r\nContent-Type:" + mimeType + "\r\nAccept-Ranges:bytes\r\nContent-Range:bytes " + start + "-" + (end > 0 ? end : length - 1) + "/" + length + "\r\nContent-Length:" + clen + "\r\n\r\n").getBytes());
-            buffer.flip();
-            final ByteBuffer body = this.content;
-            if (body == null) {
-                response.finishFile(buffer, file, start, end > 0 ? clen : end);
-            } else {
-                final ByteBuffer body2 = body.duplicate();
-                body2.position((int) (this.header.length + start));
-                if (end > 0) body2.limit((int) (body2.position() + end - start + 1));
-                response.send(buffer, buffer, new CompletionHandler<Integer, ByteBuffer>() {
-
-                    @Override
-                    public void completed(Integer result, ByteBuffer attachment) {
-                        response.getContext().offerBuffer(attachment);
-                        response.finish(body2);
-                    }
-
-                    @Override
-                    public void failed(Throwable exc, ByteBuffer attachment) {
-                        if (attachment.limit() != attachment.capacity()) {
-                            response.getContext().offerBuffer(attachment);
-                        }
-                        response.finish(true);
-                    }
-                });
-            }
-
-        }
     }
 }

@@ -33,7 +33,6 @@ public final class PrepareRunner implements Runnable {
     public void run() {
         final PrepareServlet prepare = context.prepare;
         final ObjectPool<? extends Response> responsePool = context.responsePool;
-        final ByteBuffer buffer = context.pollBuffer();
         if (data != null) {
             final Response response = responsePool.poll();
             response.init(channel);
@@ -41,11 +40,11 @@ public final class PrepareRunner implements Runnable {
                 prepare.prepare(data, response.request, response);
             } catch (Throwable t) {
                 context.logger.log(Level.WARNING, "prepare servlet abort, forece to close channel ", t);
-                context.offerBuffer(buffer);
                 response.finish(true);
             }
             return;
         }
+        final ByteBuffer buffer = context.pollBuffer();
         try {
             channel.read(buffer, null, new CompletionHandler<Integer, Void>() {
                 @Override
@@ -63,7 +62,7 @@ public final class PrepareRunner implements Runnable {
 //                        buffer.flip();
 //                        byte[] bytes = new byte[buffer.remaining()];
 //                        buffer.get(bytes);
-//                        System.out.println(new String(bytes));
+//                        System.println(new String(bytes));
 //                    }
                     buffer.flip();
                     final Response response = responsePool.poll();

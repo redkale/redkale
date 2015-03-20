@@ -11,6 +11,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * 当Service是Remote模式时， 用该注解标注在方法上可使数据变成异步传输, 该注解只能标注在返回类型为void的public方法上
+ * 不再起作用， 屏蔽掉
  *
  * @author zhangjx
  */
@@ -18,6 +19,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Documented
 @Target({TYPE, METHOD})
 @Retention(RUNTIME)
+@Deprecated
 public @interface Async {
 
 }

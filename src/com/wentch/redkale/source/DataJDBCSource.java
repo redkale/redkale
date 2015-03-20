@@ -49,6 +49,8 @@ public final class DataJDBCSource implements DataSource {
 
     private static final String JDBC_SOURCE = "javax.persistence.jdbc.source";
 
+    private static final Flipper FLIPPER_ONE = new Flipper(1);
+
     private final Logger logger = Logger.getLogger(DataJDBCSource.class.getSimpleName());
 
     private final AtomicBoolean debug = new AtomicBoolean(logger.isLoggable(Level.FINEST));
@@ -1101,7 +1103,7 @@ public final class DataJDBCSource implements DataSource {
             if (r != null || cache.isFullLoaded()) return r;
         }
         final Connection conn = createReadSQLConnection();
-        try { 
+        try {
             if (debug.get()) logger.finest(clazz.getSimpleName() + " find sql=" + info.query.sql.replace("?", String.valueOf(pk)));
             final PreparedStatement prestmt = conn.prepareStatement(info.query.sql);
             prestmt.setObject(1, pk);
@@ -1196,6 +1198,20 @@ public final class DataJDBCSource implements DataSource {
         } finally {
             if (conn != null) closeSQLConnection(conn);
         }
+    }
+
+    /**
+     * 根据过滤对象FilterBean查询第一个符合条件的对象
+     *
+     * @param <T>
+     * @param clazz
+     * @param bean
+     * @return
+     */
+    @Override
+    public <T> T find(final Class<T> clazz, final FilterBean bean) {
+        Sheet<T> sheet = querySheet(clazz, FLIPPER_ONE, bean);
+        return sheet.isEmpty() ? null : sheet.list().get(0);
     }
 
     /**
@@ -1650,7 +1666,7 @@ public final class DataJDBCSource implements DataSource {
                 public void connectionErrorOccurred(ConnectionEvent event) {
                     usingCounter.decrementAndGet();
                     if ("08S01".equals(event.getSQLException().getSQLState())) return; //MySQL特性， 长时间连接没使用会抛出com.mysql.jdbc.exceptions.jdbc4.CommunicationsException
-                    dataSource.logger.log(Level.WARNING, "connectionErronOccurred", event.getSQLException());
+                    dataSource.logger.log(Level.WARNING, "connectionErronOccurred " + event.getSQLException().getSQLState(), event.getSQLException());
                 }
             };
             try {
@@ -1780,7 +1796,9 @@ public final class DataJDBCSource implements DataSource {
                     return poll(0, null);
                 }
             } catch (SQLException ex) {
-                dataSource.logger.log(Level.FINER, "result.getConnection from pooled connection abort", ex);
+                if (!"08S01".equals(ex.getSQLState())) {//MySQL特性， 长时间连接没使用会抛出com.mysql.jdbc.exceptions.jdbc4.CommunicationsException
+                    dataSource.logger.log(Level.FINER, "result.getConnection from pooled connection abort " + ex.getSQLState(), ex);
+                }
                 return poll(0, null);
             }
             return conn;

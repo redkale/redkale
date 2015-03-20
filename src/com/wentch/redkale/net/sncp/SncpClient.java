@@ -141,27 +141,27 @@ public final class SncpClient {
         final SncpAction action = actions[index];
         final long seqid = System.nanoTime();
         final TwoLong actionid = action.actionid;
-        ByteBuffer buffer = transport.pollBuffer();
-        if ((HEADER_SIZE + bodyLength) > buffer.limit()) {
-            if (debug) logger.finest(this.serviceid + "," + this.nameid + "," + action + " sncp length : " + (HEADER_SIZE + bodyLength));
-            final int patch = bodyLength / (buffer.capacity() - HEADER_SIZE) + (bodyLength % (buffer.capacity() - HEADER_SIZE) > 0 ? 1 : 0);
-            AsyncConnection conn = transport.pollConnection();
-            final int readto = conn.getReadTimeoutSecond();
-            final int writeto = conn.getWriteTimeoutSecond();
-            int pos = 0;
-            final byte[] all = new byte[bodyLength];
-            all[pos++] = (byte) ((bytesarray.length & 0xff00) >> 8);
-            all[pos++] = (byte) (bytesarray.length & 0xff);
-            for (byte[] bs : bytesarray) {
-                all[pos++] = (byte) ((bs.length & 0xff000000) >> 24);
-                all[pos++] = (byte) ((bs.length & 0xff0000) >> 16);
-                all[pos++] = (byte) ((bs.length & 0xff00) >> 8);
-                all[pos++] = (byte) (bs.length & 0xff);
-                System.arraycopy(bs, 0, all, pos, bs.length);
-                pos += bs.length;
-            }
-            if (pos != all.length) logger.warning(this.serviceid + "," + this.nameid + "," + action + " sncp body.length : " + all.length + ", but pos=" + pos);
-            try {
+        final ByteBuffer buffer = transport.pollBuffer();
+        final AsyncConnection conn = transport.pollConnection();
+        final int readto = conn.getReadTimeoutSecond();
+        final int writeto = conn.getWriteTimeoutSecond();
+        try {
+            if ((HEADER_SIZE + bodyLength) > buffer.limit()) {
+                if (debug) logger.finest(this.serviceid + "," + this.nameid + "," + action + " sncp length : " + (HEADER_SIZE + bodyLength));
+                final int patch = bodyLength / (buffer.capacity() - HEADER_SIZE) + (bodyLength % (buffer.capacity() - HEADER_SIZE) > 0 ? 1 : 0);
+                int pos = 0;
+                final byte[] all = new byte[bodyLength];
+                all[pos++] = (byte) ((bytesarray.length & 0xff00) >> 8);
+                all[pos++] = (byte) (bytesarray.length & 0xff);
+                for (byte[] bs : bytesarray) {
+                    all[pos++] = (byte) ((bs.length & 0xff000000) >> 24);
+                    all[pos++] = (byte) ((bs.length & 0xff0000) >> 16);
+                    all[pos++] = (byte) ((bs.length & 0xff00) >> 8);
+                    all[pos++] = (byte) (bs.length & 0xff);
+                    System.arraycopy(bs, 0, all, pos, bs.length);
+                    pos += bs.length;
+                }
+                if (pos != all.length) logger.warning(this.serviceid + "," + this.nameid + "," + action + " sncp body.length : " + all.length + ", but pos=" + pos);
                 pos = 0;
                 for (int i = patch - 1; i >= 0; i--) {
                     fillHeader(buffer, seqid, actionid, patch, i, bodyLength);
@@ -169,55 +169,86 @@ public final class SncpClient {
                     buffer.put(all, pos, len);
                     pos += len;
                     buffer.flip();
+                    Thread.sleep(10);
                     conn.write(buffer).get(writeto > 0 ? writeto : 5, TimeUnit.SECONDS);
                     buffer.clear();
                 }
-                conn.read(buffer).get(readto > 0 ? readto : 5, TimeUnit.SECONDS);
-                buffer.flip();
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            } finally {
-                transport.offerConnection(conn);
-            }
-        } else {
-            {
-                //---------------------head----------------------------------
-                fillHeader(buffer, seqid, actionid, 1, 0, bodyLength);
-                //---------------------body----------------------------------
-                buffer.putChar((char) bytesarray.length); //参数数组大小
-                for (byte[] bs : bytesarray) {
-                    buffer.putInt(bs.length);
-                    buffer.put(bs);
+            } else {  //只有一帧的数据
+                {
+                    //---------------------head----------------------------------
+                    fillHeader(buffer, seqid, actionid, 1, 0, bodyLength);
+                    //---------------------body----------------------------------
+                    buffer.putChar((char) bytesarray.length); //参数数组大小
+                    for (byte[] bs : bytesarray) {
+                        buffer.putInt(bs.length);
+                        buffer.put(bs);
+                    }
+                    buffer.flip();
                 }
-                buffer.flip();
+                conn.write(buffer).get(writeto > 0 ? writeto : 5, TimeUnit.SECONDS);
+                buffer.clear();
             }
-            if (action.async) {
-                transport.async(buffer, null, null);
-                return null;
+            conn.read(buffer).get(readto > 0 ? readto : 5, TimeUnit.SECONDS);
+            buffer.flip();
+            long rseqid = buffer.getLong();
+            if (rseqid != seqid) throw new RuntimeException("sncp send seqid = " + seqid + ", but receive seqid =" + rseqid);
+            if (buffer.getChar() != HEADER_SIZE) throw new RuntimeException("sncp buffer receive header.length not " + HEADER_SIZE);
+            long rserviceid = buffer.getLong();
+            if (rserviceid != serviceid) throw new RuntimeException("sncp send serviceid = " + serviceid + ", but receive serviceid =" + rserviceid);
+            long rnameid = buffer.getLong();
+            if (rnameid != nameid) throw new RuntimeException("sncp send nameid = " + nameid + ", but receive nameid =" + rnameid);
+            long ractionid1 = buffer.getLong();
+            long ractionid2 = buffer.getLong();
+            if (!actionid.compare(ractionid1, ractionid2)) throw new RuntimeException("sncp send actionid = " + actionid + ", but receive actionid =(" + ractionid1 + "_" + ractionid2 + ")");
+            final int frameCount = buffer.get();
+            if (frameCount < 1) throw new RuntimeException("sncp send nameid = " + nameid + ", but frame.count =" + frameCount);
+            int frameIndex = buffer.get();
+            if (frameIndex < 0 || frameIndex >= frameCount) throw new RuntimeException("sncp send nameid = " + nameid + ", but frame.count =" + frameCount + " & frame.index =" + frameIndex);
+            final int retcode = buffer.getInt();
+            if (retcode != 0) throw new RuntimeException("remote service deal error (receive retcode =" + retcode + ")");
+            final int bodylen = buffer.getInt();
+            final byte[] body = new byte[bodylen];
+            if (frameCount == 1) {
+                buffer.get(body);
+                return body;
+            } else {
+                int received = 0;
+                for (int i = 0; i < frameCount; i++) {
+                    received += buffer.remaining();
+                    buffer.get(body, (frameCount - frameIndex - 1) * (buffer.capacity() - HEADER_SIZE), buffer.remaining());
+                    if (i == frameCount - 1) break;
+                    buffer.clear();
+                    conn.read(buffer).get(readto > 0 ? readto : 5, TimeUnit.SECONDS);
+                    buffer.flip();
+                    rseqid = buffer.getLong();
+                    if (rseqid != seqid) throw new RuntimeException("sncp send seqid = " + seqid + ", but receive next.seqid =" + rseqid);
+                    if (buffer.getChar() != HEADER_SIZE) throw new RuntimeException("sncp buffer receive header.length not " + HEADER_SIZE);
+                    rserviceid = buffer.getLong();
+                    if (rserviceid != serviceid) throw new RuntimeException("sncp send serviceid = " + serviceid + ", but receive next.serviceid =" + rserviceid);
+                    rnameid = buffer.getLong();
+                    if (rnameid != nameid) throw new RuntimeException("sncp send nameid = " + nameid + ", but receive next.nameid =" + rnameid);
+                    ractionid1 = buffer.getLong();
+                    ractionid2 = buffer.getLong();
+                    if (!actionid.compare(ractionid1, ractionid2)) throw new RuntimeException("sncp send actionid = " + actionid + ", but receive next.actionid =(" + ractionid1 + "_" + ractionid2 + ")");
+                    if (buffer.get() < 1) throw new RuntimeException("sncp send nameid = " + nameid + ", but next.frame.count != " + frameCount);
+                    frameIndex = buffer.get();
+                    if (frameIndex < 0 || frameIndex >= frameCount) throw new RuntimeException("sncp receive nameid = " + nameid + ", but frame.count =" + frameCount + " & next.frame.index =" + frameIndex);
+                    int rretcode = buffer.getInt();
+                    if (rretcode != 0) throw new RuntimeException("remote service deal error (receive retcode =" + rretcode + ")");
+                    int rbodylen = buffer.getInt();
+                    if (rbodylen != bodylen) throw new RuntimeException("sncp receive bodylength = " + bodylen + ", but receive next.bodylength =" + rbodylen);
+                }
+                if (received != bodylen) throw new RuntimeException("sncp receive bodylength = " + bodylen + ", but receive next.receivedlength =" + received);
+                return body;
             }
-            buffer = transport.send(buffer);
+        } catch (RuntimeException ex) {
+            throw ex;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        } finally {
+            transport.offerBuffer(buffer);
+            transport.offerConnection(conn);
         }
-        long rseqid = buffer.getLong();
-        if (rseqid != seqid) throw new RuntimeException("sncp send seqid = " + seqid + ", but receive seqid =" + rseqid);
-        if (buffer.getChar() != HEADER_SIZE) throw new RuntimeException("sncp buffer receive header.length not " + HEADER_SIZE);
-        long rserviceid = buffer.getLong();
-        if (rserviceid != serviceid) throw new RuntimeException("sncp send serviceid = " + serviceid + ", but receive serviceid =" + rserviceid);
-        long rnameid = buffer.getLong();
-        if (rnameid != nameid) throw new RuntimeException("sncp send nameid = " + nameid + ", but receive nameid =" + rnameid);
-        long ractionid1 = buffer.getLong();
-        long ractionid2 = buffer.getLong();
-        if (!actionid.compare(ractionid1, ractionid2)) throw new RuntimeException("sncp send actionid = " + actionid + ", but receive actionid =(" + ractionid1 + "_" + ractionid2 + ")");
-        int frameCount = buffer.get();
-        if (frameCount < 1) throw new RuntimeException("sncp send nameid = " + nameid + ", but frame.count =" + frameCount);
-        int frameIndex = buffer.get();
-        if (frameIndex < 0 || frameIndex >= frameCount) throw new RuntimeException("sncp send nameid = " + nameid + ", but frame.count =" + frameCount + " & frame.index =" + frameIndex);
-        int retcode = buffer.getInt();
-        if (retcode != 0) throw new RuntimeException("remote service deal error (receive retcode =" + retcode + ")");
-        int bodylen = buffer.getInt();
-        byte[] bytes = new byte[bodylen];
-        buffer.get(bytes);
-        transport.offerBuffer(buffer);
-        return bytes;
     }
 
 }

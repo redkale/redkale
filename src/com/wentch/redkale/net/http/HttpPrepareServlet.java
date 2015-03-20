@@ -5,19 +5,17 @@
  */
 package com.wentch.redkale.net.http;
 
-import com.wentch.redkale.net.PrepareServlet;
-import com.wentch.redkale.net.Context;
-import com.wentch.redkale.util.AnyValue;
-import com.wentch.redkale.util.Utility;
+import com.wentch.redkale.net.*;
 import com.wentch.redkale.util.AnyValue.DefaultAnyValue;
-import com.wentch.redkale.watch.WatchFactory;
-import java.io.IOException;
-import java.nio.ByteBuffer;
+import com.wentch.redkale.util.*;
+import com.wentch.redkale.watch.*;
+import java.io.*;
+import java.nio.*;
 import java.util.*;
 import java.util.AbstractMap.SimpleEntry;
-import java.util.function.Predicate; 
-import java.util.logging.Level;
-import java.util.regex.Pattern;
+import java.util.function.*;
+import java.util.logging.*;
+import java.util.regex.*;
 
 /**
  *
@@ -88,7 +86,7 @@ public final class HttpPrepareServlet extends PrepareServlet<HttpRequest, HttpRe
                             + flashports.replace("$", "" + request.getContext().getServerAddress().getPort()) + "\"/>"
                             + "</cross-domain-policy>").getBytes()).asReadOnlyBuffer();
                 }
-                response.finish(flashPolicyBuffer.duplicate(), true);
+                response.finish(true, flashPolicyBuffer.duplicate());
                 return;
             }
             final String uri = request.getRequestURI();

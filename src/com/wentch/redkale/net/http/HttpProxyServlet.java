@@ -5,11 +5,11 @@
  */
 package com.wentch.redkale.net.http;
 
-import com.wentch.redkale.net.AsyncConnection;
-import com.wentch.redkale.util.AnyValue;
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.channels.CompletionHandler;
+import com.wentch.redkale.net.*;
+import com.wentch.redkale.util.*;
+import java.io.*;
+import java.nio.*;
+import java.nio.channels.*;
 
 /**
  * 在appliation.xml中的HTTP类型的server节点加上forwardproxy="true"表示该HttpServer支持正向代理
@@ -76,21 +76,15 @@ public final class HttpProxyServlet extends HttpServlet {
         final ByteBuffer buffer0 = response.getContext().pollBuffer();
         buffer0.put("HTTP/1.1 200 Connection established\r\nConnection: close\r\n\r\n".getBytes());
         buffer0.flip();
-        response.send(buffer0, null, new CompletionHandler<Integer, Void>() {
+        response.sendBody(buffer0, null, new CompletionHandler<Integer, Void>() {
 
             @Override
             public void completed(Integer result, Void attachment) {
-                if (buffer0.hasRemaining()) {
-                    response.send(buffer0, attachment, this);
-                    return;
-                }
-                response.getContext().offerBuffer(buffer0);
                 new ProxyCompletionHandler(remote, request, response).completed(0, null);
             }
 
             @Override
             public void failed(Throwable exc, Void attachment) {
-                response.getContext().offerBuffer(buffer0);
                 response.finish(true);
                 try {
                     remote.close();
@@ -124,7 +118,7 @@ public final class HttpProxyServlet extends HttpServlet {
                 public void completed(Integer result, Void attachment) {
                     rbuffer.flip();
                     CompletionHandler parent = this;
-                    response.send(rbuffer, null, new CompletionHandler<Integer, Void>() {
+                    response.sendBody(rbuffer.duplicate().asReadOnlyBuffer(), null, new CompletionHandler<Integer, Void>() {
 
                         @Override
                         public void completed(Integer result, Void attachment) {

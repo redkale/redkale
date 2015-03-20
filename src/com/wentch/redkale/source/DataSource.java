@@ -5,7 +5,7 @@
  */
 package com.wentch.redkale.source;
 
-import com.wentch.redkale.util.Sheet;
+import com.wentch.redkale.util.*;
 import java.io.*;
 import java.util.*;
 
@@ -315,6 +315,16 @@ public interface DataSource {
      * @return
      */
     public <T> T[] findByColumn(Class<T> clazz, final SelectColumn selects, String column, Serializable... keys);
+
+    /**
+     * 根据过滤对象FilterBean查询第一个符合条件的对象
+     *
+     * @param <T>
+     * @param clazz
+     * @param bean
+     * @return
+     */
+    public <T> T find(final Class<T> clazz, final FilterBean bean);
 
     //-----------------------list----------------------------
     /**

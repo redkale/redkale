@@ -78,6 +78,10 @@ public final class SncpContext extends Context {
         }
     }
 
+    protected void removeRequestEntity(long seqid) {
+        requests.remove(seqid);
+    }
+
     protected RequestEntry getRequestEntity(long seqid) {
         return requests.get(seqid);
     }

@@ -7,16 +7,16 @@ package com.wentch.redkale.net;
 
 import java.io.*;
 import java.lang.invoke.*;
-import java.lang.ref.SoftReference;
+import java.lang.ref.*;
 import java.lang.reflect.*;
 import java.net.*;
-import java.nio.ByteBuffer;
+import java.nio.*;
 import java.nio.channels.*;
 import java.security.*;
 import java.util.*;
 import java.util.concurrent.*;
-import sun.misc.Cleaner;
-import sun.security.action.GetIntegerAction;
+import sun.misc.*;
+import sun.security.action.*;
 
 /**
  *
@@ -334,6 +334,35 @@ public final class AsyncDatagramChannel implements AsynchronousByteChannel, Mult
     public <A> void send(ByteBuffer src, SocketAddress target, A attachment, CompletionHandler<Integer, ? super A> handler) {
         if (handler == null) throw new NullPointerException("'handler' is null");
         implSend(src, target, attachment, handler);
+    }
+
+    public <A> void send(ByteBuffer[] srcs, final int offset, final int length, SocketAddress target, A attachment, final CompletionHandler<Integer, ? super A> handler) {
+        if (handler == null) throw new NullPointerException("'handler' is null");
+        final ByteBuffer[] buffers = srcs;
+        implSend(buffers[offset], target, attachment, new CompletionHandler<Integer, A>() {
+            private int index = offset;
+
+            private int resultSum;
+
+            private final int max = length - 1;
+
+            @Override
+            public void completed(Integer result, A attachment) {
+                resultSum += result;
+                if (buffers[index].hasRemaining()) {
+                    implSend(buffers[index], target, attachment, this);
+                } else if (index == max) {
+                    handler.completed(resultSum, attachment);
+                } else {
+                    implSend(buffers[++index], target, attachment, this);
+                }
+            }
+
+            @Override
+            public void failed(Throwable exc, A attachment) {
+                handler.failed(exc, attachment);
+            }
+        });
     }
 
     private <A> Future<Integer> implWrite(ByteBuffer src, A attachment, CompletionHandler<Integer, ? super A> handler) {

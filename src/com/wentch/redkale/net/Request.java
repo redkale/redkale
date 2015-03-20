@@ -22,6 +22,12 @@ public abstract class Request {
 
     protected AsyncConnection channel;
 
+    /**
+     * properties 与 attributes 的区别在于：调用recycle时， attributes会被清空而properties会保留;
+     * properties 通常存放需要永久绑定在request里的一些对象
+     */
+    private final Map<String, Object> properties = new HashMap<>();
+
     protected final Map<String, Object> attributes = new HashMap<>();
 
     protected Request(Context context) {
@@ -45,6 +51,23 @@ public abstract class Request {
         keepAlive = false;
         attributes.clear();
         channel = null; //   close it by  response
+    }
+
+    protected void setProperty(String name, Object value) {
+        properties.put(name, value);
+    }
+
+    @SuppressWarnings("unchecked")
+    protected <T> T getProperty(String name) {
+        return (T) properties.get(name);
+    }
+
+    protected void removeProperty(String name) {
+        properties.remove(name);
+    }
+
+    protected Map<String, Object> getProperties() {
+        return properties;
     }
 
     public void setAttribute(String name, Object value) {

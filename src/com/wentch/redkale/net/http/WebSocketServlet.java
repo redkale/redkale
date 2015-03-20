@@ -5,9 +5,10 @@
  */
 package com.wentch.redkale.net.http;
 
-import com.wentch.redkale.net.Context;
-import com.wentch.redkale.util.AnyValue;
+import com.wentch.redkale.net.*;
+import com.wentch.redkale.util.*;
 import java.io.*;
+import java.nio.*;
 import java.nio.channels.*;
 import java.security.*;
 import java.util.*;
@@ -74,7 +75,7 @@ public abstract class WebSocketServlet extends HttpServlet {
         response.setHeader("Connection", "Upgrade");
         response.addHeader("Upgrade", "websocket");
         response.addHeader("Sec-WebSocket-Accept", key);
-        response.send(null, null, new CompletionHandler<Integer, Void>() {
+        response.sendBody((ByteBuffer) null, null, new CompletionHandler<Integer, Void>() {
 
             @Override
             public void completed(Integer result, Void attachment) {

@@ -5,13 +5,12 @@
  */
 package com.wentch.redkale.source;
 
-import com.wentch.redkale.util.Sheet;
-import com.wentch.redkale.util.Attribute;
 import static com.wentch.redkale.source.FilterExpress.*;
-import java.io.Serializable;
-import java.lang.reflect.Array;
+import com.wentch.redkale.util.*;
+import java.io.*;
+import java.lang.reflect.*;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.*;
 import java.util.logging.*;
 import javax.persistence.*;
 import javax.persistence.criteria.*;
@@ -42,6 +41,11 @@ final class DataJPASource implements DataSource {
 
     @Override
     public <T> void refreshCache(Class<T> clazz) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public <T> T find(Class<T> clazz, FilterBean bean) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 

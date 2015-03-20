@@ -5,9 +5,9 @@
  */
 package com.wentch.redkale.net;
 
-import java.io.IOException;
+import java.io.*;
 import java.net.*;
-import java.nio.ByteBuffer;
+import java.nio.*;
 import java.nio.channels.*;
 import java.util.concurrent.*;
 
@@ -28,6 +28,12 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
     public abstract void setReadTimeoutSecond(int readTimeoutSecond);
 
     public abstract void setWriteTimeoutSecond(int writeTimeoutSecond);
+
+    public final <A> void write(ByteBuffer[] srcs, A attachment, CompletionHandler<Integer, ? super A> handler) {
+        write(srcs, 0, srcs.length, attachment, handler);
+    }
+
+    protected abstract <A> void write(ByteBuffer[] srcs, int offset, int length, A attachment, CompletionHandler<Integer, ? super A> handler);
 
     public abstract void dispose(); //同close， 只是去掉throws IOException
 
@@ -101,6 +107,11 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
             @Override
             public <A> void write(ByteBuffer src, A attachment, CompletionHandler<Integer, ? super A> handler) {
                 channel.send(src, remoteAddress, attachment, handler);
+            }
+
+            @Override
+            public <A> void write(ByteBuffer[] srcs, int offset, int length, A attachment, CompletionHandler<Integer, ? super A> handler) {
+                channel.send(srcs, offset, length, remoteAddress, attachment, handler);
             }
 
             @Override
@@ -211,6 +222,24 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
             }
 
             @Override
+            public <A> void write(ByteBuffer[] srcs, int offset, int length, A attachment, CompletionHandler<Integer, ? super A> handler) {
+                channel.write(srcs, offset, length, writeTimeoutSecond > 0 ? writeTimeoutSecond : 60, TimeUnit.SECONDS,
+                        attachment, new CompletionHandler<Long, A>() {
+
+                            @Override
+                            public void completed(Long result, A attachment) {
+                                handler.completed(result.intValue(), attachment);
+                            }
+
+                            @Override
+                            public void failed(Throwable exc, A attachment) {
+                                handler.failed(exc, attachment);
+                            }
+
+                        });
+            }
+
+            @Override
             public void setReadTimeoutSecond(int readTimeoutSecond) {
                 this.readTimeoutSecond = readTimeoutSecond;
             }
@@ -266,6 +295,7 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
                 } catch (IOException io) {
                 }
             }
+
         };
     }
 

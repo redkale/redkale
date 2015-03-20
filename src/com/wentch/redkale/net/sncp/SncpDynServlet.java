@@ -5,17 +5,15 @@
  */
 package com.wentch.redkale.net.sncp;
 
-import com.wentch.redkale.util.AnyValue;
-import com.wentch.redkale.util.DebugMethodVisitor;
-import com.wentch.redkale.util.TwoLong;
-import com.wentch.redkale.convert.bson.BsonConvert;
+import com.wentch.redkale.convert.bson.*;
 import static com.wentch.redkale.net.sncp.SncpClient.getOnMethod;
-import com.wentch.redkale.service.Service;
+import com.wentch.redkale.service.*;
+import com.wentch.redkale.util.*;
 import java.io.*;
 import java.lang.reflect.*;
 import java.util.*;
 import java.util.logging.*;
-import javax.annotation.Resource;
+import javax.annotation.*;
 import jdk.internal.org.objectweb.asm.*;
 import static jdk.internal.org.objectweb.asm.Opcodes.*;
 import jdk.internal.org.objectweb.asm.Type;
@@ -84,14 +82,12 @@ public class SncpDynServlet extends SncpServlet {
         if (action == null) {
             response.finish(SncpResponse.RETCODE_ILLACTIONID, null);  //无效actionid
         } else {
-            byte[] rs = null;
             try {
-                rs = action.action(request.getParamBytes());
+                response.finish(0, action.action(request.getParamBytes()));
             } catch (Throwable t) {
                 response.getContext().getLogger().log(Level.INFO, "sncp execute error(" + request + ")", t);
                 response.finish(SncpResponse.RETCODE_THROWEXCEPTION, null);
             }
-            response.finish(0, rs);
         }
     }
 

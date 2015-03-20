@@ -16,36 +16,36 @@ import java.nio.*;
  * @author zhangjx
  */
 public final class SncpRequest extends Request {
-
+    
     public static final int HEADER_SIZE = 52;
-
+    
     protected final BsonConvert convert;
-
+    
     private long seqid;
-
+    
     private int framecount;
-
+    
     private int frameindex;
-
+    
     private long nameid;
-
+    
     private long serviceid;
-
+    
     private TwoLong actionid;
-
+    
     private int bodylength;
-
+    
     private byte[][] paramBytes;
-
+    
     private boolean ping;
-
+    
     private byte[] body;
-
+    
     protected SncpRequest(SncpContext context, BsonFactory factory) {
         super(context);
         this.convert = factory.getConvert();
     }
-
+    
     @Override
     protected int readHeader(ByteBuffer buffer) {
         if (buffer.remaining() < HEADER_SIZE) {
@@ -85,20 +85,21 @@ public final class SncpRequest extends Request {
         RequestEntry entry = scontext.getRequestEntity(this.seqid);
         if (entry == null) entry = scontext.addRequestEntity(this.seqid, new byte[this.bodylength]);
         entry.add(buffer, (this.framecount - this.frameindex - 1) * (buffer.capacity() - HEADER_SIZE));
-
+        
         if (entry.isCompleted()) {  //数据读取完毕
             this.body = entry.body;
+            scontext.removeRequestEntity(this.seqid);
             return 0;
         } else {
             scontext.expireRequestEntry(10 * 1000); //10秒过期
-        }
+        } 
         return Integer.MIN_VALUE; //多帧数据返回 Integer.MIN_VALUE
     }
-
+    
     @Override
     protected void readBody(ByteBuffer buffer) {
     }
-
+    
     @Override
     protected void prepare() {
         if (this.body == null) return;
@@ -115,22 +116,14 @@ public final class SncpRequest extends Request {
         }
         this.paramBytes = bbytes;
     }
-
+    
     @Override
     public String toString() {
         return SncpRequest.class.getSimpleName() + "{seqid=" + this.seqid
                 + ",serviceid=" + this.serviceid + ",actionid=" + this.actionid
                 + ",framecount=" + this.framecount + ",frameindex=" + this.frameindex + ",bodylength=" + this.bodylength + "}";
     }
-
-    protected void setKeepAlive(boolean keepAlive) {
-        this.keepAlive = keepAlive;
-    }
-
-    protected boolean isKeepAlive() {
-        return this.keepAlive;
-    }
-
+    
     @Override
     protected void recycle() {
         this.seqid = 0;
@@ -144,29 +137,29 @@ public final class SncpRequest extends Request {
         this.ping = false;
         super.recycle();
     }
-
+    
     protected boolean isPing() {
         return ping;
     }
-
+    
     public byte[][] getParamBytes() {
         return paramBytes;
     }
-
+    
     public long getSeqid() {
         return seqid;
     }
-
+    
     public long getServiceid() {
         return serviceid;
     }
-
+    
     public long getNameid() {
         return nameid;
     }
-
+    
     public TwoLong getActionid() {
         return actionid;
     }
-
+    
 }

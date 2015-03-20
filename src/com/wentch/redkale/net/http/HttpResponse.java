@@ -150,21 +150,26 @@ public final class HttpResponse extends Response<HttpRequest> {
 
     public void finishJson(Object obj) {
         this.contentType = "text/plain; charset=utf-8";
-        finishString(request.convert.convertTo(obj));
+        finish(request.convert.convertTo(obj));
     }
 
     public void finishJson(Type type, Object obj) {
         this.contentType = "text/plain; charset=utf-8";
-        finishString(request.convert.convertTo(type, obj));
+        finish(request.convert.convertTo(type, obj));
     }
 
     public void finishJson(Object... objs) {
         this.contentType = "text/plain; charset=utf-8";
-        finishString(request.convert.convertTo(objs));
+        finish(request.convert.convertTo(objs));
     }
 
-    public void finishString(String obj) {
-        if (obj == null) obj = "null";
+    public void finish(String obj) {
+        if (obj == null || obj.isEmpty()) {
+            final ByteBuffer headbuf = createHeader();
+            headbuf.flip();
+            super.finish(headbuf);
+            return;
+        }
         if (context.getCharset() == null) {
             final char[] chars = Utility.charArray(obj);
             this.contentLength = Utility.encodeUTF8Length(chars);
@@ -172,27 +177,23 @@ public final class HttpResponse extends Response<HttpRequest> {
             ByteBuffer buf2 = Utility.encodeUTF8(headbuf, (int) this.contentLength, chars);
             headbuf.flip();
             if (buf2 == null) {
-                super.send(headbuf, headbuf, finishHandler);
+                super.finish(headbuf);
             } else {
-                super.send(headbuf, buf2, new AsyncWriteHandler<>(this.context, headbuf, this.channel, buf2, buf2, finishHandler));
+                super.finish(headbuf, buf2);
             }
         } else {
             ByteBuffer buffer = context.getCharset().encode(obj);
             this.contentLength = buffer.remaining();
-            send(buffer, buffer, finishHandler);
+            final ByteBuffer headbuf = createHeader();
+            headbuf.flip();
+            super.finish(headbuf, buffer);
         }
     }
 
     public void finish(int status, String message) {
         this.status = status;
         if (status != 200) super.refuseAlive();
-        if (message == null || message.isEmpty()) {
-            ByteBuffer headbuf = createHeader();
-            headbuf.flip();
-            super.send(headbuf, headbuf, finishHandler);
-        } else {
-            finishString(message);
-        }
+        finish(message);
     }
 
     public void finish304() {
@@ -203,15 +204,14 @@ public final class HttpResponse extends Response<HttpRequest> {
         super.finish(buffer404.duplicate());
     }
 
-    @Override
-    public <A> void send(ByteBuffer buffer, A attachment, CompletionHandler<Integer, A> handler) {
+    public <A> void sendBody(ByteBuffer buffer, A attachment, CompletionHandler<Integer, A> handler) {
         if (!this.headsended) {
             ByteBuffer headbuf = createHeader();
             headbuf.flip();
             if (buffer == null) {
                 super.send(headbuf, attachment, handler);
             } else {
-                super.send(headbuf, attachment, new AsyncWriteHandler<>(this.context, headbuf, this.channel, buffer, attachment, handler));
+                super.send(new ByteBuffer[]{headbuf, headbuf}, attachment, handler);
             }
         } else {
             super.send(buffer, attachment, handler);
@@ -234,7 +234,7 @@ public final class HttpResponse extends Response<HttpRequest> {
             return;
         }
         this.contentLength = file.length();
-        if (this.contentType == null) this.contentType = MimeType.getByFilename(file.getName());
+        this.contentType = MimeType.getByFilename(file.getName());
         if (this.contentType == null) this.contentType = "application/octet-stream";
         String range = request.getHeader("Range");
         if (range != null && (!range.startsWith("bytes=") || range.indexOf(',') >= 0)) range = null;
@@ -252,41 +252,23 @@ public final class HttpResponse extends Response<HttpRequest> {
             this.contentLength = clen;
             len = end > 0 ? clen : end;
         }
-        ByteBuffer buffer = createHeader();
-        buffer.flip();
+        this.addHeader("ETag", file.lastModified() + "-" + length);
+        ByteBuffer hbuffer = createHeader();
+        hbuffer.flip();
         if (fileBody == null) {
-            HttpResponse.this.finishFile(buffer, file, start, len);
+            finishFile(hbuffer, file, start, len);
         } else {
             final ByteBuffer body = fileBody.duplicate().asReadOnlyBuffer();
             if (start >= 0) {
                 body.position((int) start);
                 if (len > 0) body.limit((int) (body.position() + len));
             }
-            send(buffer, buffer, new CompletionHandler<Integer, ByteBuffer>() {
-
-                @Override
-                public void completed(Integer result, ByteBuffer attachment) {
-                    context.offerBuffer(attachment);
-                    finish(body);
-                }
-
-                @Override
-                public void failed(Throwable exc, ByteBuffer attachment) {
-                    if (attachment.limit() != attachment.capacity()) {
-                        context.offerBuffer(attachment);
-                    }
-                    finish(true);
-                }
-            });
+            super.finish(hbuffer, body);
         }
     }
 
-    protected <A> void finishFile(ByteBuffer buffer, File file) throws IOException {
-        finishFile(buffer, file, -1L, -1L);
-    }
-
-    protected <A> void finishFile(ByteBuffer buffer, File file, long offset, long length) throws IOException {
-        send(buffer, buffer, new TransferFileHandler(AsynchronousFileChannel.open(file.toPath(), options, ((HttpContext) context).getExecutor()), offset, length));
+    private <A> void finishFile(ByteBuffer hbuffer, File file, long offset, long length) throws IOException {
+        this.channel.write(hbuffer, hbuffer, new TransferFileHandler(AsynchronousFileChannel.open(file.toPath(), options, ((HttpContext) context).getExecutor()), offset, length));
     }
 
     private ByteBuffer createHeader() {
@@ -424,7 +406,7 @@ public final class HttpResponse extends Response<HttpRequest> {
                     }
                 }
                 attachment.flip();
-                send(attachment, attachment, this);
+                channel.write(attachment, attachment, this);
             }
         }
 

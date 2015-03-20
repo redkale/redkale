@@ -8,6 +8,7 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 import java.util.function.*;
+import java.util.logging.*;
 
 /**
  *
@@ -15,6 +16,10 @@ import java.util.function.*;
  * @param <T>
  */
 public final class ObjectPool<T> {
+
+    private static final Logger logger = Logger.getLogger(ObjectPool.class.getSimpleName());
+
+    private final boolean debug;
 
     private final Queue<T> queue;
 
@@ -48,6 +53,7 @@ public final class ObjectPool<T> {
         this.creator = creator;
         this.recycler = recycler;
         this.queue = new ArrayBlockingQueue<>(Math.max(Runtime.getRuntime().availableProcessors() * 2, max));
+        this.debug = logger.isLoggable(Level.FINER);
     }
 
     public void setCreator(Creator<T> creator) {
@@ -66,6 +72,9 @@ public final class ObjectPool<T> {
     public void offer(final T e) {
         if (e != null && recycler.test(e)) {
             if (cycleCounter != null) cycleCounter.incrementAndGet();
+            if (debug) queue.forEach(t -> {
+                if (t == e) logger.log(Level.WARNING, "repeat offer the same object(" + e + ")", new Exception());
+            });
             queue.offer(e);
         }
     }
