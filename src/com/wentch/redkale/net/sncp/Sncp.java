@@ -5,15 +5,11 @@
  */
 package com.wentch.redkale.net.sncp;
 
-import com.wentch.redkale.service.Service;
-import com.wentch.redkale.service.RemoteOn;
-import com.wentch.redkale.util.AnyValue;
-import com.wentch.redkale.util.Utility;
-import com.wentch.redkale.util.DebugMethodVisitor;
-import com.wentch.redkale.util.TwoLong;
-import com.wentch.redkale.convert.bson.BsonConvert;
-import com.wentch.redkale.net.Transport;
+import com.wentch.redkale.convert.bson.*;
+import com.wentch.redkale.net.*;
 import com.wentch.redkale.net.sncp.SncpClient.SncpAction;
+import com.wentch.redkale.service.*;
+import com.wentch.redkale.util.*;
 import jdk.internal.org.objectweb.asm.*;
 import static jdk.internal.org.objectweb.asm.Opcodes.*;
 
@@ -122,7 +118,7 @@ public abstract class Sncp {
      *
      *  @Override
      *  public void runTestBean(long id, TestBean bean) {
-     *      return client.remote(convert, transport, 2, id, bean);
+     *      client.remote(convert, transport, 2, id, bean);
      *  }
      */
     /**
