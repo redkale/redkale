@@ -27,7 +27,7 @@ public final class JsonWriter implements Writer {
     private char[] content;
 
     public static ObjectPool<JsonWriter> createPool(int max) {
-        return new ObjectPool<>(max, (Object... params) -> new JsonWriter(), (x) -> x.recycle());
+        return new ObjectPool<>(max, (Object... params) -> new JsonWriter(), null, (x) -> x.recycle());
     }
 
     public JsonWriter() {

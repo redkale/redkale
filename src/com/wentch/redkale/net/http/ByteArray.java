@@ -5,9 +5,9 @@
  */
 package com.wentch.redkale.net.http;
 
-import com.wentch.redkale.util.Utility;
-import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
+import com.wentch.redkale.util.*;
+import java.nio.*;
+import java.nio.charset.*;
 
 /**
  *
@@ -76,6 +76,10 @@ public final class ByteArray {
         return -1;
     }
 
+    public void removeLastByte() {
+        if (count > 0) count--;
+    }
+
     public void add(byte value) {
         if (count >= content.length - 1) {
             byte[] ns = new byte[content.length + 8];
@@ -99,6 +103,10 @@ public final class ByteArray {
     @Override
     public String toString() {
         return new String(content, 0, count);
+    }
+
+    public String toString(final Charset charset) {
+        return toString(0, count, charset);
     }
 
     public String toString(final int offset, int len, final Charset charset) {

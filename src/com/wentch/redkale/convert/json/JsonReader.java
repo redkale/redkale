@@ -22,7 +22,7 @@ public final class JsonReader implements Reader {
     private int limit;
 
     public static ObjectPool<JsonReader> createPool(int max) {
-        return new ObjectPool<>(max, (Object... params) -> new JsonReader(), (x) -> x.recycle());
+        return new ObjectPool<>(max, (Object... params) -> new JsonReader(), null, (x) -> x.recycle());
     }
 
     public JsonReader() {

@@ -6,11 +6,11 @@
 package com.wentch.redkale.net.http;
 
 import java.io.*;
-import java.nio.charset.Charset;
+import java.nio.charset.*;
 import java.util.*;
 import java.util.concurrent.atomic.*;
 import java.util.logging.*;
-import java.util.regex.Pattern;
+import java.util.regex.*;
 
 /**
  *
@@ -30,7 +30,9 @@ public final class MultiContext {
 
     private final String boundary;
 
-    private final ByteArrayOutputStream buf = new ByteArrayOutputStream();
+    private final byte[] endboundarray;
+
+    private final ByteArray buf = new ByteArray(64);
 
     private final Map<String, String> parameters = new HashMap<>();
 
@@ -65,6 +67,7 @@ public final class MultiContext {
         this.charset = charsetName == null ? UTF8 : charsetName;
         this.contentType = contentType.trim();
         this.boundary = parseBoundary(this.contentType);
+        this.endboundarray = ("--" + this.boundary + "--").getBytes();
         this.in = in instanceof BufferedInputStream ? in : new BufferedInputStream(in);
         this.fielnamePattern = fielnameRegex == null || fielnameRegex.isEmpty() ? null : Pattern.compile(fielnameRegex);
     }
@@ -117,7 +120,7 @@ public final class MultiContext {
 
     public Iterable<MultiPart> listMultiPart() throws IOException {
         if (!isMultipart()) return emptyIterable;
-        final boolean debug = false;
+        final boolean debug = true;
         final String boundarystr = "--" + this.boundary;
         final Pattern fielnameReg = this.fielnamePattern;
         final String endboundary = boundarystr + "--";
@@ -139,7 +142,7 @@ public final class MultiContext {
                         lastentry.skip();
                         if (finaled.get()) return false;
                     }
-                    if (boundaryline == null) boundaryline = readLine();
+                    if (boundaryline == null) boundaryline = readBoundary();
                     //if (debug) System.out.print("boundaryline=" + boundaryline + "  ");
                     if (endboundary.equals(boundaryline) || !boundarystr.equals(boundaryline)) { //结尾或异常
                         lastentry = null;
@@ -240,16 +243,32 @@ public final class MultiContext {
     }
 
     private String readLine() throws IOException {
-        int lasted = '\r';
-        buf.reset();
+        return readLine(false);
+    }
+
+    private String readBoundary() throws IOException {
+        return readLine(true);
+    }
+
+    private String readLine(boolean bd) throws IOException { // bd : 是否是读取boundary
+        byte lasted = '\r';
+        buf.clear();
+        final int bc = this.endboundarray.length;
+        int c = 0;
         for (;;) {
             int b = in.read();
+            c++;
             if (b == -1 || (lasted == '\r' && b == '\n')) break;
-            if (lasted != '\r') buf.write(lasted);
-            lasted = b;
+            if (lasted != '\r') buf.add(lasted);
+            lasted = (byte) b;
+            if (bd && bc == c) {
+                buf.add(lasted);
+                if (buf.equal(this.endboundarray)) break;
+                buf.removeLastByte();
+            }
         }
-        if (buf.size() == 0) return "";
-        return buf.toString(this.charset.name()).trim();
+        if (buf.count() == 0) return "";
+        return buf.toString(this.charset).trim();
     }
 
     private static String parseValue(final String str, String name) {

@@ -35,7 +35,7 @@ public final class BsonReader implements Reader {
     }
 
     public static ObjectPool<BsonReader> createPool(int max) {
-        return new ObjectPool<>(max, (Object... params) -> new BsonReader(), (x) -> x.recycle());
+        return new ObjectPool<>(max, (Object... params) -> new BsonReader(), null, (x) -> x.recycle());
     }
 
     public BsonReader(byte[] bytes) {

@@ -25,32 +25,35 @@ public final class ObjectPool<T> {
 
     private Creator<T> creator;
 
+    private final Consumer<T> prepare;
+
     private final Predicate<T> recycler;
 
     private final AtomicLong creatCounter;
 
     private final AtomicLong cycleCounter;
 
-    public ObjectPool(Class<T> clazz, Predicate<T> recycler) {
-        this(2, clazz, recycler);
+    public ObjectPool(Class<T> clazz, Consumer<T> prepare, Predicate<T> recycler) {
+        this(2, clazz, prepare, recycler);
     }
 
-    public ObjectPool(int max, Class<T> clazz, Predicate<T> recycler) {
-        this(max, Creator.create(clazz), recycler);
+    public ObjectPool(int max, Class<T> clazz, Consumer<T> prepare, Predicate<T> recycler) {
+        this(max, Creator.create(clazz), prepare, recycler);
     }
 
-    public ObjectPool(Creator<T> creator, Predicate<T> recycler) {
-        this(2, creator, recycler);
+    public ObjectPool(Creator<T> creator, Consumer<T> prepare, Predicate<T> recycler) {
+        this(2, creator, prepare, recycler);
     }
 
-    public ObjectPool(int max, Creator<T> creator, Predicate<T> recycler) {
-        this(null, null, max, creator, recycler);
+    public ObjectPool(int max, Creator<T> creator, Consumer<T> prepare, Predicate<T> recycler) {
+        this(null, null, max, creator, prepare, recycler);
     }
 
-    public ObjectPool(AtomicLong creatCounter, AtomicLong cycleCounter, int max, Creator<T> creator, Predicate<T> recycler) {
+    public ObjectPool(AtomicLong creatCounter, AtomicLong cycleCounter, int max, Creator<T> creator, Consumer<T> prepare, Predicate<T> recycler) {
         this.creatCounter = creatCounter;
         this.cycleCounter = cycleCounter;
         this.creator = creator;
+        this.prepare = prepare;
         this.recycler = recycler;
         this.queue = new ArrayBlockingQueue<>(Math.max(Runtime.getRuntime().availableProcessors() * 2, max));
         this.debug = logger.isLoggable(Level.FINER);
@@ -65,7 +68,8 @@ public final class ObjectPool<T> {
         if (result == null) {
             if (creatCounter != null) creatCounter.incrementAndGet();
             result = this.creator.create();
-        }
+        } 
+        if(prepare != null) prepare.accept(result);
         return result;
     }
 

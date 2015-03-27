@@ -22,6 +22,8 @@ public abstract class Response<R extends Request> {
 
     protected AsyncConnection channel;
 
+    private boolean inited = true;
+
     private final CompletionHandler finishHandler = new CompletionHandler<Integer, ByteBuffer>() {
 
         @Override
@@ -87,7 +89,12 @@ public abstract class Response<R extends Request> {
         return ch;
     }
 
+    protected void prepare() {
+        inited = true;
+    }
+
     protected boolean recycle() {
+        if (!inited) return false;
         boolean keepAlive = request.keepAlive;
         request.recycle();
         if (channel != null) {
@@ -101,6 +108,7 @@ public abstract class Response<R extends Request> {
             }
             channel = null;
         }
+        this.inited = false;
         return true;
     }
 

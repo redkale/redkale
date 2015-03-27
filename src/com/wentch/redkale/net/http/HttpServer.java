@@ -51,7 +51,7 @@ public final class HttpServer extends Server {
         AtomicLong cycleBufferCounter = watch == null ? new AtomicLong() : watch.createWatchNumber("HTTP_" + port + ".Buffer.cycleCounter");
         int rcapacity = Math.max(this.capacity, 8 * 1024);
         ObjectPool<ByteBuffer> bufferPool = new ObjectPool<>(createBufferCounter, cycleBufferCounter, this.bufferPoolSize,
-                (Object... params) -> ByteBuffer.allocateDirect(rcapacity), (e) -> {
+                (Object... params) -> ByteBuffer.allocateDirect(rcapacity), null, (e) -> {
                     if (e == null || e.isReadOnly() || e.capacity() != rcapacity) return false;
                     e.clear();
                     return true;
@@ -64,7 +64,21 @@ public final class HttpServer extends Server {
         String[][] defaultAddHeaders = null;
         String[][] defaultSetHeaders = null;
         HttpCookie defaultCookie = null;
+        String remoteAddrHeader = null;
         if (config != null) {
+            AnyValue reqs = config == null ? null : config.getAnyValue("request");
+            if (reqs != null) {
+                AnyValue raddr = reqs.getAnyValue("remoteaddr");
+                remoteAddrHeader = raddr == null ? null : raddr.getValue("value");
+                if (remoteAddrHeader != null) {
+                    if (remoteAddrHeader.startsWith("request.headers.")) {
+                        remoteAddrHeader = remoteAddrHeader.substring("request.headers.".length());
+                    } else {
+                        remoteAddrHeader = null;
+                    }
+                }
+            }
+
             AnyValue resps = config == null ? null : config.getAnyValue("response");
             if (resps != null) {
                 AnyValue[] addHeaders = resps.getAnyValues("addheader");
@@ -110,13 +124,14 @@ public final class HttpServer extends Server {
         final String[][] addHeaders = defaultAddHeaders;
         final String[][] setHeaders = defaultSetHeaders;
         final HttpCookie defCookie = defaultCookie;
+        final String addrHeader = remoteAddrHeader;
         AtomicLong createResponseCounter = watch == null ? new AtomicLong() : watch.createWatchNumber("HTTP_" + port + ".Response.creatCounter");
         AtomicLong cycleResponseCounter = watch == null ? new AtomicLong() : watch.createWatchNumber("HTTP_" + port + ".Response.cycleCounter");
         ObjectPool<Response> responsePool = HttpResponse.createPool(createResponseCounter, cycleResponseCounter, this.responsePoolSize, null);
         HttpContext httpcontext = new HttpContext(this.serverStartTime, this.logger, executor, bufferPool, responsePool,
                 this.maxbody, this.charset, this.address, prepare, this.watch, this.readTimeoutSecond, this.writeTimeoutSecond, contextPath);
         responsePool.setCreator((Object... params)
-                -> new HttpResponse(httpcontext, new HttpRequest(httpcontext, httpcontext.jsonFactory), addHeaders, setHeaders, defCookie));
+                -> new HttpResponse(httpcontext, new HttpRequest(httpcontext, httpcontext.jsonFactory, addrHeader), addHeaders, setHeaders, defCookie));
         return httpcontext;
     }
 

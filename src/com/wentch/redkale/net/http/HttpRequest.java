@@ -58,9 +58,12 @@ public final class HttpRequest extends Request {
 
     protected boolean boundary = false;
 
-    protected HttpRequest(Context context, JsonFactory factory) {
+    private final String remoteAddrHeader;
+
+    protected HttpRequest(Context context, JsonFactory factory, String remoteAddrHeader) {
         super(context);
         this.convert = factory.getConvert();
+        this.remoteAddrHeader = remoteAddrHeader;
     }
 
     protected void setKeepAlive(boolean keepAlive) {
@@ -222,6 +225,10 @@ public final class HttpRequest extends Request {
     }
 
     public String getRemoteAddr() {
+        if (remoteAddrHeader != null) {
+            String val = getHeader(remoteAddrHeader);
+            if (val != null) return val;
+        }
         return String.valueOf(getRemoteAddress());
     }
 
@@ -235,7 +242,7 @@ public final class HttpRequest extends Request {
         return this.getClass().getSimpleName() + "{method:" + this.method + ", requestURI:" + this.requestURI
                 + ", contentType:" + this.contentType + ", connection:" + this.connection + ", protocol:" + this.protocol
                 + ", contentLength:" + this.contentLength + ", cookiestr:" + this.cookiestr
-                + ", host:" + this.host + ", params:" + this.params + ", header:" + this.header + "}";
+                + ", host:" + this.host + ", params:" + this.params + ", header:" + this.header + "body:" + (array == null ? "null" : array.toString()) + "}";
     }
 
     public final MultiContext getMultiContext() {

@@ -21,7 +21,7 @@ public final class BsonWriter implements Writer {
     private byte[] content;
 
     public static ObjectPool<BsonWriter> createPool(int max) {
-        return new ObjectPool<>(max, (Object... params) -> new BsonWriter(), (x) -> x.recycle());
+        return new ObjectPool<>(max, (Object... params) -> new BsonWriter(), null, (x) -> x.recycle());
     }
 
     public byte[] toArray() {

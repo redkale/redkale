@@ -52,7 +52,7 @@ public final class Transport {
         AtomicLong cycleBufferCounter = watch == null ? new AtomicLong() : watch.createWatchNumber(Transport.class.getSimpleName() + "_" + protocol + ".Buffer.cycleCounter");
         int rcapacity = 8192;
         this.bufferPool = new ObjectPool<>(createBufferCounter, cycleBufferCounter, bufferPoolSize,
-                (Object... params) -> ByteBuffer.allocateDirect(rcapacity), (e) -> {
+                (Object... params) -> ByteBuffer.allocateDirect(rcapacity), null, (e) -> {
                     if (e == null || e.isReadOnly() || e.capacity() != rcapacity) return false;
                     e.clear();
                     return true;
