@@ -23,6 +23,7 @@ import java.nio.*;
 import java.nio.channels.*;
 import java.nio.file.*;
 import java.util.*;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.concurrent.*;
 import java.util.logging.*;
 import javax.annotation.*;
@@ -31,7 +32,7 @@ import org.w3c.dom.*;
 
 /**
  * 编译时需要加入: -XDignore.symbol.file=true
- * 
+ * <p>
  * 进程启动类，程序启动后读取application.xml,进行classpath扫描动态加载Service与Servlet，
  * 再进行Service、Servlet与其他资源之间的依赖注入。
  *
@@ -39,14 +40,28 @@ import org.w3c.dom.*;
  */
 public final class Application {
 
+    //进程启动的时间， 类型： long
     public static final String RESNAME_TIME = "APP_TIME";
 
+    //本地进程的根目录， 类型：String
     public static final String RESNAME_HOME = "APP_HOME";
 
+    //本地节点的名称， 类型：String
     public static final String RESNAME_NODE = "APP_NODE";
 
+    //本地节点的所属组， 类型：String、Map<String, Set<String>>、Map<String, List<SimpleEntry<String, InetSocketAddress[]>>>
+    public static final String RESNAME_GROUP = "APP_GROUP";
+
+    //本地节点的所属组所有节点名， 类型：Set<String> 、List<SimpleEntry<String, InetSocketAddress[]>>包含自身节点名
+    public static final String RESNAME_INGROUP = "APP_INGROUP";
+
+    //除本地节点的所属组外其他所有组的所有节点名， 类型：Map<String, Set<String>>、Map<String, List<SimpleEntry<String, InetSocketAddress[]>>>
+    public static final String RESNAME_OUTGROUP = "APP_OUTGROUP";
+
+    //本地节点的IP地址， 类型：InetAddress、String
     public static final String RESNAME_ADDR = "APP_ADDR";
-    
+
+    //application.xml 文件中resources节点的内容， 类型： AnyValue
     public static final String RESNAME_GRES = "APP_GRES";
 
     protected final ResourceFactory factory = ResourceFactory.root();
@@ -60,6 +75,8 @@ public final class Application {
     protected boolean serviceInited = false;
 
     protected final InetAddress localAddress = Utility.localInetAddress();
+
+    protected String nodeGroup = "";
 
     protected String nodeName = "";
 
@@ -92,7 +109,12 @@ public final class Application {
         }
         final File logconf = new File(root, "conf/logging.properties");
         this.nodeName = config.getValue("node", "");
+        this.nodeGroup = config.getValue("group", "");
         this.factory.register(RESNAME_NODE, this.nodeName);
+        this.factory.register(RESNAME_GROUP, this.nodeGroup);
+        System.setProperty(RESNAME_NODE, this.nodeName);
+        System.setProperty(RESNAME_GROUP, this.nodeGroup);
+
         this.factory.register(RESNAME_ADDR, this.localAddress.getHostAddress());
         this.factory.register(RESNAME_ADDR, InetAddress.class, this.localAddress);
         if (logconf.isFile() && logconf.canRead()) {
@@ -415,13 +437,24 @@ public final class Application {
 
             //------------------------------------------------------------------------
             final String host = this.localAddress.getHostAddress();
+            final Map<String, Set<String>> groups = new HashMap<>();
+            final Map<String, List<SimpleEntry<String, InetSocketAddress[]>>> groups2 = new HashMap<>();
 
             for (AnyValue conf : resources.getAnyValues("remote")) {
                 final String name = conf.getValue("name");
+                final String group = conf.getValue("group", "");
                 if (name == null) throw new RuntimeException("remote name is null");
                 String protocol = conf.getValue("protocol", "UDP").toUpperCase();
                 if (!"TCP".equalsIgnoreCase(protocol) && !"UDP".equalsIgnoreCase(protocol)) {
                     throw new RuntimeException("Not supported Transport Protocol " + conf.getValue("protocol"));
+                }
+                {
+                    Set<String> set = groups.get(group);
+                    if (set == null) {
+                        set = new HashSet<>();
+                        groups.put(group, set);
+                    }
+                    set.add(name);
                 }
                 AnyValue[] addrs = conf.getAnyValues("address");
                 InetSocketAddress[] addresses = new InetSocketAddress[addrs.length];
@@ -430,17 +463,51 @@ public final class Application {
                     addresses[++i] = new InetSocketAddress(addr.getValue("addr"), addr.getIntValue("port"));
                 }
                 if (addresses.length < 1) throw new RuntimeException("Transport(" + name + ") have no address ");
-                Transport transport = new Transport(name, protocol, watch, 100, addresses[0]);
+                {
+                    List<SimpleEntry<String, InetSocketAddress[]>> list = groups2.get(group);
+                    if (list == null) {
+                        list = new ArrayList<>();
+                        groups2.put(group, list);
+                    }
+                    list.add(new SimpleEntry<>(name, addresses));
+                }
+                Transport transport = new Transport(name, protocol, watch, 100, addresses);
                 factory.register(name, Transport.class, transport);
                 if (this.nodeName.isEmpty() && host.equals(addrs[0].getValue("addr"))) {
                     this.nodeName = name;
+                    this.nodeGroup = group;
                     this.factory.register(RESNAME_NODE, this.nodeName);
+                    this.factory.register(RESNAME_GROUP, this.nodeGroup);
+                    System.setProperty(RESNAME_NODE, this.nodeName);
+                    System.setProperty(RESNAME_GROUP, this.nodeGroup);
                 }
             }
+
+            this.factory.register(RESNAME_GROUP, new TypeToken<Map<String, Set<String>>>() {
+            }.getType(), groups);
+            this.factory.register(RESNAME_GROUP, new TypeToken<Map<String, List<SimpleEntry<String, InetSocketAddress[]>>>>() {
+            }.getType(), groups2);
+
+            final Map<String, List<SimpleEntry<String, InetSocketAddress[]>>> outgroups2 = new HashMap<>();
+            final Map<String, Set<String>> outgroups = new HashMap<>();
+            groups.entrySet().stream().filter(x -> !x.getKey().equals(nodeName)).forEach(x -> outgroups.put(x.getKey(), x.getValue()));
+            groups2.entrySet().stream().filter(x -> !x.getKey().equals(nodeName)).forEach(x -> outgroups2.put(x.getKey(), x.getValue()));
+
+            this.factory.register(RESNAME_OUTGROUP, new TypeToken<Map<String, Set<String>>>() {
+            }.getType(), outgroups);
+            this.factory.register(RESNAME_OUTGROUP, new TypeToken<Map<String, List<SimpleEntry<String, InetSocketAddress[]>>>>() {
+            }.getType(), outgroups2);
+
+            Set<String> ingroup = groups.get(this.nodeGroup);
+            if (ingroup != null) this.factory.register(RESNAME_INGROUP, new TypeToken<Set<String>>() {
+            }.getType(), ingroup);
+            List<SimpleEntry<String, InetSocketAddress[]>> inengroup = groups2.get(this.nodeGroup);
+            if (inengroup != null) this.factory.register(RESNAME_INGROUP, new TypeToken<List<SimpleEntry<String, InetSocketAddress[]>>>() {
+            }.getType(), inengroup);
         }
 
         //------------------------------------------------------------------------
-        logger.info(RESNAME_NODE + "=" + this.nodeName);
+        logger.info(RESNAME_NODE + "=" + this.nodeName + "; " + RESNAME_GROUP + "=" + this.nodeGroup);
         logger.info("datasource.nodeid=" + this.factory.find("property.datasource.nodeid", String.class));
 
     }

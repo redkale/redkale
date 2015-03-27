@@ -48,7 +48,7 @@ public final class SncpClient {
             this.resultTypes = rt == void.class ? null : rt;
             this.paramTypes = method.getGenericParameterTypes();
             this.method = method;
-            this.async = method.getReturnType() == void.class && method.getAnnotation(Async.class) != null;
+            this.async = false;// method.getReturnType() == void.class && method.getAnnotation(Async.class) != null;
         }
 
         @Override

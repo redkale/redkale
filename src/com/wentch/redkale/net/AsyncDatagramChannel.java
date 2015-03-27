@@ -352,7 +352,7 @@ public final class AsyncDatagramChannel implements AsynchronousByteChannel, Mult
                 if (buffers[index].hasRemaining()) {
                     implSend(buffers[index], target, attachment, this);
                 } else if (index == max) {
-                    handler.completed(resultSum, attachment);
+                    if (handler != null) handler.completed(resultSum, attachment);
                 } else {
                     implSend(buffers[++index], target, attachment, this);
                 }
@@ -360,7 +360,7 @@ public final class AsyncDatagramChannel implements AsynchronousByteChannel, Mult
 
             @Override
             public void failed(Throwable exc, A attachment) {
-                handler.failed(exc, attachment);
+                if (handler != null) handler.failed(exc, attachment);
             }
         });
     }

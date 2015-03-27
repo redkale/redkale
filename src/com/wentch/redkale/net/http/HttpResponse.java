@@ -99,12 +99,21 @@ public final class HttpResponse extends Response<HttpRequest> {
 
     private final DefaultAnyValue header = new DefaultAnyValue();
 
+    private final String[][] defaultAddHeaders;
+
+    private final String[][] defaultSetHeaders;
+
+    private final HttpCookie defcookie;
+
     public static ObjectPool<Response> createPool(AtomicLong creatCounter, AtomicLong cycleCounter, int max, Creator<Response> creator) {
         return new ObjectPool<>(creatCounter, cycleCounter, max, creator, (x) -> ((HttpResponse) x).recycle());
     }
 
-    protected HttpResponse(HttpContext context, HttpRequest request) {
+    protected HttpResponse(HttpContext context, HttpRequest request, String[][] defaultAddHeaders, String[][] defaultSetHeaders, HttpCookie defcookie) {
         super(context, request);
+        this.defaultAddHeaders = defaultAddHeaders;
+        this.defaultSetHeaders = defaultSetHeaders;
+        this.defcookie = defcookie;
     }
 
     @Override
@@ -204,6 +213,50 @@ public final class HttpResponse extends Response<HttpRequest> {
         super.finish(buffer404.duplicate());
     }
 
+    @Override
+    public void finish(ByteBuffer buffer) {
+        finish(false, buffer);
+    }
+
+    @Override
+    public void finish(boolean kill, ByteBuffer buffer) {
+        if (!this.headsended) {
+            ByteBuffer headbuf = createHeader();
+            headbuf.flip();
+            if (buffer == null) {
+                super.finish(kill, headbuf);
+            } else {
+                super.finish(kill, new ByteBuffer[]{headbuf, buffer});
+            }
+        } else {
+            super.finish(kill, buffer);
+        }
+    }
+
+    @Override
+    public void finish(ByteBuffer... buffers) {
+        finish(false, buffers);
+    }
+
+    @Override
+    public void finish(boolean kill, ByteBuffer... buffers) {
+        if (kill) refuseAlive();
+        if (!this.headsended) {
+            ByteBuffer headbuf = createHeader();
+            headbuf.flip();
+            if (buffers == null) {
+                super.finish(kill, headbuf);
+            } else {
+                ByteBuffer[] newbuffers = new ByteBuffer[buffers.length + 1];
+                newbuffers[0] = headbuf;
+                System.arraycopy(buffers, 0, newbuffers, 1, buffers.length);
+                super.finish(kill, newbuffers);
+            }
+        } else {
+            super.finish(kill, buffers);
+        }
+    }
+
     public <A> void sendBody(ByteBuffer buffer, A attachment, CompletionHandler<Integer, A> handler) {
         if (!this.headsended) {
             ByteBuffer headbuf = createHeader();
@@ -211,7 +264,7 @@ public final class HttpResponse extends Response<HttpRequest> {
             if (buffer == null) {
                 super.send(headbuf, attachment, handler);
             } else {
-                super.send(new ByteBuffer[]{headbuf, headbuf}, attachment, handler);
+                super.send(new ByteBuffer[]{headbuf, buffer}, attachment, handler);
             }
         } else {
             super.send(buffer, attachment, handler);
@@ -284,19 +337,50 @@ public final class HttpResponse extends Response<HttpRequest> {
         if (!this.request.isKeepAlive()) {
             buffer.put("Connection: close\r\n".getBytes());
         }
+        if (this.defaultAddHeaders != null) {
+            for (String[] headers : this.defaultAddHeaders) {
+                if (headers.length > 2) {
+                    String v = request.getHeader(headers[2]);
+                    if (v != null) this.header.addValue(headers[0], v);
+                } else {
+                    this.header.addValue(headers[0], headers[1]);
+                }
+            }
+        }
+        if (this.defaultSetHeaders != null) {
+            for (String[] headers : this.defaultSetHeaders) {
+                if (headers.length > 2) {
+                    this.header.setValue(headers[0], request.getHeader(headers[2]));
+                } else {
+                    this.header.setValue(headers[0], headers[1]);
+                }
+            }
+        }
         for (Entry<String> en : this.header.getStringEntrys()) {
             buffer.put((en.name + ": " + en.getValue() + "\r\n").getBytes());
         }
         if (request.newsessionid != null) {
-            if (request.newsessionid.isEmpty()) {
-                buffer.put(("Set-Cookie: " + HttpRequest.SESSIONID_NAME + "=; path=/; Max-Age=0; HttpOnly\r\n").getBytes());
+            String domain = defcookie == null ? null : defcookie.getDomain();
+            if (domain == null) {
+                domain = "";
             } else {
-                buffer.put(("Set-Cookie: " + HttpRequest.SESSIONID_NAME + "=" + request.newsessionid + "; path=/; HttpOnly\r\n").getBytes());
+                domain = "Domain=" + domain + "; ";
+            }
+            String path = defcookie == null ? null : defcookie.getPath();
+            if (path == null) path = "/";
+            if (request.newsessionid.isEmpty()) {
+                buffer.put(("Set-Cookie: " + HttpRequest.SESSIONID_NAME + "=; " + domain + "Path=" + path + "; Max-Age=0; HttpOnly\r\n").getBytes());
+            } else {
+                buffer.put(("Set-Cookie: " + HttpRequest.SESSIONID_NAME + "=" + request.newsessionid + "; " + domain + "Path=" + path + "; HttpOnly\r\n").getBytes());
             }
         }
         if (this.cookies != null) {
             for (HttpCookie cookie : this.cookies) {
                 if (cookie == null) continue;
+                if (defcookie != null) {
+                    if (defcookie.getDomain() != null && cookie.getDomain() == null) cookie.setDomain(defcookie.getDomain());
+                    if (defcookie.getPath() != null && cookie.getPath() == null) cookie.setPath(defcookie.getPath());
+                }
                 buffer.put(("Set-Cookie: " + genString(cookie) + "\r\n").getBytes());
             }
         }
@@ -307,8 +391,8 @@ public final class HttpResponse extends Response<HttpRequest> {
     private CharSequence genString(HttpCookie cookie) {
         StringBuilder sb = new StringBuilder();
         sb.append(cookie.getName()).append("=\"").append(cookie.getValue()).append('"').append("; Version=1");
-        if (cookie.getPath() != null) sb.append("; Path=").append(cookie.getPath());
         if (cookie.getDomain() != null) sb.append("; Domain=").append(cookie.getDomain());
+        if (cookie.getPath() != null) sb.append("; Path=").append(cookie.getPath());
         if (cookie.getPortlist() != null) sb.append("; Port=").append(cookie.getPortlist());
         if (cookie.getMaxAge() > 0) {
             sb.append("; Max-Age=").append(cookie.getMaxAge());

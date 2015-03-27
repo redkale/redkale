@@ -6,8 +6,8 @@
 package com.wentch.redkale.net.http;
 
 import com.wentch.redkale.net.*;
-import com.wentch.redkale.util.AnyValue.DefaultAnyValue;
 import com.wentch.redkale.util.*;
+import com.wentch.redkale.util.AnyValue.DefaultAnyValue;
 import com.wentch.redkale.watch.*;
 import java.io.*;
 import java.nio.*;
@@ -107,7 +107,7 @@ public final class HttpPrepareServlet extends PrepareServlet<HttpRequest, HttpRe
             servlet.execute(request, response);
         } catch (Exception e) {
             request.getContext().getLogger().log(Level.WARNING, "Servlet occur, forece to close channel ", e);
-            response.finish(505, null);
+            response.finish(500, null);
         }
     }
 

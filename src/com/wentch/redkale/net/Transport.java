@@ -68,6 +68,10 @@ public final class Transport {
         bufferPool.offer(buffer);
     }
 
+    public void offerBuffer(ByteBuffer... buffers) {
+        for (ByteBuffer buffer : buffers) offerBuffer(buffer);
+    }
+
     public AsyncConnection pollConnection() {
         SocketAddress addr = remoteAddres[0];
         try {

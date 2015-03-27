@@ -7,10 +7,10 @@ package com.wentch.redkale.util;
 
 import java.lang.reflect.*;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.*;
 import java.util.logging.*;
-import java.util.regex.Pattern;
-import javax.annotation.Resource;
+import java.util.regex.*;
+import javax.annotation.*;
 
 /**
  *
@@ -28,6 +28,8 @@ public final class ResourceFactory {
     private final ConcurrentHashMap<Type, Intercepter> interceptmap = new ConcurrentHashMap<>();
 
     private final ConcurrentHashMap<Class<?>, ConcurrentHashMap<String, ?>> store = new ConcurrentHashMap<>();
+
+    private final ConcurrentHashMap<Type, ConcurrentHashMap<String, ?>> gencstore = new ConcurrentHashMap<>();
 
     private ResourceFactory(ResourceFactory parent) {
         this.parent = parent;
@@ -73,8 +75,33 @@ public final class ResourceFactory {
         }
     }
 
+    public <A> void register(final String name, final Type clazz, final A rs) {
+        if (clazz instanceof Class) {
+            register(name, (Class) clazz, rs);
+            return;
+        }
+        ConcurrentHashMap map = this.gencstore.get(clazz);
+        if (map == null) {
+            ConcurrentHashMap<String, A> sub = new ConcurrentHashMap<>();
+            sub.put(name, rs);
+            gencstore.put(clazz, sub);
+        } else {
+            map.put(name, rs);
+        }
+    }
+
     public <A> A find(Class<? extends A> clazz) {
         return find("", clazz);
+    }
+
+    public <A> A find(String name, Type clazz) {
+        Map<String, ?> map = this.gencstore.get(clazz);
+        if (map != null) {
+            A rs = (A) map.get(name);
+            if (rs != null) return rs;
+        }
+        if (parent != null) return parent.find(name, clazz);
+        return null;
     }
 
     public <A> A find(String name, Class<? extends A> clazz) {
@@ -125,7 +152,8 @@ public final class ResourceFactory {
                 for (Field field : clazz.getDeclaredFields()) {
                     if (Modifier.isStatic(field.getModifiers())) continue;
                     field.setAccessible(true);
-                    final Class type = field.getType();
+                    final Class classtype = field.getType();
+                    final Type genctype = field.getGenericType();
                     Resource rc = field.getAnnotation(Resource.class);
                     if (rc == null) {
                         boolean flag = true;
@@ -142,14 +170,16 @@ public final class ResourceFactory {
                         continue;
                     }
                     if (Modifier.isFinal(field.getModifiers())) continue;
-                    Object rs;
-                    if (Map.class.isAssignableFrom(type)) {
-                        rs = find(Pattern.compile(rc.name().isEmpty() ? ".+" : rc.name()), (Class) ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[1], src);
-                    } else {
-                        if (rc.name().startsWith("property.")) {
-                            rs = find(rc.name(), String.class);
+                    Object rs = genctype == classtype ? null : find(rc.name(), genctype);
+                    if (rs == null) {
+                        if (Map.class.isAssignableFrom(classtype)) {
+                            rs = find(Pattern.compile(rc.name().isEmpty() ? ".+" : rc.name()), (Class) ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[1], src);
                         } else {
-                            rs = find(rc.name(), type);
+                            if (rc.name().startsWith("property.")) {
+                                rs = find(rc.name(), String.class);
+                            } else {
+                                rs = find(rc.name(), classtype);
+                            }
                         }
                     }
                     if (rs == null) {
@@ -157,20 +187,20 @@ public final class ResourceFactory {
                         if (it != null) it.invoke(this, src, field);
                         continue;
                     }
-                    if (!rs.getClass().isPrimitive() && type.isPrimitive()) {
-                        if (type == int.class) {
+                    if (!rs.getClass().isPrimitive() && classtype.isPrimitive()) {
+                        if (classtype == int.class) {
                             rs = Integer.decode(rs.toString());
-                        } else if (type == long.class) {
+                        } else if (classtype == long.class) {
                             rs = Long.decode(rs.toString());
-                        } else if (type == short.class) {
+                        } else if (classtype == short.class) {
                             rs = Short.decode(rs.toString());
-                        } else if (type == boolean.class) {
+                        } else if (classtype == boolean.class) {
                             rs = "true".equalsIgnoreCase(rs.toString());
-                        } else if (type == byte.class) {
+                        } else if (classtype == byte.class) {
                             rs = Byte.decode(rs.toString());
-                        } else if (type == float.class) {
+                        } else if (classtype == float.class) {
                             rs = Float.parseFloat(rs.toString());
-                        } else if (type == double.class) {
+                        } else if (classtype == double.class) {
                             rs = Double.parseDouble(rs.toString());
                         }
                     }

@@ -5,10 +5,14 @@
  */
 package com.wentch.redkale.service;
 
-import com.wentch.redkale.util.AnyValue;
+import com.wentch.redkale.util.*;
 
 /**
  * 所有Service的实现类不得声明为final， 允许远程模式的public方法不能声明为final。
+ * 
+ * @Resource(name = ".*")
+ * private HashMap<String, XXXService> nodemap;
+ * 被注入的多个XXXService实例 但不会包含自身的XXXService。
  *
  * @author zhangjx
  */

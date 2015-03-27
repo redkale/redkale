@@ -31,24 +31,37 @@ public class DataCacheListenerService implements DataCacheListener, Service {
 
     private final ConcurrentHashMap<String, BlockingQueue<Map.Entry<Class, Serializable[]>>> deleteQueues = new ConcurrentHashMap<>();
 
-    private boolean finer;
+    private final boolean finest = logger.isLoggable(Level.FINEST);
+
+    ;
 
     @Resource(name = "APP_NODE")
     private String localNodeName = "";
 
-    @Resource(name = ".*")
-    HashMap<String, DataSource> sourcemap;
+    @Resource(name = "APP_GROUP")
+    private String localGroupName = "";
+
+    @Resource(name = "APP_GROUP")
+    private Map<String, Set<String>> groups;
 
     @Resource(name = ".*")
-    HashMap<String, DataCacheListenerService> nodemap;
+    private HashMap<String, DataSource> sourcesmap;
+
+    @Resource(name = ".*")
+    private HashMap<String, DataCacheListenerService> nodesmap;
 
     @Override
     public void init(AnyValue config) {
-        finer = logger.isLoggable(Level.FINER);
+        if (finest) {
+            logger.finest(this.getClass().getSimpleName() + "-localgroup: " + localGroupName);
+            logger.finest(this.getClass().getSimpleName() + "-groups: " + groups);
+            logger.finest(this.getClass().getSimpleName() + "-sources: " + sourcesmap);
+        }
     }
 
     @Override
     public <T> void insert(String sourceName, Class<T> clazz, T... entitys) {
+        if (finest) logger.finest("(source:" + sourceName + ") insert " + clazz + " --> " + Arrays.toString(entitys));
         BlockingQueue<Map.Entry<Class, Object[]>> queue = this.insertQueues.get(sourceName);
         if (queue == null) {
             synchronized (this.insertQueues) {
@@ -68,7 +81,7 @@ public class DataCacheListenerService implements DataCacheListener, Service {
                             while (true) {
                                 try {
                                     Map.Entry<Class, Object[]> entry = tq.take();
-                                    sendInsert(sourceName, entry.getKey(), entry.getValue());
+                                    sendInsert(localGroupName, false, sourceName, entry.getKey(), entry.getValue());
                                 } catch (Exception e) {
                                     logger.log(Level.SEVERE, this.getName() + " sendInsert occur error", e);
                                 }
@@ -87,24 +100,48 @@ public class DataCacheListenerService implements DataCacheListener, Service {
     }
 
     @RemoteOn
-    public <T> void sendInsert(String sourceName, Class<T> clazz, T... entitys) {
-        if (nodemap == null) return;
-        nodemap.forEach((x, y) -> {
-            try {
-                y.sendInsert(sourceName, clazz, entitys);
-            } catch (Exception e) {
-                logger.log(Level.FINE, this.getClass().getSimpleName() + " send insert error (" + x + ", " + sourceName + ", " + clazz + ", " + Arrays.toString(entitys) + ")", e);
+    public <T> void sendInsert(String group, boolean ignoreRemote, String sourceName, Class<T> clazz, T... entitys) {
+        if (nodesmap == null || groups == null) return;
+        if (ignoreRemote && finest) logger.finest(DataSource.class.getSimpleName() + "(" + group + "--" + this.localNodeName + "," + sourceName + ") onGroupSendInsert " + Arrays.toString(entitys));
+        for (Map.Entry<String, Set<String>> en : groups.entrySet()) {
+            if (group != null && group.equals(en.getKey())) { //同机房
+                for (String onode : en.getValue()) {
+                    if (onode.equals(localNodeName)) continue;
+                    DataCacheListenerService service = nodesmap.get(onode);
+                    if (service != null) {
+                        try {
+                            service.sendInsert(group, false, sourceName, clazz, entitys);
+                        } catch (Exception e) {
+                            logger.log(Level.FINE, this.getClass().getSimpleName() + " send insert error (" + group + "--" + onode + ", " + sourceName + ", " + clazz + ", " + Arrays.toString(entitys) + ")", e);
+                        }
+                    }
+                }
+                if (ignoreRemote) break;
+            } else if (!ignoreRemote) {
+                for (String onode : en.getValue()) {
+                    DataCacheListenerService service = nodesmap.get(onode);
+                    if (service != null) {
+                        try {
+                            service.sendInsert(group, false, sourceName, clazz, entitys);
+                            break;   //有一个成功就退出
+                        } catch (Exception e) {
+                            logger.log(Level.FINE, this.getClass().getSimpleName() + " send insert error (" + group + "--" + onode + ", " + sourceName + ", " + clazz + ", " + Arrays.toString(entitys) + ")", e);
+                        }
+                    }
+                }
             }
-        });
+        }
     }
 
-    public final <T> void onSendInsert(String sourceName, Class<T> clazz, T... entitys) {
-        ((DataJDBCSource) sourcemap.get(sourceName)).insertCache(entitys);
-        if (finer) logger.finer(DataSource.class.getSimpleName() + "(" + this.localNodeName + "," + sourceName + ") onSendInsert " + Arrays.toString(entitys));
+    public final <T> void onSendInsert(String group, boolean ignoreRemote, String sourceName, Class<T> clazz, T... entitys) {
+        if (finest) logger.finest(DataSource.class.getSimpleName() + "(" + this.localNodeName + "," + sourceName + ") onSendInsert " + Arrays.toString(entitys));
+        ((DataJDBCSource) sourcesmap.get(sourceName)).insertCache(entitys);
+        if (!this.localGroupName.equals(group)) sendInsert(this.localGroupName, true, sourceName, clazz, entitys); //不是同一机房来的资源需要同步到其他同机房的节点上
     }
 
     @Override
     public <T> void update(String sourceName, Class<T> clazz, T... values) {
+        if (finest) logger.finest("(source:" + sourceName + ") update " + clazz + " --> " + Arrays.toString(values));
         BlockingQueue<Map.Entry<Class, Object[]>> queue = this.updateQueues.get(sourceName);
         if (queue == null) {
             synchronized (this.updateQueues) {
@@ -124,7 +161,7 @@ public class DataCacheListenerService implements DataCacheListener, Service {
                             while (true) {
                                 try {
                                     Map.Entry<Class, Object[]> entry = tq.take();
-                                    sendUpdate(sourceName, entry.getKey(), entry.getValue());
+                                    sendUpdate(localGroupName, false, sourceName, entry.getKey(), entry.getValue());
                                 } catch (Exception e) {
                                     logger.log(Level.SEVERE, this.getName() + " sendUpdate occur error", e);
                                 }
@@ -143,24 +180,48 @@ public class DataCacheListenerService implements DataCacheListener, Service {
     }
 
     @RemoteOn
-    public <T> void sendUpdate(String sourceName, Class<T> clazz, Object... values) {
-        if (nodemap == null) return;
-        nodemap.forEach((x, y) -> {
-            try {
-                y.sendUpdate(sourceName, clazz, values);
-            } catch (Exception e) {
-                logger.log(Level.FINE, this.getClass().getSimpleName() + " send update error (" + x + ", " + sourceName + ", " + clazz + ", " + Arrays.toString(values) + ")", e);
+    public <T> void sendUpdate(String group, boolean ignoreRemote, String sourceName, Class<T> clazz, T... entitys) {
+        if (nodesmap == null || groups == null) return;
+        if (ignoreRemote && finest) logger.finest(DataSource.class.getSimpleName() + "(" + group + "--" + this.localNodeName + "," + sourceName + ") onGroupSendUpdate " + Arrays.toString(entitys));
+        for (Map.Entry<String, Set<String>> en : groups.entrySet()) {
+            if (group != null && group.equals(en.getKey())) { //同机房
+                for (String onode : en.getValue()) {
+                    if (onode.equals(localNodeName)) continue;
+                    DataCacheListenerService service = nodesmap.get(onode);
+                    if (service != null) {
+                        try {
+                            service.sendUpdate(group, false, sourceName, clazz, entitys);
+                        } catch (Exception e) {
+                            logger.log(Level.FINE, this.getClass().getSimpleName() + " send update error (" + group + "--" + onode + ", " + sourceName + ", " + clazz + ", " + Arrays.toString(entitys) + ")", e);
+                        }
+                    }
+                }
+                if (ignoreRemote) break;
+            } else if (!ignoreRemote) {
+                for (String onode : en.getValue()) {
+                    DataCacheListenerService service = nodesmap.get(onode);
+                    if (service != null) {
+                        try {
+                            service.sendUpdate(group, false, sourceName, clazz, entitys);
+                            break;   //有一个成功就退出
+                        } catch (Exception e) {
+                            logger.log(Level.FINE, this.getClass().getSimpleName() + " send update error (" + group + "--" + onode + ", " + sourceName + ", " + clazz + ", " + Arrays.toString(entitys) + ")", e);
+                        }
+                    }
+                }
             }
-        });
+        }
     }
 
-    public final <T> void onSendUpdate(String sourceName, Class<T> clazz, T... entitys) {
-        ((DataJDBCSource) sourcemap.get(sourceName)).updateCache(clazz, entitys);
-        if (finer) logger.finer(DataSource.class.getSimpleName() + "(" + this.localNodeName + "," + sourceName + ") onSendUpdate " + Arrays.toString(entitys));
+    public final <T> void onSendUpdate(String group, boolean ignoreRemote, String sourceName, Class<T> clazz, T... entitys) {
+        if (finest) logger.finest(DataSource.class.getSimpleName() + "(" + group + "--" + this.localNodeName + "," + sourceName + ") onSendUpdate " + Arrays.toString(entitys));
+        ((DataJDBCSource) sourcesmap.get(sourceName)).updateCache(clazz, entitys);
+        if (!this.localGroupName.equals(group)) sendUpdate(this.localGroupName, true, sourceName, clazz, entitys); //不是同一机房来的资源需要同步到其他同机房的节点上
     }
 
     @Override
     public <T> void delete(String sourceName, Class<T> clazz, Serializable... ids) {
+        if (finest) logger.finest("(source:" + sourceName + ") delete " + clazz + " --> " + Arrays.toString(ids));
         BlockingQueue<Map.Entry<Class, Serializable[]>> queue = this.deleteQueues.get(sourceName);
         if (queue == null) {
             synchronized (this.deleteQueues) {
@@ -180,7 +241,7 @@ public class DataCacheListenerService implements DataCacheListener, Service {
                             while (true) {
                                 try {
                                     Map.Entry<Class, Serializable[]> entry = tq.take();
-                                    sendDelete(sourceName, entry.getKey(), entry.getValue());
+                                    sendDelete(localGroupName, false, sourceName, entry.getKey(), entry.getValue());
                                 } catch (Exception e) {
                                     logger.log(Level.SEVERE, this.getName() + " sendDelete occur error", e);
                                 }
@@ -199,19 +260,42 @@ public class DataCacheListenerService implements DataCacheListener, Service {
     }
 
     @RemoteOn
-    public <T> void sendDelete(String sourceName, Class<T> clazz, Serializable... ids) {
-        if (nodemap == null) return;
-        nodemap.forEach((x, y) -> {
-            try {
-                y.sendDelete(sourceName, clazz, ids);
-            } catch (Exception e) {
-                logger.log(Level.FINE, this.getClass().getSimpleName() + " send delete error (" + x + ", " + sourceName + ", " + clazz + ", " + Arrays.toString(ids) + ")", e);
+    public <T> void sendDelete(String group, boolean ignoreRemote, String sourceName, Class<T> clazz, Serializable... ids) {
+        if (nodesmap == null || groups == null) return;
+        if (ignoreRemote && finest) logger.finest(DataSource.class.getSimpleName() + "(" + group + "--" + this.localNodeName + "," + sourceName + ") onGroupSendDelete " + Arrays.toString(ids));
+        for (Map.Entry<String, Set<String>> en : groups.entrySet()) {
+            if (group != null && group.equals(en.getKey())) { //同机房
+                for (String onode : en.getValue()) {
+                    if (onode.equals(localNodeName)) continue;
+                    DataCacheListenerService service = nodesmap.get(onode);
+                    if (service != null) {
+                        try {
+                            service.sendDelete(group, false, sourceName, clazz, ids);
+                        } catch (Exception e) {
+                            logger.log(Level.FINE, this.getClass().getSimpleName() + " send delete error (" + group + "--" + onode + ", " + sourceName + ", " + clazz + ", " + Arrays.toString(ids) + ")", e);
+                        }
+                    }
+                }
+                if (ignoreRemote) break;
+            } else if (!ignoreRemote) {
+                for (String onode : en.getValue()) {
+                    DataCacheListenerService service = nodesmap.get(onode);
+                    if (service != null) {
+                        try {
+                            service.sendDelete(group, false, sourceName, clazz, ids);
+                            break;   //有一个成功就退出
+                        } catch (Exception e) {
+                            logger.log(Level.FINE, this.getClass().getSimpleName() + " send delete error (" + group + "--" + onode + ", " + sourceName + ", " + clazz + ", " + Arrays.toString(ids) + ")", e);
+                        }
+                    }
+                }
             }
-        });
+        }
     }
 
-    public final <T> void onSendDelete(String sourceName, Class<T> clazz, Serializable... ids) {
-        ((DataJDBCSource) sourcemap.get(sourceName)).deleteCache(clazz, ids);
-        if (finer) logger.finer(DataSource.class.getSimpleName() + "(" + this.localNodeName + "," + sourceName + ") onSendDelete " + clazz.getName() + " " + Arrays.toString(ids));
+    public final <T> void onSendDelete(String group, boolean ignoreRemote, String sourceName, Class<T> clazz, Serializable... ids) {
+        if (finest) logger.finest(DataSource.class.getSimpleName() + "(" + group + "--" + this.localNodeName + "," + sourceName + ") onSendDelete " + clazz.getName() + " " + Arrays.toString(ids));
+        ((DataJDBCSource) sourcesmap.get(sourceName)).deleteCache(clazz, ids);
+        if (!this.localGroupName.equals(group)) sendDelete(this.localGroupName, true, sourceName, clazz, ids); //不是同一机房来的资源需要同步到其他同机房的节点上
     }
 }

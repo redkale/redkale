@@ -1666,7 +1666,7 @@ public final class DataJDBCSource implements DataSource {
                 public void connectionErrorOccurred(ConnectionEvent event) {
                     usingCounter.decrementAndGet();
                     if ("08S01".equals(event.getSQLException().getSQLState())) return; //MySQL特性， 长时间连接没使用会抛出com.mysql.jdbc.exceptions.jdbc4.CommunicationsException
-                    dataSource.logger.log(Level.WARNING, "connectionErronOccurred " + event.getSQLException().getSQLState(), event.getSQLException());
+                    dataSource.logger.log(Level.WARNING, "connectionErronOccurred  [" + event.getSQLException().getSQLState() + "]", event.getSQLException());
                 }
             };
             try {
@@ -1797,7 +1797,7 @@ public final class DataJDBCSource implements DataSource {
                 }
             } catch (SQLException ex) {
                 if (!"08S01".equals(ex.getSQLState())) {//MySQL特性， 长时间连接没使用会抛出com.mysql.jdbc.exceptions.jdbc4.CommunicationsException
-                    dataSource.logger.log(Level.FINER, "result.getConnection from pooled connection abort " + ex.getSQLState(), ex);
+                    dataSource.logger.log(Level.FINER, "result.getConnection from pooled connection abort [" + ex.getSQLState() + "]", ex);
                 }
                 return poll(0, null);
             }

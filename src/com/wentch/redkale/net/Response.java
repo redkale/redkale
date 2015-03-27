@@ -125,7 +125,7 @@ public abstract class Response<R extends Request> {
     }
 
     public void finish(ByteBuffer buffer) {
-        finish(false, buffer);
+        this.channel.write(buffer, buffer, finishHandler);
     }
 
     public void finish(boolean kill, ByteBuffer buffer) {
@@ -134,7 +134,7 @@ public abstract class Response<R extends Request> {
     }
 
     public void finish(ByteBuffer... buffers) {
-        finish(false, buffers);
+        this.channel.write(buffers, buffers, finishHandler2);
     }
 
     public void finish(boolean kill, ByteBuffer... buffers) {
