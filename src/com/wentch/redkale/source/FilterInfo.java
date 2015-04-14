@@ -73,8 +73,10 @@ final class FilterInfo<T extends FilterBean> {
                 fields.add(field.getName());
                 FilterItem item = new FilterItem(field, "a", null);
                 FilterJoinColumn joinCol = field.getAnnotation(FilterJoinColumn.class);
+                boolean again = true;
                 if (joinCol != null) {
                     if (!joinTables.containsKey(joinCol.table())) {
+                        again = false;
                         joinTables.put(joinCol.table(), String.valueOf((char) ('a' + (++index))));
                     }
                     String alias = joinTables.get(joinCol.table());
@@ -87,9 +89,11 @@ final class FilterInfo<T extends FilterBean> {
                     }
                     item = new FilterItem(field, alias, cache);
                     EntityInfo secinfo = EntityInfo.load(joinCol.table(), null);
-                    joinsb.append(" ").append(joinCol.type().name()).append(" JOIN ").append(secinfo.getTable()).append(" ").append(alias)
-                            .append(" ON a.# = ").append(alias).append(".")
-                            .append(joinCol.column().isEmpty() ? secinfo.getPrimary().field() : joinCol.column());
+                    if (!again) {
+                        joinsb.append(" ").append(joinCol.type().name()).append(" JOIN ").append(secinfo.getTable())
+                                .append(" ").append(alias).append(" ON a.# = ").append(alias).append(".")
+                                .append(joinCol.column().isEmpty() ? secinfo.getPrimary().field() : joinCol.column());
+                    }
                 }
                 getters.put(field.getName(), item);
                 FilterGroup[] refs = field.getAnnotationsByType(FilterGroup.class);

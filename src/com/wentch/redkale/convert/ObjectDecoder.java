@@ -5,7 +5,6 @@
  */
 package com.wentch.redkale.convert;
 
-
 import static com.wentch.redkale.convert.ObjectEncoder.TYPEZERO;
 import com.wentch.redkale.util.Creator;
 import java.lang.reflect.*;
@@ -34,7 +33,7 @@ public final class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T
     protected Factory factory;
 
     protected ObjectDecoder(Type type) {
-        this.type = type;
+        this.type = ((type instanceof Class) && ((Class) type).isInterface()) ? Object.class : type;
         if (type instanceof ParameterizedType) {
             final ParameterizedType pt = (ParameterizedType) type;
             this.typeClass = (Class) pt.getRawType();

@@ -243,6 +243,10 @@ public interface DataSource {
 
     public Number getCountSingleResult(final Class entityClass, FilterBean bean);
 
+    public Number getCountDistinctSingleResult(final Class entityClass, String column);
+
+    public Number getCountDistinctSingleResult(final Class entityClass, String column, FilterBean bean);
+
     //-----------------------------AVG-----------------------------
     public Number getAvgSingleResult(final Class entityClass, final String column);
 

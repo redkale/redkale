@@ -1048,6 +1048,16 @@ public final class DataJDBCSource implements DataSource {
         return getSingleResult(ReckonType.COUNT, entityClass, null, bean);
     }
 
+    @Override
+    public Number getCountDistinctSingleResult(final Class entityClass, String column) {
+        return getCountDistinctSingleResult(entityClass, column, null);
+    }
+
+    @Override
+    public Number getCountDistinctSingleResult(final Class entityClass, String column, FilterBean bean) {
+        return getSingleResult(ReckonType.COUNT, entityClass, true, column, bean);
+    }
+
     //-----------------------------AVG-----------------------------
     @Override
     public Number getAvgSingleResult(final Class entityClass, final String column) {
@@ -1060,11 +1070,15 @@ public final class DataJDBCSource implements DataSource {
     }
 
     private <T> Number getSingleResult(final ReckonType type, final Class<T> entityClass, final String column, FilterBean bean) {
+        return getSingleResult(type, entityClass, false, column, bean);
+    }
+
+    private <T> Number getSingleResult(final ReckonType type, final Class<T> entityClass, final boolean distinct, final String column, FilterBean bean) {
         final Connection conn = createReadSQLConnection();
         try {
             final EntityXInfo<T> info = EntityXInfo.load(this, entityClass);
-            final String sql = "SELECT " + type.getReckonColumn("a." + column) + " FROM " + info.getTable() + " a" + createWhereExpression(info, null, bean);
-            if (debug.get()) logger.finest(entityClass.getSimpleName() + " single sql=" + sql);
+            final String sql = "SELECT " + type.getReckonColumn((distinct ? "DISTINCT " : "") + "a." + column) + " FROM " + info.getTable() + " a" + createWhereExpression(info, null, bean);
+            if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(entityClass.getSimpleName() + " single sql=" + sql);
             final PreparedStatement prestmt = conn.prepareStatement(sql);
             Number rs = null;
             ResultSet set = prestmt.executeQuery();
@@ -1104,7 +1118,7 @@ public final class DataJDBCSource implements DataSource {
         }
         final Connection conn = createReadSQLConnection();
         try {
-            if (debug.get()) logger.finest(clazz.getSimpleName() + " find sql=" + info.query.sql.replace("?", String.valueOf(pk)));
+            if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(clazz.getSimpleName() + " find sql=" + info.query.sql.replace("?", String.valueOf(pk)));
             final PreparedStatement prestmt = conn.prepareStatement(info.query.sql);
             prestmt.setObject(1, pk);
             T rs = null;
@@ -1178,7 +1192,7 @@ public final class DataJDBCSource implements DataSource {
         final Connection conn = createReadSQLConnection();
         try {
             final String sql = "SELECT * FROM " + info.getTable() + " WHERE " + info.getSQLColumn(column1) + " = ? AND " + info.getSQLColumn(column2) + " = ?";
-            if (debug.get()) logger.finest(clazz.getSimpleName() + " find sql=" + sql.replaceFirst("\\?", String.valueOf(key1)).replaceFirst("\\?", String.valueOf(key2)));
+            if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(clazz.getSimpleName() + " find sql=" + sql.replaceFirst("\\?", String.valueOf(key1)).replaceFirst("\\?", String.valueOf(key2)));
             final PreparedStatement prestmt = conn.prepareStatement(sql);
             prestmt.setObject(1, key1);
             prestmt.setObject(2, key2);
@@ -1269,7 +1283,7 @@ public final class DataJDBCSource implements DataSource {
         final Connection conn = createReadSQLConnection();
         try {
             final String sql = "SELECT * FROM " + info.getTable() + " WHERE " + sqlcolumn + " = ?";
-            if (debug.get()) logger.finest(clazz.getSimpleName() + " query sql=" + sql);
+            if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(clazz.getSimpleName() + " query sql=" + sql);
             final PreparedStatement prestmt = conn.prepareStatement(sql);
             T[] rs = (T[]) Array.newInstance(clazz, keys.length);
             for (int i = 0; i < keys.length; i++) {
@@ -1327,7 +1341,7 @@ public final class DataJDBCSource implements DataSource {
         try {
             final List<V> list = new ArrayList();
             final String sql = "SELECT " + info.getSQLColumn(selectedColumn) + " FROM " + info.getTable() + " WHERE " + info.getSQLColumn(column) + " = ?";
-            if (debug.get()) logger.finest(clazz.getSimpleName() + " query sql=" + sql.replaceFirst("\\?", String.valueOf(key)));
+            if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(clazz.getSimpleName() + " query sql=" + sql.replaceFirst("\\?", String.valueOf(key)));
             final PreparedStatement ps = conn.prepareStatement(sql);
             ps.setObject(1, key);
             final ResultSet set = ps.executeQuery();
@@ -1451,7 +1465,7 @@ public final class DataJDBCSource implements DataSource {
             final SelectColumn sels = selects;
             final List<T> list = new ArrayList();
             final String sql = "SELECT * FROM " + info.getTable() + " WHERE " + info.getSQLColumn(column) + " " + express.value() + " ?";
-            if (debug.get()) logger.finest(clazz.getSimpleName() + " query sql=" + sql);
+            if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(clazz.getSimpleName() + " query sql=" + sql);
             final PreparedStatement ps = conn.prepareStatement(sql);
             ps.setObject(1, key);
             final ResultSet set = ps.executeQuery();
@@ -1550,7 +1564,7 @@ public final class DataJDBCSource implements DataSource {
             final SelectColumn sels = selects;
             final List<T> list = new ArrayList();
             final String sql = "SELECT a.* FROM " + info.getTable() + " a" + createWhereExpression(info, flipper, bean);
-            if (debug.get()) logger.finest(clazz.getSimpleName() + " query sql=" + sql + (flipper == null ? "" : (" LIMIT " + flipper.index() + "," + flipper.getSize())));
+            if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(clazz.getSimpleName() + " query sql=" + sql + (flipper == null ? "" : (" LIMIT " + flipper.index() + "," + flipper.getSize())));
             final PreparedStatement ps = conn.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
             final ResultSet set = ps.executeQuery();
             if (flipper != null && flipper.index() > 0) set.absolute(flipper.index());
@@ -1914,6 +1928,8 @@ public final class DataJDBCSource implements DataSource {
         //表字段与字段名是否全部一致
         private final boolean same;
 
+        private final int logLevel;
+
         private class ActionInfo {
 
             final String sql;
@@ -1936,6 +1952,9 @@ public final class DataJDBCSource implements DataSource {
             this.nodeid = source.nodeid;
             DistributeTables dt = type.getAnnotation(DistributeTables.class);
             this.distributeTables = dt == null ? null : dt.value();
+
+            LogLevel ll = type.getAnnotation(LogLevel.class);
+            this.logLevel = ll == null ? Integer.MIN_VALUE : Level.parse(ll.value()).intValue();
 
             Class cltmp = type;
             Set<String> fields = new HashSet<>();
@@ -2037,6 +2056,10 @@ public final class DataJDBCSource implements DataSource {
             }
         }
 
+        public boolean isLoggable(Level l) {
+            return l.intValue() >= this.logLevel;
+        }
+
         public T createInstance() {
             return inner.getCreator().create();
         }
@@ -2086,7 +2109,7 @@ public final class DataJDBCSource implements DataSource {
         MAX, MIN, SUM, COUNT, AVG;
 
         public String getReckonColumn(String col) {
-            if (this == COUNT) return this.name() + "(*)";
+            if (this == COUNT && !col.contains("DISTINCT")) return this.name() + "(*)";
             return this.name() + "(" + col + ")";
         }
     }

@@ -229,7 +229,10 @@ public final class HttpRequest extends Request {
             String val = getHeader(remoteAddrHeader);
             if (val != null) return val;
         }
-        return String.valueOf(getRemoteAddress());
+        SocketAddress addr = getRemoteAddress();
+        if (addr == null) return "";
+        if (addr instanceof InetSocketAddress) return ((InetSocketAddress) addr).getAddress().getHostAddress();
+        return String.valueOf(addr);
     }
 
     public SocketAddress getRemoteAddress() {
@@ -376,6 +379,10 @@ public final class HttpRequest extends Request {
     }
 
     //------------------------------------------------------------------------------
+    public String[] getHeaderNames() {
+        return header.getNames();
+    }
+
     public String getHeader(String name) {
         return header.getValue(name);
     }
@@ -414,6 +421,11 @@ public final class HttpRequest extends Request {
     }
 
     //------------------------------------------------------------------------------
+    public String[] getParameterNames() {
+        parseBody();
+        return params.getNames();
+    }
+
     public String getParameter(String name) {
         parseBody();
         return params.getValue(name);
