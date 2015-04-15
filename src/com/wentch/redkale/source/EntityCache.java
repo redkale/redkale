@@ -198,6 +198,34 @@ final class EntityCache<T> {
         return rs;
     }
 
+    public <V> T updateColumnIncrement(final Serializable id, Attribute<T, V> attr, final long incvalue) {
+        if (id == null) return null;
+        T rs = this.map.get(id);
+        if (rs == null) return rs;
+        Number numb = (Number) attr.get(rs);
+        if (numb == null) {
+            numb = incvalue;
+        } else {
+            numb = numb.longValue() + incvalue;
+        }
+        final Class ft = attr.type();
+        if (ft == int.class || ft == Integer.class) {
+            numb = numb.intValue();
+        } else if (ft == long.class || ft == Long.class) {
+            numb = numb.longValue();
+        } else if (ft == short.class || ft == Short.class) {
+            numb = numb.shortValue();
+        } else if (ft == float.class || ft == Float.class) {
+            numb = numb.floatValue();
+        } else if (ft == double.class || ft == Double.class) {
+            numb = numb.doubleValue();
+        } else if (ft == byte.class || ft == Byte.class) {
+            numb = numb.byteValue();
+        }
+        attr.set(rs, (V) numb);
+        return rs;
+    }
+
     public boolean isParallel() {
         return this.list.size() > 1024 * 16;
     }

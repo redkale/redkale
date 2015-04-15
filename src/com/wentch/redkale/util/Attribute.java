@@ -19,6 +19,8 @@ import jdk.internal.org.objectweb.asm.Type;
  */
 public interface Attribute<T, F> {
 
+    public Class type();
+
     public String field();
 
     public F get(T obj);
@@ -154,6 +156,31 @@ public interface Attribute<T, F> {
         { //field 方法
             mv = cw.visitMethod(ACC_PUBLIC, "field", "()Ljava/lang/String;", null, null);
             mv.visitLdcInsn(fieldalias);
+            mv.visitInsn(ARETURN);
+            mv.visitMaxs(1, 1);
+            mv.visitEnd();
+        }
+        { //type 方法
+            mv = cw.visitMethod(ACC_PUBLIC, "type", "()Ljava/lang/Class;", null, null);
+            if (pcolumn == boolean.class) {
+                mv.visitFieldInsn(GETSTATIC, "java/lang/Boolean", "TYPE", "Ljava/lang/Class;");
+            } else if (pcolumn == byte.class) {
+                mv.visitFieldInsn(GETSTATIC, "java/lang/Byte", "TYPE", "Ljava/lang/Class;");
+            } else if (pcolumn == char.class) {
+                mv.visitFieldInsn(GETSTATIC, "java/lang/Character", "TYPE", "Ljava/lang/Class;");
+            } else if (pcolumn == short.class) {
+                mv.visitFieldInsn(GETSTATIC, "java/lang/Short", "TYPE", "Ljava/lang/Class;");
+            } else if (pcolumn == int.class) {
+                mv.visitFieldInsn(GETSTATIC, "java/lang/Integer", "TYPE", "Ljava/lang/Class;");
+            } else if (pcolumn == float.class) {
+                mv.visitFieldInsn(GETSTATIC, "java/lang/Float", "TYPE", "Ljava/lang/Class;");
+            } else if (pcolumn == long.class) {
+                mv.visitFieldInsn(GETSTATIC, "java/lang/Long", "TYPE", "Ljava/lang/Class;");
+            } else if (pcolumn == double.class) {
+                mv.visitFieldInsn(GETSTATIC, "java/lang/Double", "TYPE", "Ljava/lang/Class;");
+            } else {
+                mv.visitLdcInsn(Type.getType(pcolumn));
+            }
             mv.visitInsn(ARETURN);
             mv.visitMaxs(1, 1);
             mv.visitEnd();

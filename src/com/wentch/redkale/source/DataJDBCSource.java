@@ -571,6 +571,26 @@ public final class DataJDBCSource implements DataSource {
         }
     }
 
+    @Override
+    public <T> void delete(Class<T> clazz, int[] ids) {
+        if (ids == null) return;
+        Serializable[] newids = new Serializable[ids.length];
+        for (int i = 0; i < ids.length; i++) {
+            newids[i] = ids[i];
+        }
+        delete(clazz, newids);
+    }
+
+    @Override
+    public <T> void delete(Class<T> clazz, long[] ids) {
+        if (ids == null) return;
+        Serializable[] newids = new Serializable[ids.length];
+        for (int i = 0; i < ids.length; i++) {
+            newids[i] = ids[i];
+        }
+        delete(clazz, newids);
+    }
+
     /**
      * 根据主键值删除对象， 必须是Entity Class
      *
@@ -910,10 +930,8 @@ public final class DataJDBCSource implements DataSource {
             final EntityCache<T> cache = info.inner.getCache();
             if (cache == null) return;
             Attribute<T, Object> attr = (Attribute<T, Object>) info.getAttribute(column);
-            T value = find(clazz, id);
-            if (value == null) return;
-            cache.update(id, attr, attr.get(value));
-            if (cacheListener != null) cacheListener.update(name, clazz, value);
+            T value = cache.updateColumnIncrement(id, attr, incvalue);
+            if (value != null && cacheListener != null) cacheListener.update(name, clazz, value);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         } finally {
@@ -1853,6 +1871,11 @@ public final class DataJDBCSource implements DataSource {
             this.type = type;
             this.attribute = attribute;
             this.fieldName = fieldname;
+        }
+
+        @Override
+        public Class type() {
+            return type;
         }
 
         @Override
