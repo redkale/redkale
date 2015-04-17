@@ -149,7 +149,7 @@ final class EntityCache<T> {
 
     public void insert(T value) {
         if (value == null) return;
-        T rs = needcopy ? reproduce.copy(this.creator.create(), value) : value;  //确保同一主键值的map与list中的对象必须共用。
+        T rs = reproduce.copy(this.creator.create(), value);  //确保同一主键值的map与list中的对象必须共用。
         T old = this.map.put((Serializable) this.primary.get(rs), rs);
         if (old != null) logger.log(Level.WARNING, "cache repeat insert data: " + value);
         this.list.add(rs);

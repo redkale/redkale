@@ -565,30 +565,26 @@ public final class DataJDBCSource implements DataSource {
     public <T> void delete(Class<T> clazz, Serializable... ids) {
         Connection conn = createWriteSQLConnection();
         try {
+            if (ids != null && ids.length == 1 && ids[0] != null && ids[0].getClass().isArray()) {
+                Class clz = ids[0].getClass();
+                if (clz == long[].class) {
+                    long[] vs = (long[]) ids[0];
+                    ids = new Serializable[vs.length];
+                    for (int i = 0; i < vs.length; i++) {
+                        ids[i] = vs[i];
+                    }
+                } else if (clz == int[].class) {
+                    int[] vs = (int[]) ids[0];
+                    ids = new Serializable[vs.length];
+                    for (int i = 0; i < vs.length; i++) {
+                        ids[i] = vs[i];
+                    }
+                }
+            }
             delete(conn, clazz, ids);
         } finally {
             closeSQLConnection(conn);
         }
-    }
-
-    @Override
-    public <T> void delete(Class<T> clazz, int[] ids) {
-        if (ids == null) return;
-        Serializable[] newids = new Serializable[ids.length];
-        for (int i = 0; i < ids.length; i++) {
-            newids[i] = ids[i];
-        }
-        delete(clazz, newids);
-    }
-
-    @Override
-    public <T> void delete(Class<T> clazz, long[] ids) {
-        if (ids == null) return;
-        Serializable[] newids = new Serializable[ids.length];
-        for (int i = 0; i < ids.length; i++) {
-            newids[i] = ids[i];
-        }
-        delete(clazz, newids);
     }
 
     /**

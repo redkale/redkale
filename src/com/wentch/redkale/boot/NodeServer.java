@@ -48,7 +48,7 @@ public abstract class NodeServer {
         this.logger = Logger.getLogger(this.getClass().getSimpleName());
     }
 
-    public void load(final AnyValue config) throws Exception {
+    public void prepare(final AnyValue config) throws Exception {
     }
 
     public void init(AnyValue config) throws Exception {

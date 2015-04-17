@@ -42,8 +42,8 @@ public final class NodeHttpServer extends NodeServer {
     }
 
     @Override
-    public void load(AnyValue config) throws Exception {
-        super.load(config);
+    public void prepare(AnyValue config) throws Exception {
+        super.prepare(config);
         ClassFilter<HttpServlet> httpFilter = createHttpServletClassFilter(application.nodeName, config);
         ClassFilter<Service> serviceFilter = createServiceClassFilter(application.nodeName, config);
         long s = System.currentTimeMillis();

@@ -14,8 +14,9 @@
         <!--
             远程client地址组资源.  注意:  remote的name值不能为LOCAL（不区分大小写）
             protocol： 值只能是UDP TCP， 默认UDP
+            group:  组名， 默认是空字符串， 通常不同机房使用不同的group值
         -->
-        <remote name="mygroup" protocol="UDP">
+        <remote name="myremote" protocol="UDP" group="">
             <!--
                 weight: 权重百分比。 不指定则平均。 weight之和必须<=100
                 [注: weight尚未实现]
@@ -67,7 +68,7 @@
            加载所有的Service服务;
            在同一个进程中所有LOCAL模式的Service， 同一个name的将共用同一个实例
            autoload="true"  默认值. 自动加载以下目录（如果存在的话）下所有的Service类:
-                                 server.lib;    server.root/lib/*;    server.root/classes;    
+                                 server.lib;    server.lib/*;    server.classes;    
            autoload="false" 需要显著的指定Service类
            includes： 当autoload="true"， 拉取类名与includes中的正则表达式匹配的类, 多个正则表达式用分号;隔开
            excludes： 当autoload="true"， 排除类名与includes中的正则表达式匹配的类, 多个正则表达式用分号;隔开
@@ -75,7 +76,7 @@
                       当<services>指定remote值为非空非LOCAL(即远程模式)时， 所有service的remote值均默认是<services>指定remote值。
                       当<services>指定remote值为空(即本地模式)时， 所有service的remote值均默认是LOCAL值。
         -->
-        <services autoload="true" includes="" excludes="" remote="mygroup">
+        <services autoload="true" includes="" excludes="" remote="myremote">
             <!--
                大部分的情况下， 存在多个节点环境中很多service节点配置都一致，为此提供group节点来方便配置。
                remotenames: 远程模式Service的name名称集合， 多个用分号;隔开， 名称必须是在resources节点中定义的remote节点。
@@ -86,8 +87,8 @@
                 <service value="com.xxx.XXX0Service" name="RT003" remote="RT003"/>
             -->
             <group remotenames="RT001;RT002;RT003">
-				<service value="com.xxx.XXX0Service"/>
-			</group>
+                <service value="com.xxx.XXX0Service"/>
+            </group>
             
             <!-- 显著加载指定的Service的接口类 -->
             <service value="com.xxx.XXX1Service"/>
@@ -98,6 +99,29 @@
             -->
             <service value="com.xxx.XXX2Service" name="" remote="LOCAL"/>
         </services>
+        
+        <!--
+           当Server为HTTP、HTTPS协议时, request节点才有效。
+           remoteaddr 节点: 替换请求方节点的IP地址， 通常请求方是由nginx等web静态服务器转发过的则需要配置该节点。
+           且value值只能是以request.headers.开头，表示从request.headers中获取对应的header值。
+           例如下面例子获取request.getRemoteAddr()值，如果header存在X-RemoteAddress值则返回X-RemoteAddress值，不存在返回request.getRemoteAddress()。
+        -->
+        <request>
+            <remoteaddr value="request.headers.X-RemoteAddress"/>
+        </request>
+        
+        <!--
+           当Server为HTTP、HTTPS协议时, response节点才有效。
+           defcookie 节点: 当response里输出的cookie没有指定domain 和path时，使用该节点的默认值。
+           如果addheader、setheader 的value值以request.headers.开头则表示从request.headers中获取对应的header值
+           例如下面例子是在Response输出header时添加两个header（一个addHeader， 一个setHeader）。
+        -->
+        <response>
+            <defcookie domain="" path=""/>
+            <addheader name="Access-Control-Allow-Origin" value="request.headers.Origin" /> 
+            <setheader name="Access-Control-Allow-Credentials" value="true"/> 
+        </response>
+            
         <!-- 
            加载所有的Servlet服务;
            prefix:  servlet的ContextPath前缀 默认为空
@@ -105,11 +129,11 @@
                                  ${APP_HOME}/lib;    ${APP_HOME}/root/lib/*;    ${APP_HOME}/root/classes;   
            autoload="false" 需要显著的指定Service类
            includes： 当autoload="true"， 拉取类名与includes中的正则表达式匹配的类, 多个正则表达式用分号;隔开
-           excludes： 当autoload="true"， 排除类名与includes中的正则表达式匹配的类, 多个正则表达式用分号;隔开
+           excludes： 当autoload="true"， 排除类名与excludes中的正则表达式匹配的类, 多个正则表达式用分号;隔开
         -->
         <servlets prefix="/pipes" autoload="true" includes="" excludes="">
             <!-- 
-               当Server为HTTP、HTTP协议时，ResourceServlet才有效. 默认存在一个有默认属性的resource-servlet节点
+               当Server为HTTP、HTTPS协议时，ResourceServlet才有效. 默认存在一个有默认属性的resource-servlet节点
                webroot: web资源的根目录， 默认取server节点中的root值
             -->
             <resource-servlet webroot="root">

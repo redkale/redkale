@@ -93,7 +93,7 @@ public final class Application {
 
     private final long startTime = System.currentTimeMillis();
 
-    private CountDownLatch cdl;
+    private CountDownLatch serverscdl;
 
     private Application(final AnyValue config) {
         this.config = config;
@@ -203,7 +203,7 @@ public final class Application {
         final Application application = Application.create();
         application.init();
         application.factory.register(service);
-        new NodeHttpServer(application, new CountDownLatch(1), null).load(application.config);
+        new NodeHttpServer(application, new CountDownLatch(1), null).prepare(application.config);
         application.factory.inject(service);
     }
 
@@ -240,6 +240,7 @@ public final class Application {
                 try {
                     final DatagramChannel channel = DatagramChannel.open();
                     channel.configureBlocking(true);
+                    channel.socket().setSoTimeout(3000);
                     channel.bind(new InetSocketAddress(config.getValue("host", "127.0.0.1"), config.getIntValue("port")));
                     boolean loop = true;
                     ByteBuffer buffer = ByteBuffer.allocateDirect(1024);
@@ -254,14 +255,13 @@ public final class Application {
                                 long s = System.currentTimeMillis();
                                 logger.info(application.getClass().getSimpleName() + " shutdowning");
                                 application.shutdown();
-                                application.cdl.countDown();
                                 buffer.clear();
                                 buffer.put("SHUTDOWN OK".getBytes());
                                 buffer.flip();
                                 channel.send(buffer, address);
                                 long e = System.currentTimeMillis() - s;
                                 logger.info(application.getClass().getSimpleName() + " shutdown in " + e + " ms");
-                                Thread.sleep(100L);
+                                application.serverscdl.countDown();
                                 System.exit(0);
                             } catch (Exception ex) {
                                 logger.log(Level.INFO, "SHUTDOWN FAIL", ex);
@@ -301,12 +301,12 @@ public final class Application {
 
     public void start() throws Exception {
         final AnyValue[] entrys = config.getAnyValues("server");
-        cdl = new CountDownLatch(entrys.length + 1);
+        this.serverscdl = new CountDownLatch(entrys.length + 1);
         CountDownLatch timecd = new CountDownLatch(entrys.length);
         runServers(timecd, entrys);
         timecd.await();
         logger.info(this.getClass().getSimpleName() + " started in " + (System.currentTimeMillis() - startTime) + " ms");
-        cdl.await();
+        this.serverscdl.await();
     }
 
     @SuppressWarnings("unchecked")
@@ -337,14 +337,13 @@ public final class Application {
                         }
                         servers.add(server);
 
-                        server.load(entry); //必须在init之前
+                        server.prepare(entry); //必须在init之前
                         server.init(entry);
                         server.start();
                         timecd.countDown();
                     } catch (Exception ex) {
                         logger.log(Level.WARNING, entry + " runServers error", ex);
-                    } finally {
-                        cdl.countDown();
+                        serverscdl.countDown();
                     }
                 }
             }.start();
@@ -519,11 +518,11 @@ public final class Application {
             } catch (Exception t) {
                 logger.log(Level.WARNING, " shutdown server(" + server.getSocketAddress() + ") error", t);
             } finally {
-                cdl.countDown();
+                serverscdl.countDown();
             }
         });
         final StringBuilder sb = logger.isLoggable(Level.INFO) ? new StringBuilder() : null;
-        localServices.entrySet().parallelStream().forEach(k -> {
+        localServices.entrySet().stream().forEach(k -> {
             Class x = k.getKey();
             ServiceEntry y = k.getValue();
             long s = System.currentTimeMillis();

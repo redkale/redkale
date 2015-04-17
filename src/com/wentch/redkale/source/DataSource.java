@@ -83,10 +83,6 @@ public interface DataSource {
      */
     public <T> void delete(Class<T> clazz, Serializable... ids);
 
-    public <T> void delete(Class<T> clazz, int[] ids);
-
-    public <T> void delete(Class<T> clazz, long[] ids);
-
     /**
      * 根据主键值删除对象， 必须是Entity Class
      *
