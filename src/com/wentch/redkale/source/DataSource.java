@@ -330,7 +330,28 @@ public interface DataSource {
      */
     public <T> T find(final Class<T> clazz, final FilterBean bean);
 
-    //-----------------------list----------------------------
+    //-----------------------list set----------------------------
+    public <T> int[] queryColumnIntSet(String selectedColumn, Class<T> clazz, String column, Serializable key);
+
+    public <T> long[] queryColumnLongSet(String selectedColumn, Class<T> clazz, String column, Serializable key);
+
+    public <T> int[] queryColumnIntList(String selectedColumn, Class<T> clazz, String column, Serializable key);
+
+    public <T> long[] queryColumnLongList(String selectedColumn, Class<T> clazz, String column, Serializable key);
+
+    /**
+     * 根据指定字段值查询对象某个字段的集合
+     *
+     * @param <T>
+     * @param <V>
+     * @param selectedColumn
+     * @param clazz
+     * @param column
+     * @param key
+     * @return
+     */
+    public <T, V> Set<V> queryColumnSet(String selectedColumn, Class<T> clazz, String column, Serializable key);
+
     /**
      * 根据指定字段值查询对象某个字段的集合
      *
@@ -343,6 +364,42 @@ public interface DataSource {
      * @return
      */
     public <T, V> List<V> queryColumnList(String selectedColumn, Class<T> clazz, String column, Serializable key);
+
+    public <T> int[] queryColumnIntSet(String selectedColumn, Class<T> clazz, String column, FilterExpress express, Serializable key);
+
+    public <T> long[] queryColumnLongSet(String selectedColumn, Class<T> clazz, String column, FilterExpress express, Serializable key);
+
+    public <T> int[] queryColumnIntList(String selectedColumn, Class<T> clazz, String column, FilterExpress express, Serializable key);
+
+    public <T> long[] queryColumnLongList(String selectedColumn, Class<T> clazz, String column, FilterExpress express, Serializable key);
+
+    /**
+     * 根据指定字段值查询对象某个字段的集合
+     *
+     * @param <T>
+     * @param <V>
+     * @param selectedColumn
+     * @param clazz
+     * @param column
+     * @param express
+     * @param key
+     * @return
+     */
+    public <T, V> Set<V> queryColumnSet(String selectedColumn, Class<T> clazz, String column, FilterExpress express, Serializable key);
+
+    /**
+     * 根据指定字段值查询对象某个字段的集合
+     *
+     * @param <T>
+     * @param <V>
+     * @param selectedColumn
+     * @param clazz
+     * @param column
+     * @param express
+     * @param key
+     * @return
+     */
+    public <T, V> List<V> queryColumnList(String selectedColumn, Class<T> clazz, String column, FilterExpress express, Serializable key);
 
     /**
      * 根据指定字段值查询对象集合
@@ -415,6 +472,19 @@ public interface DataSource {
     public <T> List<T> queryList(final Class<T> clazz, final SelectColumn selects, final FilterBean bean);
 
     //-----------------------sheet----------------------------
+    /**
+     * 根据指定参数查询对象某个字段的集合
+     * <p>
+     * @param <T>
+     * @param <V>
+     * @param selectedColumn
+     * @param clazz
+     * @param flipper
+     * @param bean
+     * @return
+     */
+    public <T, V> Sheet<V> queryColumnSheet(String selectedColumn, Class<T> clazz, final Flipper flipper, final FilterBean bean);
+
     /**
      * 根据过滤对象FilterBean和翻页对象Flipper查询一页的数据
      *

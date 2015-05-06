@@ -3,9 +3,8 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.wentch.redkale.net.http;
+package com.wentch.redkale.util;
 
-import com.wentch.redkale.util.*;
 import java.nio.*;
 import java.nio.charset.*;
 
@@ -55,6 +54,10 @@ public final class ByteArray {
         System.arraycopy(this.content, 0, buf, 0, count);
     }
 
+    public byte[] directBytes() {
+        return content;
+    }
+
     public int find(int offset, char value) {
         return find(offset, (byte) value);
     }
@@ -80,6 +83,10 @@ public final class ByteArray {
         if (count > 0) count--;
     }
 
+    public void addInt(int value) {
+        add((byte) (value >> 24 & 0xFF), (byte) (value >> 16 & 0xFF), (byte) (value >> 8 & 0xFF), (byte) (value & 0xFF));
+    }
+
     public void add(byte value) {
         if (count >= content.length - 1) {
             byte[] ns = new byte[content.length + 8];
@@ -87,6 +94,16 @@ public final class ByteArray {
             this.content = ns;
         }
         content[count++] = value;
+    }
+
+    public void add(byte... values) {
+        if (count >= content.length - values.length) {
+            byte[] ns = new byte[content.length + values.length];
+            System.arraycopy(content, 0, ns, 0, count);
+            this.content = ns;
+        }
+        System.arraycopy(content, count, values, 0, values.length);
+        count += values.length;
     }
 
     public void add(ByteBuffer buffer, int len) {

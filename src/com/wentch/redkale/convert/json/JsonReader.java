@@ -483,6 +483,16 @@ public final class JsonReader implements Reader {
                         return null;
                     }
                 }
+            } else {
+                final int start = currpos;
+                for (;;) {
+                    char ch = text0[currpos];
+                    if (ch == ',' || ch <= ' ' || ch == '}' || ch == ']' || ch == ':') break;
+                    currpos++;
+                }
+                if (currpos == start) throw new ConvertException("expected a string after a key but '" + text0[position] + "' (position = " + position + ")");
+                this.position = currpos - 1;
+                return new String(text0, start, currpos - start);
             }
             this.position = currpos;
             throw new ConvertException("expected a ':' after a key but '" + text0[position] + "' (position = " + position + ")");

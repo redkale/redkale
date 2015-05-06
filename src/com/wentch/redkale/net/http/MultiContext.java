@@ -5,6 +5,7 @@
  */
 package com.wentch.redkale.net.http;
 
+import com.wentch.redkale.util.ByteArray;
 import java.io.*;
 import java.nio.charset.*;
 import java.util.*;

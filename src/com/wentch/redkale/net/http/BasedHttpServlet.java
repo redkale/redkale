@@ -18,7 +18,7 @@ import static jdk.internal.org.objectweb.asm.Opcodes.*;
 /**
  *
  * @author zhangjx
- */ 
+ */
 public abstract class BasedHttpServlet extends HttpServlet {
 
     private Map.Entry<String, Entry>[] actions;
@@ -28,7 +28,7 @@ public abstract class BasedHttpServlet extends HttpServlet {
         for (Map.Entry<String, Entry> en : actions) {
             if (request.getRequestURI().startsWith(en.getKey())) {
                 Entry entry = en.getValue();
-                if (entry.ignore || authenticate(request, response)) entry.servlet.execute(request, response);
+                if (entry.ignore || authenticate(entry.moduleid, entry.actionid, request, response)) entry.servlet.execute(request, response);
                 return;
             }
         }
@@ -48,7 +48,7 @@ public abstract class BasedHttpServlet extends HttpServlet {
         }
     }
 
-    public abstract boolean authenticate(HttpRequest request, HttpResponse response) throws IOException;
+    public abstract boolean authenticate(int module, int actionid, HttpRequest request, HttpResponse response) throws IOException;
 
     private HashMap<String, Entry> load() {
         final boolean typeIgnore = this.getClass().getAnnotation(AuthIgnore.class) != null;

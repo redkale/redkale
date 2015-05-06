@@ -5,6 +5,7 @@
  */
 package com.wentch.redkale.net.http;
 
+import com.wentch.redkale.util.ByteArray;
 import com.wentch.redkale.convert.json.*;
 import com.wentch.redkale.net.*;
 import com.wentch.redkale.util.AnyValue.DefaultAnyValue;

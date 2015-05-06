@@ -5,7 +5,6 @@
  */
 package com.wentch.redkale.source;
 
-import com.wentch.redkale.source.DataSource;
 import com.wentch.redkale.source.DistributeGenerator.DistributeTables;
 import static com.wentch.redkale.source.FilterInfo.formatToString;
 import com.wentch.redkale.util.*;
@@ -351,9 +350,7 @@ public final class DataJDBCSource implements DataSource {
         EntityInfo<T> info = EntityInfo.load(clazz, this);
         EntityCache<T> cache = info.getCache();
         if (cache == null) return;
-        cache.clear();
-        List<T> all = queryList(clazz, null);
-        cache.fullLoad(all);
+        cache.fullLoad(queryList(clazz, null));
     }
 
     //----------------------insert-----------------------------
@@ -565,22 +562,6 @@ public final class DataJDBCSource implements DataSource {
     public <T> void delete(Class<T> clazz, Serializable... ids) {
         Connection conn = createWriteSQLConnection();
         try {
-            if (ids != null && ids.length == 1 && ids[0] != null && ids[0].getClass().isArray()) {
-                Class clz = ids[0].getClass();
-                if (clz == long[].class) {
-                    long[] vs = (long[]) ids[0];
-                    ids = new Serializable[vs.length];
-                    for (int i = 0; i < vs.length; i++) {
-                        ids[i] = vs[i];
-                    }
-                } else if (clz == int[].class) {
-                    int[] vs = (int[]) ids[0];
-                    ids = new Serializable[vs.length];
-                    for (int i = 0; i < vs.length; i++) {
-                        ids[i] = vs[i];
-                    }
-                }
-            }
             delete(conn, clazz, ids);
         } finally {
             closeSQLConnection(conn);
@@ -641,11 +622,24 @@ public final class DataJDBCSource implements DataSource {
         try {
             final EntityXInfo<T> info = EntityXInfo.load(this, clazz);
             String sql = "DELETE FROM " + info.getTable() + " WHERE " + info.getSQLColumn(column);
-            if (keys.length == 1) {
+            if (keys.length == 1 && !keys[0].getClass().isArray()) {
                 sql += " = " + formatToString(keys[0]);
             } else {
                 sql += " IN (";
                 boolean flag = false;
+                if (keys.length == 1 && keys[0].getClass().isArray()) {
+                    Class keytype = keys[0].getClass();
+                    if (keytype.getComponentType().isPrimitive()) {
+                        Object array = keys[0];
+                        Serializable[] keys0 = new Serializable[Array.getLength(array)];
+                        for (int i = 0; i < keys0.length; i++) {
+                            keys0[i] = (Serializable) Array.get(array, i);
+                        }
+                        keys = keys0;
+                    } else {
+                        keys = (Serializable[]) keys[0];
+                    }
+                }
                 for (final Serializable value : keys) {
                     if (flag) sql += ",";
                     sql += formatToString(value);
@@ -662,7 +656,8 @@ public final class DataJDBCSource implements DataSource {
             final EntityCache<T> cache = info.inner.getCache();
             if (cache == null) return;
             final Attribute<T, ?> attr = info.getAttribute(column);
-            Serializable[] ids = cache.delete((T t) -> Arrays.binarySearch(keys, attr.get(t)) >= 0);
+            final Serializable[] keys2 = keys;
+            Serializable[] ids = cache.delete((T t) -> Arrays.binarySearch(keys2, attr.get(t)) >= 0);
             if (cacheListener != null) cacheListener.delete(name, clazz, ids);
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -1323,26 +1318,107 @@ public final class DataJDBCSource implements DataSource {
         }
     }
 
-    //-----------------------list----------------------------
+    //-----------------------list set----------------------------
+    @Override
+    public <T> int[] queryColumnIntSet(String selectedColumn, Class<T> clazz, String column, Serializable key) {
+        return formatCollectionToIntArray(queryColumnSet(selectedColumn, clazz, column, key));
+    }
+
+    @Override
+    public <T> long[] queryColumnLongSet(String selectedColumn, Class<T> clazz, String column, Serializable key) {
+        return formatCollectionToLongArray(queryColumnSet(selectedColumn, clazz, column, key));
+    }
+
+    @Override
+    public <T> int[] queryColumnIntList(String selectedColumn, Class<T> clazz, String column, Serializable key) {
+        return formatCollectionToIntArray(queryColumnList(selectedColumn, clazz, column, key));
+    }
+
+    @Override
+    public <T> long[] queryColumnLongList(String selectedColumn, Class<T> clazz, String column, Serializable key) {
+        return formatCollectionToLongArray(queryColumnList(selectedColumn, clazz, column, key));
+    }
+
+    @Override
+    public <T, V> Set<V> queryColumnSet(String selectedColumn, Class<T> clazz, String column, Serializable key) {
+        return queryColumnSet(selectedColumn, clazz, column, FilterExpress.EQUAL, key);
+    }
+
+    @Override
+    public <T, V> List<V> queryColumnList(String selectedColumn, Class<T> clazz, String column, Serializable key) {
+        return queryColumnList(selectedColumn, clazz, column, FilterExpress.EQUAL, key);
+    }
+
+    @Override
+    public <T> int[] queryColumnIntSet(String selectedColumn, Class<T> clazz, String column, FilterExpress express, Serializable key) {
+        return formatCollectionToIntArray(queryColumnSet(selectedColumn, clazz, column, express, key));
+    }
+
+    @Override
+    public <T> long[] queryColumnLongSet(String selectedColumn, Class<T> clazz, String column, FilterExpress express, Serializable key) {
+        return formatCollectionToLongArray(queryColumnSet(selectedColumn, clazz, column, express, key));
+    }
+
+    @Override
+    public <T> int[] queryColumnIntList(String selectedColumn, Class<T> clazz, String column, FilterExpress express, Serializable key) {
+        return formatCollectionToIntArray(queryColumnList(selectedColumn, clazz, column, express, key));
+    }
+
+    @Override
+    public <T> long[] queryColumnLongList(String selectedColumn, Class<T> clazz, String column, FilterExpress express, Serializable key) {
+        return formatCollectionToLongArray(queryColumnList(selectedColumn, clazz, column, express, key));
+    }
+
+    @Override
+    public <T, V> Set<V> queryColumnSet(String selectedColumn, Class<T> clazz, String column, FilterExpress express, Serializable key) {
+        return (Set<V>) queryColumnCollection(true, selectedColumn, clazz, column, express, key);
+    }
+
+    @Override
+    public <T, V> List<V> queryColumnList(String selectedColumn, Class<T> clazz, String column, FilterExpress express, Serializable key) {
+        return (List<V>) queryColumnCollection(false, selectedColumn, clazz, column, express, key);
+    }
+
+    private static int[] formatCollectionToIntArray(Collection<Integer> collection) {
+        if (collection == null || collection.isEmpty()) return new int[0];
+        int[] rs = new int[collection.size()];
+        int i = 0;
+        for (int v : collection) {
+            rs[i++] = v;
+        }
+        return rs;
+    }
+
+    private static long[] formatCollectionToLongArray(Collection<Long> collection) {
+        if (collection == null || collection.isEmpty()) return new long[0];
+        long[] rs = new long[collection.size()];
+        int i = 0;
+        for (long v : collection) {
+            rs[i++] = v;
+        }
+        return rs;
+    }
+
     /**
      * 根据指定字段值查询对象某个字段的集合
      *
      * @param <T>
      * @param <V>
+     * @param set
      * @param selectedColumn
      * @param clazz
      * @param column
+     * @param express
      * @param key
      * @return
      */
-    @Override
-    public <T, V> List<V> queryColumnList(String selectedColumn, Class<T> clazz, String column, Serializable key) {
+    protected final <T, V> Collection<V> queryColumnCollection(final boolean set, String selectedColumn, Class<T> clazz, String column, FilterExpress express, Serializable key) {
         final EntityXInfo<T> info = EntityXInfo.load(this, clazz);
         final EntityCache<T> cache = info.inner.getCache();
         if (cache != null) {
-            final Attribute<T, ?> attr = info.getAttribute(column);
-            List<T> list = cache.queryList(null, (T t) -> key.equals(attr.get(t)), null);
-            final List<V> rs = new ArrayList<>();
+            Predicate<T> filter = genFilter(info.getAttribute(column), express, key);
+            List<T> list = cache.queryList(SelectColumn.createIncludes(selectedColumn), filter, null);
+            final Collection<V> rs = set ? new LinkedHashSet<>() : new ArrayList<>();
             if (!list.isEmpty()) {
                 final Attribute<T, V> selected = (Attribute<T, V>) info.getAttribute(selectedColumn);
                 for (T t : list) {
@@ -1353,18 +1429,17 @@ public final class DataJDBCSource implements DataSource {
         }
         final Connection conn = createReadSQLConnection();
         try {
-            final List<V> list = new ArrayList();
-            final String sql = "SELECT " + info.getSQLColumn(selectedColumn) + " FROM " + info.getTable() + " WHERE " + info.getSQLColumn(column) + " = ?";
-            if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(clazz.getSimpleName() + " query sql=" + sql.replaceFirst("\\?", String.valueOf(key)));
-            final PreparedStatement ps = conn.prepareStatement(sql);
-            ps.setObject(1, key);
-            final ResultSet set = ps.executeQuery();
-            while (set.next()) {
-                list.add((V) set.getObject(1));
+            final Collection<V> collection = set ? new LinkedHashSet<>() : new ArrayList<>();
+            final String sql = genSQL(info.getSQLColumn(selectedColumn), info, column, express, key);
+            if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(clazz.getSimpleName() + " query sql=" + sql);
+            final Statement ps = conn.createStatement();
+            final ResultSet rs = ps.executeQuery(sql);
+            while (rs.next()) {
+                collection.add((V) rs.getObject(1));
             }
-            set.close();
+            rs.close();
             ps.close();
-            return list;
+            return collection;
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         } finally {
@@ -1422,55 +1497,7 @@ public final class DataJDBCSource implements DataSource {
         final EntityXInfo<T> info = EntityXInfo.load(this, clazz);
         final EntityCache<T> cache = info.inner.getCache();
         if (cache != null) {
-            final Attribute<T, ?> attr = info.getAttribute(column);
-            Predicate<T> filter = null;
-            switch (express) {
-                case EQUAL:
-                    filter = (T t) -> key.equals(attr.get(t));
-                    break;
-                case NOTEQUAL:
-                    filter = (T t) -> !key.equals(attr.get(t));
-                    break;
-                case GREATERTHAN:
-                    filter = (T t) -> ((Number) attr.get(t)).longValue() > ((Number) key).longValue();
-                    break;
-                case LESSTHAN:
-                    filter = (T t) -> ((Number) attr.get(t)).longValue() < ((Number) key).longValue();
-                    break;
-                case GREATERTHANOREQUALTO:
-                    filter = (T t) -> ((Number) attr.get(t)).longValue() >= ((Number) key).longValue();
-                    break;
-                case LESSTHANOREQUALTO:
-                    filter = (T t) -> ((Number) attr.get(t)).longValue() <= ((Number) key).longValue();
-                    break;
-                case LIKE:
-                    filter = (T t) -> {
-                        Object rs = attr.get(t);
-                        return rs != null && rs.toString().contains(key.toString());
-                    };
-                    break;
-                case NOTLIKE:
-                    filter = (T t) -> {
-                        Object rs = attr.get(t);
-                        return rs == null || !rs.toString().contains(key.toString());
-                    };
-                    break;
-                case ISNULL:
-                    filter = (T t) -> attr.get(t) == null;
-                    break;
-                case ISNOTNULL:
-                    filter = (T t) -> attr.get(t) != null;
-                    break;
-                case OPAND:
-                    filter = (T t) -> (((Number) attr.get(t)).longValue() & ((Number) key).longValue()) > 0;
-                    break;
-                case OPOR:
-                    filter = (T t) -> (((Number) attr.get(t)).longValue() | ((Number) key).longValue()) > 0;
-                    break;
-                case OPANDNO:
-                    filter = (T t) -> (((Number) attr.get(t)).longValue() & ((Number) key).longValue()) == 0;
-                    break;
-            }
+            Predicate<T> filter = genFilter(info.getAttribute(column), express, key);
             List<T> rs = cache.queryList(selects, filter, null);
             if (!rs.isEmpty() || cache.isFullLoaded()) return rs;
         }
@@ -1478,11 +1505,10 @@ public final class DataJDBCSource implements DataSource {
         try {
             final SelectColumn sels = selects;
             final List<T> list = new ArrayList();
-            final String sql = "SELECT * FROM " + info.getTable() + " WHERE " + info.getSQLColumn(column) + " " + express.value() + " ?";
+            final String sql = genSQL("*", info, column, express, key);
             if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(clazz.getSimpleName() + " query sql=" + sql);
-            final PreparedStatement ps = conn.prepareStatement(sql);
-            ps.setObject(1, key);
-            final ResultSet set = ps.executeQuery();
+            final Statement ps = conn.createStatement();
+            final ResultSet set = ps.executeQuery(sql);
             while (set.next()) {
                 final T result = info.createInstance();
                 for (AttributeX<T, Object> attr : info.query.attributes) {
@@ -1498,6 +1524,124 @@ public final class DataJDBCSource implements DataSource {
         } finally {
             closeSQLConnection(conn);
         }
+    }
+
+    private String genSQL(String queryColumn, EntityXInfo info, String column, FilterExpress express, Serializable key) {
+        String sql = "SELECT " + queryColumn + " FROM " + info.getTable() + " WHERE " + info.getSQLColumn(column) + " " + express.value();
+        if (key instanceof Number) {
+            sql += " " + key;
+        } else if (key instanceof Collection) {
+            StringBuilder sb = new StringBuilder();
+            for (Object o : (Collection) key) {
+                if (sb.length() > 0) sb.append(',');
+                if (o instanceof Number) {
+                    sb.append('"').append(o).append('"');
+                } else {
+                    sb.append('"').append(o.toString().replace("\"", "\\\"")).append('"');
+                }
+            }
+            sql += " (" + sb + ")";
+        } else if (key.getClass().isArray()) {
+            StringBuilder sb = new StringBuilder();
+            int len = Array.getLength(key);
+            for (int i = 0; i < len; i++) {
+                Object o = Array.get(key, i);
+                if (sb.length() > 0) sb.append(',');
+                if (o instanceof Number) {
+                    sb.append('"').append(o).append('"');
+                } else {
+                    sb.append('"').append(o.toString().replace("\"", "\\\"")).append('"');
+                }
+            }
+            sql += " (" + sb + ")";
+        } else {
+            sql += " \"" + key.toString().replace("\"", "\\\"") + "\"";
+        }
+        return sql;
+    }
+
+    private <T> Predicate<T> genFilter(final Attribute<T, ?> attr, FilterExpress express, Serializable key) {
+        Predicate<T> filter = null;
+        switch (express) {
+            case EQUAL:
+                filter = (T t) -> key.equals(attr.get(t));
+                break;
+            case NOTEQUAL:
+                filter = (T t) -> !key.equals(attr.get(t));
+                break;
+            case GREATERTHAN:
+                filter = (T t) -> ((Number) attr.get(t)).longValue() > ((Number) key).longValue();
+                break;
+            case LESSTHAN:
+                filter = (T t) -> ((Number) attr.get(t)).longValue() < ((Number) key).longValue();
+                break;
+            case GREATERTHANOREQUALTO:
+                filter = (T t) -> ((Number) attr.get(t)).longValue() >= ((Number) key).longValue();
+                break;
+            case LESSTHANOREQUALTO:
+                filter = (T t) -> ((Number) attr.get(t)).longValue() <= ((Number) key).longValue();
+                break;
+            case IN:
+            case NOTIN:
+                if (key instanceof Collection) {
+                    filter = (T t) -> {
+                        Object rs = attr.get(t);
+                        return rs != null && ((Collection) key).contains(rs);
+                    };
+                } else {
+                    Serializable[] keys;
+                    if (key.getClass().isArray()) {
+                        Class keytype = key.getClass();
+                        if (keytype.getComponentType().isPrimitive()) {
+                            Object array = key;
+                            Serializable[] keys0 = new Serializable[Array.getLength(array)];
+                            for (int i = 0; i < keys0.length; i++) {
+                                keys0[i] = (Serializable) Array.get(array, i);
+                            }
+                            keys = keys0;
+                        } else {
+                            keys = (Serializable[]) key;
+                        }
+                    } else {
+                        keys = new Serializable[]{key};
+                    }
+                    Serializable[] keys0 = keys;
+                    filter = (T t) -> {
+                        Object rs = attr.get(t);
+                        return rs != null && Arrays.binarySearch(keys0, rs) > -1;
+                    };
+                }
+                if (express == FilterExpress.NOTIN) filter = filter.negate();
+                break;
+            case LIKE:
+                filter = (T t) -> {
+                    Object rs = attr.get(t);
+                    return rs != null && rs.toString().contains(key.toString());
+                };
+                break;
+            case NOTLIKE:
+                filter = (T t) -> {
+                    Object rs = attr.get(t);
+                    return rs == null || !rs.toString().contains(key.toString());
+                };
+                break;
+            case ISNULL:
+                filter = (T t) -> attr.get(t) == null;
+                break;
+            case ISNOTNULL:
+                filter = (T t) -> attr.get(t) != null;
+                break;
+            case OPAND:
+                filter = (T t) -> (((Number) attr.get(t)).longValue() & ((Number) key).longValue()) > 0;
+                break;
+            case OPOR:
+                filter = (T t) -> (((Number) attr.get(t)).longValue() | ((Number) key).longValue()) > 0;
+                break;
+            case OPANDNO:
+                filter = (T t) -> (((Number) attr.get(t)).longValue() & ((Number) key).longValue()) == 0;
+                break;
+        }
+        return filter;
     }
 
     /**
@@ -1529,6 +1673,33 @@ public final class DataJDBCSource implements DataSource {
 
     //-----------------------sheet----------------------------
     /**
+     * 根据指定参数查询对象某个字段的集合
+     * <p>
+     * @param <T>
+     * @param <V>
+     * @param selectedColumn
+     * @param clazz
+     * @param flipper
+     * @param bean
+     * @return
+     */
+    @Override
+    public <T, V> Sheet<V> queryColumnSheet(String selectedColumn, Class<T> clazz, final Flipper flipper, final FilterBean bean) {
+        Sheet<T> sheet = querySheet(clazz, SelectColumn.createIncludes(selectedColumn), flipper, bean);
+        final Sheet<V> rs = new Sheet<>();
+        if (sheet.isEmpty()) return rs;
+        rs.setTotal(sheet.getTotal());
+        final EntityXInfo<T> info = EntityXInfo.load(this, clazz);
+        final Attribute<T, V> selected = (Attribute<T, V>) info.getAttribute(selectedColumn);
+        final List<V> list = new ArrayList<>();
+        for (T t : sheet.getRows()) {
+            list.add(selected.get(t));
+        }
+        rs.setRows(list);
+        return rs;
+    }
+
+    /**
      * 根据过滤对象FilterBean和翻页对象Flipper查询一页的数据
      *
      * @param <T>
@@ -1558,18 +1729,14 @@ public final class DataJDBCSource implements DataSource {
         final EntityCache<T> cache = info.inner.getCache();
         if (cache != null) {
             Predicate<T> filter = null;
-            Comparator<T> sort = null;
             boolean valid = true;
             if (bean != null) {
                 FilterInfo finfo = FilterInfo.load(bean.getClass(), this);
                 valid = finfo.isValidCacheJoin();
-                if (valid) {
-                    filter = finfo.getFilterPredicate(info.inner, bean);
-                    sort = finfo.getSortComparator(info.inner, flipper);
-                }
+                if (valid) filter = finfo.getFilterPredicate(info.inner, bean);
             }
             if (valid) {
-                Sheet<T> sheet = cache.querySheet(selects, filter, flipper, sort);
+                Sheet<T> sheet = cache.querySheet(selects, filter, flipper, FilterInfo.getSortComparator(info.inner, flipper));
                 if (!sheet.isEmpty() || cache.isFullLoaded()) return sheet;
             }
         }
@@ -2084,7 +2251,7 @@ public final class DataJDBCSource implements DataSource {
         }
 
         public void createPrimaryValue(T src) {
-            long v = primaryValue.incrementAndGet() * allocationSize + nodeid;
+            long v = allocationSize > 1 ? (primaryValue.incrementAndGet() * allocationSize + nodeid) : primaryValue.incrementAndGet();
             Class p = inner.getPrimaryType();
             if (p == int.class || p == Integer.class) {
                 getPrimary().set(src, (Integer) ((Long) v).intValue());

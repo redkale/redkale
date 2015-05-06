@@ -40,6 +40,10 @@ public abstract class Factory<R extends Reader, W extends Writer> {
 
     private final HashMap<AccessibleObject, ConvertColumnEntry> columnEntrys = new HashMap();
 
+    private final Set<Class> skipIgnores = new HashSet<>();
+
+    private boolean skipAllIgnore = false;
+
     protected Factory(Factory<R, W> parent) {
         this.parent = parent;
         if (parent == null) {
@@ -111,9 +115,36 @@ public abstract class Factory<R extends Reader, W extends Writer> {
         if (en != null) return en;
         final ConvertType ct = this.getConvertType();
         for (ConvertColumn ref : field.getAnnotationsByType(ConvertColumn.class)) {
-            if (ref.type().contains(ct)) return new ConvertColumnEntry(ref);
+            if (ref.type().contains(ct)) {
+                ConvertColumnEntry entry = new ConvertColumnEntry(ref);
+                if (skipAllIgnore) {
+                    entry.setIgnore(false);
+                    return entry;
+                }
+                if (skipIgnores.isEmpty()) return entry;
+                if (skipIgnores.contains(((Member) field).getDeclaringClass())) entry.setIgnore(false);
+                return entry;
+            }
         }
         return null;
+    }
+
+    /**
+     * 使所有类的所有被声明为ConvertColumn.ignore = true 的字段或方法变为ConvertColumn.ignore = false
+     * <p>
+     * @param skipIgnore
+     */
+    public final void registerSkipAllIgnore(final boolean skipIgnore) {
+        this.skipAllIgnore = skipIgnore;
+    }
+
+    /**
+     * 使该类所有被声明为ConvertColumn.ignore = true 的字段或方法变为ConvertColumn.ignore = false
+     * <p>
+     * @param type
+     */
+    public final void registerSkipIgnore(final Class type) {
+        skipIgnores.add(type);
     }
 
     public final boolean register(final Class type, String column, ConvertColumnEntry entry) {

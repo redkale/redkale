@@ -13,6 +13,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 import java.util.logging.Logger;
+import javax.persistence.*;
 
 /**
  *
@@ -60,6 +61,7 @@ final class FilterInfo<T extends FilterBean> {
         do {
             for (Field field : cltmp.getDeclaredFields()) {
                 if (field.getAnnotation(Ignore.class) != null) continue;
+                if (field.getAnnotation(Transient.class) != null) continue;
                 if (Modifier.isStatic(field.getModifiers())) continue;
                 if (fields.contains(field.getName())) continue;
                 char[] chars = field.getName().toCharArray();
@@ -155,7 +157,7 @@ final class FilterInfo<T extends FilterBean> {
         return rootNode.getFilterPredicate(info, bean);
     }
 
-    public <E> Comparator<E> getSortComparator(EntityInfo<E> info, Flipper flipper) {
+    public static <E> Comparator<E> getSortComparator(EntityInfo<E> info, Flipper flipper) {
         if (flipper == null || flipper.getSort() == null || flipper.getSort().isEmpty()) return null;
         Comparator<E> comparator = null;
         for (String item : flipper.getSort().split(",")) {

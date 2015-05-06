@@ -27,6 +27,53 @@ public final class HttpResourceServlet extends HttpServlet {
 
     private static final Logger logger = Logger.getLogger(HttpResourceServlet.class.getSimpleName());
 
+    protected class WatchThread extends Thread {
+
+        protected final File root;
+
+        protected final WatchService watcher;
+
+        public WatchThread(File root) throws IOException {
+            this.root = root;
+            this.setName("Servlet-ResourceWatch-Thread");
+            this.setDaemon(true);
+            this.watcher = this.root.toPath().getFileSystem().newWatchService();
+        }
+
+        @Override
+        public void run() {
+            try {
+                final String rootstr = root.getCanonicalPath();
+                while (!this.isInterrupted()) {
+                    final WatchKey key = watcher.take();
+                    final Path parent = keymaps.get(key);
+                    if (parent == null) {
+                        key.cancel();
+                        continue;
+                    }
+                    key.pollEvents().stream().forEach((event) -> {
+                        try {
+                            Path path = parent.resolve((Path) event.context());
+                            final String uri = path.toString().substring(rootstr.length()).replace('\\', '/');
+                            //logger.log(Level.FINEST, "file(" + uri + ") happen " + event.kind() + " event");
+                            Thread.sleep(1000L);  //等待update file完毕
+                            if (event.kind() == ENTRY_DELETE) {
+                                files.remove(uri);
+                            } else if (event.kind() == ENTRY_MODIFY) {
+                                FileEntry en = files.get(uri);
+                                if (en != null) en.update();
+                            }
+                        } catch (Exception ex) {
+                            logger.log(Level.FINE, event.context() + " occur erroneous", ex);
+                        }
+                    });
+                    key.reset();
+                }
+            } catch (Exception e) {
+            }
+        }
+    }
+
     //缓存总大小, 默认128M
     protected long cachelimit = 128 * 1024 * 1024L;
 
@@ -39,29 +86,33 @@ public final class HttpResourceServlet extends HttpServlet {
 
     protected final ConcurrentHashMap<String, FileEntry> files = new ConcurrentHashMap<>();
 
-    protected WatchService watcher;
-
     protected final ConcurrentHashMap<WatchKey, Path> keymaps = new ConcurrentHashMap<>();
 
     protected SimpleEntry<Pattern, String>[] locationRewrites;
 
-    protected Thread watchThread;
+    protected WatchThread watchThread;
+
+    protected List<SimpleEntry<File, WatchThread>> resx;
 
     protected Predicate<String> ranges;
 
     @Override
     public void init(Context context, AnyValue config) {
+        String[] rootstrs = null;
         if (config != null) {
-            String rootstr = config.getValue("webroot", "root").trim();
-            if (rootstr.indexOf(':') < 0 && rootstr.indexOf('/') != 0 && System.getProperty("APP_HOME") != null) {
-                rootstr = new File(System.getProperty("APP_HOME"), rootstr).getPath();
+            rootstrs = config.getValue("webroot", "root").trim().split(",");
+            for (int i = 0; i < rootstrs.length; i++) {
+                String rootstr = rootstrs[i];
+                if (rootstr.indexOf(':') < 0 && rootstr.indexOf('/') != 0 && System.getProperty("APP_HOME") != null) {
+                    rootstrs[i] = new File(System.getProperty("APP_HOME"), rootstr).getPath();
+                }
             }
             String rangesValue = config.getValue("ranges");
             this.ranges = rangesValue != null ? Pattern.compile(rangesValue).asPredicate() : null;
             try {
-                this.root = new File(rootstr).getCanonicalFile();
+                this.root = new File(rootstrs[0]).getCanonicalFile();
             } catch (IOException ioe) {
-                this.root = new File(rootstr);
+                this.root = new File(rootstrs[0]);
             }
             AnyValue cacheconf = config.getAnyValue("caches");
             if (cacheconf != null) {
@@ -83,62 +134,36 @@ public final class HttpResourceServlet extends HttpServlet {
         if (this.cachelimit < 1) return;
         if (this.root != null) {
             try {
-                this.watcher = this.root.toPath().getFileSystem().newWatchService();
-                this.watchThread = new Thread() {
-
-                    @Override
-                    public void run() {
-                        try {
-                            final String rootstr = root.getCanonicalPath();
-                            while (!this.isInterrupted()) {
-                                final WatchKey key = watcher.take();
-                                final Path parent = keymaps.get(key);
-                                if (parent == null) {
-                                    key.cancel();
-                                    continue;
-                                }
-                                key.pollEvents().stream().forEach((event) -> {
-                                    try {
-                                        Path path = parent.resolve((Path) event.context());
-                                        final String uri = path.toString().substring(rootstr.length()).replace('\\', '/');
-                                        //logger.log(Level.FINEST, "file(" + uri + ") happen " + event.kind() + " event");
-                                        Thread.sleep(1000L);  //等待update file完毕
-                                        if (event.kind() == ENTRY_DELETE) {
-                                            files.remove(uri);
-                                        } else if (event.kind() == ENTRY_MODIFY) {
-                                            FileEntry en = files.get(uri);
-                                            if (en != null) en.update();
-                                        }
-                                    } catch (Exception ex) {
-                                        logger.log(Level.FINE, event.context() + " occur erroneous", ex);
-                                    }
-                                });
-                                key.reset();
-                            }
-                        } catch (Exception e) {
-                        }
-                    }
-                };
-                this.watchThread.setName("Servlet-ResourceWatch-Thread");
-                this.watchThread.setDaemon(true);
+                this.watchThread = new WatchThread(this.root);
                 this.watchThread.start();
             } catch (IOException ex) {
                 logger.log(Level.WARNING, HttpResourceServlet.class.getSimpleName() + " start watch-thread error", ex);
+            }
+            if (rootstrs != null && rootstrs.length > 1) {
+                resx = new ArrayList<>(rootstrs.length - 1);
+                for (int i = 1; i < rootstrs.length; i++) {
+                    try {
+                        File f = new File(rootstrs[i]).getCanonicalFile();
+                        WatchThread t = new WatchThread(f);
+                        t.start();
+                        resx.add(new SimpleEntry<>(f, t));
+                    } catch (IOException ioe) {
+                        ioe.printStackTrace();
+                    }
+                }
             }
         }
     }
 
     @Override
     public void destroy(Context context, AnyValue config) {
-        if (this.watcher != null) {
+        if (this.watchThread != null) {
             try {
-                this.watcher.close();
+                this.watchThread.watcher.close();
             } catch (IOException ex) {
-                ex.printStackTrace();
+                logger.log(Level.WARNING, HttpResourceServlet.class.getSimpleName() + " close watch-thread error", ex);
             }
-        }
-        if (this.watchThread != null && this.watchThread.isAlive()) {
-            this.watchThread.interrupt();
+            if (this.watchThread.isAlive()) this.watchThread.interrupt();
         }
     }
 
@@ -168,10 +193,10 @@ public final class HttpResourceServlet extends HttpServlet {
         }
         if (uri.length() == 0 || uri.equals("/")) uri = "/index.html";
         //System.out.println(request);
-        FileEntry entry = watcher == null ? createFileEntry(uri) : files.get(uri);
+        FileEntry entry = watchThread == null ? createFileEntry(uri) : files.get(uri);
         if (entry == null) {
             entry = createFileEntry(uri);
-            if (entry != null && watcher != null) files.put(uri, entry);
+            if (entry != null && watchThread != null) files.put(uri, entry);
         }
         if (entry == null) {
             response.finish404();
@@ -182,12 +207,30 @@ public final class HttpResourceServlet extends HttpServlet {
 
     private FileEntry createFileEntry(String uri) {
         File file = new File(root, uri);
-        if (!file.isFile() || !file.canRead()) return null;
+        if (!file.isFile() || !file.canRead()) {
+            if (resx != null) {
+                for (SimpleEntry<File, WatchThread> en : resx) {
+                    File f = new File(en.getKey(), uri);
+                    if (f.isFile() && f.canRead()) {
+                        FileEntry fe = new FileEntry(this, f);
+                        if (watchThread == null) return fe;
+                        try {
+                            Path p = f.getParentFile().toPath();
+                            keymaps.put(p.register(en.getValue().watcher, ENTRY_MODIFY, ENTRY_DELETE), p);
+                        } catch (IOException e) {
+                            logger.log(Level.INFO, HttpResourceServlet.class.getSimpleName() + " create FileEntry(" + uri + ") erroneous", e);
+                        }
+                        return fe;
+                    }
+                }
+            }
+            return null;
+        }
         FileEntry en = new FileEntry(this, file);
-        if (watcher == null) return en;
+        if (watchThread == null) return en;
         try {
             Path p = file.getParentFile().toPath();
-            keymaps.put(p.register(watcher, ENTRY_MODIFY, ENTRY_DELETE), p);
+            keymaps.put(p.register(watchThread.watcher, ENTRY_MODIFY, ENTRY_DELETE), p);
         } catch (IOException e) {
             logger.log(Level.INFO, HttpResourceServlet.class.getSimpleName() + " create FileEntry(" + uri + ") erroneous", e);
         }

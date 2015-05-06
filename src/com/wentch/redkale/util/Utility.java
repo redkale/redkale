@@ -78,8 +78,16 @@ public final class Utility {
         return today.getYear() * 10000 + today.getMonthValue() * 100 + today.getDayOfMonth();
     }
 
+    public static String binToHexString(byte[] bytes) {
+        return new String(binToHex(bytes));
+    }
+
     public static char[] binToHex(byte[] bytes) {
         return binToHex(bytes, 0, bytes.length);
+    }
+
+    public static String binToHexString(byte[] bytes, int offset, int len) {
+        return new String(binToHex(bytes, offset, len));
     }
 
     public static char[] binToHex(byte[] bytes, int offset, int len) {
