@@ -100,7 +100,7 @@ public final class HttpResourceServlet extends HttpServlet {
     public void init(Context context, AnyValue config) {
         String[] rootstrs = null;
         if (config != null) {
-            rootstrs = config.getValue("webroot", "root").trim().split(",");
+            rootstrs = config.getValue("webroot", "root").trim().split(";");
             for (int i = 0; i < rootstrs.length; i++) {
                 String rootstr = rootstrs[i];
                 if (rootstr.indexOf(':') < 0 && rootstr.indexOf('/') != 0 && System.getProperty("APP_HOME") != null) {
