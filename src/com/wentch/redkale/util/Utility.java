@@ -8,13 +8,17 @@ import java.io.*;
 import java.lang.reflect.Field;
 import java.net.*;
 import java.nio.ByteBuffer;
+import java.nio.charset.*;
 import java.util.*;
+import javax.net.ssl.*;
 
 /**
  *
  * @author zhangjx
  */
 public final class Utility {
+
+    private static final Charset UTF_8 = Charset.forName("UTF-8");
 
     private static final char hex[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
 
@@ -295,6 +299,60 @@ public final class Utility {
     }
 
     //-----------------------------------------------------------------------------
+    public static String postHttpContent(String url) throws IOException {
+        return remoteHttpContent(null, "POST", url, null).toString("UTF-8");
+    }
+
+    public static String postHttpContent(String url, String body) throws IOException {
+        return remoteHttpContent(null, "POST", url, body).toString("UTF-8");
+    }
+
+    public static String getHttpContent(String url) throws IOException {
+        return remoteHttpContent(null, "GET", url, null).toString("UTF-8");
+    }
+
+    public static byte[] getHttpBytesContent(String url) throws IOException {
+        return remoteHttpContent(null, "GET", url, null).toByteArray();
+    }
+
+    public static String postHttpContent(SSLContext ctx, String url) throws IOException {
+        return remoteHttpContent(ctx, "POST", url, null).toString("UTF-8");
+    }
+
+    public static String postHttpContent(SSLContext ctx, String url, String body) throws IOException {
+        return remoteHttpContent(ctx, "POST", url, body).toString("UTF-8");
+    }
+
+    public static String getHttpContent(SSLContext ctx, String url) throws IOException {
+        return remoteHttpContent(ctx, "GET", url, null).toString("UTF-8");
+    }
+
+    public static byte[] getHttpBytesContent(SSLContext ctx, String url) throws IOException {
+        return remoteHttpContent(ctx, "GET", url, null).toByteArray();
+    }
+
+    protected static ByteArrayOutputStream remoteHttpContent(SSLContext ctx, String method, String url, String body) throws IOException {
+        HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();
+        conn.setConnectTimeout(3000);
+        conn.setReadTimeout(3000);
+        if (ctx != null && conn instanceof HttpsURLConnection) ((HttpsURLConnection) conn).setSSLSocketFactory(ctx.getSocketFactory());
+        conn.setRequestMethod(method);
+        if (body != null) {
+            conn.setDoOutput(true);
+            conn.getOutputStream().write(body.getBytes(UTF_8));
+        }
+        conn.connect();
+        InputStream in = conn.getInputStream();
+        ByteArrayOutputStream out = new ByteArrayOutputStream(1024);
+        byte[] bytes = new byte[1024];
+        int pos;
+        while ((pos = in.read(bytes)) != -1) {
+            out.write(bytes, 0, pos);
+        }
+        conn.disconnect();
+        return out;
+    }
+
     public static String read(InputStream in) throws IOException {
         return read(in, "UTF-8");
     }

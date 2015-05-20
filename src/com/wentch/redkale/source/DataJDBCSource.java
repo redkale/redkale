@@ -1527,35 +1527,44 @@ public final class DataJDBCSource implements DataSource {
     }
 
     private String genSQL(String queryColumn, EntityXInfo info, String column, FilterExpress express, Serializable key) {
-        String sql = "SELECT " + queryColumn + " FROM " + info.getTable() + " WHERE " + info.getSQLColumn(column) + " " + express.value();
+        String sql = "SELECT " + queryColumn + " FROM " + info.getTable();
         if (key instanceof Number) {
-            sql += " " + key;
+            sql += " WHERE " + info.getSQLColumn(column) + " " + express.value() + " " + key;
         } else if (key instanceof Collection) {
-            StringBuilder sb = new StringBuilder();
-            for (Object o : (Collection) key) {
-                if (sb.length() > 0) sb.append(',');
-                if (o instanceof Number) {
-                    sb.append('"').append(o).append('"');
-                } else {
-                    sb.append('"').append(o.toString().replace("\"", "\\\"")).append('"');
+            Collection list = (Collection) key;
+            if (list.isEmpty()) {
+                sql += " WHERE 1 " + (express == FilterExpress.NOTIN ? "=" : "!=") + " 1";
+            } else {
+                StringBuilder sb = new StringBuilder();
+                for (Object o : list) {
+                    if (sb.length() > 0) sb.append(',');
+                    if (o instanceof Number) {
+                        sb.append('"').append(o).append('"');
+                    } else {
+                        sb.append('"').append(o.toString().replace("\"", "\\\"")).append('"');
+                    }
                 }
+                sql += " WHERE " + info.getSQLColumn(column) + " " + express.value() + " (" + sb + ")";
             }
-            sql += " (" + sb + ")";
         } else if (key.getClass().isArray()) {
-            StringBuilder sb = new StringBuilder();
             int len = Array.getLength(key);
-            for (int i = 0; i < len; i++) {
-                Object o = Array.get(key, i);
-                if (sb.length() > 0) sb.append(',');
-                if (o instanceof Number) {
-                    sb.append('"').append(o).append('"');
-                } else {
-                    sb.append('"').append(o.toString().replace("\"", "\\\"")).append('"');
+            if (len == 0) {
+                sql += " WHERE 1 " + (express == FilterExpress.NOTIN ? "=" : "!=") + " 1";
+            } else {
+                StringBuilder sb = new StringBuilder();
+                for (int i = 0; i < len; i++) {
+                    Object o = Array.get(key, i);
+                    if (sb.length() > 0) sb.append(',');
+                    if (o instanceof Number) {
+                        sb.append('"').append(o).append('"');
+                    } else {
+                        sb.append('"').append(o.toString().replace("\"", "\\\"")).append('"');
+                    }
                 }
+                sql += " WHERE " + info.getSQLColumn(column) + " " + express.value() + " (" + sb + ")";
             }
-            sql += " (" + sb + ")";
         } else {
-            sql += " \"" + key.toString().replace("\"", "\\\"") + "\"";
+            sql += " WHERE " + info.getSQLColumn(column) + " " + express.value() + " \"" + key.toString().replace("\"", "\\\"") + "\"";
         }
         return sql;
     }

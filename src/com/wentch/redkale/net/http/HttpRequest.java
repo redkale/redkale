@@ -21,6 +21,8 @@ import java.nio.charset.*;
  */
 public final class HttpRequest extends Request {
 
+    protected static final Charset UTF8 = Charset.forName("UTF-8");
+
     protected static final String SESSIONID_NAME = "JSESSIONID";
 
     private static final byte[] flashRequestContent1 = "<policy-file-request/>\0".getBytes();
@@ -54,6 +56,8 @@ public final class HttpRequest extends Request {
     protected final DefaultAnyValue params = new DefaultAnyValue();
 
     private final ByteArray array = new ByteArray();
+
+    private boolean bodyparsed = false;
 
     protected boolean flashPolicy = false;
 
@@ -164,9 +168,9 @@ public final class HttpRequest extends Request {
     }
 
     private void parseBody() {
-        if (this.boundary || array.isEmpty()) return;
+        if (this.boundary || bodyparsed) return;
         addParameter(array, 0, array.count());
-        array.clear();
+        bodyparsed = true;
     }
 
     private void addParameter(final ByteArray array, final int offset, final int len) {
@@ -236,6 +240,18 @@ public final class HttpRequest extends Request {
         return String.valueOf(addr);
     }
 
+    public String getBody(final Charset charset) {
+        return array.toString(charset);
+    }
+
+    public String getBody() {
+        return array.toString();
+    }
+
+    public String getBodyUTF8() {
+        return array.toString(UTF8);
+    }
+
     public SocketAddress getRemoteAddress() {
         return this.channel.getRemoteAddress();
     }
@@ -246,7 +262,7 @@ public final class HttpRequest extends Request {
         return this.getClass().getSimpleName() + "{method:" + this.method + ", requestURI:" + this.requestURI
                 + ", contentType:" + this.contentType + ", connection:" + this.connection + ", protocol:" + this.protocol
                 + ", contentLength:" + this.contentLength + ", cookiestr:" + this.cookiestr
-                + ", host:" + this.host + ", params:" + this.params + ", header:" + this.header + "body:" + (array == null ? "null" : array.toString()) + "}";
+                + ", host:" + this.host + ", params:" + this.params + ", header:" + this.header + "body:" + getBody() + "}";
     }
 
     public final MultiContext getMultiContext() {
@@ -272,6 +288,7 @@ public final class HttpRequest extends Request {
         this.connection = null;
         this.contentLength = -1;
         this.boundary = false;
+        this.bodyparsed = false;
         this.flashPolicy = false;
 
         this.header.clear();
