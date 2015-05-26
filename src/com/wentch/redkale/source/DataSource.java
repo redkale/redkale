@@ -264,6 +264,17 @@ public interface DataSource {
     public <T> T find(Class<T> clazz, Serializable pk);
 
     /**
+     * 根据主键获取对象
+     *
+     * @param <T>
+     * @param clazz
+     * @param selects
+     * @param pk
+     * @return
+     */
+    public <T> T find(Class<T> clazz, final SelectColumn selects, Serializable pk);
+
+    /**
      * 根据主键值集合获取对象集合
      *
      * @param <T>

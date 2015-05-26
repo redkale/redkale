@@ -119,6 +119,11 @@ final class DataJPASource implements DataSource {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
+    @Override
+    public <T> T find(Class<T> clazz, SelectColumn selects, Serializable pk) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
     private static class DataJPAConnection extends DataConnection {
 
         private final EntityManager manager;

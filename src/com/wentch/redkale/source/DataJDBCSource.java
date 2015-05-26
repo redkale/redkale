@@ -1007,7 +1007,7 @@ public final class DataJDBCSource implements DataSource {
         final EntityCache<T> cache = info.inner.getCache();
         if (cache == null) return;
         for (Serializable id : ids) {
-            T value = find(clazz, false, id);
+            T value = find(clazz, null, false, id);
             if (value != null) cache.update(value);
         }
     }
@@ -1064,7 +1064,7 @@ public final class DataJDBCSource implements DataSource {
 
     @Override
     public Number getCountDistinctSingleResult(final Class entityClass, String column, FilterBean bean) {
-        return getSingleResult(ReckonType.COUNT, entityClass, true, column, bean);
+        return getSingleResult(ReckonType.DISTINCTCOUNT, entityClass, column, bean);
     }
 
     //-----------------------------AVG-----------------------------
@@ -1079,14 +1079,21 @@ public final class DataJDBCSource implements DataSource {
     }
 
     private <T> Number getSingleResult(final ReckonType type, final Class<T> entityClass, final String column, FilterBean bean) {
-        return getSingleResult(type, entityClass, false, column, bean);
-    }
-
-    private <T> Number getSingleResult(final ReckonType type, final Class<T> entityClass, final boolean distinct, final String column, FilterBean bean) {
         final Connection conn = createReadSQLConnection();
         try {
             final EntityXInfo<T> info = EntityXInfo.load(this, entityClass);
-            final String sql = "SELECT " + type.getReckonColumn((distinct ? "DISTINCT " : "") + "a." + column) + " FROM " + info.getTable() + " a" + createWhereExpression(info, null, bean);
+            final EntityCache<T> cache = info.inner.getCache();
+            if (cache != null && cache.isFullLoaded()) {
+                Predicate<T> filter = null;
+                boolean valid = true;
+                if (bean != null) {
+                    FilterInfo finfo = FilterInfo.load(bean.getClass(), this);
+                    valid = finfo.isValidCacheJoin();
+                    if (valid) filter = finfo.getFilterPredicate(info.inner, bean);
+                }
+                if (valid) return cache.getSingleResult(type, column == null ? null : info.getAttribute(column), filter);
+            }
+            final String sql = "SELECT " + type.getReckonColumn("a." + column) + " FROM " + info.getTable() + " a" + createWhereExpression(info, null, bean);
             if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(entityClass.getSimpleName() + " single sql=" + sql);
             final PreparedStatement prestmt = conn.prepareStatement(sql);
             Number rs = null;
@@ -1115,10 +1122,15 @@ public final class DataJDBCSource implements DataSource {
      */
     @Override
     public <T> T find(Class<T> clazz, Serializable pk) {
-        return find(clazz, true, pk);
+        return find(clazz, null, true, pk);
     }
 
-    private <T> T find(Class<T> clazz, boolean readcache, Serializable pk) {
+    @Override
+    public <T> T find(Class<T> clazz, final SelectColumn selects, Serializable pk) {
+        return find(clazz, selects, true, pk);
+    }
+
+    private <T> T find(Class<T> clazz, final SelectColumn selects, boolean readcache, Serializable pk) {
         final EntityXInfo<T> info = EntityXInfo.load(this, clazz);
         final EntityCache<T> cache = info.inner.getCache();
         if (readcache && cache != null) {
@@ -1134,8 +1146,8 @@ public final class DataJDBCSource implements DataSource {
             ResultSet set = prestmt.executeQuery();
             if (set.next()) {
                 rs = info.createInstance();
-                for (Attribute attr : info.query.attributes) {
-                    attr.set(rs, set.getObject(attr.field()));
+                for (AttributeX attr : info.query.attributes) {
+                    attr.setValue(selects, rs, set);
                 }
             }
             set.close();
@@ -2033,13 +2045,16 @@ public final class DataJDBCSource implements DataSource {
     //----------------------------------------------------------------------
     private static class AttributeX<T, F> implements Attribute<T, F> {
 
+        private final Class clazz;
+
         private final Class type;
 
         private final Attribute<T, F> attribute;
 
         private final String fieldName;
 
-        public AttributeX(Class type, Attribute<T, F> attribute, String fieldname) {
+        public AttributeX(Class clazz, Class type, Attribute<T, F> attribute, String fieldname) {
+            this.clazz = clazz;
             this.type = type;
             this.attribute = attribute;
             this.fieldName = fieldname;
@@ -2048,6 +2063,11 @@ public final class DataJDBCSource implements DataSource {
         @Override
         public Class type() {
             return type;
+        }
+
+        @Override
+        public Class declaringClass() {
+            return clazz;
         }
 
         @Override
@@ -2090,6 +2110,7 @@ public final class DataJDBCSource implements DataSource {
                 attribute.set(obj, (F) o);
             }
         }
+
     }
 
     private static class EntityXInfo<T> {
@@ -2178,7 +2199,7 @@ public final class DataJDBCSource implements DataSource {
                     final Class fieldtype = field.getType();
                     Attribute attribute = inner.getAttribute(fieldname);
                     if (attribute == null) continue;
-                    AttributeX attr = new AttributeX(fieldtype, attribute, fieldname);
+                    AttributeX attr = new AttributeX(cltmp, fieldtype, attribute, fieldname);
                     if (field.getAnnotation(Id.class) != null) {
                         idfieldtype = fieldtype;
                         GeneratedValue gv = field.getAnnotation(GeneratedValue.class);
@@ -2212,7 +2233,7 @@ public final class DataJDBCSource implements DataSource {
                     queryattrs.add(attr);
                 }
             } while ((cltmp = cltmp.getSuperclass()) != Object.class);
-            AttributeX idxattr = new AttributeX(idfieldtype, inner.getPrimary(), inner.getPrimaryField());
+            AttributeX idxattr = new AttributeX(type, idfieldtype, inner.getPrimary(), inner.getPrimaryField());
             updateattrs.add(idxattr);
             this.autoGenerated = auto;
             this.delete = new ActionInfo("DELETE FROM " + inner.getTable() + wheresql, idxattr);
@@ -2299,13 +2320,4 @@ public final class DataJDBCSource implements DataSource {
         }
     }
 
-    private static enum ReckonType {
-
-        MAX, MIN, SUM, COUNT, AVG;
-
-        public String getReckonColumn(String col) {
-            if (this == COUNT && !col.contains("DISTINCT")) return this.name() + "(*)";
-            return this.name() + "(" + col + ")";
-        }
-    }
 }

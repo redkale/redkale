@@ -21,6 +21,8 @@ public interface Attribute<T, F> {
 
     public Class type();
 
+    public Class declaringClass();
+
     public String field();
 
     public F get(T obj);
@@ -64,7 +66,7 @@ public interface Attribute<T, F> {
     }
 
     @SuppressWarnings("unchecked")
-    public static <T, F> Attribute<T, F> create(Class<T> clazz, String fieldalias0, final Field field0, Method getter0, Method setter0) {
+    public static <T, F> Attribute<T, F> create(final Class<T> clazz, String fieldalias0, final Field field0, Method getter0, Method setter0) {
         if (fieldalias0.isEmpty()) fieldalias0 = null;
         int mod = field0 == null ? Modifier.STATIC : field0.getModifiers();
         if (field0 != null && !Modifier.isStatic(mod) && !Modifier.isPublic(mod)) {
@@ -181,6 +183,13 @@ public interface Attribute<T, F> {
             } else {
                 mv.visitLdcInsn(Type.getType(pcolumn));
             }
+            mv.visitInsn(ARETURN);
+            mv.visitMaxs(1, 1);
+            mv.visitEnd();
+        }
+        { //declaringClass 方法
+            mv = cw.visitMethod(ACC_PUBLIC, "declaringClass", "()Ljava/lang/Class;", null, null);
+            mv.visitLdcInsn(Type.getType(clazz));
             mv.visitInsn(ARETURN);
             mv.visitMaxs(1, 1);
             mv.visitEnd();

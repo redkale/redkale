@@ -96,8 +96,73 @@ final class EntityCache<T> {
         return rs.isPresent() ? (needcopy ? reproduce.copy(this.creator.create(), rs.get()) : rs.get()) : null;
     }
 
+    public <V> Number getSingleResult(final ReckonType type, final Attribute<T, V> attr, final Predicate<T> filter) {
+        Stream<T> stream = listStream();
+        if (filter != null) stream = stream.filter(filter);
+        switch (type) {
+            case AVG:
+                if (attr.type() == int.class || attr.type() == Integer.class) {
+                    return (int) stream.mapToInt(x -> (Integer) attr.get(x)).average().orElse(0);
+                } else if (attr.type() == long.class || attr.type() == Long.class) {
+                    return (long) stream.mapToLong(x -> (Long) attr.get(x)).average().orElse(0);
+                } else if (attr.type() == short.class || attr.type() == Short.class) {
+                    return (short) stream.mapToInt(x -> ((Short) attr.get(x)).intValue()).average().orElse(0);
+                } else if (attr.type() == float.class || attr.type() == Float.class) {
+                    return (float) stream.mapToDouble(x -> ((Float) attr.get(x)).doubleValue()).average().orElse(0);
+                } else if (attr.type() == double.class || attr.type() == Double.class) {
+                    return stream.mapToDouble(x -> (Double) attr.get(x)).average().orElse(0);
+                }
+                throw new RuntimeException("getSingleResult error(type:" + type + ", attr.declaringClass: " + attr.declaringClass() + ", attr.field: " + attr.field() + ", attr.type: " + attr.type());
+            case COUNT: return stream.count();
+            case DISTINCTCOUNT: return stream.map(x -> attr.get(x)).distinct().count();
+
+            case MAX:
+                if (attr.type() == int.class || attr.type() == Integer.class) {
+                    return stream.mapToInt(x -> (Integer) attr.get(x)).max().orElse(0);
+                } else if (attr.type() == long.class || attr.type() == Long.class) {
+                    return stream.mapToLong(x -> (Long) attr.get(x)).max().orElse(0);
+                } else if (attr.type() == short.class || attr.type() == Short.class) {
+                    return (short) stream.mapToInt(x -> ((Short) attr.get(x)).intValue()).max().orElse(0);
+                } else if (attr.type() == float.class || attr.type() == Float.class) {
+                    return (float) stream.mapToDouble(x -> ((Float) attr.get(x)).doubleValue()).max().orElse(0);
+                } else if (attr.type() == double.class || attr.type() == Double.class) {
+                    return stream.mapToDouble(x -> (Double) attr.get(x)).max().orElse(0);
+                }
+                throw new RuntimeException("getSingleResult error(type:" + type + ", attr.declaringClass: " + attr.declaringClass() + ", attr.field: " + attr.field() + ", attr.type: " + attr.type());
+
+            case MIN:
+                if (attr.type() == int.class || attr.type() == Integer.class) {
+                    return stream.mapToInt(x -> (Integer) attr.get(x)).min().orElse(0);
+                } else if (attr.type() == long.class || attr.type() == Long.class) {
+                    return stream.mapToLong(x -> (Long) attr.get(x)).min().orElse(0);
+                } else if (attr.type() == short.class || attr.type() == Short.class) {
+                    return (short) stream.mapToInt(x -> ((Short) attr.get(x)).intValue()).min().orElse(0);
+                } else if (attr.type() == float.class || attr.type() == Float.class) {
+                    return (float) stream.mapToDouble(x -> ((Float) attr.get(x)).doubleValue()).min().orElse(0);
+                } else if (attr.type() == double.class || attr.type() == Double.class) {
+                    return stream.mapToDouble(x -> (Double) attr.get(x)).min().orElse(0);
+                }
+                throw new RuntimeException("getSingleResult error(type:" + type + ", attr.declaringClass: " + attr.declaringClass() + ", attr.field: " + attr.field() + ", attr.type: " + attr.type());
+
+            case SUM:
+                if (attr.type() == int.class || attr.type() == Integer.class) {
+                    return stream.mapToInt(x -> (Integer) attr.get(x)).sum();
+                } else if (attr.type() == long.class || attr.type() == Long.class) {
+                    return stream.mapToLong(x -> (Long) attr.get(x)).sum();
+                } else if (attr.type() == short.class || attr.type() == Short.class) {
+                    return (short) stream.mapToInt(x -> ((Short) attr.get(x)).intValue()).sum();
+                } else if (attr.type() == float.class || attr.type() == Float.class) {
+                    return (float) stream.mapToDouble(x -> ((Float) attr.get(x)).doubleValue()).sum();
+                } else if (attr.type() == double.class || attr.type() == Double.class) {
+                    return stream.mapToDouble(x -> (Double) attr.get(x)).sum();
+                }
+                throw new RuntimeException("getSingleResult error(type:" + type + ", attr.declaringClass: " + attr.declaringClass() + ", attr.field: " + attr.field() + ", attr.type: " + attr.type());
+        }
+        return -1;
+    }
+
     public Collection<T> queryCollection(final boolean set, final SelectColumn selects, final Predicate<T> filter, final Comparator<T> sort) {
-        boolean parallel = isParallel();
+        final boolean parallel = isParallel();
         final Collection<T> rs = parallel ? (set ? new CopyOnWriteArraySet<>() : new CopyOnWriteArrayList<>()) : (set ? new LinkedHashSet<>() : new ArrayList<>());
         Stream<T> stream = listStream();
         if (filter != null) stream = stream.filter(filter);
@@ -105,12 +170,14 @@ final class EntityCache<T> {
         if (selects == null) {
             stream.forEach(x -> rs.add(needcopy ? reproduce.copy(creator.create(), x) : x));
         } else {
-            final Map<String, Attribute<T, ?>> attrs = this.attributes;
+            final List<Attribute<T, ?>> attrs = new ArrayList<>();
+            for (Map.Entry<String, Attribute<T, ?>> en : this.attributes.entrySet()) {
+                if (selects.validate(en.getKey())) attrs.add(en.getValue());
+            }
             stream.forEach(x -> {
                 final T item = creator.create();
-                for (Map.Entry<String, Attribute<T, ?>> en : attrs.entrySet()) {
-                    Attribute attr = en.getValue();
-                    if (selects.validate(en.getKey())) attr.set(item, attr.get(x));
+                for (Attribute attr : attrs) {
+                    attr.set(item, attr.get(x));
                 }
                 rs.add(item);
             });
@@ -142,12 +209,14 @@ final class EntityCache<T> {
         if (selects == null) {
             stream.forEach(x -> rs.add(needcopy ? reproduce.copy(creator.create(), x) : x));
         } else {
-            final Map<String, Attribute<T, ?>> attrs = this.attributes;
+            final List<Attribute<T, ?>> attrs = new ArrayList<>();
+            for (Map.Entry<String, Attribute<T, ?>> en : this.attributes.entrySet()) {
+                if (selects.validate(en.getKey())) attrs.add(en.getValue());
+            }
             stream.forEach(x -> {
                 final T item = creator.create();
-                for (Map.Entry<String, Attribute<T, ?>> en : attrs.entrySet()) {
-                    Attribute attr = en.getValue();
-                    if (selects.validate(en.getKey())) attr.set(item, attr.get(x));
+                for (Attribute attr : attrs) {
+                    attr.set(item, attr.get(x));
                 }
                 rs.add(item);
             });

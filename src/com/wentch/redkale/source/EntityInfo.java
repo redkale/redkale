@@ -92,7 +92,7 @@ public final class EntityInfo<T> {
                     continue;
                 }
                 if (field.getAnnotation(javax.persistence.Id.class) != null) {
-                    idAttr0 = attr;
+                    if (idAttr0 == null) idAttr0 = attr;
                     primaryType0 = field.getType();
                     primaryName = field.getName();
                 }
