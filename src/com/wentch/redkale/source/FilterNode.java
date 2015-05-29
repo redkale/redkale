@@ -108,7 +108,7 @@ public class FilterNode {
 
     <T> Predicate<T> createFilterPredicate(final EntityInfo<T> info) {
         if (info == null) return null;
-        Predicate<T> filter = createFilterPredicate(info.getAttribute(column));
+        Predicate<T> filter = createFilterPredicate(info.getAttribute(column), value);
         if (nodes == null) return filter;
         for (FilterNode node : this.nodes) {
             Predicate<T> f = node.createFilterPredicate(info);
@@ -118,34 +118,34 @@ public class FilterNode {
         return filter;
     }
 
-    private <T> Predicate<T> createFilterPredicate(final Attribute<T, ?> attr) {
+    private <T> Predicate<T> createFilterPredicate(final Attribute<T, ?> attr, final Serializable val) {
         if (attr == null) return null;
-        if (value == null && express != ISNULL && express != ISNOTNULL) return null;
+        if (val == null && express != ISNULL && express != ISNOTNULL) return null;
         switch (express) {
-            case EQUAL: return (T t) -> value.equals(attr.get(t));
-            case NOTEQUAL: return (T t) -> !value.equals(attr.get(t));
-            case GREATERTHAN: return (T t) -> ((Number) attr.get(t)).longValue() > ((Number) value).longValue();
-            case LESSTHAN: return (T t) -> ((Number) attr.get(t)).longValue() < ((Number) value).longValue();
-            case GREATERTHANOREQUALTO: return (T t) -> ((Number) attr.get(t)).longValue() >= ((Number) value).longValue();
-            case LESSTHANOREQUALTO: return (T t) -> ((Number) attr.get(t)).longValue() <= ((Number) value).longValue();
+            case EQUAL: return (T t) -> val.equals(attr.get(t));
+            case NOTEQUAL: return (T t) -> !val.equals(attr.get(t));
+            case GREATERTHAN: return (T t) -> ((Number) attr.get(t)).longValue() > ((Number) val).longValue();
+            case LESSTHAN: return (T t) -> ((Number) attr.get(t)).longValue() < ((Number) val).longValue();
+            case GREATERTHANOREQUALTO: return (T t) -> ((Number) attr.get(t)).longValue() >= ((Number) val).longValue();
+            case LESSTHANOREQUALTO: return (T t) -> ((Number) attr.get(t)).longValue() <= ((Number) val).longValue();
             case ISNULL: return (T t) -> attr.get(t) == null;
             case ISNOTNULL: return (T t) -> attr.get(t) != null;
-            case OPAND: return (T t) -> (((Number) attr.get(t)).longValue() & ((Number) value).longValue()) > 0;
-            case OPOR: return (T t) -> (((Number) attr.get(t)).longValue() | ((Number) value).longValue()) > 0;
-            case OPANDNO: return (T t) -> (((Number) attr.get(t)).longValue() & ((Number) value).longValue()) == 0;
+            case OPAND: return (T t) -> (((Number) attr.get(t)).longValue() & ((Number) val).longValue()) > 0;
+            case OPOR: return (T t) -> (((Number) attr.get(t)).longValue() | ((Number) val).longValue()) > 0;
+            case OPANDNO: return (T t) -> (((Number) attr.get(t)).longValue() & ((Number) val).longValue()) == 0;
             case LIKE:
                 return (T t) -> {
                     Object rs = attr.get(t);
-                    return rs != null && rs.toString().contains(value.toString());
+                    return rs != null && rs.toString().contains(val.toString());
                 };
             case NOTLIKE:
                 return (T t) -> {
                     Object rs = attr.get(t);
-                    return rs == null || !rs.toString().contains(value.toString());
+                    return rs == null || !rs.toString().contains(val.toString());
                 };
             case BETWEEN:
             case NOTBETWEEN:
-                Range range = (Range) value;
+                Range range = (Range) val;
                 final Comparable min = range.getMin();
                 final Comparable max = range.getMax();
                 Predicate<T> p = (T t) -> {
@@ -159,47 +159,47 @@ public class FilterNode {
             case IN:
             case NOTIN:
                 Predicate<T> filter;
-                if (value instanceof Collection) {
+                if (val instanceof Collection) {
                     filter = (T t) -> {
                         Object rs = attr.get(t);
-                        return rs != null && ((Collection) value).contains(rs);
+                        return rs != null && ((Collection) val).contains(rs);
                     };
                 } else {
-                    Class type = value.getClass();
+                    Class type = val.getClass();
                     if (type == int[].class) {
                         filter = (T t) -> {
                             Object rs = attr.get(t);
                             if (rs == null) return false;
-                            return Arrays.binarySearch((int[]) value, (int) rs) >= 0;
+                            return Arrays.binarySearch((int[]) val, (int) rs) >= 0;
                         };
                     } else if (type == short[].class) {
                         filter = (T t) -> {
                             Object rs = attr.get(t);
                             if (rs == null) return false;
-                            return Arrays.binarySearch((short[]) value, (short) rs) >= 0;
+                            return Arrays.binarySearch((short[]) val, (short) rs) >= 0;
                         };
                     } else if (type == long[].class) {
                         filter = (T t) -> {
                             Object rs = attr.get(t);
                             if (rs == null) return false;
-                            return Arrays.binarySearch((long[]) value, (long) rs) >= 0;
+                            return Arrays.binarySearch((long[]) val, (long) rs) >= 0;
                         };
                     } else if (type == float[].class) {
                         filter = (T t) -> {
                             Object rs = attr.get(t);
                             if (rs == null) return false;
-                            return Arrays.binarySearch((float[]) value, (float) rs) >= 0;
+                            return Arrays.binarySearch((float[]) val, (float) rs) >= 0;
                         };
                     } else if (type == double[].class) {
                         filter = (T t) -> {
                             Object rs = attr.get(t);
                             if (rs == null) return false;
-                            return Arrays.binarySearch((double[]) value, (double) rs) >= 0;
+                            return Arrays.binarySearch((double[]) val, (double) rs) >= 0;
                         };
                     } else {
                         filter = (T t) -> {
                             Object rs = attr.get(t);
-                            return rs != null && Arrays.binarySearch((Object[]) value, rs) > -1;
+                            return rs != null && Arrays.binarySearch((Object[]) val, rs) > -1;
                         };
                     }
                 }
