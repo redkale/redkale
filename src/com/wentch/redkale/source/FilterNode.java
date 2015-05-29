@@ -5,6 +5,7 @@
  */
 package com.wentch.redkale.source;
 
+import static com.wentch.redkale.source.FilterExpress.*;
 import com.wentch.redkale.util.*;
 import java.io.*;
 import java.lang.reflect.*;
@@ -30,12 +31,22 @@ public class FilterNode {
     public FilterNode() {
     }
 
-    public FilterNode(String column, FilterExpress express, Serializable value) {
-        Objects.requireNonNull(column);
-        Objects.requireNonNull(express);
-        this.column = column;
-        this.express = express;
-        this.value = value;
+    public FilterNode(String col, FilterExpress exp, Serializable val) {
+        Objects.requireNonNull(col);
+        if (exp == null) {
+            if (val instanceof Range) {
+                exp = FilterExpress.BETWEEN;
+            } else if (val instanceof Collection) {
+                exp = FilterExpress.IN;
+            } else if (val != null && val.getClass().isArray()) {
+                exp = FilterExpress.IN;
+            } else {
+                exp = FilterExpress.EQUAL;
+            }
+        }
+        this.column = col;
+        this.express = exp;
+        this.value = val;
     }
 
     public FilterNode and(FilterNode node) {
@@ -43,7 +54,7 @@ public class FilterNode {
     }
 
     public FilterNode and(String column, Serializable value) {
-        return and(new FilterNode(column, FilterExpress.EQUAL, value));
+        return and(new FilterNode(column, null, value));
     }
 
     public FilterNode and(String column, FilterExpress express, Serializable value) {
@@ -55,7 +66,7 @@ public class FilterNode {
     }
 
     public FilterNode or(String column, Serializable value) {
-        return or(new FilterNode(column, FilterExpress.EQUAL, value));
+        return or(new FilterNode(column, null, value));
     }
 
     public FilterNode or(String column, FilterExpress express, Serializable value) {
@@ -98,16 +109,19 @@ public class FilterNode {
     <T> Predicate<T> createFilterPredicate(final EntityInfo<T> info) {
         if (info == null) return null;
         Predicate<T> filter = createFilterPredicate(info.getAttribute(column));
-        if (nodes == null || filter == null) return filter;
+        if (nodes == null) return filter;
         for (FilterNode node : this.nodes) {
             Predicate<T> f = node.createFilterPredicate(info);
-            if (f != null) filter = signand ? filter.and(f) : filter.or(f);
+            if (f == null) continue;
+            filter = (filter == null) ? f : (signand ? filter.and(f) : filter.or(f));
         }
         return filter;
     }
 
     private <T> Predicate<T> createFilterPredicate(final Attribute<T, ?> attr) {
         Predicate<T> filter = null;
+        if (attr == null) return null;
+        if (value == null && express != ISNULL && express != ISNOTNULL) return null;
         switch (express) {
             case EQUAL:
                 filter = (T t) -> value.equals(attr.get(t));
@@ -139,6 +153,19 @@ public class FilterNode {
             case LESSTHANOREQUALTO:
                 filter = (T t) -> ((Number) attr.get(t)).longValue() <= ((Number) value).longValue();
                 break;
+            case BETWEEN:
+            case NOTBETWEEN:
+                Range range = (Range) value;
+                final Comparable min = range.getMin();
+                final Comparable max = range.getMax();
+                filter = (T t) -> {
+                    Comparable rs = (Comparable) attr.get(t);
+                    if (rs == null) return false;
+                    if (min != null && min.compareTo(rs) >= 0) return false;
+                    return !(max != null && max.compareTo(rs) <= 0);
+                };
+                if (express == NOTBETWEEN) filter = filter.negate();
+                break;
             case IN:
             case NOTIN:
                 if (value instanceof Collection) {
@@ -147,29 +174,45 @@ public class FilterNode {
                         return rs != null && ((Collection) value).contains(rs);
                     };
                 } else {
-                    Serializable[] keys;
-                    if (value.getClass().isArray()) {
-                        Class keytype = value.getClass();
-                        if (keytype.getComponentType().isPrimitive()) {
-                            Object array = value;
-                            Serializable[] keys0 = new Serializable[Array.getLength(array)];
-                            for (int i = 0; i < keys0.length; i++) {
-                                keys0[i] = (Serializable) Array.get(array, i);
-                            }
-                            keys = keys0;
-                        } else {
-                            keys = (Serializable[]) value;
-                        }
+                    Class type = value.getClass();
+                    if (type == int[].class) {
+                        filter = (T t) -> {
+                            Object rs = attr.get(t);
+                            if (rs == null) return false;
+                            return Arrays.binarySearch((int[]) value, (int) rs) >= 0;
+                        };
+                    } else if (type == short[].class) {
+                        filter = (T t) -> {
+                            Object rs = attr.get(t);
+                            if (rs == null) return false;
+                            return Arrays.binarySearch((short[]) value, (short) rs) >= 0;
+                        };
+                    } else if (type == long[].class) {
+                        filter = (T t) -> {
+                            Object rs = attr.get(t);
+                            if (rs == null) return false;
+                            return Arrays.binarySearch((long[]) value, (long) rs) >= 0;
+                        };
+                    } else if (type == float[].class) {
+                        filter = (T t) -> {
+                            Object rs = attr.get(t);
+                            if (rs == null) return false;
+                            return Arrays.binarySearch((float[]) value, (float) rs) >= 0;
+                        };
+                    } else if (type == double[].class) {
+                        filter = (T t) -> {
+                            Object rs = attr.get(t);
+                            if (rs == null) return false;
+                            return Arrays.binarySearch((double[]) value, (double) rs) >= 0;
+                        };
                     } else {
-                        keys = new Serializable[]{value};
+                        filter = (T t) -> {
+                            Object rs = attr.get(t);
+                            return rs != null && Arrays.binarySearch((Object[]) value, rs) > -1;
+                        };
                     }
-                    Serializable[] keys0 = keys;
-                    filter = (T t) -> {
-                        Object rs = attr.get(t);
-                        return rs != null && Arrays.binarySearch(keys0, rs) > -1;
-                    };
                 }
-                if (express == FilterExpress.NOTIN) filter = filter.negate();
+                if (express == NOTIN) filter = filter.negate();
                 break;
             case ISNULL:
                 filter = (T t) -> attr.get(t) == null;
