@@ -119,55 +119,46 @@ public class FilterNode {
     }
 
     private <T> Predicate<T> createFilterPredicate(final Attribute<T, ?> attr) {
-        Predicate<T> filter = null;
         if (attr == null) return null;
         if (value == null && express != ISNULL && express != ISNOTNULL) return null;
         switch (express) {
-            case EQUAL:
-                filter = (T t) -> value.equals(attr.get(t));
-                break;
-            case NOTEQUAL:
-                filter = (T t) -> !value.equals(attr.get(t));
-                break;
+            case EQUAL: return (T t) -> value.equals(attr.get(t));
+            case NOTEQUAL: return (T t) -> !value.equals(attr.get(t));
+            case GREATERTHAN: return (T t) -> ((Number) attr.get(t)).longValue() > ((Number) value).longValue();
+            case LESSTHAN: return (T t) -> ((Number) attr.get(t)).longValue() < ((Number) value).longValue();
+            case GREATERTHANOREQUALTO: return (T t) -> ((Number) attr.get(t)).longValue() >= ((Number) value).longValue();
+            case LESSTHANOREQUALTO: return (T t) -> ((Number) attr.get(t)).longValue() <= ((Number) value).longValue();
+            case ISNULL: return (T t) -> attr.get(t) == null;
+            case ISNOTNULL: return (T t) -> attr.get(t) != null;
+            case OPAND: return (T t) -> (((Number) attr.get(t)).longValue() & ((Number) value).longValue()) > 0;
+            case OPOR: return (T t) -> (((Number) attr.get(t)).longValue() | ((Number) value).longValue()) > 0;
+            case OPANDNO: return (T t) -> (((Number) attr.get(t)).longValue() & ((Number) value).longValue()) == 0;
             case LIKE:
-                filter = (T t) -> {
+                return (T t) -> {
                     Object rs = attr.get(t);
                     return rs != null && rs.toString().contains(value.toString());
                 };
-                break;
             case NOTLIKE:
-                filter = (T t) -> {
+                return (T t) -> {
                     Object rs = attr.get(t);
                     return rs == null || !rs.toString().contains(value.toString());
                 };
-                break;
-            case GREATERTHAN:
-                filter = (T t) -> ((Number) attr.get(t)).longValue() > ((Number) value).longValue();
-                break;
-            case LESSTHAN:
-                filter = (T t) -> ((Number) attr.get(t)).longValue() < ((Number) value).longValue();
-                break;
-            case GREATERTHANOREQUALTO:
-                filter = (T t) -> ((Number) attr.get(t)).longValue() >= ((Number) value).longValue();
-                break;
-            case LESSTHANOREQUALTO:
-                filter = (T t) -> ((Number) attr.get(t)).longValue() <= ((Number) value).longValue();
-                break;
             case BETWEEN:
             case NOTBETWEEN:
                 Range range = (Range) value;
                 final Comparable min = range.getMin();
                 final Comparable max = range.getMax();
-                filter = (T t) -> {
+                Predicate<T> p = (T t) -> {
                     Comparable rs = (Comparable) attr.get(t);
                     if (rs == null) return false;
                     if (min != null && min.compareTo(rs) >= 0) return false;
                     return !(max != null && max.compareTo(rs) <= 0);
                 };
-                if (express == NOTBETWEEN) filter = filter.negate();
-                break;
+                if (express == NOTBETWEEN) p = p.negate();
+                return p;
             case IN:
             case NOTIN:
+                Predicate<T> filter;
                 if (value instanceof Collection) {
                     filter = (T t) -> {
                         Object rs = attr.get(t);
@@ -213,24 +204,9 @@ public class FilterNode {
                     }
                 }
                 if (express == NOTIN) filter = filter.negate();
-                break;
-            case ISNULL:
-                filter = (T t) -> attr.get(t) == null;
-                break;
-            case ISNOTNULL:
-                filter = (T t) -> attr.get(t) != null;
-                break;
-            case OPAND:
-                filter = (T t) -> (((Number) attr.get(t)).longValue() & ((Number) value).longValue()) > 0;
-                break;
-            case OPOR:
-                filter = (T t) -> (((Number) attr.get(t)).longValue() | ((Number) value).longValue()) > 0;
-                break;
-            case OPANDNO:
-                filter = (T t) -> (((Number) attr.get(t)).longValue() & ((Number) value).longValue()) == 0;
-                break;
+                return filter;
         }
-        return filter;
+        return null;
     }
 
     private String formatValue() {
