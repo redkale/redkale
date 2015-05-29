@@ -178,6 +178,39 @@ public final class Application {
         System.setProperty("convert.json.pool.size", "128");
         System.setProperty("convert.bson.writer.buffer.defsize", "4096");
         System.setProperty("convert.json.writer.buffer.defsize", "4096");
+        //------------------------------------------------------------------------
+        final AnyValue resources = config.getAnyValue("resources");
+        if (resources != null) {
+            factory.register(RESNAME_GRES, AnyValue.class, resources);
+            final AnyValue properties = resources.getAnyValue("properties");
+            if (properties != null) {
+                String dfloads = properties.getValue("load");
+                if (dfloads != null) {
+                    for (String dfload : dfloads.split(";")) {
+                        if (dfload.trim().isEmpty()) continue;
+                        dfload = dfload.trim().replace("${APP_HOME}", home.getCanonicalPath()).replace('\\', '/');
+                        final File df = (dfload.indexOf('/') < 0) ? new File(home, "conf/" + dfload) : new File(dfload);
+                        if (df.isFile()) {
+                            Properties ps = new Properties();
+                            InputStream in = new FileInputStream(df);
+                            ps.load(in);
+                            in.close();
+                            ps.forEach((x, y) -> factory.register("property." + x, y));
+                        }
+                    }
+                }
+                for (AnyValue prop : properties.getAnyValues("property")) {
+                    String name = prop.getValue("name");
+                    String value = prop.getValue("value");
+                    if (name == null || value == null) continue;
+                    if (name.startsWith("system.property.")) {
+                        System.setProperty(name.substring("system.property.".length()), value);
+                    } else {
+                        factory.register("property." + name, value);
+                    }
+                }
+            }
+        }
         final File root = new File(System.getProperty(RESNAME_HOME));
         this.factory.register(BsonFactory.root());
         this.factory.register(JsonFactory.root());
@@ -403,37 +436,6 @@ public final class Application {
         //-------------------------------------------------------------------------
         final AnyValue resources = config.getAnyValue("resources");
         if (resources != null) {
-            factory.register(RESNAME_GRES, AnyValue.class, resources);
-            //------------------------------------------------------------------------
-            final AnyValue properties = resources.getAnyValue("properties");
-            if (properties != null) {
-                String dfloads = properties.getValue("load");
-                if (dfloads != null) {
-                    for (String dfload : dfloads.split(";")) {
-                        if (dfload.trim().isEmpty()) continue;
-                        dfload = dfload.trim().replace("${APP_HOME}", home.getCanonicalPath()).replace('\\', '/');
-                        final File df = (dfload.indexOf('/') < 0) ? new File(home, "conf/" + dfload) : new File(dfload);
-                        if (df.isFile()) {
-                            Properties ps = new Properties();
-                            InputStream in = new FileInputStream(df);
-                            ps.load(in);
-                            in.close();
-                            ps.forEach((x, y) -> factory.register("property." + x, y));
-                        }
-                    }
-                }
-                for (AnyValue prop : properties.getAnyValues("property")) {
-                    String name = prop.getValue("name");
-                    String value = prop.getValue("value");
-                    if (name == null || value == null) continue;
-                    if (name.startsWith("system.property.")) {
-                        System.setProperty(name.substring("system.property.".length()), value);
-                    } else {
-                        factory.register("property." + name, value);
-                    }
-                }
-            }
-
             //------------------------------------------------------------------------
             final String host = this.localAddress.getHostAddress();
             final Map<String, Set<String>> groups = new HashMap<>();

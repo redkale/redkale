@@ -30,9 +30,10 @@ public final class EnMember<W extends Writer, T, F> implements Comparable<EnMemb
     public EnMember(Attribute<T, F> attribute, Encodeable<W, F> encoder) {
         this.attribute = attribute;
         this.encoder = encoder;
-        this.istring = CharSequence.class.isAssignableFrom(attribute.type());
-        this.isnumber = Number.class.isAssignableFrom(attribute.type()) || attribute.type().isPrimitive();
-        this.isbool = attribute.type() == Boolean.class || attribute.type() == boolean.class;
+        Class t = attribute.type();
+        this.istring = CharSequence.class.isAssignableFrom(t);
+        this.isbool = t == Boolean.class || t == boolean.class;
+        this.isnumber = Number.class.isAssignableFrom(t) || (!this.isbool && t.isPrimitive());
     }
 
     public boolean write(final W out, final boolean comma, final T obj) {
