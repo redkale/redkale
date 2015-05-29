@@ -92,9 +92,11 @@ public final class EntityInfo<T> {
                     continue;
                 }
                 if (field.getAnnotation(javax.persistence.Id.class) != null) {
-                    if (idAttr0 == null) idAttr0 = attr;
-                    primaryType0 = field.getType();
-                    primaryName = field.getName();
+                    if (idAttr0 == null) {
+                        idAttr0 = attr;
+                        primaryType0 = field.getType();
+                        primaryName = field.getName();
+                    }
                 }
                 fields.add(field.getName());
                 attributes.put(field.getName(), attr);
