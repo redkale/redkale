@@ -20,6 +20,8 @@ public final class BsonWriter implements Writer {
 
     private byte[] content;
 
+    protected boolean tiny;
+
     public static ObjectPool<BsonWriter> createPool(int max) {
         return new ObjectPool<>(max, (Object... params) -> new BsonWriter(), null, (x) -> x.recycle());
     }
@@ -37,6 +39,15 @@ public final class BsonWriter implements Writer {
 
     public BsonWriter(int size) {
         this.content = new byte[size > 32 ? size : 32];
+    }
+
+    @Override
+    public boolean isTiny() {
+        return tiny;
+    }
+
+    public void setTiny(boolean tiny) {
+        this.tiny = tiny;
     }
 
     //-----------------------------------------------------------------------

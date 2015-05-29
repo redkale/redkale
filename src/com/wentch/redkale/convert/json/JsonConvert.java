@@ -20,8 +20,11 @@ public final class JsonConvert extends Convert<JsonReader, JsonWriter> {
 
     private static final ObjectPool<JsonWriter> writerPool = JsonWriter.createPool(Integer.getInteger("convert.json.pool.size", 16));
 
-    protected JsonConvert(JsonFactory factory) {
+    private final boolean tiny;
+
+    protected JsonConvert(JsonFactory factory, boolean tiny) {
         super(factory);
+        this.tiny = tiny;
     }
 
     @Override
@@ -52,6 +55,7 @@ public final class JsonConvert extends Convert<JsonReader, JsonWriter> {
         if (type == null) return null;
         if (value == null) return "null";
         final JsonWriter out = writerPool.poll();
+        out.setTiny(tiny);
         factory.loadEncoder(type).convertTo(out, value);
         String result = out.toString();
         writerPool.offer(out);
@@ -72,6 +76,7 @@ public final class JsonConvert extends Convert<JsonReader, JsonWriter> {
         if (type == null) return null;
         if (value == null) return new byte[]{110, 117, 108, 108};
         final JsonWriter out = writerPool.poll();
+        out.setTiny(tiny);
         factory.loadEncoder(type).convertTo(out, value);
         byte[] result = out.toUTF8Bytes();
         writerPool.offer(out);

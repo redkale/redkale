@@ -21,14 +21,32 @@ public final class EnMember<W extends Writer, T, F> implements Comparable<EnMemb
 
     final Encodeable<W, F> encoder;
 
+    private final boolean istring;
+
+    private final boolean isnumber;
+
+    private final boolean isbool;
+
     public EnMember(Attribute<T, F> attribute, Encodeable<W, F> encoder) {
         this.attribute = attribute;
         this.encoder = encoder;
+        this.istring = CharSequence.class.isAssignableFrom(attribute.type());
+        this.isnumber = Number.class.isAssignableFrom(attribute.type()) || attribute.type().isPrimitive();
+        this.isbool = attribute.type() == Boolean.class || attribute.type() == boolean.class;
     }
 
     public boolean write(final W out, final boolean comma, final T obj) {
         F value = attribute.get(obj);
         if (value == null) return comma;
+        if (out.isTiny()) {
+            if (isnumber) {
+                if (((Number) value).intValue() == 0) return comma;
+            } else if (istring) {
+                if (((CharSequence) value).length() == 0) return comma;
+            } else if (isbool) {
+                if (!((Boolean) value)) return comma;
+            }
+        }
         out.writeField(comma, attribute);
         encoder.convertTo(out, value);
         return true;

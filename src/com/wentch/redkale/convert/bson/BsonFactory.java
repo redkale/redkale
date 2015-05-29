@@ -15,16 +15,15 @@ import java.io.Serializable;
  */
 public final class BsonFactory extends Factory<BsonReader, BsonWriter> {
 
-    private static final BsonFactory instance = new BsonFactory(null);
+    private static final BsonFactory instance = new BsonFactory(null, Boolean.getBoolean("convert.bson.tiny"));
 
     static {
         instance.register(Serializable.class, instance.loadDecoder(Object.class));
         instance.register(Serializable.class, instance.loadEncoder(Object.class));
     }
 
-    private BsonFactory(BsonFactory parent) {
-        super(parent);
-        this.convert = new BsonConvert(this);
+    private BsonFactory(BsonFactory parent, boolean tiny) {
+        super(parent, tiny);
     }
 
     public static BsonFactory root() {
@@ -33,12 +32,18 @@ public final class BsonFactory extends Factory<BsonReader, BsonWriter> {
 
     @Override
     public final BsonConvert getConvert() {
+        if (convert == null) convert = new BsonConvert(this, tiny);
         return (BsonConvert) convert;
     }
 
     @Override
     public BsonFactory createChild() {
-        return new BsonFactory(this);
+        return new BsonFactory(this, this.tiny);
+    }
+
+    @Override
+    public BsonFactory createChild(boolean tiny) {
+        return new BsonFactory(this, tiny);
     }
 
     @Override

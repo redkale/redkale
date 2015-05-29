@@ -15,15 +15,14 @@ import java.io.Serializable;
  */
 public final class JsonFactory extends Factory<JsonReader, JsonWriter> {
 
-    private static final JsonFactory instance = new JsonFactory(null);
+    private static final JsonFactory instance = new JsonFactory(null, Boolean.getBoolean("convert.json.tiny"));
 
     static {
         instance.register(Serializable.class, instance.loadEncoder(Object.class));
     }
 
-    private JsonFactory(JsonFactory parent) {
-        super(parent);
-        this.convert = new JsonConvert(this);
+    private JsonFactory(JsonFactory parent, boolean tiny) {
+        super(parent, tiny);
     }
 
     public static JsonFactory root() {
@@ -32,12 +31,18 @@ public final class JsonFactory extends Factory<JsonReader, JsonWriter> {
 
     @Override
     public final JsonConvert getConvert() {
+        if (convert == null) convert = new JsonConvert(this, tiny);
         return (JsonConvert) convert;
     }
 
     @Override
     public JsonFactory createChild() {
-        return new JsonFactory(this);
+        return new JsonFactory(this, this.tiny);
+    }
+
+    @Override
+    public JsonFactory createChild(boolean tiny) {
+        return new JsonFactory(this, tiny);
     }
 
     @Override

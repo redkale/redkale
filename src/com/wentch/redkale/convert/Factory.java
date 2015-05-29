@@ -29,6 +29,8 @@ public abstract class Factory<R extends Reader, W extends Writer> {
 
     protected Convert<R, W> convert;
 
+    protected boolean tiny;
+
     private final Encodeable<W, ?> anyEncoder = new AnyEncoder(this);
 
     //-----------------------------------------------------------------------------------
@@ -44,7 +46,8 @@ public abstract class Factory<R extends Reader, W extends Writer> {
 
     private boolean skipAllIgnore = false;
 
-    protected Factory(Factory<R, W> parent) {
+    protected Factory(Factory<R, W> parent, boolean tiny) {
+        this.tiny = tiny;
         this.parent = parent;
         if (parent == null) {
             //---------------------------------------------------------
@@ -105,8 +108,14 @@ public abstract class Factory<R extends Reader, W extends Writer> {
 
     public abstract Factory createChild();
 
+    public abstract Factory createChild(boolean tiny);
+
     public Convert getConvert() {
         return convert;
+    }
+
+    public void setTiny(boolean tiny) {
+        this.tiny = tiny;
     }
 
     public ConvertColumnEntry findRef(AccessibleObject field) {

@@ -26,6 +26,8 @@ public final class JsonWriter implements Writer {
 
     private char[] content;
 
+    protected boolean tiny;
+
     public static ObjectPool<JsonWriter> createPool(int max) {
         return new ObjectPool<>(max, (Object... params) -> new JsonWriter(), null, (x) -> x.recycle());
     }
@@ -38,8 +40,18 @@ public final class JsonWriter implements Writer {
         this.content = new char[size > 128 ? size : 128];
     }
 
+    @Override
+    public boolean isTiny() {
+        return tiny;
+    }
+
+    public void setTiny(boolean tiny) {
+        this.tiny = tiny;
+    }
+
     //-----------------------------------------------------------------------
     //-----------------------------------------------------------------------
+
     /**
      * 返回指定至少指定长度的缓冲区
      *

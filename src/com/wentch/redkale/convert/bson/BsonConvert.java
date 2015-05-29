@@ -19,8 +19,11 @@ public final class BsonConvert extends Convert<BsonReader, BsonWriter> {
 
     private static final ObjectPool<BsonWriter> writerPool = BsonWriter.createPool(Integer.getInteger("convert.bson.pool.size", 16));
 
-    protected BsonConvert(Factory<BsonReader, BsonWriter> factory) {
+    private final boolean tiny;
+
+    protected BsonConvert(Factory<BsonReader, BsonWriter> factory, boolean tiny) {
         super(factory);
+        this.tiny = tiny;
     }
 
     public <T> T convertFrom(final Type type, final byte[] bytes) {
@@ -41,6 +44,7 @@ public final class BsonConvert extends Convert<BsonReader, BsonWriter> {
     public byte[] convertTo(final Type type, Object value) {
         if (type == null) return null;
         final BsonWriter out = writerPool.poll();
+        out.setTiny(tiny);
         factory.loadEncoder(type).convertTo(out, value);
         byte[] result = out.toArray();
         writerPool.offer(out);
@@ -50,6 +54,7 @@ public final class BsonConvert extends Convert<BsonReader, BsonWriter> {
     public byte[] convertTo(Object value) {
         if (value == null) {
             final BsonWriter out = writerPool.poll();
+            out.setTiny(tiny);
             out.writeNull();
             byte[] result = out.toArray();
             writerPool.offer(out);

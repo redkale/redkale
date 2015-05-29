@@ -14,6 +14,13 @@ import com.wentch.redkale.util.Attribute;
 public interface Writer {
 
     /**
+     * 当tiny=true时， 字符串为空、数字为0、boolean为false的字段值都会被跳过， 不会输出。
+     * <p>
+     * @return
+     */
+    public boolean isTiny();
+
+    /**
      * 输出null值
      */
     public void writeNull();
@@ -81,7 +88,7 @@ public interface Writer {
     /**
      * 输出一个字段
      *
-     * @param comma 是否非第一个字段
+     * @param comma     是否非第一个字段
      * @param attribute
      */
     public void writeField(boolean comma, Attribute attribute);
