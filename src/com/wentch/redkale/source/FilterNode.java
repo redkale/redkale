@@ -5,9 +5,11 @@
  */
 package com.wentch.redkale.source;
 
+import com.wentch.redkale.util.*;
 import java.io.*;
 import java.lang.reflect.*;
 import java.util.*;
+import java.util.function.*;
 
 /**
  *
@@ -23,7 +25,7 @@ public class FilterNode {
 
     private Serializable value;
 
-    private FilterNode[] siblings;
+    private FilterNode[] nodes;
 
     public FilterNode() {
     }
@@ -62,22 +64,22 @@ public class FilterNode {
 
     private FilterNode any(FilterNode node, boolean sign) {
         Objects.requireNonNull(node);
-        if (siblings == null) {
-            siblings = new FilterNode[]{node};
+        if (nodes == null) {
+            nodes = new FilterNode[]{node};
             this.signand = sign;
             return this;
         }
         if (signand == sign) {
-            FilterNode[] newsiblings = new FilterNode[siblings.length + 1];
-            System.arraycopy(siblings, 0, newsiblings, 0, siblings.length);
-            newsiblings[siblings.length] = node;
-            this.siblings = newsiblings;
+            FilterNode[] newsiblings = new FilterNode[nodes.length + 1];
+            System.arraycopy(nodes, 0, newsiblings, 0, nodes.length);
+            newsiblings[nodes.length] = node;
+            this.nodes = newsiblings;
             return this;
         }
         FilterNode newnode = new FilterNode(this.column, this.express, this.value);
         newnode.signand = this.signand;
-        newnode.siblings = this.siblings;
-        this.siblings = new FilterNode[]{newnode};
+        newnode.nodes = this.nodes;
+        this.nodes = new FilterNode[]{newnode};
         this.column = node.column;
         this.express = node.express;
         this.value = node.value;
@@ -91,6 +93,101 @@ public class FilterNode {
 
     public static FilterNode create(String column, FilterExpress express, Serializable value) {
         return new FilterNode(column, express, value);
+    }
+
+    <T> Predicate<T> createFilterPredicate(final EntityInfo<T> info) {
+        if (info == null) return null;
+        Predicate<T> filter = createFilterPredicate(info.getAttribute(column));
+        if (nodes == null || filter == null) return filter;
+        for (FilterNode node : this.nodes) {
+            Predicate<T> f = node.createFilterPredicate(info);
+            if (f != null) filter = signand ? filter.and(f) : filter.or(f);
+        }
+        return filter;
+    }
+
+    private <T> Predicate<T> createFilterPredicate(final Attribute<T, ?> attr) {
+        Predicate<T> filter = null;
+        switch (express) {
+            case EQUAL:
+                filter = (T t) -> value.equals(attr.get(t));
+                break;
+            case NOTEQUAL:
+                filter = (T t) -> !value.equals(attr.get(t));
+                break;
+            case LIKE:
+                filter = (T t) -> {
+                    Object rs = attr.get(t);
+                    return rs != null && rs.toString().contains(value.toString());
+                };
+                break;
+            case NOTLIKE:
+                filter = (T t) -> {
+                    Object rs = attr.get(t);
+                    return rs == null || !rs.toString().contains(value.toString());
+                };
+                break;
+            case GREATERTHAN:
+                filter = (T t) -> ((Number) attr.get(t)).longValue() > ((Number) value).longValue();
+                break;
+            case LESSTHAN:
+                filter = (T t) -> ((Number) attr.get(t)).longValue() < ((Number) value).longValue();
+                break;
+            case GREATERTHANOREQUALTO:
+                filter = (T t) -> ((Number) attr.get(t)).longValue() >= ((Number) value).longValue();
+                break;
+            case LESSTHANOREQUALTO:
+                filter = (T t) -> ((Number) attr.get(t)).longValue() <= ((Number) value).longValue();
+                break;
+            case IN:
+            case NOTIN:
+                if (value instanceof Collection) {
+                    filter = (T t) -> {
+                        Object rs = attr.get(t);
+                        return rs != null && ((Collection) value).contains(rs);
+                    };
+                } else {
+                    Serializable[] keys;
+                    if (value.getClass().isArray()) {
+                        Class keytype = value.getClass();
+                        if (keytype.getComponentType().isPrimitive()) {
+                            Object array = value;
+                            Serializable[] keys0 = new Serializable[Array.getLength(array)];
+                            for (int i = 0; i < keys0.length; i++) {
+                                keys0[i] = (Serializable) Array.get(array, i);
+                            }
+                            keys = keys0;
+                        } else {
+                            keys = (Serializable[]) value;
+                        }
+                    } else {
+                        keys = new Serializable[]{value};
+                    }
+                    Serializable[] keys0 = keys;
+                    filter = (T t) -> {
+                        Object rs = attr.get(t);
+                        return rs != null && Arrays.binarySearch(keys0, rs) > -1;
+                    };
+                }
+                if (express == FilterExpress.NOTIN) filter = filter.negate();
+                break;
+            case ISNULL:
+                filter = (T t) -> attr.get(t) == null;
+                break;
+            case ISNOTNULL:
+                filter = (T t) -> attr.get(t) != null;
+                break;
+            case OPAND:
+                filter = (T t) -> (((Number) attr.get(t)).longValue() & ((Number) value).longValue()) > 0;
+                break;
+            case OPOR:
+                filter = (T t) -> (((Number) attr.get(t)).longValue() | ((Number) value).longValue()) > 0;
+                break;
+            case OPANDNO:
+                filter = (T t) -> (((Number) attr.get(t)).longValue() & ((Number) value).longValue()) == 0;
+                break;
+        }
+        return filter;
     }
 
     private String formatValue() {
@@ -136,11 +233,11 @@ public class FilterNode {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        if (siblings == null) {
+        if (nodes == null) {
             sb.append(column).append(' ').append(express.value()).append(' ').append(formatValue());
         } else {
             sb.append('(').append(column).append(' ').append(express.value()).append(' ').append(formatValue());
-            for (FilterNode node : this.siblings) {
+            for (FilterNode node : this.nodes) {
                 sb.append(signand ? " AND " : " OR ").append(node.toString());
             }
             sb.append(')');
@@ -180,12 +277,12 @@ public class FilterNode {
         this.value = value;
     }
 
-    public FilterNode[] getSiblings() {
-        return siblings;
+    public FilterNode[] getNodes() {
+        return nodes;
     }
 
-    public void setSiblings(FilterNode[] siblings) {
-        this.siblings = siblings;
+    public void setNodes(FilterNode[] nodes) {
+        this.nodes = nodes;
     }
 
 }
