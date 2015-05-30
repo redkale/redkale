@@ -16,64 +16,41 @@ import java.util.function.*;
  *
  * @author zhangjx
  */
-public class FilterNode {
+public abstract class FilterNode {
 
-    private boolean signand = true;
+    protected boolean signand = true;
 
-    private String column;
+    protected String column;
 
-    private FilterExpress express;
+    protected FilterExpress express;
 
-    private Serializable value;
+    protected FilterNode[] nodes;
 
-    private FilterNode[] nodes;
-
-    public FilterNode() {
-    }
-
-    public FilterNode(String col, FilterExpress exp, Serializable val) {
-        Objects.requireNonNull(col);
-        if (exp == null) {
-            if (val instanceof Range) {
-                exp = FilterExpress.BETWEEN;
-            } else if (val instanceof Collection) {
-                exp = FilterExpress.IN;
-            } else if (val != null && val.getClass().isArray()) {
-                exp = FilterExpress.IN;
-            } else {
-                exp = FilterExpress.EQUAL;
-            }
-        }
-        this.column = col;
-        this.express = exp;
-        this.value = val;
-    }
-
-    public FilterNode and(FilterNode node) {
+    public final FilterNode and(FilterNode node) {
         return any(node, true);
     }
 
-    public FilterNode and(String column, Serializable value) {
-        return and(new FilterNode(column, null, value));
+    public final FilterNode and(String column, Serializable value) {
+        return and(new FilterSimpleNode(column, null, value));
     }
 
-    public FilterNode and(String column, FilterExpress express, Serializable value) {
-        return and(new FilterNode(column, express, value));
+    public final FilterNode and(String column, FilterExpress express, Serializable value) {
+        return and(new FilterSimpleNode(column, express, value));
     }
 
-    public FilterNode or(FilterNode node) {
-        return any(node, false);
+    public final FilterNode or(FilterNode node) {
+        return any((FilterSimpleNode) node, false);
     }
 
-    public FilterNode or(String column, Serializable value) {
-        return or(new FilterNode(column, null, value));
+    public final FilterNode or(String column, Serializable value) {
+        return or(new FilterSimpleNode(column, null, value));
     }
 
-    public FilterNode or(String column, FilterExpress express, Serializable value) {
-        return or(new FilterNode(column, express, value));
+    public final FilterNode or(String column, FilterExpress express, Serializable value) {
+        return or(new FilterSimpleNode(column, express, value));
     }
 
-    private FilterNode any(FilterNode node, boolean sign) {
+    protected final FilterNode any(FilterNode node, boolean sign) {
         Objects.requireNonNull(node);
         if (nodes == null) {
             nodes = new FilterNode[]{node};
@@ -87,38 +64,35 @@ public class FilterNode {
             this.nodes = newsiblings;
             return this;
         }
-        FilterNode newnode = new FilterNode(this.column, this.express, this.value);
-        newnode.signand = this.signand;
-        newnode.nodes = this.nodes;
-        this.nodes = new FilterNode[]{newnode};
-        this.column = node.column;
-        this.express = node.express;
-        this.value = node.value;
-        this.signand = sign;
+        this.copyFrom(node, sign);
         return this;
     }
+
+    protected abstract void copyFrom(FilterNode node, boolean sign);
+
+    protected abstract Serializable getValue(Object bean);
 
     public static FilterNode create(String column, Serializable value) {
         return create(column, FilterExpress.EQUAL, value);
     }
 
     public static FilterNode create(String column, FilterExpress express, Serializable value) {
-        return new FilterNode(column, express, value);
+        return new FilterSimpleNode(column, express, value);
     }
 
-    <T> Predicate<T> createFilterPredicate(final EntityInfo<T> info) {
+    protected final <T> Predicate<T> createFilterPredicate(final EntityInfo<T> info, Object bean) {
         if (info == null) return null;
-        Predicate<T> filter = createFilterPredicate(info.getAttribute(column), value);
+        Predicate<T> filter = createFilterPredicate(info.getAttribute(column), getValue(bean));
         if (nodes == null) return filter;
         for (FilterNode node : this.nodes) {
-            Predicate<T> f = node.createFilterPredicate(info);
+            Predicate<T> f = node.createFilterPredicate(info, bean);
             if (f == null) continue;
             filter = (filter == null) ? f : (signand ? filter.and(f) : filter.or(f));
         }
         return filter;
     }
 
-    private <T> Predicate<T> createFilterPredicate(final Attribute<T, ?> attr, final Serializable val) {
+    protected final <T> Predicate<T> createFilterPredicate(final Attribute<T, ?> attr, final Serializable val) {
         if (attr == null) return null;
         if (val == null && express != ISNULL && express != ISNOTNULL) return null;
         switch (express) {
@@ -209,7 +183,7 @@ public class FilterNode {
         return null;
     }
 
-    String formatValue() {
+    protected static String formatValue(Object value) {
         if (value == null) return null;
         if (value instanceof Number) return value.toString();
         if (value instanceof CharSequence) {
@@ -249,21 +223,6 @@ public class FilterNode {
         return String.valueOf(value);
     }
 
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        if (nodes == null) {
-            sb.append(column).append(' ').append(express.value()).append(' ').append(formatValue());
-        } else {
-            sb.append('(').append(column).append(' ').append(express.value()).append(' ').append(formatValue());
-            for (FilterNode node : this.nodes) {
-                sb.append(signand ? " AND " : " OR ").append(node.toString());
-            }
-            sb.append(')');
-        }
-        return sb.toString();
-    }
-
     public boolean isSignand() {
         return signand;
     }
@@ -286,14 +245,6 @@ public class FilterNode {
 
     public void setExpress(FilterExpress express) {
         this.express = express;
-    }
-
-    public Serializable getValue() {
-        return value;
-    }
-
-    public void setValue(Serializable value) {
-        this.value = value;
     }
 
     public FilterNode[] getNodes() {
