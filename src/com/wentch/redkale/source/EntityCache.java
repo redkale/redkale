@@ -5,10 +5,7 @@
  */
 package com.wentch.redkale.source;
 
-import com.wentch.redkale.util.Sheet;
-import com.wentch.redkale.util.Reproduce;
-import com.wentch.redkale.util.Creator;
-import com.wentch.redkale.util.Attribute;
+import com.wentch.redkale.util.*;
 import java.io.*;
 import java.lang.reflect.Field;
 import java.util.*;
@@ -36,8 +33,9 @@ final class EntityCache<T> {
 
     private final Creator<T> creator;
 
-    private final Attribute<T, Object> primary;
+    private final Attribute<T, Serializable> primary;
 
+    //key是field的name
     private final Map<String, Attribute<T, ?>> attributes;
 
     private final Reproduce<T, T> reproduce;
@@ -45,7 +43,7 @@ final class EntityCache<T> {
     private boolean fullloaded;
 
     public EntityCache(final Class<T> type, Creator<T> creator,
-            Attribute<T, Object> primary, Map<String, Attribute<T, ?>> attributes) {
+        Attribute<T, Serializable> primary, Map<String, Attribute<T, ?>> attributes) {
         this.type = type;
         this.creator = creator;
         this.primary = primary;

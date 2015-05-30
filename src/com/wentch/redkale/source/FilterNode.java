@@ -226,7 +226,7 @@ public class FilterNode {
                 if (o instanceof CharSequence) {
                     sb.append('"').append(o.toString().replace("\"", "\\\"")).append('"');
                 } else {
-                    sb.append('"').append(o).append('"');
+                    sb.append(o);
                 }
             }
             return sb.append(')').toString();
@@ -241,7 +241,7 @@ public class FilterNode {
                 if (o instanceof CharSequence) {
                     sb.append('"').append(o.toString().replace("\"", "\\\"")).append('"');
                 } else {
-                    sb.append('"').append(o).append('"');
+                    sb.append(o);
                 }
             }
             return sb.append(')').toString();

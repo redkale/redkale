@@ -519,7 +519,7 @@ final class DataJPASource implements DataSource {
         final CriteriaBuilder builder = manager.getCriteriaBuilder();
         CriteriaUpdate<T> cd = builder.createCriteriaUpdate(clazz);
         cd.set(column, value);
-        cd.where(builder.equal(cd.from(clazz).get(EntityInfo.load(clazz, this).getPrimaryField()), id));
+        cd.where(builder.equal(cd.from(clazz).get(EntityInfo.load(clazz, this).getPrimary().field()), id));
         manager.createQuery(cd).executeUpdate();
     }
 
@@ -565,7 +565,7 @@ final class DataJPASource implements DataSource {
         for (String column : columns) {
             cd.set(column, info.getAttribute(column).get(value));
         }
-        cd.where(builder.equal(cd.from(clazz).get(info.getPrimaryField()), idattr.get(value)));
+        cd.where(builder.equal(cd.from(clazz).get(info.getPrimary().field()), idattr.get(value)));
         manager.createQuery(cd).executeUpdate();
     }
 
@@ -1037,7 +1037,7 @@ final class DataJPASource implements DataSource {
     private <T> List<T> selectList(final Class<T> clazz, final SelectColumn selects, final List<T> list) {
         if (selects == null || selects.isEmpty() || list.isEmpty()) return list;
         final EntityInfo info = EntityInfo.load(clazz, this);
-        final Object dftValue = info.getDefaultTypeInstance();
+        final Object dftValue = info.getCreator().create();
         final Map<String, Attribute> map = info.getAttributes();
         final List<Attribute> attrs = new ArrayList<>();
         if (selects.isExcludable()) {
