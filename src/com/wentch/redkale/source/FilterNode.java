@@ -209,16 +209,15 @@ public class FilterNode {
         return null;
     }
 
-    private String formatValue() {
-        if (value == null) return "null";
-        if (value instanceof Number) {
-            return value.toString();
-        }
+    String formatValue() {
+        if (value == null) return null;
+        if (value instanceof Number) return value.toString();
         if (value instanceof CharSequence) {
             return new StringBuilder().append('"').append(value.toString().replace("\"", "\\\"")).append('"').toString();
         }
         if (value.getClass().isArray()) {
             int len = Array.getLength(value);
+            if (len == 0) return null;
             StringBuilder sb = new StringBuilder();
             sb.append('(');
             for (int i = 0; i < len; i++) {
@@ -234,6 +233,7 @@ public class FilterNode {
         }
         if (value instanceof Collection) {
             Collection c = (Collection) value;
+            if (c.isEmpty()) return null;
             StringBuilder sb = new StringBuilder();
             sb.append('(');
             for (Object o : c) {
