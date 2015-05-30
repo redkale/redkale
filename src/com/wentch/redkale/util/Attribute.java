@@ -111,7 +111,7 @@ public interface Attribute<T, F> {
         if (getter == null && setter == null && field == null) {
             throw new RuntimeException("[" + clazz + "]have no public field or setter or getter");
         }
-        final String fieldalias = fieldalias0;
+        final String fieldname = fieldalias0;
         Class column;
         if (field != null) { // public field
             column = field.getType();
@@ -130,11 +130,11 @@ public interface Attribute<T, F> {
 
         ClassLoader loader = Attribute.class.getClassLoader();
         String newDynName = supDynName + "_Dyn_" + clazz.getSimpleName() + "_"
-                + fieldalias.substring(fieldalias.indexOf('.') + 1) + "_" + pcolumn.getSimpleName().replace("[]", "Array");
+                + fieldname.substring(fieldname.indexOf('.') + 1) + "_" + pcolumn.getSimpleName().replace("[]", "Array");
         if (String.class.getClassLoader() != clazz.getClassLoader()) {
             loader = clazz.getClassLoader();
             newDynName = interName + "_Dyn" + Attribute.class.getSimpleName() + "_"
-                    + fieldalias.substring(fieldalias.indexOf('.') + 1) + "_" + pcolumn.getSimpleName().replace("[]", "Array");
+                    + fieldname.substring(fieldname.indexOf('.') + 1) + "_" + pcolumn.getSimpleName().replace("[]", "Array");
         }
         try {
             return (Attribute) Class.forName(newDynName.replace('/', '.')).newInstance();
@@ -157,7 +157,7 @@ public interface Attribute<T, F> {
 
         { //field 方法
             mv = cw.visitMethod(ACC_PUBLIC, "field", "()Ljava/lang/String;", null, null);
-            mv.visitLdcInsn(fieldalias);
+            mv.visitLdcInsn(fieldname);
             mv.visitInsn(ARETURN);
             mv.visitMaxs(1, 1);
             mv.visitEnd();
