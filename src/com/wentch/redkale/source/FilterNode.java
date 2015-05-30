@@ -82,7 +82,9 @@ public abstract class FilterNode {
 
     protected final <T> Predicate<T> createFilterPredicate(final EntityInfo<T> info, Object bean) {
         if (info == null) return null;
-        Predicate<T> filter = createFilterPredicate(info.getAttribute(column), getValue(bean));
+        final Serializable val = getValue(bean);
+        if (val == null && express != ISNULL && express != ISNOTNULL) return null;
+        Predicate<T> filter = createFilterPredicate(info.getAttribute(column), val);
         if (nodes == null) return filter;
         for (FilterNode node : this.nodes) {
             Predicate<T> f = node.createFilterPredicate(info, bean);
@@ -92,9 +94,8 @@ public abstract class FilterNode {
         return filter;
     }
 
-    protected final <T> Predicate<T> createFilterPredicate(final Attribute<T, ?> attr, final Serializable val) {
+    private <T> Predicate<T> createFilterPredicate(final Attribute<T, ?> attr, final Serializable val) {
         if (attr == null) return null;
-        if (val == null && express != ISNULL && express != ISNOTNULL) return null;
         switch (express) {
             case EQUAL: return (T t) -> val.equals(attr.get(t));
             case NOTEQUAL: return (T t) -> !val.equals(attr.get(t));
