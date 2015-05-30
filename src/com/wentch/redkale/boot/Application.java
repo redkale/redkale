@@ -33,8 +33,7 @@ import org.w3c.dom.*;
 /**
  * 编译时需要加入: -XDignore.symbol.file=true
  * <p>
- * 进程启动类，程序启动后读取application.xml,进行classpath扫描动态加载Service与Servlet，
- * 再进行Service、Servlet与其他资源之间的依赖注入。
+ * 进程启动类，程序启动后读取application.xml,进行classpath扫描动态加载Service与Servlet， 再进行Service、Servlet与其他资源之间的依赖注入。
  *
  * @author zhangjx
  */
@@ -178,6 +177,25 @@ public final class Application {
         System.setProperty("convert.json.pool.size", "128");
         System.setProperty("convert.bson.writer.buffer.defsize", "4096");
         System.setProperty("convert.json.writer.buffer.defsize", "4096");
+
+        final File root = new File(System.getProperty(RESNAME_HOME));
+        this.factory.register(BsonFactory.root());
+        this.factory.register(JsonFactory.root());
+        this.factory.register(BsonFactory.root().getConvert());
+        this.factory.register(JsonFactory.root().getConvert());
+        File persist = new File(root, "conf/persistence.xml");
+        if (persist.isFile()) System.setProperty(DataJDBCSource.DATASOURCE_CONFPATH, persist.getCanonicalPath());
+        logger.log(Level.INFO, RESNAME_HOME + "=" + root.getCanonicalPath() + "\r\n" + RESNAME_ADDR + "=" + this.localAddress.getHostAddress());
+        String lib = config.getValue("lib", "").trim().replace("${APP_HOME}", root.getCanonicalPath());
+        lib = lib.isEmpty() ? (root.getCanonicalPath() + "/conf") : (lib + ";" + root.getCanonicalPath() + "/conf");
+        Server.loadLib(logger, lib);
+        initLogging();
+        InetAddress addr = Utility.localInetAddress();
+        if (addr != null) {
+            byte[] bs = addr.getAddress();
+            int v = (0xff & bs[bs.length - 2]) % 10 * 100 + (0xff & bs[bs.length - 1]);
+            this.factory.register("property.datasource.nodeid", "" + v);
+        }
         //------------------------------------------------------------------------
         final AnyValue resources = config.getAnyValue("resources");
         if (resources != null) {
@@ -210,24 +228,6 @@ public final class Application {
                     }
                 }
             }
-        }
-        final File root = new File(System.getProperty(RESNAME_HOME));
-        this.factory.register(BsonFactory.root());
-        this.factory.register(JsonFactory.root());
-        this.factory.register(BsonFactory.root().getConvert());
-        this.factory.register(JsonFactory.root().getConvert());
-        File persist = new File(root, "conf/persistence.xml");
-        if (persist.isFile()) System.setProperty(DataJDBCSource.DATASOURCE_CONFPATH, persist.getCanonicalPath());
-        logger.log(Level.INFO, RESNAME_HOME + "=" + root.getCanonicalPath() + "\r\n" + RESNAME_ADDR + "=" + this.localAddress.getHostAddress());
-        String lib = config.getValue("lib", "").trim().replace("${APP_HOME}", root.getCanonicalPath());
-        lib = lib.isEmpty() ? (root.getCanonicalPath() + "/conf") : (lib + ";" + root.getCanonicalPath() + "/conf");
-        Server.loadLib(logger, lib);
-        initLogging();
-        InetAddress addr = Utility.localInetAddress();
-        if (addr != null) {
-            byte[] bs = addr.getAddress();
-            int v = (0xff & bs[bs.length - 2]) % 10 * 100 + (0xff & bs[bs.length - 1]);
-            this.factory.register("property.datasource.nodeid", "" + v);
         }
         initResources();
     }
