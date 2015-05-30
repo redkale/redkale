@@ -39,7 +39,7 @@ public abstract class FilterNode {
     }
 
     public final FilterNode or(FilterNode node) {
-        return any((FilterSimpleNode) node, false);
+        return any(node, false);
     }
 
     public final FilterNode or(String column, Serializable value) {
