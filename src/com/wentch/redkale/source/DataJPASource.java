@@ -29,98 +29,151 @@ final class DataJPASource implements DataSource {
 
     private final Logger logger = Logger.getLogger(DataJPASource.class.getSimpleName());
 
-    @Override
     public <T> void updateColumnIncrement(Class<T> clazz, Serializable id, String column, long incvalue) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
-    @Override
     public <T> void updateColumnIncrement(DataConnection conn, Class<T> clazz, Serializable id, String column, long incvalue) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
-    @Override
     public <T> void refreshCache(Class<T> clazz) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
-    @Override
     public <T> T find(Class<T> clazz, FilterBean bean) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
-    @Override
     public Number getCountDistinctSingleResult(Class entityClass, String column) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
-    @Override
     public Number getCountDistinctSingleResult(Class entityClass, String column, FilterBean bean) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
-    @Override
     public <T, V> Sheet<V> queryColumnSheet(String selectedColumn, Class<T> clazz, Flipper flipper, FilterBean bean) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
-    @Override
     public <T, V> Set<V> queryColumnSet(String selectedColumn, Class<T> clazz, String column, Serializable key) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
-    @Override
     public <T, V> Set<V> queryColumnSet(String selectedColumn, Class<T> clazz, String column, FilterExpress express, Serializable key) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
-    @Override
     public <T, V> List<V> queryColumnList(String selectedColumn, Class<T> clazz, String column, FilterExpress express, Serializable key) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
-    @Override
     public <T> int[] queryColumnIntSet(String selectedColumn, Class<T> clazz, String column, Serializable key) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
-    @Override
     public <T> long[] queryColumnLongSet(String selectedColumn, Class<T> clazz, String column, Serializable key) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
-    @Override
     public <T> int[] queryColumnIntList(String selectedColumn, Class<T> clazz, String column, Serializable key) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
-    @Override
     public <T> long[] queryColumnLongList(String selectedColumn, Class<T> clazz, String column, Serializable key) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
-    @Override
     public <T> int[] queryColumnIntSet(String selectedColumn, Class<T> clazz, String column, FilterExpress express, Serializable key) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
-    @Override
     public <T> long[] queryColumnLongSet(String selectedColumn, Class<T> clazz, String column, FilterExpress express, Serializable key) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
-    @Override
     public <T> int[] queryColumnIntList(String selectedColumn, Class<T> clazz, String column, FilterExpress express, Serializable key) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
-    @Override
     public <T> long[] queryColumnLongList(String selectedColumn, Class<T> clazz, String column, FilterExpress express, Serializable key) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
-    @Override
     public <T> T find(Class<T> clazz, SelectColumn selects, Serializable pk) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    public <T> void delete(Class<T> clazz, FilterNode node) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    public <T> void delete(DataConnection conn, Class<T> clazz, FilterNode node) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    public Number getMaxSingleResult(Class entityClass, String column, FilterNode node) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    public Number getMinSingleResult(Class entityClass, String column, FilterNode node) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    public Number getSumSingleResult(Class entityClass, String column, FilterNode node) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    public Number getCountSingleResult(Class entityClass, FilterNode node) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    public Number getCountDistinctSingleResult(Class entityClass, String column, FilterNode node) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    public Number getAvgSingleResult(Class entityClass, String column, FilterNode node) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    public <T> T find(Class<T> clazz, FilterNode node) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    public <T> List<T> queryList(Class<T> clazz, FilterNode node) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    public <T> List<T> queryList(Class<T> clazz, SelectColumn selects, FilterNode node) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    public <T> Sheet<T> querySheet(Class<T> clazz, Flipper flipper, FilterNode node) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    public <T> Sheet<T> querySheet(Class<T> clazz, SelectColumn selects, Flipper flipper, FilterNode node) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    public <T, V> Set<V> queryColumnSet(String selectedColumn, Class<T> clazz, FilterNode node) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    public <T, V> Set<V> queryColumnSet(String selectedColumn, Class<T> clazz, FilterBean bean) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    public <T, V> List<V> queryColumnList(String selectedColumn, Class<T> clazz, FilterNode node) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    public <T, V> List<V> queryColumnList(String selectedColumn, Class<T> clazz, FilterBean bean) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    public <T, V> Sheet<V> queryColumnSheet(String selectedColumn, Class<T> clazz, Flipper flipper, FilterNode node) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
@@ -133,12 +186,10 @@ final class DataJPASource implements DataSource {
             this.manager = m;
         }
 
-        @Override
         public void close() {
             manager.close();
         }
 
-        @Override
         public boolean commit() {
             try {
                 manager.getTransaction().commit();
@@ -148,7 +199,6 @@ final class DataJPASource implements DataSource {
             }
         }
 
-        @Override
         public void rollback() {
             manager.getTransaction().rollback();
         }
@@ -176,12 +226,10 @@ final class DataJPASource implements DataSource {
         if (flag) logger.setLevel(Level.FINEST);
     }
 
-    @Override
     public DataConnection createReadConnection() {
         return new DataJPAConnection(factory.createEntityManager());
     }
 
-    @Override
     public DataConnection createWriteConnection() {
         return new DataJPAConnection(factory.createEntityManager());
     }
@@ -197,7 +245,6 @@ final class DataJPASource implements DataSource {
      * @param <T>
      * @param values
      */
-    @Override
     public <T> void insert(T... values) {
         final EntityManager manager = factory.createEntityManager();
         try {
@@ -218,7 +265,6 @@ final class DataJPASource implements DataSource {
      * @param conn
      * @param values
      */
-    @Override
     public <T> void insert(final DataConnection conn, T... values) {
         final EntityManager manager = conn.getConnection();
         for (T value : values) {
@@ -233,7 +279,6 @@ final class DataJPASource implements DataSource {
      * @param <T>
      * @param values
      */
-    @Override
     public <T> void delete(T... values) {
         final EntityManager manager = factory.createEntityManager();
         try {
@@ -252,7 +297,6 @@ final class DataJPASource implements DataSource {
      * @param conn
      * @param values
      */
-    @Override
     public <T> void delete(final DataConnection conn, T... values) {
         final EntityManager manager = conn.getConnection();
         delete(manager, values);
@@ -271,7 +315,6 @@ final class DataJPASource implements DataSource {
      * @param clazz
      * @param ids 主键值
      */
-    @Override
     public <T> void delete(Class<T> clazz, Serializable... ids) {
         final EntityManager manager = factory.createEntityManager();
         try {
@@ -291,7 +334,6 @@ final class DataJPASource implements DataSource {
      * @param clazz
      * @param ids
      */
-    @Override
     public <T> void delete(final DataConnection conn, Class<T> clazz, Serializable... ids) {
         final EntityManager manager = conn.getConnection();
         delete(manager, clazz, ids);
@@ -312,7 +354,6 @@ final class DataJPASource implements DataSource {
      * @param column
      * @param keys
      */
-    @Override
     public <T> void deleteByColumn(Class<T> clazz, String column, Serializable... keys) {
         final EntityManager manager = factory.createEntityManager();
         try {
@@ -333,7 +374,6 @@ final class DataJPASource implements DataSource {
      * @param column
      * @param keys
      */
-    @Override
     public <T> void deleteByColumn(final DataConnection conn, Class<T> clazz, String column, Serializable... keys) {
         final EntityManager manager = conn.getConnection();
         deleteByColumn(manager, clazz, column, keys);
@@ -356,7 +396,6 @@ final class DataJPASource implements DataSource {
      * @param column2
      * @param key2
      */
-    @Override
     public <T> void deleteByTwoColumn(Class<T> clazz, String column1, Serializable key1, String column2, Serializable key2) {
         final EntityManager manager = factory.createEntityManager();
         try {
@@ -379,7 +418,6 @@ final class DataJPASource implements DataSource {
      * @param column2
      * @param key2
      */
-    @Override
     public <T> void deleteByTwoColumn(final DataConnection conn, Class<T> clazz, String column1, Serializable key1, String column2, Serializable key2) {
         deleteByTwoColumn((EntityManager) conn.getConnection(), clazz, column1, key1, column2, key2);
     }
@@ -447,7 +485,6 @@ final class DataJPASource implements DataSource {
      * @param <T>
      * @param values
      */
-    @Override
     public <T> void update(T... values) {
         final EntityManager manager = factory.createEntityManager();
         try {
@@ -466,7 +503,6 @@ final class DataJPASource implements DataSource {
      * @param conn
      * @param values
      */
-    @Override
     public <T> void update(final DataConnection conn, T... values) {
         final EntityManager manager = conn.getConnection();
         update(manager, values);
@@ -487,7 +523,6 @@ final class DataJPASource implements DataSource {
      * @param column
      * @param value
      */
-    @Override
     public <T> void updateColumn(Class<T> clazz, Serializable id, String column, Serializable value) {
         final EntityManager manager = factory.createEntityManager();
         try {
@@ -509,7 +544,6 @@ final class DataJPASource implements DataSource {
      * @param column
      * @param value
      */
-    @Override
     public <T> void updateColumn(final DataConnection conn, Class<T> clazz, Serializable id, String column, Serializable value) {
         final EntityManager manager = conn.getConnection();
         updateColumn(manager, clazz, id, column, value);
@@ -530,7 +564,6 @@ final class DataJPASource implements DataSource {
      * @param value
      * @param columns
      */
-    @Override
     public <T> void updateColumns(final T value, final String... columns) {
         final EntityManager manager = factory.createEntityManager();
         try {
@@ -550,7 +583,6 @@ final class DataJPASource implements DataSource {
      * @param value
      * @param columns
      */
-    @Override
     public <T> void updateColumns(final DataConnection conn, final T value, final String... columns) {
         final EntityManager manager = conn.getConnection();
         updateColumns(manager, value, columns);
@@ -571,56 +603,46 @@ final class DataJPASource implements DataSource {
 
     //-----------------------getSingleResult-----------------------------
     //-----------------------------MAX-----------------------------
-    @Override
     public Number getMaxSingleResult(final Class entityClass, final String column) {
-        return getMaxSingleResult(entityClass, column, null);
+        return getMaxSingleResult(entityClass, column, (FilterBean) null);
     }
 
-    @Override
     public Number getMaxSingleResult(final Class entityClass, final String column, FilterBean bean) {
         return getSingleResult(ReckonType.MAX, entityClass, column, bean);
     }
 
     //-----------------------------MIN-----------------------------
-    @Override
     public Number getMinSingleResult(final Class entityClass, final String column) {
-        return getMinSingleResult(entityClass, column, null);
+        return getMinSingleResult(entityClass, column, (FilterBean) null);
     }
 
-    @Override
     public Number getMinSingleResult(final Class entityClass, final String column, FilterBean bean) {
         return getSingleResult(ReckonType.MIN, entityClass, column, bean);
     }
 
     //-----------------------------SUM-----------------------------
-    @Override
     public Number getSumSingleResult(final Class entityClass, final String column) {
-        return getSumSingleResult(entityClass, column, null);
+        return getSumSingleResult(entityClass, column, (FilterBean) null);
     }
 
-    @Override
     public Number getSumSingleResult(final Class entityClass, final String column, FilterBean bean) {
         return getSingleResult(ReckonType.SUM, entityClass, column, bean);
     }
 
     //----------------------------COUNT----------------------------
-    @Override
     public Number getCountSingleResult(final Class entityClass) {
-        return getCountSingleResult(entityClass, null);
+        return getCountSingleResult(entityClass, (FilterBean) null);
     }
 
-    @Override
     public Number getCountSingleResult(final Class entityClass, FilterBean bean) {
         return getSingleResult(ReckonType.COUNT, entityClass, null, bean);
     }
 
     //-----------------------------AVG-----------------------------
-    @Override
     public Number getAvgSingleResult(final Class entityClass, final String column) {
-        return getAvgSingleResult(entityClass, column, null);
+        return getAvgSingleResult(entityClass, column, (FilterBean) null);
     }
 
-    @Override
     public Number getAvgSingleResult(final Class entityClass, final String column, FilterBean bean) {
         return getSingleResult(ReckonType.AVG, entityClass, column, bean);
     }
@@ -673,7 +695,6 @@ final class DataJPASource implements DataSource {
      * @param pk
      * @return
      */
-    @Override
     public <T> T find(Class<T> clazz, Serializable pk) {
         final EntityManager manager = factory.createEntityManager();
         try {
@@ -691,7 +712,6 @@ final class DataJPASource implements DataSource {
      * @param ids
      * @return
      */
-    @Override
     public <T> T[] find(Class<T> clazz, Serializable... ids) {
         final EntityManager manager = factory.createEntityManager();
         try {
@@ -715,7 +735,6 @@ final class DataJPASource implements DataSource {
      * @param key
      * @return
      */
-    @Override
     public <T> T findByColumn(Class<T> clazz, String column, Serializable key) {
         final EntityManager manager = factory.createEntityManager();
         try {
@@ -740,7 +759,6 @@ final class DataJPASource implements DataSource {
      * @param key2
      * @return
      */
-    @Override
     public <T> T findByTwoColumn(Class<T> clazz, String column1, Serializable key1, String column2, Serializable key2) {
         final EntityManager manager = factory.createEntityManager();
         try {
@@ -789,7 +807,6 @@ final class DataJPASource implements DataSource {
      * @param keys
      * @return
      */
-    @Override
     public <T> T[] findByColumn(Class<T> clazz, String column, Serializable... keys) {
         return findByColumn(clazz, null, column, keys);
     }
@@ -804,7 +821,6 @@ final class DataJPASource implements DataSource {
      * @param keys
      * @return
      */
-    @Override
     public <T> T[] findByColumn(Class<T> clazz, final SelectColumn selects, String column, Serializable... keys) {
         final EntityManager manager = factory.createEntityManager();
         try {
@@ -831,7 +847,6 @@ final class DataJPASource implements DataSource {
      * @param key
      * @return
      */
-    @Override
     public <T, V> List<V> queryColumnList(String selectedColumn, Class<T> clazz, String column, Serializable key) {
         final EntityManager manager = factory.createEntityManager();
         try {
@@ -855,7 +870,6 @@ final class DataJPASource implements DataSource {
      * @param key
      * @return
      */
-    @Override
     public <T> List<T> queryList(Class<T> clazz, String column, Serializable key) {
         return queryList(clazz, (SelectColumn) null, column, key);
     }
@@ -870,7 +884,6 @@ final class DataJPASource implements DataSource {
      * @param key
      * @return
      */
-    @Override
     public <T> List<T> queryList(Class<T> clazz, String column, FilterExpress express, Serializable key) {
         return queryList(clazz, (SelectColumn) null, column, express, key);
     }
@@ -885,7 +898,6 @@ final class DataJPASource implements DataSource {
      * @param key
      * @return
      */
-    @Override
     public <T> List<T> queryList(Class<T> clazz, final SelectColumn selects, String column, Serializable key) {
         return queryList(clazz, selects, column, FilterExpress.EQUAL, key);
     }
@@ -901,7 +913,6 @@ final class DataJPASource implements DataSource {
      * @param key
      * @return
      */
-    @Override
     public <T> List<T> queryList(Class<T> clazz, final SelectColumn selects, String column, FilterExpress express, Serializable key) {
         final EntityManager manager = factory.createEntityManager();
         try {
@@ -923,7 +934,6 @@ final class DataJPASource implements DataSource {
      * @param bean
      * @return
      */
-    @Override
     public <T> List<T> queryList(final Class<T> clazz, final FilterBean bean) {
         return queryList(clazz, null, bean);
     }
@@ -937,7 +947,6 @@ final class DataJPASource implements DataSource {
      * @param bean
      * @return
      */
-    @Override
     public <T> List<T> queryList(final Class<T> clazz, final SelectColumn selects, final FilterBean bean) {
         final EntityManager manager = factory.createEntityManager();
         try {
@@ -962,7 +971,6 @@ final class DataJPASource implements DataSource {
      * @param bean
      * @return
      */
-    @Override
     public <T> Sheet<T> querySheet(Class<T> clazz, final Flipper flipper, final FilterBean bean) {
         return querySheet(clazz, null, flipper, bean);
     }
@@ -977,7 +985,6 @@ final class DataJPASource implements DataSource {
      * @param bean
      * @return
      */
-    @Override
     public <T> Sheet<T> querySheet(Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterBean bean) {
         final EntityManager manager = factory.createEntityManager();
         try {

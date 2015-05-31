@@ -262,7 +262,7 @@ final class EntityCache<T> {
         this.reproduce.copy(rs, value);
     }
 
-    public void update(final T value, Attribute<T, Serializable>[] attrs) {
+    public void update(final T value, Collection<Attribute<T, Serializable>> attrs) {
         if (value == null) return;
         T rs = this.map.get(this.primary.get(value));
         if (rs == null) return;

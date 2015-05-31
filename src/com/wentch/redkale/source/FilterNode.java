@@ -143,6 +143,29 @@ public class FilterNode {
         return rs;
     }
 
+    protected static <E> String createFilterSQLOrderBy(EntityInfo<E> info, Flipper flipper) {
+        if (flipper == null || flipper.getSort() == null || flipper.getSort().isEmpty()) return "";
+        final StringBuilder sb = new StringBuilder();
+        sb.append(" ORDER BY ");
+        if (info.isNoAlias()) {
+            sb.append(flipper.getSort());
+        } else {
+            boolean flag = false;
+            for (String item : flipper.getSort().split(",")) {
+                if (item.isEmpty()) continue;
+                String[] sub = item.split("\\s+");
+                if (flag) sb.append(',');
+                if (sub.length < 2 || sub[1].equalsIgnoreCase("ASC")) {
+                    sb.append("a.").append(info.getSQLColumn(sub[0])).append(" ASC");
+                } else {
+                    sb.append("a.").append(info.getSQLColumn(sub[0])).append(" DESC");
+                }
+                flag = true;
+            }
+        }
+        return sb.toString();
+    }
+
     private <T> StringBuilder createFilterSQLExpress(final EntityInfo<T> info, Serializable val0) {
         final StringBuilder val = formatValue(val0);
         if (val == null) return null;
@@ -272,29 +295,6 @@ public class FilterNode {
         return null;
     }
 
-    protected static <E> StringBuilder createFilterSQLOrderBy(EntityInfo<E> info, Flipper flipper) {
-        if (flipper == null || flipper.getSort() == null || flipper.getSort().isEmpty()) return null;
-        final StringBuilder sb = new StringBuilder();
-        sb.append(" ORDER BY ");
-        if (info.isNoAlias()) {
-            sb.append(flipper.getSort());
-        } else {
-            boolean flag = false;
-            for (String item : flipper.getSort().split(",")) {
-                if (item.isEmpty()) continue;
-                String[] sub = item.split("\\s+");
-                if (flag) sb.append(',');
-                if (sub.length < 2 || sub[1].equalsIgnoreCase("ASC")) {
-                    sb.append("a.").append(info.getSQLColumn(sub[0])).append(" ASC");
-                } else {
-                    sb.append("a.").append(info.getSQLColumn(sub[0])).append(" DESC");
-                }
-                flag = true;
-            }
-        }
-        return sb;
-    }
-
     protected static <E> Comparator<E> createFilterComparator(EntityInfo<E> info, Flipper flipper) {
         if (flipper == null || flipper.getSort() == null || flipper.getSort().isEmpty()) return null;
         Comparator<E> comparator = null;
@@ -320,6 +320,15 @@ public class FilterNode {
     }
 
     protected StringBuilder formatValue(Object value) {
+        return formatValue(express, value);
+    }
+
+    protected static String formatToString(Object value) {
+        StringBuilder sb = formatValue(null, value);
+        return sb == null ? null : sb.toString();
+    }
+
+    private static StringBuilder formatValue(FilterExpress express, Object value) {
         if (value == null) return null;
         if (value instanceof Number) return new StringBuilder().append(value);
         if (value instanceof CharSequence) {
@@ -344,6 +353,10 @@ public class FilterNode {
         } else if (value.getClass().isArray()) {
             int len = Array.getLength(value);
             if (len == 0) return null;
+            if (len == 1) {
+                Object firstval = Array.get(value, 0);
+                if (firstval != null && firstval.getClass().isArray()) return formatValue(express, firstval);
+            }
             StringBuilder sb = new StringBuilder();
             sb.append('(');
             for (int i = 0; i < len; i++) {
