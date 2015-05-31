@@ -42,8 +42,8 @@ final class EntityCache<T> {
 
     private boolean fullloaded;
 
-    public EntityCache(final Class<T> type, Creator<T> creator,
-        Attribute<T, Serializable> primary, Map<String, Attribute<T, Serializable>> attributes) {
+    public EntityCache(final Class<T> type, Creator<T> creator, Attribute<T, Serializable> primary,
+        Map<String, Attribute<T, Serializable>> attributes, Function<Class<T>, List<T>> fullloader) {
         this.type = type;
         this.creator = creator;
         this.primary = primary;
@@ -59,9 +59,14 @@ final class EntityCache<T> {
                 return false;
             }
         });
+        AutoLoad auto = type.getAnnotation(AutoLoad.class);
+        if (auto != null && auto.value() && fullloader != null) {
+            fullLoad(fullloader.apply(type));
+        }
     }
 
     public void fullLoad(List<T> all) {
+        if (all == null) return;
         clear();
         all.stream().filter(x -> x != null).forEach(x -> this.map.put(this.primary.get(x), x));
         this.list.addAll(all);

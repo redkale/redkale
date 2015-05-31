@@ -13,6 +13,7 @@ import java.sql.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Function;
 import java.util.logging.*;
 import javax.persistence.*;
 
@@ -27,6 +28,8 @@ public final class EntityInfo<T> {
     private static final ConcurrentHashMap<Class, EntityInfo> entityInfos = new ConcurrentHashMap<>();
 
     private static final Logger logger = Logger.getLogger(EntityInfo.class);
+
+    static final Set<Class> cacheClasses = new HashSet<>();
 
     //Entity类的类名
     private final Class<T> type;
@@ -83,29 +86,21 @@ public final class EntityInfo<T> {
     final int allocationSize;
     //------------------------------------------------------------
 
-    public static <T> EntityInfo<T> load(Class<T> clazz, final DataSource source) {
+    public static <T> EntityInfo<T> load(Class<T> clazz, final int nodeid,
+        Function<Class, List> fullloader) {
         EntityInfo rs = entityInfos.get(clazz);
         if (rs != null) return rs;
         synchronized (entityInfos) {
             rs = entityInfos.get(clazz);
             if (rs == null) {
-                rs = new EntityInfo(clazz, ((DataJDBCSource) source).nodeid, ((DataJDBCSource) source).cacheClasses);
+                rs = new EntityInfo(clazz, nodeid, fullloader);
                 entityInfos.put(clazz, rs);
-                if (rs.cache != null && source != null) {
-                    AutoLoad auto = clazz.getAnnotation(AutoLoad.class);
-                    if (auto != null && auto.value()) {
-                        long s = System.currentTimeMillis();
-                        rs.cache.fullLoad(source.queryList(clazz, null));
-                        long e = System.currentTimeMillis() - s;
-                        if (logger.isLoggable(Level.FINEST)) logger.finest(clazz.getName() + " full auto loaded for cache in " + e + " ms");
-                    }
-                }
             }
             return rs;
         }
     }
 
-    private EntityInfo(Class<T> type, int nodeid, final List<Class> cacheClasses) {
+    private EntityInfo(Class<T> type, int nodeid, Function<Class<T>, List<T>> fullloader) {
         this.type = type;
         //---------------------------------------------
         this.nodeid = nodeid;
@@ -216,7 +211,7 @@ public final class EntityInfo<T> {
         Cacheable c = type.getAnnotation(Cacheable.class);
         boolean cf = (c == null) ? (cacheClasses != null && cacheClasses.contains(type)) : false;
         if ((c != null && c.value()) || cf) {
-            this.cache = new EntityCache<>(type, creator, primary, attributes);
+            this.cache = new EntityCache<>(type, creator, primary, attributes, fullloader);
         } else {
             this.cache = null;
         }

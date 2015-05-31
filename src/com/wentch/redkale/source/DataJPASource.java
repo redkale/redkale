@@ -269,7 +269,7 @@ final class DataJPASource implements DataSource {
      *
      * @param <T>
      * @param clazz
-     * @param ids   主键值
+     * @param ids 主键值
      */
     @Override
     public <T> void delete(Class<T> clazz, Serializable... ids) {
@@ -519,7 +519,7 @@ final class DataJPASource implements DataSource {
         final CriteriaBuilder builder = manager.getCriteriaBuilder();
         CriteriaUpdate<T> cd = builder.createCriteriaUpdate(clazz);
         cd.set(column, value);
-        cd.where(builder.equal(cd.from(clazz).get(EntityInfo.load(clazz, this).getPrimary().field()), id));
+        cd.where(builder.equal(cd.from(clazz).get(EntityInfo.load(clazz, 0, null).getPrimary().field()), id));
         manager.createQuery(cd).executeUpdate();
     }
 
@@ -558,7 +558,7 @@ final class DataJPASource implements DataSource {
 
     private <T> void updateColumns(final EntityManager manager, final T value, final String... columns) {
         final Class clazz = value.getClass();
-        final EntityInfo info = EntityInfo.load(clazz, this);
+        final EntityInfo info = EntityInfo.load(clazz, 0, null);
         final Attribute idattr = info.getPrimary();
         final CriteriaBuilder builder = manager.getCriteriaBuilder();
         final CriteriaUpdate<T> cd = builder.createCriteriaUpdate(clazz);
@@ -891,8 +891,7 @@ final class DataJPASource implements DataSource {
     }
 
     /**
-     * 注意: 尚未实现识别express功能
-     * 根据指定字段值查询对象集合， 对象只填充或排除SelectColumn指定的字段
+     * 注意: 尚未实现识别express功能 根据指定字段值查询对象集合， 对象只填充或排除SelectColumn指定的字段
      *
      * @param <T>
      * @param clazz
@@ -1036,7 +1035,7 @@ final class DataJPASource implements DataSource {
 
     private <T> List<T> selectList(final Class<T> clazz, final SelectColumn selects, final List<T> list) {
         if (selects == null || selects.isEmpty() || list.isEmpty()) return list;
-        final EntityInfo info = EntityInfo.load(clazz, this);
+        final EntityInfo info = EntityInfo.load(clazz, 0, null);
         final Object dftValue = info.getCreator().create();
         final Map<String, Attribute> map = info.getAttributes();
         final List<Attribute> attrs = new ArrayList<>();

@@ -62,8 +62,6 @@ public final class DataJDBCSource implements DataSource {
 
     private final JDBCPoolSource writePool;
 
-    final List<Class> cacheClasses = new ArrayList<>();
-
     @Resource(name = "property.datasource.nodeid")
     int nodeid;
 
@@ -164,7 +162,7 @@ public final class DataJDBCSource implements DataSource {
         for (Map.Entry<Object, Object> en : readprop.entrySet()) {
             if ("cache".equalsIgnoreCase(en.getValue().toString())) {
                 try {
-                    cacheClasses.add(Class.forName(en.getKey().toString()));
+                    EntityInfo.cacheClasses.add(Class.forName(en.getKey().toString()));
                 } catch (Exception e) {
                 }
             }
@@ -179,7 +177,7 @@ public final class DataJDBCSource implements DataSource {
         for (Map.Entry<Object, Object> en : readprop.entrySet()) {
             if ("cache".equalsIgnoreCase(en.getValue().toString())) {
                 try {
-                    cacheClasses.add(Class.forName(en.getKey().toString()));
+                    EntityInfo.cacheClasses.add(Class.forName(en.getKey().toString()));
                 } catch (Exception e) {
                 }
             }
@@ -339,8 +337,10 @@ public final class DataJDBCSource implements DataSource {
         }
     }
 
+    private final Function<Class, List> fullloader = (t) -> queryList(t, null);
+
     private <T> EntityInfo<T> loadEntityInfo(Class<T> clazz) {
-        return EntityInfo.load(clazz, this);
+        return EntityInfo.load(clazz, this.nodeid, fullloader);
     }
 
     /**
@@ -351,7 +351,7 @@ public final class DataJDBCSource implements DataSource {
      */
     @Override
     public <T> void refreshCache(Class<T> clazz) {
-        EntityInfo<T> info = EntityInfo.load(clazz, this);
+        EntityInfo<T> info = EntityInfo.load(clazz, this.nodeid, fullloader);
         EntityCache<T> cache = info.getCache();
         if (cache == null) return;
         cache.fullLoad(queryList(clazz, null));
@@ -505,7 +505,7 @@ public final class DataJDBCSource implements DataSource {
 
     public <T> void insertCache(T... values) {
         if (values.length == 0) return;
-        final EntityInfo<T> info = EntityInfo.load((Class<T>) values[0].getClass(), this);
+        final EntityInfo<T> info = EntityInfo.load((Class<T>) values[0].getClass(), this.nodeid, fullloader);
         final EntityCache<T> cache = info.getCache();
         if (cache == null) return;
         for (T value : values) {
@@ -2153,7 +2153,7 @@ public final class DataJDBCSource implements DataSource {
         }
 
         public EntityXXInfo(DataJDBCSource source, Class<T> type) {
-            this.inner = EntityInfo.load(type, source);
+            this.inner = EntityInfo.load(type, source.nodeid, null);
             this.nodeid = source.nodeid;
             DistributeTables dt = type.getAnnotation(DistributeTables.class);
             this.distributeTables = dt == null ? null : dt.value();

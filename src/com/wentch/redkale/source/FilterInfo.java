@@ -82,7 +82,7 @@ final class FilterInfo<T extends FilterBean> {
                         joinTables.put(joinCol.table(), String.valueOf((char) ('a' + (++index))));
                     }
                     String alias = joinTables.get(joinCol.table());
-                    EntityInfo info = EntityInfo.load(joinCol.table(), source);
+                    EntityInfo info = EntityInfo.load(joinCol.table(), 0, null);
                     EntityCache cache = null;
                     if (info.getCache() != null && info.getCache().isFullLoaded()) {
                         cache = info.getCache();
@@ -90,7 +90,7 @@ final class FilterInfo<T extends FilterBean> {
                         cachejoin = false;
                     }
                     item = new FilterItem(field, alias, cache);
-                    EntityInfo secinfo = EntityInfo.load(joinCol.table(), null);
+                    EntityInfo secinfo = EntityInfo.load(joinCol.table(), 0, null);
                     if (!again) {
                         joinsb.append(" ").append(joinCol.type().name()).append(" JOIN ").append(secinfo.getTable())
                             .append(" ").append(alias).append(" ON a.# = ").append(alias).append(".")
