@@ -209,7 +209,7 @@ public final class EntityInfo<T> {
         this.allocationSize = allocationSize0;
         //----------------cache--------------
         Cacheable c = type.getAnnotation(Cacheable.class);
-        boolean cf = (c == null) ? (cacheClasses != null && cacheClasses.contains(type)) : false;
+        boolean cf = (c == null && cacheClasses != null && cacheClasses.contains(type));
         if ((c != null && c.value()) || cf) {
             this.cache = new EntityCache<>(type, creator, primary, attributes, fullloader);
         } else {

@@ -6,18 +6,140 @@
 package com.wentch.redkale.source;
 
 import static com.wentch.redkale.source.FilterExpress.*;
-import com.wentch.redkale.util.Attribute;
+import com.wentch.redkale.util.*;
 import java.io.Serializable;
 import java.lang.reflect.*;
-import java.util.Collection;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
+import java.util.logging.Logger;
+import javax.persistence.Transient;
 
 /**
  *
  * @author zhangjx
  */
-public class FilterBeanNode extends FilterNode {
+@SuppressWarnings("unchecked")
+final class FilterBeanNode extends FilterNode {
 
+    private static final Logger logger = Logger.getLogger(FilterBeanNode.class.getSimpleName());
+
+    private static final ConcurrentHashMap<Class, FilterBeanNode> beanodes = new ConcurrentHashMap<>();
+
+    public static <T extends FilterBean> FilterBeanNode load(Class<T> clazz, final int nodeid,
+        Function<Class, List> fullloader) {
+        FilterBeanNode rs = beanodes.get(clazz);
+        if (rs != null) return rs;
+        synchronized (beanodes) {
+            rs = beanodes.get(clazz);
+            if (rs == null) {
+                rs = createNode(clazz, nodeid, fullloader);
+                beanodes.put(clazz, rs);
+            }
+            return rs;
+        }
+    }
+
+    private static <T extends FilterBean> FilterBeanNode createNode(Class<T> clazz, final int nodeid,
+        Function<Class, List> fullloader) {
+        Class cltmp = clazz;
+        Set<String> fields = new HashSet<>();
+        final Map<Class, String> joinTables = new HashMap<>();
+        Map<String, FilterBeanNode> nodemap = new HashMap<>();
+        boolean joinallcached = true;
+        final StringBuilder joinsb = new StringBuilder();
+        do {
+            for (Field field : cltmp.getDeclaredFields()) {
+                if (Modifier.isStatic(field.getModifiers())) continue;
+                if (fields.contains(field.getName())) continue;
+                if (field.getAnnotation(Ignore.class) != null) continue;
+                if (field.getAnnotation(Transient.class) != null) continue;
+
+                char[] chars = field.getName().toCharArray();
+                chars[0] = Character.toUpperCase(chars[0]);
+                final Class t = field.getType();
+                Method getter = null;
+                try {
+                    getter = cltmp.getMethod(((t == boolean.class || t == Boolean.class) ? "is" : "get") + new String(chars));
+                } catch (Exception ex) {
+                    continue;
+                }
+                fields.add(field.getName());
+                FilterBeanNode newnode = new FilterBeanNode(field.getName(), true, Attribute.create(getter, null));
+                newnode.setField(field);
+                //------------------------------------
+                {
+                    FilterJoinColumn joinCol = field.getAnnotation(FilterJoinColumn.class);
+                    if (joinCol != null) {
+                        boolean first = false;
+                        final Class joinClass = joinCol.table();
+                        if (!joinTables.containsKey(joinClass)) {
+                            first = true;
+                            joinTables.put(joinClass, String.valueOf((char) ('b' + joinTables.size())));
+                        }
+                        final String alias = joinTables.get(joinClass);
+                        final EntityInfo secinfo = EntityInfo.load(joinClass, nodeid, fullloader);
+                        if (secinfo.getCache() == null || !secinfo.getCache().isFullLoaded()) {
+                            joinallcached = false;
+                        }
+                        if (first) {
+                            joinsb.append(" ").append(joinCol.type().name()).append(" JOIN ").append(secinfo.getTable())
+                                .append(" ").append(alias).append(" ON a.# = ").append(alias).append(".")
+                                .append(joinCol.column().isEmpty() ? secinfo.getPrimarySQLColumn() : secinfo.getSQLColumn(joinCol.column()));
+                        }
+                        newnode.foreignEntity = secinfo;
+                        newnode.tabalis = alias;
+                        newnode.foreignColumn = joinCol.column().isEmpty() ? secinfo.getPrimary().field() : joinCol.column();
+                    }
+                }
+                //------------------------------------
+                {
+                    FilterGroup[] refs = field.getAnnotationsByType(FilterGroup.class);
+                    String[] groups = new String[refs.length];
+                    for (int i = 0; i < refs.length; i++) {
+                        groups[i] = refs[i].value();
+                    }
+                    if (groups.length == 0) groups = new String[]{"[AND]"};
+                    for (String key : groups) {
+                        if (!key.startsWith("[AND]") && !key.startsWith("[OR]")) {
+                            throw new RuntimeException(field + "'s FilterGroup.value(" + key + ") illegal, must be [AND] or [OR] startsWith");
+                        }
+                        FilterBeanNode node = nodemap.get(key);
+                        if (node == null) {
+                            nodemap.put(key, newnode);
+                        } else {
+                            node.any(node, !key.contains("[OR]"));
+                        }
+                    }
+                }
+            }
+        } while ((cltmp = cltmp.getSuperclass()) != Object.class);
+        FilterBeanNode rs = null;
+        for (FilterBeanNode f : nodemap.values()) {
+            if (rs == null) {
+                rs = f;
+            } else {
+                rs.and(f);
+            }
+        }
+        if (rs != null) {
+            rs.joinallcached = joinallcached;
+            if (joinsb.length() > 0) rs.joinSQL = joinsb.toString();
+        }
+        return rs;
+    }
+
+    //--------------------------- only header -----------------------------------------------------
+    private boolean joinallcached = true;
+
+    private String joinSQL;
+
+    //---------------------------------------------------------------------------------------------
     private Attribute beanAttribute;
+
+    private EntityInfo foreignEntity;
+
+    private String foreignColumn;
 
     private boolean array;
 
@@ -39,7 +161,7 @@ public class FilterBeanNode extends FilterNode {
         this.beanAttribute = beanAttr;
     }
 
-    void setField(Field field) {
+    private void setField(Field field) {
         final FilterColumn fc = field.getAnnotation(FilterColumn.class);
         if (fc != null && !fc.name().isEmpty()) this.column = fc.name();
         final Class type = field.getType();
@@ -63,6 +185,7 @@ public class FilterBeanNode extends FilterNode {
         }
         if (exp == null) exp = EQUAL;
         this.express = exp;
+        this.tabalis = "a";
     }
 
     @Override
@@ -70,6 +193,8 @@ public class FilterBeanNode extends FilterNode {
         FilterBeanNode newnode = new FilterBeanNode(this.column, this.signand, this.beanAttribute);
         newnode.express = this.express;
         newnode.nodes = this.nodes;
+        newnode.foreignEntity = this.foreignEntity;
+        newnode.foreignColumn = this.foreignColumn;
         newnode.array = this.array;
         newnode.collection = this.collection;
         newnode.ignoreCase = this.ignoreCase;
@@ -85,6 +210,8 @@ public class FilterBeanNode extends FilterNode {
         if (node instanceof FilterBeanNode) {
             FilterBeanNode beanNode = ((FilterBeanNode) node);
             this.beanAttribute = beanNode.beanAttribute;
+            this.foreignEntity = beanNode.foreignEntity;
+            this.foreignColumn = beanNode.foreignColumn;
             this.array = beanNode.array;
             this.collection = beanNode.collection;
             this.ignoreCase = beanNode.ignoreCase;
@@ -93,6 +220,19 @@ public class FilterBeanNode extends FilterNode {
             this.number = beanNode.number;
             this.string = beanNode.string;
         }
+    }
+
+    @Override
+    protected <T> StringBuilder createFilterSQLExpress(final EntityInfo<T> info, FilterBean bean) {
+        if (joinSQL == null) return super.createFilterSQLExpress(info, bean);
+        StringBuilder sb = super.createFilterSQLExpress(info, bean);
+        String jsql = joinSQL.replace("#", info.getPrimarySQLColumn());
+        return new StringBuilder(sb.length() + jsql.length()).append(jsql).append(sb);
+    }
+
+    @Override
+    protected boolean isJoinAllCached() {
+        return false && joinallcached; //暂时没实现
     }
 
     @Override

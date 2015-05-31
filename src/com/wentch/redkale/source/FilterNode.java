@@ -20,6 +20,8 @@ public class FilterNode {
 
     protected boolean signand = true;
 
+    protected String tabalis;
+
     protected String column;
 
     protected FilterExpress express;
@@ -96,6 +98,7 @@ public class FilterNode {
         newnode.signand = this.signand;
         newnode.nodes = this.nodes;
         this.nodes = new FilterNode[]{newnode};
+        this.tabalis = node.tabalis;
         this.column = node.column;
         this.express = node.express;
         this.signand = sign;
@@ -106,6 +109,10 @@ public class FilterNode {
         return value;
     }
 
+    protected boolean isJoinAllCached() {
+        return true;
+    }
+
     public static FilterNode create(String column, Serializable value) {
         return create(column, FilterExpress.EQUAL, value);
     }
@@ -114,13 +121,16 @@ public class FilterNode {
         return new FilterNode(column, express, value);
     }
 
-    protected final <T> StringBuilder createFilterSQLExpress(final EntityInfo<T> info, FilterBean bean) {
+    protected <T> StringBuilder createFilterSQLExpress(final EntityInfo<T> info, FilterBean bean) {
         final Serializable val = getValue(bean);
-        if (val == null && express != ISNULL && express != ISNOTNULL) return null;
+        if (val == null && express != ISNULL && express != ISNOTNULL) return new StringBuilder(0);
         StringBuilder sb0 = createFilterSQLExpress(info, val);
-        if (nodes == null) return sb0;
+        if (nodes == null) {
+            if (sb0 == null) return new StringBuilder(0);
+            return new StringBuilder(sb0.length() + 8).append(" WHERE ").append(sb0);
+        }
         final StringBuilder rs = new StringBuilder();
-        rs.append('(');
+        rs.append(" WHERE (");
         if (sb0 != null) rs.append(sb0);
         for (FilterNode node : this.nodes) {
             StringBuilder f = node.createFilterSQLExpress(info, bean);
@@ -129,7 +139,7 @@ public class FilterNode {
             rs.append(f);
         }
         rs.append(')');
-        if (rs.length() < 3) return null;
+        if (rs.length() < 10) return new StringBuilder(0);
         return rs;
     }
 
@@ -137,6 +147,7 @@ public class FilterNode {
         final StringBuilder val = formatValue(val0);
         if (val == null) return null;
         StringBuilder sb = new StringBuilder();
+        if (tabalis != null) sb.append(tabalis).append('.');
         sb.append(info.getSQLColumn(column)).append(' ');
         switch (express) {
             case ISNULL:
@@ -261,7 +272,30 @@ public class FilterNode {
         return null;
     }
 
-    protected static <E> Comparator<E> getSortComparator(EntityInfo<E> info, Flipper flipper) {
+    protected static <E> StringBuilder createFilterSQLOrderBy(EntityInfo<E> info, Flipper flipper) {
+        if (flipper == null || flipper.getSort() == null || flipper.getSort().isEmpty()) return null;
+        final StringBuilder sb = new StringBuilder();
+        sb.append(" ORDER BY ");
+        if (info.isNoAlias()) {
+            sb.append(flipper.getSort());
+        } else {
+            boolean flag = false;
+            for (String item : flipper.getSort().split(",")) {
+                if (item.isEmpty()) continue;
+                String[] sub = item.split("\\s+");
+                if (flag) sb.append(',');
+                if (sub.length < 2 || sub[1].equalsIgnoreCase("ASC")) {
+                    sb.append("a.").append(info.getSQLColumn(sub[0])).append(" ASC");
+                } else {
+                    sb.append("a.").append(info.getSQLColumn(sub[0])).append(" DESC");
+                }
+                flag = true;
+            }
+        }
+        return sb;
+    }
+
+    protected static <E> Comparator<E> createFilterComparator(EntityInfo<E> info, Flipper flipper) {
         if (flipper == null || flipper.getSort() == null || flipper.getSort().isEmpty()) return null;
         Comparator<E> comparator = null;
         for (String item : flipper.getSort().split(",")) {
@@ -369,6 +403,14 @@ public class FilterNode {
 
     public void setSignand(boolean signand) {
         this.signand = signand;
+    }
+
+    public String getTabalis() {
+        return tabalis;
+    }
+
+    public void setTabalis(String tabalis) {
+        this.tabalis = tabalis;
     }
 
     public String getColumn() {

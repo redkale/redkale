@@ -1749,7 +1749,7 @@ public final class DataJDBCSource implements DataSource {
                 if (valid) filter = finfo.getFilterPredicate(info, bean);
             }
             if (valid) {
-                Sheet<T> sheet = cache.querySheet(selects, filter, flipper, FilterNode.getSortComparator(info, flipper));
+                Sheet<T> sheet = cache.querySheet(selects, filter, flipper, FilterNode.createFilterComparator(info, flipper));
                 if (!sheet.isEmpty() || cache.isFullLoaded()) return sheet;
             }
         }
