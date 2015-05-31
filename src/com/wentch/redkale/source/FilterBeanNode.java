@@ -54,7 +54,6 @@ public class FilterBeanNode extends FilterNode {
         FilterExpress exp = fc == null ? null : fc.express();
         if (this.array || this.collection) {
             if (Range.class.isAssignableFrom(type.getComponentType())) {
-                if (exp == null) exp = AND;
                 if (AND != exp) exp = OR;
             } else {
                 if (NOTIN != exp) exp = IN;
