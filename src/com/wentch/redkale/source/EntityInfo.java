@@ -47,19 +47,21 @@ public final class EntityInfo<T> {
 
     //key是field的name， 不是sql字段。
     //存放所有与数据库对应的字段， 包括主键
-    private final Map<String, Attribute<T, ?>> attributes = new HashMap<>();
+    private final Map<String, Attribute<T, Serializable>> attributes = new HashMap<>();
+
+    private final Map<String, Attribute<T, Serializable>> updateAttributeMap = new HashMap<>();
 
     final String querySQL;
 
-    private final Attribute<T, Object>[] queryAttributes; //数据库中所有字段
+    private final Attribute<T, Serializable>[] queryAttributes; //数据库中所有字段
 
     final String insertSQL;
 
-    final Attribute<T, Object>[] insertAttributes; //数据库中所有可新增字段
+    final Attribute<T, Serializable>[] insertAttributes; //数据库中所有可新增字段
 
     final String updateSQL;
 
-    final Attribute<T, Object>[] updateAttributes; //数据库中所有可更新字段
+    final Attribute<T, Serializable>[] updateAttributes; //数据库中所有可更新字段
 
     final String deleteSQL;
 
@@ -120,11 +122,11 @@ public final class EntityInfo<T> {
         Map<String, String> aliasmap0 = null;
         Class cltmp = type;
         Set<String> fields = new HashSet<>();
-        List<Attribute<T, ?>> queryattrs = new ArrayList<>();
+        List<Attribute<T, Serializable>> queryattrs = new ArrayList<>();
         List<String> insertcols = new ArrayList<>();
-        List<Attribute<T, ?>> insertattrs = new ArrayList<>();
+        List<Attribute<T, Serializable>> insertattrs = new ArrayList<>();
         List<String> updatecols = new ArrayList<>();
-        List<Attribute<T, ?>> updateattrs = new ArrayList<>();
+        List<Attribute<T, Serializable>> updateattrs = new ArrayList<>();
         boolean auto = false;
         boolean sqldistribute = false;
         int allocationSize0 = 0;
@@ -175,6 +177,7 @@ public final class EntityInfo<T> {
                     if (col == null || col.updatable()) {
                         updatecols.add(sqlfield);
                         updateattrs.add(attr);
+                        updateAttributeMap.put(fieldname, attr);
                     }
                 }
                 queryattrs.add(attr);
@@ -248,8 +251,12 @@ public final class EntityInfo<T> {
         return this.primary;
     }
 
-    public Attribute<T, ?> getAttribute(String fieldname) {
+    public Attribute<T, Serializable> getAttribute(String fieldname) {
         return this.attributes.get(fieldname);
+    }
+
+    public Attribute<T, Serializable> getUpdateAttribute(String fieldname) {
+        return this.updateAttributeMap.get(fieldname);
     }
 
     public boolean isNoAlias() {
@@ -266,7 +273,7 @@ public final class EntityInfo<T> {
         return getSQLColumn(this.primary.field());
     }
 
-    public Map<String, Attribute<T, ?>> getAttributes() {
+    public Map<String, Attribute<T, Serializable>> getAttributes() {
         return attributes;
     }
 
@@ -276,9 +283,9 @@ public final class EntityInfo<T> {
 
     public T getValue(SelectColumn sels, ResultSet set) throws SQLException {
         T obj = creator.create();
-        for (Attribute<T, Object> attr : queryAttributes) {
+        for (Attribute<T, Serializable> attr : queryAttributes) {
             if (sels == null || sels.validate(attr.field())) {
-                Object o = set.getObject(this.getSQLColumn(attr.field()));
+                Serializable o = (Serializable) set.getObject(this.getSQLColumn(attr.field()));
                 if (o != null) {
                     if (type == long.class) {
                         o = ((Number) o).longValue();

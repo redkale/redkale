@@ -399,7 +399,7 @@ public final class DataJDBCSource implements DataSource {
             final Class primaryType = info.getPrimary().type();
             final Attribute primary = info.getPrimary();
             final boolean distributed = info.distributed;
-            Attribute<T, ?>[] attrs = info.insertAttributes;
+            Attribute<T, Serializable>[] attrs = info.insertAttributes;
             String[] sqls = null;
             if (distributed && !info.initedPrimaryValue && primaryType.isPrimitive()) {
                 synchronized (info) {
@@ -443,7 +443,7 @@ public final class DataJDBCSource implements DataSource {
                 for (final T value : values) {
                     int i = 0;
                     if (distributed) info.createPrimaryValue(value);
-                    for (Attribute<T, ?> attr : attrs) {
+                    for (Attribute<T, Serializable> attr : attrs) {
                         prestmt.setObject(++i, attr.get(value));
                     }
                     prestmt.addBatch();
@@ -456,7 +456,7 @@ public final class DataJDBCSource implements DataSource {
                 for (final T value : values) {
                     int i = 0;
                     if (distributed) info.createPrimaryValue(value);
-                    for (Attribute<T, ?> attr : attrs) {
+                    for (Attribute<T, Serializable> attr : attrs) {
                         Object a = attr.get(value);
                         ps[i] = formatToString(a);
                         prestmt.setObject(++i, a);
@@ -659,7 +659,7 @@ public final class DataJDBCSource implements DataSource {
             //------------------------------------
             final EntityCache<T> cache = info.getCache();
             if (cache == null) return;
-            final Attribute<T, ?> attr = info.getAttribute(column);
+            final Attribute<T, Serializable> attr = info.getAttribute(column);
             final Serializable[] keys2 = keys;
             Serializable[] ids = cache.delete((T t) -> Arrays.binarySearch(keys2, attr.get(t)) >= 0);
             if (cacheListener != null) cacheListener.delete(name, clazz, ids);
@@ -717,8 +717,8 @@ public final class DataJDBCSource implements DataSource {
             //------------------------------------
             final EntityCache<T> cache = info.getCache();
             if (cache == null) return;
-            final Attribute<T, ?> attr1 = info.getAttribute(column1);
-            final Attribute<T, ?> attr2 = info.getAttribute(column2);
+            final Attribute<T, Serializable> attr1 = info.getAttribute(column1);
+            final Attribute<T, Serializable> attr2 = info.getAttribute(column2);
             Serializable[] ids = cache.delete((T t) -> key1.equals(attr1.get(t)) && key2.equals(attr2.get(t)));
             if (cacheListener != null) cacheListener.delete(name, clazz, ids);
         } catch (SQLException e) {
@@ -771,12 +771,12 @@ public final class DataJDBCSource implements DataSource {
             final EntityInfo<T> info = loadEntityInfo(clazz);
             if (debug.get()) logger.finest(clazz.getSimpleName() + " update sql=" + info.updateSQL);
             final PreparedStatement prestmt = conn.prepareStatement(info.updateSQL);
-            Attribute<T, ?>[] attrs = info.updateAttributes;
+            Attribute<T, Serializable>[] attrs = info.updateAttributes;
             String[] sqls = null;
             if (writeListener == null) {
                 for (final T value : values) {
                     int i = 0;
-                    for (Attribute<T, ?> attr : attrs) {
+                    for (Attribute<T, Serializable> attr : attrs) {
                         prestmt.setObject(++i, attr.get(value));
                     }
                     prestmt.addBatch();
@@ -788,7 +788,7 @@ public final class DataJDBCSource implements DataSource {
                 int index = 0;
                 for (final T value : values) {
                     int i = 0;
-                    for (Attribute<T, ?> attr : attrs) {
+                    for (Attribute<T, Serializable> attr : attrs) {
                         Object a = attr.get(value);
                         ps[i] = formatToString(a);
                         prestmt.setObject(++i, a);
@@ -924,7 +924,7 @@ public final class DataJDBCSource implements DataSource {
             //---------------------------------------------------
             final EntityCache<T> cache = info.getCache();
             if (cache == null) return;
-            Attribute<T, Object> attr = (Attribute<T, Object>) info.getAttribute(column);
+            Attribute<T, Serializable> attr = info.getAttribute(column);
             T value = cache.updateColumnIncrement(id, attr, incvalue);
             if (value != null && cacheListener != null) cacheListener.update(name, clazz, value);
         } catch (SQLException e) {
@@ -970,7 +970,7 @@ public final class DataJDBCSource implements DataSource {
             final Class<T> clazz = (Class<T>) value.getClass();
             final EntityInfo<T> info = loadEntityInfo(clazz);
             StringBuilder setsql = new StringBuilder();
-            Attribute<T, ?>[] attrs = new Attribute[columns.length];
+            Attribute<T, Serializable>[] attrs = new Attribute[columns.length];
             int i = - 1;
             final Serializable id = (Serializable) info.getPrimary().get(value);
             for (String col : columns) {
@@ -1206,8 +1206,8 @@ public final class DataJDBCSource implements DataSource {
         final EntityInfo<T> info = loadEntityInfo(clazz);
         final EntityCache<T> cache = info.getCache();
         if (cache != null) {
-            final Attribute<T, ?> attr1 = info.getAttribute(column1);
-            final Attribute<T, ?> attr2 = info.getAttribute(column2);
+            final Attribute<T, Serializable> attr1 = info.getAttribute(column1);
+            final Attribute<T, Serializable> attr2 = info.getAttribute(column2);
             T r = cache.find((T t) -> key1.equals(attr1.get(t)) && key2.equals(attr2.get(t)));
             if (r != null || cache.isFullLoaded()) return r;
         }
@@ -1278,7 +1278,7 @@ public final class DataJDBCSource implements DataSource {
         final EntityInfo<T> info = loadEntityInfo(clazz);
         final EntityCache<T> cache = info.getCache();
         if (cache != null) {
-            Attribute<T, ?> idattr = info.getAttribute(column);
+            Attribute<T, Serializable> idattr = info.getAttribute(column);
             List<T> list = cache.queryList(selects, (x) -> Arrays.binarySearch(keys, idattr.get(x)) >= 0, null);
             final T[] rs = (T[]) Array.newInstance(clazz, keys.length);
             if (!list.isEmpty()) {
@@ -1573,7 +1573,7 @@ public final class DataJDBCSource implements DataSource {
         return sql;
     }
 
-    private <T> Predicate<T> genFilter(final Attribute<T, ?> attr, FilterExpress express, Serializable key) {
+    private <T> Predicate<T> genFilter(final Attribute<T, Serializable> attr, FilterExpress express, Serializable key) {
         Predicate<T> filter = null;
         switch (express) {
             case EQUAL:
@@ -1749,7 +1749,7 @@ public final class DataJDBCSource implements DataSource {
                 if (valid) filter = finfo.getFilterPredicate(info, bean);
             }
             if (valid) {
-                Sheet<T> sheet = cache.querySheet(selects, filter, flipper, FilterInfo.getSortComparator(info, flipper));
+                Sheet<T> sheet = cache.querySheet(selects, filter, flipper, FilterNode.getSortComparator(info, flipper));
                 if (!sheet.isEmpty() || cache.isFullLoaded()) return sheet;
             }
         }
@@ -2296,7 +2296,7 @@ public final class DataJDBCSource implements DataSource {
             return inner.getAttribute(fieldname).field();
         }
 
-        public Attribute<T, ?> getAttribute(String fieldname) {
+        public Attribute<T, Serializable> getAttribute(String fieldname) {
             return inner.getAttribute(fieldname);
         }
     }

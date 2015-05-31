@@ -114,6 +114,49 @@ public class FilterNode {
         return new FilterNode(column, express, value);
     }
 
+    protected final <T> StringBuilder createFilterSQLExpress(final EntityInfo<T> info, FilterBean bean) {
+        final Serializable val = getValue(bean);
+        if (val == null && express != ISNULL && express != ISNOTNULL) return null;
+        StringBuilder sb0 = createFilterSQLExpress(info, val);
+        if (nodes == null) return sb0;
+        final StringBuilder rs = new StringBuilder();
+        rs.append('(');
+        if (sb0 != null) rs.append(sb0);
+        for (FilterNode node : this.nodes) {
+            StringBuilder f = node.createFilterSQLExpress(info, bean);
+            if (f == null) continue;
+            if (rs.length() > 0) rs.append(signand ? " AND " : " OR ");
+            rs.append(f);
+        }
+        rs.append(')');
+        if (rs.length() < 3) return null;
+        return rs;
+    }
+
+    private <T> StringBuilder createFilterSQLExpress(final EntityInfo<T> info, Serializable val0) {
+        final StringBuilder val = formatValue(val0);
+        if (val == null) return null;
+        StringBuilder sb = new StringBuilder();
+        sb.append(info.getSQLColumn(column)).append(' ');
+        switch (express) {
+            case ISNULL:
+            case ISNOTNULL:
+                sb.append(express.value());
+                break;
+            case OPAND:
+            case OPOR:
+                sb.append(express.value()).append(' ').append(val).append(" > 0)");
+                break;
+            case OPANDNO:
+                sb.append(express.value()).append(' ').append(val).append(" = 0)");
+                break;
+            default:
+                sb.append(express.value()).append(' ').append(val);
+                break;
+        }
+        return sb;
+    }
+
     protected final <T> Predicate<T> createFilterPredicate(final EntityInfo<T> info, FilterBean bean) {
         if (info == null) return null;
         final Serializable val = getValue(bean);
@@ -128,7 +171,7 @@ public class FilterNode {
         return filter;
     }
 
-    private <T> Predicate<T> createFilterPredicate(final Attribute<T, ?> attr, final Serializable val) {
+    private <T> Predicate<T> createFilterPredicate(final Attribute<T, Serializable> attr, final Serializable val) {
         if (attr == null) return null;
         switch (express) {
             case EQUAL: return (T t) -> val.equals(attr.get(t));
@@ -218,13 +261,53 @@ public class FilterNode {
         return null;
     }
 
-    protected static String formatValue(Object value) {
-        if (value == null) return null;
-        if (value instanceof Number) return value.toString();
-        if (value instanceof CharSequence) {
-            return new StringBuilder().append('"').append(value.toString().replace("\"", "\\\"")).append('"').toString();
+    protected static <E> Comparator<E> getSortComparator(EntityInfo<E> info, Flipper flipper) {
+        if (flipper == null || flipper.getSort() == null || flipper.getSort().isEmpty()) return null;
+        Comparator<E> comparator = null;
+        for (String item : flipper.getSort().split(",")) {
+            if (item.isEmpty()) continue;
+            String[] sub = item.split("\\s+");
+            final Attribute<E, Serializable> attr = info.getAttribute(sub[0]);
+            Comparator<E> c = (E o1, E o2) -> {
+                Comparable c1 = (Comparable) attr.get(o1);
+                Comparable c2 = (Comparable) attr.get(o2);
+                return c1 == null ? -1 : c1.compareTo(c2);
+            };
+            if (sub.length > 1 && sub[1].equalsIgnoreCase("DESC")) {
+                c = c.reversed();
+            }
+            if (comparator == null) {
+                comparator = c;
+            } else {
+                comparator = comparator.thenComparing(c);
+            }
         }
-        if (value.getClass().isArray()) {
+        return comparator;
+    }
+
+    protected StringBuilder formatValue(Object value) {
+        if (value == null) return null;
+        if (value instanceof Number) return new StringBuilder().append(value);
+        if (value instanceof CharSequence) {
+            if (express == LIKE || express == NOTLIKE) value = "%" + value + '%';
+            return new StringBuilder().append('\\').append(value.toString().replace("'", "\\'")).append('\'');
+        } else if (value instanceof Range) {
+            Range range = (Range) value;
+            boolean rangestring = range.getClass() == Range.StringRange.class;
+            StringBuilder sb = new StringBuilder();
+            if (rangestring) {
+                sb.append('\'').append(range.getMin().toString().replace("'", "\\'")).append('\'');
+            } else {
+                sb.append(range.getMin());
+            }
+            sb.append(" AND ");
+            if (rangestring) {
+                sb.append('\'').append(range.getMax().toString().replace("'", "\\'")).append('\'');
+            } else {
+                sb.append(range.getMax());
+            }
+            return sb;
+        } else if (value.getClass().isArray()) {
             int len = Array.getLength(value);
             if (len == 0) return null;
             StringBuilder sb = new StringBuilder();
@@ -233,14 +316,13 @@ public class FilterNode {
                 Object o = Array.get(value, i);
                 if (sb.length() > 0) sb.append(',');
                 if (o instanceof CharSequence) {
-                    sb.append('"').append(o.toString().replace("\"", "\\\"")).append('"');
+                    sb.append('\'').append(o.toString().replace("'", "\\'")).append('\'');
                 } else {
                     sb.append(o);
                 }
             }
-            return sb.append(')').toString();
-        }
-        if (value instanceof Collection) {
+            return sb.append(')');
+        } else if (value instanceof Collection) {
             Collection c = (Collection) value;
             if (c.isEmpty()) return null;
             StringBuilder sb = new StringBuilder();
@@ -248,14 +330,14 @@ public class FilterNode {
             for (Object o : c) {
                 if (sb.length() > 0) sb.append(',');
                 if (o instanceof CharSequence) {
-                    sb.append('"').append(o.toString().replace("\"", "\\\"")).append('"');
+                    sb.append('\'').append(o.toString().replace("'", "\\'")).append('\'');
                 } else {
                     sb.append(o);
                 }
             }
-            return sb.append(')').toString();
+            return sb.append(')');
         }
-        return String.valueOf(value);
+        return new StringBuilder().append(value);
     }
 
     @Override

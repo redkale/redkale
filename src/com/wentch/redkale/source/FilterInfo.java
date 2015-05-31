@@ -93,8 +93,8 @@ final class FilterInfo<T extends FilterBean> {
                     EntityInfo secinfo = EntityInfo.load(joinCol.table(), null);
                     if (!again) {
                         joinsb.append(" ").append(joinCol.type().name()).append(" JOIN ").append(secinfo.getTable())
-                                .append(" ").append(alias).append(" ON a.# = ").append(alias).append(".")
-                                .append(joinCol.column().isEmpty() ? secinfo.getPrimary().field() : joinCol.column());
+                            .append(" ").append(alias).append(" ON a.# = ").append(alias).append(".")
+                            .append(joinCol.column().isEmpty() ? secinfo.getPrimary().field() : joinCol.column());
                     }
                 }
                 getters.put(field.getName(), item);
@@ -155,30 +155,6 @@ final class FilterInfo<T extends FilterBean> {
 
     public <E> Predicate<E> getFilterPredicate(EntityInfo<E> info, T bean) {
         return rootNode.getFilterPredicate(info, bean);
-    }
-
-    public static <E> Comparator<E> getSortComparator(EntityInfo<E> info, Flipper flipper) {
-        if (flipper == null || flipper.getSort() == null || flipper.getSort().isEmpty()) return null;
-        Comparator<E> comparator = null;
-        for (String item : flipper.getSort().split(",")) {
-            if (item.isEmpty()) continue;
-            String[] sub = item.split("\\s+");
-            final Attribute<E, ?> attr = info.getAttribute(sub[0]);
-            Comparator<E> c = (E o1, E o2) -> {
-                Comparable c1 = (Comparable) attr.get(o1);
-                Comparable c2 = (Comparable) attr.get(o2);
-                return c1 == null ? -1 : c1.compareTo(c2);
-            };
-            if (sub.length > 1 && sub[1].equalsIgnoreCase("DESC")) {
-                c = c.reversed();
-            }
-            if (comparator == null) {
-                comparator = c;
-            } else {
-                comparator = comparator.thenComparing(c);
-            }
-        }
-        return comparator;
     }
 
     public StringBuilder createWhereSql(String primaryColumn, T obj) {
@@ -378,7 +354,7 @@ final class FilterInfo<T extends FilterBean> {
         private StringBuilder getRangeExpress(Range range) {
             StringBuilder sb = new StringBuilder();
             return sb.append("(").append(aliasfield).append((NOTBETWEEN == express ? " NOT BETWEEN " : " BETWEEN "))
-                    .append(formatToString(range.getMin())).append(" AND ").append(formatToString(range.getMax())).append(")");
+                .append(formatToString(range.getMin())).append(" AND ").append(formatToString(range.getMax())).append(")");
         }
 
         private <E> Predicate<E> getRangePredicate(final Attribute<E, ?> attr, Range range) {

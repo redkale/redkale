@@ -36,14 +36,14 @@ final class EntityCache<T> {
     private final Attribute<T, Serializable> primary;
 
     //key是field的name
-    private final Map<String, Attribute<T, ?>> attributes;
+    private final Map<String, Attribute<T, Serializable>> attributes;
 
     private final Reproduce<T, T> reproduce;
 
     private boolean fullloaded;
 
     public EntityCache(final Class<T> type, Creator<T> creator,
-        Attribute<T, Serializable> primary, Map<String, Attribute<T, ?>> attributes) {
+        Attribute<T, Serializable> primary, Map<String, Attribute<T, Serializable>> attributes) {
         this.type = type;
         this.creator = creator;
         this.primary = primary;
@@ -63,7 +63,7 @@ final class EntityCache<T> {
 
     public void fullLoad(List<T> all) {
         clear();
-        all.stream().filter(x -> x != null).forEach(x -> this.map.put((Serializable) this.primary.get(x), x));
+        all.stream().filter(x -> x != null).forEach(x -> this.map.put(this.primary.get(x), x));
         this.list.addAll(all);
         this.fullloaded = true;
     }
@@ -168,8 +168,8 @@ final class EntityCache<T> {
         if (selects == null) {
             stream.forEach(x -> rs.add(needcopy ? reproduce.copy(creator.create(), x) : x));
         } else {
-            final List<Attribute<T, ?>> attrs = new ArrayList<>();
-            for (Map.Entry<String, Attribute<T, ?>> en : this.attributes.entrySet()) {
+            final List<Attribute<T, Serializable>> attrs = new ArrayList<>();
+            for (Map.Entry<String, Attribute<T, Serializable>> en : this.attributes.entrySet()) {
                 if (selects.validate(en.getKey())) attrs.add(en.getValue());
             }
             stream.forEach(x -> {
@@ -207,8 +207,8 @@ final class EntityCache<T> {
         if (selects == null) {
             stream.forEach(x -> rs.add(needcopy ? reproduce.copy(creator.create(), x) : x));
         } else {
-            final List<Attribute<T, ?>> attrs = new ArrayList<>();
-            for (Map.Entry<String, Attribute<T, ?>> en : this.attributes.entrySet()) {
+            final List<Attribute<T, Serializable>> attrs = new ArrayList<>();
+            for (Map.Entry<String, Attribute<T, Serializable>> en : this.attributes.entrySet()) {
                 if (selects.validate(en.getKey())) attrs.add(en.getValue());
             }
             stream.forEach(x -> {
@@ -225,7 +225,7 @@ final class EntityCache<T> {
     public void insert(T value) {
         if (value == null) return;
         T rs = reproduce.copy(this.creator.create(), value);  //确保同一主键值的map与list中的对象必须共用。
-        T old = this.map.put((Serializable) this.primary.get(rs), rs);
+        T old = this.map.put(this.primary.get(rs), rs);
         if (old != null) logger.log(Level.WARNING, "cache repeat insert data: " + value);
         this.list.add(rs);
     }
@@ -243,7 +243,7 @@ final class EntityCache<T> {
         int i = -1;
         for (Object o : rms) {
             T t = (T) o;
-            ids[++i] = (Serializable) this.primary.get(t);
+            ids[++i] = this.primary.get(t);
             this.map.remove(ids[i]);
             this.list.remove(t);
         }
@@ -252,14 +252,14 @@ final class EntityCache<T> {
 
     public void update(final T value) {
         if (value == null) return;
-        T rs = this.map.get((Serializable) this.primary.get(value));
+        T rs = this.map.get(this.primary.get(value));
         if (rs == null) return;
         this.reproduce.copy(rs, value);
     }
 
-    public void update(final T value, Attribute<T, ?>[] attrs) {
+    public void update(final T value, Attribute<T, Serializable>[] attrs) {
         if (value == null) return;
-        T rs = this.map.get((Serializable) this.primary.get(value));
+        T rs = this.map.get(this.primary.get(value));
         if (rs == null) return;
         for (Attribute attr : attrs) {
             attr.set(rs, attr.get(value));
