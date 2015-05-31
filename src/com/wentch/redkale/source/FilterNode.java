@@ -16,7 +16,7 @@ import java.util.function.*;
  *
  * @author zhangjx
  */
-public abstract class FilterNode {
+public class FilterNode {
 
     protected boolean signand = true;
 
@@ -26,16 +26,39 @@ public abstract class FilterNode {
 
     protected FilterNode[] nodes;
 
+    private Serializable value;
+
+    public FilterNode() {
+    }
+
+    FilterNode(String col, FilterExpress exp, Serializable val) {
+        Objects.requireNonNull(col);
+        if (exp == null) {
+            if (val instanceof Range) {
+                exp = FilterExpress.BETWEEN;
+            } else if (val instanceof Collection) {
+                exp = FilterExpress.IN;
+            } else if (val != null && val.getClass().isArray()) {
+                exp = FilterExpress.IN;
+            } else {
+                exp = FilterExpress.EQUAL;
+            }
+        }
+        this.column = col;
+        this.express = exp;
+        this.value = val;
+    }
+
     public final FilterNode and(FilterNode node) {
         return any(node, true);
     }
 
     public final FilterNode and(String column, Serializable value) {
-        return and(new FilterSimpleNode(column, null, value));
+        return and(new FilterNode(column, null, value));
     }
 
     public final FilterNode and(String column, FilterExpress express, Serializable value) {
-        return and(new FilterSimpleNode(column, express, value));
+        return and(new FilterNode(column, express, value));
     }
 
     public final FilterNode or(FilterNode node) {
@@ -43,11 +66,11 @@ public abstract class FilterNode {
     }
 
     public final FilterNode or(String column, Serializable value) {
-        return or(new FilterSimpleNode(column, null, value));
+        return or(new FilterNode(column, null, value));
     }
 
     public final FilterNode or(String column, FilterExpress express, Serializable value) {
-        return or(new FilterSimpleNode(column, express, value));
+        return or(new FilterNode(column, express, value));
     }
 
     protected final FilterNode any(FilterNode node, boolean sign) {
@@ -64,23 +87,34 @@ public abstract class FilterNode {
             this.nodes = newsiblings;
             return this;
         }
-        this.copyFrom(node, sign);
+        this.append(node, sign);
         return this;
     }
 
-    protected abstract void copyFrom(FilterNode node, boolean sign);
+    protected void append(FilterNode node, boolean sign) {
+        FilterNode newnode = new FilterNode(this.column, this.express, this.value);
+        newnode.signand = this.signand;
+        newnode.nodes = this.nodes;
+        this.nodes = new FilterNode[]{newnode};
+        this.column = node.column;
+        this.express = node.express;
+        this.signand = sign;
+        this.value = node.value;
+    }
 
-    protected abstract Serializable getValue(Object bean);
+    protected Serializable getValue(FilterBean bean) {
+        return value;
+    }
 
     public static FilterNode create(String column, Serializable value) {
         return create(column, FilterExpress.EQUAL, value);
     }
 
     public static FilterNode create(String column, FilterExpress express, Serializable value) {
-        return new FilterSimpleNode(column, express, value);
+        return new FilterNode(column, express, value);
     }
 
-    protected final <T> Predicate<T> createFilterPredicate(final EntityInfo<T> info, Object bean) {
+    protected final <T> Predicate<T> createFilterPredicate(final EntityInfo<T> info, FilterBean bean) {
         if (info == null) return null;
         final Serializable val = getValue(bean);
         if (val == null && express != ISNULL && express != ISNOTNULL) return null;
@@ -222,6 +256,29 @@ public abstract class FilterNode {
             return sb.append(')').toString();
         }
         return String.valueOf(value);
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        if (nodes == null) {
+            sb.append(column).append(' ').append(express.value()).append(' ').append(formatValue(value));
+        } else {
+            sb.append('(').append(column).append(' ').append(express.value()).append(' ').append(formatValue(value));
+            for (FilterNode node : this.nodes) {
+                sb.append(signand ? " AND " : " OR ").append(node.toString());
+            }
+            sb.append(')');
+        }
+        return sb.toString();
+    }
+
+    public Serializable getValue() {
+        return value;
+    }
+
+    public void setValue(Serializable value) {
+        this.value = value;
     }
 
     public boolean isSignand() {
