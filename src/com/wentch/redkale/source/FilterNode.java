@@ -121,25 +121,35 @@ public class FilterNode {
         return new FilterNode(column, express, value);
     }
 
-    protected <T> StringBuilder createFilterSQLExpress(final EntityInfo<T> info, FilterBean bean) {
+    protected final <T> StringBuilder createFilterSQLExpress(final EntityInfo<T> info, FilterBean bean) {
+        return createFilterSQLExpress(true, info, bean);
+    }
+
+    protected <T> StringBuilder createFilterSQLExpress(final boolean first, final EntityInfo<T> info, FilterBean bean) {
         final Serializable val = getValue(bean);
-        if (val == null && express != ISNULL && express != ISNOTNULL) return new StringBuilder(0);
+        if (val == null && (express == ISNULL || express == ISNOTNULL)) return new StringBuilder(0);
         StringBuilder sb0 = createFilterSQLExpress(info, val);
-        if (nodes == null) {
+        if (this.nodes == null) {
             if (sb0 == null) return new StringBuilder(0);
+            if (!first) return sb0;
             return new StringBuilder(sb0.length() + 8).append(" WHERE ").append(sb0);
         }
         final StringBuilder rs = new StringBuilder();
-        rs.append(" WHERE (");
-        if (sb0 != null) rs.append(sb0);
+        rs.append(first ? " WHERE (" : " (");
+        boolean more = false;
+        if (sb0 != null && sb0.length() > 2) {
+            more = true;
+            rs.append(sb0);
+        }
         for (FilterNode node : this.nodes) {
-            StringBuilder f = node.createFilterSQLExpress(info, bean);
-            if (f == null) continue;
-            if (rs.length() > 0) rs.append(signand ? " AND " : " OR ");
+            StringBuilder f = node.createFilterSQLExpress(false, info, bean);
+            if (f == null || f.length() < 3) continue;
+            if (more) rs.append(signand ? " AND " : " OR ");
             rs.append(f);
+            more = true;
         }
         rs.append(')');
-        if (rs.length() < 10) return new StringBuilder(0);
+        if (rs.length() < (first ? 10 : 5)) return new StringBuilder(0);
         return rs;
     }
 
@@ -179,10 +189,10 @@ public class FilterNode {
                 break;
             case OPAND:
             case OPOR:
-                sb.append(express.value()).append(' ').append(val).append(" > 0)");
+                sb.append(express.value()).append(' ').append(val).append(" > 0");
                 break;
             case OPANDNO:
-                sb.append(express.value()).append(' ').append(val).append(" = 0)");
+                sb.append(express.value()).append(' ').append(val).append(" = 0");
                 break;
             default:
                 sb.append(express.value()).append(' ').append(val);
@@ -333,7 +343,7 @@ public class FilterNode {
         if (value instanceof Number) return new StringBuilder().append(value);
         if (value instanceof CharSequence) {
             if (express == LIKE || express == NOTLIKE) value = "%" + value + '%';
-            return new StringBuilder().append('\\').append(value.toString().replace("'", "\\'")).append('\'');
+            return new StringBuilder().append('\'').append(value.toString().replace("'", "\\'")).append('\'');
         } else if (value instanceof Range) {
             Range range = (Range) value;
             boolean rangestring = range.getClass() == Range.StringRange.class;
@@ -361,7 +371,7 @@ public class FilterNode {
             sb.append('(');
             for (int i = 0; i < len; i++) {
                 Object o = Array.get(value, i);
-                if (sb.length() > 0) sb.append(',');
+                if (sb.length() > 1) sb.append(',');
                 if (o instanceof CharSequence) {
                     sb.append('\'').append(o.toString().replace("'", "\\'")).append('\'');
                 } else {
@@ -375,7 +385,7 @@ public class FilterNode {
             StringBuilder sb = new StringBuilder();
             sb.append('(');
             for (Object o : c) {
-                if (sb.length() > 0) sb.append(',');
+                if (sb.length() > 1) sb.append(',');
                 if (o instanceof CharSequence) {
                     sb.append('\'').append(o.toString().replace("'", "\\'")).append('\'');
                 } else {

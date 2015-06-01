@@ -27,7 +27,7 @@ final class FilterBeanNode extends FilterNode {
     private static final ConcurrentHashMap<Class, FilterBeanNode> beanodes = new ConcurrentHashMap<>();
 
     public static <T extends FilterBean> FilterBeanNode load(Class<T> clazz, final int nodeid,
-        Function<Class, List> fullloader) {
+            Function<Class, List> fullloader) {
         FilterBeanNode rs = beanodes.get(clazz);
         if (rs != null) return rs;
         synchronized (beanodes) {
@@ -41,7 +41,7 @@ final class FilterBeanNode extends FilterNode {
     }
 
     private static <T extends FilterBean> FilterBeanNode createNode(Class<T> clazz, final int nodeid,
-        Function<Class, List> fullloader) {
+            Function<Class, List> fullloader) {
         Class cltmp = clazz;
         Set<String> fields = new HashSet<>();
         final Map<Class, String> joinTables = new HashMap<>();
@@ -58,7 +58,7 @@ final class FilterBeanNode extends FilterNode {
                 char[] chars = field.getName().toCharArray();
                 chars[0] = Character.toUpperCase(chars[0]);
                 final Class t = field.getType();
-                Method getter = null;
+                Method getter;
                 try {
                     getter = cltmp.getMethod(((t == boolean.class || t == Boolean.class) ? "is" : "get") + new String(chars));
                 } catch (Exception ex) {
@@ -84,8 +84,8 @@ final class FilterBeanNode extends FilterNode {
                         }
                         if (first) {
                             joinsb.append(" ").append(joinCol.type().name()).append(" JOIN ").append(secinfo.getTable())
-                                .append(" ").append(alias).append(" ON a.# = ").append(alias).append(".")
-                                .append(joinCol.column().isEmpty() ? secinfo.getPrimarySQLColumn() : secinfo.getSQLColumn(joinCol.column()));
+                                    .append(" ").append(alias).append(" ON a.# = ").append(alias).append(".")
+                                    .append(joinCol.column().isEmpty() ? secinfo.getPrimarySQLColumn() : secinfo.getSQLColumn(joinCol.column()));
                         }
                         newnode.foreignEntity = secinfo;
                         newnode.tabalis = alias;
@@ -108,7 +108,7 @@ final class FilterBeanNode extends FilterNode {
                         if (node == null) {
                             nodemap.put(key, newnode);
                         } else {
-                            node.any(node, !key.contains("[OR]"));
+                            node.any(newnode, !key.contains("[OR]"));
                         }
                     }
                 }
@@ -170,7 +170,7 @@ final class FilterBeanNode extends FilterNode {
         this.least = fc == null ? 1L : fc.least();
         this.likefit = fc == null ? true : fc.likefit();
         this.ignoreCase = fc == null ? true : fc.ignoreCase();
-        this.number = type.isPrimitive() || Number.class.isAssignableFrom(type);
+        this.number = (type.isPrimitive() && type != boolean.class) || Number.class.isAssignableFrom(type);
         this.string = CharSequence.class.isAssignableFrom(type);
 
         FilterExpress exp = fc == null ? null : fc.express();
@@ -223,9 +223,9 @@ final class FilterBeanNode extends FilterNode {
     }
 
     @Override
-    protected <T> StringBuilder createFilterSQLExpress(final EntityInfo<T> info, FilterBean bean) {
-        if (joinSQL == null) return super.createFilterSQLExpress(info, bean);
-        StringBuilder sb = super.createFilterSQLExpress(info, bean);
+    protected <T> StringBuilder createFilterSQLExpress(final boolean first, final EntityInfo<T> info, FilterBean bean) {
+        if (joinSQL == null || !first) return super.createFilterSQLExpress(first, info, bean);
+        StringBuilder sb = super.createFilterSQLExpress(first, info, bean);
         String jsql = joinSQL.replace("#", info.getPrimarySQLColumn());
         return new StringBuilder(sb.length() + jsql.length()).append(jsql).append(sb);
     }

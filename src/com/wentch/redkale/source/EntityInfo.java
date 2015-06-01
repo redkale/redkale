@@ -87,7 +87,7 @@ public final class EntityInfo<T> {
     //------------------------------------------------------------
 
     public static <T> EntityInfo<T> load(Class<T> clazz, final int nodeid,
-        Function<Class, List> fullloader) {
+            Function<Class, List> fullloader) {
         EntityInfo rs = entityInfos.get(clazz);
         if (rs != null) return rs;
         synchronized (entityInfos) {
@@ -95,6 +95,10 @@ public final class EntityInfo<T> {
             if (rs == null) {
                 rs = new EntityInfo(clazz, nodeid, fullloader);
                 entityInfos.put(clazz, rs);
+                AutoLoad auto = clazz.getAnnotation(AutoLoad.class);
+                if (rs.cache != null && auto != null && auto.value() && fullloader != null) {
+                    rs.cache.fullLoad(fullloader.apply(clazz));
+                }
             }
             return rs;
         }
@@ -211,7 +215,7 @@ public final class EntityInfo<T> {
         Cacheable c = type.getAnnotation(Cacheable.class);
         boolean cf = (c == null && cacheClasses != null && cacheClasses.contains(type));
         if ((c != null && c.value()) || cf) {
-            this.cache = new EntityCache<>(type, creator, primary, attributes, fullloader);
+            this.cache = new EntityCache<>(type, creator, primary, attributes);
         } else {
             this.cache = null;
         }
@@ -282,12 +286,13 @@ public final class EntityInfo<T> {
             if (sels == null || sels.validate(attr.field())) {
                 Serializable o = (Serializable) set.getObject(this.getSQLColumn(attr.field()));
                 if (o != null) {
-                    if (type == long.class) {
-                        o = ((Number) o).longValue();
-                    } else if (type == int.class) {
-                        o = ((Number) o).intValue();
-                    } else if (type == short.class) {
+                    Class t = attr.type();
+                    if (t == short.class) {
                         o = ((Number) o).shortValue();
+                    } else if (t == long.class) {
+                        o = ((Number) o).longValue();
+                    } else if (t == int.class) {
+                        o = ((Number) o).intValue();
                     }
                 }
                 attr.set(obj, o);

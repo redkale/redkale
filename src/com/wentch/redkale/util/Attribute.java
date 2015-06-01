@@ -67,7 +67,7 @@ public interface Attribute<T, F> {
 
     @SuppressWarnings("unchecked")
     public static <T, F> Attribute<T, F> create(final Class<T> clazz, String fieldalias0, final Field field0, Method getter0, Method setter0) {
-        if (fieldalias0.isEmpty()) fieldalias0 = null;
+        if (fieldalias0 != null && fieldalias0.isEmpty()) fieldalias0 = null;
         int mod = field0 == null ? Modifier.STATIC : field0.getModifiers();
         if (field0 != null && !Modifier.isStatic(mod) && !Modifier.isPublic(mod)) {
             Class t = field0.getType();
