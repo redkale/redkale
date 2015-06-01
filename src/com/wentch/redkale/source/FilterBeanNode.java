@@ -89,7 +89,9 @@ final class FilterBeanNode extends FilterNode {
                         }
                         newnode.foreignEntity = secinfo;
                         newnode.tabalis = alias;
-                        newnode.foreignColumn = joinCol.column().isEmpty() ? secinfo.getPrimary().field() : joinCol.column();
+                        newnode.foreignAttribute = joinCol.column().isEmpty() ? secinfo.getPrimary() : secinfo.getAttribute(joinCol.column());
+                        if (newnode.foreignEntity != null && newnode.foreignAttribute == null) throw new RuntimeException(clazz.getName() + "." + field.getName() + " have illegal FilterJoinColumn " + joinCol);
+                        joinallcached = false; //关联查询暂不支持缓存查询
                     }
                 }
                 //------------------------------------
@@ -139,7 +141,7 @@ final class FilterBeanNode extends FilterNode {
 
     private EntityInfo foreignEntity;
 
-    private String foreignColumn;
+    private Attribute foreignAttribute;
 
     private boolean array;
 
@@ -194,7 +196,7 @@ final class FilterBeanNode extends FilterNode {
         newnode.express = this.express;
         newnode.nodes = this.nodes;
         newnode.foreignEntity = this.foreignEntity;
-        newnode.foreignColumn = this.foreignColumn;
+        newnode.foreignAttribute = this.foreignAttribute;
         newnode.array = this.array;
         newnode.collection = this.collection;
         newnode.ignoreCase = this.ignoreCase;
@@ -211,7 +213,7 @@ final class FilterBeanNode extends FilterNode {
             FilterBeanNode beanNode = ((FilterBeanNode) node);
             this.beanAttribute = beanNode.beanAttribute;
             this.foreignEntity = beanNode.foreignEntity;
-            this.foreignColumn = beanNode.foreignColumn;
+            this.foreignAttribute = beanNode.foreignAttribute;
             this.array = beanNode.array;
             this.collection = beanNode.collection;
             this.ignoreCase = beanNode.ignoreCase;
@@ -232,7 +234,7 @@ final class FilterBeanNode extends FilterNode {
 
     @Override
     protected boolean isJoinAllCached() {
-        return false && joinallcached; //暂时没实现
+        return joinallcached; //暂时没实现
     }
 
     @Override
