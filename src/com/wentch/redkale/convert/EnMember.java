@@ -40,9 +40,10 @@ public final class EnMember<W extends Writer, T, F> implements Comparable<EnMemb
         F value = attribute.get(obj);
         if (value == null) return comma;
         if (out.isTiny()) {
-            if (isnumber) {
-                if (((Number) value).intValue() == 0) return comma;
-            } else if (istring) {
+//            if (isnumber) {
+//                if (((Number) value).intValue() == 0) return comma;
+//            } 
+            if (istring) {
                 if (((CharSequence) value).length() == 0) return comma;
             } else if (isbool) {
                 if (!((Boolean) value)) return comma;
