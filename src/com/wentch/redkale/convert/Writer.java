@@ -14,7 +14,7 @@ import com.wentch.redkale.util.Attribute;
 public interface Writer {
 
     /**
-     * 当tiny=true时， 字符串为空、数字为0、boolean为false的字段值都会被跳过， 不会输出。
+     * 当tiny=true时， 字符串为空、boolean为false的字段值都会被跳过， 不会输出。
      * <p>
      * @return
      */
