@@ -39,13 +39,6 @@ public interface DataSource {
      */
     public <T> void insert(T... values);
 
-    /**
-     * 新增对象， 必须是Entity对象
-     *
-     * @param <T>
-     * @param conn
-     * @param values
-     */
     public <T> void insert(final DataConnection conn, T... values);
 
     /**
@@ -65,51 +58,14 @@ public interface DataSource {
      */
     public <T> void delete(T... values);
 
-    /**
-     * 删除对象， 必须是Entity对象
-     *
-     * @param <T>
-     * @param conn
-     * @param values
-     */
     public <T> void delete(final DataConnection conn, T... values);
 
-    /**
-     * 根据主键值删除对象， 必须是Entity Class
-     *
-     * @param <T>
-     * @param clazz
-     * @param ids 主键值
-     */
     public <T> void delete(Class<T> clazz, Serializable... ids);
 
-    /**
-     * 根据主键值删除对象， 必须是Entity Class
-     *
-     * @param <T>
-     * @param conn
-     * @param clazz
-     * @param ids
-     */
     public <T> void delete(final DataConnection conn, Class<T> clazz, Serializable... ids);
 
-    /**
-     * 根据FilterNode的值删除对象， 必须是Entity Class
-     *
-     * @param <T>
-     * @param clazz
-     * @param node
-     */
     public <T> void delete(Class<T> clazz, FilterNode node);
 
-    /**
-     * 根据FilterNode的值删除对象， 必须是Entity Class
-     *
-     * @param <T>
-     * @param conn
-     * @param clazz
-     * @param node
-     */
     public <T> void delete(final DataConnection conn, Class<T> clazz, FilterNode node);
 
     //------------------------update---------------------------
@@ -123,42 +79,17 @@ public interface DataSource {
 
     public <T> void update(final DataConnection conn, T... values);
 
-    /**
-     * 根据主键值更新对象的column对应的值， 必须是Entity Class
-     *
-     * @param <T>
-     * @param clazz
-     * @param id
-     * @param column
-     * @param value
-     */
     public <T> void updateColumn(Class<T> clazz, Serializable id, String column, Serializable value);
 
     public <T> void updateColumn(DataConnection conn, Class<T> clazz, Serializable id, String column, Serializable value);
 
-    /**
-     * 根据主键值给对象的column对应的值+incvalue， 必须是Entity Class
-     *
-     * @param <T>
-     * @param clazz
-     * @param id
-     * @param column
-     * @param incvalue
-     */
-    public <T> void updateColumnIncrement(Class<T> clazz, Serializable id, String column, long incvalue);
-
-    public <T> void updateColumnIncrement(final DataConnection conn, Class<T> clazz, Serializable id, String column, long incvalue);
-
-    /**
-     * 更新对象指定的一些字段， 必须是Entity对象
-     *
-     * @param <T>
-     * @param value
-     * @param columns
-     */
     public <T> void updateColumns(final T value, final String... columns);
 
     public <T> void updateColumns(final DataConnection conn, final T value, final String... columns);
+
+    public <T> void updateColumnIncrement(Class<T> clazz, Serializable id, String column, long incvalue);
+
+    public <T> void updateColumnIncrement(final DataConnection conn, Class<T> clazz, Serializable id, String column, long incvalue);
 
     //-----------------------getSingleResult-----------------------------
     //-----------------------------MAX-----------------------------
@@ -189,6 +120,7 @@ public interface DataSource {
 
     public Number getCountSingleResult(final Class entityClass, FilterNode node);
 
+    //----------------------------DISTINCT COUNT----------------------------
     public Number getCountDistinctSingleResult(final Class entityClass, String column);
 
     public Number getCountDistinctSingleResult(final Class entityClass, String column, FilterBean bean);

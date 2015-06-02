@@ -11,7 +11,7 @@ import java.io.Serializable;
 import java.lang.reflect.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Function;
+import java.util.function.*;
 import java.util.logging.Logger;
 import javax.persistence.Transient;
 
@@ -89,9 +89,9 @@ final class FilterBeanNode extends FilterNode {
                         }
                         newnode.foreignEntity = secinfo;
                         newnode.tabalis = alias;
+                        newnode.columnAttribute = secinfo.getAttribute(newnode.column);
                         newnode.foreignAttribute = joinCol.column().isEmpty() ? secinfo.getPrimary() : secinfo.getAttribute(joinCol.column());
                         if (newnode.foreignEntity != null && newnode.foreignAttribute == null) throw new RuntimeException(clazz.getName() + "." + field.getName() + " have illegal FilterJoinColumn " + joinCol);
-                        joinallcached = false; //关联查询暂不支持缓存查询
                     }
                 }
                 //------------------------------------
@@ -142,6 +142,8 @@ final class FilterBeanNode extends FilterNode {
     private EntityInfo foreignEntity;
 
     private Attribute foreignAttribute;
+
+    private Attribute columnAttribute;
 
     private boolean array;
 
@@ -197,6 +199,7 @@ final class FilterBeanNode extends FilterNode {
         newnode.nodes = this.nodes;
         newnode.foreignEntity = this.foreignEntity;
         newnode.foreignAttribute = this.foreignAttribute;
+        newnode.columnAttribute = this.columnAttribute;
         newnode.array = this.array;
         newnode.collection = this.collection;
         newnode.ignoreCase = this.ignoreCase;
@@ -214,6 +217,7 @@ final class FilterBeanNode extends FilterNode {
             this.beanAttribute = beanNode.beanAttribute;
             this.foreignEntity = beanNode.foreignEntity;
             this.foreignAttribute = beanNode.foreignAttribute;
+            this.columnAttribute = beanNode.columnAttribute;
             this.array = beanNode.array;
             this.collection = beanNode.collection;
             this.ignoreCase = beanNode.ignoreCase;
@@ -233,8 +237,55 @@ final class FilterBeanNode extends FilterNode {
     }
 
     @Override
+    protected <T> Predicate<T> createFilterPredicate(final EntityInfo<T> info, FilterBean bean) {
+        if (this.foreignEntity == null) return super.createFilterPredicate(info, bean);
+        final Map<EntityInfo, Predicate> foreign = new HashMap<>();
+        Predicate<T> result = null;
+        putForeignPredicate(foreign, bean);
+        if (this.nodes != null) {
+            for (FilterNode n : this.nodes) {
+                FilterBeanNode node = (FilterBeanNode) n;
+                if (node.foreignEntity == null) {
+                    Predicate<T> f = node.createFilterPredicate(info, bean);
+                    if (f == null) continue;
+                    result = (result == null) ? f : (signand ? result.and(f) : result.or(f));
+                } else {
+                    putForeignPredicate(foreign, bean);
+                }
+            }
+        }
+        final Attribute foreignAttr = this.foreignAttribute;
+        for (Map.Entry<EntityInfo, Predicate> en : foreign.entrySet()) {
+            Attribute<T, Serializable> mainIdAttr = info.getPrimary();
+            final EntityCache cache = en.getKey().getCache();
+            final Predicate p = en.getValue();
+            Predicate<T> f = (T t) -> {
+                Serializable key = mainIdAttr.get(t);
+                Predicate k = (e) -> key.equals(foreignAttr.get(e));
+                return cache.contains(k.and(p));
+            };
+            result = (result == null) ? f : (signand ? result.and(f) : result.or(f));
+        }
+        return result;
+    }
+
+    private void putForeignPredicate(final Map<EntityInfo, Predicate> foreign, FilterBean bean) {
+        final Serializable val = getValue(bean);
+        Predicate filter = (val == null && express != ISNULL && express != ISNOTNULL) ? ((t) -> signand) : super.createFilterPredicate(this.columnAttribute, val);
+        if (filter == null) return;
+        Predicate p = foreign.get(this.foreignEntity);
+        if (p == null) {
+            foreign.put(foreignEntity, filter);
+        } else if (signand) {
+            p.and(filter);
+        } else {
+            p.or(filter);
+        }
+    }
+
+    @Override
     protected boolean isJoinAllCached() {
-        return joinallcached; //暂时没实现
+        return joinallcached;
     }
 
     @Override

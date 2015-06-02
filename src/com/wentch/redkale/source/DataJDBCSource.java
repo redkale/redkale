@@ -417,7 +417,7 @@ public final class DataJDBCSource implements DataSource {
                             for (final Class t : info.distributeTables) {
                                 EntityInfo<T> infox = loadEntityInfo(t);
                                 stmt = conn.createStatement();
-                                rs = stmt.executeQuery("SELECT MAX(" + info.getPrimarySQLColumn() + ") FROM " + infox.getTable());// 必须是同一字段名
+                                rs = stmt.executeQuery("SELECT MAX(" + info.getPrimarySQLColumn() + ") FROM " + infox.getTable()); // 必须是同一字段名
                                 if (rs.next()) {
                                     if (primaryType == int.class) {
                                         int v = rs.getInt(1) / info.allocationSize;

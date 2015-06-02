@@ -43,7 +43,7 @@ final class EntityCache<T> {
     private boolean fullloaded;
 
     public EntityCache(final Class<T> type, Creator<T> creator, Attribute<T, Serializable> primary,
-        Map<String, Attribute<T, Serializable>> attributes) {
+            Map<String, Attribute<T, Serializable>> attributes) {
         this.type = type;
         this.creator = creator;
         this.primary = primary;
@@ -58,7 +58,7 @@ final class EntityCache<T> {
             } catch (Exception e) {
                 return false;
             }
-        });        
+        });
     }
 
     public void fullLoad(List<T> all) {
@@ -93,6 +93,10 @@ final class EntityCache<T> {
         if (filter == null) return null;
         Optional<T> rs = listStream().filter(filter).findFirst();
         return rs.isPresent() ? (needcopy ? reproduce.copy(this.creator.create(), rs.get()) : rs.get()) : null;
+    }
+
+    public boolean contains(final Predicate<T> filter) {
+        return (filter != null) && listStream().filter(filter).findFirst().isPresent();
     }
 
     public <V> Number getSingleResult(final ReckonType type, final Attribute<T, V> attr, final Predicate<T> filter) {

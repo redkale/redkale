@@ -201,7 +201,7 @@ public class FilterNode {
         return sb;
     }
 
-    protected final <T> Predicate<T> createFilterPredicate(final EntityInfo<T> info, FilterBean bean) {
+    protected <T> Predicate<T> createFilterPredicate(final EntityInfo<T> info, FilterBean bean) {
         if (info == null) return null;
         final Serializable val = getValue(bean);
         if (val == null && express != ISNULL && express != ISNOTNULL) return null;
@@ -215,7 +215,7 @@ public class FilterNode {
         return filter;
     }
 
-    private <T> Predicate<T> createFilterPredicate(final Attribute<T, Serializable> attr, final Serializable val) {
+    protected final <T> Predicate<T> createFilterPredicate(final Attribute<T, Serializable> attr, final Serializable val) {
         if (attr == null) return null;
         switch (express) {
             case EQUAL: return (T t) -> val.equals(attr.get(t));
