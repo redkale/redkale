@@ -258,6 +258,7 @@ final class FilterBeanNode extends FilterNode {
                 }
             }
         }
+        if(foreign.isEmpty()) return result;
         final Attribute foreignAttr = this.foreignAttribute;
         for (Map.Entry<EntityInfo, Predicate> en : foreign.entrySet()) {
             Attribute<T, Serializable> mainIdAttr = info.getPrimary();
