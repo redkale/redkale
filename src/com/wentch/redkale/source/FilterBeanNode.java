@@ -238,7 +238,11 @@ final class FilterBeanNode extends FilterNode {
 
     @Override
     protected <T> Predicate<T> createFilterPredicate(final EntityInfo<T> info, FilterBean bean) {
-        if (this.joinSQL == null) return super.createFilterPredicate(info, bean);
+        return createFilterPredicate(true, info, bean);
+    }
+
+    private <T> Predicate<T> createFilterPredicate(final boolean first, final EntityInfo<T> info, FilterBean bean) {
+        if ((this.joinSQL == null && first) || this.foreignEntity == null) return super.createFilterPredicate(info, bean);
         final Map<EntityInfo, Predicate> foreign = new HashMap<>();
         Predicate<T> result = null;
         putForeignPredicate(foreign, bean);
@@ -246,7 +250,7 @@ final class FilterBeanNode extends FilterNode {
             for (FilterNode n : this.nodes) {
                 FilterBeanNode node = (FilterBeanNode) n;
                 if (node.foreignEntity == null) {
-                    Predicate<T> f = node.createFilterPredicate(info, bean);
+                    Predicate<T> f = node.createFilterPredicate(false, info, bean);
                     if (f == null) continue;
                     result = (result == null) ? f : (signand ? result.and(f) : result.or(f));
                 } else {
@@ -270,9 +274,10 @@ final class FilterBeanNode extends FilterNode {
     }
 
     private void putForeignPredicate(final Map<EntityInfo, Predicate> foreign, FilterBean bean) {
+        if (this.foreignEntity == null) return;
         final Serializable val = getValue(bean);
         Predicate filter = (val == null && express != ISNULL && express != ISNOTNULL) ? ((t) -> signand) : super.createFilterPredicate(this.columnAttribute, val);
-        if (filter == null || this.foreignEntity == null) return;
+        if (filter == null) return;
         Predicate p = foreign.get(this.foreignEntity);
         if (p == null) {
             foreign.put(foreignEntity, filter);
