@@ -833,9 +833,9 @@ public final class DataJDBCSource implements DataSource {
             final Serializable id = info.getPrimary().get(value);
             final List<Attribute<T, Serializable>> attrs = new ArrayList<>();
             for (String col : columns) {
-                if (setsql.length() > 0) setsql.append(',');
                 Attribute<T, Serializable> attr = info.getUpdateAttribute(col);
                 if (attr == null) continue;
+                if (setsql.length() > 0) setsql.append(',');
                 setsql.append(info.getSQLColumn(col)).append(" = ").append(formatToString(attr.get(value)));
             }
             String sql = "UPDATE " + info.getTable() + " SET " + setsql
