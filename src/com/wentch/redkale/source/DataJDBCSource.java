@@ -877,103 +877,103 @@ public final class DataJDBCSource implements DataSource {
         }
     }
 
-    //-----------------------getSingleResult-----------------------------
+    //-----------------------getNumberResult-----------------------------
     //-----------------------------MAX-----------------------------
     @Override
-    public Number getMaxSingleResult(final Class entityClass, final String column) {
-        return getMaxSingleResult(entityClass, column, (FilterNode) null);
+    public Number getMaxNumberResult(final Class entityClass, final String column) {
+        return getMaxNumberResult(entityClass, column, (FilterNode) null);
     }
 
     @Override
-    public Number getMaxSingleResult(final Class entityClass, final String column, FilterBean bean) {
-        return getSingleResult(ReckonType.MAX, entityClass, column, null, bean);
+    public Number getMaxNumberResult(final Class entityClass, final String column, FilterBean bean) {
+        return getNumberResult(ReckonType.MAX, entityClass, column, null, bean);
     }
 
     @Override
-    public Number getMaxSingleResult(final Class entityClass, final String column, FilterNode node) {
-        return getSingleResult(ReckonType.MAX, entityClass, column, node, null);
+    public Number getMaxNumberResult(final Class entityClass, final String column, FilterNode node) {
+        return getNumberResult(ReckonType.MAX, entityClass, column, node, null);
     }
 
     //-----------------------------MIN-----------------------------
     @Override
-    public Number getMinSingleResult(final Class entityClass, final String column) {
-        return getMinSingleResult(entityClass, column, (FilterNode) null);
+    public Number getMinNumberResult(final Class entityClass, final String column) {
+        return getMinNumberResult(entityClass, column, (FilterNode) null);
     }
 
     @Override
-    public Number getMinSingleResult(final Class entityClass, final String column, FilterBean bean) {
-        return getSingleResult(ReckonType.MIN, entityClass, column, null, bean);
+    public Number getMinNumberResult(final Class entityClass, final String column, FilterBean bean) {
+        return getNumberResult(ReckonType.MIN, entityClass, column, null, bean);
     }
 
     @Override
-    public Number getMinSingleResult(final Class entityClass, final String column, FilterNode node) {
-        return getSingleResult(ReckonType.MIN, entityClass, column, node, null);
+    public Number getMinNumberResult(final Class entityClass, final String column, FilterNode node) {
+        return getNumberResult(ReckonType.MIN, entityClass, column, node, null);
     }
 
     //-----------------------------SUM-----------------------------
     @Override
-    public Number getSumSingleResult(final Class entityClass, final String column) {
-        return getSumSingleResult(entityClass, column, (FilterNode) null);
+    public Number getSumNumberResult(final Class entityClass, final String column) {
+        return getSumNumberResult(entityClass, column, (FilterNode) null);
     }
 
     @Override
-    public Number getSumSingleResult(final Class entityClass, final String column, FilterBean bean) {
-        return getSingleResult(ReckonType.SUM, entityClass, column, null, bean);
+    public Number getSumNumberResult(final Class entityClass, final String column, FilterBean bean) {
+        return getNumberResult(ReckonType.SUM, entityClass, column, null, bean);
     }
 
     @Override
-    public Number getSumSingleResult(final Class entityClass, final String column, FilterNode node) {
-        return getSingleResult(ReckonType.SUM, entityClass, column, node, null);
+    public Number getSumNumberResult(final Class entityClass, final String column, FilterNode node) {
+        return getNumberResult(ReckonType.SUM, entityClass, column, node, null);
     }
 
     //----------------------------COUNT----------------------------
     @Override
-    public Number getCountSingleResult(final Class entityClass) {
-        return getCountSingleResult(entityClass, (FilterNode) null);
+    public Number getCountNumberResult(final Class entityClass) {
+        return getCountNumberResult(entityClass, (FilterNode) null);
     }
 
     @Override
-    public Number getCountSingleResult(final Class entityClass, FilterBean bean) {
-        return getSingleResult(ReckonType.COUNT, entityClass, null, null, bean);
+    public Number getCountNumberResult(final Class entityClass, FilterBean bean) {
+        return getNumberResult(ReckonType.COUNT, entityClass, null, null, bean);
     }
 
     @Override
-    public Number getCountSingleResult(final Class entityClass, FilterNode node) {
-        return getSingleResult(ReckonType.COUNT, entityClass, null, node, null);
+    public Number getCountNumberResult(final Class entityClass, FilterNode node) {
+        return getNumberResult(ReckonType.COUNT, entityClass, null, node, null);
     }
 
     @Override
-    public Number getCountDistinctSingleResult(final Class entityClass, String column) {
-        return getCountDistinctSingleResult(entityClass, column, (FilterNode) null);
+    public Number getCountDistinctNumberResult(final Class entityClass, String column) {
+        return getCountDistinctNumberResult(entityClass, column, (FilterNode) null);
     }
 
     @Override
-    public Number getCountDistinctSingleResult(final Class entityClass, String column, FilterBean bean) {
-        return getSingleResult(ReckonType.DISTINCTCOUNT, entityClass, column, null, bean);
+    public Number getCountDistinctNumberResult(final Class entityClass, String column, FilterBean bean) {
+        return getNumberResult(ReckonType.DISTINCTCOUNT, entityClass, column, null, bean);
     }
 
     @Override
-    public Number getCountDistinctSingleResult(final Class entityClass, final String column, FilterNode node) {
-        return getSingleResult(ReckonType.DISTINCTCOUNT, entityClass, column, node, null);
+    public Number getCountDistinctNumberResult(final Class entityClass, final String column, FilterNode node) {
+        return getNumberResult(ReckonType.DISTINCTCOUNT, entityClass, column, node, null);
     }
 
     //-----------------------------AVG-----------------------------
     @Override
-    public Number getAvgSingleResult(final Class entityClass, final String column) {
-        return getAvgSingleResult(entityClass, column, (FilterNode) null);
+    public Number getAvgNumberResult(final Class entityClass, final String column) {
+        return getAvgNumberResult(entityClass, column, (FilterNode) null);
     }
 
     @Override
-    public Number getAvgSingleResult(final Class entityClass, final String column, FilterBean bean) {
-        return getSingleResult(ReckonType.AVG, entityClass, column, null, bean);
+    public Number getAvgNumberResult(final Class entityClass, final String column, FilterBean bean) {
+        return getNumberResult(ReckonType.AVG, entityClass, column, null, bean);
     }
 
     @Override
-    public Number getAvgSingleResult(final Class entityClass, final String column, FilterNode node) {
-        return getSingleResult(ReckonType.AVG, entityClass, column, node, null);
+    public Number getAvgNumberResult(final Class entityClass, final String column, FilterNode node) {
+        return getNumberResult(ReckonType.AVG, entityClass, column, node, null);
     }
 
-    private <T> Number getSingleResult(final ReckonType type, final Class<T> entityClass, final String column, FilterNode node, FilterBean bean) {
+    private <T> Number getNumberResult(final ReckonType type, final Class<T> entityClass, final String column, FilterNode node, FilterBean bean) {
         final Connection conn = createReadSQLConnection();
         try {
             final EntityInfo<T> info = loadEntityInfo(entityClass);
@@ -982,7 +982,7 @@ public final class DataJDBCSource implements DataSource {
             if (cache != null && cache.isFullLoaded()) {
                 Predicate<T> filter = node == null ? null : node.createFilterPredicate(info, bean);
                 if (node == null || node.isJoinAllCached()) {
-                    return cache.getSingleResult(type, column == null ? null : info.getAttribute(column), filter);
+                    return cache.getNumberResult(type, column == null ? null : info.getAttribute(column), filter);
                 }
             }
             final String sql = "SELECT " + type.getReckonColumn("a." + column) + " FROM " + info.getTable() + " a"

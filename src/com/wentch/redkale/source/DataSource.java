@@ -91,48 +91,48 @@ public interface DataSource {
 
     public <T> void updateColumnIncrement(final DataConnection conn, Class<T> clazz, Serializable id, String column, long incvalue);
 
-    //-----------------------getSingleResult-----------------------------
+    //-----------------------getNumberResult-----------------------------
     //-----------------------------MAX-----------------------------
-    public Number getMaxSingleResult(final Class entityClass, final String column);
+    public Number getMaxNumberResult(final Class entityClass, final String column);
 
-    public Number getMaxSingleResult(final Class entityClass, final String column, FilterBean bean);
+    public Number getMaxNumberResult(final Class entityClass, final String column, FilterBean bean);
 
-    public Number getMaxSingleResult(final Class entityClass, final String column, FilterNode node);
+    public Number getMaxNumberResult(final Class entityClass, final String column, FilterNode node);
 
     //-----------------------------MIN-----------------------------
-    public Number getMinSingleResult(final Class entityClass, final String column);
+    public Number getMinNumberResult(final Class entityClass, final String column);
 
-    public Number getMinSingleResult(final Class entityClass, final String column, FilterBean bean);
+    public Number getMinNumberResult(final Class entityClass, final String column, FilterBean bean);
 
-    public Number getMinSingleResult(final Class entityClass, final String column, FilterNode node);
+    public Number getMinNumberResult(final Class entityClass, final String column, FilterNode node);
 
     //-----------------------------SUM-----------------------------
-    public Number getSumSingleResult(final Class entityClass, final String column);
+    public Number getSumNumberResult(final Class entityClass, final String column);
 
-    public Number getSumSingleResult(final Class entityClass, final String column, FilterBean bean);
+    public Number getSumNumberResult(final Class entityClass, final String column, FilterBean bean);
 
-    public Number getSumSingleResult(final Class entityClass, final String column, FilterNode node);
+    public Number getSumNumberResult(final Class entityClass, final String column, FilterNode node);
 
     //----------------------------COUNT----------------------------
-    public Number getCountSingleResult(final Class entityClass);
+    public Number getCountNumberResult(final Class entityClass);
 
-    public Number getCountSingleResult(final Class entityClass, FilterBean bean);
+    public Number getCountNumberResult(final Class entityClass, FilterBean bean);
 
-    public Number getCountSingleResult(final Class entityClass, FilterNode node);
+    public Number getCountNumberResult(final Class entityClass, FilterNode node);
 
     //----------------------------DISTINCT COUNT----------------------------
-    public Number getCountDistinctSingleResult(final Class entityClass, String column);
+    public Number getCountDistinctNumberResult(final Class entityClass, String column);
 
-    public Number getCountDistinctSingleResult(final Class entityClass, String column, FilterBean bean);
+    public Number getCountDistinctNumberResult(final Class entityClass, String column, FilterBean bean);
 
-    public Number getCountDistinctSingleResult(final Class entityClass, String column, FilterNode node);
+    public Number getCountDistinctNumberResult(final Class entityClass, String column, FilterNode node);
 
     //-----------------------------AVG-----------------------------
-    public Number getAvgSingleResult(final Class entityClass, final String column);
+    public Number getAvgNumberResult(final Class entityClass, final String column);
 
-    public Number getAvgSingleResult(final Class entityClass, final String column, FilterBean bean);
+    public Number getAvgNumberResult(final Class entityClass, final String column, FilterBean bean);
 
-    public Number getAvgSingleResult(final Class entityClass, final String column, FilterNode node);
+    public Number getAvgNumberResult(final Class entityClass, final String column, FilterNode node);
 
     //-----------------------find----------------------------
     /**

@@ -99,7 +99,7 @@ final class EntityCache<T> {
         return (filter != null) && listStream().filter(filter).findFirst().isPresent();
     }
 
-    public <V> Number getSingleResult(final ReckonType type, final Attribute<T, V> attr, final Predicate<T> filter) {
+    public <V> Number getNumberResult(final ReckonType type, final Attribute<T, V> attr, final Predicate<T> filter) {
         Stream<T> stream = listStream();
         if (filter != null) stream = stream.filter(filter);
         switch (type) {
@@ -115,7 +115,7 @@ final class EntityCache<T> {
                 } else if (attr.type() == double.class || attr.type() == Double.class) {
                     return stream.mapToDouble(x -> (Double) attr.get(x)).average().orElse(0);
                 }
-                throw new RuntimeException("getSingleResult error(type:" + type + ", attr.declaringClass: " + attr.declaringClass() + ", attr.field: " + attr.field() + ", attr.type: " + attr.type());
+                throw new RuntimeException("getNumberResult error(type:" + type + ", attr.declaringClass: " + attr.declaringClass() + ", attr.field: " + attr.field() + ", attr.type: " + attr.type());
             case COUNT: return stream.count();
             case DISTINCTCOUNT: return stream.map(x -> attr.get(x)).distinct().count();
 
@@ -131,7 +131,7 @@ final class EntityCache<T> {
                 } else if (attr.type() == double.class || attr.type() == Double.class) {
                     return stream.mapToDouble(x -> (Double) attr.get(x)).max().orElse(0);
                 }
-                throw new RuntimeException("getSingleResult error(type:" + type + ", attr.declaringClass: " + attr.declaringClass() + ", attr.field: " + attr.field() + ", attr.type: " + attr.type());
+                throw new RuntimeException("getNumberResult error(type:" + type + ", attr.declaringClass: " + attr.declaringClass() + ", attr.field: " + attr.field() + ", attr.type: " + attr.type());
 
             case MIN:
                 if (attr.type() == int.class || attr.type() == Integer.class) {
@@ -145,7 +145,7 @@ final class EntityCache<T> {
                 } else if (attr.type() == double.class || attr.type() == Double.class) {
                     return stream.mapToDouble(x -> (Double) attr.get(x)).min().orElse(0);
                 }
-                throw new RuntimeException("getSingleResult error(type:" + type + ", attr.declaringClass: " + attr.declaringClass() + ", attr.field: " + attr.field() + ", attr.type: " + attr.type());
+                throw new RuntimeException("getNumberResult error(type:" + type + ", attr.declaringClass: " + attr.declaringClass() + ", attr.field: " + attr.field() + ", attr.type: " + attr.type());
 
             case SUM:
                 if (attr.type() == int.class || attr.type() == Integer.class) {
@@ -159,7 +159,7 @@ final class EntityCache<T> {
                 } else if (attr.type() == double.class || attr.type() == Double.class) {
                     return stream.mapToDouble(x -> (Double) attr.get(x)).sum();
                 }
-                throw new RuntimeException("getSingleResult error(type:" + type + ", attr.declaringClass: " + attr.declaringClass() + ", attr.field: " + attr.field() + ", attr.type: " + attr.type());
+                throw new RuntimeException("getNumberResult error(type:" + type + ", attr.declaringClass: " + attr.declaringClass() + ", attr.field: " + attr.field() + ", attr.type: " + attr.type());
         }
         return -1;
     }
