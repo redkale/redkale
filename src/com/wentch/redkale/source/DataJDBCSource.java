@@ -905,7 +905,7 @@ public final class DataJDBCSource implements DataSource {
                     return cache.getNumberResult(reckon, column == null ? null : info.getAttribute(column), filter);
                 }
             }
-            final String sql = "SELECT " + reckon.getColumn("a." + (column == null || column.isEmpty() ? "*" : column)) + " FROM " + info.getTable() + " a"
+            final String sql = "SELECT " + reckon.getColumn((column == null || column.isEmpty() ? "*" : ("a." + column))) + " FROM " + info.getTable() + " a"
                     + (node == null ? "" : node.createFilterSQLExpress(info, bean));
             if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(entityClass.getSimpleName() + " single sql=" + sql);
             final PreparedStatement prestmt = conn.prepareStatement(sql);
@@ -953,7 +953,7 @@ public final class DataJDBCSource implements DataSource {
                 }
             }
             final String sqlkey = info.getSQLColumn(keyColumn);
-            final String sql = "SELECT a." + sqlkey + ", " + reckon.getColumn("a." + (reckonColumn == null || reckonColumn.isEmpty() ? "*" : reckonColumn))
+            final String sql = "SELECT a." + sqlkey + ", " + reckon.getColumn((reckonColumn == null || reckonColumn.isEmpty() ? "*" : ("a." + reckonColumn)))
                     + " FROM " + info.getTable() + " a" + (node == null ? "" : node.createFilterSQLExpress(info, bean)) + " GROUP BY a." + sqlkey;
             if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(entityClass.getSimpleName() + " single sql=" + sql);
             final PreparedStatement prestmt = conn.prepareStatement(sql);
