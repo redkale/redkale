@@ -22,7 +22,7 @@ import java.util.stream.*;
  *
  * @author zhangjx
  */
-final class EntityCache<T> {
+public final class EntityCache<T> {
 
     private static final Logger logger = Logger.getLogger(EntityCache.class.getName());
 
@@ -102,7 +102,7 @@ final class EntityCache<T> {
         return (filter != null) && listStream().filter(filter).findFirst().isPresent();
     }
 
-    public <K, V> Map<Serializable, Number> getMapResult(final Attribute<T, K> keyAttr, final Reckon reckon, final Attribute<T, V> reckonAttr, final Predicate<T> filter) {
+    public <K, V> Map<Serializable, Number> getMapResult(final Attribute<T, K> keyAttr, final Reckon reckon, final Attribute reckonAttr, final Predicate<T> filter) {
         Stream<T> stream = listStream();
         if (filter != null) stream = stream.filter(filter);
         Collector<T, Map, ?> collector = null;
@@ -117,11 +117,13 @@ final class EntityCache<T> {
                 break;
             case COUNT: collector = (Collector<T, Map, ?>) Collectors.counting();
                 break;
-            case DISTINCTCOUNT: collector = (Collector<T, Map, ?>) Collectors.counting();
+            case DISTINCTCOUNT:
+                collector = (Collector<T, Map, ?>) Collectors.mapping((t) -> reckonAttr.get(t), Collectors.toSet());
                 break;
-            case MAX: collector = (Collector<T, Map, ?>) Collectors.maxBy(null);
-                break;
-            case MIN: collector = (Collector<T, Map, ?>) Collectors.minBy(null);
+            case MAX:
+            case MIN:
+                Comparator<T> comp = (o1, o2) -> o1 == null ? (o2 == null ? 0 : -1) : ((Comparable) reckonAttr.get(o1)).compareTo(reckonAttr.get(o2));
+                collector = (Collector<T, Map, ?>) ((reckon == MAX) ? Collectors.maxBy(comp) : Collectors.minBy(comp));
                 break;
             case SUM:
                 if (valtype == float.class || valtype == Float.class || valtype == double.class || valtype == Double.class) {
@@ -131,7 +133,18 @@ final class EntityCache<T> {
                 }
                 break;
         }
-        final Map rs = stream.collect(Collectors.groupingBy(t -> keyAttr.get(t), LinkedHashMap::new, collector));
+        Map rs = stream.collect(Collectors.groupingBy(t -> keyAttr.get(t), LinkedHashMap::new, collector));
+        if (reckon == MAX || reckon == MIN) {
+            Map rs2 = new LinkedHashMap();
+            rs.forEach((x, y) -> {
+                if (((Optional) y).isPresent()) rs2.put(x, reckonAttr.get((T) ((Optional) y).get()));
+            });
+            rs = rs2;
+        } else if (reckon == DISTINCTCOUNT) {
+            Map rs2 = new LinkedHashMap();
+            rs.forEach((x, y) -> rs2.put(x, ((Set) y).size()));
+            rs = rs2;
+        }
         return rs;
     }
 
@@ -346,7 +359,7 @@ final class EntityCache<T> {
         return this.list.size() > 1024 * 16;
     }
 
-    protected Stream<T> listStream() {
+    private Stream<T> listStream() {
         return isParallel() ? this.list.parallelStream() : this.list.stream();
     }
 }
