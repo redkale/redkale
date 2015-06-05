@@ -16,6 +16,16 @@ import java.util.*;
 @SuppressWarnings("unchecked")
 public interface DataSource {
 
+    public static enum Reckon {
+
+        AVG, COUNT, DISTINCTCOUNT, MAX, MIN, SUM;
+
+        public String getColumn(String col) {
+            if (this == DISTINCTCOUNT) return "COUNT(DISTINCT " + col + ")";
+            return this.name() + "(" + col + ")";
+        }
+    }
+
     /**
      * 创建读连接
      *
@@ -87,52 +97,22 @@ public interface DataSource {
 
     public <T> void updateColumns(final DataConnection conn, final T value, final String... columns);
 
-    public <T> void updateColumnIncrement(Class<T> clazz, Serializable id, String column, long incvalue);
+    public <T> void updateColumnIncrement(final Class<T> clazz, Serializable id, String column, long incvalue);
 
     public <T> void updateColumnIncrement(final DataConnection conn, Class<T> clazz, Serializable id, String column, long incvalue);
 
-    //-----------------------getNumberResult-----------------------------
-    //-----------------------------MAX-----------------------------
-    public Number getMaxNumberResult(final Class entityClass, final String column);
+    //-----------------------getXXXXResult-----------------------------
+    public Number getNumberResult(final Class entityClass, final Reckon reckon, final String column);
 
-    public Number getMaxNumberResult(final Class entityClass, final String column, FilterBean bean);
+    public Number getNumberResult(final Class entityClass, final Reckon reckon, final String column, FilterBean bean);
 
-    public Number getMaxNumberResult(final Class entityClass, final String column, FilterNode node);
+    public Number getNumberResult(final Class entityClass, final Reckon reckon, final String column, FilterNode node);
 
-    //-----------------------------MIN-----------------------------
-    public Number getMinNumberResult(final Class entityClass, final String column);
+    public Map<Serializable, Number> getMapResult(Class entityClass, final String keyColumn, Reckon reckon, final String reckonColumn);
 
-    public Number getMinNumberResult(final Class entityClass, final String column, FilterBean bean);
+    public Map<Serializable, Number> getMapResult(Class entityClass, final String keyColumn, Reckon reckon, final String reckonColumn, FilterBean bean);
 
-    public Number getMinNumberResult(final Class entityClass, final String column, FilterNode node);
-
-    //-----------------------------SUM-----------------------------
-    public Number getSumNumberResult(final Class entityClass, final String column);
-
-    public Number getSumNumberResult(final Class entityClass, final String column, FilterBean bean);
-
-    public Number getSumNumberResult(final Class entityClass, final String column, FilterNode node);
-
-    //----------------------------COUNT----------------------------
-    public Number getCountNumberResult(final Class entityClass);
-
-    public Number getCountNumberResult(final Class entityClass, FilterBean bean);
-
-    public Number getCountNumberResult(final Class entityClass, FilterNode node);
-
-    //----------------------------DISTINCT COUNT----------------------------
-    public Number getCountDistinctNumberResult(final Class entityClass, String column);
-
-    public Number getCountDistinctNumberResult(final Class entityClass, String column, FilterBean bean);
-
-    public Number getCountDistinctNumberResult(final Class entityClass, String column, FilterNode node);
-
-    //-----------------------------AVG-----------------------------
-    public Number getAvgNumberResult(final Class entityClass, final String column);
-
-    public Number getAvgNumberResult(final Class entityClass, final String column, FilterBean bean);
-
-    public Number getAvgNumberResult(final Class entityClass, final String column, FilterNode node);
+    public Map<Serializable, Number> getMapResult(Class entityClass, final String keyColumn, Reckon reckon, final String reckonColumn, FilterNode node);
 
     //-----------------------find----------------------------
     /**

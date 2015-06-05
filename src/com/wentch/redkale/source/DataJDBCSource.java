@@ -878,102 +878,22 @@ public final class DataJDBCSource implements DataSource {
     }
 
     //-----------------------getNumberResult-----------------------------
-    //-----------------------------MAX-----------------------------
     @Override
-    public Number getMaxNumberResult(final Class entityClass, final String column) {
-        return getMaxNumberResult(entityClass, column, (FilterNode) null);
+    public Number getNumberResult(final Class entityClass, final Reckon reckon, final String column) {
+        return getNumberResult(entityClass, reckon, column, null, null);
     }
 
     @Override
-    public Number getMaxNumberResult(final Class entityClass, final String column, FilterBean bean) {
-        return getNumberResult(ReckonType.MAX, entityClass, column, null, bean);
+    public Number getNumberResult(final Class entityClass, final Reckon reckon, final String column, FilterBean bean) {
+        return getNumberResult(entityClass, reckon, column, null, bean);
     }
 
     @Override
-    public Number getMaxNumberResult(final Class entityClass, final String column, FilterNode node) {
-        return getNumberResult(ReckonType.MAX, entityClass, column, node, null);
+    public Number getNumberResult(final Class entityClass, final Reckon reckon, final String column, FilterNode node) {
+        return getNumberResult(entityClass, reckon, column, node, null);
     }
 
-    //-----------------------------MIN-----------------------------
-    @Override
-    public Number getMinNumberResult(final Class entityClass, final String column) {
-        return getMinNumberResult(entityClass, column, (FilterNode) null);
-    }
-
-    @Override
-    public Number getMinNumberResult(final Class entityClass, final String column, FilterBean bean) {
-        return getNumberResult(ReckonType.MIN, entityClass, column, null, bean);
-    }
-
-    @Override
-    public Number getMinNumberResult(final Class entityClass, final String column, FilterNode node) {
-        return getNumberResult(ReckonType.MIN, entityClass, column, node, null);
-    }
-
-    //-----------------------------SUM-----------------------------
-    @Override
-    public Number getSumNumberResult(final Class entityClass, final String column) {
-        return getSumNumberResult(entityClass, column, (FilterNode) null);
-    }
-
-    @Override
-    public Number getSumNumberResult(final Class entityClass, final String column, FilterBean bean) {
-        return getNumberResult(ReckonType.SUM, entityClass, column, null, bean);
-    }
-
-    @Override
-    public Number getSumNumberResult(final Class entityClass, final String column, FilterNode node) {
-        return getNumberResult(ReckonType.SUM, entityClass, column, node, null);
-    }
-
-    //----------------------------COUNT----------------------------
-    @Override
-    public Number getCountNumberResult(final Class entityClass) {
-        return getCountNumberResult(entityClass, (FilterNode) null);
-    }
-
-    @Override
-    public Number getCountNumberResult(final Class entityClass, FilterBean bean) {
-        return getNumberResult(ReckonType.COUNT, entityClass, null, null, bean);
-    }
-
-    @Override
-    public Number getCountNumberResult(final Class entityClass, FilterNode node) {
-        return getNumberResult(ReckonType.COUNT, entityClass, null, node, null);
-    }
-
-    @Override
-    public Number getCountDistinctNumberResult(final Class entityClass, String column) {
-        return getCountDistinctNumberResult(entityClass, column, (FilterNode) null);
-    }
-
-    @Override
-    public Number getCountDistinctNumberResult(final Class entityClass, String column, FilterBean bean) {
-        return getNumberResult(ReckonType.DISTINCTCOUNT, entityClass, column, null, bean);
-    }
-
-    @Override
-    public Number getCountDistinctNumberResult(final Class entityClass, final String column, FilterNode node) {
-        return getNumberResult(ReckonType.DISTINCTCOUNT, entityClass, column, node, null);
-    }
-
-    //-----------------------------AVG-----------------------------
-    @Override
-    public Number getAvgNumberResult(final Class entityClass, final String column) {
-        return getAvgNumberResult(entityClass, column, (FilterNode) null);
-    }
-
-    @Override
-    public Number getAvgNumberResult(final Class entityClass, final String column, FilterBean bean) {
-        return getNumberResult(ReckonType.AVG, entityClass, column, null, bean);
-    }
-
-    @Override
-    public Number getAvgNumberResult(final Class entityClass, final String column, FilterNode node) {
-        return getNumberResult(ReckonType.AVG, entityClass, column, node, null);
-    }
-
-    private <T> Number getNumberResult(final ReckonType type, final Class<T> entityClass, final String column, FilterNode node, FilterBean bean) {
+    private <T> Number getNumberResult(final Class<T> entityClass, final Reckon reckon, final String column, FilterNode node, FilterBean bean) {
         final Connection conn = createReadSQLConnection();
         try {
             final EntityInfo<T> info = loadEntityInfo(entityClass);
@@ -982,10 +902,10 @@ public final class DataJDBCSource implements DataSource {
             if (cache != null && cache.isFullLoaded()) {
                 Predicate<T> filter = node == null ? null : node.createFilterPredicate(info, bean);
                 if (node == null || node.isJoinAllCached()) {
-                    return cache.getNumberResult(type, column == null ? null : info.getAttribute(column), filter);
+                    return cache.getNumberResult(reckon, column == null ? null : info.getAttribute(column), filter);
                 }
             }
-            final String sql = "SELECT " + type.getReckonColumn("a." + column) + " FROM " + info.getTable() + " a"
+            final String sql = "SELECT " + reckon.getColumn("a." + (column == null || column.isEmpty() ? "*" : column)) + " FROM " + info.getTable() + " a"
                     + (node == null ? "" : node.createFilterSQLExpress(info, bean));
             if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(entityClass.getSimpleName() + " single sql=" + sql);
             final PreparedStatement prestmt = conn.prepareStatement(sql);
@@ -993,6 +913,54 @@ public final class DataJDBCSource implements DataSource {
             ResultSet set = prestmt.executeQuery();
             if (set.next()) {
                 rs = (Number) set.getObject(1);
+            }
+            set.close();
+            prestmt.close();
+            return rs;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        } finally {
+            if (conn != null) closeSQLConnection(conn);
+        }
+    }
+
+    //-----------------------getMapResult-----------------------------
+    @Override
+    public Map<Serializable, Number> getMapResult(Class entityClass, final String keyColumn, Reckon reckon, final String reckonColumn) {
+        return getMapResult(entityClass, keyColumn, reckon, reckonColumn, null, null);
+    }
+
+    @Override
+    public Map<Serializable, Number> getMapResult(Class entityClass, final String keyColumn, Reckon reckon, final String reckonColumn, FilterBean bean) {
+        return getMapResult(entityClass, keyColumn, reckon, reckonColumn, null, bean);
+    }
+
+    @Override
+    public Map<Serializable, Number> getMapResult(Class entityClass, final String keyColumn, Reckon reckon, final String reckonColumn, FilterNode node) {
+        return getMapResult(entityClass, keyColumn, reckon, reckonColumn, node, null);
+    }
+
+    private <T> Map<Serializable, Number> getMapResult(final Class entityClass, final String keyColumn, final Reckon reckon, final String reckonColumn, FilterNode node, FilterBean bean) {
+        final Connection conn = createReadSQLConnection();
+        try {
+            final EntityInfo<T> info = loadEntityInfo(entityClass);
+            if (node == null && bean != null) node = loadFilterBeanNode(bean.getClass());
+            final EntityCache<T> cache = info.getCache();
+            if (cache != null && cache.isFullLoaded()) {
+                Predicate<T> filter = node == null ? null : node.createFilterPredicate(info, bean);
+                if (node == null || node.isJoinAllCached()) {
+                    return cache.getMapResult(info.getAttribute(keyColumn), reckon, reckonColumn == null ? null : info.getAttribute(reckonColumn), filter);
+                }
+            }
+            final String sqlkey = info.getSQLColumn(keyColumn);
+            final String sql = "SELECT a." + sqlkey + ", " + reckon.getColumn("a." + (reckonColumn == null || reckonColumn.isEmpty() ? "*" : reckonColumn))
+                    + " FROM " + info.getTable() + " a" + (node == null ? "" : node.createFilterSQLExpress(info, bean)) + " GROUP BY a." + sqlkey;
+            if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(entityClass.getSimpleName() + " single sql=" + sql);
+            final PreparedStatement prestmt = conn.prepareStatement(sql);
+            Map<Serializable, Number> rs = new LinkedHashMap<>();
+            ResultSet set = prestmt.executeQuery();
+            while (set.next()) {
+                rs.put((Serializable) set.getObject(1), (Number) set.getObject(2));
             }
             set.close();
             prestmt.close();

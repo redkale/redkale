@@ -29,241 +29,128 @@ final class DataJPASource implements DataSource {
 
     private final Logger logger = Logger.getLogger(DataJPASource.class.getSimpleName());
 
-    public <T> void updateColumnIncrement(Class<T> clazz, Serializable id, String column, long incvalue) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    public <T> void updateColumnIncrement(DataConnection conn, Class<T> clazz, Serializable id, String column, long incvalue) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
+    @Override
     public <T> void refreshCache(Class<T> clazz) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
-    public <T> T find(Class<T> clazz, FilterBean bean) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    public Number getCountDistinctSingleResult(Class entityClass, String column) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    public Number getCountDistinctSingleResult(Class entityClass, String column, FilterBean bean) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    public <T, V> Sheet<V> queryColumnSheet(String selectedColumn, Class<T> clazz, Flipper flipper, FilterBean bean) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    public <T, V> Set<V> queryColumnSet(String selectedColumn, Class<T> clazz, String column, Serializable key) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    public <T, V> Set<V> queryColumnSet(String selectedColumn, Class<T> clazz, String column, FilterExpress express, Serializable key) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    public <T, V> List<V> queryColumnList(String selectedColumn, Class<T> clazz, String column, FilterExpress express, Serializable key) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    public <T> int[] queryColumnIntSet(String selectedColumn, Class<T> clazz, String column, Serializable key) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    public <T> long[] queryColumnLongSet(String selectedColumn, Class<T> clazz, String column, Serializable key) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    public <T> int[] queryColumnIntList(String selectedColumn, Class<T> clazz, String column, Serializable key) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    public <T> long[] queryColumnLongList(String selectedColumn, Class<T> clazz, String column, Serializable key) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    public <T> int[] queryColumnIntSet(String selectedColumn, Class<T> clazz, String column, FilterExpress express, Serializable key) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    public <T> long[] queryColumnLongSet(String selectedColumn, Class<T> clazz, String column, FilterExpress express, Serializable key) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    public <T> int[] queryColumnIntList(String selectedColumn, Class<T> clazz, String column, FilterExpress express, Serializable key) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    public <T> long[] queryColumnLongList(String selectedColumn, Class<T> clazz, String column, FilterExpress express, Serializable key) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    public <T> T find(Class<T> clazz, SelectColumn selects, Serializable pk) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
+    @Override
     public <T> void delete(Class<T> clazz, FilterNode node) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
+    @Override
     public <T> void delete(DataConnection conn, Class<T> clazz, FilterNode node) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
-    public Number getMaxSingleResult(Class entityClass, String column, FilterNode node) {
+    @Override
+    public <T> void updateColumnIncrement(Class<T> clazz, Serializable id, String column, long incvalue) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
-    public Number getMinSingleResult(Class entityClass, String column, FilterNode node) {
+    @Override
+    public <T> void updateColumnIncrement(DataConnection conn, Class<T> clazz, Serializable id, String column, long incvalue) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
-    public Number getSumSingleResult(Class entityClass, String column, FilterNode node) {
+    @Override
+    public Number getNumberResult(Class entityClass, Reckon reckon, String column) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
-    public Number getCountSingleResult(Class entityClass, FilterNode node) {
+    @Override
+    public Number getNumberResult(Class entityClass, Reckon reckon, String column, FilterBean bean) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
-    public Number getCountDistinctSingleResult(Class entityClass, String column, FilterNode node) {
+    @Override
+    public Number getNumberResult(Class entityClass, Reckon reckon, String column, FilterNode node) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
-    public Number getAvgSingleResult(Class entityClass, String column, FilterNode node) {
+    @Override
+    public <T> T find(Class<T> clazz, SelectColumn selects, Serializable pk) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
+    @Override
     public <T> T find(Class<T> clazz, FilterNode node) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
-    public <T> List<T> queryList(Class<T> clazz, FilterNode node) {
+    @Override
+    public <T> T find(Class<T> clazz, FilterBean bean) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
-    public <T> List<T> queryList(Class<T> clazz, SelectColumn selects, FilterNode node) {
+    @Override
+    public <T, V> Set<V> queryColumnSet(String selectedColumn, Class<T> clazz, String column, Serializable key) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
-    public <T> Sheet<T> querySheet(Class<T> clazz, Flipper flipper, FilterNode node) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    public <T> Sheet<T> querySheet(Class<T> clazz, SelectColumn selects, Flipper flipper, FilterNode node) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
+    @Override
     public <T, V> Set<V> queryColumnSet(String selectedColumn, Class<T> clazz, FilterNode node) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
+    @Override
     public <T, V> Set<V> queryColumnSet(String selectedColumn, Class<T> clazz, FilterBean bean) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
+    @Override
     public <T, V> List<V> queryColumnList(String selectedColumn, Class<T> clazz, FilterNode node) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
+    @Override
     public <T, V> List<V> queryColumnList(String selectedColumn, Class<T> clazz, FilterBean bean) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
+    @Override
+    public <T> List<T> queryList(Class<T> clazz, FilterNode node) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public <T> List<T> queryList(Class<T> clazz, SelectColumn selects, FilterNode node) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public <T, V> Sheet<V> queryColumnSheet(String selectedColumn, Class<T> clazz, Flipper flipper, FilterBean bean) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
     public <T, V> Sheet<V> queryColumnSheet(String selectedColumn, Class<T> clazz, Flipper flipper, FilterNode node) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
-    public Number getMaxNumberResult(Class entityClass, String column) {
+    public <T> Sheet<T> querySheet(Class<T> clazz, Flipper flipper, FilterNode node) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
-    public Number getMaxNumberResult(Class entityClass, String column, FilterBean bean) {
+    public <T> Sheet<T> querySheet(Class<T> clazz, SelectColumn selects, Flipper flipper, FilterNode node) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
-    public Number getMaxNumberResult(Class entityClass, String column, FilterNode node) {
+    public Map<Serializable, Number> getMapResult(Class entityClass, String keyColumn, Reckon reckon, String reckonColumn) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
-    public Number getMinNumberResult(Class entityClass, String column) {
+    public Map<Serializable, Number> getMapResult(Class entityClass, String keyColumn, Reckon reckon, String reckonColumn, FilterBean bean) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
-    public Number getMinNumberResult(Class entityClass, String column, FilterBean bean) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public Number getMinNumberResult(Class entityClass, String column, FilterNode node) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public Number getSumNumberResult(Class entityClass, String column) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public Number getSumNumberResult(Class entityClass, String column, FilterBean bean) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public Number getSumNumberResult(Class entityClass, String column, FilterNode node) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public Number getCountNumberResult(Class entityClass) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public Number getCountNumberResult(Class entityClass, FilterBean bean) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public Number getCountNumberResult(Class entityClass, FilterNode node) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public Number getCountDistinctNumberResult(Class entityClass, String column) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public Number getCountDistinctNumberResult(Class entityClass, String column, FilterBean bean) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public Number getCountDistinctNumberResult(Class entityClass, String column, FilterNode node) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public Number getAvgNumberResult(Class entityClass, String column) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public Number getAvgNumberResult(Class entityClass, String column, FilterBean bean) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public Number getAvgNumberResult(Class entityClass, String column, FilterNode node) {
+    public Map<Serializable, Number> getMapResult(Class entityClass, String keyColumn, Reckon reckon, String reckonColumn, FilterNode node) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
