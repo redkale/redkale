@@ -205,7 +205,7 @@ public class FilterNode {
         if (info == null) return null;
         final Serializable val = getValue(bean);
         Predicate<T> filter = val == null ? null : createFilterPredicate(info.getAttribute(column), val);
-        if (nodes == null) return filter;
+        if (this.nodes == null) return filter;
         for (FilterNode node : this.nodes) {
             Predicate<T> f = node.createFilterPredicate(info, bean);
             if (f == null) continue;
