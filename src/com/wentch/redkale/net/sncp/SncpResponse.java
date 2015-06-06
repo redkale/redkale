@@ -66,7 +66,7 @@ public final class SncpResponse extends Response<SncpRequest> {
         buffer.putChar((char) SncpRequest.HEADER_SIZE);
         buffer.putLong(request.getServiceid());
         buffer.putLong(request.getNameid());
-        TwoLong actionid = request.getActionid();
+        DLong actionid = request.getActionid();
         buffer.putLong(actionid.getFirst());
         buffer.putLong(actionid.getSecond());
         buffer.put((byte) frameCount); // frame count

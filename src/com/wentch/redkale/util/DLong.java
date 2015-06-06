@@ -9,13 +9,13 @@ package com.wentch.redkale.util;
  *
  * @author zhangjx
  */
-public final class TwoLong extends Number implements Comparable<TwoLong> {
+public final class DLong extends Number implements Comparable<DLong> {
 
-    private long first;
+    private final long first;
 
-    private long second;
+    private final long second;
 
-    public TwoLong(long one, long two) {
+    public DLong(long one, long two) {
         this.first = one;
         this.second = two;
     }
@@ -41,7 +41,7 @@ public final class TwoLong extends Number implements Comparable<TwoLong> {
     public boolean equals(Object obj) {
         if (obj == null) return false;
         if (getClass() != obj.getClass()) return false;
-        final TwoLong other = (TwoLong) obj;
+        final DLong other = (DLong) obj;
         return (this.first == other.first && this.second == other.second);
     }
 
@@ -71,7 +71,7 @@ public final class TwoLong extends Number implements Comparable<TwoLong> {
     }
 
     @Override
-    public int compareTo(TwoLong o) {
+    public int compareTo(DLong o) {
         return (int) (first == o.first ? (second - o.second) : (first - o.first));
     }
 

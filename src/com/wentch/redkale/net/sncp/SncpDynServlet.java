@@ -30,14 +30,14 @@ public class SncpDynServlet extends SncpServlet {
 
     private final long serviceid;
 
-    private final HashMap<TwoLong, SncpServletAction> actions = new HashMap<>();
+    private final HashMap<DLong, SncpServletAction> actions = new HashMap<>();
 
     public SncpDynServlet(final BsonConvert convert, final String serviceName, final Service service, final AnyValue conf) {
         this.conf = conf;
         final Class serviceClass = service.getClass();
         this.nameid = Sncp.hash(serviceName);
         this.serviceid = Sncp.hash(serviceClass);
-        Set<TwoLong> actionids = new HashSet<>();
+        Set<DLong> actionids = new HashSet<>();
         for (java.lang.reflect.Method method : serviceClass.getMethods()) {
             if (method.isSynthetic()) continue;
             if (Modifier.isStatic(method.getModifiers())) continue;
@@ -48,7 +48,7 @@ public class SncpDynServlet extends SncpServlet {
             if (method.getName().equals("init") || method.getName().equals("destroy")) continue;
             Method onMethod = getOnMethod(serviceClass, method);
             if (onMethod != null) method = onMethod;
-            final TwoLong actionid = Sncp.hash(method);
+            final DLong actionid = Sncp.hash(method);
             SncpServletAction action = SncpServletAction.create(service, actionid, method);
             action.convert = convert;
             if (actionids.contains(actionid)) {
@@ -132,7 +132,7 @@ public class SncpDynServlet extends SncpServlet {
          * @return
          */
         @SuppressWarnings("unchecked")
-        public static SncpServletAction create(final Service service, final TwoLong actionid, final Method method) {
+        public static SncpServletAction create(final Service service, final DLong actionid, final Method method) {
             final Class serviceClass = service.getClass();
             final String supDynName = SncpServletAction.class.getName().replace('.', '/');
             final String serviceName = serviceClass.getName().replace('.', '/');

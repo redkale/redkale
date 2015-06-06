@@ -46,8 +46,8 @@ public abstract class Sncp {
         return (rs < Integer.MAX_VALUE) ? rs | 0xF00000000L : rs;
     }
 
-    public static TwoLong hash(final java.lang.reflect.Method method) {
-        if (method == null) return new TwoLong(-1L, -1L);
+    public static DLong hash(final java.lang.reflect.Method method) {
+        if (method == null) return new DLong(-1L, -1L);
         long rs1 = hash(method.getName());
         if (rs1 < Integer.MAX_VALUE) {
             rs1 |= (method.getParameterCount() + 0L) << 32;
@@ -58,7 +58,7 @@ public abstract class Sncp {
             rs2 |= (method.getParameterCount() + 0L) << 32;
         }
         rs2 = (rs2 < Integer.MAX_VALUE) ? rs2 | 0xF00000000L : rs2;
-        return new TwoLong(rs1, rs2);
+        return new DLong(rs1, rs2);
     }
 
     private static String wrapName(final java.lang.reflect.Method method) {

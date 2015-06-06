@@ -80,7 +80,7 @@ public abstract class Factory<R extends Reader, W extends Writer> {
             this.register(java.util.Date.class, DateSimpledCoder.instance);
             this.register(BigInteger.class, BigIntegerSimpledCoder.instance);
             this.register(InetAddress.class, InetAddressSimpledCoder.instance);
-            this.register(TwoLong.class, TwoLongSimpledCoder.instance);
+            this.register(DLong.class, DLongSimpledCoder.instance);
             this.register(Class.class, TypeSimpledCoder.instance);
             this.register(InetSocketAddress.class, InetSocketAddressSimpledCoder.instance);
             this.register(InetSocketAddress.class, InetSocketAddressSimpledCoder.instance);

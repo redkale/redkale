@@ -31,7 +31,7 @@ public final class SncpRequest extends Request {
     
     private long serviceid;
     
-    private TwoLong actionid;
+    private DLong actionid;
     
     private int bodylength;
     
@@ -60,7 +60,7 @@ public final class SncpRequest extends Request {
         }
         this.serviceid = buffer.getLong();
         this.nameid = buffer.getLong();
-        this.actionid = new TwoLong(buffer.getLong(), buffer.getLong());
+        this.actionid = new DLong(buffer.getLong(), buffer.getLong());
         this.framecount = buffer.get();
         this.frameindex = buffer.get();
         if (buffer.getInt() != 0) {
@@ -158,7 +158,7 @@ public final class SncpRequest extends Request {
         return nameid;
     }
     
-    public TwoLong getActionid() {
+    public DLong getActionid() {
         return actionid;
     }
     

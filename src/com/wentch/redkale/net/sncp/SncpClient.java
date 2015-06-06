@@ -28,7 +28,7 @@ public final class SncpClient {
 
     protected static final class SncpAction {
 
-        protected final TwoLong actionid;
+        protected final DLong actionid;
 
         protected final Method method;
 
@@ -38,7 +38,7 @@ public final class SncpClient {
 
         protected final boolean async;
 
-        public SncpAction(Method method, TwoLong actionid) {
+        public SncpAction(Method method, DLong actionid) {
             this.actionid = actionid;
             Type rt = method.getGenericReturnType();
             if (rt instanceof TypeVariable) {
@@ -69,7 +69,7 @@ public final class SncpClient {
         this.serviceid = Sncp.hash(serviceClass);
         final List<SncpAction> methodens = new ArrayList<>();
         //------------------------------------------------------------------------------
-        Set<TwoLong> actionids = new HashSet<>();
+        Set<DLong> actionids = new HashSet<>();
         for (java.lang.reflect.Method method : serviceClass.getDeclaredMethods()) {
             if (method.isSynthetic()) continue;
             final int mod = method.getModifiers();
@@ -116,7 +116,7 @@ public final class SncpClient {
         return convert.convertFrom(actions[index].resultTypes, send(convert, transport, index, params));
     }
 
-    private void fillHeader(ByteBuffer buffer, long seqid, TwoLong actionid, int frameCount, int frameIndex, int bodyLength) {
+    private void fillHeader(ByteBuffer buffer, long seqid, DLong actionid, int frameCount, int frameIndex, int bodyLength) {
         //---------------------head----------------------------------
         buffer.putLong(seqid); //序列号
         buffer.putChar((char) HEADER_SIZE); //header长度
@@ -140,7 +140,7 @@ public final class SncpClient {
         }
         final SncpAction action = actions[index];
         final long seqid = System.nanoTime();
-        final TwoLong actionid = action.actionid;
+        final DLong actionid = action.actionid;
         final ByteBuffer buffer = transport.pollBuffer();
         final AsyncConnection conn = transport.pollConnection();
         final int readto = conn.getReadTimeoutSecond();
