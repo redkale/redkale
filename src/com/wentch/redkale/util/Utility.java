@@ -256,13 +256,7 @@ public final class Utility {
         final int limit = start + len;
         for (int i = start; i < limit; i++) {
             c = chars[i];
-            if (c < 0x80) {
-                size++;
-            } else if (c < 0x800) {
-                size += 2;
-            } else {
-                size += 3;
-            }
+            size += (c < 0x80 ? 1 : (c < 0x800 ? 2 : 3));
         }
         return size;
     }
