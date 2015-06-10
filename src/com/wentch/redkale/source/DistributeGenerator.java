@@ -33,7 +33,7 @@ public @interface DistributeGenerator {
         Class[] value();
     }
 
-    int initialValue() default 1;
+    long initialValue() default 1;
 
     /**
      * 如果allocationSize的值小于或等于1,则主键不会加上nodeid
