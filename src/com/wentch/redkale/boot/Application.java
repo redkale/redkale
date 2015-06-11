@@ -179,10 +179,6 @@ public final class Application {
         System.setProperty("convert.json.writer.buffer.defsize", "4096");
 
         final File root = new File(System.getProperty(RESNAME_HOME));
-        this.factory.register(BsonFactory.root());
-        this.factory.register(JsonFactory.root());
-        this.factory.register(BsonFactory.root().getConvert());
-        this.factory.register(JsonFactory.root().getConvert());
         File persist = new File(root, "conf/persistence.xml");
         if (persist.isFile()) System.setProperty(DataJDBCSource.DATASOURCE_CONFPATH, persist.getCanonicalPath());
         logger.log(Level.INFO, RESNAME_HOME + "=" + root.getCanonicalPath() + "\r\n" + RESNAME_ADDR + "=" + this.localAddress.getHostAddress());
@@ -229,6 +225,10 @@ public final class Application {
                 }
             }
         }
+        this.factory.register(BsonFactory.root());
+        this.factory.register(JsonFactory.root());
+        this.factory.register(BsonFactory.root().getConvert());
+        this.factory.register(JsonFactory.root().getConvert());
         initResources();
     }
 
