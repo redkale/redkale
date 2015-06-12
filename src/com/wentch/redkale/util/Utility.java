@@ -9,6 +9,7 @@ import java.lang.reflect.Field;
 import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.charset.*;
+import java.time.*;
 import java.util.*;
 import javax.net.ssl.*;
 
@@ -80,6 +81,32 @@ public final class Utility {
     public static int today() {
         java.time.LocalDate today = java.time.LocalDate.now();
         return today.getYear() * 10000 + today.getMonthValue() * 100 + today.getDayOfMonth();
+    }
+
+    //时间点所在星期的周一
+    public static long monday(long time) {
+        ZoneId zid = ZoneId.systemDefault();
+        Instant instant = Instant.ofEpochMilli(time);
+        LocalDate ld = instant.atZone(zid).toLocalDate();
+        ld = ld.minusDays(ld.getDayOfWeek().getValue() - 1);
+        return ld.atStartOfDay(zid).toInstant().toEpochMilli();
+    }
+
+    //时间点所在星期的周日
+    public static long sunday(long time) {
+        ZoneId zid = ZoneId.systemDefault();
+        Instant instant = Instant.ofEpochMilli(time);
+        LocalDate ld = instant.atZone(zid).toLocalDate();
+        ld = ld.plusDays(7 - ld.getDayOfWeek().getValue());
+        return ld.atStartOfDay(zid).toInstant().toEpochMilli();
+    }
+
+    //时间点所在月份的1号
+    public static long monthFirstDay(long time) {
+        ZoneId zid = ZoneId.systemDefault();
+        Instant instant = Instant.ofEpochMilli(time);
+        LocalDate ld = instant.atZone(zid).toLocalDate().withDayOfMonth(1);
+        return ld.atStartOfDay(zid).toInstant().toEpochMilli();
     }
 
     public static String binToHexString(byte[] bytes) {
