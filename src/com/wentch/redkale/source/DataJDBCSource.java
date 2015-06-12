@@ -959,8 +959,10 @@ public final class DataJDBCSource implements DataSource {
             final PreparedStatement prestmt = conn.prepareStatement(sql);
             Map<K, V> rs = new LinkedHashMap<>();
             ResultSet set = prestmt.executeQuery();
+            ResultSetMetaData rsd = set.getMetaData();
+            boolean smallint = rsd.getColumnType(1) == Types.SMALLINT;
             while (set.next()) {
-                rs.put((K) set.getObject(1), (V) set.getObject(2));
+                rs.put((K) (smallint ? set.getShort(1) : set.getObject(1)), (V) set.getObject(2));
             }
             set.close();
             prestmt.close();
