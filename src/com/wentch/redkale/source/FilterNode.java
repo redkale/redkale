@@ -117,7 +117,7 @@ public class FilterNode {
     }
 
     public static FilterNode create(String column, Serializable value) {
-        return create(column, FilterExpress.EQUAL, value);
+        return create(column, null, value);
     }
 
     public static FilterNode create(String column, FilterExpress express, Serializable value) {
