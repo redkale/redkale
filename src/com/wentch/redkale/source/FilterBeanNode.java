@@ -153,8 +153,6 @@ final class FilterBeanNode extends FilterNode {
 
     private boolean number;
 
-    private boolean likefit;
-
     private boolean ignoreCase;
 
     private long least;
@@ -204,7 +202,6 @@ final class FilterBeanNode extends FilterNode {
         newnode.collection = this.collection;
         newnode.ignoreCase = this.ignoreCase;
         newnode.least = this.least;
-        newnode.likefit = this.likefit;
         newnode.number = this.number;
         newnode.string = this.string;
         this.nodes = new FilterNode[]{newnode};
@@ -222,7 +219,6 @@ final class FilterBeanNode extends FilterNode {
             this.collection = beanNode.collection;
             this.ignoreCase = beanNode.ignoreCase;
             this.least = beanNode.least;
-            this.likefit = beanNode.likefit;
             this.number = beanNode.number;
             this.string = beanNode.string;
         }
@@ -258,7 +254,7 @@ final class FilterBeanNode extends FilterNode {
                 }
             }
         }
-        if(foreign.isEmpty()) return result;
+        if (foreign.isEmpty()) return result;
         final Attribute foreignAttr = this.foreignAttribute;
         for (Map.Entry<EntityInfo, Predicate> en : foreign.entrySet()) {
             Attribute<T, Serializable> mainIdAttr = info.getPrimary();

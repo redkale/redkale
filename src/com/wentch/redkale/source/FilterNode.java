@@ -26,6 +26,8 @@ public class FilterNode {
 
     protected FilterExpress express;
 
+    protected boolean likefit = true;
+
     protected FilterNode[] nodes;
 
     private Serializable value;
@@ -101,6 +103,7 @@ public class FilterNode {
         this.tabalis = node.tabalis;
         this.column = node.column;
         this.express = node.express;
+        this.likefit = node.likefit;
         this.signand = sign;
         this.value = node.value;
     }
@@ -329,19 +332,19 @@ public class FilterNode {
     }
 
     protected StringBuilder formatValue(Object value) {
-        return formatValue(express, value);
+        return formatValue(likefit, express, value);
     }
 
     protected static String formatToString(Object value) {
-        StringBuilder sb = formatValue(null, value);
+        StringBuilder sb = formatValue(true, null, value);
         return sb == null ? null : sb.toString();
     }
 
-    private static StringBuilder formatValue(FilterExpress express, Object value) {
+    private static StringBuilder formatValue(boolean likefit, FilterExpress express, Object value) {
         if (value == null) return null;
         if (value instanceof Number) return new StringBuilder().append(value);
         if (value instanceof CharSequence) {
-            if (express == LIKE || express == NOTLIKE) value = "%" + value + '%';
+            if (likefit && (express == LIKE || express == NOTLIKE)) value = "%" + value + '%';
             return new StringBuilder().append('\'').append(value.toString().replace("'", "\\'")).append('\'');
         } else if (value instanceof Range) {
             Range range = (Range) value;
@@ -364,7 +367,7 @@ public class FilterNode {
             if (len == 0) return null;
             if (len == 1) {
                 Object firstval = Array.get(value, 0);
-                if (firstval != null && firstval.getClass().isArray()) return formatValue(express, firstval);
+                if (firstval != null && firstval.getClass().isArray()) return formatValue(likefit, express, firstval);
             }
             StringBuilder sb = new StringBuilder();
             sb.append('(');
