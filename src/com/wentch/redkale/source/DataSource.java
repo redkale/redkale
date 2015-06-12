@@ -108,11 +108,11 @@ public interface DataSource {
 
     public Number getNumberResult(final Class entityClass, final Reckon reckon, final String column, FilterNode node);
 
-    public Map<Serializable, Number> getMapResult(Class entityClass, final String keyColumn, Reckon reckon, final String reckonColumn);
+    public <K extends Serializable, V extends Number> Map<K, V> getMapResult(Class entityClass, final String keyColumn, Reckon reckon, final String reckonColumn);
 
-    public Map<Serializable, Number> getMapResult(Class entityClass, final String keyColumn, Reckon reckon, final String reckonColumn, FilterBean bean);
+    public <K extends Serializable, V extends Number> Map<K, V> getMapResult(Class entityClass, final String keyColumn, Reckon reckon, final String reckonColumn, FilterBean bean);
 
-    public Map<Serializable, Number> getMapResult(Class entityClass, final String keyColumn, Reckon reckon, final String reckonColumn, FilterNode node);
+    public <K extends Serializable, V extends Number> Map<K, V> getMapResult(Class entityClass, final String keyColumn, Reckon reckon, final String reckonColumn, FilterNode node);
 
     //-----------------------find----------------------------
     /**

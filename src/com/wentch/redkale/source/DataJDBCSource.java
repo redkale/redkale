@@ -926,28 +926,28 @@ public final class DataJDBCSource implements DataSource {
 
     //-----------------------getMapResult-----------------------------
     @Override
-    public Map<Serializable, Number> getMapResult(Class entityClass, final String keyColumn, Reckon reckon, final String reckonColumn) {
+    public <K extends Serializable, V extends Number> Map<K, V> getMapResult(Class entityClass, final String keyColumn, Reckon reckon, final String reckonColumn) {
         return getMapResult(entityClass, keyColumn, reckon, reckonColumn, null, null);
     }
 
     @Override
-    public Map<Serializable, Number> getMapResult(Class entityClass, final String keyColumn, Reckon reckon, final String reckonColumn, FilterBean bean) {
+    public <K extends Serializable, V extends Number> Map<K, V> getMapResult(Class entityClass, final String keyColumn, Reckon reckon, final String reckonColumn, FilterBean bean) {
         return getMapResult(entityClass, keyColumn, reckon, reckonColumn, null, bean);
     }
 
     @Override
-    public Map<Serializable, Number> getMapResult(Class entityClass, final String keyColumn, Reckon reckon, final String reckonColumn, FilterNode node) {
+    public <K extends Serializable, V extends Number> Map<K, V> getMapResult(Class entityClass, final String keyColumn, Reckon reckon, final String reckonColumn, FilterNode node) {
         return getMapResult(entityClass, keyColumn, reckon, reckonColumn, node, null);
     }
 
-    private <T> Map<Serializable, Number> getMapResult(final Class entityClass, final String keyColumn, final Reckon reckon, final String reckonColumn, FilterNode node, FilterBean bean) {
+    private <K extends Serializable, V extends Number> Map<K, V> getMapResult(final Class entityClass, final String keyColumn, final Reckon reckon, final String reckonColumn, FilterNode node, FilterBean bean) {
         final Connection conn = createReadSQLConnection();
         try {
-            final EntityInfo<T> info = loadEntityInfo(entityClass);
+            final EntityInfo info = loadEntityInfo(entityClass);
             if (node == null && bean != null) node = loadFilterBeanNode(bean.getClass());
-            final EntityCache<T> cache = info.getCache();
+            final EntityCache cache = info.getCache();
             if (cache != null && cache.isFullLoaded()) {
-                Predicate<T> filter = node == null ? null : node.createFilterPredicate(info, bean);
+                Predicate filter = node == null ? null : node.createFilterPredicate(info, bean);
                 if (node == null || node.isJoinAllCached()) {
                     return cache.getMapResult(info.getAttribute(keyColumn), reckon, reckonColumn == null ? null : info.getAttribute(reckonColumn), filter);
                 }
@@ -957,10 +957,10 @@ public final class DataJDBCSource implements DataSource {
                     + " FROM " + info.getTable() + " a" + (node == null ? "" : node.createFilterSQLExpress(info, bean)) + " GROUP BY a." + sqlkey;
             if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(entityClass.getSimpleName() + " single sql=" + sql);
             final PreparedStatement prestmt = conn.prepareStatement(sql);
-            Map<Serializable, Number> rs = new LinkedHashMap<>();
+            Map<K, V> rs = new LinkedHashMap<>();
             ResultSet set = prestmt.executeQuery();
             while (set.next()) {
-                rs.put((Serializable) set.getObject(1), (Number) set.getObject(2));
+                rs.put((K) set.getObject(1), (V) set.getObject(2));
             }
             set.close();
             prestmt.close();
