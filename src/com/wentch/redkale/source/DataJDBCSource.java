@@ -837,6 +837,7 @@ public final class DataJDBCSource implements DataSource {
                 if (attr == null) continue;
                 if (setsql.length() > 0) setsql.append(',');
                 setsql.append(info.getSQLColumn(col)).append(" = ").append(formatToString(attr.get(value)));
+                attrs.add(attr);
             }
             String sql = "UPDATE " + info.getTable() + " SET " + setsql
                     + " WHERE " + info.getPrimarySQLColumn() + " = " + formatToString(id);
