@@ -27,6 +27,8 @@ public final class Utility {
 
     private static final long strvaloffset;
 
+    private static final javax.net.ssl.SSLContext DEFAULTSSL_CONTEXT;
+
     static {
         sun.misc.Unsafe usafe = null;
         long fd = 0L;
@@ -40,6 +42,26 @@ public final class Utility {
         }
         UNSAFE = usafe;
         strvaloffset = fd;
+
+        try {
+            DEFAULTSSL_CONTEXT = javax.net.ssl.SSLContext.getInstance("SSL");
+            DEFAULTSSL_CONTEXT.init(null, new javax.net.ssl.TrustManager[]{new javax.net.ssl.X509TrustManager() {
+                @Override
+                public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+                    return null;
+                }
+
+                @Override
+                public void checkServerTrusted(java.security.cert.X509Certificate[] certs, String authType) throws java.security.cert.CertificateException {
+                }
+
+                @Override
+                public void checkClientTrusted(java.security.cert.X509Certificate[] certs, String authType) throws java.security.cert.CertificateException {
+                }
+            }}, null);
+        } catch (Exception e) {
+            throw new RuntimeException(e); //不可能会发生
+        }
     }
 
     private Utility() {
@@ -356,7 +378,7 @@ public final class Utility {
         HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();
         conn.setConnectTimeout(3000);
         conn.setReadTimeout(3000);
-        if (ctx != null && conn instanceof HttpsURLConnection) ((HttpsURLConnection) conn).setSSLSocketFactory(ctx.getSocketFactory());
+        if (conn instanceof HttpsURLConnection) ((HttpsURLConnection) conn).setSSLSocketFactory((ctx == null ? DEFAULTSSL_CONTEXT : ctx).getSocketFactory());
         conn.setRequestMethod(method);
         if (body != null) {
             conn.setDoOutput(true);
