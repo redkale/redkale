@@ -23,8 +23,7 @@ public final class EnMember<W extends Writer, T, F> implements Comparable<EnMemb
 
     private final boolean istring;
 
-    private final boolean isnumber;
-
+    //private final boolean isnumber;
     private final boolean isbool;
 
     public EnMember(Attribute<T, F> attribute, Encodeable<W, F> encoder) {
@@ -33,16 +32,13 @@ public final class EnMember<W extends Writer, T, F> implements Comparable<EnMemb
         Class t = attribute.type();
         this.istring = CharSequence.class.isAssignableFrom(t);
         this.isbool = t == Boolean.class || t == boolean.class;
-        this.isnumber = Number.class.isAssignableFrom(t) || (!this.isbool && t.isPrimitive());
+        //this.isnumber = Number.class.isAssignableFrom(t) || (!this.isbool && t.isPrimitive());
     }
 
     public boolean write(final W out, final boolean comma, final T obj) {
         F value = attribute.get(obj);
         if (value == null) return comma;
         if (out.isTiny()) {
-//            if (isnumber) {
-//                if (((Number) value).intValue() == 0) return comma;
-//            }  
             if (istring) {
                 if (((CharSequence) value).length() == 0) return comma;
             } else if (isbool) {

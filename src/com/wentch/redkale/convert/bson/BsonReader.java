@@ -6,6 +6,7 @@
 package com.wentch.redkale.convert.bson;
 
 import com.wentch.redkale.convert.*;
+import com.wentch.redkale.convert.ext.*;
 import com.wentch.redkale.util.*;
 import java.util.concurrent.atomic.*;
 
@@ -28,6 +29,8 @@ public final class BsonReader implements Reader {
     public static final byte VERBOSE_YES = 2;
 
     private int position = -1;
+
+    private byte typeval;  //字段的类型值  对应  BsonWriter.writeField
 
     private byte[] content;
 
@@ -58,6 +61,7 @@ public final class BsonReader implements Reader {
 
     protected boolean recycle() {
         this.position = -1;
+        this.typeval = 0;
         //this.limit = -1;
         this.content = null;
         return true;
@@ -72,7 +76,56 @@ public final class BsonReader implements Reader {
      */
     @Override
     public final void skipValue() {
-
+        if (typeval == 0) return;
+        final byte val = this.typeval;
+        this.typeval = 0;
+        switch (val) {
+            case 1: readBoolean();
+                break;
+            case 2: readByte();
+                break;
+            case 3: readShort();
+                break;
+            case 4: readChar();
+                break;
+            case 5: readInt();
+                break;
+            case 6: readLong();
+                break;
+            case 7: readFloat();
+                break;
+            case 8: readDouble();
+                break;
+            case 9: readString();
+                break;
+            case 101:
+                BoolArraySimpledCoder.instance.convertFrom(this);
+                break;
+            case 102:
+                ByteArraySimpledCoder.instance.convertFrom(this);
+                break;
+            case 103:
+                ShortArraySimpledCoder.instance.convertFrom(this);
+                break;
+            case 104:
+                CharArraySimpledCoder.instance.convertFrom(this);
+                break;
+            case 105:
+                IntArraySimpledCoder.instance.convertFrom(this);
+                break;
+            case 106:
+                LongArraySimpledCoder.instance.convertFrom(this);
+                break;
+            case 107:
+                FloatArraySimpledCoder.instance.convertFrom(this);
+                break;
+            case 108:
+                DoubleArraySimpledCoder.instance.convertFrom(this);
+                break;
+            case 109:
+                StringArraySimpledCoder.instance.convertFrom(this);
+                break;
+        }
     }
 
     /**
@@ -145,6 +198,7 @@ public final class BsonReader implements Reader {
     @Override
     public DeMember readField(final AtomicInteger index, final DeMember[] members) {
         final String exceptedfield = readSmallString();
+        this.typeval = readByte();
         final int len = members.length;
         int v = index.get();
         if (v >= len) {

@@ -171,6 +171,46 @@ public final class BsonWriter implements Writer {
     public final void writeField(boolean comma, Attribute attribute) {
         writeByte(BsonReader.SIGN_HASNEXT);
         writeSmallString(attribute.field());
+        byte typeval = 127;  //字段的类型值
+        final Class type = attribute.type();
+        if (type == boolean.class || type == Boolean.class) {
+            typeval = 1;
+        } else if (type == byte.class || type == Byte.class) {
+            typeval = 2;
+        } else if (type == short.class || type == Short.class) {
+            typeval = 3;
+        } else if (type == char.class || type == Character.class) {
+            typeval = 4;
+        } else if (type == int.class || type == Integer.class) {
+            typeval = 5;
+        } else if (type == long.class || type == Long.class) {
+            typeval = 6;
+        } else if (type == float.class || type == Float.class) {
+            typeval = 7;
+        } else if (type == double.class || type == Double.class) {
+            typeval = 8;
+        } else if (type == String.class) {
+            typeval = 9;
+        } else if (type == boolean[].class || type == Boolean[].class) {
+            typeval = 101;
+        } else if (type == byte[].class || type == Byte[].class) {
+            typeval = 102;
+        } else if (type == short[].class || type == Short[].class) {
+            typeval = 103;
+        } else if (type == char[].class || type == Character[].class) {
+            typeval = 104;
+        } else if (type == int[].class || type == Integer[].class) {
+            typeval = 105;
+        } else if (type == long[].class || type == Long[].class) {
+            typeval = 106;
+        } else if (type == float[].class || type == Float[].class) {
+            typeval = 107;
+        } else if (type == double[].class || type == Double[].class) {
+            typeval = 108;
+        } else if (type == String[].class) {
+            typeval = 109;
+        }
+        writeByte(typeval);
     }
 
     /**
