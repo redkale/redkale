@@ -385,6 +385,12 @@ public final class Utility {
             conn.getOutputStream().write(body.getBytes(UTF_8));
         }
         conn.connect();
+        int rs = conn.getResponseCode();
+        if (rs == 301 || rs == 302) {
+            String newurl = conn.getHeaderField("Location");
+            conn.disconnect();
+            return remoteHttpContent(ctx, method, newurl, body);
+        }
         InputStream in = conn.getInputStream();
         ByteArrayOutputStream out = new ByteArrayOutputStream(1024);
         byte[] bytes = new byte[1024];
