@@ -5,8 +5,7 @@
  */
 package com.wentch.redkale.convert.bson;
 
-import com.wentch.redkale.convert.ConvertType;
-import com.wentch.redkale.convert.Factory;
+import com.wentch.redkale.convert.*;
 import java.io.Serializable;
 
 /**
@@ -17,9 +16,13 @@ public final class BsonFactory extends Factory<BsonReader, BsonWriter> {
 
     private static final BsonFactory instance = new BsonFactory(null, Boolean.getBoolean("convert.bson.tiny"));
 
+    static final Decodeable objectDecoder = instance.loadDecoder(Object.class);
+
+    static final Encodeable objectEncoder = instance.loadEncoder(Object.class);
+
     static {
-        instance.register(Serializable.class, instance.loadDecoder(Object.class));
-        instance.register(Serializable.class, instance.loadEncoder(Object.class));
+        instance.register(Serializable.class, objectDecoder);
+        instance.register(Serializable.class, objectEncoder);
     }
 
     private BsonFactory(BsonFactory parent, boolean tiny) {

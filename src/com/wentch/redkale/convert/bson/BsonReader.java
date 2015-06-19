@@ -125,6 +125,9 @@ public final class BsonReader implements Reader {
             case 109:
                 StringArraySimpledCoder.instance.convertFrom(this);
                 break;
+            case 127:
+                BsonFactory.objectDecoder.convertFrom(this);
+                break;
         }
     }
 
