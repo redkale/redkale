@@ -8,8 +8,8 @@ package com.wentch.redkale.convert;
 import java.lang.reflect.*;
 
 /**
- * 对象数组的反序列化，不包含int[]、long[]这样的primitive class数组. 
- * 数组长度不能超过 32767。  在BSON中数组长度设定的是short，对于大于32767长度的数组传输会影响性能，所以没有采用int存储。
+ * 对象数组的反序列化，不包含int[]、long[]这样的primitive class数组.
+ * 数组长度不能超过 32767。 在BSON中数组长度设定的是short，对于大于32767长度的数组传输会影响性能，所以没有采用int存储。
  * 支持一定程度的泛型。
  *
  * @author zhangjx
@@ -57,7 +57,7 @@ public final class ArrayEncoder<T> implements Encodeable<Writer, T[]> {
         boolean first = true;
         for (Object v : value) {
             if (!first) out.writeArrayMark();
-            ((v.getClass() == comp) ? encoder : anyEncoder).convertTo(out, v);
+            ((v != null && v.getClass() == comp) ? encoder : anyEncoder).convertTo(out, v);
             if (first) first = false;
         }
         out.writeArrayE();
