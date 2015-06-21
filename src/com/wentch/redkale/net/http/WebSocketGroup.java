@@ -58,4 +58,9 @@ public final class WebSocketGroup {
     public final void setAttribute(String name, Object value) {
         attributes.put(name, value);
     }
+
+    @Override
+    public String toString() {
+        return "{groupid: " + groupid + ", list.size: " + (list == null ? -1 : list.size()) + "}";
+    }
 }
