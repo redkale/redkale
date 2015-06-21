@@ -14,6 +14,8 @@ import java.util.concurrent.*;
  */
 public final class WebSocketEngine {
 
+    private final long engineid = Math.abs(System.nanoTime());
+
     private final Map<Long, WebSocketGroup> containers = new ConcurrentHashMap<>();
 
     WebSocketEngine() {
@@ -40,5 +42,9 @@ public final class WebSocketEngine {
     }
 
     void close() {
+    }
+
+    public long getEngineid() {
+        return engineid;
     }
 }
