@@ -5,6 +5,7 @@
  */
 package com.wentch.redkale.net.http;
 
+import java.io.*;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Stream;
@@ -15,17 +16,17 @@ import java.util.stream.Stream;
  */
 public final class WebSocketGroup {
 
-    private final long groupid;
+    private final Serializable groupid;
 
     private final List<WebSocket> list = new CopyOnWriteArrayList<>();
 
     private final Map<String, Object> attributes = new HashMap<>();
 
-    WebSocketGroup(long groupid) {
+    WebSocketGroup(Serializable groupid) {
         this.groupid = groupid;
     }
 
-    public long getGroupid() {
+    public Serializable getGroupid() {
         return groupid;
     }
 

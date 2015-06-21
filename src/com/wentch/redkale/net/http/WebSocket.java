@@ -5,6 +5,7 @@
  */
 package com.wentch.redkale.net.http;
 
+import java.io.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -22,7 +23,7 @@ public abstract class WebSocket {
 
     String sessionid;
 
-    long groupid;
+    Serializable groupid;
 
     private final Map<String, Object> attributes = new ConcurrentHashMap<>();
 
@@ -42,8 +43,16 @@ public abstract class WebSocket {
         send(text, true);
     }
 
-    private void send(String text, boolean last) {
+    public final void send(String text, boolean last) {
         send(new WebSocketPacket(text, last));
+    }
+
+    public final void send(byte[] data) {
+        send(data, true);
+    }
+
+    public final void send(byte[] data, boolean last) {
+        send(new WebSocketPacket(data, last));
     }
 
     @SuppressWarnings("unchecked")
@@ -59,7 +68,7 @@ public abstract class WebSocket {
         attributes.put(name, value);
     }
 
-    public final long getGroupid() {
+    public final Serializable getGroupid() {
         return groupid;
     }
 
@@ -77,7 +86,6 @@ public abstract class WebSocket {
     }
 
     //-------------------------------------------------------------------
-
     /**
      * 返回sessionid, null表示连接不合法或异常
      *
@@ -89,12 +97,12 @@ public abstract class WebSocket {
     }
 
     /**
-     * 返回GroupID， 负数表示异常
+     * 返回GroupID， null表示异常
      *
      * @return
      */
-    public long createGroupid() {
-        return 0;
+    public Serializable createGroupid() {
+        return null;
     }
 
     /**

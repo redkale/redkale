@@ -40,6 +40,10 @@ public abstract class WebSocketServlet extends HttpServlet {
         engine.close();
     }
 
+    protected long getEngineid() {
+        return engine.getEngineid();
+    }
+
     @Override
     public final void execute(HttpRequest request, HttpResponse response) throws IOException {
         final boolean debug = logger.isLoggable(Level.FINER);
@@ -80,8 +84,8 @@ public abstract class WebSocketServlet extends HttpServlet {
             @Override
             public void completed(Integer result, Void attachment) {
                 HttpContext context = response.getContext();
-                long groupid = webSocket.createGroupid();
-                if (groupid < 0) {
+                Serializable groupid = webSocket.createGroupid();
+                if (groupid == null) {
                     if (debug) logger.finer("WebSocket connect abort, Create groupid abort");
                     response.finish(true);
                     return;

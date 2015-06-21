@@ -5,6 +5,7 @@
  */
 package com.wentch.redkale.net.http;
 
+import java.io.*;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -16,7 +17,7 @@ public final class WebSocketEngine {
 
     private final long engineid = Math.abs(System.nanoTime());
 
-    private final Map<Long, WebSocketGroup> containers = new ConcurrentHashMap<>();
+    private final Map<Serializable, WebSocketGroup> containers = new ConcurrentHashMap<>();
 
     WebSocketEngine() {
     }
@@ -37,7 +38,7 @@ public final class WebSocketEngine {
         if (group.isEmpty()) containers.remove(socket.groupid);
     }
 
-    public WebSocketGroup getWebSocketGroup(long groupid) {
+    public WebSocketGroup getWebSocketGroup(Serializable groupid) {
         return containers.get(groupid);
     }
 
