@@ -1,10 +1,32 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <application port="6560">     
-    <resources>
+    <resources>       
+        <!-- 
+        <properties>
+            <property name="system.property.convert.json.tiny" value="true"/>
+        </properties>
+        -->
     </resources> 
-    <server protocol="HTTP" host="0.0.0.0" port="6060" root="root" forwardproxy="true"> 
+    <server protocol="HTTP" host="0.0.0.0" port="6060" root="root" forwardproxy="true">         
+        <!--
+        <request>
+            <remoteaddr value="request.headers.X-RemoteAddress"/>
+        </request>
+        <response>
+            <addheader name="X-Node" value="system.property.APP_NODE" />             
+            <addheader name="Access-Control-Allow-Origin" value="request.headers.Origin" /> 
+            <setheader name="Access-Control-Allow-Credentials" value="true"/> 
+        </response>
+        -->
         <services autoload="true"/>
-        <servlets prefix="/pipes" autoload="true" />
+        <servlets prefix="/pipes" autoload="true" >
+            <!--
+            <resource-servlet>
+                <caches  limit="0"/>
+                <rewrite type="location" match="^/([^-]+)(-[^-\.]+)+\.html(.*)" forward="/$1.html"/>
+            </resource-servlet>            
+            -->
+        </servlets>
     </server>
 </application>
