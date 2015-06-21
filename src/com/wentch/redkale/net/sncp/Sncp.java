@@ -66,9 +66,9 @@ public abstract class Sncp {
         if (params.length == 0) return method.getName() + "00";
         int c = 0;
         for (Class clzz : params) {
-            c |= clzz.getSimpleName().charAt(0);
+            c += clzz.getSimpleName().charAt(0);
         }
-        return method.getName() + hashes[0xff & params.length] + hashes[0xff & c];
+        return method.getName() + Integer.toString(params.length, 36) + Integer.toString(0xff & c, 36);
     }
 
     public static long hash(final String name) {
