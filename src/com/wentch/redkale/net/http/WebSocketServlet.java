@@ -103,7 +103,7 @@ public abstract class WebSocketServlet extends HttpServlet {
                 }
                 webSocket.groupid = groupid;
                 engine.add(webSocket);
-                context.submit(new WebSocketRunner(context, nodeService, webSocket, response.removeChannel()));
+                context.submit(new WebSocketRunner(context, webSocket, response.removeChannel()));
                 response.finish(true);
             }
 

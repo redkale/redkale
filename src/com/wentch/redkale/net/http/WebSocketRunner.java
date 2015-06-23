@@ -8,7 +8,6 @@ package com.wentch.redkale.net.http;
 import com.wentch.redkale.net.AsyncConnection;
 import com.wentch.redkale.net.Context;
 import com.wentch.redkale.net.http.WebSocketPacket.PacketType;
-import com.wentch.redkale.service.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.security.SecureRandom;
@@ -30,8 +29,6 @@ public class WebSocketRunner implements Runnable {
 
     protected final Context context;
 
-    protected final WebSocketNodeService nodeService;
-
     private ByteBuffer readBuffer;
 
     private ByteBuffer writeBuffer;
@@ -44,9 +41,8 @@ public class WebSocketRunner implements Runnable {
 
     private final BlockingQueue<byte[]> queue = new ArrayBlockingQueue(1024);
 
-    public WebSocketRunner(Context context, WebSocketNodeService nodeService, WebSocket webSocket, AsyncConnection channel) {
+    public WebSocketRunner(Context context, WebSocket webSocket, AsyncConnection channel) {
         this.context = context;
-        this.nodeService = nodeService;
         this.engine = webSocket.engine;
         this.webSocket = webSocket;
         this.channel = channel;
@@ -61,7 +57,7 @@ public class WebSocketRunner implements Runnable {
     public void run() {
         final boolean debug = this.coder.debugable;
         try {
-            if (nodeService != null) nodeService.connectSelf(webSocket.groupid);
+            if (webSocket.nodeService != null) webSocket.nodeService.connectSelf(webSocket.groupid);
             webSocket.onConnected();
             channel.setReadTimeoutSecond(300); //读取超时5分钟
             if (channel.isOpen()) {
@@ -181,9 +177,9 @@ public class WebSocketRunner implements Runnable {
         readBuffer = null;
         writeBuffer = null;
         engine.remove(webSocket);
-        if (nodeService != null) {
+        if (webSocket.nodeService != null) {
             WebSocketGroup group = webSocket.getWebSocketGroup();
-            if (group == null || group.isEmpty()) nodeService.disconnectSelf(webSocket.groupid);
+            if (group == null || group.isEmpty()) webSocket.nodeService.disconnectSelf(webSocket.groupid);
         }
         webSocket.onClose(0, null);
     }
