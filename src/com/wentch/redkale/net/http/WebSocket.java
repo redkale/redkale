@@ -59,16 +59,16 @@ public abstract class WebSocket {
     }
 
     //----------------------------------------------------------------
-    public final boolean sendMessage(Serializable groupid, String text) {
+    public final int sendMessage(Serializable groupid, String text) {
         return sendMessage(groupid, text, true);
     }
 
-    public final boolean sendMessage(Serializable groupid, byte[] data) {
+    public final int sendMessage(Serializable groupid, byte[] data) {
         return sendMessage(groupid, data, true);
     }
 
-    public final boolean sendMessage(Serializable groupid, String text, boolean last) {
-        if (nodeService == null) return false;
+    public final int sendMessage(Serializable groupid, String text, boolean last) {
+        if (nodeService == null) return WebSocketNodeService.RETCODE_NODESERVICE_NULL;
         if (groupid == this.groupid) {
             return nodeService.onSend(this.engine.getEngineid(), groupid, text, last);
         } else {
@@ -76,8 +76,8 @@ public abstract class WebSocket {
         }
     }
 
-    public final boolean sendMessage(Serializable groupid, byte[] data, boolean last) {
-        if (nodeService == null) return false;
+    public final int sendMessage(Serializable groupid, byte[] data, boolean last) {
+        if (nodeService == null) return WebSocketNodeService.RETCODE_NODESERVICE_NULL;
         if (groupid == this.groupid) {
             return nodeService.onSend(this.engine.getEngineid(), groupid, data, last);
         } else {
