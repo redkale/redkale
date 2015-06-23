@@ -5,6 +5,7 @@
  */
 package com.wentch.redkale.net.http;
 
+import com.wentch.redkale.service.*;
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -20,6 +21,8 @@ public abstract class WebSocket {
     WebSocketEngine engine;
 
     WebSocketGroup group;
+
+    WebSocketNodeService nodeService;
 
     String sessionid;
 
@@ -53,6 +56,33 @@ public abstract class WebSocket {
 
     public final void send(byte[] data, boolean last) {
         send(new WebSocketPacket(data, last));
+    }
+
+    //----------------------------------------------------------------
+    public final boolean sendMessage(Serializable groupid, String text) {
+        return sendMessage(groupid, text, true);
+    }
+
+    public final boolean sendMessage(Serializable groupid, byte[] data) {
+        return sendMessage(groupid, data, true);
+    }
+
+    public final boolean sendMessage(Serializable groupid, String text, boolean last) {
+        if (nodeService == null) return false;
+        if (groupid == this.groupid) {
+            return nodeService.onSend(this.engine.getEngineid(), groupid, text, last);
+        } else {
+            return nodeService.send(this.engine.getEngineid(), groupid, text, last);
+        }
+    }
+
+    public final boolean sendMessage(Serializable groupid, byte[] data, boolean last) {
+        if (nodeService == null) return false;
+        if (groupid == this.groupid) {
+            return nodeService.onSend(this.engine.getEngineid(), groupid, data, last);
+        } else {
+            return nodeService.send(this.engine.getEngineid(), groupid, data, last);
+        }
     }
 
     @SuppressWarnings("unchecked")

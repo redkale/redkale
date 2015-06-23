@@ -39,25 +39,25 @@ import org.w3c.dom.*;
  */
 public final class Application {
 
-    //进程启动的时间， 类型： long
+    //当前进程启动的时间， 类型： long
     public static final String RESNAME_TIME = "APP_TIME";
 
-    //本地进程的根目录， 类型：String
+    //当前进程的根目录， 类型：String
     public static final String RESNAME_HOME = "APP_HOME";
 
-    //本地节点的名称， 类型：String
+    //当前进程节点的名称， 类型：String
     public static final String RESNAME_NODE = "APP_NODE";
 
-    //本地节点的所属组， 类型：String、Map<String, Set<String>>、Map<String, List<SimpleEntry<String, InetSocketAddress[]>>>
+    //当前进程节点的所属组， 类型：String、Map<String, Set<String>>、Map<String, List<SimpleEntry<String, InetSocketAddress[]>>>
     public static final String RESNAME_GROUP = "APP_GROUP";
 
-    //本地节点的所属组所有节点名， 类型：Set<String> 、List<SimpleEntry<String, InetSocketAddress[]>>包含自身节点名
+    //当前进程节点的所属组所有节点名， 类型：Set<String> 、List<SimpleEntry<String, InetSocketAddress[]>>包含自身节点名
     public static final String RESNAME_INGROUP = "APP_INGROUP";
 
-    //除本地节点的所属组外其他所有组的所有节点名， 类型：Map<String, Set<String>>、Map<String, List<SimpleEntry<String, InetSocketAddress[]>>>
+    //除当前进程节点的所属组外其他所有组的所有节点名， 类型：Map<String, Set<String>>、Map<String, List<SimpleEntry<String, InetSocketAddress[]>>>
     public static final String RESNAME_OUTGROUP = "APP_OUTGROUP";
 
-    //本地节点的IP地址， 类型：InetAddress、String
+    //当前进程节点的IP地址， 类型：InetAddress、String
     public static final String RESNAME_ADDR = "APP_ADDR";
 
     //application.xml 文件中resources节点的内容， 类型： AnyValue

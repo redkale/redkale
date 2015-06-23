@@ -34,11 +34,14 @@ public class WebSocketNodeService implements Service {
     //用户分布在节点上的队列信息,只保存远程节点的用户分布信息
     protected final ConcurrentHashMap<Serializable, Set<String>> usernodes = new ConcurrentHashMap();
 
-    protected final ConcurrentHashMap<Long, WebSocketEngine> engines = new ConcurrentHashMap();
+    protected final ConcurrentHashMap<String, WebSocketEngine> engines = new ConcurrentHashMap();
 
     @Override
     public void init(AnyValue conf) {
         if (fine) logger.fine(this.localNodeName + ", " + this + ", " + nodemaps);
+    }
+
+    public void initUserNodes() {
         if (this.nodemaps == null || this.nodemaps.isEmpty()) return;
         new Thread() {
             {
@@ -132,42 +135,42 @@ public class WebSocketNodeService implements Service {
     }
 
     @RemoteOn
-    public boolean send(long engineid, Serializable groupid, String text) {
+    public boolean send(String engineid, Serializable groupid, String text) {
         return send(engineid, groupid, text, true);
     }
 
-    public final boolean onSend(long engineid, Serializable groupid, String text) {
+    public final boolean onSend(String engineid, Serializable groupid, String text) {
         return onSend(engineid, groupid, text, true);
     }
 
     @RemoteOn
-    public boolean send(long engineid, Serializable groupid, String text, boolean last) {
+    public boolean send(String engineid, Serializable groupid, String text, boolean last) {
         return send0(engineid, groupid, text, last);
     }
 
-    public final boolean onSend(long engineid, Serializable groupid, String text, boolean last) {
+    public final boolean onSend(String engineid, Serializable groupid, String text, boolean last) {
         return onSend0(engineid, groupid, text, last);
     }
 
     @RemoteOn
-    public boolean send(long engineid, Serializable groupid, byte[] data) {
+    public boolean send(String engineid, Serializable groupid, byte[] data) {
         return send(engineid, groupid, data, true);
     }
 
-    public final boolean onSend(long engineid, Serializable groupid, byte[] data) {
+    public final boolean onSend(String engineid, Serializable groupid, byte[] data) {
         return onSend(engineid, groupid, data, true);
     }
 
     @RemoteOn
-    public boolean send(long engineid, Serializable groupid, byte[] data, boolean last) {
+    public boolean send(String engineid, Serializable groupid, byte[] data, boolean last) {
         return send0(engineid, groupid, data, last);
     }
 
-    public final boolean onSend(long engineid, Serializable groupid, byte[] data, boolean last) {
+    public final boolean onSend(String engineid, Serializable groupid, byte[] data, boolean last) {
         return onSend0(engineid, groupid, data, last);
     }
 
-    private boolean send0(long engineid, Serializable groupid, Serializable text, boolean last) {
+    private boolean send0(String engineid, Serializable groupid, Serializable text, boolean last) {
         final Set<String> nodes = usernodes.get(groupid);
         if (nodes == null) return false;
         boolean rs = false;
@@ -195,7 +198,7 @@ public class WebSocketNodeService implements Service {
      * @param text
      * @return
      */
-    private boolean onSend0(long engineid, Serializable groupid, Serializable text, boolean last) {
+    private boolean onSend0(String engineid, Serializable groupid, Serializable text, boolean last) {
         WebSocketEngine webSocketEngine = engines.get(engineid);
         if (webSocketEngine == null) return false;
         WebSocketGroup group = webSocketEngine.getWebSocketGroup(groupid);

@@ -6,6 +6,7 @@
 package com.wentch.redkale.net.http;
 
 import com.wentch.redkale.net.*;
+import com.wentch.redkale.service.*;
 import com.wentch.redkale.util.*;
 import java.io.*;
 import java.nio.*;
@@ -13,6 +14,7 @@ import java.nio.channels.*;
 import java.security.*;
 import java.util.*;
 import java.util.logging.*;
+import javax.annotation.*;
 
 /**
  *
@@ -32,16 +34,24 @@ public abstract class WebSocketServlet extends HttpServlet {
         }
     }
 
+    @Resource
+    protected WebSocketNodeService nodeService;
+
     protected final WebSocketEngine engine = new WebSocketEngine();
+
+    @Override
+    public void init(Context context, AnyValue conf) {
+        engine.setEngineid(context.getServerAddress().getPort() + "-" + Arrays.toString(this.getClass().getAnnotation(WebServlet.class).value()));
+        if (nodeService != null) {
+            nodeService.addWebSocketEngine(engine);
+            nodeService.initUserNodes();
+        }
+    }
 
     @Override
     public void destroy(Context context, AnyValue conf) {
         super.destroy(context, conf);
         engine.close();
-    }
-
-    protected long getEngineid() {
-        return engine.getEngineid();
     }
 
     @Override
@@ -62,6 +72,7 @@ public abstract class WebSocketServlet extends HttpServlet {
         }
         final WebSocket webSocket = this.createWebSocket();
         webSocket.engine = engine;
+        webSocket.nodeService = nodeService;
         String sessionid = webSocket.onOpen(request);
         if (sessionid == null) {
             if (debug) logger.finer("WebSocket connect abort, Not found sessionid. request=" + request);
@@ -92,7 +103,7 @@ public abstract class WebSocketServlet extends HttpServlet {
                 }
                 webSocket.groupid = groupid;
                 engine.add(webSocket);
-                context.submit(new WebSocketRunner(context, webSocket, response.removeChannel()));
+                context.submit(new WebSocketRunner(context, nodeService, webSocket, response.removeChannel()));
                 response.finish(true);
             }
 
