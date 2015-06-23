@@ -37,11 +37,10 @@ public abstract class WebSocketServlet extends HttpServlet {
     @Resource
     private WebSocketNodeService nodeService;
 
-    protected final WebSocketEngine engine = new WebSocketEngine();
+    protected final WebSocketEngine engine = WebSocketEngine.create(this.getClass().getName() + "-" + Arrays.toString(this.getClass().getAnnotation(WebServlet.class).value()));
 
     @Override
     public void init(Context context, AnyValue conf) {
-        engine.setEngineid(this.getClass().getName() + "-" + Arrays.toString(this.getClass().getAnnotation(WebServlet.class).value()));
         if (nodeService != null) {
             nodeService.addWebSocketEngine(engine);
             nodeService.initUserNodes();
