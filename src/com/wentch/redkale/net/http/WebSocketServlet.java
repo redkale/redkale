@@ -41,7 +41,7 @@ public abstract class WebSocketServlet extends HttpServlet {
 
     @Override
     public void init(Context context, AnyValue conf) {
-        engine.setEngineid(context.getServerAddress().getPort() + "-" + Arrays.toString(this.getClass().getAnnotation(WebServlet.class).value()));
+        engine.setEngineid(this.getClass().getName() + "-" + Arrays.toString(this.getClass().getAnnotation(WebServlet.class).value()));
         if (nodeService != null) {
             nodeService.addWebSocketEngine(engine);
             nodeService.initUserNodes();
