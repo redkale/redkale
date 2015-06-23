@@ -35,7 +35,7 @@ public abstract class WebSocketServlet extends HttpServlet {
     }
 
     @Resource
-    protected WebSocketNodeService nodeService;
+    private WebSocketNodeService nodeService;
 
     protected final WebSocketEngine engine = new WebSocketEngine();
 
