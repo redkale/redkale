@@ -14,7 +14,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  */
 /*
  * 只能标识在Service类的方法上, 且Service类被实例成RemoteService时才有效。
- * 被@RemoteOn 标记的xxx方法必须存在onXxx方法， 且参数喝返回值必须一致, onXxx方法必须声明为public final。 且onXxx方法不会被RemoteService重载。
+ * 被@RemoteOn 标记的xxx方法必须存在onXxx方法， 且参数和返回值必须一致, onXxx方法必须声明为public final。 且onXxx方法不会被RemoteService重载。
  * 例如：
  * public class XXXService implements Service {
  *
