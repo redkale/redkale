@@ -49,6 +49,10 @@ public final class WebSocketEngine {
         if (group.isEmpty()) containers.remove(socket.groupid);
     }
 
+    Collection<WebSocketGroup> getWebSocketGroups() {
+        return containers.values();
+    }
+
     public WebSocketGroup getWebSocketGroup(Serializable groupid) {
         return containers.get(groupid);
     }

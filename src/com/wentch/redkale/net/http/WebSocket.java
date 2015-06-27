@@ -114,6 +114,10 @@ public abstract class WebSocket {
     protected final WebSocketGroup getWebSocketGroup(long groupid) {
         return engine.getWebSocketGroup(groupid);
     }
+    
+    protected final Collection<WebSocketGroup> getWebSocketGroups() {
+        return engine.getWebSocketGroups();
+    }
 
     //-------------------------------------------------------------------
     /**
