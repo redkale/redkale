@@ -5,12 +5,14 @@
  */
 package com.wentch.redkale.test.convert;
 
+import com.wentch.redkale.convert.*;
 import java.util.*;
 
 /**
  *
  * @author zhangjx
  */
+@ConvertEntity("myname")
 public class TestEntry2 extends TestEntry {
 
     private String extend;

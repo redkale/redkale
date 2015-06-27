@@ -28,7 +28,8 @@ public class BsonTestMain {
     public static void main2(String[] args) throws Exception {
         final BsonConvert convert = BsonFactory.root().getConvert();
         TestEntry2 entry = TestEntry2.create();
-        byte[] bytes = convert.convertTo(TestEntry2.class, entry);
+        byte[] bytes = convert.convertTo(TestEntry.class, entry);
+        System.out.println(Arrays.toString(bytes)); 
         System.out.println(JsonFactory.root().getConvert().convertTo(entry)); 
         TestEntry rs  = convert.convertFrom(TestEntry.class, bytes);
         System.out.println(rs.toString());
