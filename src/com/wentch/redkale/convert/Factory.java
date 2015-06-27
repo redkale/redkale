@@ -143,12 +143,17 @@ public abstract class Factory<R extends Reader, W extends Writer> {
 
     final String getEntity(Class clazz) {
         ConvertEntity ce = (ConvertEntity) clazz.getAnnotation(ConvertEntity.class);
-        if (ce != null && entitys.get(ce.value()) == null) entitys.put(ce.value(), clazz);
+        if (ce != null && findEntity(ce.value()) == null) entitys.put(ce.value(), clazz);
         return ce == null ? clazz.getName() : ce.value();
     }
 
-    final Class getEntity(String name) {
+    private Class findEntity(String name) {
         Class clazz = entitys.get(name);
+        return parent == null ? clazz : parent.findEntity(name);
+    }
+
+    final Class getEntity(String name) {
+        Class clazz = findEntity(name);
         try {
             return clazz == null ? Class.forName(name) : clazz;
         } catch (Exception ex) {
