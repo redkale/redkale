@@ -189,7 +189,7 @@ public final class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T
         }
         if (value != null && value.getClass() != this.typeClass) {
             final Class clz = value.getClass();
-            out.wirteClassName(clz);
+            out.wirteClassName(factory.getEntity(clz));
             factory.loadEncoder(clz).convertTo(out, value);
             return;
         }

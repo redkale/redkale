@@ -27,7 +27,7 @@ public final class AnyEncoder<T> implements Encodeable<Writer, T> {
         if (value == null) {
             out.writeNull();
         } else {
-            out.wirteClassName(value.getClass());
+            out.wirteClassName(factory.getEntity(value.getClass())); 
             factory.loadEncoder(value.getClass()).convertTo(out, value);
         }
     }

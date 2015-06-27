@@ -107,13 +107,7 @@ public final class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T
     @Override
     public final T convertFrom(final R in) {
         final String clazz = in.readClassName();
-        if (clazz != null && !clazz.isEmpty()) {
-            try {
-                return (T) factory.loadDecoder(Class.forName(clazz)).convertFrom(in);
-            } catch (Exception ex) {
-                throw new ConvertException(ex);
-            }
-        }
+        if (clazz != null && !clazz.isEmpty()) return (T) factory.loadDecoder(factory.getEntity(clazz)).convertFrom(in);
         if (in.readObjectB() == Reader.SIGN_NULL) return null;
         final T result = this.creator.create();
         final AtomicInteger index = new AtomicInteger();

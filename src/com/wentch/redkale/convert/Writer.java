@@ -29,7 +29,7 @@ public interface Writer {
      *
      * @param clazz
      */
-    public void wirteClassName(Class clazz);
+    public void wirteClassName(String clazz);
 
     /**
      * 输出一个对象前的操作

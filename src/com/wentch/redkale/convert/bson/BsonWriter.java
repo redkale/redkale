@@ -151,8 +151,8 @@ public final class BsonWriter implements Writer {
     }
 
     @Override
-    public void wirteClassName(Class clazz) {
-        writeSmallString(clazz == null ? "" : clazz.getName());
+    public void wirteClassName(String clazz) {
+        writeSmallString(clazz == null ? "" : clazz);
     }
 
     @Override

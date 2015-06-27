@@ -224,7 +224,7 @@ public final class JsonWriter implements Writer {
     }
 
     @Override
-    public void wirteClassName(Class clazz) {
+    public void wirteClassName(String clazz) {
     }
 
     @Override

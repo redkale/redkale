@@ -15,6 +15,7 @@ import java.math.BigInteger;
 import java.net.*;
 import static com.wentch.redkale.convert.ext.InetAddressSimpledCoder.*;
 import java.util.*;
+import java.util.concurrent.*;
 
 /**
  *
@@ -35,6 +36,8 @@ public abstract class Factory<R extends Reader, W extends Writer> {
 
     //-----------------------------------------------------------------------------------
     private final HashedMap<Class, Creator> creators = new HashedMap();
+
+    private final Map<String, Class> entitys = new ConcurrentHashMap<>();
 
     private final HashedMap<Type, Decodeable<R, ?>> decoders = new HashedMap();
 
@@ -136,6 +139,21 @@ public abstract class Factory<R extends Reader, W extends Writer> {
             }
         }
         return null;
+    }
+
+    final String getEntity(Class clazz) {
+        ConvertEntity ce = (ConvertEntity) clazz.getAnnotation(ConvertEntity.class);
+        if (ce != null && entitys.get(ce.value()) == null) entitys.put(ce.value(), clazz);
+        return ce == null ? clazz.getName() : ce.value();
+    }
+
+    final Class getEntity(String name) {
+        Class clazz = entitys.get(name);
+        try {
+            return clazz == null ? Class.forName(name) : clazz;
+        } catch (Exception ex) {
+            throw new ConvertException("convert entity is " + name, ex);
+        }
     }
 
     /**
