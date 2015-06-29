@@ -18,6 +18,8 @@ public final class WebSocketGroup {
 
     private final Serializable groupid;
 
+    WebSocket recentWebSocket;
+
     private final List<WebSocket> list = new CopyOnWriteArrayList<>();
 
     private final Map<String, Object> attributes = new HashMap<>();
@@ -45,6 +47,15 @@ public final class WebSocketGroup {
 
     public final boolean isEmpty() {
         return list.isEmpty();
+    }
+
+    /**
+     * 最近发送消息的WebSocket
+     * <p>
+     * @return
+     */
+    public final WebSocket getRecentWebSocket() {
+        return recentWebSocket;
     }
 
     @SuppressWarnings("unchecked")

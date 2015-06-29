@@ -38,6 +38,7 @@ public final class WebSocketEngine {
         if (group == null) {
             group = new WebSocketGroup(socket.groupid);
             containers.put(socket.groupid, group);
+            group.recentWebSocket = socket;
         }
         group.add(socket);
     }

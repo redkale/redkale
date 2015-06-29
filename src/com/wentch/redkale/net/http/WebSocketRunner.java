@@ -80,6 +80,7 @@ public class WebSocketRunner implements Runnable {
                                 readBuffer.clear();
                                 channel.read(readBuffer, null, this);
                             }
+                            webSocket.group.recentWebSocket = webSocket;
                             if (packet.type == PacketType.TEXT) {
                                 webSocket.onMessage(packet.getPayload());
                             } else if (packet.type == PacketType.BINARY) {
