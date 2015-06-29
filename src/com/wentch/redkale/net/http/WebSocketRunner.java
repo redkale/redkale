@@ -78,7 +78,16 @@ public class WebSocketRunner implements Runnable {
                         readBuffer.flip();
                         try {
                             ByteBuffer[] exBuffers = null;
+                            if (!readBuffers.isEmpty()) {
+                                exBuffers = readBuffers.toArray(new ByteBuffer[readBuffers.size()]);
+                                readBuffers.clear();
+                            }
                             WebSocketPacket packet = coder.decode(readBuffer, exBuffers);
+                            if (exBuffers != null) {
+                                for (ByteBuffer b : exBuffers) {
+                                    context.offerBuffer(b);
+                                }
+                            }
                             if (packet == null) {
                                 if (debug) context.getLogger().log(Level.FINEST, "WebSocketRunner abort on decode WebSocketPacket, force to close channel");
                                 failed(null, attachment1);
