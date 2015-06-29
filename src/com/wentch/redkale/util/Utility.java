@@ -72,7 +72,19 @@ public final class Utility {
         byte[] bytes = new byte[buffer.remaining()];
         buffer.put(bytes);
         buffer.flip();
-        (System.out).println(Arrays.toString(bytes));
+        println(bytes);
+    }
+
+    public static void println(byte... bytes) {
+        if (bytes == null) return;
+        StringBuilder sb = new StringBuilder();
+        sb.append('[');
+        for (byte b : bytes) {
+            if (sb.length() > 1) sb.append(',');
+            sb.append(Integer.toHexString(b & 0xff));
+        }
+        sb.append(']');
+        (System.out).println(sb);
     }
 
     /**
