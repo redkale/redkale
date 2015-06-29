@@ -143,13 +143,14 @@ public class WebSocketRunner implements Runnable {
     public void sendMessage(WebSocketPacket packet) {
         if (packet == null || closed) return;
 
+        final boolean debug = this.coder.debugable;
         //System.out.println("推送消息");
         final byte[] bytes = coder.encode(packet);
+        if (debug) context.getLogger().log(Level.FINEST, "send web socket message's length = " + bytes.length);
         if (writing.getAndSet(true)) {
             queue.add(bytes);
             return;
         }
-        final boolean debug = this.coder.debugable;
         if (writeBuffer == null) return;
         ByteBuffer sendBuffer = null;
         if (bytes.length <= writeBuffer.capacity()) {
