@@ -77,11 +77,6 @@ public class WebSocketRunner implements Runnable {
                             return;
                         }
                         if (readBuffer == null) return;
-                        if (recentExBuffer == null) {
-                            readBuffer.flip();
-                        } else {
-                            recentExBuffer.flip();
-                        }
                         if (!readBuffer.hasRemaining() && (recentExBuffer == null || !recentExBuffer.hasRemaining())) {
                             final ByteBuffer buffer = context.pollBuffer();
                             recentExBuffer = buffer;
@@ -89,12 +84,16 @@ public class WebSocketRunner implements Runnable {
                             channel.read(buffer, null, this);
                             return;
                         }
+                        readBuffer.flip();
                         try {
                             ByteBuffer[] exBuffers = null;
                             if (!readBuffers.isEmpty()) {
                                 exBuffers = readBuffers.toArray(new ByteBuffer[readBuffers.size()]);
                                 readBuffers.clear();
                                 recentExBuffer = null;
+                                for (ByteBuffer b : exBuffers) {
+                                    b.flip();
+                                }
                             }
                             WebSocketPacket packet = coder.decode(readBuffer, exBuffers);
                             if (exBuffers != null) {
@@ -338,14 +337,14 @@ public class WebSocketRunner implements Runnable {
 
         public WebSocketPacket decode(final ByteBuffer buffer, ByteBuffer... exbuffers) {
             final boolean debug = this.debugable;
-            {
+            if (debug) {
                 int remain = buffer.remaining();
                 if (exbuffers != null) {
                     for (ByteBuffer b : exbuffers) {
                         remain += b == null ? 0 : b.remaining();
                     }
                 }
-                if (debug) logger.log(Level.FINEST, "read web socket message's length = " + remain);
+                logger.log(Level.FINEST, "read web socket message's length = " + remain);
             }
             if (buffer.remaining() < 2) return null;
             byte opcode = buffer.get();
