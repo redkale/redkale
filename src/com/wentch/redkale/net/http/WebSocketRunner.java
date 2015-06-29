@@ -65,6 +65,7 @@ public class WebSocketRunner implements Runnable {
                     @Override
                     public void completed(Integer count, Void attachment1) {
                         if (count < 1) {
+                            if (debug) context.getLogger().log(Level.FINEST, "WebSocketRunner abort on read buffer count, force to close channel");
                             closeRunner();
                             return;
                         }
@@ -73,6 +74,7 @@ public class WebSocketRunner implements Runnable {
                         try {
                             WebSocketPacket packet = coder.decode(readBuffer);
                             if (packet == null) {
+                                if (debug) context.getLogger().log(Level.FINEST, "WebSocketRunner abort on decode WebSocketPacket, force to close channel");
                                 failed(null, attachment1);
                                 return;
                             }
