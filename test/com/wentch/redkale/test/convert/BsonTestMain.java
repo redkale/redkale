@@ -8,6 +8,7 @@ package com.wentch.redkale.test.convert;
 import com.wentch.redkale.convert.bson.BsonConvert;
 import com.wentch.redkale.convert.bson.BsonFactory;
 import com.wentch.redkale.convert.json.*;
+import com.wentch.redkale.util.*;
 import java.io.Serializable;
 import java.util.Arrays;
 
@@ -29,7 +30,7 @@ public class BsonTestMain {
         final BsonConvert convert = BsonFactory.root().getConvert();
         TestEntry2 entry = TestEntry2.create();
         byte[] bytes = convert.convertTo(TestEntry.class, entry);
-        System.out.println(Arrays.toString(bytes)); 
+        Utility.println(bytes); 
         System.out.println(JsonFactory.root().getConvert().convertTo(entry)); 
         TestEntry rs  = convert.convertFrom(TestEntry.class, bytes);
         System.out.println(rs.toString());
