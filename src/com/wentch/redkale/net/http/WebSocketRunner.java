@@ -151,27 +151,39 @@ public class WebSocketRunner implements Runnable {
         }
         final boolean debug = this.coder.debugable;
         if (writeBuffer == null) return;
-        writeBuffer.clear();
-        writeBuffer.put(bytes);
-        writeBuffer.flip();
+        ByteBuffer sendBuffer = null;
+        if (bytes.length <= writeBuffer.capacity()) {
+            writeBuffer.clear();
+            writeBuffer.put(bytes);
+            writeBuffer.flip();
+            sendBuffer = writeBuffer;
+        } else {
+            sendBuffer = ByteBuffer.wrap(bytes);
+        }
         try {
-            channel.write(writeBuffer, null, new CompletionHandler<Integer, Void>() {
+            channel.write(sendBuffer, sendBuffer, new CompletionHandler<Integer, ByteBuffer>() {
 
                 @Override
-                public void completed(Integer result, Void attachment) {
-                    if (writeBuffer == null || closed) return;
+                public void completed(Integer result, ByteBuffer attachment) {
+                    if (attachment == null || closed) return;
                     try {
-                        if (writeBuffer.hasRemaining()) {
-                            if (debug) context.getLogger().log(Level.FINEST, "WebSocketRunner write completed reemaining: " + writeBuffer.remaining());
-                            channel.write(writeBuffer, attachment, this);
+                        if (attachment.hasRemaining()) {
+                            if (debug) context.getLogger().log(Level.FINEST, "WebSocketRunner write completed reemaining: " + attachment.remaining());
+                            channel.write(attachment, attachment, this);
                             return;
                         }
                         byte[] bs = queue.poll();
                         if (bs != null && writeBuffer != null) {
-                            writeBuffer.clear();
-                            writeBuffer.put(bytes);
-                            writeBuffer.flip();
-                            channel.write(writeBuffer, null, this);
+                            ByteBuffer sendBuffer;
+                            if (bs.length <= writeBuffer.capacity()) {
+                                writeBuffer.clear();
+                                writeBuffer.put(bs);
+                                writeBuffer.flip();
+                                sendBuffer = writeBuffer;
+                            } else {
+                                sendBuffer = ByteBuffer.wrap(bs);
+                            }
+                            channel.write(sendBuffer, sendBuffer, this);
                             return;
                         }
                     } catch (NullPointerException e) {
@@ -183,7 +195,7 @@ public class WebSocketRunner implements Runnable {
                 }
 
                 @Override
-                public void failed(Throwable exc, Void attachment) {
+                public void failed(Throwable exc, ByteBuffer attachment) {
                     writing.set(false);
                     closeRunner();
                     if (exc != null) {
