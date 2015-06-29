@@ -101,6 +101,7 @@ public class WebSocketRunner implements Runnable {
                     }
                 });
             } else {
+                context.getLogger().log(Level.FINEST, "WebSocketRunner abort by AsyncConnection closed");
                 closeRunner();
             }
         } catch (Exception e) {
