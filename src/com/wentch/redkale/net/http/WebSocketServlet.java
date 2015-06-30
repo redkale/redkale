@@ -35,7 +35,7 @@ public abstract class WebSocketServlet extends HttpServlet {
     }
 
     @Resource
-    private WebSocketNodeService nodeService;
+    protected WebSocketNodeService nodeService;
 
     protected final WebSocketEngine engine = WebSocketEngine.create(this.getClass().getName() + "-" + Arrays.toString(this.getClass().getAnnotation(WebServlet.class).value()));
 
