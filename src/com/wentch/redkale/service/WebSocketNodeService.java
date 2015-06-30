@@ -6,6 +6,7 @@
 package com.wentch.redkale.service;
 
 import com.wentch.redkale.net.http.*;
+import com.wentch.redkale.util.*;
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.*;
@@ -16,6 +17,7 @@ import javax.annotation.*;
  *
  * @author zhangjx
  */
+@AutoLoad(false)
 public class WebSocketNodeService implements Service {
 
     public static final int RETCODE_ENGINE_NULL = 5001;

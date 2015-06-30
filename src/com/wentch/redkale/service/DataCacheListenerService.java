@@ -33,8 +33,6 @@ public class DataCacheListenerService implements DataCacheListener, Service {
 
     private final boolean finest = logger.isLoggable(Level.FINEST);
 
-    ;
-
     @Resource(name = "APP_NODE")
     private String localNodeName = "";
 
