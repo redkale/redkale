@@ -158,6 +158,22 @@ public interface DataSource {
     public <T, V> List<V> queryColumnList(String selectedColumn, Class<T> clazz, FilterBean bean);
 
     /**
+     * Map 接口
+     * <p>
+     * @param <T>
+     * @param clazz
+     * @param node
+     * @return
+     */
+    public <T> Map<Serializable, T> queryMap(final Class<T> clazz, final FilterNode node);
+
+    public <T> Map<Serializable, T> queryMap(final Class<T> clazz, final FilterBean bean);
+
+    public <T> Map<Serializable, T> queryMap(final Class<T> clazz, final SelectColumn selects, final FilterNode node);
+
+    public <T> Map<Serializable, T> queryMap(final Class<T> clazz, final SelectColumn selects, final FilterBean bean);
+
+    /**
      * 根据指定字段值查询对象集合
      *
      * @param <T>

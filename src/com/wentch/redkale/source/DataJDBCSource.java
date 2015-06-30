@@ -1045,6 +1045,44 @@ public final class DataJDBCSource implements DataSource {
     }
 
     /**
+     * 根据过滤对象FilterBean查询对象集合
+     *
+     * @param <T>
+     * @param clazz
+     * @param bean
+     * @return
+     */
+    @Override
+    public <T> Map<Serializable, T> queryMap(final Class<T> clazz, final FilterBean bean) {
+        return queryMap(clazz, null, bean);
+    }
+
+    @Override
+    public <T> Map<Serializable, T> queryMap(final Class<T> clazz, final FilterNode node) {
+        return queryMap(clazz, null, node);
+    }
+
+    @Override
+    public <T> Map<Serializable, T> queryMap(final Class<T> clazz, final SelectColumn selects, final FilterBean bean) {
+        return formatMap(clazz, querySheet(clazz, selects, null, bean).getRows());
+    }
+
+    @Override
+    public <T> Map<Serializable, T> queryMap(final Class<T> clazz, final SelectColumn selects, final FilterNode node) {
+        return formatMap(clazz, querySheet(clazz, selects, null, node).getRows());
+    }
+
+    private <T> Map<Serializable, T> formatMap(final Class<T> clazz, Collection<T> list) {
+        Map<Serializable, T> map = new LinkedHashMap<>();
+        if (list == null || list.isEmpty()) return map;
+        final Attribute<T, Serializable> attr = loadEntityInfo(clazz).getPrimary();
+        for (T t : list) {
+            map.put(attr.get(t), t);
+        }
+        return map;
+    }
+
+    /**
      * 根据指定字段值查询对象集合
      *
      * @param <T>
