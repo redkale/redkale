@@ -68,20 +68,44 @@ public abstract class WebSocket {
     }
 
     public final int sendMessage(Serializable groupid, String text, boolean last) {
-        if (nodeService == null) return WebSocketNodeService.RETCODE_NODESERVICE_NULL;
-        if (groupid == this.groupid) {
-            return nodeService.onSend(this.engine.getEngineid(), groupid, text, last);
-        } else {
-            return nodeService.send(this.engine.getEngineid(), groupid, text, last);
-        }
+        return sendMessage(groupid, false, text, last);
     }
 
     public final int sendMessage(Serializable groupid, byte[] data, boolean last) {
+        return sendMessage(groupid, false, data, last);
+    }
+
+    public final int sendRecentMessage(Serializable groupid, String text) {
+        return sendRecentMessage(groupid, text, true);
+    }
+
+    public final int sendRecentMessage(Serializable groupid, byte[] data) {
+        return sendRecentMessage(groupid, data, true);
+    }
+
+    public final int sendRecentMessage(Serializable groupid, String text, boolean last) {
+        return sendMessage(groupid, true, text, last);
+    }
+
+    public final int sendRecentMessage(Serializable groupid, byte[] data, boolean last) {
+        return sendMessage(groupid, true, data, last);
+    }
+
+    private int sendMessage(Serializable groupid, boolean recent, String text, boolean last) {
         if (nodeService == null) return WebSocketNodeService.RETCODE_NODESERVICE_NULL;
         if (groupid == this.groupid) {
-            return nodeService.onSend(this.engine.getEngineid(), groupid, data, last);
+            return nodeService.onSend(this.engine.getEngineid(), groupid, recent, text, last);
         } else {
-            return nodeService.send(this.engine.getEngineid(), groupid, data, last);
+            return nodeService.send(this.engine.getEngineid(), groupid, recent, text, last);
+        }
+    }
+
+    private int sendMessage(Serializable groupid, boolean recent, byte[] data, boolean last) {
+        if (nodeService == null) return WebSocketNodeService.RETCODE_NODESERVICE_NULL;
+        if (groupid == this.groupid) {
+            return nodeService.onSend(this.engine.getEngineid(), groupid, recent, data, last);
+        } else {
+            return nodeService.send(this.engine.getEngineid(), groupid, recent, data, last);
         }
     }
 
@@ -114,7 +138,7 @@ public abstract class WebSocket {
     protected final WebSocketGroup getWebSocketGroup(long groupid) {
         return engine.getWebSocketGroup(groupid);
     }
-    
+
     protected final Collection<WebSocketGroup> getWebSocketGroups() {
         return engine.getWebSocketGroups();
     }

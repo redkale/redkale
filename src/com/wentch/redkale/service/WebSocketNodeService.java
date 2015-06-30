@@ -146,11 +146,20 @@ public class WebSocketNodeService implements Service {
 
     @RemoteOn
     public int send(String engineid, Serializable groupid, String text, boolean last) {
-        return send0(engineid, groupid, text, last);
+        return send0(engineid, groupid, false, text, last);
     }
 
     public final int onSend(String engineid, Serializable groupid, String text, boolean last) {
-        return onSend0(engineid, groupid, text, last);
+        return onSend0(engineid, groupid, false, text, last);
+    }
+
+    @RemoteOn
+    public int send(String engineid, Serializable groupid, boolean recent, String text, boolean last) {
+        return send0(engineid, groupid, recent, text, last);
+    }
+
+    public final int onSend(String engineid, Serializable groupid, boolean recent, String text, boolean last) {
+        return onSend0(engineid, groupid, recent, text, last);
     }
 
     @RemoteOn
@@ -164,18 +173,27 @@ public class WebSocketNodeService implements Service {
 
     @RemoteOn
     public int send(String engineid, Serializable groupid, byte[] data, boolean last) {
-        return send0(engineid, groupid, data, last);
+        return send0(engineid, groupid, false, data, last);
     }
 
     public final int onSend(String engineid, Serializable groupid, byte[] data, boolean last) {
-        return onSend0(engineid, groupid, data, last);
+        return onSend0(engineid, groupid, false, data, last);
     }
 
-    private int send0(String engineid, Serializable groupid, Serializable text, boolean last) {
+    @RemoteOn
+    public int send(String engineid, Serializable groupid, boolean recent, byte[] data, boolean last) {
+        return send0(engineid, groupid, recent, data, last);
+    }
+
+    public final int onSend(String engineid, Serializable groupid, boolean recent, byte[] data, boolean last) {
+        return onSend0(engineid, groupid, recent, data, last);
+    }
+
+    private int send0(String engineid, Serializable groupid, boolean recent, Serializable text, boolean last) {
         final Set<String> nodes = usernodes.get(groupid);
         if (nodes == null) return RETCODE_WSOFFLINE; //未登录
         int rs = 0;
-        if (nodes.contains(this.localNodeName)) rs = onSend0(engineid, groupid, text, last);
+        if (nodes.contains(this.localNodeName)) rs = onSend0(engineid, groupid, recent, text, last);
         if (nodemaps == null) return rs;
         this.nodemaps.forEach((x, y) -> {
             if (nodes.contains(x)) {
@@ -201,10 +219,11 @@ public class WebSocketNodeService implements Service {
      *
      * @param engineid
      * @param groupid  接收方
+     * @param recent   是否只发送最近的WebSocket端
      * @param text
      * @return
      */
-    private int onSend0(String engineid, Serializable groupid, Serializable text, boolean last) {
+    private int onSend0(String engineid, Serializable groupid, boolean recent, Serializable text, boolean last) {
         WebSocketEngine webSocketEngine = engines.get(engineid);
         if (webSocketEngine == null) {
             if (finest) logger.finest("Node(" + localNodeName + ") receive websocket message {engineid:'" + engineid + "', groupid:" + groupid + ", content:'" + text + "'} but result is " + RETCODE_ENGINE_NULL);
@@ -217,9 +236,17 @@ public class WebSocketNodeService implements Service {
         }
         if (finest) logger.finest("Node (" + localNodeName + ") receive websocket message {engineid:'" + engineid + "', groupid:" + groupid + ", content:'" + text + "'}.");
         if (text != null && text.getClass() == byte[].class) {
-            group.getWebSockets().forEach(x -> x.send((byte[]) text, last));
+            if (recent) {
+                group.getRecentWebSocket().send((byte[]) text, last);
+            } else {
+                group.getWebSockets().forEach(x -> x.send((byte[]) text, last));
+            }
         } else {
-            group.getWebSockets().forEach(x -> x.send(text.toString(), last));
+            if (recent) {
+                group.getRecentWebSocket().send(text.toString(), last);
+            } else {
+                group.getWebSockets().forEach(x -> x.send(text.toString(), last));
+            }
         }
         return 0;
     }
