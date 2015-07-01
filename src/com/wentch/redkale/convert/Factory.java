@@ -16,6 +16,7 @@ import java.net.*;
 import static com.wentch.redkale.convert.ext.InetAddressSimpledCoder.*;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.regex.*;
 
 /**
  *
@@ -87,6 +88,7 @@ public abstract class Factory<R extends Reader, W extends Writer> {
             this.register(Class.class, TypeSimpledCoder.instance);
             this.register(InetSocketAddress.class, InetSocketAddressSimpledCoder.instance);
             this.register(InetSocketAddress.class, InetSocketAddressSimpledCoder.instance);
+            this.register(Pattern.class, PatternSimpledCoder.instance);
             //---------------------------------------------------------
             this.register(boolean[].class, BoolArraySimpledCoder.instance);
             this.register(byte[].class, ByteArraySimpledCoder.instance);
