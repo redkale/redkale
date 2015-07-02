@@ -12,6 +12,7 @@ import com.wentch.redkale.net.http.WebSocket;
 import com.wentch.redkale.net.http.HttpServer;
 import com.wentch.redkale.util.TypeToken;
 import com.wentch.redkale.util.AnyValue;
+import java.io.*;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
 
@@ -22,9 +23,9 @@ import java.util.concurrent.CountDownLatch;
 @WebServlet({"/listen/*"})
 public class VideoWebSocketServlet extends WebSocketServlet {
 
-    private final Map<String, Entry> sessions = new java.util.concurrent.ConcurrentHashMap<>();
+    private final Map<Serializable, Entry> sessions = new java.util.concurrent.ConcurrentHashMap<>();
 
-    private final Map<String, String> users = new HashMap<>();
+    private final Map<Serializable, String> users = new HashMap<>();
 
     private static final class Entry {
 
@@ -32,7 +33,7 @@ public class VideoWebSocketServlet extends WebSocketServlet {
 
         public String username;
 
-        public String userid;
+        public Serializable userid;
 
     }
 
@@ -73,7 +74,7 @@ public class VideoWebSocketServlet extends WebSocketServlet {
                     entry.username = users.get(entry.userid);
                     sessions.put(this.getSessionid(), entry);
                     StringBuilder sb = new StringBuilder();
-                    for (Map.Entry<String, Entry> en : sessions.entrySet()) {
+                    for (Map.Entry<Serializable, Entry> en : sessions.entrySet()) {
                         if (sb.length() > 0) sb.append(',');
                         sb.append("{'userid':'").append(en.getKey()).append("','username':'").append(en.getValue().username).append("'}");
                     }
