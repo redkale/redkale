@@ -81,7 +81,9 @@ public final class Utility {
         sb.append('[');
         for (byte b : bytes) {
             if (sb.length() > 1) sb.append(',');
-            sb.append(Integer.toHexString(b & 0xff));
+            int v = b & 0xff;
+            if (v < 10) sb.append('0');
+            sb.append(Integer.toHexString(v));
         }
         sb.append(']');
         (System.out).println(sb);
