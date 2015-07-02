@@ -170,7 +170,7 @@ public final class BsonReader implements Reader {
      */
     @Override
     public int readArrayB() {
-        return readShort() & 0xffff;
+        return readInt();
     }
 
     @Override

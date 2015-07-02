@@ -14,7 +14,7 @@ import java.lang.reflect.*;
  *   1). 基本数据类型:  直接转换成byte[]
  *   2). SmallString(无特殊字符且长度小于256的字符串): length(1 byte) + byte[](utf8); 通常用于类名、字段名、枚举。
  *   3). String: length(4 bytes) + byte[](utf8);
- *   4). 数组(长度不能大于65535):  length(2 byte) + byte[]...
+ *   4). 数组:   length(4 bytes) + byte[]...
  *   5). Object: 
  *          1. realclass (SmallString) (如果指定格式化的class与实体对象的class不一致才会有该值)
  *          2. 空字符串(SmallString)

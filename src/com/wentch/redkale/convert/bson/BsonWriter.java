@@ -256,7 +256,7 @@ public final class BsonWriter implements Writer {
 
     @Override
     public void writeArrayB(int size) {
-        writeShort((short) size);
+        writeInt(size);
     }
 
     @Override
