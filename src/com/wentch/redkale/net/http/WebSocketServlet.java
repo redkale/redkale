@@ -17,6 +17,19 @@ import java.util.logging.*;
 import javax.annotation.*;
 
 /**
+ * 当WebSocketServlet接收一个TCP连接后，进行协议判断，如果成功就会创建一个WebSocket。
+ * 
+ *                                    WebSocketServlet
+ *                                            |
+ *                                            |
+ *                                    WebSocketEngine   
+ *                                    /             \
+ *                                 /                  \
+ *                              /                       \
+ *                     WebSocketGroup1            WebSocketGroup2
+ *                        /        \                /        \
+ *                      /           \             /           \  
+ *               WebSocket1     WebSocket2   WebSocket3    WebSocket4
  *
  * @author zhangjx
  */
@@ -75,7 +88,7 @@ public abstract class WebSocketServlet extends HttpServlet {
         final WebSocket webSocket = this.createWebSocket();
         webSocket.engine = engine;
         webSocket.nodeService = nodeService;
-        String sessionid = webSocket.onOpen(request);
+        Serializable sessionid = webSocket.onOpen(request);
         if (sessionid == null) {
             if (debug) logger.finer("WebSocket connect abort, Not found sessionid. request=" + request);
             response.finish(true);
