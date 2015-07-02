@@ -82,7 +82,7 @@ public final class Utility {
         for (byte b : bytes) {
             if (sb.length() > 1) sb.append(',');
             int v = b & 0xff;
-            if (v < 10) sb.append('0');
+            if (v < 16) sb.append('0');
             sb.append(Integer.toHexString(v));
         }
         sb.append(']');
