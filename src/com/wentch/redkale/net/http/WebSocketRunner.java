@@ -42,11 +42,14 @@ public class WebSocketRunner implements Runnable {
 
     private final BlockingQueue<byte[]> queue = new ArrayBlockingQueue(1024);
 
-    public WebSocketRunner(Context context, WebSocket webSocket, AsyncConnection channel) {
+    private final boolean wsbinary;
+
+    public WebSocketRunner(Context context, WebSocket webSocket, AsyncConnection channel, final boolean wsbinary) {
         this.context = context;
         this.engine = webSocket.engine;
         this.webSocket = webSocket;
         this.channel = channel;
+        this.wsbinary = wsbinary;
         webSocket.runner = this;
         this.coder.logger = context.getLogger();
         this.coder.debugable = context.getLogger().isLoggable(Level.FINEST);
@@ -62,6 +65,10 @@ public class WebSocketRunner implements Runnable {
             webSocket.onConnected();
             channel.setReadTimeoutSecond(300); //读取超时5分钟
             if (channel.isOpen()) {
+                if (wsbinary) {
+                    webSocket.onRead(channel);
+                    return;
+                }
                 channel.read(readBuffer, null, new CompletionHandler<Integer, Void>() {
 
                     private ByteBuffer recentExBuffer;

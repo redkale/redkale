@@ -34,6 +34,9 @@ public abstract class WebSocketServlet extends HttpServlet {
         }
     }
 
+    //是否用于二进制流传输
+    protected final boolean wsbinary = getClass().getAnnotation(WebSocketBinary.class) != null;
+
     @Resource
     protected WebSocketNodeService nodeService;
 
@@ -102,7 +105,7 @@ public abstract class WebSocketServlet extends HttpServlet {
                 }
                 webSocket.groupid = groupid;
                 engine.add(webSocket);
-                context.submit(new WebSocketRunner(context, webSocket, response.removeChannel()));
+                context.submit(new WebSocketRunner(context, webSocket, response.removeChannel(), wsbinary));
                 response.finish(true);
             }
 

@@ -5,6 +5,7 @@
  */
 package com.wentch.redkale.net.http;
 
+import com.wentch.redkale.net.*;
 import com.wentch.redkale.service.*;
 import java.io.*;
 import java.util.*;
@@ -164,8 +165,17 @@ public abstract class WebSocket {
     }
 
     /**
+     * WebSocketBinary模式流程顺序: onOpen、createGroupid、onRead
      * WebSocket流程顺序: onOpen、createGroupid、onConnected、onMessage/onFragment+、onClose
      */
+    
+    /**
+     * 
+     * @param channel 
+     */
+    public void onRead(AsyncConnection channel) {
+    }
+
     public void onConnected() {
     }
 
