@@ -384,6 +384,11 @@ public final class HttpRequest extends Request {
         return requestURI.substring(requestURI.lastIndexOf('/') + 1);
     }
 
+    public String[] getRequstURIPaths(String prefix) {
+        if (requestURI == null || prefix == null) return new String[0];
+        return requestURI.substring(prefix.length() + (prefix.endsWith("/") ? 0 : 1)).split("//");
+    }
+
     public String getRequestURI() {
         return requestURI;
     }
