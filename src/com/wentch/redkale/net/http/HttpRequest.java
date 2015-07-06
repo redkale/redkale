@@ -384,9 +384,40 @@ public final class HttpRequest extends Request {
         return requestURI.substring(requestURI.lastIndexOf('/') + 1);
     }
 
+    /**
+     *
+     * 从prefix之后截取getRequestURI再对"/"进行分隔
+     * <p>
+     * @param prefix
+     * @return
+     */
     public String[] getRequstURIPaths(String prefix) {
         if (requestURI == null || prefix == null) return new String[0];
         return requestURI.substring(requestURI.indexOf(prefix) + prefix.length() + (prefix.endsWith("/") ? 0 : 1)).split("//");
+    }
+
+    public String getRequstURIPath(String prefix, String defvalue) {
+        if (requestURI == null || prefix == null) return defvalue;
+        int pos = requestURI.indexOf(prefix);
+        if (pos < 0) return defvalue;
+        String sub = requestURI.substring(pos + prefix.length());
+        pos = sub.indexOf('/');
+        return pos < 0 ? sub : sub.substring(0, pos);
+    }
+
+    public short getRequstURIPath(String prefix, short defvalue) {
+        String val = getRequstURIPath(prefix, null);
+        return val == null ? defvalue : Short.parseShort(val);
+    }
+
+    public int getRequstURIPath(String prefix, int defvalue) {
+        String val = getRequstURIPath(prefix, null);
+        return val == null ? defvalue : Integer.parseInt(val);
+    }
+
+    public long getRequstURIPath(String prefix, long defvalue) {
+        String val = getRequstURIPath(prefix, null);
+        return val == null ? defvalue : Long.parseLong(val);
     }
 
     public String getRequestURI() {
