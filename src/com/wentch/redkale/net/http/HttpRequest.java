@@ -393,7 +393,7 @@ public final class HttpRequest extends Request {
      */
     public String[] getRequstURIPaths(String prefix) {
         if (requestURI == null || prefix == null) return new String[0];
-        return requestURI.substring(requestURI.indexOf(prefix) + prefix.length() + (prefix.endsWith("/") ? 0 : 1)).split("//");
+        return requestURI.substring(requestURI.indexOf(prefix) + prefix.length() + (prefix.endsWith("/") ? 0 : 1)).split("/");
     }
 
     public String getRequstURIPath(String prefix, String defvalue) {
