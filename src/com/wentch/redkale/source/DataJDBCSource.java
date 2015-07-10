@@ -153,14 +153,7 @@ public final class DataJDBCSource implements DataSource {
         this.conf = url;
         this.readPool = new JDBCPoolSource(this, "read", readprop);
         this.writePool = new JDBCPoolSource(this, "write", writeprop);
-        for (Map.Entry<Object, Object> en : readprop.entrySet()) {
-            if ("cache".equalsIgnoreCase(en.getValue().toString())) {
-                try {
-                    EntityInfo.cacheClasses.add(Class.forName(en.getKey().toString()));
-                } catch (Exception e) {
-                }
-            }
-        }
+        EntityInfo.cacheForbidden = "NONE".equalsIgnoreCase(readprop.getProperty("shared-cache-mode"));
     }
 
     public DataJDBCSource(String unitName, Properties readprop, Properties writeprop) {
@@ -168,14 +161,7 @@ public final class DataJDBCSource implements DataSource {
         this.conf = null;
         this.readPool = new JDBCPoolSource(this, "read", readprop);
         this.writePool = new JDBCPoolSource(this, "write", writeprop);
-        for (Map.Entry<Object, Object> en : readprop.entrySet()) {
-            if ("cache".equalsIgnoreCase(en.getValue().toString())) {
-                try {
-                    EntityInfo.cacheClasses.add(Class.forName(en.getKey().toString()));
-                } catch (Exception e) {
-                }
-            }
-        }
+        EntityInfo.cacheForbidden = "NONE".equalsIgnoreCase(readprop.getProperty("shared-cache-mode"));
     }
 
     public static Map<String, DataJDBCSource> create(final InputStream in) {
@@ -218,7 +204,8 @@ public final class DataJDBCSource implements DataSource {
                         String value = reader.getAttributeValue(null, "value");
                         if (name == null) continue;
                         result.put(name, value);
-                    } else if (result.getProperty(JDBC_URL) != null) {
+                    } else if (flag && "shared-cache-mode".equalsIgnoreCase(reader.getLocalName())) {
+                        result.put(reader.getLocalName(), reader.getElementText());
                     }
                 }
             }

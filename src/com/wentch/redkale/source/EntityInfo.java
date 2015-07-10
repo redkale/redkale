@@ -29,7 +29,7 @@ public final class EntityInfo<T> {
 
     private static final Logger logger = Logger.getLogger(EntityInfo.class);
 
-    static final Set<Class> cacheClasses = new HashSet<>();
+    static boolean cacheForbidden = false;
 
     //Entity类的类名
     private final Class<T> type;
@@ -213,8 +213,7 @@ public final class EntityInfo<T> {
         this.allocationSize = allocationSize0;
         //----------------cache--------------
         Cacheable c = type.getAnnotation(Cacheable.class);
-        boolean cf = (c == null && cacheClasses != null && cacheClasses.contains(type));
-        if ((c != null && c.value()) || cf) {
+        if (!cacheForbidden && c != null && c.value()) {
             this.cache = new EntityCache<>(type, creator, primary, attributes);
         } else {
             this.cache = null;
