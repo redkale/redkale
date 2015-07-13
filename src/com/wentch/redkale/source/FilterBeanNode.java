@@ -263,7 +263,7 @@ final class FilterBeanNode extends FilterNode {
             Predicate<T> f = (T t) -> {
                 Serializable key = mainIdAttr.get(t);
                 Predicate k = (e) -> key.equals(foreignAttr.get(e));
-                return cache.contains(k.and(p));
+                return cache.exists(k.and(p));
             };
             result = (result == null) ? f : (signand ? result.and(f) : result.or(f));
         }
