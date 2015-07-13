@@ -64,11 +64,12 @@ public abstract class Sncp {
     private static String wrapName(final java.lang.reflect.Method method) {
         final Class[] params = method.getParameterTypes();
         if (params.length == 0) return method.getName() + "00";
-        int c = 0;
+        StringBuilder sb = new StringBuilder();
         for (Class clzz : params) {
-            c += clzz.getSimpleName().charAt(0);
+            String s = clzz.getSimpleName();
+            sb.append(s.substring(0, s.length() > 1 ? 2 : 0));
         }
-        return method.getName() + Integer.toString(params.length, 36) + Integer.toString(0xff & c, 36);
+        return method.getName() + sb + Integer.toString(params.length, 36);
     }
 
     public static long hash(final String name) {
@@ -98,28 +99,28 @@ public abstract class Sncp {
     /*
      * public final class DynRemoteTestService extends TestService{
      *
-     *  @Resource
-     *  private BsonConvert convert;
-     * 
-     *  @Resource(name="xxxx")
-     *  private Transport transport;
+     * @Resource
+     * private BsonConvert convert;
      *
-     *  public SncpClient client;
+     * @Resource(name="xxxx")
+     * private Transport transport;
      *
-     *  @Override
-     *  public boolean testChange(TestBean bean) {
-     *      return client.remote(convert, transport, 0, bean);
-     *  }
+     * public SncpClient client;
      *
-     *  @Override
-     *  public TestBean findTestBean(long id) {
-     *      return client.remote(convert, transport, 1, id);
-     *  }
+     * @Override
+     * public boolean testChange(TestBean bean) {
+     * return client.remote(convert, transport, 0, bean);
+     * }
      *
-     *  @Override
-     *  public void runTestBean(long id, TestBean bean) {
-     *      client.remote(convert, transport, 2, id, bean);
-     *  }
+     * @Override
+     * public TestBean findTestBean(long id) {
+     * return client.remote(convert, transport, 1, id);
+     * }
+     *
+     * @Override
+     * public void runTestBean(long id, TestBean bean) {
+     * client.remote(convert, transport, 2, id, bean);
+     * }
      */
     /**
      *
