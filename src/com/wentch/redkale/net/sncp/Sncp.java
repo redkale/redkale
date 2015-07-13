@@ -67,7 +67,7 @@ public abstract class Sncp {
         StringBuilder sb = new StringBuilder();
         for (Class clzz : params) {
             String s = clzz.getSimpleName();
-            sb.append(s.substring(0, s.length() > 1 ? 2 : 0));
+            sb.append(s.substring(0, s.length() > 1 ? 2 : 1));
         }
         return method.getName() + sb + Integer.toString(params.length, 36);
     }
