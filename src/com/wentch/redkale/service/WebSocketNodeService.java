@@ -154,6 +154,15 @@ public class WebSocketNodeService implements Service {
     }
 
     @RemoteOn
+    public int send(String engineid, Serializable groupid, boolean recent, String text) {
+        return send0(engineid, groupid, recent, text, true);
+    }
+
+    public final int onSend(String engineid, Serializable groupid, boolean recent, String text) {
+        return onSend0(engineid, groupid, recent, text, true);
+    }
+
+    @RemoteOn
     public int send(String engineid, Serializable groupid, boolean recent, String text, boolean last) {
         return send0(engineid, groupid, recent, text, last);
     }
@@ -178,6 +187,15 @@ public class WebSocketNodeService implements Service {
 
     public final int onSend(String engineid, Serializable groupid, byte[] data, boolean last) {
         return onSend0(engineid, groupid, false, data, last);
+    }
+
+    @RemoteOn
+    public int send(String engineid, Serializable groupid, boolean recent, byte[] data) {
+        return send0(engineid, groupid, recent, data, true);
+    }
+
+    public final int onSend(String engineid, Serializable groupid, boolean recent, byte[] data) {
+        return onSend0(engineid, groupid, recent, data, true);
     }
 
     @RemoteOn
