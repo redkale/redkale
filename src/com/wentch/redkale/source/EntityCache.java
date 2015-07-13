@@ -98,7 +98,7 @@ public final class EntityCache<T> {
         return rs.isPresent() ? (needcopy ? reproduce.copy(this.creator.create(), rs.get()) : rs.get()) : null;
     }
 
-    public boolean contains(final Predicate<T> filter) {
+    public boolean exists(final Predicate<T> filter) {
         return (filter != null) && listStream().filter(filter).findFirst().isPresent();
     }
 
