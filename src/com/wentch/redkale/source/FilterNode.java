@@ -311,8 +311,8 @@ public class FilterNode {
         if (flipper == null || flipper.getSort() == null || flipper.getSort().isEmpty()) return null;
         Comparator<E> comparator = null;
         for (String item : flipper.getSort().split(",")) {
-            if (item.isEmpty()) continue;
-            String[] sub = item.split("\\s+");
+            if (item.trim().isEmpty()) continue;
+            String[] sub = item.trim().split("\\s+");
             final Attribute<E, Serializable> attr = info.getAttribute(sub[0]);
             Comparator<E> c = (E o1, E o2) -> {
                 Comparable c1 = (Comparable) attr.get(o1);
