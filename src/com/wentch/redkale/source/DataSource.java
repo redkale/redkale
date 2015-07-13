@@ -133,6 +133,12 @@ public interface DataSource {
 
     public <T> T find(final Class<T> clazz, final FilterBean bean);
 
+    public <T> boolean exists(Class<T> clazz, Serializable pk);
+
+    public <T> boolean exists(final Class<T> clazz, final FilterNode node);
+
+    public <T> boolean exists(final Class<T> clazz, final FilterBean bean);
+
     //-----------------------list set----------------------------
     /**
      * 根据指定字段值查询对象某个字段的集合

@@ -1000,6 +1000,21 @@ public final class DataJDBCSource implements DataSource {
         return sheet.isEmpty() ? null : sheet.list().get(0);
     }
 
+    @Override
+    public <T> boolean exists(Class<T> clazz, Serializable pk) {
+        return find(clazz, pk) != null;
+    }
+
+    @Override
+    public <T> boolean exists(final Class<T> clazz, final FilterNode node) {
+        return find(clazz, node) != null;
+    }
+
+    @Override
+    public <T> boolean exists(final Class<T> clazz, final FilterBean bean) {
+        return find(clazz, bean) != null;
+    }
+
     //-----------------------list set----------------------------
     @Override
     public <T, V> Set<V> queryColumnSet(String selectedColumn, Class<T> clazz, String column, Serializable key) {
