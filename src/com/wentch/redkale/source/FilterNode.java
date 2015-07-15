@@ -99,13 +99,13 @@ public class FilterNode {
         FilterNode newnode = new FilterNode(this.column, this.express, this.value);
         newnode.signand = this.signand;
         newnode.nodes = this.nodes;
-        this.nodes = new FilterNode[]{newnode};
-        this.tabalis = node.tabalis;
-        this.column = node.column;
-        this.express = node.express;
-        this.likefit = node.likefit;
+        this.nodes = new FilterNode[]{newnode, node};
+        this.tabalis = null;
+        this.column = null;
+        this.express = null;
+        this.likefit = false;
         this.signand = sign;
-        this.value = node.value;
+        this.value = null;
     }
 
     protected Serializable getValue(FilterBean bean) {
@@ -128,7 +128,7 @@ public class FilterNode {
         return createFilterSQLExpress(true, info, bean);
     }
 
-    protected <T> StringBuilder createFilterSQLExpress(final boolean first, final EntityInfo<T> info, FilterBean bean) {
+    protected <T> StringBuilder createFilterSQLExpress(final boolean first, final EntityInfo<T> info, FilterBean bean) {        
         final Serializable val = getValue(bean);
         if (val == null && (express == ISNULL || express == ISNOTNULL)) return new StringBuilder(0);
         StringBuilder sb0 = createFilterSQLExpress(info, val);
@@ -156,30 +156,8 @@ public class FilterNode {
         return rs;
     }
 
-    protected static <E> String createFilterSQLOrderBy(EntityInfo<E> info, Flipper flipper) {
-        if (flipper == null || flipper.getSort() == null || flipper.getSort().isEmpty()) return "";
-        final StringBuilder sb = new StringBuilder();
-        sb.append(" ORDER BY ");
-        if (info.isNoAlias()) {
-            sb.append(flipper.getSort());
-        } else {
-            boolean flag = false;
-            for (String item : flipper.getSort().split(",")) {
-                if (item.isEmpty()) continue;
-                String[] sub = item.split("\\s+");
-                if (flag) sb.append(',');
-                if (sub.length < 2 || sub[1].equalsIgnoreCase("ASC")) {
-                    sb.append("a.").append(info.getSQLColumn(sub[0])).append(" ASC");
-                } else {
-                    sb.append("a.").append(info.getSQLColumn(sub[0])).append(" DESC");
-                }
-                flag = true;
-            }
-        }
-        return sb.toString();
-    }
-
     private <T> StringBuilder createFilterSQLExpress(final EntityInfo<T> info, Serializable val0) {
+        if(column == null) return null;
         final StringBuilder val = formatValue(val0);
         if (val == null) return null;
         StringBuilder sb = new StringBuilder();
@@ -204,8 +182,31 @@ public class FilterNode {
         return sb;
     }
 
+    protected static <E> String createFilterSQLOrderBy(EntityInfo<E> info, Flipper flipper) {
+        if (flipper == null || flipper.getSort() == null || flipper.getSort().isEmpty()) return "";
+        final StringBuilder sb = new StringBuilder();
+        sb.append(" ORDER BY ");
+        if (info.isNoAlias()) {
+            sb.append(flipper.getSort());
+        } else {
+            boolean flag = false;
+            for (String item : flipper.getSort().split(",")) {
+                if (item.isEmpty()) continue;
+                String[] sub = item.split("\\s+");
+                if (flag) sb.append(',');
+                if (sub.length < 2 || sub[1].equalsIgnoreCase("ASC")) {
+                    sb.append("a.").append(info.getSQLColumn(sub[0])).append(" ASC");
+                } else {
+                    sb.append("a.").append(info.getSQLColumn(sub[0])).append(" DESC");
+                }
+                flag = true;
+            }
+        }
+        return sb.toString();
+    }
+
     protected <T> Predicate<T> createFilterPredicate(final EntityInfo<T> info, FilterBean bean) {
-        if (info == null) return null;
+        if (info == null || column == null) return null;
         final Serializable val = getValue(bean);
         Predicate<T> filter = val == null ? null : createFilterPredicate(info.getAttribute(column), val);
         if (this.nodes == null) return filter;
@@ -405,9 +406,10 @@ public class FilterNode {
         if (nodes == null) {
             sb.append(column).append(' ').append(express.value()).append(' ').append(formatValue(value));
         } else {
-            sb.append('(').append(column).append(' ').append(express.value()).append(' ').append(formatValue(value));
+            if (column != null) sb.append('(').append(column).append(' ').append(express.value()).append(' ').append(formatValue(value));
             for (FilterNode node : this.nodes) {
-                sb.append(signand ? " AND " : " OR ").append(node.toString());
+                if (sb.length() > 0) sb.append(signand ? " AND " : " OR ");
+                sb.append(node.toString());
             }
             sb.append(')');
         }
