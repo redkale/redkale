@@ -166,18 +166,19 @@ public interface DataSource {
     /**
      * Map 接口
      * <p>
+     * @param <K>
      * @param <T>
      * @param clazz
      * @param node
      * @return
      */
-    public <T> Map<Serializable, T> queryMap(final Class<T> clazz, final FilterNode node);
+    public <K extends Serializable, T> Map<K, T> queryMap(final Class<T> clazz, final FilterNode node);
 
-    public <T> Map<Serializable, T> queryMap(final Class<T> clazz, final FilterBean bean);
+    public <K extends Serializable, T> Map<K, T> queryMap(final Class<T> clazz, final FilterBean bean);
 
-    public <T> Map<Serializable, T> queryMap(final Class<T> clazz, final SelectColumn selects, final FilterNode node);
+    public <K extends Serializable, T> Map<K, T> queryMap(final Class<T> clazz, final SelectColumn selects, final FilterNode node);
 
-    public <T> Map<Serializable, T> queryMap(final Class<T> clazz, final SelectColumn selects, final FilterBean bean);
+    public <K extends Serializable, T> Map<K, T> queryMap(final Class<T> clazz, final SelectColumn selects, final FilterBean bean);
 
     /**
      * 根据指定字段值查询对象集合
