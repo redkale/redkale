@@ -1017,17 +1017,17 @@ public final class DataJDBCSource implements DataSource {
 
     //-----------------------list set----------------------------
     @Override
-    public <T, V> Set<V> queryColumnSet(String selectedColumn, Class<T> clazz, String column, Serializable key) {
+    public <T, V> HashSet<V> queryColumnSet(String selectedColumn, Class<T> clazz, String column, Serializable key) {
         return queryColumnSet(selectedColumn, clazz, FilterNode.create(column, key));
     }
 
     @Override
-    public <T, V> Set<V> queryColumnSet(String selectedColumn, Class<T> clazz, FilterBean bean) {
+    public <T, V> HashSet<V> queryColumnSet(String selectedColumn, Class<T> clazz, FilterBean bean) {
         return new LinkedHashSet<>(queryColumnList(selectedColumn, clazz, bean));
     }
 
     @Override
-    public <T, V> Set<V> queryColumnSet(String selectedColumn, Class<T> clazz, FilterNode node) {
+    public <T, V> HashSet<V> queryColumnSet(String selectedColumn, Class<T> clazz, FilterNode node) {
         return new LinkedHashSet<>(queryColumnList(selectedColumn, clazz, node));
     }
 

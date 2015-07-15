@@ -151,11 +151,11 @@ public interface DataSource {
      * @param key
      * @return
      */
-    public <T, V> Set<V> queryColumnSet(String selectedColumn, Class<T> clazz, String column, Serializable key);
+    public <T, V> HashSet<V> queryColumnSet(String selectedColumn, Class<T> clazz, String column, Serializable key);
 
-    public <T, V> Set<V> queryColumnSet(String selectedColumn, Class<T> clazz, FilterNode node);
+    public <T, V> HashSet<V> queryColumnSet(String selectedColumn, Class<T> clazz, FilterNode node);
 
-    public <T, V> Set<V> queryColumnSet(String selectedColumn, Class<T> clazz, FilterBean bean);
+    public <T, V> HashSet<V> queryColumnSet(String selectedColumn, Class<T> clazz, FilterBean bean);
 
     public <T, V> List<V> queryColumnList(String selectedColumn, Class<T> clazz, String column, Serializable key);
 
