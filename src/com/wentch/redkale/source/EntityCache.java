@@ -106,7 +106,7 @@ public final class EntityCache<T> {
         Stream<T> stream = listStream();
         if (filter != null) stream = stream.filter(filter);
         Collector<T, Map, ?> collector = null;
-        final Class valtype = reckonAttr.type();
+        final Class valtype = reckonAttr == null ? null : reckonAttr.type();
         switch (reckon) {
             case AVG:
                 if (valtype == float.class || valtype == Float.class || valtype == double.class || valtype == Double.class) {
