@@ -92,27 +92,21 @@ public final class HttpResourceServlet extends HttpServlet {
 
     protected WatchThread watchThread;
 
-    protected List<SimpleEntry<File, WatchThread>> resx;
-
     protected Predicate<String> ranges;
 
     @Override
     public void init(Context context, AnyValue config) {
-        String[] rootstrs = null;
         if (config != null) {
-            rootstrs = config.getValue("webroot", "root").trim().split(";");
-            for (int i = 0; i < rootstrs.length; i++) {
-                String rootstr = rootstrs[i];
-                if (rootstr.indexOf(':') < 0 && rootstr.indexOf('/') != 0 && System.getProperty("APP_HOME") != null) {
-                    rootstrs[i] = new File(System.getProperty("APP_HOME"), rootstr).getPath();
-                }
+            String rootstr = config.getValue("webroot", "root");
+            if (rootstr.indexOf(':') < 0 && rootstr.indexOf('/') != 0 && System.getProperty("APP_HOME") != null) {
+                rootstr = new File(System.getProperty("APP_HOME"), rootstr).getPath();
             }
             String rangesValue = config.getValue("ranges");
             this.ranges = rangesValue != null ? Pattern.compile(rangesValue).asPredicate() : null;
             try {
-                this.root = new File(rootstrs[0]).getCanonicalFile();
+                this.root = new File(rootstr).getCanonicalFile();
             } catch (IOException ioe) {
-                this.root = new File(rootstrs[0]);
+                this.root = new File(rootstr);
             }
             AnyValue cacheconf = config.getAnyValue("caches");
             if (cacheconf != null) {
@@ -131,26 +125,13 @@ public final class HttpResourceServlet extends HttpServlet {
             }
             this.locationRewrites = locations.isEmpty() ? null : locations.toArray(new SimpleEntry[locations.size()]);
         }
-        if (this.cachelimit < 1) return;
+        if (this.cachelimit < 1) return;  //不缓存不需要开启WatchThread监听
         if (this.root != null) {
             try {
                 this.watchThread = new WatchThread(this.root);
                 this.watchThread.start();
             } catch (IOException ex) {
                 logger.log(Level.WARNING, HttpResourceServlet.class.getSimpleName() + " start watch-thread error", ex);
-            }
-            if (rootstrs != null && rootstrs.length > 1) {
-                resx = new ArrayList<>(rootstrs.length - 1);
-                for (int i = 1; i < rootstrs.length; i++) {
-                    try {
-                        File f = new File(rootstrs[i]).getCanonicalFile();
-                        WatchThread t = new WatchThread(f);
-                        t.start();
-                        resx.add(new SimpleEntry<>(f, t));
-                    } catch (IOException ioe) {
-                        ioe.printStackTrace();
-                    }
-                }
             }
         }
     }
@@ -193,10 +174,15 @@ public final class HttpResourceServlet extends HttpServlet {
         }
         if (uri.length() == 0 || uri.equals("/")) uri = "/index.html";
         //System.out.println(request);
-        FileEntry entry = watchThread == null ? createFileEntry(uri) : files.get(uri);
-        if (entry == null) {
+        FileEntry entry;
+        if (watchThread == null) {
             entry = createFileEntry(uri);
-            if (entry != null && watchThread != null) files.put(uri, entry);
+        } else {  //有缓存
+            entry = files.get(uri);
+            if (entry == null) {
+                entry = createFileEntry(uri);
+                if (entry != null) files.put(uri, entry);
+            }
         }
         if (entry == null) {
             response.finish404();
@@ -207,32 +193,15 @@ public final class HttpResourceServlet extends HttpServlet {
 
     private FileEntry createFileEntry(String uri) {
         File file = new File(root, uri);
-        if (!file.isFile() || !file.canRead()) {
-            if (resx != null) {
-                for (SimpleEntry<File, WatchThread> en : resx) {
-                    File f = new File(en.getKey(), uri);
-                    if (f.isFile() && f.canRead()) {
-                        FileEntry fe = new FileEntry(this, f);
-                        if (watchThread == null) return fe;
-                        try {
-                            Path p = f.getParentFile().toPath();
-                            keymaps.put(p.register(en.getValue().watcher, ENTRY_MODIFY, ENTRY_DELETE), p);
-                        } catch (IOException e) {
-                            logger.log(Level.INFO, HttpResourceServlet.class.getSimpleName() + " create FileEntry(" + uri + ") erroneous", e);
-                        }
-                        return fe;
-                    }
-                }
-            }
-            return null;
-        }
+        if (file.isDirectory()) file = new File(file, "index.html");
+        if (!file.isFile() || !file.canRead()) return null;
         FileEntry en = new FileEntry(this, file);
         if (watchThread == null) return en;
         try {
             Path p = file.getParentFile().toPath();
             keymaps.put(p.register(watchThread.watcher, ENTRY_MODIFY, ENTRY_DELETE), p);
         } catch (IOException e) {
-            logger.log(Level.INFO, HttpResourceServlet.class.getSimpleName() + " create FileEntry(" + uri + ") erroneous", e);
+            logger.log(Level.INFO, HttpResourceServlet.class.getSimpleName() + " watch FileEntry(" + uri + ") erroneous", e);
         }
         return en;
     }
@@ -258,7 +227,7 @@ public final class HttpResourceServlet extends HttpServlet {
             }
             long length = this.file.length();
             if (length > this.servlet.cachelengthmax) return;
-            if (this.servlet.cachedLength.longValue() + length > this.servlet.cachelimit) return;
+            if (this.servlet.cachedLength.longValue() + length > this.servlet.cachelimit) return; //超过缓存总容量
             try {
                 FileInputStream in = new FileInputStream(file);
                 ByteArrayOutputStream out = new ByteArrayOutputStream((int) file.length());

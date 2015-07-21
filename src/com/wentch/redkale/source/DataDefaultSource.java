@@ -24,7 +24,7 @@ import javax.xml.stream.*;
  * @author zhangjx
  */
 @SuppressWarnings("unchecked")
-public final class DataJDBCSource implements DataSource {
+public final class DataDefaultSource implements DataSource {
 
     public static final String DATASOURCE_CONFPATH = "DATASOURCE_CONFPATH";
 
@@ -42,7 +42,7 @@ public final class DataJDBCSource implements DataSource {
 
     private static final Flipper FLIPPER_ONE = new Flipper(1);
 
-    final Logger logger = Logger.getLogger(DataJDBCSource.class.getSimpleName());
+    final Logger logger = Logger.getLogger(DataDefaultSource.class.getSimpleName());
 
     final AtomicBoolean debug = new AtomicBoolean(logger.isLoggable(Level.FINEST));
 
@@ -55,13 +55,13 @@ public final class DataJDBCSource implements DataSource {
     private final JDBCPoolSource writePool;
 
     @Resource(name = "property.datasource.nodeid")
-    int nodeid;
+    private int nodeid;
 
     @Resource
-    DataSQLListener writeListener;
+    private DataSQLListener writeListener;
 
     @Resource
-    DataCacheListener cacheListener;
+    private DataCacheListener cacheListener;
 
     private static class DataJDBCConnection extends DataConnection {
 
@@ -108,17 +108,17 @@ public final class DataJDBCSource implements DataSource {
 
     private final Function<Class, List> fullloader = (t) -> queryList(t, (FilterNode) null);
 
-    public DataJDBCSource() throws IOException {
+    public DataDefaultSource() throws IOException {
         this("");
     }
 
-    public DataJDBCSource(final String unitName) throws IOException {
+    public DataDefaultSource(final String unitName) throws IOException {
         this(unitName, System.getProperty(DATASOURCE_CONFPATH) == null
-                ? DataJDBCSource.class.getResource("/META-INF/persistence.xml")
+                ? DataDefaultSource.class.getResource("/META-INF/persistence.xml")
                 : new File(System.getProperty(DATASOURCE_CONFPATH)).toURI().toURL());
     }
 
-    public DataJDBCSource(final String unitName, URL url) throws IOException {
+    public DataDefaultSource(final String unitName, URL url) throws IOException {
         if (url == null) url = this.getClass().getResource("/persistence.xml");
         InputStream in = url.openStream();
         Map<String, Properties> map = loadProperties(in);
@@ -156,7 +156,7 @@ public final class DataJDBCSource implements DataSource {
         EntityInfo.cacheForbidden = "NONE".equalsIgnoreCase(readprop.getProperty("shared-cache-mode"));
     }
 
-    public DataJDBCSource(String unitName, Properties readprop, Properties writeprop) {
+    public DataDefaultSource(String unitName, Properties readprop, Properties writeprop) {
         this.name = unitName;
         this.conf = null;
         this.readPool = new JDBCPoolSource(this, "read", readprop);
@@ -164,7 +164,7 @@ public final class DataJDBCSource implements DataSource {
         EntityInfo.cacheForbidden = "NONE".equalsIgnoreCase(readprop.getProperty("shared-cache-mode"));
     }
 
-    public static Map<String, DataJDBCSource> create(final InputStream in) {
+    public static Map<String, DataDefaultSource> create(final InputStream in) {
         Map<String, Properties> map = loadProperties(in);
         Map<String, Properties[]> maps = new HashMap<>();
         map.entrySet().stream().forEach((en) -> {
@@ -179,9 +179,9 @@ public final class DataJDBCSource implements DataSource {
                 maps.put(en.getKey(), new Properties[]{en.getValue(), en.getValue()});
             }
         });
-        Map<String, DataJDBCSource> result = new HashMap<>();
+        Map<String, DataDefaultSource> result = new HashMap<>();
         maps.entrySet().stream().forEach((en) -> {
-            result.put(en.getKey(), new DataJDBCSource(en.getKey(), en.getValue()[0], en.getValue()[1]));
+            result.put(en.getKey(), new DataDefaultSource(en.getKey(), en.getValue()[0], en.getValue()[1]));
         });
         return result;
     }
@@ -280,11 +280,12 @@ public final class DataJDBCSource implements DataSource {
         return readPool.poll();
     }
 
-    private Connection createWriteSQLConnection() {
+    private <T> Connection createWriteSQLConnection() {
         return writePool.poll();
     }
 
     private void closeSQLConnection(final Connection sqlconn) {
+        if (sqlconn == null) return;
         try {
             sqlconn.close();
         } catch (Exception e) {
@@ -349,9 +350,15 @@ public final class DataJDBCSource implements DataSource {
      */
     @Override
     public <T> void insert(T... values) {
+        if (values.length == 0) return;
+        final EntityInfo<T> info = loadEntityInfo((Class<T>) values[0].getClass());
+        if (info.isVirtualEntity()) {
+            insert(null, info, values);
+            return;
+        }
         Connection conn = createWriteSQLConnection();
         try {
-            insert(conn, values);
+            insert(conn, info, values);
         } finally {
             closeSQLConnection(conn);
         }
@@ -366,121 +373,123 @@ public final class DataJDBCSource implements DataSource {
      */
     @Override
     public <T> void insert(final DataConnection conn, T... values) {
-        insert((Connection) conn.getConnection(), values);
+        if (values.length == 0) return;
+        final EntityInfo<T> info = loadEntityInfo((Class<T>) values[0].getClass());
+        insert((Connection) conn.getConnection(), info, values);
     }
 
-    private <T> void insert(final Connection conn, T... values) {
+    private <T> void insert(final Connection conn, final EntityInfo<T> info, T... values) {
         if (values.length == 0) return;
         try {
-            final Class<T> clazz = (Class<T>) values[0].getClass();
-            final EntityInfo<T> info = loadEntityInfo(clazz);
             final EntityCache<T> cache = info.getCache();
-            final String sql = info.insertSQL;
-            if (debug.get()) logger.finest(clazz.getSimpleName() + " insert sql=" + sql);
-            final PreparedStatement prestmt = info.autoGenerated
-                    ? conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS) : conn.prepareStatement(sql);
-            final Class primaryType = info.getPrimary().type();
-            final Attribute primary = info.getPrimary();
-            final boolean distributed = info.distributed;
-            Attribute<T, Serializable>[] attrs = info.insertAttributes;
-            String[] sqls = null;
-            if (distributed && !info.initedPrimaryValue && primaryType.isPrimitive()) {
-                synchronized (info) {
-                    if (!info.initedPrimaryValue) {
-                        Statement stmt = conn.createStatement();
-                        ResultSet rs = stmt.executeQuery("SELECT MAX(" + info.getPrimarySQLColumn() + ") FROM " + info.getTable());
-                        if (rs.next()) {
-                            if (primaryType == int.class) {
-                                int v = rs.getInt(1) / info.allocationSize;
-                                if (v > info.primaryValue.get()) info.primaryValue.set(v);
-                            } else {
-                                long v = rs.getLong(1) / info.allocationSize;
-                                if (v > info.primaryValue.get()) info.primaryValue.set(v);
-                            }
-                        }
-                        rs.close();
-                        stmt.close();
-                        if (info.distributeTables != null) {
-                            for (final Class t : info.distributeTables) {
-                                EntityInfo<T> infox = loadEntityInfo(t);
-                                stmt = conn.createStatement();
-                                rs = stmt.executeQuery("SELECT MAX(" + info.getPrimarySQLColumn() + ") FROM " + infox.getTable()); // 必须是同一字段名
-                                if (rs.next()) {
-                                    if (primaryType == int.class) {
-                                        int v = rs.getInt(1) / info.allocationSize;
-                                        if (v > info.primaryValue.get()) info.primaryValue.set(v);
-                                    } else {
-                                        long v = rs.getLong(1) / info.allocationSize;
-                                        if (v > info.primaryValue.get()) info.primaryValue.set(v);
-                                    }
+            if (!info.isVirtualEntity()) {
+                final String sql = info.insertSQL;
+                if (debug.get()) logger.finest(info.getType().getSimpleName() + " insert sql=" + sql);
+                final PreparedStatement prestmt = info.autoGenerated
+                        ? conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS) : conn.prepareStatement(sql);
+                final Class primaryType = info.getPrimary().type();
+                final Attribute primary = info.getPrimary();
+                final boolean distributed = info.distributed;
+                Attribute<T, Serializable>[] attrs = info.insertAttributes;
+                String[] sqls = null;
+                if (distributed && !info.initedPrimaryValue && primaryType.isPrimitive()) {
+                    synchronized (info) {
+                        if (!info.initedPrimaryValue) {
+                            Statement stmt = conn.createStatement();
+                            ResultSet rs = stmt.executeQuery("SELECT MAX(" + info.getPrimarySQLColumn() + ") FROM " + info.getTable());
+                            if (rs.next()) {
+                                if (primaryType == int.class) {
+                                    int v = rs.getInt(1) / info.allocationSize;
+                                    if (v > info.primaryValue.get()) info.primaryValue.set(v);
+                                } else {
+                                    long v = rs.getLong(1) / info.allocationSize;
+                                    if (v > info.primaryValue.get()) info.primaryValue.set(v);
                                 }
-                                rs.close();
-                                stmt.close();
+                            }
+                            rs.close();
+                            stmt.close();
+                            if (info.distributeTables != null) {
+                                for (final Class t : info.distributeTables) {
+                                    EntityInfo<T> infox = loadEntityInfo(t);
+                                    stmt = conn.createStatement();
+                                    rs = stmt.executeQuery("SELECT MAX(" + info.getPrimarySQLColumn() + ") FROM " + infox.getTable()); // 必须是同一字段名
+                                    if (rs.next()) {
+                                        if (primaryType == int.class) {
+                                            int v = rs.getInt(1) / info.allocationSize;
+                                            if (v > info.primaryValue.get()) info.primaryValue.set(v);
+                                        } else {
+                                            long v = rs.getLong(1) / info.allocationSize;
+                                            if (v > info.primaryValue.get()) info.primaryValue.set(v);
+                                        }
+                                    }
+                                    rs.close();
+                                    stmt.close();
+                                }
+                            }
+                            info.initedPrimaryValue = true;
+                        }
+                    }
+                }
+                if (writeListener == null) {
+                    for (final T value : values) {
+                        int i = 0;
+                        if (distributed) info.createPrimaryValue(value);
+                        for (Attribute<T, Serializable> attr : attrs) {
+                            prestmt.setObject(++i, attr.get(value));
+                        }
+                        prestmt.addBatch();
+                    }
+                } else {
+                    char[] sqlchars = sql.toCharArray();
+                    sqls = new String[values.length];
+                    String[] ps = new String[attrs.length];
+                    int index = 0;
+                    for (final T value : values) {
+                        int i = 0;
+                        if (distributed) info.createPrimaryValue(value);
+                        for (Attribute<T, Serializable> attr : attrs) {
+                            Object a = attr.get(value);
+                            ps[i] = formatToString(a);
+                            prestmt.setObject(++i, a);
+                        }
+                        prestmt.addBatch();
+                        //-----------------------------
+                        StringBuilder sb = new StringBuilder(128);
+                        i = 0;
+                        for (char ch : sqlchars) {
+                            if (ch == '?') {
+                                sb.append(ps[i++]);
+                            } else {
+                                sb.append(ch);
                             }
                         }
-                        info.initedPrimaryValue = true;
+                        sqls[index++] = sb.toString();
                     }
                 }
-            }
-            if (writeListener == null) {
-                for (final T value : values) {
-                    int i = 0;
-                    if (distributed) info.createPrimaryValue(value);
-                    for (Attribute<T, Serializable> attr : attrs) {
-                        prestmt.setObject(++i, attr.get(value));
-                    }
-                    prestmt.addBatch();
-                }
-            } else {
-                char[] sqlchars = sql.toCharArray();
-                sqls = new String[values.length];
-                String[] ps = new String[attrs.length];
-                int index = 0;
-                for (final T value : values) {
-                    int i = 0;
-                    if (distributed) info.createPrimaryValue(value);
-                    for (Attribute<T, Serializable> attr : attrs) {
-                        Object a = attr.get(value);
-                        ps[i] = formatToString(a);
-                        prestmt.setObject(++i, a);
-                    }
-                    prestmt.addBatch();
-                    //-----------------------------
-                    StringBuilder sb = new StringBuilder(128);
-                    i = 0;
-                    for (char ch : sqlchars) {
-                        if (ch == '?') {
-                            sb.append(ps[i++]);
+                prestmt.executeBatch();
+                if (writeListener != null) writeListener.insert(name, sqls);
+                if (info.autoGenerated) {
+                    ResultSet set = prestmt.getGeneratedKeys();
+                    int i = -1;
+                    while (set.next()) {
+                        if (primaryType == int.class) {
+                            primary.set(values[++i], set.getInt(1));
+                        } else if (primaryType == long.class) {
+                            primary.set(values[++i], set.getLong(1));
                         } else {
-                            sb.append(ch);
+                            primary.set(values[++i], set.getObject(1));
                         }
                     }
-                    sqls[index++] = sb.toString();
+                    set.close();
                 }
-            }
-            prestmt.executeBatch();
-            if (writeListener != null) writeListener.insert(name, sqls);
-            if (info.autoGenerated) {
-                ResultSet set = prestmt.getGeneratedKeys();
-                int i = -1;
-                while (set.next()) {
-                    if (primaryType == int.class) {
-                        primary.set(values[++i], set.getInt(1));
-                    } else if (primaryType == long.class) {
-                        primary.set(values[++i], set.getLong(1));
-                    } else {
-                        primary.set(values[++i], set.getObject(1));
-                    }
-                }
-                set.close();
+                prestmt.close();
             }
             if (cache != null) {
                 for (final T value : values) {
                     cache.insert(value);
                 }
-                if (cacheListener != null) cacheListener.insert(name, clazz, values);
+                if (cacheListener != null) cacheListener.insert(name, info.getType(), values);
             }
-            prestmt.close();
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -505,9 +514,15 @@ public final class DataJDBCSource implements DataSource {
      */
     @Override
     public <T> void delete(T... values) {
+        if (values.length == 0) return;
+        final EntityInfo<T> info = loadEntityInfo((Class<T>) values[0].getClass());
+        if (info.isVirtualEntity()) {
+            delete(null, info, values);
+            return;
+        }
         Connection conn = createWriteSQLConnection();
         try {
-            delete(conn, values);
+            delete(conn, info, values);
         } finally {
             closeSQLConnection(conn);
         }
@@ -515,27 +530,32 @@ public final class DataJDBCSource implements DataSource {
 
     @Override
     public <T> void delete(final DataConnection conn, T... values) {
-        delete((Connection) conn.getConnection(), values);
+        if (values.length == 0) return;
+        final EntityInfo<T> info = loadEntityInfo((Class<T>) values[0].getClass());
+        delete((Connection) conn.getConnection(), info, values);
     }
 
-    private <T> void delete(final Connection conn, T... values) {
+    private <T> void delete(final Connection conn, final EntityInfo<T> info, T... values) {
         if (values.length == 0) return;
-        final Class clazz = values[0].getClass();
-        final EntityInfo<T> info = loadEntityInfo(clazz);
         final Attribute primary = info.getPrimary();
         Serializable[] ids = new Serializable[values.length];
         int i = 0;
         for (final T value : values) {
             ids[i++] = (Serializable) primary.get(value);
         }
-        delete(conn, clazz, ids);
+        delete(conn, info, ids);
     }
 
     @Override
     public <T> void delete(Class<T> clazz, Serializable... ids) {
+        final EntityInfo<T> info = loadEntityInfo(clazz);
+        if (info.isVirtualEntity()) {
+            delete(null, info, ids);
+            return;
+        }
         Connection conn = createWriteSQLConnection();
         try {
-            delete(conn, clazz, ids);
+            delete(conn, info, ids);
         } finally {
             closeSQLConnection(conn);
         }
@@ -543,27 +563,28 @@ public final class DataJDBCSource implements DataSource {
 
     @Override
     public <T> void delete(final DataConnection conn, Class<T> clazz, Serializable... ids) {
-        delete((Connection) conn.getConnection(), clazz, ids);
+        delete((Connection) conn.getConnection(), loadEntityInfo(clazz), ids);
     }
 
-    private <T> void delete(final Connection conn, Class<T> clazz, Serializable... keys) {
+    private <T> void delete(final Connection conn, final EntityInfo<T> info, Serializable... keys) {
         if (keys.length == 0) return;
         try {
-            final EntityInfo<T> info = loadEntityInfo(clazz);
-            String sql = "DELETE FROM " + info.getTable() + " WHERE " + info.getPrimarySQLColumn()
-                    + " IN " + formatToString(keys);
-            if (debug.get()) logger.finest(clazz.getSimpleName() + " delete sql=" + sql);
-            final Statement stmt = conn.createStatement();
-            stmt.execute(sql);
-            stmt.close();
-            if (writeListener != null) writeListener.delete(name, sql);
+            if (!info.isVirtualEntity()) {
+                String sql = "DELETE FROM " + info.getTable() + " WHERE " + info.getPrimarySQLColumn()
+                        + " IN " + formatToString(keys);
+                if (debug.get()) logger.finest(info.getType().getSimpleName() + " delete sql=" + sql);
+                final Statement stmt = conn.createStatement();
+                stmt.execute(sql);
+                stmt.close();
+                if (writeListener != null) writeListener.delete(name, sql);
+            }
             //------------------------------------
             final EntityCache<T> cache = info.getCache();
             if (cache == null) return;
             final Attribute<T, Serializable> attr = info.getPrimary();
             final Serializable[] keys2 = keys;
             Serializable[] ids = cache.delete((T t) -> Arrays.binarySearch(keys2, attr.get(t)) >= 0);
-            if (cacheListener != null) cacheListener.delete(name, clazz, ids);
+            if (cacheListener != null) cacheListener.delete(name, info.getType(), ids);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -571,9 +592,14 @@ public final class DataJDBCSource implements DataSource {
 
     @Override
     public <T> void delete(Class<T> clazz, FilterNode node) {
+        final EntityInfo<T> info = loadEntityInfo(clazz);
+        if (info.isVirtualEntity()) {
+            delete(null, info, node);
+            return;
+        }
         Connection conn = createWriteSQLConnection();
         try {
-            delete(conn, clazz, node);
+            delete(conn, info, node);
         } finally {
             closeSQLConnection(conn);
         }
@@ -581,23 +607,24 @@ public final class DataJDBCSource implements DataSource {
 
     @Override
     public <T> void delete(final DataConnection conn, Class<T> clazz, FilterNode node) {
-        delete((Connection) conn.getConnection(), clazz, node);
+        delete((Connection) conn.getConnection(), loadEntityInfo(clazz), node);
     }
 
-    private <T> void delete(final Connection conn, Class<T> clazz, FilterNode node) {
+    private <T> void delete(final Connection conn, final EntityInfo<T> info, FilterNode node) {
         try {
-            final EntityInfo<T> info = loadEntityInfo(clazz);
-            String sql = "DELETE FROM " + info.getTable() + " a" + node.createFilterSQLExpress(info, null);
-            if (debug.get()) logger.finest(clazz.getSimpleName() + " delete sql=" + sql);
-            final Statement stmt = conn.createStatement();
-            stmt.execute(sql);
-            stmt.close();
-            if (writeListener != null) writeListener.delete(name, sql);
+            if (!info.isVirtualEntity()) {
+                String sql = "DELETE FROM " + info.getTable() + " a" + node.createFilterSQLExpress(info, null);
+                if (debug.get()) logger.finest(info.getType().getSimpleName() + " delete sql=" + sql);
+                final Statement stmt = conn.createStatement();
+                stmt.execute(sql);
+                stmt.close();
+                if (writeListener != null) writeListener.delete(name, sql);
+            }
             //------------------------------------
             final EntityCache<T> cache = info.getCache();
             if (cache == null) return;
             Serializable[] ids = cache.delete(node.createFilterPredicate(info, null));
-            if (cacheListener != null) cacheListener.delete(name, clazz, ids);
+            if (cacheListener != null) cacheListener.delete(name, info.getType(), ids);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -622,9 +649,15 @@ public final class DataJDBCSource implements DataSource {
      */
     @Override
     public <T> void update(T... values) {
+        if (values.length == 0) return;
+        final EntityInfo<T> info = loadEntityInfo((Class<T>) values[0].getClass());
+        if (info.isVirtualEntity()) {
+            update(null, info, values);
+            return;
+        }
         Connection conn = createWriteSQLConnection();
         try {
-            update(conn, values);
+            update(conn, info, values);
         } finally {
             closeSQLConnection(conn);
         }
@@ -632,57 +665,60 @@ public final class DataJDBCSource implements DataSource {
 
     @Override
     public <T> void update(final DataConnection conn, T... values) {
-        update((Connection) conn.getConnection(), values);
+        if (values.length == 0) return;
+        final EntityInfo<T> info = loadEntityInfo((Class<T>) values[0].getClass());
+        update((Connection) conn.getConnection(), info, values);
     }
 
-    private <T> void update(final Connection conn, T... values) {
+    private <T> void update(final Connection conn, final EntityInfo<T> info, T... values) {
         try {
-            Class clazz = values[0].getClass();
-            final EntityInfo<T> info = loadEntityInfo(clazz);
-            if (debug.get()) logger.finest(clazz.getSimpleName() + " update sql=" + info.updateSQL);
-            final Attribute<T, Serializable> primary = info.getPrimary();
-            final PreparedStatement prestmt = conn.prepareStatement(info.updateSQL);
-            Attribute<T, Serializable>[] attrs = info.updateAttributes;
-            String[] sqls = null;
-            if (writeListener == null) {
-                for (final T value : values) {
-                    int i = 0;
-                    for (Attribute<T, Serializable> attr : attrs) {
-                        prestmt.setObject(++i, attr.get(value));
-                    }
-                    prestmt.setObject(++i, primary.get(value));
-                    prestmt.addBatch();
-                }
-            } else {
-                char[] sqlchars = info.updateSQL.toCharArray();
-                sqls = new String[values.length];
-                String[] ps = new String[attrs.length];
-                int index = 0;
-                for (final T value : values) {
-                    int i = 0;
-                    for (Attribute<T, Serializable> attr : attrs) {
-                        Object a = attr.get(value);
-                        ps[i] = formatToString(a);
-                        prestmt.setObject(++i, a);
-                    }
-                    prestmt.setObject(++i, primary.get(value));
-                    prestmt.addBatch();
-                    //-----------------------------
-                    StringBuilder sb = new StringBuilder(128);
-                    i = 0;
-                    for (char ch : sqlchars) {
-                        if (ch == '?') {
-                            sb.append(ps[i++]);
-                        } else {
-                            sb.append(ch);
+            Class clazz = info.getType();
+            if (!info.isVirtualEntity()) {
+                if (debug.get()) logger.finest(clazz.getSimpleName() + " update sql=" + info.updateSQL);
+                final Attribute<T, Serializable> primary = info.getPrimary();
+                final PreparedStatement prestmt = conn.prepareStatement(info.updateSQL);
+                Attribute<T, Serializable>[] attrs = info.updateAttributes;
+                String[] sqls = null;
+                if (writeListener == null) {
+                    for (final T value : values) {
+                        int i = 0;
+                        for (Attribute<T, Serializable> attr : attrs) {
+                            prestmt.setObject(++i, attr.get(value));
                         }
+                        prestmt.setObject(++i, primary.get(value));
+                        prestmt.addBatch();
                     }
-                    sqls[index++] = sb.toString();
+                } else {
+                    char[] sqlchars = info.updateSQL.toCharArray();
+                    sqls = new String[values.length];
+                    String[] ps = new String[attrs.length];
+                    int index = 0;
+                    for (final T value : values) {
+                        int i = 0;
+                        for (Attribute<T, Serializable> attr : attrs) {
+                            Object a = attr.get(value);
+                            ps[i] = formatToString(a);
+                            prestmt.setObject(++i, a);
+                        }
+                        prestmt.setObject(++i, primary.get(value));
+                        prestmt.addBatch();
+                        //-----------------------------
+                        StringBuilder sb = new StringBuilder(128);
+                        i = 0;
+                        for (char ch : sqlchars) {
+                            if (ch == '?') {
+                                sb.append(ps[i++]);
+                            } else {
+                                sb.append(ch);
+                            }
+                        }
+                        sqls[index++] = sb.toString();
+                    }
                 }
+                prestmt.executeBatch();
+                prestmt.close();
+                if (writeListener != null) writeListener.update(name, sqls);
             }
-            prestmt.executeBatch();
-            prestmt.close();
-            if (writeListener != null) writeListener.update(name, sqls);
             //---------------------------------------------------
             final EntityCache<T> cache = info.getCache();
             if (cache == null) return;
@@ -706,9 +742,14 @@ public final class DataJDBCSource implements DataSource {
      */
     @Override
     public <T> void updateColumn(Class<T> clazz, Serializable id, String column, Serializable value) {
+        final EntityInfo<T> info = loadEntityInfo(clazz);
+        if (info.isVirtualEntity()) {
+            updateColumn(null, info, id, column, value);
+            return;
+        }
         Connection conn = createWriteSQLConnection();
         try {
-            updateColumn(conn, clazz, id, column, value);
+            updateColumn(conn, info, id, column, value);
         } finally {
             closeSQLConnection(conn);
         }
@@ -716,24 +757,25 @@ public final class DataJDBCSource implements DataSource {
 
     @Override
     public <T> void updateColumn(DataConnection conn, Class<T> clazz, Serializable id, String column, Serializable value) {
-        updateColumn((Connection) conn.getConnection(), clazz, id, column, value);
+        updateColumn((Connection) conn.getConnection(), loadEntityInfo(clazz), id, column, value);
     }
 
-    private <T> void updateColumn(Connection conn, Class<T> clazz, Serializable id, String column, Serializable value) {
+    private <T> void updateColumn(Connection conn, final EntityInfo<T> info, Serializable id, String column, Serializable value) {
         try {
-            final EntityInfo<T> info = loadEntityInfo(clazz);
-            String sql = "UPDATE " + info.getTable() + " SET " + info.getSQLColumn(column) + " = "
-                    + formatToString(value) + " WHERE " + info.getPrimarySQLColumn() + " = " + formatToString(id);
-            if (debug.get()) logger.finest(clazz.getSimpleName() + " update sql=" + sql);
-            final Statement stmt = conn.createStatement();
-            stmt.execute(sql);
-            stmt.close();
-            if (writeListener != null) writeListener.update(name, sql);
+            if (!info.isVirtualEntity()) {
+                String sql = "UPDATE " + info.getTable() + " SET " + info.getSQLColumn(column) + " = "
+                        + formatToString(value) + " WHERE " + info.getPrimarySQLColumn() + " = " + formatToString(id);
+                if (debug.get()) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
+                final Statement stmt = conn.createStatement();
+                stmt.execute(sql);
+                stmt.close();
+                if (writeListener != null) writeListener.update(name, sql);
+            }
             //---------------------------------------------------
             final EntityCache<T> cache = info.getCache();
             if (cache == null) return;
             T rs = cache.update(id, (Attribute<T, Serializable>) info.getAttribute(column), value);
-            if (cacheListener != null) cacheListener.update(name, clazz, rs);
+            if (cacheListener != null) cacheListener.update(name, info.getType(), rs);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         } finally {
@@ -752,9 +794,14 @@ public final class DataJDBCSource implements DataSource {
      */
     @Override
     public <T> void updateColumnIncrement(Class<T> clazz, Serializable id, String column, long incvalue) {
+        final EntityInfo<T> info = loadEntityInfo(clazz);
+        if (info.isVirtualEntity()) {
+            updateColumnIncrement(null, info, id, column, incvalue);
+            return;
+        }
         Connection conn = createWriteSQLConnection();
         try {
-            updateColumnIncrement(conn, clazz, id, column, incvalue);
+            updateColumnIncrement(conn, info, id, column, incvalue);
         } finally {
             closeSQLConnection(conn);
         }
@@ -762,26 +809,27 @@ public final class DataJDBCSource implements DataSource {
 
     @Override
     public <T> void updateColumnIncrement(DataConnection conn, Class<T> clazz, Serializable id, String column, long incvalue) {
-        updateColumnIncrement((Connection) conn.getConnection(), clazz, id, column, incvalue);
+        updateColumnIncrement((Connection) conn.getConnection(), loadEntityInfo(clazz), id, column, incvalue);
     }
 
-    private <T> void updateColumnIncrement(Connection conn, Class<T> clazz, Serializable id, String column, long incvalue) {
+    private <T> void updateColumnIncrement(Connection conn, final EntityInfo<T> info, Serializable id, String column, long incvalue) {
         try {
-            final EntityInfo<T> info = loadEntityInfo(clazz);
-            String col = info.getSQLColumn(column);
-            String sql = "UPDATE " + info.getTable() + " SET " + col + " = " + col + " + (" + incvalue
-                    + ") WHERE " + info.getPrimarySQLColumn() + " = " + formatToString(id);
-            if (debug.get()) logger.finest(clazz.getSimpleName() + " update sql=" + sql);
-            final Statement stmt = conn.createStatement();
-            stmt.execute(sql);
-            stmt.close();
-            if (writeListener != null) writeListener.update(name, sql);
+            if (!info.isVirtualEntity()) {
+                String col = info.getSQLColumn(column);
+                String sql = "UPDATE " + info.getTable() + " SET " + col + " = " + col + " + (" + incvalue
+                        + ") WHERE " + info.getPrimarySQLColumn() + " = " + formatToString(id);
+                if (debug.get()) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
+                final Statement stmt = conn.createStatement();
+                stmt.execute(sql);
+                stmt.close();
+                if (writeListener != null) writeListener.update(name, sql);
+            }
             //---------------------------------------------------
             final EntityCache<T> cache = info.getCache();
             if (cache == null) return;
             Attribute<T, Serializable> attr = info.getAttribute(column);
             T value = cache.updateColumnIncrement(id, attr, incvalue);
-            if (value != null && cacheListener != null) cacheListener.update(name, clazz, value);
+            if (value != null && cacheListener != null) cacheListener.update(name, info.getType(), value);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         } finally {
@@ -798,9 +846,14 @@ public final class DataJDBCSource implements DataSource {
      */
     @Override
     public <T> void updateColumns(final T value, final String... columns) {
+        final EntityInfo<T> info = loadEntityInfo((Class<T>) value.getClass());
+        if (info.isVirtualEntity()) {
+            updateColumns(null, info, value, columns);
+            return;
+        }
         Connection conn = createWriteSQLConnection();
         try {
-            updateColumns(conn, value, columns);
+            updateColumns(conn, info, value, columns);
         } finally {
             closeSQLConnection(conn);
         }
@@ -808,31 +861,35 @@ public final class DataJDBCSource implements DataSource {
 
     @Override
     public <T> void updateColumns(final DataConnection conn, final T value, final String... columns) {
-        updateColumns((Connection) conn.getConnection(), value, columns);
+        updateColumns((Connection) conn.getConnection(), loadEntityInfo((Class<T>) value.getClass()), value, columns);
     }
 
-    private <T> void updateColumns(final Connection conn, final T value, final String... columns) {
+    private <T> void updateColumns(final Connection conn, final EntityInfo<T> info, final T value, final String... columns) {
         if (value == null || columns.length < 1) return;
         try {
             final Class<T> clazz = (Class<T>) value.getClass();
-            final EntityInfo<T> info = loadEntityInfo(clazz);
             StringBuilder setsql = new StringBuilder();
             final Serializable id = info.getPrimary().get(value);
             final List<Attribute<T, Serializable>> attrs = new ArrayList<>();
+            final boolean virtual = info.isVirtualEntity();
             for (String col : columns) {
                 Attribute<T, Serializable> attr = info.getUpdateAttribute(col);
                 if (attr == null) continue;
-                if (setsql.length() > 0) setsql.append(',');
-                setsql.append(info.getSQLColumn(col)).append(" = ").append(formatToString(attr.get(value)));
                 attrs.add(attr);
+                if (!virtual) {
+                    if (setsql.length() > 0) setsql.append(',');
+                    setsql.append(info.getSQLColumn(col)).append(" = ").append(formatToString(attr.get(value)));
+                }
             }
-            String sql = "UPDATE " + info.getTable() + " SET " + setsql
-                    + " WHERE " + info.getPrimarySQLColumn() + " = " + formatToString(id);
-            if (debug.get()) logger.finest(value.getClass().getSimpleName() + ": " + sql);
-            final Statement stmt = conn.createStatement();
-            stmt.execute(sql);
-            stmt.close();
-            if (writeListener != null) writeListener.update(name, sql);
+            if (!virtual) {
+                String sql = "UPDATE " + info.getTable() + " SET " + setsql
+                        + " WHERE " + info.getPrimarySQLColumn() + " = " + formatToString(id);
+                if (debug.get()) logger.finest(value.getClass().getSimpleName() + ": " + sql);
+                final Statement stmt = conn.createStatement();
+                stmt.execute(sql);
+                stmt.close();
+                if (writeListener != null) writeListener.update(name, sql);
+            }
             //---------------------------------------------------
             final EntityCache<T> cache = info.getCache();
             if (cache == null) return;
@@ -887,7 +944,7 @@ public final class DataJDBCSource implements DataSource {
             final EntityInfo<T> info = loadEntityInfo(entityClass);
             if (node == null && bean != null) node = loadFilterBeanNode(bean.getClass());
             final EntityCache<T> cache = info.getCache();
-            if (cache != null && cache.isFullLoaded()) {
+            if (cache != null && (info.isVirtualEntity() || cache.isFullLoaded())) {
                 Predicate<T> filter = node == null ? null : node.createFilterPredicate(info, bean);
                 if (node == null || node.isJoinAllCached()) {
                     return cache.getNumberResult(reckon, column == null ? null : info.getAttribute(column), filter);
@@ -934,7 +991,7 @@ public final class DataJDBCSource implements DataSource {
             final EntityInfo info = loadEntityInfo(entityClass);
             if (node == null && bean != null) node = loadFilterBeanNode(bean.getClass());
             final EntityCache cache = info.getCache();
-            if (cache != null && cache.isFullLoaded()) {
+            if (cache != null && (info.isVirtualEntity() || cache.isFullLoaded())) {
                 Predicate filter = node == null ? null : node.createFilterPredicate(info, bean);
                 if (node == null || node.isJoinAllCached()) {
                     return cache.getMapResult(info.getAttribute(keyColumn), reckon, reckonColumn == null ? null : info.getAttribute(reckonColumn), filter);
@@ -1049,6 +1106,7 @@ public final class DataJDBCSource implements DataSource {
     /**
      * 根据过滤对象FilterBean查询对象集合
      *
+     * @param <K>
      * @param <T>
      * @param clazz
      * @param bean
@@ -1219,7 +1277,7 @@ public final class DataJDBCSource implements DataSource {
             Predicate<T> filter = node == null ? null : node.createFilterPredicate(info, bean);
             if (node == null || node.isJoinAllCached()) {
                 Sheet<T> sheet = cache.querySheet(selects, filter, flipper, FilterNode.createFilterComparator(info, flipper));
-                if (!sheet.isEmpty() || cache.isFullLoaded()) return sheet;
+                if (!sheet.isEmpty() || info.isVirtualEntity() || cache.isFullLoaded()) return sheet;
             }
         }
         final Connection conn = createReadSQLConnection();

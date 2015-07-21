@@ -5,7 +5,7 @@
  */
 package com.wentch.redkale.source;
 
-import static com.wentch.redkale.source.DataJDBCSource.*;
+import static com.wentch.redkale.source.DataDefaultSource.*;
 import java.io.*;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Method;
@@ -40,7 +40,7 @@ public class JDBCPoolSource {
 
     private final ConnectionEventListener listener;
 
-    private final DataJDBCSource dataSource;
+    private final DataDefaultSource dataSource;
 
     private final String stype; // "" 或 "read"  或 "write"
 
@@ -52,7 +52,7 @@ public class JDBCPoolSource {
 
     private String password;
 
-    public JDBCPoolSource(DataJDBCSource source, String stype, Properties prop) {
+    public JDBCPoolSource(DataDefaultSource source, String stype, Properties prop) {
         this.dataSource = source;
         this.stype = stype;
         this.source = createDataSource(prop);

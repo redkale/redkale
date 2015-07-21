@@ -180,7 +180,7 @@ public final class Application {
 
         final File root = new File(System.getProperty(RESNAME_HOME));
         File persist = new File(root, "conf/persistence.xml");
-        if (persist.isFile()) System.setProperty(DataJDBCSource.DATASOURCE_CONFPATH, persist.getCanonicalPath());
+        if (persist.isFile()) System.setProperty(DataDefaultSource.DATASOURCE_CONFPATH, persist.getCanonicalPath());
         logger.log(Level.INFO, RESNAME_HOME + "=" + root.getCanonicalPath() + "\r\n" + RESNAME_ADDR + "=" + this.localAddress.getHostAddress());
         String lib = config.getValue("lib", "").trim().replace("${APP_HOME}", root.getCanonicalPath());
         lib = lib.isEmpty() ? (root.getCanonicalPath() + "/conf") : (lib + ";" + root.getCanonicalPath() + "/conf");

@@ -31,7 +31,7 @@ public abstract class DataSourceFactory {
 //        }
 //        if (jpa) return new DataJPASource(unitName);
         try {
-            return new DataJDBCSource(unitName);
+            return new DataDefaultSource(unitName);
         } catch (IOException ex) {
             logger.log(Level.WARNING, "cannot create DataSource (" + unitName + ")", ex);
             return null;

@@ -133,7 +133,7 @@ public class DataCacheListenerService implements DataCacheListener, Service {
 
     public final <T> void onSendInsert(String group, boolean ignoreRemote, String sourceName, Class<T> clazz, T... entitys) {
         if (finest) logger.finest(DataSource.class.getSimpleName() + "(" + this.localNodeName + "," + sourceName + ") onSendInsert " + Arrays.toString(entitys));
-        ((DataJDBCSource) sourcesmap.get(sourceName)).insertCache(entitys);
+        ((DataDefaultSource) sourcesmap.get(sourceName)).insertCache(entitys);
         if (!this.localGroupName.equals(group)) sendInsert(this.localGroupName, true, sourceName, clazz, entitys); //不是同一机房来的资源需要同步到其他同机房的节点上
     }
 
@@ -213,7 +213,7 @@ public class DataCacheListenerService implements DataCacheListener, Service {
 
     public final <T> void onSendUpdate(String group, boolean ignoreRemote, String sourceName, Class<T> clazz, T... entitys) {
         if (finest) logger.finest(DataSource.class.getSimpleName() + "(" + group + "--" + this.localNodeName + "," + sourceName + ") onSendUpdate " + Arrays.toString(entitys));
-        ((DataJDBCSource) sourcesmap.get(sourceName)).updateCache(clazz, entitys);
+        ((DataDefaultSource) sourcesmap.get(sourceName)).updateCache(clazz, entitys);
         if (!this.localGroupName.equals(group)) sendUpdate(this.localGroupName, true, sourceName, clazz, entitys); //不是同一机房来的资源需要同步到其他同机房的节点上
     }
 
@@ -293,7 +293,7 @@ public class DataCacheListenerService implements DataCacheListener, Service {
 
     public final <T> void onSendDelete(String group, boolean ignoreRemote, String sourceName, Class<T> clazz, Serializable... ids) {
         if (finest) logger.finest(DataSource.class.getSimpleName() + "(" + group + "--" + this.localNodeName + "," + sourceName + ") onSendDelete " + clazz.getName() + " " + Arrays.toString(ids));
-        ((DataJDBCSource) sourcesmap.get(sourceName)).deleteCache(clazz, ids);
+        ((DataDefaultSource) sourcesmap.get(sourceName)).deleteCache(clazz, ids);
         if (!this.localGroupName.equals(group)) sendDelete(this.localGroupName, true, sourceName, clazz, ids); //不是同一机房来的资源需要同步到其他同机房的节点上
     }
 }

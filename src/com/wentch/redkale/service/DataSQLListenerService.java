@@ -7,7 +7,7 @@ package com.wentch.redkale.service;
 
 import com.wentch.redkale.source.DataSQLListener;
 import com.wentch.redkale.source.DataSource;
-import com.wentch.redkale.source.DataJDBCSource;
+import com.wentch.redkale.source.DataDefaultSource;
 import com.wentch.redkale.util.AnyValue;
 import com.wentch.redkale.util.AutoLoad;
 import java.io.*;
@@ -172,7 +172,7 @@ public class DataSQLListenerService implements DataSQLListener, Service {
     }
 
     public final void onSend(String sourceName, String... sqls) {
-        ((DataJDBCSource) sourcemaps.get(sourceName)).execute(sqls);
+        ((DataDefaultSource) sourcemaps.get(sourceName)).execute(sqls);
     }
 
 }
