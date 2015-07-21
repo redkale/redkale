@@ -139,7 +139,7 @@ public final class HttpRequest extends Request {
                     break;
                 case "Connection":
                     this.connection = value;
-                    this.setKeepAlive("Keep-Alive".equalsIgnoreCase(value));
+                    this.setKeepAlive(!"close".equalsIgnoreCase(value));
                     break;
                 default:
                     header.addValue(name, value);
