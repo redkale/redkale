@@ -181,6 +181,10 @@ public abstract class Factory<R extends Reader, W extends Writer> {
         skipIgnores.add(type);
     }
 
+    public final boolean register(final Class type, String column, boolean ignore) {
+        return register(type, column, new ConvertColumnEntry(column, ignore));
+    }
+
     public final boolean register(final Class type, String column, ConvertColumnEntry entry) {
         if (type == null || column == null || entry == null) return false;
         try {
