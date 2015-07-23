@@ -14,6 +14,8 @@
         <!--
             远程client地址组资源.  注意:  remote的name值不能为LOCAL（不区分大小写）
             protocol： 值只能是UDP TCP， 默认UDP
+            clients:  连接池数， 默认: CPU核数*8
+            buffers: ByteBuffer对象池的大小， 默认: CPU核数*16
             group:  组名， 默认是空字符串， 通常不同机房使用不同的group值
         -->
         <remote name="myremote" protocol="UDP" group="">

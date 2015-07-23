@@ -23,17 +23,20 @@ public final class Transport {
 
     protected SocketAddress[] remoteAddres;
 
-    protected ObjectPool<ByteBuffer> bufferPool;
+    protected final ObjectPool<ByteBuffer> bufferPool;
 
-    protected String name;
+    protected final String name;
 
-    protected String protocol;
+    protected final String protocol;
+
+    private final boolean udp;
 
     protected final AsynchronousChannelGroup group;
 
-    public Transport(String name, String protocol, WatchFactory watch, int bufferPoolSize, SocketAddress... addresses) {
+    public Transport(String name, String protocol, int clients, int bufferPoolSize, WatchFactory watch, SocketAddress... addresses) {
         this.name = name;
         this.protocol = protocol;
+        this.udp = "UDP".equalsIgnoreCase(protocol);
         AsynchronousChannelGroup g = null;
         try {
             final AtomicInteger counter = new AtomicInteger();
@@ -72,17 +75,21 @@ public final class Transport {
         for (ByteBuffer buffer : buffers) offerBuffer(buffer);
     }
 
+    public boolean isUDP() {
+        return udp;
+    }
+
     public AsyncConnection pollConnection() {
         SocketAddress addr = remoteAddres[0];
         try {
-            if ("TCP".equalsIgnoreCase(protocol)) {
-                AsynchronousSocketChannel channel = AsynchronousSocketChannel.open(group);
-                channel.connect(addr).get(2, TimeUnit.SECONDS);
-                return AsyncConnection.create(channel, 0, 0);
-            } else {
+            if (udp) {
                 AsyncDatagramChannel channel = AsyncDatagramChannel.open(group);
                 channel.connect(addr);
                 return AsyncConnection.create(channel, addr, true, 0, 0);
+            } else {
+                AsynchronousSocketChannel channel = AsynchronousSocketChannel.open(group);
+                channel.connect(addr).get(2, TimeUnit.SECONDS);
+                return AsyncConnection.create(channel, 0, 0);
             }
         } catch (Exception ex) {
             throw new RuntimeException("transport address = " + addr, ex);

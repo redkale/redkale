@@ -479,7 +479,8 @@ public final class Application {
                     }
                     list.add(new SimpleEntry<>(name, addresses));
                 }
-                Transport transport = new Transport(name, protocol, watch, 100, addresses);
+                Transport transport = new Transport(name, protocol, conf.getIntValue("clients", Runtime.getRuntime().availableProcessors() * 8),
+                        conf.getIntValue("buffers:", Runtime.getRuntime().availableProcessors() * 16), watch, addresses);
                 factory.register(name, Transport.class, transport);
                 if (this.nodeName.isEmpty() && host.equals(addrs[0].getValue("addr"))) {
                     this.nodeName = name;
