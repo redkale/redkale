@@ -56,12 +56,14 @@ public final class HttpResourceServlet extends HttpServlet {
                             Path path = parent.resolve((Path) event.context());
                             final String uri = path.toString().substring(rootstr.length()).replace('\\', '/');
                             //logger.log(Level.FINEST, "file(" + uri + ") happen " + event.kind() + " event");
-                            Thread.sleep(1000L);  //等待update file完毕
                             if (event.kind() == ENTRY_DELETE) {
                                 files.remove(uri);
                             } else if (event.kind() == ENTRY_MODIFY) {
                                 FileEntry en = files.get(uri);
-                                if (en != null) en.update();
+                                if (en != null) {
+                                    Thread.sleep(5000L);  //等待update file完毕
+                                    en.update();
+                                }
                             }
                         } catch (Exception ex) {
                             logger.log(Level.FINE, event.context() + " occur erroneous", ex);
