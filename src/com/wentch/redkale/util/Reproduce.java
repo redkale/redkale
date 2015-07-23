@@ -5,6 +5,13 @@ import java.util.function.Predicate;
 import static jdk.internal.org.objectweb.asm.Opcodes.*;
 import jdk.internal.org.objectweb.asm.*;
 
+/**
+ * 该类提供对象拷贝， 两对象存在相同的getter、setter的字段值会被拷贝
+ * 
+ * @author zhangjx
+ * @param <D>
+ * @param <S> 
+ */
 public interface Reproduce<D, S> {
 
     public D copy(D dest, S src);
