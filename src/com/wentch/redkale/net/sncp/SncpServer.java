@@ -22,12 +22,12 @@ public final class SncpServer extends Server {
 
     private final List<ServiceEntry> services = new ArrayList<>();
 
-    public SncpServer() {
-        this(System.currentTimeMillis(), null);
+    public SncpServer(String protocol) {
+        this(System.currentTimeMillis(), protocol, null);
     }
 
-    public SncpServer(long serverStartTime, final WatchFactory watch) {
-        super(serverStartTime, "UDP", watch);
+    public SncpServer(long serverStartTime, String protocol, final WatchFactory watch) {
+        super(serverStartTime, protocol, watch);
     }
 
     public void addService(ServiceEntry entry) {

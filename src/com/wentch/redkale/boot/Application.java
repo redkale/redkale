@@ -358,11 +358,18 @@ public final class Application {
                     try {
                         //Thread ctd = Thread.currentThread();
                         //ctd.setContextClassLoader(new URLClassLoader(new URL[0], ctd.getContextClassLoader()));
+                        String protocol = entry.getValue("protocol", "");
+                        String subprotocol = "UDP";
+                        int pos = protocol.indexOf('.');
+                        if (pos > 0) {
+                            subprotocol = protocol.substring(pos + 1);
+                            protocol = protocol.substring(0, pos);
+                        }
                         NodeServer server = null;
-                        if ("HTTP".equalsIgnoreCase(entry.getValue("protocol", ""))) {
+                        if ("HTTP".equalsIgnoreCase(protocol)) {
                             server = new NodeHttpServer(Application.this, servicecdl, new HttpServer(startTime, watch));
-                        } else if ("SNCP".equalsIgnoreCase(entry.getValue("protocol", ""))) {
-                            server = new NodeSncpServer(Application.this, servicecdl, new SncpServer(startTime, watch));
+                        } else if ("SNCP".equalsIgnoreCase(protocol)) {
+                            server = new NodeSncpServer(Application.this, servicecdl, new SncpServer(startTime, subprotocol, watch));
                         }
                         if (server == null) {
                             logger.log(Level.SEVERE, "Not found Server Class for protocol({0})", entry.getValue("protocol"));
