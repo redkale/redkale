@@ -31,17 +31,17 @@ public class SncpTest {
 
     private static void runClient() throws Exception {
         ResourceFactory.root().register("", BsonConvert.class, BsonFactory.root().getConvert());
-        Transport transport = new Transport("testsncp", "UDP", WatchFactory.root(), 100, new InetSocketAddress("127.0.0.1", port));
+        Transport transport = new Transport("testsncp", "UDP", 32, 100, WatchFactory.root(), new InetSocketAddress("127.0.0.1", port));
         ResourceFactory.root().register("testsncp", Transport.class, transport);
         SncpTestService service = Sncp.createRemoteService(serviceName, SncpTestService.class, "testsncp");
         ResourceFactory.root().inject(service);
-        
+
         SncpTestBean bean = new SncpTestBean();
         StringBuilder sb = new StringBuilder();
-        for(int i =0; i < 2000; i++) {
+        for (int i = 0; i < 2000; i++) {
             sb.append("_").append(i).append("_0123456789");
         }
-        bean.setContent(sb.toString()); 
+        bean.setContent(sb.toString());
         System.out.println(service.queryResult(bean));
     }
 
