@@ -51,7 +51,7 @@ public class SncpTest {
             @Override
             public void run() {
                 try {
-                    SncpServer server = new SncpServer();
+                    SncpServer server = new SncpServer("UDP");
                     server.addService(new ServiceEntry(SncpTestService.class, new SncpTestService(), null, serviceName));
                     AnyValue.DefaultAnyValue conf = new AnyValue.DefaultAnyValue();
                     conf.addValue("host", "0.0.0.0");
