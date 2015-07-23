@@ -221,6 +221,7 @@ public final class HttpResponse extends Response<HttpRequest> {
     @Override
     public void finish(boolean kill, ByteBuffer buffer) {
         if (!this.headsended) {
+            this.contentLength = buffer == null ? 0 : buffer.remaining();
             ByteBuffer headbuf = createHeader();
             headbuf.flip();
             if (buffer == null) {
@@ -242,6 +243,11 @@ public final class HttpResponse extends Response<HttpRequest> {
     public void finish(boolean kill, ByteBuffer... buffers) {
         if (kill) refuseAlive();
         if (!this.headsended) {
+            long len = 0;
+            for (ByteBuffer buf : buffers) {
+                len += buf.remaining();
+            }
+            this.contentLength = len;
             ByteBuffer headbuf = createHeader();
             headbuf.flip();
             if (buffers == null) {
@@ -259,6 +265,7 @@ public final class HttpResponse extends Response<HttpRequest> {
 
     public <A> void sendBody(ByteBuffer buffer, A attachment, CompletionHandler<Integer, A> handler) {
         if (!this.headsended) {
+            if (this.contentLength < 0) this.contentLength = buffer == null ? 0 : buffer.remaining();
             ByteBuffer headbuf = createHeader();
             headbuf.flip();
             if (buffer == null) {
@@ -275,18 +282,19 @@ public final class HttpResponse extends Response<HttpRequest> {
         finishFile(file, null);
     }
 
-    protected <A> void finishFile(final File file, final ByteBuffer fileBody) throws IOException {
+    protected <A> void finishFile(final File file, ByteBuffer fileBody) throws IOException {
         if (file == null || !file.isFile() || !file.canRead()) {
             finish404();
             return;
         }
+        if (fileBody != null) fileBody = fileBody.duplicate().asReadOnlyBuffer();
         final long length = file.length();
         final String match = request.getHeader("If-None-Match");
         if (match != null && (file.lastModified() + "-" + length).equals(match)) {
             finish304();
             return;
         }
-        this.contentLength = file.length();
+        this.contentLength = fileBody == null ? file.length() : fileBody.remaining();
         this.contentType = MimeType.getByFilename(file.getName());
         if (this.contentType == null) this.contentType = "application/octet-stream";
         String range = request.getHeader("Range");
@@ -311,12 +319,11 @@ public final class HttpResponse extends Response<HttpRequest> {
         if (fileBody == null) {
             finishFile(hbuffer, file, start, len);
         } else {
-            final ByteBuffer body = fileBody.duplicate().asReadOnlyBuffer();
             if (start >= 0) {
-                body.position((int) start);
-                if (len > 0) body.limit((int) (body.position() + len));
+                fileBody.position((int) start);
+                if (len > 0) fileBody.limit((int) (fileBody.position() + len));
             }
-            super.finish(hbuffer, body);
+            super.finish(hbuffer, fileBody);
         }
     }
 
