@@ -112,7 +112,7 @@ public abstract class Server {
         this.transport = ProtocolServer.create(this.protocol, context);
         this.transport.open();
         transport.setOption(StandardSocketOptions.SO_REUSEADDR, true);
-        transport.setOption(StandardSocketOptions.SO_RCVBUF, 8 * 1024);
+        transport.setOption(StandardSocketOptions.SO_RCVBUF, 16 * 1024 + 8);
         transport.bind(address, backlog);
         logger.info(this.getClass().getSimpleName() + " listen: " + address);
         logger.info(this.getClass().getSimpleName() + " threads: " + threads + ", bufferPoolSize: " + bufferPoolSize + ", responsePoolSize: " + responsePoolSize);
