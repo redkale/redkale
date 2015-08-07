@@ -40,7 +40,7 @@ public final class InetAddressSimpledCoder<R extends Reader, W extends Writer> e
         }
     }
 
-    public static class InetSocketAddressSimpledCoder<R extends Reader, W extends Writer> extends SimpledCoder<R, W, InetSocketAddress> {
+    public final static class InetSocketAddressSimpledCoder<R extends Reader, W extends Writer> extends SimpledCoder<R, W, InetSocketAddress> {
 
         public static final InetSocketAddressSimpledCoder instance = new InetSocketAddressSimpledCoder();
 

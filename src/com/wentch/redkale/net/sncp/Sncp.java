@@ -10,14 +10,24 @@ import com.wentch.redkale.net.*;
 import com.wentch.redkale.net.sncp.SncpClient.SncpAction;
 import com.wentch.redkale.service.*;
 import com.wentch.redkale.util.*;
+import java.lang.reflect.*;
+import java.net.*;
+import java.util.*;
 import jdk.internal.org.objectweb.asm.*;
 import static jdk.internal.org.objectweb.asm.Opcodes.*;
+import jdk.internal.org.objectweb.asm.Type;
 
 /**
  *
  * @author zhangjx
  */
 public abstract class Sncp {
+
+    public static final String DEFAULT_PROTOCOL = "UDP";
+
+    static final String LOCALPREFIX = "_DynLocal";
+
+    static final String REMOTEPREFIX = "_DynRemote";
 
     private static final byte[] hashes = new byte[255];
 
@@ -40,9 +50,20 @@ public abstract class Sncp {
     private Sncp() {
     }
 
+    public static long nodeid(InetSocketAddress ip) {
+        byte[] bytes = ip.getAddress().getAddress();
+        return ((0L + ip.getPort()) << 32) | ((0xffffffff & bytes[0]) << 24) | ((0xffffff & bytes[1]) << 16) | ((0xffff & bytes[2]) << 8) | (0xff & bytes[3]);
+    }
+
     public static long hash(final Class clazz) {
         if (clazz == null) return Long.MIN_VALUE;
         long rs = hash(clazz.getSimpleName());
+        return (rs < Integer.MAX_VALUE) ? rs | 0xF00000000L : rs;
+    }
+
+    public static long hashClass(final String clazzName) {
+        if (clazzName == null || clazzName.isEmpty()) return Long.MIN_VALUE;
+        long rs = hash(clazzName.substring(clazzName.lastIndexOf('.') + 1));
         return (rs < Integer.MAX_VALUE) ? rs | 0xF00000000L : rs;
     }
 
@@ -95,61 +116,103 @@ public abstract class Sncp {
         return Math.abs(rs);
     }
 
+    public static boolean isRemote(Service service) {
+        return service.getClass().getName().startsWith(REMOTEPREFIX);
+    }
 
-    /*
-     * public final class DynRemoteTestService extends TestService{
-     *
-     * @Resource
-     * private BsonConvert convert;
-     *
-     * @Resource(name="xxxx")
-     * private Transport transport;
-     *
-     * public SncpClient client;
-     *
-     * @Override
-     * public boolean testChange(TestBean bean) {
-     * return client.remote(convert, transport, 0, bean);
-     * }
-     *
-     * @Override
-     * public TestBean findTestBean(long id) {
-     * return client.remote(convert, transport, 1, id);
-     * }
-     *
-     * @Override
-     * public void runTestBean(long id, TestBean bean) {
-     * client.remote(convert, transport, 2, id, bean);
-     * }
-     */
     /**
+     * public class TestService implements Service{
      *
+     *      public String queryNode(){
+     *          return "hello";
+     *      }
+     *
+     *      @MultiRun
+     *      public String updateSomeThing(String id){
+     *          return "hello" + id;
+     *      }
+     *
+     *      @MultiRun
+     *      public void createSomeThing(TestBean bean){
+     *          "xxxxx" + bean;
+     *      }
+     * }
+     *
+     * public final class _DynLocalTestService extends TestService{
+     *
+     *      @Resource
+     *      private BsonConvert _convert;
+     *
+     *      private Transport[] _sameGroupTransports;
+     *
+     *      private Transport[] _diffGroupTransports;
+     *
+     *      private SncpClient _client;
+     *     
+     *      @Override
+     *      public final String name() {
+     *          return "";
+     *      }
+     *
+     *      @Override
+     *      public String updateSomeThing(String id){
+     *          return _updateSomeThing(true, true, id);
+     *      }
+     *
+     *      public String _updateSomeThing(boolean cansamerun, boolean candiffrun, String id){
+     *          String rs = super.updateSomeThing(id);
+     *          _client.remote(_convert, _sameGroupTransports, cansamerun, 0, false, false, id); 
+     *          _client.remote(_convert, _diffGroupTransports, candiffrun, 0, true, false, id); 
+     *          return rs;
+     *      }
+     *
+     *      @Override
+     *      public void createSomeThing(TestBean bean){
+     *          _createSomeThing(true, true, bean);
+     *      }
+     *
+     *      public void _createSomeThing(boolean cansamerun, boolean candiffrun, TestBean bean){
+     *          super.createSomeThing(bean);
+     *          _client.remote(_convert, _sameGroupTransports, cansamerun, 1, false, false, bean); 
+     *          _client.remote(_convert, _diffGroupTransports, candiffrun, 1, true, false, bean); 
+     *      }
+     * }
+     *
+     * 创建Service的本地模式Class
      * @param <T>
-     * @param serviceName
-     * @param remote
+     * @param name
      * @param serviceClass
-     * @return
+     * @return 
      */
     @SuppressWarnings("unchecked")
-    public static <T extends Service> T createRemoteService(final String serviceName, final Class<T> serviceClass, final String remote) {
+    public static <T extends Service> Class<? extends T> createLocalServiceClass(final String name, final Class<T> serviceClass) {
         if (serviceClass == null) return null;
-        if (!Service.class.isAssignableFrom(serviceClass)) return null;
+        if (!Service.class.isAssignableFrom(serviceClass)) return serviceClass;
         int mod = serviceClass.getModifiers();
-        if (!java.lang.reflect.Modifier.isPublic(mod)) return null;
-        if (java.lang.reflect.Modifier.isAbstract(mod)) return null;
+        if (!java.lang.reflect.Modifier.isPublic(mod)) return serviceClass;
+        if (java.lang.reflect.Modifier.isAbstract(mod)) return serviceClass;
+        final List<Method> methods = SncpClient.parseMethod(serviceClass, false);
+        boolean hasMultiRun0 = false;
+        for (Method method : methods) {
+            if (method.getAnnotation(MultiRun.class) != null) {
+                hasMultiRun0 = true;
+                break;
+            }
+        }
+        final boolean hasMultiRun = hasMultiRun0;
         final String supDynName = serviceClass.getName().replace('.', '/');
         final String clientName = SncpClient.class.getName().replace('.', '/');
         final String clientDesc = Type.getDescriptor(SncpClient.class);
         final String convertDesc = Type.getDescriptor(BsonConvert.class);
         final String transportDesc = Type.getDescriptor(Transport.class);
-        final String anyValueDesc = Type.getDescriptor(AnyValue.class);
+        final String sncpDynDesc = Type.getDescriptor(SncpDyn.class);
+        final String transportsDesc = Type.getDescriptor(Transport[].class);
         ClassLoader loader = Sncp.class.getClassLoader();
-        String newDynName = supDynName.substring(0, supDynName.lastIndexOf('/') + 1) + "DynRemote" + serviceClass.getSimpleName();
+        String newDynName = supDynName.substring(0, supDynName.lastIndexOf('/') + 1) + LOCALPREFIX + serviceClass.getSimpleName();
         try {
-            return (T) Class.forName(newDynName.replace('/', '.')).newInstance();
+            return (Class<T>) Class.forName(newDynName.replace('/', '.'));
         } catch (Exception ex) {
         }
-        final SncpClient client = new SncpClient(serviceName, serviceClass);
         //------------------------------------------------------------------------------
         ClassWriter cw = new ClassWriter(0);
         FieldVisitor fv;
@@ -158,24 +221,436 @@ public abstract class Sncp {
 
         cw.visit(V1_8, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynName, null, supDynName, null);
         {
-            av0 = cw.visitAnnotation(Type.getDescriptor(RemoteOn.class), true);
+            av0 = cw.visitAnnotation(sncpDynDesc, true);
+            av0.visitEnd();
+        }
+        if (hasMultiRun) {
+            {
+                fv = cw.visitField(ACC_PRIVATE, "_convert", convertDesc, null, null);
+                av0 = fv.visitAnnotation("Ljavax/annotation/Resource;", true);
+                av0.visitEnd();
+                fv.visitEnd();
+            }
+            {
+                fv = cw.visitField(ACC_PRIVATE, "_sameGroupTransports", transportsDesc, null, null);
+                fv.visitEnd();
+            }
+            {
+                fv = cw.visitField(ACC_PRIVATE, "_diffGroupTransports", transportsDesc, null, null);
+                fv.visitEnd();
+            }
+            {
+                fv = cw.visitField(ACC_PRIVATE, "_client", clientDesc, null, null);
+                fv.visitEnd();
+            }
+        }
+        { //构造函数
+            mv = new DebugMethodVisitor(cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null));
+            //mv.setDebug(true);
+            mv.visitVarInsn(ALOAD, 0);
+            mv.visitMethodInsn(INVOKESPECIAL, supDynName, "<init>", "()V", false);
+            mv.visitInsn(RETURN);
+            mv.visitMaxs(1, 1);
+            mv.visitEnd();
+        }
+        { // name()
+            mv = new DebugMethodVisitor(cw.visitMethod(ACC_PUBLIC + ACC_FINAL, "name", "()Ljava/lang/String;", null, null));
+            mv.visitLdcInsn(name);
+            mv.visitInsn(ARETURN);
+            mv.visitMaxs(1, 1);
+            mv.visitEnd();
+        }
+        int i = - 1;
+        for (final Method method : methods) {
+            final MultiRun mrun = method.getAnnotation(MultiRun.class);
+            if (mrun == null) continue;
+            final Class returnType = method.getReturnType();
+            final String methodDesc = Type.getMethodDescriptor(method);
+            final Class[] paramtypes = method.getParameterTypes();
+            final int index = ++i;
+            {   //原始方法
+                mv = new DebugMethodVisitor(cw.visitMethod(ACC_PUBLIC + (method.isVarArgs() ? ACC_VARARGS : 0), method.getName(), methodDesc, null, null));
+                //mv.setDebug(true);
+                mv.visitVarInsn(ALOAD, 0);
+                mv.visitInsn(mrun.samerun() ? ICONST_1 : ICONST_0);
+                mv.visitInsn(mrun.diffrun() ? ICONST_1 : ICONST_0);
+                int varindex = 0;
+                for (Class pt : paramtypes) {
+                    if (pt.isPrimitive()) {
+                        if (pt == long.class) {
+                            mv.visitVarInsn(LLOAD, ++varindex);
+                            ++varindex;
+                        } else if (pt == double.class) {
+                            mv.visitVarInsn(DLOAD, ++varindex);
+                            ++varindex;
+                        } else if (pt == float.class) {
+                            mv.visitVarInsn(FLOAD, ++varindex);
+                        } else {
+                            mv.visitVarInsn(ILOAD, ++varindex);
+                        }
+                    } else {
+                        mv.visitVarInsn(ALOAD, ++varindex);
+                    }
+                }
+                mv.visitMethodInsn(INVOKEVIRTUAL, newDynName, "_" + method.getName(), "(ZZ" + methodDesc.substring(1), false);
+                if (returnType == void.class) {
+                    mv.visitInsn(RETURN);
+                } else if (returnType.isPrimitive()) {
+                    if (returnType == long.class) {
+                        mv.visitInsn(LRETURN);
+                    } else if (returnType == float.class) {
+                        mv.visitInsn(FRETURN);
+                    } else if (returnType == double.class) {
+                        mv.visitInsn(DRETURN);
+                    } else {
+                        mv.visitInsn(IRETURN);
+                    }
+                } else {
+                    mv.visitInsn(ARETURN);
+                }
+                mv.visitMaxs(varindex + 3, varindex + 1);
+                mv.visitEnd();
+            }
+            {  // _方法
+                mv = new DebugMethodVisitor(cw.visitMethod(ACC_PUBLIC + (method.isVarArgs() ? ACC_VARARGS : 0), "_" + method.getName(), "(ZZ" + methodDesc.substring(1), null, null));
+                //mv.setDebug(true);
+                av0 = mv.visitAnnotation(sncpDynDesc, true);
+                av0.visit("index", index);
+                av0.visitEnd();
+
+                mv.visitVarInsn(ALOAD, 0);
+                int varindex = 2;
+                for (Class pt : paramtypes) {
+                    if (pt.isPrimitive()) {
+                        if (pt == long.class) {
+                            mv.visitVarInsn(LLOAD, ++varindex);
+                            ++varindex;
+                        } else if (pt == double.class) {
+                            mv.visitVarInsn(DLOAD, ++varindex);
+                            ++varindex;
+                        } else if (pt == float.class) {
+                            mv.visitVarInsn(FLOAD, ++varindex);
+                        } else {
+                            mv.visitVarInsn(ILOAD, ++varindex);
+                        }
+                    } else {
+                        mv.visitVarInsn(ALOAD, ++varindex);
+                    }
+                }
+                mv.visitMethodInsn(INVOKESPECIAL, supDynName, method.getName(), methodDesc, false);
+                if (returnType == void.class) {
+                } else if (returnType.isPrimitive()) {
+                    if (returnType == long.class) {
+                        mv.visitVarInsn(LSTORE, ++varindex);
+                        ++varindex; //多加1
+                    } else if (returnType == float.class) {
+                        mv.visitVarInsn(FSTORE, ++varindex);
+                    } else if (returnType == double.class) {
+                        mv.visitVarInsn(DSTORE, ++varindex);
+                        ++varindex; //多加1
+                    } else {
+                        mv.visitVarInsn(ISTORE, ++varindex);
+                    }
+                } else {
+                    mv.visitVarInsn(ASTORE, ++varindex);
+                }
+                final int rsindex = varindex;  //
+
+                mv.visitVarInsn(ALOAD, 0);//调用 _client
+                mv.visitFieldInsn(GETFIELD, newDynName, "_client", clientDesc);
+                mv.visitVarInsn(ALOAD, 0);  //传递 _convert
+                mv.visitFieldInsn(GETFIELD, newDynName, "_convert", convertDesc);
+                mv.visitVarInsn(ALOAD, 0);  //传递 _sameGroupTransports
+                mv.visitFieldInsn(GETFIELD, newDynName, "_sameGroupTransports", transportsDesc);
+
+                mv.visitVarInsn(ILOAD, 1);   //传递 cansamerun
+
+                if (index <= 5) {  //第几个 SncpAction 
+                    mv.visitInsn(ICONST_0 + index);
+                } else {
+                    mv.visitIntInsn(BIPUSH, index);
+                }
+                if (paramtypes.length + 2 <= 5) {  //参数总数量
+                    mv.visitInsn(ICONST_0 + paramtypes.length + 2);
+                } else {
+                    mv.visitIntInsn(BIPUSH, paramtypes.length + 2);
+                }
+
+                mv.visitTypeInsn(ANEWARRAY, "java/lang/Object");
+
+                mv.visitInsn(DUP);
+                mv.visitInsn(ICONST_0);
+                mv.visitInsn(ICONST_0);   //第一个参数  cansamerun
+                mv.visitMethodInsn(INVOKESTATIC, "java/lang/Boolean", "valueOf", "(Z)Ljava/lang/Boolean;", false);
+                mv.visitInsn(AASTORE);
+
+                mv.visitInsn(DUP);
+                mv.visitInsn(ICONST_1);
+                mv.visitInsn(ICONST_0);   //第二个参数  candiffrun
+                mv.visitMethodInsn(INVOKESTATIC, "java/lang/Boolean", "valueOf", "(Z)Ljava/lang/Boolean;", false);
+                mv.visitInsn(AASTORE);
+
+                int insn = 2;
+                for (int j = 0; j < paramtypes.length; j++) {
+                    final Class pt = paramtypes[j];
+                    mv.visitInsn(DUP);
+                    insn++;
+                    if (j <= 3) {
+                        mv.visitInsn(ICONST_0 + j + 2);
+                    } else {
+                        mv.visitIntInsn(BIPUSH, j + 2);
+                    }
+                    if (pt.isPrimitive()) {
+                        if (pt == long.class) {
+                            mv.visitVarInsn(LLOAD, insn++);
+                        } else if (pt == float.class) {
+                            mv.visitVarInsn(FLOAD, insn++);
+                        } else if (pt == double.class) {
+                            mv.visitVarInsn(DLOAD, insn++);
+                        } else {
+                            mv.visitVarInsn(ILOAD, insn);
+                        }
+                        Class bigclaz = java.lang.reflect.Array.get(java.lang.reflect.Array.newInstance(pt, 1), 0).getClass();
+                        mv.visitMethodInsn(INVOKESTATIC, bigclaz.getName().replace('.', '/'), "valueOf", "(" + Type.getDescriptor(pt) + ")" + Type.getDescriptor(bigclaz), false);
+                    } else {
+                        mv.visitVarInsn(ALOAD, insn);
+                    }
+                    mv.visitInsn(AASTORE);
+                }
+                mv.visitMethodInsn(INVOKEVIRTUAL, clientName, mrun.async() ? "asyncRemote" : "remote", "(" + convertDesc + transportsDesc + "ZI[Ljava/lang/Object;)V", false);
+
+                mv.visitVarInsn(ALOAD, 0);
+                mv.visitFieldInsn(GETFIELD, newDynName, "_client", clientDesc);
+                mv.visitVarInsn(ALOAD, 0);
+                mv.visitFieldInsn(GETFIELD, newDynName, "_convert", convertDesc);
+                mv.visitVarInsn(ALOAD, 0);
+                mv.visitFieldInsn(GETFIELD, newDynName, "_diffGroupTransports", transportsDesc);
+
+                mv.visitVarInsn(ILOAD, 2);   //传递 candiffrun
+                if (index <= 5) {  //第几个 SncpAction 
+                    mv.visitInsn(ICONST_0 + index);
+                } else {
+                    mv.visitIntInsn(BIPUSH, index);
+                }
+                if (paramtypes.length + 2 <= 5) {  //参数总数量
+                    mv.visitInsn(ICONST_0 + paramtypes.length + 2);
+                } else {
+                    mv.visitIntInsn(BIPUSH, paramtypes.length + 2);
+                }
+
+                mv.visitTypeInsn(ANEWARRAY, "java/lang/Object");
+
+                mv.visitInsn(DUP);
+                mv.visitInsn(ICONST_0);
+                mv.visitInsn(ICONST_1);   //第一个参数  cansamerun
+                mv.visitMethodInsn(INVOKESTATIC, "java/lang/Boolean", "valueOf", "(Z)Ljava/lang/Boolean;", false);
+                mv.visitInsn(AASTORE);
+
+                mv.visitInsn(DUP);
+                mv.visitInsn(ICONST_1);
+                mv.visitInsn(ICONST_0);   //第二个参数  candiffrun
+                mv.visitMethodInsn(INVOKESTATIC, "java/lang/Boolean", "valueOf", "(Z)Ljava/lang/Boolean;", false);
+                mv.visitInsn(AASTORE);
+
+                insn = 2;
+                for (int j = 0; j < paramtypes.length; j++) {
+                    final Class pt = paramtypes[j];
+                    mv.visitInsn(DUP);
+                    insn++;
+                    if (j <= 3) {
+                        mv.visitInsn(ICONST_0 + j + 2);
+                    } else {
+                        mv.visitIntInsn(BIPUSH, j + 2);
+                    }
+                    if (pt.isPrimitive()) {
+                        if (pt == long.class) {
+                            mv.visitVarInsn(LLOAD, insn++);
+                        } else if (pt == float.class) {
+                            mv.visitVarInsn(FLOAD, insn++);
+                        } else if (pt == double.class) {
+                            mv.visitVarInsn(DLOAD, insn++);
+                        } else {
+                            mv.visitVarInsn(ILOAD, insn);
+                        }
+                        Class bigclaz = java.lang.reflect.Array.get(java.lang.reflect.Array.newInstance(pt, 1), 0).getClass();
+                        mv.visitMethodInsn(INVOKESTATIC, bigclaz.getName().replace('.', '/'), "valueOf", "(" + Type.getDescriptor(pt) + ")" + Type.getDescriptor(bigclaz), false);
+                    } else {
+                        mv.visitVarInsn(ALOAD, insn);
+                    }
+                    mv.visitInsn(AASTORE);
+                }
+                mv.visitMethodInsn(INVOKEVIRTUAL, clientName, mrun.async() ? "asyncRemote" : "remote", "(" + convertDesc + transportsDesc + "ZI[Ljava/lang/Object;)V", false);
+
+                if (returnType == void.class) {
+                    mv.visitInsn(RETURN);
+                } else if (returnType.isPrimitive()) {
+                    if (returnType == long.class) {
+                        mv.visitVarInsn(LLOAD, rsindex);
+                        mv.visitInsn(LRETURN);
+                    } else if (returnType == float.class) {
+                        mv.visitVarInsn(FLOAD, rsindex);
+                        mv.visitInsn(FRETURN);
+                    } else if (returnType == double.class) {
+                        mv.visitVarInsn(DLOAD, rsindex);
+                        mv.visitInsn(DRETURN);
+                    } else {
+                        mv.visitVarInsn(ILOAD, rsindex);
+                        mv.visitInsn(IRETURN);
+                    }
+                } else {
+                    mv.visitVarInsn(ALOAD, rsindex);
+                    mv.visitInsn(ARETURN);
+                }
+
+                mv.visitMaxs(Math.max(varindex, 10), varindex + 4);
+                mv.visitEnd();
+            }
+        }
+        cw.visitEnd();
+        byte[] bytes = cw.toByteArray();
+        Class<?> newClazz = new ClassLoader(loader) {
+            public final Class<?> loadClass(String name, byte[] b) {
+                return defineClass(name, b, 0, b.length);
+            }
+        }.loadClass(newDynName.replace('/', '.'), bytes);
+        return (Class<T>) newClazz;
+    }
+
+    /**
+     *
+     * 创建本地模式Service实例
+     * @param <T>
+     * @param name
+     * @param serviceClass
+     * @param clientAddress
+     * @param sameGroupTransports
+     * @param diffGroupTransports
+     * @return 
+     */
+    @SuppressWarnings("unchecked")
+    public static <T extends Service> T createLocalService(final String name, final Class<T> serviceClass,
+            final InetSocketAddress clientAddress, Collection<Transport> sameGroupTransports, Collection<Transport> diffGroupTransports) {
+        try {
+            Class newClazz = createLocalServiceClass(name, serviceClass);
+            T rs = (T) newClazz.newInstance();
+            Field e = null;
+            try {
+                e = newClazz.getDeclaredField("_client");
+            } catch (NoSuchFieldException ne) {
+                return rs;
+            }
+            e.setAccessible(true);
+            e.set(rs, new SncpClient(name, hash(serviceClass), false, newClazz, true, clientAddress));
+            if (sameGroupTransports == null) sameGroupTransports = new ArrayList<>();
+            Field c = newClazz.getDeclaredField("_sameGroupTransports");
+            c.setAccessible(true);
+            c.set(rs, sameGroupTransports.toArray(new Transport[sameGroupTransports.size()]));
+
+            if (diffGroupTransports == null) diffGroupTransports = new ArrayList<>();
+            Field t = newClazz.getDeclaredField("_diffGroupTransports");
+            t.setAccessible(true);
+            t.set(rs, diffGroupTransports.toArray(new Transport[diffGroupTransports.size()]));
+            return rs;
+        } catch (RuntimeException rex) {
+            throw rex;
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+
+    }
+
+    /**
+     * public final class _DynRemoteTestService extends TestService{
+     *
+     *      @Resource
+     *      private BsonConvert _convert;
+     *
+     *      private Transport _transport;
+     *
+     *      private SncpClient _client;
+     *
+     *      @Override
+     *      public final String name() {
+     *          return "";
+     *      }
+     *
+     *      @Override
+     *      public boolean testChange(TestBean bean) {
+     *          return _client.remote(_convert, _transport, 0, bean);
+     *      }
+     *
+     *      @Override
+     *      public TestBean findTestBean(long id) {
+     *          return _client.remote(_convert, _transport, 1, id);
+     *      }
+     *
+     *      @Override
+     *      public void runTestBean(long id, TestBean bean) {
+     *          _client.remote(_convert, _transport, 2, id, bean);
+     *      }
+     * }
+     *
+     * 创建远程模式的Service实例
+     * <p>
+     * @param <T>
+     * @param name
+     * @param serviceClass
+     * @param clientAddress
+     * @param transport
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    public static <T extends Service> T createRemoteService(final String name, final Class<T> serviceClass, final InetSocketAddress clientAddress, final Transport transport) {
+        if (serviceClass == null) return null;
+        if (!Service.class.isAssignableFrom(serviceClass)) return null;
+        int mod = serviceClass.getModifiers();
+        if (!java.lang.reflect.Modifier.isPublic(mod)) return null;
+        if (java.lang.reflect.Modifier.isAbstract(mod)) return null;
+        final String supDynName = serviceClass.getName().replace('.', '/');
+        final String clientName = SncpClient.class.getName().replace('.', '/');
+        final String clientDesc = Type.getDescriptor(SncpClient.class);
+        final String sncpDynDesc = Type.getDescriptor(SncpDyn.class);
+        final String convertDesc = Type.getDescriptor(BsonConvert.class);
+        final String transportDesc = Type.getDescriptor(Transport.class);
+        final String anyValueDesc = Type.getDescriptor(AnyValue.class);
+        ClassLoader loader = Sncp.class.getClassLoader();
+        String newDynName = supDynName.substring(0, supDynName.lastIndexOf('/') + 1) + REMOTEPREFIX + serviceClass.getSimpleName();
+        final SncpClient client = new SncpClient(name, hash(serviceClass), true, createLocalServiceClass(name, serviceClass), false, clientAddress);
+        try {
+            Class newClazz = Class.forName(newDynName.replace('/', '.'));
+            T rs = (T) newClazz.newInstance();
+            Field c = newClazz.getDeclaredField("_client");
+            c.setAccessible(true);
+            c.set(rs, client);
+            Field t = newClazz.getDeclaredField("_transport");
+            t.setAccessible(true);
+            t.set(rs, transport);
+            return rs;
+        } catch (Exception ex) {
+        }
+        //------------------------------------------------------------------------------
+        ClassWriter cw = new ClassWriter(0);
+        FieldVisitor fv;
+        DebugMethodVisitor mv;
+        AnnotationVisitor av0;
+
+        cw.visit(V1_8, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynName, null, supDynName, null);
+        {
+            av0 = cw.visitAnnotation(sncpDynDesc, true);
             av0.visitEnd();
         }
         {
-            fv = cw.visitField(ACC_PRIVATE, "convert", convertDesc, null, null);
+            fv = cw.visitField(ACC_PRIVATE, "_convert", convertDesc, null, null);
             av0 = fv.visitAnnotation("Ljavax/annotation/Resource;", true);
             av0.visitEnd();
             fv.visitEnd();
         }
         {
-            fv = cw.visitField(ACC_PRIVATE, "transport", transportDesc, null, null);
-            av0 = fv.visitAnnotation("Ljavax/annotation/Resource;", true);
-            av0.visit("name", remote == null ? "" : remote);
-            av0.visitEnd();
+            fv = cw.visitField(ACC_PRIVATE, "_transport", transportDesc, null, null);
             fv.visitEnd();
         }
         {
-            fv = cw.visitField(ACC_PUBLIC, "client", clientDesc, null, null);
+            fv = cw.visitField(ACC_PRIVATE, "_client", clientDesc, null, null);
             fv.visitEnd();
         }
         { //构造函数
@@ -199,6 +674,13 @@ public abstract class Sncp {
             mv.visitMaxs(0, 2);
             mv.visitEnd();
         }
+        { // name()
+            mv = new DebugMethodVisitor(cw.visitMethod(ACC_PUBLIC + ACC_FINAL, "name", "()Ljava/lang/String;", null, null));
+            mv.visitLdcInsn(name);
+            mv.visitInsn(ARETURN);
+            mv.visitMaxs(1, 1);
+            mv.visitEnd();
+        }
         int i = -1;
         for (final SncpAction entry : client.actions) {
             final int index = ++i;
@@ -207,11 +689,11 @@ public abstract class Sncp {
                 mv = new DebugMethodVisitor(cw.visitMethod(ACC_PUBLIC, method.getName(), Type.getMethodDescriptor(method), null, null));
                 //mv.setDebug(true);
                 mv.visitVarInsn(ALOAD, 0);
-                mv.visitFieldInsn(GETFIELD, newDynName, "client", clientDesc);
+                mv.visitFieldInsn(GETFIELD, newDynName, "_client", clientDesc);
                 mv.visitVarInsn(ALOAD, 0);
-                mv.visitFieldInsn(GETFIELD, newDynName, "convert", convertDesc);
+                mv.visitFieldInsn(GETFIELD, newDynName, "_convert", convertDesc);
                 mv.visitVarInsn(ALOAD, 0);
-                mv.visitFieldInsn(GETFIELD, newDynName, "transport", transportDesc);
+                mv.visitFieldInsn(GETFIELD, newDynName, "_transport", transportDesc);
                 if (index <= 5) {
                     mv.visitInsn(ICONST_0 + index);
                 } else {
@@ -252,7 +734,6 @@ public abstract class Sncp {
                         } else {
                             mv.visitVarInsn(ALOAD, insn);
                         }
-                        //mv.visitVarInsn(ALOAD, 1);
                         mv.visitInsn(AASTORE);
                     }
                 }
@@ -300,7 +781,12 @@ public abstract class Sncp {
         }.loadClass(newDynName.replace('/', '.'), bytes);
         try {
             T rs = (T) newClazz.newInstance();
-            newClazz.getField("client").set(rs, client);
+            Field c = newClazz.getDeclaredField("_client");
+            c.setAccessible(true);
+            c.set(rs, client);
+            Field t = newClazz.getDeclaredField("_transport");
+            t.setAccessible(true);
+            t.set(rs, transport);
             return rs;
         } catch (Exception ex) {
             throw new RuntimeException(ex);

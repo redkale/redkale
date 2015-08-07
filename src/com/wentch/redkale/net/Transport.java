@@ -11,6 +11,7 @@ import java.io.*;
 import java.net.*;
 import java.nio.*;
 import java.nio.channels.*;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 
@@ -21,25 +22,21 @@ import java.util.concurrent.atomic.*;
  */
 public final class Transport {
 
-    protected SocketAddress[] remoteAddres;
-
-    protected final ObjectPool<ByteBuffer> bufferPool;
-
     protected final String name;
 
     protected final String protocol;
 
-    private final boolean udp;
-
     protected final AsynchronousChannelGroup group;
 
-    protected BlockingQueue<AsyncConnection> queue;
+    protected final InetSocketAddress[] remoteAddres;
 
-    public Transport(String name, String protocol, int clients, int bufferPoolSize, WatchFactory watch, SocketAddress... addresses) {
+    protected final ObjectPool<ByteBuffer> bufferPool;
+
+    protected final AtomicInteger index = new AtomicInteger();
+
+    public Transport(String name, String protocol, WatchFactory watch, int bufferPoolSize, Collection<InetSocketAddress> addresses) {
         this.name = name;
         this.protocol = protocol;
-        this.udp = "UDP".equalsIgnoreCase(protocol);
-        this.queue = this.udp ? null : new ArrayBlockingQueue<>(clients);
         AsynchronousChannelGroup g = null;
         try {
             final AtomicInteger counter = new AtomicInteger();
@@ -63,7 +60,21 @@ public final class Transport {
                     e.clear();
                     return true;
                 });
-        this.remoteAddres = addresses;
+        this.remoteAddres = addresses.toArray(new InetSocketAddress[addresses.size()]);
+    }
+
+    public boolean match(Collection<InetSocketAddress> addrs) {
+        if (addrs == null) return false;
+        if (addrs.size() != this.remoteAddres.length) return false;
+        for (InetSocketAddress addr : this.remoteAddres) {
+            if (!addrs.contains(addr)) return false;
+        }
+        return true;
+    }
+
+    @Override
+    public String toString() {
+        return Transport.class.getSimpleName() + "{name=" + name + ",protocol=" + protocol + ",remoteAddres=" + Arrays.toString(remoteAddres) + "}";
     }
 
     public ByteBuffer pollBuffer() {
@@ -78,27 +89,18 @@ public final class Transport {
         for (ByteBuffer buffer : buffers) offerBuffer(buffer);
     }
 
-    public boolean isUDP() {
-        return udp;
-    }
-
     public AsyncConnection pollConnection() {
-        if (udp) return createConnection();
-        AsyncConnection conn = queue.poll();
-        return (conn != null && conn.isOpen()) ? conn : createConnection();
-    }
-
-    private AsyncConnection createConnection() {
-        SocketAddress addr = remoteAddres[0];
+        int i = index.get();
+        SocketAddress addr = remoteAddres[i];
         try {
-            if (udp) {
-                AsyncDatagramChannel channel = AsyncDatagramChannel.open(group);
-                channel.connect(addr);
-                return AsyncConnection.create(channel, addr, true, 0, 0);
-            } else {
+            if ("TCP".equalsIgnoreCase(protocol)) {
                 AsynchronousSocketChannel channel = AsynchronousSocketChannel.open(group);
                 channel.connect(addr).get(2, TimeUnit.SECONDS);
                 return AsyncConnection.create(channel, 0, 0);
+            } else {
+                AsyncDatagramChannel channel = AsyncDatagramChannel.open(group);
+                channel.connect(addr);
+                return AsyncConnection.create(channel, addr, true, 0, 0);
             }
         } catch (Exception ex) {
             throw new RuntimeException("transport address = " + addr, ex);
@@ -106,18 +108,9 @@ public final class Transport {
     }
 
     public void offerConnection(AsyncConnection conn) {
-        if (udp) {
-            try {
-                conn.close();
-            } catch (IOException io) {
-            }
-        } else if (conn.isOpen()) {
-            if (!queue.offer(conn)) {
-                try {
-                    conn.close();
-                } catch (IOException io) {
-                }
-            }
+        try {
+            conn.close();
+        } catch (IOException io) {
         }
     }
 

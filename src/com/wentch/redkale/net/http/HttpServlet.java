@@ -6,12 +6,15 @@
 package com.wentch.redkale.net.http;
 
 import com.wentch.redkale.net.Servlet;
+import com.wentch.redkale.util.*;
 
 /**
  *
  * @author zhangjx
  */
 public abstract class HttpServlet implements Servlet<HttpRequest, HttpResponse> {
+
+    AnyValue conf; //当前HttpServlet的配置
 
     @Override
     public final boolean equals(Object obj) {

@@ -87,7 +87,6 @@ public abstract class Factory<R extends Reader, W extends Writer> {
             this.register(DLong.class, DLongSimpledCoder.instance);
             this.register(Class.class, TypeSimpledCoder.instance);
             this.register(InetSocketAddress.class, InetSocketAddressSimpledCoder.instance);
-            this.register(InetSocketAddress.class, InetSocketAddressSimpledCoder.instance);
             this.register(Pattern.class, PatternSimpledCoder.instance);
             //---------------------------------------------------------
             this.register(boolean[].class, BoolArraySimpledCoder.instance);

@@ -11,7 +11,6 @@ import com.wentch.redkale.watch.*;
 import java.net.*;
 import java.nio.*;
 import java.util.*;
-import java.util.AbstractMap.SimpleEntry;
 import java.util.concurrent.atomic.*;
 
 /**
@@ -20,8 +19,6 @@ import java.util.concurrent.atomic.*;
  */
 public final class HttpServer extends Server {
 
-    private final Map<SimpleEntry<HttpServlet, AnyValue>, String[]> servlets = new HashMap<>();
-
     private String contextPath;
 
     public HttpServer() {
@@ -29,7 +26,7 @@ public final class HttpServer extends Server {
     }
 
     public HttpServer(long serverStartTime, final WatchFactory watch) {
-        super(serverStartTime, "TCP", watch);
+        super(serverStartTime, "TCP", new HttpPrepareServlet(), watch);
     }
 
     @Override
@@ -40,7 +37,7 @@ public final class HttpServer extends Server {
     }
 
     public void addHttpServlet(HttpServlet servlet, AnyValue conf, String... mappings) {
-        this.servlets.put(new SimpleEntry<>(servlet, conf), mappings);
+        ((HttpPrepareServlet) this.prepare).addHttpServlet(servlet, conf, mappings);
     }
 
     @Override
@@ -56,13 +53,8 @@ public final class HttpServer extends Server {
                     e.clear();
                     return true;
                 });
-        HttpPrepareServlet prepare = new HttpPrepareServlet();
-        this.servlets.entrySet().stream().forEach((en) -> {
-            prepare.addHttpServlet(en.getKey().getKey(), en.getKey().getValue(), en.getValue());
-        });
-        this.servlets.clear();
-        String[][] defaultAddHeaders = null;
-        String[][] defaultSetHeaders = null;
+        final List<String[]> defaultAddHeaders = new ArrayList<>();
+        final List<String[]> defaultSetHeaders = new ArrayList<>();
         HttpCookie defaultCookie = null;
         String remoteAddrHeader = null;
         if (config != null) {
@@ -83,29 +75,27 @@ public final class HttpServer extends Server {
             if (resps != null) {
                 AnyValue[] addHeaders = resps.getAnyValues("addheader");
                 if (addHeaders.length > 0) {
-                    defaultAddHeaders = new String[addHeaders.length][];
                     for (int i = 0; i < addHeaders.length; i++) {
                         String val = addHeaders[i].getValue("value");
                         if (val == null) continue;
                         if (val.startsWith("request.headers.")) {
-                            defaultAddHeaders[i] = new String[]{addHeaders[i].getValue("name"), val, val.substring("request.headers.".length())};
+                            defaultAddHeaders.add(new String[]{addHeaders[i].getValue("name"), val, val.substring("request.headers.".length())});
                         } else if (val.startsWith("system.property.")) {
                             String v = System.getProperty(val.substring("system.property.".length()));
-                            if (v != null) defaultAddHeaders[i] = new String[]{addHeaders[i].getValue("name"), v};
+                            if (v != null) defaultAddHeaders.add(new String[]{addHeaders[i].getValue("name"), v});
                         } else {
-                            defaultAddHeaders[i] = new String[]{addHeaders[i].getValue("name"), val};
+                            defaultAddHeaders.add(new String[]{addHeaders[i].getValue("name"), val});
                         }
                     }
                 }
                 AnyValue[] setHeaders = resps.getAnyValues("setheader");
                 if (setHeaders.length > 0) {
-                    defaultSetHeaders = new String[setHeaders.length][];
                     for (int i = 0; i < setHeaders.length; i++) {
                         String val = setHeaders[i].getValue("value");
                         if (val != null && val.startsWith("request.headers.")) {
-                            defaultSetHeaders[i] = new String[]{setHeaders[i].getValue("name"), val, val.substring("request.headers.".length())};
+                            defaultSetHeaders.add(new String[]{setHeaders[i].getValue("name"), val, val.substring("request.headers.".length())});
                         } else {
-                            defaultSetHeaders[i] = new String[]{setHeaders[i].getValue("name"), val};
+                            defaultSetHeaders.add(new String[]{setHeaders[i].getValue("name"), val});
                         }
                     }
                 }
@@ -121,15 +111,15 @@ public final class HttpServer extends Server {
                 }
             }
         }
-        final String[][] addHeaders = defaultAddHeaders;
-        final String[][] setHeaders = defaultSetHeaders;
+        final String[][] addHeaders = defaultAddHeaders.isEmpty() ? null : defaultAddHeaders.toArray(new String[defaultAddHeaders.size()][]);
+        final String[][] setHeaders = defaultSetHeaders.isEmpty() ? null : defaultSetHeaders.toArray(new String[defaultSetHeaders.size()][]);
         final HttpCookie defCookie = defaultCookie;
         final String addrHeader = remoteAddrHeader;
         AtomicLong createResponseCounter = watch == null ? new AtomicLong() : watch.createWatchNumber("HTTP_" + port + ".Response.creatCounter");
         AtomicLong cycleResponseCounter = watch == null ? new AtomicLong() : watch.createWatchNumber("HTTP_" + port + ".Response.cycleCounter");
         ObjectPool<Response> responsePool = HttpResponse.createPool(createResponseCounter, cycleResponseCounter, this.responsePoolSize, null);
         HttpContext httpcontext = new HttpContext(this.serverStartTime, this.logger, executor, bufferPool, responsePool,
-                this.maxbody, this.charset, this.address, prepare, this.watch, this.readTimeoutSecond, this.writeTimeoutSecond, contextPath);
+                this.maxbody, this.charset, this.address, this.prepare, this.watch, this.readTimeoutSecond, this.writeTimeoutSecond, contextPath);
         responsePool.setCreator((Object... params)
                 -> new HttpResponse(httpcontext, new HttpRequest(httpcontext, httpcontext.jsonFactory, addrHeader), addHeaders, setHeaders, defCookie));
         return httpcontext;

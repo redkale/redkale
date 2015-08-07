@@ -5,11 +5,13 @@
  */
 package com.wentch.redkale.boot;
 
-import com.wentch.redkale.net.sncp.SncpServer;
+import com.wentch.redkale.net.sncp.*;
 import com.wentch.redkale.util.AnyValue;
 import com.wentch.redkale.service.Service;
+import java.io.*;
 import java.net.InetSocketAddress;
 import java.util.concurrent.CountDownLatch;
+import java.util.logging.*;
 
 /**
  *
@@ -19,16 +21,15 @@ public final class NodeSncpServer extends NodeServer {
 
     private final SncpServer server;
 
-    public NodeSncpServer(Application application, CountDownLatch regcdl, SncpServer server) {
-        super(application, regcdl, server);
-        this.server = server;
-        this.consumer = x -> server.addService(x);
-    }
+    private final File home;
 
-    @Override
-    public void init(AnyValue config) throws Exception {
-        server.init(config);
-        super.init(config);
+    public NodeSncpServer(Application application, InetSocketAddress addr, CountDownLatch regcdl, SncpServer server) {
+        super(application, application.factory.createChild(), regcdl, server);
+        this.server = server;
+        this.home = application.getHome();
+        this.servaddr = addr;
+        this.nodeGroup = application.addrGroups.getOrDefault(addr, "");
+        this.consumer = server == null ? null : x -> server.addService(x);
     }
 
     @Override
@@ -38,13 +39,28 @@ public final class NodeSncpServer extends NodeServer {
 
     @Override
     public void prepare(AnyValue config) throws Exception {
-        super.prepare(config);
-        ClassFilter<Service> serviceFilter = createServiceClassFilter(application.nodeName, config);
+        ClassFilter<Service> serviceFilter = createServiceClassFilter(config);
         long s = System.currentTimeMillis();
-        ClassFilter.Loader.load(application.getHome(), serviceFilter);
+        ClassFilter.Loader.load(home, serviceFilter);
         long e = System.currentTimeMillis() - s;
         logger.info(this.getClass().getSimpleName() + " load filter class in " + e + " ms");
         loadService(config.getAnyValue("services"), serviceFilter); //必须在servlet之前
+        //-------------------------------------------------------------------
+        if(server == null) return; //调试时server才可能为null
+        final StringBuilder sb = logger.isLoggable(Level.FINE) ? new StringBuilder() : null;
+        final String threadName = "[" + Thread.currentThread().getName() + "] ";
+        for (SncpServlet en : server.getSncpServlets()) {
+            if (sb != null) sb.append(threadName).append(" Loaded ").append(en).append(LINE_SEPARATOR);
+        }
+        if (sb != null && sb.length() > 0) logger.log(Level.FINE, sb.toString());
     }
 
+    @Override
+    public boolean isSNCP() {
+        return true;
+    }
+
+    public SncpServer getSncpServer() {
+        return server;
+    }
 }

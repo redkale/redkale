@@ -3,12 +3,13 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.wentch.redkale.service;
+package com.wentch.redkale.util;
 
 /**
  *
  * @author zhangjx
  */
-public interface MultiService extends Service {
+public interface Nameable {
 
+    String name();
 }

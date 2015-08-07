@@ -6,9 +6,9 @@
 package com.wentch.redkale.net.http;
 
 import com.wentch.redkale.net.*;
-import com.wentch.redkale.service.*;
 import com.wentch.redkale.util.*;
 import java.io.*;
+import java.net.*;
 import java.nio.*;
 import java.nio.channels.*;
 import java.security.*;
@@ -33,7 +33,7 @@ import javax.annotation.*;
  *
  * @author zhangjx
  */
-public abstract class WebSocketServlet extends HttpServlet {
+public abstract class WebSocketServlet extends HttpServlet implements Nameable {
 
     protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
 
@@ -50,21 +50,22 @@ public abstract class WebSocketServlet extends HttpServlet {
     //是否用于二进制流传输
     protected final boolean wsbinary = getClass().getAnnotation(WebSocketBinary.class) != null;
 
-    @Resource
-    protected WebSocketNodeService nodeService;
+    @Resource(name = "$")
+    protected WebSocketNode node;
 
-    protected final WebSocketEngine engine = WebSocketEngine.create(this.getClass().getName() + "-" + Arrays.toString(this.getClass().getAnnotation(WebServlet.class).value()));
+    protected WebSocketEngine engine;
 
     @Override
     public void init(Context context, AnyValue conf) {
-        if (nodeService != null) {
-            nodeService.addWebSocketEngine(engine);
-            nodeService.initUserNodes();
-        }
+        InetSocketAddress addr = context.getServerAddress();
+        this.engine = new WebSocketEngine(addr.getHostString() + ":" + addr.getPort() + "-" + name());
+        this.node.addWebSocketEngine(engine);
+        this.node.init(conf);
     }
 
     @Override
     public void destroy(Context context, AnyValue conf) {
+        this.node.destroy(conf);
         super.destroy(context, conf);
         engine.close();
     }
@@ -87,7 +88,7 @@ public abstract class WebSocketServlet extends HttpServlet {
         }
         final WebSocket webSocket = this.createWebSocket();
         webSocket.engine = engine;
-        webSocket.nodeService = nodeService;
+        webSocket.node = node;
         Serializable sessionid = webSocket.onOpen(request);
         if (sessionid == null) {
             if (debug) logger.finer("WebSocket connect abort, Not found sessionid. request=" + request);
@@ -129,6 +130,9 @@ public abstract class WebSocketServlet extends HttpServlet {
             }
         });
     }
+
+    @Override
+    public abstract String name();
 
     protected abstract WebSocket createWebSocket();
 }

@@ -6,6 +6,7 @@
 package com.wentch.redkale.net.http;
 
 import com.wentch.redkale.util.Utility;
+import java.io.*;
 
 /**
  *
@@ -52,6 +53,18 @@ public final class WebSocketPacket {
 
     public WebSocketPacket(String payload) {
         this(payload, true);
+    }
+
+    public WebSocketPacket(Serializable message, boolean fin) {
+        boolean bin = message != null && message.getClass() == byte[].class;
+        if (bin) {
+            this.type = PacketType.BINARY;
+            this.bytes = (byte[]) message;
+        } else {
+            this.type = PacketType.TEXT;
+            this.payload = String.valueOf(message);
+        }
+        this.last = fin;
     }
 
     public WebSocketPacket(String payload, boolean fin) {

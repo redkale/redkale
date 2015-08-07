@@ -5,7 +5,6 @@
  */
 package com.wentch.redkale.boot;
 
-import static com.wentch.redkale.boot.NodeServer.LINE_SEPARATOR;
 import com.wentch.redkale.convert.bson.*;
 import com.wentch.redkale.convert.json.*;
 import com.wentch.redkale.net.*;
@@ -17,23 +16,23 @@ import com.wentch.redkale.util.*;
 import com.wentch.redkale.util.AnyValue.DefaultAnyValue;
 import com.wentch.redkale.watch.*;
 import java.io.*;
-import java.lang.reflect.*;
 import java.net.*;
 import java.nio.*;
 import java.nio.channels.*;
 import java.nio.file.*;
 import java.util.*;
-import java.util.AbstractMap.SimpleEntry;
 import java.util.concurrent.*;
 import java.util.logging.*;
-import javax.annotation.*;
 import javax.xml.parsers.*;
 import org.w3c.dom.*;
 
 /**
  * 编译时需要加入: -XDignore.symbol.file=true
  * <p>
- * 进程启动类，程序启动后读取application.xml,进行classpath扫描动态加载Service与Servlet， 再进行Service、Servlet与其他资源之间的依赖注入。
+ * 进程启动类，程序启动后读取application.xml,进行classpath扫描动态加载Service与Servlet
+ * 优先加载所有SNCP协议的服务， 再加载其他协议服务，
+ * 最后进行Service、Servlet与其他资源之间的依赖注入。
+ * 
  *
  * @author zhangjx
  */
@@ -45,18 +44,6 @@ public final class Application {
     //当前进程的根目录， 类型：String
     public static final String RESNAME_HOME = "APP_HOME";
 
-    //当前进程节点的名称， 类型：String
-    public static final String RESNAME_NODE = "APP_NODE";
-
-    //当前进程节点的所属组， 类型：String、Map<String, Set<String>>、Map<String, List<SimpleEntry<String, InetSocketAddress[]>>>
-    public static final String RESNAME_GROUP = "APP_GROUP";
-
-    //当前进程节点的所属组所有节点名， 类型：Set<String> 、List<SimpleEntry<String, InetSocketAddress[]>>包含自身节点名
-    public static final String RESNAME_INGROUP = "APP_INGROUP";
-
-    //除当前进程节点的所属组外其他所有组的所有节点名， 类型：Map<String, Set<String>>、Map<String, List<SimpleEntry<String, InetSocketAddress[]>>>
-    public static final String RESNAME_OUTGROUP = "APP_OUTGROUP";
-
     //当前进程节点的IP地址， 类型：InetAddress、String
     public static final String RESNAME_ADDR = "APP_ADDR";
 
@@ -67,17 +54,19 @@ public final class Application {
 
     protected final WatchFactory watch = WatchFactory.root();
 
-    protected final HashMap<Class, ServiceEntry> localServices = new HashMap<>();
+    protected final Map<InetSocketAddress, String> addrGroups = new HashMap<>();
 
-    protected final ArrayList<ServiceEntry> remoteServices = new ArrayList<>();
+    protected final List<Transport> transports = new ArrayList<>();
 
-    protected boolean serviceInited = false;
+    protected final InetAddress localAddress;
 
-    protected final InetAddress localAddress = Utility.localInetAddress();
+    protected Class<? extends DataCacheListener> dataCacheListenerClass = DataCacheListenerService.class;
 
-    protected String nodeGroup = "";
+    protected Class<? extends WebSocketNode> webSocketNodeClass = WebSocketNodeService.class;
 
-    protected String nodeName = "";
+    protected final List<DataSource> sources = new CopyOnWriteArrayList<>();
+
+    protected final List<NodeServer> servers = new CopyOnWriteArrayList<>();
 
     //--------------------------------------------------------------------------------------------
     private File home;
@@ -85,10 +74,6 @@ public final class Application {
     private final Logger logger;
 
     private final AnyValue config;
-
-    private final List<NodeServer> servers = new CopyOnWriteArrayList<>();
-
-    private final List<DataSource> sources = new CopyOnWriteArrayList<>();
 
     private final long startTime = System.currentTimeMillis();
 
@@ -106,16 +91,12 @@ public final class Application {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+        String localaddr = config.getValue("address", "").trim();
+        this.localAddress = localaddr.isEmpty() ? Utility.localInetAddress() : new InetSocketAddress(localaddr, 0).getAddress();
+        Application.this.factory.register(RESNAME_ADDR, Application.this.localAddress.getHostAddress());
+        Application.this.factory.register(RESNAME_ADDR, InetAddress.class, Application.this.localAddress);
+        //以下是初始化日志配置
         final File logconf = new File(root, "conf/logging.properties");
-        this.nodeName = config.getValue("node", "");
-        this.nodeGroup = config.getValue("group", "");
-        this.factory.register(RESNAME_NODE, this.nodeName);
-        this.factory.register(RESNAME_GROUP, this.nodeGroup);
-        System.setProperty(RESNAME_NODE, this.nodeName);
-        System.setProperty(RESNAME_GROUP, this.nodeGroup);
-
-        this.factory.register(RESNAME_ADDR, this.localAddress.getHostAddress());
-        this.factory.register(RESNAME_ADDR, InetAddress.class, this.localAddress);
         if (logconf.isFile() && logconf.canRead()) {
             try {
                 final String rootpath = root.getCanonicalPath().replace('\\', '/');
@@ -178,17 +159,16 @@ public final class Application {
         System.setProperty("convert.bson.writer.buffer.defsize", "4096");
         System.setProperty("convert.json.writer.buffer.defsize", "4096");
 
-        final File root = new File(System.getProperty(RESNAME_HOME));
-        File persist = new File(root, "conf/persistence.xml");
+        File persist = new File(this.home, "conf/persistence.xml");
+        final String homepath = this.home.getCanonicalPath();
         if (persist.isFile()) System.setProperty(DataDefaultSource.DATASOURCE_CONFPATH, persist.getCanonicalPath());
-        logger.log(Level.INFO, RESNAME_HOME + "=" + root.getCanonicalPath() + "\r\n" + RESNAME_ADDR + "=" + this.localAddress.getHostAddress());
-        String lib = config.getValue("lib", "").trim().replace("${APP_HOME}", root.getCanonicalPath());
-        lib = lib.isEmpty() ? (root.getCanonicalPath() + "/conf") : (lib + ";" + root.getCanonicalPath() + "/conf");
+        logger.log(Level.INFO, RESNAME_HOME + "=" + homepath + "\r\n" + RESNAME_ADDR + "=" + this.localAddress.getHostAddress());
+        String lib = config.getValue("lib", "").trim().replace("${APP_HOME}", homepath);
+        lib = lib.isEmpty() ? (homepath + "/conf") : (lib + ";" + homepath + "/conf");
         Server.loadLib(logger, lib);
         initLogging();
-        InetAddress addr = Utility.localInetAddress();
-        if (addr != null) {
-            byte[] bs = addr.getAddress();
+        if (this.localAddress != null) {
+            byte[] bs = this.localAddress.getAddress();
             int v = (0xff & bs[bs.length - 2]) % 10 * 100 + (0xff & bs[bs.length - 1]);
             this.factory.register("property.datasource.nodeid", "" + v);
         }
@@ -232,12 +212,23 @@ public final class Application {
         initResources();
     }
 
+    @Deprecated
     public static void singleton(Service service) throws Exception {
         final Application application = Application.create();
         application.init();
         application.factory.register(service);
-        new NodeHttpServer(application, new CountDownLatch(1), null).prepare(application.config);
+        new NodeHttpServer(application, null, new CountDownLatch(1), null).prepare(application.config);
         application.factory.inject(service);
+    }
+
+    public static <T extends Service> T singleton(Class<T> serviceClass) throws Exception {
+        final Application application = Application.create();
+        T service = Sncp.createLocalService("", serviceClass, null, null, null);
+        application.init();
+        application.factory.register(service);
+        new NodeSncpServer(application, null, new CountDownLatch(1), null).init(application.config);
+        application.factory.inject(service);
+        return service;
     }
 
     private static Application create() throws IOException {
@@ -257,7 +248,12 @@ public final class Application {
         }
         application.init();
         application.startSelfServer();
-        application.start();
+        try {
+            application.start();
+        } catch (Exception e) {
+            application.logger.log(Level.SEVERE, "Application start error", e);
+            System.exit(0);
+        }
         System.exit(0);
     }
 
@@ -336,20 +332,38 @@ public final class Application {
         final AnyValue[] entrys = config.getAnyValues("server");
         this.serverscdl = new CountDownLatch(entrys.length + 1);
         CountDownLatch timecd = new CountDownLatch(entrys.length);
-        runServers(timecd, entrys);
+        final List<AnyValue> sncps = new ArrayList<>();
+        final List<AnyValue> others = new ArrayList<>();
+        for (final AnyValue entry : entrys) {
+            if (entry.getValue("protocol", "").toUpperCase().startsWith("SNCP")) {
+                sncps.add(entry);
+            } else {
+                others.add(entry);
+            }
+        }
+        for (AnyValue sncpconf : sncps) {
+            String host = sncpconf.getValue("host", "0.0.0.0").replace("0.0.0.0", "");
+            InetSocketAddress addr = new InetSocketAddress(host.isEmpty() ? this.localAddress.getHostAddress() : host, sncpconf.getIntValue("port", 80));
+            String oldgroup = addrGroups.get(addr);
+            if (oldgroup != null && !((sncpconf.getValue("group", "") + ";").contains(oldgroup + ";"))) throw new RuntimeException(addr + " has one more group " + (addrGroups.get(addr)));
+            if (oldgroup == null) addrGroups.put(addr, "");
+        }
+        runServers(timecd, sncps);  //确保sncp都启动后再启动其他协议
+        runServers(timecd, others);
         timecd.await();
         logger.info(this.getClass().getSimpleName() + " started in " + (System.currentTimeMillis() - startTime) + " ms");
         this.serverscdl.await();
     }
 
     @SuppressWarnings("unchecked")
-    private void runServers(CountDownLatch timecd, final AnyValue[] entrys) throws Exception {
-        CountDownLatch servicecdl = new CountDownLatch(entrys.length);
-        for (final AnyValue entry : entrys) {
-            new Thread() {
+    private void runServers(CountDownLatch timecd, final List<AnyValue> serconfs) throws Exception {
+        CountDownLatch servicecdl = new CountDownLatch(serconfs.size());
+        CountDownLatch sercdl = new CountDownLatch(serconfs.size());
+        for (final AnyValue serconf : serconfs) {
+            Thread thread = new Thread() {
                 {
-                    String host = entry.getValue("host", "").replace("0.0.0.0", "");
-                    setName(entry.getValue("protocol", "Server").toUpperCase() + "-" + host + ":" + entry.getIntValue("port", 80) + "-Thread");
+                    String host = serconf.getValue("host", "").replace("0.0.0.0", "[0]");
+                    setName(serconf.getValue("protocol", "Server").toUpperCase() + "-" + host + ":" + serconf.getIntValue("port", 80) + "-Thread");
                     this.setDaemon(true);
                 }
 
@@ -358,167 +372,96 @@ public final class Application {
                     try {
                         //Thread ctd = Thread.currentThread();
                         //ctd.setContextClassLoader(new URLClassLoader(new URL[0], ctd.getContextClassLoader()));
-                        String protocol = entry.getValue("protocol", "");
-                        String subprotocol = "UDP";
+                        String protocol = serconf.getValue("protocol", "");
+                        String subprotocol = Sncp.DEFAULT_PROTOCOL;
                         int pos = protocol.indexOf('.');
                         if (pos > 0) {
                             subprotocol = protocol.substring(pos + 1);
                             protocol = protocol.substring(0, pos);
                         }
                         NodeServer server = null;
-                        if ("HTTP".equalsIgnoreCase(protocol)) {
-                            server = new NodeHttpServer(Application.this, servicecdl, new HttpServer(startTime, watch));
-                        } else if ("SNCP".equalsIgnoreCase(protocol)) {
-                            server = new NodeSncpServer(Application.this, servicecdl, new SncpServer(startTime, subprotocol, watch));
+                        String host = serconf.getValue("host", "0.0.0.0").replace("0.0.0.0", "");
+                        InetSocketAddress addr = new InetSocketAddress(host.isEmpty() ? localAddress.getHostAddress() : host, serconf.getIntValue("port", 80));
+                        if ("SNCP".equalsIgnoreCase(protocol)) {
+                            server = new NodeSncpServer(Application.this, addr, servicecdl, new SncpServer(startTime, subprotocol, addr, watch));
+                        } else if ("HTTP".equalsIgnoreCase(protocol)) {
+                            server = new NodeHttpServer(Application.this, addr, servicecdl, new HttpServer(startTime, watch));
                         }
                         if (server == null) {
-                            logger.log(Level.SEVERE, "Not found Server Class for protocol({0})", entry.getValue("protocol"));
+                            logger.log(Level.SEVERE, "Not found Server Class for protocol({0})", serconf.getValue("protocol"));
                             System.exit(0);
                         }
                         servers.add(server);
-
-                        server.prepare(entry); //必须在init之前
-                        server.init(entry);
+                        server.init(serconf);
                         server.start();
                         timecd.countDown();
+                        sercdl.countDown();
                     } catch (Exception ex) {
-                        logger.log(Level.WARNING, entry + " runServers error", ex);
+                        logger.log(Level.WARNING, serconf + " runServers error", ex);
                         serverscdl.countDown();
                     }
                 }
-            }.start();
+            };
+            thread.start();
         }
+        sercdl.await();
     }
 
     private void initResources() throws Exception {
-
-        this.factory.add(DataSource.class, (ResourceFactory rf, final Object src, Field field) -> {
-            try {
-                Resource rs = field.getAnnotation(Resource.class);
-                if (rs == null) return;
-                if (src.getClass().getAnnotation(RemoteOn.class) != null) return;
-                DataSource source = DataSourceFactory.create(rs.name());
-                sources.add(source);
-                rf.register(rs.name(), DataSource.class, source);
-                field.set(src, source);
-                rf.inject(source); // 给 "datasource.nodeid" 赋值
-            } catch (Exception e) {
-                logger.log(Level.SEVERE, "DataSource inject error", e);
-            }
-        });
-
-        this.factory.add(DataSQLListener.class, (ResourceFactory rf, Object src, Field field) -> {
-
-            try {
-                Resource rs = field.getAnnotation(Resource.class);
-                if (rs == null) return;
-                if (src.getClass().getAnnotation(RemoteOn.class) != null) return;
-                DataSQLListener service = rf.findChild("", DataSQLListener.class);
-                if (service != null) {
-                    field.set(src, service);
-                    rf.inject(service);
-                }
-            } catch (Exception e) {
-                logger.log(Level.SEVERE, DataSQLListener.class.getSimpleName() + " inject error", e);
-            }
-        }
-        );
-
-        this.factory.add(DataCacheListener.class, (ResourceFactory rf, Object src, Field field) -> {
-
-            try {
-                Resource rs = field.getAnnotation(Resource.class);
-                if (rs == null) return;
-                if (src.getClass().getAnnotation(RemoteOn.class) != null) return;
-                DataCacheListener service = rf.findChild("", DataCacheListener.class);
-                if (service != null) {
-                    field.set(src, service);
-                    rf.inject(service);
-                }
-            } catch (Exception e) {
-                logger.log(Level.SEVERE, DataCacheListener.class.getSimpleName() + " inject error", e);
-            }
-        }
-        );
         //-------------------------------------------------------------------------
         final AnyValue resources = config.getAnyValue("resources");
         if (resources != null) {
             //------------------------------------------------------------------------
-            final String host = this.localAddress.getHostAddress();
-            final Map<String, Set<String>> groups = new HashMap<>();
-            final Map<String, List<SimpleEntry<String, InetSocketAddress[]>>> groups2 = new HashMap<>();
-
-            for (AnyValue conf : resources.getAnyValues("remote")) {
-                final String name = conf.getValue("name");
-                final String group = conf.getValue("group", "");
-                if (name == null) throw new RuntimeException("remote name is null");
-                String protocol = conf.getValue("protocol", "UDP").toUpperCase();
-                if (!"TCP".equalsIgnoreCase(protocol) && !"UDP".equalsIgnoreCase(protocol)) {
-                    throw new RuntimeException("Not supported Transport Protocol " + conf.getValue("protocol"));
-                }
-                {
-                    Set<String> set = groups.get(group);
-                    if (set == null) {
-                        set = new HashSet<>();
-                        groups.put(group, set);
+            AnyValue datacachelistenerConf = resources.getAnyValue("datacachelistener");
+            if (datacachelistenerConf != null) {
+                String val = datacachelistenerConf.getValue("service", "");
+                if (!val.isEmpty()) {
+                    if ("none".equalsIgnoreCase(val)) {
+                        this.dataCacheListenerClass = null;
+                    } else {
+                        Class clazz = Class.forName(val);
+                        if (!DataCacheListener.class.isAssignableFrom(clazz) || !Service.class.isAssignableFrom(clazz)) {
+                            throw new RuntimeException("datacachelistener service (" + val + ") is illegal");
+                        }
+                        this.dataCacheListenerClass = clazz;
                     }
-                    set.add(name);
-                }
-                AnyValue[] addrs = conf.getAnyValues("address");
-                InetSocketAddress[] addresses = new InetSocketAddress[addrs.length];
-                int i = -1;
-                for (AnyValue addr : addrs) {
-                    addresses[++i] = new InetSocketAddress(addr.getValue("addr"), addr.getIntValue("port"));
-                }
-                if (addresses.length < 1) throw new RuntimeException("Transport(" + name + ") have no address ");
-                {
-                    List<SimpleEntry<String, InetSocketAddress[]>> list = groups2.get(group);
-                    if (list == null) {
-                        list = new ArrayList<>();
-                        groups2.put(group, list);
-                    }
-                    list.add(new SimpleEntry<>(name, addresses));
-                }
-                Transport transport = new Transport(name, protocol, conf.getIntValue("clients", Runtime.getRuntime().availableProcessors() * 8),
-                        conf.getIntValue("buffers:", Runtime.getRuntime().availableProcessors() * 16), watch, addresses);
-                factory.register(name, Transport.class, transport);
-                if (this.nodeName.isEmpty() && host.equals(addrs[0].getValue("addr"))) {
-                    this.nodeName = name;
-                    this.nodeGroup = group;
-                    this.factory.register(RESNAME_NODE, this.nodeName);
-                    this.factory.register(RESNAME_GROUP, this.nodeGroup);
-                    System.setProperty(RESNAME_NODE, this.nodeName);
-                    System.setProperty(RESNAME_GROUP, this.nodeGroup);
                 }
             }
+//------------------------------------------------------------------------
+            AnyValue websocketnodeConf = resources.getAnyValue("websocketnode");
+            if (websocketnodeConf != null) {
+                String val = websocketnodeConf.getValue("service", "");
+                if (!val.isEmpty()) {
+                    if ("none".equalsIgnoreCase(val)) {
+                        this.webSocketNodeClass = null;
+                    } else {
+                        Class clazz = Class.forName(val);
+                        if (!WebSocketNode.class.isAssignableFrom(clazz) || !Service.class.isAssignableFrom(clazz)) {
+                            throw new RuntimeException("websocketnode service (" + val + ") is illegal");
+                        }
+                        this.webSocketNodeClass = clazz;
+                    }
+                }
+            }
+            //------------------------------------------------------------------------
+            final Map<String, Set<String>> groups = new HashMap<>();
 
-            this.factory.register(RESNAME_GROUP, new TypeToken<Map<String, Set<String>>>() {
-            }.getType(), groups);
-            this.factory.register(RESNAME_GROUP, new TypeToken<Map<String, List<SimpleEntry<String, InetSocketAddress[]>>>>() {
-            }.getType(), groups2);
-
-            final Map<String, List<SimpleEntry<String, InetSocketAddress[]>>> outgroups2 = new HashMap<>();
-            final Map<String, Set<String>> outgroups = new HashMap<>();
-            groups.entrySet().stream().filter(x -> !x.getKey().equals(nodeName)).forEach(x -> outgroups.put(x.getKey(), x.getValue()));
-            groups2.entrySet().stream().filter(x -> !x.getKey().equals(nodeName)).forEach(x -> outgroups2.put(x.getKey(), x.getValue()));
-
-            this.factory.register(RESNAME_OUTGROUP, new TypeToken<Map<String, Set<String>>>() {
-            }.getType(), outgroups);
-            this.factory.register(RESNAME_OUTGROUP, new TypeToken<Map<String, List<SimpleEntry<String, InetSocketAddress[]>>>>() {
-            }.getType(), outgroups2);
-
-            Set<String> ingroup = groups.get(this.nodeGroup);
-            if (ingroup != null) this.factory.register(RESNAME_INGROUP, new TypeToken<Set<String>>() {
-            }.getType(), ingroup);
-            List<SimpleEntry<String, InetSocketAddress[]>> inengroup = groups2.get(this.nodeGroup);
-            if (inengroup != null) this.factory.register(RESNAME_INGROUP, new TypeToken<List<SimpleEntry<String, InetSocketAddress[]>>>() {
-            }.getType(), inengroup);
+            for (AnyValue conf : resources.getAnyValues("group")) {
+                final String group = conf.getValue("name", "");
+                String protocol = conf.getValue("protocol", Sncp.DEFAULT_PROTOCOL).toUpperCase();
+                if (!"TCP".equalsIgnoreCase(protocol) && !Sncp.DEFAULT_PROTOCOL.equalsIgnoreCase(protocol)) {
+                    throw new RuntimeException("Not supported Transport Protocol " + conf.getValue("protocol"));
+                }
+                List<InetSocketAddress> addrs = new ArrayList<>();
+                for (AnyValue node : conf.getAnyValues("node")) {
+                    InetSocketAddress addr = new InetSocketAddress(node.getValue("addr"), node.getIntValue("port"));
+                    if (addrGroups.containsKey(addr)) throw new RuntimeException(addr + " had one more group " + (addrGroups.get(addr)));
+                    addrGroups.put(addr, group);
+                    addrs.add(addr);
+                }
+            }
         }
-
         //------------------------------------------------------------------------
-        logger.info(RESNAME_NODE + "=" + this.nodeName + "; " + RESNAME_GROUP + "=" + this.nodeGroup);
-        logger.info("datasource.nodeid=" + this.factory.find("property.datasource.nodeid", String.class));
-
     }
 
     private void shutdown() throws Exception {
@@ -531,18 +474,6 @@ public final class Application {
                 serverscdl.countDown();
             }
         });
-        final StringBuilder sb = logger.isLoggable(Level.INFO) ? new StringBuilder() : null;
-        localServices.entrySet().stream().forEach(k -> {
-            Class x = k.getKey();
-            ServiceEntry y = k.getValue();
-            long s = System.currentTimeMillis();
-            y.getService().destroy(y.getServiceConf());
-            long e = System.currentTimeMillis() - s;
-            if (e > 2 && sb != null) {
-                sb.append("LocalService(").append(y.getNames()).append("|").append(y.getServiceClass()).append(") destroy ").append(e).append("ms").append(LINE_SEPARATOR);
-            }
-        });
-        if (sb != null && sb.length() > 0) logger.log(Level.INFO, sb.toString());
         for (DataSource source : sources) {
             try {
                 source.getClass().getMethod("close").invoke(source);

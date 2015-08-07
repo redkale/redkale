@@ -61,7 +61,7 @@ public class WebSocketRunner implements Runnable {
     public void run() {
         final boolean debug = this.coder.debugable;
         try {
-            if (webSocket.nodeService != null) webSocket.nodeService.connectSelf(webSocket.groupid);
+            if (webSocket.node != null) webSocket.node.connect(webSocket.groupid, webSocket.engine.getEngineid());
             webSocket.onConnected();
             channel.setReadTimeoutSecond(300); //读取超时5分钟
             if (channel.isOpen()) {
@@ -117,7 +117,7 @@ public class WebSocketRunner implements Runnable {
                                 readBuffer.clear();
                                 channel.read(readBuffer, null, this);
                             }
-                            webSocket.group.recentWebSocket = webSocket;
+                            webSocket.group.setRecentWebSocket(webSocket);
                             if (packet.type == PacketType.TEXT) {
                                 webSocket.onMessage(packet.getPayload());
                             } else if (packet.type == PacketType.BINARY) {
@@ -229,9 +229,9 @@ public class WebSocketRunner implements Runnable {
         readBuffer = null;
         writeBuffer = null;
         engine.remove(webSocket);
-        if (webSocket.nodeService != null) {
+        if (webSocket.node != null) {
             WebSocketGroup group = webSocket.getWebSocketGroup();
-            if (group == null || group.isEmpty()) webSocket.nodeService.disconnectSelf(webSocket.groupid);
+            if (group == null || group.isEmpty()) webSocket.node.disconnect(webSocket.groupid, webSocket.engine.getEngineid());
         }
         webSocket.onClose(0, null);
     }

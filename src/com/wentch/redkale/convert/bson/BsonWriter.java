@@ -7,6 +7,7 @@ package com.wentch.redkale.convert.bson;
 
 import com.wentch.redkale.convert.*;
 import com.wentch.redkale.util.*;
+import java.nio.*;
 
 /**
  *
@@ -31,6 +32,10 @@ public final class BsonWriter implements Writer {
         byte[] newdata = new byte[count];
         System.arraycopy(content, 0, newdata, 0, count);
         return newdata;
+    }
+
+    public ByteBuffer toBuffer() {
+        return ByteBuffer.wrap(content, 0, count);
     }
 
     public BsonWriter() {

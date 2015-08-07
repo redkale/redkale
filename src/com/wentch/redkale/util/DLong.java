@@ -33,16 +33,19 @@ public final class DLong extends Number implements Comparable<DLong> {
     }
 
     @Override
-    public int hashCode() {
-        return intValue();
-    }
-
-    @Override
     public boolean equals(Object obj) {
         if (obj == null) return false;
         if (getClass() != obj.getClass()) return false;
         final DLong other = (DLong) obj;
         return (this.first == other.first && this.second == other.second);
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 7;
+        hash = 89 * hash + (int) (this.first ^ (this.first >>> 32));
+        hash = 89 * hash + (int) (this.second ^ (this.second >>> 32));
+        return hash;
     }
 
     @Override

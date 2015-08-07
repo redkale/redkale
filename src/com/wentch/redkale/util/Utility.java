@@ -324,6 +324,17 @@ public final class Utility {
         return size;
     }
 
+    /**
+     * 将两个数字组装成一个long
+     * <p>
+     * @param high
+     * @param low
+     * @return
+     */
+    public static long merge(long high, long low) {
+        return high << 32 | low;
+    }
+
     public static ByteBuffer encodeUTF8(final ByteBuffer buffer, final char[] text, final int start, final int len) {
         return encodeUTF8(buffer, encodeUTF8Length(text, start, len), text, start, len);
     }

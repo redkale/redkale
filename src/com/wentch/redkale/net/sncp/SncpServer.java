@@ -9,6 +9,7 @@ import com.wentch.redkale.convert.bson.*;
 import com.wentch.redkale.net.*;
 import com.wentch.redkale.util.*;
 import com.wentch.redkale.watch.*;
+import java.net.*;
 import java.nio.*;
 import java.util.*;
 import java.util.concurrent.atomic.*;
@@ -20,18 +21,45 @@ import java.util.concurrent.atomic.*;
  */
 public final class SncpServer extends Server {
 
-    private final List<ServiceEntry> services = new ArrayList<>();
+    protected InetSocketAddress nodeAddress;
 
     public SncpServer(String protocol) {
-        this(System.currentTimeMillis(), protocol, null);
+        this(System.currentTimeMillis(), protocol, null, null);
     }
 
-    public SncpServer(long serverStartTime, String protocol, final WatchFactory watch) {
-        super(serverStartTime, protocol, watch);
+    public SncpServer(long serverStartTime, String protocol, InetSocketAddress nodeAddress, final WatchFactory watch) {
+        super(serverStartTime, protocol, new SncpPrepareServlet(), watch);
+        this.nodeAddress = nodeAddress;
     }
 
-    public void addService(ServiceEntry entry) {
-        this.services.add(entry);
+    @Override
+    public void init(AnyValue config) throws Exception {
+        super.init(config);
+        if (this.nodeAddress == null) {
+            if ("0.0.0.0".equals(this.address.getHostString())) {
+                this.nodeAddress = new InetSocketAddress(Utility.localInetAddress().getHostAddress(), this.address.getPort());
+            } else {
+                this.nodeAddress = this.address;
+            }
+        }
+    }
+
+    public void addService(ServiceWrapper entry) {
+        ((SncpPrepareServlet) this.prepare).addSncpServlet(new SncpDynServlet(BsonFactory.root().getConvert(), entry.getName(), entry.getService(), entry.getConf()));
+    }
+
+    public List<SncpServlet> getSncpServlets() {
+        return ((SncpPrepareServlet) this.prepare).getSncpServlets();
+    }
+
+    /**
+     *
+     * 对外的IP地址
+     *
+     @return 
+     */
+    public InetSocketAddress getNodeAddress() {
+        return nodeAddress;
     }
 
     @Override
@@ -47,15 +75,11 @@ public final class SncpServer extends Server {
                     e.clear();
                     return true;
                 });
-        SncpPrepareServlet prepare = new SncpPrepareServlet();
-        final BsonConvert convert = BsonFactory.root().getConvert();
-        this.services.stream().forEach(x -> x.getNames().forEach(y -> prepare.addSncpServlet(new SncpDynServlet(convert, y, x.getService(), x.getServiceConf()))));
-        this.services.clear();
         AtomicLong createResponseCounter = watch == null ? new AtomicLong() : watch.createWatchNumber("SNCP_" + port + ".Response.creatCounter");
         AtomicLong cycleResponseCounter = watch == null ? new AtomicLong() : watch.createWatchNumber("SNCP_" + port + ".Response.cycleCounter");
         ObjectPool<Response> responsePool = SncpResponse.createPool(createResponseCounter, cycleResponseCounter, this.responsePoolSize, null);
         SncpContext sncpcontext = new SncpContext(this.serverStartTime, this.logger, executor, bufferPool, responsePool,
-                this.maxbody, this.charset, this.address, prepare, this.watch, this.readTimeoutSecond, this.writeTimeoutSecond);
+                this.maxbody, this.charset, this.address, this.prepare, this.watch, this.readTimeoutSecond, this.writeTimeoutSecond);
         responsePool.setCreator((Object... params) -> new SncpResponse(sncpcontext, new SncpRequest(sncpcontext, sncpcontext.bsonFactory)));
         return sncpcontext;
     }

@@ -8,6 +8,7 @@ package com.wentch.redkale.convert.bson;
 import com.wentch.redkale.convert.*;
 import com.wentch.redkale.util.*;
 import java.lang.reflect.*;
+import java.nio.*;
 
 /**
  * BSON协议格式: 
@@ -77,5 +78,27 @@ public final class BsonConvert extends Convert<BsonReader, BsonWriter> {
             return result;
         }
         return convertTo(value.getClass(), value);
+    }
+
+    public ByteBuffer convertToBuffer(final Type type, Object value) {
+        if (type == null) return null;
+        final BsonWriter out = writerPool.poll();
+        out.setTiny(tiny);
+        factory.loadEncoder(type).convertTo(out, value);
+        ByteBuffer result = out.toBuffer();
+        writerPool.offer(out);
+        return result;
+    }
+
+    public ByteBuffer convertToBuffer(Object value) {
+        if (value == null) {
+            final BsonWriter out = writerPool.poll();
+            out.setTiny(tiny);
+            out.writeNull();
+            ByteBuffer result = out.toBuffer();
+            writerPool.offer(out);
+            return result;
+        }
+        return convertToBuffer(value.getClass(), value);
     }
 }

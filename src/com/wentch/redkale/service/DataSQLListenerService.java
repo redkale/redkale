@@ -17,162 +17,102 @@ import java.util.logging.*;
 import javax.annotation.Resource;
 
 /**
+ * 暂时不实现
  *
  * @author zhangjx
  */
 @AutoLoad(false)
 public class DataSQLListenerService implements DataSQLListener, Service {
 
-    protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
-
     private static final String format = "%1$tY-%1$tm-%1$td %1$tH:%1$tM:%1$tS.%tL";
 
-    private boolean finest;
+    protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
 
-    @Resource(name = "APP_NODE")
-    private String localNodeName = "";
-
-    private String localIDCName = "";
+    private final boolean finest = logger.isLoggable(Level.FINEST);
 
     @Resource(name = "APP_HOME")
     private File home;
 
-    private File root;
+    @Resource(name = "$")
+    private DataSource source;
 
-    @Resource(name = ".*")
-    HashMap<String, DataSource> sourcemaps;
+    private final BlockingQueue<String> queue = new ArrayBlockingQueue<>(1024 * 1024);
 
-    private ConcurrentHashMap<String, BlockingQueue<String>> queues = new ConcurrentHashMap<>();
-
-    @Resource
-    private HashMap<String, DataSQLListenerService> nodemaps;
-
-    private final HashSet<String> allidcs = new HashSet<>();
-
-    private ConcurrentHashMap<String, PrintStream> syncfiles = new ConcurrentHashMap<>();
+    private PrintStream syncfile;
 
     @Override
     public void init(AnyValue config) {
-        finest = logger.isLoggable(Level.FINEST);
-        //nodename的前两位字符表示机房ID
-        if (localNodeName.length() > 2) localIDCName = getIDC(localNodeName);
-        if (finest) logger.fine("LocalNodeName: " + localNodeName + ", " + localIDCName + "      " + this.nodemaps);
-        if (this.nodemaps == null) return;
-        this.nodemaps.forEach((x, y) -> allidcs.add(x.substring(0, 2)));
+        new Thread() {
+            {
+                setName(DataSQLListener.class.getSimpleName() + "-Thread");
+                setDaemon(true);
+            }
+
+            @Override
+            public void run() {
+                while (true) {
+                    try {
+                        String sql = queue.take();
+                        send(sql);
+                    } catch (Exception e) {
+                        logger.log(Level.SEVERE, this.getName() + " occur error");
+                    }
+                }
+            }
+        }.start();
+
     }
 
     @Override
     public void destroy(AnyValue config) {
-        this.syncfiles.forEach((x, y) -> {
-            y.close();
-        });
+        if (syncfile != null) syncfile.close();
     }
 
-    private void write(String node, String sourceName, String... sqls) {
-        if (sourceName == null || sourceName.isEmpty()) sourceName = "<>";
-        String key = node + "-" + sourceName;
-        PrintStream channel = syncfiles.get(key);
+    private void write(String... sqls) {
         try {
-            if (channel == null) {
-                if (this.root == null) {
-                    this.root = new File(home, "dbsync");
-                    this.root.mkdirs();
-                }
-                channel = new PrintStream(new FileOutputStream(new File(this.root, key + ".sql"), true), false, "UTF-8");
-                syncfiles.put(key, channel);
+            if (syncfile == null) {
+                File root = new File(home, "dbsync");
+                root.mkdirs();
+                syncfile = new PrintStream(new FileOutputStream(new File(root, "sql-" + name() + ".sql"), true), false, "UTF-8");
             }
             for (String sql : sqls) {
-                channel.print(sql + ";\r\n");
+                syncfile.print(sql + ";\r\n");
             }
-            channel.flush();
+            syncfile.flush();
         } catch (Exception e) {
-            logger.log(Level.WARNING, "write sql file error. (" + node + ", " + sourceName + ", " + Arrays.toString(sqls) + ")", e);
+            logger.log(Level.WARNING, "write sql file error. (" + name() + ", " + Arrays.toString(sqls) + ")", e);
         }
     }
 
     @Override
-    public void insert(String sourceName, String... sqls) {
-        put(sourceName, sqls);
+    public void insert(String... sqls) {
+        put(sqls);
     }
 
     @Override
-    public void update(String sourceName, String... sqls) {
-        put(sourceName, sqls);
+    public void update(String... sqls) {
+        put(sqls);
     }
 
     @Override
-    public void delete(String sourceName, String... sqls) {
-        put(sourceName, sqls);
+    public void delete(String... sqls) {
+        put(sqls);
     }
 
-    private void put(final String sourceName, String... sqls) {
+    private void put(String... sqls) {
         String date = String.format(format, System.currentTimeMillis());
-        BlockingQueue<String> queue = this.queues.get(sourceName);
-        if (queue == null) {
-            synchronized (this) {
-                queue = this.queues.get(sourceName);
-                if (queue == null) {
-                    queue = new ArrayBlockingQueue<>(1024 * 1024);
-                    this.queues.put(sourceName, queue);
-                    final BlockingQueue<String> tq = queue;
-                    new Thread() {
-                        {
-                            setName(DataSQLListener.class.getSimpleName() + "-" + (sourceName.isEmpty() ? "<>" : sourceName) + "-Thread");
-                            setDaemon(true);
-                        }
-
-                        @Override
-                        public void run() {
-                            while (true) {
-                                try {
-                                    String sql = tq.take();
-                                    send(sourceName, sql);
-                                } catch (Exception e) {
-                                    logger.log(Level.SEVERE, this.getName() + " occur error");
-                                }
-                            }
-
-                        }
-                    }.start();
-                }
-            }
-        }
-        try {
-            for (String sql : sqls) {
-                queue.put("/* " + date + " */ " + sql);
-            }
-        } catch (Exception e) {
-            logger.log(Level.WARNING, this.getClass().getSimpleName() + " put queue error" + Arrays.toString(sqls), e);
-        }
-    }
-
-    private String getIDC(String nodeName) {
-        return nodeName.substring(0, 2);
-    }
-
-    @RemoteOn
-    public void send(String sourceName, String... sqls) {
-        if (this.nodemaps == null) return;
-        final Set<String> idcs = new HashSet<>();
-        idcs.add(localIDCName);
-        nodemaps.forEach((x, y) -> {
+        for (String sql : sqls) {
             try {
-                String idc = getIDC(x);
-                if (!idcs.contains(idc)) {
-                    y.send(sourceName, sqls);
-                    idcs.add(idc);
-                }
+                queue.put("/* " + date + " */ " + sql);
             } catch (Exception e) {
-                logger.log(Level.FINE, this.getClass().getSimpleName() + " send error (" + x + ", " + sourceName + ", " + Arrays.toString(sqls) + ")", e);
+                write(sql);
             }
-        });
-        allidcs.forEach(x -> {
-            if (!idcs.contains(x)) write(x, sourceName, sqls);
-        });
+        }
     }
 
-    public final void onSend(String sourceName, String... sqls) {
-        ((DataDefaultSource) sourcemaps.get(sourceName)).execute(sqls);
+    @MultiRun
+    public void send(String... sqls) {
+        ((DataDefaultSource) source).execute(sqls);
     }
 
 }

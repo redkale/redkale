@@ -12,9 +12,9 @@ package com.wentch.redkale.source;
  */
 public interface DataSQLListener {
 
-    public void insert(String sourceName, String... sqls);
+    public void insert(String... sqls);
 
-    public void update(String sourceName, String... sqls);
+    public void update(String... sqls);
 
-    public void delete(String sourceName, String... sqls);
+    public void delete(String... sqls);
 }

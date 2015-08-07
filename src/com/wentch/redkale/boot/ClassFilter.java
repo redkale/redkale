@@ -37,9 +37,25 @@ public final class ClassFilter<T> {
 
     private Pattern[] excludePatterns;
 
+    private List<ClassFilter> ors;
+
+    private List<ClassFilter> ands;
+
     public ClassFilter(Class<? extends Annotation> annotationClass, Class superClass) {
         this.annotationClass = annotationClass;
         this.superClass = superClass;
+    }
+
+    public ClassFilter<T> or(ClassFilter<T> filter) {
+        if (ors == null) ors = new ArrayList<>();
+        ors.add(filter);
+        return this;
+    }
+
+    public ClassFilter<T> and(ClassFilter<T> filter) {
+        if (ands == null) ands = new ArrayList<>();
+        ands.add(filter);
+        return this;
     }
 
     /**
@@ -74,8 +90,7 @@ public final class ClassFilter<T> {
         try {
             Class clazz = Class.forName(clazzname);
             if (accept(property, clazz, autoscan)) {
-                FilterEntry en = new FilterEntry(clazz, property);
-                if (!entrys.contains(en)) entrys.add(en);
+                entrys.add(new FilterEntry(clazz, property));
             }
         } catch (Throwable cfe) {
         }
@@ -104,6 +119,21 @@ public final class ClassFilter<T> {
      * @return
      */
     public boolean accept(AnyValue property, String classname) {
+        boolean r = accept0(property, classname);
+        if (r && ands != null) {
+            for (ClassFilter filter : ands) {
+                if (!filter.accept(property, classname)) return false;
+            }
+        }
+        if (!r && ors != null) {
+            for (ClassFilter filter : ors) {
+                if (filter.accept(property, classname)) return true;
+            }
+        }
+        return r;
+    }
+
+    private boolean accept0(AnyValue property, String classname) {
         if (this.refused) return false;
         if (classname.startsWith("java.") || classname.startsWith("javax.")) return false;
         if (excludePatterns != null) {
@@ -186,16 +216,17 @@ public final class ClassFilter<T> {
      */
     public static final class FilterEntry<T> {
 
+        private String group;
+
         private final String name;
 
         private final Class<T> type;
 
         private final AnyValue property;
 
-        protected Object attachment;
-
         public FilterEntry(Class<T> type, AnyValue property) {
             this.type = type;
+            this.group = property == null ? "" : property.getValue("group", "");
             this.property = property;
             this.name = property == null ? "" : property.getValue("name", "");
         }
@@ -203,8 +234,7 @@ public final class ClassFilter<T> {
         @Override
         public String toString() {
             return this.getClass().getSimpleName() + "[thread=" + Thread.currentThread().getName()
-                    + ", type=" + this.type.getSimpleName() + ", name=" + name
-                    + ", remote=" + (property == null ? "null" : property.getValue("remote")) + "]";
+                    + ", type=" + this.type.getSimpleName() + ", name=" + name + ", group=" + group + "]";
         }
 
         @Override
@@ -216,7 +246,7 @@ public final class ClassFilter<T> {
         public boolean equals(Object obj) {
             if (obj == null) return false;
             if (getClass() != obj.getClass()) return false;
-            return (this.type == ((FilterEntry<?>) obj).type && this.name.equals(((FilterEntry<?>) obj).name));
+            return (this.type == ((FilterEntry<?>) obj).type && this.group.equals(((FilterEntry<?>) obj).group) && this.name.equals(((FilterEntry<?>) obj).name));
         }
 
         public Class<T> getType() {
@@ -231,14 +261,13 @@ public final class ClassFilter<T> {
             return property;
         }
 
-        public Object getAttachment() {
-            return attachment;
+        public String getGroup() {
+            return group;
         }
 
-        public void setAttachment(Object attachment) {
-            this.attachment = attachment;
+        public void setGroup(String group) {
+            this.group = group;
         }
-
     }
 
     /**

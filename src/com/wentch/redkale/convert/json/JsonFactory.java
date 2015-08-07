@@ -8,6 +8,7 @@ package com.wentch.redkale.convert.json;
 import com.wentch.redkale.convert.ConvertType;
 import com.wentch.redkale.convert.Factory;
 import java.io.Serializable;
+import java.net.*;
 
 /**
  *
@@ -18,6 +19,8 @@ public final class JsonFactory extends Factory<JsonReader, JsonWriter> {
     private static final JsonFactory instance = new JsonFactory(null, Boolean.getBoolean("convert.json.tiny"));
 
     static {
+        instance.register(InetAddress.class, InetAddressJsonSimpledCoder.instance);
+        instance.register(InetSocketAddress.class, InetAddressJsonSimpledCoder.InetSocketAddressJsonSimpledCoder.instance);
         instance.register(Serializable.class, instance.loadEncoder(Object.class));
     }
 

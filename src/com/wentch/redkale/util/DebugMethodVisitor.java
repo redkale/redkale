@@ -5,6 +5,7 @@
  */
 package com.wentch.redkale.util;
 
+import java.util.*;
 import jdk.internal.org.objectweb.asm.*;
 
 /**
@@ -20,6 +21,8 @@ public class DebugMethodVisitor {
     public void setDebug(boolean d) {
         debug = d;
     }
+
+    private final Map<Label, Integer> labels = new LinkedHashMap<>();
 
     private static final String[] opcodes = new String[200]; //0 -18
 
@@ -46,6 +49,12 @@ public class DebugMethodVisitor {
         this.visitor = visitor;
     }
 
+    public AnnotationVisitor visitAnnotation(String desc, boolean flag) {
+        AnnotationVisitor av = visitor.visitAnnotation(desc, flag);
+        if (debug) System.out.println("mv.visitAnnotation(\"" + desc + "\", " + flag + ");");
+        return av;
+    }
+
     public void visitParameter(String name, int access) {
         visitor.visitParameter(name, access);
         if (debug) System.out.println("mv.visitParameter(" + name + ", " + access + ");");
@@ -54,6 +63,37 @@ public class DebugMethodVisitor {
     public void visitVarInsn(int opcode, int var) {
         visitor.visitVarInsn(opcode, var);
         if (debug) System.out.println("mv.visitVarInsn(" + opcodes[opcode] + ", " + var + ");");
+    }
+
+    public void visitJumpInsn(int opcode, Label var) {
+        visitor.visitJumpInsn(opcode, var);
+        if (debug) {
+            Integer index = labels.get(var);
+            if (index == null) {
+                index = labels.size();
+                labels.put(var, index);
+                System.out.println("Label l" + index + " = new Label();");
+            }
+            System.out.println("mv.visitJumpInsn(" + opcodes[opcode] + ", l" + index + ");");
+        }
+    }
+
+    public void visitCode() {
+        visitor.visitCode();
+        if (debug) System.out.println("mv.visitCode();");
+    }
+
+    public void visitLabel(Label var) {
+        visitor.visitLabel(var);
+        if (debug) {
+            Integer index = labels.get(var);
+            if (index == null) {
+                index = labels.size();
+                labels.put(var, index);
+                System.out.println("Label l" + index + " = new Label();");
+            }
+            System.out.println("mv.visitLabel(l" + index + ");");
+        }
     }
 
     public void visitMethodInsn(int opcode, String owner, String name, String desc, boolean itf) {
@@ -79,6 +119,11 @@ public class DebugMethodVisitor {
     public void visitIntInsn(int opcode, int value) {
         visitor.visitIntInsn(opcode, value);
         if (debug) System.out.println("mv.visitIntInsn(" + opcodes[opcode] + ", " + value + ");");
+    }
+
+    public void visitIincInsn(int opcode, int value) {
+        visitor.visitIincInsn(opcode, value);
+        if (debug) System.out.println("mv.visitIincInsn(" + opcode + ", " + value + ");");
     }
 
     public void visitLdcInsn(Object o) {

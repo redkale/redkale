@@ -29,8 +29,6 @@ public final class EntityInfo<T> {
 
     private static final Logger logger = Logger.getLogger(EntityInfo.class);
 
-    static boolean cacheForbidden = false;
-
     //Entity类的类名
     private final Class<T> type;
 
@@ -86,14 +84,14 @@ public final class EntityInfo<T> {
     final int allocationSize;
     //------------------------------------------------------------
 
-    public static <T> EntityInfo<T> load(Class<T> clazz, final int nodeid,
+    public static <T> EntityInfo<T> load(Class<T> clazz, final int nodeid, final boolean cacheForbidden,
             Function<Class, List> fullloader) {
         EntityInfo rs = entityInfos.get(clazz);
         if (rs != null) return rs;
         synchronized (entityInfos) {
             rs = entityInfos.get(clazz);
             if (rs == null) {
-                rs = new EntityInfo(clazz, nodeid, fullloader);
+                rs = new EntityInfo(clazz, nodeid, cacheForbidden, fullloader);
                 entityInfos.put(clazz, rs);
                 AutoLoad auto = clazz.getAnnotation(AutoLoad.class);
                 if (rs.cache != null && auto != null && auto.value() && fullloader != null) {
@@ -104,7 +102,7 @@ public final class EntityInfo<T> {
         }
     }
 
-    private EntityInfo(Class<T> type, int nodeid, Function<Class<T>, List<T>> fullloader) {
+    private EntityInfo(Class<T> type, int nodeid, final boolean cacheForbidden, Function<Class<T>, List<T>> fullloader) {
         this.type = type;
         //---------------------------------------------
         this.nodeid = nodeid;

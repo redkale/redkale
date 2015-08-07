@@ -26,15 +26,25 @@ public class SncpPrepareServlet extends PrepareServlet<SncpRequest, SncpResponse
 
     public void addSncpServlet(SncpServlet servlet) {
         if (servlet.getNameid() == 0) {
-            singlemaps.put(servlet.getServiceid(), servlet);
-        } else {
-            Map<Long, SncpServlet> m = maps.get(servlet.getServiceid());
-            if (m == null) {
-                m = new HashMap<>();
-                maps.put(servlet.getServiceid(), m);
+            synchronized (singlemaps) {
+                singlemaps.put(servlet.getServiceid(), servlet);
             }
-            m.put(servlet.getNameid(), servlet);
+        } else {
+            synchronized (maps) {
+                Map<Long, SncpServlet> m = maps.get(servlet.getServiceid());
+                if (m == null) {
+                    m = new HashMap<>();
+                    maps.put(servlet.getServiceid(), m);
+                }
+                m.put(servlet.getNameid(), servlet);
+            }
         }
+    }
+
+    public List<SncpServlet> getSncpServlets() {
+        ArrayList<SncpServlet> list = new ArrayList<>(singlemaps.values());
+        maps.values().forEach(x -> list.addAll(x.values()));
+        return list;
     }
 
     @Override
@@ -62,6 +72,10 @@ public class SncpPrepareServlet extends PrepareServlet<SncpRequest, SncpResponse
         SncpServlet servlet;
         if (request.getNameid() == 0) {
             servlet = singlemaps.get(request.getServiceid());
+            if (servlet == null) {
+                response.finish(SncpResponse.RETCODE_ILLSERVICEID, null);  //无效serviceid
+                return;
+            }
         } else {
             Map<Long, SncpServlet> m = maps.get(request.getServiceid());
             if (m == null) {

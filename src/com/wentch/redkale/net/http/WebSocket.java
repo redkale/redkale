@@ -6,7 +6,6 @@
 package com.wentch.redkale.net.http;
 
 import com.wentch.redkale.net.*;
-import com.wentch.redkale.service.*;
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -41,7 +40,7 @@ public abstract class WebSocket {
 
     WebSocketGroup group;
 
-    WebSocketNodeService nodeService;
+    WebSocketNode node;
 
     Serializable sessionid;
 
@@ -105,6 +104,16 @@ public abstract class WebSocket {
      */
     public final void send(byte[] data, boolean last) {
         send(new WebSocketPacket(data, last));
+    }
+
+    /**
+     * 发送消息, 消息类型是String或byte[]
+     * <p>
+     * @param message 不可为空, 只能是String或者byte[]
+     * @param last 是否最后一条
+     */
+    public final void send(Serializable message, boolean last) {
+        send(new WebSocketPacket(message, last));
     }
 
     //----------------------------------------------------------------
@@ -201,21 +210,13 @@ public abstract class WebSocket {
     }
 
     private int sendMessage(Serializable groupid, boolean recent, String text, boolean last) {
-        if (nodeService == null) return WebSocketNodeService.RETCODE_NODESERVICE_NULL;
-        if (groupid == this.groupid) {
-            return nodeService.onSend(this.engine.getEngineid(), groupid, recent, text, last);
-        } else {
-            return nodeService.send(this.engine.getEngineid(), groupid, recent, text, last);
-        }
+        if (node == null) return WebSocketNode.RETCODE_NODESERVICE_NULL;
+        return node.sendMessage(groupid, recent, text, last);
     }
 
     private int sendMessage(Serializable groupid, boolean recent, byte[] data, boolean last) {
-        if (nodeService == null) return WebSocketNodeService.RETCODE_NODESERVICE_NULL;
-        if (groupid == this.groupid) {
-            return nodeService.onSend(this.engine.getEngineid(), groupid, recent, data, last);
-        } else {
-            return nodeService.send(this.engine.getEngineid(), groupid, recent, data, last);
-        }
+        if (node == null) return WebSocketNode.RETCODE_NODESERVICE_NULL;
+        return node.sendMessage(groupid, recent, data, last);
     }
 
     /**
@@ -309,9 +310,7 @@ public abstract class WebSocket {
      *
      * @return
      */
-    public Serializable createGroupid() {
-        return null;
-    }
+    protected abstract Serializable createGroupid();
 
     /**
      *

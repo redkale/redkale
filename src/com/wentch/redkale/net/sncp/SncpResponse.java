@@ -26,11 +26,25 @@ public final class SncpResponse extends Response<SncpRequest> {
     public static final int RETCODE_THROWEXCEPTION = 10011; //内部异常
 
     public static ObjectPool<Response> createPool(AtomicLong creatCounter, AtomicLong cycleCounter, int max, Creator<Response> creator) {
-        return new ObjectPool<>(creatCounter, cycleCounter, max, creator, (x)-> ((SncpResponse) x).prepare(), (x) -> ((SncpResponse) x).recycle());
+        return new ObjectPool<>(creatCounter, cycleCounter, max, creator, (x) -> ((SncpResponse) x).prepare(), (x) -> ((SncpResponse) x).recycle());
+    }
+
+    private final byte[] addrBytes;
+
+    private final int addrPort;
+
+    public static String getRetCodeInfo(int retcode) {
+        if (retcode == RETCODE_ILLSERVICEID) return "serviceid is invalid";
+        if (retcode == RETCODE_ILLNAMEID) return "nameid is invalid";
+        if (retcode == RETCODE_ILLACTIONID) return "actionid is invalid";
+        if (retcode == RETCODE_THROWEXCEPTION) return "Inner exception";
+        return null;
     }
 
     protected SncpResponse(Context context, SncpRequest request) {
         super(context, request);
+        this.addrBytes = context.getServerAddress().getAddress().getAddress();
+        this.addrPort = context.getServerAddress().getPort();
     }
 
     public void finish(final int retcode, final byte[] bytes) {
@@ -56,7 +70,7 @@ public final class SncpResponse extends Response<SncpRequest> {
                 pos += len;
                 buffer.flip();
             }
-            finish(buffers); 
+            finish(buffers);
         }
     }
 
@@ -69,6 +83,8 @@ public final class SncpResponse extends Response<SncpRequest> {
         DLong actionid = request.getActionid();
         buffer.putLong(actionid.getFirst());
         buffer.putLong(actionid.getSecond());
+        buffer.put(addrBytes);
+        buffer.putInt(this.addrPort);
         buffer.put((byte) frameCount); // frame count
         buffer.put((byte) frameIndex); //frame index
         buffer.putInt(retcode);

@@ -13,9 +13,9 @@ import java.io.Serializable;
  */
 public interface DataCacheListener {
 
-    public <T> void insert(String sourceName, Class<T> clazz, T... entitys);
+    public <T> void insertCache(Class<T> clazz, T... entitys);
 
-    public <T> void update(String sourceName, Class<T> clazz, T... entitys);
+    public <T> void updateCache(Class<T> clazz, T... entitys);
 
-    public <T> void delete(String sourceName, Class<T> clazz, Serializable... ids);
+    public <T> void deleteCache(Class<T> clazz, Serializable... ids);
 }

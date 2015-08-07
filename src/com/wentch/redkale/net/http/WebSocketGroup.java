@@ -18,7 +18,7 @@ public final class WebSocketGroup {
 
     private final Serializable groupid;
 
-    WebSocket recentWebSocket;
+    private WebSocket recentWebSocket;
 
     private final List<WebSocket> list = new CopyOnWriteArrayList<>();
 
@@ -42,7 +42,12 @@ public final class WebSocketGroup {
 
     void add(WebSocket socket) {
         socket.group = this;
+        this.recentWebSocket = socket;
         list.add(socket);
+    }
+
+    void setRecentWebSocket(WebSocket socket) {
+        this.recentWebSocket = socket;
     }
 
     public final boolean isEmpty() {
@@ -69,6 +74,22 @@ public final class WebSocketGroup {
 
     public final void setAttribute(String name, Object value) {
         attributes.put(name, value);
+    }
+
+    public final void send(boolean recent, Serializable message, boolean last) {
+        if (recent) {
+            recentWebSocket.send(message, last);
+        } else {
+            list.forEach(x -> x.send(message, last));
+        }
+    }
+
+    public final void sendEach(Serializable message, boolean last) {
+        list.forEach(x -> x.send(message, last));
+    }
+
+    public final void sendRecent(Serializable message, boolean last) {
+        recentWebSocket.send(message, last);
     }
 
     @Override

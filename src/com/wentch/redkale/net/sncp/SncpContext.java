@@ -53,8 +53,8 @@ public final class SncpContext extends Context {
     protected final BsonFactory bsonFactory;
 
     public SncpContext(long serverStartTime, Logger logger, ExecutorService executor, ObjectPool<ByteBuffer> bufferPool,
-            ObjectPool<Response> responsePool, int maxbody, Charset charset, InetSocketAddress address,
-            PrepareServlet prepare, WatchFactory watch, int readTimeoutSecond, int writeTimeoutSecond) {
+            ObjectPool<Response> responsePool, int maxbody, Charset charset, InetSocketAddress address, PrepareServlet prepare,
+            WatchFactory watch, int readTimeoutSecond, int writeTimeoutSecond) {
         super(serverStartTime, logger, executor, bufferPool, responsePool, maxbody, charset,
                 address, prepare, watch, readTimeoutSecond, writeTimeoutSecond);
         this.bsonFactory = BsonFactory.root();

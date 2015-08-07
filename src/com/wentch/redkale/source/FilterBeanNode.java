@@ -26,21 +26,21 @@ final class FilterBeanNode extends FilterNode {
 
     private static final ConcurrentHashMap<Class, FilterBeanNode> beanodes = new ConcurrentHashMap<>();
 
-    public static <T extends FilterBean> FilterBeanNode load(Class<T> clazz, final int nodeid,
+    public static <T extends FilterBean> FilterBeanNode load(Class<T> clazz, final int nodeid, final boolean cacheForbidden,
             Function<Class, List> fullloader) {
         FilterBeanNode rs = beanodes.get(clazz);
         if (rs != null) return rs;
         synchronized (beanodes) {
             rs = beanodes.get(clazz);
             if (rs == null) {
-                rs = createNode(clazz, nodeid, fullloader);
+                rs = createNode(clazz, nodeid, cacheForbidden, fullloader);
                 beanodes.put(clazz, rs);
             }
             return rs;
         }
     }
 
-    private static <T extends FilterBean> FilterBeanNode createNode(Class<T> clazz, final int nodeid,
+    private static <T extends FilterBean> FilterBeanNode createNode(Class<T> clazz, final int nodeid, final boolean cacheForbidden,
             Function<Class, List> fullloader) {
         Class cltmp = clazz;
         Set<String> fields = new HashSet<>();
@@ -78,7 +78,7 @@ final class FilterBeanNode extends FilterNode {
                             joinTables.put(joinClass, String.valueOf((char) ('b' + joinTables.size())));
                         }
                         final String alias = joinTables.get(joinClass);
-                        final EntityInfo secinfo = EntityInfo.load(joinClass, nodeid, fullloader);
+                        final EntityInfo secinfo = EntityInfo.load(joinClass, nodeid, cacheForbidden, fullloader);
                         if (secinfo.getCache() == null || !secinfo.getCache().isFullLoaded()) {
                             joinallcached = false;
                         }

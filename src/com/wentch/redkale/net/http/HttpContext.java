@@ -29,8 +29,8 @@ public final class HttpContext extends Context {
     protected final SecureRandom random = new SecureRandom();
 
     public HttpContext(long serverStartTime, Logger logger, ExecutorService executor, ObjectPool<ByteBuffer> bufferPool,
-            ObjectPool<Response> responsePool, int maxbody, Charset charset, InetSocketAddress address,
-            PrepareServlet prepare, WatchFactory watch, int readTimeoutSecond, int writeTimeoutSecond, String contextPath) {
+            ObjectPool<Response> responsePool, int maxbody, Charset charset, InetSocketAddress address, PrepareServlet prepare,
+            WatchFactory watch, int readTimeoutSecond, int writeTimeoutSecond, String contextPath) {
         super(serverStartTime, logger, executor, bufferPool, responsePool, maxbody, charset,
                 address, prepare, watch, readTimeoutSecond, writeTimeoutSecond);
         this.contextPath = contextPath;

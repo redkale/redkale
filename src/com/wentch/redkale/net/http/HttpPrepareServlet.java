@@ -25,7 +25,7 @@ public final class HttpPrepareServlet extends PrepareServlet<HttpRequest, HttpRe
 
     private ByteBuffer flashPolicyBuffer;
 
-    private final List<SimpleEntry<HttpServlet, AnyValue>> servlets = new ArrayList<>();
+    private final List<HttpServlet> servlets = new ArrayList<>();
 
     private final Map<String, HttpServlet> strmaps = new HashMap<>();
 
@@ -43,13 +43,13 @@ public final class HttpPrepareServlet extends PrepareServlet<HttpRequest, HttpRe
 
     @Override
     public void init(Context context, AnyValue config) {
-        this.servlets.stream().forEach((en) -> {
-            en.getKey().init(context, en.getValue());
+        this.servlets.stream().forEach(s -> {
+            s.init(context, s.conf);
         });
         final WatchFactory watch = ((HttpContext) context).getWatchFactory();
         if (watch != null) {
-            this.servlets.stream().forEach((en) -> {
-                watch.inject(en.getKey());
+            this.servlets.stream().forEach(s -> {
+                watch.inject(s);
             });
         }
         if (config != null) {
@@ -131,7 +131,8 @@ public final class HttpPrepareServlet extends PrepareServlet<HttpRequest, HttpRe
                 strmaps.put(mapping, servlet);
             }
         }
-        this.servlets.add(new SimpleEntry<>(servlet, conf));
+        servlet.conf = conf;
+        this.servlets.add(servlet);
     }
 
     private static boolean contains(String string, char... values) {
@@ -153,8 +154,8 @@ public final class HttpPrepareServlet extends PrepareServlet<HttpRequest, HttpRe
     @Override
     public void destroy(Context context, AnyValue config) {
         this.resourceHttpServlet.destroy(context, config);
-        this.servlets.stream().forEach((en) -> {
-            en.getKey().destroy(context, en.getValue());
+        this.servlets.stream().forEach(s -> {
+            s.destroy(context, s.conf);
         });
     }
 

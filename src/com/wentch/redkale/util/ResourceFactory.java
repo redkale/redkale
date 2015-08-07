@@ -13,11 +13,14 @@ import java.util.regex.*;
 import javax.annotation.*;
 
 /**
+ * 如果Resource(name = "$") 表示资源name采用所属对象的name
  *
  * @author zhangjx
  */
 @SuppressWarnings("unchecked")
 public final class ResourceFactory {
+
+    public static final String RESOURCE_PARENT_NAME = "$";
 
     private static final Logger logger = Logger.getLogger(ResourceFactory.class.getSimpleName());
 
@@ -170,15 +173,16 @@ public final class ResourceFactory {
                         continue;
                     }
                     if (Modifier.isFinal(field.getModifiers())) continue;
-                    Object rs = genctype == classtype ? null : find(rc.name(), genctype);
+                    final String rcname = (rc.name().equals(RESOURCE_PARENT_NAME) && src instanceof Nameable) ? ((Nameable) src).name() : rc.name();
+                    Object rs = genctype == classtype ? null : find(rcname, genctype);
                     if (rs == null) {
                         if (Map.class.isAssignableFrom(classtype)) {
-                            rs = find(Pattern.compile(rc.name().isEmpty() ? ".+" : rc.name()), (Class) ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[1], src);
+                            rs = find(Pattern.compile(rcname.isEmpty() ? ".*" : rcname), (Class) ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[1], src);
                         } else {
-                            if (rc.name().startsWith("property.")) {
-                                rs = find(rc.name(), String.class);
+                            if (rcname.startsWith("property.")) {
+                                rs = find(rcname, String.class);
                             } else {
-                                rs = find(rc.name(), classtype);
+                                rs = find(rcname, classtype);
                             }
                         }
                     }

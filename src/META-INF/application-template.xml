@@ -1,8 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- 
-    ${APP_HOME} 指当前程序的总目录APP_HOME
-    node: 进程节点的名称， 默认为空
-    required： 被声明required的属性值不能为空
+    文件说明:
+        ${APP_HOME} 指当前程序的总目录APP_HOME
+        required： 被声明required的属性值不能为空
+        
+                                            group
+                                         /  /  \  \  
+                                      /    /    \   \   
+                                   /     /       \    \                      
+                               node1   node2   node3  node4
+                             /       \                             
+                          /             \
+                       /                   \
+                    /                         \
+             serviceid1                       serviceid2
+            /       \                        /       \
+  serviceid1_name1  serviceid1_name2   serviceid2_name1  serviceid2_name2    
+-->
+<!--     
+    address:  本地的IP地址， 默认值为默认网卡的ip，当不使用默认值需要指定值，如127.0.0.1
     port: required  程序的管理Server的端口，用于关闭或者与监管系统进行数据交互
     host:  程序的管理Server的地址; 默认为127.0.0.1。
     lib:  加上额外的lib路径,多个路径用分号;隔开； 默认为空。  例如: ${APP_HOME}/lib/a.jar;${APP_HOME}/lib2/b.jar;
@@ -11,6 +27,28 @@
     
     <!-- 所有服务所需的资源 -->      
     <resources>
+        
+        <!--  设置系统的 DataCacheListener 的Service实现，值[none]表示不需要启动DataCacheListener同步， 默认为系统自带实现类 -->
+        <datacachelistener service="none"/>
+        
+        <!--  设置系统的 WebSocketNode 的Service实现， 值[none]表示不需要启动WebSocketNode同步，默认为系统自带实现类 -->
+        <websocketnode service="xxxx"/>
+        
+         <!--
+            一个组包含多个NODE， 同一Service服务可以由多个进程提供，这些进程称为一个GROUP，且同一GROUP内的进程必须在同一机房或局域网内
+            name: 服务组ID，长度不能超过11个字节. 默认为空字符串。
+            protocol：值只能是UDP TCP， 默认UDP
+        -->
+        <group name="" protocol="UDP">
+            <!--
+                需要将本地node的addr与port列在此处。
+                addr: required IP地址
+                port: required 端口
+                clients: 连接池数， 默认: CPU核数*4
+                buffers: ByteBuffer对象池的大小， 默认: CPU核数*8
+            -->
+            <node addr="127.0.0.1" port="7070"/>
+        </group>
         <!--
             远程client地址组资源.  注意:  remote的name值不能为LOCAL（不区分大小写）
             protocol： 值只能是UDP TCP， 默认UDP
@@ -48,13 +86,14 @@
         protocol: required  server所启动的协议，有HTTP、SNCP， 目前只支持HTTP、SNCP。SNCP也分TCP、UDP实现，默认使用UDP实现，TCP实现则使用SNCP.TCP值; 
         host:  服务所占address ， 默认: 0.0.0.0
         port:  服务所占端口 ，默认: 80
+        group: 所属组的节点,多个节点值用;隔开，如果配置文件中存在多个SNCP协议的Server节点，需要显式指定group属性
         root:  如果是web类型服务，则包含页面  默认:{APP_HOME}/root
         lib: server额外的class目录， 默认为空        
         charset: 文本编码， 默认: UTF-8
         backlog:  默认10K
         threads： 线程总数， 默认: CPU核数*16
         maxbody: request.body最大值， 默认: 64K
-        capacity: ByteBuffer的初始化大小， 默认: 8K
+        capacity: ByteBuffer的初始化大小， 默认: 8K;  如果是HTTP协议则默认: 16K + 8B (HTTP 2.0)
         bufferPoolSize： ByteBuffer池的大小，默认: CPU核数*512
         responsePoolSize： Response池的大小，默认: CPU核数*256
         readTimeoutSecond: 读操作超时秒数， 默认0， 表示永久不超时
@@ -72,16 +111,13 @@
            autoload="false" 需要显著的指定Service类
            includes： 当autoload="true"， 拉取类名与includes中的正则表达式匹配的类, 多个正则表达式用分号;隔开
            excludes： 当autoload="true"， 排除类名与includes中的正则表达式匹配的类, 多个正则表达式用分号;隔开
-           remote：   远程地址组的名称, 默认为空， 即本地模式。                    
-                      当<services>指定remote值为非空非LOCAL(即远程模式)时， 所有service的remote值均默认是<services>指定remote值。
-                      当<services>指定remote值为空(即本地模式)时， 所有service的remote值均默认是LOCAL值。
         -->
-        <services autoload="true" includes="" excludes="" remote="myremote">
+        <services autoload="true" includes="" excludes="">
             <!--
                大部分的情况下， 存在多个节点环境中很多service节点配置都一致，为此提供group节点来方便配置。
                remotenames: 远程模式Service的name名称集合， 多个用分号;隔开， 名称必须是在resources节点中定义的remote节点。
                以下group节点例子等价于:
-                <service value="com.xxx.XXX0Service" name="LC001" remote="LOCAL"/>
+                <service value="com.xxx.XXX0Service" name="" remote="LOCAL"/>
                 <service value="com.xxx.XXX0Service" name="RT001" remote="RT001"/>
                 <service value="com.xxx.XXX0Service" name="RT002" remote="RT002"/>
                 <service value="com.xxx.XXX0Service" name="RT003" remote="RT003"/>

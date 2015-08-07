@@ -34,6 +34,8 @@ public abstract class Server {
 
     protected final String protocol;
 
+    protected final PrepareServlet prepare;
+
     protected AnyValue config;
 
     protected Charset charset;
@@ -64,9 +66,10 @@ public abstract class Server {
 
     private ScheduledThreadPoolExecutor scheduler;
 
-    protected Server(long serverStartTime, String protocol, final WatchFactory watch) {
+    protected Server(long serverStartTime, String protocol, PrepareServlet servlet, final WatchFactory watch) {
         this.serverStartTime = serverStartTime;
         this.protocol = protocol;
+        this.prepare = servlet;
         this.watch = watch;
     }
 
@@ -88,17 +91,22 @@ public abstract class Server {
         final Format f = createFormat();
         this.executor = Executors.newFixedThreadPool(threads, (Runnable r) -> {
             Thread t = new WorkThread(executor, r);
-            t.setName("Servlet-HTTP-" + port + "-Thread-" + f.format(counter.incrementAndGet()));
+            t.setName("Servlet-" + protocol + "-" + port + "-Thread-" + f.format(counter.incrementAndGet()));
             return t;
         });
     }
 
     public void destroy(final AnyValue config) throws Exception {
+        this.prepare.destroy(context, config);
         if (scheduler != null) scheduler.shutdownNow();
     }
 
     public InetSocketAddress getSocketAddress() {
         return address;
+    }
+
+    public String getProtocol() {
+        return protocol;
     }
 
     public Logger getLogger() {
@@ -107,17 +115,18 @@ public abstract class Server {
 
     public void start() throws IOException {
         this.context = this.createContext();
-        this.context.prepare.init(this.context, config);
-        if (this.watch != null) this.watch.inject(this.context.prepare);
+        this.prepare.init(this.context, config);
+        if (this.watch != null) this.watch.inject(this.prepare);
         this.transport = ProtocolServer.create(this.protocol, context);
         this.transport.open();
         transport.setOption(StandardSocketOptions.SO_REUSEADDR, true);
-        transport.setOption(StandardSocketOptions.SO_RCVBUF, 16 * 1024 + 8);
+        transport.setOption(StandardSocketOptions.SO_RCVBUF, 8 * 1024);
         transport.bind(address, backlog);
-        logger.info(this.getClass().getSimpleName() + " listen: " + address);
-        logger.info(this.getClass().getSimpleName() + " threads: " + threads + ", bufferPoolSize: " + bufferPoolSize + ", responsePoolSize: " + responsePoolSize);
         transport.accept();
-        logger.info(this.getClass().getSimpleName() + " started in " + (System.currentTimeMillis() - context.getServerStartTime()) + " ms");
+        final String threadName = "[" + Thread.currentThread().getName() + "] ";
+        logger.info(threadName + this.getClass().getSimpleName() + " listen: " + address
+                + ", threads: " + threads + ", bufferPoolSize: " + bufferPoolSize + ", responsePoolSize: " + responsePoolSize
+                + ", started in " + (System.currentTimeMillis() - context.getServerStartTime()) + " ms");
     }
 
     protected abstract Context createContext();
@@ -130,7 +139,7 @@ public abstract class Server {
         } catch (Exception e) {
         }
         logger.info(this.getClass().getSimpleName() + "-" + this.protocol + " shutdow prepare servlet");
-        this.context.prepare.destroy(this.context, config);
+        this.prepare.destroy(this.context, config);
         long e = System.currentTimeMillis() - s;
         logger.info(this.getClass().getSimpleName() + " shutdown in " + e + " ms");
     }

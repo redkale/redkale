@@ -6,7 +6,6 @@
 package com.wentch.redkale.net.sncp;
 
 import com.wentch.redkale.convert.bson.*;
-import static com.wentch.redkale.net.sncp.SncpClient.getOnMethod;
 import com.wentch.redkale.service.*;
 import com.wentch.redkale.util.*;
 import java.io.*;
@@ -22,9 +21,15 @@ import jdk.internal.org.objectweb.asm.Type;
  *
  * @author zhangjx
  */
-public class SncpDynServlet extends SncpServlet {
+public final class SncpDynServlet extends SncpServlet {
 
     private final Logger logger = Logger.getLogger(SncpDynServlet.class.getSimpleName());
+
+    private final boolean finest = logger.isLoggable(Level.FINEST);
+
+    private final Class<? extends Service> type;
+
+    private final String serviceName;
 
     private final long nameid;
 
@@ -34,36 +39,33 @@ public class SncpDynServlet extends SncpServlet {
 
     public SncpDynServlet(final BsonConvert convert, final String serviceName, final Service service, final AnyValue conf) {
         this.conf = conf;
-        final Class serviceClass = service.getClass();
+        this.serviceName = serviceName;
+        this.type = (Class<? extends Service>) service.getClass().getSuperclass();
         this.nameid = Sncp.hash(serviceName);
-        this.serviceid = Sncp.hash(serviceClass);
+        this.serviceid = Sncp.hash(type);
         Set<DLong> actionids = new HashSet<>();
-        for (java.lang.reflect.Method method : serviceClass.getMethods()) {
+        for (java.lang.reflect.Method method : service.getClass().getMethods()) {
             if (method.isSynthetic()) continue;
             if (Modifier.isStatic(method.getModifiers())) continue;
             if (Modifier.isFinal(method.getModifiers())) continue;
             if (method.getName().equals("getClass") || method.getName().equals("toString")) continue;
             if (method.getName().equals("equals") || method.getName().equals("hashCode")) continue;
             if (method.getName().equals("notify") || method.getName().equals("notifyAll") || method.getName().equals("wait")) continue;
-            if (method.getName().equals("init") || method.getName().equals("destroy")) continue;
-            Method onMethod = getOnMethod(serviceClass, method);
-            if (onMethod != null) method = onMethod;
+            if (method.getName().equals("init") || method.getName().equals("destroy") || method.getName().equals("name")) continue;
             final DLong actionid = Sncp.hash(method);
             SncpServletAction action = SncpServletAction.create(service, actionid, method);
             action.convert = convert;
             if (actionids.contains(actionid)) {
-                throw new RuntimeException(serviceClass.getName()
-                        + " have action(Method=" + method + ", actionid=" + actionid + ") same to (" + actions.get(actionid).method + ")");
+                throw new RuntimeException(type.getName() + " have action(Method=" + method + ", actionid=" + actionid + ") same to (" + actions.get(actionid).method + ")");
             }
             actions.put(actionid, action);
             actionids.add(actionid);
         }
-        if (!logger.isLoggable(Level.FINE)) return;
-        StringBuilder sb = new StringBuilder();
-        sb.append("{");
-        actions.forEach((x, y) -> sb.append('{').append(x).append(',').append(y.method.getName()).append("},"));
-        sb.append("}");
-        logger.fine(this.getClass().getSimpleName() + "(serviceClass = " + serviceClass.getName() + ", serviceid =" + serviceid + ", serviceName =" + serviceName + ", actions = " + sb + ") loaded");
+    }
+
+    @Override
+    public String toString() {
+        return this.getClass().getSimpleName() + "(type=" + type.getName() + ", serviceid=" + serviceid + ", name=" + serviceName + ", actions.size=" + actions.size() + ")";
     }
 
     @Override
@@ -79,6 +81,7 @@ public class SncpDynServlet extends SncpServlet {
     @Override
     public void execute(SncpRequest request, SncpResponse response) throws IOException {
         SncpServletAction action = actions.get(request.getActionid());
+        //if (finest) logger.log(Level.FINEST, "sncpdyn.execute: " + request + ", " + (action == null ? "null" : action.method));
         if (action == null) {
             response.finish(SncpResponse.RETCODE_ILLACTIONID, null);  //无效actionid
         } else {
@@ -103,25 +106,25 @@ public class SncpDynServlet extends SncpServlet {
         public abstract byte[] action(byte[][] bytes) throws Throwable;
 
         /*
-         * 
+         *
          * public class TestService implements Service {
-         *      public boolean change(TestBean bean, String name, int id) { 
-         *         
-         *      }
+         * public boolean change(TestBean bean, String name, int id) {
+         *
+         * }
          * }
          *
          * public class DynActionTestService_change extends SncpServletAction {
          *
-         *      public TestService service;
+         * public TestService service;
          *
-         *      @Override
-         *      public byte[] action(byte[][] bytes) throws Throwable {
-         *          TestBean arg1 = convert.convertFrom(paramTypes[1], bytes[1]);
-         *          String arg2 = convert.convertFrom(paramTypes[2], bytes[2]);
-         *          int arg3 = convert.convertFrom(paramTypes[3], bytes[3]);
-         *          Object rs = service.change(arg1, arg2, arg3);
-         *          return convert.convertTo(paramTypes[0], rs);
-         *      }
+         * @Override
+         * public byte[] action(byte[][] bytes) throws Throwable {
+         * TestBean arg1 = convert.convertFrom(paramTypes[1], bytes[1]);
+         * String arg2 = convert.convertFrom(paramTypes[2], bytes[2]);
+         * int arg3 = convert.convertFrom(paramTypes[3], bytes[3]);
+         * Object rs = service.change(arg1, arg2, arg3);
+         * return convert.convertTo(paramTypes[0], rs);
+         * }
          * }
          */
         /**

@@ -15,21 +15,11 @@ import java.util.concurrent.*;
  */
 public final class WebSocketEngine {
 
-    private static final Map<String, WebSocketEngine> globals = new ConcurrentHashMap<>();
-
     private final String engineid;
 
     private final Map<Serializable, WebSocketGroup> containers = new ConcurrentHashMap<>();
 
-    static WebSocketEngine create(String engineid) {
-        WebSocketEngine engine = globals.get(engineid);
-        if (engine != null) return engine;
-        engine = new WebSocketEngine(engineid);
-        globals.put(engineid, engine);
-        return engine;
-    }
-
-    private WebSocketEngine(String engineid) {
+    protected WebSocketEngine(String engineid) {
         this.engineid = engineid;
     }
 
@@ -38,7 +28,6 @@ public final class WebSocketEngine {
         if (group == null) {
             group = new WebSocketGroup(socket.groupid);
             containers.put(socket.groupid, group);
-            group.recentWebSocket = socket;
         }
         group.add(socket);
     }
