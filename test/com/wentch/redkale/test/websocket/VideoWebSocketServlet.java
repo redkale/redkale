@@ -20,12 +20,17 @@ import java.util.concurrent.CountDownLatch;
  *
  * @author zhangjx
  */
-@WebServlet({"/listen/*"})
+@WebServlet({"/ws/listen"})
 public class VideoWebSocketServlet extends WebSocketServlet {
 
     private final Map<Serializable, Entry> sessions = new java.util.concurrent.ConcurrentHashMap<>();
 
     private final Map<Serializable, String> users = new HashMap<>();
+
+    @Override
+    public String name() {
+        return "listen";
+    }
 
     private static final class Entry {
 
@@ -101,6 +106,11 @@ public class VideoWebSocketServlet extends WebSocketServlet {
                 super.getWebSocketGroup().getWebSockets().filter(x -> x != this).forEach(x -> {
                     x.send(msg);
                 });
+            }
+
+            @Override
+            protected Serializable createGroupid() {
+                return "";
             }
         };
         return socket;

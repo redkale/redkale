@@ -8,6 +8,7 @@ package com.wentch.redkale.test.websocket;
 import com.wentch.redkale.net.http.WebServlet;
 import com.wentch.redkale.net.http.WebSocketServlet;
 import com.wentch.redkale.net.http.WebSocket;
+import java.io.*;
 import static java.lang.Thread.sleep;
 import java.text.*;
 import java.util.concurrent.atomic.*;
@@ -16,7 +17,7 @@ import java.util.concurrent.atomic.*;
  *
  * @author zhangjx
  */
-@WebServlet("/chat")
+@WebServlet("/ws/chat")
 public class ChatWebSocketServlet extends WebSocketServlet {
 
     private final AtomicLong counter = new AtomicLong();
@@ -62,7 +63,17 @@ public class ChatWebSocketServlet extends WebSocketServlet {
                 if (debug) System.out.println("收到消息: " + text);
                 super.getWebSocketGroup().getWebSockets().forEach(x -> x.send(text));
             }
+
+            @Override
+            protected Serializable createGroupid() {
+               return "";
+            }
         };
+    }
+
+    @Override
+    public String name() {
+       return "chat";
     }
 
 }
