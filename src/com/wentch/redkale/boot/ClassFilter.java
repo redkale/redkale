@@ -93,13 +93,28 @@ public final class ClassFilter<T> {
      * @param autoscan  为true表示自动扫描的， false表示显著调用filter， AutoLoad的注解将被忽略
      */
     public final void filter(AnyValue property, String clazzname, boolean autoscan) {
-        if (!accept(property, clazzname)) return;
+        boolean r = accept0(property, clazzname);
+        ClassFilter cf = r ? this : null;
+        if (r && ands != null) {
+            for (ClassFilter filter : ands) {
+                if (!filter.accept(property, clazzname)) return;
+            }
+        }
+        if (!r && ors != null) {
+            for (ClassFilter filter : ors) {
+                if (filter.accept(property, clazzname)) {
+                    cf = filter;
+                    break;
+                }
+            }
+        }
+        if (cf == null) return;
         try {
             Class clazz = Class.forName(clazzname);
-            if (accept(property, clazz, autoscan)) {
+            if (cf.accept(property, clazz, autoscan)) {
                 if (conf != null) {
                     if (property == null) {
-                        property = conf;
+                        property = cf.conf;
                     }
                 }
                 entrys.add(new FilterEntry(clazz, property));
