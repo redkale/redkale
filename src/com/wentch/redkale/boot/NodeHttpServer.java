@@ -53,7 +53,7 @@ public final class NodeHttpServer extends NodeServer {
         ClassFilter.Loader.load(home, serviceFilter, httpFilter);
         long e = System.currentTimeMillis() - s;
         logger.info(this.getClass().getSimpleName() + " load filter class in " + e + " ms");
-        loadService(config.getAnyValue("services"), serviceFilter); //必须在servlet之前
+        loadService(serviceFilter); //必须在servlet之前
         initWebSocketService();
         if (server != null) loadHttpServlet(config.getAnyValue("servlets"), httpFilter);
     }

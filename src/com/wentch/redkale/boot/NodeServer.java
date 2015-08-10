@@ -15,6 +15,7 @@ import com.wentch.redkale.boot.ClassFilter.FilterEntry;
 import com.wentch.redkale.net.*;
 import com.wentch.redkale.source.*;
 import com.wentch.redkale.util.*;
+import com.wentch.redkale.util.AnyValue.DefaultAnyValue;
 import java.io.*;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
@@ -186,7 +187,7 @@ public abstract class NodeServer {
     }
 
     @SuppressWarnings("unchecked")
-    protected void loadService(final AnyValue servicesConf, ClassFilter serviceFilter) throws Exception {
+    protected void loadService(ClassFilter serviceFilter) throws Exception {
         if (serviceFilter == null) return;
         final String threadName = "[" + Thread.currentThread().getName() + "] ";
         final Set<FilterEntry<Service>> entrys = serviceFilter.getFilterEntrys();
@@ -287,14 +288,20 @@ public abstract class NodeServer {
 
     protected static ClassFilter createClassFilter(final String localGroup, final AnyValue config, Class<? extends Annotation> ref,
             Class inter, Class<? extends Annotation> ref2, String properties, String property) {
-        ClassFilter cf = new ClassFilter(ref, inter);
+        ClassFilter cf = new ClassFilter(ref, inter, null);
         if (properties == null && properties == null) return cf;
         if (config == null) return cf;
         AnyValue[] proplist = config.getAnyValues(properties);
         if (proplist == null || proplist.length < 1) return cf;
         cf = null;
         for (AnyValue list : proplist) {
-            ClassFilter filter = new ClassFilter(ref, inter);
+            DefaultAnyValue prop = null;
+            String sc = list.getValue("group", "");
+            if (!sc.isEmpty()) {
+                prop = new AnyValue.DefaultAnyValue();
+                prop.addValue("group", sc);
+            }
+            ClassFilter filter = new ClassFilter(ref, inter, prop);
             for (AnyValue av : list.getAnyValues(property)) {
                 filter.filter(av, av.getValue("value"), false);
             }

@@ -41,9 +41,16 @@ public final class ClassFilter<T> {
 
     private List<ClassFilter> ands;
 
+    private AnyValue conf;
+
     public ClassFilter(Class<? extends Annotation> annotationClass, Class superClass) {
+        this(annotationClass, superClass, null);
+    }
+
+    public ClassFilter(Class<? extends Annotation> annotationClass, Class superClass, AnyValue conf) {
         this.annotationClass = annotationClass;
         this.superClass = superClass;
+        this.conf = conf;
     }
 
     public ClassFilter<T> or(ClassFilter<T> filter) {
@@ -90,6 +97,11 @@ public final class ClassFilter<T> {
         try {
             Class clazz = Class.forName(clazzname);
             if (accept(property, clazz, autoscan)) {
+                if (conf != null) {
+                    if (property == null) {
+                        property = conf;
+                    }
+                }
                 entrys.add(new FilterEntry(clazz, property));
             }
         } catch (Throwable cfe) {

@@ -47,7 +47,7 @@ public final class NodeSncpServer extends NodeServer {
         ClassFilter.Loader.load(home, serviceFilter);
         long e = System.currentTimeMillis() - s;
         logger.info(this.getClass().getSimpleName() + " load filter class in " + e + " ms");
-        loadService(config.getAnyValue("services"), serviceFilter); //必须在servlet之前
+        loadService(serviceFilter); //必须在servlet之前
         //-------------------------------------------------------------------
         if (server == null) return; //调试时server才可能为null
         final StringBuilder sb = logger.isLoggable(Level.FINE) ? new StringBuilder() : null;
