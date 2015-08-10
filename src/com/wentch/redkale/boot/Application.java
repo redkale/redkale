@@ -226,8 +226,12 @@ public final class Application {
     }
 
     public static <T extends Service> T singleton(Class<T> serviceClass) throws Exception {
+        return singleton(serviceClass, false);
+    }
+
+    public static <T extends Service> T singleton(Class<T> serviceClass, boolean remote) throws Exception {
         final Application application = Application.create();
-        T service = Sncp.createLocalService("", serviceClass, null, null, null);
+        T service = remote ? Sncp.createRemoteService("", serviceClass, null, null) : Sncp.createLocalService("", serviceClass, null, null, null);
         application.init();
         application.factory.register(service);
         new NodeSncpServer(application, null, new CountDownLatch(1), null).init(application.config);
