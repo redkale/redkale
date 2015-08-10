@@ -225,15 +225,6 @@ public final class Application {
         initResources();
     }
 
-    @Deprecated
-    public static void singleton(Service service) throws Exception {
-        final Application application = Application.create();
-        application.init();
-        application.factory.register(service);
-        new NodeHttpServer(application, null, new CountDownLatch(1), null).prepare(application.config);
-        application.factory.inject(service);
-    }
-
     public static <T extends Service> T singleton(Class<T> serviceClass) throws Exception {
         final Application application = Application.create();
         T service = Sncp.createLocalService("", serviceClass, null, null, null);
