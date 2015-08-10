@@ -134,7 +134,7 @@ public abstract class ProtocolServer {
                 @Override
                 public void completed(final AsynchronousSocketChannel channel, Void attachment) {
                     serchannel.accept(null, this);
-                    context.submit(new PrepareRunner(context, AsyncConnection.create(channel, context.readTimeoutSecond, context.writeTimeoutSecond), null));
+                    context.submit(new PrepareRunner(context, AsyncConnection.create(channel, null, context.readTimeoutSecond, context.writeTimeoutSecond), null));
                 }
 
                 @Override

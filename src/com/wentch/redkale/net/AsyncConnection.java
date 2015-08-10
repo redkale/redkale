@@ -17,7 +17,7 @@ import java.util.concurrent.*;
  */
 public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCloseable {
 
-    protected AsyncPooledConnection pooledConnection;
+    public abstract boolean isTCP();
 
     public abstract SocketAddress getRemoteAddress();
 
@@ -60,7 +60,7 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
             } catch (Exception e) {
                 throw new IOException("AsyncConnection connect " + address, e);
             }
-            return create(channel, readTimeoutSecond0, writeTimeoutSecond0);
+            return create(channel, address, readTimeoutSecond0, writeTimeoutSecond0);
         } else if ("UDP".equalsIgnoreCase(protocol)) {
             AsyncDatagramChannel channel = AsyncDatagramChannel.open(null);
             channel.connect(address);
@@ -152,11 +152,7 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
             @Override
             public final void close() throws IOException {
                 if (client) {
-                    if (pooledConnection == null) {
-                        channel.close();
-                    } else {
-                        pooledConnection.fireConnectionClosed();
-                    }
+                    channel.close();
                 }
             }
 
@@ -173,14 +169,18 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
                 return channel.isOpen();
             }
 
+            @Override
+            public final boolean isTCP() {
+                return false;
+            }
         };
     }
 
     public static AsyncConnection create(final AsynchronousSocketChannel ch) {
-        return create(ch, 0, 0);
+        return create(ch, null, 0, 0);
     }
 
-    public static AsyncConnection create(final AsynchronousSocketChannel ch, final int readTimeoutSecond0, final int writeTimeoutSecond0) {
+    public static AsyncConnection create(final AsynchronousSocketChannel ch, final SocketAddress addr0, final int readTimeoutSecond0, final int writeTimeoutSecond0) {
         return new AsyncConnection() {
             private int readTimeoutSecond;
 
@@ -194,11 +194,13 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
                 this.channel = ch;
                 this.readTimeoutSecond = readTimeoutSecond0;
                 this.writeTimeoutSecond = writeTimeoutSecond0;
-                SocketAddress addr = null;
-                try {
-                    addr = ch.getRemoteAddress();
-                } catch (Exception e) {
-                    //do nothing
+                SocketAddress addr = addr0;
+                if (addr == null) {
+                    try {
+                        addr = ch.getRemoteAddress();
+                    } catch (Exception e) {
+                        //do nothing
+                    }
                 }
                 this.remoteAddress = addr;
             }
@@ -276,16 +278,17 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
 
             @Override
             public final void close() throws IOException {
-                if (pooledConnection == null) {
-                    channel.close();
-                } else {
-                    pooledConnection.fireConnectionClosed();
-                }
+                channel.close();
             }
 
             @Override
             public final boolean isOpen() {
                 return channel.isOpen();
+            }
+
+            @Override
+            public final boolean isTCP() {
+                return true;
             }
 
             @Override

@@ -16,6 +16,7 @@ import com.wentch.redkale.util.*;
 import com.wentch.redkale.util.AnyValue.DefaultAnyValue;
 import com.wentch.redkale.watch.*;
 import java.io.*;
+import java.lang.reflect.*;
 import java.net.*;
 import java.nio.*;
 import java.nio.channels.*;
@@ -49,6 +50,18 @@ public final class Application {
 
     //application.xml 文件中resources节点的内容， 类型： AnyValue
     public static final String RESNAME_GRES = "APP_GRES";
+
+    //当前SNCP Server的IP地址+端口 类型: SocketAddress、InetSocketAddress 
+    public static final String RESNAME_SNCP_ADDRESS = "SNCP_ADDRESS";
+
+    //当前SNCP Server的IP地址+端口集合 类型: Map<InetSocketAddress, String>、HashMap<InetSocketAddress, String> 
+    public static final String RESNAME_SNCP_NODES = "SNCP_NODES";
+
+    private static final Type NODES1TYPE = new TypeToken<Map<InetSocketAddress, String>>() {
+    }.getType();
+
+    private static final Type NODES2TYPE = new TypeToken<HashMap<InetSocketAddress, String>>() {
+    }.getType();
 
     protected final ResourceFactory factory = ResourceFactory.root();
 
@@ -348,6 +361,8 @@ public final class Application {
             if (oldgroup != null && !((sncpconf.getValue("group", "") + ";").contains(oldgroup + ";"))) throw new RuntimeException(addr + " has one more group " + (addrGroups.get(addr)));
             if (oldgroup == null) addrGroups.put(addr, "");
         }
+        factory.register(RESNAME_SNCP_NODES, NODES1TYPE, new HashMap<>(addrGroups));
+        factory.register(RESNAME_SNCP_NODES, NODES2TYPE, new HashMap<>(addrGroups));
         runServers(timecd, sncps);  //确保sncp都启动后再启动其他协议
         runServers(timecd, others);
         timecd.await();
@@ -427,7 +442,7 @@ public final class Application {
                     }
                 }
             }
-//------------------------------------------------------------------------
+            //------------------------------------------------------------------------
             AnyValue websocketnodeConf = resources.getAnyValue("websocketnode");
             if (websocketnodeConf != null) {
                 String val = websocketnodeConf.getValue("service", "");

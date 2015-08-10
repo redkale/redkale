@@ -6,6 +6,7 @@
 package com.wentch.redkale.service;
 
 import com.wentch.redkale.net.http.*;
+import com.wentch.redkale.net.sncp.*;
 import com.wentch.redkale.util.*;
 import java.io.*;
 import java.net.*;
@@ -30,9 +31,10 @@ public class WebSocketNodeService extends WebSocketNode implements Service {
     }
 
     @Override
-    public int sendMessage(Serializable groupid, boolean recent, Serializable message, boolean last) {
+    public int sendMessage(@SncpParameter InetSocketAddress addr, Serializable groupid, boolean recent, Serializable message, boolean last) {
         final Set<String> engineids = localNodes.get(groupid);
         if (engineids == null || engineids.isEmpty()) return RETCODE_GROUP_EMPTY;
+        int code = RETCODE_GROUP_EMPTY;
         for (String engineid : engineids) {
             final WebSocketEngine engine = engines.get(engineid);
             if (engine != null) { //在本地
@@ -42,11 +44,10 @@ public class WebSocketNodeService extends WebSocketNode implements Service {
                     return RETCODE_GROUP_EMPTY;
                 }
                 group.send(recent, message, last);
-            } else { //对方连接在远程节点
-                return RETCODE_WSOFFLINE;
             }
+            code = 0;
         }
-        return 0;
+        return code;
     }
 
     @Override
@@ -58,7 +59,7 @@ public class WebSocketNodeService extends WebSocketNode implements Service {
             dataNodes.put(groupid, addrs);
         }
         addrs.add(addr);
-        if(finest) logger.finest(WebSocketNodeService.class.getSimpleName() + ".event: " + groupid +" connect from " + addr); 
+        if (finest) logger.finest(WebSocketNodeService.class.getSimpleName() + ".event: " + groupid + " connect from " + addr);
     }
 
     @Override
@@ -68,6 +69,6 @@ public class WebSocketNodeService extends WebSocketNode implements Service {
         if (addrs == null) return;
         addrs.remove(addr);
         if (addrs.isEmpty()) dataNodes.remove(groupid);
-        if(finest) logger.finest(WebSocketNodeService.class.getSimpleName() + ".event: " + groupid +" disconnect from " + addr); 
+        if (finest) logger.finest(WebSocketNodeService.class.getSimpleName() + ".event: " + groupid + " disconnect from " + addr);
     }
 }

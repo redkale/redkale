@@ -9,6 +9,7 @@ import com.wentch.redkale.convert.bson.*;
 import com.wentch.redkale.net.*;
 import static com.wentch.redkale.net.sncp.SncpRequest.HEADER_SIZE;
 import com.wentch.redkale.util.*;
+import java.lang.annotation.*;
 import java.lang.reflect.*;
 import java.net.*;
 import java.nio.*;
@@ -36,7 +37,7 @@ public final class SncpClient {
 
         protected final Type[] paramTypes;
 
-        protected final boolean async;
+        protected final int addressParamIndex;
 
         public SncpAction(Method method, DLong actionid) {
             this.actionid = actionid;
@@ -48,7 +49,22 @@ public final class SncpClient {
             this.resultTypes = rt == void.class ? null : rt;
             this.paramTypes = method.getGenericParameterTypes();
             this.method = method;
-            this.async = false;// method.getReturnType() == void.class && method.getAnnotation(Async.class) != null;
+            Annotation[][] anns = method.getParameterAnnotations();
+            int addrIndex = -1;
+            if (anns.length > 0) {
+                Class<?>[] params = method.getParameterTypes();
+                for (int i = 0; i < anns.length; i++) {
+                    if (anns[i].length > 0) {
+                        for (Annotation ann : anns[i]) {
+                            if (ann.annotationType() == SncpParameter.class && SocketAddress.class.isAssignableFrom(params[i])) {
+                                addrIndex = i;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            this.addressParamIndex = addrIndex;
         }
 
         @Override
@@ -73,6 +89,8 @@ public final class SncpClient {
 
     protected final SncpAction[] actions;
 
+    protected final BlockingQueue<Runnable> queue = new ArrayBlockingQueue(1024 * 64);
+
     public SncpClient(final String serviceName, final long serviceid0, boolean remote, final Class serviceClass, boolean onlySncpDyn, final InetSocketAddress clientAddress) {
         if (serviceName.length() > 10) throw new RuntimeException(serviceClass + " @Resource name(" + serviceName + ") too long , must less 11");
         this.remote = remote;
@@ -91,6 +109,24 @@ public final class SncpClient {
         this.addrBytes = clientAddress == null ? new byte[4] : clientAddress.getAddress().getAddress();
         this.addrPort = clientAddress == null ? 0 : clientAddress.getPort();
         logger.fine("[" + Thread.currentThread().getName() + "] Load " + this);
+        new Thread() {
+            {
+                setName(SncpClient.class.getSimpleName() + serviceClass.getSimpleName() + "-" + serviceName + "-Thread");
+                setDaemon(true);
+            }
+
+            @Override
+            public void run() {
+                while (true) {
+                    try {
+                        Runnable runner = queue.take();
+                        runner.run();
+                    } catch (Exception e) {
+                        logger.log(Level.SEVERE, SncpClient.class.getSimpleName() + " runnable occur error", e);
+                    }
+                }
+            }
+        }.start();
     }
 
     @Override
@@ -165,14 +201,7 @@ public final class SncpClient {
     }
 
     private void submit(Runnable runner) {
-        Thread thread = Thread.currentThread();
-        if (false && thread instanceof WorkThread) { //有待验证为什么WorkThread 不工作
-            ((WorkThread) thread).submit(runner);
-            return;
-        }
-        Thread t = new Thread(runner);
-        t.setPriority(Thread.MAX_PRIORITY);
-        t.start();
+        if (!queue.offer(runner)) runner.run();
     }
 
     private byte[] send(final BsonConvert convert, Transport transport, final SncpAction action, Object... params) {
@@ -185,7 +214,7 @@ public final class SncpClient {
         }
         final long seqid = System.nanoTime();
         final DLong actionid = action.actionid;
-        final AsyncConnection conn = transport.pollConnection();
+        final AsyncConnection conn = transport.pollConnection(action.addressParamIndex >= 0 ? (SocketAddress) params[action.addressParamIndex] : null);
         if (conn == null || !conn.isOpen()) return null;
         final ByteBuffer buffer = transport.pollBuffer();
         final int readto = conn.getReadTimeoutSecond();
@@ -291,7 +320,7 @@ public final class SncpClient {
         } catch (RuntimeException ex) {
             throw ex;
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException(conn.getRemoteAddress() + " connect failed.", e);
         } finally {
             transport.offerBuffer(buffer);
             transport.offerConnection(conn);

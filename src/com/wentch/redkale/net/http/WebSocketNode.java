@@ -5,6 +5,7 @@
  */
 package com.wentch.redkale.net.http;
 
+import com.wentch.redkale.net.sncp.*;
 import com.wentch.redkale.util.*;
 import java.io.*;
 import java.net.*;
@@ -44,12 +45,21 @@ public abstract class WebSocketNode {
 
     public void init(AnyValue conf) {
         if (remoteNode != null) {
-            try {
-                Map<Serializable, Set<InetSocketAddress>> map = remoteNode.getDataNodes();
-                if (map != null) dataNodes.putAll(map);
-            } catch (Exception e) {
-                logger.log(Level.INFO, WebSocketNode.class.getSimpleName() + "(" + this.localSncpAddress + ") not load data nodes ", e);
-            }
+            new Thread() {
+                {
+                    setDaemon(true);
+                }
+
+                @Override
+                public void run() {
+                    try {
+                        Map<Serializable, Set<InetSocketAddress>> map = remoteNode.getDataNodes();
+                        if (map != null) dataNodes.putAll(map);
+                    } catch (Exception e) {
+                        logger.log(Level.INFO, WebSocketNode.class.getSimpleName() + "(" + localSncpAddress + ") not load data nodes ", e);
+                    }
+                }
+            }.start();
         }
     }
 
@@ -66,7 +76,7 @@ public abstract class WebSocketNode {
         return dataNodes;
     }
 
-    protected abstract int sendMessage(Serializable groupid, boolean recent, Serializable message, boolean last);
+    protected abstract int sendMessage(@SncpParameter InetSocketAddress addr, Serializable groupid, boolean recent, Serializable message, boolean last);
 
     protected abstract void connect(Serializable groupid, InetSocketAddress addr);
 
@@ -74,7 +84,7 @@ public abstract class WebSocketNode {
 
     //--------------------------------------------------------------------------------
     public final void connect(Serializable groupid, String engineid) {
-        if (finest) logger.finest(localSncpAddress +" receive websocket connect event (" + groupid + " on " + engineid + ").");
+        if (finest) logger.finest(localSncpAddress + " receive websocket connect event (" + groupid + " on " + engineid + ").");
         Set<String> engineids = localNodes.get(groupid);
         if (engineids == null) {
             engineids = new CopyOnWriteArraySet<>();
@@ -85,7 +95,7 @@ public abstract class WebSocketNode {
     }
 
     public final void disconnect(Serializable groupid, String engineid) {
-        if (finest) logger.finest(localSncpAddress +" receive websocket disconnect event (" + groupid + " on " + engineid + ").");
+        if (finest) logger.finest(localSncpAddress + " receive websocket disconnect event (" + groupid + " on " + engineid + ").");
         Set<String> engineids = localNodes.get(groupid);
         if (engineids == null || engineids.isEmpty()) return;
         engineids.remove(engineid);
@@ -105,6 +115,37 @@ public abstract class WebSocketNode {
 
     public final void addWebSocketEngine(WebSocketEngine engine) {
         engines.put(engine.getEngineid(), engine);
+    }
+
+    public final int sendMessage(Serializable groupid, boolean recent, Serializable message, boolean last) {
+        final Set<String> engineids = localNodes.get(groupid);
+        int rscode = 0;
+        if (engineids != null && !engineids.isEmpty()) {
+            for (String engineid : engineids) {
+                final WebSocketEngine engine = engines.get(engineid);
+                if (engine != null) { //在本地
+                    final WebSocketGroup group = engine.getWebSocketGroup(groupid);
+                    if (group == null || group.isEmpty()) {
+                        if (finest) logger.finest("receive websocket message {engineid:'" + engineid + "', groupid:" + groupid + ", content:'" + message + "'} but result is " + RETCODE_GROUP_EMPTY);
+                        rscode = RETCODE_GROUP_EMPTY;
+                        break;
+                    }
+                    group.send(recent, message, last);
+                }
+            }
+        }
+        if ((recent && rscode == 0) || remoteNode == null) return rscode;
+        Set<InetSocketAddress> addrs = dataNodes.get(groupid);
+        if (addrs != null && !addrs.isEmpty()) {   //对方连接在远程节点       
+            for (InetSocketAddress addr : addrs) {
+                if (!addr.equals(localSncpAddress)) {
+                    remoteNode.sendMessage(addr, groupid, recent, message, last);
+                }
+            }
+        } else {
+            rscode = RETCODE_GROUP_EMPTY;
+        }
+        return rscode;
     }
 
     //--------------------------------------------------------------------------------

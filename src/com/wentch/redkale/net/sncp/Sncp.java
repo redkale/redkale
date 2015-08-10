@@ -23,7 +23,7 @@ import jdk.internal.org.objectweb.asm.Type;
  */
 public abstract class Sncp {
 
-    public static final String DEFAULT_PROTOCOL = "UDP";
+    public static final String DEFAULT_PROTOCOL = "TCP";
 
     static final String LOCALPREFIX = "_DynLocal";
 
