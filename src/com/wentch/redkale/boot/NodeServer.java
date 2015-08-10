@@ -5,6 +5,7 @@
  */
 package com.wentch.redkale.boot;
 
+import static com.wentch.redkale.boot.Application.RESNAME_SNCP_GROUP;
 import com.wentch.redkale.net.sncp.ServiceWrapper;
 import com.wentch.redkale.net.Server;
 import com.wentch.redkale.net.sncp.Sncp;
@@ -86,6 +87,8 @@ public abstract class NodeServer {
         final List<Transport>[] transportses = parseTransport(defgroup, this.nodeGroup, this.servaddr);
         final List<Transport> sameGroupTransports = transportses[0];
         final List<Transport> diffGroupTransports = transportses[1];
+
+        this.factory.register(RESNAME_SNCP_GROUP, !defgroup.isEmpty() ? defgroup : (this.nodeGroup == null ? "" : this.nodeGroup));
         //---------------------------------------------------------------------------------------------
         final ResourceFactory regFactory = application.factory;
         factory.add(DataSource.class, (ResourceFactory rf, final Object src, Field field) -> {

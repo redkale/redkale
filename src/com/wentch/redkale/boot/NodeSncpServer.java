@@ -36,7 +36,6 @@ public final class NodeSncpServer extends NodeServer {
             this.factory.register(RESNAME_SNCP_ADDR, InetSocketAddress.class, this.servaddr);
             this.factory.register(RESNAME_SNCP_ADDR, String.class, this.servaddr.getAddress().getHostAddress());
         }
-        this.factory.register(RESNAME_SNCP_GROUP, this.nodeGroup);
     }
 
     @Override
