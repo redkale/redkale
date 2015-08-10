@@ -45,6 +45,9 @@ public final class Application {
     //当前进程的根目录， 类型：String
     public static final String RESNAME_HOME = "APP_HOME";
 
+    //当前进程节点的name， 类型：String
+    public static final String RESNAME_NODE = "APP_NODE";
+
     //当前进程节点的IP地址， 类型：InetAddress、String
     public static final String RESNAME_ADDR = "APP_ADDR";
 
@@ -108,6 +111,19 @@ public final class Application {
         this.localAddress = localaddr.isEmpty() ? Utility.localInetAddress() : new InetSocketAddress(localaddr, 0).getAddress();
         Application.this.factory.register(RESNAME_ADDR, Application.this.localAddress.getHostAddress());
         Application.this.factory.register(RESNAME_ADDR, InetAddress.class, Application.this.localAddress);
+        {
+            StringBuilder sb = new StringBuilder();
+            byte[] bs = this.localAddress.getAddress();
+            int v1 = bs[bs.length - 2] & 0xff;
+            int v2 = bs[bs.length - 1] & 0xff;
+            if (v1 <= 0xf) sb.append('0');
+            sb.append(Integer.toHexString(v1));
+            if (v2 <= 0xf) sb.append('0');
+            sb.append(Integer.toHexString(v2));
+            String node = sb.toString();
+            Application.this.factory.register(RESNAME_NODE, node);
+            System.setProperty(RESNAME_NODE, node);
+        }
         //以下是初始化日志配置
         final File logconf = new File(root, "conf/logging.properties");
         if (logconf.isFile() && logconf.canRead()) {
