@@ -54,6 +54,9 @@ public final class Application {
     //application.xml 文件中resources节点的内容， 类型： AnyValue
     public static final String RESNAME_GRES = "APP_GRES";
 
+    //当前SNCP Server所属的组  类型: String
+    public static final String RESNAME_SNCP_GROUP = "SNCP_GROUP";
+
     //当前SNCP Server的IP地址+端口 类型: SocketAddress、InetSocketAddress 
     public static final String RESNAME_SNCP_ADDRESS = "SNCP_ADDRESS";
 

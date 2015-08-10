@@ -5,7 +5,7 @@
  */
 package com.wentch.redkale.boot;
 
-import static com.wentch.redkale.boot.Application.RESNAME_SNCP_ADDRESS;
+import static com.wentch.redkale.boot.Application.*;
 import com.wentch.redkale.net.sncp.*;
 import com.wentch.redkale.util.AnyValue;
 import com.wentch.redkale.service.Service;
@@ -33,6 +33,7 @@ public final class NodeSncpServer extends NodeServer {
         this.consumer = server == null ? null : x -> server.addService(x);
         this.factory.register(RESNAME_SNCP_ADDRESS, SocketAddress.class, this.servaddr);
         this.factory.register(RESNAME_SNCP_ADDRESS, InetSocketAddress.class, this.servaddr);
+        this.factory.register(RESNAME_SNCP_GROUP, this.nodeGroup);
     }
 
     @Override
