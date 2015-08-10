@@ -57,7 +57,7 @@ public final class Application {
     //当前SNCP Server所属的组  类型: String
     public static final String RESNAME_SNCP_GROUP = "SNCP_GROUP";
 
-    //当前SNCP Server的IP地址+端口 类型: SocketAddress、InetSocketAddress 
+    //当前SNCP Server的IP地址+端口 类型: SocketAddress、InetSocketAddress、String
     public static final String RESNAME_SNCP_ADDR = "SNCP_ADDR";
 
     //当前SNCP Server的IP地址+端口集合 类型: Map<InetSocketAddress, String>、HashMap<InetSocketAddress, String> 

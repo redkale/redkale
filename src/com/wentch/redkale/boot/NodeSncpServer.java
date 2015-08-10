@@ -31,8 +31,11 @@ public final class NodeSncpServer extends NodeServer {
         this.servaddr = addr;
         this.nodeGroup = application.addrGroups.getOrDefault(addr, "");
         this.consumer = server == null ? null : x -> server.addService(x);
-        this.factory.register(RESNAME_SNCP_ADDR, SocketAddress.class, this.servaddr);
-        this.factory.register(RESNAME_SNCP_ADDR, InetSocketAddress.class, this.servaddr);
+        if (this.servaddr != null) {
+            this.factory.register(RESNAME_SNCP_ADDR, SocketAddress.class, this.servaddr);
+            this.factory.register(RESNAME_SNCP_ADDR, InetSocketAddress.class, this.servaddr);
+            this.factory.register(RESNAME_SNCP_ADDR, String.class, this.servaddr.getAddress().getHostAddress());
+        }
         this.factory.register(RESNAME_SNCP_GROUP, this.nodeGroup);
     }
 
