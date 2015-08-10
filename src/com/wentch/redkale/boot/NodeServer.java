@@ -82,14 +82,13 @@ public abstract class NodeServer {
     }
 
     private void initResource() {
-        if (!isSNCP()) return;
         final String defgroup = servconf.getValue("group", ""); //Server节点获取group信息
         final List<Transport>[] transportses = parseTransport(defgroup, this.nodeGroup, this.servaddr);
         final List<Transport> sameGroupTransports = transportses[0];
         final List<Transport> diffGroupTransports = transportses[1];
         //---------------------------------------------------------------------------------------------
         final ResourceFactory regFactory = application.factory;
-        regFactory.add(DataSource.class, (ResourceFactory rf, final Object src, Field field) -> {
+        factory.add(DataSource.class, (ResourceFactory rf, final Object src, Field field) -> {
             try {
                 Resource rs = field.getAnnotation(Resource.class);
                 if (rs == null) return;
