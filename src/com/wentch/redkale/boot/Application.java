@@ -58,7 +58,7 @@ public final class Application {
     public static final String RESNAME_SNCP_GROUP = "SNCP_GROUP";
 
     //当前SNCP Server的IP地址+端口 类型: SocketAddress、InetSocketAddress 
-    public static final String RESNAME_SNCP_ADDRESS = "SNCP_ADDRESS";
+    public static final String RESNAME_SNCP_ADDR = "SNCP_ADDR";
 
     //当前SNCP Server的IP地址+端口集合 类型: Map<InetSocketAddress, String>、HashMap<InetSocketAddress, String> 
     public static final String RESNAME_SNCP_NODES = "SNCP_NODES";
