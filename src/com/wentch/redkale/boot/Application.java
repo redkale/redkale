@@ -16,7 +16,6 @@ import com.wentch.redkale.util.*;
 import com.wentch.redkale.util.AnyValue.DefaultAnyValue;
 import com.wentch.redkale.watch.*;
 import java.io.*;
-import java.lang.reflect.*;
 import java.net.*;
 import java.nio.*;
 import java.nio.channels.*;
@@ -58,22 +57,18 @@ public final class Application {
     public static final String RESNAME_SNCP_GROUP = "SNCP_GROUP";
 
     //当前SNCP Server的IP地址+端口 类型: SocketAddress、InetSocketAddress、String
-    public static final String RESNAME_SNCP_ADDR = "SNCP_ADDR";
+    public static final String RESNAME_SNCP_NODE = "SNCP_NODE";
 
     //当前SNCP Server的IP地址+端口集合 类型: Map<InetSocketAddress, String>、HashMap<InetSocketAddress, String> 
     public static final String RESNAME_SNCP_NODES = "SNCP_NODES";
-
-    private static final Type NODES1TYPE = new TypeToken<Map<InetSocketAddress, String>>() {
-    }.getType();
-
-    private static final Type NODES2TYPE = new TypeToken<HashMap<InetSocketAddress, String>>() {
-    }.getType();
 
     protected final ResourceFactory factory = ResourceFactory.root();
 
     protected final WatchFactory watch = WatchFactory.root();
 
-    protected final Map<InetSocketAddress, String> addrGroups = new HashMap<>();
+    protected final Map<InetSocketAddress, String> globalNodes = new HashMap<>();
+
+    private final Map<String, Set<InetSocketAddress>> globalGroups = new HashMap<>();
 
     protected final List<Transport> transports = new ArrayList<>();
 
@@ -96,10 +91,11 @@ public final class Application {
 
     private final long startTime = System.currentTimeMillis();
 
-    private CountDownLatch serverscdl;
+    private final CountDownLatch serversLatch;
 
     private Application(final AnyValue config) {
         this.config = config;
+
         final File root = new File(System.getProperty(RESNAME_HOME));
         this.factory.register(RESNAME_TIME, long.class, this.startTime);
         this.factory.register(RESNAME_HOME, Path.class, root.toPath());
@@ -174,7 +170,8 @@ public final class Application {
                 Logger.getLogger(this.getClass().getSimpleName()).log(Level.WARNING, "init logger configuration error", e);
             }
         }
-        logger = Logger.getLogger(this.getClass().getSimpleName());
+        this.logger = Logger.getLogger(this.getClass().getSimpleName());
+        this.serversLatch = new CountDownLatch(config.getAnyValues("server").length + 1);
     }
 
     public File getHome() {
@@ -244,44 +241,65 @@ public final class Application {
         initResources();
     }
 
-    public static <T extends Service> T singleton(Class<T> serviceClass) throws Exception {
-        return singleton(serviceClass, false);
-    }
+    private void initResources() throws Exception {
+        //-------------------------------------------------------------------------
+        final AnyValue resources = config.getAnyValue("resources");
+        if (resources != null) {
+            //------------------------------------------------------------------------
+            AnyValue datacachelistenerConf = resources.getAnyValue("datacachelistener");
+            if (datacachelistenerConf != null) {
+                String val = datacachelistenerConf.getValue("service", "");
+                if (!val.isEmpty()) {
+                    if ("none".equalsIgnoreCase(val)) {
+                        this.dataCacheListenerClass = null;
+                    } else {
+                        Class clazz = Class.forName(val);
+                        if (!DataCacheListener.class.isAssignableFrom(clazz) || !Service.class.isAssignableFrom(clazz)) {
+                            throw new RuntimeException("datacachelistener service (" + val + ") is illegal");
+                        }
+                        this.dataCacheListenerClass = clazz;
+                    }
+                }
+            }
+            //------------------------------------------------------------------------
+            AnyValue websocketnodeConf = resources.getAnyValue("websocketnode");
+            if (websocketnodeConf != null) {
+                String val = websocketnodeConf.getValue("service", "");
+                if (!val.isEmpty()) {
+                    if ("none".equalsIgnoreCase(val)) {
+                        this.webSocketNodeClass = null;
+                    } else {
+                        Class clazz = Class.forName(val);
+                        if (!WebSocketNode.class.isAssignableFrom(clazz) || !Service.class.isAssignableFrom(clazz)) {
+                            throw new RuntimeException("websocketnode service (" + val + ") is illegal");
+                        }
+                        this.webSocketNodeClass = clazz;
+                    }
+                }
+            }
+            //------------------------------------------------------------------------
 
-    public static <T extends Service> T singleton(Class<T> serviceClass, boolean remote) throws Exception {
-        final Application application = Application.create();
-        T service = remote ? Sncp.createRemoteService("", serviceClass, null, null) : Sncp.createLocalService("", serviceClass, null, null, null);
-        application.init();
-        application.factory.register(service);
-        new NodeSncpServer(application, null, new CountDownLatch(1), null).init(application.config);
-        application.factory.inject(service);
-        return service;
-    }
-
-    private static Application create() throws IOException {
-        final String home = new File(System.getProperty(RESNAME_HOME, "")).getCanonicalPath();
-        System.setProperty(RESNAME_HOME, home);
-        File appfile = new File(home, "conf/application.xml");
-        //System.setProperty(DataConnection.PERSIST_FILEPATH, appfile.getCanonicalPath());
-        return new Application(load(new FileInputStream(appfile)));
-    }
-
-    public static void main(String[] args) throws Exception {
-        //运行主程序
-        final Application application = Application.create();
-        if (System.getProperty("SHUTDOWN") != null) {
-            application.sendShutDown();
-            return;
+            for (AnyValue conf : resources.getAnyValues("group")) {
+                final String group = conf.getValue("name", "");
+                String protocol = conf.getValue("protocol", Sncp.DEFAULT_PROTOCOL).toUpperCase();
+                if (!"TCP".equalsIgnoreCase(protocol) && "UDP".equalsIgnoreCase(protocol)) {
+                    throw new RuntimeException("Not supported Transport Protocol " + conf.getValue("protocol"));
+                }
+                Set<InetSocketAddress> addrs = globalGroups.get(group);
+                if (addrs == null) {
+                    addrs = new LinkedHashSet<>();
+                    globalGroups.put(group, addrs);
+                }
+                for (AnyValue node : conf.getAnyValues("node")) {
+                    final InetSocketAddress addr = new InetSocketAddress(node.getValue("addr"), node.getIntValue("port"));
+                    addrs.add(addr);
+                    String oldgroup = globalNodes.get(addr);
+                    if (oldgroup != null) throw new RuntimeException(addr + " had one more group " + (globalNodes.get(addr)));
+                    globalNodes.put(addr, group);
+                }
+            }
         }
-        application.init();
-        application.startSelfServer();
-        try {
-            application.start();
-        } catch (Exception e) {
-            application.logger.log(Level.SEVERE, "Application start error", e);
-            System.exit(0);
-        }
-        System.exit(0);
+        //------------------------------------------------------------------------
     }
 
     private void startSelfServer() throws Exception {
@@ -317,7 +335,7 @@ public final class Application {
                                 channel.send(buffer, address);
                                 long e = System.currentTimeMillis() - s;
                                 logger.info(application.getClass().getSimpleName() + " shutdown in " + e + " ms");
-                                application.serverscdl.countDown();
+                                application.serversLatch.countDown();
                                 System.exit(0);
                             } catch (Exception ex) {
                                 logger.log(Level.INFO, "SHUTDOWN FAIL", ex);
@@ -357,7 +375,6 @@ public final class Application {
 
     public void start() throws Exception {
         final AnyValue[] entrys = config.getAnyValues("server");
-        this.serverscdl = new CountDownLatch(entrys.length + 1);
         CountDownLatch timecd = new CountDownLatch(entrys.length);
         final List<AnyValue> sncps = new ArrayList<>();
         final List<AnyValue> others = new ArrayList<>();
@@ -368,20 +385,21 @@ public final class Application {
                 others.add(entry);
             }
         }
-        for (AnyValue sncpconf : sncps) {
-            String host = sncpconf.getValue("host", "0.0.0.0").replace("0.0.0.0", "");
-            InetSocketAddress addr = new InetSocketAddress(host.isEmpty() ? this.localAddress.getHostAddress() : host, sncpconf.getIntValue("port", 80));
-            String oldgroup = addrGroups.get(addr);
-            if (oldgroup != null && !((sncpconf.getValue("group", "") + ";").contains(oldgroup + ";"))) throw new RuntimeException(addr + " has one more group " + (addrGroups.get(addr)));
-            if (oldgroup == null) addrGroups.put(addr, "");
-        }
-        factory.register(RESNAME_SNCP_NODES, NODES1TYPE, new HashMap<>(addrGroups));
-        factory.register(RESNAME_SNCP_NODES, NODES2TYPE, new HashMap<>(addrGroups));
-        runServers(timecd, sncps);  //确保sncp都启动后再启动其他协议
+        factory.register(RESNAME_SNCP_NODES, new TypeToken<Map<InetSocketAddress, String>>() {
+        }.getType(), globalNodes);
+        factory.register(RESNAME_SNCP_NODES, new TypeToken<HashMap<InetSocketAddress, String>>() {
+        }.getType(), globalNodes);
+
+        factory.register(RESNAME_SNCP_NODES, new TypeToken<Map<String, Set<InetSocketAddress>>>() {
+        }.getType(), globalGroups);
+        factory.register(RESNAME_SNCP_NODES, new TypeToken<HashMap<String, Set<InetSocketAddress>>>() {
+        }.getType(), globalGroups);
+
+        runServers(timecd, sncps);  //必须确保sncp都启动后再启动其他协议
         runServers(timecd, others);
         timecd.await();
         logger.info(this.getClass().getSimpleName() + " started in " + (System.currentTimeMillis() - startTime) + " ms");
-        this.serverscdl.await();
+        this.serversLatch.await();
     }
 
     @SuppressWarnings("unchecked")
@@ -392,7 +410,7 @@ public final class Application {
             Thread thread = new Thread() {
                 {
                     String host = serconf.getValue("host", "").replace("0.0.0.0", "[0]");
-                    setName(serconf.getValue("protocol", "Server").toUpperCase() + "-" + host + ":" + serconf.getIntValue("port", 80) + "-Thread");
+                    setName(serconf.getValue("protocol", "Server").toUpperCase() + "-" + host + ":" + serconf.getIntValue("port") + "-Thread");
                     this.setDaemon(true);
                 }
 
@@ -409,12 +427,10 @@ public final class Application {
                             protocol = protocol.substring(0, pos);
                         }
                         NodeServer server = null;
-                        String host = serconf.getValue("host", "0.0.0.0").replace("0.0.0.0", "");
-                        InetSocketAddress addr = new InetSocketAddress(host.isEmpty() ? localAddress.getHostAddress() : host, serconf.getIntValue("port", 80));
                         if ("SNCP".equalsIgnoreCase(protocol)) {
-                            server = new NodeSncpServer(Application.this, addr, servicecdl, new SncpServer(startTime, subprotocol, addr, watch));
+                            server = new NodeSncpServer(Application.this, servicecdl, new SncpServer(startTime, subprotocol, watch));
                         } else if ("HTTP".equalsIgnoreCase(protocol)) {
-                            server = new NodeHttpServer(Application.this, addr, servicecdl, new HttpServer(startTime, watch));
+                            server = new NodeHttpServer(Application.this, servicecdl, new HttpServer(startTime, watch));
                         }
                         if (server == null) {
                             logger.log(Level.SEVERE, "Not found Server Class for protocol({0})", serconf.getValue("protocol"));
@@ -427,7 +443,7 @@ public final class Application {
                         sercdl.countDown();
                     } catch (Exception ex) {
                         logger.log(Level.WARNING, serconf + " runServers error", ex);
-                        serverscdl.countDown();
+                        Application.this.serversLatch.countDown();
                     }
                 }
             };
@@ -436,61 +452,49 @@ public final class Application {
         sercdl.await();
     }
 
-    private void initResources() throws Exception {
-        //-------------------------------------------------------------------------
-        final AnyValue resources = config.getAnyValue("resources");
-        if (resources != null) {
-            //------------------------------------------------------------------------
-            AnyValue datacachelistenerConf = resources.getAnyValue("datacachelistener");
-            if (datacachelistenerConf != null) {
-                String val = datacachelistenerConf.getValue("service", "");
-                if (!val.isEmpty()) {
-                    if ("none".equalsIgnoreCase(val)) {
-                        this.dataCacheListenerClass = null;
-                    } else {
-                        Class clazz = Class.forName(val);
-                        if (!DataCacheListener.class.isAssignableFrom(clazz) || !Service.class.isAssignableFrom(clazz)) {
-                            throw new RuntimeException("datacachelistener service (" + val + ") is illegal");
-                        }
-                        this.dataCacheListenerClass = clazz;
-                    }
-                }
-            }
-            //------------------------------------------------------------------------
-            AnyValue websocketnodeConf = resources.getAnyValue("websocketnode");
-            if (websocketnodeConf != null) {
-                String val = websocketnodeConf.getValue("service", "");
-                if (!val.isEmpty()) {
-                    if ("none".equalsIgnoreCase(val)) {
-                        this.webSocketNodeClass = null;
-                    } else {
-                        Class clazz = Class.forName(val);
-                        if (!WebSocketNode.class.isAssignableFrom(clazz) || !Service.class.isAssignableFrom(clazz)) {
-                            throw new RuntimeException("websocketnode service (" + val + ") is illegal");
-                        }
-                        this.webSocketNodeClass = clazz;
-                    }
-                }
-            }
-            //------------------------------------------------------------------------
-            final Map<String, Set<String>> groups = new HashMap<>();
+    public static <T extends Service> T singleton(Class<T> serviceClass) throws Exception {
+        return singleton(serviceClass, false);
+    }
 
-            for (AnyValue conf : resources.getAnyValues("group")) {
-                final String group = conf.getValue("name", "");
-                String protocol = conf.getValue("protocol", Sncp.DEFAULT_PROTOCOL).toUpperCase();
-                if (!"TCP".equalsIgnoreCase(protocol) && !Sncp.DEFAULT_PROTOCOL.equalsIgnoreCase(protocol)) {
-                    throw new RuntimeException("Not supported Transport Protocol " + conf.getValue("protocol"));
-                }
-                List<InetSocketAddress> addrs = new ArrayList<>();
-                for (AnyValue node : conf.getAnyValues("node")) {
-                    InetSocketAddress addr = new InetSocketAddress(node.getValue("addr"), node.getIntValue("port"));
-                    if (addrGroups.containsKey(addr)) throw new RuntimeException(addr + " had one more group " + (addrGroups.get(addr)));
-                    addrGroups.put(addr, group);
-                    addrs.add(addr);
-                }
-            }
+    public static <T extends Service> T singleton(Class<T> serviceClass, boolean remote) throws Exception {
+        final Application application = Application.create();
+        T service = remote ? Sncp.createRemoteService("", serviceClass, null, null) : Sncp.createLocalService("", serviceClass, null, null, null);
+        application.init();
+        application.factory.register(service);
+        new NodeSncpServer(application, new CountDownLatch(1), null).init(application.config);
+        application.factory.inject(service);
+        return service;
+    }
+
+    private static Application create() throws IOException {
+        final String home = new File(System.getProperty(RESNAME_HOME, "")).getCanonicalPath();
+        System.setProperty(RESNAME_HOME, home);
+        File appfile = new File(home, "conf/application.xml");
+        //System.setProperty(DataConnection.PERSIST_FILEPATH, appfile.getCanonicalPath());
+        return new Application(load(new FileInputStream(appfile)));
+    }
+
+    public static void main(String[] args) throws Exception {
+        //运行主程序
+        final Application application = Application.create();
+        if (System.getProperty("SHUTDOWN") != null) {
+            application.sendShutDown();
+            return;
         }
-        //------------------------------------------------------------------------
+        application.init();
+        application.startSelfServer();
+        try {
+            application.start();
+        } catch (Exception e) {
+            application.logger.log(Level.SEVERE, "Application start error", e);
+            System.exit(0);
+        }
+        System.exit(0);
+    }
+
+    Set<InetSocketAddress> findGlobalGroup(String group) {
+        Set<InetSocketAddress> set = globalGroups.get(group);
+        return set == null ? null : new LinkedHashSet<>(set);
     }
 
     private void shutdown() throws Exception {
@@ -500,7 +504,7 @@ public final class Application {
             } catch (Exception t) {
                 logger.log(Level.WARNING, " shutdown server(" + server.getSocketAddress() + ") error", t);
             } finally {
-                serverscdl.countDown();
+                serversLatch.countDown();
             }
         });
         for (DataSource source : sources) {

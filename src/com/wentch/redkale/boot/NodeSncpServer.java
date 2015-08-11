@@ -5,11 +5,9 @@
  */
 package com.wentch.redkale.boot;
 
-import static com.wentch.redkale.boot.Application.*;
 import com.wentch.redkale.net.sncp.*;
 import com.wentch.redkale.util.AnyValue;
 import com.wentch.redkale.service.Service;
-import java.io.*;
 import java.net.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.logging.*;
@@ -22,20 +20,10 @@ public final class NodeSncpServer extends NodeServer {
 
     private final SncpServer server;
 
-    private final File home;
-
-    public NodeSncpServer(Application application, InetSocketAddress addr, CountDownLatch regcdl, SncpServer server) {
+    public NodeSncpServer(Application application, CountDownLatch regcdl, SncpServer server) {
         super(application, application.factory.createChild(), regcdl, server);
         this.server = server;
-        this.home = application.getHome();
-        this.servaddr = addr;
-        this.nodeGroup = application.addrGroups.getOrDefault(addr, "");
         this.consumer = server == null ? null : x -> server.addService(x);
-        if (this.servaddr != null) {
-            this.factory.register(RESNAME_SNCP_ADDR, SocketAddress.class, this.servaddr);
-            this.factory.register(RESNAME_SNCP_ADDR, InetSocketAddress.class, this.servaddr);
-            this.factory.register(RESNAME_SNCP_ADDR, String.class, this.servaddr.getAddress().getHostAddress());
-        }
     }
 
     @Override
@@ -47,7 +35,7 @@ public final class NodeSncpServer extends NodeServer {
     public void prepare(AnyValue config) throws Exception {
         ClassFilter<Service> serviceFilter = createServiceClassFilter(config);
         long s = System.currentTimeMillis();
-        ClassFilter.Loader.load(home, serviceFilter);
+        ClassFilter.Loader.load(application.getHome(), serviceFilter);
         long e = System.currentTimeMillis() - s;
         logger.info(this.getClass().getSimpleName() + " load filter class in " + e + " ms");
         loadService(serviceFilter); //必须在servlet之前

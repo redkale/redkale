@@ -232,6 +232,10 @@ public interface AnyValue {
         }
     }
 
+    public static AnyValue create() {
+        return new DefaultAnyValue();
+    }
+
     default String toString(int len) {
         if (len < 0) len = 0;
         char[] chars = new char[len];

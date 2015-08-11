@@ -9,7 +9,6 @@ import com.wentch.redkale.convert.bson.*;
 import com.wentch.redkale.net.*;
 import com.wentch.redkale.util.*;
 import com.wentch.redkale.watch.*;
-import java.net.*;
 import java.nio.*;
 import java.util.*;
 import java.util.concurrent.atomic.*;
@@ -21,27 +20,17 @@ import java.util.concurrent.atomic.*;
  */
 public final class SncpServer extends Server {
 
-    protected InetSocketAddress nodeAddress;
-
     public SncpServer(String protocol) {
-        this(System.currentTimeMillis(), protocol, null, null);
+        this(System.currentTimeMillis(), protocol, null);
     }
 
-    public SncpServer(long serverStartTime, String protocol, InetSocketAddress nodeAddress, final WatchFactory watch) {
+    public SncpServer(long serverStartTime, String protocol, final WatchFactory watch) {
         super(serverStartTime, protocol, new SncpPrepareServlet(), watch);
-        this.nodeAddress = nodeAddress;
     }
 
     @Override
     public void init(AnyValue config) throws Exception {
         super.init(config);
-        if (this.nodeAddress == null) {
-            if ("0.0.0.0".equals(this.address.getHostString())) {
-                this.nodeAddress = new InetSocketAddress(Utility.localInetAddress().getHostAddress(), this.address.getPort());
-            } else {
-                this.nodeAddress = this.address;
-            }
-        }
     }
 
     public void addService(ServiceWrapper entry) {
@@ -50,16 +39,6 @@ public final class SncpServer extends Server {
 
     public List<SncpServlet> getSncpServlets() {
         return ((SncpPrepareServlet) this.prepare).getSncpServlets();
-    }
-
-    /**
-     *
-     * 对外的IP地址
-     *
-     @return 
-     */
-    public InetSocketAddress getNodeAddress() {
-        return nodeAddress;
     }
 
     @Override

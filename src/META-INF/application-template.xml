@@ -37,9 +37,10 @@
          <!--
             一个组包含多个NODE， 同一Service服务可以由多个进程提供，这些进程称为一个GROUP，且同一GROUP内的进程必须在同一机房或局域网内
             name: 服务组ID，长度不能超过11个字节. 默认为空字符串。
-            protocol：值只能是UDP TCP， 默认UDP
+            protocol：值只能是UDP TCP， 默认TCP
+            注意: 一个node只能所属一个group。
         -->
-        <group name="" protocol="UDP">
+        <group name="" protocol="TCP">
             <!--
                 需要将本地node的addr与port列在此处。
                 addr: required IP地址

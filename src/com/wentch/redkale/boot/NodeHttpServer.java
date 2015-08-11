@@ -10,12 +10,10 @@ import com.wentch.redkale.net.http.HttpServer;
 import com.wentch.redkale.net.http.HttpServlet;
 import com.wentch.redkale.util.AnyValue;
 import com.wentch.redkale.boot.ClassFilter.FilterEntry;
-import com.wentch.redkale.net.*;
 import com.wentch.redkale.net.http.*;
 import com.wentch.redkale.net.sncp.*;
 import com.wentch.redkale.service.*;
 import com.wentch.redkale.util.*;
-import java.io.*;
 import java.lang.reflect.*;
 import java.net.InetSocketAddress;
 import java.util.*;
@@ -32,12 +30,9 @@ public final class NodeHttpServer extends NodeServer {
 
     private final HttpServer server;
 
-    private final File home;
-
-    public NodeHttpServer(Application application, InetSocketAddress addr, CountDownLatch servicecdl, HttpServer server) {
+    public NodeHttpServer(Application application, CountDownLatch servicecdl, HttpServer server) {
         super(application, application.factory.createChild(), servicecdl, server);
         this.server = server;
-        this.home = application.getHome();
     }
 
     @Override
@@ -50,7 +45,7 @@ public final class NodeHttpServer extends NodeServer {
         ClassFilter<HttpServlet> httpFilter = createClassFilter(null, config, WebServlet.class, HttpServlet.class, null, "servlets", "servlet");
         ClassFilter<Service> serviceFilter = createServiceClassFilter(config);
         long s = System.currentTimeMillis();
-        ClassFilter.Loader.load(home, serviceFilter, httpFilter);
+        ClassFilter.Loader.load(application.getHome(), serviceFilter, httpFilter);
         long e = System.currentTimeMillis() - s;
         logger.info(this.getClass().getSimpleName() + " load filter class in " + e + " ms");
         loadService(serviceFilter); //必须在servlet之前
@@ -59,31 +54,17 @@ public final class NodeHttpServer extends NodeServer {
     }
 
     private void initWebSocketService() {
-        String defgroup = servconf.getValue("group", ""); //Server节点获取group信息
-        NodeSncpServer firstnss = null;
-        NodeSncpServer sncpServer = null;
+        NodeSncpServer sncpServer0 = null;
         for (NodeServer ns : application.servers) {
-            if (!(ns instanceof NodeSncpServer)) continue;
-            final NodeSncpServer nss = (NodeSncpServer) ns;
-            if (firstnss == null) firstnss = nss;
-            if (defgroup.equals(nss.nodeGroup)) {
-                sncpServer = nss;
+            if (!ns.isSNCP()) continue;
+            if (sncpServer0 == null) sncpServer0 = (NodeSncpServer) ns;
+            if (ns.getNodeGroup().equals(getNodeGroup())) {
+                sncpServer0 = (NodeSncpServer) ns;
                 break;
             }
         }
-        if (sncpServer == null) sncpServer = firstnss;
-        if (defgroup.isEmpty() && sncpServer != null) {
-            defgroup = sncpServer.servconf.getValue("group", "");
-        }
-        final String localGroup = sncpServer == null ? this.nodeGroup : sncpServer.nodeGroup;
-        final InetSocketAddress localAddr = sncpServer == null ? this.servaddr : sncpServer.servaddr;
-        final List<Transport>[] transportses = parseTransport(defgroup, localGroup, localAddr);
-        final List<Transport> sameGroupTransports = transportses[0];
-        final List<Transport> diffGroupTransports = transportses[1];
-        //---------------------------------------------------------------------------------------------
-        final NodeSncpServer onesncpServer = sncpServer;
+        final NodeSncpServer sncpServer = sncpServer0;
         final ResourceFactory regFactory = application.factory;
-        final String subprotocol = sncpServer == null ? Sncp.DEFAULT_PROTOCOL : sncpServer.getSncpServer().getProtocol();
         factory.add(WebSocketNode.class, (ResourceFactory rf, final Object src, Field field) -> {
             try {
                 Resource rs = field.getAnnotation(Resource.class);
@@ -96,21 +77,21 @@ public final class NodeHttpServer extends NodeServer {
                     if (nodeService == null) {
                         Class<? extends Service> sc = (Class<? extends Service>) application.webSocketNodeClass;
                         nodeService = Sncp.createLocalService(rcname, (Class<? extends Service>) (sc == null ? WebSocketNodeService.class : sc),
-                                localAddr, (sc == null ? null : sameGroupTransports), (sc == null ? null : diffGroupTransports));
+                                getNodeAddress(), (sc == null ? null : nodeSameGroupTransports), (sc == null ? null : nodeDiffGroupTransports));
                         regFactory.register(rcname, WebSocketNode.class, nodeService);
                         WebSocketNode wsn = (WebSocketNode) nodeService;
-                        wsn.setLocalSncpAddress(localAddr);
+                        wsn.setLocalSncpAddress(getNodeAddress());
                         final Set<InetSocketAddress> alladdrs = new HashSet<>();
-                        application.addrGroups.forEach((k, v) -> alladdrs.add(k));
-                        alladdrs.remove(localAddr);
+                        application.globalNodes.forEach((k, v) -> alladdrs.add(k));
+                        alladdrs.remove(getNodeAddress());
                         WebSocketNode remoteNode = (WebSocketNode) Sncp.createRemoteService(rcname, (Class<? extends Service>) (sc == null ? WebSocketNodeService.class : sc),
-                                localAddr, (sc == null ? null : loadTransport(localGroup, subprotocol, alladdrs)));
+                                getNodeAddress(), (sc == null ? null : loadTransport(getNodeGroup(), getNodeProtocol(), alladdrs)));
                         wsn.setRemoteWebSocketNode(remoteNode);
                         factory.inject(nodeService);
                         factory.inject(remoteNode);
-                        if (onesncpServer != null) {
-                            ServiceWrapper wrapper = new ServiceWrapper((Class<? extends Service>) (sc == null ? WebSocketNodeService.class : sc), nodeService, localGroup, rcname, null);
-                            onesncpServer.getSncpServer().addService(wrapper);
+                        if (sncpServer != null) {
+                            ServiceWrapper wrapper = new ServiceWrapper((Class<? extends Service>) (sc == null ? WebSocketNodeService.class : sc), nodeService, getNodeGroup(), rcname, null);
+                            sncpServer.getSncpServer().addService(wrapper);
                         }
                     }
                     field.set(src, nodeService);

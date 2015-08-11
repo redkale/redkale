@@ -5,7 +5,7 @@
  */
 package com.wentch.redkale.boot;
 
-import static com.wentch.redkale.boot.Application.RESNAME_SNCP_GROUP;
+import static com.wentch.redkale.boot.Application.*;
 import com.wentch.redkale.net.sncp.ServiceWrapper;
 import com.wentch.redkale.net.Server;
 import com.wentch.redkale.net.sncp.Sncp;
@@ -20,7 +20,7 @@ import com.wentch.redkale.util.AnyValue.DefaultAnyValue;
 import java.io.*;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
-import java.net.InetSocketAddress;
+import java.net.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.Consumer;
@@ -45,13 +45,19 @@ public abstract class NodeServer {
 
     private final Server server;
 
-    protected AnyValue servconf;
+    private InetSocketAddress nodeAddress; //HttpServer中的nodeAddress 为所属group对应的SncpServer, 为null表示没有分布式结构
 
-    protected InetSocketAddress servaddr;
+    private String nodeGroup = "";  //当前Server的SNCP协议的组
 
-    protected String nodeGroup = "";
+    private AnyValue nodeConf;
+
+    private String nodeProtocol = Sncp.DEFAULT_PROTOCOL;
 
     protected Consumer<ServiceWrapper> consumer;
+
+    protected final List<Transport> nodeSameGroupTransports = new ArrayList<>();
+
+    protected final List<Transport> nodeDiffGroupTransports = new ArrayList<>();
 
     protected final Set<ServiceWrapper> localServices = new LinkedHashSet<>();
 
@@ -68,27 +74,55 @@ public abstract class NodeServer {
     protected abstract void prepare(final AnyValue config) throws Exception;
 
     public void init(AnyValue config) throws Exception {
-        this.servconf = config == null ? new AnyValue.DefaultAnyValue() : config;
-        //设置root文件夹
-        String webroot = config.getValue("root", "root");
-        File myroot = new File(webroot);
-        if (!webroot.contains(":") && !webroot.startsWith("/")) {
-            myroot = new File(System.getProperty(Application.RESNAME_HOME), webroot);
+        this.nodeConf = config == null ? AnyValue.create() : config;
+        if (isSNCP()) { // SNCP协议
+            String host = this.nodeConf.getValue("host", "0.0.0.0").replace("0.0.0.0", "");
+            this.nodeAddress = new InetSocketAddress(host.isEmpty() ? application.localAddress.getHostAddress() : host, this.nodeConf.getIntValue("port"));
+            this.nodeGroup = application.globalNodes.getOrDefault(this.nodeAddress, "");
+            if (server != null) this.nodeProtocol = server.getProtocol();
+        } else { // HTTP协议
+            String mbgroup = this.nodeConf.getValue("group", "");
+            NodeServer sncpServer = null;  //有匹配的就取匹配的， 没有且SNCP只有一个，则取此SNCP。
+            for (NodeServer ns : application.servers) {
+                if (!ns.isSNCP()) continue;
+                if (sncpServer == null) sncpServer = ns;
+                if (ns.getNodeGroup().equals(mbgroup)) {
+                    sncpServer = ns;
+                    break;
+                }
+            }
+            if (sncpServer != null) {
+                this.nodeAddress = sncpServer.getNodeAddress();
+                this.nodeGroup = sncpServer.getNodeGroup();
+                this.nodeProtocol = sncpServer.getNodeProtocol();
+            }
         }
-        final String homepath = myroot.getCanonicalPath();
-        Server.loadLib(logger, config.getValue("lib", "") + ";" + homepath + "/lib/*;" + homepath + "/classes");
-        if (server != null) server.init(config);
+        if (this.nodeAddress != null) { // 无分布式结构下 HTTP协议的nodeAddress 为 null
+            this.factory.register(RESNAME_SNCP_NODE, SocketAddress.class, this.nodeAddress);
+            this.factory.register(RESNAME_SNCP_NODE, InetSocketAddress.class, this.nodeAddress);
+            this.factory.register(RESNAME_SNCP_NODE, String.class, this.nodeAddress.getAddress().getHostAddress());
+            this.factory.register(RESNAME_SNCP_GROUP, this.nodeGroup);
+        }
+        {
+            //设置root文件夹
+            String webroot = config.getValue("root", "root");
+            File myroot = new File(webroot);
+            if (!webroot.contains(":") && !webroot.startsWith("/")) {
+                myroot = new File(System.getProperty(Application.RESNAME_HOME), webroot);
+            }
+            final String homepath = myroot.getCanonicalPath();
+            Server.loadLib(logger, config.getValue("lib", "") + ";" + homepath + "/lib/*;" + homepath + "/classes");
+            if (server != null) server.init(config);
+        }
         initResource();
         prepare(config);
     }
 
     private void initResource() {
-        final String defgroup = servconf.getValue("group", ""); //Server节点获取group信息
-        final List<Transport>[] transportses = parseTransport(defgroup, this.nodeGroup, this.servaddr);
-        final List<Transport> sameGroupTransports = transportses[0];
-        final List<Transport> diffGroupTransports = transportses[1];
+        final List<Transport>[] transportses = parseTransport(this.nodeConf.getValue("group", "").split(";"));
+        this.nodeSameGroupTransports.addAll(transportses[0]);
+        this.nodeDiffGroupTransports.addAll(transportses[1]);
 
-        this.factory.register(RESNAME_SNCP_GROUP, !defgroup.isEmpty() ? defgroup : (this.nodeGroup == null ? "" : this.nodeGroup));
         //---------------------------------------------------------------------------------------------
         final ResourceFactory regFactory = application.factory;
         factory.add(DataSource.class, (ResourceFactory rf, final Object src, Field field) -> {
@@ -101,7 +135,7 @@ public abstract class NodeServer {
                 regFactory.register(rs.name(), DataSource.class, source);
                 Class<? extends Service> sc = (Class<? extends Service>) application.dataCacheListenerClass;
                 if (sc != null) {
-                    Service cacheListenerService = Sncp.createLocalService(rs.name(), sc, this.servaddr, sameGroupTransports, diffGroupTransports);
+                    Service cacheListenerService = Sncp.createLocalService(rs.name(), sc, this.nodeAddress, nodeSameGroupTransports, nodeDiffGroupTransports);
                     regFactory.register(rs.name(), DataCacheListener.class, cacheListenerService);
                     ServiceWrapper wrapper = new ServiceWrapper(sc, cacheListenerService, nodeGroup, rs.name(), null);
                     localServices.add(wrapper);
@@ -116,40 +150,41 @@ public abstract class NodeServer {
         });
     }
 
-    protected List<Transport>[] parseTransport(final String group, final String localGroup, final InetSocketAddress addr) {
-        final Set<InetSocketAddress> sameGroupAddrs = new LinkedHashSet<>();
+    protected List<Transport>[] parseTransport(final String[] groups) {
+        final Set<InetSocketAddress> sameGroupAddrs = application.findGlobalGroup(this.nodeGroup);
         final Map<String, Set<InetSocketAddress>> diffGroupAddrs = new HashMap<>();
-        for (String str : group.split(";")) {
-            application.addrGroups.forEach((k, v) -> {
-                if (v.equals(str)) {
-                    if (v.equals(localGroup)) {
-                        sameGroupAddrs.add(k);
-                    } else {
-                        Set<InetSocketAddress> set = diffGroupAddrs.get(v);
-                        if (set == null) {
-                            set = new LinkedHashSet<>();
-                            diffGroupAddrs.put(v, set);
-                        }
-                        set.add(k);
-                    }
-                }
-            });
+        for (String groupitem : groups) {
+            final Set<InetSocketAddress> addrs = application.findGlobalGroup(groupitem);
+            if (addrs == null || groupitem.equals(this.nodeGroup)) continue;
+            diffGroupAddrs.put(groupitem, addrs);
         }
-        sameGroupAddrs.remove(addr);
-        final List<Transport> sameGroupTransports = new ArrayList<>();
-        for (InetSocketAddress iaddr : sameGroupAddrs) {
-            Set<InetSocketAddress> tset = new HashSet<>();
-            tset.add(iaddr);
-            sameGroupTransports.add(loadTransport(localGroup, server.getProtocol(), tset));
+        final List<Transport> sameGroupTransports0 = new ArrayList<>();
+        if (sameGroupAddrs != null) {
+            sameGroupAddrs.remove(this.nodeAddress);
+            for (InetSocketAddress iaddr : sameGroupAddrs) {
+                sameGroupTransports0.add(loadTransport(this.nodeGroup, getNodeProtocol(), iaddr));
+            }
         }
-        final List<Transport> diffGroupTransports = new ArrayList<>();
-        diffGroupAddrs.forEach((k, v) -> diffGroupTransports.add(loadTransport(k, server.getProtocol(), v)));
-        return new List[]{sameGroupTransports, diffGroupTransports};
+        final List<Transport> diffGroupTransports0 = new ArrayList<>();
+        diffGroupAddrs.forEach((k, v) -> diffGroupTransports0.add(loadTransport(k, getNodeProtocol(), v)));
+        return new List[]{sameGroupTransports0, diffGroupTransports0};
     }
 
     public abstract InetSocketAddress getSocketAddress();
 
     public abstract boolean isSNCP();
+
+    public InetSocketAddress getNodeAddress() {
+        return nodeAddress;
+    }
+
+    public String getNodeGroup() {
+        return nodeGroup;
+    }
+
+    public String getNodeProtocol() {
+        return nodeProtocol;
+    }
 
     public void start() throws IOException {
         server.start();
@@ -162,11 +197,18 @@ public abstract class NodeServer {
             y.getService().destroy(y.getConf());
             long e = System.currentTimeMillis() - s;
             if (e > 2 && sb != null) {
-                sb.append("LocalServices(").append(y.getType()).append(':').append(y.getName()).append(") destroy ").append(e).append("ms").append(LINE_SEPARATOR);
+                sb.append("LocalService(").append(y.getType()).append(':').append(y.getName()).append(") destroy ").append(e).append("ms").append(LINE_SEPARATOR);
             }
         });
         if (sb != null && sb.length() > 0) logger.log(Level.INFO, sb.toString());
         server.shutdown();
+    }
+
+    protected Transport loadTransport(String group, String protocol, InetSocketAddress addr) {
+        if (addr == null) return null;
+        Set<InetSocketAddress> set = new HashSet<>();
+        set.add(addr);
+        return loadTransport(group, protocol, set);
     }
 
     protected Transport loadTransport(String group, String protocol, Set<InetSocketAddress> addrs) {
@@ -193,7 +235,7 @@ public abstract class NodeServer {
         if (serviceFilter == null) return;
         final String threadName = "[" + Thread.currentThread().getName() + "] ";
         final Set<FilterEntry<Service>> entrys = serviceFilter.getFilterEntrys();
-        final String defgroup = servconf == null ? "" : servconf.getValue("group", ""); //Server节点获取group信息
+        final String defgroup = nodeConf == null ? "" : nodeConf.getValue("group", ""); //Server节点获取group信息
         ResourceFactory regFactory = isSNCP() ? application.factory : factory;
         for (FilterEntry<Service> entry : entrys) { //service实现类
             final Class<? extends Service> type = entry.getType();
@@ -208,7 +250,7 @@ public abstract class NodeServer {
             final Set<InetSocketAddress> sameGroupAddrs = new LinkedHashSet<>();
             final Map<String, Set<InetSocketAddress>> diffGroupAddrs = new HashMap<>();
             for (String str : group.split(";")) {
-                application.addrGroups.forEach((k, v) -> {
+                application.globalNodes.forEach((k, v) -> {
                     if (v.equals(str)) {
                         if (v.equals(this.nodeGroup)) {
                             sameGroupAddrs.add(k);
@@ -223,21 +265,21 @@ public abstract class NodeServer {
                     }
                 });
             }
-            final boolean localable = sameGroupAddrs.contains(this.servaddr);
+            final boolean localable = sameGroupAddrs.contains(this.nodeAddress);
             Service service;
 
             List<Transport> diffGroupTransports = new ArrayList<>();
             diffGroupAddrs.forEach((k, v) -> diffGroupTransports.add(loadTransport(k, server.getProtocol(), v)));
 
             if (localable || (sameGroupAddrs.isEmpty() && diffGroupTransports.isEmpty())) {
-                sameGroupAddrs.remove(this.servaddr);
+                sameGroupAddrs.remove(this.nodeAddress);
                 List<Transport> sameGroupTransports = new ArrayList<>();
                 for (InetSocketAddress iaddr : sameGroupAddrs) {
                     Set<InetSocketAddress> tset = new HashSet<>();
                     tset.add(iaddr);
                     sameGroupTransports.add(loadTransport(this.nodeGroup, server.getProtocol(), tset));
                 }
-                service = Sncp.createLocalService(entry.getName(), type, this.servaddr, sameGroupTransports, diffGroupTransports);
+                service = Sncp.createLocalService(entry.getName(), type, this.nodeAddress, sameGroupTransports, diffGroupTransports);
             } else {
                 StringBuilder g = new StringBuilder(this.nodeGroup);
                 diffGroupAddrs.forEach((k, v) -> {
@@ -246,7 +288,7 @@ public abstract class NodeServer {
                     sameGroupAddrs.addAll(v);
                 });
                 if (sameGroupAddrs.isEmpty()) throw new RuntimeException(type + ":" + group);
-                service = Sncp.createRemoteService(entry.getName(), type, this.servaddr, loadTransport(g.toString(), server.getProtocol(), sameGroupAddrs));
+                service = Sncp.createRemoteService(entry.getName(), type, this.nodeAddress, loadTransport(g.toString(), server.getProtocol(), sameGroupAddrs));
             }
             ServiceWrapper wrapper = new ServiceWrapper(type, service, entry);
             if (factory.find(wrapper.getName(), wrapper.getType()) == null) {
