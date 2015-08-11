@@ -85,7 +85,7 @@
     <!--
         protocol: required  server所启动的协议，有HTTP、SNCP， 目前只支持HTTP、SNCP。SNCP也分TCP、UDP实现，默认使用UDP实现，TCP实现则使用SNCP.TCP值; 
         host:  服务所占address ， 默认: 0.0.0.0
-        port:  服务所占端口 ，默认: 80
+        port:  required 服务所占端口 
         group: 所属组的节点,多个节点值用;隔开，如果配置文件中存在多个SNCP协议的Server节点，需要显式指定group属性
         root:  如果是web类型服务，则包含页面  默认:{APP_HOME}/root
         lib: server额外的class目录， 默认为空        
