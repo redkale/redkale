@@ -14,6 +14,7 @@ import java.lang.reflect.*;
 import java.net.*;
 import java.util.*;
 import jdk.internal.org.objectweb.asm.*;
+import static jdk.internal.org.objectweb.asm.ClassWriter.COMPUTE_FRAMES;
 import static jdk.internal.org.objectweb.asm.Opcodes.*;
 import jdk.internal.org.objectweb.asm.Type;
 
@@ -214,7 +215,7 @@ public abstract class Sncp {
         } catch (Exception ex) {
         }
         //------------------------------------------------------------------------------
-        ClassWriter cw = new ClassWriter(0);
+        ClassWriter cw = new ClassWriter(COMPUTE_FRAMES);
         FieldVisitor fv;
         DebugMethodVisitor mv;
         AnnotationVisitor av0;
@@ -355,7 +356,34 @@ public abstract class Sncp {
                     mv.visitVarInsn(ASTORE, ++varindex);
                 }
                 final int rsindex = varindex;  //
-
+                
+                //---------------------------if (_client== null)  return ----------------------------------
+                mv.visitVarInsn(ALOAD, 0);
+                mv.visitFieldInsn(GETFIELD, newDynName, "_client", clientDesc);
+                Label ifrt = new Label();
+                mv.visitJumpInsn(IFNONNULL, ifrt);
+                if (returnType == void.class) {
+                    mv.visitInsn(RETURN);
+                } else if (returnType.isPrimitive()) {
+                    if (returnType == long.class) {
+                        mv.visitVarInsn(LLOAD, rsindex);
+                        mv.visitInsn(LRETURN);
+                    } else if (returnType == float.class) {
+                        mv.visitVarInsn(FLOAD, rsindex);
+                        mv.visitInsn(FRETURN);
+                    } else if (returnType == double.class) {
+                        mv.visitVarInsn(DLOAD, rsindex);
+                        mv.visitInsn(DRETURN);
+                    } else {
+                        mv.visitVarInsn(ILOAD, rsindex);
+                        mv.visitInsn(IRETURN);
+                    }
+                } else {
+                    mv.visitVarInsn(ALOAD, rsindex);
+                    mv.visitInsn(ARETURN);
+                }
+                mv.visitLabel(ifrt); 
+                //-------------------------------------------------------------
                 mv.visitVarInsn(ALOAD, 0);//调用 _client
                 mv.visitFieldInsn(GETFIELD, newDynName, "_client", clientDesc);
                 mv.visitVarInsn(ALOAD, 0);  //传递 _convert
