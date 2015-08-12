@@ -24,13 +24,13 @@ import java.util.logging.*;
  */
 public class SncpTest {
 
-    private static final String protocol = "UDP";
+    private static final String protocol = Sncp.DEFAULT_PROTOCOL;
 
     private static final String serviceName = "";
 
-    private static final int port = 7070;
+    private static final int port = 4040;
 
-    private static final int port2 = 7270;
+    private static final int port2 = 4240;
 
     public static void main(String[] args) throws Exception {
         ResourceFactory.root().register("", BsonConvert.class, BsonFactory.root().getConvert());
