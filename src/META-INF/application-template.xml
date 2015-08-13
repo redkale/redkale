@@ -38,7 +38,7 @@
             一个组包含多个NODE， 同一Service服务可以由多个进程提供，这些进程称为一个GROUP，且同一GROUP内的进程必须在同一机房或局域网内
             name: 服务组ID，长度不能超过11个字节. 默认为空字符串。
             protocol：值只能是UDP TCP， 默认TCP
-            注意: 一个node只能所属一个group。
+            注意: 一个node只能所属一个group。只要存在protocol == SNCP的Server节点信息， 就必须有group节点信息。
         -->
         <group name="" protocol="TCP">
             <!--
@@ -87,7 +87,9 @@
         protocol: required  server所启动的协议，有HTTP、SNCP， 目前只支持HTTP、SNCP。SNCP也分TCP、UDP实现，默认使用UDP实现，TCP实现则使用SNCP.TCP值; 
         host:  服务所占address ， 默认: 0.0.0.0
         port:  required 服务所占端口 
-        group: 所属组的节点,多个节点值用;隔开，如果配置文件中存在多个SNCP协议的Server节点，需要显式指定group属性
+        group: 所属组的节点,多个节点值用;隔开，如果配置文件中存在多个SNCP协议的Server节点，需要显式指定group属性.
+               当 protocol == SNCP 时 group表示当前Server与哪些节点组关联。
+               当 protocol != SNCP 时 group只能是空或者一个group的节点值，不能为多个节点值。
         root:  如果是web类型服务，则包含页面  默认:{APP_HOME}/root
         lib: server额外的class目录， 默认为空        
         charset: 文本编码， 默认: UTF-8
@@ -100,7 +102,7 @@
         readTimeoutSecond: 读操作超时秒数， 默认0， 表示永久不超时
         writeTimeoutSecond:  写操作超时秒数， 默认0， 表示永久不超时
         
-        forwardproxy: 正向代理(支持CONNECT); 默认: false， 只有当protocol=HTTP才生效
+        forwardproxy: 正向代理(支持CONNECT); 默认: false， 只有当 protocol==HTTP 才生效
     -->
     <server protocol="HTTP" host="127.0.0.1" port="6060" root="root" lib=""> 
         

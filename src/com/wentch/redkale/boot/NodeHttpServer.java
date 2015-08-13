@@ -58,7 +58,7 @@ public final class NodeHttpServer extends NodeServer {
         for (NodeServer ns : application.servers) {
             if (!ns.isSNCP()) continue;
             if (sncpServer0 == null) sncpServer0 = (NodeSncpServer) ns;
-            if (ns.getNodeGroup().equals(getNodeGroup())) {
+            if (ns.getSncpGroup().equals(getSncpGroup())) {
                 sncpServer0 = (NodeSncpServer) ns;
                 break;
             }
@@ -77,20 +77,20 @@ public final class NodeHttpServer extends NodeServer {
                     if (nodeService == null) {
                         Class<? extends Service> sc = (Class<? extends Service>) application.webSocketNodeClass;
                         nodeService = Sncp.createLocalService(rcname, (Class<? extends Service>) (sc == null ? WebSocketNodeService.class : sc),
-                                getNodeAddress(), (sc == null ? null : nodeSameGroupTransports), (sc == null ? null : nodeDiffGroupTransports));
+                                getSncpAddress(), (sc == null ? null : nodeSameGroupTransports), (sc == null ? null : nodeDiffGroupTransports));
                         regFactory.register(rcname, WebSocketNode.class, nodeService);
                         WebSocketNode wsn = (WebSocketNode) nodeService;
-                        wsn.setLocalSncpAddress(getNodeAddress());
+                        wsn.setLocalSncpAddress(getSncpAddress());
                         final Set<InetSocketAddress> alladdrs = new HashSet<>();
                         application.globalNodes.forEach((k, v) -> alladdrs.add(k));
-                        alladdrs.remove(getNodeAddress());
+                        alladdrs.remove(getSncpAddress());
                         WebSocketNode remoteNode = (WebSocketNode) Sncp.createRemoteService(rcname, (Class<? extends Service>) (sc == null ? WebSocketNodeService.class : sc),
-                                getNodeAddress(), (sc == null ? null : loadTransport(getNodeGroup(), getNodeProtocol(), alladdrs)));
+                                getSncpAddress(), (sc == null ? null : loadTransport(getSncpGroup(), getNodeProtocol(), alladdrs)));
                         wsn.setRemoteWebSocketNode(remoteNode);
                         factory.inject(nodeService);
                         factory.inject(remoteNode);
                         if (sncpServer != null) {
-                            ServiceWrapper wrapper = new ServiceWrapper((Class<? extends Service>) (sc == null ? WebSocketNodeService.class : sc), nodeService, getNodeGroup(), rcname, null);
+                            ServiceWrapper wrapper = new ServiceWrapper((Class<? extends Service>) (sc == null ? WebSocketNodeService.class : sc), nodeService, getSncpGroup(), rcname, null);
                             sncpServer.getSncpServer().addService(wrapper);
                         }
                     }

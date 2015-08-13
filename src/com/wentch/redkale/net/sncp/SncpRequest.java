@@ -112,6 +112,7 @@ public final class SncpRequest extends Request {
 
     @Override
     protected void prepare() {
+        this.keepAlive = true;
         if (this.body == null) return;
         byte[] bytes = this.body;
         int pos = 0;

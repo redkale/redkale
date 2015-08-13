@@ -385,6 +385,8 @@ public final class Application {
                 others.add(entry);
             }
         }
+        if (!sncps.isEmpty() && globalNodes.isEmpty()) throw new RuntimeException("found SNCP Server node bug not found <group> node info.");
+        
         factory.register(RESNAME_SNCP_NODES, new TypeToken<Map<InetSocketAddress, String>>() {
         }.getType(), globalNodes);
         factory.register(RESNAME_SNCP_NODES, new TypeToken<HashMap<InetSocketAddress, String>>() {
