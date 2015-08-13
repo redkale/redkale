@@ -54,6 +54,66 @@ public interface AnyValue {
             return rs;
         }
 
+        public void addAll(final AnyValue av) {
+            if (av == null) return;
+            if (av instanceof DefaultAnyValue) {
+                final DefaultAnyValue adv = (DefaultAnyValue) av;
+                if (adv.stringValues != null) {
+                    for (Entry<String> en : adv.stringValues) {
+                        this.addValue(en.name, en.value);
+                    }
+                }
+                if (adv.entityValues != null) {
+                    for (Entry<AnyValue> en : adv.entityValues) {
+                        this.addValue(en.name, en.value);
+                    }
+                }
+            } else {
+                final Entry<String>[] strings = av.getStringEntrys();
+                if (strings != null) {
+                    for (Entry<String> en : strings) {
+                        this.addValue(en.name, en.value);
+                    }
+                }
+                final Entry<AnyValue>[] anys = av.getAnyEntrys();
+                if (anys != null) {
+                    for (Entry<AnyValue> en : anys) {
+                        this.addValue(en.name, en.value);
+                    }
+                }
+            }
+        }
+
+        public void setAll(final AnyValue av) {
+            if (av == null) return;
+            if (av instanceof DefaultAnyValue) {
+                final DefaultAnyValue adv = (DefaultAnyValue) av;
+                if (adv.stringValues != null) {
+                    for (Entry<String> en : adv.stringValues) {
+                        this.setValue(en.name, en.value);
+                    }
+                }
+                if (adv.entityValues != null) {
+                    for (Entry<AnyValue> en : adv.entityValues) {
+                        this.setValue(en.name, en.value);
+                    }
+                }
+            } else {
+                final Entry<String>[] strings = av.getStringEntrys();
+                if (strings != null) {
+                    for (Entry<String> en : strings) {
+                        this.setValue(en.name, en.value);
+                    }
+                }
+                final Entry<AnyValue>[] anys = av.getAnyEntrys();
+                if (anys != null) {
+                    for (Entry<AnyValue> en : anys) {
+                        this.setValue(en.name, en.value);
+                    }
+                }
+            }
+        }
+
         @Override
         public Entry<String>[] getStringEntrys() {
             return stringValues;
