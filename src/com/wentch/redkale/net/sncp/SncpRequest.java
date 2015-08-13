@@ -112,7 +112,7 @@ public final class SncpRequest extends Request {
 
     @Override
     protected void prepare() {
-        this.keepAlive = true;
+        this.keepAlive = this.channel.isTCP();
         if (this.body == null) return;
         byte[] bytes = this.body;
         int pos = 0;
