@@ -124,7 +124,7 @@ public abstract class Server {
         transport.bind(address, backlog);
         transport.accept();
         final String threadName = "[" + Thread.currentThread().getName() + "] ";
-        logger.info(threadName + this.getClass().getSimpleName() + " listen: " + address
+        logger.info(threadName + this.getClass().getSimpleName() + "." + protocol + " listen: " + address
                 + ", threads: " + threads + ", bufferPoolSize: " + bufferPoolSize + ", responsePoolSize: " + responsePoolSize
                 + ", started in " + (System.currentTimeMillis() - context.getServerStartTime()) + " ms");
     }
