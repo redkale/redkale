@@ -107,9 +107,11 @@ public final class Transport {
                         p = i;
                         addr = remoteAddres[i];
                         BlockingQueue<AsyncConnection> queue = connPool.get(addr);
-                        if (queue != null && queue.isEmpty()) {
-                            AsyncConnection conn = queue.poll();
-                            if (conn.isOpen()) return conn;
+                        if (queue != null && !queue.isEmpty()) {
+                            AsyncConnection conn;
+                            while ((conn = queue.poll()) != null) {
+                                if (conn.isOpen()) return conn;
+                            }
                         }
                         if (channel == null) channel = AsynchronousSocketChannel.open(group);
                         try {
