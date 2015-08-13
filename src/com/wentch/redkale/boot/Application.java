@@ -56,11 +56,14 @@ public final class Application {
     //当前SNCP Server所属的组  类型: String
     public static final String RESNAME_SNCP_GROUP = "SNCP_GROUP";
 
+    //当前Service所属的组  类型: Set<String>、String[]
+    public static final String RESNAME_SNCP_GROUPS = Sncp.RESNAME_SNCP_GROUPS; //SNCP_GROUPS
+
     //当前SNCP Server的IP地址+端口 类型: SocketAddress、InetSocketAddress、String
     public static final String RESNAME_SNCP_NODE = "SNCP_NODE";
 
     //当前SNCP Server的IP地址+端口集合 类型: Map<InetSocketAddress, String>、HashMap<InetSocketAddress, String> 
-    public static final String RESNAME_SNCP_NODES = "SNCP_NODES";
+    public static final String RESNAME_SNCP_NODES = "SNCP_NODES"; 
 
     protected final ResourceFactory factory = ResourceFactory.root();
 
@@ -386,7 +389,7 @@ public final class Application {
             }
         }
         if (!sncps.isEmpty() && globalNodes.isEmpty()) throw new RuntimeException("found SNCP Server node bug not found <group> node info.");
-        
+
         factory.register(RESNAME_SNCP_NODES, new TypeToken<Map<InetSocketAddress, String>>() {
         }.getType(), globalNodes);
         factory.register(RESNAME_SNCP_NODES, new TypeToken<HashMap<InetSocketAddress, String>>() {
@@ -460,7 +463,7 @@ public final class Application {
 
     public static <T extends Service> T singleton(Class<T> serviceClass, boolean remote) throws Exception {
         final Application application = Application.create();
-        T service = remote ? Sncp.createRemoteService("", serviceClass, null, null) : Sncp.createLocalService("", serviceClass, null, null, null);
+        T service = remote ? Sncp.createRemoteService("", serviceClass, null, null) : Sncp.createLocalService("", serviceClass, null, new LinkedHashSet<>(), null, null);
         application.init();
         application.factory.register(service);
         new NodeSncpServer(application, new CountDownLatch(1), null).init(application.config);
@@ -495,6 +498,7 @@ public final class Application {
     }
 
     Set<InetSocketAddress> findGlobalGroup(String group) {
+        if (group == null) return null;
         Set<InetSocketAddress> set = globalGroups.get(group);
         return set == null ? null : new LinkedHashSet<>(set);
     }

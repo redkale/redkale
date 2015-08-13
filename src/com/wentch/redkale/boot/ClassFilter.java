@@ -8,6 +8,7 @@ package com.wentch.redkale.boot;
 import com.wentch.redkale.util.Ignore;
 import com.wentch.redkale.util.AutoLoad;
 import com.wentch.redkale.util.AnyValue;
+import com.wentch.redkale.util.AnyValue.DefaultAnyValue;
 import java.io.*;
 import java.lang.annotation.*;
 import java.lang.reflect.*;
@@ -111,14 +112,22 @@ public final class ClassFilter<T> {
         if (cf == null) return;
         try {
             Class clazz = Class.forName(clazzname);
-            if (cf.accept(property, clazz, autoscan)) {
-                if (conf != null) {
-                    if (property == null) {
-                        property = cf.conf;
+            if (!cf.accept(property, clazz, autoscan)) return;
+            if (cf.conf != null) {
+                if (property == null) {
+                    property = cf.conf;
+                } else {
+                    if (property instanceof DefaultAnyValue) {
+                        ((DefaultAnyValue) property).addAll(cf.conf);
+                    } else {
+                        DefaultAnyValue dav = new DefaultAnyValue();
+                        dav.addAll(property);
+                        dav.addAll(cf.conf);
+                        property = dav;
                     }
                 }
-                entrys.add(new FilterEntry(clazz, property));
             }
+            entrys.add(new FilterEntry(clazz, property));
         } catch (Throwable cfe) {
         }
     }
@@ -243,7 +252,7 @@ public final class ClassFilter<T> {
      */
     public static final class FilterEntry<T> {
 
-        private String group;
+        private final HashSet<String> groups = new LinkedHashSet<>();
 
         private final String name;
 
@@ -253,7 +262,8 @@ public final class ClassFilter<T> {
 
         public FilterEntry(Class<T> type, AnyValue property) {
             this.type = type;
-            this.group = property == null ? "" : property.getValue("group", "");
+            String str = property == null ? null : property.getValue("groups");
+            if (str != null) groups.addAll(Arrays.asList(str.split(";")));
             this.property = property;
             this.name = property == null ? "" : property.getValue("name", "");
         }
@@ -261,7 +271,7 @@ public final class ClassFilter<T> {
         @Override
         public String toString() {
             return this.getClass().getSimpleName() + "[thread=" + Thread.currentThread().getName()
-                    + ", type=" + this.type.getSimpleName() + ", name=" + name + ", group=" + group + "]";
+                    + ", type=" + this.type.getSimpleName() + ", name=" + name + ", groups=" + groups + "]";
         }
 
         @Override
@@ -273,7 +283,7 @@ public final class ClassFilter<T> {
         public boolean equals(Object obj) {
             if (obj == null) return false;
             if (getClass() != obj.getClass()) return false;
-            return (this.type == ((FilterEntry<?>) obj).type && this.group.equals(((FilterEntry<?>) obj).group) && this.name.equals(((FilterEntry<?>) obj).name));
+            return (this.type == ((FilterEntry<?>) obj).type && this.groups.equals(((FilterEntry<?>) obj).groups) && this.name.equals(((FilterEntry<?>) obj).name));
         }
 
         public Class<T> getType() {
@@ -288,13 +298,10 @@ public final class ClassFilter<T> {
             return property;
         }
 
-        public String getGroup() {
-            return group;
+        public HashSet<String> getGroups() {
+            return groups;
         }
 
-        public void setGroup(String group) {
-            this.group = group;
-        }
     }
 
     /**

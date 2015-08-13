@@ -13,6 +13,7 @@ import com.wentch.redkale.util.*;
 import java.lang.reflect.*;
 import java.net.*;
 import java.util.*;
+import javax.annotation.*;
 import jdk.internal.org.objectweb.asm.*;
 import static jdk.internal.org.objectweb.asm.ClassWriter.COMPUTE_FRAMES;
 import static jdk.internal.org.objectweb.asm.Opcodes.*;
@@ -23,6 +24,15 @@ import jdk.internal.org.objectweb.asm.Type;
  * @author zhangjx
  */
 public abstract class Sncp {
+
+    //当前Service所属的组  类型: Set<String>、String[]
+    public static final String RESNAME_SNCP_GROUPS = "SNCP_GROUPS";
+
+    private static final java.lang.reflect.Type GROUPS_TYPE1 = new TypeToken<Set<String>>() {
+    }.getType();
+
+    private static final java.lang.reflect.Type GROUPS_TYPE2 = new TypeToken<String[]>() {
+    }.getType();
 
     public static final String DEFAULT_PROTOCOL = "TCP";
 
@@ -356,7 +366,7 @@ public abstract class Sncp {
                     mv.visitVarInsn(ASTORE, ++varindex);
                 }
                 final int rsindex = varindex;  //
-                
+
                 //---------------------------if (_client== null)  return ----------------------------------
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitFieldInsn(GETFIELD, newDynName, "_client", clientDesc);
@@ -382,7 +392,7 @@ public abstract class Sncp {
                     mv.visitVarInsn(ALOAD, rsindex);
                     mv.visitInsn(ARETURN);
                 }
-                mv.visitLabel(ifrt); 
+                mv.visitLabel(ifrt);
                 //-------------------------------------------------------------
                 mv.visitVarInsn(ALOAD, 0);//调用 _client
                 mv.visitFieldInsn(GETFIELD, newDynName, "_client", clientDesc);
@@ -551,33 +561,74 @@ public abstract class Sncp {
      * @param name
      * @param serviceClass
      * @param clientAddress
+     * @param groups
      * @param sameGroupTransports
      * @param diffGroupTransports
      * @return 
      */
     @SuppressWarnings("unchecked")
     public static <T extends Service> T createLocalService(final String name, final Class<T> serviceClass,
-            final InetSocketAddress clientAddress, Collection<Transport> sameGroupTransports, Collection<Transport> diffGroupTransports) {
+            final InetSocketAddress clientAddress, HashSet<String> groups, Collection<Transport> sameGroupTransports, Collection<Transport> diffGroupTransports) {
         try {
-            Class newClazz = createLocalServiceClass(name, serviceClass);
+            final Class newClazz = createLocalServiceClass(name, serviceClass);
             T rs = (T) newClazz.newInstance();
-            Field e = null;
-            try {
-                e = newClazz.getDeclaredField("_client");
-            } catch (NoSuchFieldException ne) {
-                return rs;
-            }
-            e.setAccessible(true);
-            e.set(rs, new SncpClient(name, hash(serviceClass), false, newClazz, true, clientAddress));
+            //--------------------------------------            
             if (sameGroupTransports == null) sameGroupTransports = new ArrayList<>();
-            Field c = newClazz.getDeclaredField("_sameGroupTransports");
-            c.setAccessible(true);
-            c.set(rs, sameGroupTransports.toArray(new Transport[sameGroupTransports.size()]));
-
             if (diffGroupTransports == null) diffGroupTransports = new ArrayList<>();
-            Field t = newClazz.getDeclaredField("_diffGroupTransports");
-            t.setAccessible(true);
-            t.set(rs, diffGroupTransports.toArray(new Transport[diffGroupTransports.size()]));
+            Transport remoteTransport = null;
+            {
+                Class loop = newClazz;
+                String[] groupArray = null;
+                do {
+                    for (Field field : loop.getDeclaredFields()) {
+                        int mod = field.getModifiers();
+                        if (Modifier.isFinal(mod) || Modifier.isStatic(mod)) continue;
+                        if (field.getAnnotation(SncpRemote.class) != null) {
+                            field.setAccessible(true);
+                            if (remoteTransport == null) {
+                                List<Transport> list = new ArrayList<>();
+                                list.addAll(sameGroupTransports);
+                                list.addAll(diffGroupTransports);
+                                if (!list.isEmpty()) remoteTransport = new Transport(list.get(0), clientAddress, list);
+                            }
+                            if (field.getType().isAssignableFrom(newClazz) && remoteTransport != null) {
+                                field.set(rs, createRemoteService(name, serviceClass, clientAddress, remoteTransport));
+                            }
+                            continue;
+                        }
+                        Resource res = field.getAnnotation(Resource.class);
+                        if (res == null || !res.name().equals(RESNAME_SNCP_GROUPS)) continue;
+                        field.setAccessible(true);
+                        if (groups == null) groups = new LinkedHashSet<>();
+                        if (groupArray == null) groupArray = groups.toArray(new String[groups.size()]);
+                        if (field.getGenericType().equals(GROUPS_TYPE1)) {
+                            field.set(rs, groups);
+                        } else if (field.getGenericType().equals(GROUPS_TYPE2)) {
+                            field.set(rs, groupArray);
+                        }
+                    }
+                } while ((loop = loop.getSuperclass()) != Object.class);
+            }
+            {
+                Field e;
+                try {
+                    e = newClazz.getDeclaredField("_client");
+                } catch (NoSuchFieldException ne) {
+                    return rs;
+                }
+                e.setAccessible(true);
+                e.set(rs, new SncpClient(name, hash(serviceClass), false, newClazz, true, clientAddress));
+            }
+            {
+                Field c = newClazz.getDeclaredField("_sameGroupTransports");
+                c.setAccessible(true);
+                c.set(rs, sameGroupTransports.toArray(new Transport[sameGroupTransports.size()]));
+            }
+            {
+                Field t = newClazz.getDeclaredField("_diffGroupTransports");
+                t.setAccessible(true);
+                t.set(rs, diffGroupTransports.toArray(new Transport[diffGroupTransports.size()]));
+            }
             return rs;
         } catch (RuntimeException rex) {
             throw rex;

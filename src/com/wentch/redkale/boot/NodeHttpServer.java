@@ -77,20 +77,17 @@ public final class NodeHttpServer extends NodeServer {
                     if (nodeService == null) {
                         Class<? extends Service> sc = (Class<? extends Service>) application.webSocketNodeClass;
                         nodeService = Sncp.createLocalService(rcname, (Class<? extends Service>) (sc == null ? WebSocketNodeService.class : sc),
-                                getSncpAddress(), (sc == null ? null : nodeSameGroupTransports), (sc == null ? null : nodeDiffGroupTransports));
+                                getSncpAddress(), new LinkedHashSet<>(), (sc == null ? null : sncpSameGroupTransports), (sc == null ? null : sncpDiffGroupTransports));
                         regFactory.register(rcname, WebSocketNode.class, nodeService);
                         WebSocketNode wsn = (WebSocketNode) nodeService;
                         wsn.setLocalSncpAddress(getSncpAddress());
                         final Set<InetSocketAddress> alladdrs = new HashSet<>();
                         application.globalNodes.forEach((k, v) -> alladdrs.add(k));
                         alladdrs.remove(getSncpAddress());
-                        WebSocketNode remoteNode = (WebSocketNode) Sncp.createRemoteService(rcname, (Class<? extends Service>) (sc == null ? WebSocketNodeService.class : sc),
-                                getSncpAddress(), (sc == null ? null : loadTransport(getSncpGroup(), getNodeProtocol(), alladdrs)));
-                        wsn.setRemoteWebSocketNode(remoteNode);
+                        final Class<? extends Service> serviceType = (sc == null ? WebSocketNodeService.class : sc);
                         factory.inject(nodeService);
-                        factory.inject(remoteNode);
                         if (sncpServer != null) {
-                            ServiceWrapper wrapper = new ServiceWrapper((Class<? extends Service>) (sc == null ? WebSocketNodeService.class : sc), nodeService, getSncpGroup(), rcname, null);
+                            ServiceWrapper wrapper = new ServiceWrapper(serviceType, nodeService, rcname, getSncpGroup(), new LinkedHashSet<>(), null);
                             sncpServer.getSncpServer().addService(wrapper);
                         }
                     }

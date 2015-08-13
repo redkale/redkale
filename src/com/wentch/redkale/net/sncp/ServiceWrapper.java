@@ -25,19 +25,22 @@ public final class ServiceWrapper<T extends Service> {
 
     private final String group;
 
+    private final Set<String> groups;
+
     private final String name;
 
     private final boolean remote;
 
-    public ServiceWrapper(Class<T> type, T service, ClassFilter.FilterEntry<Service> entry) {
-        this(type, service, entry.getGroup(), entry.getName(), entry.getProperty());
+    public ServiceWrapper(Class<T> type, T service, String group, ClassFilter.FilterEntry<Service> entry) {
+        this(type, service, entry.getName(), group, entry.getGroups(), entry.getProperty());
     }
 
-    public ServiceWrapper(Class<T> type, T service, String group, String name, AnyValue conf) {
+    public ServiceWrapper(Class<T> type, T service, String name, String group, Set<String> groups, AnyValue conf) {
         this.type = type == null ? (Class<T>) service.getClass() : type;
         this.service = service;
         this.conf = conf;
         this.group = group;
+        this.groups = groups;
         this.name = name;
         this.remote = Sncp.isRemote(service);
     }
@@ -79,6 +82,10 @@ public final class ServiceWrapper<T extends Service> {
 
     public boolean isRemote() {
         return remote;
+    }
+
+    public Set<String> getGroups() {
+        return groups;
     }
 
 }

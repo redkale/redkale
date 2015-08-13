@@ -14,6 +14,7 @@ import com.wentch.redkale.util.AnyValue;
 import com.wentch.redkale.util.Ignore;
 import com.wentch.redkale.boot.ClassFilter.FilterEntry;
 import com.wentch.redkale.net.*;
+import com.wentch.redkale.net.http.*;
 import com.wentch.redkale.source.*;
 import com.wentch.redkale.util.*;
 import com.wentch.redkale.util.AnyValue.DefaultAnyValue;
@@ -47,7 +48,7 @@ public abstract class NodeServer {
 
     private InetSocketAddress sncpAddress; //HttpServer中的sncpAddress 为所属group对应的SncpServer, 为null表示只是单节点，没有分布式结构
 
-    private String sncpGroup = "";  //当前Server的SNCP协议的组
+    private String sncpGroup = null;  //当前Server的SNCP协议的组
 
     private AnyValue nodeConf;
 
@@ -55,9 +56,9 @@ public abstract class NodeServer {
 
     protected Consumer<ServiceWrapper> consumer;
 
-    protected final List<Transport> nodeSameGroupTransports = new ArrayList<>();
+    protected final List<Transport> sncpSameGroupTransports = new ArrayList<>();
 
-    protected final List<Transport> nodeDiffGroupTransports = new ArrayList<>();
+    protected final List<Transport> sncpDiffGroupTransports = new ArrayList<>();
 
     protected final Set<ServiceWrapper> localServices = new LinkedHashSet<>();
 
@@ -78,27 +79,9 @@ public abstract class NodeServer {
         if (isSNCP()) { // SNCP协议
             String host = this.nodeConf.getValue("host", "0.0.0.0").replace("0.0.0.0", "");
             this.sncpAddress = new InetSocketAddress(host.isEmpty() ? application.localAddress.getHostAddress() : host, this.nodeConf.getIntValue("port"));
-            this.sncpGroup = application.globalNodes.getOrDefault(this.sncpAddress, "");
+            this.sncpGroup = application.globalNodes.get(this.sncpAddress);
+            if (this.sncpGroup == null) throw new RuntimeException("Server (" + String.valueOf(config).replaceAll("\\s+", " ") + ") not found <group> info");
             if (server != null) this.nodeProtocol = server.getProtocol();
-        } else { // HTTP协议
-            this.sncpAddress = null;
-            this.sncpGroup = "";
-            this.nodeProtocol = Sncp.DEFAULT_PROTOCOL;
-            String mbgroup = this.nodeConf.getValue("group", "");
-            NodeServer sncpServer = null;  //有匹配的就取匹配的， 没有且SNCP只有一个，则取此SNCP。
-            for (NodeServer ns : application.servers) {
-                if (!ns.isSNCP()) continue;
-                if (sncpServer == null) sncpServer = ns;
-                if (ns.getSncpGroup().equals(mbgroup)) {
-                    sncpServer = ns;
-                    break;
-                }
-            }
-            if (sncpServer != null) {
-                this.sncpAddress = sncpServer.getSncpAddress();
-                this.sncpGroup = sncpServer.getSncpGroup();
-                this.nodeProtocol = sncpServer.getNodeProtocol();
-            }
         }
         if (this.sncpAddress != null) { // 无分布式结构下 HTTP协议的sncpAddress 为 null
             this.factory.register(RESNAME_SNCP_NODE, SocketAddress.class, this.sncpAddress);
@@ -123,11 +106,12 @@ public abstract class NodeServer {
 
     private void initResource() {
         final List<Transport>[] transportses = parseTransport(this.nodeConf.getValue("group", "").split(";"));
-        this.nodeSameGroupTransports.addAll(transportses[0]);
-        this.nodeDiffGroupTransports.addAll(transportses[1]);
+        this.sncpSameGroupTransports.addAll(transportses[0]);
+        this.sncpDiffGroupTransports.addAll(transportses[1]);
 
         //---------------------------------------------------------------------------------------------
         final ResourceFactory regFactory = application.factory;
+        final HashSet<String> defGroups = new LinkedHashSet<>();
         factory.add(DataSource.class, (ResourceFactory rf, final Object src, Field field) -> {
             try {
                 Resource rs = field.getAnnotation(Resource.class);
@@ -138,9 +122,9 @@ public abstract class NodeServer {
                 regFactory.register(rs.name(), DataSource.class, source);
                 Class<? extends Service> sc = (Class<? extends Service>) application.dataCacheListenerClass;
                 if (sc != null) {
-                    Service cacheListenerService = Sncp.createLocalService(rs.name(), sc, this.sncpAddress, nodeSameGroupTransports, nodeDiffGroupTransports);
+                    Service cacheListenerService = Sncp.createLocalService(rs.name(), sc, this.sncpAddress, defGroups, sncpSameGroupTransports, sncpDiffGroupTransports);
                     regFactory.register(rs.name(), DataCacheListener.class, cacheListenerService);
-                    ServiceWrapper wrapper = new ServiceWrapper(sc, cacheListenerService, sncpGroup, rs.name(), null);
+                    ServiceWrapper wrapper = new ServiceWrapper(sc, cacheListenerService, rs.name(), sncpGroup, defGroups, null);
                     localServices.add(wrapper);
                     if (consumer != null) consumer.accept(wrapper);
                     rf.inject(cacheListenerService);
@@ -171,6 +155,170 @@ public abstract class NodeServer {
         final List<Transport> diffGroupTransports0 = new ArrayList<>();
         diffGroupAddrs.forEach((k, v) -> diffGroupTransports0.add(loadTransport(k, getNodeProtocol(), v)));
         return new List[]{sameGroupTransports0, diffGroupTransports0};
+    }
+
+    @SuppressWarnings("unchecked")
+    protected void loadService(ClassFilter serviceFilter) throws Exception {
+        if (serviceFilter == null) return;
+        final String threadName = "[" + Thread.currentThread().getName() + "] ";
+        final Set<FilterEntry<Service>> entrys = serviceFilter.getFilterEntrys();
+        ResourceFactory regFactory = isSNCP() ? application.factory : factory;
+        for (FilterEntry<Service> entry : entrys) { //service实现类
+            final Class<? extends Service> type = entry.getType();
+            if (type.isInterface()) continue;
+            if (Modifier.isFinal(type.getModifiers())) continue;
+            if (!Modifier.isPublic(type.getModifiers())) continue;
+            if (Modifier.isAbstract(type.getModifiers())) continue;
+            if (type.getAnnotation(Ignore.class) != null) continue;
+            if (!isSNCP() && factory.find(entry.getName(), type) != null) continue;
+            final Set<InetSocketAddress> sameGroupAddrs = new LinkedHashSet<>();
+            Set<InetSocketAddress> sg = application.findGlobalGroup(this.sncpGroup);
+            if (sg != null) sameGroupAddrs.addAll(sg);
+            final Map<String, Set<InetSocketAddress>> diffGroupAddrs = new HashMap<>();
+            final HashSet<String> groups = entry.getGroups();
+            for (String g : groups) {
+                if (g.isEmpty()) continue;
+                Set<InetSocketAddress> set = application.findGlobalGroup(g);
+                if (set == null) throw new RuntimeException(type.getName() + " has illegal group (" + groups + ")");
+                if (!g.equals(this.sncpGroup)) {
+                    diffGroupAddrs.put(g, set);
+                }
+            }
+            List<Transport> diffGroupTransports = new ArrayList<>();
+            diffGroupAddrs.forEach((k, v) -> diffGroupTransports.add(loadTransport(k, server.getProtocol(), v)));
+
+            ServiceWrapper wrapper;
+            if ((sameGroupAddrs.isEmpty() && diffGroupAddrs.isEmpty()) || sameGroupAddrs.contains(this.sncpAddress)) { //本地模式
+                sameGroupAddrs.remove(this.sncpAddress);
+                List<Transport> sameGroupTransports = new ArrayList<>();
+                for (InetSocketAddress iaddr : sameGroupAddrs) {
+                    Set<InetSocketAddress> tset = new HashSet<>();
+                    tset.add(iaddr);
+                    sameGroupTransports.add(loadTransport(this.sncpGroup, server.getProtocol(), tset));
+                }
+                Service service = Sncp.createLocalService(entry.getName(), type, this.sncpAddress, groups, sameGroupTransports, diffGroupTransports);
+                wrapper = new ServiceWrapper(type, service, this.sncpGroup, entry);
+            } else {
+                sameGroupAddrs.remove(this.sncpAddress);
+                StringBuilder g = new StringBuilder();
+                diffGroupAddrs.forEach((k, v) -> {
+                    if (g.length() > 0) g.append(';');
+                    g.append(k);
+                    sameGroupAddrs.addAll(v);
+                });
+                if (sameGroupAddrs.isEmpty()) throw new RuntimeException(type.getName() + " has no remote address on group (" + groups + ")");
+                Service service = Sncp.createRemoteService(entry.getName(), type, this.sncpAddress, loadTransport(g.toString(), server.getProtocol(), sameGroupAddrs));
+                wrapper = new ServiceWrapper(type, service, "", entry);
+            }
+            if (factory.find(wrapper.getName(), wrapper.getType()) == null) {
+                regFactory.register(wrapper.getName(), wrapper.getType(), wrapper.getService());
+                if (wrapper.getService() instanceof DataSource) {
+                    regFactory.register(wrapper.getName(), DataSource.class, wrapper.getService());
+                } else if (wrapper.getService() instanceof DataCacheListener) {
+                    regFactory.register(wrapper.getName(), DataCacheListener.class, wrapper.getService());
+                } else if (wrapper.getService() instanceof DataSQLListener) {
+                    regFactory.register(wrapper.getName(), DataSQLListener.class, wrapper.getService());
+                } else if (wrapper.getService() instanceof WebSocketNode) {
+                    regFactory.register(wrapper.getName(), WebSocketNode.class, wrapper.getService());
+                }
+                if (wrapper.isRemote()) {
+                    remoteServices.add(wrapper);
+                } else {
+                    localServices.add(wrapper);
+                    if (consumer != null) consumer.accept(wrapper);
+                }
+            } else if (isSNCP()) {
+                throw new RuntimeException(ServiceWrapper.class.getSimpleName() + "(class:" + type.getName() + ", name:" + entry.getName() + ", group:" + groups + ") is repeat.");
+            }
+        }
+        servicecdl.countDown();
+        servicecdl.await();
+
+        final StringBuilder sb = logger.isLoggable(Level.INFO) ? new StringBuilder() : null;
+        //---------------- inject ----------------
+        new HashSet<>(localServices).forEach(y -> {
+            factory.inject(y.getService());
+        });
+        remoteServices.forEach(y -> {
+            factory.inject(y.getService());
+        });
+        //----------------- init -----------------
+        localServices.parallelStream().forEach(y -> {
+            long s = System.currentTimeMillis();
+            y.getService().init(y.getConf());
+            long e = System.currentTimeMillis() - s;
+            if (e > 2 && sb != null) {
+                sb.append(threadName).append("LocalService(").append(y.getType()).append(':').append(y.getName()).append(") init ").append(e).append("ms").append(LINE_SEPARATOR);
+            }
+        });
+        if (sb != null && sb.length() > 0) logger.log(Level.INFO, sb.toString());
+    }
+
+    protected Transport loadTransport(String group, String protocol, InetSocketAddress addr) {
+        if (addr == null) return null;
+        Set<InetSocketAddress> set = new HashSet<>();
+        set.add(addr);
+        return loadTransport(group, protocol, set);
+    }
+
+    protected Transport loadTransport(String group, String protocol, Set<InetSocketAddress> addrs) {
+        Transport transport = null;
+        if (!addrs.isEmpty()) {
+            synchronized (application.transports) {
+                for (Transport tran : application.transports) {
+                    if (tran.match(addrs)) {
+                        transport = tran;
+                        break;
+                    }
+                }
+                if (transport == null) {
+                    transport = new Transport(group + "_" + application.transports.size(), protocol, application.watch, 32, addrs);
+                    application.transports.add(transport);
+                }
+            }
+        }
+        return transport;
+    }
+
+    protected ClassFilter<Service> createServiceClassFilter(final AnyValue config) {
+        return createClassFilter(this.sncpGroup, config, null, Service.class, Annotation.class, "services", "service");
+    }
+
+    protected static ClassFilter createClassFilter(final String localGroup, final AnyValue config, Class<? extends Annotation> ref,
+            Class inter, Class<? extends Annotation> ref2, String properties, String property) {
+        ClassFilter cf = new ClassFilter(ref, inter, null);
+        if (properties == null && properties == null) return cf;
+        if (config == null) return cf;
+        AnyValue[] proplist = config.getAnyValues(properties);
+        if (proplist == null || proplist.length < 1) return cf;
+        cf = null;
+        for (AnyValue list : proplist) {
+            DefaultAnyValue prop = null;
+            String sc = list.getValue("groups");
+            if (sc == null) sc = localGroup;
+            if (sc != null) {
+                prop = new AnyValue.DefaultAnyValue();
+                prop.addValue("groups", sc);
+            }
+            ClassFilter filter = new ClassFilter(ref, inter, prop);
+            for (AnyValue av : list.getAnyValues(property)) {
+                filter.filter(av, av.getValue("value"), false);
+            }
+            if (list.getBoolValue("autoload", true)) {
+                String includes = list.getValue("includes", "");
+                String excludes = list.getValue("excludes", "");
+                filter.setIncludePatterns(includes.split(";"));
+                filter.setExcludePatterns(excludes.split(";"));
+            } else {
+                if (ref2 == null || ref2 == Annotation.class) {  //service如果是autoload=false则不需要加载
+                    filter.setRefused(true);
+                } else if (ref2 != Annotation.class) {
+                    filter.setAnnotationClass(ref2);
+                }
+            }
+            cf = (cf == null) ? filter : cf.or(filter);
+        }
+        return cf;
     }
 
     public abstract InetSocketAddress getSocketAddress();
@@ -205,162 +353,6 @@ public abstract class NodeServer {
         });
         if (sb != null && sb.length() > 0) logger.log(Level.INFO, sb.toString());
         server.shutdown();
-    }
-
-    protected Transport loadTransport(String group, String protocol, InetSocketAddress addr) {
-        if (addr == null) return null;
-        Set<InetSocketAddress> set = new HashSet<>();
-        set.add(addr);
-        return loadTransport(group, protocol, set);
-    }
-
-    protected Transport loadTransport(String group, String protocol, Set<InetSocketAddress> addrs) {
-        Transport transport = null;
-        if (!addrs.isEmpty()) {
-            synchronized (application.transports) {
-                for (Transport tran : application.transports) {
-                    if (tran.match(addrs)) {
-                        transport = tran;
-                        break;
-                    }
-                }
-                if (transport == null) {
-                    transport = new Transport(group + "_" + application.transports.size(), protocol, application.watch, 32, addrs);
-                    application.transports.add(transport);
-                }
-            }
-        }
-        return transport;
-    }
-
-    @SuppressWarnings("unchecked")
-    protected void loadService(ClassFilter serviceFilter) throws Exception {
-        if (serviceFilter == null) return;
-        final String threadName = "[" + Thread.currentThread().getName() + "] ";
-        final Set<FilterEntry<Service>> entrys = serviceFilter.getFilterEntrys();
-        final String defgroups = nodeConf == null ? "" : nodeConf.getValue("group", ""); //Server节点获取group信息
-        ResourceFactory regFactory = isSNCP() ? application.factory : factory;
-        for (FilterEntry<Service> entry : entrys) { //service实现类
-            final Class<? extends Service> type = entry.getType();
-            if (type.isInterface()) continue;
-            if (Modifier.isFinal(type.getModifiers())) continue;
-            if (!Modifier.isPublic(type.getModifiers())) continue;
-            if (Modifier.isAbstract(type.getModifiers())) continue;
-            if (type.getAnnotation(Ignore.class) != null) continue;
-            if (!isSNCP() && factory.find(entry.getName(), type) != null) continue;
-            String groups = entry.getGroup();
-            if (groups == null || groups.isEmpty()) groups = defgroups;
-            final Set<InetSocketAddress> sameGroupAddrs = new LinkedHashSet<>();
-            final Map<String, Set<InetSocketAddress>> diffGroupAddrs = new HashMap<>();
-            for (String g : groups.split(";")) {
-                if (g.isEmpty()) continue;
-                Set<InetSocketAddress> set = application.findGlobalGroup(g);
-                if (set == null) throw new RuntimeException(type.getName() + " has illegal group (" + groups + ")");
-                if (g.equals(this.sncpGroup)) {
-                    sameGroupAddrs.addAll(set);
-                } else {
-                    diffGroupAddrs.put(g, set);
-                }
-            }
-            final boolean localable = this.sncpAddress == null || sameGroupAddrs.contains(this.sncpAddress);
-            Service service;
-
-            List<Transport> diffGroupTransports = new ArrayList<>();
-            diffGroupAddrs.forEach((k, v) -> diffGroupTransports.add(loadTransport(k, server.getProtocol(), v)));
-
-            if (localable || (sameGroupAddrs.isEmpty() && diffGroupTransports.isEmpty())) {
-                sameGroupAddrs.remove(this.sncpAddress);
-                List<Transport> sameGroupTransports = new ArrayList<>();
-                for (InetSocketAddress iaddr : sameGroupAddrs) {
-                    Set<InetSocketAddress> tset = new HashSet<>();
-                    tset.add(iaddr);
-                    sameGroupTransports.add(loadTransport(this.sncpGroup, server.getProtocol(), tset));
-                }
-                service = Sncp.createLocalService(entry.getName(), type, this.sncpAddress, sameGroupTransports, diffGroupTransports);
-            } else {
-                StringBuilder g = new StringBuilder(this.sncpGroup);
-                diffGroupAddrs.forEach((k, v) -> {
-                    if (g.length() > 0) g.append(';');
-                    g.append(k);
-                    sameGroupAddrs.addAll(v);
-                });
-                if (sameGroupAddrs.isEmpty()) throw new RuntimeException(type.getName() + " has no remote address on group (" + groups + ")");
-                service = Sncp.createRemoteService(entry.getName(), type, this.sncpAddress, loadTransport(g.toString(), server.getProtocol(), sameGroupAddrs));
-            }
-            ServiceWrapper wrapper = new ServiceWrapper(type, service, entry);
-            if (factory.find(wrapper.getName(), wrapper.getType()) == null) {
-                regFactory.register(wrapper.getName(), wrapper.getType(), wrapper.getService());
-                if (wrapper.isRemote()) {
-                    remoteServices.add(wrapper);
-                } else {
-                    localServices.add(wrapper);
-                    if (consumer != null) consumer.accept(wrapper);
-                }
-            } else if (isSNCP()) {
-                throw new RuntimeException(ServiceWrapper.class.getSimpleName() + "(class:" + type.getName() + ", name:" + entry.getName() + ", group:" + groups + ") is repeat.");
-            }
-        }
-        servicecdl.countDown();
-        servicecdl.await();
-
-        final StringBuilder sb = logger.isLoggable(Level.INFO) ? new StringBuilder() : null;
-        //---------------- inject ----------------
-        new HashSet<>(localServices).forEach(y -> {
-            factory.inject(y.getService());
-        });
-        remoteServices.forEach(y -> {
-            factory.inject(y.getService());
-        });
-        //----------------- init -----------------
-        localServices.parallelStream().forEach(y -> {
-            long s = System.currentTimeMillis();
-            y.getService().init(y.getConf());
-            long e = System.currentTimeMillis() - s;
-            if (e > 2 && sb != null) {
-                sb.append(threadName).append("LocalService(").append(y.getType()).append(':').append(y.getName()).append(") init ").append(e).append("ms").append(LINE_SEPARATOR);
-            }
-        });
-        if (sb != null && sb.length() > 0) logger.log(Level.INFO, sb.toString());
-    }
-
-    protected ClassFilter<Service> createServiceClassFilter(final AnyValue config) {
-        return createClassFilter(this.sncpGroup, config, null, Service.class, Annotation.class, "services", "service");
-    }
-
-    protected static ClassFilter createClassFilter(final String localGroup, final AnyValue config, Class<? extends Annotation> ref,
-            Class inter, Class<? extends Annotation> ref2, String properties, String property) {
-        ClassFilter cf = new ClassFilter(ref, inter, null);
-        if (properties == null && properties == null) return cf;
-        if (config == null) return cf;
-        AnyValue[] proplist = config.getAnyValues(properties);
-        if (proplist == null || proplist.length < 1) return cf;
-        cf = null;
-        for (AnyValue list : proplist) {
-            DefaultAnyValue prop = null;
-            String sc = list.getValue("group", "");
-            if (!sc.isEmpty()) {
-                prop = new AnyValue.DefaultAnyValue();
-                prop.addValue("group", sc);
-            }
-            ClassFilter filter = new ClassFilter(ref, inter, prop);
-            for (AnyValue av : list.getAnyValues(property)) {
-                filter.filter(av, av.getValue("value"), false);
-            }
-            if (list.getBoolValue("autoload", true)) {
-                String includes = list.getValue("includes", "");
-                String excludes = list.getValue("excludes", "");
-                filter.setIncludePatterns(includes.split(";"));
-                filter.setExcludePatterns(excludes.split(";"));
-            } else {
-                if (ref2 == null || ref2 == Annotation.class) {  //service如果是autoload=false则不需要加载
-                    filter.setRefused(true);
-                } else if (ref2 != Annotation.class) {
-                    filter.setAnnotationClass(ref2);
-                }
-            }
-            cf = (cf == null) ? filter : cf.or(filter);
-        }
-        return cf;
     }
 
 }

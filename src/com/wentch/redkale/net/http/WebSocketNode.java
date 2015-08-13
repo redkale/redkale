@@ -33,6 +33,7 @@ public abstract class WebSocketNode {
 
     protected InetSocketAddress localSncpAddress;  //为SncpServer的服务address
 
+    @SncpRemote
     protected WebSocketNode remoteNode;
 
     //存放所有用户分布在节点上的队列信息,Set<InetSocketAddress> 为 sncpnode 的集合
@@ -109,11 +110,7 @@ public abstract class WebSocketNode {
         this.localSncpAddress = localSncpAddress;
     }
 
-    public final void setRemoteWebSocketNode(WebSocketNode node) {
-        this.remoteNode = node;
-    }
-
-    public final void addWebSocketEngine(WebSocketEngine engine) {
+    public final void putWebSocketEngine(WebSocketEngine engine) {
         engines.put(engine.getEngineid(), engine);
     }
 

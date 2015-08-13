@@ -50,22 +50,6 @@
             -->
             <node addr="127.0.0.1" port="7070"/>
         </group>
-        <!--
-            远程client地址组资源.  注意:  remote的name值不能为LOCAL（不区分大小写）
-            protocol： 值只能是UDP TCP， 默认UDP
-            clients:  连接池数， 默认: CPU核数*8
-            buffers: ByteBuffer对象池的大小， 默认: CPU核数*16
-            group:  组名， 默认是空字符串， 通常不同机房使用不同的group值
-        -->
-        <remote name="myremote" protocol="UDP" group="">
-            <!--
-                weight: 权重百分比。 不指定则平均。 weight之和必须<=100
-                [注: weight尚未实现]
-            -->
-            <address addr="127.0.0.1" port="7070" weight="30"/>
-            <address addr="127.0.0.1" port="7071" weight="30"/>
-            <address addr="127.0.0.1" port="7072" weight="40"/>
-        </remote>
         <!-- 
             全局的参数配置, 可以通过@Resource(name="property.xxxxxx") 进行注入, 被注解的字段类型只能是String、primitive class
             如果name是system.property.开头的值将会在进程启动时进行System.setProperty("yyyy", "YYYYYY")操作。
@@ -84,12 +68,9 @@
         </properties>
     </resources> 
     <!--
-        protocol: required  server所启动的协议，有HTTP、SNCP， 目前只支持HTTP、SNCP。SNCP也分TCP、UDP实现，默认使用UDP实现，TCP实现则使用SNCP.TCP值; 
+        protocol: required  server所启动的协议，有HTTP、SNCP， 目前只支持HTTP、SNCP。SNCP分TCP、UDP实现，默认使用TCP实现，UDP实现则使用SNCP.UDP值; 
         host:  服务所占address ， 默认: 0.0.0.0
         port:  required 服务所占端口 
-        group: 所属组的节点,多个节点值用;隔开，如果配置文件中存在多个SNCP协议的Server节点，需要显式指定group属性.
-               当 protocol == SNCP 时 group表示当前Server与哪些节点组关联。
-               当 protocol != SNCP 时 group只能是空或者一个group的节点值，不能为多个节点值。
         root:  如果是web类型服务，则包含页面  默认:{APP_HOME}/root
         lib: server额外的class目录， 默认为空        
         charset: 文本编码， 默认: UTF-8
@@ -113,7 +94,10 @@
                                  server.lib;    server.lib/*;    server.classes;    
            autoload="false" 需要显著的指定Service类
            includes： 当autoload="true"， 拉取类名与includes中的正则表达式匹配的类, 多个正则表达式用分号;隔开
-           excludes： 当autoload="true"， 排除类名与includes中的正则表达式匹配的类, 多个正则表达式用分号;隔开
+           excludes： 当autoload="true"， 排除类名与includes中的正则表达式匹配的类, 多个正则表达式用分号;隔开           
+           groups:   所属组的节点,多个节点值用;隔开，如果配置文件中存在多个SNCP协议的Server节点，需要显式指定group属性.
+                    当 protocol == SNCP 时 group表示当前Server与哪些节点组关联。
+                    当 protocol != SNCP 时 group只能是空或者一个group的节点值，不能为多个节点值。
         -->
         <services autoload="true" includes="" excludes="">
             <!--

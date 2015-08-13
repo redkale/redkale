@@ -59,7 +59,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Nameable {
     public void init(Context context, AnyValue conf) {
         InetSocketAddress addr = context.getServerAddress();
         this.engine = new WebSocketEngine(addr.getHostString() + ":" + addr.getPort() + "-" + name());
-        this.node.addWebSocketEngine(engine);
+        this.node.putWebSocketEngine(engine);
         this.node.init(conf);
     }
 

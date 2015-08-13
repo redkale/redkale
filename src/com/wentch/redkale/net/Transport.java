@@ -25,6 +25,8 @@ public final class Transport {
 
     protected final String name;
 
+    protected final int bufferPoolSize;
+
     protected final String protocol;
 
     protected final AsynchronousChannelGroup group;
@@ -37,9 +39,14 @@ public final class Transport {
 
     protected final ConcurrentHashMap<SocketAddress, BlockingQueue<AsyncConnection>> connPool = new ConcurrentHashMap<>();
 
+    public Transport(Transport transport, InetSocketAddress localAddress, Collection<Transport> transports) {
+        this(transport.name, transport.protocol, null, transport.bufferPoolSize, parse(localAddress, transports));
+    }
+
     public Transport(String name, String protocol, WatchFactory watch, int bufferPoolSize, Collection<InetSocketAddress> addresses) {
         this.name = name;
         this.protocol = protocol;
+        this.bufferPoolSize = bufferPoolSize;
         AsynchronousChannelGroup g = null;
         try {
             final AtomicInteger counter = new AtomicInteger();
@@ -54,8 +61,8 @@ public final class Transport {
             throw new RuntimeException(e);
         }
         this.group = g;
-        AtomicLong createBufferCounter = watch == null ? new AtomicLong() : watch.createWatchNumber(Transport.class.getSimpleName() + "_" + protocol + ".Buffer.creatCounter");
-        AtomicLong cycleBufferCounter = watch == null ? new AtomicLong() : watch.createWatchNumber(Transport.class.getSimpleName() + "_" + protocol + ".Buffer.cycleCounter");
+        AtomicLong createBufferCounter = watch == null ? new AtomicLong() : watch.createWatchNumber(Transport.class.getSimpleName() + "-" + name + "-" + protocol + ".Buffer.creatCounter");
+        AtomicLong cycleBufferCounter = watch == null ? new AtomicLong() : watch.createWatchNumber(Transport.class.getSimpleName() + "-" + name + "-" + protocol + ".Buffer.cycleCounter");
         int rcapacity = 8192;
         this.bufferPool = new ObjectPool<>(createBufferCounter, cycleBufferCounter, bufferPoolSize,
                 (Object... params) -> ByteBuffer.allocateDirect(rcapacity), null, (e) -> {
@@ -64,6 +71,15 @@ public final class Transport {
                     return true;
                 });
         this.remoteAddres = addresses.toArray(new InetSocketAddress[addresses.size()]);
+    }
+
+    private static Collection<InetSocketAddress> parse(InetSocketAddress addr, Collection<Transport> transports) {
+        final Set<InetSocketAddress> set = new LinkedHashSet<>();
+        for (Transport t : transports) {
+            set.addAll(Arrays.asList(t.remoteAddres));
+        }
+        set.remove(addr);
+        return set;
     }
 
     public void close() {
