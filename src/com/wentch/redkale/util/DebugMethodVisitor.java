@@ -65,7 +65,7 @@ public class DebugMethodVisitor {
         if (debug) System.out.println("mv.visitVarInsn(" + opcodes[opcode] + ", " + var + ");");
     }
 
-    public void visitJumpInsn(int opcode, Label var) {
+    public void visitJumpInsn(int opcode, Label var) {   //调用次方法的 ClassWriter 必须由 COMPUTE_FRAMES 构建
         visitor.visitJumpInsn(opcode, var);
         if (debug) {
             Integer index = labels.get(var);
