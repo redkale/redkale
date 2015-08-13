@@ -100,27 +100,14 @@
                     当 protocol != SNCP 时 group只能是空或者一个group的节点值，不能为多个节点值。
         -->
         <services autoload="true" includes="" excludes="">
-            <!--
-               大部分的情况下， 存在多个节点环境中很多service节点配置都一致，为此提供group节点来方便配置。
-               remotenames: 远程模式Service的name名称集合， 多个用分号;隔开， 名称必须是在resources节点中定义的remote节点。
-               以下group节点例子等价于:
-                <service value="com.xxx.XXX0Service" name="" remote="LOCAL"/>
-                <service value="com.xxx.XXX0Service" name="RT001" remote="RT001"/>
-                <service value="com.xxx.XXX0Service" name="RT002" remote="RT002"/>
-                <service value="com.xxx.XXX0Service" name="RT003" remote="RT003"/>
-            -->
-            <group remotenames="RT001;RT002;RT003">
-                <service value="com.xxx.XXX0Service"/>
-            </group>
-            
+
             <!-- 显著加载指定的Service的接口类 -->
             <service value="com.xxx.XXX1Service"/>
             <!-- 
-               设定remote=LOCAL时 则表示该service为本地模式， 同时忽略<services>节点的remote值。
-               name表示被@Resource注入时指定的name
-               设定remote为非空非LOCAL且值在<resources>中有定义时 则表示该service为远程模式， 同时忽略<services>节点的remote值。
+               name:   显式指定name，覆盖默认的空字符串值。
+               groups: 显式指定groups，覆盖<services>节点的groups默认值。
             -->
-            <service value="com.xxx.XXX2Service" name="" remote="LOCAL"/>
+            <service value="com.xxx.XXX2Service" name="" groups="xxx;yyy"/>
             <!--   给Service增加配置属性 -->
             <service value="com.xxx.XXX1Service">
                 <property name="xxxxxx" value="XXXXXXXX"/>
