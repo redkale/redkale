@@ -5,7 +5,6 @@
  */
 package com.wentch.redkale.test.sncp;
 
-
 import com.wentch.redkale.boot.*;
 import com.wentch.redkale.convert.bson.*;
 import com.wentch.redkale.net.*;
@@ -53,7 +52,8 @@ public class SncpTest {
         set.add(addr);
         set.add(new InetSocketAddress("127.0.0.1", port2));
         Transport transport = new Transport("", protocol, WatchFactory.root(), 100, set);
-        SncpTestService service = Sncp.createRemoteService(serviceName, SncpTestService.class, null, transport);
+        SncpTestService service = Sncp.createRemoteService(serviceName, SncpTestService.class, null, new LinkedHashSet<>(), transport);
+        System.out.println(service);
         ResourceFactory.root().inject(service);
 
         SncpTestBean bean = new SncpTestBean();
@@ -65,7 +65,7 @@ public class SncpTest {
         bean.setContent("hello sncp");
         System.out.println(service.queryResult(bean));
         bean.setContent("xxxxx");
-        System.out.println(service.updateBean(bean)); 
+        System.out.println(service.updateBean(bean));
     }
 
     private static void runServer() throws Exception {
@@ -84,6 +84,7 @@ public class SncpTest {
                     SncpTestService service = Sncp.createLocalService("", SncpTestService.class, addr, new LinkedHashSet<>(), sameTransports, null);
                     ResourceFactory.root().inject(service);
                     server.addService(new ServiceWrapper(SncpTestService.class, service, "", new ClassFilter.FilterEntry(SncpTestService.class, null)));
+                    System.out.println(service);
                     AnyValue.DefaultAnyValue conf = new AnyValue.DefaultAnyValue();
                     conf.addValue("host", "0.0.0.0");
                     conf.addValue("port", "" + port);
@@ -111,8 +112,8 @@ public class SncpTest {
                     Transport transport = new Transport("", protocol, WatchFactory.root(), 100, set);
                     List<Transport> sameTransports = new ArrayList<>();
                     sameTransports.add(transport);
-                    Service service = Sncp.createLocalService("", SncpTestService.class, addr,new LinkedHashSet<>(), sameTransports, null);
-                    server.addService(new ServiceWrapper(SncpTestService.class,service ,"", new ClassFilter.FilterEntry(SncpTestService.class, null)));
+                    Service service = Sncp.createLocalService("", SncpTestService.class, addr, new LinkedHashSet<>(), sameTransports, null);
+                    server.addService(new ServiceWrapper(SncpTestService.class, service, "", new ClassFilter.FilterEntry(SncpTestService.class, null)));
                     AnyValue.DefaultAnyValue conf = new AnyValue.DefaultAnyValue();
                     conf.addValue("host", "0.0.0.0");
                     conf.addValue("port", "" + port2);
