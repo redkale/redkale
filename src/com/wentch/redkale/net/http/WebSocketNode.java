@@ -12,6 +12,7 @@ import java.net.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.logging.*;
+import javax.annotation.*;
 
 /**
  *
@@ -31,6 +32,7 @@ public abstract class WebSocketNode {
 
     protected final boolean finest = logger.isLoggable(Level.FINEST);
 
+    @Resource(name = "SERVER_ADDR")
     protected InetSocketAddress localSncpAddress;  //为SncpServer的服务address
 
     @SncpRemote
@@ -104,10 +106,6 @@ public abstract class WebSocketNode {
             localNodes.remove(groupid);
             if (localSncpAddress != null) disconnect(groupid, localSncpAddress);
         }
-    }
-
-    public final void setLocalSncpAddress(InetSocketAddress localSncpAddress) {
-        this.localSncpAddress = localSncpAddress;
     }
 
     public final void putWebSocketEngine(WebSocketEngine engine) {

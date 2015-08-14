@@ -39,31 +39,32 @@ import org.w3c.dom.*;
 public final class Application {
 
     //当前进程启动的时间， 类型： long
-    public static final String RESNAME_TIME = "APP_TIME";
+    public static final String RESNAME_APP_TIME = "APP_TIME";
 
     //当前进程的根目录， 类型：String
-    public static final String RESNAME_HOME = "APP_HOME";
-
-    //当前进程节点的name， 类型：String
-    public static final String RESNAME_NODE = "APP_NODE";
-
-    //当前进程节点的IP地址， 类型：InetAddress、String
-    public static final String RESNAME_ADDR = "APP_ADDR";
+    public static final String RESNAME_APP_HOME = "APP_HOME";
 
     //application.xml 文件中resources节点的内容， 类型： AnyValue
-    public static final String RESNAME_GRES = "APP_GRES";
+    public static final String RESNAME_APP_GRES = "APP_GRES";
 
-    //当前SNCP Server所属的组  类型: String
-    public static final String RESNAME_SNCP_GROUP = "SNCP_GROUP";
+    //当前进程节点的name， 类型：String
+    public static final String RESNAME_APP_NODE = "APP_NODE";
 
-    //当前Service所属的组  类型: Set<String>、String[]
-    public static final String RESNAME_SNCP_GROUPS = Sncp.RESNAME_SNCP_GROUPS; //SNCP_GROUPS
-
-    //当前SNCP Server的IP地址+端口 类型: SocketAddress、InetSocketAddress、String
-    public static final String RESNAME_SNCP_NODE = "SNCP_NODE";
+    //当前进程节点的IP地址， 类型：InetAddress、String
+    public static final String RESNAME_APP_ADDR = "APP_ADDR";
 
     //当前SNCP Server的IP地址+端口集合 类型: Map<InetSocketAddress, String>、HashMap<InetSocketAddress, String> 
-    public static final String RESNAME_SNCP_NODES = "SNCP_NODES"; 
+    public static final String RESNAME_APP_NODES = "APP_NODES";
+
+    //当前Service的IP地址+端口 类型: SocketAddress、InetSocketAddress、String
+    public static final String RESNAME_SERVER_ADDR = "SERVER_ADDR"; // SERVER_ADDR
+    
+    //当前SNCP Server所属的组  类型: String
+    public static final String RESNAME_SERVER_GROUP = "SERVER_GROUP";
+
+    //当前Service所属的组  类型: Set<String>、String[]
+    public static final String RESNAME_SNCP_GROUPS = Sncp.RESNAME_SNCP_GROUPS; // SNCP_GROUPS
+
 
     protected final ResourceFactory factory = ResourceFactory.root();
 
@@ -76,10 +77,6 @@ public final class Application {
     protected final List<Transport> transports = new ArrayList<>();
 
     protected final InetAddress localAddress;
-
-    protected Class<? extends DataCacheListener> dataCacheListenerClass = DataCacheListenerService.class;
-
-    protected Class<? extends WebSocketNode> webSocketNodeClass = WebSocketNodeService.class;
 
     protected final List<DataSource> sources = new CopyOnWriteArrayList<>();
 
@@ -99,20 +96,20 @@ public final class Application {
     private Application(final AnyValue config) {
         this.config = config;
 
-        final File root = new File(System.getProperty(RESNAME_HOME));
-        this.factory.register(RESNAME_TIME, long.class, this.startTime);
-        this.factory.register(RESNAME_HOME, Path.class, root.toPath());
-        this.factory.register(RESNAME_HOME, File.class, root);
+        final File root = new File(System.getProperty(RESNAME_APP_HOME));
+        this.factory.register(RESNAME_APP_TIME, long.class, this.startTime);
+        this.factory.register(RESNAME_APP_HOME, Path.class, root.toPath());
+        this.factory.register(RESNAME_APP_HOME, File.class, root);
         try {
-            this.factory.register(RESNAME_HOME, root.getCanonicalPath());
+            this.factory.register(RESNAME_APP_HOME, root.getCanonicalPath());
             this.home = root.getCanonicalFile();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
         String localaddr = config.getValue("address", "").trim();
         this.localAddress = localaddr.isEmpty() ? Utility.localInetAddress() : new InetSocketAddress(localaddr, 0).getAddress();
-        Application.this.factory.register(RESNAME_ADDR, Application.this.localAddress.getHostAddress());
-        Application.this.factory.register(RESNAME_ADDR, InetAddress.class, Application.this.localAddress);
+        Application.this.factory.register(RESNAME_APP_ADDR, Application.this.localAddress.getHostAddress());
+        Application.this.factory.register(RESNAME_APP_ADDR, InetAddress.class, Application.this.localAddress);
         {
             StringBuilder sb = new StringBuilder();
             byte[] bs = this.localAddress.getAddress();
@@ -123,8 +120,8 @@ public final class Application {
             if (v2 <= 0xf) sb.append('0');
             sb.append(Integer.toHexString(v2));
             String node = sb.toString();
-            Application.this.factory.register(RESNAME_NODE, node);
-            System.setProperty(RESNAME_NODE, node);
+            Application.this.factory.register(RESNAME_APP_NODE, node);
+            System.setProperty(RESNAME_APP_NODE, node);
         }
         //以下是初始化日志配置
         final File logconf = new File(root, "conf/logging.properties");
@@ -194,7 +191,7 @@ public final class Application {
         File persist = new File(this.home, "conf/persistence.xml");
         final String homepath = this.home.getCanonicalPath();
         if (persist.isFile()) System.setProperty(DataDefaultSource.DATASOURCE_CONFPATH, persist.getCanonicalPath());
-        logger.log(Level.INFO, RESNAME_HOME + "=" + homepath + "\r\n" + RESNAME_ADDR + "=" + this.localAddress.getHostAddress());
+        logger.log(Level.INFO, RESNAME_APP_HOME + "=" + homepath + "\r\n" + RESNAME_APP_ADDR + "=" + this.localAddress.getHostAddress());
         String lib = config.getValue("lib", "").trim().replace("${APP_HOME}", homepath);
         lib = lib.isEmpty() ? (homepath + "/conf") : (lib + ";" + homepath + "/conf");
         Server.loadLib(logger, lib);
@@ -207,7 +204,7 @@ public final class Application {
         //------------------------------------------------------------------------
         final AnyValue resources = config.getAnyValue("resources");
         if (resources != null) {
-            factory.register(RESNAME_GRES, AnyValue.class, resources);
+            factory.register(RESNAME_APP_GRES, AnyValue.class, resources);
             final AnyValue properties = resources.getAnyValue("properties");
             if (properties != null) {
                 String dfloads = properties.getValue("load");
@@ -248,38 +245,6 @@ public final class Application {
         //-------------------------------------------------------------------------
         final AnyValue resources = config.getAnyValue("resources");
         if (resources != null) {
-            //------------------------------------------------------------------------
-            AnyValue datacachelistenerConf = resources.getAnyValue("datacachelistener");
-            if (datacachelistenerConf != null) {
-                String val = datacachelistenerConf.getValue("service", "");
-                if (!val.isEmpty()) {
-                    if ("none".equalsIgnoreCase(val)) {
-                        this.dataCacheListenerClass = null;
-                    } else {
-                        Class clazz = Class.forName(val);
-                        if (!DataCacheListener.class.isAssignableFrom(clazz) || !Service.class.isAssignableFrom(clazz)) {
-                            throw new RuntimeException("datacachelistener service (" + val + ") is illegal");
-                        }
-                        this.dataCacheListenerClass = clazz;
-                    }
-                }
-            }
-            //------------------------------------------------------------------------
-            AnyValue websocketnodeConf = resources.getAnyValue("websocketnode");
-            if (websocketnodeConf != null) {
-                String val = websocketnodeConf.getValue("service", "");
-                if (!val.isEmpty()) {
-                    if ("none".equalsIgnoreCase(val)) {
-                        this.webSocketNodeClass = null;
-                    } else {
-                        Class clazz = Class.forName(val);
-                        if (!WebSocketNode.class.isAssignableFrom(clazz) || !Service.class.isAssignableFrom(clazz)) {
-                            throw new RuntimeException("websocketnode service (" + val + ") is illegal");
-                        }
-                        this.webSocketNodeClass = clazz;
-                    }
-                }
-            }
             //------------------------------------------------------------------------
 
             for (AnyValue conf : resources.getAnyValues("group")) {
@@ -390,14 +355,14 @@ public final class Application {
         }
         if (!sncps.isEmpty() && globalNodes.isEmpty()) throw new RuntimeException("found SNCP Server node bug not found <group> node info.");
 
-        factory.register(RESNAME_SNCP_NODES, new TypeToken<Map<InetSocketAddress, String>>() {
+        factory.register(RESNAME_APP_NODES, new TypeToken<Map<InetSocketAddress, String>>() {
         }.getType(), globalNodes);
-        factory.register(RESNAME_SNCP_NODES, new TypeToken<HashMap<InetSocketAddress, String>>() {
+        factory.register(RESNAME_APP_NODES, new TypeToken<HashMap<InetSocketAddress, String>>() {
         }.getType(), globalNodes);
 
-        factory.register(RESNAME_SNCP_NODES, new TypeToken<Map<String, Set<InetSocketAddress>>>() {
+        factory.register(RESNAME_APP_NODES, new TypeToken<Map<String, Set<InetSocketAddress>>>() {
         }.getType(), globalGroups);
-        factory.register(RESNAME_SNCP_NODES, new TypeToken<HashMap<String, Set<InetSocketAddress>>>() {
+        factory.register(RESNAME_APP_NODES, new TypeToken<HashMap<String, Set<InetSocketAddress>>>() {
         }.getType(), globalGroups);
 
         runServers(timecd, sncps);  //必须确保sncp都启动后再启动其他协议
@@ -463,7 +428,8 @@ public final class Application {
 
     public static <T extends Service> T singleton(Class<T> serviceClass, boolean remote) throws Exception {
         final Application application = Application.create();
-        T service = remote ? Sncp.createRemoteService("", serviceClass, null, null) : Sncp.createLocalService("", serviceClass, null, new LinkedHashSet<>(), null, null);
+        T service = remote ? Sncp.createRemoteService("", serviceClass, null, new LinkedHashSet<>(), null)
+                : Sncp.createLocalService("", serviceClass, null, new LinkedHashSet<>(), null, null);
         application.init();
         application.factory.register(service);
         new NodeSncpServer(application, new CountDownLatch(1), null).init(application.config);
@@ -472,8 +438,8 @@ public final class Application {
     }
 
     private static Application create() throws IOException {
-        final String home = new File(System.getProperty(RESNAME_HOME, "")).getCanonicalPath();
-        System.setProperty(RESNAME_HOME, home);
+        final String home = new File(System.getProperty(RESNAME_APP_HOME, "")).getCanonicalPath();
+        System.setProperty(RESNAME_APP_HOME, home);
         File appfile = new File(home, "conf/application.xml");
         //System.setProperty(DataConnection.PERSIST_FILEPATH, appfile.getCanonicalPath());
         return new Application(load(new FileInputStream(appfile)));
@@ -537,7 +503,7 @@ public final class Application {
     }
 
     private static void load(final DefaultAnyValue any, final Node root) {
-        final String home = System.getProperty(RESNAME_HOME);
+        final String home = System.getProperty(RESNAME_APP_HOME);
         NamedNodeMap nodes = root.getAttributes();
         if (nodes == null) return;
         for (int i = 0; i < nodes.getLength(); i++) {

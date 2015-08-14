@@ -25,6 +25,9 @@ import jdk.internal.org.objectweb.asm.Type;
  */
 public abstract class Sncp {
 
+    //当前SNCP Server的IP地址+端口 类型: SocketAddress、InetSocketAddress、String
+    public static final String RESNAME_SNCP_ADDR = "SNCP_ADDR";
+
     //当前Service所属的组  类型: Set<String>、String[]
     public static final String RESNAME_SNCP_GROUPS = "SNCP_GROUPS";
 
@@ -160,9 +163,16 @@ public abstract class Sncp {
      *
      *      private SncpClient _client;
      *     
+     *      private String _selfstring;
+     *
      *      @Override
      *      public final String name() {
      *          return "";
+     *      }
+     *
+     *      @Override
+     *      public String toString() {
+     *          return _selfstring == null ? super.toString() : _selfstring;
      *      }
      *
      *      @Override
@@ -255,6 +265,10 @@ public abstract class Sncp {
                 fv.visitEnd();
             }
         }
+        {
+            fv = cw.visitField(ACC_PRIVATE, "_selfstring", "Ljava/lang/String;", null, null);
+            fv.visitEnd();
+        }
         { //构造函数
             mv = new DebugMethodVisitor(cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null));
             //mv.setDebug(true);
@@ -267,6 +281,24 @@ public abstract class Sncp {
         { // name()
             mv = new DebugMethodVisitor(cw.visitMethod(ACC_PUBLIC + ACC_FINAL, "name", "()Ljava/lang/String;", null, null));
             mv.visitLdcInsn(name);
+            mv.visitInsn(ARETURN);
+            mv.visitMaxs(1, 1);
+            mv.visitEnd();
+        }
+        { // toString()
+            mv = new DebugMethodVisitor(cw.visitMethod(ACC_PUBLIC, "toString", "()Ljava/lang/String;", null, null));
+            mv.visitVarInsn(ALOAD, 0);
+            mv.visitFieldInsn(GETFIELD, newDynName, "_selfstring", "Ljava/lang/String;");
+            Label l1 = new Label();
+            mv.visitJumpInsn(IFNONNULL, l1);
+            mv.visitVarInsn(ALOAD, 0);
+            mv.visitMethodInsn(INVOKESPECIAL, "java/lang/Object", "toString", "()Ljava/lang/String;", false);
+            Label l2 = new Label();
+            mv.visitJumpInsn(GOTO, l2);
+            mv.visitLabel(l1);
+            mv.visitVarInsn(ALOAD, 0);
+            mv.visitFieldInsn(GETFIELD, newDynName, "_selfstring", "Ljava/lang/String;");
+            mv.visitLabel(l2);
             mv.visitInsn(ARETURN);
             mv.visitMaxs(1, 1);
             mv.visitEnd();
@@ -592,33 +624,69 @@ public abstract class Sncp {
                                 if (!list.isEmpty()) remoteTransport = new Transport(list.get(0), clientAddress, list);
                             }
                             if (field.getType().isAssignableFrom(newClazz) && remoteTransport != null) {
-                                field.set(rs, createRemoteService(name, serviceClass, clientAddress, remoteTransport));
+                                field.set(rs, createRemoteService(name, serviceClass, clientAddress, groups, remoteTransport));
                             }
                             continue;
                         }
                         Resource res = field.getAnnotation(Resource.class);
-                        if (res == null || !res.name().equals(RESNAME_SNCP_GROUPS)) continue;
+                        if (res == null) continue;
                         field.setAccessible(true);
-                        if (groups == null) groups = new LinkedHashSet<>();
-                        if (groupArray == null) groupArray = groups.toArray(new String[groups.size()]);
-                        if (field.getGenericType().equals(GROUPS_TYPE1)) {
-                            field.set(rs, groups);
-                        } else if (field.getGenericType().equals(GROUPS_TYPE2)) {
-                            field.set(rs, groupArray);
+                        if (res.name().equals(RESNAME_SNCP_GROUPS)) {
+                            if (groups == null) groups = new LinkedHashSet<>();
+                            if (groupArray == null) groupArray = groups.toArray(new String[groups.size()]);
+                            if (field.getGenericType().equals(GROUPS_TYPE1)) {
+                                field.set(rs, groups);
+                            } else if (field.getGenericType().equals(GROUPS_TYPE2)) {
+                                field.set(rs, groupArray);
+                            }
+                        } else if (res.name().endsWith(RESNAME_SNCP_ADDR)) {
+                            if (field.getType() == String.class) {
+                                field.set(rs, clientAddress == null ? null : (clientAddress.getHostString() + ":" + clientAddress.getPort()));
+                            } else {
+                                field.set(rs, clientAddress);
+                            }
                         }
                     }
                 } while ((loop = loop.getSuperclass()) != Object.class);
             }
+            SncpClient client = null;
             {
-                Field e;
                 try {
-                    e = newClazz.getDeclaredField("_client");
+                    Field e = newClazz.getDeclaredField("_client");
+                    e.setAccessible(true);
+                    client = new SncpClient(name, hash(serviceClass), false, newClazz, true, clientAddress, groups);
+                    e.set(rs, client);
                 } catch (NoSuchFieldException ne) {
-                    return rs;
                 }
-                e.setAccessible(true);
-                e.set(rs, new SncpClient(name, hash(serviceClass), false, newClazz, true, clientAddress));
             }
+            {
+                StringBuilder sb = new StringBuilder();
+                sb.append(newClazz.getName()).append("{name = ").append(name);
+                if (client != null) {
+                    sb.append(", nameid = ").append(client.getNameid()).append(", serviceid = ").append(client.getServiceid());
+                    sb.append(", action.size = ").append(client.getActionCount());
+
+                    sb.append(", address = ").append(clientAddress).append(", groups = ").append(groups);
+                    List<InetSocketAddress> addrs = new ArrayList<>();
+                    for (Transport t : sameGroupTransports) {
+                        addrs.addAll(Arrays.asList(t.getRemoteAddress()));
+                    }
+                    sb.append(", samegroups = ").append(addrs);
+
+                    addrs.clear();
+                    for (Transport t : diffGroupTransports) {
+                        addrs.addAll(Arrays.asList(t.getRemoteAddress()));
+                    }
+                    sb.append(", diffgroups = ").append(addrs);
+                } else {
+                    sb.append(", ").append(MultiRun.class.getSimpleName().toLowerCase()).append(" = false");
+                }
+                sb.append("}");
+                Field s = newClazz.getDeclaredField("_selfstring");
+                s.setAccessible(true);
+                s.set(rs, sb.toString());
+            }
+            if (client == null) return rs;
             {
                 Field c = newClazz.getDeclaredField("_sameGroupTransports");
                 c.setAccessible(true);
@@ -648,9 +716,16 @@ public abstract class Sncp {
      *
      *      private SncpClient _client;
      *
+     *      private String _selfstring;
+     *
      *      @Override
      *      public final String name() {
      *          return "";
+     *      }
+     *
+     *      @Override
+     *      public String toString() {
+     *          return _selfstring == null ? super.toString() : _selfstring;
      *      }
      *
      *      @Override
@@ -674,12 +749,13 @@ public abstract class Sncp {
      * @param <T>
      * @param name
      * @param serviceClass
-     * @param clientAddress
+     * @param clientAddress     
+     * @param groups
      * @param transport
      * @return
      */
     @SuppressWarnings("unchecked")
-    public static <T extends Service> T createRemoteService(final String name, final Class<T> serviceClass, final InetSocketAddress clientAddress, final Transport transport) {
+    public static <T extends Service> T createRemoteService(final String name, final Class<T> serviceClass, final InetSocketAddress clientAddress, HashSet<String> groups, final Transport transport) {
         if (serviceClass == null) return null;
         if (!Service.class.isAssignableFrom(serviceClass)) return null;
         int mod = serviceClass.getModifiers();
@@ -694,7 +770,7 @@ public abstract class Sncp {
         final String anyValueDesc = Type.getDescriptor(AnyValue.class);
         ClassLoader loader = Sncp.class.getClassLoader();
         String newDynName = supDynName.substring(0, supDynName.lastIndexOf('/') + 1) + REMOTEPREFIX + serviceClass.getSimpleName();
-        final SncpClient client = new SncpClient(name, hash(serviceClass), true, createLocalServiceClass(name, serviceClass), false, clientAddress);
+        final SncpClient client = new SncpClient(name, hash(serviceClass), true, createLocalServiceClass(name, serviceClass), false, clientAddress, groups);
         try {
             Class newClazz = Class.forName(newDynName.replace('/', '.'));
             T rs = (T) newClazz.newInstance();
@@ -704,11 +780,23 @@ public abstract class Sncp {
             Field t = newClazz.getDeclaredField("_transport");
             t.setAccessible(true);
             t.set(rs, transport);
+            {
+                StringBuilder sb = new StringBuilder();
+                sb.append(newClazz.getName()).append("{name = ").append(name);
+                sb.append(", nameid = ").append(client.getNameid()).append(", serviceid = ").append(client.getServiceid());
+                sb.append(", action.size = ").append(client.getActionCount());
+                sb.append(", address = ").append(clientAddress).append(", groups = ").append(groups);
+                sb.append(", remotes = ").append(transport == null ? null : Arrays.asList(transport.getRemoteAddress()));
+                sb.append("}");
+                Field s = newClazz.getDeclaredField("_selfstring");
+                s.setAccessible(true);
+                s.set(rs, sb.toString());
+            }
             return rs;
         } catch (Exception ex) {
         }
         //------------------------------------------------------------------------------
-        ClassWriter cw = new ClassWriter(0);
+        ClassWriter cw = new ClassWriter(COMPUTE_FRAMES);
         FieldVisitor fv;
         DebugMethodVisitor mv;
         AnnotationVisitor av0;
@@ -730,6 +818,10 @@ public abstract class Sncp {
         }
         {
             fv = cw.visitField(ACC_PRIVATE, "_client", clientDesc, null, null);
+            fv.visitEnd();
+        }
+        {
+            fv = cw.visitField(ACC_PRIVATE, "_selfstring", "Ljava/lang/String;", null, null);
             fv.visitEnd();
         }
         { //构造函数
@@ -756,6 +848,24 @@ public abstract class Sncp {
         { // name()
             mv = new DebugMethodVisitor(cw.visitMethod(ACC_PUBLIC + ACC_FINAL, "name", "()Ljava/lang/String;", null, null));
             mv.visitLdcInsn(name);
+            mv.visitInsn(ARETURN);
+            mv.visitMaxs(1, 1);
+            mv.visitEnd();
+        }
+        { // toString()
+            mv = new DebugMethodVisitor(cw.visitMethod(ACC_PUBLIC, "toString", "()Ljava/lang/String;", null, null));
+            mv.visitVarInsn(ALOAD, 0);
+            mv.visitFieldInsn(GETFIELD, newDynName, "_selfstring", "Ljava/lang/String;");
+            Label l1 = new Label();
+            mv.visitJumpInsn(IFNONNULL, l1);
+            mv.visitVarInsn(ALOAD, 0);
+            mv.visitMethodInsn(INVOKESPECIAL, "java/lang/Object", "toString", "()Ljava/lang/String;", false);
+            Label l2 = new Label();
+            mv.visitJumpInsn(GOTO, l2);
+            mv.visitLabel(l1);
+            mv.visitVarInsn(ALOAD, 0);
+            mv.visitFieldInsn(GETFIELD, newDynName, "_selfstring", "Ljava/lang/String;");
+            mv.visitLabel(l2);
             mv.visitInsn(ARETURN);
             mv.visitMaxs(1, 1);
             mv.visitEnd();
@@ -866,6 +976,18 @@ public abstract class Sncp {
             Field t = newClazz.getDeclaredField("_transport");
             t.setAccessible(true);
             t.set(rs, transport);
+            {
+                StringBuilder sb = new StringBuilder();
+                sb.append(newClazz.getName()).append("{name = ").append(name);
+                sb.append(", nameid = ").append(client.getNameid()).append(", serviceid = ").append(client.getServiceid());
+                sb.append(", action.size = ").append(client.getActionCount());
+                sb.append(", address = ").append(clientAddress).append(", groups = ").append(groups);
+                sb.append(", remotes = ").append(transport == null ? null : Arrays.asList(transport.getRemoteAddress()));
+                sb.append("}");
+                Field s = newClazz.getDeclaredField("_selfstring");
+                s.setAccessible(true);
+                s.set(rs, sb.toString());
+            }
             return rs;
         } catch (Exception ex) {
             throw new RuntimeException(ex);

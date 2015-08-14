@@ -6,7 +6,6 @@
 package com.wentch.redkale.boot;
 
 import com.wentch.redkale.net.sncp.*;
-import com.wentch.redkale.util.AnyValue;
 import com.wentch.redkale.service.Service;
 import java.net.*;
 import java.util.concurrent.CountDownLatch;
@@ -32,8 +31,8 @@ public final class NodeSncpServer extends NodeServer {
     }
 
     @Override
-    public void prepare(AnyValue config) throws Exception {
-        ClassFilter<Service> serviceFilter = createServiceClassFilter(config);
+    public void prepare() throws Exception {
+        ClassFilter<Service> serviceFilter = createServiceClassFilter();
         long s = System.currentTimeMillis();
         ClassFilter.Loader.load(application.getHome(), serviceFilter);
         long e = System.currentTimeMillis() - s;

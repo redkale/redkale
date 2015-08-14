@@ -41,29 +41,21 @@ public final class NodeHttpServer extends NodeServer {
     }
 
     @Override
-    public void prepare(AnyValue config) throws Exception {
-        ClassFilter<HttpServlet> httpFilter = createClassFilter(null, config, WebServlet.class, HttpServlet.class, null, "servlets", "servlet");
-        ClassFilter<Service> serviceFilter = createServiceClassFilter(config);
+    public void prepare() throws Exception {
+        ClassFilter<HttpServlet> httpFilter = createClassFilter(null, WebServlet.class, HttpServlet.class, null, "servlets", "servlet");
+        ClassFilter<Service> serviceFilter = createServiceClassFilter();
         long s = System.currentTimeMillis();
         ClassFilter.Loader.load(application.getHome(), serviceFilter, httpFilter);
         long e = System.currentTimeMillis() - s;
         logger.info(this.getClass().getSimpleName() + " load filter class in " + e + " ms");
         loadService(serviceFilter); //必须在servlet之前
         initWebSocketService();
-        if (server != null) loadHttpServlet(config.getAnyValue("servlets"), httpFilter);
+        if (server != null) loadHttpServlet(this.nodeConf.getAnyValue("servlets"), httpFilter);
     }
 
     private void initWebSocketService() {
-        NodeSncpServer sncpServer0 = null;
-        for (NodeServer ns : application.servers) {
-            if (!ns.isSNCP()) continue;
-            if (sncpServer0 == null) sncpServer0 = (NodeSncpServer) ns;
-            if (ns.getSncpGroup().equals(getSncpGroup())) {
-                sncpServer0 = (NodeSncpServer) ns;
-                break;
-            }
-        }
-        final NodeSncpServer sncpServer = sncpServer0;
+        final boolean fine = logger.isLoggable(Level.FINE);
+
         final ResourceFactory regFactory = application.factory;
         factory.add(WebSocketNode.class, (ResourceFactory rf, final Object src, Field field) -> {
             try {
@@ -75,19 +67,19 @@ public final class NodeHttpServer extends NodeServer {
                 synchronized (regFactory) {
                     Service nodeService = (Service) rf.find(rcname, WebSocketNode.class);
                     if (nodeService == null) {
-                        Class<? extends Service> sc = (Class<? extends Service>) application.webSocketNodeClass;
-                        nodeService = Sncp.createLocalService(rcname, (Class<? extends Service>) (sc == null ? WebSocketNodeService.class : sc),
-                                getSncpAddress(), new LinkedHashSet<>(), (sc == null ? null : sncpSameGroupTransports), (sc == null ? null : sncpDiffGroupTransports));
+                        nodeService = Sncp.createLocalService(rcname, (Class<? extends Service>) WebSocketNodeService.class,
+                                getSncpAddress(), sncpDefaultGroups, sncpSameGroupTransports, sncpDiffGroupTransports);
                         regFactory.register(rcname, WebSocketNode.class, nodeService);
-                        WebSocketNode wsn = (WebSocketNode) nodeService;
-                        wsn.setLocalSncpAddress(getSncpAddress());
-                        final Set<InetSocketAddress> alladdrs = new HashSet<>();
-                        application.globalNodes.forEach((k, v) -> alladdrs.add(k));
-                        alladdrs.remove(getSncpAddress());
-                        final Class<? extends Service> serviceType = (sc == null ? WebSocketNodeService.class : sc);
                         factory.inject(nodeService);
-                        if (sncpServer != null) {
-                            ServiceWrapper wrapper = new ServiceWrapper(serviceType, nodeService, rcname, getSncpGroup(), new LinkedHashSet<>(), null);
+                        logger.fine("[" + Thread.currentThread().getName() + "] Load " + nodeService);
+                        if (getSncpAddress() != null) {
+                            NodeSncpServer sncpServer = null;
+                            for (NodeServer node : application.servers) {
+                                if (node.isSNCP() && getSncpAddress().equals(node.getSncpAddress())) {
+                                    sncpServer = (NodeSncpServer) node;
+                                }
+                            }
+                            ServiceWrapper wrapper = new ServiceWrapper(WebSocketNodeService.class, nodeService, rcname, getSncpGroup(), sncpDefaultGroups, null);
                             sncpServer.getSncpServer().addService(wrapper);
                         }
                     }

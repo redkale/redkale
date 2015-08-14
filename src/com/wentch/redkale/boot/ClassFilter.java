@@ -127,7 +127,7 @@ public final class ClassFilter<T> {
                     }
                 }
             }
-            entrys.add(new FilterEntry(clazz, property));
+            entrys.add(new FilterEntry(clazz, autoscan, property));
         } catch (Throwable cfe) {
         }
     }
@@ -260,11 +260,18 @@ public final class ClassFilter<T> {
 
         private final AnyValue property;
 
+        private final boolean autoload;
+
         public FilterEntry(Class<T> type, AnyValue property) {
+            this(type, false, property);
+        }
+
+        public FilterEntry(Class<T> type, final boolean autoload, AnyValue property) {
             this.type = type;
             String str = property == null ? null : property.getValue("groups");
             if (str != null) groups.addAll(Arrays.asList(str.split(";")));
             this.property = property;
+            this.autoload = autoload;
             this.name = property == null ? "" : property.getValue("name", "");
         }
 
@@ -300,6 +307,10 @@ public final class ClassFilter<T> {
 
         public HashSet<String> getGroups() {
             return groups;
+        }
+
+        public boolean isAutoload() {
+            return autoload;
         }
 
     }

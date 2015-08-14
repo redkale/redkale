@@ -28,12 +28,6 @@
     <!-- 所有服务所需的资源 -->      
     <resources>
         
-        <!--  设置系统的 DataCacheListener 的Service实现，值[none]表示不需要启动DataCacheListener同步， 默认为系统自带实现类 -->
-        <datacachelistener service="none"/>
-        
-        <!--  设置系统的 WebSocketNode 的Service实现， 值[none]表示不需要启动WebSocketNode同步，默认为系统自带实现类 -->
-        <websocketnode service="xxxx"/>
-        
          <!--
             一个组包含多个NODE， 同一Service服务可以由多个进程提供，这些进程称为一个GROUP，且同一GROUP内的进程必须在同一机房或局域网内
             name: 服务组ID，长度不能超过11个字节. 默认为空字符串。

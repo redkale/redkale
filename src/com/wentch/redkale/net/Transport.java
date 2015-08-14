@@ -95,6 +95,10 @@ public final class Transport {
         return true;
     }
 
+    public InetSocketAddress[] getRemoteAddress() {
+        return remoteAddres;
+    }
+
     @Override
     public String toString() {
         return Transport.class.getSimpleName() + "{name=" + name + ",protocol=" + protocol + ",remoteAddres=" + Arrays.toString(remoteAddres) + "}";

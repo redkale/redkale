@@ -23,10 +23,6 @@ import java.util.logging.*;
  */
 public final class SncpClient {
 
-    private final Logger logger = Logger.getLogger(SncpClient.class.getSimpleName());
-
-    private final boolean debug = logger.isLoggable(Level.FINEST);
-
     protected static final class SncpAction {
 
         protected final DLong actionid;
@@ -73,11 +69,19 @@ public final class SncpClient {
         }
     }
 
+    private final Logger logger = Logger.getLogger(SncpClient.class.getSimpleName());
+
+    private final boolean debug = logger.isLoggable(Level.FINEST);
+
     protected final String name;
 
     protected final boolean remote;
 
     private final Class serviceClass;
+
+    protected final InetSocketAddress address;
+
+    protected final HashSet<String> groups;
 
     private final byte[] addrBytes;
 
@@ -91,10 +95,13 @@ public final class SncpClient {
 
     protected final BlockingQueue<Runnable> queue = new ArrayBlockingQueue(1024 * 64);
 
-    public SncpClient(final String serviceName, final long serviceid0, boolean remote, final Class serviceClass, boolean onlySncpDyn, final InetSocketAddress clientAddress) {
+    public SncpClient(final String serviceName, final long serviceid0, boolean remote, final Class serviceClass,
+            boolean onlySncpDyn, final InetSocketAddress clientAddress, final HashSet<String> groups) {
         if (serviceName.length() > 10) throw new RuntimeException(serviceClass + " @Resource name(" + serviceName + ") too long , must less 11");
         this.remote = remote;
         this.serviceClass = serviceClass;
+        this.address = clientAddress;
+        this.groups = groups;
         //if (subLocalClass != null && !serviceClass.isAssignableFrom(subLocalClass)) throw new RuntimeException(subLocalClass + " is not " + serviceClass + " sub class ");
         this.name = serviceName;
         this.nameid = Sncp.hash(serviceName);
@@ -108,7 +115,6 @@ public final class SncpClient {
         this.actions = methodens.toArray(new SncpAction[methodens.size()]);
         this.addrBytes = clientAddress == null ? new byte[4] : clientAddress.getAddress().getAddress();
         this.addrPort = clientAddress == null ? 0 : clientAddress.getPort();
-        logger.fine("[" + Thread.currentThread().getName() + "] Load " + this);
         new Thread() {
             {
                 setName(SncpClient.class.getSimpleName() + serviceClass.getSimpleName() + "-" + serviceName + "-Thread");
@@ -129,11 +135,25 @@ public final class SncpClient {
         }.start();
     }
 
+    public long getNameid() {
+        return nameid;
+    }
+
+    public long getServiceid() {
+        return serviceid;
+    }
+
+    public int getActionCount() {
+        return actions.length;
+    }
+
     @Override
     public String toString() {
         String service = serviceClass.getName();
         if (remote) service = service.replace(Sncp.LOCALPREFIX, Sncp.REMOTEPREFIX);
-        return this.getClass().getSimpleName() + "(service = " + service + ", serviceid = " + serviceid + ", name = " + name + ", nameid = " + nameid + ", actions.size = " + actions.length + ")";
+        return this.getClass().getSimpleName() + "(service = " + service + ", serviceid = " + serviceid
+                + ", name = " + name + ", nameid = " + nameid + ", address = " + (address == null ? "" : (address.getHostString() + ":" + address.getPort()))
+                + ", groups = " + groups + ", actions.size = " + actions.length + ")";
     }
 
     public static List<Method> parseMethod(final Class serviceClass, boolean onlySncpDyn) {
