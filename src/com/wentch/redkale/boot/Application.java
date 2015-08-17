@@ -58,13 +58,12 @@ public final class Application {
 
     //当前Service的IP地址+端口 类型: SocketAddress、InetSocketAddress、String
     public static final String RESNAME_SERVER_ADDR = "SERVER_ADDR"; // SERVER_ADDR
-    
+
     //当前SNCP Server所属的组  类型: String
     public static final String RESNAME_SERVER_GROUP = "SERVER_GROUP";
 
     //当前Service所属的组  类型: Set<String>、String[]
     public static final String RESNAME_SNCP_GROUPS = Sncp.RESNAME_SNCP_GROUPS; // SNCP_GROUPS
-
 
     protected final ResourceFactory factory = ResourceFactory.root();
 
@@ -432,8 +431,9 @@ public final class Application {
                 : Sncp.createLocalService("", serviceClass, null, new LinkedHashSet<>(), null, null);
         application.init();
         application.factory.register(service);
-        new NodeSncpServer(application, new CountDownLatch(1), null).init(application.config);
-        application.factory.inject(service);
+        final NodeServer server = new NodeHttpServer(application, new CountDownLatch(1), null);
+        server.init(application.config);
+        server.factory.inject(service);
         return service;
     }
 
