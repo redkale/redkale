@@ -352,7 +352,7 @@ public final class Application {
                 others.add(entry);
             }
         }
-        if (!sncps.isEmpty() && globalNodes.isEmpty()) throw new RuntimeException("found SNCP Server node bug not found <group> node info.");
+        if (!sncps.isEmpty() && globalNodes.isEmpty()) throw new RuntimeException("found SNCP Server node but not found <group> node info.");
 
         factory.register(RESNAME_APP_NODES, new TypeToken<Map<InetSocketAddress, String>>() {
         }.getType(), globalNodes);
