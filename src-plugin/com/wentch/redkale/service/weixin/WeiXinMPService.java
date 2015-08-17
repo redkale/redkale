@@ -21,7 +21,7 @@ import javax.annotation.*;
  *
  * @author zhangjx
  */
-public class WeiXinMPService {
+public class WeiXinMPService implements Service{
 
     protected static final Type MAPTYPE = new TypeToken<Map<String, String>>() {
     }.getType();
