@@ -7,10 +7,10 @@ package com.wentch.redkale.service.weixin;
 
 import com.wentch.redkale.convert.json.*;
 import com.wentch.redkale.service.*;
-import static com.wentch.redkale.service.weixin.WeiXinQYService.MAPTYPE;
 import com.wentch.redkale.util.*;
 import static com.wentch.redkale.util.Utility.getHttpContent;
 import java.io.*;
+import java.lang.reflect.*;
 import java.security.*;
 import java.util.*;
 import java.util.logging.*;
@@ -22,6 +22,9 @@ import javax.annotation.*;
  * @author zhangjx
  */
 public class WeiXinMPService {
+
+    protected static final Type MAPTYPE = new TypeToken<Map<String, String>>() {
+    }.getType();
 
     protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
 
