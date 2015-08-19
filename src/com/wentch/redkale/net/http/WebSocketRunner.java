@@ -7,6 +7,7 @@ package com.wentch.redkale.net.http;
 
 import com.wentch.redkale.net.AsyncConnection;
 import com.wentch.redkale.net.Context;
+import static com.wentch.redkale.net.http.WebSocket.*;
 import com.wentch.redkale.net.http.WebSocketPacket.PacketType;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
@@ -147,18 +148,18 @@ public class WebSocketRunner implements Runnable {
         }
     }
 
-    public void sendMessage(WebSocketPacket packet) {
-        if (packet == null || closed) return;
-
+    public int sendMessage(WebSocketPacket packet) {
+        if (packet == null) return RETCODE_SEND_ILLPACKET;
+        if (closed) return RETCODE_WSOCKET_CLOSED;
         final boolean debug = this.coder.debugable;
         //System.out.println("推送消息");
         final byte[] bytes = coder.encode(packet);
         if (debug) context.getLogger().log(Level.FINEST, "send web socket message's length = " + bytes.length);
         if (writing.getAndSet(true)) {
             queue.add(bytes);
-            return;
+            return 0;
         }
-        if (writeBuffer == null) return;
+        if (writeBuffer == null) return RETCODE_ILLEGALBUFFER;
         ByteBuffer sendBuffer = null;
         if (bytes.length <= writeBuffer.capacity()) {
             writeBuffer.clear();
@@ -211,9 +212,11 @@ public class WebSocketRunner implements Runnable {
                     }
                 }
             });
+            return 0;
         } catch (Exception t) {
             writing.set(false);
             context.getLogger().log(Level.FINE, "WebSocket sendMessage abort, force to close channel", t);
+            return RETCODE_SENDEXCEPTION;
         }
     }
 

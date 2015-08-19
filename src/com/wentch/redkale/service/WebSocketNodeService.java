@@ -6,12 +6,12 @@
 package com.wentch.redkale.service;
 
 import com.wentch.redkale.net.http.*;
+import static com.wentch.redkale.net.http.WebSocket.*;
 import com.wentch.redkale.net.sncp.*;
 import com.wentch.redkale.util.*;
 import java.io.*;
 import java.net.*;
 import java.util.*;
-import java.util.concurrent.*;
 
 /**
  *
@@ -53,9 +53,9 @@ public class WebSocketNodeService extends WebSocketNode implements Service {
     @Override
     @MultiRun
     public void connect(Serializable groupid, InetSocketAddress addr) {
-        Set<InetSocketAddress> addrs = dataNodes.get(groupid);
+        LinkedHashSet<InetSocketAddress> addrs = dataNodes.get(groupid);
         if (addrs == null) {
-            addrs = new CopyOnWriteArraySet<>();
+            addrs = new LinkedHashSet<>();
             dataNodes.put(groupid, addrs);
         }
         addrs.add(addr);
@@ -67,7 +67,9 @@ public class WebSocketNodeService extends WebSocketNode implements Service {
     public void disconnect(Serializable groupid, InetSocketAddress addr) {
         Set<InetSocketAddress> addrs = dataNodes.get(groupid);
         if (addrs == null) return;
-        addrs.remove(addr);
+        synchronized (addrs) {
+            addrs.remove(addr);
+        }
         if (addrs.isEmpty()) dataNodes.remove(groupid);
         if (finest) logger.finest(WebSocketNodeService.class.getSimpleName() + ".event: " + groupid + " disconnect from " + addr);
     }

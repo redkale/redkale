@@ -5,6 +5,7 @@
  */
 package com.wentch.redkale.net.http;
 
+import static com.wentch.redkale.net.http.WebSocket.*;
 import com.wentch.redkale.net.sncp.*;
 import com.wentch.redkale.util.*;
 import java.io.*;
@@ -20,14 +21,6 @@ import javax.annotation.*;
  */
 public abstract class WebSocketNode {
 
-    public static final int RETCODE_ENGINE_NULL = 5001;
-
-    public static final int RETCODE_NODESERVICE_NULL = 5002;
-
-    public static final int RETCODE_GROUP_EMPTY = 5005;
-
-    public static final int RETCODE_WSOFFLINE = 5011;
-
     protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
 
     protected final boolean finest = logger.isLoggable(Level.FINEST);
@@ -39,7 +32,7 @@ public abstract class WebSocketNode {
     protected WebSocketNode remoteNode;
 
     //存放所有用户分布在节点上的队列信息,Set<InetSocketAddress> 为 sncpnode 的集合
-    protected final ConcurrentHashMap<Serializable, Set<InetSocketAddress>> dataNodes = new ConcurrentHashMap();
+    protected final ConcurrentHashMap<Serializable, LinkedHashSet<InetSocketAddress>> dataNodes = new ConcurrentHashMap();
 
     //存放所有用户分布在节点上的队列信息,Set<String> 为 engineid 的集合
     protected final ConcurrentHashMap<Serializable, Set<String>> localNodes = new ConcurrentHashMap();
@@ -56,7 +49,7 @@ public abstract class WebSocketNode {
                 @Override
                 public void run() {
                     try {
-                        Map<Serializable, Set<InetSocketAddress>> map = remoteNode.getDataNodes();
+                        Map<Serializable, LinkedHashSet<InetSocketAddress>> map = remoteNode.getDataNodes();
                         if (map != null) dataNodes.putAll(map);
                     } catch (Exception e) {
                         logger.log(Level.INFO, WebSocketNode.class.getSimpleName() + "(" + localSncpAddress + ") not load data nodes ", e);
@@ -75,7 +68,7 @@ public abstract class WebSocketNode {
         });
     }
 
-    public Map<Serializable, Set<InetSocketAddress>> getDataNodes() {
+    public Map<Serializable, LinkedHashSet<InetSocketAddress>> getDataNodes() {
         return dataNodes;
     }
 
@@ -125,16 +118,24 @@ public abstract class WebSocketNode {
                         rscode = RETCODE_GROUP_EMPTY;
                         break;
                     }
-                    group.send(recent, message, last);
+                    rscode = group.send(recent, message, last);
                 }
             }
         }
         if ((recent && rscode == 0) || remoteNode == null) return rscode;
-        Set<InetSocketAddress> addrs = dataNodes.get(groupid);
-        if (addrs != null && !addrs.isEmpty()) {   //对方连接在远程节点       
-            for (InetSocketAddress addr : addrs) {
-                if (!addr.equals(localSncpAddress)) {
-                    remoteNode.sendMessage(addr, groupid, recent, message, last);
+        LinkedHashSet<InetSocketAddress> addrs = dataNodes.get(groupid);
+        if (addrs != null && !addrs.isEmpty()) {   //对方连接在远程节点      
+            if (recent) {
+                InetSocketAddress one = null;
+                for (InetSocketAddress addr : addrs) {
+                    one = addr;
+                }
+                rscode = remoteNode.sendMessage(one, groupid, recent, message, last);
+            } else {
+                for (InetSocketAddress addr : addrs) {
+                    if (!addr.equals(localSncpAddress)) {
+                        rscode |= remoteNode.sendMessage(addr, groupid, recent, message, last);
+                    }
                 }
             }
         } else {

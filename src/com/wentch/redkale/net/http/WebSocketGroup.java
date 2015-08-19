@@ -76,24 +76,29 @@ public final class WebSocketGroup {
         attributes.put(name, value);
     }
 
-    public final void send(boolean recent, Serializable message, boolean last) {
+    public final int send(boolean recent, Serializable message, boolean last) {
         if (recent) {
-            recentWebSocket.send(message, last);
+            return recentWebSocket.send(message, last);
         } else {
-            list.forEach(x -> x.send(message, last));
+            return sendEach(message, last);
         }
     }
 
-    public final void sendEach(Serializable message, boolean last) {
-        list.forEach(x -> x.send(message, last));
+    public final int sendEach(Serializable message, boolean last) {
+        int rs = 0;
+        for (WebSocket s : list) {
+            rs |= s.send(message, last);
+        }
+        return rs;
     }
 
-    public final void sendRecent(Serializable message, boolean last) {
-        recentWebSocket.send(message, last);
+    public final int sendRecent(Serializable message, boolean last) {
+        return recentWebSocket.send(message, last);
     }
 
     @Override
     public String toString() {
         return "{groupid: " + groupid + ", list.size: " + (list == null ? -1 : list.size()) + "}";
     }
+
 }

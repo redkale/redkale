@@ -34,6 +34,26 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public abstract class WebSocket {
 
+    //消息不合法
+    public static final int RETCODE_SEND_ILLPACKET = 1 << 1; //2
+
+    //ws已经关闭
+    public static final int RETCODE_WSOCKET_CLOSED = 1 << 2; //4
+
+    //socket的buffer不合法
+    public static final int RETCODE_ILLEGALBUFFER = 1 << 3; //8
+
+    //ws发送消息异常
+    public static final int RETCODE_SENDEXCEPTION = 1 << 4; //16
+
+    public static final int RETCODE_ENGINE_NULL = 1 << 5; //32
+
+    public static final int RETCODE_NODESERVICE_NULL = 1 << 6; //64
+
+    public static final int RETCODE_GROUP_EMPTY = 1 << 7; //128
+
+    public static final int RETCODE_WSOFFLINE = 1 << 8; //256
+
     WebSocketRunner runner;
 
     WebSocketEngine engine;
@@ -56,9 +76,11 @@ public abstract class WebSocket {
      * 发送消息体, 包含二进制/文本
      * <p>
      * @param packet
+     * @return 
      */
-    public final void send(WebSocketPacket packet) {
-        if (this.runner != null) this.runner.sendMessage(packet);
+    public final int send(WebSocketPacket packet) {
+        if (this.runner != null) return this.runner.sendMessage(packet);
+        return RETCODE_WSOCKET_CLOSED;
     }
 
     /**
@@ -72,9 +94,10 @@ public abstract class WebSocket {
      * 发送单一的文本消息
      * <p>
      * @param text 不可为空
+     * @return 
      */
-    public final void send(String text) {
-        send(text, true);
+    public final int send(String text) {
+        return send(text, true);
     }
 
     /**
@@ -82,18 +105,20 @@ public abstract class WebSocket {
      * <p>
      * @param text 不可为空
      * @param last 是否最后一条
+     * @return 
      */
-    public final void send(String text, boolean last) {
-        send(new WebSocketPacket(text, last));
+    public final int send(String text, boolean last) {
+        return send(new WebSocketPacket(text, last));
     }
 
     /**
      * 发送单一的二进制消息
      * <p>
      * @param data
+     * @return 
      */
-    public final void send(byte[] data) {
-        send(data, true);
+    public final int send(byte[] data) {
+        return send(data, true);
     }
 
     /**
@@ -101,9 +126,10 @@ public abstract class WebSocket {
      * <p>
      * @param data 不可为空
      * @param last 是否最后一条
+     * @return 
      */
-    public final void send(byte[] data, boolean last) {
-        send(new WebSocketPacket(data, last));
+    public final int send(byte[] data, boolean last) {
+        return send(new WebSocketPacket(data, last));
     }
 
     /**
@@ -111,9 +137,10 @@ public abstract class WebSocket {
      * <p>
      * @param message 不可为空, 只能是String或者byte[]
      * @param last 是否最后一条
+     * @return 
      */
-    public final void send(Serializable message, boolean last) {
-        send(new WebSocketPacket(message, last));
+    public final int send(Serializable message, boolean last) {
+        return send(new WebSocketPacket(message, last));
     }
 
     //----------------------------------------------------------------
@@ -210,12 +237,12 @@ public abstract class WebSocket {
     }
 
     private int sendMessage(Serializable groupid, boolean recent, String text, boolean last) {
-        if (node == null) return WebSocketNode.RETCODE_NODESERVICE_NULL;
+        if (node == null) return RETCODE_NODESERVICE_NULL;
         return node.sendMessage(groupid, recent, text, last);
     }
 
     private int sendMessage(Serializable groupid, boolean recent, byte[] data, boolean last) {
-        if (node == null) return WebSocketNode.RETCODE_NODESERVICE_NULL;
+        if (node == null) return RETCODE_NODESERVICE_NULL;
         return node.sendMessage(groupid, recent, data, last);
     }
 
