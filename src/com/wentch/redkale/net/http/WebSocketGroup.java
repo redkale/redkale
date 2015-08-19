@@ -54,6 +54,10 @@ public final class WebSocketGroup {
         return list.isEmpty();
     }
 
+    public final int size() {
+        return list.size();
+    }
+
     /**
      * 最近发送消息的WebSocket
      * <p>
