@@ -54,23 +54,33 @@ public class ApnsService implements Service {
 
     @Override
     public void init(AnyValue conf) {
-        try {
-            final String path = "/" + this.getClass().getPackage().getName().replace('.', '/') + "/" + apnscertpath;
-            KeyStore ks = KeyStore.getInstance("PKCS12");
-            InputStream in = ApnsService.class.getResourceAsStream(path);
-            ks.load(in, apnscertpwd.toCharArray());
-            in.close();
-            KeyManagerFactory kf = KeyManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-            kf.init(ks, apnscertpwd.toCharArray());
+        new Thread() {
+            {
+                setDaemon(true);
+                setPriority(Thread.MAX_PRIORITY);
+            }
 
-            TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-            tmf.init((KeyStore) null);
-            SSLContext context = SSLContext.getInstance("TLS");
-            context.init(kf.getKeyManagers(), tmf.getTrustManagers(), null);
-            this.sslFactory = context.getSocketFactory();
-        } catch (Exception e) {
-            logger.log(Level.SEVERE, this.getClass().getSimpleName() + " init SSLContext error", e);
-        }
+            @Override
+            public void run() {
+                try {
+                    final String path = "/" + this.getClass().getPackage().getName().replace('.', '/') + "/" + apnscertpath;
+                    KeyStore ks = KeyStore.getInstance("PKCS12");
+                    InputStream in = ApnsService.class.getResourceAsStream(path);
+                    ks.load(in, apnscertpwd.toCharArray());
+                    in.close();
+                    KeyManagerFactory kf = KeyManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+                    kf.init(ks, apnscertpwd.toCharArray());
+
+                    TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+                    tmf.init((KeyStore) null);
+                    SSLContext context = SSLContext.getInstance("TLS");
+                    context.init(kf.getKeyManagers(), tmf.getTrustManagers(), null);
+                    ApnsService.this.sslFactory = context.getSocketFactory();
+                } catch (Exception e) {
+                    logger.log(Level.SEVERE, this.getClass().getSimpleName() + " init SSLContext error", e);
+                }
+            }
+        }.start();
     }
 
     @Override
