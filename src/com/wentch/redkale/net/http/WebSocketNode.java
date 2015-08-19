@@ -107,7 +107,7 @@ public abstract class WebSocketNode {
 
     public final int sendMessage(Serializable groupid, boolean recent, Serializable message, boolean last) {
         final Set<String> engineids = localNodes.get(groupid);
-        int rscode = 0;
+        int rscode = RETCODE_GROUP_EMPTY;
         if (engineids != null && !engineids.isEmpty()) {
             for (String engineid : engineids) {
                 final WebSocketEngine engine = engines.get(engineid);
