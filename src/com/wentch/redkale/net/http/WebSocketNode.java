@@ -145,12 +145,20 @@ public abstract class WebSocketNode {
     }
 
     //--------------------------------------------------------------------------------
-    public final int sendMessage(Serializable groupid, String text) {
+    public final int sendEachMessage(Serializable groupid, String text) {
         return sendMessage(groupid, false, text);
     }
 
-    public final int sendMessage(Serializable groupid, String text, boolean last) {
+    public final int sendEachMessage(Serializable groupid, String text, boolean last) {
         return sendMessage(groupid, false, text, last);
+    }
+
+    public final int sendRecentMessage(Serializable groupid, String text) {
+        return sendMessage(groupid, true, text);
+    }
+
+    public final int sendRecentMessage(Serializable groupid, String text, boolean last) {
+        return sendMessage(groupid, true, text, last);
     }
 
     public final int sendMessage(Serializable groupid, boolean recent, String text) {
@@ -162,12 +170,20 @@ public abstract class WebSocketNode {
     }
 
     //--------------------------------------------------------------------------------
-    public final int sendMessage(Serializable groupid, byte[] data) {
+    public final int sendEachMessage(Serializable groupid, byte[] data) {
         return sendMessage(groupid, false, data);
     }
 
-    public final int sendMessage(Serializable groupid, byte[] data, boolean last) {
+    public final int sendEachMessage(Serializable groupid, byte[] data, boolean last) {
         return sendMessage(groupid, false, data, last);
+    }
+
+    public final int sendRecentMessage(Serializable groupid, byte[] data) {
+        return sendMessage(groupid, true, data);
+    }
+
+    public final int sendRecentMessage(Serializable groupid, byte[] data, boolean last) {
+        return sendMessage(groupid, true, data, last);
     }
 
     public final int sendMessage(Serializable groupid, boolean recent, byte[] data) {

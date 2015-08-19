@@ -151,8 +151,8 @@ public abstract class WebSocket {
      * @param text    不可为空
      * @return 为0表示成功， 其他值表示异常
      */
-    public final int sendMessage(Serializable groupid, String text) {
-        return sendMessage(groupid, text, true);
+    public final int sendEachMessage(Serializable groupid, String text) {
+        return sendEachMessage(groupid, text, true);
     }
 
     /**
@@ -162,8 +162,8 @@ public abstract class WebSocket {
      * @param data    不可为空
      * @return 为0表示成功， 其他值表示异常
      */
-    public final int sendMessage(Serializable groupid, byte[] data) {
-        return sendMessage(groupid, data, true);
+    public final int sendEachMessage(Serializable groupid, byte[] data) {
+        return WebSocket.this.sendEachMessage(groupid, data, true);
     }
 
     /**
@@ -174,7 +174,7 @@ public abstract class WebSocket {
      * @param last
      * @return 为0表示成功， 其他值表示异常
      */
-    public final int sendMessage(Serializable groupid, String text, boolean last) {
+    public final int sendEachMessage(Serializable groupid, String text, boolean last) {
         return sendMessage(groupid, false, text, last);
     }
 
@@ -186,7 +186,7 @@ public abstract class WebSocket {
      * @param last    是否最后一条
      * @return 为0表示成功， 其他值表示异常
      */
-    public final int sendMessage(Serializable groupid, byte[] data, boolean last) {
+    public final int sendEachMessage(Serializable groupid, byte[] data, boolean last) {
         return sendMessage(groupid, false, data, last);
     }
 
