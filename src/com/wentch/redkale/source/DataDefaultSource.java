@@ -845,6 +845,114 @@ public final class DataDefaultSource implements DataSource, Nameable {
     }
 
     /**
+     * 根据主键值给对象的column对应的值 & andvalue， 必须是Entity Class
+     *
+     * @param <T>
+     * @param clazz
+     * @param id
+     * @param column
+     * @param andvalue
+     */
+    @Override
+    public <T> void updateColumnAnd(Class<T> clazz, Serializable id, String column, long andvalue) {
+        final EntityInfo<T> info = loadEntityInfo(clazz);
+        if (info.isVirtualEntity()) {
+            updateColumnAnd(null, info, id, column, andvalue);
+            return;
+        }
+        Connection conn = createWriteSQLConnection();
+        try {
+            updateColumnAnd(conn, info, id, column, andvalue);
+        } finally {
+            closeSQLConnection(conn);
+        }
+    }
+
+    @Override
+    public <T> void updateColumnAnd(DataConnection conn, Class<T> clazz, Serializable id, String column, long andvalue) {
+        updateColumnAnd((Connection) conn.getConnection(), loadEntityInfo(clazz), id, column, andvalue);
+    }
+
+    private <T> void updateColumnAnd(Connection conn, final EntityInfo<T> info, Serializable id, String column, long andvalue) {
+        try {
+            if (!info.isVirtualEntity()) {
+                String col = info.getSQLColumn(column);
+                String sql = "UPDATE " + info.getTable() + " SET " + col + " = " + col + " & (" + andvalue
+                        + ") WHERE " + info.getPrimarySQLColumn() + " = " + formatToString(id);
+                if (debug.get()) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
+                final Statement stmt = conn.createStatement();
+                stmt.execute(sql);
+                stmt.close();
+                if (writeListener != null) writeListener.update(sql);
+            }
+            //---------------------------------------------------
+            final EntityCache<T> cache = info.getCache();
+            if (cache == null) return;
+            Attribute<T, Serializable> attr = info.getAttribute(column);
+            T value = cache.updateColumnAnd(id, attr, andvalue);
+            if (value != null && cacheListener != null) cacheListener.updateCache(info.getType(), value);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        } finally {
+            if (conn != null) closeSQLConnection(conn);
+        }
+    }
+
+    /**
+     * 根据主键值给对象的column对应的值 | andvalue， 必须是Entity Class
+     *
+     * @param <T>
+     * @param clazz
+     * @param id
+     * @param column
+     * @param orvalue
+     */
+    @Override
+    public <T> void updateColumnOr(Class<T> clazz, Serializable id, String column, long orvalue) {
+        final EntityInfo<T> info = loadEntityInfo(clazz);
+        if (info.isVirtualEntity()) {
+            updateColumnOr(null, info, id, column, orvalue);
+            return;
+        }
+        Connection conn = createWriteSQLConnection();
+        try {
+            updateColumnOr(conn, info, id, column, orvalue);
+        } finally {
+            closeSQLConnection(conn);
+        }
+    }
+
+    @Override
+    public <T> void updateColumnOr(DataConnection conn, Class<T> clazz, Serializable id, String column, long orvalue) {
+        updateColumnOr((Connection) conn.getConnection(), loadEntityInfo(clazz), id, column, orvalue);
+    }
+
+    private <T> void updateColumnOr(Connection conn, final EntityInfo<T> info, Serializable id, String column, long orvalue) {
+        try {
+            if (!info.isVirtualEntity()) {
+                String col = info.getSQLColumn(column);
+                String sql = "UPDATE " + info.getTable() + " SET " + col + " = " + col + " | (" + orvalue
+                        + ") WHERE " + info.getPrimarySQLColumn() + " = " + formatToString(id);
+                if (debug.get()) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
+                final Statement stmt = conn.createStatement();
+                stmt.execute(sql);
+                stmt.close();
+                if (writeListener != null) writeListener.update(sql);
+            }
+            //---------------------------------------------------
+            final EntityCache<T> cache = info.getCache();
+            if (cache == null) return;
+            Attribute<T, Serializable> attr = info.getAttribute(column);
+            T value = cache.updateColumnOr(id, attr, orvalue);
+            if (value != null && cacheListener != null) cacheListener.updateCache(info.getType(), value);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        } finally {
+            if (conn != null) closeSQLConnection(conn);
+        }
+    }
+
+    /**
      * 更新对象指定的一些字段， 必须是Entity对象
      *
      * @param <T>

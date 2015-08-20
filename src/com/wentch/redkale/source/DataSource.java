@@ -100,6 +100,14 @@ public interface DataSource {
     public <T> void updateColumnIncrement(final Class<T> clazz, Serializable id, String column, long incvalue);
 
     public <T> void updateColumnIncrement(final DataConnection conn, Class<T> clazz, Serializable id, String column, long incvalue);
+    
+    public <T> void updateColumnAnd(final Class<T> clazz, Serializable id, String column, long incvalue);
+
+    public <T> void updateColumnAnd(final DataConnection conn, Class<T> clazz, Serializable id, String column, long incvalue);
+    
+    public <T> void updateColumnOr(final Class<T> clazz, Serializable id, String column, long incvalue);
+
+    public <T> void updateColumnOr(final DataConnection conn, Class<T> clazz, Serializable id, String column, long incvalue);
 
     //-----------------------getXXXXResult-----------------------------
     public Number getNumberResult(final Class entityClass, final Reckon reckon, final String column);

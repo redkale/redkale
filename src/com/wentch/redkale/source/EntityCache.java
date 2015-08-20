@@ -327,16 +327,31 @@ public final class EntityCache<T> {
         return rs;
     }
 
+    public <V> T updateColumnOr(final Serializable id, Attribute<T, V> attr, final long orvalue) {
+        if (id == null) return null;
+        T rs = this.map.get(id);
+        if (rs == null) return rs;
+        Number numb = (Number) attr.get(rs);
+        return updateColumnIncrAndOr(id, attr, rs, (numb == null) ? orvalue : (numb.longValue() & orvalue));
+    }
+
+    public <V> T updateColumnAnd(final Serializable id, Attribute<T, V> attr, final long andvalue) {
+        if (id == null) return null;
+        T rs = this.map.get(id);
+        if (rs == null) return rs;
+        Number numb = (Number) attr.get(rs);
+        return updateColumnIncrAndOr(id, attr, rs, (numb == null) ? 0 : (numb.longValue() & andvalue));
+    }
+
     public <V> T updateColumnIncrement(final Serializable id, Attribute<T, V> attr, final long incvalue) {
         if (id == null) return null;
         T rs = this.map.get(id);
         if (rs == null) return rs;
         Number numb = (Number) attr.get(rs);
-        if (numb == null) {
-            numb = incvalue;
-        } else {
-            numb = numb.longValue() + incvalue;
-        }
+        return updateColumnIncrAndOr(id, attr, rs, (numb == null) ? incvalue : (numb.longValue() + incvalue));
+    }
+
+    private <V> T updateColumnIncrAndOr(final Serializable id, Attribute<T, V> attr, final T rs, Number numb) {
         final Class ft = attr.type();
         if (ft == int.class || ft == Integer.class) {
             numb = numb.intValue();
