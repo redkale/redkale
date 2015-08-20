@@ -14,6 +14,7 @@ import java.nio.*;
 import java.nio.channels.*;
 import java.nio.charset.*;
 import java.security.*;
+import java.util.concurrent.*;
 import java.util.logging.*;
 import javax.annotation.*;
 import javax.net.ssl.*;
@@ -48,6 +49,10 @@ public class ApnsService implements Service {
 
     private final Object socketlock = new Object();
 
+    private boolean inited = false;
+
+    private final CountDownLatch cdl = new CountDownLatch(1);
+
     private SSLSocketFactory sslFactory;
 
     private Socket pushSocket;
@@ -78,6 +83,9 @@ public class ApnsService implements Service {
                     ApnsService.this.sslFactory = context.getSocketFactory();
                 } catch (Exception e) {
                     logger.log(Level.SEVERE, this.getClass().getSimpleName() + " init SSLContext error", e);
+                } finally {
+                    inited = true;
+                    cdl.countDown();
                 }
             }
         }.start();
@@ -92,6 +100,12 @@ public class ApnsService implements Service {
     }
 
     private Socket getPushSocket() throws IOException {
+        if (!this.inited) {
+            try {
+                cdl.await();
+            } catch (InterruptedException e) {
+            }
+        }
         if (this.sslFactory == null) return null;
         if (pushSocket == null || pushSocket.isClosed()) {
             synchronized (socketlock) {
