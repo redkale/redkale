@@ -27,11 +27,6 @@ public class VideoWebSocketServlet extends WebSocketServlet {
 
     private final Map<Serializable, String> users = new HashMap<>();
 
-    @Override
-    public String name() {
-        return "listen";
-    }
-
     private static final class Entry {
 
         public WebSocket socket;

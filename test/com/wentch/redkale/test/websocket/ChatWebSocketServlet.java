@@ -66,14 +66,9 @@ public class ChatWebSocketServlet extends WebSocketServlet {
 
             @Override
             protected Serializable createGroupid() {
-               return "";
+                return "";
             }
         };
-    }
-
-    @Override
-    public String name() {
-       return "chat";
     }
 
 }
