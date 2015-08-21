@@ -71,6 +71,11 @@ public abstract class WebSocketServlet extends HttpServlet implements Nameable {
     }
 
     @Override
+    public final String name() {
+        return this.getClass().getSimpleName().replace("Servlet", "").replace("WebSocket", "").toLowerCase();
+    }
+
+    @Override
     public final void execute(HttpRequest request, HttpResponse response) throws IOException {
         final boolean debug = logger.isLoggable(Level.FINER);
         if (!"GET".equalsIgnoreCase(request.getMethod())
@@ -130,9 +135,6 @@ public abstract class WebSocketServlet extends HttpServlet implements Nameable {
             }
         });
     }
-
-    @Override
-    public abstract String name();
 
     protected abstract WebSocket createWebSocket();
 }
