@@ -71,7 +71,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Nameable {
     }
 
     @Override
-    public final String name() {
+    public String name() {
         return this.getClass().getSimpleName().replace("Servlet", "").replace("WebSocket", "").toLowerCase();
     }
 
