@@ -68,8 +68,8 @@ public final class ObjectPool<T> {
         if (result == null) {
             if (creatCounter != null) creatCounter.incrementAndGet();
             result = this.creator.create();
-        } 
-        if(prepare != null) prepare.accept(result);
+        }
+        if (prepare != null) prepare.accept(result);
         return result;
     }
 
@@ -77,7 +77,7 @@ public final class ObjectPool<T> {
         if (e != null && recycler.test(e)) {
             if (cycleCounter != null) cycleCounter.incrementAndGet();
             if (debug) queue.forEach(t -> {
-                if (t == e) logger.log(Level.WARNING, "repeat offer the same object(" + e + ")", new Exception());
+                if (t == e) logger.log(Level.WARNING, "[" + Thread.currentThread().getName() + "] repeat offer the same object(" + e + ")", new Exception());
             });
             queue.offer(e);
         }
