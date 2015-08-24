@@ -220,7 +220,7 @@ public class WebSocketRunner implements Runnable {
         }
     }
 
-    public void closeRunner() {
+    public synchronized void closeRunner() {
         if (closed) return;
         closed = true;
         try {
