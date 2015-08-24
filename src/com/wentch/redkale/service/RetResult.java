@@ -15,7 +15,10 @@ import com.wentch.redkale.convert.json.*;
  */
 public class RetResult<T> {
 
-    public static final RetResult SUCCESS = new RetResult() {
+    protected static final class RetSuccessResult<T> extends RetResult<T> {
+
+        public RetSuccessResult() {
+        }
 
         @Override
         public void setRetcode(int retcode) {
@@ -26,10 +29,11 @@ public class RetResult<T> {
         }
 
         @Override
-        public void setResult(Object result) {
+        public void setResult(T result) {
         }
+    }
 
-    };
+    public static final RetResult SUCCESS = new RetSuccessResult();
 
     protected int retcode;
 
