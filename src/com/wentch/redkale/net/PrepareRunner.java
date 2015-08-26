@@ -69,9 +69,8 @@ public final class PrepareRunner implements Runnable {
                     response.init(channel);
                     try {
                         prepare.prepare(buffer, response.request, response);
-                    } catch (Throwable t) {
-                        context.logger.log(Level.WARNING, "prepare servlet abort, forece to close channel ", t);
-                        context.offerBuffer(buffer);
+                    } catch (Throwable t) {  //此处不可  context.offerBuffer(buffer); 以免prepare.prepare内部异常导致重复 offerBuffer
+                        context.logger.log(Level.WARNING, "prepare servlet abort, forece to close channel ", t);                        
                         response.finish(true);
                     }
                 }
