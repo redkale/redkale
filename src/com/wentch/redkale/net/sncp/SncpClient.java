@@ -285,7 +285,13 @@ public final class SncpClient {
             conn.read(buffer).get(readto > 0 ? readto : 5, TimeUnit.SECONDS);
             buffer.flip();
             long rseqid = buffer.getLong();
-            if (rseqid != seqid) throw new RuntimeException("sncp send seqid = " + seqid + ", but receive seqid =" + rseqid);
+            while (rseqid != seqid) {
+                if (!conn.isTCP()) throw new RuntimeException("sncp send seqid = " + seqid + ", but receive seqid =" + rseqid);
+                buffer.clear();
+                conn.read(buffer).get(readto > 0 ? readto : 5, TimeUnit.SECONDS);
+                buffer.flip();
+                rseqid = buffer.getLong();
+            }
             if (buffer.getChar() != HEADER_SIZE) throw new RuntimeException("sncp buffer receive header.length not " + HEADER_SIZE);
             long rserviceid = buffer.getLong();
             if (rserviceid != serviceid) throw new RuntimeException("sncp send serviceid = " + serviceid + ", but receive serviceid =" + rserviceid);
