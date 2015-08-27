@@ -37,7 +37,7 @@ public abstract class Sncp {
     private static final java.lang.reflect.Type GROUPS_TYPE2 = new TypeToken<String[]>() {
     }.getType();
 
-    public static final String DEFAULT_PROTOCOL = "TCP";
+    public static final String DEFAULT_PROTOCOL = "UDP";
 
     static final String LOCALPREFIX = "_DynLocal";
 
