@@ -110,15 +110,18 @@ public final class Application {
         Application.this.factory.register(RESNAME_APP_ADDR, Application.this.localAddress.getHostAddress());
         Application.this.factory.register(RESNAME_APP_ADDR, InetAddress.class, Application.this.localAddress);
         {
-            StringBuilder sb = new StringBuilder();
-            byte[] bs = this.localAddress.getAddress();
-            int v1 = bs[bs.length - 2] & 0xff;
-            int v2 = bs[bs.length - 1] & 0xff;
-            if (v1 <= 0xf) sb.append('0');
-            sb.append(Integer.toHexString(v1));
-            if (v2 <= 0xf) sb.append('0');
-            sb.append(Integer.toHexString(v2));
-            String node = sb.toString();
+            String node = config.getValue("node", "").trim();
+            if (node.isEmpty()) {
+                StringBuilder sb = new StringBuilder();
+                byte[] bs = this.localAddress.getAddress();
+                int v1 = bs[bs.length - 2] & 0xff;
+                int v2 = bs[bs.length - 1] & 0xff;
+                if (v1 <= 0xf) sb.append('0');
+                sb.append(Integer.toHexString(v1));
+                if (v2 <= 0xf) sb.append('0');
+                sb.append(Integer.toHexString(v2));
+                node = sb.toString();
+            }
             Application.this.factory.register(RESNAME_APP_NODE, node);
             System.setProperty(RESNAME_APP_NODE, node);
         }
