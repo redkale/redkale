@@ -128,7 +128,7 @@ public class FilterNode {
         return createFilterSQLExpress(true, info, bean);
     }
 
-    protected <T> StringBuilder createFilterSQLExpress(final boolean first, final EntityInfo<T> info, FilterBean bean) {        
+    protected <T> StringBuilder createFilterSQLExpress(final boolean first, final EntityInfo<T> info, FilterBean bean) {
         final Serializable val = getValue(bean);
         if (val == null && (express == ISNULL || express == ISNOTNULL)) return new StringBuilder(0);
         StringBuilder sb0 = createFilterSQLExpress(info, val);
@@ -157,7 +157,7 @@ public class FilterNode {
     }
 
     private <T> StringBuilder createFilterSQLExpress(final EntityInfo<T> info, Serializable val0) {
-        if(column == null) return null;
+        if (column == null) return null;
         final StringBuilder val = formatValue(val0);
         if (val == null) return null;
         StringBuilder sb = new StringBuilder();
@@ -218,8 +218,25 @@ public class FilterNode {
         return filter;
     }
 
-    protected final <T> Predicate<T> createFilterPredicate(final Attribute<T, Serializable> attr, final Serializable val) {
+    protected final <T> Predicate<T> createFilterPredicate(final Attribute<T, Serializable> attr, Serializable val0) {
         if (attr == null) return null;
+        final Class atype = attr.type();
+        if (val0 != null && atype != val0.getClass() && val0 instanceof Number) {
+            if (atype == short.class || atype == Short.class) {
+                val0 = ((Number) val0).shortValue();
+            } else if (atype == long.class || atype == Long.class) {
+                val0 = ((Number) val0).longValue();
+            } else if (atype == byte.class || atype == Byte.class) {
+                val0 = ((Number) val0).byteValue();
+            } else if (atype == int.class || atype == Integer.class) {
+                val0 = ((Number) val0).intValue();
+            } else if (atype == float.class || atype == Float.class) {
+                val0 = ((Number) val0).floatValue();
+            } else if (atype == double.class || atype == Double.class) {
+                val0 = ((Number) val0).doubleValue();
+            }
+        }
+        final Serializable val = val0;
         switch (express) {
             case EQUAL: return (T t) -> val.equals(attr.get(t));
             case NOTEQUAL: return (T t) -> !val.equals(attr.get(t));
