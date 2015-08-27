@@ -162,7 +162,7 @@ public final class Transport {
     }
 
     public void offerConnection(AsyncConnection conn) {
-        if (conn.isTCP()) {
+        if (conn.isTCP() && false) {  //暂时每次都关闭
             if (conn.isOpen()) {
                 BlockingQueue<AsyncConnection> queue = connPool.get(conn.getRemoteAddress());
                 if (queue == null) {
