@@ -152,6 +152,7 @@ public final class Transport {
                 if (channel == null) return null;
                 return AsyncConnection.create(channel, addr, 0, 0);
             } else {
+                if (rand) addr = remoteAddres[0];
                 AsyncDatagramChannel channel = AsyncDatagramChannel.open(group);
                 channel.connect(addr);
                 return AsyncConnection.create(channel, addr, true, 0, 0);
