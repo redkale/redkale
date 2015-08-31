@@ -70,7 +70,7 @@ public final class Utility {
     public static void println(ByteBuffer buffer) {
         if (buffer == null || !buffer.hasRemaining()) return;
         byte[] bytes = new byte[buffer.remaining()];
-        buffer.put(bytes);
+        buffer.get(bytes);
         buffer.flip();
         println(bytes);
     }
