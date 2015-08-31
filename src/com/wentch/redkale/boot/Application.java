@@ -8,7 +8,6 @@ package com.wentch.redkale.boot;
 import com.wentch.redkale.convert.bson.*;
 import com.wentch.redkale.convert.json.*;
 import com.wentch.redkale.net.*;
-import com.wentch.redkale.net.http.*;
 import com.wentch.redkale.net.sncp.*;
 import com.wentch.redkale.service.*;
 import com.wentch.redkale.source.*;
@@ -65,10 +64,6 @@ public final class Application {
     //当前Service所属的组  类型: Set<String>、String[]
     public static final String RESNAME_SNCP_GROUPS = Sncp.RESNAME_SNCP_GROUPS; // SNCP_GROUPS
 
-    protected final ResourceFactory factory = ResourceFactory.root();
-
-    protected final WatchFactory watch = WatchFactory.root();
-
     protected final Map<InetSocketAddress, String> globalNodes = new HashMap<>();
 
     private final Map<String, Set<InetSocketAddress>> globalGroups = new HashMap<>();
@@ -81,7 +76,13 @@ public final class Application {
 
     protected final List<NodeServer> servers = new CopyOnWriteArrayList<>();
 
-    //--------------------------------------------------------------------------------------------
+    protected CountDownLatch servicecdl;  //会出现两次赋值
+
+    //--------------------------------------------------------------------------------------------    
+    private final ResourceFactory factory = ResourceFactory.root();
+
+    private final WatchFactory watch = WatchFactory.root();
+
     private File home;
 
     private final Logger logger;
@@ -176,8 +177,20 @@ public final class Application {
         this.serversLatch = new CountDownLatch(config.getAnyValues("server").length + 1);
     }
 
+    public ResourceFactory getResourceFactory() {
+        return factory;
+    }
+
+    public WatchFactory getWatchFactory() {
+        return watch;
+    }
+
     public File getHome() {
         return home;
+    }
+
+    public long getStartTime() {
+        return startTime;
     }
 
     private void initLogging() {
@@ -376,7 +389,7 @@ public final class Application {
 
     @SuppressWarnings("unchecked")
     private void runServers(CountDownLatch timecd, final List<AnyValue> serconfs) throws Exception {
-        CountDownLatch servicecdl = new CountDownLatch(serconfs.size());
+        this.servicecdl = new CountDownLatch(serconfs.size());
         CountDownLatch sercdl = new CountDownLatch(serconfs.size());
         for (final AnyValue serconf : serconfs) {
             Thread thread = new Thread() {
@@ -391,18 +404,12 @@ public final class Application {
                     try {
                         //Thread ctd = Thread.currentThread();
                         //ctd.setContextClassLoader(new URLClassLoader(new URL[0], ctd.getContextClassLoader()));
-                        String protocol = serconf.getValue("protocol", "");
-                        String subprotocol = Sncp.DEFAULT_PROTOCOL;
-                        int pos = protocol.indexOf('.');
-                        if (pos > 0) {
-                            subprotocol = protocol.substring(pos + 1);
-                            protocol = protocol.substring(0, pos);
-                        }
+                        final String protocol = serconf.getValue("protocol", "").replaceFirst("\\..+", "");
                         NodeServer server = null;
                         if ("SNCP".equalsIgnoreCase(protocol)) {
-                            server = new NodeSncpServer(Application.this, servicecdl, new SncpServer(startTime, subprotocol, watch));
+                            server = new NodeSncpServer(Application.this, serconf);
                         } else if ("HTTP".equalsIgnoreCase(protocol)) {
-                            server = new NodeHttpServer(Application.this, servicecdl, new HttpServer(startTime, watch));
+                            server = new NodeHttpServer(Application.this, serconf);
                         }
                         if (server == null) {
                             logger.log(Level.SEVERE, "Not found Server Class for protocol({0})", serconf.getValue("protocol"));
@@ -434,7 +441,8 @@ public final class Application {
                 : Sncp.createLocalService("", serviceClass, null, new LinkedHashSet<>(), null, null);
         application.init();
         application.factory.register(service);
-        final NodeServer server = new NodeHttpServer(application, new CountDownLatch(1), null);
+        application.servicecdl = new CountDownLatch(1);
+        final NodeServer server = new NodeHttpServer(application, null);
         server.init(application.config);
         server.factory.inject(service);
         return service;
@@ -444,7 +452,6 @@ public final class Application {
         final String home = new File(System.getProperty(RESNAME_APP_HOME, "")).getCanonicalPath();
         System.setProperty(RESNAME_APP_HOME, home);
         File appfile = new File(home, "conf/application.xml");
-        //System.setProperty(DataConnection.PERSIST_FILEPATH, appfile.getCanonicalPath());
         return new Application(load(new FileInputStream(appfile)));
     }
 

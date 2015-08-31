@@ -10,6 +10,7 @@ import com.wentch.redkale.net.http.HttpServer;
 import com.wentch.redkale.net.http.HttpServlet;
 import com.wentch.redkale.util.AnyValue;
 import com.wentch.redkale.boot.ClassFilter.FilterEntry;
+import com.wentch.redkale.net.*;
 import com.wentch.redkale.net.http.*;
 import com.wentch.redkale.net.sncp.*;
 import com.wentch.redkale.service.*;
@@ -17,7 +18,6 @@ import com.wentch.redkale.util.*;
 import java.lang.reflect.*;
 import java.net.InetSocketAddress;
 import java.util.*;
-import java.util.concurrent.CountDownLatch;
 import java.util.logging.*;
 import javax.annotation.*;
 
@@ -28,35 +28,40 @@ import javax.annotation.*;
  */
 public final class NodeHttpServer extends NodeServer {
 
-    private final HttpServer server;
+    private final HttpServer httpServer;
 
-    public NodeHttpServer(Application application, CountDownLatch servicecdl, HttpServer server) {
-        super(application, application.factory.createChild(), servicecdl, server);
-        this.server = server;
+    public NodeHttpServer(Application application, AnyValue serconf) {
+        super(application, application.getResourceFactory().createChild(), createServer(application, serconf));
+        this.httpServer = (HttpServer) server;
+    }
+
+    private static Server createServer(Application application, AnyValue serconf) {
+        return new HttpServer(application.getStartTime(), application.getWatchFactory());
     }
 
     @Override
     public InetSocketAddress getSocketAddress() {
-        return server == null ? null : server.getSocketAddress();
+        return httpServer == null ? null : httpServer.getSocketAddress();
     }
 
     @Override
-    public void prepare() throws Exception {
-        ClassFilter<HttpServlet> httpFilter = createClassFilter(null, WebServlet.class, HttpServlet.class, null, "servlets", "servlet");
-        ClassFilter<Service> serviceFilter = createServiceClassFilter();
-        long s = System.currentTimeMillis();
-        ClassFilter.Loader.load(application.getHome(), serviceFilter, httpFilter);
-        long e = System.currentTimeMillis() - s;
-        logger.info(this.getClass().getSimpleName() + " load filter class in " + e + " ms");
-        loadService(serviceFilter); //必须在servlet之前
+    protected ClassFilter<Servlet> createServletClassFilter() {
+        return createClassFilter(null, WebServlet.class, HttpServlet.class, null, "servlets", "servlet");
+    }
+
+    @Override
+    protected void loadServlet(ClassFilter<? extends Servlet> servletFilter) throws Exception {
+        if (httpServer != null) loadHttpServlet(this.nodeConf.getAnyValue("servlets"), servletFilter);
+    }
+
+    @Override
+    protected void loadService(ClassFilter serviceFilter) throws Exception {
+        super.loadService(serviceFilter);
         initWebSocketService();
-        if (server != null) loadHttpServlet(this.nodeConf.getAnyValue("servlets"), httpFilter);
     }
 
     private void initWebSocketService() {
-        final boolean fine = logger.isLoggable(Level.FINE);
-
-        final ResourceFactory regFactory = application.factory;
+        final ResourceFactory regFactory = application.getResourceFactory();
         factory.add(WebSocketNode.class, (ResourceFactory rf, final Object src, Field field) -> {
             try {
                 Resource rs = field.getAnnotation(Resource.class);
@@ -91,12 +96,12 @@ public final class NodeHttpServer extends NodeServer {
         });
     }
 
-    protected void loadHttpServlet(final AnyValue conf, final ClassFilter<HttpServlet> filter) throws Exception {
+    protected void loadHttpServlet(final AnyValue conf, final ClassFilter<? extends Servlet> filter) throws Exception {
         final StringBuilder sb = logger.isLoggable(Level.FINE) ? new StringBuilder() : null;
         final String prefix = conf == null ? "" : conf.getValue("prefix", "");
         final String threadName = "[" + Thread.currentThread().getName() + "] ";
-        for (FilterEntry<HttpServlet> en : filter.getFilterEntrys()) {
-            Class<HttpServlet> clazz = en.getType();
+        for (FilterEntry<? extends Servlet> en : filter.getFilterEntrys()) {
+            Class<HttpServlet> clazz = (Class<HttpServlet>) en.getType();
             if (Modifier.isAbstract(clazz.getModifiers())) continue;
             WebServlet ws = clazz.getAnnotation(WebServlet.class);
             if (ws == null || ws.value().length == 0) continue;
@@ -108,7 +113,7 @@ public final class NodeHttpServer extends NodeServer {
                     mappings[i] = prefix + mappings[i];
                 }
             }
-            this.server.addHttpServlet(servlet, en.getProperty(), mappings);
+            this.httpServer.addHttpServlet(servlet, en.getProperty(), mappings);
             if (sb != null) sb.append(threadName).append(" Loaded ").append(clazz.getName()).append(" --> ").append(Arrays.toString(mappings)).append(LINE_SEPARATOR);
         }
         if (sb != null && sb.length() > 0) logger.log(Level.FINE, sb.toString());

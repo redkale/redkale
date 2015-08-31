@@ -23,7 +23,6 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
 import java.net.*;
 import java.util.*;
-import java.util.concurrent.*;
 import java.util.function.Consumer;
 import java.util.logging.*;
 import javax.annotation.*;
@@ -44,9 +43,7 @@ public abstract class NodeServer {
 
     protected final ResourceFactory factory;
 
-    private final CountDownLatch servicecdl;
-
-    private final Server server;
+    protected final Server server;
 
     private String sncpGroup = null;  //当前Server的SNCP协议的组
 
@@ -68,16 +65,13 @@ public abstract class NodeServer {
 
     protected final Set<ServiceWrapper> remoteServiceWrappers = new LinkedHashSet<>();
 
-    public NodeServer(Application application, ResourceFactory factory, CountDownLatch servicecdl, Server server) {
+    public NodeServer(Application application, ResourceFactory factory, Server server) {
         this.application = application;
         this.factory = factory;
-        this.servicecdl = servicecdl;
         this.server = server;
         this.logger = Logger.getLogger(this.getClass().getSimpleName());
         this.fine = logger.isLoggable(Level.FINE);
     }
-
-    protected abstract void prepare() throws Exception;
 
     public void init(AnyValue config) throws Exception {
         this.nodeConf = config == null ? AnyValue.create() : config;
@@ -103,12 +97,26 @@ public abstract class NodeServer {
             if (server != null) server.init(config);
         }
         initResource();
-        prepare();
+        //prepare();
+        ClassFilter<Servlet> servletFilter = createServletClassFilter();
+        ClassFilter<Service> serviceFilter = createServiceClassFilter();
+        long s = System.currentTimeMillis();
+        if (servletFilter == null) {
+            ClassFilter.Loader.load(application.getHome(), serviceFilter);
+        } else {
+            ClassFilter.Loader.load(application.getHome(), serviceFilter, servletFilter);
+        }
+        long e = System.currentTimeMillis() - s;
+        logger.info(this.getClass().getSimpleName() + " load filter class in " + e + " ms");
+        loadService(serviceFilter); //必须在servlet之前
+        loadServlet(servletFilter);
     }
+
+    protected abstract void loadServlet(ClassFilter<? extends Servlet> servletFilter) throws Exception;
 
     private void initResource() {
         //---------------------------------------------------------------------------------------------
-        final ResourceFactory regFactory = application.factory;
+        final ResourceFactory regFactory = application.getResourceFactory();
         factory.add(DataSource.class, (ResourceFactory rf, final Object src, Field field) -> {
             try {
                 Resource rs = field.getAnnotation(Resource.class);
@@ -183,7 +191,7 @@ public abstract class NodeServer {
         if (serviceFilter == null) return;
         final String threadName = "[" + Thread.currentThread().getName() + "] ";
         final Set<FilterEntry<Service>> entrys = serviceFilter.getFilterEntrys();
-        ResourceFactory regFactory = isSNCP() ? application.factory : factory;
+        ResourceFactory regFactory = isSNCP() ? application.getResourceFactory() : factory;
         for (FilterEntry<Service> entry : entrys) { //service实现类
             final Class<? extends Service> type = entry.getType();
             if (type.isInterface()) continue;
@@ -254,8 +262,8 @@ public abstract class NodeServer {
                 throw new RuntimeException(ServiceWrapper.class.getSimpleName() + "(class:" + type.getName() + ", name:" + entry.getName() + ", group:" + groups + ") is repeat.");
             }
         }
-        servicecdl.countDown();
-        servicecdl.await();
+        application.servicecdl.countDown();
+        application.servicecdl.await();
 
         final StringBuilder sb = logger.isLoggable(Level.INFO) ? new StringBuilder() : null;
         //---------------- inject ----------------
@@ -295,13 +303,15 @@ public abstract class NodeServer {
                     }
                 }
                 if (transport == null) {
-                    transport = new Transport(group + "_" + application.transports.size(), protocol, application.watch, 32, addrs);
+                    transport = new Transport(group + "_" + application.transports.size(), protocol, application.getWatchFactory(), 32, addrs);
                     application.transports.add(transport);
                 }
             }
         }
         return transport;
     }
+
+    protected abstract ClassFilter<Servlet> createServletClassFilter();
 
     protected ClassFilter<Service> createServiceClassFilter() {
         return createClassFilter(this.sncpGroup, null, Service.class, Annotation.class, "services", "service");

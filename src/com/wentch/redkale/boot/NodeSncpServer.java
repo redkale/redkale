@@ -5,10 +5,10 @@
  */
 package com.wentch.redkale.boot;
 
+import com.wentch.redkale.net.*;
 import com.wentch.redkale.net.sncp.*;
-import com.wentch.redkale.service.Service;
+import com.wentch.redkale.util.*;
 import java.net.*;
-import java.util.concurrent.CountDownLatch;
 import java.util.logging.*;
 
 /**
@@ -17,32 +17,37 @@ import java.util.logging.*;
  */
 public final class NodeSncpServer extends NodeServer {
 
-    private final SncpServer server;
+    private final SncpServer sncpServer;
 
-    public NodeSncpServer(Application application, CountDownLatch regcdl, SncpServer server) {
-        super(application, application.factory.createChild(), regcdl, server);
-        this.server = server;
-        this.consumer = server == null ? null : x -> server.addService(x);
+    public NodeSncpServer(Application application, AnyValue serconf) {
+        super(application, application.getResourceFactory().createChild(), createServer(application, serconf));
+        this.sncpServer = (SncpServer) this.server;
+        this.consumer = sncpServer == null ? null : x -> sncpServer.addService(x);
+    }
+
+    private static Server createServer(Application application, AnyValue serconf) {
+        String proto = serconf.getValue("protocol", "");
+        String subprotocol = Sncp.DEFAULT_PROTOCOL;
+        int pos = proto.indexOf('.');
+        if (pos > 0) {
+            subprotocol = proto.substring(pos + 1);
+        }
+        return new SncpServer(application.getStartTime(), subprotocol, application.getWatchFactory());
     }
 
     @Override
     public InetSocketAddress getSocketAddress() {
-        return server == null ? null : server.getSocketAddress();
+        return sncpServer == null ? null : sncpServer.getSocketAddress();
     }
 
     @Override
-    public void prepare() throws Exception {
-        ClassFilter<Service> serviceFilter = createServiceClassFilter();
-        long s = System.currentTimeMillis();
-        ClassFilter.Loader.load(application.getHome(), serviceFilter);
-        long e = System.currentTimeMillis() - s;
-        logger.info(this.getClass().getSimpleName() + " load filter class in " + e + " ms");
-        loadService(serviceFilter); //必须在servlet之前
+    public void init(AnyValue config) throws Exception {
+        super.init(config);
         //-------------------------------------------------------------------
-        if (server == null) return; //调试时server才可能为null
+        if (sncpServer == null) return; //调试时server才可能为null
         final StringBuilder sb = logger.isLoggable(Level.FINE) ? new StringBuilder() : null;
         final String threadName = "[" + Thread.currentThread().getName() + "] ";
-        for (SncpServlet en : server.getSncpServlets()) {
+        for (SncpServlet en : sncpServer.getSncpServlets()) {
             if (sb != null) sb.append(threadName).append(" Loaded ").append(en).append(LINE_SEPARATOR);
         }
         if (sb != null && sb.length() > 0) logger.log(Level.FINE, sb.toString());
@@ -54,6 +59,15 @@ public final class NodeSncpServer extends NodeServer {
     }
 
     public SncpServer getSncpServer() {
-        return server;
+        return sncpServer;
+    }
+
+    @Override
+    protected void loadServlet(ClassFilter<? extends Servlet> servletFilter) throws Exception {
+    }
+
+    @Override
+    protected ClassFilter<Servlet> createServletClassFilter() {
+        return null;
     }
 }
