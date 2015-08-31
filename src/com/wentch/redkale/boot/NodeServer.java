@@ -356,7 +356,9 @@ public abstract class NodeServer {
 
     public abstract InetSocketAddress getSocketAddress();
 
-    public abstract boolean isSNCP();
+    public boolean isSNCP() {
+        return false;
+    }
 
     public InetSocketAddress getSncpAddress() {
         return sncpAddress;

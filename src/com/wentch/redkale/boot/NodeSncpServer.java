@@ -70,4 +70,5 @@ public final class NodeSncpServer extends NodeServer {
     protected ClassFilter<Servlet> createServletClassFilter() {
         return null;
     }
+
 }
