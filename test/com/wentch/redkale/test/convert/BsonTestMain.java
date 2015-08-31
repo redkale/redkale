@@ -30,7 +30,7 @@ public class BsonTestMain {
         final BsonConvert convert = BsonFactory.root().getConvert();
         TestEntry2 entry = TestEntry2.create();
         byte[] bytes = convert.convertTo(TestEntry.class, entry);
-        Utility.println(bytes); 
+        Utility.println(null,bytes); 
         System.out.println(JsonFactory.root().getConvert().convertTo(entry)); 
         TestEntry rs  = convert.convertFrom(TestEntry.class, bytes);
         System.out.println(rs.toString());
