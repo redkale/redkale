@@ -78,7 +78,7 @@ public final class Utility {
     public static void println(byte... bytes) {
         if (bytes == null) return;
         StringBuilder sb = new StringBuilder();
-        sb.append('[');
+        sb.append(bytes.length).append(".[");
         for (byte b : bytes) {
             if (sb.length() > 1) sb.append(',');
             int v = b & 0xff;
