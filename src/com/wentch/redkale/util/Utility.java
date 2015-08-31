@@ -79,11 +79,13 @@ public final class Utility {
         if (bytes == null) return;
         StringBuilder sb = new StringBuilder();
         sb.append(bytes.length).append(".[");
+        boolean last = false;
         for (byte b : bytes) {
-            if (sb.length() > 1) sb.append(',');
+            if (last) sb.append(',');
             int v = b & 0xff;
             if (v < 16) sb.append('0');
             sb.append(Integer.toHexString(v));
+            last = true;
         }
         sb.append(']');
         (System.out).println(sb);
