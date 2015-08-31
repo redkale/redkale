@@ -19,6 +19,8 @@ import javax.net.ssl.*;
  */
 public final class Utility {
 
+    private static final String format = "%1$tY-%1$tm-%1$td %1$tH:%1$tM:%1$tS.%tL";
+
     private static final Charset UTF_8 = Charset.forName("UTF-8");
 
     private static final char hex[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
@@ -67,17 +69,22 @@ public final class Utility {
     private Utility() {
     }
 
-    public static void println(ByteBuffer buffer) {
+    public static String now() {
+        return String.format(format, System.currentTimeMillis());
+    }
+
+    public static void println(String string, ByteBuffer buffer) {
         if (buffer == null || !buffer.hasRemaining()) return;
         byte[] bytes = new byte[buffer.remaining()];
         buffer.get(bytes);
         buffer.flip();
-        println(bytes);
+        println(string, bytes);
     }
 
-    public static void println(byte... bytes) {
+    public static void println(String string, byte... bytes) {
         if (bytes == null) return;
         StringBuilder sb = new StringBuilder();
+        if (string != null) sb.append(string);
         sb.append(bytes.length).append(".[");
         boolean last = false;
         for (byte b : bytes) {
