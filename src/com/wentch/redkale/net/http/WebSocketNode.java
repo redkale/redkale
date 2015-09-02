@@ -114,7 +114,7 @@ public abstract class WebSocketNode {
                 if (engine != null) { //在本地
                     final WebSocketGroup group = engine.getWebSocketGroup(groupid);
                     if (group == null || group.isEmpty()) {
-                        if (finest) logger.finest("receive websocket message {engineid:'" + engineid + "', groupid:" + groupid + ", content:'" + message + "'} but result is " + RETCODE_GROUP_EMPTY);
+                        if (finest) logger.finest("receive websocket but result is " + RETCODE_GROUP_EMPTY + " in message {engineid:'" + engineid + "', groupid:" + groupid + ", content:'" + message + "'}");
                         rscode = RETCODE_GROUP_EMPTY;
                         break;
                     }
