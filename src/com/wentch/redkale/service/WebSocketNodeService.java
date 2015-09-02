@@ -43,9 +43,9 @@ public class WebSocketNodeService extends WebSocketNode implements Service {
                     if (finest) logger.finest("receive websocket message {engineid:'" + engineid + "', groupid:" + groupid + ", content:'" + message + "'} but result is " + RETCODE_GROUP_EMPTY);
                     return RETCODE_GROUP_EMPTY;
                 }
-                group.send(recent, message, last);
+                code = group.send(recent, message, last);
+                if (finest) logger.finest("websocket node send message (" + message + ") result is " + code);
             }
-            code = 0;
         }
         return code;
     }
