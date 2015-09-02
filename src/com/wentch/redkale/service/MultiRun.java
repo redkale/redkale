@@ -19,9 +19,11 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface MultiRun {
 
-    boolean samerun() default true;  //是否同组节点也运营指定操作
+    boolean selfrun() default true; //当前本地实例是否运行指定操作；只有当指定操作的方法的返回值为void时，该值才有效。
 
-    boolean diffrun() default true; //是否不同组节点也运营指定操作
+    boolean samerun() default true;  //是否同组节点也运行指定操作
+
+    boolean diffrun() default true; //是否不同组节点也运行指定操作
 
     boolean async() default true; //分布式运行是否采用异步模式
 }

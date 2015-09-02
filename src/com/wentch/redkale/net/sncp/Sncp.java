@@ -146,7 +146,7 @@ public abstract class Sncp {
      *          return "hello" + id;
      *      }
      *
-     *      @MultiRun
+     *      @MultiRun(selfrun = false)
      *      public void createSomeThing(TestBean bean){
      *          "xxxxx" + bean;
      *      }
@@ -177,25 +177,27 @@ public abstract class Sncp {
      *
      *      @Override
      *      public String updateSomeThing(String id){
-     *          return _updateSomeThing(true, true, id);
+     *          return _updateSomeThing(true, true, true, id);
      *      }
      *
-     *      public String _updateSomeThing(boolean cansamerun, boolean candiffrun, String id){
+     *      public String _updateSomeThing(boolean canselfrun, boolean cansamerun, boolean candiffrun, String id){
      *          String rs = super.updateSomeThing(id);
-     *          _client.remote(_convert, _sameGroupTransports, cansamerun, 0, false, false, id); 
-     *          _client.remote(_convert, _diffGroupTransports, candiffrun, 0, true, false, id); 
+     *          if (_client== null) return;
+     *          _client.remote(_convert, _sameGroupTransports, cansamerun, 0, true, false, false, id); 
+     *          _client.remote(_convert, _diffGroupTransports, candiffrun, 0, true, true, false, id); 
      *          return rs;
      *      }
      *
      *      @Override
      *      public void createSomeThing(TestBean bean){
-     *          _createSomeThing(true, true, bean);
+     *          _createSomeThing(false, true, true, bean);
      *      }
      *
-     *      public void _createSomeThing(boolean cansamerun, boolean candiffrun, TestBean bean){
-     *          super.createSomeThing(bean);
-     *          _client.remote(_convert, _sameGroupTransports, cansamerun, 1, false, false, bean); 
-     *          _client.remote(_convert, _diffGroupTransports, candiffrun, 1, true, false, bean); 
+     *      public void _createSomeThing(boolean canselfrun, boolean cansamerun, boolean candiffrun, TestBean bean){
+     *          if(canselfrun) super.createSomeThing(bean);
+     *          if (_client== null) return;
+     *          _client.remote(_convert, _sameGroupTransports, cansamerun, 1, true, false, false, bean); 
+     *          _client.remote(_convert, _diffGroupTransports, candiffrun, 1, true, true, false, bean); 
      *      }
      * }
      *
@@ -225,7 +227,6 @@ public abstract class Sncp {
         final String clientName = SncpClient.class.getName().replace('.', '/');
         final String clientDesc = Type.getDescriptor(SncpClient.class);
         final String convertDesc = Type.getDescriptor(BsonConvert.class);
-        final String transportDesc = Type.getDescriptor(Transport.class);
         final String sncpDynDesc = Type.getDescriptor(SncpDyn.class);
         final String transportsDesc = Type.getDescriptor(Transport[].class);
         ClassLoader loader = Sncp.class.getClassLoader();
@@ -313,8 +314,9 @@ public abstract class Sncp {
             final int index = ++i;
             {   //原始方法
                 mv = new DebugMethodVisitor(cw.visitMethod(ACC_PUBLIC + (method.isVarArgs() ? ACC_VARARGS : 0), method.getName(), methodDesc, null, null));
-                //mv.setDebug(true);
+                mv.setDebug(true);
                 mv.visitVarInsn(ALOAD, 0);
+                mv.visitInsn(mrun.selfrun() ? ICONST_1 : ICONST_0);
                 mv.visitInsn(mrun.samerun() ? ICONST_1 : ICONST_0);
                 mv.visitInsn(mrun.diffrun() ? ICONST_1 : ICONST_0);
                 int varindex = 0;
@@ -335,7 +337,7 @@ public abstract class Sncp {
                         mv.visitVarInsn(ALOAD, ++varindex);
                     }
                 }
-                mv.visitMethodInsn(INVOKEVIRTUAL, newDynName, "_" + method.getName(), "(ZZ" + methodDesc.substring(1), false);
+                mv.visitMethodInsn(INVOKEVIRTUAL, newDynName, "_" + method.getName(), "(ZZZ" + methodDesc.substring(1), false);
                 if (returnType == void.class) {
                     mv.visitInsn(RETURN);
                 } else if (returnType.isPrimitive()) {
@@ -355,14 +357,18 @@ public abstract class Sncp {
                 mv.visitEnd();
             }
             {  // _方法
-                mv = new DebugMethodVisitor(cw.visitMethod(ACC_PUBLIC + (method.isVarArgs() ? ACC_VARARGS : 0), "_" + method.getName(), "(ZZ" + methodDesc.substring(1), null, null));
-                //mv.setDebug(true);
+                mv = new DebugMethodVisitor(cw.visitMethod(ACC_PUBLIC + (method.isVarArgs() ? ACC_VARARGS : 0), "_" + method.getName(), "(ZZZ" + methodDesc.substring(1), null, null));
+                mv.setDebug(true);
                 av0 = mv.visitAnnotation(sncpDynDesc, true);
                 av0.visit("index", index);
                 av0.visitEnd();
-
+                Label l1 = new Label();
+                if (returnType == void.class) {  // if
+                    mv.visitVarInsn(ILOAD, 1);
+                    mv.visitJumpInsn(IFEQ, l1);
+                }
                 mv.visitVarInsn(ALOAD, 0);
-                int varindex = 2;
+                int varindex = 3;
                 for (Class pt : paramtypes) {
                     if (pt.isPrimitive()) {
                         if (pt == long.class) {
@@ -381,6 +387,9 @@ public abstract class Sncp {
                     }
                 }
                 mv.visitMethodInsn(INVOKESPECIAL, supDynName, method.getName(), methodDesc, false);
+                if (returnType == void.class) {  // end if
+                    mv.visitLabel(l1);
+                }
                 if (returnType == void.class) {
                 } else if (returnType.isPrimitive()) {
                     if (returnType == long.class) {
@@ -433,42 +442,48 @@ public abstract class Sncp {
                 mv.visitVarInsn(ALOAD, 0);  //传递 _sameGroupTransports
                 mv.visitFieldInsn(GETFIELD, newDynName, "_sameGroupTransports", transportsDesc);
 
-                mv.visitVarInsn(ILOAD, 1);   //传递 cansamerun
+                mv.visitVarInsn(ILOAD, 2);   //传递 cansamerun
 
                 if (index <= 5) {  //第几个 SncpAction 
                     mv.visitInsn(ICONST_0 + index);
                 } else {
                     mv.visitIntInsn(BIPUSH, index);
                 }
-                if (paramtypes.length + 2 <= 5) {  //参数总数量
-                    mv.visitInsn(ICONST_0 + paramtypes.length + 2);
+                if (paramtypes.length + 3 <= 5) {  //参数总数量
+                    mv.visitInsn(ICONST_0 + paramtypes.length + 3);
                 } else {
-                    mv.visitIntInsn(BIPUSH, paramtypes.length + 2);
+                    mv.visitIntInsn(BIPUSH, paramtypes.length + 3);
                 }
 
                 mv.visitTypeInsn(ANEWARRAY, "java/lang/Object");
 
                 mv.visitInsn(DUP);
                 mv.visitInsn(ICONST_0);
-                mv.visitInsn(ICONST_0);   //第一个参数  cansamerun
+                mv.visitInsn(ICONST_1);   //第一个参数  canselfrun
                 mv.visitMethodInsn(INVOKESTATIC, "java/lang/Boolean", "valueOf", "(Z)Ljava/lang/Boolean;", false);
                 mv.visitInsn(AASTORE);
 
                 mv.visitInsn(DUP);
                 mv.visitInsn(ICONST_1);
+                mv.visitInsn(ICONST_0);   //第一个参数  cansamerun
+                mv.visitMethodInsn(INVOKESTATIC, "java/lang/Boolean", "valueOf", "(Z)Ljava/lang/Boolean;", false);
+                mv.visitInsn(AASTORE);
+
+                mv.visitInsn(DUP);
+                mv.visitInsn(ICONST_2);
                 mv.visitInsn(ICONST_0);   //第二个参数  candiffrun
                 mv.visitMethodInsn(INVOKESTATIC, "java/lang/Boolean", "valueOf", "(Z)Ljava/lang/Boolean;", false);
                 mv.visitInsn(AASTORE);
 
-                int insn = 2;
+                int insn = 3;
                 for (int j = 0; j < paramtypes.length; j++) {
                     final Class pt = paramtypes[j];
                     mv.visitInsn(DUP);
                     insn++;
-                    if (j <= 3) {
-                        mv.visitInsn(ICONST_0 + j + 2);
+                    if (j <= 2) {
+                        mv.visitInsn(ICONST_0 + j + 3);
                     } else {
-                        mv.visitIntInsn(BIPUSH, j + 2);
+                        mv.visitIntInsn(BIPUSH, j + 3);
                     }
                     if (pt.isPrimitive()) {
                         if (pt == long.class) {
@@ -496,16 +511,16 @@ public abstract class Sncp {
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitFieldInsn(GETFIELD, newDynName, "_diffGroupTransports", transportsDesc);
 
-                mv.visitVarInsn(ILOAD, 2);   //传递 candiffrun
+                mv.visitVarInsn(ILOAD, 3);   //传递 candiffrun
                 if (index <= 5) {  //第几个 SncpAction 
                     mv.visitInsn(ICONST_0 + index);
                 } else {
                     mv.visitIntInsn(BIPUSH, index);
                 }
-                if (paramtypes.length + 2 <= 5) {  //参数总数量
-                    mv.visitInsn(ICONST_0 + paramtypes.length + 2);
+                if (paramtypes.length + 3 <= 5) {  //参数总数量
+                    mv.visitInsn(ICONST_0 + paramtypes.length + 3);
                 } else {
-                    mv.visitIntInsn(BIPUSH, paramtypes.length + 2);
+                    mv.visitIntInsn(BIPUSH, paramtypes.length + 3);
                 }
 
                 mv.visitTypeInsn(ANEWARRAY, "java/lang/Object");
@@ -518,19 +533,25 @@ public abstract class Sncp {
 
                 mv.visitInsn(DUP);
                 mv.visitInsn(ICONST_1);
+                mv.visitInsn(ICONST_1);   //第二个参数  candiffrun
+                mv.visitMethodInsn(INVOKESTATIC, "java/lang/Boolean", "valueOf", "(Z)Ljava/lang/Boolean;", false);
+                mv.visitInsn(AASTORE);
+
+                mv.visitInsn(DUP);
+                mv.visitInsn(ICONST_2);
                 mv.visitInsn(ICONST_0);   //第二个参数  candiffrun
                 mv.visitMethodInsn(INVOKESTATIC, "java/lang/Boolean", "valueOf", "(Z)Ljava/lang/Boolean;", false);
                 mv.visitInsn(AASTORE);
 
-                insn = 2;
+                insn = 3;
                 for (int j = 0; j < paramtypes.length; j++) {
                     final Class pt = paramtypes[j];
                     mv.visitInsn(DUP);
                     insn++;
-                    if (j <= 3) {
-                        mv.visitInsn(ICONST_0 + j + 2);
+                    if (j <= 2) {
+                        mv.visitInsn(ICONST_0 + j + 3);
                     } else {
-                        mv.visitIntInsn(BIPUSH, j + 2);
+                        mv.visitIntInsn(BIPUSH, j + 3);
                     }
                     if (pt.isPrimitive()) {
                         if (pt == long.class) {
