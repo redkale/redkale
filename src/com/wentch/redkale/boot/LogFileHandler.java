@@ -113,15 +113,18 @@ public class LogFileHandler extends Handler {
                 while (true) {
                     try {
                         LogRecord record = records.take();
-                        if ((limit > 0 && limit <= length.get()) || tomorrow <= record.getMillis()) {
+                        final boolean bigger = (limit > 0 && limit <= length.get());
+                        if (bigger || tomorrow <= record.getMillis()) {
                             updateTomorrow();
                             if (stream != null) {
                                 stream.close();
-                                for (int i = Math.min(count - 2, index.get() - 1); i > 0; i--) {
-                                    File greater = new File(logfile.getPath() + "." + i);
-                                    if (greater.exists()) Files.move(greater.toPath(), new File(logfile.getPath() + "." + (i + 1)).toPath(), REPLACE_EXISTING, ATOMIC_MOVE);
+                                if (bigger) {
+                                    for (int i = Math.min(count - 2, index.get() - 1); i > 0; i--) {
+                                        File greater = new File(logfile.getPath() + "." + i);
+                                        if (greater.exists()) Files.move(greater.toPath(), new File(logfile.getPath() + "." + (i + 1)).toPath(), REPLACE_EXISTING, ATOMIC_MOVE);
+                                    }
+                                    Files.move(logfile.toPath(), new File(logfile.getPath() + ".1").toPath(), REPLACE_EXISTING, ATOMIC_MOVE);
                                 }
-                                Files.move(logfile.toPath(), new File(logfile.getPath() + ".1").toPath(), REPLACE_EXISTING, ATOMIC_MOVE);
                                 stream = null;
                             }
                         }
