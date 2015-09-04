@@ -96,7 +96,7 @@ public final class SncpClient {
     protected final BlockingQueue<Runnable> queue = new ArrayBlockingQueue(1024 * 64);
 
     public SncpClient(final String serviceName, final long serviceid0, boolean remote, final Class serviceClass,
-        boolean onlySncpDyn, final InetSocketAddress clientAddress, final HashSet<String> groups) {
+            boolean onlySncpDyn, final InetSocketAddress clientAddress, final HashSet<String> groups) {
         if (serviceName.length() > 10) throw new RuntimeException(serviceClass + " @Resource name(" + serviceName + ") too long , must less 11");
         this.remote = remote;
         this.serviceClass = serviceClass;
@@ -152,8 +152,8 @@ public final class SncpClient {
         String service = serviceClass.getName();
         if (remote) service = service.replace(Sncp.LOCALPREFIX, Sncp.REMOTEPREFIX);
         return this.getClass().getSimpleName() + "(service = " + service + ", serviceid = " + serviceid
-            + ", name = " + name + ", nameid = " + nameid + ", address = " + (address == null ? "" : (address.getHostString() + ":" + address.getPort()))
-            + ", groups = " + groups + ", actions.size = " + actions.length + ")";
+                + ", name = " + name + ", nameid = " + nameid + ", address = " + (address == null ? "" : (address.getHostString() + ":" + address.getPort()))
+                + ", groups = " + groups + ", actions.size = " + actions.length + ")";
     }
 
     public static List<Method> parseMethod(final Class serviceClass, boolean onlySncpDyn) {
@@ -326,8 +326,7 @@ public final class SncpClient {
                     if (rnameid != nameid) throw new RuntimeException("sncp send nameid = " + nameid + ", but receive next.nameid =" + rnameid);
                     ractionid1 = buffer.getLong();
                     ractionid2 = buffer.getLong();
-                    if (!actionid.compare(ractionid1, ractionid2))
-                        throw new RuntimeException("sncp send actionid = " + actionid + ", but receive next.actionid =(" + ractionid1 + "_" + ractionid2 + ")");
+                    if (!actionid.compare(ractionid1, ractionid2)) throw new RuntimeException("sncp send actionid = " + actionid + ", but receive next.actionid =(" + ractionid1 + "_" + ractionid2 + ")");
                     buffer.getInt();
                     buffer.getInt();
                     if (buffer.get() < 1) throw new RuntimeException("sncp send nameid = " + nameid + ", but next.frame.count != " + frameCount);
