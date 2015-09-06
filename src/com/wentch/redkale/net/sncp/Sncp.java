@@ -314,7 +314,7 @@ public abstract class Sncp {
             final int index = ++i;
             {   //原始方法
                 mv = new DebugMethodVisitor(cw.visitMethod(ACC_PUBLIC + (method.isVarArgs() ? ACC_VARARGS : 0), method.getName(), methodDesc, null, null));
-                mv.setDebug(true);
+                //mv.setDebug(true);
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitInsn(mrun.selfrun() ? ICONST_1 : ICONST_0);
                 mv.visitInsn(mrun.samerun() ? ICONST_1 : ICONST_0);
@@ -358,7 +358,7 @@ public abstract class Sncp {
             }
             {  // _方法
                 mv = new DebugMethodVisitor(cw.visitMethod(ACC_PUBLIC + (method.isVarArgs() ? ACC_VARARGS : 0), "_" + method.getName(), "(ZZZ" + methodDesc.substring(1), null, null));
-                mv.setDebug(true);
+                //mv.setDebug(true);
                 av0 = mv.visitAnnotation(sncpDynDesc, true);
                 av0.visit("index", index);
                 av0.visitEnd();
