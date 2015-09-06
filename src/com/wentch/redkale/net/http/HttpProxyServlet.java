@@ -8,6 +8,7 @@ package com.wentch.redkale.net.http;
 import com.wentch.redkale.net.*;
 import com.wentch.redkale.util.*;
 import java.io.*;
+import java.net.*;
 import java.nio.*;
 import java.nio.channels.*;
 
@@ -72,7 +73,9 @@ public final class HttpProxyServlet extends HttpServlet {
     }
 
     private void connect(HttpRequest request, HttpResponse response) throws IOException {
-        final AsyncConnection remote = AsyncConnection.create("TCP", HttpRequest.parseSocketAddress(request.getRequestURI()), 6, 6);
+        final InetSocketAddress remoteAddress = HttpRequest.parseSocketAddress(request.getRequestURI());
+        final AsyncConnection remote = remoteAddress.getPort() == 443
+                ? AsyncConnection.create(Utility.createDefaultSSLSocket(remoteAddress)) : AsyncConnection.create("TCP", remoteAddress, 6, 6);
         final ByteBuffer buffer0 = response.getContext().pollBuffer();
         buffer0.put("HTTP/1.1 200 Connection established\r\nConnection: close\r\n\r\n".getBytes());
         buffer0.flip();

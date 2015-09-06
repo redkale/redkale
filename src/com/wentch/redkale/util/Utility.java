@@ -376,6 +376,16 @@ public final class Utility {
     }
 
     //-----------------------------------------------------------------------------
+    public static Socket createDefaultSSLSocket(InetSocketAddress address) throws IOException {
+        return createDefaultSSLSocket(address.getAddress(), address.getPort());
+    }
+
+    public static Socket createDefaultSSLSocket(InetAddress host, int port) throws IOException {
+        Socket socket = DEFAULTSSL_CONTEXT.getSocketFactory().createSocket(host, port);
+
+        return socket;
+    }
+
     public static String postHttpContent(String url) throws IOException {
         return remoteHttpContent(null, "POST", url, null).toString("UTF-8");
     }
