@@ -83,7 +83,8 @@ public class StunHeader {
     }
 
     public ByteBuffer encode(final ByteBuffer buffer) {
-        buffer.putShort((short) (this.typeid << 8 | this.actionid)); //requestid
+        buffer.put((byte) this.typeid);
+        buffer.put((byte) this.actionid);
         buffer.putShort((short) 0); //bodysize
         buffer.put(transactionid);
         return buffer;
