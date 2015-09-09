@@ -88,6 +88,14 @@ public final class WebSocketGroup {
         }
     }
 
+    public final int sendEach(Serializable message) {
+        return sendEach(message, true);
+    }
+
+    public final int sendRecent(Serializable message) {
+        return sendRecent(message, true);
+    }
+
     public final int sendEach(Serializable message, boolean last) {
         int rs = 0;
         for (WebSocket s : list) {
