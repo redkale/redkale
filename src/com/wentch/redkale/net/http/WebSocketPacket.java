@@ -15,13 +15,13 @@ import java.util.*;
  */
 public final class WebSocketPacket {
 
-    public static enum PacketType {
+    public static enum FrameType {
 
         TEXT(0x01), BINARY(0x02), CLOSE(0x08), PING(0x09), PONG(0x0A);
 
         private final int value;
 
-        private PacketType(int v) {
+        private FrameType(int v) {
             this.value = v;
         }
 
@@ -29,7 +29,7 @@ public final class WebSocketPacket {
             return value;
         }
 
-        public static PacketType valueOf(int v) {
+        public static FrameType valueOf(int v) {
             switch (v) {
                 case 0x01: return TEXT;
                 case 0x02: return BINARY;
@@ -41,7 +41,7 @@ public final class WebSocketPacket {
         }
     }
 
-    protected PacketType type;
+    protected FrameType type;
 
     protected String payload;
 
@@ -59,36 +59,36 @@ public final class WebSocketPacket {
     public WebSocketPacket(Serializable message, boolean fin) {
         boolean bin = message != null && message.getClass() == byte[].class;
         if (bin) {
-            this.type = PacketType.BINARY;
+            this.type = FrameType.BINARY;
             this.bytes = (byte[]) message;
         } else {
-            this.type = PacketType.TEXT;
+            this.type = FrameType.TEXT;
             this.payload = String.valueOf(message);
         }
         this.last = fin;
     }
 
     public WebSocketPacket(String payload, boolean fin) {
-        this.type = PacketType.TEXT;
+        this.type = FrameType.TEXT;
         this.payload = payload;
         this.last = fin;
     }
 
     public WebSocketPacket(byte[] data) {
-        this(PacketType.BINARY, data, true);
+        this(FrameType.BINARY, data, true);
     }
 
     public WebSocketPacket(byte[] data, boolean fin) {
-        this(PacketType.BINARY, data, fin);
+        this(FrameType.BINARY, data, fin);
     }
 
-    public WebSocketPacket(PacketType type, byte[] data) {
+    public WebSocketPacket(FrameType type, byte[] data) {
         this(type, data, true);
     }
 
-    public WebSocketPacket(PacketType type, byte[] data, boolean fin) {
+    public WebSocketPacket(FrameType type, byte[] data, boolean fin) {
         this.type = type;
-        if (type == PacketType.TEXT) {
+        if (type == FrameType.TEXT) {
             this.payload = new String(Utility.decodeUTF8(data));
         } else {
             this.bytes = data;
@@ -97,7 +97,7 @@ public final class WebSocketPacket {
     }
 
     public byte[] getContent() {
-        if (this.type == PacketType.TEXT) return Utility.encodeUTF8(getPayload());
+        if (this.type == FrameType.TEXT) return Utility.encodeUTF8(getPayload());
         if (this.bytes == null) return new byte[0];
         return this.bytes;
     }

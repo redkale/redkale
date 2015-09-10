@@ -8,7 +8,7 @@ package com.wentch.redkale.net.http;
 import com.wentch.redkale.net.AsyncConnection;
 import com.wentch.redkale.net.Context;
 import static com.wentch.redkale.net.http.WebSocket.*;
-import com.wentch.redkale.net.http.WebSocketPacket.PacketType;
+import com.wentch.redkale.net.http.WebSocketPacket.FrameType;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.security.SecureRandom;
@@ -120,10 +120,14 @@ public class WebSocketRunner implements Runnable {
                             }
                             webSocket.group.setRecentWebSocket(webSocket);
                             try {
-                                if (packet.type == PacketType.TEXT) {
+                                if (packet.type == FrameType.TEXT) {
                                     webSocket.onMessage(packet.getPayload());
-                                } else if (packet.type == PacketType.BINARY) {
+                                } else if (packet.type == FrameType.BINARY) {
                                     webSocket.onMessage(packet.getBytes());
+                                } else if (packet.type == FrameType.PONG) {
+                                    webSocket.onPong(packet.getBytes());
+                                } else if (packet.type == FrameType.PING) {
+                                    webSocket.onPing(packet.getBytes());
                                 }
                             } catch (Exception e) {
                                 context.getLogger().log(Level.INFO, "WebSocket onMessage error (" + packet + ")", e);
@@ -414,8 +418,8 @@ public class WebSocketRunner implements Runnable {
             //0x0B-0F 为以后的控制帧保留
             final boolean control = (opcode & 0x08) == 0x08; //是否控制帧
             //final boolean continuation = opcode == 0;
-            PacketType type = PacketType.valueOf(opcode & 0xf);
-            if (type == PacketType.CLOSE) {
+            FrameType type = FrameType.valueOf(opcode & 0xf);
+            if (type == FrameType.CLOSE) {
                 if (debug) logger.log(Level.FINEST, " receive close command from websocket client");
                 return null;
             }

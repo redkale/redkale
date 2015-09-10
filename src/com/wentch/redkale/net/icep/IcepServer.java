@@ -22,7 +22,11 @@ public final class IcepServer extends Server {
     public IcepServer() {
         this(System.currentTimeMillis(), null);
     }
-    
+    /**
+   "content":"{\"cmd\":\"icecandidate\",\"candidate\":{\"candidate\":\"candidate:3791502225 1 tcp 1518214911 10.28.2.207 0 typ host tcptype active generation 0\",\"sdpMid\":\"video\",\"sdpMLineIndex\":1}}"
+    @param args
+    @throws Exception 
+    */
     public static void main(String[] args) throws Exception {
         DefaultAnyValue conf = new DefaultAnyValue();
         conf.addValue("host", "10.28.2.207");

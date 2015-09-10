@@ -5,6 +5,7 @@
  */
 package com.wentch.redkale.net.icep.stun;
 
+import com.wentch.redkale.net.icep.*;
 import com.wentch.redkale.util.*;
 import java.nio.*;
 import java.security.*;
@@ -13,7 +14,7 @@ import java.security.*;
  *
  * @author zhangjx
  */
-public class StunHeader {
+public class StunHeader implements IcepCoder<StunHeader>{
 
     public static final int MAGIC_COOKIE = 0x2112A442;
 

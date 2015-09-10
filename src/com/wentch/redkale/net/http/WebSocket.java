@@ -6,6 +6,7 @@
 package com.wentch.redkale.net.http;
 
 import com.wentch.redkale.net.*;
+import com.wentch.redkale.net.http.WebSocketPacket.FrameType;
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -119,6 +120,14 @@ public abstract class WebSocket {
      */
     public final int send(byte[] data) {
         return send(data, true);
+    }
+
+    public final int sendPing(byte[] data) {
+        return send(new WebSocketPacket(FrameType.PING, data));
+    }
+
+    public final int sendPong(byte[] data) {
+        return send(new WebSocketPacket(FrameType.PONG, data));
     }
 
     /**
@@ -350,6 +359,12 @@ public abstract class WebSocket {
     }
 
     public void onMessage(String text) {
+    }
+
+    public void onPing(byte[] bytes) {
+    }
+
+    public void onPong(byte[] bytes) {
     }
 
     public void onMessage(byte[] bytes) {
