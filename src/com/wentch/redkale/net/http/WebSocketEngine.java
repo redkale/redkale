@@ -49,7 +49,7 @@ public final class WebSocketEngine {
         scheduler.scheduleWithFixedDelay(() -> {
             getWebSocketGroups().stream().forEach(x -> x.getWebSockets().forEach(y -> y.send(DEFAULT_PING_PACKET)));
         }, delay, liveinterval, TimeUnit.SECONDS);
-        if (finest) logger.finest(this.getClass().getSimpleName() + " start keeplive(interval:" + liveinterval + "s) scheduler executor");
+        if (finest) logger.finest(this.getClass().getSimpleName() + "(" + engineid + ")" + " start keeplive(interval:" + liveinterval + "s) scheduler executor");
     }
 
     void add(WebSocket socket) {
