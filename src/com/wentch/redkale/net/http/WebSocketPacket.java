@@ -98,6 +98,7 @@ public final class WebSocketPacket {
 
     public byte[] getContent() {
         if (this.type == PacketType.TEXT) return Utility.encodeUTF8(getPayload());
+        if (this.bytes == null) return new byte[0];
         return this.bytes;
     }
 
