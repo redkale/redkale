@@ -14,15 +14,11 @@ import java.lang.annotation.*;
 @Target({ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-public @interface WebServlet {
+public @interface WebInitParam {
 
-    String name() default "";
+    String name();
 
-    boolean fillurl() default true;
+    String value();
 
-    String[] value() default {};
-
-    int moduleid() default 0;
-
-    WebInitParam[] initParams() default {};
+    String description() default "";
 }

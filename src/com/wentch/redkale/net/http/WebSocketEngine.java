@@ -5,9 +5,13 @@
  */
 package com.wentch.redkale.net.http;
 
+import static com.wentch.redkale.net.http.WebSocketPacket.DEFAULT_PING_PACKET;
+import static com.wentch.redkale.net.http.WebSocketServlet.DEFAILT_LIVEINTERVAL;
+import com.wentch.redkale.util.*;
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.logging.*;
 
 /**
  *
@@ -19,8 +23,33 @@ public final class WebSocketEngine {
 
     private final Map<Serializable, WebSocketGroup> containers = new ConcurrentHashMap<>();
 
-    protected WebSocketEngine(String engineid) {
+    private ScheduledThreadPoolExecutor scheduler;
+
+    protected final Logger logger;
+
+    protected final boolean finest;
+
+    protected WebSocketEngine(String engineid, Logger logger) {
         this.engineid = engineid;
+        this.logger = logger;
+        this.finest = logger.isLoggable(Level.FINEST);
+    }
+
+    void init(AnyValue conf) {
+        final int liveinterval = conf == null ? DEFAILT_LIVEINTERVAL : conf.getIntValue("liveinterval", DEFAILT_LIVEINTERVAL);
+        if (liveinterval == 0) return;
+        if (scheduler != null) return;
+        this.scheduler = new ScheduledThreadPoolExecutor(1, (Runnable r) -> {
+            final Thread t = new Thread(r, engineid + "-WebSocket-LiveInterval-Thread");
+            t.setDaemon(true);
+            return t;
+        });
+        long now = System.currentTimeMillis() / 1000;
+        long delay = liveinterval - now / liveinterval;
+        scheduler.scheduleWithFixedDelay(() -> {
+            getWebSocketGroups().stream().forEach(x -> x.getWebSockets().forEach(y -> y.send(DEFAULT_PING_PACKET)));
+        }, delay, liveinterval, TimeUnit.SECONDS);
+        if (finest) logger.finest(this.getClass().getSimpleName() + " start keeplive(interval:" + liveinterval + "s) scheduler executor");
     }
 
     void add(WebSocket socket) {
@@ -48,6 +77,7 @@ public final class WebSocketEngine {
     }
 
     void close() {
+        if (scheduler != null) scheduler.shutdownNow();
     }
 
     public String getEngineid() {

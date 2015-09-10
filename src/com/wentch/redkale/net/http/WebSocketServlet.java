@@ -35,6 +35,10 @@ import javax.annotation.*;
  */
 public abstract class WebSocketServlet extends HttpServlet implements Nameable {
 
+    public static final String WEBPARAM__LIVEINTERVAL = "liveinterval";
+
+    public static final int DEFAILT_LIVEINTERVAL = 60;
+
     protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
 
     private final MessageDigest digest = getMessageDigest();
@@ -58,9 +62,10 @@ public abstract class WebSocketServlet extends HttpServlet implements Nameable {
     @Override
     public void init(Context context, AnyValue conf) {
         InetSocketAddress addr = context.getServerAddress();
-        this.engine = new WebSocketEngine(addr.getHostString() + ":" + addr.getPort() + "-" + name());
+        this.engine = new WebSocketEngine(addr.getHostString() + ":" + addr.getPort() + "-" + name(), logger);
         this.node.putWebSocketEngine(engine);
         this.node.init(conf);
+        this.engine.init(conf);
     }
 
     @Override

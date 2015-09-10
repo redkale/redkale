@@ -15,6 +15,7 @@ import com.wentch.redkale.net.http.*;
 import com.wentch.redkale.net.sncp.*;
 import com.wentch.redkale.service.*;
 import com.wentch.redkale.util.*;
+import com.wentch.redkale.util.AnyValue.DefaultAnyValue;
 import java.lang.reflect.*;
 import java.net.InetSocketAddress;
 import java.util.*;
@@ -113,7 +114,15 @@ public final class NodeHttpServer extends NodeServer {
                     mappings[i] = prefix + mappings[i];
                 }
             }
-            this.httpServer.addHttpServlet(servlet, en.getProperty(), mappings);
+            DefaultAnyValue servletConf = (DefaultAnyValue) en.getProperty();
+            WebInitParam[] webparams = ws.initParams();
+            if (webparams.length > 0) {
+                if (servletConf == null) servletConf = new DefaultAnyValue();
+                for (WebInitParam webparam : webparams) {
+                    servletConf.addValue(webparam.name(), webparam.value());
+                }
+            }
+            this.httpServer.addHttpServlet(servlet, servletConf, mappings);
             if (sb != null) sb.append(threadName).append(" Loaded ").append(clazz.getName()).append(" --> ").append(Arrays.toString(mappings)).append(LINE_SEPARATOR);
         }
         if (sb != null && sb.length() > 0) logger.log(Level.FINE, sb.toString());

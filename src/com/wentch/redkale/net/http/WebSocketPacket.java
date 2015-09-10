@@ -15,6 +15,8 @@ import java.util.*;
  */
 public final class WebSocketPacket {
 
+    public static final WebSocketPacket DEFAULT_PING_PACKET  = new WebSocketPacket(FrameType.PING, new byte[0]);
+
     public static enum FrameType {
 
         TEXT(0x01), BINARY(0x02), CLOSE(0x08), PING(0x09), PONG(0x0A);
