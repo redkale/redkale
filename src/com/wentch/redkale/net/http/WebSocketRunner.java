@@ -119,14 +119,18 @@ public class WebSocketRunner implements Runnable {
                                 channel.read(readBuffer, null, this);
                             }
                             webSocket.group.setRecentWebSocket(webSocket);
-                            if (packet.type == PacketType.TEXT) {
-                                webSocket.onMessage(packet.getPayload());
-                            } else if (packet.type == PacketType.BINARY) {
-                                webSocket.onMessage(packet.getBytes());
+                            try {
+                                if (packet.type == PacketType.TEXT) {
+                                    webSocket.onMessage(packet.getPayload());
+                                } else if (packet.type == PacketType.BINARY) {
+                                    webSocket.onMessage(packet.getBytes());
+                                }
+                            } catch (Exception e) {
+                                context.getLogger().log(Level.INFO, "WebSocket onMessage error (" + packet + ")", e);
                             }
-                        } catch (Exception e) {
+                        } catch (Throwable t) {
                             closeRunner();
-                            if (debug) context.getLogger().log(Level.FINEST, "WebSocketRunner abort on read WebSocketPacket, force to close channel", e);
+                            if (debug) context.getLogger().log(Level.FINEST, "WebSocketRunner abort on read WebSocketPacket, force to close channel", t);
                         }
                     }
 
