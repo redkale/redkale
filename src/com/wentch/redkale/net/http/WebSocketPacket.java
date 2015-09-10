@@ -7,6 +7,7 @@ package com.wentch.redkale.net.http;
 
 import com.wentch.redkale.util.Utility;
 import java.io.*;
+import java.util.*;
 
 /**
  *
@@ -112,4 +113,8 @@ public final class WebSocketPacket {
         return last;
     }
 
+    @Override
+    public String toString() {
+        return this.getClass().getSimpleName() + "[type=" + type + ", last=" + last + (payload != null ? (", payload=" + payload) : "") + (bytes != null ? (", bytes=" + Arrays.toString(bytes)) : "") + "]";
+    }
 }
