@@ -313,7 +313,7 @@ public abstract class WebSocket {
      * @param groupid
      * @return
      */
-    protected final WebSocketGroup getWebSocketGroup(long groupid) {
+    protected final WebSocketGroup getWebSocketGroup(Serializable groupid) {
         return engine.getWebSocketGroup(groupid);
     }
 
