@@ -387,43 +387,68 @@ public final class Utility {
     }
 
     public static String postHttpContent(String url) throws IOException {
-        return remoteHttpContent(null, "POST", url, null).toString("UTF-8");
+        return remoteHttpContent(null, "POST", url, null, null).toString("UTF-8");
     }
 
     public static String postHttpContent(String url, String body) throws IOException {
-        return remoteHttpContent(null, "POST", url, body).toString("UTF-8");
-    }
-
-    public static String getHttpContent(String url) throws IOException {
-        return remoteHttpContent(null, "GET", url, null).toString("UTF-8");
-    }
-
-    public static byte[] getHttpBytesContent(String url) throws IOException {
-        return remoteHttpContent(null, "GET", url, null).toByteArray();
+        return remoteHttpContent(null, "POST", url, null, body).toString("UTF-8");
     }
 
     public static String postHttpContent(SSLContext ctx, String url) throws IOException {
-        return remoteHttpContent(ctx, "POST", url, null).toString("UTF-8");
+        return remoteHttpContent(ctx, "POST", url, null, null).toString("UTF-8");
     }
 
     public static String postHttpContent(SSLContext ctx, String url, String body) throws IOException {
-        return remoteHttpContent(ctx, "POST", url, body).toString("UTF-8");
+        return remoteHttpContent(ctx, "POST", url, null, body).toString("UTF-8");
+    }
+
+    public static String postHttpContent(SSLContext ctx, String url, Map<String, String> headers, String body) throws IOException {
+        return remoteHttpContent(ctx, "POST", url, headers, body).toString("UTF-8");
+    }
+
+    public static byte[] postHttpBytesContent(String url) throws IOException {
+        return remoteHttpContent(null, "POST", url, null, null).toByteArray();
+    }
+
+    public static byte[] postHttpBytesContent(SSLContext ctx, String url) throws IOException {
+        return remoteHttpContent(ctx, "POST", url, null, null).toByteArray();
+    }
+
+    public static byte[] postHttpBytesContent(SSLContext ctx, String url, Map<String, String> headers, String body) throws IOException {
+        return remoteHttpContent(ctx, "POST", url, headers, body).toByteArray();
+    }
+
+    public static String getHttpContent(String url) throws IOException {
+        return remoteHttpContent(null, "GET", url, null, null).toString("UTF-8");
     }
 
     public static String getHttpContent(SSLContext ctx, String url) throws IOException {
-        return remoteHttpContent(ctx, "GET", url, null).toString("UTF-8");
+        return remoteHttpContent(ctx, "GET", url, null, null).toString("UTF-8");
+    }
+
+    public static String getHttpContent(SSLContext ctx, String url, Map<String, String> headers, String body) throws IOException {
+        return remoteHttpContent(ctx, "GET", url, headers, body).toString("UTF-8");
+    }
+
+    public static byte[] getHttpBytesContent(String url) throws IOException {
+        return remoteHttpContent(null, "GET", url, null, null).toByteArray();
     }
 
     public static byte[] getHttpBytesContent(SSLContext ctx, String url) throws IOException {
-        return remoteHttpContent(ctx, "GET", url, null).toByteArray();
+        return remoteHttpContent(ctx, "GET", url, null, null).toByteArray();
     }
 
-    protected static ByteArrayOutputStream remoteHttpContent(SSLContext ctx, String method, String url, String body) throws IOException {
+    public static byte[] getHttpBytesContent(SSLContext ctx, String url, Map<String, String> headers, String body) throws IOException {
+        return remoteHttpContent(ctx, "GET", url, headers, body).toByteArray();
+    }
+
+    protected static ByteArrayOutputStream remoteHttpContent(SSLContext ctx, String method, String url, Map<String, String> headers, String body) throws IOException {
         HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();
         conn.setConnectTimeout(3000);
         conn.setReadTimeout(3000);
         if (conn instanceof HttpsURLConnection) ((HttpsURLConnection) conn).setSSLSocketFactory((ctx == null ? DEFAULTSSL_CONTEXT : ctx).getSocketFactory());
         conn.setRequestMethod(method);
+        if (headers != null) headers.forEach((x, y) -> conn.setRequestProperty(x, y));
         if (body != null) {
             conn.setDoOutput(true);
             conn.getOutputStream().write(body.getBytes(UTF_8));
@@ -433,7 +458,7 @@ public final class Utility {
         if (rs == 301 || rs == 302) {
             String newurl = conn.getHeaderField("Location");
             conn.disconnect();
-            return remoteHttpContent(ctx, method, newurl, body);
+            return remoteHttpContent(ctx, method, newurl, headers, body);
         }
         InputStream in = conn.getInputStream();
         ByteArrayOutputStream out = new ByteArrayOutputStream(1024);
