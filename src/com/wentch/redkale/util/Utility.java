@@ -466,6 +466,7 @@ public final class Utility {
         conn.setRequestMethod(method);
         if (headers != null) headers.forEach((x, y) -> conn.setRequestProperty(x, y));
         if (body != null) {
+            conn.setDoInput(true);
             conn.setDoOutput(true);
             conn.getOutputStream().write(body.getBytes(UTF_8));
         }
