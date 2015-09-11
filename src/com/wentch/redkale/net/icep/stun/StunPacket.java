@@ -30,9 +30,7 @@ public class StunPacket {
             attr.encode(buffer, transactionid);
         }
         int end = buffer.position();
-        buffer.position(start + 2);
-        buffer.putShort((short) (end - start - 20));
-        buffer.position(end);
+        buffer.putShort(start + 2, (short) (end - start - 20));
         return buffer;
     }
 

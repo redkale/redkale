@@ -6,6 +6,7 @@
 package com.wentch.redkale.net.icep.attr;
 
 import com.wentch.redkale.net.icep.*;
+import com.wentch.redkale.net.icep.stun.*;
 import com.wentch.redkale.util.*;
 import java.net.*;
 import java.nio.*;
@@ -14,13 +15,15 @@ import java.nio.*;
  *
  * @author zhangjx
  */
-public class XorMappedAddressAttribute extends MappedAddressAttribute {
+public class MappedAddressAttribute extends StunAttribute {
 
-    public XorMappedAddressAttribute() {
+    protected InetSocketAddress address;
+
+    public MappedAddressAttribute() {
     }
 
-    public XorMappedAddressAttribute(InetSocketAddress address) {
-        super(address);
+    public MappedAddressAttribute(InetSocketAddress address) {
+        this.address = address;
     }
 
     /**
@@ -47,20 +50,26 @@ public class XorMappedAddressAttribute extends MappedAddressAttribute {
         Utility.println(null, buffer);
     }
 
+    protected static byte[] format(String string) {
+        String[] strs = string.split("\\s+");
+        byte[] bs = new byte[strs.length];
+        for (int i = 0; i < bs.length; i++) {
+            bs[i] = (byte) Integer.parseInt(strs[i], 16);
+        }
+        return bs;
+    }
+
     @Override
-    public XorMappedAddressAttribute decode(final ByteBuffer buffer, final byte[] transactionid) {
+    public MappedAddressAttribute decode(final ByteBuffer buffer, final byte[] transactionid) {
         final short attrid = (short) (buffer.getShort() & 0x00ff);
         if (attrid != getAttributeid()) throw new IcepException(this.getClass().getSimpleName() + " has illegal attributeid " + attrid);
         final int bodysize = buffer.getShort() & 0xffff;
         final short family = buffer.getShort();
         if (family == 0x0001 && bodysize != 8) throw new IcepException("family = " + family + " but bodysize = " + bodysize);
         if (family == 0x0002 && bodysize != 20) throw new IcepException("family = " + family + " but bodysize = " + bodysize);
-        final int port = (buffer.getShort() ^ ((transactionid[0] << 8 & 0x0000FF00) | (transactionid[1] & 0x000000FF))) & 0xffff;
+        final int port = buffer.getShort() & 0xffff;
         byte[] bytes = new byte[family == 0x0002 ? 16 : 4];
         buffer.get(bytes);
-        for (int i = 0; i < bytes.length; i++) {
-            bytes[i] ^= transactionid[i];
-        }
         try {
             this.address = new InetSocketAddress(InetAddress.getByAddress(bytes), port);
         } catch (UnknownHostException e) {
@@ -75,23 +84,29 @@ public class XorMappedAddressAttribute extends MappedAddressAttribute {
         buffer.putShort((short) getAttributeid());
         buffer.putShort((short) (ipv6 ? 20 : 8));
         buffer.putShort((short) (ipv6 ? 0x0002 : 0x0001));
-        buffer.putShort((short) (this.address.getPort() ^ ((transactionid[0] << 8 & 0x0000FF00) | (transactionid[1] & 0x000000FF))));
+        buffer.putShort((short) this.address.getPort());
         final byte[] bytes = this.address.getAddress().getAddress();
-        for (int i = 0; i < bytes.length; i++) {
-            bytes[i] ^= transactionid[i];
-        }
         buffer.put(bytes);
         return buffer;
     }
 
     @Override
     public short getAttributeid() {
-        return 0x0020;
+        return 0x0001;
     }
 
     @Override
     public String getName() {
-        return "XOR-MAPPED-ADDRESS";
+        return "MAPPED-ADDRESS";
+    }
+
+    public InetSocketAddress getInetSocketAddress() {
+        return address;
+    }
+
+    @Override
+    public String toString() {
+        return getName() + ":" + address;
     }
 
 }

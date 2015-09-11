@@ -116,8 +116,12 @@ public class RtpHeader implements IcepCoder<RtpHeader> {
         return buffer;
     }
 
+    public static int getSsrc(final ByteBuffer buffer) {
+        return buffer.getInt(8);
+    }
+
     public int getVersion() {
-        return (headval << 30) & 0b11;
+        return (headval >> 30) & 0b11;
     }
 
     public boolean isPadding() {
@@ -173,7 +177,7 @@ public class RtpHeader implements IcepCoder<RtpHeader> {
     }
 
     public int getCrscs() {
-        return (headval >> 4 << 28) & 0b1111;
+        return (headval >> 24) & 0b1111;
     }
 
     public boolean isMarker() {
@@ -181,7 +185,7 @@ public class RtpHeader implements IcepCoder<RtpHeader> {
     }
 
     public int getPayloadtype() {
-        return (headval >> 9 << 25) & 0b1111111;
+        return (headval >> 16) & 0b1111111;
     }
 
     public void setPayloadtype(int payloadtype) {

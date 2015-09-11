@@ -23,7 +23,8 @@ public class BindingIcepServlet extends IcepServlet {
         StunPacket packet = request.getStunPacket();
         ByteBuffer buffer = response.getContext().pollBuffer();
         packet.addAttribute(new XorMappedAddressAttribute(request.getRemoteAddress()));
-        packet.getHeader().setRequestid((short) (StunHeader.TYPE_SUCCESS | StunHeader.ACTION_BINDING));
+        packet.addAttribute(new MappedAddressAttribute(request.getRemoteAddress()));
+        packet.getHeader().setRequestid((StunHeader.TYPE_SUCCESS | StunHeader.ACTION_BINDING));
         packet.encode(buffer);
         buffer.flip();
         Utility.println("响应结果: ", buffer);

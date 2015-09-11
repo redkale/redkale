@@ -14,7 +14,7 @@ import java.security.*;
  *
  * @author zhangjx
  */
-public class StunHeader implements IcepCoder<StunHeader>{
+public class StunHeader implements IcepCoder<StunHeader> {
 
     public static final int MAGIC_COOKIE = 0x2112A442;
 
@@ -73,6 +73,7 @@ public class StunHeader implements IcepCoder<StunHeader>{
         this.transactionid = transactionid0 == null ? generateTransactionid() : transactionid0;
     }
 
+    @Override
     public StunHeader decode(final ByteBuffer buffer) {
         short requestid = buffer.getShort();
         this.typeid = (short) (requestid << 2);
@@ -83,10 +84,11 @@ public class StunHeader implements IcepCoder<StunHeader>{
         return this;
     }
 
+    @Override
     public ByteBuffer encode(final ByteBuffer buffer) {
         buffer.put((byte) this.typeid);
         buffer.put((byte) this.actionid);
-        buffer.putShort((short) 0); //bodysize
+        buffer.putShort((short) this.bodysize); //bodysize
         buffer.put(transactionid);
         return buffer;
     }
@@ -105,8 +107,8 @@ public class StunHeader implements IcepCoder<StunHeader>{
         return "0x" + str;
     }
 
-    public void setRequestid(short requestid) {
-        this.typeid = (short) (requestid << 2);
+    public void setRequestid(int requestid) {
+        this.typeid = (short) (requestid >> 8);
         this.actionid = (short) (requestid & 0xff);
     }
 
