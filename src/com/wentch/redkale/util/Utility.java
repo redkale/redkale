@@ -394,6 +394,10 @@ public final class Utility {
         return remoteHttpContent(null, "POST", url, null, body).toString("UTF-8");
     }
 
+    public static String postHttpContent(String url, Map<String, String> headers, String body) throws IOException {
+        return remoteHttpContent(null, "POST", url, headers, body).toString("UTF-8");
+    }
+
     public static String postHttpContent(SSLContext ctx, String url) throws IOException {
         return remoteHttpContent(ctx, "POST", url, null, null).toString("UTF-8");
     }
@@ -414,6 +418,10 @@ public final class Utility {
         return remoteHttpContent(ctx, "POST", url, null, null).toByteArray();
     }
 
+    public static byte[] postHttpBytesContent(String url, Map<String, String> headers, String body) throws IOException {
+        return remoteHttpContent(null, "POST", url, headers, body).toByteArray();
+    }
+
     public static byte[] postHttpBytesContent(SSLContext ctx, String url, Map<String, String> headers, String body) throws IOException {
         return remoteHttpContent(ctx, "POST", url, headers, body).toByteArray();
     }
@@ -430,12 +438,20 @@ public final class Utility {
         return remoteHttpContent(ctx, "GET", url, headers, body).toString("UTF-8");
     }
 
+    public static String getHttpContent(String url, Map<String, String> headers, String body) throws IOException {
+        return remoteHttpContent(null, "GET", url, headers, body).toString("UTF-8");
+    }
+
     public static byte[] getHttpBytesContent(String url) throws IOException {
         return remoteHttpContent(null, "GET", url, null, null).toByteArray();
     }
 
     public static byte[] getHttpBytesContent(SSLContext ctx, String url) throws IOException {
         return remoteHttpContent(ctx, "GET", url, null, null).toByteArray();
+    }
+
+    public static byte[] getHttpBytesContent(String url, Map<String, String> headers, String body) throws IOException {
+        return remoteHttpContent(null, "GET", url, headers, body).toByteArray();
     }
 
     public static byte[] getHttpBytesContent(SSLContext ctx, String url, Map<String, String> headers, String body) throws IOException {
