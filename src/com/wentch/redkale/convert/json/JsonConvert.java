@@ -16,6 +16,9 @@ import java.lang.reflect.*;
 @SuppressWarnings("unchecked")
 public final class JsonConvert extends Convert<JsonReader, JsonWriter> {
 
+    public static final Type TYPE_MAP_STRING_STRING = new TypeToken<java.util.Map<String, String>>() {
+    }.getType();
+
     private static final ObjectPool<JsonReader> readerPool = JsonReader.createPool(Integer.getInteger("convert.json.pool.size", 16));
 
     private static final ObjectPool<JsonWriter> writerPool = JsonWriter.createPool(Integer.getInteger("convert.json.pool.size", 16));
