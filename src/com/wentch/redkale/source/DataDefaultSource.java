@@ -636,7 +636,7 @@ public final class DataDefaultSource implements DataSource, Nameable {
     private <T> void delete(final Connection conn, final EntityInfo<T> info, FilterNode node) {
         try {
             if (!info.isVirtualEntity()) {
-                String sql = "DELETE FROM " + info.getTable() + " a" + node.createFilterSQLExpress(info, null);
+                String sql = "DELETE FROM " + info.getTable() + node.createFilterSQLExpress(info, null);
                 if (debug.get()) logger.finest(info.getType().getSimpleName() + " delete sql=" + sql);
                 final Statement stmt = conn.createStatement();
                 stmt.execute(sql);
