@@ -52,7 +52,7 @@ public final class Flipper implements Serializable {
         this.size = copy.size;
         this.sort = copy.sort;
     }
-    
+
     public Flipper next() {
         this.page++;
         return this;
@@ -91,10 +91,11 @@ public final class Flipper implements Serializable {
         return sort;
     }
 
-    public void putSortIfEmpty(String sort) {
+    public Flipper putSortIfEmpty(String sort) {
         if (this.sort == null || this.sort.isEmpty()) {
             this.sort = sort;
         }
+        return this;
     }
 
     public void setSort(String sort) {
