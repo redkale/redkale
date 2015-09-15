@@ -17,7 +17,7 @@ import java.nio.*;
  */
 public class IcepRequest extends Request {
 
-    private int requestid;
+    private short requestid;
 
     private StunPacket stunPacket;
 
@@ -31,12 +31,10 @@ public class IcepRequest extends Request {
         Utility.println(Utility.now() + "-------" + getRemoteAddress() + "   ", buffer);
         if (buffer.remaining() < 20) return -1;
         this.requestid = buffer.getShort();
-        short typeid = (short) ((this.requestid >> 8) & 0xffff);
-        short actionid = (short) (this.requestid & 0xffff);
-        int bodysize = buffer.getShort() & 0xffff;
-        byte[] bytes = new byte[16];
+        char bodysize = buffer.getChar();
+        byte[] bytes = new byte[16]; 
         buffer.get(bytes);
-        StunHeader header = new StunHeader(typeid, actionid, bytes);
+        StunHeader header = new StunHeader(this.requestid, bytes);
         this.stunPacket = new StunPacket(header);
         return 0;
     }
@@ -59,7 +57,7 @@ public class IcepRequest extends Request {
 
     }
 
-    public int getRequestid() {
+    public short getRequestid() {
         return requestid;
     }
 

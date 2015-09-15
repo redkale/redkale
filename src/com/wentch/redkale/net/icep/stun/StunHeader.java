@@ -47,11 +47,9 @@ public class StunHeader implements IcepCoder<StunHeader> {
     public static final short ACTION_CHANNELBIND = 0x0009;
 
     //-----------------------------------------------------------
-    private short typeid;   //无符号 2bytes
+    private short requestid;   //无符号 2bytes  首位2bits必定是00， 所以该值不会为负数
 
-    private short actionid;  //无符号 2bytes
-
-    private int bodysize;  //无符号 2bytes
+    private char bodysize;  //无符号 2bytes
 
     private byte[] transactionid;  //RFC5389 =MAGIC_COOKIE +  byte[12]  = byte[16];
 
@@ -67,18 +65,15 @@ public class StunHeader implements IcepCoder<StunHeader> {
         return transactions;
     }
 
-    public StunHeader(short typeid, short actionid, byte[] transactionid0) {
-        this.typeid = typeid;
-        this.actionid = actionid;
+    public StunHeader(short requestid, byte[] transactionid0) {
+        this.requestid = requestid;
         this.transactionid = transactionid0 == null ? generateTransactionid() : transactionid0;
     }
 
     @Override
     public StunHeader decode(final ByteBuffer buffer) {
-        short requestid = buffer.getShort();
-        this.typeid = (short) (requestid << 2);
-        this.actionid = (short) (requestid & 0xff);
-        this.bodysize = buffer.getShort() & 0xffff;
+        this.requestid = buffer.getShort();
+        this.bodysize = buffer.getChar();
         this.transactionid = new byte[16];
         buffer.get(transactionid);
         return this;
@@ -86,17 +81,15 @@ public class StunHeader implements IcepCoder<StunHeader> {
 
     @Override
     public ByteBuffer encode(final ByteBuffer buffer) {
-        buffer.put((byte) this.typeid);
-        buffer.put((byte) this.actionid);
-        buffer.putShort((short) this.bodysize); //bodysize
+        buffer.putShort(this.requestid);
+        buffer.putChar(this.bodysize);
         buffer.put(transactionid);
         return buffer;
     }
 
     @Override
     public String toString() {
-        return this.getClass().getSimpleName() + "[typeid = " + format(typeid) + ", actionid = " + format(actionid)
-                + ", bodysize = " + (int) (bodysize) + ", transactionid = " + Utility.binToHexString(transactionid) + "]";
+        return this.getClass().getSimpleName() + "[requestid = " + format(requestid) + ", bodysize = " + (int) (bodysize) + ", transactionid = " + Utility.binToHexString(transactionid) + "]";
     }
 
     private static String format(short value) {
@@ -108,28 +101,19 @@ public class StunHeader implements IcepCoder<StunHeader> {
     }
 
     public void setRequestid(int requestid) {
-        this.typeid = (short) (requestid >> 8);
-        this.actionid = (short) (requestid & 0xff);
+        this.requestid = (short) requestid;
+    }
+
+    public void setRequestid(short requestid) {
+        this.requestid = requestid;
     }
 
     public void setBodysize(char bodysize) {
         this.bodysize = bodysize;
     }
 
-    public void setTypeid(short typeid) {
-        this.typeid = typeid;
-    }
-
-    public void setActionid(short actionid) {
-        this.actionid = actionid;
-    }
-
-    public short getTypeid() {
-        return typeid;
-    }
-
-    public short getActionid() {
-        return actionid;
+    public void setBodysize(int bodysize) {
+        this.bodysize = (char) bodysize;
     }
 
     public int getBodysize() {

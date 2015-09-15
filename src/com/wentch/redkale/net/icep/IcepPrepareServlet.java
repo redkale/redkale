@@ -16,10 +16,11 @@ import java.util.*;
  */
 public class IcepPrepareServlet extends PrepareServlet<IcepRequest, IcepResponse> {
 
-    private final HashMap<Integer, IcepServlet> servletmaps = new HashMap<>();
+    private final HashMap<Short, IcepServlet> servletmaps = new HashMap<>();
 
     public IcepPrepareServlet() {
-        this.servletmaps.put(0x0001, new BindingIcepServlet());
+        BindingIcepServlet servlet = new BindingIcepServlet();
+        this.servletmaps.put(servlet.getRequestid(), new BindingIcepServlet());
     }
 
     @Override

@@ -16,6 +16,8 @@ public abstract class IcepServlet implements Servlet<IcepRequest, IcepResponse> 
 
     AnyValue conf; //当前HttpServlet的配置
 
+    public abstract short getRequestid();
+
     @Override
     public final boolean equals(Object obj) {
         return obj != null && obj.getClass() == this.getClass();
