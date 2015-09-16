@@ -7,10 +7,8 @@ package com.wentch.redkale.net.icep;
 
 import com.wentch.redkale.net.*;
 import com.wentch.redkale.util.*;
-import com.wentch.redkale.util.AnyValue.DefaultAnyValue;
 import com.wentch.redkale.watch.*;
 import java.nio.*;
-import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 
 /**
@@ -21,23 +19,6 @@ public final class IcepServer extends Server {
 
     public IcepServer() {
         this(System.currentTimeMillis(), null);
-    }
-
-    /**
-     "content":"{\"cmd\":\"icecandidate\",\"candidate\":{\"candidate\":\"candidate:3791502225 1 tcp 1518214911 10.28.2.207 0 typ host tcptype active generation 0\",\"sdpMid\":\"video\",\"sdpMLineIndex\":1}}"
-     @param args
-     @throws Exception 
-     */
-    public static void main(String[] args) throws Exception {
-        DefaultAnyValue conf = new DefaultAnyValue();
-        conf.addValue("host", "10.28.2.207");
-        conf.addValue("port", "3478");
-        final CountDownLatch cdl = new CountDownLatch(1);
-        final IcepServer server = new IcepServer();
-        server.init(conf);
-        server.addIcepServlet(new BindingIcepServlet(), null);
-        server.start();
-        cdl.await();
     }
 
     public IcepServer(long serverStartTime, final WatchFactory watch) {
