@@ -408,11 +408,11 @@ public final class Application {
                     try {
                         //Thread ctd = Thread.currentThread();
                         //ctd.setContextClassLoader(new URLClassLoader(new URL[0], ctd.getContextClassLoader()));
-                        final String protocol = serconf.getValue("protocol", "").replaceFirst("\\..+", "");
+                        final String protocol = serconf.getValue("protocol", "").replaceFirst("\\..+", "").toUpperCase();
                         NodeServer server = null;
-                        if ("SNCP".equalsIgnoreCase(protocol)) {
+                        if ("SNCP".equals(protocol)) {
                             server = new NodeSncpServer(Application.this, serconf);
-                        } else if ("HTTP".equalsIgnoreCase(protocol) || "HTTPS".equalsIgnoreCase(protocol)) {
+                        } else if ("HTTP".equals(protocol) || "HTTPS".equals(protocol)) {
                             server = new NodeHttpServer(Application.this, serconf);
                         } else {
                             if (!inited.get()) {
@@ -426,7 +426,8 @@ public final class Application {
                                             final Class<? extends NodeServer> type = entry.getType();
                                             NodeProtocol pros = type.getAnnotation(NodeProtocol.class);
                                             for (String p : pros.value()) {
-                                                if (p.equalsIgnoreCase("SNCP") || p.equalsIgnoreCase("HTTP") || p.equalsIgnoreCase("HTTPS")) continue;
+                                                p = p.toUpperCase();
+                                                if ("SNCP".equals(p) || "HTTP".equals(p) || "HTTPS".equals(p)) continue;
                                                 final Class<? extends NodeServer> old = nodeClasses.get(p);
                                                 if (old != null && old != type) throw new RuntimeException("Protocol(" + p + ") had NodeServer-Class(" + old.getName() + ") but repeat NodeServer-Class(" + type.getName() + ")");
                                                 nodeClasses.put(p, type);

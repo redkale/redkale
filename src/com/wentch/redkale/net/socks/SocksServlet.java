@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.wentch.redkale.net.icep;
+package com.wentch.redkale.net.socks;
 
 import com.wentch.redkale.net.*;
 import com.wentch.redkale.util.*;
@@ -12,7 +12,7 @@ import com.wentch.redkale.util.*;
  *
  * @author zhangjx
  */
-public abstract class IcepServlet implements Servlet<IcepRequest, IcepResponse> {
+public abstract class SocksServlet implements Servlet<SocksRequest, SocksResponse> {
 
     AnyValue conf; //当前Servlet的配置
 

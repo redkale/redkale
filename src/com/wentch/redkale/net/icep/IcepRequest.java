@@ -32,7 +32,7 @@ public class IcepRequest extends Request {
         if (buffer.remaining() < 20) return -1;
         this.requestid = buffer.getShort();
         char bodysize = buffer.getChar();
-        byte[] bytes = new byte[16]; 
+        byte[] bytes = new byte[16];
         buffer.get(bytes);
         StunHeader header = new StunHeader(this.requestid, bytes);
         this.stunPacket = new StunPacket(header);
@@ -49,12 +49,13 @@ public class IcepRequest extends Request {
 
     @Override
     protected void prepare() {
-
     }
 
     @Override
     protected void recycle() {
-
+        this.requestid = 0;
+        this.stunPacket = null;
+        super.recycle();
     }
 
     public short getRequestid() {

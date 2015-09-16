@@ -40,7 +40,7 @@ public final class IcepServer extends Server {
         final int port = this.address.getPort();
         AtomicLong createBufferCounter = watch == null ? new AtomicLong() : watch.createWatchNumber("ICEP_" + port + ".Buffer.creatCounter");
         AtomicLong cycleBufferCounter = watch == null ? new AtomicLong() : watch.createWatchNumber("ICEP_" + port + ".Buffer.cycleCounter");
-        int rcapacity = Math.max(this.capacity, 16 * 1024 + 8); //兼容 HTTP 2.0
+        int rcapacity = Math.max(this.capacity, 8 * 1024);
         ObjectPool<ByteBuffer> bufferPool = new ObjectPool<>(createBufferCounter, cycleBufferCounter, this.bufferPoolSize,
                 (Object... params) -> ByteBuffer.allocateDirect(rcapacity), null, (e) -> {
                     if (e == null || e.isReadOnly() || e.capacity() != rcapacity) return false;
@@ -50,9 +50,9 @@ public final class IcepServer extends Server {
         AtomicLong createResponseCounter = watch == null ? new AtomicLong() : watch.createWatchNumber("ICEP_" + port + ".Response.creatCounter");
         AtomicLong cycleResponseCounter = watch == null ? new AtomicLong() : watch.createWatchNumber("ICEP_" + port + ".Response.cycleCounter");
         ObjectPool<Response> responsePool = IcepResponse.createPool(createResponseCounter, cycleResponseCounter, this.responsePoolSize, null);
-        IcepContext icepcontext = new IcepContext(this.serverStartTime, this.logger, executor, bufferPool, responsePool,
+        IcepContext localcontext = new IcepContext(this.serverStartTime, this.logger, executor, bufferPool, responsePool,
                 this.maxbody, this.charset, this.address, this.prepare, this.watch, this.readTimeoutSecond, this.writeTimeoutSecond);
-        responsePool.setCreator((Object... params) -> new IcepResponse(icepcontext, new IcepRequest(icepcontext)));
-        return icepcontext;
+        responsePool.setCreator((Object... params) -> new IcepResponse(localcontext, new IcepRequest(localcontext)));
+        return localcontext;
     }
 }
