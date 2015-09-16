@@ -73,6 +73,14 @@ public abstract class NodeServer {
         this.fine = logger.isLoggable(Level.FINE);
     }
 
+    public static <T extends NodeServer> NodeServer create(Class<T> clazz, Application application, AnyValue serconf) {
+        try {
+            return clazz.getConstructor(Application.class, AnyValue.class).newInstance(application, serconf);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public void init(AnyValue config) throws Exception {
         this.nodeConf = config == null ? AnyValue.create() : config;
         if (isSNCP()) { // SNCP协议

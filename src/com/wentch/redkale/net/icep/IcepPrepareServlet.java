@@ -19,12 +19,15 @@ public class IcepPrepareServlet extends PrepareServlet<IcepRequest, IcepResponse
     private final HashMap<Short, IcepServlet> servletmaps = new HashMap<>();
 
     public IcepPrepareServlet() {
-        BindingIcepServlet servlet = new BindingIcepServlet();
-        this.servletmaps.put(servlet.getRequestid(), new BindingIcepServlet());
     }
 
     @Override
     public void init(Context context, AnyValue config) {
+    }
+
+    public void addIcepServlet(IcepServlet servlet, AnyValue conf) {
+        servlet.conf = conf;
+        this.servletmaps.put(servlet.getRequestid(), servlet);
     }
 
     // 28.[00,03,00,08,  21,12,a4,42,45,6f,4e,77,4e,47,71,55,32,37,77,39,    00,19,00,04,11,00,00,00]

@@ -14,6 +14,7 @@ import java.lang.annotation.*;
 import java.lang.reflect.*;
 import java.net.*;
 import java.util.*;
+import java.util.concurrent.*;
 import java.util.jar.*;
 import java.util.logging.*;
 import java.util.regex.*;
@@ -322,6 +323,12 @@ public final class ClassFilter<T> {
 
         protected static final Logger logger = Logger.getLogger(Loader.class.getName());
 
+        protected static final ConcurrentMap<URL, Set<String>> cache = new ConcurrentHashMap<>();
+
+        public static void close() {
+            cache.clear();
+        }
+
         /**
          * 加载当前线程的classpath扫描所有class进行过滤
          * <p>
@@ -346,33 +353,69 @@ public final class ClassFilter<T> {
             List<File> files = new ArrayList<>();
             boolean debug = logger.isLoggable(Level.FINEST);
             StringBuilder debugstr = new StringBuilder();
-            for (URL url : urljares) {
-                try (JarFile jar = new JarFile(URLDecoder.decode(url.getFile(), "UTF-8"))) {
-                    Enumeration<JarEntry> it = jar.entries();
-                    while (it.hasMoreElements()) {
-                        String entryname = it.nextElement().getName().replace('/', '.');
-                        if (entryname.endsWith(".class") && entryname.indexOf('$') < 0) {
-                            String classname = entryname.substring(0, entryname.length() - 6);
-                            if (classname.startsWith("javax.") || classname.startsWith("org.") || classname.startsWith("com.mysql.")) continue;
-                            if (debug) debugstr.append(classname).append("\r\n");
-                            for (final ClassFilter filter : filters) {
-                                if (filter != null) filter.filter(null, classname);
+            for (final URL url : urljares) {
+                Set<String> classes = cache.get(url);
+                if (classes == null) {
+                    synchronized (cache) {
+                        if (cache.get(url) == null) {
+                            classes = new CopyOnWriteArraySet<>();
+                            cache.put(url, classes);
+                        } else {
+                            classes = cache.get(url);
+                        }
+                    }
+                    try (JarFile jar = new JarFile(URLDecoder.decode(url.getFile(), "UTF-8"))) {
+                        Enumeration<JarEntry> it = jar.entries();
+                        while (it.hasMoreElements()) {
+                            String entryname = it.nextElement().getName().replace('/', '.');
+                            if (entryname.endsWith(".class") && entryname.indexOf('$') < 0) {
+                                String classname = entryname.substring(0, entryname.length() - 6);
+                                if (classname.startsWith("javax.") || classname.startsWith("org.") || classname.startsWith("com.mysql.")) continue;
+                                classes.add(classname);
+                                if (debug) debugstr.append(classname).append("\r\n");
+                                for (final ClassFilter filter : filters) {
+                                    if (filter != null) filter.filter(null, classname);
+                                }
                             }
+                        }
+                    }
+                } else {
+                    for (String classname : classes) {
+                        for (final ClassFilter filter : filters) {
+                            if (filter != null) filter.filter(null, classname);
                         }
                     }
                 }
             }
-            for (URL url : urlfiles) {
-                files.clear();
-                File root = new File(url.getFile());
-                String rootpath = root.getPath();
-                loadClassFiles(exclude, root, files);
-                for (File f : files) {
-                    String classname = f.getPath().substring(rootpath.length() + 1, f.getPath().length() - 6).replace(File.separatorChar, '.');
-                    if (classname.startsWith("javax.") || classname.startsWith("org.") || classname.startsWith("com.mysql.")) continue;
-                    if (debug) debugstr.append(classname).append("\r\n");
-                    for (final ClassFilter filter : filters) {
-                        if (filter != null) filter.filter(null, classname);
+            for (final URL url : urlfiles) {
+                Set<String> classes = cache.get(url);
+                if (classes == null) {
+                    synchronized (cache) {
+                        if (cache.get(url) == null) {
+                            classes = new CopyOnWriteArraySet<>();
+                            cache.put(url, classes);
+                        } else {
+                            classes = cache.get(url);
+                        }
+                    }
+                    files.clear();
+                    File root = new File(url.getFile());
+                    String rootpath = root.getPath();
+                    loadClassFiles(exclude, root, files);
+                    for (File f : files) {
+                        String classname = f.getPath().substring(rootpath.length() + 1, f.getPath().length() - 6).replace(File.separatorChar, '.');
+                        if (classname.startsWith("javax.") || classname.startsWith("org.") || classname.startsWith("com.mysql.")) continue;
+                        classes.add(classname);
+                        if (debug) debugstr.append(classname).append("\r\n");
+                        for (final ClassFilter filter : filters) {
+                            if (filter != null) filter.filter(null, classname);
+                        }
+                    }
+                } else {
+                    for (String classname : classes) {
+                        for (final ClassFilter filter : filters) {
+                            if (filter != null) filter.filter(null, classname);
+                        }
                     }
                 }
             }

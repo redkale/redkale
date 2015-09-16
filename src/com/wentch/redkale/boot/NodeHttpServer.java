@@ -27,6 +27,7 @@ import javax.annotation.*;
  *
  * @author zhangjx
  */
+@NodeProtocol({"HTTP", "HTTPS"})
 public final class NodeHttpServer extends NodeServer {
 
     private final HttpServer httpServer;

@@ -15,6 +15,7 @@ import java.util.logging.*;
  *
  * @author zhangjx
  */
+@NodeProtocol({"SNCP"})
 public final class NodeSncpServer extends NodeServer {
 
     private final SncpServer sncpServer;

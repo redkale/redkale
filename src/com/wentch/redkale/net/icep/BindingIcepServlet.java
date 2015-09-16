@@ -15,7 +15,6 @@ import java.nio.*;
  *
  * @author zhangjx
  */
-@AutoLoad(false)
 public class BindingIcepServlet extends IcepServlet {
 
     @Override

@@ -5,6 +5,7 @@
  */
 package com.wentch.redkale.boot;
 
+import com.wentch.redkale.boot.ClassFilter.FilterEntry;
 import com.wentch.redkale.convert.bson.*;
 import com.wentch.redkale.convert.json.*;
 import com.wentch.redkale.net.*;
@@ -21,6 +22,7 @@ import java.nio.channels.*;
 import java.nio.file.*;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.*;
 import java.util.logging.*;
 import javax.xml.parsers.*;
 import org.w3c.dom.*;
@@ -391,6 +393,8 @@ public final class Application {
     private void runServers(CountDownLatch timecd, final List<AnyValue> serconfs) throws Exception {
         this.servicecdl = new CountDownLatch(serconfs.size());
         CountDownLatch sercdl = new CountDownLatch(serconfs.size());
+        final AtomicBoolean inited = new AtomicBoolean(false);
+        final Map<String, Class<? extends NodeServer>> nodeClasses = new HashMap<>();
         for (final AnyValue serconf : serconfs) {
             Thread thread = new Thread() {
                 {
@@ -410,6 +414,28 @@ public final class Application {
                             server = new NodeSncpServer(Application.this, serconf);
                         } else if ("HTTP".equalsIgnoreCase(protocol)) {
                             server = new NodeHttpServer(Application.this, serconf);
+                        } else {
+                            if (!inited.get()) {
+                                synchronized (nodeClasses) {
+                                    if (!inited.get()) {
+                                        inited.set(true);
+                                        ClassFilter profilter = new ClassFilter(NodeProtocol.class, NodeServer.class);
+                                        ClassFilter.Loader.load(home, profilter);
+                                        final Set<FilterEntry<NodeServer>> entrys = profilter.getFilterEntrys();
+                                        for (FilterEntry<NodeServer> entry : entrys) {
+                                            final Class<? extends NodeServer> type = entry.getType();
+                                            NodeProtocol pros = type.getAnnotation(NodeProtocol.class);
+                                            for (String p : pros.value()) {
+                                                final Class<? extends NodeServer> old = nodeClasses.get(p);
+                                                if (old != null && old != type) throw new RuntimeException("Protocol(" + p + ") had NodeServer-Class(" + old.getName() + ") but repeat NodeServer-Class(" + type.getName() + ")");
+                                                nodeClasses.put(p, type);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            Class<? extends NodeServer> nodeClass = nodeClasses.get(protocol);
+                            if (nodeClass != null) server = NodeServer.create(nodeClass, Application.this, serconf);
                         }
                         if (server == null) {
                             logger.log(Level.SEVERE, "Not found Server Class for protocol({0})", serconf.getValue("protocol"));
