@@ -483,7 +483,7 @@ public class WebSocketRunner implements Runnable {
             return packet;
         }
 
-        private static byte[] encodeLength(final long length) {
+        private static byte[] encodeLength(final int length) {
             byte[] lengthBytes;
             if (length <= 125) {
                 lengthBytes = new byte[1];
