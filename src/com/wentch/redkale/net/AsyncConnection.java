@@ -9,6 +9,7 @@ import java.io.*;
 import java.net.*;
 import java.nio.*;
 import java.nio.channels.*;
+import java.util.*;
 import java.util.concurrent.*;
 
 /**
@@ -16,6 +17,8 @@ import java.util.concurrent.*;
  * @author zhangjx
  */
 public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCloseable {
+
+    protected Map<String, Object> attributes;
 
     public abstract boolean isTCP();
 
@@ -37,6 +40,29 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
 
     public abstract void dispose(); //同close， 只是去掉throws IOException
 
+    public void setAttribute(String name, Object value) {
+        if (attributes == null) attributes = new HashMap<>();
+        attributes.put(name, value);
+    }
+
+    @SuppressWarnings("unchecked")
+    public final <T> T getAttribute(String name) {
+        return (T) (attributes == null ? null : attributes.get(name));
+    }
+
+    public final void removeAttribute(String name) {
+        if (attributes != null) attributes.remove(name);
+    }
+
+    public final Map<String, Object> getAttributes() {
+        return attributes;
+    }
+
+    public final void clearAttribute() {
+        if (attributes != null) attributes.clear();
+    }
+
+    //------------------------------------------------------------------------------------------------------------------------------
     public static AsyncConnection create(final String protocol, final SocketAddress address) throws IOException {
         return create(protocol, address, 0, 0);
     }
