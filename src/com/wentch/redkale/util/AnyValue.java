@@ -35,6 +35,10 @@ public interface AnyValue {
 
         private Entry<AnyValue>[] entityValues = new Entry[0];
 
+        public static final DefaultAnyValue create() {
+            return new DefaultAnyValue();
+        }
+
         public DefaultAnyValue() {
             this(false);
         }
