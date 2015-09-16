@@ -38,7 +38,23 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
 
     protected abstract <A> void write(ByteBuffer[] srcs, int offset, int length, A attachment, CompletionHandler<Integer, ? super A> handler);
 
-    public abstract void dispose(); //同close， 只是去掉throws IOException
+    public void dispose() {//同close， 只是去掉throws IOException
+        try {
+            this.close();
+        } catch (IOException io) {
+        }
+    }
+
+    @Override
+    public void close() throws IOException {
+        if (attributes == null) return;
+        try {
+            for (Object obj : attributes.values()) {
+                if (obj instanceof AutoCloseable) ((AutoCloseable) obj).close();
+            }
+        } catch (Exception io) {
+        }
+    }
 
     public void setAttribute(String name, Object value) {
         if (attributes == null) attributes = new HashMap<>();
@@ -173,16 +189,9 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
 
         @Override
         public final void close() throws IOException {
+            super.close();
             if (client) {
                 channel.close();
-            }
-        }
-
-        @Override
-        public void dispose() {
-            try {
-                this.close();
-            } catch (IOException io) {
             }
         }
 
@@ -324,14 +333,6 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
         }
 
         @Override
-        public void dispose() {
-            try {
-                this.close();
-            } catch (IOException io) {
-            }
-        }
-
-        @Override
         public <A> void read(ByteBuffer dst, A attachment, CompletionHandler<Integer, ? super A> handler) {
             try {
                 int rs = readChannel.read(dst);
@@ -373,6 +374,7 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
 
         @Override
         public void close() throws IOException {
+            super.close();
             this.socket.close();
         }
 
@@ -488,6 +490,7 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
 
         @Override
         public final void close() throws IOException {
+            super.close();
             channel.close();
         }
 
@@ -501,13 +504,6 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
             return true;
         }
 
-        @Override
-        public void dispose() {
-            try {
-                this.close();
-            } catch (IOException io) {
-            }
-        }
     }
 
     public static AsyncConnection create(final AsynchronousSocketChannel ch) {
