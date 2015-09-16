@@ -412,7 +412,7 @@ public final class Application {
                         NodeServer server = null;
                         if ("SNCP".equalsIgnoreCase(protocol)) {
                             server = new NodeSncpServer(Application.this, serconf);
-                        } else if ("HTTP".equalsIgnoreCase(protocol)) {
+                        } else if ("HTTP".equalsIgnoreCase(protocol) || "HTTPS".equalsIgnoreCase(protocol)) {
                             server = new NodeHttpServer(Application.this, serconf);
                         } else {
                             if (!inited.get()) {
@@ -426,6 +426,7 @@ public final class Application {
                                             final Class<? extends NodeServer> type = entry.getType();
                                             NodeProtocol pros = type.getAnnotation(NodeProtocol.class);
                                             for (String p : pros.value()) {
+                                                if (p.equalsIgnoreCase("SNCP") || p.equalsIgnoreCase("HTTP") || p.equalsIgnoreCase("HTTPS")) continue;
                                                 final Class<? extends NodeServer> old = nodeClasses.get(p);
                                                 if (old != null && old != type) throw new RuntimeException("Protocol(" + p + ") had NodeServer-Class(" + old.getName() + ") but repeat NodeServer-Class(" + type.getName() + ")");
                                                 nodeClasses.put(p, type);
