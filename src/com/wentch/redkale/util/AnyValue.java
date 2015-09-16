@@ -39,6 +39,18 @@ public interface AnyValue {
             return new DefaultAnyValue();
         }
 
+        public static final DefaultAnyValue create(String name, String value) {
+            DefaultAnyValue conf = new DefaultAnyValue();
+            conf.addValue(name, value);
+            return conf;
+        }
+
+        public static final DefaultAnyValue create(String name, AnyValue value) {
+            DefaultAnyValue conf = new DefaultAnyValue();
+            conf.addValue(name, value);
+            return conf;
+        }
+
         public DefaultAnyValue() {
             this(false);
         }
