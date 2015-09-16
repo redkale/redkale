@@ -54,8 +54,8 @@ public interface AnyValue {
             return rs;
         }
 
-        public void addAll(final AnyValue av) {
-            if (av == null) return;
+        public DefaultAnyValue addAll(final AnyValue av) {
+            if (av == null) return this;
             if (av instanceof DefaultAnyValue) {
                 final DefaultAnyValue adv = (DefaultAnyValue) av;
                 if (adv.stringValues != null) {
@@ -82,10 +82,11 @@ public interface AnyValue {
                     }
                 }
             }
+            return this;
         }
 
-        public void setAll(final AnyValue av) {
-            if (av == null) return;
+        public DefaultAnyValue setAll(final AnyValue av) {
+            if (av == null) return this;
             if (av instanceof DefaultAnyValue) {
                 final DefaultAnyValue adv = (DefaultAnyValue) av;
                 if (adv.stringValues != null) {
@@ -112,6 +113,7 @@ public interface AnyValue {
                     }
                 }
             }
+            return this;
         }
 
         @Override
@@ -151,55 +153,60 @@ public interface AnyValue {
             return toString(0);
         }
 
-        public void clear() {
+        public DefaultAnyValue clear() {
             this.stringValues = new Entry[0];
             this.entityValues = new Entry[0];
+            return this;
         }
 
-        public void setValue(String name, String value) {
-            if (name == null) return;
+        public DefaultAnyValue setValue(String name, String value) {
+            if (name == null) return this;
             if (getValue(name) == null) {
                 this.addValue(name, value);
             } else {
                 for (Entry<String> en : this.stringValues) {
                     if (predicate.test(en.name, name)) {
                         en.value = value;
-                        return;
+                        return this;
                     }
                 }
             }
+            return this;
         }
 
-        public void setValue(String name, AnyValue value) {
-            if (name == null) return;
+        public DefaultAnyValue setValue(String name, AnyValue value) {
+            if (name == null) return this;
             if (getValue(name) == null) {
                 this.addValue(name, value);
             } else {
                 for (Entry<AnyValue> en : this.entityValues) {
                     if (predicate.test(en.name, name)) {
                         en.value = value;
-                        return;
+                        return this;
                     }
                 }
             }
+            return this;
         }
 
-        public void addValue(String name, String value) {
-            if (name == null) return;
+        public DefaultAnyValue addValue(String name, String value) {
+            if (name == null) return this;
             int len = this.stringValues.length;
             Entry[] news = new Entry[len + 1];
             System.arraycopy(this.stringValues, 0, news, 0, len);
             news[len] = new Entry(name, value);
             this.stringValues = news;
+            return this;
         }
 
-        public void addValue(String name, AnyValue value) {
-            if (name == null || value == null) return;
+        public DefaultAnyValue addValue(String name, AnyValue value) {
+            if (name == null || value == null) return this;
             int len = this.entityValues.length;
             Entry[] news = new Entry[len + 1];
             System.arraycopy(this.entityValues, 0, news, 0, len);
             news[len] = new Entry(name, value);
             this.entityValues = news;
+            return this;
         }
 
         @Override
