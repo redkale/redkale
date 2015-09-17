@@ -166,7 +166,7 @@ public final class JsonReader implements Reader {
         }
         if (ch == 'n' && text[++position] == 'u' && text[++position] == 'l' && text[++position] == 'l') return SIGN_NULL;
         if (ch == 'N' && text[++position] == 'U' && text[++position] == 'L' && text[++position] == 'L') return SIGN_NULL;
-        throw new ConvertException("a json object text must begin with '{' (position = " + position + ") but '" + ch + "'");
+        throw new ConvertException("a json object text must begin with '{' (position = " + position + ") but '" + ch + "' in (" + new String(this.text) + ")");
     }
 
     @Override
@@ -206,7 +206,7 @@ public final class JsonReader implements Reader {
         }
         if (ch == 'n' && text[++position] == 'u' && text[++position] == 'l' && text[++position] == 'l') return SIGN_NULL;
         if (ch == 'N' && text[++position] == 'U' && text[++position] == 'L' && text[++position] == 'L') return SIGN_NULL;
-        throw new ConvertException("a json array text must begin with '[' (position = " + position + ") but '" + ch + "'");
+        throw new ConvertException("a json array text must begin with '[' (position = " + position + ") but '" + ch + "' in (" + new String(this.text) + ")");
     }
 
     @Override
@@ -227,7 +227,7 @@ public final class JsonReader implements Reader {
             }
             if (ch == ':') return;
         }
-        throw new ConvertException("'" + new String(text) + "'expected a ':' but '" + ch + "'(position = " + position + ")");
+        throw new ConvertException("'" + new String(text) + "'expected a ':' but '" + ch + "'(position = " + position + ") in (" + new String(this.text) + ")");
     }
 
     /**
@@ -331,7 +331,7 @@ public final class JsonReader implements Reader {
         int value = 0;
         final boolean negative = firstchar == '-';
         if (!negative) {
-            if (firstchar < '0' || firstchar > '9') throw new NumberFormatException("illegal escape(" + firstchar + ") (position = " + currpos + ")");
+            if (firstchar < '0' || firstchar > '9') throw new NumberFormatException("illegal escape(" + firstchar + ") (position = " + currpos + ") in (" + new String(this.text) + ")");
             value = firstchar - '0';
         }
         for (;;) {
@@ -343,7 +343,7 @@ public final class JsonReader implements Reader {
             } else if (ch == ',' || ch == '}' || ch == ']' || ch <= ' ' || ch == ':') {
                 break;
             } else {
-                throw new NumberFormatException("illegal escape(" + ch + ") (position = " + currpos + ")");
+                throw new NumberFormatException("illegal escape(" + ch + ") (position = " + currpos + ") in (" + new String(this.text) + ")");
             }
         }
         this.position = currpos - 1;
@@ -377,7 +377,7 @@ public final class JsonReader implements Reader {
         long value = 0;
         final boolean negative = firstchar == '-';
         if (!negative) {
-            if (firstchar < '0' || firstchar > '9') throw new NumberFormatException("illegal escape(" + firstchar + ") (position = " + currpos + ")");
+            if (firstchar < '0' || firstchar > '9') throw new NumberFormatException("illegal escape(" + firstchar + ") (position = " + currpos + ") in (" + new String(this.text) + ")");
             value = firstchar - '0';
         }
         for (;;) {
@@ -389,7 +389,7 @@ public final class JsonReader implements Reader {
             } else if (ch == ',' || ch == '}' || ch == ']' || ch <= ' ' || ch == ':') {
                 break;
             } else {
-                throw new NumberFormatException("illegal escape(" + ch + ") (position = " + currpos + ") but '" + ch + "'");
+                throw new NumberFormatException("illegal escape(" + ch + ") (position = " + currpos + ") but '" + ch + "' in (" + new String(this.text) + ")");
             }
         }
         this.position = currpos - 1;
@@ -490,12 +490,12 @@ public final class JsonReader implements Reader {
                     if (ch == ',' || ch <= ' ' || ch == '}' || ch == ']' || ch == ':') break;
                     currpos++;
                 }
-                if (currpos == start) throw new ConvertException("expected a string after a key but '" + text0[position] + "' (position = " + position + ")");
+                if (currpos == start) throw new ConvertException("expected a string after a key but '" + text0[position] + "' (position = " + position + ") in (" + new String(this.text) + ")");
                 this.position = currpos - 1;
                 return new String(text0, start, currpos - start);
             }
             this.position = currpos;
-            throw new ConvertException("expected a ':' after a key but '" + text0[position] + "' (position = " + position + ")");
+            throw new ConvertException("expected a ':' after a key but '" + text0[position] + "' (position = " + position + ") in (" + new String(this.text) + ")");
         }
         final int start = ++currpos;
         for (;;) {
@@ -552,7 +552,7 @@ public final class JsonReader implements Reader {
                         break;
                     default:
                         this.position = pos;
-                        throw new ConvertException("illegal escape(" + c + ") (position = " + this.position + ")");
+                        throw new ConvertException("illegal escape(" + c + ") (position = " + this.position + ") in (" + new String(this.text) + ")");
                 }
             } else {
                 array.append(c);
