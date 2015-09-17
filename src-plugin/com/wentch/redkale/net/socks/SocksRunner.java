@@ -61,6 +61,10 @@ public class SocksRunner implements Runnable {
 
             @Override
             public void completed(Integer result, Void attachment) {
+                if (buffer.hasRemaining()) {
+                    channel.write(buffer, null, this);
+                    return;
+                }
                 connect();
             }
 
@@ -102,6 +106,10 @@ public class SocksRunner implements Runnable {
 
                         @Override
                         public void completed(Integer result, Void attachment) {
+                            if (buffer.hasRemaining()) {
+                                channel.write(buffer, null, this);
+                                return;
+                            }
                             stream();
                         }
 
@@ -118,6 +126,10 @@ public class SocksRunner implements Runnable {
 
                         @Override
                         public void completed(Integer result, Void attachment) {
+                            if (buffer.hasRemaining()) {
+                                channel.write(buffer, null, this);
+                                return;
+                            }
                             closeRunner(null);
                         }
 
@@ -171,8 +183,12 @@ public class SocksRunner implements Runnable {
 
         @Override
         public void completed(Integer result0, Void v0) {
-            rbuffer.clear();
             final CompletionHandler self = this;
+            if (rbuffer.hasRemaining()) {
+                conn2.write(rbuffer, null, self);
+                return;
+            }
+            rbuffer.clear();
             conn1.read(rbuffer, null, new CompletionHandler<Integer, Void>() {
 
                 @Override
