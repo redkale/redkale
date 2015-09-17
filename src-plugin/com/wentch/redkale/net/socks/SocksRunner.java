@@ -179,6 +179,7 @@ public class SocksRunner implements Runnable {
             this.conn1 = conn1;
             this.conn2 = conn2;
             this.rbuffer = context.pollBuffer();
+            this.rbuffer.flip();
         }
 
         @Override
