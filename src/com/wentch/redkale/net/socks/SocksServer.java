@@ -31,7 +31,7 @@ public final class SocksServer extends Server {
     }
 
     public void addSocksServlet(SocksServlet servlet, AnyValue conf) {
-        ((SocksPrepareServlet) this.prepare).addSocksServlet(servlet, conf);
+        ((SocksPrepareServlet) this.prepare).setSocksServlet(servlet, conf);
     }
 
     @Override

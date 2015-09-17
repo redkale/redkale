@@ -16,8 +16,6 @@ public abstract class SocksServlet implements Servlet<SocksRequest, SocksRespons
 
     AnyValue conf; //当前Servlet的配置
 
-    public abstract short getRequestid();
-
     @Override
     public final boolean equals(Object obj) {
         return obj != null && obj.getClass() == this.getClass();

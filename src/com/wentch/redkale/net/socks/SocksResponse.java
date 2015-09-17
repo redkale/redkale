@@ -18,9 +18,13 @@ public class SocksResponse extends Response<SocksRequest> {
     protected SocksResponse(Context context, SocksRequest request) {
         super(context, request);
     }
-    
+
     public static ObjectPool<Response> createPool(AtomicLong creatCounter, AtomicLong cycleCounter, int max, Creator<Response> creator) {
         return new ObjectPool<>(creatCounter, cycleCounter, max, creator, (x) -> ((SocksResponse) x).prepare(), (x) -> ((SocksResponse) x).recycle());
     }
-}
 
+    @Override
+    public AsyncConnection removeChannel() {
+        return super.removeChannel();
+    }
+}

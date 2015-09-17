@@ -22,12 +22,14 @@ public class SocksRequest extends Request {
 
     @Override
     protected int readHeader(ByteBuffer buffer) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        if (buffer.get() != 0x05) return -1;
+        if (buffer.get() != 0x01) return -1;
+        if (buffer.get() != 0x00) return -1;
+        return 0;
     }
 
     @Override
     protected void readBody(ByteBuffer buffer) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
@@ -36,6 +38,7 @@ public class SocksRequest extends Request {
 
     @Override
     protected void recycle() {
+        this.requestid = 0;
         super.recycle();
     }
 

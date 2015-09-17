@@ -16,6 +16,7 @@ import java.net.*;
 import java.util.logging.*;
 
 /**
+ * < server protocol="SOCKS" host="0.0.0.0" port="1080" bindaddr="外网IP"> < /server>
  *
  * @author zhangjx
  */
@@ -58,16 +59,9 @@ public class NodeSocksServer extends NodeServer {
             factory.inject(servlet);
             DefaultAnyValue servletConf = (DefaultAnyValue) en.getProperty();
             this.socksServer.addSocksServlet(servlet, servletConf);
-            if (sb != null) sb.append(threadName).append(" Loaded ").append(clazz.getName()).append(" --> ").append(format(servlet.getRequestid())).append(LINE_SEPARATOR);
+            if (sb != null) sb.append(threadName).append(" Loaded ").append(clazz.getName()).append(" --> ").append(servletConf).append(LINE_SEPARATOR);
         }
         if (sb != null && sb.length() > 0) logger.log(Level.FINE, sb.toString());
     }
 
-    private static String format(short value) {
-        String str = Integer.toHexString(value);
-        if (str.length() == 1) return "0x000" + str;
-        if (str.length() == 2) return "0x00" + str;
-        if (str.length() == 3) return "0x0" + str;
-        return "0x" + str;
-    }
 }
