@@ -116,6 +116,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Nameable {
         response.setHeader("Connection", "Upgrade");
         response.addHeader("Upgrade", "websocket");
         response.addHeader("Sec-WebSocket-Accept", key);
+        final boolean mask = "13".equals(request.getHeader("Sec-WebSocket-Version"));
         response.sendBody((ByteBuffer) null, null, new CompletionHandler<Integer, Void>() {
 
             @Override
@@ -129,7 +130,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Nameable {
                 }
                 webSocket.groupid = groupid;
                 engine.add(webSocket);
-                context.submit(new WebSocketRunner(context, webSocket, response.removeChannel(), wsbinary));
+                context.submit(new WebSocketRunner(context, webSocket, response.removeChannel(), mask, wsbinary));
                 response.finish(true);
             }
 

@@ -39,17 +39,18 @@ public class WebSocketRunner implements Runnable {
 
     private AtomicBoolean writing = new AtomicBoolean();
 
-    private final Coder coder = new Coder();
+    private final Coder coder;
 
     private final BlockingQueue<byte[]> queue = new ArrayBlockingQueue(1024);
 
     private final boolean wsbinary;
 
-    public WebSocketRunner(Context context, WebSocket webSocket, AsyncConnection channel, final boolean wsbinary) {
+    public WebSocketRunner(Context context, WebSocket webSocket, AsyncConnection channel, final boolean maskData, final boolean wsbinary) {
         this.context = context;
         this.engine = webSocket.engine;
         this.webSocket = webSocket;
         this.channel = channel;
+        this.coder = new Coder(maskData);
         this.wsbinary = wsbinary;
         webSocket.runner = this;
         this.coder.logger = context.getLogger();
@@ -358,13 +359,17 @@ public class WebSocketRunner implements Runnable {
 
         protected byte outFragmentedType;
 
-        protected final boolean maskData = false;
+        protected final boolean maskData;
 
         protected boolean processingFragment;
 
         private boolean debugable;
 
         private Logger logger;
+
+        Coder(boolean maskData) {
+            this.maskData = maskData;
+        }
 
         /**
          0                   1                   2                   3
