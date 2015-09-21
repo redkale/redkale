@@ -44,11 +44,9 @@ public final class WebSocketEngine {
             t.setDaemon(true);
             return t;
         });
-        long now = System.currentTimeMillis() / 1000;
-        long delay = liveinterval - now / liveinterval;
         scheduler.scheduleWithFixedDelay(() -> {
-            getWebSocketGroups().stream().forEach(x -> x.getWebSockets().forEach(y -> y.send(DEFAULT_PING_PACKET)));
-        }, delay, liveinterval, TimeUnit.SECONDS);
+            getWebSocketGroups().stream().forEach(x -> x.sendEach(DEFAULT_PING_PACKET));
+        }, (liveinterval - System.currentTimeMillis() / 1000 % liveinterval), liveinterval, TimeUnit.SECONDS);
         if (finest) logger.finest(this.getClass().getSimpleName() + "(" + engineid + ")" + " start keeplive(interval:" + liveinterval + "s) scheduler executor");
     }
 
