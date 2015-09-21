@@ -53,7 +53,7 @@ public final class WebSocketEngine {
         long delay = (liveinterval - System.currentTimeMillis() / 1000 % liveinterval) + index * 5;
         scheduler.scheduleWithFixedDelay(() -> {
             getWebSocketGroups().stream().forEach(x -> x.sendEach(DEFAULT_PING_PACKET));
-            if (finest) logger.finest(engineid + " ping...");
+            //if (finest) logger.finest(engineid + " ping...");
         }, delay, liveinterval, TimeUnit.SECONDS);
         if (finest) logger.finest(this.getClass().getSimpleName() + "(" + engineid + ")" + " start keeplive(delay:" + delay + ", interval:" + liveinterval + "s) scheduler executor");
     }
