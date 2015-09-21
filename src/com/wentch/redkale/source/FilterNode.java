@@ -36,6 +36,10 @@ public class FilterNode {
     }
 
     FilterNode(String col, FilterExpress exp, Serializable val) {
+        this(col, exp, true, val);
+    }
+
+    FilterNode(String col, FilterExpress exp, boolean likefit, Serializable val) {
         Objects.requireNonNull(col);
         if (exp == null) {
             if (val instanceof Range) {
@@ -50,6 +54,7 @@ public class FilterNode {
         }
         this.column = col;
         this.express = exp;
+        this.likefit = likefit;
         this.value = val;
     }
 
@@ -65,6 +70,10 @@ public class FilterNode {
         return and(new FilterNode(column, express, value));
     }
 
+    public final FilterNode and(String column, FilterExpress express, boolean likefit, Serializable value) {
+        return and(new FilterNode(column, express, likefit, value));
+    }
+
     public final FilterNode or(FilterNode node) {
         return any(node, false);
     }
@@ -75,6 +84,10 @@ public class FilterNode {
 
     public final FilterNode or(String column, FilterExpress express, Serializable value) {
         return or(new FilterNode(column, express, value));
+    }
+
+    public final FilterNode or(String column, FilterExpress express, boolean likefit, Serializable value) {
+        return or(new FilterNode(column, express, likefit, value));
     }
 
     protected final FilterNode any(FilterNode node, boolean sign) {
@@ -99,6 +112,7 @@ public class FilterNode {
         FilterNode newnode = new FilterNode(this.column, this.express, this.value);
         newnode.signand = this.signand;
         newnode.nodes = this.nodes;
+        newnode.likefit = this.likefit;
         this.nodes = new FilterNode[]{newnode, node};
         this.tabalis = null;
         this.column = null;
