@@ -92,8 +92,20 @@ public final class WebSocketGroup {
         return sendEach(message, true);
     }
 
+    public final int sendEach(WebSocketPacket packet) {
+        int rs = 0;
+        for (WebSocket s : list) {
+            rs |= s.send(packet);
+        }
+        return rs;
+    }
+
     public final int sendRecent(Serializable message) {
         return sendRecent(message, true);
+    }
+
+    public final int sendRecent(WebSocketPacket packet) {
+        return recentWebSocket.send(packet);
     }
 
     public final int sendEach(Serializable message, boolean last) {
