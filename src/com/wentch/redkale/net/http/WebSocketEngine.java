@@ -11,6 +11,7 @@ import com.wentch.redkale.util.*;
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.*;
 import java.util.logging.*;
 
 /**
@@ -18,6 +19,10 @@ import java.util.logging.*;
  * @author zhangjx
  */
 public final class WebSocketEngine {
+
+    private static final AtomicInteger sequence = new AtomicInteger();
+
+    private final int index;
 
     private final String engineid;
 
@@ -32,6 +37,7 @@ public final class WebSocketEngine {
     protected WebSocketEngine(String engineid, Logger logger) {
         this.engineid = engineid;
         this.logger = logger;
+        this.index = sequence.getAndIncrement();
         this.finest = logger.isLoggable(Level.FINEST);
     }
 
@@ -44,10 +50,12 @@ public final class WebSocketEngine {
             t.setDaemon(true);
             return t;
         });
+        long delay = (liveinterval - System.currentTimeMillis() / 1000 % liveinterval) + index * 5;
         scheduler.scheduleWithFixedDelay(() -> {
             getWebSocketGroups().stream().forEach(x -> x.sendEach(DEFAULT_PING_PACKET));
-        }, (liveinterval - System.currentTimeMillis() / 1000 % liveinterval), liveinterval, TimeUnit.SECONDS);
-        if (finest) logger.finest(this.getClass().getSimpleName() + "(" + engineid + ")" + " start keeplive(interval:" + liveinterval + "s) scheduler executor");
+            if (finest) logger.finest(engineid + " ping...");
+        }, delay, liveinterval, TimeUnit.SECONDS);
+        if (finest) logger.finest(this.getClass().getSimpleName() + "(" + engineid + ")" + " start keeplive(delay:" + delay + ", interval:" + liveinterval + "s) scheduler executor");
     }
 
     void add(WebSocket socket) {
