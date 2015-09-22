@@ -19,7 +19,7 @@ public class ObjectNode extends HashMap<String, Object> {
         return node;
     }
 
-    public ObjectNode and(String key, Object value) {
+    public ObjectNode appand(String key, Object value) {
         this.put(key, value);
         return this;
     }
