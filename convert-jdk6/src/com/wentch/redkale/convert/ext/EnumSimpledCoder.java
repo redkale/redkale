@@ -1,0 +1,44 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package com.wentch.redkale.convert.ext;
+
+import com.wentch.redkale.convert.Reader;
+import com.wentch.redkale.convert.SimpledCoder;
+import com.wentch.redkale.convert.Writer;
+
+/**
+ *
+ * @author zhangjx
+ * @param <R>
+ * @param <W>
+ * @param <E>
+ */
+public final class EnumSimpledCoder<R extends Reader, W extends Writer, E extends Enum> extends SimpledCoder<R, W, E> {
+
+    private final Class<E> type;
+
+    public EnumSimpledCoder(Class<E> type) {
+        this.type = type;
+    }
+
+    @Override
+    public void convertTo(final W out, final E value) {
+        if (value == null) {
+            out.writeNull();
+        } else {
+            out.writeSmallString(value.toString());
+        }
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public E convertFrom(final R in) {
+        String value = in.readSmallString();
+        if (value == null) return null;
+        return (E) Enum.valueOf(type, value);
+    }
+
+}
