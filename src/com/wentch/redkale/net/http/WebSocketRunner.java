@@ -228,23 +228,26 @@ public class WebSocketRunner implements Runnable {
         }
     }
 
-    public synchronized void closeRunner() {
+    public void closeRunner() {
         if (closed) return;
-        closed = true;
-        try {
-            channel.close();
-        } catch (Throwable t) {
+        synchronized (this) {
+            if (closed) return;
+            closed = true;
+            try {
+                channel.close();
+            } catch (Throwable t) {
+            }
+            context.offerBuffer(readBuffer);
+            context.offerBuffer(writeBuffer);
+            readBuffer = null;
+            writeBuffer = null;
+            engine.remove(webSocket);
+            if (webSocket.node != null) {
+                WebSocketGroup group = webSocket.getWebSocketGroup();
+                if (group == null || group.isEmpty()) webSocket.node.disconnect(webSocket.groupid, webSocket.engine.getEngineid());
+            }
+            webSocket.onClose(0, null);
         }
-        context.offerBuffer(readBuffer);
-        context.offerBuffer(writeBuffer);
-        readBuffer = null;
-        writeBuffer = null;
-        engine.remove(webSocket);
-        if (webSocket.node != null) {
-            WebSocketGroup group = webSocket.getWebSocketGroup();
-            if (group == null || group.isEmpty()) webSocket.node.disconnect(webSocket.groupid, webSocket.engine.getEngineid());
-        }
-        webSocket.onClose(0, null);
     }
 
     private static final class Masker {
