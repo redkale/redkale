@@ -208,7 +208,6 @@ public class MimeType {
     public static void add(String extension, String contentType) {
         if (extension != null && extension.length() != 0
                 && contentType != null && contentType.length() != 0) {
-
             contentTypes.put(extension, contentType);
         }
     }
@@ -220,12 +219,7 @@ public class MimeType {
      */
     public static String getByFilename(String fileName) {
         String extn = getExtension(fileName);
-        if (extn != null) {
-            return get(extn);
-        } else {
-            // no extension, no content type
-            return null;
-        }
+        return extn == null ? null : get(extn);
     }
 
     /**
@@ -237,19 +231,10 @@ public class MimeType {
         int length = fileName.length();
 
         int newEnd = fileName.lastIndexOf('#');
-        if (newEnd == -1) {
-            newEnd = length;
-        }
+        if (newEnd == -1) newEnd = length;
         // Instead of creating a new string.
-        //         if (i != -1) {
-        //             fileName = fileName.substring(0, i);
-        //         }
+        // if (i != -1) fileName = fileName.substring(0, i);
         int i = fileName.lastIndexOf('.', newEnd);
-        if (i != -1) {
-            return fileName.substring(i + 1, newEnd);
-        } else {
-            // no extension, no content type
-            return null;
-        }
+        return i == -1 ? null : fileName.substring(i + 1, newEnd);
     }
 }
