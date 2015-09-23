@@ -21,7 +21,7 @@ import javax.annotation.*;
  *
  * @author zhangjx
  */
-public class WeiXinMPService implements Service{
+public class WeiXinMPService implements Service {
 
     protected static final Type MAPTYPE = new TypeToken<Map<String, String>>() {
     }.getType();
@@ -52,9 +52,9 @@ public class WeiXinMPService implements Service{
     }
 
     //-----------------------------------微信服务号接口----------------------------------------------------------
-    public RetResult<String> getMPWxunionid(String appid, String code) {
+    public RetResult<String> getMPWxunionidByCode(String appid, String code) {
         try {
-            Map<String, String> wxmap = getMPUserToken(appid, code);
+            Map<String, String> wxmap = getMPUserTokenByCode(appid, code);
             final String unionid = wxmap.get("unionid");
             if (unionid != null && !unionid.isEmpty()) return new RetResult<>(unionid);
             return new RetResult<>(1011002);
@@ -63,15 +63,19 @@ public class WeiXinMPService implements Service{
         }
     }
 
-    public Map<String, String> getMPUserToken(String appid, String code) throws IOException {
+    public Map<String, String> getMPUserTokenByCode(String appid, String code) throws IOException {
         String url = "https://api.weixin.qq.com/sns/oauth2/access_token?appid=" + appid + "&secret=" + mpsecrets.get(appid) + "&code=" + code + "&grant_type=authorization_code";
         String json = getHttpContent(url);
         if (finest) logger.finest(url + "--->" + json);
         Map<String, String> jsonmap = convert.convertFrom(MAPTYPE, json);
-        url = "https://api.weixin.qq.com/sns/userinfo?access_token=" + jsonmap.get("access_token") + "&openid=" + jsonmap.get("openid");
-        json = getHttpContent(url);
+        return getMPUserTokenByOpenid(jsonmap.get("access_token"), jsonmap.get("openid"));
+    }
+
+    public Map<String, String> getMPUserTokenByOpenid(String access_token, String openid) throws IOException {
+        String url = "https://api.weixin.qq.com/sns/userinfo?access_token=" + access_token + "&openid=" + openid;
+        String json = getHttpContent(url);
         if (finest) logger.finest(url + "--->" + json);
-        jsonmap = convert.convertFrom(MAPTYPE, json.replaceFirst("\\[.*\\]", "null"));
+        Map<String, String> jsonmap = convert.convertFrom(MAPTYPE, json.replaceFirst("\\[.*\\]", "null"));
         return jsonmap;
     }
 
