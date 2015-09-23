@@ -230,7 +230,7 @@ public class WeiXinQYService implements Service {
     }
 
     protected Cipher createQYCipher(int mode) throws Exception {
-        Cipher cipher = Cipher.getInstance("AES/CBC/NoPadding");
+        Cipher cipher = Cipher.getInstance("AES/CBC/NoPadding"); //AES192、256位加密解密 需要将 local_policy.jar、US_export_policy.jar两个文件覆盖到 ${JDK_HOME}/jre/lib/security/下
         if (qykeyspec == null) {
             byte[] aeskeyBytes = Base64.getDecoder().decode(qyaeskey + "=");
             qykeyspec = new SecretKeySpec(aeskeyBytes, "AES");
