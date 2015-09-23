@@ -328,9 +328,7 @@ public class WebSocketRunner implements Runnable {
         public void mask(byte[] target, int location, byte[] bytes) {
             if (bytes != null && target != null) {
                 for (int i = 0; i < bytes.length; i++) {
-                    target[location + i] = mask == null
-                            ? bytes[i]
-                            : (byte) (bytes[i] ^ mask[index++ % MASK_SIZE]);
+                    target[location + i] = mask == null ? bytes[i] : (byte) (bytes[i] ^ mask[index++ % MASK_SIZE]);
                 }
             }
         }
