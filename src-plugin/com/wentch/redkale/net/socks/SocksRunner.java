@@ -153,17 +153,20 @@ public class SocksRunner implements Runnable {
         new StreamCompletionHandler(remoteChannel, channel).completed(0, null);
     }
 
-    public synchronized void closeRunner(final Throwable e) {
+    public void closeRunner(final Throwable e) {
         if (closed) return;
-        closed = true;
-        try {
-            channel.close();
-        } catch (Throwable t) {
-        }
-        context.offerBuffer(buffer);
-        buffer = null;
-        if (e != null && finest) {
-            logger.log(Level.FINEST, "close socks channel by error", e);
+        synchronized (this) {
+            if (closed) return;
+            closed = true;
+            try {
+                channel.close();
+            } catch (Throwable t) {
+            }
+            context.offerBuffer(buffer);
+            buffer = null;
+            if (e != null && finest) {
+                logger.log(Level.FINEST, "close socks channel by error", e);
+            }
         }
     }
 
