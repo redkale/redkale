@@ -19,7 +19,7 @@ import java.nio.charset.*;
  *
  * @author zhangjx
  */
-public final class HttpRequest extends Request {
+public class HttpRequest extends Request {
 
     protected static final Charset UTF8 = Charset.forName("UTF-8");
 

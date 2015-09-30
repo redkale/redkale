@@ -21,7 +21,7 @@ import java.util.regex.*;
  *
  * @author zhangjx
  */
-public final class HttpPrepareServlet extends PrepareServlet<HttpRequest, HttpResponse> {
+public final class HttpPrepareServlet extends PrepareServlet<HttpRequest, HttpResponse<HttpRequest>> {
 
     private ByteBuffer flashPolicyBuffer;
 
@@ -30,10 +30,6 @@ public final class HttpPrepareServlet extends PrepareServlet<HttpRequest, HttpRe
     private final Map<String, HttpServlet> strmaps = new HashMap<>();
 
     private SimpleEntry<Predicate<String>, HttpServlet>[] regArray = new SimpleEntry[0];
-
-    private boolean forwardproxy = false;
-
-    private final HttpServlet proxyServlet = new HttpProxyServlet();
 
     private HttpServlet resourceHttpServlet = new HttpResourceServlet();
 
@@ -69,21 +65,7 @@ public final class HttpPrepareServlet extends PrepareServlet<HttpRequest, HttpRe
             }
             this.flashdomain = config.getValue("crossdomain-domain", "*");
             this.flashports = config.getValue("crossdomain-ports", "80,443,$");
-            this.forwardproxy = config.getBoolValue("forwardproxy", false);
-            if (forwardproxy) this.proxyServlet.init(context, config);
         }
-    }
-
-    public static void recycle(HttpRequest request) {
-        request.recycle();
-    }
-
-    public static boolean recycle(HttpResponse response) {
-        return response.recycle();
-    }
-
-    public static void prepare(HttpRequest request) {
-        request.prepare();
     }
 
     @Override
@@ -102,10 +84,6 @@ public final class HttpPrepareServlet extends PrepareServlet<HttpRequest, HttpRe
                 return;
             }
             final String uri = request.getRequestURI();
-            if (forwardproxy && (uri.charAt(0) != '/' || "CONNECT".equalsIgnoreCase(request.getMethod()))) { //正向代理
-                proxyServlet.execute(request, response);
-                return;
-            }
             HttpServlet servlet = this.strmaps.isEmpty() ? null : this.strmaps.get(uri);
             if (servlet == null && this.regArray != null) {
                 for (SimpleEntry<Predicate<String>, HttpServlet> en : regArray) {

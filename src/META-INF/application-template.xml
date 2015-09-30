@@ -77,7 +77,6 @@
         readTimeoutSecond: 读操作超时秒数， 默认0， 表示永久不超时
         writeTimeoutSecond:  写操作超时秒数， 默认0， 表示永久不超时
         
-        forwardproxy: 正向代理(支持CONNECT); 默认: false， 只有当 protocol==HTTP 才生效
     -->
     <server protocol="HTTP" host="127.0.0.1" port="6060" root="root" lib=""> 
         

@@ -22,8 +22,9 @@ import java.util.concurrent.atomic.*;
 /**
  *
  * @author zhangjx
+ * @param <R>
  */
-public final class HttpResponse extends Response<HttpRequest> {
+public class HttpResponse<R extends HttpRequest> extends Response<R> {
 
     private static final ByteBuffer buffer304 = ByteBuffer.wrap("HTTP/1.1 304 Not Modified\r\n\r\n".getBytes()).asReadOnlyBuffer();
 
@@ -109,7 +110,7 @@ public final class HttpResponse extends Response<HttpRequest> {
         return new ObjectPool<>(creatCounter, cycleCounter, max, creator, (x) -> ((HttpResponse) x).prepare(), (x) -> ((HttpResponse) x).recycle());
     }
 
-    public HttpResponse(Context context, HttpRequest request, String[][] defaultAddHeaders, String[][] defaultSetHeaders, HttpCookie defcookie) {
+    public HttpResponse(Context context, R request, String[][] defaultAddHeaders, String[][] defaultSetHeaders, HttpCookie defcookie) {
         super(context, request);
         this.defaultAddHeaders = defaultAddHeaders;
         this.defaultSetHeaders = defaultSetHeaders;
@@ -130,6 +131,11 @@ public final class HttpResponse extends Response<HttpRequest> {
         this.headsended = false;
         this.header.clear();
         return super.recycle();
+    }
+
+    @Override
+    protected void init(AsyncConnection channel) {
+        super.init(channel);
     }
 
     protected String getHttpCode(int status) {

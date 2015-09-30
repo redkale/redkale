@@ -12,7 +12,7 @@ import com.wentch.redkale.util.*;
  *
  * @author zhangjx
  */
-public abstract class HttpServlet implements Servlet<HttpRequest, HttpResponse> {
+public abstract class HttpServlet implements Servlet<HttpRequest, HttpResponse<HttpRequest>> {
 
     AnyValue conf; //当前HttpServlet的配置
 
