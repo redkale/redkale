@@ -6,6 +6,7 @@
 package com.wentch.redkale.net.socks;
 
 import com.wentch.redkale.net.*;
+import com.wentch.redkale.net.http.*;
 import com.wentch.redkale.util.*;
 import java.util.concurrent.atomic.*;
 
@@ -13,10 +14,10 @@ import java.util.concurrent.atomic.*;
  *
  * @author zhangjx
  */
-public class SocksResponse extends Response<SocksRequest> {
+public class SocksResponse extends HttpResponse<SocksRequest> {
 
     protected SocksResponse(Context context, SocksRequest request) {
-        super(context, request);
+        super(context, request, (String[][]) null, (String[][]) null, null);
     }
 
     public static ObjectPool<Response> createPool(AtomicLong creatCounter, AtomicLong cycleCounter, int max, Creator<Response> creator) {
@@ -27,4 +28,5 @@ public class SocksResponse extends Response<SocksRequest> {
     public AsyncConnection removeChannel() {
         return super.removeChannel();
     }
+
 }

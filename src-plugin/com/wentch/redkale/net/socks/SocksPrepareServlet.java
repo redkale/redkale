@@ -15,25 +15,31 @@ import java.io.*;
  */
 public final class SocksPrepareServlet extends PrepareServlet<SocksRequest, SocksResponse> {
 
-    private SocksServlet servlet = new DefaultSocksServlet();
+    private SocksServlet socksServlet = new DefaultSocksServlet();
+
+    private SocksProxyServlet proxyServlet = new SocksProxyServlet();
 
     public SocksPrepareServlet() {
     }
 
     @Override
     public void init(Context context, AnyValue config) {
-        if (servlet != null) servlet.init(context, servlet.conf == null ? config : servlet.conf);
+        if (socksServlet != null) socksServlet.init(context, socksServlet.conf == null ? config : socksServlet.conf);
     }
 
     public void setSocksServlet(SocksServlet servlet, AnyValue conf) {
         servlet.conf = conf;
-        if (servlet != null) this.servlet = servlet;
+        if (servlet != null) this.socksServlet = servlet;
     }
 
     // 
     @Override
     public void execute(SocksRequest request, SocksResponse response) throws IOException {
-        servlet.execute(request, response);
+        if (request.isHttp()) {
+            proxyServlet.execute(request, response);
+        } else {
+            socksServlet.execute(request, response);
+        }
     }
 
 }
