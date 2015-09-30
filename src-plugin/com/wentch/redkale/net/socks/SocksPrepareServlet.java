@@ -15,7 +15,7 @@ import java.io.*;
  */
 public final class SocksPrepareServlet extends PrepareServlet<SocksRequest, SocksResponse> {
 
-    private SocksServlet socksServlet = new DefaultSocksServlet();
+    private SocksServlet socksServlet = new SocksConnectServlet();
 
     private SocksProxyServlet proxyServlet = new SocksProxyServlet();
 
