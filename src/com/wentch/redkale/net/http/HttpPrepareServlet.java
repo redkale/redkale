@@ -74,6 +74,18 @@ public final class HttpPrepareServlet extends PrepareServlet<HttpRequest, HttpRe
         }
     }
 
+    public static void recycle(HttpRequest request) {
+        request.recycle();
+    }
+
+    public static boolean recycle(HttpResponse response) {
+        return response.recycle();
+    }
+
+    public static void prepare(HttpRequest request) {
+        request.prepare();
+    }
+
     @Override
     public void execute(HttpRequest request, HttpResponse response) throws IOException {
         try {
