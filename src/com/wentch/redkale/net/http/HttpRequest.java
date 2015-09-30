@@ -65,7 +65,7 @@ public final class HttpRequest extends Request {
 
     private final String remoteAddrHeader;
 
-    protected HttpRequest(Context context, JsonFactory factory, String remoteAddrHeader) {
+    public HttpRequest(Context context, JsonFactory factory, String remoteAddrHeader) {
         super(context);
         this.convert = factory.getConvert();
         this.remoteAddrHeader = remoteAddrHeader;
