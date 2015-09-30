@@ -21,13 +21,13 @@ public class SocksRequest extends HttpRequest {
 
     private short requestid;
 
-    protected SocksRequest(SocksContext context) {
+    protected SocksRequest(HttpContext context) {
         super(context, JsonFactory.root(), null);
     }
 
     @Override
     protected int readHeader(ByteBuffer buffer) {
-        if (buffer.remaining() > 3) {
+        if (buffer.get(0) > 0x05 && buffer.remaining() > 3) {
             this.http = true;
             return super.readHeader(buffer);
         }

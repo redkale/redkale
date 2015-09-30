@@ -13,10 +13,11 @@ import java.nio.*;
 import java.nio.channels.*;
 
 /**
- * 在appliation.xml中的HTTP类型的server节点加上forwardproxy="true"表示该HttpServer支持正向代理
+ * 正向代理
  *
  * @author zhangjx
  */
+@AutoLoad(false)
 public final class SocksProxyServlet extends SocksServlet {
 
     protected static final byte[] LINE = new byte[]{'\r', '\n'};

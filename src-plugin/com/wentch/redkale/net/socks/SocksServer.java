@@ -6,6 +6,7 @@
 package com.wentch.redkale.net.socks;
 
 import com.wentch.redkale.net.*;
+import com.wentch.redkale.net.http.*;
 import com.wentch.redkale.util.*;
 import com.wentch.redkale.watch.*;
 import java.nio.*;
@@ -50,8 +51,8 @@ public final class SocksServer extends Server {
         AtomicLong createResponseCounter = watch == null ? new AtomicLong() : watch.createWatchNumber("SOCKS_" + port + ".Response.creatCounter");
         AtomicLong cycleResponseCounter = watch == null ? new AtomicLong() : watch.createWatchNumber("SOCKS_" + port + ".Response.cycleCounter");
         ObjectPool<Response> responsePool = SocksResponse.createPool(createResponseCounter, cycleResponseCounter, this.responsePoolSize, null);
-        SocksContext localcontext = new SocksContext(this.serverStartTime, this.logger, executor, bufferPool, responsePool,
-                this.maxbody, this.charset, this.address, this.prepare, this.watch, this.readTimeoutSecond, this.writeTimeoutSecond);
+        HttpContext localcontext = new HttpContext(this.serverStartTime, this.logger, executor, bufferPool, responsePool,
+                this.maxbody, this.charset, this.address, this.prepare, this.watch, this.readTimeoutSecond, this.writeTimeoutSecond, "");
         responsePool.setCreator((Object... params) -> new SocksResponse(localcontext, new SocksRequest(localcontext)));
         return localcontext;
     }
