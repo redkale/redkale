@@ -225,7 +225,7 @@ public abstract class NodeServer {
             diffGroupAddrs.forEach((k, v) -> diffGroupTransports.add(loadTransport(k, server.getProtocol(), v)));
 
             ServiceWrapper wrapper;
-            if ((sameGroupAddrs.isEmpty() && diffGroupAddrs.isEmpty()) || sameGroupAddrs.contains(this.sncpAddress)) { //本地模式
+            if ((sameGroupAddrs.isEmpty() && diffGroupAddrs.isEmpty()) || sameGroupAddrs.contains(this.sncpAddress) || type.getAnnotation(LocalService.class) != null) { //本地模式
                 sameGroupAddrs.remove(this.sncpAddress);
                 List<Transport> sameGroupTransports = new ArrayList<>();
                 for (InetSocketAddress iaddr : sameGroupAddrs) {
