@@ -4,7 +4,6 @@
  */
 package com.wentch.redkale.util;
 
-import java.beans.ConstructorProperties;
 import java.lang.reflect.*;
 import java.util.*;
 import org.objectweb.asm.*;
@@ -110,7 +109,7 @@ public interface Creator<T> {
             }
             Constructor<T> constructor = null;
             for (Constructor c : clazz.getConstructors()) {
-                if (c.getParameterCount() == 0) {
+                if (c.getParameterTypes().length == 0) {
                     constructor = c;
                     break;
                 }
@@ -154,8 +153,9 @@ public interface Creator<T> {
                 mv.visitTypeInsn(NEW, interName);
                 mv.visitInsn(DUP);
                 //---------------------------------------
+                final Class[] params = constructor.getParameterTypes();
                 {
-                    Parameter[] params = constructor.getParameters();
+
                     final int[] iconsts = {ICONST_0, ICONST_1, ICONST_2, ICONST_3, ICONST_4, ICONST_5};
                     for (int i = 0; i < params.length; i++) {
                         mv.visitVarInsn(ALOAD, 1);
@@ -165,7 +165,7 @@ public interface Creator<T> {
                             mv.visitIntInsn(BIPUSH, i);
                         }
                         mv.visitInsn(AALOAD);
-                        Class ct = params[i].getType();
+                        Class ct = params[i];
                         mv.visitTypeInsn(CHECKCAST, Type.getInternalName(ct));
                         if (ct.isPrimitive()) {
                             Class fct = Array.get(Array.newInstance(ct, 1), 0).getClass();
@@ -181,7 +181,7 @@ public interface Creator<T> {
                 //---------------------------------------
                 mv.visitMethodInsn(INVOKESPECIAL, interName, "<init>", Type.getConstructorDescriptor(constructor), false);
                 mv.visitInsn(ARETURN);
-                mv.visitMaxs((constructor.getParameterCount() > 0 ? (constructor.getParameterCount() + 3) : 2), 2);
+                mv.visitMaxs((params.length > 0 ? (params.length + 3) : 2), 2);
                 mv.visitEnd();
             }
             { //虚拟 create 方法

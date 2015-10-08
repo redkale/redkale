@@ -128,7 +128,8 @@ public abstract class Factory<R extends Reader, W extends Writer> {
         ConvertColumnEntry en = this.columnEntrys.get(field);
         if (en != null) return en;
         final ConvertType ct = this.getConvertType();
-        for (ConvertColumn ref : field.getAnnotationsByType(ConvertColumn.class)) {
+        ConvertColumn ref = field.getAnnotation(ConvertColumn.class);
+        if (ref != null) {
             if (ref.type().contains(ct)) {
                 ConvertColumnEntry entry = new ConvertColumnEntry(ref);
                 if (skipAllIgnore) {

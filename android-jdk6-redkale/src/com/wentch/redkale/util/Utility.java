@@ -5,11 +5,9 @@
 package com.wentch.redkale.util;
 
 import java.io.*;
-import java.lang.reflect.Field;
 import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.charset.*;
-import java.time.*;
 import java.util.*;
 import javax.net.ssl.*;
 
@@ -25,25 +23,9 @@ public final class Utility {
 
     private static final char hex[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
 
-    private static final sun.misc.Unsafe UNSAFE;
-
-    private static final long strvaloffset;
-
     private static final javax.net.ssl.SSLContext DEFAULTSSL_CONTEXT;
 
     static {
-        sun.misc.Unsafe usafe = null;
-        long fd = 0L;
-        try {
-            Field safeField = sun.misc.Unsafe.class.getDeclaredField("theUnsafe");
-            safeField.setAccessible(true);
-            usafe = (sun.misc.Unsafe) safeField.get(null);
-            fd = usafe.objectFieldOffset(String.class.getDeclaredField("value"));
-        } catch (Exception e) {
-            throw new RuntimeException(e); //不可能会发生
-        }
-        UNSAFE = usafe;
-        strvaloffset = fd;
 
         try {
             DEFAULTSSL_CONTEXT = javax.net.ssl.SSLContext.getInstance("SSL");
@@ -121,37 +103,6 @@ public final class Utility {
             e.printStackTrace();
         }
         return back;
-    }
-
-    public static int today() {
-        java.time.LocalDate today = java.time.LocalDate.now();
-        return today.getYear() * 10000 + today.getMonthValue() * 100 + today.getDayOfMonth();
-    }
-
-    //时间点所在星期的周一
-    public static long monday(long time) {
-        ZoneId zid = ZoneId.systemDefault();
-        Instant instant = Instant.ofEpochMilli(time);
-        LocalDate ld = instant.atZone(zid).toLocalDate();
-        ld = ld.minusDays(ld.getDayOfWeek().getValue() - 1);
-        return ld.atStartOfDay(zid).toInstant().toEpochMilli();
-    }
-
-    //时间点所在星期的周日
-    public static long sunday(long time) {
-        ZoneId zid = ZoneId.systemDefault();
-        Instant instant = Instant.ofEpochMilli(time);
-        LocalDate ld = instant.atZone(zid).toLocalDate();
-        ld = ld.plusDays(7 - ld.getDayOfWeek().getValue());
-        return ld.atStartOfDay(zid).toInstant().toEpochMilli();
-    }
-
-    //时间点所在月份的1号
-    public static long monthFirstDay(long time) {
-        ZoneId zid = ZoneId.systemDefault();
-        Instant instant = Instant.ofEpochMilli(time);
-        LocalDate ld = instant.atZone(zid).toLocalDate().withDayOfMonth(1);
-        return ld.atStartOfDay(zid).toInstant().toEpochMilli();
     }
 
     public static String binToHexString(byte[] bytes) {
@@ -260,7 +211,7 @@ public final class Utility {
 
     public static byte[] encodeUTF8(final String value) {
         if (value == null) return new byte[0];
-        return encodeUTF8((char[]) UNSAFE.getObject(value, strvaloffset));
+        return encodeUTF8(value.toCharArray());
     }
 
     public static byte[] encodeUTF8(final char[] array) {
@@ -301,7 +252,7 @@ public final class Utility {
     }
 
     public static char[] charArray(String value) {
-        return value == null ? null : (char[]) UNSAFE.getObject(value, strvaloffset);
+        return value == null ? null : value.toCharArray();
     }
 
     public static ByteBuffer encodeUTF8(final ByteBuffer buffer, final char[] array) {
@@ -314,7 +265,7 @@ public final class Utility {
 
     public static int encodeUTF8Length(String value) {
         if (value == null) return -1;
-        return encodeUTF8Length((char[]) UNSAFE.getObject(value, strvaloffset));
+        return encodeUTF8Length(value.toCharArray());
     }
 
     public static int encodeUTF8Length(final char[] text) {

@@ -18,7 +18,7 @@ import static java.lang.annotation.RetentionPolicy.*;
 @Documented
 @Target({METHOD, FIELD})
 @Retention(RUNTIME)
-@Repeatable(ConvertColumns.class)
+//@Repeatable(ConvertColumns.class)
 public @interface ConvertColumn {
 
     /**
