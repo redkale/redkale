@@ -133,7 +133,7 @@ public interface Creator<T> {
             mv = cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null);
             ConstructorProperties cps = constructor.getAnnotation(ConstructorProperties.class);
             if (cps != null) {
-                av0 = mv.visitAnnotation("Ljava/beans/ConstructorProperties;", true);
+                av0 = mv.visitAnnotation(Type.getDescriptor(ConstructorProperties.class), true);
                 AnnotationVisitor av1 = av0.visitArray("value");
                 for (String n : cps.value()) {
                     av1.visit(null, n);
