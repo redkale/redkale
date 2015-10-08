@@ -10,6 +10,7 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
+ * 声明为LocalService的Service将不会变成远程模式， 无论配置文件中是否配置成远程模式。
  *
  * @author zhangjx
  */
