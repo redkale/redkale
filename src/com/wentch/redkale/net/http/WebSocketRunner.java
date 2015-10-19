@@ -80,8 +80,8 @@ public class WebSocketRunner implements Runnable {
                     @Override
                     public void completed(Integer count, Void attachment1) {
                         if (count < 1 && readBuffers.isEmpty()) {
-                            if (debug) context.getLogger().log(Level.FINEST, "WebSocketRunner abort on read buffer count, force to close channel");
                             closeRunner();
+                            if (debug) context.getLogger().log(Level.FINEST, "WebSocketRunner abort on read buffer count, force to close channel, live " + (System.currentTimeMillis() - webSocket.getCreatetime()) / 1000 + " seconds");
                             return;
                         }
                         if (readBuffer == null) return;
@@ -110,8 +110,8 @@ public class WebSocketRunner implements Runnable {
                                 }
                             }
                             if (packet == null) {
-                                if (debug) context.getLogger().log(Level.FINEST, "WebSocketRunner abort on decode WebSocketPacket, force to close channel");
                                 failed(null, attachment1);
+                                if (debug) context.getLogger().log(Level.FINEST, "WebSocketRunner abort on decode WebSocketPacket, force to close channel, live " + (System.currentTimeMillis() - webSocket.getCreatetime()) / 1000 + " seconds");
                                 return;
                             }
                             if (readBuffer != null) {
@@ -134,7 +134,7 @@ public class WebSocketRunner implements Runnable {
                             }
                         } catch (Throwable t) {
                             closeRunner();
-                            if (debug) context.getLogger().log(Level.FINEST, "WebSocketRunner abort on read WebSocketPacket, force to close channel", t);
+                            if (debug) context.getLogger().log(Level.FINEST, "WebSocketRunner abort on read WebSocketPacket, force to close channel, live " + (System.currentTimeMillis() - webSocket.getCreatetime()) / 1000 + " seconds", t);
                         }
                     }
 
@@ -142,17 +142,17 @@ public class WebSocketRunner implements Runnable {
                     public void failed(Throwable exc, Void attachment2) {
                         closeRunner();
                         if (exc != null) {
-                            context.getLogger().log(Level.FINEST, "WebSocketRunner read WebSocketPacket failed, force to close channel", exc);
+                            context.getLogger().log(Level.FINEST, "WebSocketRunner read WebSocketPacket failed, force to close channel, live " + (System.currentTimeMillis() - webSocket.getCreatetime()) / 1000 + " seconds", exc);
                         }
                     }
                 });
             } else {
-                context.getLogger().log(Level.FINEST, "WebSocketRunner abort by AsyncConnection closed");
                 closeRunner();
+                context.getLogger().log(Level.FINEST, "WebSocketRunner abort by AsyncConnection closed");
             }
         } catch (Exception e) {
-            context.getLogger().log(Level.FINEST, "WebSocketRunner abort on read bytes from channel, force to close channel", e);
             closeRunner();
+            context.getLogger().log(Level.FINEST, "WebSocketRunner abort on read bytes from channel, force to close channel, live " + (System.currentTimeMillis() - webSocket.getCreatetime()) / 1000 + " seconds", e);
         }
     }
 
@@ -205,8 +205,8 @@ public class WebSocketRunner implements Runnable {
                         }
                     } catch (NullPointerException e) {
                     } catch (Exception e) {
-                        context.getLogger().log(Level.WARNING, "WebSocket sendMessage abort on rewrite, force to close channel", e);
                         closeRunner();
+                        context.getLogger().log(Level.WARNING, "WebSocket sendMessage abort on rewrite, force to close channel, live " + (System.currentTimeMillis() - webSocket.getCreatetime()) / 1000 + " seconds", e);
                     }
                     writing.set(false);
                 }
@@ -216,14 +216,15 @@ public class WebSocketRunner implements Runnable {
                     writing.set(false);
                     closeRunner();
                     if (exc != null) {
-                        context.getLogger().log(Level.FINE, "WebSocket sendMessage on CompletionHandler failed, force to close channel", exc);
+                        context.getLogger().log(Level.FINE, "WebSocket sendMessage on CompletionHandler failed, force to close channel, live " + (System.currentTimeMillis() - webSocket.getCreatetime()) / 1000 + " seconds", exc);
                     }
                 }
             });
             return 0;
         } catch (Exception t) {
             writing.set(false);
-            context.getLogger().log(Level.FINE, "WebSocket sendMessage abort, force to close channel", t);
+            closeRunner();
+            context.getLogger().log(Level.FINE, "WebSocket sendMessage abort, force to close channel, live " + (System.currentTimeMillis() - webSocket.getCreatetime()) / 1000 + " seconds", t);
             return RETCODE_SENDEXCEPTION;
         }
     }

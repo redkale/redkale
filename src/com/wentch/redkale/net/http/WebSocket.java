@@ -67,6 +67,8 @@ public abstract class WebSocket {
 
     Serializable groupid;
 
+    private final long createtime = System.currentTimeMillis();
+
     private final Map<String, Object> attributes = new ConcurrentHashMap<>();
 
     protected WebSocket() {
@@ -128,6 +130,10 @@ public abstract class WebSocket {
 
     public final int sendPong(byte[] data) {
         return send(new WebSocketPacket(FrameType.PONG, data));
+    }
+
+    public final long getCreatetime() {
+        return createtime;
     }
 
     /**
