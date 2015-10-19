@@ -293,6 +293,7 @@ public class HttpRequest extends Request {
 
         this.header.clear();
         this.params.clear();
+        this.array.clear();
         super.recycle();
     }
 
