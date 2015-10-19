@@ -36,6 +36,7 @@ public interface Service extends Nameable {
      * <p>
      * @return
      */
+    @Override
     default String name() {
         return "";
     }
