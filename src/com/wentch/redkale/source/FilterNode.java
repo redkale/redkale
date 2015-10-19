@@ -345,7 +345,136 @@ public class FilterNode {
         for (String item : flipper.getSort().split(",")) {
             if (item.trim().isEmpty()) continue;
             String[] sub = item.trim().split("\\s+");
-            final Attribute<E, Serializable> attr = info.getAttribute(sub[0]);
+            int pos = sub[0].indexOf('(');
+            Attribute<E, Serializable> attr;
+            if (pos <= 0) {
+                attr = info.getAttribute(sub[0]);
+            } else {  //含SQL函数
+                int pos2 = sub[0].lastIndexOf(')');
+                final Attribute<E, Serializable> pattr = info.getAttribute(sub[0].substring(pos + 1, pos2));
+                final String func = sub[0].substring(0, pos);
+                if ("ABS".equalsIgnoreCase(func)) {
+                    if (pattr.type() == int.class || pattr.type() == Integer.class) {
+                        attr = new Attribute<E, Serializable>() {
+
+                            @Override
+                            public Class type() {
+                                return pattr.type();
+                            }
+
+                            @Override
+                            public Class declaringClass() {
+                                return pattr.declaringClass();
+                            }
+
+                            @Override
+                            public String field() {
+                                return pattr.field();
+                            }
+
+                            @Override
+                            public Serializable get(E obj) {
+                                return Math.abs(((Number) pattr.get(obj)).intValue());
+                            }
+
+                            @Override
+                            public void set(E obj, Serializable value) {
+                                pattr.set(obj, value);
+                            }
+                        };
+                    } else if (pattr.type() == long.class || pattr.type() == Long.class) {
+                        attr = new Attribute<E, Serializable>() {
+
+                            @Override
+                            public Class type() {
+                                return pattr.type();
+                            }
+
+                            @Override
+                            public Class declaringClass() {
+                                return pattr.declaringClass();
+                            }
+
+                            @Override
+                            public String field() {
+                                return pattr.field();
+                            }
+
+                            @Override
+                            public Serializable get(E obj) {
+                                return Math.abs(((Number) pattr.get(obj)).longValue());
+                            }
+
+                            @Override
+                            public void set(E obj, Serializable value) {
+                                pattr.set(obj, value);
+                            }
+                        };
+                    } else if (pattr.type() == float.class || pattr.type() == Float.class) {
+                        attr = new Attribute<E, Serializable>() {
+
+                            @Override
+                            public Class type() {
+                                return pattr.type();
+                            }
+
+                            @Override
+                            public Class declaringClass() {
+                                return pattr.declaringClass();
+                            }
+
+                            @Override
+                            public String field() {
+                                return pattr.field();
+                            }
+
+                            @Override
+                            public Serializable get(E obj) {
+                                return Math.abs(((Number) pattr.get(obj)).floatValue());
+                            }
+
+                            @Override
+                            public void set(E obj, Serializable value) {
+                                pattr.set(obj, value);
+                            }
+                        };
+                    } else if (pattr.type() == double.class || pattr.type() == Double.class) {
+                        attr = new Attribute<E, Serializable>() {
+
+                            @Override
+                            public Class type() {
+                                return pattr.type();
+                            }
+
+                            @Override
+                            public Class declaringClass() {
+                                return pattr.declaringClass();
+                            }
+
+                            @Override
+                            public String field() {
+                                return pattr.field();
+                            }
+
+                            @Override
+                            public Serializable get(E obj) {
+                                return Math.abs(((Number) pattr.get(obj)).doubleValue());
+                            }
+
+                            @Override
+                            public void set(E obj, Serializable value) {
+                                pattr.set(obj, value);
+                            }
+                        };
+                    } else {
+                        throw new RuntimeException("Flipper not supported sort illegal type by ABS (" + flipper.getSort() + ")");
+                    }
+                } else if (func.isEmpty()) {
+                    attr = pattr;
+                } else {
+                    throw new RuntimeException("Flipper not supported sort illegal function (" + flipper.getSort() + ")");
+                }
+            }
             Comparator<E> c = (E o1, E o2) -> {
                 Comparable c1 = (Comparable) attr.get(o1);
                 Comparable c2 = (Comparable) attr.get(o2);
