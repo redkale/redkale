@@ -16,6 +16,7 @@ import java.lang.reflect.*;
 import java.nio.charset.*;
 import java.security.*;
 import java.util.*;
+import java.util.function.*;
 import java.util.logging.*;
 import javax.annotation.*;
 import javax.crypto.*;
@@ -99,10 +100,15 @@ public class WeiXinQYService implements Service {
         sendQYMessage(new WeiXinQYMessage(agentid, message));
     }
 
+    public void sendQYTextMessage(String agentid, Supplier<String> contentSupplier) {
+        sendQYMessage(new WeiXinQYMessage(agentid, contentSupplier));
+    }
+
     public void sendQYMessage(WeiXinQYMessage message) {
         submit(() -> {
             String result = null;
             try {
+                message.supplyContent();
                 String url = "https://qyapi.weixin.qq.com/cgi-bin/message/send?access_token=" + getQYAccessToken();
                 result = postHttpContent(url, convert.convertTo(message));
                 if (finest) logger.finest("sendQYMessage ok: " + message + " -> " + result);

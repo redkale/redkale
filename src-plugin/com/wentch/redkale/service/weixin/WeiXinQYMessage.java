@@ -7,6 +7,7 @@ package com.wentch.redkale.service.weixin;
 
 import com.wentch.redkale.convert.json.*;
 import java.util.*;
+import java.util.function.*;
 
 /**
  * 微信企业号Service
@@ -29,6 +30,8 @@ public class WeiXinQYMessage {
 
     private String safe;
 
+    private Supplier<String> contentSupplier;
+
     public WeiXinQYMessage() {
     }
 
@@ -37,9 +40,18 @@ public class WeiXinQYMessage {
         setTextMessage(text);
     }
 
+    public WeiXinQYMessage(String agentid, Supplier<String> contentSupplier) {
+        this.agentid = agentid;
+        this.contentSupplier = contentSupplier;
+    }
+
     public final void setTextMessage(String content) {
         if (text == null) text = new HashMap<>();
         text.put("content", content);
+    }
+
+    public void supplyContent() {
+        if (contentSupplier != null) setTextMessage(contentSupplier.get());
     }
 
     public String getAgentid() {
