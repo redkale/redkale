@@ -108,7 +108,7 @@ public final class DataDefaultSource implements DataSource, Nameable {
         }
     }
 
-    private final Function<Class, List> fullloader = (t) -> queryList(t, (FilterNode) null);
+    private final Function<Class, List> fullloader = (t) -> querySheet(false, t, null, null, (FilterNode) null, null).list(true);
 
     public DataDefaultSource() throws IOException {
         this("");
