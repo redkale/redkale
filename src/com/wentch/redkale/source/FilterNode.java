@@ -227,7 +227,31 @@ public class FilterNode {
         for (FilterNode node : this.nodes) {
             Predicate<T> f = node.createFilterPredicate(info, bean);
             if (f == null) continue;
-            filter = (filter == null) ? f : (signand ? filter.and(f) : filter.or(f));
+            final Predicate<T> one = filter;
+            final Predicate<T> two = f;
+            filter = (filter == null) ? f : (signand ? new Predicate<T>() {
+
+                @Override
+                public boolean test(T t) {
+                    return one.test(t) && two.test(t);
+                }
+
+                @Override
+                public String toString() {
+                    return "(" + one + " AND " + two + ")";
+                }
+            } : new Predicate<T>() {
+
+                @Override
+                public boolean test(T t) {
+                    return one.test(t) || two.test(t);
+                }
+
+                @Override
+                public String toString() {
+                    return "(" + one + " OR " + two + ")";
+                }
+            });
         }
         return filter;
     }
@@ -252,88 +276,327 @@ public class FilterNode {
         }
         final Serializable val = val0;
         switch (express) {
-            case EQUAL: return (T t) -> val.equals(attr.get(t));
-            case NOTEQUAL: return (T t) -> !val.equals(attr.get(t));
-            case GREATERTHAN: return (T t) -> ((Number) attr.get(t)).longValue() > ((Number) val).longValue();
-            case LESSTHAN: return (T t) -> ((Number) attr.get(t)).longValue() < ((Number) val).longValue();
-            case GREATERTHANOREQUALTO: return (T t) -> ((Number) attr.get(t)).longValue() >= ((Number) val).longValue();
-            case LESSTHANOREQUALTO: return (T t) -> ((Number) attr.get(t)).longValue() <= ((Number) val).longValue();
-            case ISNULL: return (T t) -> attr.get(t) == null;
-            case ISNOTNULL: return (T t) -> attr.get(t) != null;
-            case OPAND: return (T t) -> (((Number) attr.get(t)).longValue() & ((Number) val).longValue()) > 0;
-            case OPOR: return (T t) -> (((Number) attr.get(t)).longValue() | ((Number) val).longValue()) > 0;
-            case OPANDNO: return (T t) -> (((Number) attr.get(t)).longValue() & ((Number) val).longValue()) == 0;
+            case EQUAL: return new Predicate<T>() {
+
+                @Override
+                public boolean test(T t) {
+                    return val.equals(attr.get(t));
+                }
+
+                @Override
+                public String toString() {
+                    return attr.field() + ' ' + express.value() + ' ' + val;
+                }
+            };
+            case NOTEQUAL: return new Predicate<T>() {
+
+                @Override
+                public boolean test(T t) {
+                    return !val.equals(attr.get(t));
+                }
+
+                @Override
+                public String toString() {
+                    return attr.field() + ' ' + express.value() + ' ' + val;
+                }
+            };
+            case GREATERTHAN: return new Predicate<T>() {
+
+                @Override
+                public boolean test(T t) {
+                    return ((Number) attr.get(t)).longValue() > ((Number) val).longValue();
+                }
+
+                @Override
+                public String toString() {
+                    return attr.field() + ' ' + express.value() + ' ' + val;
+                }
+            };
+            case LESSTHAN: return new Predicate<T>() {
+
+                @Override
+                public boolean test(T t) {
+                    return ((Number) attr.get(t)).longValue() < ((Number) val).longValue();
+                }
+
+                @Override
+                public String toString() {
+                    return attr.field() + ' ' + express.value() + ' ' + val;
+                }
+            };
+            case GREATERTHANOREQUALTO: return new Predicate<T>() {
+
+                @Override
+                public boolean test(T t) {
+                    return ((Number) attr.get(t)).longValue() >= ((Number) val).longValue();
+                }
+
+                @Override
+                public String toString() {
+                    return attr.field() + ' ' + express.value() + ' ' + val;
+                }
+            };
+            case LESSTHANOREQUALTO: return new Predicate<T>() {
+
+                @Override
+                public boolean test(T t) {
+                    return ((Number) attr.get(t)).longValue() <= ((Number) val).longValue();
+                }
+
+                @Override
+                public String toString() {
+                    return attr.field() + ' ' + express.value() + ' ' + val;
+                }
+            };
+            case ISNULL: return new Predicate<T>() {
+
+                @Override
+                public boolean test(T t) {
+                    return attr.get(t) == null;
+                }
+
+                @Override
+                public String toString() {
+                    return attr.field() + " = null";
+                }
+            };
+            case ISNOTNULL: return new Predicate<T>() {
+
+                @Override
+                public boolean test(T t) {
+                    return attr.get(t) != null;
+                }
+
+                @Override
+                public String toString() {
+                    return attr.field() + " != null";
+                }
+            };
+            case OPAND: return new Predicate<T>() {
+
+                @Override
+                public boolean test(T t) {
+                    return (((Number) attr.get(t)).longValue() & ((Number) val).longValue()) > 0;
+                }
+
+                @Override
+                public String toString() {
+                    return attr.field() + " & " + val + " > 0";
+                }
+            };
+            case OPOR: return new Predicate<T>() {
+
+                @Override
+                public boolean test(T t) {
+                    return (((Number) attr.get(t)).longValue() | ((Number) val).longValue()) > 0;
+                }
+
+                @Override
+                public String toString() {
+                    return attr.field() + " | " + val + " > 0";
+                }
+            };
+            case OPANDNO: return new Predicate<T>() {
+
+                @Override
+                public boolean test(T t) {
+                    return (((Number) attr.get(t)).longValue() & ((Number) val).longValue()) == 0;
+                }
+
+                @Override
+                public String toString() {
+                    return attr.field() + " & " + val + " = 0";
+                }
+            };
             case LIKE:
-                return (T t) -> {
-                    Object rs = attr.get(t);
-                    return rs != null && rs.toString().contains(val.toString());
+                return new Predicate<T>() {
+
+                    @Override
+                    public boolean test(T t) {
+                        Object rs = attr.get(t);
+                        return rs != null && rs.toString().contains(val.toString());
+                    }
+
+                    @Override
+                    public String toString() {
+                        return attr.field() + ' ' + express.value() + ' ' + val;
+                    }
                 };
             case NOTLIKE:
-                return (T t) -> {
-                    Object rs = attr.get(t);
-                    return rs == null || !rs.toString().contains(val.toString());
+                return new Predicate<T>() {
+
+                    @Override
+                    public boolean test(T t) {
+                        Object rs = attr.get(t);
+                        return rs == null || !rs.toString().contains(val.toString());
+                    }
+
+                    @Override
+                    public String toString() {
+                        return attr.field() + ' ' + express.value() + ' ' + val;
+                    }
                 };
             case BETWEEN:
             case NOTBETWEEN:
                 Range range = (Range) val;
                 final Comparable min = range.getMin();
                 final Comparable max = range.getMax();
-                Predicate<T> p = (T t) -> {
-                    Comparable rs = (Comparable) attr.get(t);
-                    if (rs == null) return false;
-                    if (min != null && min.compareTo(rs) >= 0) return false;
-                    return !(max != null && max.compareTo(rs) <= 0);
+                if (express == BETWEEN) return new Predicate<T>() {
+
+                    @Override
+                    public boolean test(T t) {
+                        Comparable rs = (Comparable) attr.get(t);
+                        if (rs == null) return false;
+                        if (min != null && min.compareTo(rs) >= 0) return false;
+                        return !(max != null && max.compareTo(rs) <= 0);
+                    }
+
+                    @Override
+                    public String toString() {
+                        return attr.field() + " BETWEEN " + min + " AND " + max;
+                    }
                 };
-                if (express == NOTBETWEEN) p = p.negate();
-                return p;
+                if (express == NOTBETWEEN) return new Predicate<T>() {
+
+                    @Override
+                    public boolean test(T t) {
+                        Comparable rs = (Comparable) attr.get(t);
+                        if (rs == null) return true;
+                        if (min != null && min.compareTo(rs) >= 0) return true;
+                        return (max != null && max.compareTo(rs) <= 0);
+                    }
+
+                    @Override
+                    public String toString() {
+                        return attr.field() + " NOT BETWEEN " + min + " AND " + max;
+                    }
+                };
+                return null;
             case IN:
             case NOTIN:
                 Predicate<T> filter;
                 if (val instanceof Collection) {
-                    filter = (T t) -> {
-                        Object rs = attr.get(t);
-                        return rs != null && ((Collection) val).contains(rs);
+                    filter = new Predicate<T>() {
+
+                        @Override
+                        public boolean test(T t) {
+                            Object rs = attr.get(t);
+                            return rs != null && ((Collection) val).contains(rs);
+                        }
+
+                        @Override
+                        public String toString() {
+                            return attr.field() + ' ' + express.value() + ' ' + val;
+                        }
                     };
                 } else {
                     Class type = val.getClass();
                     if (type == int[].class) {
-                        filter = (T t) -> {
-                            Object rs = attr.get(t);
-                            if (rs == null) return false;
-                            return Arrays.binarySearch((int[]) val, (int) rs) >= 0;
+                        filter = new Predicate<T>() {
+
+                            @Override
+                            public boolean test(T t) {
+                                Object rs = attr.get(t);
+                                if (rs == null) return false;
+                                return Arrays.binarySearch((int[]) val, (int) rs) >= 0;
+                            }
+
+                            @Override
+                            public String toString() {
+                                return attr.field() + ' ' + express.value() + ' ' + Arrays.toString((int[]) val);
+                            }
                         };
                     } else if (type == short[].class) {
-                        filter = (T t) -> {
-                            Object rs = attr.get(t);
-                            if (rs == null) return false;
-                            return Arrays.binarySearch((short[]) val, (short) rs) >= 0;
+                        filter = new Predicate<T>() {
+
+                            @Override
+                            public boolean test(T t) {
+                                Object rs = attr.get(t);
+                                if (rs == null) return false;
+                                return Arrays.binarySearch((short[]) val, (short) rs) >= 0;
+                            }
+
+                            @Override
+                            public String toString() {
+                                return attr.field() + ' ' + express.value() + ' ' + Arrays.toString((short[]) val);
+                            }
                         };
                     } else if (type == long[].class) {
-                        filter = (T t) -> {
-                            Object rs = attr.get(t);
-                            if (rs == null) return false;
-                            return Arrays.binarySearch((long[]) val, (long) rs) >= 0;
+                        filter = new Predicate<T>() {
+
+                            @Override
+                            public boolean test(T t) {
+                                Object rs = attr.get(t);
+                                if (rs == null) return false;
+                                return Arrays.binarySearch((long[]) val, (long) rs) >= 0;
+                            }
+
+                            @Override
+                            public String toString() {
+                                return attr.field() + ' ' + express.value() + ' ' + Arrays.toString((long[]) val);
+                            }
                         };
                     } else if (type == float[].class) {
-                        filter = (T t) -> {
-                            Object rs = attr.get(t);
-                            if (rs == null) return false;
-                            return Arrays.binarySearch((float[]) val, (float) rs) >= 0;
+                        filter = new Predicate<T>() {
+
+                            @Override
+                            public boolean test(T t) {
+                                Object rs = attr.get(t);
+                                if (rs == null) return false;
+                                return Arrays.binarySearch((float[]) val, (float) rs) >= 0;
+                            }
+
+                            @Override
+                            public String toString() {
+                                return attr.field() + ' ' + express.value() + ' ' + Arrays.toString((float[]) val);
+                            }
                         };
                     } else if (type == double[].class) {
-                        filter = (T t) -> {
-                            Object rs = attr.get(t);
-                            if (rs == null) return false;
-                            return Arrays.binarySearch((double[]) val, (double) rs) >= 0;
+                        filter = new Predicate<T>() {
+
+                            @Override
+                            public boolean test(T t) {
+                                Object rs = attr.get(t);
+                                if (rs == null) return false;
+                                return Arrays.binarySearch((double[]) val, (double) rs) >= 0;
+                            }
+
+                            @Override
+                            public String toString() {
+                                return attr.field() + ' ' + express.value() + ' ' + Arrays.toString((double[]) val);
+                            }
                         };
                     } else {
-                        filter = (T t) -> {
-                            Object rs = attr.get(t);
-                            return rs != null && Arrays.binarySearch((Object[]) val, rs) > -1;
+                        filter = new Predicate<T>() {
+
+                            @Override
+                            public boolean test(T t) {
+                                Object rs = attr.get(t);
+                                return rs != null && Arrays.binarySearch((Object[]) val, rs) >= 0;
+                            }
+
+                            @Override
+                            public String toString() {
+                                return attr.field() + ' ' + express.value() + ' ' + Arrays.toString((Object[]) val);
+                            }
                         };
                     }
                 }
-                if (express == NOTIN) filter = filter.negate();
+                if (express == NOTIN) {
+                    final Predicate<T> filter2 = filter;
+                    filter = new Predicate<T>() {
+
+                        @Override
+                        public boolean test(T t) {
+                            return !filter2.test(t);
+                        }
+
+                        @Override
+                        public String toString() {
+                            return filter2.toString();
+                        }
+                    };
+                }
                 return filter;
         }
         return null;

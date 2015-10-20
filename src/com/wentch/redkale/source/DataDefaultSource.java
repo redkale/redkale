@@ -1407,6 +1407,7 @@ public final class DataDefaultSource implements DataSource, Nameable {
         if (readcache && cache != null) {
             Predicate<T> filter = node == null ? null : node.createFilterPredicate(info, bean);
             if (node == null || node.isJoinAllCached()) {
+                if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(clazz.getSimpleName() + " cache query predicate = " + filter);
                 Sheet<T> sheet = cache.querySheet(selects, filter, flipper, FilterNode.createFilterComparator(info, flipper));
                 if (!sheet.isEmpty() || info.isVirtualEntity() || cache.isFullLoaded()) return sheet;
             }

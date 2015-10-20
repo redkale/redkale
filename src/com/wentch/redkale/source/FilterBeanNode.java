@@ -238,7 +238,8 @@ final class FilterBeanNode extends FilterNode {
     }
 
     private <T> Predicate<T> createFilterPredicate(final boolean first, final EntityInfo<T> info, FilterBean bean) {
-        if ((this.joinSQL == null && first) || this.foreignEntity == null) return super.createFilterPredicate(info, bean);
+        //if ((this.joinSQL == null && first) || this.foreignEntity == null) return super.createFilterPredicate(info, bean);
+        if (this.foreignEntity == null) return super.createFilterPredicate(info, bean);
         final Map<EntityInfo, Predicate> foreign = new HashMap<>();
         Predicate<T> result = null;
         putForeignPredicate(foreign, bean);
@@ -248,7 +249,31 @@ final class FilterBeanNode extends FilterNode {
                 if (node.foreignEntity == null) {
                     Predicate<T> f = node.createFilterPredicate(false, info, bean);
                     if (f == null) continue;
-                    result = (result == null) ? f : (signand ? result.and(f) : result.or(f));
+                    final Predicate<T> one = result;
+                    final Predicate<T> two = f;
+                    result = (result == null) ? f : (signand ? new Predicate<T>() {
+
+                        @Override
+                        public boolean test(T t) {
+                            return one.test(t) && two.test(t);
+                        }
+
+                        @Override
+                        public String toString() {
+                            return "(" + one + " AND " + two + ")";
+                        }
+                    } : new Predicate<T>() {
+
+                        @Override
+                        public boolean test(T t) {
+                            return one.test(t) || two.test(t);
+                        }
+
+                        @Override
+                        public String toString() {
+                            return "(" + one + " OR " + two + ")";
+                        }
+                    });
                 } else {
                     putForeignPredicate(foreign, bean);
                 }
@@ -256,16 +281,49 @@ final class FilterBeanNode extends FilterNode {
         }
         if (foreign.isEmpty()) return result;
         final Attribute foreignAttr = this.foreignAttribute;
-        for (Map.Entry<EntityInfo, Predicate> en : foreign.entrySet()) {
+        for (final Map.Entry<EntityInfo, Predicate> en : foreign.entrySet()) {
             Attribute<T, Serializable> mainIdAttr = info.getPrimary();
             final EntityCache cache = en.getKey().getCache();
             final Predicate p = en.getValue();
-            Predicate<T> f = (T t) -> {
-                Serializable key = mainIdAttr.get(t);
-                Predicate k = (e) -> key.equals(foreignAttr.get(e));
-                return cache.exists(k.and(p));
+            Predicate<T> f = new Predicate<T>() {
+
+                @Override
+                public boolean test(T t) {
+                    Serializable key = mainIdAttr.get(t);
+                    Predicate k = (e) -> key.equals(foreignAttr.get(e));
+                    return cache.exists(k.and(p));
+                }
+
+                @Override
+                public String toString() {
+                    return "(" + mainIdAttr.field() + " = " + en.getKey().getType().getSimpleName() + "." + foreignAttr.field() + " AND " + p + ")";
+                }
             };
-            result = (result == null) ? f : (signand ? result.and(f) : result.or(f));
+            final Predicate<T> one = result;
+            final Predicate<T> two = f;
+            result = (result == null) ? f : (signand ? new Predicate<T>() {
+
+                @Override
+                public boolean test(T t) {
+                    return one.test(t) && two.test(t);
+                }
+
+                @Override
+                public String toString() {
+                    return "(" + one + " AND " + two + ")";
+                }
+            } : new Predicate<T>() {
+
+                @Override
+                public boolean test(T t) {
+                    return one.test(t) || two.test(t);
+                }
+
+                @Override
+                public String toString() {
+                    return "(" + one + " OR " + two + ")";
+                }
+            });
         }
         return result;
     }
