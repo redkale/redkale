@@ -11,7 +11,6 @@ import com.wentch.redkale.util.*;
 import java.io.*;
 import java.net.*;
 import java.nio.*;
-import java.nio.channels.*;
 import java.nio.charset.*;
 import java.security.*;
 import java.util.concurrent.*;
@@ -157,7 +156,7 @@ public class ApnsService implements Service {
         buffer.flip();
 
         Socket socket = getPushSocket();
-        Channels.newChannel(socket.getOutputStream()).write(buffer);
+        socket.getOutputStream().write(buffer.array(), 0, buffer.remaining()); 
     }
 
     public static void main(String[] args) throws Exception {
