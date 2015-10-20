@@ -212,12 +212,12 @@ public class LogFileHandler extends Handler {
             StackTraceElement[] ses = new Throwable().getStackTrace();
             for (int i = 2; i < ses.length; i++) {
                 if (ses[i].getClassName().startsWith("java.util.logging")) continue;
-                record.setSourceClassName(Thread.currentThread().getName() + ' ' + ses[i].getClassName());
+                record.setSourceClassName('[' + Thread.currentThread().getName() + "] " + ses[i].getClassName());
                 record.setSourceMethodName(ses[i].getMethodName());
                 break;
             }
         } else {
-            record.setSourceClassName(Thread.currentThread().getName() + ' ' + sourceClassName);
+            record.setSourceClassName('[' + Thread.currentThread().getName() + "] " + sourceClassName);
         }
         records.offer(record);
     }
