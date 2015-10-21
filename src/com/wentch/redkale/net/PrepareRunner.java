@@ -60,9 +60,7 @@ public final class PrepareRunner implements Runnable {
                     }
 //                    {  //测试
 //                        buffer.flip();
-//                        byte[] bytes = new byte[buffer.remaining()];
-//                        buffer.get(bytes);
-//                        System.println(new String(bytes));
+//                        System.println(new String(buffer.array(), 0, buffer.remaining()));
 //                    }
                     buffer.flip();
                     final Response response = responsePool.poll();

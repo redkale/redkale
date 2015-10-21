@@ -90,4 +90,9 @@ public abstract class Request {
     public Context getContext() {
         return this.context;
     }
+
+    public long getCreatetime() {
+        return createtime;
+    }
+
 }

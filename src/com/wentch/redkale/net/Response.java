@@ -24,6 +24,8 @@ public abstract class Response<R extends Request> {
 
     private boolean inited = true;
 
+    protected Runnable recycleListener;
+
     private final CompletionHandler finishHandler = new CompletionHandler<Integer, ByteBuffer>() {
 
         @Override
@@ -96,6 +98,13 @@ public abstract class Response<R extends Request> {
     protected boolean recycle() {
         if (!inited) return false;
         boolean keepAlive = request.keepAlive;
+        if (recycleListener != null) {
+            try {
+                recycleListener.run();
+            } catch (Exception e) {
+            }
+            recycleListener = null;
+        }
         request.recycle();
         if (channel != null) {
             if (keepAlive) {
@@ -120,6 +129,10 @@ public abstract class Response<R extends Request> {
         this.channel = channel;
         this.request.channel = channel;
         this.request.createtime = System.currentTimeMillis();
+    }
+
+    public void setRecycleListener(Runnable recycleListener) {
+        this.recycleListener = recycleListener;
     }
 
     public void finish() {
