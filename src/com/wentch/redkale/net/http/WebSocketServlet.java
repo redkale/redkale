@@ -81,7 +81,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Nameable {
     }
 
     @Override
-    public final void execute(HttpRequest request, HttpResponse response) throws IOException {
+    public final void execute(final HttpRequest request, final HttpResponse response) throws IOException {
         final boolean debug = logger.isLoggable(Level.FINER);
         if (!"GET".equalsIgnoreCase(request.getMethod())
                 || !request.getConnection().contains("Upgrade")
@@ -123,7 +123,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Nameable {
                 HttpContext context = response.getContext();
                 Serializable groupid = webSocket.createGroupid();
                 if (groupid == null) {
-                    if (debug) logger.finer("WebSocket connect abort, Create groupid abort");
+                    if (debug) logger.finer("WebSocket connect abort, Create groupid abort. request = " + request);
                     response.finish(true);
                     return;
                 }
@@ -135,7 +135,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Nameable {
 
             @Override
             public void failed(Throwable exc, Void attachment) {
-                logger.log(Level.FINER, "WebSocket connect abort, Response send abort", exc);
+                logger.log(Level.FINER, "WebSocket connect abort, Response send abort. request = " + request, exc);
                 response.finish(true);
             }
         });
