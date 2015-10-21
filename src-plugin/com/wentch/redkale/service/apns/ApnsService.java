@@ -46,15 +46,11 @@ public class ApnsService implements Service {
     @Resource(name = "property.apns.buffersize") //
     protected int apnsbuffersize = 4096;
 
-    private final Object socketlock = new Object();
-
     private boolean inited = false;
 
     private final CountDownLatch cdl = new CountDownLatch(1);
 
     private SSLSocketFactory sslFactory;
-
-    private Socket pushSocket;
 
     @Override
     public void init(AnyValue conf) {
@@ -95,10 +91,6 @@ public class ApnsService implements Service {
 
     @Override
     public void destroy(AnyValue conf) {
-        try {
-            if (pushSocket != null) pushSocket.close();
-        } catch (Exception e) {
-        }
     }
 
     private Socket getPushSocket() throws IOException {
@@ -108,15 +100,8 @@ public class ApnsService implements Service {
             } catch (InterruptedException e) {
             }
         }
-        if (this.sslFactory == null) return null;
-        if (pushSocket == null || pushSocket.isClosed()) {
-            synchronized (socketlock) {
-                if (pushSocket == null || pushSocket.isClosed()) {
-                    pushSocket = sslFactory.createSocket(apnspushaddr, apnspushport);
-                    pushSocket.setTcpNoDelay(true);
-                }
-            }
-        }
+        Socket pushSocket = sslFactory.createSocket(apnspushaddr, apnspushport);
+        pushSocket.setTcpNoDelay(true);
         return pushSocket;
     }
 
@@ -156,7 +141,8 @@ public class ApnsService implements Service {
         buffer.flip();
 
         Socket socket = getPushSocket();
-        socket.getOutputStream().write(buffer.array(), 0, buffer.remaining()); 
+        socket.getOutputStream().write(buffer.array(), 0, buffer.remaining());
+        socket.close();
     }
 
     public static void main(String[] args) throws Exception {
