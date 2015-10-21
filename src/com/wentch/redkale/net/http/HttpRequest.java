@@ -262,7 +262,7 @@ public class HttpRequest extends Request {
         return this.getClass().getSimpleName() + "{method:" + this.method + ", requestURI:" + this.requestURI
                 + ", contentType:" + this.contentType + ", connection:" + this.connection + ", protocol:" + this.protocol
                 + ", contentLength:" + this.contentLength + ", cookiestr:" + this.cookiestr
-                + ", host:" + this.host + ", params:" + this.params + ", header:" + this.header + (this.boundary ? "" : ("body:" + getBody())) + "}";
+                + ", host:" + this.host + ", params:" + this.params + ", header:" + this.header + (this.boundary ? "" : (", body:" + getBody())) + "}";
     }
 
     public final MultiContext getMultiContext() {
