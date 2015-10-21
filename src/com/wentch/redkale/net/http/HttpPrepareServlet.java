@@ -96,7 +96,7 @@ public final class HttpPrepareServlet extends PrepareServlet<HttpRequest, HttpRe
             if (servlet == null) servlet = this.resourceHttpServlet;
             servlet.execute(request, response);
         } catch (Exception e) {
-            request.getContext().getLogger().log(Level.WARNING, "Servlet occur, forece to close channel ", e);
+            request.getContext().getLogger().log(Level.WARNING, "Servlet occur, forece to close channel. request = " + request, e);
             response.finish(500, null);
         }
     }
