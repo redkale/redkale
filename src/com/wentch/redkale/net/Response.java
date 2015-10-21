@@ -102,6 +102,8 @@ public abstract class Response<R extends Request> {
             try {
                 recycleListener.run();
             } catch (Exception e) {
+                System.err.println(request);
+                e.printStackTrace();
             }
             recycleListener = null;
         }
