@@ -376,6 +376,10 @@ public final class Utility {
     }
 
     //-----------------------------------------------------------------------------
+    public static javax.net.ssl.SSLContext getDefaultSSLContext() {
+        return DEFAULTSSL_CONTEXT;
+    }
+
     public static Socket createDefaultSSLSocket(InetSocketAddress address) throws IOException {
         return createDefaultSSLSocket(address.getAddress(), address.getPort());
     }
