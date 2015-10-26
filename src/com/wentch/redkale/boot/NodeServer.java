@@ -75,10 +75,25 @@ public abstract class NodeServer {
 
     protected Consumer<Runnable> getExecutor() throws Exception {
         if (server == null) return null;
-        Field field = Server.class.getDeclaredField("context");
+        final Field field = Server.class.getDeclaredField("context");
         field.setAccessible(true);
-        Context context = (Context) field.get(server);
-        return (x) -> context.submit(x);
+        return new Consumer<Runnable>() {
+
+            private Context context;
+
+            @Override
+            public void accept(Runnable t) {
+                if (context == null && server != null) {
+                    try {
+                        this.context = (Context) field.get(server);
+                    } catch (Exception e) {
+                        logger.log(Level.SEVERE, "Server (" + server.getSocketAddress() + ") cannot find Context", e);
+                    }
+                }
+                context.submit(t);
+            }
+
+        };
     }
 
     public static <T extends NodeServer> NodeServer create(Class<T> clazz, Application application, AnyValue serconf) {
