@@ -325,12 +325,12 @@ public interface AnyValue {
         Arrays.fill(chars, ' ');
         final String space = new String(chars);
         StringBuilder sb = new StringBuilder();
-        sb.append("{\n");
+        sb.append("{\r\n");
         for (Entry<String> en : getStringEntrys()) {
-            sb.append(space).append("    '").append(en.name).append("': '").append(en.value).append("',\n");
+            sb.append(space).append("    '").append(en.name).append("': '").append(en.value).append("',\r\n");
         }
         for (Entry<AnyValue> en : getAnyEntrys()) {
-            sb.append(space).append("    '").append(en.name).append("': '").append(en.value.toString(len + 4)).append("',\n");
+            sb.append(space).append("    '").append(en.name).append("': '").append(en.value.toString(len + 4)).append("',\r\n");
         }
         sb.append(space).append('}');
         return sb.toString();
