@@ -220,9 +220,9 @@ public class FilterNode {
     }
 
     protected <T> Predicate<T> createFilterPredicate(final EntityInfo<T> info, FilterBean bean) {
-        if (info == null || column == null) return null;
+        if (info == null || (column == null && this.nodes == null)) return null;
         final Serializable val = getValue(bean);
-        Predicate<T> filter = val == null ? null : createFilterPredicate(info.getAttribute(column), val);
+        Predicate<T> filter = (val == null || column == null) ? null : createFilterPredicate(info.getAttribute(column), val);
         if (this.nodes == null) return filter;
         for (FilterNode node : this.nodes) {
             Predicate<T> f = node.createFilterPredicate(info, bean);
