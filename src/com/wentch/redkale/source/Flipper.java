@@ -28,6 +28,10 @@ public final class Flipper implements Serializable {
         this.size = pageSize;
     }
 
+    public Flipper(String sortColumn) {
+        this.sort = sortColumn;
+    }
+
     public Flipper(int pageSize, int pageNo) {
         this.size = pageSize;
         this.page = pageNo;
