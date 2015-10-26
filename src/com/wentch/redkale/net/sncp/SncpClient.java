@@ -15,6 +15,7 @@ import java.net.*;
 import java.nio.*;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.function.*;
 import java.util.logging.*;
 
 /**
@@ -93,12 +94,13 @@ public final class SncpClient {
 
     protected final SncpAction[] actions;
 
-    protected final BlockingQueue<Runnable> queue = new ArrayBlockingQueue(1024 * 64);
+    protected final Consumer<Runnable> executor;
 
-    public SncpClient(final String serviceName, final long serviceid0, boolean remote, final Class serviceClass,
+    public SncpClient(final String serviceName, final Consumer<Runnable> executor, final long serviceid0, boolean remote, final Class serviceClass,
             boolean onlySncpDyn, final InetSocketAddress clientAddress, final HashSet<String> groups) {
         if (serviceName.length() > 10) throw new RuntimeException(serviceClass + " @Resource name(" + serviceName + ") too long , must less 11");
         this.remote = remote;
+        this.executor = executor;
         this.serviceClass = serviceClass;
         this.address = clientAddress;
         this.groups = groups;
@@ -115,24 +117,6 @@ public final class SncpClient {
         this.actions = methodens.toArray(new SncpAction[methodens.size()]);
         this.addrBytes = clientAddress == null ? new byte[4] : clientAddress.getAddress().getAddress();
         this.addrPort = clientAddress == null ? 0 : clientAddress.getPort();
-        new Thread() {
-            {
-                setName(SncpClient.class.getSimpleName() + serviceClass.getSimpleName() + "-" + serviceName + "-Thread");
-                setDaemon(true);
-            }
-
-            @Override
-            public void run() {
-                while (true) {
-                    try {
-                        Runnable runner = queue.take();
-                        runner.run();
-                    } catch (Exception e) {
-                        logger.log(Level.SEVERE, SncpClient.class.getSimpleName() + " runnable occur error", e);
-                    }
-                }
-            }
-        }.start();
     }
 
     public long getNameid() {
@@ -208,8 +192,8 @@ public final class SncpClient {
 
     private <T> void remote(final boolean async, final BsonConvert convert, final Transport[] transports, final boolean run, final int index, final Object... params) {
         if (!run) return;
-        if (async) {
-            submit(() -> {
+        if (async && executor != null) {
+            executor.accept(() -> {
                 for (Transport transport : transports) {
                     convert.convertFrom(actions[index].resultTypes, send(convert, transport, actions[index], params));
                 }
@@ -219,10 +203,6 @@ public final class SncpClient {
                 convert.convertFrom(actions[index].resultTypes, send(convert, transport, actions[index], params));
             }
         }
-    }
-
-    private void submit(Runnable runner) {
-        if (!queue.offer(runner)) runner.run();
     }
 
     private byte[] send(final BsonConvert convert, Transport transport, final SncpAction action, Object... params) {
@@ -256,7 +236,7 @@ public final class SncpClient {
                     System.arraycopy(bs, 0, all, pos, bs.length);
                     pos += bs.length;
                 }
-                if (pos != all.length) logger.warning(this.serviceid + "," + this.nameid + "," + action + " sncp body.length : " + all.length + ", but pos=" + pos);
+                if (pos != all.length) logger.warning(this.serviceid + "," + this.nameid + "," + action + " sncp(" + action.method + ") body.length : " + all.length + ", but pos=" + pos);
                 pos = 0;
                 for (int i = patch - 1; i >= 0; i--) {
                     fillHeader(buffer, seqid, actionid, patch, i, bodyLength);
@@ -286,23 +266,23 @@ public final class SncpClient {
             conn.read(buffer).get(readto > 0 ? readto : 5, TimeUnit.SECONDS);
             buffer.flip();
             long rseqid = buffer.getLong();
-            if (rseqid != seqid) throw new RuntimeException("sncp send seqid = " + seqid + ", but receive seqid =" + rseqid);
-            if (buffer.getChar() != HEADER_SIZE) throw new RuntimeException("sncp buffer receive header.length not " + HEADER_SIZE);
+            if (rseqid != seqid) throw new RuntimeException("sncp(" + action.method + ") send seqid = " + seqid + ", but receive seqid =" + rseqid);
+            if (buffer.getChar() != HEADER_SIZE) throw new RuntimeException("sncp(" + action.method + ") buffer receive header.length not " + HEADER_SIZE);
             long rserviceid = buffer.getLong();
-            if (rserviceid != serviceid) throw new RuntimeException("sncp send serviceid = " + serviceid + ", but receive serviceid =" + rserviceid);
+            if (rserviceid != serviceid) throw new RuntimeException("sncp(" + action.method + ") send serviceid = " + serviceid + ", but receive serviceid =" + rserviceid);
             long rnameid = buffer.getLong();
-            if (rnameid != nameid) throw new RuntimeException("sncp send nameid = " + nameid + ", but receive nameid =" + rnameid);
+            if (rnameid != nameid) throw new RuntimeException("sncp(" + action.method + ") send nameid = " + nameid + ", but receive nameid =" + rnameid);
             long ractionid1 = buffer.getLong();
             long ractionid2 = buffer.getLong();
-            if (!actionid.compare(ractionid1, ractionid2)) throw new RuntimeException("sncp send actionid = " + actionid + ", but receive actionid =(" + ractionid1 + "_" + ractionid2 + ")");
+            if (!actionid.compare(ractionid1, ractionid2)) throw new RuntimeException("sncp(" + action.method + ") send actionid = " + actionid + ", but receive actionid =(" + ractionid1 + "_" + ractionid2 + ")");
             buffer.getInt();
             buffer.getInt();
             final int frameCount = buffer.get();
-            if (frameCount < 1) throw new RuntimeException("sncp send nameid = " + nameid + ", but frame.count =" + frameCount);
+            if (frameCount < 1) throw new RuntimeException("sncp(" + action.method + ") send nameid = " + nameid + ", but frame.count =" + frameCount);
             int frameIndex = buffer.get();
-            if (frameIndex < 0 || frameIndex >= frameCount) throw new RuntimeException("sncp send nameid = " + nameid + ", but frame.count =" + frameCount + " & frame.index =" + frameIndex);
+            if (frameIndex < 0 || frameIndex >= frameCount) throw new RuntimeException("sncp(" + action.method + ") send nameid = " + nameid + ", but frame.count =" + frameCount + " & frame.index =" + frameIndex);
             final int retcode = buffer.getInt();
-            if (retcode != 0) throw new RuntimeException("remote service deal error (retcode=" + retcode + ", retinfo=" + SncpResponse.getRetCodeInfo(retcode) + ")");
+            if (retcode != 0) throw new RuntimeException("remote service(" + action.method + ") deal error (retcode=" + retcode + ", retinfo=" + SncpResponse.getRetCodeInfo(retcode) + ")");
             final int bodylen = buffer.getInt();
             final byte[] body = new byte[bodylen];
             if (frameCount == 1) {
@@ -318,33 +298,33 @@ public final class SncpClient {
                     conn.read(buffer).get(readto > 0 ? readto : 5, TimeUnit.SECONDS);
                     buffer.flip();
                     rseqid = buffer.getLong();
-                    if (rseqid != seqid) throw new RuntimeException("sncp send seqid = " + seqid + ", but receive next.seqid =" + rseqid);
-                    if (buffer.getChar() != HEADER_SIZE) throw new RuntimeException("sncp buffer receive header.length not " + HEADER_SIZE);
+                    if (rseqid != seqid) throw new RuntimeException("sncp(" + action.method + ") send seqid = " + seqid + ", but receive next.seqid =" + rseqid);
+                    if (buffer.getChar() != HEADER_SIZE) throw new RuntimeException("sncp(" + action.method + ") buffer receive header.length not " + HEADER_SIZE);
                     rserviceid = buffer.getLong();
-                    if (rserviceid != serviceid) throw new RuntimeException("sncp send serviceid = " + serviceid + ", but receive next.serviceid =" + rserviceid);
+                    if (rserviceid != serviceid) throw new RuntimeException("sncp(" + action.method + ") send serviceid = " + serviceid + ", but receive next.serviceid =" + rserviceid);
                     rnameid = buffer.getLong();
-                    if (rnameid != nameid) throw new RuntimeException("sncp send nameid = " + nameid + ", but receive next.nameid =" + rnameid);
+                    if (rnameid != nameid) throw new RuntimeException("sncp(" + action.method + ") send nameid = " + nameid + ", but receive next.nameid =" + rnameid);
                     ractionid1 = buffer.getLong();
                     ractionid2 = buffer.getLong();
-                    if (!actionid.compare(ractionid1, ractionid2)) throw new RuntimeException("sncp send actionid = " + actionid + ", but receive next.actionid =(" + ractionid1 + "_" + ractionid2 + ")");
+                    if (!actionid.compare(ractionid1, ractionid2)) throw new RuntimeException("sncp(" + action.method + ") send actionid = " + actionid + ", but receive next.actionid =(" + ractionid1 + "_" + ractionid2 + ")");
                     buffer.getInt();
                     buffer.getInt();
-                    if (buffer.get() < 1) throw new RuntimeException("sncp send nameid = " + nameid + ", but next.frame.count != " + frameCount);
+                    if (buffer.get() < 1) throw new RuntimeException("sncp(" + action.method + ") send nameid = " + nameid + ", but next.frame.count != " + frameCount);
                     frameIndex = buffer.get();
                     if (frameIndex < 0 || frameIndex >= frameCount)
-                        throw new RuntimeException("sncp receive nameid = " + nameid + ", but frame.count =" + frameCount + " & next.frame.index =" + frameIndex);
+                        throw new RuntimeException("sncp(" + action.method + ") receive nameid = " + nameid + ", but frame.count =" + frameCount + " & next.frame.index =" + frameIndex);
                     int rretcode = buffer.getInt();
-                    if (rretcode != 0) throw new RuntimeException("remote service deal error (receive retcode =" + rretcode + ")");
+                    if (rretcode != 0) throw new RuntimeException("remote service(" + action.method + ") deal error (receive retcode =" + rretcode + ")");
                     int rbodylen = buffer.getInt();
-                    if (rbodylen != bodylen) throw new RuntimeException("sncp receive bodylength = " + bodylen + ", but receive next.bodylength =" + rbodylen);
+                    if (rbodylen != bodylen) throw new RuntimeException("sncp(" + action.method + ") receive bodylength = " + bodylen + ", but receive next.bodylength =" + rbodylen);
                 }
-                if (received != bodylen) throw new RuntimeException("sncp receive bodylength = " + bodylen + ", but receive next.receivedlength =" + received);
+                if (received != bodylen) throw new RuntimeException("sncp(" + action.method + ") receive bodylength = " + bodylen + ", but receive next.receivedlength =" + received);
                 return body;
             }
         } catch (RuntimeException ex) {
             throw ex;
         } catch (Exception e) {
-            throw new RuntimeException(conn.getRemoteAddress() + " connect failed.", e);
+            throw new RuntimeException("sncp(" + action.method + ") " + conn.getRemoteAddress() + " connect failed.", e);
         } finally {
             transport.offerBuffer(buffer);
             transport.offerConnection(conn);

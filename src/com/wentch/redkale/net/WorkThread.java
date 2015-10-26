@@ -24,4 +24,8 @@ public class WorkThread extends Thread {
     public void submit(Runnable runner) {
         executor.submit(runner);
     }
+
+    public ExecutorService getExecutor() {
+        return executor;
+    }
 }

@@ -23,6 +23,7 @@ import java.nio.file.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
+import java.util.function.*;
 import java.util.logging.*;
 import javax.xml.parsers.*;
 import org.w3c.dom.*;
@@ -465,8 +466,9 @@ public final class Application {
 
     public static <T extends Service> T singleton(Class<T> serviceClass, boolean remote) throws Exception {
         final Application application = Application.create();
-        T service = remote ? Sncp.createRemoteService("", serviceClass, null, new LinkedHashSet<>(), null)
-                : Sncp.createLocalService("", serviceClass, null, new LinkedHashSet<>(), null, null);
+        Consumer<Runnable> executor = (x) -> Executors.newFixedThreadPool(8).submit(x);
+        T service = remote ? Sncp.createRemoteService("", executor, serviceClass, null, new LinkedHashSet<>(), null)
+                : Sncp.createLocalService("", executor, serviceClass, null, new LinkedHashSet<>(), null, null);
         application.init();
         application.factory.register(service);
         application.servicecdl = new CountDownLatch(1);

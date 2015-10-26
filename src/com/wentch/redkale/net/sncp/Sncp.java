@@ -13,6 +13,7 @@ import com.wentch.redkale.util.*;
 import java.lang.reflect.*;
 import java.net.*;
 import java.util.*;
+import java.util.function.*;
 import javax.annotation.*;
 import jdk.internal.org.objectweb.asm.*;
 import static jdk.internal.org.objectweb.asm.ClassWriter.COMPUTE_FRAMES;
@@ -612,6 +613,7 @@ public abstract class Sncp {
      * 创建本地模式Service实例
      * @param <T>
      * @param name
+     * @param executor
      * @param serviceClass
      * @param clientAddress
      * @param groups
@@ -620,7 +622,7 @@ public abstract class Sncp {
      * @return 
      */
     @SuppressWarnings("unchecked")
-    public static <T extends Service> T createLocalService(final String name, final Class<T> serviceClass,
+    public static <T extends Service> T createLocalService(final String name, final Consumer<Runnable> executor, final Class<T> serviceClass,
             final InetSocketAddress clientAddress, HashSet<String> groups, Collection<Transport> sameGroupTransports, Collection<Transport> diffGroupTransports) {
         try {
             final Class newClazz = createLocalServiceClass(name, serviceClass);
@@ -645,7 +647,7 @@ public abstract class Sncp {
                                 if (!list.isEmpty()) remoteTransport = new Transport(list.get(0), clientAddress, list);
                             }
                             if (field.getType().isAssignableFrom(newClazz) && remoteTransport != null) {
-                                field.set(rs, createRemoteService(name, serviceClass, clientAddress, groups, remoteTransport));
+                                field.set(rs, createRemoteService(name, executor, serviceClass, clientAddress, groups, remoteTransport));
                             }
                             continue;
                         }
@@ -675,7 +677,7 @@ public abstract class Sncp {
                 try {
                     Field e = newClazz.getDeclaredField("_client");
                     e.setAccessible(true);
-                    client = new SncpClient(name, hash(serviceClass), false, newClazz, true, clientAddress, groups);
+                    client = new SncpClient(name, executor, hash(serviceClass), false, newClazz, true, clientAddress, groups);
                     e.set(rs, client);
                 } catch (NoSuchFieldException ne) {
                 }
@@ -769,6 +771,7 @@ public abstract class Sncp {
      * <p>
      * @param <T>
      * @param name
+     * @param executor
      * @param serviceClass
      * @param clientAddress     
      * @param groups
@@ -776,7 +779,8 @@ public abstract class Sncp {
      * @return
      */
     @SuppressWarnings("unchecked")
-    public static <T extends Service> T createRemoteService(final String name, final Class<T> serviceClass, final InetSocketAddress clientAddress, HashSet<String> groups, final Transport transport) {
+    public static <T extends Service> T createRemoteService(final String name, final Consumer<Runnable> executor,
+            final Class<T> serviceClass, final InetSocketAddress clientAddress, HashSet<String> groups, final Transport transport) {
         if (serviceClass == null) return null;
         if (!Service.class.isAssignableFrom(serviceClass)) return null;
         int mod = serviceClass.getModifiers();
@@ -791,7 +795,7 @@ public abstract class Sncp {
         final String anyValueDesc = Type.getDescriptor(AnyValue.class);
         ClassLoader loader = Sncp.class.getClassLoader();
         String newDynName = supDynName.substring(0, supDynName.lastIndexOf('/') + 1) + REMOTEPREFIX + serviceClass.getSimpleName();
-        final SncpClient client = new SncpClient(name, hash(serviceClass), true, createLocalServiceClass(name, serviceClass), false, clientAddress, groups);
+        final SncpClient client = new SncpClient(name, executor, hash(serviceClass), true, createLocalServiceClass(name, serviceClass), false, clientAddress, groups);
         try {
             Class newClazz = Class.forName(newDynName.replace('/', '.'));
             T rs = (T) newClazz.newInstance();

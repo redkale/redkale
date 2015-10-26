@@ -73,6 +73,14 @@ public abstract class NodeServer {
         this.fine = logger.isLoggable(Level.FINE);
     }
 
+    protected Consumer<Runnable> getExecutor() throws Exception {
+        if (server == null) return null;
+        Field field = Server.class.getDeclaredField("context");
+        field.setAccessible(true);
+        Context context = (Context) field.get(server);
+        return (x) -> context.submit(x);
+    }
+
     public static <T extends NodeServer> NodeServer create(Class<T> clazz, Application application, AnyValue serconf) {
         try {
             return clazz.getConstructor(Application.class, AnyValue.class).newInstance(application, serconf);
@@ -134,7 +142,7 @@ public abstract class NodeServer {
                 application.sources.add(source);
                 regFactory.register(rs.name(), DataSource.class, source);
                 if (factory.find(rs.name(), DataCacheListener.class) == null) {
-                    Service cacheListenerService = Sncp.createLocalService(rs.name(), DataCacheListenerService.class, this.sncpAddress, sncpDefaultGroups, sncpSameGroupTransports, sncpDiffGroupTransports);
+                    Service cacheListenerService = Sncp.createLocalService(rs.name(), getExecutor(), DataCacheListenerService.class, this.sncpAddress, sncpDefaultGroups, sncpSameGroupTransports, sncpDiffGroupTransports);
                     regFactory.register(rs.name(), DataCacheListener.class, cacheListenerService);
                     ServiceWrapper wrapper = new ServiceWrapper(DataCacheListenerService.class, cacheListenerService, rs.name(), sncpGroup, sncpDefaultGroups, null);
                     localServiceWrappers.add(wrapper);
@@ -233,7 +241,7 @@ public abstract class NodeServer {
                     tset.add(iaddr);
                     sameGroupTransports.add(loadTransport(this.sncpGroup, server.getProtocol(), tset));
                 }
-                Service service = Sncp.createLocalService(entry.getName(), type, this.sncpAddress, groups, sameGroupTransports, diffGroupTransports);
+                Service service = Sncp.createLocalService(entry.getName(), getExecutor(), type, this.sncpAddress, groups, sameGroupTransports, diffGroupTransports);
                 wrapper = new ServiceWrapper(type, service, this.sncpGroup, entry);
                 if (fine) logger.fine("[" + Thread.currentThread().getName() + "] Load " + service);
             } else {
@@ -245,7 +253,7 @@ public abstract class NodeServer {
                     sameGroupAddrs.addAll(v);
                 });
                 if (sameGroupAddrs.isEmpty()) throw new RuntimeException(type.getName() + " has no remote address on group (" + groups + ")");
-                Service service = Sncp.createRemoteService(entry.getName(), type, this.sncpAddress, groups, loadTransport(g.toString(), server.getProtocol(), sameGroupAddrs));
+                Service service = Sncp.createRemoteService(entry.getName(), getExecutor(), type, this.sncpAddress, groups, loadTransport(g.toString(), server.getProtocol(), sameGroupAddrs));
                 wrapper = new ServiceWrapper(type, service, "", entry);
                 if (fine) logger.fine("[" + Thread.currentThread().getName() + "] Load " + service);
             }
