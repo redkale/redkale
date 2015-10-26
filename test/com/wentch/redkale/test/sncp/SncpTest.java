@@ -52,7 +52,7 @@ public class SncpTest {
         set.add(addr);
         set.add(new InetSocketAddress("127.0.0.1", port2));
         Transport transport = new Transport("", protocol, WatchFactory.root(), 100, set);
-        SncpTestService service = Sncp.createRemoteService(serviceName, SncpTestService.class, null, new LinkedHashSet<>(), transport);
+        SncpTestService service = Sncp.createRemoteService(serviceName, null, SncpTestService.class, null, new LinkedHashSet<>(), transport);
         System.out.println(service);
         ResourceFactory.root().inject(service);
 
@@ -81,7 +81,7 @@ public class SncpTest {
                     Transport transport = new Transport("", protocol, WatchFactory.root(), 100, set);
                     List<Transport> sameTransports = new ArrayList<>();
                     sameTransports.add(transport);
-                    SncpTestService service = Sncp.createLocalService("", SncpTestService.class, addr, new LinkedHashSet<>(), sameTransports, null);
+                    SncpTestService service = Sncp.createLocalService("", null, SncpTestService.class, addr, new LinkedHashSet<>(), sameTransports, null);
                     ResourceFactory.root().inject(service);
                     server.addService(new ServiceWrapper(SncpTestService.class, service, "", new ClassFilter.FilterEntry(SncpTestService.class, null)));
                     System.out.println(service);
@@ -112,7 +112,7 @@ public class SncpTest {
                     Transport transport = new Transport("", protocol, WatchFactory.root(), 100, set);
                     List<Transport> sameTransports = new ArrayList<>();
                     sameTransports.add(transport);
-                    Service service = Sncp.createLocalService("", SncpTestService.class, addr, new LinkedHashSet<>(), sameTransports, null);
+                    Service service = Sncp.createLocalService("", null, SncpTestService.class, addr, new LinkedHashSet<>(), sameTransports, null);
                     server.addService(new ServiceWrapper(SncpTestService.class, service, "", new ClassFilter.FilterEntry(SncpTestService.class, null)));
                     AnyValue.DefaultAnyValue conf = new AnyValue.DefaultAnyValue();
                     conf.addValue("host", "0.0.0.0");
