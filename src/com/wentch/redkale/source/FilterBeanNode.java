@@ -328,7 +328,7 @@ final class FilterBeanNode extends FilterNode {
         return result;
     }
 
-    private void putForeignPredicate(final Map<EntityInfo, Predicate> foreign, FilterBean bean) {
+    private <T> void putForeignPredicate(final Map<EntityInfo, Predicate> foreign, FilterBean bean) {
         if (this.foreignEntity == null) return;
         final Serializable val = getValue(bean);
         Predicate filter = (val == null && express != ISNULL && express != ISNOTNULL) ? ((t) -> signand) : super.createFilterPredicate(this.columnAttribute, val);
@@ -336,10 +336,33 @@ final class FilterBeanNode extends FilterNode {
         Predicate p = foreign.get(this.foreignEntity);
         if (p == null) {
             foreign.put(foreignEntity, filter);
-        } else if (signand) {
-            p.and(filter);
         } else {
-            p.or(filter);
+            final Predicate<T> one = p;
+            final Predicate<T> two = filter;
+            p = signand ? new Predicate<T>() {
+
+                @Override
+                public boolean test(T t) {
+                    return one.test(t) && two.test(t);
+                }
+
+                @Override
+                public String toString() {
+                    return "(" + one + " AND " + two + ")";
+                }
+            } : new Predicate<T>() {
+
+                @Override
+                public boolean test(T t) {
+                    return one.test(t) || two.test(t);
+                }
+
+                @Override
+                public String toString() {
+                    return "(" + one + " OR " + two + ")";
+                }
+            };
+            foreign.put(foreignEntity, p);
         }
     }
 
