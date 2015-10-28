@@ -476,12 +476,14 @@ public class FilterNode {
             case NOTIN:
                 Predicate<T> filter;
                 if (val instanceof Collection) {
+                    Collection array = (Collection) val;
+                    if (array.isEmpty()) return null;
                     filter = new Predicate<T>() {
 
                         @Override
                         public boolean test(T t) {
                             Object rs = attr.get(t);
-                            return rs != null && ((Collection) val).contains(rs);
+                            return rs != null && array.contains(rs);
                         }
 
                         @Override
@@ -490,6 +492,7 @@ public class FilterNode {
                         }
                     };
                 } else {
+                    if (Array.getLength(val) < 1) return null;
                     Class type = val.getClass();
                     if (type == int[].class) {
                         filter = new Predicate<T>() {
