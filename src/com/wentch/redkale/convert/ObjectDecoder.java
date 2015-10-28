@@ -129,7 +129,6 @@ public final class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T
                 }
             }
         }
-
         final T result = this.creator.create();
         final AtomicInteger index = new AtomicInteger();
         while (in.hasNext()) {
