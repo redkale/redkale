@@ -331,7 +331,18 @@ final class FilterBeanNode extends FilterNode {
     private <T> void putForeignPredicate(final Map<EntityInfo, Predicate> foreign, FilterBean bean) {
         if (this.foreignEntity == null) return;
         final Serializable val = getValue(bean);
-        Predicate filter = (val == null && express != ISNULL && express != ISNOTNULL) ? ((t) -> signand) : super.createFilterPredicate(this.columnAttribute, val);
+        Predicate filter = (val == null && express != ISNULL && express != ISNOTNULL) ? new Predicate<T>() {
+
+            @Override
+            public boolean test(T t) {
+                return signand;
+            }
+
+            @Override
+            public String toString() {
+                return "" + signand;
+            }
+        } : super.createFilterPredicate(this.columnAttribute, val);
         if (filter == null) return;
         Predicate p = foreign.get(this.foreignEntity);
         if (p == null) {
