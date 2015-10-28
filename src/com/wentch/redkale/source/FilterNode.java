@@ -18,6 +18,17 @@ import java.util.function.*;
  */
 public class FilterNode {
 
+    private static final Map<Class, Class> class2 = new HashMap<>();
+
+    static {
+        class2.put(Integer.class, int.class);
+        class2.put(Long.class, long.class);
+        class2.put(Short.class, short.class);
+        class2.put(Float.class, float.class);
+        class2.put(Byte.class, byte.class);
+        class2.put(Double.class, double.class);
+    }
+
     protected boolean signand = true;
 
     protected String tabalis;
@@ -222,7 +233,7 @@ public class FilterNode {
     protected <T> Predicate<T> createFilterPredicate(final EntityInfo<T> info, FilterBean bean) {
         if (info == null || (column == null && this.nodes == null)) return null;
         final Serializable val = getValue(bean);
-        Predicate<T> filter = (val == null || column == null) ? null : createFilterPredicate(info.getAttribute(column), val);
+        Predicate<T> filter = createFilterPredicate(column == null ? null : info.getAttribute(column), val);
         if (this.nodes == null) return filter;
         for (FilterNode node : this.nodes) {
             Predicate<T> f = node.createFilterPredicate(info, bean);
@@ -257,21 +268,129 @@ public class FilterNode {
     }
 
     protected final <T> Predicate<T> createFilterPredicate(final Attribute<T, Serializable> attr, Serializable val0) {
+        if (val0 == null) {
+            if (express == ISNULL) return new Predicate<T>() {
+
+                @Override
+                public boolean test(T t) {
+                    return attr.get(t) == null;
+                }
+
+                @Override
+                public String toString() {
+                    return attr.field() + " = null";
+                }
+            };
+            if (express == ISNOTNULL) return new Predicate<T>() {
+
+                @Override
+                public boolean test(T t) {
+                    return attr.get(t) != null;
+                }
+
+                @Override
+                public String toString() {
+                    return attr.field() + " != null";
+                }
+            };
+            return null;
+        }
         if (attr == null) return null;
+
         final Class atype = attr.type();
-        if (val0 != null && atype != val0.getClass() && val0 instanceof Number) {
-            if (atype == short.class || atype == Short.class) {
-                val0 = ((Number) val0).shortValue();
+        final Class valtype = val0.getClass();
+        if (atype != valtype && val0 instanceof Number) {
+            if (atype == int.class || atype == Integer.class) {
+                val0 = ((Number) val0).intValue();
             } else if (atype == long.class || atype == Long.class) {
                 val0 = ((Number) val0).longValue();
-            } else if (atype == byte.class || atype == Byte.class) {
-                val0 = ((Number) val0).byteValue();
-            } else if (atype == int.class || atype == Integer.class) {
-                val0 = ((Number) val0).intValue();
+            } else if (atype == short.class || atype == Short.class) {
+                val0 = ((Number) val0).shortValue();
             } else if (atype == float.class || atype == Float.class) {
                 val0 = ((Number) val0).floatValue();
+            } else if (atype == byte.class || atype == Byte.class) {
+                val0 = ((Number) val0).byteValue();
             } else if (atype == double.class || atype == Double.class) {
                 val0 = ((Number) val0).doubleValue();
+            }
+        } else if (valtype.isArray()) {
+            final int len = Array.getLength(val0);
+            if (len == 0) return null;
+            final Class compType = valtype.getComponentType();
+            if (atype != compType) {
+                if (!compType.isPrimitive() && Number.class.isAssignableFrom(compType)) throw new RuntimeException("param(" + val0 + ") type not match " + atype + " for column " + column);
+                if (atype == int.class || atype == Integer.class) {
+                    int[] vs = new int[len];
+                    for (int i = 0; i < len; i++) {
+                        vs[i] = ((Number) Array.get(val0, i)).intValue();
+                    }
+                    val0 = vs;
+                } else if (atype == long.class || atype == Long.class) {
+                    long[] vs = new long[len];
+                    for (int i = 0; i < len; i++) {
+                        vs[i] = ((Number) Array.get(val0, i)).longValue();
+                    }
+                    val0 = vs;
+                } else if (atype == short.class || atype == Short.class) {
+                    short[] vs = new short[len];
+                    for (int i = 0; i < len; i++) {
+                        vs[i] = ((Number) Array.get(val0, i)).shortValue();
+                    }
+                    val0 = vs;
+                } else if (atype == float.class || atype == Float.class) {
+                    float[] vs = new float[len];
+                    for (int i = 0; i < len; i++) {
+                        vs[i] = ((Number) Array.get(val0, i)).floatValue();
+                    }
+                    val0 = vs;
+                } else if (atype == byte.class || atype == Byte.class) {
+                    byte[] vs = new byte[len];
+                    for (int i = 0; i < len; i++) {
+                        vs[i] = ((Number) Array.get(val0, i)).byteValue();
+                    }
+                    val0 = vs;
+                } else if (atype == double.class || atype == Double.class) {
+                    double[] vs = new double[len];
+                    for (int i = 0; i < len; i++) {
+                        vs[i] = ((Number) Array.get(val0, i)).doubleValue();
+                    }
+                    val0 = vs;
+                }
+            }
+        } else if (val0 instanceof Collection) {
+            final Collection collection = (Collection) val0;
+            if (collection.isEmpty()) return null;
+            Iterator it = collection.iterator();
+            it.hasNext();
+            Class fs = it.next().getClass();
+            if (Number.class.isAssignableFrom(fs) && atype != fs && atype != class2.get(fs)) { //需要转换
+                ArrayList list = new ArrayList(collection.size());
+                if (atype == int.class || atype == Integer.class) {
+                    for (Number num : (Collection<Number>) collection) {
+                        list.add(num.intValue());
+                    }
+                } else if (atype == long.class || atype == Long.class) {
+                    for (Number num : (Collection<Number>) collection) {
+                        list.add(num.longValue());
+                    }
+                } else if (atype == short.class || atype == Short.class) {
+                    for (Number num : (Collection<Number>) collection) {
+                        list.add(num.shortValue());
+                    }
+                } else if (atype == float.class || atype == Float.class) {
+                    for (Number num : (Collection<Number>) collection) {
+                        list.add(num.floatValue());
+                    }
+                } else if (atype == byte.class || atype == Byte.class) {
+                    for (Number num : (Collection<Number>) collection) {
+                        list.add(num.byteValue());
+                    }
+                } else if (atype == double.class || atype == Double.class) {
+                    for (Number num : (Collection<Number>) collection) {
+                        list.add(num.doubleValue());
+                    }
+                }
+                val0 = list;
             }
         }
         final Serializable val = val0;
@@ -348,30 +467,7 @@ public class FilterNode {
                     return attr.field() + ' ' + express.value() + ' ' + val;
                 }
             };
-            case ISNULL: return new Predicate<T>() {
 
-                @Override
-                public boolean test(T t) {
-                    return attr.get(t) == null;
-                }
-
-                @Override
-                public String toString() {
-                    return attr.field() + " = null";
-                }
-            };
-            case ISNOTNULL: return new Predicate<T>() {
-
-                @Override
-                public boolean test(T t) {
-                    return attr.get(t) != null;
-                }
-
-                @Override
-                public String toString() {
-                    return attr.field() + " != null";
-                }
-            };
             case OPAND: return new Predicate<T>() {
 
                 @Override
@@ -477,7 +573,6 @@ public class FilterNode {
                 Predicate<T> filter;
                 if (val instanceof Collection) {
                     Collection array = (Collection) val;
-                    if (array.isEmpty()) return null;
                     filter = new Predicate<T>() {
 
                         @Override
@@ -492,7 +587,6 @@ public class FilterNode {
                         }
                     };
                 } else {
-                    if (Array.getLength(val) < 1) return null;
                     Class type = val.getClass();
                     if (type == int[].class) {
                         filter = new Predicate<T>() {
