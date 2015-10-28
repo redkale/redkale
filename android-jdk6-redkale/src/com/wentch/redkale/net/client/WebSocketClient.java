@@ -9,6 +9,7 @@ import com.wentch.redkale.util.*;
 import java.io.*;
 import java.net.*;
 import java.util.*;
+import java.util.concurrent.*;
 import javax.net.ssl.*;
 
 /**
@@ -26,6 +27,8 @@ public class WebSocketClient {
     private SSLContext sslContext;
 
     private Socket socket;
+
+    private final Map<String, Object> attributes = new ConcurrentHashMap<String, Object>();
 
     private WebSocketClient(URI uri, Map<String, String> headers0) {
         this.uri = uri;
@@ -81,6 +84,66 @@ public class WebSocketClient {
     }
 
     public static void main(String[] args) throws Exception {
-        System.out.println(new URI("wss://talk.3wyc.com/pipes/ws/listen?test=aa").getQuery());
+        URI uri = new URI("ws://10.28.2.207/pipes/ws/listen?test=aa");
+        WebSocketClient client = WebSocketClient.create(uri);
+        client.connect();
+        System.out.println();
+    }
+
+    public void onConnected() {
+    }
+
+    public void onMessage(String text) {
+    }
+
+    public void onPing(byte[] bytes) {
+    }
+
+    public void onPong(byte[] bytes) {
+    }
+
+    public void onMessage(byte[] bytes) {
+    }
+
+    public void onFragment(String text, boolean last) {
+    }
+
+    public void onFragment(byte[] bytes, boolean last) {
+    }
+
+    public void onClose(int code, String reason) {
+    }
+
+    /**
+     * 获取当前WebSocket下的属性
+     * <p>
+     * @param <T>
+     * @param name
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    public final <T> T getAttribute(String name) {
+        return (T) attributes.get(name);
+    }
+
+    /**
+     * 移出当前WebSocket下的属性
+     * <p>
+     * @param <T>
+     * @param name
+     * @return
+     */
+    public final <T> T removeAttribute(String name) {
+        return (T) attributes.remove(name);
+    }
+
+    /**
+     * 给当前WebSocket下的增加属性
+     * <p>
+     * @param name
+     * @param value
+     */
+    public final void setAttribute(String name, Object value) {
+        attributes.put(name, value);
     }
 }
