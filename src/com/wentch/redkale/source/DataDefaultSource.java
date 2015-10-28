@@ -606,7 +606,14 @@ public final class DataDefaultSource implements DataSource, Nameable {
             if (cache == null) return;
             final Attribute<T, Serializable> attr = info.getPrimary();
             final Serializable[] keys2 = keys;
-            Serializable[] ids = cache.delete((T t) -> Arrays.binarySearch(keys2, attr.get(t)) >= 0);
+            Serializable[] ids = cache.delete((T t) -> {
+                Serializable k = attr.get(t);
+                if (k == null) return false;
+                for (Serializable y : keys2) {
+                    if (k.equals(y)) return true;
+                }
+                return false;
+            });
             if (cacheListener != null) cacheListener.deleteCache(info.getType(), ids);
         } catch (SQLException e) {
             throw new RuntimeException(e);

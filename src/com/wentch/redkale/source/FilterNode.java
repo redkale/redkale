@@ -498,7 +498,11 @@ public class FilterNode {
                             public boolean test(T t) {
                                 Object rs = attr.get(t);
                                 if (rs == null) return false;
-                                return Arrays.binarySearch((int[]) val, (int) rs) >= 0;
+                                int k = (int) rs;
+                                for (int v : (int[]) val) {
+                                    if (v == k) return true;
+                                }
+                                return false;
                             }
 
                             @Override
@@ -513,7 +517,11 @@ public class FilterNode {
                             public boolean test(T t) {
                                 Object rs = attr.get(t);
                                 if (rs == null) return false;
-                                return Arrays.binarySearch((short[]) val, (short) rs) >= 0;
+                                short k = (short) rs;
+                                for (short v : (short[]) val) {
+                                    if (v == k) return true;
+                                }
+                                return false;
                             }
 
                             @Override
@@ -528,7 +536,11 @@ public class FilterNode {
                             public boolean test(T t) {
                                 Object rs = attr.get(t);
                                 if (rs == null) return false;
-                                return Arrays.binarySearch((long[]) val, (long) rs) >= 0;
+                                long k = (long) rs;
+                                for (long v : (long[]) val) {
+                                    if (v == k) return true;
+                                }
+                                return false;
                             }
 
                             @Override
@@ -543,7 +555,11 @@ public class FilterNode {
                             public boolean test(T t) {
                                 Object rs = attr.get(t);
                                 if (rs == null) return false;
-                                return Arrays.binarySearch((float[]) val, (float) rs) >= 0;
+                                float k = (float) rs;
+                                for (float v : (float[]) val) {
+                                    if (v == k) return true;
+                                }
+                                return false;
                             }
 
                             @Override
@@ -558,7 +574,11 @@ public class FilterNode {
                             public boolean test(T t) {
                                 Object rs = attr.get(t);
                                 if (rs == null) return false;
-                                return Arrays.binarySearch((double[]) val, (double) rs) >= 0;
+                                double k = (double) rs;
+                                for (double v : (double[]) val) {
+                                    if (v == k) return true;
+                                }
+                                return false;
                             }
 
                             @Override
@@ -572,7 +592,11 @@ public class FilterNode {
                             @Override
                             public boolean test(T t) {
                                 Object rs = attr.get(t);
-                                return rs != null && Arrays.binarySearch((Object[]) val, rs) >= 0;
+                                if (rs == null) return false;
+                                for (Object v : (Object[]) val) {
+                                    if (rs.equals(v)) return true;
+                                }
+                                return false;
                             }
 
                             @Override
