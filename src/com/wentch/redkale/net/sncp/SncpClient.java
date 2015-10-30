@@ -244,7 +244,6 @@ public final class SncpClient {
                     buffer.put(all, pos, len);
                     pos += len;
                     buffer.flip();
-                    Thread.sleep(10);
                     conn.write(buffer).get(writeto > 0 ? writeto : 5, TimeUnit.SECONDS);
                     buffer.clear();
                 }

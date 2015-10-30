@@ -23,6 +23,8 @@ public final class Transport {
 
     protected static final int MAX_POOL_LIMIT = 16;
 
+    protected final boolean aio;
+
     protected final String name;
 
     protected final int bufferPoolSize;
@@ -40,12 +42,17 @@ public final class Transport {
     protected final ConcurrentHashMap<SocketAddress, BlockingQueue<AsyncConnection>> connPool = new ConcurrentHashMap<>();
 
     public Transport(Transport transport, InetSocketAddress localAddress, Collection<Transport> transports) {
-        this(transport.name, transport.protocol, null, transport.bufferPoolSize, parse(localAddress, transports));
+        this(transport.name, transport.protocol, transport.aio, null, transport.bufferPoolSize, parse(localAddress, transports));
     }
 
     public Transport(String name, String protocol, WatchFactory watch, int bufferPoolSize, Collection<InetSocketAddress> addresses) {
+        this(name, protocol, false, watch, bufferPoolSize, addresses);
+    }
+
+    public Transport(String name, String protocol, boolean aio, WatchFactory watch, int bufferPoolSize, Collection<InetSocketAddress> addresses) {
         this.name = name;
         this.protocol = protocol;
+        this.aio = aio;
         this.bufferPoolSize = bufferPoolSize;
         AsynchronousChannelGroup g = null;
         try {
@@ -120,8 +127,9 @@ public final class Transport {
         final boolean rand = addr == null;
         try {
             if ("TCP".equalsIgnoreCase(protocol)) {
+                Socket socket = null;
                 AsynchronousSocketChannel channel = null;
-                if (rand) {
+                if (rand) {   //随机取地址
                     int p = 0;
                     for (int i = index.get(); i < remoteAddres.length; i++) {
                         p = i;
@@ -133,29 +141,51 @@ public final class Transport {
                                 if (conn.isOpen()) return conn;
                             }
                         }
-                        if (channel == null) channel = AsynchronousSocketChannel.open(group);
+                        if (aio) {
+                            if (channel == null) channel = AsynchronousSocketChannel.open(group);
+                        } else {
+                            if (socket == null) socket = new Socket();
+                        }
                         try {
-                            channel.connect(addr).get(1, TimeUnit.SECONDS);
+                            if (aio) {
+                                channel.connect(addr).get(1, TimeUnit.SECONDS);
+                            } else {
+                                socket.connect(addr, 1000);
+                            }
                             break;
                         } catch (Exception iex) {
                             if (i == remoteAddres.length - 1) {
                                 p = 0;
+                                socket = null;
                                 channel = null;
                             }
                         }
                     }
                     index.set(p);
                 } else {
-                    channel = AsynchronousSocketChannel.open(group);
-                    channel.connect(addr).get(2, TimeUnit.SECONDS);
+                    if (aio) {
+                        channel = AsynchronousSocketChannel.open(group);
+                        channel.connect(addr).get(1, TimeUnit.SECONDS);
+                    } else {
+                        socket = new Socket();
+                        socket.connect(addr, 1000);
+                    }
                 }
-                if (channel == null) return null;
-                return AsyncConnection.create(channel, addr, 0, 0);
-            } else {
+                if (aio && channel == null) return null;
+                if (!aio && socket == null) return null;
+                return aio ? AsyncConnection.create(channel, addr, 3000, 3000) : AsyncConnection.create(socket, addr, 3000, 3000);
+            } else { // UDP
                 if (rand) addr = remoteAddres[0];
-                AsyncDatagramChannel channel = AsyncDatagramChannel.open(group);
-                channel.connect(addr);
-                return AsyncConnection.create(channel, addr, true, 0, 0);
+                if (aio) {
+                    AsyncDatagramChannel channel = AsyncDatagramChannel.open(group);
+                    channel.connect(addr);
+                    return AsyncConnection.create(channel, addr, true, 3000, 3000);
+                } else {
+                    DatagramChannel socket = DatagramChannel.open();
+                    socket.configureBlocking(true);
+                    socket.connect(addr);
+                    return AsyncConnection.create(socket, addr, true, 3000, 3000);
+                }
             }
         } catch (Exception ex) {
             throw new RuntimeException("transport address = " + addr, ex);

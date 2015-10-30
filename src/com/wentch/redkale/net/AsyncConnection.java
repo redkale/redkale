@@ -206,6 +206,131 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
         }
     }
 
+    private static class BIOUDPAsyncConnection extends AsyncConnection {
+
+        private int readTimeoutSecond;
+
+        private int writeTimeoutSecond;
+
+        private final DatagramChannel channel;
+
+        private final SocketAddress remoteAddress;
+
+        private final boolean client;
+
+        public BIOUDPAsyncConnection(final DatagramChannel ch, SocketAddress addr,
+                final boolean client0, final int readTimeoutSecond0, final int writeTimeoutSecond0) {
+            this.channel = ch;
+            if (client0) {
+                try {
+                    this.channel.configureBlocking(true);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            this.client = client0;
+            this.readTimeoutSecond = readTimeoutSecond0;
+            this.writeTimeoutSecond = writeTimeoutSecond0;
+            this.remoteAddress = addr;
+        }
+
+        @Override
+        public void setReadTimeoutSecond(int readTimeoutSecond) {
+            this.readTimeoutSecond = readTimeoutSecond;
+        }
+
+        @Override
+        public void setWriteTimeoutSecond(int writeTimeoutSecond) {
+            this.writeTimeoutSecond = writeTimeoutSecond;
+        }
+
+        @Override
+        public int getReadTimeoutSecond() {
+            return this.readTimeoutSecond;
+        }
+
+        @Override
+        public int getWriteTimeoutSecond() {
+            return this.writeTimeoutSecond;
+        }
+
+        @Override
+        public final SocketAddress getRemoteAddress() {
+            return remoteAddress;
+        }
+
+        @Override
+        protected <A> void write(ByteBuffer[] srcs, int offset, int length, A attachment, CompletionHandler<Integer, ? super A> handler) {
+            try {
+                int rs = 0;
+                for (int i = offset; i < offset + length; i++) {
+                    rs += channel.write(srcs[i]);
+                }
+                if (handler != null) handler.completed(rs, attachment);
+            } catch (IOException e) {
+                if (handler != null) handler.failed(e, attachment);
+            }
+        }
+
+        @Override
+        public <A> void read(ByteBuffer dst, A attachment, CompletionHandler<Integer, ? super A> handler) {
+            try {
+                int rs = channel.read(dst);
+                if (handler != null) handler.completed(rs, attachment);
+            } catch (IOException e) {
+                if (handler != null) handler.failed(e, attachment);
+            }
+        }
+
+        @Override
+        public Future<Integer> read(ByteBuffer dst) {
+            try {
+                int rs = channel.read(dst);
+                return new SimpleFuture(rs);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        @Override
+        public <A> void write(ByteBuffer src, A attachment, CompletionHandler<Integer, ? super A> handler) {
+            try {
+                int rs = channel.write(src);
+                if (handler != null) handler.completed(rs, attachment);
+            } catch (IOException e) {
+                if (handler != null) handler.failed(e, attachment);
+            }
+        }
+
+        @Override
+        public Future<Integer> write(ByteBuffer src) {
+            try {
+                int rs = channel.write(src);
+                return new SimpleFuture(rs);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        @Override
+        public final void close() throws IOException {
+            super.close();
+            if (client) {
+                channel.close();
+            }
+        }
+
+        @Override
+        public final boolean isOpen() {
+            return channel.isOpen();
+        }
+
+        @Override
+        public final boolean isTCP() {
+            return false;
+        }
+    }
+
     public static AsyncConnection create(final AsyncDatagramChannel ch, SocketAddress addr, final boolean client0) {
         return create(ch, addr, client0, 0, 0);
     }
@@ -213,6 +338,11 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
     public static AsyncConnection create(final AsyncDatagramChannel ch, SocketAddress addr,
             final boolean client0, final int readTimeoutSecond0, final int writeTimeoutSecond0) {
         return new AIOUDPAsyncConnection(ch, addr, client0, readTimeoutSecond0, writeTimeoutSecond0);
+    }
+
+    public static AsyncConnection create(final DatagramChannel ch, SocketAddress addr,
+            final boolean client0, final int readTimeoutSecond0, final int writeTimeoutSecond0) {
+        return new BIOUDPAsyncConnection(ch, addr, client0, readTimeoutSecond0, writeTimeoutSecond0);
     }
 
     private static class SimpleFuture implements Future<Integer> {
