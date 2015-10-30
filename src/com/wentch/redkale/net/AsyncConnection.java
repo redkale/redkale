@@ -273,6 +273,7 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
                 rc = Channels.newChannel(socket.getInputStream());
                 wc = Channels.newChannel(socket.getOutputStream());
             } catch (IOException e) {
+                e.printStackTrace();
             }
             this.readChannel = rc;
             this.writeChannel = wc;
