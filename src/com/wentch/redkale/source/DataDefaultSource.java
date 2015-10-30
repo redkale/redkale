@@ -498,7 +498,12 @@ public final class DataDefaultSource implements DataSource, Nameable {
                         int i = 0;
                         for (char ch : sqlchars) {
                             if (ch == '?') {
-                                sb.append(formatToString(attrs[i++].get(value)));
+                                Object obj = attrs[i++].get(value);
+                                if (obj != null && obj.getClass().isArray()) {
+                                    sb.append("'[length=").append(java.lang.reflect.Array.getLength(obj)).append("]'");
+                                } else {
+                                    sb.append(formatToString(obj));
+                                }
                             } else {
                                 sb.append(ch);
                             }
