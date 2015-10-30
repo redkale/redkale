@@ -82,15 +82,17 @@ final class FilterBeanNode extends FilterNode {
                         if (secinfo.getCache() == null || !secinfo.getCache().isFullLoaded()) {
                             joinallcached = false;
                         }
+                        final String jc = joinCol.column().isEmpty() ? secinfo.getPrimary().field() : joinCol.column();
                         if (first) {
                             joinsb.append(" ").append(joinCol.type().name()).append(" JOIN ").append(secinfo.getTable())
                                     .append(" ").append(alias).append(" ON a.# = ").append(alias).append(".")
-                                    .append(joinCol.column().isEmpty() ? secinfo.getPrimarySQLColumn() : secinfo.getSQLColumn(joinCol.column()));
+                                    .append(secinfo.getSQLColumn(jc));
                         }
                         newnode.foreignEntity = secinfo;
                         newnode.tabalis = alias;
                         newnode.columnAttribute = secinfo.getAttribute(newnode.column);
-                        newnode.foreignAttribute = joinCol.column().isEmpty() ? secinfo.getPrimary() : secinfo.getAttribute(joinCol.column());
+                        newnode.byjoinColumn = jc;
+                        newnode.foreignAttribute = secinfo.getAttribute(jc);
                         if (newnode.foreignEntity != null && newnode.foreignAttribute == null) throw new RuntimeException(clazz.getName() + "." + field.getName() + " have illegal FilterJoinColumn " + joinCol);
                     }
                 }
@@ -139,9 +141,11 @@ final class FilterBeanNode extends FilterNode {
     //---------------------------------------------------------------------------------------------
     private Attribute beanAttribute;
 
-    private EntityInfo foreignEntity;
+    private EntityInfo foreignEntity; // join 表
 
-    private Attribute foreignAttribute;
+    private String byjoinColumn;  //被join表的join字段
+
+    private Attribute foreignAttribute;  //join表的join字段
 
     private Attribute columnAttribute;
 
@@ -196,6 +200,7 @@ final class FilterBeanNode extends FilterNode {
         newnode.express = this.express;
         newnode.nodes = this.nodes;
         newnode.foreignEntity = this.foreignEntity;
+        newnode.byjoinColumn = this.byjoinColumn;
         newnode.foreignAttribute = this.foreignAttribute;
         newnode.columnAttribute = this.columnAttribute;
         newnode.array = this.array;
@@ -213,6 +218,7 @@ final class FilterBeanNode extends FilterNode {
             FilterBeanNode beanNode = ((FilterBeanNode) node);
             this.beanAttribute = beanNode.beanAttribute;
             this.foreignEntity = beanNode.foreignEntity;
+            this.byjoinColumn = beanNode.byjoinColumn;
             this.foreignAttribute = beanNode.foreignAttribute;
             this.columnAttribute = beanNode.columnAttribute;
             this.array = beanNode.array;
@@ -228,7 +234,7 @@ final class FilterBeanNode extends FilterNode {
     protected <T> StringBuilder createFilterSQLExpress(final boolean first, final EntityInfo<T> info, FilterBean bean) {
         if (joinSQL == null || !first) return super.createFilterSQLExpress(first, info, bean);
         StringBuilder sb = super.createFilterSQLExpress(first, info, bean);
-        String jsql = joinSQL.replace("#", info.getPrimarySQLColumn());
+        String jsql = joinSQL.replace("#", info.getSQLColumn(byjoinColumn));
         return new StringBuilder(sb.length() + jsql.length()).append(jsql).append(sb);
     }
 
@@ -280,23 +286,24 @@ final class FilterBeanNode extends FilterNode {
             }
         }
         if (foreign.isEmpty()) return result;
+        final String byjoinCol = this.byjoinColumn;
         final Attribute foreignAttr = this.foreignAttribute;
         for (final Map.Entry<EntityInfo, Predicate> en : foreign.entrySet()) {
-            Attribute<T, Serializable> mainIdAttr = info.getPrimary();
+            Attribute<T, Serializable> byjoinAttr = info.getAttribute(byjoinCol);
             final EntityCache cache = en.getKey().getCache();
             final Predicate p = en.getValue();
             Predicate<T> f = new Predicate<T>() {
 
                 @Override
                 public boolean test(T t) {
-                    Serializable key = mainIdAttr.get(t);
+                    Serializable key = byjoinAttr.get(t);
                     Predicate k = (e) -> key.equals(foreignAttr.get(e));
                     return cache.exists(k.and(p));
                 }
 
                 @Override
                 public String toString() {
-                    return "(" + mainIdAttr.field() + " = " + en.getKey().getType().getSimpleName() + "." + foreignAttr.field() + " AND " + p + ")";
+                    return "(" + byjoinAttr.field() + " = " + en.getKey().getType().getSimpleName() + "." + foreignAttr.field() + " AND " + p + ")";
                 }
             };
             final Predicate<T> one = result;

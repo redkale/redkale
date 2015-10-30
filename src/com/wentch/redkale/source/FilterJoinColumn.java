@@ -25,14 +25,14 @@ public @interface FilterJoinColumn {
     }
 
     /**
-     * 关联表
+     * 关联表 通常join表默认别名为b/c/d/...自增， 被join表默认别名为a
      *
      * @return
      */
     Class table();
 
     /**
-     * 默认使用主键
+     * 默认使用join表(b)的主键, join表与被join表(a)的字段必须一样
      * <p>
      * @return
      */
