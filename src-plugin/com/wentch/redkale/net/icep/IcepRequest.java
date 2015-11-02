@@ -44,7 +44,8 @@ public class IcepRequest extends Request {
     }
 
     @Override
-    protected void readBody(ByteBuffer buffer) {
+    protected int readBody(ByteBuffer buffer) {
+        return buffer.remaining();
     }
 
     @Override
