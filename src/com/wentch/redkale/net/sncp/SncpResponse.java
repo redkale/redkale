@@ -50,22 +50,22 @@ public final class SncpResponse extends Response<SncpRequest> {
     public void finish(final int retcode, final byte[] bytes) {
         ByteBuffer buffer = context.pollBuffer();
         final int bodyLength = (bytes == null ? 0 : bytes.length);
-        final int patch = bodyLength / (buffer.capacity() - HEADER_SIZE) + (bodyLength % (buffer.capacity() - HEADER_SIZE) > 0 ? 1 : 0);
-        if (patch <= 1) {
+        final int frames = bodyLength / (buffer.capacity() - HEADER_SIZE) + (bodyLength % (buffer.capacity() - HEADER_SIZE) > 0 ? 1 : 0);
+        if (frames <= 1) {
             //---------------------head----------------------------------
-            fillHeader(buffer, retcode, 1, 0, bodyLength);
+            fillHeader(buffer, bodyLength, 1, 0, retcode, 0, bytes.length);
             //---------------------body----------------------------------
             if (bytes != null) buffer.put(bytes);
             buffer.flip();
             finish(buffer);
         } else {
-            final ByteBuffer[] buffers = new ByteBuffer[patch];
+            final ByteBuffer[] buffers = new ByteBuffer[frames];
             int pos = 0;
-            for (int i = patch - 1; i >= 0; i--) {
-                if (i != patch - 1) buffer = context.pollBuffer();
-                fillHeader(buffer, retcode, patch, i, bodyLength);
+            for (int i = frames - 1; i >= 0; i--) {
+                if (i != frames - 1) buffer = context.pollBuffer();
+                int len = Math.min(buffer.remaining() - HEADER_SIZE, bytes.length - pos);
+                fillHeader(buffer, bodyLength, frames, i, retcode, pos, len);
                 buffers[i] = buffer;
-                int len = Math.min(buffer.remaining(), bytes.length - pos);
                 buffer.put(bytes, pos, len);
                 pos += len;
                 buffer.flip();
@@ -74,7 +74,7 @@ public final class SncpResponse extends Response<SncpRequest> {
         }
     }
 
-    private void fillHeader(ByteBuffer buffer, int retcode, int frameCount, int frameIndex, int bodyLength) {
+    private void fillHeader(ByteBuffer buffer, int bodyLength, int frameCount, int frameIndex, int retcode, int bodyOffset, int framelength) {
         //---------------------head----------------------------------
         buffer.putLong(request.getSeqid());
         buffer.putChar((char) SncpRequest.HEADER_SIZE);
@@ -84,10 +84,12 @@ public final class SncpResponse extends Response<SncpRequest> {
         buffer.putLong(actionid.getFirst());
         buffer.putLong(actionid.getSecond());
         buffer.put(addrBytes);
-        buffer.putInt(this.addrPort);
+        buffer.putChar((char) this.addrPort);
+        buffer.putInt(bodyLength);
         buffer.put((byte) frameCount); // frame count
         buffer.put((byte) frameIndex); //frame index
         buffer.putInt(retcode);
-        buffer.putInt(bodyLength);
+        buffer.putInt(bodyOffset);
+        buffer.putChar((char) framelength);
     }
 }

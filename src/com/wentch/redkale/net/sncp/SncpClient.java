@@ -223,34 +223,41 @@ public final class SncpClient {
         try {
             if ((HEADER_SIZE + bodyLength) > buffer.limit()) {
                 if (debug) logger.finest(this.serviceid + "," + this.nameid + "," + action + " sncp length : " + (HEADER_SIZE + bodyLength));
-                final int patch = bodyLength / (buffer.capacity() - HEADER_SIZE) + (bodyLength % (buffer.capacity() - HEADER_SIZE) > 0 ? 1 : 0);
+                final int frames = bodyLength / (buffer.capacity() - HEADER_SIZE) + (bodyLength % (buffer.capacity() - HEADER_SIZE) > 0 ? 1 : 0);
                 int pos = 0;
                 final byte[] all = new byte[bodyLength];
-                all[pos++] = (byte) ((bytesarray.length & 0xff00) >> 8);
-                all[pos++] = (byte) (bytesarray.length & 0xff);
-                for (byte[] bs : bytesarray) {
-                    all[pos++] = (byte) ((bs.length & 0xff000000) >> 24);
-                    all[pos++] = (byte) ((bs.length & 0xff0000) >> 16);
-                    all[pos++] = (byte) ((bs.length & 0xff00) >> 8);
-                    all[pos++] = (byte) (bs.length & 0xff);
-                    System.arraycopy(bs, 0, all, pos, bs.length);
-                    pos += bs.length;
+                { //将二维byte数组转换成一维bye数组
+                    all[pos++] = (byte) ((bytesarray.length & 0xff00) >> 8);
+                    all[pos++] = (byte) (bytesarray.length & 0xff);
+                    for (byte[] bs : bytesarray) {
+                        all[pos++] = (byte) ((bs.length & 0xff000000) >> 24);
+                        all[pos++] = (byte) ((bs.length & 0xff0000) >> 16);
+                        all[pos++] = (byte) ((bs.length & 0xff00) >> 8);
+                        all[pos++] = (byte) (bs.length & 0xff);
+                        System.arraycopy(bs, 0, all, pos, bs.length);
+                        pos += bs.length;
+                    }
                 }
-                if (pos != all.length) logger.warning(this.serviceid + "," + this.nameid + "," + action + " sncp(" + action.method + ") body.length : " + all.length + ", but pos=" + pos);
+                if (pos != all.length) throw new RuntimeException(this.serviceid + "," + this.nameid + "," + action + " sncp(" + action.method + ") body.length : " + all.length + ", but pos=" + pos);
                 pos = 0;
-                for (int i = patch - 1; i >= 0; i--) {
-                    fillHeader(buffer, seqid, actionid, patch, i, bodyLength);
-                    int len = Math.min(buffer.remaining(), all.length - pos);
+                for (int i = frames - 1; i >= 0; i--) {  //填充每一帧的数据
+                    int len = Math.min(buffer.remaining() - HEADER_SIZE, all.length - pos);
+                    fillHeader(buffer, seqid, actionid, bodyLength, frames, i, pos, len);
                     buffer.put(all, pos, len);
                     pos += len;
                     buffer.flip();
+                    Thread.sleep(1);
                     conn.write(buffer).get(writeto > 0 ? writeto : 5, TimeUnit.SECONDS);
                     buffer.clear();
                 }
             } else {  //只有一帧的数据
                 {
                     //---------------------head----------------------------------
-                    fillHeader(buffer, seqid, actionid, 1, 0, bodyLength);
+                    int len = 2;
+                    for (byte[] bs : bytesarray) {
+                        len += 4 + bs.length;
+                    }
+                    fillHeader(buffer, seqid, actionid, bodyLength, 1, 0, 0, len);
                     //---------------------body----------------------------------
                     buffer.putChar((char) bytesarray.length); //参数数组大小
                     for (byte[] bs : bytesarray) {
@@ -262,7 +269,7 @@ public final class SncpClient {
                 conn.write(buffer).get(writeto > 0 ? writeto : 5, TimeUnit.SECONDS);
                 buffer.clear();
             }
-            conn.read(buffer).get(readto > 0 ? readto : 5, TimeUnit.SECONDS);
+            conn.read(buffer).get(readto > 0 ? readto : 5, TimeUnit.SECONDS);  //读取第一帧的结果数据
             buffer.flip();
             long rseqid = buffer.getLong();
             if (rseqid != seqid) throw new RuntimeException("sncp(" + action.method + ") send seqid = " + seqid + ", but receive seqid =" + rseqid);
@@ -274,28 +281,48 @@ public final class SncpClient {
             long ractionid1 = buffer.getLong();
             long ractionid2 = buffer.getLong();
             if (!actionid.compare(ractionid1, ractionid2)) throw new RuntimeException("sncp(" + action.method + ") send actionid = " + actionid + ", but receive actionid =(" + ractionid1 + "_" + ractionid2 + ")");
-            buffer.getInt();
-            buffer.getInt();
+            buffer.getInt();  //地址
+            buffer.getChar(); //端口
+            final int bodylen = buffer.getInt();
             final int frameCount = buffer.get();
             if (frameCount < 1) throw new RuntimeException("sncp(" + action.method + ") send nameid = " + nameid + ", but frame.count =" + frameCount);
             int frameIndex = buffer.get();
             if (frameIndex < 0 || frameIndex >= frameCount) throw new RuntimeException("sncp(" + action.method + ") send nameid = " + nameid + ", but frame.count =" + frameCount + " & frame.index =" + frameIndex);
             final int retcode = buffer.getInt();
             if (retcode != 0) throw new RuntimeException("remote service(" + action.method + ") deal error (retcode=" + retcode + ", retinfo=" + SncpResponse.getRetCodeInfo(retcode) + ")");
-            final int bodylen = buffer.getInt();
+            int bodyOffset = buffer.getInt();
+            int frameLength = buffer.getChar();
             final byte[] body = new byte[bodylen];
-            if (frameCount == 1) {
-                buffer.get(body);
+            if (frameCount == 1) {  //只有一帧的数据
+                buffer.get(body, bodyOffset, frameLength);
                 return body;
-            } else {
+            } else {  //读取多帧结果数据
                 int received = 0;
+                int lack = 0;
+                int lackoffset = 0;
                 for (int i = 0; i < frameCount; i++) {
-                    received += buffer.remaining();
-                    buffer.get(body, (frameCount - frameIndex - 1) * (buffer.capacity() - HEADER_SIZE), buffer.remaining());
+                    received += frameLength;
+                    if (buffer.remaining() < frameLength) { //一帧缺失部分数据
+                        lack = frameLength - buffer.remaining();
+                        lackoffset = bodyOffset + buffer.remaining();
+                        buffer.get(body, bodyOffset, buffer.remaining());
+                    } else {
+                        lack = 0;
+                        buffer.get(body, bodyOffset, frameLength);
+                    }
                     if (i == frameCount - 1) break;
-                    buffer.clear();
+                    if (buffer.hasRemaining()) {
+                        byte[] bytes = new byte[buffer.remaining()];
+                        buffer.get(bytes);
+                        buffer.clear();
+                        buffer.put(bytes);
+                    } else {
+                        buffer.clear();
+                    }
                     conn.read(buffer).get(readto > 0 ? readto : 5, TimeUnit.SECONDS);
                     buffer.flip();
+
+                    if (lack > 0) buffer.get(body, lackoffset, lack);
                     rseqid = buffer.getLong();
                     if (rseqid != seqid) throw new RuntimeException("sncp(" + action.method + ") send seqid = " + seqid + ", but receive next.seqid =" + rseqid);
                     if (buffer.getChar() != HEADER_SIZE) throw new RuntimeException("sncp(" + action.method + ") buffer receive header.length not " + HEADER_SIZE);
@@ -306,16 +333,17 @@ public final class SncpClient {
                     ractionid1 = buffer.getLong();
                     ractionid2 = buffer.getLong();
                     if (!actionid.compare(ractionid1, ractionid2)) throw new RuntimeException("sncp(" + action.method + ") send actionid = " + actionid + ", but receive next.actionid =(" + ractionid1 + "_" + ractionid2 + ")");
-                    buffer.getInt();
-                    buffer.getInt();
-                    if (buffer.get() < 1) throw new RuntimeException("sncp(" + action.method + ") send nameid = " + nameid + ", but next.frame.count != " + frameCount);
-                    frameIndex = buffer.get();
-                    if (frameIndex < 0 || frameIndex >= frameCount)
-                        throw new RuntimeException("sncp(" + action.method + ") receive nameid = " + nameid + ", but frame.count =" + frameCount + " & next.frame.index =" + frameIndex);
-                    int rretcode = buffer.getInt();
-                    if (rretcode != 0) throw new RuntimeException("remote service(" + action.method + ") deal error (receive retcode =" + rretcode + ")");
+                    buffer.getInt();  //地址
+                    buffer.getChar();  //端口
                     int rbodylen = buffer.getInt();
                     if (rbodylen != bodylen) throw new RuntimeException("sncp(" + action.method + ") receive bodylength = " + bodylen + ", but receive next.bodylength =" + rbodylen);
+                    if (buffer.get() <= 1) throw new RuntimeException("sncp(" + action.method + ") receive count error, but next.frame.count != " + frameCount);
+                    frameIndex = buffer.get();
+                    if (frameIndex < 0 || frameIndex >= frameCount) throw new RuntimeException("sncp(" + action.method + ") receive nameid = " + nameid + ", but frame.count =" + frameCount + " & next.frame.index =" + frameIndex);
+                    int rretcode = buffer.getInt();
+                    if (rretcode != 0) throw new RuntimeException("remote service(" + action.method + ") deal error (receive retcode =" + rretcode + ")");
+                    bodyOffset = buffer.getInt();
+                    frameLength = buffer.getChar();
                 }
                 if (received != bodylen) throw new RuntimeException("sncp(" + action.method + ") receive bodylength = " + bodylen + ", but receive next.receivedlength =" + received);
                 return body;
@@ -330,7 +358,7 @@ public final class SncpClient {
         }
     }
 
-    private void fillHeader(ByteBuffer buffer, long seqid, DLong actionid, int frameCount, int frameIndex, int bodyLength) {
+    private void fillHeader(ByteBuffer buffer, long seqid, DLong actionid, int bodyLength, int frameCount, int frameIndex, int bodyOffset, int frameLength) {
         //---------------------head----------------------------------
         buffer.putLong(seqid); //序列号
         buffer.putChar((char) HEADER_SIZE); //header长度
@@ -339,10 +367,12 @@ public final class SncpClient {
         buffer.putLong(actionid.getFirst());
         buffer.putLong(actionid.getSecond());
         buffer.put(addrBytes);
-        buffer.putInt(this.addrPort);
+        buffer.putChar((char) this.addrPort);
+        buffer.putInt(bodyLength); //body长度
         buffer.put((byte) frameCount); //数据的帧数， 最小值为1
         buffer.put((byte) frameIndex); //数据的帧数序号， 从frame.count-1开始, 0表示最后一帧
         buffer.putInt(0); //结果码， 请求方固定传0
-        buffer.putInt(bodyLength); //body长度
+        buffer.putInt(bodyOffset);
+        buffer.putChar((char) frameLength); //一帧数据的长度
     }
 }

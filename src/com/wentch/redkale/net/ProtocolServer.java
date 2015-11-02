@@ -34,7 +34,7 @@ public abstract class ProtocolServer {
     //---------------------------------------------------------------------
     public static ProtocolServer create(String protocol, Context context) {
         if ("TCP".equalsIgnoreCase(protocol)) return new ProtocolTCPServer(context);
-        if ("UDP".equalsIgnoreCase(protocol)) return winos ? new ProtocolUDPWinServer(context) : new ProtocolUDPServer(context);
+        if ("UDP".equalsIgnoreCase(protocol)) return new ProtocolUDPServer(context);
         throw new RuntimeException("ProtocolServer not support protocol " + protocol);
     }
 

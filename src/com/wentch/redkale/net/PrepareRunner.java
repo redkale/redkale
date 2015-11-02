@@ -60,7 +60,9 @@ public final class PrepareRunner implements Runnable {
                     }
 //                    {  //测试
 //                        buffer.flip();
-//                        System.println(new String(buffer.array(), 0, buffer.remaining()));
+//                        byte[] bs = new byte[buffer.remaining()];
+//                        buffer.get(bs);
+//                        System.println(new String(bs));
 //                    }
                     buffer.flip();
                     final Response response = responsePool.poll();
@@ -68,7 +70,7 @@ public final class PrepareRunner implements Runnable {
                     try {
                         prepare.prepare(buffer, response.request, response);
                     } catch (Throwable t) {  //此处不可  context.offerBuffer(buffer); 以免prepare.prepare内部异常导致重复 offerBuffer
-                        context.logger.log(Level.WARNING, "prepare servlet abort, forece to close channel ", t);                        
+                        context.logger.log(Level.WARNING, "prepare servlet abort, forece to close channel ", t);
                         response.finish(true);
                     }
                 }

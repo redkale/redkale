@@ -42,8 +42,7 @@ public abstract class PrepareServlet<R extends Request, P extends Response<R>> i
                 @Override
                 public void completed(Integer result, ByteBuffer attachment) {
                     buffer.flip();
-                    ai.addAndGet(-buffer.remaining());
-                    request.readBody(buffer);
+                    ai.addAndGet(-request.readBody(buffer));
                     if (ai.get() > 0) {
                         buffer.clear();
                         request.channel.read(buffer, buffer, this);

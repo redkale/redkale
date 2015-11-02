@@ -256,11 +256,13 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
         protected <A> void write(ByteBuffer[] srcs, int offset, int length, A attachment, CompletionHandler<Integer, ? super A> handler) {
             try {
                 int rs = 0;
+                int end = offset + length - 1;
                 for (int i = offset; i < offset + length; i++) {
                     rs += channel.send(srcs[i], remoteAddress);
+                    if (i != end) Thread.sleep(1);
                 }
                 if (handler != null) handler.completed(rs, attachment);
-            } catch (IOException e) {
+            } catch (Exception e) {
                 if (handler != null) handler.failed(e, attachment);
             }
         }

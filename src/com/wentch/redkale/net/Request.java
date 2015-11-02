@@ -42,7 +42,12 @@ public abstract class Request {
      */
     protected abstract int readHeader(ByteBuffer buffer);
 
-    protected abstract void readBody(ByteBuffer buffer);
+    /**
+     * 读取buffer，并返回读取的有效数据长度
+     @param buffer
+     @return 
+     */
+    protected abstract int readBody(ByteBuffer buffer);
 
     protected abstract void prepare();
 

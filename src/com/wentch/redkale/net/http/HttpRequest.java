@@ -159,8 +159,10 @@ public class HttpRequest extends Request {
     }
 
     @Override
-    protected void readBody(ByteBuffer buffer) {
-        array.add(buffer, buffer.remaining());
+    protected int readBody(ByteBuffer buffer) {
+        int len = buffer.remaining();
+        array.add(buffer, len);
+        return len;
     }
 
     @Override
