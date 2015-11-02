@@ -221,13 +221,6 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
         public BIOUDPAsyncConnection(final DatagramChannel ch, SocketAddress addr,
                 final boolean client0, final int readTimeoutSecond0, final int writeTimeoutSecond0) {
             this.channel = ch;
-            if (client0) {
-                try {
-                    this.channel.configureBlocking(true);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
             this.client = client0;
             this.readTimeoutSecond = readTimeoutSecond0;
             this.writeTimeoutSecond = writeTimeoutSecond0;
