@@ -53,10 +53,6 @@ public abstract class Request {
         channel = null; //   close it by  response
     }
 
-    protected boolean isTCP() {
-        return channel != null && channel.isTCP();
-    }
-
     protected void setProperty(String name, Object value) {
         properties.put(name, value);
     }
