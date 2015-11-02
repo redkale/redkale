@@ -264,7 +264,7 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
             try {
                 int rs = 0;
                 for (int i = offset; i < offset + length; i++) {
-                    rs += channel.write(srcs[i]);
+                    rs += channel.send(srcs[i], remoteAddress);
                 }
                 if (handler != null) handler.completed(rs, attachment);
             } catch (IOException e) {
@@ -295,7 +295,7 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
         @Override
         public <A> void write(ByteBuffer src, A attachment, CompletionHandler<Integer, ? super A> handler) {
             try {
-                int rs = channel.write(src);
+                int rs = channel.send(src, remoteAddress);
                 if (handler != null) handler.completed(rs, attachment);
             } catch (IOException e) {
                 if (handler != null) handler.failed(e, attachment);
@@ -305,7 +305,7 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
         @Override
         public Future<Integer> write(ByteBuffer src) {
             try {
-                int rs = channel.write(src);
+                int rs = channel.send(src, remoteAddress);
                 return new SimpleFuture(rs);
             } catch (IOException e) {
                 throw new RuntimeException(e);
