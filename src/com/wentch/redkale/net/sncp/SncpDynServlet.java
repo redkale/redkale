@@ -85,11 +85,15 @@ public final class SncpDynServlet extends SncpServlet {
         if (action == null) {
             response.finish(SncpResponse.RETCODE_ILLACTIONID, null);  //无效actionid
         } else {
+            BsonReader in = action.convert.pollBsonReader();
             try {
-                response.finish(0, action.action(request.getParamBytes()));
+                in.setBytes(request.getBody());
+                response.finish(0, action.action(in));
             } catch (Throwable t) {
                 response.getContext().getLogger().log(Level.INFO, "sncp execute error(" + request + ")", t);
                 response.finish(SncpResponse.RETCODE_THROWEXCEPTION, null);
+            } finally {
+                action.convert.offerBsonReader(in);
             }
         }
     }
@@ -103,28 +107,28 @@ public final class SncpDynServlet extends SncpServlet {
 
         protected java.lang.reflect.Type[] paramTypes;  //index=0表示返回参数的type， void的返回参数类型为null
 
-        public abstract byte[] action(byte[][] bytes) throws Throwable;
+        public abstract byte[] action(final BsonReader in) throws Throwable;
 
         /*
          *
          * public class TestService implements Service {
-         * public boolean change(TestBean bean, String name, int id) {
+         *      public boolean change(TestBean bean, String name, int id) {
          *
-         * }
+         *      }
          * }
          *
          * public class DynActionTestService_change extends SncpServletAction {
          *
-         * public TestService service;
+         *      public TestService service;
          *
-         * @Override
-         * public byte[] action(byte[][] bytes) throws Throwable {
-         * TestBean arg1 = convert.convertFrom(paramTypes[1], bytes[1]);
-         * String arg2 = convert.convertFrom(paramTypes[2], bytes[2]);
-         * int arg3 = convert.convertFrom(paramTypes[3], bytes[3]);
-         * Object rs = service.change(arg1, arg2, arg3);
-         * return convert.convertTo(paramTypes[0], rs);
-         * }
+         *      @Override
+         *      public byte[] action(final BsonReader in) throws Throwable {
+         *          TestBean arg1 = convert.convertFrom(in, paramTypes[1]);
+         *          String arg2 = convert.convertFrom(in, paramTypes[2]);
+         *          int arg3 = convert.convertFrom(in, paramTypes[3]);
+         *          Object rs = service.change(arg1, arg2, arg3);
+         *          return convert.convertTo(paramTypes[0], rs);
+         *      }
          * }
          */
         /**
@@ -140,6 +144,7 @@ public final class SncpDynServlet extends SncpServlet {
             final String supDynName = SncpServletAction.class.getName().replace('.', '/');
             final String serviceName = serviceClass.getName().replace('.', '/');
             final String convertName = BsonConvert.class.getName().replace('.', '/');
+            final String convertReaderDesc = Type.getDescriptor(BsonReader.class);
             final String serviceDesc = Type.getDescriptor(serviceClass);
             String newDynName = serviceName.substring(0, serviceName.lastIndexOf('/') + 1)
                     + "DynAction" + serviceClass.getSimpleName() + "_" + method.getName() + "_" + actionid;
@@ -173,14 +178,14 @@ public final class SncpDynServlet extends SncpServlet {
                 mv.visitMaxs(1, 1);
                 mv.visitEnd();
             }
-            String convertFromDesc = "(Ljava/lang/reflect/Type;[B)Ljava/lang/Object;";
+            String convertFromDesc = "(" + convertReaderDesc + "Ljava/lang/reflect/Type;)Ljava/lang/Object;";
             try {
-                convertFromDesc = Type.getMethodDescriptor(BsonConvert.class.getMethod("convertFrom", java.lang.reflect.Type.class, byte[].class));
+                convertFromDesc = Type.getMethodDescriptor(BsonConvert.class.getMethod("convertFrom", BsonReader.class, java.lang.reflect.Type.class));
             } catch (Exception ex) {
                 throw new RuntimeException(ex); //不可能会发生
             }
             { // action方法
-                mv = new DebugMethodVisitor(cw.visitMethod(ACC_PUBLIC, "action", "([[B)[B", null, new String[]{"java/lang/Throwable"}));
+                mv = new DebugMethodVisitor(cw.visitMethod(ACC_PUBLIC, "action", "(" + convertReaderDesc + ")[B", null, new String[]{"java/lang/Throwable"}));
                 //mv.setDebug(true);
                 int iconst = ICONST_1;
                 int intconst = 1;
@@ -190,6 +195,7 @@ public final class SncpDynServlet extends SncpServlet {
                 for (int i = 0; i < paramClasses.length; i++) { //参数
                     mv.visitVarInsn(ALOAD, 0);
                     mv.visitFieldInsn(GETFIELD, newDynName, "convert", Type.getDescriptor(BsonConvert.class));
+                    mv.visitVarInsn(ALOAD, 1);
                     mv.visitVarInsn(ALOAD, 0);
                     mv.visitFieldInsn(GETFIELD, newDynName, "paramTypes", "[Ljava/lang/reflect/Type;");
                     if (iconst > ICONST_5) {
@@ -198,13 +204,7 @@ public final class SncpDynServlet extends SncpServlet {
                         mv.visitInsn(iconst);  //
                     }
                     mv.visitInsn(AALOAD);
-                    mv.visitVarInsn(ALOAD, 1);
-                    if (iconst > ICONST_5) {
-                        mv.visitIntInsn(BIPUSH, intconst);
-                    } else {
-                        mv.visitInsn(iconst);  //
-                    }
-                    mv.visitInsn(AALOAD);
+
                     mv.visitMethodInsn(INVOKEVIRTUAL, convertName, "convertFrom", convertFromDesc, false);
                     int load = ALOAD;
                     int v = 0;

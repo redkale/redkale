@@ -40,8 +40,7 @@ public final class SncpRequest extends Request {
 
     private int bodyoffset;
 
-    private byte[][] paramBytes;
-
+    //private byte[][] paramBytes;
     private boolean ping;
 
     private byte[] body;
@@ -86,14 +85,8 @@ public final class SncpRequest extends Request {
         this.framelength = buffer.getChar();
         //---------------------body----------------------------------
         if (this.framecount == 1) {  //只有一帧的数据
-            int paramlen = buffer.getChar();
-            byte[][] bbytes = new byte[paramlen + 1][]; //占位第0个byte[]
-            for (int i = 1; i <= paramlen; i++) {
-                byte[] bytes = new byte[buffer.getInt()];
-                buffer.get(bytes);
-                bbytes[i] = bytes;
-            }
-            this.paramBytes = bbytes;
+            this.body = new byte[this.framelength];
+            buffer.get(body);
             return 0;
         }
         //多帧数据
@@ -151,19 +144,6 @@ public final class SncpRequest extends Request {
     @Override
     protected void prepare() {
         this.keepAlive = this.channel.isTCP();
-        if (this.body == null) return;
-        byte[] bytes = this.body;
-        int pos = 0;
-        int paramlen = ((0xff00 & (bytes[pos++] << 8)) | (0xff & bytes[pos++]));
-        byte[][] bbytes = new byte[paramlen + 1][]; //占位第0个byte[]
-        for (int i = 1; i <= paramlen; i++) {
-            byte[] bs = new byte[(0xff000000 & (bytes[pos++] << 24)) | (0xff0000 & (bytes[pos++] << 16))
-                    | (0xff00 & (bytes[pos++] << 8)) | (0xff & bytes[pos++])];
-            System.arraycopy(bytes, pos, bs, 0, bs.length);
-            pos += bs.length;
-            bbytes[i] = bs;
-        }
-        this.paramBytes = bbytes;
     }
 
     @Override
@@ -171,7 +151,7 @@ public final class SncpRequest extends Request {
         return SncpRequest.class.getSimpleName() + "{seqid=" + this.seqid
                 + ",serviceid=" + this.serviceid + ",actionid=" + this.actionid
                 + ",framecount=" + this.framecount + ",frameindex=" + this.frameindex + ",framelength=" + this.framelength
-                + ",bodylength=" + this.bodylength+ ",bodyoffset=" + this.bodyoffset + ",remoteAddress=" + remoteAddress + "}";
+                + ",bodylength=" + this.bodylength + ",bodyoffset=" + this.bodyoffset + ",remoteAddress=" + remoteAddress + "}";
     }
 
     @Override
@@ -185,7 +165,7 @@ public final class SncpRequest extends Request {
         this.bodylength = 0;
         this.bodyoffset = 0;
         this.body = null;
-        this.paramBytes = null;
+        //this.paramBytes = null;
         this.ping = false;
         this.remoteAddress = null;
         this.bufferbytes[0] = 0;
@@ -196,8 +176,11 @@ public final class SncpRequest extends Request {
         return ping;
     }
 
-    public byte[][] getParamBytes() {
-        return paramBytes;
+//    public byte[][] getParamBytes() {
+//        return paramBytes;
+//    }
+    public byte[] getBody() {
+        return body;
     }
 
     public long getSeqid() {

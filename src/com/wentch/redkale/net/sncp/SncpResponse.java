@@ -53,7 +53,7 @@ public final class SncpResponse extends Response<SncpRequest> {
         final int frames = bodyLength / (buffer.capacity() - HEADER_SIZE) + (bodyLength % (buffer.capacity() - HEADER_SIZE) > 0 ? 1 : 0);
         if (frames <= 1) {
             //---------------------head----------------------------------
-            fillHeader(buffer, bodyLength, 1, 0, retcode, 0, bytes.length);
+            fillHeader(buffer, bodyLength, 1, 0, retcode, 0, bytes == null ? 0 : bytes.length);
             //---------------------body----------------------------------
             if (bytes != null) buffer.put(bytes);
             buffer.flip();

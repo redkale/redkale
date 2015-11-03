@@ -206,13 +206,13 @@ public final class SncpClient {
     }
 
     private byte[] send(final BsonConvert convert, Transport transport, final SncpAction action, Object... params) {
-        int bodyLength = 2;
         Type[] myparamtypes = action.paramTypes;
-        byte[][] bytesarray = new byte[params.length][];
-        for (int i = 0; i < bytesarray.length; i++) {
-            bytesarray[i] = convert.convertTo(myparamtypes[i], params[i]);
-            bodyLength += 4 + bytesarray[i].length;
+        final BsonWriter bw = convert.pollBsonWriter();
+        for (int i = 0; i < params.length; i++) {
+            convert.convertTo(bw, myparamtypes[i], params[i]);
         }
+        final int bodyLength = bw.count();
+
         final long seqid = System.nanoTime();
         final DLong actionid = action.actionid;
         final AsyncConnection conn = transport.pollConnection(action.addressParamIndex >= 0 ? (SocketAddress) params[action.addressParamIndex] : null);
@@ -225,47 +225,23 @@ public final class SncpClient {
                 if (debug) logger.finest(this.serviceid + "," + this.nameid + "," + action + " sncp length : " + (HEADER_SIZE + bodyLength));
                 final int frames = bodyLength / (buffer.capacity() - HEADER_SIZE) + (bodyLength % (buffer.capacity() - HEADER_SIZE) > 0 ? 1 : 0);
                 int pos = 0;
-                final byte[] all = new byte[bodyLength];
-                { //将二维byte数组转换成一维bye数组
-                    all[pos++] = (byte) ((bytesarray.length & 0xff00) >> 8);
-                    all[pos++] = (byte) (bytesarray.length & 0xff);
-                    for (byte[] bs : bytesarray) {
-                        all[pos++] = (byte) ((bs.length & 0xff000000) >> 24);
-                        all[pos++] = (byte) ((bs.length & 0xff0000) >> 16);
-                        all[pos++] = (byte) ((bs.length & 0xff00) >> 8);
-                        all[pos++] = (byte) (bs.length & 0xff);
-                        System.arraycopy(bs, 0, all, pos, bs.length);
-                        pos += bs.length;
-                    }
-                }
-                if (pos != all.length) throw new RuntimeException(this.serviceid + "," + this.nameid + "," + action + " sncp(" + action.method + ") body.length : " + all.length + ", but pos=" + pos);
-                pos = 0;
                 for (int i = frames - 1; i >= 0; i--) {  //填充每一帧的数据
-                    int len = Math.min(buffer.remaining() - HEADER_SIZE, all.length - pos);
+                    int len = Math.min(buffer.remaining() - HEADER_SIZE, bodyLength - pos);
                     fillHeader(buffer, seqid, actionid, bodyLength, frames, i, pos, len);
-                    buffer.put(all, pos, len);
-                    pos += len;
+                    pos += bw.toBuffer(pos, buffer);
                     buffer.flip();
                     Thread.sleep(1);
                     conn.write(buffer).get(writeto > 0 ? writeto : 5, TimeUnit.SECONDS);
                     buffer.clear();
                 }
+                convert.offerBsonWriter(bw);
             } else {  //只有一帧的数据
-                {
-                    //---------------------head----------------------------------
-                    int len = 2;
-                    for (byte[] bs : bytesarray) {
-                        len += 4 + bs.length;
-                    }
-                    fillHeader(buffer, seqid, actionid, bodyLength, 1, 0, 0, len);
-                    //---------------------body----------------------------------
-                    buffer.putChar((char) bytesarray.length); //参数数组大小
-                    for (byte[] bs : bytesarray) {
-                        buffer.putInt(bs.length);
-                        buffer.put(bs);
-                    }
-                    buffer.flip();
-                }
+                //---------------------head----------------------------------
+                fillHeader(buffer, seqid, actionid, bodyLength, 1, 0, 0, bodyLength);
+                //---------------------body----------------------------------
+                bw.toBuffer(buffer);
+                convert.offerBsonWriter(bw);
+                buffer.flip();
                 conn.write(buffer).get(writeto > 0 ? writeto : 5, TimeUnit.SECONDS);
                 buffer.clear();
             }
