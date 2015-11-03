@@ -50,7 +50,11 @@ public final class BsonReader implements Reader {
     }
 
     public final void setBytes(byte[] bytes) {
-        setBytes(bytes, 0, bytes.length);
+        if (bytes == null) {
+            this.position = 0;
+        } else {
+            setBytes(bytes, 0, bytes.length);
+        }
     }
 
     public final void setBytes(byte[] bytes, int start, int len) {

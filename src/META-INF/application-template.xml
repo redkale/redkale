@@ -62,7 +62,7 @@
         </properties>
     </resources> 
     <!--
-        protocol: required  server所启动的协议，有HTTP、SNCP， 目前只支持HTTP、SNCP。SNCP分TCP、UDP实现，默认使用UDP实现，TCP实现则使用SNCP.TCP值; 
+        protocol: required  server所启动的协议，有HTTP、SNCP， 目前只支持HTTP、SNCP。SNCP分TCP、UDP实现，默认使用TCP实现，UDP实现则使用SNCP.UDP值; 
         host:  服务所占address ， 默认: 0.0.0.0
         port:  required 服务所占端口 
         root:  如果是web类型服务，则包含页面  默认:{APP_HOME}/root

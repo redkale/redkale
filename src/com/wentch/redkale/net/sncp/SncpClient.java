@@ -222,22 +222,21 @@ public final class SncpClient {
         final int writeto = conn.getWriteTimeoutSecond();
         try {
             if ((HEADER_SIZE + bodyLength) > buffer.limit()) {
-                if (debug) logger.finest(this.serviceid + "," + this.nameid + "," + action + " sncp length : " + (HEADER_SIZE + bodyLength));
+                //if (debug) logger.finest(this.serviceid + "," + this.nameid + "," + action + " sncp length : " + (HEADER_SIZE + bodyLength));
                 final int frames = bodyLength / (buffer.capacity() - HEADER_SIZE) + (bodyLength % (buffer.capacity() - HEADER_SIZE) > 0 ? 1 : 0);
                 int pos = 0;
                 for (int i = frames - 1; i >= 0; i--) {  //填充每一帧的数据
                     int len = Math.min(buffer.remaining() - HEADER_SIZE, bodyLength - pos);
-                    fillHeader(buffer, seqid, actionid, bodyLength, frames, i, pos, len);
+                    fillHeader(buffer, seqid, actionid, bodyLength, pos, len);
                     pos += bw.toBuffer(pos, buffer);
                     buffer.flip();
-                    Thread.sleep(1);
                     conn.write(buffer).get(writeto > 0 ? writeto : 5, TimeUnit.SECONDS);
                     buffer.clear();
                 }
                 convert.offerBsonWriter(bw);
             } else {  //只有一帧的数据
                 //---------------------head----------------------------------
-                fillHeader(buffer, seqid, actionid, bodyLength, 1, 0, 0, bodyLength);
+                fillHeader(buffer, seqid, actionid, bodyLength, 0, bodyLength);
                 //---------------------body----------------------------------
                 bw.toBuffer(buffer);
                 convert.offerBsonWriter(bw);
@@ -260,33 +259,31 @@ public final class SncpClient {
             buffer.getInt();  //地址
             buffer.getChar(); //端口
             final int bodylen = buffer.getInt();
-            final int frameCount = buffer.get();
-            if (frameCount < 1) throw new RuntimeException("sncp(" + action.method + ") send nameid = " + nameid + ", but frame.count =" + frameCount);
-            int frameIndex = buffer.get();
-            if (frameIndex < 0 || frameIndex >= frameCount) throw new RuntimeException("sncp(" + action.method + ") send nameid = " + nameid + ", but frame.count =" + frameCount + " & frame.index =" + frameIndex);
+            int bodyOffset = buffer.getInt();
+            int frameLength = buffer.getInt();
             final int retcode = buffer.getInt();
             if (retcode != 0) throw new RuntimeException("remote service(" + action.method + ") deal error (retcode=" + retcode + ", retinfo=" + SncpResponse.getRetCodeInfo(retcode) + ")");
-            int bodyOffset = buffer.getInt();
-            int frameLength = buffer.getChar();
+
             final byte[] body = new byte[bodylen];
-            if (frameCount == 1) {  //只有一帧的数据
+            if (bodylen == frameLength) {  //只有一帧的数据
                 buffer.get(body, bodyOffset, frameLength);
                 return body;
             } else {  //读取多帧结果数据
                 int received = 0;
                 int lack = 0;
                 int lackoffset = 0;
-                for (int i = 0; i < frameCount; i++) {
-                    received += frameLength;
+                while (received < bodylen) {
                     if (buffer.remaining() < frameLength) { //一帧缺失部分数据
                         lack = frameLength - buffer.remaining();
                         lackoffset = bodyOffset + buffer.remaining();
+                        received += buffer.remaining();
                         buffer.get(body, bodyOffset, buffer.remaining());
                     } else {
                         lack = 0;
+                        received += frameLength;
                         buffer.get(body, bodyOffset, frameLength);
                     }
-                    if (i == frameCount - 1) break;
+                    if (received >= bodylen) break;
                     if (buffer.hasRemaining()) {
                         byte[] bytes = new byte[buffer.remaining()];
                         buffer.get(bytes);
@@ -313,13 +310,10 @@ public final class SncpClient {
                     buffer.getChar();  //端口
                     int rbodylen = buffer.getInt();
                     if (rbodylen != bodylen) throw new RuntimeException("sncp(" + action.method + ") receive bodylength = " + bodylen + ", but receive next.bodylength =" + rbodylen);
-                    if (buffer.get() <= 1) throw new RuntimeException("sncp(" + action.method + ") receive count error, but next.frame.count != " + frameCount);
-                    frameIndex = buffer.get();
-                    if (frameIndex < 0 || frameIndex >= frameCount) throw new RuntimeException("sncp(" + action.method + ") receive nameid = " + nameid + ", but frame.count =" + frameCount + " & next.frame.index =" + frameIndex);
+                    bodyOffset = buffer.getInt();
+                    frameLength = buffer.getInt();
                     int rretcode = buffer.getInt();
                     if (rretcode != 0) throw new RuntimeException("remote service(" + action.method + ") deal error (receive retcode =" + rretcode + ")");
-                    bodyOffset = buffer.getInt();
-                    frameLength = buffer.getChar();
                 }
                 if (received != bodylen) throw new RuntimeException("sncp(" + action.method + ") receive bodylength = " + bodylen + ", but receive next.receivedlength =" + received);
                 return body;
@@ -334,7 +328,7 @@ public final class SncpClient {
         }
     }
 
-    private void fillHeader(ByteBuffer buffer, long seqid, DLong actionid, int bodyLength, int frameCount, int frameIndex, int bodyOffset, int frameLength) {
+    private void fillHeader(ByteBuffer buffer, long seqid, DLong actionid, int bodyLength, int bodyOffset, int frameLength) {
         //---------------------head----------------------------------
         buffer.putLong(seqid); //序列号
         buffer.putChar((char) HEADER_SIZE); //header长度
@@ -344,11 +338,9 @@ public final class SncpClient {
         buffer.putLong(actionid.getSecond());
         buffer.put(addrBytes);
         buffer.putChar((char) this.addrPort);
-        buffer.putInt(bodyLength); //body长度
-        buffer.put((byte) frameCount); //数据的帧数， 最小值为1
-        buffer.put((byte) frameIndex); //数据的帧数序号， 从frame.count-1开始, 0表示最后一帧
-        buffer.putInt(0); //结果码， 请求方固定传0
+        buffer.putInt(bodyLength); //body长度        
         buffer.putInt(bodyOffset);
-        buffer.putChar((char) frameLength); //一帧数据的长度
+        buffer.putInt(frameLength); //一帧数据的长度
+        buffer.putInt(0); //结果码， 请求方固定传0
     }
 }

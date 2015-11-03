@@ -88,7 +88,9 @@ public final class SncpDynServlet extends SncpServlet {
             BsonReader in = action.convert.pollBsonReader();
             try {
                 in.setBytes(request.getBody());
-                response.finish(0, action.action(in));
+                BsonWriter bw = action.action(in);
+                response.finish(0, bw);
+                if (bw != null) action.convert.offerBsonWriter(bw);
             } catch (Throwable t) {
                 response.getContext().getLogger().log(Level.INFO, "sncp execute error(" + request + ")", t);
                 response.finish(SncpResponse.RETCODE_THROWEXCEPTION, null);
@@ -107,7 +109,7 @@ public final class SncpDynServlet extends SncpServlet {
 
         protected java.lang.reflect.Type[] paramTypes;  //index=0表示返回参数的type， void的返回参数类型为null
 
-        public abstract byte[] action(final BsonReader in) throws Throwable;
+        public abstract BsonWriter action(final BsonReader in) throws Throwable;
 
         /*
          *
@@ -122,7 +124,7 @@ public final class SncpDynServlet extends SncpServlet {
          *      public TestService service;
          *
          *      @Override
-         *      public byte[] action(final BsonReader in) throws Throwable {
+         *      public BsonWriter action(final BsonReader in) throws Throwable {
          *          TestBean arg1 = convert.convertFrom(in, paramTypes[1]);
          *          String arg2 = convert.convertFrom(in, paramTypes[2]);
          *          int arg3 = convert.convertFrom(in, paramTypes[3]);
@@ -145,6 +147,7 @@ public final class SncpDynServlet extends SncpServlet {
             final String serviceName = serviceClass.getName().replace('.', '/');
             final String convertName = BsonConvert.class.getName().replace('.', '/');
             final String convertReaderDesc = Type.getDescriptor(BsonReader.class);
+            final String convertWriterDesc = Type.getDescriptor(BsonWriter.class);
             final String serviceDesc = Type.getDescriptor(serviceClass);
             String newDynName = serviceName.substring(0, serviceName.lastIndexOf('/') + 1)
                     + "DynAction" + serviceClass.getSimpleName() + "_" + method.getName() + "_" + actionid;
@@ -185,7 +188,7 @@ public final class SncpDynServlet extends SncpServlet {
                 throw new RuntimeException(ex); //不可能会发生
             }
             { // action方法
-                mv = new DebugMethodVisitor(cw.visitMethod(ACC_PUBLIC, "action", "(" + convertReaderDesc + ")[B", null, new String[]{"java/lang/Throwable"}));
+                mv = new DebugMethodVisitor(cw.visitMethod(ACC_PUBLIC, "action", "(" + convertReaderDesc + ")" + convertWriterDesc, null, new String[]{"java/lang/Throwable"}));
                 //mv.setDebug(true);
                 int iconst = ICONST_1;
                 int intconst = 1;
@@ -277,7 +280,7 @@ public final class SncpDynServlet extends SncpServlet {
                     mv.visitInsn(ICONST_0);
                     mv.visitInsn(AALOAD);
                     mv.visitVarInsn(ALOAD, store);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, convertName, "convertTo", "(Ljava/lang/reflect/Type;Ljava/lang/Object;)[B", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, convertName, "convertToWriter", "(Ljava/lang/reflect/Type;Ljava/lang/Object;)" + convertWriterDesc, false);
                     mv.visitInsn(ARETURN);
                     store++;
                     if (maxStack < 10) maxStack = 10;

@@ -62,8 +62,9 @@ public final class BsonWriter implements Writer {
         return tiny;
     }
 
-    public void setTiny(boolean tiny) {
+    public BsonWriter setTiny(boolean tiny) {
         this.tiny = tiny;
+        return this;
     }
 
     //-----------------------------------------------------------------------

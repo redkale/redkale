@@ -29,6 +29,8 @@ public final class Transport {
 
     protected final int bufferPoolSize;
 
+    protected final int bufferCapacity;
+
     protected final String protocol;
 
     protected final AsynchronousChannelGroup group;
@@ -54,6 +56,7 @@ public final class Transport {
         this.protocol = protocol;
         this.aio = aio;
         this.bufferPoolSize = bufferPoolSize;
+        this.bufferCapacity = 8192;
         AsynchronousChannelGroup g = null;
         try {
             final AtomicInteger counter = new AtomicInteger();
@@ -70,7 +73,7 @@ public final class Transport {
         this.group = g;
         AtomicLong createBufferCounter = watch == null ? new AtomicLong() : watch.createWatchNumber(Transport.class.getSimpleName() + "-" + name + "-" + protocol + ".Buffer.creatCounter");
         AtomicLong cycleBufferCounter = watch == null ? new AtomicLong() : watch.createWatchNumber(Transport.class.getSimpleName() + "-" + name + "-" + protocol + ".Buffer.cycleCounter");
-        int rcapacity = 8192;
+        final int rcapacity = bufferCapacity;
         this.bufferPool = new ObjectPool<>(createBufferCounter, cycleBufferCounter, bufferPoolSize,
                 (Object... params) -> ByteBuffer.allocateDirect(rcapacity), null, (e) -> {
                     if (e == null || e.isReadOnly() || e.capacity() != rcapacity) return false;

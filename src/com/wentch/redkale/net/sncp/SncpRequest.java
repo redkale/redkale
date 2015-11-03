@@ -24,12 +24,6 @@ public final class SncpRequest extends Request {
 
     private long seqid;
 
-    private int framecount;
-
-    private int frameindex;
-
-    private int framelength;
-
     private long nameid;
 
     private long serviceid;
@@ -39,6 +33,8 @@ public final class SncpRequest extends Request {
     private int bodylength;
 
     private int bodyoffset;
+
+    private int framelength;
 
     //private byte[][] paramBytes;
     private boolean ping;
@@ -75,16 +71,15 @@ public final class SncpRequest extends Request {
             this.remoteAddress = new InetSocketAddress((0xff & bufferbytes[0]) + "." + (0xff & bufferbytes[1]) + "." + (0xff & bufferbytes[2]) + "." + (0xff & bufferbytes[3]), port);
         }
         this.bodylength = buffer.getInt();
-        this.framecount = buffer.get();
-        this.frameindex = buffer.get();
+        this.bodyoffset = buffer.getInt();
+        this.framelength = buffer.getInt();
+
         if (buffer.getInt() != 0) {
             context.getLogger().finest("sncp buffer header.retcode not 0");
             return -1;
         }
-        this.bodyoffset = buffer.getInt();
-        this.framelength = buffer.getChar();
         //---------------------body----------------------------------
-        if (this.framecount == 1) {  //只有一帧的数据
+        if (this.bodylength == this.framelength) {  //只有一帧的数据
             this.body = new byte[this.framelength];
             buffer.get(body);
             return 0;
@@ -121,15 +116,11 @@ public final class SncpRequest extends Request {
         buffer.getInt();  //地址
         buffer.getChar();  //端口
         final int bodylen = buffer.getInt();
-        if (bodylen != this.bodylength) throw new RuntimeException("sncp frame receive bodylength = " + bodylen + ", but first bodylength =" + bodylength);
-        final int frameCount = buffer.get();
-        if (frameCount != this.framecount) throw new RuntimeException("sncp frame receive nameid = " + nameid + ", but first frame.count =" + frameCount);
-        final int frameIndex = buffer.get();
-        if (frameIndex < 0 || frameIndex >= frameCount) throw new RuntimeException("sncp frame receive nameid = " + nameid + ", but first frame.count =" + frameCount + " & frame.index =" + frameIndex);
+        if (bodylen != this.bodylength) throw new RuntimeException("sncp frame receive bodylength = " + bodylen + ", but first bodylength =" + bodylength);        
+        final int bodyOffset = buffer.getInt();
+        final int framelen = buffer.getInt();        
         final int retcode = buffer.getInt();
         if (retcode != 0) throw new RuntimeException("sncp frame receive retcode error (retcode=" + retcode + ")");
-        final int bodyOffset = buffer.getInt();
-        final int framelen = buffer.getChar();
         final SncpContext scontext = (SncpContext) this.context;
         RequestEntry entry = scontext.getRequestEntity(this.seqid);
         if (entry == null) entry = scontext.addRequestEntity(this.seqid, new byte[this.bodylength]);
@@ -150,22 +141,19 @@ public final class SncpRequest extends Request {
     public String toString() {
         return SncpRequest.class.getSimpleName() + "{seqid=" + this.seqid
                 + ",serviceid=" + this.serviceid + ",actionid=" + this.actionid
-                + ",framecount=" + this.framecount + ",frameindex=" + this.frameindex + ",framelength=" + this.framelength
-                + ",bodylength=" + this.bodylength + ",bodyoffset=" + this.bodyoffset + ",remoteAddress=" + remoteAddress + "}";
+                + ",bodylength=" + this.bodylength + ",bodyoffset=" + this.bodyoffset
+                + ",framelength=" + this.framelength + ",remoteAddress=" + remoteAddress + "}";
     }
 
     @Override
     protected void recycle() {
         this.seqid = 0;
-        this.framecount = 0;
-        this.frameindex = 0;
         this.framelength = 0;
         this.serviceid = 0;
         this.actionid = null;
         this.bodylength = 0;
         this.bodyoffset = 0;
         this.body = null;
-        //this.paramBytes = null;
         this.ping = false;
         this.remoteAddress = null;
         this.bufferbytes[0] = 0;
@@ -176,9 +164,6 @@ public final class SncpRequest extends Request {
         return ping;
     }
 
-//    public byte[][] getParamBytes() {
-//        return paramBytes;
-//    }
     public byte[] getBody() {
         return body;
     }

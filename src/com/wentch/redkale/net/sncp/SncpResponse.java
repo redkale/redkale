@@ -5,6 +5,7 @@
  */
 package com.wentch.redkale.net.sncp;
 
+import com.wentch.redkale.convert.bson.*;
 import com.wentch.redkale.net.*;
 import static com.wentch.redkale.net.sncp.SncpRequest.HEADER_SIZE;
 import com.wentch.redkale.util.*;
@@ -47,26 +48,27 @@ public final class SncpResponse extends Response<SncpRequest> {
         this.addrPort = context.getServerAddress().getPort();
     }
 
-    public void finish(final int retcode, final byte[] bytes) {
+    public void finish(final int retcode, final BsonWriter out) {
         ByteBuffer buffer = context.pollBuffer();
-        final int bodyLength = (bytes == null ? 0 : bytes.length);
-        final int frames = bodyLength / (buffer.capacity() - HEADER_SIZE) + (bodyLength % (buffer.capacity() - HEADER_SIZE) > 0 ? 1 : 0);
-        if (frames <= 1) {
+        final int bodyLength = (out == null ? 0 : out.count());
+        final int bufsize = buffer.capacity() - HEADER_SIZE;
+        if (bufsize > bodyLength) { //只需一帧
             //---------------------head----------------------------------
-            fillHeader(buffer, bodyLength, 1, 0, retcode, 0, bytes == null ? 0 : bytes.length);
+            fillHeader(buffer, bodyLength, 0, bodyLength, retcode);
             //---------------------body----------------------------------
-            if (bytes != null) buffer.put(bytes);
+            out.toBuffer(buffer);
             buffer.flip();
             finish(buffer);
         } else {
+            final int frames = (bodyLength / bufsize) + (bodyLength % bufsize > 0 ? 1 : 0);
             final ByteBuffer[] buffers = new ByteBuffer[frames];
             int pos = 0;
-            for (int i = frames - 1; i >= 0; i--) {
-                if (i != frames - 1) buffer = context.pollBuffer();
-                int len = Math.min(buffer.remaining() - HEADER_SIZE, bytes.length - pos);
-                fillHeader(buffer, bodyLength, frames, i, retcode, pos, len);
+            for (int i = 0; i < frames; i++) {
+                if (i != 0) buffer = context.pollBuffer();
+                int len = Math.min(bufsize, bodyLength - pos);
+                fillHeader(buffer, bodyLength, pos, len, retcode);
                 buffers[i] = buffer;
-                buffer.put(bytes, pos, len);
+                out.toBuffer(pos, buffer);
                 pos += len;
                 buffer.flip();
             }
@@ -74,7 +76,7 @@ public final class SncpResponse extends Response<SncpRequest> {
         }
     }
 
-    private void fillHeader(ByteBuffer buffer, int bodyLength, int frameCount, int frameIndex, int retcode, int bodyOffset, int framelength) {
+    private void fillHeader(ByteBuffer buffer, int bodyLength, int bodyOffset, int framelength, int retcode) {
         //---------------------head----------------------------------
         buffer.putLong(request.getSeqid());
         buffer.putChar((char) SncpRequest.HEADER_SIZE);
@@ -86,10 +88,8 @@ public final class SncpResponse extends Response<SncpRequest> {
         buffer.put(addrBytes);
         buffer.putChar((char) this.addrPort);
         buffer.putInt(bodyLength);
-        buffer.put((byte) frameCount); // frame count
-        buffer.put((byte) frameIndex); //frame index
-        buffer.putInt(retcode);
         buffer.putInt(bodyOffset);
-        buffer.putChar((char) framelength);
+        buffer.putInt(framelength);
+        buffer.putInt(retcode);
     }
 }
