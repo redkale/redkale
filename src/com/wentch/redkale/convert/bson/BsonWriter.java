@@ -72,6 +72,16 @@ public final class BsonWriter implements Writer {
         return newdata;
     }
 
+    /**
+     * 往指定的位置写入字节
+     *
+     * @param position
+     * @param chs 
+     */
+    public void writeTo(int position, byte... chs) {
+        System.arraycopy(chs, 0, content, position, chs.length);
+    }
+
     public void writeTo(final byte ch) {
         expand(1);
         content[count++] = ch;
@@ -100,6 +110,10 @@ public final class BsonWriter implements Writer {
     }
 
     //------------------------------------------------------------------------
+    public int position() {
+        return this.count;
+    }
+
     public final int count() {
         return this.count;
     }
