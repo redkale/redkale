@@ -94,6 +94,23 @@ public final class BsonWriter implements Writer {
         System.arraycopy(chs, 0, content, position, chs.length);
     }
 
+    public void writeTo(int position, short value) {
+        writeTo(position, (byte) (value >> 8), (byte) value);
+    }
+
+    public void writeTo(int position, char value) {
+        writeTo(position, (byte) ((value & 0xFF00) >> 8), (byte) (value & 0xFF));
+    }
+
+    public void writeTo(int position, int value) {
+        writeTo(position, (byte) (value >> 24), (byte) (value >> 16), (byte) (value >> 8), (byte) value);
+    }
+
+    public void writeTo(int position, long value) {
+        writeTo(position, (byte) (value >> 56), (byte) (value >> 48), (byte) (value >> 40), (byte) (value >> 32),
+                (byte) (value >> 24), (byte) (value >> 16), (byte) (value >> 8), (byte) value);
+    }
+
     public void writeTo(final byte ch) {
         expand(1);
         content[count++] = ch;
