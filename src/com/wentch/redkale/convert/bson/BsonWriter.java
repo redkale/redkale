@@ -38,12 +38,23 @@ public final class BsonWriter implements Writer {
         return ByteBuffer.wrap(content, 0, count);
     }
 
+    public void toBuffer(ByteBuffer buffer) {
+        buffer.put(content, 0, count);
+    }
+
+    public int toBuffer(int offset, ByteBuffer buffer) {
+        int len = Math.min(count - offset, buffer.remaining());
+        if (len < 1) return 0;
+        buffer.put(content, offset, len);
+        return len;
+    }
+
     public BsonWriter() {
         this(defaultSize);
     }
 
     public BsonWriter(int size) {
-        this.content = new byte[size > 32 ? size : 32];
+        this.content = new byte[size > 128 ? size : 128];
     }
 
     @Override
@@ -80,6 +91,23 @@ public final class BsonWriter implements Writer {
      */
     public void writeTo(int position, byte... chs) {
         System.arraycopy(chs, 0, content, position, chs.length);
+    }
+
+    public void writeTo(int position, short value) {
+        writeTo(position, (byte) (value >> 8), (byte) value);
+    }
+
+    public void writeTo(int position, char value) {
+        writeTo(position, (byte) ((value & 0xFF00) >> 8), (byte) (value & 0xFF));
+    }
+
+    public void writeTo(int position, int value) {
+        writeTo(position, (byte) (value >> 24), (byte) (value >> 16), (byte) (value >> 8), (byte) value);
+    }
+
+    public void writeTo(int position, long value) {
+        writeTo(position, (byte) (value >> 56), (byte) (value >> 48), (byte) (value >> 40), (byte) (value >> 32),
+                (byte) (value >> 24), (byte) (value >> 16), (byte) (value >> 8), (byte) value);
     }
 
     public void writeTo(final byte ch) {
