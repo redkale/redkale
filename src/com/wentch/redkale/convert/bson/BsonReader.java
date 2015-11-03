@@ -54,9 +54,13 @@ public final class BsonReader implements Reader {
     }
 
     public final void setBytes(byte[] bytes, int start, int len) {
-        this.content = bytes;
-        this.position = start - 1;
-        //this.limit = start + len - 1;
+        if (bytes == null) {
+            this.position = 0;
+        } else {
+            this.content = bytes;
+            this.position = start - 1;
+            //this.limit = start + len - 1;
+        }
     }
 
     protected boolean recycle() {
