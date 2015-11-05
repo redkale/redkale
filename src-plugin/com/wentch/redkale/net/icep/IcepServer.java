@@ -50,7 +50,7 @@ public final class IcepServer extends Server {
         AtomicLong createResponseCounter = watch == null ? new AtomicLong() : watch.createWatchNumber("ICEP_" + port + ".Response.creatCounter");
         AtomicLong cycleResponseCounter = watch == null ? new AtomicLong() : watch.createWatchNumber("ICEP_" + port + ".Response.cycleCounter");
         ObjectPool<Response> responsePool = IcepResponse.createPool(createResponseCounter, cycleResponseCounter, this.responsePoolSize, null);
-        IcepContext localcontext = new IcepContext(this.serverStartTime, this.logger, executor, bufferPool, responsePool,
+        IcepContext localcontext = new IcepContext(this.serverStartTime, this.logger, executor, rcapacity, bufferPool, responsePool,
                 this.maxbody, this.charset, this.address, this.prepare, this.watch, this.readTimeoutSecond, this.writeTimeoutSecond);
         responsePool.setCreator((Object... params) -> new IcepResponse(localcontext, new IcepRequest(localcontext)));
         return localcontext;
