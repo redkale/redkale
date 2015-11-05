@@ -315,9 +315,9 @@ public class FilterNode {
             }
         } else if (valtype.isArray()) {
             final int len = Array.getLength(val0);
-            if (len == 0) return null;
+            if (len == 0 && express == NOTIN) return null;
             final Class compType = valtype.getComponentType();
-            if (atype != compType) {
+            if (atype != compType && len > 0) {
                 if (!compType.isPrimitive() && Number.class.isAssignableFrom(compType)) throw new RuntimeException("param(" + val0 + ") type not match " + atype + " for column " + column);
                 if (atype == int.class || atype == Integer.class) {
                     int[] vs = new int[len];
@@ -359,38 +359,40 @@ public class FilterNode {
             }
         } else if (val0 instanceof Collection) {
             final Collection collection = (Collection) val0;
-            if (collection.isEmpty()) return null;
-            Iterator it = collection.iterator();
-            it.hasNext();
-            Class fs = it.next().getClass();
-            if (Number.class.isAssignableFrom(fs) && atype != fs && atype != class2.get(fs)) { //需要转换
-                ArrayList list = new ArrayList(collection.size());
-                if (atype == int.class || atype == Integer.class) {
-                    for (Number num : (Collection<Number>) collection) {
-                        list.add(num.intValue());
+            if (collection.isEmpty() && express == NOTIN) return null;
+            if (!collection.isEmpty()) {
+                Iterator it = collection.iterator();
+                it.hasNext();
+                Class fs = it.next().getClass();
+                if (Number.class.isAssignableFrom(fs) && atype != fs && atype != class2.get(fs)) { //需要转换
+                    ArrayList list = new ArrayList(collection.size());
+                    if (atype == int.class || atype == Integer.class) {
+                        for (Number num : (Collection<Number>) collection) {
+                            list.add(num.intValue());
+                        }
+                    } else if (atype == long.class || atype == Long.class) {
+                        for (Number num : (Collection<Number>) collection) {
+                            list.add(num.longValue());
+                        }
+                    } else if (atype == short.class || atype == Short.class) {
+                        for (Number num : (Collection<Number>) collection) {
+                            list.add(num.shortValue());
+                        }
+                    } else if (atype == float.class || atype == Float.class) {
+                        for (Number num : (Collection<Number>) collection) {
+                            list.add(num.floatValue());
+                        }
+                    } else if (atype == byte.class || atype == Byte.class) {
+                        for (Number num : (Collection<Number>) collection) {
+                            list.add(num.byteValue());
+                        }
+                    } else if (atype == double.class || atype == Double.class) {
+                        for (Number num : (Collection<Number>) collection) {
+                            list.add(num.doubleValue());
+                        }
                     }
-                } else if (atype == long.class || atype == Long.class) {
-                    for (Number num : (Collection<Number>) collection) {
-                        list.add(num.longValue());
-                    }
-                } else if (atype == short.class || atype == Short.class) {
-                    for (Number num : (Collection<Number>) collection) {
-                        list.add(num.shortValue());
-                    }
-                } else if (atype == float.class || atype == Float.class) {
-                    for (Number num : (Collection<Number>) collection) {
-                        list.add(num.floatValue());
-                    }
-                } else if (atype == byte.class || atype == Byte.class) {
-                    for (Number num : (Collection<Number>) collection) {
-                        list.add(num.byteValue());
-                    }
-                } else if (atype == double.class || atype == Double.class) {
-                    for (Number num : (Collection<Number>) collection) {
-                        list.add(num.doubleValue());
-                    }
+                    val0 = list;
                 }
-                val0 = list;
             }
         }
         final Serializable val = val0;
@@ -573,22 +575,50 @@ public class FilterNode {
                 Predicate<T> filter;
                 if (val instanceof Collection) {
                     Collection array = (Collection) val;
-                    filter = new Predicate<T>() {
+                    if (array.isEmpty()) { //express 只会是 IN
+                        filter = new Predicate<T>() {
 
-                        @Override
-                        public boolean test(T t) {
-                            Object rs = attr.get(t);
-                            return rs != null && array.contains(rs);
-                        }
+                            @Override
+                            public boolean test(T t) {
+                                return false;
+                            }
 
-                        @Override
-                        public String toString() {
-                            return attr.field() + ' ' + express.value() + ' ' + val;
-                        }
-                    };
+                            @Override
+                            public String toString() {
+                                return attr.field() + ' ' + express.value() + " []";
+                            }
+                        };
+                    } else {
+                        filter = new Predicate<T>() {
+
+                            @Override
+                            public boolean test(T t) {
+                                Object rs = attr.get(t);
+                                return rs != null && array.contains(rs);
+                            }
+
+                            @Override
+                            public String toString() {
+                                return attr.field() + ' ' + express.value() + ' ' + val;
+                            }
+                        };
+                    }
                 } else {
                     Class type = val.getClass();
-                    if (type == int[].class) {
+                    if (Array.getLength(val) == 0) {//express 只会是 IN
+                        filter = new Predicate<T>() {
+
+                            @Override
+                            public boolean test(T t) {
+                                return false;
+                            }
+
+                            @Override
+                            public String toString() {
+                                return attr.field() + ' ' + express.value() + " []";
+                            }
+                        };
+                    } else if (type == int[].class) {
                         filter = new Predicate<T>() {
 
                             @Override
@@ -909,7 +939,7 @@ public class FilterNode {
             return sb;
         } else if (value.getClass().isArray()) {
             int len = Array.getLength(value);
-            if (len == 0) return null;
+            if (len == 0) return express == NOTIN ? null : new StringBuilder("(NULL)");
             if (len == 1) {
                 Object firstval = Array.get(value, 0);
                 if (firstval != null && firstval.getClass().isArray()) return formatValue(likefit, express, firstval);
@@ -928,7 +958,7 @@ public class FilterNode {
             return sb.append(')');
         } else if (value instanceof Collection) {
             Collection c = (Collection) value;
-            if (c.isEmpty()) return null;
+            if (c.isEmpty()) return express == NOTIN ? null : new StringBuilder("(NULL)");
             StringBuilder sb = new StringBuilder();
             sb.append('(');
             for (Object o : c) {

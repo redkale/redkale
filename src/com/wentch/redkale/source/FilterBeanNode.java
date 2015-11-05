@@ -396,8 +396,6 @@ final class FilterBeanNode extends FilterNode {
         if (rs == null) return null;
         if (string && ((CharSequence) rs).length() == 0) return null;
         if (number && ((Number) rs).longValue() < this.least) return null;
-        if (array && Array.getLength(rs) == 0) return null;
-        if (collection && ((Collection) rs).isEmpty()) return null;
         return rs;
     }
 }
