@@ -31,7 +31,7 @@
          <!--
             一个组包含多个NODE， 同一Service服务可以由多个进程提供，这些进程称为一个GROUP，且同一GROUP内的进程必须在同一机房或局域网内
             name: 服务组ID，长度不能超过11个字节. 默认为空字符串。
-            protocol：值只能是UDP TCP， 默认UDP
+            protocol：值只能是UDP TCP， 默认TCP
             注意: 一个node只能所属一个group。只要存在protocol == SNCP的Server节点信息， 就必须有group节点信息。
         -->
         <group name="" protocol="TCP">
@@ -71,7 +71,7 @@
         backlog:  默认10K
         threads： 线程总数， 默认: CPU核数*16
         maxbody: request.body最大值， 默认: 64K
-        capacity: ByteBuffer的初始化大小， 默认: 8K;  如果是HTTP协议则默认: 16K + 8B (HTTP 2.0)
+        capacity: ByteBuffer的初始化大小， 默认: 8K;  如果是HTTP协议则默认: 16K + 8B (兼容HTTP 2.0)
         bufferPoolSize： ByteBuffer池的大小，默认: CPU核数*512
         responsePoolSize： Response池的大小，默认: CPU核数*256
         readTimeoutSecond: 读操作超时秒数， 默认0， 表示永久不超时
