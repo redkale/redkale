@@ -148,7 +148,7 @@ public final class Transport {
                         if (channel == null) channel = AsynchronousSocketChannel.open(group);
 
                         try {
-                            channel.connect(addr).get(1, TimeUnit.SECONDS);
+                            channel.connect(addr).get(2, TimeUnit.SECONDS);
                             break;
                         } catch (Exception iex) {
                             iex.printStackTrace();
