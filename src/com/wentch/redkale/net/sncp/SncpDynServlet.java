@@ -6,6 +6,7 @@
 package com.wentch.redkale.net.sncp;
 
 import com.wentch.redkale.convert.bson.*;
+import static com.wentch.redkale.net.sncp.SncpRequest.HEADER_SIZE;
 import com.wentch.redkale.service.*;
 import com.wentch.redkale.util.*;
 import java.io.*;
@@ -85,17 +86,18 @@ public final class SncpDynServlet extends SncpServlet {
         if (action == null) {
             response.finish(SncpResponse.RETCODE_ILLACTIONID, null);  //无效actionid
         } else {
+            BsonWriter out = action.convert.pollBsonWriter().fillRange(HEADER_SIZE);
             BsonReader in = action.convert.pollBsonReader();
             try {
                 in.setBytes(request.getBody());
-                BsonWriter bw = action.action(in);
-                response.finish(0, bw);
-                if (bw != null) action.convert.offerBsonWriter(bw);
+                action.action(in, out);
+                response.finish(0, out);
             } catch (Throwable t) {
                 response.getContext().getLogger().log(Level.INFO, "sncp execute error(" + request + ")", t);
                 response.finish(SncpResponse.RETCODE_THROWEXCEPTION, null);
             } finally {
                 action.convert.offerBsonReader(in);
+                action.convert.offerBsonWriter(out);
             }
         }
     }
@@ -109,7 +111,7 @@ public final class SncpDynServlet extends SncpServlet {
 
         protected java.lang.reflect.Type[] paramTypes;  //index=0表示返回参数的type， void的返回参数类型为null
 
-        public abstract BsonWriter action(final BsonReader in) throws Throwable;
+        public abstract void action(final BsonReader in, final BsonWriter out) throws Throwable;
 
         /*
          *
@@ -124,12 +126,12 @@ public final class SncpDynServlet extends SncpServlet {
          *      public TestService service;
          *
          *      @Override
-         *      public BsonWriter action(final BsonReader in) throws Throwable {
+         *      public void action(final BsonReader in, final BsonWriter out) throws Throwable {
          *          TestBean arg1 = convert.convertFrom(in, paramTypes[1]);
          *          String arg2 = convert.convertFrom(in, paramTypes[2]);
          *          int arg3 = convert.convertFrom(in, paramTypes[3]);
          *          Object rs = service.change(arg1, arg2, arg3);
-         *          return convert.convertTo(paramTypes[0], rs);
+         *          convert.convertTo(out, paramTypes[0], rs);
          *      }
          * }
          */
@@ -188,11 +190,11 @@ public final class SncpDynServlet extends SncpServlet {
                 throw new RuntimeException(ex); //不可能会发生
             }
             { // action方法
-                mv = new DebugMethodVisitor(cw.visitMethod(ACC_PUBLIC, "action", "(" + convertReaderDesc + ")" + convertWriterDesc, null, new String[]{"java/lang/Throwable"}));
+                mv = new DebugMethodVisitor(cw.visitMethod(ACC_PUBLIC, "action", "(" + convertReaderDesc + convertWriterDesc + ")V", null, new String[]{"java/lang/Throwable"}));
                 //mv.setDebug(true);
                 int iconst = ICONST_1;
                 int intconst = 1;
-                int store = 2;
+                int store = 3; //action的参数个数+1
                 final Class[] paramClasses = method.getParameterTypes();
                 int[][] codes = new int[paramClasses.length][2];
                 for (int i = 0; i < paramClasses.length; i++) { //参数
@@ -259,8 +261,7 @@ public final class SncpDynServlet extends SncpServlet {
                 int maxStack = codes.length > 0 ? codes[codes.length - 1][1] : 1;
                 Class returnClass = method.getReturnType();
                 if (method.getReturnType() == void.class) { //返回
-                    mv.visitInsn(ACONST_NULL);
-                    mv.visitInsn(ARETURN);
+                    mv.visitInsn(RETURN);
                     maxStack = 8;
                 } else {
                     if (returnClass.isPrimitive()) {
@@ -275,13 +276,14 @@ public final class SncpDynServlet extends SncpServlet {
                     mv.visitVarInsn(ASTORE, store);  //11
                     mv.visitVarInsn(ALOAD, 0);
                     mv.visitFieldInsn(GETFIELD, newDynName, "convert", Type.getDescriptor(BsonConvert.class));
+                    mv.visitVarInsn(ALOAD, 2);
                     mv.visitVarInsn(ALOAD, 0);
                     mv.visitFieldInsn(GETFIELD, newDynName, "paramTypes", "[Ljava/lang/reflect/Type;");
                     mv.visitInsn(ICONST_0);
                     mv.visitInsn(AALOAD);
                     mv.visitVarInsn(ALOAD, store);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, convertName, "convertToWriter", "(Ljava/lang/reflect/Type;Ljava/lang/Object;)" + convertWriterDesc, false);
-                    mv.visitInsn(ARETURN);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, convertName, "convertTo", "(" + convertWriterDesc + "Ljava/lang/reflect/Type;Ljava/lang/Object;)V", false);
+                    mv.visitInsn(RETURN);
                     store++;
                     if (maxStack < 10) maxStack = 10;
                 }

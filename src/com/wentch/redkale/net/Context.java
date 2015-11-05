@@ -25,6 +25,8 @@ public class Context {
 
     protected final ExecutorService executor;
 
+    protected final int bufferCapacity;
+
     protected final ObjectPool<ByteBuffer> bufferPool;
 
     protected final ObjectPool<Response> responsePool;
@@ -45,12 +47,13 @@ public class Context {
 
     protected final WatchFactory watch;
 
-    public Context(long serverStartTime, Logger logger, ExecutorService executor, ObjectPool<ByteBuffer> bufferPool, ObjectPool<Response> responsePool,
+    public Context(long serverStartTime, Logger logger, ExecutorService executor, int bufferCapacity, ObjectPool<ByteBuffer> bufferPool, ObjectPool<Response> responsePool,
             final int maxbody, Charset charset, InetSocketAddress address, final PrepareServlet prepare, final WatchFactory watch,
             final int readTimeoutSecond, final int writeTimeoutSecond) {
         this.serverStartTime = serverStartTime;
         this.logger = logger;
         this.executor = executor;
+        this.bufferCapacity = bufferCapacity;
         this.bufferPool = bufferPool;
         this.responsePool = responsePool;
         this.maxbody = maxbody;
@@ -80,6 +83,10 @@ public class Context {
 
     public void submit(Runnable r) {
         executor.submit(r);
+    }
+
+    public int getBufferCapacity() {
+        return bufferCapacity;
     }
 
     public ByteBuffer pollBuffer() {

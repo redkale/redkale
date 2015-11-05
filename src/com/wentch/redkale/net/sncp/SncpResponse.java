@@ -49,31 +49,50 @@ public final class SncpResponse extends Response<SncpRequest> {
     }
 
     public void finish(final int retcode, final BsonWriter out) {
-        ByteBuffer buffer = context.pollBuffer();
-        final int bodyLength = (out == null ? 0 : out.count());
-        final int bufsize = buffer.capacity() - HEADER_SIZE;
-        if (bufsize > bodyLength) { //只需一帧
-            //---------------------head----------------------------------
-            fillHeader(buffer, bodyLength, 0, bodyLength, retcode);
-            //---------------------body----------------------------------
-            out.toBuffer(buffer);
-            buffer.flip();
+        if (out == null) {
+            final ByteBuffer buffer = context.pollBuffer();
+            fillHeader(buffer, 0, 0, 0, retcode);
             finish(buffer);
-        } else {
-            final int frames = (bodyLength / bufsize) + (bodyLength % bufsize > 0 ? 1 : 0);
-            final ByteBuffer[] buffers = new ByteBuffer[frames];
-            int pos = 0;
-            for (int i = 0; i < frames; i++) {
-                if (i != 0) buffer = context.pollBuffer();
-                int len = Math.min(bufsize, bodyLength - pos);
-                fillHeader(buffer, bodyLength, pos, len, retcode);
-                buffers[i] = buffer;
-                out.toBuffer(pos, buffer);
-                pos += len;
-                buffer.flip();
-            }
-            finish(buffers);
+            return;
         }
+        final int respBodyLength = out.count() - HEADER_SIZE; //body总长度
+        if (this.channel.isTCP() || out.count() <= context.getBufferCapacity()) {  //TCP模式 或者 一帧数据            
+            fillHeader(out, respBodyLength, 0, respBodyLength, retcode);
+            finish(out.toBuffer());
+            return;
+        }
+        final int bufsize = context.getBufferCapacity() - HEADER_SIZE;
+        final int frames = (respBodyLength / bufsize) + (respBodyLength % bufsize > 0 ? 1 : 0);
+        final ByteBuffer[] buffers = new ByteBuffer[frames];
+        int pos = 0;
+        for (int i = 0; i < frames; i++) {
+            final ByteBuffer buffer = context.pollBuffer();
+            int len = Math.min(bufsize, respBodyLength - pos);
+            fillHeader(buffer, respBodyLength, pos, len, retcode);
+            buffers[i] = buffer;
+            out.toBuffer(pos + HEADER_SIZE, buffer);
+            pos += len;
+            buffer.flip();
+        }
+        finish(buffers);
+    }
+
+    private void fillHeader(BsonWriter writer, int bodyLength, int bodyOffset, int framelength, int retcode) {
+        //---------------------head----------------------------------
+        int pos = 0;
+        pos = writer.rewriteTo(pos, request.getSeqid());
+        pos = writer.rewriteTo(pos, (char) SncpRequest.HEADER_SIZE);
+        pos = writer.rewriteTo(pos, request.getServiceid());
+        pos = writer.rewriteTo(pos, request.getNameid());
+        DLong actionid = request.getActionid();
+        pos = writer.rewriteTo(pos, actionid.getFirst());
+        pos = writer.rewriteTo(pos, actionid.getSecond());
+        pos = writer.rewriteTo(pos, addrBytes);
+        pos = writer.rewriteTo(pos, (char) this.addrPort);
+        pos = writer.rewriteTo(pos, bodyLength);
+        pos = writer.rewriteTo(pos, bodyOffset);
+        pos = writer.rewriteTo(pos, framelength);
+        writer.rewriteTo(pos, retcode);
     }
 
     private void fillHeader(ByteBuffer buffer, int bodyLength, int bodyOffset, int framelength, int retcode) {

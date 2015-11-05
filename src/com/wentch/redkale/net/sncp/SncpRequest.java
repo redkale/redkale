@@ -36,14 +36,11 @@ public final class SncpRequest extends Request {
 
     private int framelength;
 
-    //private byte[][] paramBytes;
     private boolean ping;
 
     private byte[] body;
 
-    private byte[] bufferbytes = new byte[4];
-
-    private InetSocketAddress remoteAddress;
+    private byte[] bufferbytes = new byte[6];
 
     protected SncpRequest(SncpContext context, BsonFactory factory) {
         super(context);
@@ -66,10 +63,6 @@ public final class SncpRequest extends Request {
         this.nameid = buffer.getLong();
         this.actionid = new DLong(buffer.getLong(), buffer.getLong());
         buffer.get(bufferbytes);
-        int port = buffer.getChar();
-        if (bufferbytes[0] > 0 && port > 0) {
-            this.remoteAddress = new InetSocketAddress((0xff & bufferbytes[0]) + "." + (0xff & bufferbytes[1]) + "." + (0xff & bufferbytes[2]) + "." + (0xff & bufferbytes[3]), port);
-        }
         this.bodylength = buffer.getInt();
         this.bodyoffset = buffer.getInt();
         this.framelength = buffer.getInt();
@@ -79,7 +72,18 @@ public final class SncpRequest extends Request {
             return -1;
         }
         //---------------------body----------------------------------
+        if (this.channel.isTCP()) { // TCP模式， 不管数据包大小 只传一帧数据
+            this.body = new byte[this.bodylength];
+            int len = Math.min(this.bodylength, buffer.remaining());
+            buffer.get(body, 0, len);
+            this.bodyoffset = len;
+            return bodylength - len;
+        }
+        //--------------------- UDP 模式 ----------------------------
         if (this.bodylength == this.framelength) {  //只有一帧的数据
+            if (this.framelength > buffer.remaining()) { //缺失一部分数据 
+                throw new RuntimeException(SncpRequest.class.getSimpleName() + " data need " + this.framelength + " bytes, but only " + buffer.remaining() + " bytes");
+            }
             this.body = new byte[this.framelength];
             buffer.get(body);
             return 0;
@@ -102,33 +106,10 @@ public final class SncpRequest extends Request {
     }
 
     @Override
-    protected int readBody(ByteBuffer buffer) { // TCP 模式会调用此方法
-        long rseqid = buffer.getLong();
-        if (rseqid != this.seqid) throw new RuntimeException("sncp frame receive seqid = " + seqid + ", but first receive seqid =" + rseqid);
-        if (buffer.getChar() != HEADER_SIZE) throw new RuntimeException("sncp buffer receive header.length not " + HEADER_SIZE);
-        long rserviceid = buffer.getLong();
-        if (rserviceid != this.serviceid) throw new RuntimeException("sncp frame receive serviceid = " + serviceid + ", but first receive serviceid =" + rserviceid);
-        long rnameid = buffer.getLong();
-        if (rnameid != this.nameid) throw new RuntimeException("sncp frame receive nameid = " + nameid + ", but first receive nameid =" + rnameid);
-        long ractionid1 = buffer.getLong();
-        long ractionid2 = buffer.getLong();
-        if (!this.actionid.compare(ractionid1, ractionid2)) throw new RuntimeException("sncp frame receive actionid = " + actionid + ", but first receive actionid =(" + ractionid1 + "_" + ractionid2 + ")");
-        buffer.getInt();  //地址
-        buffer.getChar();  //端口
-        final int bodylen = buffer.getInt();
-        if (bodylen != this.bodylength) throw new RuntimeException("sncp frame receive bodylength = " + bodylen + ", but first bodylength =" + bodylength);        
-        final int bodyOffset = buffer.getInt();
-        final int framelen = buffer.getInt();        
-        final int retcode = buffer.getInt();
-        if (retcode != 0) throw new RuntimeException("sncp frame receive retcode error (retcode=" + retcode + ")");
-        final SncpContext scontext = (SncpContext) this.context;
-        RequestEntry entry = scontext.getRequestEntity(this.seqid);
-        if (entry == null) entry = scontext.addRequestEntity(this.seqid, new byte[this.bodylength]);
-        entry.add(buffer, bodyOffset);
-        if (entry.isCompleted()) {  //数据读取完毕
-            this.body = entry.body;
-            scontext.removeRequestEntity(this.seqid);
-        }
+    protected int readBody(ByteBuffer buffer) { // 只有 TCP 模式会调用此方法
+        final int framelen = buffer.remaining();
+        buffer.get(this.body, this.bodyoffset, framelen);
+        this.bodyoffset += framelen;
         return framelen;
     }
 
@@ -137,12 +118,16 @@ public final class SncpRequest extends Request {
         this.keepAlive = this.channel.isTCP();
     }
 
+    protected boolean isTCP() {
+        return this.channel.isTCP();
+    }
+
     @Override
     public String toString() {
         return SncpRequest.class.getSimpleName() + "{seqid=" + this.seqid
                 + ",serviceid=" + this.serviceid + ",actionid=" + this.actionid
                 + ",bodylength=" + this.bodylength + ",bodyoffset=" + this.bodyoffset
-                + ",framelength=" + this.framelength + ",remoteAddress=" + remoteAddress + "}";
+                + ",framelength=" + this.framelength + ",remoteAddress=" + getRemoteAddress() + "}";
     }
 
     @Override
@@ -155,7 +140,6 @@ public final class SncpRequest extends Request {
         this.bodyoffset = 0;
         this.body = null;
         this.ping = false;
-        this.remoteAddress = null;
         this.bufferbytes[0] = 0;
         super.recycle();
     }
@@ -185,7 +169,9 @@ public final class SncpRequest extends Request {
     }
 
     public InetSocketAddress getRemoteAddress() {
-        return remoteAddress;
+        if (bufferbytes[0] == 0) return null;
+        return new InetSocketAddress((0xff & bufferbytes[0]) + "." + (0xff & bufferbytes[1]) + "." + (0xff & bufferbytes[2]) + "." + (0xff & bufferbytes[3]),
+                ((0xff00 & (bufferbytes[4] << 8)) | (0xff & bufferbytes[5])));
     }
 
 }

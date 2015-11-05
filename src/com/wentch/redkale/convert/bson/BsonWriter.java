@@ -89,26 +89,38 @@ public final class BsonWriter implements Writer {
      *
      * @param position
      * @param chs 
+     * @return  
      */
-    public void rewriteTo(int position, byte... chs) {
+    public int rewriteTo(int position, byte... chs) {
         System.arraycopy(chs, 0, content, position, chs.length);
+        return position + chs.length;
     }
 
-    public void rewriteTo(int position, short value) {
+    public int rewriteTo(int position, short value) {
         rewriteTo(position, (byte) (value >> 8), (byte) value);
+        return position + 2;
     }
 
-    public void rewriteTo(int position, char value) {
+    public int rewriteTo(int position, char value) {
         rewriteTo(position, (byte) ((value & 0xFF00) >> 8), (byte) (value & 0xFF));
+        return position + 2;
     }
 
-    public void rewriteTo(int position, int value) {
+    public int rewriteTo(int position, int value) {
         rewriteTo(position, (byte) (value >> 24), (byte) (value >> 16), (byte) (value >> 8), (byte) value);
+        return position + 4;
     }
 
-    public void rewriteTo(int position, long value) {
+    public int rewriteTo(int position, long value) {
         rewriteTo(position, (byte) (value >> 56), (byte) (value >> 48), (byte) (value >> 40), (byte) (value >> 32),
                 (byte) (value >> 24), (byte) (value >> 16), (byte) (value >> 8), (byte) value);
+        return position + 8;
+    }
+
+    public BsonWriter fillRange(final int len) {
+        expand(len);
+        count += len;
+        return this;
     }
 
     public void writeTo(final byte ch) {

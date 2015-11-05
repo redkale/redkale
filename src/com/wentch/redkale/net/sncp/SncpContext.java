@@ -38,8 +38,9 @@ public final class SncpContext extends Context {
         }
 
         public void add(ByteBuffer buffer, int pos) {
-            this.received += buffer.remaining();
-            buffer.get(body, pos, buffer.remaining());
+            int len = Math.min(buffer.remaining(), this.body.length - this.received);
+            this.received += len;
+            buffer.get(body, pos, len);
         }
 
         public boolean isCompleted() {
@@ -52,10 +53,10 @@ public final class SncpContext extends Context {
 
     protected final BsonFactory bsonFactory;
 
-    public SncpContext(long serverStartTime, Logger logger, ExecutorService executor, ObjectPool<ByteBuffer> bufferPool,
+    public SncpContext(long serverStartTime, Logger logger, ExecutorService executor, int bufferCapacity, ObjectPool<ByteBuffer> bufferPool,
             ObjectPool<Response> responsePool, int maxbody, Charset charset, InetSocketAddress address, PrepareServlet prepare,
             WatchFactory watch, int readTimeoutSecond, int writeTimeoutSecond) {
-        super(serverStartTime, logger, executor, bufferPool, responsePool, maxbody, charset,
+        super(serverStartTime, logger, executor, bufferCapacity, bufferPool, responsePool, maxbody, charset,
                 address, prepare, watch, readTimeoutSecond, writeTimeoutSecond);
         this.bsonFactory = BsonFactory.root();
     }

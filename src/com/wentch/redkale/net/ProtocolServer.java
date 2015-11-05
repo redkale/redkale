@@ -40,76 +40,13 @@ public abstract class ProtocolServer {
 
     private static final class ProtocolUDPServer extends ProtocolServer {
 
-        private final Context context;
-
-        private AsynchronousChannelGroup group;
-
-        private AsyncDatagramChannel serverChannel;
-
-        public ProtocolUDPServer(Context context) {
-            this.context = context;
-        }
-
-        @Override
-        public void open() throws IOException {
-            this.group = AsynchronousChannelGroup.withCachedThreadPool(context.executor, 1);
-            this.serverChannel = AsyncDatagramChannel.open(group);
-        }
-
-        @Override
-        public void bind(SocketAddress local, int backlog) throws IOException {
-            this.serverChannel.bind(local);
-        }
-
-        @Override
-        public <T> void setOption(SocketOption<T> name, T value) throws IOException {
-            this.serverChannel.setOption(name, value);
-        }
-
-        @Override
-        public void accept() {
-            final AsyncDatagramChannel serchannel = this.serverChannel;
-            final ByteBuffer buffer = this.context.pollBuffer();
-            serchannel.receive(buffer, buffer, new CompletionHandler<SocketAddress, ByteBuffer>() {
-
-                @Override
-                public void completed(final SocketAddress address, ByteBuffer attachment) {
-                    final ByteBuffer buffer2 = context.pollBuffer();
-                    serchannel.receive(buffer2, buffer2, this);
-                    attachment.flip();
-                    AsyncConnection conn = AsyncConnection.create(serchannel, address, false, context.readTimeoutSecond, context.writeTimeoutSecond);
-                    context.submit(new PrepareRunner(context, conn, attachment));
-                }
-
-                @Override
-                public void failed(Throwable exc, ByteBuffer attachment) {
-                    context.offerBuffer(attachment);
-                    //if (exc != null) context.logger.log(Level.FINEST, AsyncDatagramChannel.class.getSimpleName() + " accept erroneous", exc);
-                }
-            });
-        }
-
-        @Override
-        public void close() throws IOException {
-            this.serverChannel.close();
-        }
-
-        @Override
-        public AsynchronousChannelGroup getChannelGroup() {
-            return this.group;
-        }
-
-    }
-
-    private static final class ProtocolUDPWinServer extends ProtocolServer {
-
         private boolean running;
 
         private final Context context;
 
         private DatagramChannel serverChannel;
 
-        public ProtocolUDPWinServer(Context context) {
+        public ProtocolUDPServer(Context context) {
             this.context = context;
         }
 
