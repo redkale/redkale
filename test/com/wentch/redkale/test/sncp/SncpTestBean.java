@@ -5,8 +5,10 @@
  */
 package com.wentch.redkale.test.sncp;
 
+import com.wentch.redkale.convert.bson.*;
 import com.wentch.redkale.convert.json.*;
 import com.wentch.redkale.source.*;
+import com.wentch.redkale.util.*;
 
 /**
  *
@@ -18,6 +20,14 @@ public class SncpTestBean implements FilterBean {
 
     private String content;
 
+    public static void main(String[] args) throws Exception {
+        SncpTestBean bean = JsonFactory.root().getConvert().convertFrom(SncpTestBean.class, "{\"content\":\"数据: 01\",\"id\":1}");
+        System.out.println(bean);
+        byte[] bs = BsonFactory.root().getConvert().convertTo(bean);
+        Utility.println("---------", bs); 
+        System.out.println(BsonFactory.root().getConvert().convertFrom(SncpTestBean.class, bs).toString());
+    }
+    
     @Override
     public String toString() {
         return JsonFactory.root().getConvert().convertTo(this);
