@@ -60,6 +60,10 @@ public final class HttpContext extends Context {
         return responsePool;
     }
 
+    protected ObjectPool<ByteBuffer> getBufferPool() {
+        return bufferPool;
+    }
+
     public JsonConvert getJsonConvert() {
         return jsonFactory.getConvert();
     }

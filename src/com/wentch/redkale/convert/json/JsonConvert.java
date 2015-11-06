@@ -8,6 +8,9 @@ package com.wentch.redkale.convert.json;
 import com.wentch.redkale.convert.*;
 import com.wentch.redkale.util.*;
 import java.lang.reflect.*;
+import java.nio.*;
+import java.nio.charset.*;
+import java.util.function.*;
 
 /**
  *
@@ -92,6 +95,36 @@ public final class JsonConvert extends Convert<JsonReader, JsonWriter> {
         } else {
             factory.loadEncoder(value.getClass()).convertTo(out, value);
         }
+    }
+
+    public ByteBuffer[] convertTo(final Supplier<ByteBuffer> supplier, final Type type, Object value) {
+        return convertTo(null, supplier, type, value);
+    }
+
+    public ByteBuffer[] convertTo(final Charset charset, final Supplier<ByteBuffer> supplier, final Type type, Object value) {
+        if (supplier == null || type == null) return null;
+        JsonByteBufferWriter out = new JsonByteBufferWriter(charset, supplier);
+        if (value == null) {
+            out.writeNull();
+        } else {
+            factory.loadEncoder(type).convertTo(out, value);
+        }
+        return out.toBuffers();
+    }
+
+    public ByteBuffer[] convertTo(final Supplier<ByteBuffer> supplier, Object value) {
+        return convertTo(null, supplier, value);
+    }
+
+    public ByteBuffer[] convertTo(final Charset charset, final Supplier<ByteBuffer> supplier, Object value) {
+        if (supplier == null) return null;
+        JsonByteBufferWriter out = new JsonByteBufferWriter(charset, supplier);
+        if (value == null) {
+            out.writeNull();
+        } else {
+            factory.loadEncoder(value.getClass()).convertTo(out, value);
+        }
+        return out.toBuffers();
     }
 
     public byte[] convertToUTF8Bytes(Object value) {

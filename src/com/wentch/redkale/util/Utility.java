@@ -29,21 +29,26 @@ public final class Utility {
 
     private static final long strvaloffset;
 
+    private static final long sbvaloffset;
+
     private static final javax.net.ssl.SSLContext DEFAULTSSL_CONTEXT;
 
     static {
         sun.misc.Unsafe usafe = null;
-        long fd = 0L;
+        long fd1 = 0L;
+        long fd2 = 0L;
         try {
             Field safeField = sun.misc.Unsafe.class.getDeclaredField("theUnsafe");
             safeField.setAccessible(true);
             usafe = (sun.misc.Unsafe) safeField.get(null);
-            fd = usafe.objectFieldOffset(String.class.getDeclaredField("value"));
+            fd1 = usafe.objectFieldOffset(String.class.getDeclaredField("value"));
+            fd2 = usafe.objectFieldOffset(StringBuilder.class.getSuperclass().getDeclaredField("value"));
         } catch (Exception e) {
             throw new RuntimeException(e); //不可能会发生
         }
         UNSAFE = usafe;
-        strvaloffset = fd;
+        strvaloffset = fd1;
+        sbvaloffset = fd2;
 
         try {
             DEFAULTSSL_CONTEXT = javax.net.ssl.SSLContext.getInstance("SSL");
@@ -302,6 +307,10 @@ public final class Utility {
 
     public static char[] charArray(String value) {
         return value == null ? null : (char[]) UNSAFE.getObject(value, strvaloffset);
+    }
+
+    public static char[] charArray(StringBuilder value) {
+        return value == null ? null : (char[]) UNSAFE.getObject(value, sbvaloffset);
     }
 
     public static ByteBuffer encodeUTF8(final ByteBuffer buffer, final char[] array) {

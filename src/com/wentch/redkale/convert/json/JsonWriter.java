@@ -22,7 +22,7 @@ public class JsonWriter implements Writer {
 
     private static final int defaultSize = Integer.getInteger("convert.json.writer.buffer.defsize", 1024);
 
-    protected int count;
+    private int count;
 
     private char[] content;
 
@@ -58,7 +58,7 @@ public class JsonWriter implements Writer {
      * @param len
      * @return
      */
-    public char[] expand(int len) {
+    private char[] expand(int len) {
         int newcount = count + len;
         if (newcount <= content.length) return content;
         char[] newdata = new char[Math.max(content.length * 3 / 2, newcount)];
@@ -67,20 +67,12 @@ public class JsonWriter implements Writer {
         return newdata;
     }
 
-    public void writeTo(final char ch) {
+    public void writeTo(final char ch) { //只能是 0 - 127 的字符
         expand(1);
         content[count++] = ch;
     }
 
-    public void writeTo(final char... chs) {
-        int len = chs.length;
-        expand(len);
-        System.arraycopy(chs, 0, content, count, len);
-        count += len;
-    }
-
-    public void writeTo(final char[] chs, final int start, final int end) {
-        int len = end - start;
+    public void writeTo(final char[] chs, final int start, final int len) { //只能是 0 - 127 的字符
         expand(len);
         System.arraycopy(chs, start, content, count, len);
         count += len;
@@ -120,75 +112,8 @@ public class JsonWriter implements Writer {
         return Utility.encodeUTF8(content, 0, count);
     }
 
-    //------------------------------------------------------------------------
-    public final int count() {
+    public int count() {
         return this.count;
-    }
-
-    public final void count(int count) {
-        if (count >= 0) this.count = count;
-    }
-
-//    @SuppressWarnings("unchecked")
-//    public final boolean writeRefer(final Object value) {
-//        if (stack == null) return false;
-//        int index = stack.indexOf(value);
-//        if (index > -1) {
-//            int deep = stack.size() - index;
-//            if (deep < 0) throw new ConvertException("the refer deep  value(" + deep + ") is illegal");
-//            writeTo('{', '"', '@', '"', ':', '"');
-//            for (int i = 0; i < deep; i++) {
-//                writeTo('@');
-//            }
-//            writeTo('"', '}');
-//            return true;
-//        }
-//        return false;
-//    }
-    //-----------------------------------------------------------------------
-    @Override
-    public String toString() {
-        return new String(content, 0, count);
-    }
-
-    @Override
-    public void writeBoolean(boolean value) {
-        writeTo(value ? CHARS_TUREVALUE : CHARS_FALSEVALUE);
-    }
-
-    @Override
-    public void writeByte(byte value) {
-        writeInt(value);
-    }
-
-    @Override
-    public void writeChar(char value) {
-        writeInt(value);
-    }
-
-    @Override
-    public void writeShort(short value) {
-        writeInt(value);
-    }
-
-    @Override
-    public void writeInt(int value) {
-        writeSmallString(String.valueOf(value));
-    }
-
-    @Override
-    public void writeLong(long value) {
-        writeSmallString(String.valueOf(value));
-    }
-
-    @Override
-    public void writeFloat(float value) {
-        writeSmallString(String.valueOf(value));
-    }
-
-    @Override
-    public void writeDouble(double value) {
-        writeSmallString(String.valueOf(value));
     }
 
     @Override
@@ -224,7 +149,71 @@ public class JsonWriter implements Writer {
     }
 
     @Override
-    public void wirteClassName(String clazz) {
+    public void writeField(boolean comma, Attribute attribute) {
+        if (comma) writeTo(',');
+        writeTo('"');
+        writeSmallString(attribute.field());
+        writeTo('"');
+        writeTo(':');
+    }
+
+    @Override
+    public void writeSmallString(String value) {
+        writeTo(false, value);
+    }
+
+    @Override
+    public String toString() {
+        return new String(content, 0, count);
+    }
+
+    //----------------------------------------------------------------------------------------------
+    public final void writeTo(final char... chs) { //只能是 0 - 127 的字符
+        writeTo(chs, 0, chs.length);
+    }
+
+    @Override
+    public final void writeBoolean(boolean value) {
+        writeTo(value ? CHARS_TUREVALUE : CHARS_FALSEVALUE);
+    }
+
+    @Override
+    public final void writeByte(byte value) {
+        writeInt(value);
+    }
+
+    @Override
+    public final void writeChar(char value) {
+        writeInt(value);
+    }
+
+    @Override
+    public final void writeShort(short value) {
+        writeInt(value);
+    }
+
+    @Override
+    public final void writeInt(int value) {
+        writeSmallString(String.valueOf(value));
+    }
+
+    @Override
+    public final void writeLong(long value) {
+        writeSmallString(String.valueOf(value));
+    }
+
+    @Override
+    public final void writeFloat(float value) {
+        writeSmallString(String.valueOf(value));
+    }
+
+    @Override
+    public final void writeDouble(double value) {
+        writeSmallString(String.valueOf(value));
+    }
+
+    @Override
+    public final void wirteClassName(String clazz) {
     }
 
     @Override
@@ -238,51 +227,37 @@ public class JsonWriter implements Writer {
     }
 
     @Override
-    public final void writeField(boolean comma, Attribute attribute) {
-        if (comma) writeTo(',');
-        writeTo('"');
-        writeSmallString(attribute.field());
-        writeTo('"');
-        writeTo(':');
-    }
-
-    @Override
     public final void writeNull() {
         writeTo('n', 'u', 'l', 'l');
     }
 
     @Override
-    public void writeArrayB(int size) {
+    public final void writeArrayB(int size) {
         writeTo('[');
     }
 
     @Override
-    public void writeArrayMark() {
+    public final void writeArrayMark() {
         writeTo(',');
     }
 
     @Override
-    public void writeArrayE() {
+    public final void writeArrayE() {
         writeTo(']');
     }
 
     @Override
-    public void writeMapB(int size) {
+    public final void writeMapB(int size) {
         writeTo('{');
     }
 
     @Override
-    public void writeMapMark() {
+    public final void writeMapMark() {
         writeTo(':');
     }
 
     @Override
-    public void writeMapE() {
+    public final void writeMapE() {
         writeTo('}');
-    }
-
-    @Override
-    public void writeSmallString(String value) {
-        writeTo(false, value);
     }
 }
