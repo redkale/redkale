@@ -63,7 +63,7 @@ public final class ObjectPool<T> {
         this.creator = creator;
     }
 
-    public T poll() {
+    public T get() {
         T result = queue.poll();
         if (result == null) {
             if (creatCounter != null) creatCounter.incrementAndGet();
