@@ -8,6 +8,7 @@ package com.wentch.redkale.test.convert;
 import com.wentch.redkale.convert.json.*;
 import com.wentch.redkale.util.*;
 import java.lang.reflect.*;
+import java.nio.*;
 import java.util.*;
 
 /**
@@ -27,5 +28,9 @@ public class JsonTestMain {
         Map<String, String> map = convert.convertFrom(MAPTYPE, json);
         System.out.println(map);
         System.out.println(convert.convertTo(map));
+        ByteBuffer[] buffers = convert.convertTo(() -> ByteBuffer.allocate(1024), map);
+        byte[] bs = new byte[buffers[0].remaining()];
+        buffers[0].get(bs);
+        System.out.println(new String(bs)); 
     }
 }
