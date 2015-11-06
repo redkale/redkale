@@ -14,7 +14,7 @@ import com.wentch.redkale.util.*;
  *
  * @author zhangjx
  */
-public final class JsonWriter implements Writer {
+public class JsonWriter implements Writer {
 
     private static final char[] CHARS_TUREVALUE = "true".toCharArray();
 
@@ -45,13 +45,13 @@ public final class JsonWriter implements Writer {
         return tiny;
     }
 
-    public void setTiny(boolean tiny) {
+    public JsonWriter setTiny(boolean tiny) {
         this.tiny = tiny;
+        return this;
     }
 
     //-----------------------------------------------------------------------
     //-----------------------------------------------------------------------
-
     /**
      * 返回指定至少指定长度的缓冲区
      *
