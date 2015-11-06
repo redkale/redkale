@@ -232,7 +232,6 @@ public final class JsonByteBufferWriter extends JsonWriter {
                     case '"': sb.append("\\\"");
                         break;
                     default: sb.append(ch);
-                        ;
                         break;
                 }
             }
