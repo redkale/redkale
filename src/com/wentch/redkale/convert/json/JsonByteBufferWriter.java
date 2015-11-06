@@ -15,7 +15,7 @@ import java.util.function.*;
  *
  * @author zhangjx
  */
-public class JsonByteBufferWriter extends JsonWriter {
+public final class JsonByteBufferWriter extends JsonWriter {
 
     private static final Charset UTF8 = Charset.forName("UTF-8");
 
