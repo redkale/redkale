@@ -112,7 +112,7 @@ public final class Transport {
     }
 
     public ByteBuffer pollBuffer() {
-        return bufferPool.poll();
+        return bufferPool.get();
     }
 
     public void offerBuffer(ByteBuffer buffer) {
@@ -131,7 +131,6 @@ public final class Transport {
         final boolean rand = addr == null;
         try {
             if ("TCP".equalsIgnoreCase(protocol)) {
-                Socket socket = null;
                 AsynchronousSocketChannel channel = null;
                 if (rand) {   //随机取地址
                     int p = 0;
@@ -154,7 +153,6 @@ public final class Transport {
                             iex.printStackTrace();
                             if (i == remoteAddres.length - 1) {
                                 p = 0;
-                                socket = null;
                                 channel = null;
                             }
                         }

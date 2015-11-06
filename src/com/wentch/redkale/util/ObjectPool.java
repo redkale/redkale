@@ -15,7 +15,7 @@ import java.util.logging.*;
  * @author zhangjx
  * @param <T>
  */
-public final class ObjectPool<T> {
+public final class ObjectPool<T> implements Supplier<T> {
 
     private static final Logger logger = Logger.getLogger(ObjectPool.class.getSimpleName());
 
@@ -63,7 +63,8 @@ public final class ObjectPool<T> {
         this.creator = creator;
     }
 
-    public T poll() {
+    @Override
+    public T get() {
         T result = queue.poll();
         if (result == null) {
             if (creatCounter != null) creatCounter.incrementAndGet();

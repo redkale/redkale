@@ -34,7 +34,7 @@ public final class PrepareRunner implements Runnable {
         final PrepareServlet prepare = context.prepare;
         final ObjectPool<? extends Response> responsePool = context.responsePool;
         if (data != null) {
-            final Response response = responsePool.poll();
+            final Response response = responsePool.get();
             response.init(channel);
             try {
                 prepare.prepare(data, response.request, response);
@@ -65,7 +65,7 @@ public final class PrepareRunner implements Runnable {
 //                        System.println(new String(bs));
 //                    }
                     buffer.flip();
-                    final Response response = responsePool.poll();
+                    final Response response = responsePool.get();
                     response.init(channel);
                     try {
                         prepare.prepare(buffer, response.request, response);

@@ -90,7 +90,7 @@ public class Context {
     }
 
     public ByteBuffer pollBuffer() {
-        return bufferPool.poll();
+        return bufferPool.get();
     }
 
     public void offerBuffer(ByteBuffer buffer) {
