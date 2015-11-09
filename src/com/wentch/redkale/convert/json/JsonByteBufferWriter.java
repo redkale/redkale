@@ -197,47 +197,50 @@ public final class JsonByteBufferWriter extends JsonWriter {
             writeNull();
             return;
         }
-        final char[] chs = Utility.charArray(value);
-        int len = 0;
-        for (char ch : chs) {
+        ByteBuffer buffer = this.buffers[index];
+        expand(1);
+        if (!buffer.hasRemaining()) buffer = nextByteBuffer();
+        buffer.put((byte) '"');
+
+        for (char ch : Utility.charArray(value)) {
             switch (ch) {
-                case '\n': len += 2;
+                case '\n': expand(2);
+                    if (!buffer.hasRemaining()) buffer = nextByteBuffer();
+                    buffer.put((byte) '\\');
+                    if (!buffer.hasRemaining()) buffer = nextByteBuffer();
+                    buffer.put((byte) 'n');
                     break;
-                case '\r': len += 2;
+                case '\r': expand(2);
+                    if (!buffer.hasRemaining()) buffer = nextByteBuffer();
+                    buffer.put((byte) '\\');
+                    if (!buffer.hasRemaining()) buffer = nextByteBuffer();
+                    buffer.put((byte) 'r');
                     break;
-                case '\t': len += 2;
+                case '\t': expand(2);
+                    if (!buffer.hasRemaining()) buffer = nextByteBuffer();
+                    buffer.put((byte) '\\');
+                    if (!buffer.hasRemaining()) buffer = nextByteBuffer();
+                    buffer.put((byte) 't');
                     break;
-                case '\\': len += 2;
+                case '\\': expand(2);
+                    if (!buffer.hasRemaining()) buffer = nextByteBuffer();
+                    buffer.put((byte) '\\');
+                    if (!buffer.hasRemaining()) buffer = nextByteBuffer();
+                    buffer.put((byte) '\\');
                     break;
-                case '"': len += 2;
+                case '"': expand(2);
+                    if (!buffer.hasRemaining()) buffer = nextByteBuffer();
+                    buffer.put((byte) '\\');
+                    if (!buffer.hasRemaining()) buffer = nextByteBuffer();
+                    buffer.put((byte) '"');
                     break;
-                default: len++;
+                default: buffer = putChar(buffer, ch);
                     break;
             }
         }
-        if (len == chs.length) {
-            writeTo(true, chs, 0, len);
-        } else {
-            StringBuilder sb = new StringBuilder(value.length() * 2);
-            for (char ch : chs) {
-                switch (ch) {
-                    case '\n': sb.append("\\n");
-                        break;
-                    case '\r': sb.append("\\r");
-                        break;
-                    case '\t': sb.append("\\t");
-                        break;
-                    case '\\': sb.append("\\\\");
-                        break;
-                    case '"': sb.append("\\\"");
-                        break;
-                    default: sb.append(ch);
-                        break;
-                }
-            }
-            char[] cs = Utility.charArray(sb);
-            writeTo(true, cs, 0, sb.length());
-        }
+        expand(1);
+        if (!buffer.hasRemaining()) buffer = nextByteBuffer();
+        buffer.put((byte) '"');
     }
 
     @Override

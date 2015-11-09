@@ -85,8 +85,8 @@ final class FilterBeanNode extends FilterNode {
                         final String jc = joinCol.column().isEmpty() ? secinfo.getPrimary().field() : joinCol.column();
                         if (first) {
                             joinsb.append(" ").append(joinCol.type().name()).append(" JOIN ").append(secinfo.getTable())
-                                    .append(" ").append(alias).append(" ON a.# = ").append(alias).append(".")
-                                    .append(secinfo.getSQLColumn(jc));
+                                    .append(" ").append(alias).append(" ON a.").append(secinfo.getSQLColumn(jc)).append(" = ")
+                                    .append(alias).append(".").append(secinfo.getSQLColumn(jc));
                         }
                         newnode.foreignEntity = secinfo;
                         newnode.tabalis = alias;
@@ -235,8 +235,7 @@ final class FilterBeanNode extends FilterNode {
         if (joinSQL == null || !first) return super.createFilterSQLExpress(first, info, bean);
         StringBuilder sb = super.createFilterSQLExpress(first, info, bean);
         if (joinSQL == null) return sb;
-        String jsql = joinSQL.replace("#", info.getSQLColumn(byjoinColumn));
-        return new StringBuilder(sb.length() + jsql.length()).append(jsql).append(sb);
+        return new StringBuilder(sb.length() + joinSQL.length()).append(joinSQL).append(sb);
     }
 
     @Override
