@@ -234,6 +234,7 @@ final class FilterBeanNode extends FilterNode {
     protected <T> StringBuilder createFilterSQLExpress(final boolean first, final EntityInfo<T> info, FilterBean bean) {
         if (joinSQL == null || !first) return super.createFilterSQLExpress(first, info, bean);
         StringBuilder sb = super.createFilterSQLExpress(first, info, bean);
+        if (joinSQL == null) return sb;
         String jsql = joinSQL.replace("#", info.getSQLColumn(byjoinColumn));
         return new StringBuilder(sb.length() + jsql.length()).append(jsql).append(sb);
     }
