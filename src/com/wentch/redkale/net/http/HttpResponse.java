@@ -18,7 +18,6 @@ import java.nio.file.*;
 import java.text.*;
 import java.util.*;
 import java.util.concurrent.atomic.*;
-import java.util.function.*;
 
 /**
  *
@@ -148,10 +147,6 @@ public class HttpResponse<R extends HttpRequest> extends Response<R> {
         return v == null ? defValue : v;
     }
 
-    protected Supplier<ByteBuffer> getByteBufferSupplier() {
-        return ((HttpContext) context).getBufferPool();
-    }
-
     @Override
     public HttpContext getContext() {
         return (HttpContext) context;
@@ -170,17 +165,17 @@ public class HttpResponse<R extends HttpRequest> extends Response<R> {
 
     public void finishJson(Object obj) {
         this.contentType = "text/plain; charset=utf-8";
-        finish(request.convert.convertTo(context.getCharset(), getByteBufferSupplier(), obj));
+        finish(request.convert.convertTo(context.getCharset(), context.getBufferSupplier(), obj));
     }
 
     public void finishJson(Type type, Object obj) {
         this.contentType = "text/plain; charset=utf-8";
-        finish(request.convert.convertTo(context.getCharset(), getByteBufferSupplier(), type, obj));
+        finish(request.convert.convertTo(context.getCharset(), context.getBufferSupplier(), type, obj));
     }
 
     public void finishJson(Object... objs) {
         this.contentType = "text/plain; charset=utf-8";
-        finish(request.convert.convertTo(context.getCharset(), getByteBufferSupplier(), objs));
+        finish(request.convert.convertTo(context.getCharset(), context.getBufferSupplier(), objs));
     }
 
     public void finish(String obj) {

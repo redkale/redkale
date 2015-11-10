@@ -11,6 +11,7 @@ import java.net.*;
 import java.nio.*;
 import java.nio.charset.*;
 import java.util.concurrent.*;
+import java.util.function.*;
 import java.util.logging.*;
 
 /**
@@ -87,6 +88,10 @@ public class Context {
 
     public int getBufferCapacity() {
         return bufferCapacity;
+    }
+
+    public Supplier<ByteBuffer> getBufferSupplier() {
+        return bufferPool;
     }
 
     public ByteBuffer pollBuffer() {

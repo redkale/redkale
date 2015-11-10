@@ -13,6 +13,7 @@ import java.nio.channels.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
+import java.util.function.*;
 
 /**
  * 传输客户端
@@ -113,6 +114,10 @@ public final class Transport {
 
     public ByteBuffer pollBuffer() {
         return bufferPool.get();
+    }
+
+    public Supplier<ByteBuffer> getBufferSupplier() {
+        return bufferPool;
     }
 
     public void offerBuffer(ByteBuffer buffer) {
