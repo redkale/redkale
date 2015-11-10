@@ -49,6 +49,10 @@ public class BsonWriter implements Writer {
         return len;
     }
 
+    protected BsonWriter(byte[] bs) {
+        this.content = bs;
+    }
+
     public BsonWriter() {
         this(defaultSize);
     }
