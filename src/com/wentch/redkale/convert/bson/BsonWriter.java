@@ -13,13 +13,13 @@ import java.nio.*;
  *
  * @author zhangjx
  */
-public final class BsonWriter implements Writer {
+public class BsonWriter implements Writer {
 
     private static final int defaultSize = Integer.getInteger("convert.bson.writer.buffer.defsize", 1024);
 
-    protected int count;
-
     private byte[] content;
+
+    protected int count;
 
     protected boolean tiny;
 
@@ -58,7 +58,7 @@ public final class BsonWriter implements Writer {
     }
 
     @Override
-    public boolean isTiny() {
+    public final boolean isTiny() {
         return tiny;
     }
 
@@ -75,7 +75,7 @@ public final class BsonWriter implements Writer {
      * @param len
      * @return
      */
-    public byte[] expand(int len) {
+    private byte[] expand(int len) {
         int newcount = count + len;
         if (newcount <= content.length) return content;
         byte[] newdata = new byte[Math.max(content.length * 3 / 2, newcount)];
@@ -96,22 +96,22 @@ public final class BsonWriter implements Writer {
         return position + chs.length;
     }
 
-    public int rewriteTo(int position, short value) {
+    public final int rewriteTo(int position, short value) {
         rewriteTo(position, (byte) (value >> 8), (byte) value);
         return position + 2;
     }
 
-    public int rewriteTo(int position, char value) {
+    public final int rewriteTo(int position, char value) {
         rewriteTo(position, (byte) ((value & 0xFF00) >> 8), (byte) (value & 0xFF));
         return position + 2;
     }
 
-    public int rewriteTo(int position, int value) {
+    public final int rewriteTo(int position, int value) {
         rewriteTo(position, (byte) (value >> 24), (byte) (value >> 16), (byte) (value >> 8), (byte) value);
         return position + 4;
     }
 
-    public int rewriteTo(int position, long value) {
+    public final int rewriteTo(int position, long value) {
         rewriteTo(position, (byte) (value >> 56), (byte) (value >> 48), (byte) (value >> 40), (byte) (value >> 32),
                 (byte) (value >> 24), (byte) (value >> 16), (byte) (value >> 8), (byte) value);
         return position + 8;
@@ -128,15 +128,11 @@ public final class BsonWriter implements Writer {
         content[count++] = ch;
     }
 
-    public void writeTo(final byte... chs) {
-        int len = chs.length;
-        expand(len);
-        System.arraycopy(chs, 0, content, count, len);
-        count += len;
+    public final void writeTo(final byte... chs) {
+        writeTo(chs, 0, chs.length);
     }
 
-    public void writeTo(final byte[] chs, final int start, final int end) {
-        int len = end - start;
+    public void writeTo(final byte[] chs, final int start, final int len) {
         expand(len);
         System.arraycopy(chs, start, content, count, len);
         count += len;
@@ -150,68 +146,59 @@ public final class BsonWriter implements Writer {
         return true;
     }
 
-    //------------------------------------------------------------------------
-    public int position() {
-        return this.count;
-    }
-
-    public final int count() {
-        return this.count;
-    }
-
-    public final void count(int count) {
-        if (count >= 0) this.count = count;
-    }
-
-    //-----------------------------------------------------------------------
     @Override
     public String toString() {
         return new String(content, 0, count);
     }
 
+    //------------------------------------------------------------------------
+    public final int count() {
+        return this.count;
+    }
+
     @Override
-    public void writeBoolean(boolean value) {
+    public final void writeBoolean(boolean value) {
         writeTo(value ? (byte) 1 : (byte) 0);
     }
 
     @Override
-    public void writeByte(byte value) {
+    public final void writeByte(byte value) {
         writeTo(value);
     }
 
     @Override
-    public void writeChar(final char value) {
+    public final void writeChar(final char value) {
         writeTo((byte) ((value & 0xFF00) >> 8), (byte) (value & 0xFF));
     }
 
     @Override
-    public void writeShort(short value) {
+    public final void writeShort(short value) {
         writeTo((byte) (value >> 8), (byte) value);
     }
 
     @Override
-    public void writeInt(int value) {
+    public final void writeInt(int value) {
         writeTo((byte) (value >> 24), (byte) (value >> 16), (byte) (value >> 8), (byte) value);
     }
 
     @Override
-    public void writeLong(long value) {
+    public final void writeLong(long value) {
         writeTo((byte) (value >> 56), (byte) (value >> 48), (byte) (value >> 40), (byte) (value >> 32),
                 (byte) (value >> 24), (byte) (value >> 16), (byte) (value >> 8), (byte) value);
     }
 
     @Override
-    public void writeFloat(float value) {
+    public final void writeFloat(float value) {
         writeInt(Float.floatToIntBits(value));
     }
 
     @Override
-    public void writeDouble(double value) {
+    public final void writeDouble(double value) {
         writeLong(Double.doubleToLongBits(value));
     }
 
     @Override
-    public void wirteClassName(String clazz) {
+    public final void wirteClassName(String clazz) {
         writeSmallString(clazz == null ? "" : clazz);
     }
 
@@ -279,7 +266,7 @@ public final class BsonWriter implements Writer {
      * @param value
      */
     @Override
-    public void writeSmallString(String value) {
+    public final void writeSmallString(String value) {
         if (value.isEmpty()) {
             writeTo((byte) 0);
             return;
@@ -296,7 +283,7 @@ public final class BsonWriter implements Writer {
     }
 
     @Override
-    public void writeString(String value) {
+    public final void writeString(String value) {
         if (value == null) {
             writeInt(Reader.SIGN_NULL);
             return;
@@ -315,16 +302,16 @@ public final class BsonWriter implements Writer {
     }
 
     @Override
-    public void writeArrayB(int size) {
+    public final void writeArrayB(int size) {
         writeInt(size);
     }
 
     @Override
-    public void writeArrayMark() {
+    public final void writeArrayMark() {
     }
 
     @Override
-    public void writeArrayE() {
+    public final void writeArrayE() {
     }
 
     @Override
@@ -333,11 +320,11 @@ public final class BsonWriter implements Writer {
     }
 
     @Override
-    public void writeMapMark() {
+    public final void writeMapMark() {
     }
 
     @Override
-    public void writeMapE() {
+    public final void writeMapE() {
     }
 
 }

@@ -40,13 +40,14 @@ public final class JsonByteBufferWriter extends JsonWriter {
     protected boolean recycle() {
         this.index = 0;
         this.buffers = null;
-        return true;
+        return false;
     }
 
     public ByteBuffer[] toBuffers() {
         if (buffers == null) return new ByteBuffer[0];
         for (int i = index; i < this.buffers.length; i++) {
-            this.buffers[i].flip();
+            ByteBuffer buf = this.buffers[i];
+            if (buf.position() != 0) buf.flip();
         }
         return this.buffers;
     }

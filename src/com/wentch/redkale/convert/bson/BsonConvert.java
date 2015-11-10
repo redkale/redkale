@@ -9,6 +9,7 @@ import com.wentch.redkale.convert.*;
 import com.wentch.redkale.util.*;
 import java.lang.reflect.*;
 import java.nio.*;
+import java.util.function.*;
 
 /**
  * BSON协议格式: 
@@ -93,6 +94,28 @@ public final class BsonConvert extends Convert<BsonReader, BsonWriter> {
     public void convertTo(final BsonWriter out, final Type type, Object value) {
         if (type == null) return;
         factory.loadEncoder(type).convertTo(out, value);
+    }
+
+    public ByteBuffer[] convertTo(final Supplier<ByteBuffer> supplier, final Type type, Object value) {
+        if (supplier == null || type == null) return null;
+        BsonByteBufferWriter out = new BsonByteBufferWriter(supplier);
+        if (value == null) {
+            out.writeNull();
+        } else {
+            factory.loadEncoder(type).convertTo(out, value);
+        }
+        return out.toBuffers();
+    }
+
+    public ByteBuffer[] convertTo(final Supplier<ByteBuffer> supplier, Object value) {
+        if (supplier == null) return null;
+        BsonByteBufferWriter out = new BsonByteBufferWriter(supplier);
+        if (value == null) {
+            out.writeNull();
+        } else {
+            factory.loadEncoder(value.getClass()).convertTo(out, value);
+        }
+        return out.toBuffers();
     }
 
     public void convertTo(final BsonWriter out, Object value) {
