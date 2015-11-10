@@ -27,13 +27,19 @@ public final class JsonByteBufferWriter extends JsonWriter {
 
     private int index;
 
-    public JsonByteBufferWriter(Supplier<ByteBuffer> supplier) {
+    protected JsonByteBufferWriter(Supplier<ByteBuffer> supplier) {
         this(null, supplier);
     }
 
-    public JsonByteBufferWriter(Charset charset, Supplier<ByteBuffer> supplier) {
+    protected JsonByteBufferWriter(Charset charset, Supplier<ByteBuffer> supplier) {
         this.charset = UTF8.equals(charset) ? null : charset;
         this.supplier = supplier;
+    }
+
+    @Override
+    public JsonByteBufferWriter setTiny(boolean tiny) {
+        this.tiny = tiny;
+        return this;
     }
 
     @Override

@@ -44,6 +44,10 @@ public final class BsonConvert extends Convert<BsonReader, BsonWriter> {
         this.tiny = tiny;
     }
 
+    public BsonByteBufferWriter pollBsonWriter(final Supplier<ByteBuffer> supplier) {
+        return new BsonByteBufferWriter(supplier).setTiny(tiny);
+    }
+
     public BsonWriter pollBsonWriter() {
         return writerPool.get().setTiny(tiny);
     }

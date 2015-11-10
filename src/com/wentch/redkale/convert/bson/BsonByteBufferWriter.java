@@ -20,7 +20,7 @@ public final class BsonByteBufferWriter extends BsonWriter {
 
     private int index;
 
-    public BsonByteBufferWriter(Supplier<ByteBuffer> supplier) {
+    protected BsonByteBufferWriter(Supplier<ByteBuffer> supplier) {
         super((byte[]) null);
         this.supplier = supplier;
     }

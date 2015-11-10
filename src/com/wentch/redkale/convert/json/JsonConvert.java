@@ -33,6 +33,14 @@ public final class JsonConvert extends Convert<JsonReader, JsonWriter> {
         this.tiny = tiny;
     }
 
+    public JsonByteBufferWriter pollJsonWriter(final Supplier<ByteBuffer> supplier) {
+        return new JsonByteBufferWriter(supplier).setTiny(tiny);
+    }
+
+    public JsonByteBufferWriter pollJsonWriter(final Charset charset, final Supplier<ByteBuffer> supplier) {
+        return new JsonByteBufferWriter(charset, supplier).setTiny(tiny);
+    }
+
     public JsonWriter pollJsonWriter() {
         return writerPool.get().setTiny(tiny);
     }
