@@ -6,7 +6,6 @@
 package com.wentch.redkale.convert.bson;
 
 import java.nio.*;
-import java.nio.charset.*;
 import java.util.function.*;
 
 /**
@@ -14,8 +13,6 @@ import java.util.function.*;
  * @author zhangjx
  */
 public final class BsonByteBufferWriter extends BsonWriter {
-
-    private static final Charset UTF8 = Charset.forName("UTF-8");
 
     private final Supplier<ByteBuffer> supplier;
 
@@ -138,7 +135,7 @@ public final class BsonByteBufferWriter extends BsonWriter {
 
     @Override
     public int rewriteTo(int position, byte... chs) {
-        return position += chs.length;
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
