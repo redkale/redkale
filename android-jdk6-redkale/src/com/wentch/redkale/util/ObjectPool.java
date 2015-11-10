@@ -15,7 +15,7 @@ import java.util.logging.*;
  * @author zhangjx
  * @param <T>
  */
-public final class ObjectPool<T> {
+public final class ObjectPool<T> implements Supplier<T> {
 
     private static final Logger logger = Logger.getLogger(ObjectPool.class.getSimpleName());
 
