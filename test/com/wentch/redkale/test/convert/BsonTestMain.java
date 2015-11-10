@@ -5,11 +5,11 @@
  */
 package com.wentch.redkale.test.convert;
 
-import com.wentch.redkale.convert.bson.BsonConvert;
-import com.wentch.redkale.convert.bson.BsonFactory;
+import com.wentch.redkale.convert.bson.*;
 import com.wentch.redkale.convert.json.*;
 import com.wentch.redkale.util.*;
 import java.io.Serializable;
+import java.nio.*;
 import java.util.Arrays;
 
 /**
@@ -38,6 +38,10 @@ public class BsonTestMain {
         
         TestComplextBean bean = new TestComplextBean();
         byte[] bytes2 = convert.convertTo(Object.class, bean);
+        final int len = bytes2.length;
+        BsonByteBufferWriter writer = convert.pollBsonWriter(()-> ByteBuffer.allocate(len/2));
+        convert.convertTo(writer, bean);
+        bytes2 = writer.toArray();
         System.out.println(convert.convertFrom(TestComplextBean.class, bytes2).toString());
     }
 }
