@@ -896,14 +896,16 @@ public class FilterNode {
                     throw new RuntimeException("Flipper not supported sort illegal function (" + flipper.getSort() + ")");
                 }
             }
-            Comparator<E> c = (E o1, E o2) -> {
+            Comparator<E> c = (sub.length > 1 && sub[1].equalsIgnoreCase("DESC")) ? (E o1, E o2) -> {
+                Comparable c1 = (Comparable) attr.get(o1);
+                Comparable c2 = (Comparable) attr.get(o2);
+                return c2 == null ? -1 : c2.compareTo(c1);
+            } : (E o1, E o2) -> {
                 Comparable c1 = (Comparable) attr.get(o1);
                 Comparable c2 = (Comparable) attr.get(o2);
                 return c1 == null ? -1 : c1.compareTo(c2);
             };
-            if (sub.length > 1 && sub[1].equalsIgnoreCase("DESC")) {
-                c = c.reversed();
-            }
+            
             if (comparator == null) {
                 comparator = c;
             } else {
