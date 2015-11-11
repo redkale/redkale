@@ -23,12 +23,13 @@ public abstract class BasedHttpServlet extends HttpServlet {
 
     private Map.Entry<String, Entry>[] actions;
 
-    public void preExecute(HttpRequest request, HttpResponse response) throws IOException {
+    public boolean preExecute(HttpRequest request, HttpResponse response) throws IOException {
+        return true;
     }
 
     @Override
     public final void execute(HttpRequest request, HttpResponse response) throws IOException {
-        preExecute(request, response);
+        if (!preExecute(request, response)) return;
         for (Map.Entry<String, Entry> en : actions) {
             if (request.getRequestURI().startsWith(en.getKey())) {
                 Entry entry = en.getValue();
