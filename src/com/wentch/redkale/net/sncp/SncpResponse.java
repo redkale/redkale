@@ -57,7 +57,7 @@ public final class SncpResponse extends Response<SncpRequest> {
         }
         final int respBodyLength = out.count(); //body总长度
         final ByteBuffer[] buffers = out.toBuffers();
-        if (this.channel.isTCP()) {  //TCP模式 或者 一帧数据     TCP的总长度需要减去第一个buffer的header长度       
+        if (this.channel.isTCP()) {  //TCP模式 TCP的总长度需要减去第一个buffer的header长度       
             fillHeader(buffers[0], respBodyLength - HEADER_SIZE, 0, respBodyLength - HEADER_SIZE, retcode);
         } else {
             int pos = 0;
