@@ -68,6 +68,10 @@ public final class EntityInfo<T> {
 
     private final int logLevel;
 
+    private final Map<String, String> sortOrderbySqls = new ConcurrentHashMap<>();
+
+    private final Map<String, Comparator<T>> sortComparators = new ConcurrentHashMap<>();
+
     //---------------------计算主键值----------------------------
     private final int nodeid;
 
@@ -275,6 +279,22 @@ public final class EntityInfo<T> {
 
     public boolean isNoAlias() {
         return this.aliasmap == null;
+    }
+
+    public String getSortOrderbySql(String sort) {
+        return this.sortOrderbySqls.get(sort);
+    }
+
+    protected void putSortOrderbySql(String sort, String sql) {
+        this.sortOrderbySqls.put(sort, sql);
+    }
+
+    public Comparator<T> getSortComparator(String sort) {
+        return this.sortComparators.get(sort);
+    }
+
+    protected void putSortComparator(String sort, Comparator<T> comparator) {
+        this.sortComparators.put(sort, comparator);
     }
 
     //根据field字段名获取数据库对应的字段名

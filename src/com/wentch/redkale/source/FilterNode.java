@@ -209,13 +209,16 @@ public class FilterNode {
 
     protected static <E> String createFilterSQLOrderBy(EntityInfo<E> info, Flipper flipper) {
         if (flipper == null || flipper.getSort() == null || flipper.getSort().isEmpty()) return "";
+        final String sort = flipper.getSort();
+        String sql = info.getSortOrderbySql(sort);
+        if (sql != null) return sql;
         final StringBuilder sb = new StringBuilder();
         sb.append(" ORDER BY ");
         if (info.isNoAlias()) {
-            sb.append(flipper.getSort());
+            sb.append(sort);
         } else {
             boolean flag = false;
-            for (String item : flipper.getSort().split(",")) {
+            for (String item : sort.split(",")) {
                 if (item.isEmpty()) continue;
                 String[] sub = item.split("\\s+");
                 if (flag) sb.append(',');
@@ -227,7 +230,9 @@ public class FilterNode {
                 flag = true;
             }
         }
-        return sb.toString();
+        sql = sb.toString();
+        info.putSortOrderbySql(sort, sql);
+        return sql;
     }
 
     protected <T> Predicate<T> createFilterPredicate(final EntityInfo<T> info, FilterBean bean) {
@@ -755,8 +760,10 @@ public class FilterNode {
 
     protected static <E> Comparator<E> createFilterComparator(EntityInfo<E> info, Flipper flipper) {
         if (flipper == null || flipper.getSort() == null || flipper.getSort().isEmpty()) return null;
-        Comparator<E> comparator = null;
-        for (String item : flipper.getSort().split(",")) {
+        final String sort = flipper.getSort();
+        Comparator<E> comparator = info.getSortComparator(sort);
+        if (comparator != null) return comparator;
+        for (String item : sort.split(",")) {
             if (item.trim().isEmpty()) continue;
             String[] sub = item.trim().split("\\s+");
             int pos = sub[0].indexOf('(');
@@ -903,6 +910,7 @@ public class FilterNode {
                 comparator = comparator.thenComparing(c);
             }
         }
+        info.putSortComparator(sort, comparator);
         return comparator;
     }
 
