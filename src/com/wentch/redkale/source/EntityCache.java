@@ -220,19 +220,29 @@ public final class EntityCache<T> {
         if (filter != null) stream = stream.filter(filter);
         if (sort != null) stream = stream.sorted(sort);
         if (selects == null) {
-            stream.forEach(x -> rs.add(needcopy ? reproduce.copy(creator.create(), x) : x));
+            Consumer<? super T> action = x -> rs.add(needcopy ? reproduce.copy(creator.create(), x) : x);
+            if (parallel && sort != null) {
+                stream.forEachOrdered(action);
+            } else {
+                stream.forEach(action);
+            }
         } else {
             final List<Attribute<T, Serializable>> attrs = new ArrayList<>();
             for (Map.Entry<String, Attribute<T, Serializable>> en : this.attributes.entrySet()) {
                 if (selects.validate(en.getKey())) attrs.add(en.getValue());
             }
-            stream.forEach(x -> {
+            Consumer<? super T> action = x -> {
                 final T item = creator.create();
                 for (Attribute attr : attrs) {
                     attr.set(item, attr.get(x));
                 }
                 rs.add(item);
-            });
+            };
+            if (parallel && sort != null) {
+                stream.forEachOrdered(action);
+            } else {
+                stream.forEach(action);
+            }
         }
         return parallel ? (set ? new LinkedHashSet<>(rs) : new ArrayList<>(rs)) : rs;
     }
@@ -259,19 +269,29 @@ public final class EntityCache<T> {
         boolean parallel = isParallel();
         final List<T> rs = parallel ? new CopyOnWriteArrayList<>() : new ArrayList<>();
         if (selects == null) {
-            stream.forEach(x -> rs.add(needcopy ? reproduce.copy(creator.create(), x) : x));
+            Consumer<? super T> action = x -> rs.add(needcopy ? reproduce.copy(creator.create(), x) : x);
+            if (parallel && sort != null) {
+                stream.forEachOrdered(action);
+            } else {
+                stream.forEach(action);
+            }
         } else {
             final List<Attribute<T, Serializable>> attrs = new ArrayList<>();
             for (Map.Entry<String, Attribute<T, Serializable>> en : this.attributes.entrySet()) {
                 if (selects.validate(en.getKey())) attrs.add(en.getValue());
             }
-            stream.forEach(x -> {
+            Consumer<? super T> action = x -> {
                 final T item = creator.create();
                 for (Attribute attr : attrs) {
                     attr.set(item, attr.get(x));
                 }
                 rs.add(item);
-            });
+            };
+            if (parallel && sort != null) {
+                stream.forEachOrdered(action);
+            } else {
+                stream.forEach(action);
+            }
         }
         return new Sheet<>(total, parallel ? new ArrayList<>(rs) : rs);
     }
