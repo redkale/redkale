@@ -263,7 +263,7 @@ public class HttpRequest extends Request {
         parseBody();
         return this.getClass().getSimpleName() + "{method:" + this.method + ", requestURI:" + this.requestURI
                 + ", contentType:" + this.contentType + ", connection:" + this.connection + ", protocol:" + this.protocol
-                + ", contentLength:" + this.contentLength + ", cookiestr:" + this.cookiestr
+                + ", contentLength:" + this.contentLength + ", cookies:" + this.cookiestr
                 + ", host:" + this.host + ", params:" + this.params + ", header:" + this.header + "}";
     }
 
