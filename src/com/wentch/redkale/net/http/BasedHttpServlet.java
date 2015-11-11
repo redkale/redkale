@@ -64,7 +64,7 @@ public abstract class BasedHttpServlet extends HttpServlet {
         for (final Method method : this.getClass().getMethods()) {
             //-----------------------------------------------
             String methodname = method.getName();
-            if ("service".equals(methodname) || "execute".equals(methodname) || "authenticate".equals(methodname)) continue;
+            if ("service".equals(methodname) || "preExecute".equals(methodname) || "execute".equals(methodname) || "authenticate".equals(methodname)) continue;
             //-----------------------------------------------
             Class[] paramTypes = method.getParameterTypes();
             if (paramTypes.length != 2 || paramTypes[0] != HttpRequest.class
