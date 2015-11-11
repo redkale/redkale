@@ -145,9 +145,7 @@ public class JsonWriter implements Writer {
     @Override
     public void writeField(boolean comma, Attribute attribute) {
         if (comma) writeTo(',');
-        writeTo('"');
-        writeSmallString(attribute.field());
-        writeTo('"');
+        writeTo(true, attribute.field());
         writeTo(':');
     }
 
