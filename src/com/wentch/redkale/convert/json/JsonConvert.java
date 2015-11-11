@@ -134,19 +134,4 @@ public final class JsonConvert extends Convert<JsonReader, JsonWriter> {
         }
         return out.toBuffers();
     }
-
-    public byte[] convertToUTF8Bytes(Object value) {
-        if (value == null) return new byte[]{110, 117, 108, 108};
-        return convertToUTF8Bytes(value.getClass(), value);
-    }
-
-    public byte[] convertToUTF8Bytes(final Type type, Object value) {
-        if (type == null) return null;
-        if (value == null) return new byte[]{110, 117, 108, 108};
-        final JsonWriter out = writerPool.get().setTiny(tiny);
-        factory.loadEncoder(type).convertTo(out, value);
-        byte[] result = out.toUTF8Bytes();
-        writerPool.offer(out);
-        return result;
-    }
 }

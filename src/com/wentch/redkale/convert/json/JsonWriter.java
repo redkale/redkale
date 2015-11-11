@@ -7,6 +7,7 @@ package com.wentch.redkale.convert.json;
 
 import com.wentch.redkale.convert.*;
 import com.wentch.redkale.util.*;
+import java.nio.*;
 
 /**
  *
@@ -101,15 +102,8 @@ public class JsonWriter implements Writer {
         return true;
     }
 
-    public char[] toArray() {
-        if (count == content.length) return content;
-        char[] newdata = new char[count];
-        System.arraycopy(content, 0, newdata, 0, count);
-        return newdata;
-    }
-
-    public byte[] toUTF8Bytes() {
-        return Utility.encodeUTF8(content, 0, count);
+    public ByteBuffer[] toBuffers() {
+        return new ByteBuffer[]{ByteBuffer.wrap(Utility.encodeUTF8(content, 0, count))};
     }
 
     public int count() {

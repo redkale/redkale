@@ -49,6 +49,7 @@ public final class JsonByteBufferWriter extends JsonWriter {
         return false;
     }
 
+    @Override
     public ByteBuffer[] toBuffers() {
         if (buffers == null) return new ByteBuffer[0];
         for (int i = index; i < this.buffers.length; i++) {
@@ -56,16 +57,6 @@ public final class JsonByteBufferWriter extends JsonWriter {
             if (buf.position() != 0) buf.flip();
         }
         return this.buffers;
-    }
-
-    @Override
-    public char[] toArray() {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public byte[] toUTF8Bytes() {
-        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
