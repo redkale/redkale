@@ -34,19 +34,8 @@ public class BsonWriter implements Writer {
         return newdata;
     }
 
-    public ByteBuffer toBuffer() {
-        return ByteBuffer.wrap(content, 0, count);
-    }
-
-    public void toBuffer(ByteBuffer buffer) {
-        buffer.put(content, 0, count);
-    }
-
-    public int toBuffer(int offset, ByteBuffer buffer) {
-        int len = Math.min(count - offset, buffer.remaining());
-        if (len < 1) return 0;
-        buffer.put(content, offset, len);
-        return len;
+    public ByteBuffer[] toBuffers() {
+        return new ByteBuffer[]{ByteBuffer.wrap(content, 0, count)};
     }
 
     protected BsonWriter(byte[] bs) {
@@ -74,57 +63,18 @@ public class BsonWriter implements Writer {
     //-----------------------------------------------------------------------
     //-----------------------------------------------------------------------
     /**
-     * 返回指定至少指定长度的缓冲区
+     * 扩充指定长度的缓冲区
      *
      * @param len
-     * @return
+     * @return 
      */
-    private byte[] expand(int len) {
+    protected int expand(int len) {
         int newcount = count + len;
-        if (newcount <= content.length) return content;
+        if (newcount <= content.length) return 0;
         byte[] newdata = new byte[Math.max(content.length * 3 / 2, newcount)];
         System.arraycopy(content, 0, newdata, 0, count);
         this.content = newdata;
-        return newdata;
-    }
-
-    /**
-     * 往指定的位置写入字节
-     *
-     * @param position
-     * @param chs 
-     * @return  
-     */
-    public int rewriteTo(int position, byte... chs) {
-        System.arraycopy(chs, 0, content, position, chs.length);
-        return position + chs.length;
-    }
-
-    public final int rewriteTo(int position, short value) {
-        rewriteTo(position, (byte) (value >> 8), (byte) value);
-        return position + 2;
-    }
-
-    public final int rewriteTo(int position, char value) {
-        rewriteTo(position, (byte) ((value & 0xFF00) >> 8), (byte) (value & 0xFF));
-        return position + 2;
-    }
-
-    public final int rewriteTo(int position, int value) {
-        rewriteTo(position, (byte) (value >> 24), (byte) (value >> 16), (byte) (value >> 8), (byte) value);
-        return position + 4;
-    }
-
-    public final int rewriteTo(int position, long value) {
-        rewriteTo(position, (byte) (value >> 56), (byte) (value >> 48), (byte) (value >> 40), (byte) (value >> 32),
-                (byte) (value >> 24), (byte) (value >> 16), (byte) (value >> 8), (byte) value);
-        return position + 8;
-    }
-
-    public BsonWriter fillRange(final int len) {
-        expand(len);
-        count += len;
-        return this;
+        return 0;
     }
 
     public void writeTo(final byte ch) {
@@ -152,7 +102,7 @@ public class BsonWriter implements Writer {
 
     @Override
     public String toString() {
-        return new String(content, 0, count);
+        return this.getClass().getSimpleName() + "[count=" + this.count + "]";
     }
 
     //------------------------------------------------------------------------

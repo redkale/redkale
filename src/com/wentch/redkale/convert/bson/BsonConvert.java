@@ -141,26 +141,6 @@ public final class BsonConvert extends Convert<BsonReader, BsonWriter> {
         return convertTo(value.getClass(), value);
     }
 
-    public ByteBuffer convertToBuffer(final Type type, Object value) {
-        if (type == null) return null;
-        final BsonWriter out = writerPool.get().setTiny(tiny);
-        factory.loadEncoder(type).convertTo(out, value);
-        ByteBuffer result = out.toBuffer();
-        writerPool.offer(out);
-        return result;
-    }
-
-    public ByteBuffer convertToBuffer(Object value) {
-        if (value == null) {
-            final BsonWriter out = writerPool.get().setTiny(tiny);
-            out.writeNull();
-            ByteBuffer result = out.toBuffer();
-            writerPool.offer(out);
-            return result;
-        }
-        return convertToBuffer(value.getClass(), value);
-    }
-
     public BsonWriter convertToWriter(final Type type, Object value) {
         if (type == null) return null;
         final BsonWriter out = writerPool.get().setTiny(tiny);

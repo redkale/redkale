@@ -6,12 +6,14 @@
 package com.wentch.redkale.net.sncp;
 
 import com.wentch.redkale.convert.bson.*;
-import static com.wentch.redkale.net.sncp.SncpRequest.HEADER_SIZE;
+import static com.wentch.redkale.net.sncp.SncpRequest.DEFAULT_HEADER;
 import com.wentch.redkale.service.*;
 import com.wentch.redkale.util.*;
 import java.io.*;
 import java.lang.reflect.*;
+import java.nio.*;
 import java.util.*;
+import java.util.function.*;
 import java.util.logging.*;
 import javax.annotation.*;
 import jdk.internal.org.objectweb.asm.*;
@@ -37,6 +39,8 @@ public final class SncpDynServlet extends SncpServlet {
     private final long serviceid;
 
     private final HashMap<DLong, SncpServletAction> actions = new HashMap<>();
+
+    private Supplier<ByteBuffer> bufferSupplier;
 
     public SncpDynServlet(final BsonConvert convert, final String serviceName, final Service service, final AnyValue conf) {
         this.conf = conf;
@@ -81,12 +85,22 @@ public final class SncpDynServlet extends SncpServlet {
 
     @Override
     public void execute(SncpRequest request, SncpResponse response) throws IOException {
+        final boolean tcp = request.isTCP();
+        if (bufferSupplier == null) {
+            if (tcp) {
+                bufferSupplier = request.getContext().getBufferSupplier();
+            } else { //UDP 需要分包
+                final Supplier<ByteBuffer> supplier = request.getContext().getBufferSupplier();
+                bufferSupplier = () -> supplier.get().put(DEFAULT_HEADER);
+            }
+        }
         SncpServletAction action = actions.get(request.getActionid());
         //if (finest) logger.log(Level.FINEST, "sncpdyn.execute: " + request + ", " + (action == null ? "null" : action.method));
         if (action == null) {
             response.finish(SncpResponse.RETCODE_ILLACTIONID, null);  //无效actionid
         } else {
-            BsonWriter out = action.convert.pollBsonWriter().fillRange(HEADER_SIZE);
+            BsonWriter out = action.convert.pollBsonWriter(bufferSupplier);
+            if (tcp) out.writeTo(DEFAULT_HEADER);
             BsonReader in = action.convert.pollBsonReader();
             try {
                 in.setBytes(request.getBody());

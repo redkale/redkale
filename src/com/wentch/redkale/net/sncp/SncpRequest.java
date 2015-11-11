@@ -20,6 +20,8 @@ public final class SncpRequest extends Request {
 
     public static final int HEADER_SIZE = 64;
 
+    public static final byte[] DEFAULT_HEADER = new byte[HEADER_SIZE];
+
     protected final BsonConvert convert;
 
     private long seqid;

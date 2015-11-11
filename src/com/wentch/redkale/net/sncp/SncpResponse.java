@@ -55,48 +55,25 @@ public final class SncpResponse extends Response<SncpRequest> {
             finish(buffer);
             return;
         }
-        final int respBodyLength = out.count() - HEADER_SIZE; //body总长度
-        if (this.channel.isTCP() || out.count() <= context.getBufferCapacity()) {  //TCP模式 或者 一帧数据            
-            fillHeader(out, respBodyLength, 0, respBodyLength, retcode);
-            finish(out.toBuffer());
-            return;
-        }
-        final int bufsize = context.getBufferCapacity() - HEADER_SIZE;
-        final int frames = (respBodyLength / bufsize) + (respBodyLength % bufsize > 0 ? 1 : 0);
-        final ByteBuffer[] buffers = new ByteBuffer[frames];
-        int pos = 0;
-        for (int i = 0; i < frames; i++) {
-            final ByteBuffer buffer = context.pollBuffer();
-            int len = Math.min(bufsize, respBodyLength - pos);
-            fillHeader(buffer, respBodyLength, pos, len, retcode);
-            buffers[i] = buffer;
-            out.toBuffer(pos + HEADER_SIZE, buffer);
-            pos += len;
-            buffer.flip();
+        final int respBodyLength = out.count(); //body总长度
+        final ByteBuffer[] buffers = out.toBuffers();
+        if (this.channel.isTCP()) {  //TCP模式 或者 一帧数据     TCP的总长度需要减去第一个buffer的header长度       
+            fillHeader(buffers[0], respBodyLength - HEADER_SIZE, 0, respBodyLength - HEADER_SIZE, retcode);
+        } else {
+            int pos = 0;
+            for (ByteBuffer buffer : buffers) {
+                int len = buffer.remaining() - HEADER_SIZE;
+                fillHeader(buffer, respBodyLength, pos, len, retcode);
+                pos += len;
+            }
         }
         finish(buffers);
     }
 
-    private void fillHeader(BsonWriter writer, int bodyLength, int bodyOffset, int framelength, int retcode) {
-        //---------------------head----------------------------------
-        int pos = 0;
-        pos = writer.rewriteTo(pos, request.getSeqid());
-        pos = writer.rewriteTo(pos, (char) SncpRequest.HEADER_SIZE);
-        pos = writer.rewriteTo(pos, request.getServiceid());
-        pos = writer.rewriteTo(pos, request.getNameid());
-        DLong actionid = request.getActionid();
-        pos = writer.rewriteTo(pos, actionid.getFirst());
-        pos = writer.rewriteTo(pos, actionid.getSecond());
-        pos = writer.rewriteTo(pos, addrBytes);
-        pos = writer.rewriteTo(pos, (char) this.addrPort);
-        pos = writer.rewriteTo(pos, bodyLength);
-        pos = writer.rewriteTo(pos, bodyOffset);
-        pos = writer.rewriteTo(pos, framelength);
-        writer.rewriteTo(pos, retcode);
-    }
-
     private void fillHeader(ByteBuffer buffer, int bodyLength, int bodyOffset, int framelength, int retcode) {
         //---------------------head----------------------------------
+        final int currentpos = buffer.position();
+        buffer.position(0);
         buffer.putLong(request.getSeqid());
         buffer.putChar((char) SncpRequest.HEADER_SIZE);
         buffer.putLong(request.getServiceid());
@@ -110,5 +87,6 @@ public final class SncpResponse extends Response<SncpRequest> {
         buffer.putInt(bodyOffset);
         buffer.putInt(framelength);
         buffer.putInt(retcode);
+        buffer.position(currentpos);
     }
 }

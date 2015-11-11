@@ -25,6 +25,7 @@ public final class BsonByteBufferWriter extends BsonWriter {
         this.supplier = supplier;
     }
 
+    @Override
     public ByteBuffer[] toBuffers() {
         if (buffers == null) return new ByteBuffer[0];
         for (int i = index; i < this.buffers.length; i++) {
@@ -49,31 +50,8 @@ public final class BsonByteBufferWriter extends BsonWriter {
     }
 
     @Override
-    public ByteBuffer toBuffer() {
-        if (buffers == null) return null;
-        if (buffers.length == 1) return buffers[0];
-        final ByteBuffer rs = ByteBuffer.allocate(count);
-        for (ByteBuffer buf : toBuffers()) {
-            rs.put(buf);
-            buf.flip();
-        }
-        rs.flip();
-        return rs;
-    }
-
-    @Override
-    public void toBuffer(ByteBuffer buffer) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public int toBuffer(int offset, ByteBuffer buffer) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
     public String toString() {
-        return "bytes[" + count() + "]";
+        return this.getClass().getSimpleName() + "[count=" + this.count + "]";
     }
 
     @Override
@@ -83,29 +61,7 @@ public final class BsonByteBufferWriter extends BsonWriter {
     }
 
     @Override
-    public BsonByteBufferWriter fillRange(final int len) {
-        ByteBuffer buffer = this.buffers[index];
-        if (expand(len) == 0) {
-            buffer.position(buffer.position() + len);
-        } else {
-            int remain = len;  //还剩多少没有写
-            while (remain > 0) {
-                final int br = buffer.remaining();
-                if (remain > br) { //一个buffer写不完
-                    buffer.position(buffer.position() + br);
-                    buffer = nextByteBuffer();
-                    remain -= br;
-                } else {
-                    buffer.position(buffer.position() + remain);
-                    remain = 0;
-                }
-            }
-        }
-        this.count += len;
-        return this;
-    }
-
-    private int expand(final int byteLength) {
+    protected int expand(final int byteLength) {
         if (this.buffers == null) {
             this.index = 0;
             this.buffers = new ByteBuffer[]{supplier.get()};
@@ -132,11 +88,6 @@ public final class BsonByteBufferWriter extends BsonWriter {
             size++;
         }
         return size;
-    }
-
-    @Override
-    public int rewriteTo(int position, byte... chs) {
-        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
