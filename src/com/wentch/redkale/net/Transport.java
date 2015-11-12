@@ -133,7 +133,9 @@ public final class Transport {
     }
 
     public AsyncConnection pollConnection(SocketAddress addr) {
+        if (addr == null && remoteAddres.length == 1) addr = remoteAddres[0];
         final boolean rand = addr == null;
+        if (rand && remoteAddres.length < 1) throw new RuntimeException("Transport (" + this.name + ") has no remoteAddress list");
         try {
             if ("TCP".equalsIgnoreCase(protocol)) {
                 AsynchronousSocketChannel channel = null;
@@ -165,7 +167,7 @@ public final class Transport {
                     index.set(p);
                 } else {
                     channel = AsynchronousSocketChannel.open(group);
-                    channel.connect(addr).get(1, TimeUnit.SECONDS);
+                    channel.connect(addr).get(2, TimeUnit.SECONDS);
                 }
                 if (channel == null) return null;
                 return AsyncConnection.create(channel, addr, 3000, 3000);

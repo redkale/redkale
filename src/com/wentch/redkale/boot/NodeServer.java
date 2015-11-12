@@ -335,6 +335,7 @@ public abstract class NodeServer {
                 }
                 if (transport == null) {
                     transport = new Transport(group + "_" + application.transports.size(), protocol, application.getWatchFactory(), 32, addrs);
+                    logger.info(transport + " created");
                     application.transports.add(transport);
                 }
             }
