@@ -278,7 +278,7 @@ public final class SncpClient {
             throw new RuntimeException(ex);
         } finally {
             transport.offerBuffer(buffer);
-            transport.offerConnection(conn);
+            transport.offerConnection(true, conn);
         }
     }
 
@@ -335,7 +335,7 @@ public final class SncpClient {
                         if (count < 1 && buffer.remaining() == buffer.limit()) {   //没有数据可读
                             future.set(new RuntimeException(action.method + " sncp remote no response data"));
                             transport.offerBuffer(buffer);
-                            transport.offerConnection(conn);
+                            transport.offerConnection(true, conn);
                             return;
                         }
                         if (received < 1 && buffer.limit() < buffer.remaining() + HEADER_SIZE) { //header都没读全
@@ -379,16 +379,15 @@ public final class SncpClient {
                     public void success() {
                         future.set(this.body);
                         transport.offerBuffer(buffer);
-                        transport.offerConnection(conn);
+                        transport.offerConnection(false, conn);
                     }
 
                     @Override
                     public void failed(Throwable exc, Void attachment2) {
                         future.set(new RuntimeException(action.method + " sncp remote exec failed"));
                         transport.offerBuffer(buffer);
-                        transport.offerConnection(conn);
+                        transport.offerConnection(true, conn);
                     }
-
                 });
             }
 
@@ -396,7 +395,7 @@ public final class SncpClient {
             public void failed(Throwable exc, ByteBuffer[] attachment) {
                 exc.printStackTrace();
                 transport.offerBuffer(buffer);
-                transport.offerConnection(conn);
+                transport.offerConnection(true, conn);
             }
         });
         return future;

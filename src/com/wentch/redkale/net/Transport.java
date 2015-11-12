@@ -184,8 +184,8 @@ public final class Transport {
         }
     }
 
-    public void offerConnection(AsyncConnection conn) {
-        if (false && conn.isTCP()) {  //暂时每次都关闭
+    public void offerConnection(final boolean forceClose, AsyncConnection conn) {
+        if (!forceClose && conn.isTCP()) {  //暂时每次都关闭
             if (conn.isOpen()) {
                 BlockingQueue<AsyncConnection> queue = connPool.get(conn.getRemoteAddress());
                 if (queue == null) {
@@ -212,13 +212,13 @@ public final class Transport {
                     public void completed(Integer result, ByteBuffer attachment) {
                         if (handler != null) handler.completed(result, att);
                         offerBuffer(buffer);
-                        offerConnection(conn);
+                        offerConnection(false, conn);
                     }
 
                     @Override
                     public void failed(Throwable exc, ByteBuffer attachment) {
                         offerBuffer(buffer);
-                        offerConnection(conn);
+                        offerConnection(true, conn);
                     }
                 });
 
@@ -227,26 +227,9 @@ public final class Transport {
             @Override
             public void failed(Throwable exc, ByteBuffer attachment) {
                 offerBuffer(buffer);
-                offerConnection(conn);
+                offerConnection(true, conn);
             }
         });
-    }
-
-    public ByteBuffer send(SocketAddress addr, ByteBuffer buffer) {
-        AsyncConnection conn = pollConnection(addr);
-        final int readto = conn.getReadTimeoutSecond();
-        final int writeto = conn.getWriteTimeoutSecond();
-        try {
-            conn.write(buffer).get(writeto > 0 ? writeto : 5, TimeUnit.SECONDS);
-            buffer.clear();
-            conn.read(buffer).get(readto > 0 ? readto : 5, TimeUnit.SECONDS);
-            buffer.flip();
-            return buffer;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        } finally {
-            offerConnection(conn);
-        }
     }
 
 }
