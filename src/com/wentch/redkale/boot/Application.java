@@ -152,7 +152,7 @@ public final class Application {
                 if (fileHandlerPattern != null && fileHandlerPattern.contains("%d")) {
                     final String fileHandlerClass = LogFileHandler.class.getName();
                     Properties prop = new Properties();
-                    String handlers = properties.getProperty("handlers");
+                    final String handlers = properties.getProperty("handlers");
                     if (handlers != null && handlers.contains("java.util.logging.FileHandler")) {
                         prop.setProperty("handlers", handlers.replace("java.util.logging.FileHandler", fileHandlerClass));
                     }
@@ -167,6 +167,7 @@ public final class Application {
                             properties.put(x.getKey(), x.getValue());
                         });
                     }
+                    properties.put(SncpClient.class.getSimpleName() + ".handlers", LogFileHandler.SncpLogFileHandler.class.getName());
                 }
                 ByteArrayOutputStream out = new ByteArrayOutputStream();
                 final PrintStream ps = new PrintStream(out);

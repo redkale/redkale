@@ -6,6 +6,7 @@
 package com.wentch.redkale.net.sncp;
 
 import com.wentch.redkale.convert.bson.*;
+import com.wentch.redkale.convert.json.*;
 import com.wentch.redkale.net.*;
 import static com.wentch.redkale.net.sncp.SncpRequest.*;
 import com.wentch.redkale.util.*;
@@ -73,7 +74,9 @@ public final class SncpClient {
 
     private final Logger logger = Logger.getLogger(SncpClient.class.getSimpleName());
 
-    private final boolean debug = logger.isLoggable(Level.FINEST);
+    private final boolean finest = logger.isLoggable(Level.FINEST);
+
+    protected final JsonConvert jsonConvert = JsonFactory.root().getConvert();
 
     protected final String name;
 
@@ -182,6 +185,7 @@ public final class SncpClient {
         try {
             return convert.convertFrom(actions[index].resultTypes, future.get(5, TimeUnit.SECONDS));
         } catch (InterruptedException | ExecutionException | TimeoutException e) {
+            logger.log(Level.SEVERE, actions[index].method + " sncp (params: " + jsonConvert.convertTo(params) + ") remote error", e);
             throw new RuntimeException(actions[index].method + " sncp remote error", e);
         }
     }
@@ -229,7 +233,10 @@ public final class SncpClient {
         }
         final SocketAddress addr = action.addressParamIndex >= 0 ? (SocketAddress) params[action.addressParamIndex] : null;
         final AsyncConnection conn = transport.pollConnection(addr);
-        if (conn == null || !conn.isOpen()) throw new RuntimeException("sncp " + (conn == null ? addr : conn.getRemoteAddress()) + " cannot connect");
+        if (conn == null || !conn.isOpen()) {
+            logger.log(Level.SEVERE, action.method + " sncp (params: " + jsonConvert.convertTo(params) + ") cannot connect");
+            throw new RuntimeException("sncp " + (conn == null ? addr : conn.getRemoteAddress()) + " cannot connect");
+        }
 
         final int reqBodyLength = bw.count(); //body总长度
         final long seqid = System.nanoTime();
@@ -266,7 +273,10 @@ public final class SncpClient {
                 int bodyOffset = buffer.getInt();  // 
                 int frameLength = buffer.getInt();  // 
                 final int retcode = buffer.getInt();
-                if (retcode != 0) throw new RuntimeException("remote service(" + action.method + ") deal error (retcode=" + retcode + ", retinfo=" + SncpResponse.getRetCodeInfo(retcode) + ")");
+                if (retcode != 0) {
+                    logger.log(Level.SEVERE, action.method + " sncp (params: " + jsonConvert.convertTo(params) + ") deal error (retcode=" + retcode + ", retinfo=" + SncpResponse.getRetCodeInfo(retcode) + ")");
+                    throw new RuntimeException("remote service(" + action.method + ") deal error (retcode=" + retcode + ", retinfo=" + SncpResponse.getRetCodeInfo(retcode) + ")");
+                }
                 int len = Math.min(buffer.remaining(), frameLength);
                 buffer.get(respBody, bodyOffset, len);
                 received += len;
@@ -275,6 +285,7 @@ public final class SncpClient {
         } catch (RuntimeException e) {
             throw e;
         } catch (Exception ex) {
+            logger.log(Level.SEVERE, action.method + " sncp (params: " + jsonConvert.convertTo(params) + ") udp remote error", ex);
             throw new RuntimeException(ex);
         } finally {
             transport.offerBuffer(buffer);
@@ -294,7 +305,10 @@ public final class SncpClient {
         final DLong actionid = action.actionid;
         final SocketAddress addr = action.addressParamIndex >= 0 ? (SocketAddress) params[action.addressParamIndex] : null;
         final AsyncConnection conn = transport.pollConnection(addr);
-        if (conn == null || !conn.isOpen()) throw new RuntimeException("sncp " + (conn == null ? addr : conn.getRemoteAddress()) + " cannot connect");
+        if (conn == null || !conn.isOpen()) {
+            logger.log(Level.SEVERE, action.method + " sncp (params: " + jsonConvert.convertTo(params) + ") cannot connect");
+            throw new RuntimeException("sncp " + (conn == null ? addr : conn.getRemoteAddress()) + " cannot connect");
+        }
         final ByteBuffer[] sendBuffers = writer.toBuffers();
         fillHeader(sendBuffers[0], seqid, actionid, reqBodyLength, 0, reqBodyLength);
 
@@ -361,7 +375,10 @@ public final class SncpClient {
                         buffer.getInt();  // bodyOffset
                         buffer.getInt();  // frameLength
                         final int retcode = buffer.getInt();
-                        if (retcode != 0) throw new RuntimeException("remote service(" + action.method + ") deal error (retcode=" + retcode + ", retinfo=" + SncpResponse.getRetCodeInfo(retcode) + ")");
+                        if (retcode != 0) {
+                            logger.log(Level.SEVERE, action.method + " sncp (params: " + jsonConvert.convertTo(params) + ") deal error (retcode=" + retcode + ", retinfo=" + SncpResponse.getRetCodeInfo(retcode) + ")");
+                            throw new RuntimeException("remote service(" + action.method + ") deal error (retcode=" + retcode + ", retinfo=" + SncpResponse.getRetCodeInfo(retcode) + ")");
+                        }
 
                         if (respBodyLength > buffer.remaining()) { // 数据不全，需要继续读取
                             this.body = new byte[respBodyLength];
@@ -384,6 +401,7 @@ public final class SncpClient {
 
                     @Override
                     public void failed(Throwable exc, Void attachment2) {
+                        logger.log(Level.SEVERE, action.method + " sncp (params: " + jsonConvert.convertTo(params) + ") remote read exec failed", exc);
                         future.set(new RuntimeException(action.method + " sncp remote exec failed"));
                         transport.offerBuffer(buffer);
                         transport.offerConnection(true, conn);
@@ -393,7 +411,7 @@ public final class SncpClient {
 
             @Override
             public void failed(Throwable exc, ByteBuffer[] attachment) {
-                exc.printStackTrace();
+                logger.log(Level.SEVERE, action.method + " sncp (params: " + jsonConvert.convertTo(params) + ") remote write exec failed", exc);
                 transport.offerBuffer(buffer);
                 transport.offerConnection(true, conn);
             }

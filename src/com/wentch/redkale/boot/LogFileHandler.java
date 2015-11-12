@@ -22,6 +22,14 @@ import java.util.logging.Formatter;
  */
 public class LogFileHandler extends Handler {
 
+    public static class SncpLogFileHandler extends LogFileHandler {
+
+        @Override
+        public String getPrefix() {
+            return "sncp-";
+        }
+    }
+
     public static class LoggingFormater extends Formatter {
 
         private static final String format = "%1$tY-%1$tm-%1$td %1$tH:%1$tM:%1$tS.%tL %4$s %2$s\r\n%5$s%6$s\r\n";
@@ -153,11 +161,24 @@ public class LogFileHandler extends Handler {
         }.start();
     }
 
+    public String getPrefix() {
+        return "";
+    }
+
     private void configure() {
         LogManager manager = LogManager.getLogManager();
-        String cname = getClass().getName();
+        String cname = LogFileHandler.class.getName();
         pattern = manager.getProperty(cname + ".pattern");
-        if (pattern == null) pattern = "logs/log-%d.log";
+        if (pattern == null) {
+            pattern = "logs/" + getPrefix() + "log-%d.log";
+        } else {
+            int pos = pattern.lastIndexOf('/');
+            if (pos > 0) {
+                pattern = pattern.substring(0, pos + 1) + getPrefix() + pattern.substring(pos + 1);
+            } else {
+                pattern = getPrefix() + pattern;
+            }
+        }
         String limitstr = manager.getProperty(cname + ".limit");
         try {
             if (limitstr != null) limit = Math.abs(Integer.decode(limitstr));
