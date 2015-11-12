@@ -213,6 +213,14 @@ public final class EntityCache<T> {
         return -1;
     }
 
+    public Set<T> querySet(final SelectColumn selects, final Predicate<T> filter, final Comparator<T> sort) {
+        return (Set<T>) queryCollection(true, selects, filter, sort);
+    }
+
+    public List<T> queryList(final SelectColumn selects, final Predicate<T> filter, final Comparator<T> sort) {
+        return (List<T>) queryCollection(false, selects, filter, sort);
+    }
+
     public Collection<T> queryCollection(final boolean set, final SelectColumn selects, final Predicate<T> filter, final Comparator<T> sort) {
         final boolean parallel = isParallel();
         final Collection<T> rs = parallel ? (set ? new CopyOnWriteArraySet<>() : new CopyOnWriteArrayList<>()) : (set ? new LinkedHashSet<>() : new ArrayList<>());
@@ -221,7 +229,7 @@ public final class EntityCache<T> {
         if (sort != null) stream = stream.sorted(sort);
         if (selects == null) {
             Consumer<? super T> action = x -> rs.add(needcopy ? reproduce.copy(creator.create(), x) : x);
-            if (parallel && sort != null) {
+            if (sort != null) {
                 stream.forEachOrdered(action);
             } else {
                 stream.forEach(action);
@@ -238,21 +246,13 @@ public final class EntityCache<T> {
                 }
                 rs.add(item);
             };
-            if (parallel && sort != null) {
+            if (sort != null) {
                 stream.forEachOrdered(action);
             } else {
                 stream.forEach(action);
             }
         }
         return parallel ? (set ? new LinkedHashSet<>(rs) : new ArrayList<>(rs)) : rs;
-    }
-
-    public Set<T> querySet(final SelectColumn selects, final Predicate<T> filter, final Comparator<T> sort) {
-        return (Set<T>) queryCollection(true, selects, filter, sort);
-    }
-
-    public List<T> queryList(final SelectColumn selects, final Predicate<T> filter, final Comparator<T> sort) {
-        return (List<T>) queryCollection(false, selects, filter, sort);
     }
 
     public Sheet<T> querySheet(final SelectColumn selects, final Predicate<T> filter, final Flipper flipper, final Comparator<T> sort) {
@@ -270,7 +270,7 @@ public final class EntityCache<T> {
         final List<T> rs = parallel ? new CopyOnWriteArrayList<>() : new ArrayList<>();
         if (selects == null) {
             Consumer<? super T> action = x -> rs.add(needcopy ? reproduce.copy(creator.create(), x) : x);
-            if (parallel && sort != null) {
+            if (sort != null) {
                 stream.forEachOrdered(action);
             } else {
                 stream.forEach(action);
@@ -287,7 +287,7 @@ public final class EntityCache<T> {
                 }
                 rs.add(item);
             };
-            if (parallel && sort != null) {
+            if (sort != null) {
                 stream.forEachOrdered(action);
             } else {
                 stream.forEach(action);
@@ -394,7 +394,7 @@ public final class EntityCache<T> {
     }
 
     public boolean isParallel() {
-        return this.list.size() > 1024 * 1024;
+        return this.list.size() > 1024 * 64;
     }
 
     private Stream<T> listStream() {
