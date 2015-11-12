@@ -30,6 +30,8 @@ public final class Transport {
 
     protected final int bufferCapacity;
 
+    protected final boolean tcp;
+
     protected final String protocol;
 
     protected final AsynchronousChannelGroup group;
@@ -49,6 +51,7 @@ public final class Transport {
     public Transport(String name, String protocol, WatchFactory watch, int bufferPoolSize, Collection<InetSocketAddress> addresses) {
         this.name = name;
         this.protocol = protocol;
+        this.tcp = "TCP".equalsIgnoreCase(protocol);
         this.bufferPoolSize = bufferPoolSize;
         this.bufferCapacity = 8192;
         AsynchronousChannelGroup g = null;
@@ -129,7 +132,7 @@ public final class Transport {
     }
 
     public boolean isTCP() {
-        return "TCP".equalsIgnoreCase(protocol);
+        return tcp;
     }
 
     public AsyncConnection pollConnection(SocketAddress addr) {
@@ -137,7 +140,7 @@ public final class Transport {
         final boolean rand = addr == null;
         if (rand && remoteAddres.length < 1) throw new RuntimeException("Transport (" + this.name + ") has no remoteAddress list");
         try {
-            if ("TCP".equalsIgnoreCase(protocol)) {
+            if (tcp) {
                 AsynchronousSocketChannel channel = null;
                 if (rand) {   //随机取地址
                     int p = 0;
