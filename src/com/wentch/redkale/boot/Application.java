@@ -34,7 +34,7 @@ import org.w3c.dom.*;
  * 进程启动类，程序启动后读取application.xml,进行classpath扫描动态加载Service与Servlet
  * 优先加载所有SNCP协议的服务， 再加载其他协议服务，
  * 最后进行Service、Servlet与其他资源之间的依赖注入。
- * 
+ *
  *
  * @author zhangjx
  */
@@ -201,6 +201,7 @@ public final class Application {
     }
 
     public void init() throws Exception {
+        System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", "" + Runtime.getRuntime().availableProcessors() * 16);
         System.setProperty("convert.bson.pool.size", "128");
         System.setProperty("convert.json.pool.size", "128");
         System.setProperty("convert.bson.writer.buffer.defsize", "4096");
