@@ -108,7 +108,7 @@ public final class DataDefaultSource implements DataSource, Nameable {
         }
     }
 
-    private final Function<Class, List> fullloader = (t) -> querySheet(false, t, null, null, (FilterNode) null, null).list(true);
+    private final Function<Class, List> fullloader = (t) -> querySheet(false, false, t, null, null, (FilterNode) null, null).list(true);
 
     public DataDefaultSource() throws IOException {
         this("");
@@ -1059,7 +1059,7 @@ public final class DataDefaultSource implements DataSource, Nameable {
         if (cache == null) return;
         String column = info.getPrimary().field();
         for (Serializable id : ids) {
-            Sheet<T> sheet = querySheet(false, clazz, null, FLIPPER_ONE, FilterNode.create(column, id), null);
+            Sheet<T> sheet = querySheet(false, true, clazz, null, FLIPPER_ONE, FilterNode.create(column, id), null);
             T value = sheet.isEmpty() ? null : sheet.list().get(0);
             if (value != null) cache.update(value);
         }
@@ -1309,12 +1309,12 @@ public final class DataDefaultSource implements DataSource, Nameable {
      */
     @Override
     public <T> List<T> queryList(final Class<T> clazz, final FilterBean bean) {
-        return queryList(clazz, null, bean);
+        return queryList(clazz, (SelectColumn) null, bean);
     }
 
     @Override
     public <T> List<T> queryList(final Class<T> clazz, final FilterNode node) {
-        return queryList(clazz, null, node);
+        return queryList(clazz, (SelectColumn) null, node);
     }
 
     /**
@@ -1328,12 +1328,37 @@ public final class DataDefaultSource implements DataSource, Nameable {
      */
     @Override
     public <T> List<T> queryList(final Class<T> clazz, final SelectColumn selects, final FilterBean bean) {
-        return querySheet(clazz, selects, null, bean).list(true);
+        return queryList(clazz, selects, (Flipper) null, bean);
     }
 
     @Override
     public <T> List<T> queryList(final Class<T> clazz, final SelectColumn selects, final FilterNode node) {
-        return querySheet(clazz, selects, null, node).list(true);
+        return queryList(clazz, selects, (Flipper) null, node);
+    }
+
+    @Override
+    public <T> List<T> queryList(Class<T> clazz, final Flipper flipper, String column, Serializable key) {
+        return queryList(clazz, flipper, FilterNode.create(column, key));
+    }
+
+    @Override
+    public <T> List<T> queryList(final Class<T> clazz, final Flipper flipper, final FilterNode node) {
+        return queryList(clazz, null, flipper, node);
+    }
+
+    @Override
+    public <T> List<T> queryList(final Class<T> clazz, final Flipper flipper, final FilterBean bean) {
+        return queryList(clazz, null, flipper, bean);
+    }
+
+    @Override
+    public <T> List<T> queryList(final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterNode node) {
+        return querySheet(true, false, clazz, selects, flipper, node, null).list(true);
+    }
+
+    @Override
+    public <T> List<T> queryList(final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterBean bean) {
+        return querySheet(true, false, clazz, selects, flipper, null, bean).list(true);
     }
 
     //-----------------------sheet----------------------------
@@ -1359,7 +1384,7 @@ public final class DataDefaultSource implements DataSource, Nameable {
     }
 
     private <T, V> Sheet<V> queryColumnSheet(String selectedColumn, Class<T> clazz, final Flipper flipper, final FilterNode node, final FilterBean bean) {
-        Sheet<T> sheet = querySheet(true, clazz, SelectColumn.createIncludes(selectedColumn), flipper, node, bean);
+        Sheet<T> sheet = querySheet(true, true, clazz, SelectColumn.createIncludes(selectedColumn), flipper, node, bean);
         final Sheet<V> rs = new Sheet<>();
         if (sheet.isEmpty()) return rs;
         rs.setTotal(sheet.getTotal());
@@ -1404,15 +1429,15 @@ public final class DataDefaultSource implements DataSource, Nameable {
      */
     @Override
     public <T> Sheet<T> querySheet(Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterBean bean) {
-        return querySheet(true, clazz, selects, flipper, null, bean);
+        return querySheet(true, true, clazz, selects, flipper, null, bean);
     }
 
     @Override
     public <T> Sheet<T> querySheet(Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterNode node) {
-        return querySheet(true, clazz, selects, flipper, node, null);
+        return querySheet(true, true, clazz, selects, flipper, node, null);
     }
 
-    private <T> Sheet<T> querySheet(boolean readcache, Class<T> clazz, final SelectColumn selects, final Flipper flipper, FilterNode node, final FilterBean bean) {
+    private <T> Sheet<T> querySheet(boolean readcache, boolean needtotal, Class<T> clazz, final SelectColumn selects, final Flipper flipper, FilterNode node, final FilterBean bean) {
         final EntityInfo<T> info = loadEntityInfo(clazz);
         final EntityCache<T> cache = info.getCache();
         if (node == null && bean != null) node = loadFilterBeanNode(bean.getClass());
@@ -1420,7 +1445,7 @@ public final class DataDefaultSource implements DataSource, Nameable {
             Predicate<T> filter = node == null ? null : node.createFilterPredicate(info, bean);
             if (node == null || node.isJoinAllCached()) {
                 if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(clazz.getSimpleName() + " cache query predicate = " + filter);
-                Sheet<T> sheet = cache.querySheet(selects, filter, flipper, FilterNode.createFilterComparator(info, flipper));
+                Sheet<T> sheet = cache.querySheet(needtotal, selects, filter, flipper, FilterNode.createFilterComparator(info, flipper));
                 if (!sheet.isEmpty() || info.isVirtualEntity() || cache.isFullLoaded()) return sheet;
             }
         }
@@ -1437,17 +1462,15 @@ public final class DataDefaultSource implements DataSource, Nameable {
             if (flipper != null && flipper.index() > 0) set.absolute(flipper.index());
             final int limit = flipper == null ? Integer.MAX_VALUE : flipper.getSize();
             int i = 0;
-            long total;
             while (set.next()) {
                 i++;
                 list.add(info.getValue(sels, set));
                 if (limit <= i) break;
             }
-            if (flipper != null) {
+            long total = list.size();
+            if (needtotal && flipper != null) {
                 set.last();
                 total = set.getRow();
-            } else {
-                total = list.size();
             }
             set.close();
             ps.close();

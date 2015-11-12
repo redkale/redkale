@@ -255,11 +255,11 @@ public final class EntityCache<T> {
         return parallel ? (set ? new LinkedHashSet<>(rs) : new ArrayList<>(rs)) : rs;
     }
 
-    public Sheet<T> querySheet(final SelectColumn selects, final Predicate<T> filter, final Flipper flipper, final Comparator<T> sort) {
+    public Sheet<T> querySheet(final boolean needtotal, final SelectColumn selects, final Predicate<T> filter, final Flipper flipper, final Comparator<T> sort) {
         Stream<T> stream = listStream();
         if (filter != null) stream = stream.filter(filter);
-        long total = stream.count();
-        if (total == 0) return new Sheet<>();
+        long total = needtotal ? stream.count() : 0;
+        if (needtotal && total == 0) return new Sheet<>();
         stream = listStream();
         if (filter != null) stream = stream.filter(filter);
         if (sort != null) stream = stream.sorted(sort);
@@ -293,6 +293,7 @@ public final class EntityCache<T> {
                 stream.forEach(action);
             }
         }
+        if (!needtotal) total = rs.size();
         return new Sheet<>(total, parallel ? new ArrayList<>(rs) : rs);
     }
 

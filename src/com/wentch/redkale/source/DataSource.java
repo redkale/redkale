@@ -100,11 +100,11 @@ public interface DataSource {
     public <T> void updateColumnIncrement(final Class<T> clazz, Serializable id, String column, long incvalue);
 
     public <T> void updateColumnIncrement(final DataConnection conn, Class<T> clazz, Serializable id, String column, long incvalue);
-    
+
     public <T> void updateColumnAnd(final Class<T> clazz, Serializable id, String column, long incvalue);
 
     public <T> void updateColumnAnd(final DataConnection conn, Class<T> clazz, Serializable id, String column, long incvalue);
-    
+
     public <T> void updateColumnOr(final Class<T> clazz, Serializable id, String column, long incvalue);
 
     public <T> void updateColumnOr(final DataConnection conn, Class<T> clazz, Serializable id, String column, long incvalue);
@@ -197,7 +197,7 @@ public interface DataSource {
      * @param key
      * @return
      */
-    public <T> List<T> queryList(Class<T> clazz, String column, Serializable key);
+    public <T> List<T> queryList(final Class<T> clazz, final String column, final Serializable key);
 
     public <T> List<T> queryList(final Class<T> clazz, final FilterNode node);
 
@@ -206,6 +206,16 @@ public interface DataSource {
     public <T> List<T> queryList(final Class<T> clazz, final SelectColumn selects, final FilterNode node);
 
     public <T> List<T> queryList(final Class<T> clazz, final SelectColumn selects, final FilterBean bean);
+
+    public <T> List<T> queryList(final Class<T> clazz, final Flipper flipper, final String column, final Serializable key);
+
+    public <T> List<T> queryList(final Class<T> clazz, final Flipper flipper, final FilterNode node);
+
+    public <T> List<T> queryList(final Class<T> clazz, final Flipper flipper, final FilterBean bean);
+
+    public <T> List<T> queryList(final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterNode node);
+
+    public <T> List<T> queryList(final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterBean bean);
 
     //-----------------------sheet----------------------------
     /**
@@ -219,16 +229,16 @@ public interface DataSource {
      * @param bean
      * @return
      */
-    public <T, V> Sheet<V> queryColumnSheet(String selectedColumn, Class<T> clazz, final Flipper flipper, final FilterBean bean);
+    public <T, V> Sheet<V> queryColumnSheet(final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterBean bean);
 
-    public <T, V> Sheet<V> queryColumnSheet(String selectedColumn, Class<T> clazz, final Flipper flipper, final FilterNode node);
+    public <T, V> Sheet<V> queryColumnSheet(final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterNode node);
 
-    public <T> Sheet<T> querySheet(Class<T> clazz, final Flipper flipper, final FilterBean bean);
+    public <T> Sheet<T> querySheet(final Class<T> clazz, final Flipper flipper, final FilterBean bean);
 
-    public <T> Sheet<T> querySheet(Class<T> clazz, final Flipper flipper, final FilterNode node);
+    public <T> Sheet<T> querySheet(final Class<T> clazz, final Flipper flipper, final FilterNode node);
 
-    public <T> Sheet<T> querySheet(Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterBean bean);
+    public <T> Sheet<T> querySheet(final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterBean bean);
 
-    public <T> Sheet<T> querySheet(Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterNode node);
+    public <T> Sheet<T> querySheet(final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterNode node);
 
 }
