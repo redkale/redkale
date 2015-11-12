@@ -102,9 +102,10 @@ public class LogFileHandler extends Handler {
     }
 
     private void open() {
+        final String name = "Logging-" + getClass().getSimpleName() + "-Thread";
         new Thread() {
             {
-                setName("Logging-FileHandler-Thread");
+                setName(name);
                 setDaemon(true);
             }
 
