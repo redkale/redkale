@@ -394,7 +394,7 @@ public final class EntityCache<T> {
     }
 
     public boolean isParallel() {
-        return this.list.size() > 1024 * 64;
+        return this.list.size() > 1024 * 1024;
     }
 
     private Stream<T> listStream() {
