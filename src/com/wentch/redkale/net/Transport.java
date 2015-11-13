@@ -22,7 +22,7 @@ import java.util.function.*;
  */
 public final class Transport {
 
-    protected static final int MAX_POOL_LIMIT = 16;
+    protected static final int MAX_POOL_LIMIT = Runtime.getRuntime().availableProcessors() * 16;
 
     protected final String name;
 
