@@ -82,17 +82,17 @@ public abstract class WebSocketServlet extends HttpServlet implements Nameable {
 
     @Override
     public final void execute(final HttpRequest request, final HttpResponse response) throws IOException {
-        final boolean debug = logger.isLoggable(Level.FINER);
+        final boolean debug = logger.isLoggable(Level.FINEST);
         if (!"GET".equalsIgnoreCase(request.getMethod())
                 || !request.getConnection().contains("Upgrade")
                 || !"websocket".equalsIgnoreCase(request.getHeader("Upgrade"))) {
-            if (debug) logger.finer("WebSocket connect abort, (Not GET Method) or (Connection != Upgrade) or (Upgrade != websocket). request=" + request);
+            if (debug) logger.finest("WebSocket connect abort, (Not GET Method) or (Connection != Upgrade) or (Upgrade != websocket). request=" + request);
             response.finish(true);
             return;
         }
         String key = request.getHeader("Sec-WebSocket-Key");
         if (key == null) {
-            if (debug) logger.finer("WebSocket connect abort, Not found Sec-WebSocket-Key header. request=" + request);
+            if (debug) logger.finest("WebSocket connect abort, Not found Sec-WebSocket-Key header. request=" + request);
             response.finish(true);
             return;
         }
@@ -101,7 +101,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Nameable {
         webSocket.node = node;
         Serializable sessionid = webSocket.onOpen(request);
         if (sessionid == null) {
-            if (debug) logger.finer("WebSocket connect abort, Not found sessionid. request=" + request);
+            if (debug) logger.finest("WebSocket connect abort, Not found sessionid. request=" + request);
             response.finish(true);
             return;
         }
@@ -123,7 +123,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Nameable {
                 HttpContext context = response.getContext();
                 Serializable groupid = webSocket.createGroupid();
                 if (groupid == null) {
-                    if (debug) logger.finer("WebSocket connect abort, Create groupid abort. request = " + request);
+                    if (debug) logger.finest("WebSocket connect abort, Create groupid abort. request = " + request);
                     response.finish(true);
                     return;
                 }
@@ -135,7 +135,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Nameable {
 
             @Override
             public void failed(Throwable exc, Void attachment) {
-                logger.log(Level.FINER, "WebSocket connect abort, Response send abort. request = " + request, exc);
+                logger.log(Level.FINEST, "WebSocket connect abort, Response send abort. request = " + request, exc);
                 response.finish(true);
             }
         });
