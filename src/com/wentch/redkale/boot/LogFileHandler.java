@@ -140,7 +140,7 @@ public class LogFileHandler extends Handler {
                         if (stream == null) {
                             index.incrementAndGet();
                             java.time.LocalDate date = LocalDate.now();
-                            logfile = new File(pattern.replace("%d", String.valueOf((date.getYear() * 10000 + date.getMonthValue() * 100 + date.getDayOfMonth()))));
+                            logfile = new File(pattern.replace("%m", String.valueOf((date.getYear() * 100 + date.getMonthValue()))).replace("%d", String.valueOf((date.getYear() * 10000 + date.getMonthValue() * 100 + date.getDayOfMonth()))));
                             logfile.getParentFile().mkdirs();
                             length.set(logfile.length());
                             stream = new FileOutputStream(logfile, append);
@@ -170,7 +170,7 @@ public class LogFileHandler extends Handler {
         String cname = LogFileHandler.class.getName();
         pattern = manager.getProperty(cname + ".pattern");
         if (pattern == null) {
-            pattern = "logs/" + getPrefix() + "log-%d.log";
+            pattern = "logs-%m/" + getPrefix() + "log-%d.log";
         } else {
             int pos = pattern.lastIndexOf('/');
             if (pos > 0) {
