@@ -40,8 +40,6 @@ public final class Transport {
 
     protected final ObjectPool<ByteBuffer> bufferPool;
 
-    protected final AtomicInteger index = new AtomicInteger();
-
     protected final ConcurrentHashMap<SocketAddress, BlockingQueue<AsyncConnection>> connPool = new ConcurrentHashMap<>();
 
     public Transport(Transport transport, InetSocketAddress localAddress, Collection<Transport> transports) {
@@ -142,10 +140,8 @@ public final class Transport {
         try {
             if (tcp) {
                 AsynchronousSocketChannel channel = null;
-                if (rand) {   //随机取地址
-                    int p = 0;
-                    for (int i = index.get(); i < remoteAddres.length; i++) {
-                        p = i;
+                if (rand) {   //取地址
+                    for (int i = 0; i < remoteAddres.length; i++) {
                         addr = remoteAddres[i];
                         BlockingQueue<AsyncConnection> queue = connPool.get(addr);
                         if (queue != null && !queue.isEmpty()) {
@@ -155,19 +151,14 @@ public final class Transport {
                             }
                         }
                         if (channel == null) channel = AsynchronousSocketChannel.open(group);
-
                         try {
                             channel.connect(addr).get(2, TimeUnit.SECONDS);
                             break;
                         } catch (Exception iex) {
                             iex.printStackTrace();
-                            if (i == remoteAddres.length - 1) {
-                                p = 0;
-                                channel = null;
-                            }
+                            if (i == remoteAddres.length - 1) channel = null;
                         }
                     }
-                    index.set(p);
                 } else {
                     channel = AsynchronousSocketChannel.open(group);
                     channel.connect(addr).get(2, TimeUnit.SECONDS);
