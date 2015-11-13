@@ -223,6 +223,7 @@ public abstract class NodeServer {
         final String threadName = "[" + Thread.currentThread().getName() + "] ";
         final Set<FilterEntry<Service>> entrys = serviceFilter.getFilterEntrys();
         ResourceFactory regFactory = isSNCP() ? application.getResourceFactory() : factory;
+        final Set<InetSocketAddress> sg = application.findGlobalGroup(this.sncpGroup);
         for (FilterEntry<Service> entry : entrys) { //service实现类
             final Class<? extends Service> type = entry.getType();
             if (type.isInterface()) continue;
@@ -232,12 +233,11 @@ public abstract class NodeServer {
             if (type.getAnnotation(Ignore.class) != null) continue;
             if (!isSNCP() && factory.find(entry.getName(), type) != null) continue;
             final Set<InetSocketAddress> sameGroupAddrs = new LinkedHashSet<>();
-            Set<InetSocketAddress> sg = application.findGlobalGroup(this.sncpGroup);
-            if (sg != null) sameGroupAddrs.addAll(sg);
             final Map<String, Set<InetSocketAddress>> diffGroupAddrs = new HashMap<>();
             final HashSet<String> groups = entry.getGroups();
             for (String g : groups) {
                 if (g.isEmpty()) continue;
+                if (g.equals(this.sncpGroup) && sg != null) sameGroupAddrs.addAll(sg);
                 Set<InetSocketAddress> set = application.findGlobalGroup(g);
                 if (set == null) throw new RuntimeException(type.getName() + " has illegal group (" + groups + ")");
                 if (!g.equals(this.sncpGroup)) {
@@ -258,7 +258,7 @@ public abstract class NodeServer {
                 }
                 Service service = Sncp.createLocalService(entry.getName(), getExecutor(), type, this.sncpAddress, groups, sameGroupTransports, diffGroupTransports);
                 wrapper = new ServiceWrapper(type, service, this.sncpGroup, entry);
-                if (fine) logger.fine("[" + Thread.currentThread().getName() + "] Load " + service);
+                if (fine) logger.fine("[" + Thread.currentThread().getName() + "] " + service + " loaded");
             } else {
                 sameGroupAddrs.remove(this.sncpAddress);
                 StringBuilder g = new StringBuilder();
@@ -270,7 +270,7 @@ public abstract class NodeServer {
                 if (sameGroupAddrs.isEmpty()) throw new RuntimeException(type.getName() + " has no remote address on group (" + groups + ")");
                 Service service = Sncp.createRemoteService(entry.getName(), getExecutor(), type, this.sncpAddress, groups, loadTransport(g.toString(), server.getProtocol(), sameGroupAddrs));
                 wrapper = new ServiceWrapper(type, service, "", entry);
-                if (fine) logger.fine("[" + Thread.currentThread().getName() + "] Load " + service);
+                if (fine) logger.fine("[" + Thread.currentThread().getName() + "] " + service + " loaded");
             }
             if (factory.find(wrapper.getName(), wrapper.getType()) == null) {
                 regFactory.register(wrapper.getName(), wrapper.getType(), wrapper.getService());
@@ -289,7 +289,7 @@ public abstract class NodeServer {
                     localServiceWrappers.add(wrapper);
                     if (consumer != null) consumer.accept(wrapper);
                 }
-            } else if (isSNCP()) {
+            } else if (isSNCP() && !entry.isAutoload()) {
                 throw new RuntimeException(ServiceWrapper.class.getSimpleName() + "(class:" + type.getName() + ", name:" + entry.getName() + ", group:" + groups + ") is repeat.");
             }
         }
@@ -303,6 +303,9 @@ public abstract class NodeServer {
         });
         remoteServiceWrappers.forEach(y -> {
             factory.inject(y.getService());
+            if (sb != null) {
+                sb.append(threadName).append("RemoteService(").append(y.getType()).append(':').append(y.getName()).append(") loaded").append(LINE_SEPARATOR);
+            }
         });
         //----------------- init -----------------
         localServiceWrappers.parallelStream().forEach(y -> {
