@@ -180,11 +180,7 @@ public final class HttpResourceServlet extends HttpServlet {
         if (watchThread == null) {
             entry = createFileEntry(uri);
         } else {  //有缓存
-            entry = files.get(uri);
-            if (entry == null) {
-                entry = createFileEntry(uri);
-                if (entry != null) files.put(uri, entry);
-            }
+            entry = files.computeIfAbsent(uri, x -> createFileEntry(x));
         }
         if (entry == null) {
             response.finish404();
