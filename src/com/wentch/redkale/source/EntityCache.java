@@ -256,11 +256,14 @@ public final class EntityCache<T> {
     }
 
     public Sheet<T> querySheet(final boolean needtotal, final SelectColumn selects, final Predicate<T> filter, final Flipper flipper, final Comparator<T> sort) {
-        Stream<T> stream = listStream();
-        if (filter != null) stream = stream.filter(filter);
-        long total = needtotal ? stream.count() : 0;
+        long total = 0;
+        if (needtotal) {
+            Stream<T> stream = listStream();
+            if (filter != null) stream = stream.filter(filter);
+            total = stream.count();
+        }
         if (needtotal && total == 0) return new Sheet<>();
-        stream = listStream();
+        Stream<T> stream = listStream();
         if (filter != null) stream = stream.filter(filter);
         if (sort != null) stream = stream.sorted(sort);
         if (flipper != null) {
