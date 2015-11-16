@@ -356,7 +356,7 @@ public final class EntityCache<T> {
         T rs = this.map.get(id);
         if (rs == null) return rs;
         Number numb = (Number) attr.get(rs);
-        return updateColumnIncrAndOr(id, attr, rs, (numb == null) ? orvalue : (numb.longValue() & orvalue));
+        return updateColumnIncrAndOr(id, attr, rs, (numb == null) ? orvalue : (numb.longValue() | orvalue));
     }
 
     public <V> T updateColumnAnd(final Serializable id, Attribute<T, V> attr, final long andvalue) {
