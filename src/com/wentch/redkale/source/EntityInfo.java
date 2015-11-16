@@ -95,7 +95,7 @@ public final class EntityInfo<T> {
         synchronized (entityInfos) {
             rs = entityInfos.get(clazz);
             if (rs == null) {
-                rs = new EntityInfo(clazz, nodeid, cacheForbidden, fullloader);
+                rs = new EntityInfo(clazz, nodeid, cacheForbidden);
                 entityInfos.put(clazz, rs);
                 AutoLoad auto = clazz.getAnnotation(AutoLoad.class);
                 if (rs.cache != null && auto != null && auto.value() && fullloader != null) {
@@ -106,7 +106,7 @@ public final class EntityInfo<T> {
         }
     }
 
-    private EntityInfo(Class<T> type, int nodeid, final boolean cacheForbidden, Function<Class<T>, List<T>> fullloader) {
+    private EntityInfo(Class<T> type, int nodeid, final boolean cacheForbidden) {
         this.type = type;
         //---------------------------------------------
         this.nodeid = nodeid;
