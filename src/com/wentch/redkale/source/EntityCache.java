@@ -266,9 +266,7 @@ public final class EntityCache<T> {
         Stream<T> stream = listStream();
         if (filter != null) stream = stream.filter(filter);
         if (sort != null) stream = stream.sorted(sort);
-        if (flipper != null) {
-            stream = stream.skip(flipper.index()).limit(flipper.getSize());
-        }
+        if (flipper != null) stream = stream.skip(flipper.index()).limit(flipper.getSize());
         boolean parallel = isParallel();
         final List<T> rs = parallel ? new CopyOnWriteArrayList<>() : new ArrayList<>();
         if (selects == null) {
