@@ -222,8 +222,7 @@ public final class EntityCache<T> {
     }
 
     public Collection<T> queryCollection(final boolean set, final SelectColumn selects, final Predicate<T> filter, final Comparator<T> sort) {
-        final boolean parallel = isParallel();
-        final Collection<T> rs = parallel ? (set ? new CopyOnWriteArraySet<>() : new CopyOnWriteArrayList<>()) : (set ? new LinkedHashSet<>() : new ArrayList<>());
+        final Collection<T> rs = set ? new LinkedHashSet<>() : new ArrayList<>();
         Stream<T> stream = listStream();
         if (filter != null) stream = stream.filter(filter);
         if (sort != null) stream = stream.sorted(sort);
@@ -252,7 +251,7 @@ public final class EntityCache<T> {
                 stream.forEach(action);
             }
         }
-        return parallel ? (set ? new LinkedHashSet<>(rs) : new ArrayList<>(rs)) : rs;
+        return rs;
     }
 
     public Sheet<T> querySheet(final boolean needtotal, final SelectColumn selects, final Predicate<T> filter, final Flipper flipper, final Comparator<T> sort) {
@@ -267,8 +266,7 @@ public final class EntityCache<T> {
         if (filter != null) stream = stream.filter(filter);
         if (sort != null) stream = stream.sorted(sort);
         if (flipper != null) stream = stream.skip(flipper.index()).limit(flipper.getSize());
-        boolean parallel = isParallel();
-        final List<T> rs = parallel ? new CopyOnWriteArrayList<>() : new ArrayList<>();
+        final List<T> rs = new ArrayList<>();
         if (selects == null) {
             Consumer<? super T> action = x -> rs.add(needcopy ? reproduce.copy(creator.create(), x) : x);
             if (sort != null) {
@@ -295,7 +293,7 @@ public final class EntityCache<T> {
             }
         }
         if (!needtotal) total = rs.size();
-        return new Sheet<>(total, parallel ? new ArrayList<>(rs) : rs);
+        return new Sheet<>(total, rs);
     }
 
     public void insert(T value) {
@@ -395,11 +393,7 @@ public final class EntityCache<T> {
         return rs;
     }
 
-    public boolean isParallel() {
-        return this.list.size() >= 1024 * 1024;
-    }
-
     private Stream<T> listStream() {
-        return isParallel() ? this.list.parallelStream() : this.list.stream();
+        return this.list.stream();
     }
 }
