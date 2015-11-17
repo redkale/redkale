@@ -28,7 +28,7 @@ public final class EntityCache<T> {
 
     private final ConcurrentHashMap<Serializable, T> map = new ConcurrentHashMap();
 
-    private final CopyOnWriteArrayList<T> list = new CopyOnWriteArrayList(); // CopyOnWriteArrayList插入慢、查询快; ConcurrentLinkedQueue 插入快、查询慢； 
+    private final CopyOnWriteArrayList<T> list = new CopyOnWriteArrayList(); // CopyOnWriteArrayList 插入慢、查询快; 10w数据插入需要3.2秒; ConcurrentLinkedQueue 插入快、查询慢；10w数据查询需要 0.062秒，  查询慢40%;
 
     private final Class<T> type;
 
