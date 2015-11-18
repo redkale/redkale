@@ -9,13 +9,14 @@ import com.wentch.redkale.source.*;
 import com.wentch.redkale.source.DataSource.Reckon;
 import com.wentch.redkale.util.*;
 import java.util.*;
+import javax.persistence.*;
 
 /**
  *
  * @author zhangjx
  */
 public class CacheTestBean {
-
+    @Id
     private long pkgid;
 
     private String name;
@@ -31,15 +32,15 @@ public class CacheTestBean {
         Attribute idattr = Attribute.create(CacheTestBean.class, "pkgid");
         Attribute nameattr = Attribute.create(CacheTestBean.class, "name");
         Attribute priceattr = Attribute.create(CacheTestBean.class, "price");
-        EntityCache<CacheTestBean> cache = new EntityCache(CacheTestBean.class, Creator.create(CacheTestBean.class), idattr, null);
+        EntityCache<CacheTestBean> cache = new EntityCache(EntityInfo.load(CacheTestBean.class, 0, true, null)); 
         cache.fullLoad(list);
 
-        System.out.println(cache.getMapResult(idattr, Reckon.COUNT, nameattr, null));
-        System.out.println(cache.getMapResult(idattr, Reckon.DISTINCTCOUNT, nameattr, null));
-        System.out.println(cache.getMapResult(idattr, Reckon.AVG, priceattr, null));
-        System.out.println(cache.getMapResult(idattr, Reckon.SUM, priceattr, null));
-        System.out.println(cache.getMapResult(idattr, Reckon.MAX, priceattr, null));
-        System.out.println(cache.getMapResult(idattr, Reckon.MIN, priceattr, null));
+        System.out.println(cache.getMapResult("pkgid", Reckon.COUNT, "name", null,null));
+        System.out.println(cache.getMapResult("pkgid", Reckon.DISTINCTCOUNT, "name", null,null));
+        System.out.println(cache.getMapResult("pkgid", Reckon.AVG, "price", null,null));
+        System.out.println(cache.getMapResult("pkgid", Reckon.SUM, "price", null,null));
+        System.out.println(cache.getMapResult("pkgid", Reckon.MAX, "price", null,null));
+        System.out.println(cache.getMapResult("pkgid", Reckon.MIN, "price", null,null));
     }
 
     public CacheTestBean() {
