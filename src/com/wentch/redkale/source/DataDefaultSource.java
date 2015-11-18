@@ -609,17 +609,10 @@ public final class DataDefaultSource implements DataSource, Nameable {
             //------------------------------------
             final EntityCache<T> cache = info.getCache();
             if (cache == null) return;
-            final Attribute<T, Serializable> attr = info.getPrimary();
-            final Serializable[] keys2 = keys;
-            Serializable[] ids = cache.delete((T t) -> {
-                Serializable k = attr.get(t);
-                if (k == null) return false;
-                for (Serializable y : keys2) {
-                    if (k.equals(y)) return true;
-                }
-                return false;
-            });
-            if (cacheListener != null) cacheListener.deleteCache(info.getType(), ids);
+            for (Serializable key : keys) {
+                cache.delete(key);
+            }
+            if (cacheListener != null) cacheListener.deleteCache(info.getType(), keys);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -645,7 +638,7 @@ public final class DataDefaultSource implements DataSource, Nameable {
         delete((Connection) conn.getConnection(), loadEntityInfo(clazz), node);
     }
 
-    private <T> void delete(final Connection conn, final EntityInfo<T> info, FilterNode node) {
+    private <T> void delete(final Connection conn, final EntityInfo<T> info, final FilterNode node) {
         try {
             if (!info.isVirtualEntity()) {
                 String sql = "DELETE FROM " + info.getTable() + node.createFilterSQLExpress(info, null);
@@ -658,7 +651,7 @@ public final class DataDefaultSource implements DataSource, Nameable {
             //------------------------------------
             final EntityCache<T> cache = info.getCache();
             if (cache == null) return;
-            Serializable[] ids = cache.delete(node.createFilterPredicate(info, null));
+            Serializable[] ids = cache.delete(node);
             if (cacheListener != null) cacheListener.deleteCache(info.getType(), ids);
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -1088,9 +1081,8 @@ public final class DataDefaultSource implements DataSource, Nameable {
             if (node == null && bean != null) node = loadFilterBeanNode(bean.getClass());
             final EntityCache<T> cache = info.getCache();
             if (cache != null && (info.isVirtualEntity() || cache.isFullLoaded())) {
-                Predicate<T> filter = node == null ? null : node.createFilterPredicate(info, bean);
                 if (node == null || node.isJoinAllCached()) {
-                    return cache.getNumberResult(reckon, column == null ? null : info.getAttribute(column), filter);
+                    return cache.getNumberResult(reckon, column, node, bean);
                 }
             }
             final String sql = "SELECT " + reckon.getColumn((column == null || column.isEmpty() ? "*" : ("a." + column))) + " FROM " + info.getTable() + " a"
@@ -1135,9 +1127,8 @@ public final class DataDefaultSource implements DataSource, Nameable {
             if (node == null && bean != null) node = loadFilterBeanNode(bean.getClass());
             final EntityCache cache = info.getCache();
             if (cache != null && (info.isVirtualEntity() || cache.isFullLoaded())) {
-                Predicate filter = node == null ? null : node.createFilterPredicate(info, bean);
                 if (node == null || node.isJoinAllCached()) {
-                    return cache.getMapResult(info.getAttribute(keyColumn), reckon, reckonColumn == null ? null : info.getAttribute(reckonColumn), filter);
+                    return cache.getMapResult(keyColumn, reckon, reckonColumn, node, bean);
                 }
             }
             final String sqlkey = info.getSQLColumn(keyColumn);
@@ -1442,10 +1433,9 @@ public final class DataDefaultSource implements DataSource, Nameable {
         final EntityCache<T> cache = info.getCache();
         if (node == null && bean != null) node = loadFilterBeanNode(bean.getClass());
         if (readcache && cache != null) {
-            Predicate<T> filter = node == null ? null : node.createFilterPredicate(info, bean);
             if (node == null || node.isJoinAllCached()) {
-                if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(clazz.getSimpleName() + " cache query predicate = " + filter);
-                Sheet<T> sheet = cache.querySheet(needtotal, selects, filter, flipper, FilterNode.createFilterComparator(info, flipper));
+                if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(clazz.getSimpleName() + " cache query predicate = " + (node == null ? null : node.createFilterPredicate(info, bean)));
+                Sheet<T> sheet = cache.querySheet(needtotal, selects, flipper, node, bean);
                 if (!sheet.isEmpty() || info.isVirtualEntity() || cache.isFullLoaded()) return sheet;
             }
         }

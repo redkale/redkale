@@ -239,10 +239,6 @@ final class FilterBeanNode extends FilterNode {
 
     @Override
     protected <T> Predicate<T> createFilterPredicate(final EntityInfo<T> info, FilterBean bean) {
-        return createFilterPredicate(true, info, bean);
-    }
-
-    private <T> Predicate<T> createFilterPredicate(final boolean first, final EntityInfo<T> info, FilterBean bean) {
         //if ((this.joinSQL == null && first) || this.foreignEntity == null) return super.createFilterPredicate(info, bean);
         if (this.foreignEntity == null) return super.createFilterPredicate(info, bean);
         final Map<EntityInfo, Predicate> foreign = new HashMap<>();
@@ -252,7 +248,7 @@ final class FilterBeanNode extends FilterNode {
             for (FilterNode n : this.nodes) {
                 FilterBeanNode node = (FilterBeanNode) n;
                 if (node.foreignEntity == null) {
-                    Predicate<T> f = node.createFilterPredicate(false, info, bean);
+                    Predicate<T> f = node.createFilterPredicate(info, bean);
                     if (f == null) continue;
                     final Predicate<T> one = result;
                     final Predicate<T> two = f;

@@ -13,7 +13,7 @@ import java.sql.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.Function;
+import java.util.function.*;
 import java.util.logging.*;
 import javax.persistence.*;
 
@@ -38,17 +38,17 @@ public final class EntityInfo<T> {
     private final Creator<T> creator;
 
     //主键
-    private final Attribute<T, Serializable> primary;
+    final Attribute<T, Serializable> primary;
 
     private final EntityCache<T> cache;
+
+    //key是field的name， 不是sql字段。
+    //存放所有与数据库对应的字段， 包括主键
+    final Map<String, Attribute<T, Serializable>> attributes = new HashMap<>();
 
     //key是field的name， value是Column的别名，即数据库表的字段名
     //只有field.name 与 Column.name不同才存放在aliasmap里.
     private final Map<String, String> aliasmap;
-
-    //key是field的name， 不是sql字段。
-    //存放所有与数据库对应的字段， 包括主键
-    private final Map<String, Attribute<T, Serializable>> attributes = new HashMap<>();
 
     private final Map<String, Attribute<T, Serializable>> updateAttributeMap = new HashMap<>();
 
@@ -69,8 +69,6 @@ public final class EntityInfo<T> {
     private final int logLevel;
 
     private final Map<String, String> sortOrderbySqls = new ConcurrentHashMap<>();
-
-    private final Map<String, Comparator<T>> sortComparators = new ConcurrentHashMap<>();
 
     //---------------------计算主键值----------------------------
     private final int nodeid;
@@ -225,7 +223,7 @@ public final class EntityInfo<T> {
         //----------------cache--------------
         Cacheable c = type.getAnnotation(Cacheable.class);
         if (this.table == null || (!cacheForbidden && c != null && c.value())) {
-            this.cache = new EntityCache<>(type, creator, primary, attributes);
+            this.cache = new EntityCache<>(this);
         } else {
             this.cache = null;
         }
@@ -287,14 +285,6 @@ public final class EntityInfo<T> {
 
     protected void putSortOrderbySql(String sort, String sql) {
         this.sortOrderbySqls.put(sort, sql);
-    }
-
-    public Comparator<T> getSortComparator(String sort) {
-        return this.sortComparators.get(sort);
-    }
-
-    protected void putSortComparator(String sort, Comparator<T> comparator) {
-        this.sortComparators.put(sort, comparator);
     }
 
     //根据field字段名获取数据库对应的字段名

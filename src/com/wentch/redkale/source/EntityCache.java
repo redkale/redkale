@@ -21,14 +21,89 @@ import java.util.stream.*;
 /**
  *
  * @author zhangjx
+ * @param <T>
  */
 public final class EntityCache<T> {
+
+    private static class UniqueSequence implements Serializable {
+
+        private final Serializable[] value;
+
+        public UniqueSequence(Serializable[] val) {
+            this.value = val;
+        }
+
+        @Override
+        public int hashCode() {
+            return Arrays.deepHashCode(this.value);
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == null) return false;
+            if (getClass() != obj.getClass()) return false;
+            final UniqueSequence other = (UniqueSequence) obj;
+            if (value.length != other.value.length) return false;
+            for (int i = 0; i < value.length; i++) {
+                if (!value[i].equals(other.value[i])) return false;
+            }
+            return true;
+        }
+
+    }
+
+    private static interface UniqueAttribute<T> extends Predicate<FilterNode> {
+
+        public Serializable getValue(T bean);
+
+        @Override
+        public boolean test(FilterNode node);
+
+        public static <T> UniqueAttribute<T> create(final Attribute<T, Serializable>[] attributes) {
+            if (attributes.length == 1) {
+                final Attribute<T, Serializable> attribute = attributes[0];
+                return new UniqueAttribute<T>() {
+
+                    @Override
+                    public Serializable getValue(T bean) {
+                        return attribute.get(bean);
+                    }
+
+                    @Override
+                    public boolean test(FilterNode node) {
+                        return true;
+                    }
+                };
+            } else {
+                return new UniqueAttribute<T>() {
+
+                    @Override
+                    public Serializable getValue(T bean) {
+                        final Serializable[] rs = new Serializable[attributes.length];
+                        for (int i = 0; i < rs.length; i++) {
+                            rs[i] = attributes[i].get(bean);
+                        }
+                        return new UniqueSequence(rs);
+                    }
+
+                    @Override
+                    public boolean test(FilterNode node) {
+                        return true;
+                    }
+                };
+            }
+        }
+    }
 
     private static final Logger logger = Logger.getLogger(EntityCache.class.getName());
 
     private final ConcurrentHashMap<Serializable, T> map = new ConcurrentHashMap();
 
     private final CopyOnWriteArrayList<T> list = new CopyOnWriteArrayList(); // CopyOnWriteArrayList 插入慢、查询快; 10w数据插入需要3.2秒; ConcurrentLinkedQueue 插入快、查询慢；10w数据查询需要 0.062秒，  查询慢40%;
+
+    private final HashMap<UniqueAttribute<T>, ConcurrentHashMap<Serializable, Collection<T>>> uniques = new HashMap<>();
+
+    private final Map<String, Comparator<T>> sortComparators = new ConcurrentHashMap<>();
 
     private final Class<T> type;
 
@@ -38,19 +113,17 @@ public final class EntityCache<T> {
 
     private final Attribute<T, Serializable> primary;
 
-    //key是field的name
-    private final Map<String, Attribute<T, Serializable>> attributes;
-
     private final Reproduce<T, T> reproduce;
 
     private boolean fullloaded;
 
-    public EntityCache(final Class<T> type, Creator<T> creator, Attribute<T, Serializable> primary,
-            Map<String, Attribute<T, Serializable>> attributes) {
-        this.type = type;
-        this.creator = creator;
-        this.primary = primary;
-        this.attributes = attributes;
+    final EntityInfo<T> info;
+
+    public EntityCache(final EntityInfo<T> info) {
+        this.info = info;
+        this.type = info.getType();
+        this.creator = info.getCreator();
+        this.primary = info.primary;
         this.needcopy = true;
         this.reproduce = Reproduce.create(type, type, (m) -> {
             char[] mn = m.getName().substring(3).toCharArray();
@@ -62,12 +135,23 @@ public final class EntityCache<T> {
                 return false;
             }
         });
+        for (Unique unique : type.getAnnotationsByType(Unique.class)) {
+            final Attribute<T, Serializable>[] attrs = new Attribute[unique.columns().length];
+            for (int i = 0; i < attrs.length; i++) {
+                attrs[i] = info.getAttribute(unique.columns()[i]);
+            }
+            this.uniques.put(UniqueAttribute.create(attrs), new ConcurrentHashMap<>());
+        }
     }
 
     public void fullLoad(List<T> all) {
         if (all == null) return;
         clear();
-        all.stream().filter(x -> x != null).forEach(x -> this.map.put(this.primary.get(x), x));
+        final HashMap<UniqueAttribute<T>, ConcurrentHashMap<Serializable, Collection<T>>> localUniques = this.uniques;
+        all.stream().filter(x -> x != null).forEach(x -> {
+            this.map.put(this.primary.get(x), x);
+            localUniques.forEach((k, v) -> v.computeIfAbsent(k.getValue(x), (c) -> new ConcurrentLinkedQueue<>()).add(x));
+        });
         this.list.addAll(all);
         this.fullloaded = true;
     }
@@ -79,6 +163,7 @@ public final class EntityCache<T> {
     public void clear() {
         this.fullloaded = false;
         this.list.clear();
+        this.uniques.values().forEach(x -> x.clear());
         this.map.clear();
     }
 
@@ -92,17 +177,14 @@ public final class EntityCache<T> {
         return rs == null ? null : (needcopy ? reproduce.copy(this.creator.create(), rs) : rs);
     }
 
-    public T find(final Predicate<T> filter) {
-        if (filter == null) return null;
-        Optional<T> rs = listStream().filter(filter).findFirst();
-        return rs.isPresent() ? (needcopy ? reproduce.copy(this.creator.create(), rs.get()) : rs.get()) : null;
-    }
-
     public boolean exists(final Predicate<T> filter) {
         return (filter != null) && listStream().filter(filter).findFirst().isPresent();
     }
 
-    public <K, V> Map<Serializable, Number> getMapResult(final Attribute<T, K> keyAttr, final Reckon reckon, final Attribute reckonAttr, final Predicate<T> filter) {
+    public <K, V> Map<Serializable, Number> getMapResult(final String keyColumn, final Reckon reckon, final String reckonColumn, final FilterNode node, final FilterBean bean) {
+        final Attribute<T, Serializable> keyAttr = info.getAttribute(keyColumn);
+        final Predicate filter = node == null ? null : node.createFilterPredicate(this.info, bean);
+        final Attribute reckonAttr = reckonColumn == null ? null : info.getAttribute(reckonColumn);
         Stream<T> stream = listStream();
         if (filter != null) stream = stream.filter(filter);
         Collector<T, Map, ?> collector = null;
@@ -148,7 +230,9 @@ public final class EntityCache<T> {
         return rs;
     }
 
-    public <V> Number getNumberResult(final Reckon reckon, final Attribute<T, V> attr, final Predicate<T> filter) {
+    public <V> Number getNumberResult(final Reckon reckon, final String column, final FilterNode node, final FilterBean bean) {
+        final Attribute<T, Serializable> attr = column == null ? null : info.getAttribute(column);
+        final Predicate<T> filter = node == null ? null : node.createFilterPredicate(this.info, bean);
         Stream<T> stream = listStream();
         if (filter != null) stream = stream.filter(filter);
         switch (reckon) {
@@ -213,48 +297,13 @@ public final class EntityCache<T> {
         return -1;
     }
 
-    public Set<T> querySet(final SelectColumn selects, final Predicate<T> filter, final Comparator<T> sort) {
-        return (Set<T>) queryCollection(true, selects, filter, sort);
+    public Sheet<T> querySheet(final SelectColumn selects, final Flipper flipper, final FilterNode node, final FilterBean bean) {
+        return querySheet(true, selects, flipper, node, bean);
     }
 
-    public List<T> queryList(final SelectColumn selects, final Predicate<T> filter, final Comparator<T> sort) {
-        return (List<T>) queryCollection(false, selects, filter, sort);
-    }
-
-    public Collection<T> queryCollection(final boolean set, final SelectColumn selects, final Predicate<T> filter, final Comparator<T> sort) {
-        final Collection<T> rs = set ? new LinkedHashSet<>() : new ArrayList<>();
-        Stream<T> stream = listStream();
-        if (filter != null) stream = stream.filter(filter);
-        if (sort != null) stream = stream.sorted(sort);
-        if (selects == null) {
-            Consumer<? super T> action = x -> rs.add(needcopy ? reproduce.copy(creator.create(), x) : x);
-            if (sort != null) {
-                stream.forEachOrdered(action);
-            } else {
-                stream.forEach(action);
-            }
-        } else {
-            final List<Attribute<T, Serializable>> attrs = new ArrayList<>();
-            for (Map.Entry<String, Attribute<T, Serializable>> en : this.attributes.entrySet()) {
-                if (selects.validate(en.getKey())) attrs.add(en.getValue());
-            }
-            Consumer<? super T> action = x -> {
-                final T item = creator.create();
-                for (Attribute attr : attrs) {
-                    attr.set(item, attr.get(x));
-                }
-                rs.add(item);
-            };
-            if (sort != null) {
-                stream.forEachOrdered(action);
-            } else {
-                stream.forEach(action);
-            }
-        }
-        return rs;
-    }
-
-    public Sheet<T> querySheet(final boolean needtotal, final SelectColumn selects, final Predicate<T> filter, final Flipper flipper, final Comparator<T> sort) {
+    public Sheet<T> querySheet(final boolean needtotal, final SelectColumn selects, final Flipper flipper, final FilterNode node, final FilterBean bean) {
+        final Predicate<T> filter = node == null ? null : node.createFilterPredicate(this.info, bean);
+        final Comparator<T> comparator = FilterNode.createFilterComparator(this, flipper);
         long total = 0;
         if (needtotal) {
             Stream<T> stream = listStream();
@@ -264,19 +313,19 @@ public final class EntityCache<T> {
         if (needtotal && total == 0) return new Sheet<>();
         Stream<T> stream = listStream();
         if (filter != null) stream = stream.filter(filter);
-        if (sort != null) stream = stream.sorted(sort);
+        if (comparator != null) stream = stream.sorted(comparator);
         if (flipper != null) stream = stream.skip(flipper.index()).limit(flipper.getSize());
         final List<T> rs = new ArrayList<>();
         if (selects == null) {
             Consumer<? super T> action = x -> rs.add(needcopy ? reproduce.copy(creator.create(), x) : x);
-            if (sort != null) {
+            if (comparator != null) {
                 stream.forEachOrdered(action);
             } else {
                 stream.forEach(action);
             }
         } else {
             final List<Attribute<T, Serializable>> attrs = new ArrayList<>();
-            for (Map.Entry<String, Attribute<T, Serializable>> en : this.attributes.entrySet()) {
+            for (Map.Entry<String, Attribute<T, Serializable>> en : info.attributes.entrySet()) {
                 if (selects.validate(en.getKey())) attrs.add(en.getValue());
             }
             Consumer<? super T> action = x -> {
@@ -286,7 +335,7 @@ public final class EntityCache<T> {
                 }
                 rs.add(item);
             };
-            if (sort != null) {
+            if (comparator != null) {
                 stream.forEachOrdered(action);
             } else {
                 stream.forEach(action);
@@ -298,10 +347,11 @@ public final class EntityCache<T> {
 
     public void insert(T value) {
         if (value == null) return;
-        T rs = reproduce.copy(this.creator.create(), value);  //确保同一主键值的map与list中的对象必须共用。
+        final T rs = reproduce.copy(this.creator.create(), value);  //确保同一主键值的map与list中的对象必须共用。
         T old = this.map.put(this.primary.get(rs), rs);
         if (old == null) {
             this.list.add(rs);
+            this.uniques.forEach((k, v) -> v.computeIfAbsent(k.getValue(rs), (c) -> new ConcurrentLinkedQueue<>()).add(rs));
         } else {
             logger.log(Level.WARNING, "cache repeat insert data: " + value);
         }
@@ -309,20 +359,28 @@ public final class EntityCache<T> {
 
     public void delete(final Serializable id) {
         if (id == null) return;
-        T rs = this.map.remove(id);
+        final T rs = this.map.remove(id);
         if (rs != null) this.list.remove(rs);
+        this.uniques.forEach((k, v) -> v.computeIfPresent(k.getValue(rs), (x, u) -> {
+            u.remove(rs);
+            return u;
+        }));
     }
 
-    public Serializable[] delete(final Predicate<T> filter) {
-        if (filter == null || this.list.isEmpty()) return new Serializable[0];
-        Object[] rms = listStream().filter(filter).toArray();
+    public Serializable[] delete(final FilterNode node) {
+        if (node == null || this.list.isEmpty()) return new Serializable[0];
+        Object[] rms = listStream().filter(node.createFilterPredicate(this.info, null)).toArray();
         Serializable[] ids = new Serializable[rms.length];
         int i = -1;
         for (Object o : rms) {
-            T t = (T) o;
+            final T t = (T) o;
             ids[++i] = this.primary.get(t);
             this.map.remove(ids[i]);
             this.list.remove(t);
+            this.uniques.forEach((k, v) -> v.computeIfPresent(k.getValue(t), (x, u) -> {
+                u.remove(t);
+                return u;
+            }));
         }
         return ids;
     }
@@ -395,5 +453,13 @@ public final class EntityCache<T> {
 
     private Stream<T> listStream() {
         return this.list.stream();
+    }
+
+    protected Comparator<T> getSortComparator(String sort) {
+        return this.sortComparators.get(sort);
+    }
+
+    protected void putSortComparator(String sort, Comparator<T> comparator) {
+        this.sortComparators.put(sort, comparator);
     }
 }

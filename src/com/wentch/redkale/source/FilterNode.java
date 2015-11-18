@@ -741,10 +741,10 @@ public class FilterNode {
         return null;
     }
 
-    protected static <E> Comparator<E> createFilterComparator(EntityInfo<E> info, Flipper flipper) {
+    protected static <E> Comparator<E> createFilterComparator(EntityCache<E> cache, Flipper flipper) {
         if (flipper == null || flipper.getSort() == null || flipper.getSort().isEmpty()) return null;
         final String sort = flipper.getSort();
-        Comparator<E> comparator = info.getSortComparator(sort);
+        Comparator<E> comparator = cache.getSortComparator(sort);
         if (comparator != null) return comparator;
         for (String item : sort.split(",")) {
             if (item.trim().isEmpty()) continue;
@@ -752,10 +752,10 @@ public class FilterNode {
             int pos = sub[0].indexOf('(');
             Attribute<E, Serializable> attr;
             if (pos <= 0) {
-                attr = info.getAttribute(sub[0]);
+                attr = cache.info.getAttribute(sub[0]);
             } else {  //含SQL函数
                 int pos2 = sub[0].lastIndexOf(')');
-                final Attribute<E, Serializable> pattr = info.getAttribute(sub[0].substring(pos + 1, pos2));
+                final Attribute<E, Serializable> pattr = cache.info.getAttribute(sub[0].substring(pos + 1, pos2));
                 final String func = sub[0].substring(0, pos);
                 if ("ABS".equalsIgnoreCase(func)) {
                     if (pattr.type() == int.class || pattr.type() == Integer.class) {
@@ -895,7 +895,7 @@ public class FilterNode {
                 comparator = comparator.thenComparing(c);
             }
         }
-        info.putSortComparator(sort, comparator);
+        cache.putSortComparator(sort, comparator);
         return comparator;
     }
 
