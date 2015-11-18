@@ -37,20 +37,14 @@ public class FilterNode {
 
     protected FilterExpress express;
 
-    protected boolean likefit = true;
-
     protected FilterNode[] nodes;
 
     private Serializable value;
 
-    public FilterNode() {
+    protected FilterNode() {
     }
 
-    FilterNode(String col, FilterExpress exp, Serializable val) {
-        this(col, exp, true, val);
-    }
-
-    FilterNode(String col, FilterExpress exp, boolean likefit, Serializable val) {
+    protected FilterNode(String col, FilterExpress exp, Serializable val) {
         Objects.requireNonNull(col);
         if (exp == null) {
             if (val instanceof Range) {
@@ -65,7 +59,6 @@ public class FilterNode {
         }
         this.column = col;
         this.express = exp;
-        this.likefit = likefit;
         this.value = val;
     }
 
@@ -81,10 +74,6 @@ public class FilterNode {
         return and(new FilterNode(column, express, value));
     }
 
-    public final FilterNode and(String column, FilterExpress express, boolean likefit, Serializable value) {
-        return and(new FilterNode(column, express, likefit, value));
-    }
-
     public final FilterNode or(FilterNode node) {
         return any(node, false);
     }
@@ -95,10 +84,6 @@ public class FilterNode {
 
     public final FilterNode or(String column, FilterExpress express, Serializable value) {
         return or(new FilterNode(column, express, value));
-    }
-
-    public final FilterNode or(String column, FilterExpress express, boolean likefit, Serializable value) {
-        return or(new FilterNode(column, express, likefit, value));
     }
 
     protected final FilterNode any(FilterNode node, boolean sign) {
@@ -123,12 +108,10 @@ public class FilterNode {
         FilterNode newnode = new FilterNode(this.column, this.express, this.value);
         newnode.signand = this.signand;
         newnode.nodes = this.nodes;
-        newnode.likefit = this.likefit;
         this.nodes = new FilterNode[]{newnode, node};
         this.tabalis = null;
         this.column = null;
         this.express = null;
-        this.likefit = false;
         this.signand = sign;
         this.value = null;
     }
@@ -905,7 +888,7 @@ public class FilterNode {
                 Comparable c2 = (Comparable) attr.get(o2);
                 return c1 == null ? -1 : c1.compareTo(c2);
             };
-            
+
             if (comparator == null) {
                 comparator = c;
             } else {
@@ -917,19 +900,19 @@ public class FilterNode {
     }
 
     protected StringBuilder formatValue(Object value) {
-        return formatValue(likefit, express, value);
+        return formatValue(express, value);
     }
 
     protected static String formatToString(Object value) {
-        StringBuilder sb = formatValue(true, null, value);
+        StringBuilder sb = formatValue(null, value);
         return sb == null ? null : sb.toString();
     }
 
-    private static StringBuilder formatValue(boolean likefit, FilterExpress express, Object value) {
+    private static StringBuilder formatValue(FilterExpress express, Object value) {
         if (value == null) return null;
         if (value instanceof Number) return new StringBuilder().append(value);
         if (value instanceof CharSequence) {
-            if (likefit && (express == LIKE || express == NOTLIKE)) value = "%" + value + '%';
+            if (express == LIKE || express == NOTLIKE) value = "%" + value + '%';
             return new StringBuilder().append('\'').append(value.toString().replace("'", "\\'")).append('\'');
         } else if (value instanceof Range) {
             Range range = (Range) value;
@@ -952,7 +935,7 @@ public class FilterNode {
             if (len == 0) return express == NOTIN ? null : new StringBuilder("(NULL)");
             if (len == 1) {
                 Object firstval = Array.get(value, 0);
-                if (firstval != null && firstval.getClass().isArray()) return formatValue(likefit, express, firstval);
+                if (firstval != null && firstval.getClass().isArray()) return formatValue(express, firstval);
             }
             StringBuilder sb = new StringBuilder();
             sb.append('(');

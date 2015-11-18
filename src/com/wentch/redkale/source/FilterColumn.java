@@ -34,13 +34,6 @@ public @interface FilterColumn {
     long least() default 1;
 
     /**
-     * 当express="like" 是否把非空值首尾加上%
-     *
-     * @return
-     */
-    boolean likefit() default true;
-
-    /**
      * LIKE、NOT LIKE时是否区分大小写
      * <p>
      * @return

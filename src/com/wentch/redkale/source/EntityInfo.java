@@ -240,7 +240,7 @@ public final class EntityInfo<T> {
         }
     }
 
-    EntityCache<T> getCache() {
+    public EntityCache<T> getCache() {
         return cache;
     }
 

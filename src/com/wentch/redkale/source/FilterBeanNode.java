@@ -161,7 +161,7 @@ final class FilterBeanNode extends FilterNode {
 
     private long least;
 
-    FilterBeanNode(String col, boolean sign, Attribute beanAttr) {
+    protected FilterBeanNode(String col, boolean sign, Attribute beanAttr) {
         this.column = col;
         this.signand = sign;
         this.beanAttribute = beanAttr;
@@ -174,7 +174,6 @@ final class FilterBeanNode extends FilterNode {
         this.array = type.isArray();
         this.collection = Collection.class.isAssignableFrom(type);
         this.least = fc == null ? 1L : fc.least();
-        this.likefit = fc == null ? true : fc.likefit();
         this.ignoreCase = fc == null ? true : fc.ignoreCase();
         this.number = (type.isPrimitive() && type != boolean.class) || Number.class.isAssignableFrom(type);
         this.string = CharSequence.class.isAssignableFrom(type);
