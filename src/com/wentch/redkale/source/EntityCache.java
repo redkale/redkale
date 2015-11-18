@@ -136,9 +136,11 @@ public final class EntityCache<T> {
             }
         });
         for (Unique unique : type.getAnnotationsByType(Unique.class)) {
-            final Attribute<T, Serializable>[] attrs = new Attribute[unique.columns().length];
+            final String[] cols = unique.columns();
+            final Attribute<T, Serializable>[] attrs = new Attribute[cols.length];
             for (int i = 0; i < attrs.length; i++) {
-                attrs[i] = info.getAttribute(unique.columns()[i]);
+                attrs[i] = info.getAttribute(cols[i]);
+                if (info.getUpdateAttribute(cols[i]) != null) throw new RuntimeException(type + "." + cols[i] + " unique but can be updatable");
             }
             this.uniques.put(UniqueAttribute.create(attrs), new ConcurrentHashMap<>());
         }
