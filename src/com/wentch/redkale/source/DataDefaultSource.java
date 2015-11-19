@@ -641,7 +641,9 @@ public final class DataDefaultSource implements DataSource, Nameable {
     private <T> void delete(final Connection conn, final EntityInfo<T> info, final FilterNode node) {
         try {
             if (!info.isVirtualEntity()) {
-                String sql = "DELETE FROM " + info.getTable() + node.createFilterSQLExpress(info, null);
+                CharSequence join = node.createSQLJoin(info);
+                CharSequence where = node.createSQLExpress(info, null);
+                String sql = "DELETE FROM " + info.getTable() + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
                 if (debug.get()) logger.finest(info.getType().getSimpleName() + " delete sql=" + sql);
                 final Statement stmt = conn.createStatement();
                 stmt.execute(sql);
@@ -1081,12 +1083,14 @@ public final class DataDefaultSource implements DataSource, Nameable {
             if (node == null && bean != null) node = loadFilterBeanNode(bean.getClass());
             final EntityCache<T> cache = info.getCache();
             if (cache != null && (info.isVirtualEntity() || cache.isFullLoaded())) {
-                if (node == null || node.isJoinAllCached()) {
+                if (node == null || node.isCacheUseable()) {
                     return cache.getNumberResult(reckon, column, node, bean);
                 }
             }
+            final CharSequence join = node == null ? null : node.createSQLJoin(info);
+            final CharSequence where = node == null ? null : node.createSQLExpress(info, bean);
             final String sql = "SELECT " + reckon.getColumn((column == null || column.isEmpty() ? "*" : ("a." + column))) + " FROM " + info.getTable() + " a"
-                    + (node == null ? "" : node.createFilterSQLExpress(info, bean));
+                    + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
             if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(entityClass.getSimpleName() + " single sql=" + sql);
             final PreparedStatement prestmt = conn.prepareStatement(sql);
             Number rs = null;
@@ -1127,13 +1131,15 @@ public final class DataDefaultSource implements DataSource, Nameable {
             if (node == null && bean != null) node = loadFilterBeanNode(bean.getClass());
             final EntityCache cache = info.getCache();
             if (cache != null && (info.isVirtualEntity() || cache.isFullLoaded())) {
-                if (node == null || node.isJoinAllCached()) {
+                if (node == null || node.isCacheUseable()) {
                     return cache.getMapResult(keyColumn, reckon, reckonColumn, node, bean);
                 }
             }
             final String sqlkey = info.getSQLColumn(keyColumn);
+            final CharSequence join = node == null ? null : node.createSQLJoin(info);
+            final CharSequence where = node == null ? null : node.createSQLExpress(info, bean);
             final String sql = "SELECT a." + sqlkey + ", " + reckon.getColumn((reckonColumn == null || reckonColumn.isEmpty() ? "*" : ("a." + reckonColumn)))
-                    + " FROM " + info.getTable() + " a" + (node == null ? "" : node.createFilterSQLExpress(info, bean)) + " GROUP BY a." + sqlkey;
+                    + " FROM " + info.getTable() + " a" + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where)) + " GROUP BY a." + sqlkey;
             if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(entityClass.getSimpleName() + " single sql=" + sql);
             final PreparedStatement prestmt = conn.prepareStatement(sql);
             Map<K, V> rs = new LinkedHashMap<>();
@@ -1433,8 +1439,8 @@ public final class DataDefaultSource implements DataSource, Nameable {
         final EntityCache<T> cache = info.getCache();
         if (node == null && bean != null) node = loadFilterBeanNode(bean.getClass());
         if (readcache && cache != null) {
-            if (node == null || node.isJoinAllCached()) {
-                if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(clazz.getSimpleName() + " cache query predicate = " + (node == null ? null : node.createFilterPredicate(info, bean)));
+            if (node == null || node.isCacheUseable()) {
+                if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(clazz.getSimpleName() + " cache query predicate = " + (node == null ? null : node.createPredicate(cache, bean)));
                 Sheet<T> sheet = cache.querySheet(needtotal, selects, flipper, node, bean);
                 if (!sheet.isEmpty() || info.isVirtualEntity() || cache.isFullLoaded()) return sheet;
             }
@@ -1443,8 +1449,10 @@ public final class DataDefaultSource implements DataSource, Nameable {
         try {
             final SelectColumn sels = selects;
             final List<T> list = new ArrayList();
-            final String sql = "SELECT a.* FROM " + info.getTable() + " a"
-                    + (node == null ? "" : node.createFilterSQLExpress(info, bean)) + createFilterSQLOrderBy(info, flipper);
+            final CharSequence join = node == null ? null : node.createSQLJoin(info);
+            final CharSequence where = node == null ? null : node.createSQLExpress(info, bean);
+            final String sql = "SELECT a.* FROM " + info.getTable() + " a" + (join == null ? "" : join)
+                    + ((where == null || where.length() == 0) ? "" : (" WHERE " + where)) + info.createSQLOrderby(flipper);
             if (debug.get() && info.isLoggable(Level.FINEST))
                 logger.finest(clazz.getSimpleName() + " query sql=" + sql + (flipper == null ? "" : (" LIMIT " + flipper.index() + "," + flipper.getSize())));
             final PreparedStatement ps = conn.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);

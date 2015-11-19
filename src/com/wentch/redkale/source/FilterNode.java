@@ -38,12 +38,11 @@ public class FilterNode {
     protected Serializable value;
 
     //----------------------------------------------
-
-    protected boolean signand = true;
+    protected boolean and = true;
 
     protected FilterNode[] nodes;
 
-    protected FilterNode() {
+    public FilterNode() {
     }
 
     protected FilterNode(String col, FilterExpress exp, Serializable val) {
@@ -69,7 +68,7 @@ public class FilterNode {
     }
 
     public final FilterNode and(String column, Serializable value) {
-        return and(new FilterNode(column, null, value));
+        return and(column, null, value);
     }
 
     public final FilterNode and(String column, FilterExpress express, Serializable value) {
@@ -81,7 +80,7 @@ public class FilterNode {
     }
 
     public final FilterNode or(String column, Serializable value) {
-        return or(new FilterNode(column, null, value));
+        return or(column, null, value);
     }
 
     public final FilterNode or(String column, FilterExpress express, Serializable value) {
@@ -90,12 +89,18 @@ public class FilterNode {
 
     protected final FilterNode any(FilterNode node, boolean sign) {
         Objects.requireNonNull(node);
-        if (nodes == null) {
-            nodes = new FilterNode[]{node};
-            this.signand = sign;
+        if (this.column == null) {
+            this.column = node.column;
+            this.express = node.express;
+            this.value = node.value;
             return this;
         }
-        if (signand == sign) {
+        if (nodes == null) {
+            nodes = new FilterNode[]{node};
+            this.and = sign;
+            return this;
+        }
+        if (and == sign) {
             FilterNode[] newsiblings = new FilterNode[nodes.length + 1];
             System.arraycopy(nodes, 0, newsiblings, 0, nodes.length);
             newsiblings[nodes.length] = node;
@@ -106,23 +111,51 @@ public class FilterNode {
         return this;
     }
 
+    /**
+     * 该方法需要重载
+     *
+     * @param node
+     * @param sign
+     */
     protected void append(FilterNode node, boolean sign) {
         FilterNode newnode = new FilterNode(this.column, this.express, this.value);
-        newnode.signand = this.signand;
+        newnode.and = this.and;
         newnode.nodes = this.nodes;
         this.nodes = new FilterNode[]{newnode, node};
         this.tabalis = null;
         this.column = null;
         this.express = null;
-        this.signand = sign;
+        this.and = sign;
         this.value = null;
     }
 
-    protected Serializable getValue(FilterBean bean) {
+    /**
+     * 该方法需要重载
+     *
+     * @param bean
+     * @return
+     */
+    protected Serializable getElementValue(final FilterBean bean) {
         return value;
     }
 
-    protected boolean isJoinAllCached() {
+    /**
+     * 该方法需要重载
+     *
+     * @param <T>
+     * @param info
+     * @return
+     */
+    protected <T> CharSequence createSQLJoin(final EntityInfo<T> info) {
+        return null;
+    }
+
+    /**
+     * 该方法需要重载
+     *
+     * @return
+     */
+    protected boolean isCacheUseable() {
         return true;
     }
 
@@ -134,50 +167,42 @@ public class FilterNode {
         return new FilterNode(column, express, value);
     }
 
-    protected final <T> StringBuilder createFilterSQLExpress(final EntityInfo<T> info, FilterBean bean) {
-        return createFilterSQLExpress(true, info, bean);
-    }
-
-    protected <T> StringBuilder createFilterSQLExpress(final boolean first, final EntityInfo<T> info, FilterBean bean) {
-        final Serializable val = getValue(bean);
-        if (val == null && (express == ISNULL || express == ISNOTNULL)) return new StringBuilder(0);
-        StringBuilder sb0 = createFilterSQLExpress(info, val);
-        if (this.nodes == null) {
-            if (sb0 == null) return new StringBuilder(0);
-            if (!first) return sb0;
-            return new StringBuilder(sb0.length() + 8).append(" WHERE ").append(sb0);
-        }
+    protected final <T> CharSequence createSQLExpress(final EntityInfo<T> info, final FilterBean bean) {
+        CharSequence sb0 = createElementSQLExpress(info, bean);
+        if (this.nodes == null) return sb0;
         final StringBuilder rs = new StringBuilder();
-        rs.append(first ? " WHERE (" : " (");
+        rs.append('(');
         boolean more = false;
         if (sb0 != null && sb0.length() > 2) {
             more = true;
             rs.append(sb0);
         }
         for (FilterNode node : this.nodes) {
-            StringBuilder f = node.createFilterSQLExpress(false, info, bean);
+            CharSequence f = node.createSQLExpress(info, bean);
             if (f == null || f.length() < 3) continue;
-            if (more) rs.append(signand ? " AND " : " OR ");
+            if (more) rs.append(and ? " AND " : " OR ");
             rs.append(f);
             more = true;
         }
         rs.append(')');
-        if (rs.length() < (first ? 10 : 5)) return new StringBuilder(0);
+        if (rs.length() < 5) return null;
         return rs;
     }
 
-    private <T> StringBuilder createFilterSQLExpress(final EntityInfo<T> info, Serializable val0) {
+    protected final <T> CharSequence createElementSQLExpress(final EntityInfo<T> info, final FilterBean bean) {
         if (column == null) return null;
-        final StringBuilder val = formatValue(val0);
+        if (express == ISNULL || express == ISNOTNULL) {
+            StringBuilder sb = new StringBuilder();
+            if (tabalis != null) sb.append(tabalis).append('.');
+            sb.append(info.getSQLColumn(column)).append(' ').append(express.value());
+            return sb;
+        }
+        final StringBuilder val = formatToString(express, getElementValue(bean));
         if (val == null) return null;
-        StringBuilder sb = new StringBuilder();
+        StringBuilder sb = new StringBuilder(32);
         if (tabalis != null) sb.append(tabalis).append('.');
         sb.append(info.getSQLColumn(column)).append(' ');
         switch (express) {
-            case ISNULL:
-            case ISNOTNULL:
-                sb.append(express.value());
-                break;
             case OPAND:
             case OPOR:
                 sb.append(express.value()).append(' ').append(val).append(" > 0");
@@ -192,45 +217,16 @@ public class FilterNode {
         return sb;
     }
 
-    protected static <E> String createFilterSQLOrderBy(EntityInfo<E> info, Flipper flipper) {
-        if (flipper == null || flipper.getSort() == null || flipper.getSort().isEmpty()) return "";
-        final String sort = flipper.getSort();
-        String sql = info.getSortOrderbySql(sort);
-        if (sql != null) return sql;
-        final StringBuilder sb = new StringBuilder();
-        sb.append(" ORDER BY ");
-        if (info.isNoAlias()) {
-            sb.append(sort);
-        } else {
-            boolean flag = false;
-            for (String item : sort.split(",")) {
-                if (item.isEmpty()) continue;
-                String[] sub = item.split("\\s+");
-                if (flag) sb.append(',');
-                if (sub.length < 2 || sub[1].equalsIgnoreCase("ASC")) {
-                    sb.append("a.").append(info.getSQLColumn(sub[0])).append(" ASC");
-                } else {
-                    sb.append("a.").append(info.getSQLColumn(sub[0])).append(" DESC");
-                }
-                flag = true;
-            }
-        }
-        sql = sb.toString();
-        info.putSortOrderbySql(sort, sql);
-        return sql;
-    }
-
-    protected <T> Predicate<T> createFilterPredicate(final EntityInfo<T> info, FilterBean bean) {
-        if (info == null || (column == null && this.nodes == null)) return null;
-        final Serializable val = getValue(bean);
-        Predicate<T> filter = createFilterPredicate(column == null ? null : info.getAttribute(column), val);
+    protected <T> Predicate<T> createPredicate(final EntityCache<T> cache, final FilterBean bean) {
+        if (cache == null || (column == null && this.nodes == null)) return null;
+        Predicate<T> filter = createElementPredicate(cache, bean);
         if (this.nodes == null) return filter;
         for (FilterNode node : this.nodes) {
-            Predicate<T> f = node.createFilterPredicate(info, bean);
+            Predicate<T> f = node.createPredicate(cache, bean);
             if (f == null) continue;
             final Predicate<T> one = filter;
             final Predicate<T> two = f;
-            filter = (filter == null) ? f : (signand ? new Predicate<T>() {
+            filter = (filter == null) ? f : (and ? new Predicate<T>() {
 
                 @Override
                 public boolean test(T t) {
@@ -257,35 +253,39 @@ public class FilterNode {
         return filter;
     }
 
-    protected final <T> Predicate<T> createFilterPredicate(final Attribute<T, Serializable> attr, Serializable val0) {
-        if (val0 == null) {
-            if (express == ISNULL) return new Predicate<T>() {
+    protected final <T> Predicate<T> createElementPredicate(final EntityCache<T> cache, final FilterBean bean) {
+        return createElementPredicate(cache, cache.getAttribute(column), bean);
+    }
 
-                @Override
-                public boolean test(T t) {
-                    return attr.get(t) == null;
-                }
+    protected final <T> Predicate<T> createElementPredicate(final EntityCache<T> cache, final Attribute<T, Serializable> attr, final FilterBean bean) {
 
-                @Override
-                public String toString() {
-                    return attr.field() + " = null";
-                }
-            };
-            if (express == ISNOTNULL) return new Predicate<T>() {
+        if (express == ISNULL) return new Predicate<T>() {
 
-                @Override
-                public boolean test(T t) {
-                    return attr.get(t) != null;
-                }
+            @Override
+            public boolean test(T t) {
+                return attr.get(t) == null;
+            }
 
-                @Override
-                public String toString() {
-                    return attr.field() + " != null";
-                }
-            };
-            return null;
-        }
+            @Override
+            public String toString() {
+                return attr.field() + " = null";
+            }
+        };
+        if (express == ISNOTNULL) return new Predicate<T>() {
+
+            @Override
+            public boolean test(T t) {
+                return attr.get(t) != null;
+            }
+
+            @Override
+            public String toString() {
+                return attr.field() + " != null";
+            }
+        };
         if (attr == null) return null;
+        Serializable val0 = getElementValue(bean);
+        if (val0 == null) return null;
 
         final Class atype = attr.type();
         final Class valtype = val0.getClass();
@@ -743,174 +743,51 @@ public class FilterNode {
         return null;
     }
 
-    protected static <E> Comparator<E> createFilterComparator(EntityCache<E> cache, Flipper flipper) {
-        if (flipper == null || flipper.getSort() == null || flipper.getSort().isEmpty()) return null;
-        final String sort = flipper.getSort();
-        Comparator<E> comparator = cache.getSortComparator(sort);
-        if (comparator != null) return comparator;
-        for (String item : sort.split(",")) {
-            if (item.trim().isEmpty()) continue;
-            String[] sub = item.trim().split("\\s+");
-            int pos = sub[0].indexOf('(');
-            Attribute<E, Serializable> attr;
-            if (pos <= 0) {
-                attr = cache.info.getAttribute(sub[0]);
-            } else {  //含SQL函数
-                int pos2 = sub[0].lastIndexOf(')');
-                final Attribute<E, Serializable> pattr = cache.info.getAttribute(sub[0].substring(pos + 1, pos2));
-                final String func = sub[0].substring(0, pos);
-                if ("ABS".equalsIgnoreCase(func)) {
-                    if (pattr.type() == int.class || pattr.type() == Integer.class) {
-                        attr = new Attribute<E, Serializable>() {
-
-                            @Override
-                            public Class type() {
-                                return pattr.type();
-                            }
-
-                            @Override
-                            public Class declaringClass() {
-                                return pattr.declaringClass();
-                            }
-
-                            @Override
-                            public String field() {
-                                return pattr.field();
-                            }
-
-                            @Override
-                            public Serializable get(E obj) {
-                                return Math.abs(((Number) pattr.get(obj)).intValue());
-                            }
-
-                            @Override
-                            public void set(E obj, Serializable value) {
-                                pattr.set(obj, value);
-                            }
-                        };
-                    } else if (pattr.type() == long.class || pattr.type() == Long.class) {
-                        attr = new Attribute<E, Serializable>() {
-
-                            @Override
-                            public Class type() {
-                                return pattr.type();
-                            }
-
-                            @Override
-                            public Class declaringClass() {
-                                return pattr.declaringClass();
-                            }
-
-                            @Override
-                            public String field() {
-                                return pattr.field();
-                            }
-
-                            @Override
-                            public Serializable get(E obj) {
-                                return Math.abs(((Number) pattr.get(obj)).longValue());
-                            }
-
-                            @Override
-                            public void set(E obj, Serializable value) {
-                                pattr.set(obj, value);
-                            }
-                        };
-                    } else if (pattr.type() == float.class || pattr.type() == Float.class) {
-                        attr = new Attribute<E, Serializable>() {
-
-                            @Override
-                            public Class type() {
-                                return pattr.type();
-                            }
-
-                            @Override
-                            public Class declaringClass() {
-                                return pattr.declaringClass();
-                            }
-
-                            @Override
-                            public String field() {
-                                return pattr.field();
-                            }
-
-                            @Override
-                            public Serializable get(E obj) {
-                                return Math.abs(((Number) pattr.get(obj)).floatValue());
-                            }
-
-                            @Override
-                            public void set(E obj, Serializable value) {
-                                pattr.set(obj, value);
-                            }
-                        };
-                    } else if (pattr.type() == double.class || pattr.type() == Double.class) {
-                        attr = new Attribute<E, Serializable>() {
-
-                            @Override
-                            public Class type() {
-                                return pattr.type();
-                            }
-
-                            @Override
-                            public Class declaringClass() {
-                                return pattr.declaringClass();
-                            }
-
-                            @Override
-                            public String field() {
-                                return pattr.field();
-                            }
-
-                            @Override
-                            public Serializable get(E obj) {
-                                return Math.abs(((Number) pattr.get(obj)).doubleValue());
-                            }
-
-                            @Override
-                            public void set(E obj, Serializable value) {
-                                pattr.set(obj, value);
-                            }
-                        };
-                    } else {
-                        throw new RuntimeException("Flipper not supported sort illegal type by ABS (" + flipper.getSort() + ")");
-                    }
-                } else if (func.isEmpty()) {
-                    attr = pattr;
-                } else {
-                    throw new RuntimeException("Flipper not supported sort illegal function (" + flipper.getSort() + ")");
-                }
-            }
-            Comparator<E> c = (sub.length > 1 && sub[1].equalsIgnoreCase("DESC")) ? (E o1, E o2) -> {
-                Comparable c1 = (Comparable) attr.get(o1);
-                Comparable c2 = (Comparable) attr.get(o2);
-                return c2 == null ? -1 : c2.compareTo(c1);
-            } : (E o1, E o2) -> {
-                Comparable c1 = (Comparable) attr.get(o1);
-                Comparable c2 = (Comparable) attr.get(o2);
-                return c1 == null ? -1 : c1.compareTo(c2);
-            };
-
-            if (comparator == null) {
-                comparator = c;
-            } else {
-                comparator = comparator.thenComparing(c);
-            }
-        }
-        cache.putSortComparator(sort, comparator);
-        return comparator;
+    @Override
+    public String toString() {
+        return toString(null);
     }
 
-    protected StringBuilder formatValue(Object value) {
-        return formatValue(express, value);
+    public String toString(final FilterBean bean) {
+        StringBuilder sb = new StringBuilder();
+        if (nodes == null) {
+            if (column != null) {
+                Serializable ev = getElementValue(bean);
+                if (express == ISNULL || express == ISNOTNULL) {
+                    sb.append(column).append(' ').append(express.value());
+                } else if (ev != null) {
+                    sb.append(column).append(' ').append(express.value()).append(' ').append(formatToString(express, ev));
+                }
+            }
+        } else {
+            boolean more = false;
+            if (column != null) {
+                Serializable ev = getElementValue(bean);
+                if (express == ISNULL || express == ISNOTNULL) {
+                    sb.append('(').append(column).append(' ').append(express.value());
+                    more = true;
+                } else if (ev != null) {
+                    sb.append('(').append(column).append(' ').append(express.value()).append(' ').append(formatToString(express, ev));
+                    more = true;
+                }
+            }
+            for (FilterNode node : this.nodes) {
+                String s = node.toString();
+                if (s.isEmpty()) continue;
+                if (sb.length() > 0) sb.append(and ? " AND " : " OR ");
+                sb.append(s);
+            }
+            if (more) sb.append(')');
+        }
+        return sb.toString();
     }
 
     protected static String formatToString(Object value) {
-        StringBuilder sb = formatValue(null, value);
+        StringBuilder sb = formatToString(null, value);
         return sb == null ? null : sb.toString();
     }
 
-    private static StringBuilder formatValue(FilterExpress express, Object value) {
+    private static StringBuilder formatToString(FilterExpress express, Object value) {
         if (value == null) return null;
         if (value instanceof Number) return new StringBuilder().append(value);
         if (value instanceof CharSequence) {
@@ -937,7 +814,7 @@ public class FilterNode {
             if (len == 0) return express == NOTIN ? null : new StringBuilder("(NULL)");
             if (len == 1) {
                 Object firstval = Array.get(value, 0);
-                if (firstval != null && firstval.getClass().isArray()) return formatValue(express, firstval);
+                if (firstval != null && firstval.getClass().isArray()) return formatToString(express, firstval);
             }
             StringBuilder sb = new StringBuilder();
             sb.append('(');
@@ -969,67 +846,51 @@ public class FilterNode {
         return new StringBuilder().append(value);
     }
 
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        if (nodes == null) {
-            sb.append(column).append(' ').append(express.value()).append(' ').append(formatValue(value));
-        } else {
-            if (column != null) sb.append('(').append(column).append(' ').append(express.value()).append(' ').append(formatValue(value));
-            for (FilterNode node : this.nodes) {
-                if (sb.length() > 0) sb.append(signand ? " AND " : " OR ");
-                sb.append(node.toString());
-            }
-            sb.append(')');
-        }
-        return sb.toString();
-    }
-
-    public Serializable getValue() {
+    public final Serializable getValue() {
         return value;
     }
 
-    public void setValue(Serializable value) {
+    public final void setValue(Serializable value) {
         this.value = value;
     }
 
-    public boolean isSignand() {
-        return signand;
+    public final boolean isAnd() {
+        return and;
     }
 
-    public void setSignand(boolean signand) {
-        this.signand = signand;
+    public final void setAnd(boolean and) {
+        this.and = and;
     }
 
-    public String getTabalis() {
+    public final String getTabalis() {
         return tabalis;
     }
 
-    public void setTabalis(String tabalis) {
+    public final void setTabalis(String tabalis) {
         this.tabalis = tabalis;
     }
 
-    public String getColumn() {
+    public final String getColumn() {
         return column;
     }
 
-    public void setColumn(String column) {
+    public final void setColumn(String column) {
         this.column = column;
     }
 
-    public FilterExpress getExpress() {
+    public final FilterExpress getExpress() {
         return express;
     }
 
-    public void setExpress(FilterExpress express) {
+    public final void setExpress(FilterExpress express) {
         this.express = express;
     }
 
-    public FilterNode[] getNodes() {
+    public final FilterNode[] getNodes() {
         return nodes;
     }
 
-    public void setNodes(FilterNode[] nodes) {
+    public final void setNodes(FilterNode[] nodes) {
         this.nodes = nodes;
     }
 

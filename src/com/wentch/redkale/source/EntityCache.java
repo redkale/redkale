@@ -25,81 +25,11 @@ import java.util.stream.*;
  */
 public final class EntityCache<T> {
 
-    private static class UniqueSequence implements Serializable {
-
-        private final Serializable[] value;
-
-        public UniqueSequence(Serializable[] val) {
-            this.value = val;
-        }
-
-        @Override
-        public int hashCode() {
-            return Arrays.deepHashCode(this.value);
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (obj == null) return false;
-            if (getClass() != obj.getClass()) return false;
-            final UniqueSequence other = (UniqueSequence) obj;
-            if (value.length != other.value.length) return false;
-            for (int i = 0; i < value.length; i++) {
-                if (!value[i].equals(other.value[i])) return false;
-            }
-            return true;
-        }
-
-    }
-
-    private static interface UniqueAttribute<T> extends Predicate<FilterNode> {
-
-        public Serializable getValue(T bean);
-
-        @Override
-        public boolean test(FilterNode node);
-
-        public static <T> UniqueAttribute<T> create(final Attribute<T, Serializable>[] attributes) {
-            if (attributes.length == 1) {
-                final Attribute<T, Serializable> attribute = attributes[0];
-                return new UniqueAttribute<T>() {
-
-                    @Override
-                    public Serializable getValue(T bean) {
-                        return attribute.get(bean);
-                    }
-
-                    @Override
-                    public boolean test(FilterNode node) {
-                        return true;
-                    }
-                };
-            } else {
-                return new UniqueAttribute<T>() {
-
-                    @Override
-                    public Serializable getValue(T bean) {
-                        final Serializable[] rs = new Serializable[attributes.length];
-                        for (int i = 0; i < rs.length; i++) {
-                            rs[i] = attributes[i].get(bean);
-                        }
-                        return new UniqueSequence(rs);
-                    }
-
-                    @Override
-                    public boolean test(FilterNode node) {
-                        return true;
-                    }
-                };
-            }
-        }
-    }
-
     private static final Logger logger = Logger.getLogger(EntityCache.class.getName());
 
     private final ConcurrentHashMap<Serializable, T> map = new ConcurrentHashMap();
 
-    private final CopyOnWriteArrayList<T> list = new CopyOnWriteArrayList(); // CopyOnWriteArrayList 插入慢、查询快; 10w数据插入需要3.2秒; ConcurrentLinkedQueue 插入快、查询慢；10w数据查询需要 0.062秒，  查询慢40%;
+    private final Collection<T> list = new CopyOnWriteArrayList(); // CopyOnWriteArrayList 插入慢、查询快; 10w数据插入需要3.2秒; ConcurrentLinkedQueue 插入快、查询慢；10w数据查询需要 0.062秒，  查询慢40%;
 
     private final HashMap<UniqueAttribute<T>, ConcurrentHashMap<Serializable, Collection<T>>> uniques = new HashMap<>();
 
@@ -180,14 +110,19 @@ public final class EntityCache<T> {
     }
 
     public boolean exists(final Predicate<T> filter) {
-        return (filter != null) && listStream().filter(filter).findFirst().isPresent();
+        return (filter != null) && this.list.stream().filter(filter).findFirst().isPresent();
     }
 
-    public <K, V> Map<Serializable, Number> getMapResult(final String keyColumn, final Reckon reckon, final String reckonColumn, final FilterNode node, final FilterBean bean) {
+    public <K, V> Map<Serializable, Number> getMapResult(final String keyColumn, final Reckon reckon, final String reckonColumn, final FilterNode node) {
+        return getMapResult(keyColumn, reckon, reckonColumn, node, null);
+    }
+
+    public <K, V> Map<Serializable, Number> getMapResult(final String keyColumn, final Reckon reckon, final String reckonColumn, FilterNode node, final FilterBean bean) {
+        if (node == null && bean != null) node = FilterBeanNode.load(bean.getClass());
         final Attribute<T, Serializable> keyAttr = info.getAttribute(keyColumn);
-        final Predicate filter = node == null ? null : node.createFilterPredicate(this.info, bean);
+        final Predicate filter = node == null ? null : node.createPredicate(this, bean);
         final Attribute reckonAttr = reckonColumn == null ? null : info.getAttribute(reckonColumn);
-        Stream<T> stream = listStream();
+        Stream<T> stream = this.list.stream();
         if (filter != null) stream = stream.filter(filter);
         Collector<T, Map, ?> collector = null;
         final Class valtype = reckonAttr == null ? null : reckonAttr.type();
@@ -232,10 +167,15 @@ public final class EntityCache<T> {
         return rs;
     }
 
-    public <V> Number getNumberResult(final Reckon reckon, final String column, final FilterNode node, final FilterBean bean) {
+    public <V> Number getNumberResult(final Reckon reckon, final String column, final FilterNode node) {
+        return getNumberResult(reckon, column, node, null);
+    }
+
+    public <V> Number getNumberResult(final Reckon reckon, final String column, FilterNode node, final FilterBean bean) {
+        if (node == null && bean != null) node = FilterBeanNode.load(bean.getClass());
         final Attribute<T, Serializable> attr = column == null ? null : info.getAttribute(column);
-        final Predicate<T> filter = node == null ? null : node.createFilterPredicate(this.info, bean);
-        Stream<T> stream = listStream();
+        final Predicate<T> filter = node == null ? null : node.createPredicate(this, bean);
+        Stream<T> stream = this.list.stream();
         if (filter != null) stream = stream.filter(filter);
         switch (reckon) {
             case AVG:
@@ -299,21 +239,30 @@ public final class EntityCache<T> {
         return -1;
     }
 
+    public Sheet<T> querySheet(final SelectColumn selects, final Flipper flipper, final FilterNode node) {
+        return querySheet(selects, flipper, node, null);
+    }
+
     public Sheet<T> querySheet(final SelectColumn selects, final Flipper flipper, final FilterNode node, final FilterBean bean) {
         return querySheet(true, selects, flipper, node, bean);
     }
 
-    public Sheet<T> querySheet(final boolean needtotal, final SelectColumn selects, final Flipper flipper, final FilterNode node, final FilterBean bean) {
-        final Predicate<T> filter = node == null ? null : node.createFilterPredicate(this.info, bean);
-        final Comparator<T> comparator = FilterNode.createFilterComparator(this, flipper);
+    public Sheet<T> querySheet(final boolean needtotal, final SelectColumn selects, final Flipper flipper, final FilterNode node) {
+        return querySheet(needtotal, selects, flipper, node, null);
+    }
+
+    public Sheet<T> querySheet(final boolean needtotal, final SelectColumn selects, final Flipper flipper, FilterNode node, final FilterBean bean) {
+        if (node == null && bean != null) node = FilterBeanNode.load(bean.getClass());
+        final Predicate<T> filter = node == null ? null : node.createPredicate(this, bean);
+        final Comparator<T> comparator = createComparator(flipper);
         long total = 0;
         if (needtotal) {
-            Stream<T> stream = listStream();
+            Stream<T> stream = this.list.stream();
             if (filter != null) stream = stream.filter(filter);
             total = stream.count();
         }
         if (needtotal && total == 0) return new Sheet<>();
-        Stream<T> stream = listStream();
+        Stream<T> stream = this.list.stream();
         if (filter != null) stream = stream.filter(filter);
         if (comparator != null) stream = stream.sorted(comparator);
         if (flipper != null) stream = stream.skip(flipper.index()).limit(flipper.getSize());
@@ -327,9 +276,9 @@ public final class EntityCache<T> {
             }
         } else {
             final List<Attribute<T, Serializable>> attrs = new ArrayList<>();
-            for (Map.Entry<String, Attribute<T, Serializable>> en : info.attributes.entrySet()) {
-                if (selects.validate(en.getKey())) attrs.add(en.getValue());
-            }
+            info.forEachAttribute((k, v) -> {
+                if (selects.validate(k)) attrs.add(v);
+            });
             Consumer<? super T> action = x -> {
                 final T item = creator.create();
                 for (Attribute attr : attrs) {
@@ -371,7 +320,7 @@ public final class EntityCache<T> {
 
     public Serializable[] delete(final FilterNode node) {
         if (node == null || this.list.isEmpty()) return new Serializable[0];
-        Object[] rms = listStream().filter(node.createFilterPredicate(this.info, null)).toArray();
+        Object[] rms = this.list.stream().filter(node.createPredicate(this, null)).toArray();
         Serializable[] ids = new Serializable[rms.length];
         int i = -1;
         for (Object o : rms) {
@@ -453,15 +402,237 @@ public final class EntityCache<T> {
         return rs;
     }
 
-    private Stream<T> listStream() {
-        return this.list.stream();
+    public Attribute<T, Serializable> getAttribute(String fieldname) {
+        return info.getAttribute(fieldname);
     }
 
-    protected Comparator<T> getSortComparator(String sort) {
-        return this.sortComparators.get(sort);
-    }
+    //-------------------------------------------------------------------------------------------------------------------------------
+    protected Comparator<T> createComparator(Flipper flipper) {
+        if (flipper == null || flipper.getSort() == null || flipper.getSort().isEmpty()) return null;
+        final String sort = flipper.getSort();
+        Comparator<T> comparator = this.sortComparators.get(sort);
+        if (comparator != null) return comparator;
+        for (String item : sort.split(",")) {
+            if (item.trim().isEmpty()) continue;
+            String[] sub = item.trim().split("\\s+");
+            int pos = sub[0].indexOf('(');
+            Attribute<T, Serializable> attr;
+            if (pos <= 0) {
+                attr = getAttribute(sub[0]);
+            } else {  //含SQL函数
+                int pos2 = sub[0].lastIndexOf(')');
+                final Attribute<T, Serializable> pattr = getAttribute(sub[0].substring(pos + 1, pos2));
+                final String func = sub[0].substring(0, pos);
+                if ("ABS".equalsIgnoreCase(func)) {
+                    if (pattr.type() == int.class || pattr.type() == Integer.class) {
+                        attr = new Attribute<T, Serializable>() {
 
-    protected void putSortComparator(String sort, Comparator<T> comparator) {
+                            @Override
+                            public Class type() {
+                                return pattr.type();
+                            }
+
+                            @Override
+                            public Class declaringClass() {
+                                return pattr.declaringClass();
+                            }
+
+                            @Override
+                            public String field() {
+                                return pattr.field();
+                            }
+
+                            @Override
+                            public Serializable get(T obj) {
+                                return Math.abs(((Number) pattr.get(obj)).intValue());
+                            }
+
+                            @Override
+                            public void set(T obj, Serializable value) {
+                                pattr.set(obj, value);
+                            }
+                        };
+                    } else if (pattr.type() == long.class || pattr.type() == Long.class) {
+                        attr = new Attribute<T, Serializable>() {
+
+                            @Override
+                            public Class type() {
+                                return pattr.type();
+                            }
+
+                            @Override
+                            public Class declaringClass() {
+                                return pattr.declaringClass();
+                            }
+
+                            @Override
+                            public String field() {
+                                return pattr.field();
+                            }
+
+                            @Override
+                            public Serializable get(T obj) {
+                                return Math.abs(((Number) pattr.get(obj)).longValue());
+                            }
+
+                            @Override
+                            public void set(T obj, Serializable value) {
+                                pattr.set(obj, value);
+                            }
+                        };
+                    } else if (pattr.type() == float.class || pattr.type() == Float.class) {
+                        attr = new Attribute<T, Serializable>() {
+
+                            @Override
+                            public Class type() {
+                                return pattr.type();
+                            }
+
+                            @Override
+                            public Class declaringClass() {
+                                return pattr.declaringClass();
+                            }
+
+                            @Override
+                            public String field() {
+                                return pattr.field();
+                            }
+
+                            @Override
+                            public Serializable get(T obj) {
+                                return Math.abs(((Number) pattr.get(obj)).floatValue());
+                            }
+
+                            @Override
+                            public void set(T obj, Serializable value) {
+                                pattr.set(obj, value);
+                            }
+                        };
+                    } else if (pattr.type() == double.class || pattr.type() == Double.class) {
+                        attr = new Attribute<T, Serializable>() {
+
+                            @Override
+                            public Class type() {
+                                return pattr.type();
+                            }
+
+                            @Override
+                            public Class declaringClass() {
+                                return pattr.declaringClass();
+                            }
+
+                            @Override
+                            public String field() {
+                                return pattr.field();
+                            }
+
+                            @Override
+                            public Serializable get(T obj) {
+                                return Math.abs(((Number) pattr.get(obj)).doubleValue());
+                            }
+
+                            @Override
+                            public void set(T obj, Serializable value) {
+                                pattr.set(obj, value);
+                            }
+                        };
+                    } else {
+                        throw new RuntimeException("Flipper not supported sort illegal type by ABS (" + flipper.getSort() + ")");
+                    }
+                } else if (func.isEmpty()) {
+                    attr = pattr;
+                } else {
+                    throw new RuntimeException("Flipper not supported sort illegal function (" + flipper.getSort() + ")");
+                }
+            }
+            Comparator<T> c = (sub.length > 1 && sub[1].equalsIgnoreCase("DESC")) ? (T o1, T o2) -> {
+                Comparable c1 = (Comparable) attr.get(o1);
+                Comparable c2 = (Comparable) attr.get(o2);
+                return c2 == null ? -1 : c2.compareTo(c1);
+            } : (T o1, T o2) -> {
+                Comparable c1 = (Comparable) attr.get(o1);
+                Comparable c2 = (Comparable) attr.get(o2);
+                return c1 == null ? -1 : c1.compareTo(c2);
+            };
+
+            if (comparator == null) {
+                comparator = c;
+            } else {
+                comparator = comparator.thenComparing(c);
+            }
+        }
         this.sortComparators.put(sort, comparator);
+        return comparator;
     }
+
+    private static class UniqueSequence implements Serializable {
+
+        private final Serializable[] value;
+
+        public UniqueSequence(Serializable[] val) {
+            this.value = val;
+        }
+
+        @Override
+        public int hashCode() {
+            return Arrays.deepHashCode(this.value);
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == null) return false;
+            if (getClass() != obj.getClass()) return false;
+            final UniqueSequence other = (UniqueSequence) obj;
+            if (value.length != other.value.length) return false;
+            for (int i = 0; i < value.length; i++) {
+                if (!value[i].equals(other.value[i])) return false;
+            }
+            return true;
+        }
+
+    }
+
+    private static interface UniqueAttribute<T> extends Predicate<FilterNode> {
+
+        public Serializable getValue(T bean);
+
+        @Override
+        public boolean test(FilterNode node);
+
+        public static <T> UniqueAttribute<T> create(final Attribute<T, Serializable>[] attributes) {
+            if (attributes.length == 1) {
+                final Attribute<T, Serializable> attribute = attributes[0];
+                return new UniqueAttribute<T>() {
+
+                    @Override
+                    public Serializable getValue(T bean) {
+                        return attribute.get(bean);
+                    }
+
+                    @Override
+                    public boolean test(FilterNode node) {
+                        return true;
+                    }
+                };
+            } else {
+                return new UniqueAttribute<T>() {
+
+                    @Override
+                    public Serializable getValue(T bean) {
+                        final Serializable[] rs = new Serializable[attributes.length];
+                        for (int i = 0; i < rs.length; i++) {
+                            rs[i] = attributes[i].get(bean);
+                        }
+                        return new UniqueSequence(rs);
+                    }
+
+                    @Override
+                    public boolean test(FilterNode node) {
+                        return true;
+                    }
+                };
+            }
+        }
+    }
+
 }

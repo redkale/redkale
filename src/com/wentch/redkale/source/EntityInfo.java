@@ -44,7 +44,7 @@ public final class EntityInfo<T> {
 
     //key是field的name， 不是sql字段。
     //存放所有与数据库对应的字段， 包括主键
-    final Map<String, Attribute<T, Serializable>> attributes = new HashMap<>();
+    private final HashMap<String, Attribute<T, Serializable>> attributes = new HashMap<>();
 
     //key是field的name， value是Column的别名，即数据库表的字段名
     //只有field.name 与 Column.name不同才存放在aliasmap里.
@@ -93,10 +93,12 @@ public final class EntityInfo<T> {
         synchronized (entityInfos) {
             rs = entityInfos.get(clazz);
             if (rs == null) {
+                if (nodeid < 0) throw new IllegalArgumentException("nodeid(" + nodeid + ") is illegal");
                 rs = new EntityInfo(clazz, nodeid, cacheForbidden);
                 entityInfos.put(clazz, rs);
                 AutoLoad auto = clazz.getAnnotation(AutoLoad.class);
-                if (rs.cache != null && auto != null && auto.value() && fullloader != null) {
+                if (rs.cache != null && auto != null && auto.value()) {
+                    if (fullloader == null) throw new IllegalArgumentException(clazz.getName() + " auto loader  is illegal");
                     rs.cache.fullLoad(fullloader.apply(clazz));
                 }
             }
@@ -107,7 +109,7 @@ public final class EntityInfo<T> {
     private EntityInfo(Class<T> type, int nodeid, final boolean cacheForbidden) {
         this.type = type;
         //---------------------------------------------
-        this.nodeid = nodeid;
+        this.nodeid = nodeid >= 0 ? nodeid : 0;
         DistributeGenerator.DistributeTables dt = type.getAnnotation(DistributeGenerator.DistributeTables.class);
         this.distributeTables = dt == null ? null : dt.value();
 
@@ -267,7 +269,12 @@ public final class EntityInfo<T> {
         return this.primary;
     }
 
+    public void forEachAttribute(BiConsumer<String, Attribute<T, Serializable>> action) {
+        this.attributes.forEach(action);
+    }
+
     public Attribute<T, Serializable> getAttribute(String fieldname) {
+        if (fieldname == null) return null;
         return this.attributes.get(fieldname);
     }
 
@@ -279,12 +286,32 @@ public final class EntityInfo<T> {
         return this.aliasmap == null;
     }
 
-    public String getSortOrderbySql(String sort) {
-        return this.sortOrderbySqls.get(sort);
-    }
-
-    protected void putSortOrderbySql(String sort, String sql) {
+    protected String createSQLOrderby(Flipper flipper) {
+        if (flipper == null || flipper.getSort() == null || flipper.getSort().isEmpty()) return "";
+        final String sort = flipper.getSort();
+        String sql = this.sortOrderbySqls.get(sort);
+        if (sql != null) return sql;
+        final StringBuilder sb = new StringBuilder();
+        sb.append(" ORDER BY ");
+        if (isNoAlias()) {
+            sb.append(sort);
+        } else {
+            boolean flag = false;
+            for (String item : sort.split(",")) {
+                if (item.isEmpty()) continue;
+                String[] sub = item.split("\\s+");
+                if (flag) sb.append(',');
+                if (sub.length < 2 || sub[1].equalsIgnoreCase("ASC")) {
+                    sb.append("a.").append(getSQLColumn(sub[0])).append(" ASC");
+                } else {
+                    sb.append("a.").append(getSQLColumn(sub[0])).append(" DESC");
+                }
+                flag = true;
+            }
+        }
+        sql = sb.toString();
         this.sortOrderbySqls.put(sort, sql);
+        return sql;
     }
 
     //根据field字段名获取数据库对应的字段名

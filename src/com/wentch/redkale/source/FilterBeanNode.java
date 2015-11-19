@@ -26,6 +26,10 @@ final class FilterBeanNode extends FilterNode {
 
     private static final ConcurrentHashMap<Class, FilterBeanNode> beanodes = new ConcurrentHashMap<>();
 
+    public static <T extends FilterBean> FilterBeanNode load(Class<T> clazz) {
+        return load(clazz, -1, true, null);
+    }
+
     public static <T extends FilterBean> FilterBeanNode load(Class<T> clazz, final int nodeid, final boolean cacheForbidden,
             Function<Class, List> fullloader) {
         FilterBeanNode rs = beanodes.get(clazz);
@@ -55,17 +59,19 @@ final class FilterBeanNode extends FilterNode {
                 if (field.getAnnotation(Ignore.class) != null) continue;
                 if (field.getAnnotation(Transient.class) != null) continue;
 
+                final boolean pubmod = Modifier.isPublic(field.getModifiers());
+
                 char[] chars = field.getName().toCharArray();
                 chars[0] = Character.toUpperCase(chars[0]);
                 final Class t = field.getType();
-                Method getter;
+                Method getter = null;
                 try {
                     getter = cltmp.getMethod(((t == boolean.class || t == Boolean.class) ? "is" : "get") + new String(chars));
                 } catch (Exception ex) {
-                    continue;
+                    if (!pubmod) continue;
                 }
                 fields.add(field.getName());
-                FilterBeanNode newnode = new FilterBeanNode(field.getName(), true, Attribute.create(getter, null));
+                FilterBeanNode newnode = new FilterBeanNode(field.getName(), true, pubmod ? Attribute.create(field) : Attribute.create(getter, null));
                 newnode.setField(field);
                 //------------------------------------
                 {
@@ -163,7 +169,7 @@ final class FilterBeanNode extends FilterNode {
 
     protected FilterBeanNode(String col, boolean sign, Attribute beanAttr) {
         this.column = col;
-        this.signand = sign;
+        this.and = sign;
         this.beanAttribute = beanAttr;
     }
 
@@ -195,7 +201,7 @@ final class FilterBeanNode extends FilterNode {
 
     @Override
     protected void append(FilterNode node, boolean sign) {
-        FilterBeanNode newnode = new FilterBeanNode(this.column, this.signand, this.beanAttribute);
+        FilterBeanNode newnode = new FilterBeanNode(this.column, this.and, this.beanAttribute);
         newnode.express = this.express;
         newnode.nodes = this.nodes;
         newnode.foreignEntity = this.foreignEntity;
@@ -211,7 +217,7 @@ final class FilterBeanNode extends FilterNode {
         this.nodes = new FilterNode[]{newnode};
         this.column = node.column;
         this.express = node.express;
-        this.signand = sign;
+        this.and = sign;
         this.setValue(node.getValue());
         if (node instanceof FilterBeanNode) {
             FilterBeanNode beanNode = ((FilterBeanNode) node);
@@ -230,29 +236,27 @@ final class FilterBeanNode extends FilterNode {
     }
 
     @Override
-    protected <T> StringBuilder createFilterSQLExpress(final boolean first, final EntityInfo<T> info, FilterBean bean) {
-        if (joinSQL == null || !first) return super.createFilterSQLExpress(first, info, bean);
-        StringBuilder sb = super.createFilterSQLExpress(first, info, bean);
-        if (joinSQL == null) return sb;
-        return new StringBuilder(sb.length() + joinSQL.length()).append(joinSQL).append(sb);
+    protected <T> CharSequence createSQLJoin(final EntityInfo<T> info) {
+        if (joinSQL == null) return null;
+        return new StringBuilder(joinSQL);
     }
 
+
     @Override
-    protected <T> Predicate<T> createFilterPredicate(final EntityInfo<T> info, FilterBean bean) {
-        //if ((this.joinSQL == null && first) || this.foreignEntity == null) return super.createFilterPredicate(info, bean);
-        if (this.foreignEntity == null) return super.createFilterPredicate(info, bean);
+    protected <T> Predicate<T> createPredicate(final EntityCache<T> cache, FilterBean bean) {
+        if (this.foreignEntity == null) return super.createPredicate(cache, bean);
         final Map<EntityInfo, Predicate> foreign = new HashMap<>();
         Predicate<T> result = null;
-        putForeignPredicate(foreign, bean);
+        putForeignPredicate(cache, foreign, bean);
         if (this.nodes != null) {
             for (FilterNode n : this.nodes) {
                 FilterBeanNode node = (FilterBeanNode) n;
                 if (node.foreignEntity == null) {
-                    Predicate<T> f = node.createFilterPredicate(info, bean);
+                    Predicate<T> f = node.createPredicate(cache, bean);
                     if (f == null) continue;
                     final Predicate<T> one = result;
                     final Predicate<T> two = f;
-                    result = (result == null) ? f : (signand ? new Predicate<T>() {
+                    result = (result == null) ? f : (and ? new Predicate<T>() {
 
                         @Override
                         public boolean test(T t) {
@@ -276,7 +280,7 @@ final class FilterBeanNode extends FilterNode {
                         }
                     });
                 } else {
-                    putForeignPredicate(foreign, bean);
+                    putForeignPredicate(cache, foreign, bean);
                 }
             }
         }
@@ -284,8 +288,7 @@ final class FilterBeanNode extends FilterNode {
         final String byjoinCol = this.byjoinColumn;
         final Attribute foreignAttr = this.foreignAttribute;
         for (final Map.Entry<EntityInfo, Predicate> en : foreign.entrySet()) {
-            Attribute<T, Serializable> byjoinAttr = info.getAttribute(byjoinCol);
-            final EntityCache cache = en.getKey().getCache();
+            Attribute<T, Serializable> byjoinAttr = cache.getAttribute(byjoinCol);
             final Predicate p = en.getValue();
             Predicate<T> f = new Predicate<T>() {
 
@@ -303,7 +306,7 @@ final class FilterBeanNode extends FilterNode {
             };
             final Predicate<T> one = result;
             final Predicate<T> two = f;
-            result = (result == null) ? f : (signand ? new Predicate<T>() {
+            result = (result == null) ? f : (and ? new Predicate<T>() {
 
                 @Override
                 public boolean test(T t) {
@@ -330,21 +333,21 @@ final class FilterBeanNode extends FilterNode {
         return result;
     }
 
-    private <T> void putForeignPredicate(final Map<EntityInfo, Predicate> foreign, FilterBean bean) {
+    private <T> void putForeignPredicate(final EntityCache<T> cache, final Map<EntityInfo, Predicate> foreign, FilterBean bean) {
         if (this.foreignEntity == null) return;
-        final Serializable val = getValue(bean);
+        final Serializable val = getElementValue(bean);
         Predicate filter = (val == null && express != ISNULL && express != ISNOTNULL) ? new Predicate<T>() {
 
             @Override
             public boolean test(T t) {
-                return signand;
+                return and;
             }
 
             @Override
             public String toString() {
-                return "" + signand;
+                return "" + and;
             }
-        } : super.createFilterPredicate(this.columnAttribute, val);
+        } : super.createElementPredicate(cache, this.columnAttribute, bean);
         if (filter == null) return;
         Predicate p = foreign.get(this.foreignEntity);
         if (p == null) {
@@ -352,7 +355,7 @@ final class FilterBeanNode extends FilterNode {
         } else {
             final Predicate<T> one = p;
             final Predicate<T> two = filter;
-            p = signand ? new Predicate<T>() {
+            p = and ? new Predicate<T>() {
 
                 @Override
                 public boolean test(T t) {
@@ -380,12 +383,12 @@ final class FilterBeanNode extends FilterNode {
     }
 
     @Override
-    protected boolean isJoinAllCached() {
+    protected boolean isCacheUseable() {
         return joinallcached;
     }
 
     @Override
-    protected Serializable getValue(FilterBean bean) {
+    protected Serializable getElementValue(FilterBean bean) {
         if (bean == null || beanAttribute == null) return null;
         Serializable rs = (Serializable) beanAttribute.get(bean);
         if (rs == null) return null;
