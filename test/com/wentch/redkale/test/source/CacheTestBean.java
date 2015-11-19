@@ -16,6 +16,7 @@ import javax.persistence.*;
  * @author zhangjx
  */
 public class CacheTestBean {
+
     @Id
     private long pkgid;
 
@@ -32,15 +33,15 @@ public class CacheTestBean {
         Attribute idattr = Attribute.create(CacheTestBean.class, "pkgid");
         Attribute nameattr = Attribute.create(CacheTestBean.class, "name");
         Attribute priceattr = Attribute.create(CacheTestBean.class, "price");
-        EntityCache<CacheTestBean> cache = new EntityCache(EntityInfo.load(CacheTestBean.class, 0, true, null)); 
+        EntityCache<CacheTestBean> cache = new EntityCache(EntityInfo.load(CacheTestBean.class, 0, true, null));
         cache.fullLoad(list);
 
-        System.out.println(cache.getMapResult("pkgid", Reckon.COUNT, "name", null,null));
-        System.out.println(cache.getMapResult("pkgid", Reckon.DISTINCTCOUNT, "name", null,null));
-        System.out.println(cache.getMapResult("pkgid", Reckon.AVG, "price", null,null));
-        System.out.println(cache.getMapResult("pkgid", Reckon.SUM, "price", null,null));
-        System.out.println(cache.getMapResult("pkgid", Reckon.MAX, "price", null,null));
-        System.out.println(cache.getMapResult("pkgid", Reckon.MIN, "price", null,null));
+        System.out.println(cache.getMapResult("pkgid", Reckon.COUNT, "name", null));
+        System.out.println(cache.getMapResult("pkgid", Reckon.DISTINCTCOUNT, "name", null));
+        System.out.println(cache.getMapResult("pkgid", Reckon.AVG, "price", null));
+        System.out.println(cache.getMapResult("pkgid", Reckon.SUM, "price", null));
+        System.out.println(cache.getMapResult("pkgid", Reckon.MAX, "price", null));
+        System.out.println(cache.getMapResult("pkgid", Reckon.MIN, "price", null));
     }
 
     public CacheTestBean() {

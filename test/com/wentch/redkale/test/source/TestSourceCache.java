@@ -17,6 +17,20 @@ import javax.persistence.*;
  */
 public class TestSourceCache {
 
+    public static class TestEntityBean implements FilterBean {
+
+        @FilterColumn(express = FilterExpress.GREATERTHAN)
+        public int userid;
+
+        @FilterColumn(express = FilterExpress.LIKE)
+        public String username;
+
+        public TestEntityBean(int userid, String username) {
+            this.userid = userid;
+            this.username = username;
+        }
+    }
+
     public static void main(String[] args) throws Exception {
         final EntityInfo<TestEntity> info = EntityInfo.load(TestEntity.class, 0, false, null);
         TestEntity[] entitys = new TestEntity[10_0000];
@@ -39,7 +53,9 @@ public class TestSourceCache {
         flipper.setSort("userid DESC, createtime DESC");
         final FilterNode node = FilterNode.create("userid", FilterExpress.GREATERTHAN, 1000).and("username", FilterExpress.LIKE, "用户");
         System.out.println("node = " + node);
-        Sheet<TestEntity> sheet = info.getCache().querySheet(true, null, flipper, node, null);
+        Sheet<TestEntity> sheet = info.getCache().querySheet(null, flipper, node);
+        System.out.println(sheet);
+        System.out.println(info.getCache().querySheet(null, flipper, null, new TestEntityBean(1000, "用户")));
         final CountDownLatch cdl = new CountDownLatch(100);
         s = System.currentTimeMillis();
         for (int i = 0; i < 100; i++) {
@@ -47,7 +63,7 @@ public class TestSourceCache {
                 @Override
                 public void run() {
                     for (int k = 0; k < 10; k++) {
-                        info.getCache().querySheet(true, null, flipper, node, null);
+                        info.getCache().querySheet(true, null, flipper, node);
                     }
                     cdl.countDown();
                 }
