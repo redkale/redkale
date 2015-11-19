@@ -29,17 +29,19 @@ public class FilterNode {
         class2.put(Double.class, double.class);
     }
 
-    protected boolean signand = true;
-
     protected String tabalis;
 
     protected String column;
 
     protected FilterExpress express;
 
-    protected FilterNode[] nodes;
+    protected Serializable value;
 
-    private Serializable value;
+    //----------------------------------------------
+
+    protected boolean signand = true;
+
+    protected FilterNode[] nodes;
 
     protected FilterNode() {
     }
