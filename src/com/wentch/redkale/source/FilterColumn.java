@@ -34,14 +34,6 @@ public @interface FilterColumn {
     long least() default 1;
 
     /**
-     * LIKE、NOT LIKE时是否区分大小写, 由IGNORECASELIKE、IGNORECASENOTLIKE代替
-     * <p>
-     * @return
-     */
-    @Deprecated
-    boolean ignoreCase() default false;
-
-    /**
      * express的默认值根据字段类型的不同而不同:
      * 数组 --> IN
      * Range --> Between
