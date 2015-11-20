@@ -34,10 +34,11 @@ public @interface FilterColumn {
     long least() default 1;
 
     /**
-     * LIKE、NOT LIKE时是否区分大小写
+     * LIKE、NOT LIKE时是否区分大小写, 由IGNORECASELIKE、IGNORECASENOTLIKE代替
      * <p>
      * @return
      */
+    @Deprecated
     boolean ignoreCase() default false;
 
     /**

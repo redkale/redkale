@@ -19,6 +19,8 @@ public enum FilterExpress {
     LESSTHANOREQUALTO("<="),
     LIKE("LIKE"),
     NOTLIKE("NOT LIKE"),
+    IGNORECASELIKE("LIKE"),
+    IGNORECASENOTLIKE("NOT LIKE"),
     BETWEEN("BETWEEN"),
     NOTBETWEEN("NOT BETWEEN"),
     IN("IN"),

@@ -201,7 +201,12 @@ public class FilterNode {
         if (val == null) return null;
         StringBuilder sb = new StringBuilder(32);
         if (tabalis != null) sb.append(tabalis).append('.');
-        sb.append(info.getSQLColumn(column)).append(' ');
+        if (express == IGNORECASELIKE || express == IGNORECASENOTLIKE) {
+            sb.append("LOWER(").append(info.getSQLColumn(column)).append(')');
+        } else {
+            sb.append(info.getSQLColumn(column));
+        }
+        sb.append(' ');
         switch (express) {
             case OPAND:
             case OPOR:
@@ -510,6 +515,21 @@ public class FilterNode {
                         return attr.field() + ' ' + express.value() + ' ' + val;
                     }
                 };
+            case IGNORECASELIKE:
+                final String valstr = val.toString().toLowerCase();
+                return new Predicate<T>() {
+
+                    @Override
+                    public boolean test(T t) {
+                        Object rs = attr.get(t);
+                        return rs != null && rs.toString().toLowerCase().contains(valstr);
+                    }
+
+                    @Override
+                    public String toString() {
+                        return "LOWER(" + attr.field() + ") " + express.value() + ' ' + valstr;
+                    }
+                };
             case NOTLIKE:
                 return new Predicate<T>() {
 
@@ -522,6 +542,21 @@ public class FilterNode {
                     @Override
                     public String toString() {
                         return attr.field() + ' ' + express.value() + ' ' + val;
+                    }
+                };
+            case IGNORECASENOTLIKE:
+                final String valstr2 = val.toString().toLowerCase();
+                return new Predicate<T>() {
+
+                    @Override
+                    public boolean test(T t) {
+                        Object rs = attr.get(t);
+                        return rs == null || !rs.toString().toLowerCase().contains(valstr2);
+                    }
+
+                    @Override
+                    public String toString() {
+                        return "LOWER(" + attr.field() + ") " + express.value() + ' ' + valstr2;
                     }
                 };
             case BETWEEN:
@@ -756,7 +791,7 @@ public class FilterNode {
                 if (express == ISNULL || express == ISNOTNULL) {
                     sb.append(column).append(' ').append(express.value());
                 } else if (ev != null) {
-                    sb.append(column).append(' ').append(express.value()).append(' ').append(formatToString(express, ev));
+                    sb.append((express == IGNORECASELIKE || express == IGNORECASENOTLIKE) ? ("LOWER(" + column + ')') : column).append(' ').append(express.value()).append(' ').append(formatToString(express, ev));
                 }
             }
         } else {
@@ -767,7 +802,7 @@ public class FilterNode {
                     sb.append('(').append(column).append(' ').append(express.value());
                     more = true;
                 } else if (ev != null) {
-                    sb.append('(').append(column).append(' ').append(express.value()).append(' ').append(formatToString(express, ev));
+                    sb.append('(').append((express == IGNORECASELIKE || express == IGNORECASENOTLIKE) ? ("LOWER(" + column + ')') : column).append(' ').append(express.value()).append(' ').append(formatToString(express, ev));
                     more = true;
                 }
             }
@@ -791,7 +826,11 @@ public class FilterNode {
         if (value == null) return null;
         if (value instanceof Number) return new StringBuilder().append(value);
         if (value instanceof CharSequence) {
-            if (express == LIKE || express == NOTLIKE) value = "%" + value + '%';
+            if (express == LIKE || express == NOTLIKE) {
+                value = "%" + value + '%';
+            } else if (express == IGNORECASELIKE || express == IGNORECASENOTLIKE) {
+                value = "%" + value.toString().toLowerCase() + '%';
+            }
             return new StringBuilder().append('\'').append(value.toString().replace("'", "\\'")).append('\'');
         } else if (value instanceof Range) {
             Range range = (Range) value;
