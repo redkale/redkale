@@ -29,7 +29,7 @@ public final class EntityCache<T> {
 
     private final ConcurrentHashMap<Serializable, T> map = new ConcurrentHashMap();
 
-    private final Collection<T> list = new CopyOnWriteArrayList(); // CopyOnWriteArrayList 插入慢、查询快; 10w数据插入需要3.2秒; ConcurrentLinkedQueue 插入快、查询慢；10w数据查询需要 0.062秒，  查询慢40%;
+    private final Collection<T> list = new ConcurrentLinkedQueue(); // CopyOnWriteArrayList 插入慢、查询快; 10w数据插入需要3.2秒; ConcurrentLinkedQueue 插入快、查询慢；10w数据查询需要 0.062秒，  查询慢40%;
 
     private final HashMap<UniqueAttribute<T>, ConcurrentHashMap<Serializable, Collection<T>>> uniques = new HashMap<>();
 
