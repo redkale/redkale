@@ -155,17 +155,11 @@ final class FilterBeanNode extends FilterNode {
 
     private Attribute columnAttribute;
 
-    private boolean array;
-
-    private boolean collection;
+    private long least;
 
     private boolean string;
 
     private boolean number;
-
-    private boolean ignoreCase;
-
-    private long least;
 
     protected FilterBeanNode(String col, boolean sign, Attribute beanAttr) {
         this.column = col;
@@ -177,15 +171,12 @@ final class FilterBeanNode extends FilterNode {
         final FilterColumn fc = field.getAnnotation(FilterColumn.class);
         if (fc != null && !fc.name().isEmpty()) this.column = fc.name();
         final Class type = field.getType();
-        this.array = type.isArray();
-        this.collection = Collection.class.isAssignableFrom(type);
         this.least = fc == null ? 1L : fc.least();
-        this.ignoreCase = fc == null ? true : fc.ignoreCase();
         this.number = (type.isPrimitive() && type != boolean.class) || Number.class.isAssignableFrom(type);
         this.string = CharSequence.class.isAssignableFrom(type);
 
         FilterExpress exp = fc == null ? null : fc.express();
-        if (this.array || this.collection) {
+        if (type.isArray() || Collection.class.isAssignableFrom(type)) {
             if (Range.class.isAssignableFrom(type.getComponentType())) {
                 if (AND != exp) exp = OR;
             } else {
@@ -208,9 +199,6 @@ final class FilterBeanNode extends FilterNode {
         newnode.byjoinColumn = this.byjoinColumn;
         newnode.foreignAttribute = this.foreignAttribute;
         newnode.columnAttribute = this.columnAttribute;
-        newnode.array = this.array;
-        newnode.collection = this.collection;
-        newnode.ignoreCase = this.ignoreCase;
         newnode.least = this.least;
         newnode.number = this.number;
         newnode.string = this.string;
@@ -226,9 +214,6 @@ final class FilterBeanNode extends FilterNode {
             this.byjoinColumn = beanNode.byjoinColumn;
             this.foreignAttribute = beanNode.foreignAttribute;
             this.columnAttribute = beanNode.columnAttribute;
-            this.array = beanNode.array;
-            this.collection = beanNode.collection;
-            this.ignoreCase = beanNode.ignoreCase;
             this.least = beanNode.least;
             this.number = beanNode.number;
             this.string = beanNode.string;
@@ -238,9 +223,8 @@ final class FilterBeanNode extends FilterNode {
     @Override
     protected <T> CharSequence createSQLJoin(final EntityInfo<T> info) {
         if (joinSQL == null) return null;
-        return new StringBuilder(joinSQL);
+        return joinSQL;
     }
-
 
     @Override
     protected <T> Predicate<T> createPredicate(final EntityCache<T> cache, FilterBean bean) {
