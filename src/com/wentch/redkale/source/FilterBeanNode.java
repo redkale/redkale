@@ -155,6 +155,8 @@ final class FilterBeanNode extends FilterNode {
 
     private Attribute columnAttribute;
 
+    private String tabalis;
+
     private long least;
 
     private boolean string;
@@ -163,7 +165,7 @@ final class FilterBeanNode extends FilterNode {
 
     protected FilterBeanNode(String col, boolean sign, Attribute beanAttr) {
         this.column = col;
-        this.and = sign;
+        this.or = sign;
         this.beanAttribute = beanAttr;
     }
 
@@ -191,8 +193,13 @@ final class FilterBeanNode extends FilterNode {
     }
 
     @Override
+    protected String getTabalis() {
+        return tabalis;
+    }
+
+    @Override
     protected void append(FilterNode node, boolean sign) {
-        FilterBeanNode newnode = new FilterBeanNode(this.column, this.and, this.beanAttribute);
+        FilterBeanNode newnode = new FilterBeanNode(this.column, this.or, this.beanAttribute);
         newnode.express = this.express;
         newnode.nodes = this.nodes;
         newnode.foreignEntity = this.foreignEntity;
@@ -205,7 +212,7 @@ final class FilterBeanNode extends FilterNode {
         this.nodes = new FilterNode[]{newnode};
         this.column = node.column;
         this.express = node.express;
-        this.and = sign;
+        this.or = sign;
         this.setValue(node.getValue());
         if (node instanceof FilterBeanNode) {
             FilterBeanNode beanNode = ((FilterBeanNode) node);
@@ -240,18 +247,7 @@ final class FilterBeanNode extends FilterNode {
                     if (f == null) continue;
                     final Predicate<T> one = result;
                     final Predicate<T> two = f;
-                    result = (result == null) ? f : (and ? new Predicate<T>() {
-
-                        @Override
-                        public boolean test(T t) {
-                            return one.test(t) && two.test(t);
-                        }
-
-                        @Override
-                        public String toString() {
-                            return "(" + one + " AND " + two + ")";
-                        }
-                    } : new Predicate<T>() {
+                    result = (result == null) ? f : (or ? new Predicate<T>() {
 
                         @Override
                         public boolean test(T t) {
@@ -261,6 +257,17 @@ final class FilterBeanNode extends FilterNode {
                         @Override
                         public String toString() {
                             return "(" + one + " OR " + two + ")";
+                        }
+                    } : new Predicate<T>() {
+
+                        @Override
+                        public boolean test(T t) {
+                            return one.test(t) && two.test(t);
+                        }
+
+                        @Override
+                        public String toString() {
+                            return "(" + one + " AND " + two + ")";
                         }
                     });
                 } else {
@@ -290,18 +297,7 @@ final class FilterBeanNode extends FilterNode {
             };
             final Predicate<T> one = result;
             final Predicate<T> two = f;
-            result = (result == null) ? f : (and ? new Predicate<T>() {
-
-                @Override
-                public boolean test(T t) {
-                    return one.test(t) && two.test(t);
-                }
-
-                @Override
-                public String toString() {
-                    return "(" + one + " AND " + two + ")";
-                }
-            } : new Predicate<T>() {
+            result = (result == null) ? f : (or ? new Predicate<T>() {
 
                 @Override
                 public boolean test(T t) {
@@ -311,6 +307,17 @@ final class FilterBeanNode extends FilterNode {
                 @Override
                 public String toString() {
                     return "(" + one + " OR " + two + ")";
+                }
+            } : new Predicate<T>() {
+
+                @Override
+                public boolean test(T t) {
+                    return one.test(t) && two.test(t);
+                }
+
+                @Override
+                public String toString() {
+                    return "(" + one + " AND " + two + ")";
                 }
             });
         }
@@ -324,12 +331,12 @@ final class FilterBeanNode extends FilterNode {
 
             @Override
             public boolean test(T t) {
-                return and;
+                return or;
             }
 
             @Override
             public String toString() {
-                return "" + and;
+                return "" + or;
             }
         } : super.createElementPredicate(cache, this.columnAttribute, bean);
         if (filter == null) return;
@@ -339,18 +346,7 @@ final class FilterBeanNode extends FilterNode {
         } else {
             final Predicate<T> one = p;
             final Predicate<T> two = filter;
-            p = and ? new Predicate<T>() {
-
-                @Override
-                public boolean test(T t) {
-                    return one.test(t) && two.test(t);
-                }
-
-                @Override
-                public String toString() {
-                    return "(" + one + " AND " + two + ")";
-                }
-            } : new Predicate<T>() {
+            p = or ? new Predicate<T>() {
 
                 @Override
                 public boolean test(T t) {
@@ -360,6 +356,17 @@ final class FilterBeanNode extends FilterNode {
                 @Override
                 public String toString() {
                     return "(" + one + " OR " + two + ")";
+                }
+            } : new Predicate<T>() {
+
+                @Override
+                public boolean test(T t) {
+                    return one.test(t) && two.test(t);
+                }
+
+                @Override
+                public String toString() {
+                    return "(" + one + " AND " + two + ")";
                 }
             };
             foreign.put(foreignEntity, p);

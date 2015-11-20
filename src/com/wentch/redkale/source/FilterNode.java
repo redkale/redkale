@@ -29,8 +29,6 @@ public class FilterNode {
         class2.put(Double.class, double.class);
     }
 
-    protected String tabalis;
-
     protected String column;
 
     protected FilterExpress express;
@@ -38,7 +36,7 @@ public class FilterNode {
     protected Serializable value;
 
     //----------------------------------------------
-    protected boolean and = true;
+    protected boolean or;
 
     protected FilterNode[] nodes;
 
@@ -64,7 +62,7 @@ public class FilterNode {
     }
 
     public final FilterNode and(FilterNode node) {
-        return any(node, true);
+        return any(node, false);
     }
 
     public final FilterNode and(String column, Serializable value) {
@@ -76,7 +74,7 @@ public class FilterNode {
     }
 
     public final FilterNode or(FilterNode node) {
-        return any(node, false);
+        return any(node, true);
     }
 
     public final FilterNode or(String column, Serializable value) {
@@ -97,10 +95,10 @@ public class FilterNode {
         }
         if (nodes == null) {
             nodes = new FilterNode[]{node};
-            this.and = sign;
+            this.or = sign;
             return this;
         }
-        if (and == sign) {
+        if (or == sign) {
             FilterNode[] newsiblings = new FilterNode[nodes.length + 1];
             System.arraycopy(nodes, 0, newsiblings, 0, nodes.length);
             newsiblings[nodes.length] = node;
@@ -119,13 +117,12 @@ public class FilterNode {
      */
     protected void append(FilterNode node, boolean sign) {
         FilterNode newnode = new FilterNode(this.column, this.express, this.value);
-        newnode.and = this.and;
+        newnode.or = this.or;
         newnode.nodes = this.nodes;
         this.nodes = new FilterNode[]{newnode, node};
-        this.tabalis = null;
         this.column = null;
         this.express = null;
-        this.and = sign;
+        this.or = sign;
         this.value = null;
     }
 
@@ -147,6 +144,15 @@ public class FilterNode {
      * @return
      */
     protected <T> CharSequence createSQLJoin(final EntityInfo<T> info) {
+        return null;
+    }
+
+    /**
+     * 该方法需要重载
+     *
+     * @return
+     */
+    protected String getTabalis() {
         return null;
     }
 
@@ -180,7 +186,7 @@ public class FilterNode {
         for (FilterNode node : this.nodes) {
             CharSequence f = node.createSQLExpress(info, bean);
             if (f == null || f.length() < 3) continue;
-            if (more) rs.append(and ? " AND " : " OR ");
+            if (more) rs.append(or ? " OR " : " AND ");
             rs.append(f);
             more = true;
         }
@@ -191,6 +197,7 @@ public class FilterNode {
 
     protected final <T> CharSequence createElementSQLExpress(final EntityInfo<T> info, final FilterBean bean) {
         if (column == null) return null;
+        final String tabalis = getTabalis();
         if (express == ISNULL || express == ISNOTNULL) {
             StringBuilder sb = new StringBuilder();
             if (tabalis != null) sb.append(tabalis).append('.');
@@ -231,18 +238,7 @@ public class FilterNode {
             if (f == null) continue;
             final Predicate<T> one = filter;
             final Predicate<T> two = f;
-            filter = (filter == null) ? f : (and ? new Predicate<T>() {
-
-                @Override
-                public boolean test(T t) {
-                    return one.test(t) && two.test(t);
-                }
-
-                @Override
-                public String toString() {
-                    return "(" + one + " AND " + two + ")";
-                }
-            } : new Predicate<T>() {
+            filter = (filter == null) ? f : (or ? new Predicate<T>() {
 
                 @Override
                 public boolean test(T t) {
@@ -252,6 +248,17 @@ public class FilterNode {
                 @Override
                 public String toString() {
                     return "(" + one + " OR " + two + ")";
+                }
+            } : new Predicate<T>() {
+
+                @Override
+                public boolean test(T t) {
+                    return one.test(t) && two.test(t);
+                }
+
+                @Override
+                public String toString() {
+                    return "(" + one + " AND " + two + ")";
                 }
             });
         }
@@ -809,7 +816,7 @@ public class FilterNode {
             for (FilterNode node : this.nodes) {
                 String s = node.toString();
                 if (s.isEmpty()) continue;
-                if (sb.length() > 0) sb.append(and ? " AND " : " OR ");
+                if (sb.length() > 0) sb.append(or ? " OR " : " AND ");
                 sb.append(s);
             }
             if (more) sb.append(')');
@@ -893,20 +900,12 @@ public class FilterNode {
         this.value = value;
     }
 
-    public final boolean isAnd() {
-        return and;
+    public final boolean isOr() {
+        return or;
     }
 
-    public final void setAnd(boolean and) {
-        this.and = and;
-    }
-
-    public final String getTabalis() {
-        return tabalis;
-    }
-
-    public final void setTabalis(String tabalis) {
-        this.tabalis = tabalis;
+    public final void setOr(boolean or) {
+        this.or = or;
     }
 
     public final String getColumn() {
