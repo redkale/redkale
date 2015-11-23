@@ -156,8 +156,24 @@ public abstract class NodeServer {
                 DataSource source = DataSourceFactory.create(rs.name());
                 application.sources.add(source);
                 regFactory.register(rs.name(), DataSource.class, source);
+                List<Transport> sameGroupTransports = sncpSameGroupTransports;
+                List<Transport> diffGroupTransports = sncpDiffGroupTransports;
+                try {
+                    Field ts = src.getClass().getDeclaredField("_sameGroupTransports");
+                    ts.setAccessible(true);
+                    Transport[] lts = (Transport[]) ts.get(src);
+                    sameGroupTransports = Arrays.asList(lts);
+
+                    ts = src.getClass().getDeclaredField("_diffGroupTransports");
+                    ts.setAccessible(true);
+                    lts = (Transport[]) ts.get(src);
+                    diffGroupTransports = Arrays.asList(lts);
+                } catch (Exception e) {
+                    logger.log(Level.WARNING, "DataSource inject error " + src, e);
+                    //src 并非 LocaleService 对象
+                }
                 if (factory.find(rs.name(), DataCacheListener.class) == null) {
-                    Service cacheListenerService = Sncp.createLocalService(rs.name(), getExecutor(), DataCacheListenerService.class, this.sncpAddress, sncpDefaultGroups, sncpSameGroupTransports, sncpDiffGroupTransports);
+                    Service cacheListenerService = Sncp.createLocalService(rs.name(), getExecutor(), DataCacheListenerService.class, this.sncpAddress, sncpDefaultGroups, sameGroupTransports, diffGroupTransports);
                     regFactory.register(rs.name(), DataCacheListener.class, cacheListenerService);
                     ServiceWrapper wrapper = new ServiceWrapper(DataCacheListenerService.class, cacheListenerService, rs.name(), sncpGroup, sncpDefaultGroups, null);
                     localServiceWrappers.add(wrapper);
