@@ -118,7 +118,7 @@ final class FilterBeanNode extends FilterNode {
                         if (node == null) {
                             nodemap.put(key, newnode);
                         } else {
-                            node.any(newnode, !key.contains("[OR]"));
+                            node.any(newnode, key.contains("[OR]"));
                         }
                     }
                 }
