@@ -25,8 +25,6 @@ import java.util.logging.*;
  */
 public class SncpTest {
 
-    private static final String protocol = "TCP";// Sncp.DEFAULT_PROTOCOL;
-
     private static final String serviceName = "";
 
     private static final String myhost = Utility.localInetAddress().getHostAddress();
@@ -61,7 +59,7 @@ public class SncpTest {
         Set<InetSocketAddress> set = new LinkedHashSet<>();
         set.add(addr);
         if (port2 > 0) set.add(new InetSocketAddress(myhost, port2));
-        final Transport transport = new Transport("", protocol, WatchFactory.root(), 50, set);
+        final Transport transport = new Transport("", WatchFactory.root(), 50, set);
         final SncpTestService service = Sncp.createRemoteService(serviceName, null, SncpTestService.class, null, new LinkedHashSet<>(), transport);
         ResourceFactory.root().inject(service);
 
@@ -81,7 +79,7 @@ public class SncpTest {
                 @Override
                 public void run() {
                     try {
-                        Thread.sleep(k); 
+                        Thread.sleep(k);
                         SncpTestBean bean = new SncpTestBean();
                         bean.setId(k);
                         bean.setContent("数据: " + (k < 10 ? "0" : "") + k);
@@ -94,7 +92,7 @@ public class SncpTest {
 
                         //service.queryResult(bean);
                         service.updateBean(bean);
-                    }catch(Exception e){
+                    } catch (Exception e) {
                         e.printStackTrace();
                     } finally {
                         long a = ai.incrementAndGet();
@@ -116,10 +114,10 @@ public class SncpTest {
             @Override
             public void run() {
                 try {
-                    SncpServer server = new SncpServer(protocol);
+                    SncpServer server = new SncpServer();
                     Set<InetSocketAddress> set = new LinkedHashSet<>();
                     if (port2 > 0) set.add(new InetSocketAddress(myhost, port2));
-                    Transport transport = new Transport("", protocol, WatchFactory.root(), 50, set);
+                    Transport transport = new Transport("", WatchFactory.root(), 50, set);
                     List<Transport> sameTransports = new ArrayList<>();
                     if (port2 > 0) sameTransports.add(transport);
                     SncpTestService service = Sncp.createLocalService("", null, SncpTestService.class, addr, new LinkedHashSet<>(), sameTransports, null);
@@ -147,10 +145,10 @@ public class SncpTest {
             @Override
             public void run() {
                 try {
-                    SncpServer server = new SncpServer(protocol);
+                    SncpServer server = new SncpServer();
                     Set<InetSocketAddress> set = new LinkedHashSet<>();
                     set.add(new InetSocketAddress(myhost, port));
-                    Transport transport = new Transport("", protocol, WatchFactory.root(), 50, set);
+                    Transport transport = new Transport("", WatchFactory.root(), 50, set);
                     List<Transport> sameTransports = new ArrayList<>();
                     sameTransports.add(transport);
                     Service service = Sncp.createLocalService("", null, SncpTestService.class, addr, new LinkedHashSet<>(), sameTransports, null);
