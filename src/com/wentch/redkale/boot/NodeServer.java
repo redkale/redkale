@@ -170,7 +170,7 @@ public abstract class NodeServer {
                     diffGroupTransports = Arrays.asList(lts);
                 } catch (Exception e) {
                     logger.log(Level.WARNING, "DataSource inject error " + src, e);
-                    //src 并非 LocaleService 对象
+                    //src 并非 LocalService 对象
                 }
                 if (factory.find(rs.name(), DataCacheListener.class) == null) {
                     Service cacheListenerService = Sncp.createLocalService(rs.name(), getExecutor(), DataCacheListenerService.class, this.sncpAddress, sncpDefaultGroups, sameGroupTransports, diffGroupTransports);
