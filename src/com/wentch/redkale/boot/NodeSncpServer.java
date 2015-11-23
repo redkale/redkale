@@ -27,13 +27,7 @@ public final class NodeSncpServer extends NodeServer {
     }
 
     private static Server createServer(Application application, AnyValue serconf) {
-        String proto = serconf.getValue("protocol", "");
-        String subprotocol = Sncp.DEFAULT_PROTOCOL;
-        int pos = proto.indexOf('.');
-        if (pos > 0) {
-            subprotocol = proto.substring(pos + 1);
-        }
-        return new SncpServer(application.getStartTime(), subprotocol, application.getWatchFactory());
+        return new SncpServer(application.getStartTime(), application.getWatchFactory());
     }
 
     @Override

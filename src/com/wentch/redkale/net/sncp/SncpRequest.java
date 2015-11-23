@@ -7,7 +7,6 @@ package com.wentch.redkale.net.sncp;
 
 import com.wentch.redkale.convert.bson.*;
 import com.wentch.redkale.net.*;
-import com.wentch.redkale.net.sncp.SncpContext.RequestEntry;
 import com.wentch.redkale.util.*;
 import java.net.*;
 import java.nio.*;
@@ -74,41 +73,15 @@ public final class SncpRequest extends Request {
             return -1;
         }
         //---------------------body----------------------------------
-        if (this.channel.isTCP()) { // TCP模式， 不管数据包大小 只传一帧数据
-            this.body = new byte[this.bodylength];
-            int len = Math.min(this.bodylength, buffer.remaining());
-            buffer.get(body, 0, len);
-            this.bodyoffset = len;
-            return bodylength - len;
-        }
-        //--------------------- UDP 模式 ----------------------------
-        if (this.bodylength == this.framelength) {  //只有一帧的数据
-            if (this.framelength > buffer.remaining()) { //缺失一部分数据 
-                throw new RuntimeException(SncpRequest.class.getSimpleName() + " data need " + this.framelength + " bytes, but only " + buffer.remaining() + " bytes");
-            }
-            this.body = new byte[this.framelength];
-            buffer.get(body);
-            return 0;
-        }
-        //多帧数据
-        final SncpContext scontext = (SncpContext) this.context;
-        RequestEntry entry = scontext.getRequestEntity(this.seqid);
-        if (entry == null) entry = scontext.addRequestEntity(this.seqid, new byte[this.bodylength]);
-        entry.add(buffer, this.bodyoffset);
-
-        if (entry.isCompleted()) {  //数据读取完毕
-            this.body = entry.body;
-            scontext.removeRequestEntity(this.seqid);
-            return 0;
-        } else {
-            scontext.expireRequestEntry(10 * 1000); //10秒过期
-        }
-        if (this.channel.isTCP()) return this.bodylength - this.framelength;
-        return Integer.MIN_VALUE; //多帧数据返回 Integer.MIN_VALUE
+        this.body = new byte[this.bodylength];
+        int len = Math.min(this.bodylength, buffer.remaining());
+        buffer.get(body, 0, len);
+        this.bodyoffset = len;
+        return bodylength - len;
     }
 
     @Override
-    protected int readBody(ByteBuffer buffer) { // 只有 TCP 模式会调用此方法
+    protected int readBody(ByteBuffer buffer) {
         final int framelen = buffer.remaining();
         buffer.get(this.body, this.bodyoffset, framelen);
         this.bodyoffset += framelen;
@@ -117,11 +90,7 @@ public final class SncpRequest extends Request {
 
     @Override
     protected void prepare() {
-        this.keepAlive = this.channel.isTCP();
-    }
-
-    protected boolean isTCP() {
-        return this.channel.isTCP();
+        this.keepAlive = true;
     }
 
     @Override

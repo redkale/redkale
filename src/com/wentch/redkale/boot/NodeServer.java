@@ -47,7 +47,7 @@ public abstract class NodeServer {
 
     private String sncpGroup = null;  //当前Server的SNCP协议的组
 
-    private String nodeProtocol = Sncp.DEFAULT_PROTOCOL;
+    private String nodeProtocol = Transport.DEFAULT_PROTOCOL;
 
     private InetSocketAddress sncpAddress; //HttpServer中的sncpAddress 为所属group对应的SncpServer, 为null表示只是单节点，没有分布式结构
 

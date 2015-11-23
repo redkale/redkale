@@ -181,7 +181,7 @@ public final class SncpClient {
     }
 
     public <T> T remote(final BsonConvert convert, Transport transport, final int index, final Object... params) {
-        Future<byte[]> future = transport.isTCP() ? remoteTCP(convert, transport, actions[index], params) : remoteUDP(convert, transport, actions[index], params);
+        Future<byte[]> future = remote(convert, transport, actions[index], params);
         try {
             return convert.convertFrom(actions[index].resultTypes, future.get(5, TimeUnit.SECONDS));
         } catch (InterruptedException | ExecutionException | TimeoutException e) {
@@ -193,11 +193,7 @@ public final class SncpClient {
     public <T> void remote(final BsonConvert convert, Transport[] transports, boolean run, final int index, final Object... params) {
         if (!run) return;
         for (Transport transport : transports) {
-            if (transport.isTCP()) {
-                remoteTCP(convert, transport, actions[index], params);
-            } else {
-                remoteUDP(convert, transport, actions[index], params);
-            }
+            remote(convert, transport, actions[index], params);
         }
     }
 
@@ -206,94 +202,17 @@ public final class SncpClient {
         if (executor != null) {
             executor.accept(() -> {
                 for (Transport transport : transports) {
-                    if (transport.isTCP()) {
-                        remoteTCP(convert, transport, actions[index], params);
-                    } else {
-                        remoteUDP(convert, transport, actions[index], params);
-                    }
+                    remote(convert, transport, actions[index], params);
                 }
             });
         } else {
             for (Transport transport : transports) {
-                if (transport.isTCP()) {
-                    remoteTCP(convert, transport, actions[index], params);
-                } else {
-                    remoteUDP(convert, transport, actions[index], params);
-                }
+                remote(convert, transport, actions[index], params);
             }
         }
     }
 
-    private Future<byte[]> remoteUDP(final BsonConvert convert, final Transport transport, final SncpAction action, final Object... params) {
-        Type[] myparamtypes = action.paramTypes;
-        final Supplier<ByteBuffer> supplier = transport.getBufferSupplier();
-        final BsonWriter bw = convert.pollBsonWriter(() -> supplier.get().put(DEFAULT_HEADER)); // 将head写入
-        for (int i = 0; i < params.length; i++) {
-            convert.convertTo(bw, myparamtypes[i], params[i]);
-        }
-        final SocketAddress addr = action.addressParamIndex >= 0 ? (SocketAddress) params[action.addressParamIndex] : null;
-        final AsyncConnection conn = transport.pollConnection(addr);
-        if (conn == null || !conn.isOpen()) {
-            logger.log(Level.SEVERE, action.method + " sncp (params: " + jsonConvert.convertTo(params) + ") cannot connect " + (conn == null ? addr : conn.getRemoteAddress()));
-            throw new RuntimeException("sncp " + (conn == null ? addr : conn.getRemoteAddress()) + " cannot connect");
-        }
-
-        final int reqBodyLength = bw.count(); //body总长度
-        final long seqid = System.nanoTime();
-        final DLong actionid = action.actionid;
-        final int readto = conn.getReadTimeoutSecond();
-        final int writeto = conn.getWriteTimeoutSecond();
-        final ByteBuffer buffer = transport.pollBuffer();
-        try {
-            //------------------------------ 发送请求 ---------------------------------------------------
-            int pos = 0;
-            for (ByteBuffer buf : bw.toBuffers()) {
-                int len = buf.remaining() - HEADER_SIZE;
-                fillHeader(buf, seqid, actionid, reqBodyLength, pos, len);
-                pos += len;
-                Thread.sleep(20);
-                conn.write(buf).get(writeto > 0 ? writeto : 3, TimeUnit.SECONDS);
-                transport.offerBuffer(buf);
-            }
-            //------------------------------ 接收响应 ---------------------------------------------------
-            int received = 0;
-            int respBodyLength = 1;
-            byte[] respBody = null;
-            while (received < respBodyLength) {
-                buffer.clear();
-                conn.read(buffer).get(readto > 0 ? readto : 3, TimeUnit.SECONDS);
-                buffer.flip();
-
-                checkResult(seqid, action, buffer);
-                int respbodylen = buffer.getInt();
-                if (respBody == null) {
-                    respBodyLength = respbodylen;
-                    respBody = new byte[respBodyLength];
-                }
-                int bodyOffset = buffer.getInt();  // 
-                int frameLength = buffer.getInt();  // 
-                final int retcode = buffer.getInt();
-                if (retcode != 0) {
-                    logger.log(Level.SEVERE, action.method + " sncp (params: " + jsonConvert.convertTo(params) + ") deal error (retcode=" + retcode + ", retinfo=" + SncpResponse.getRetCodeInfo(retcode) + ")");
-                    throw new RuntimeException("remote service(" + action.method + ") deal error (retcode=" + retcode + ", retinfo=" + SncpResponse.getRetCodeInfo(retcode) + ")");
-                }
-                int len = Math.min(buffer.remaining(), frameLength);
-                buffer.get(respBody, bodyOffset, len);
-                received += len;
-            }
-            return new SncpFuture<>(respBody);
-        } catch (RuntimeException e) {
-            throw e;
-        } catch (Exception ex) {
-            logger.log(Level.SEVERE, action.method + " sncp (params: " + jsonConvert.convertTo(params) + ") udp remote error", ex);
-            throw new RuntimeException(ex);
-        } finally {
-            transport.offerBuffer(buffer);
-            transport.offerConnection(true, conn);
-        }
-    }
-
-    private Future<byte[]> remoteTCP(final BsonConvert convert, final Transport transport, final SncpAction action, final Object... params) {
+    private Future<byte[]> remote(final BsonConvert convert, final Transport transport, final SncpAction action, final Object... params) {
         Type[] myparamtypes = action.paramTypes;
         final BsonWriter writer = convert.pollBsonWriter(transport.getBufferSupplier()); // 将head写入
         writer.writeTo(DEFAULT_HEADER);

@@ -20,12 +20,12 @@ import java.util.concurrent.atomic.*;
  */
 public final class SncpServer extends Server {
 
-    public SncpServer(String protocol) {
-        this(System.currentTimeMillis(), protocol, null);
+    public SncpServer() {
+        this(System.currentTimeMillis(), null);
     }
 
-    public SncpServer(long serverStartTime, String protocol, final WatchFactory watch) {
-        super(serverStartTime, protocol, new SncpPrepareServlet(), watch);
+    public SncpServer(long serverStartTime, final WatchFactory watch) {
+        super(serverStartTime, "TCP", new SncpPrepareServlet(), watch);
     }
 
     @Override

@@ -22,6 +22,8 @@ import java.util.function.*;
  */
 public final class Transport {
 
+    public static final String DEFAULT_PROTOCOL = "TCP";
+
     protected static final int MAX_POOL_LIMIT = Runtime.getRuntime().availableProcessors() * 16;
 
     protected final String name;
@@ -44,6 +46,10 @@ public final class Transport {
 
     public Transport(Transport transport, InetSocketAddress localAddress, Collection<Transport> transports) {
         this(transport.name, transport.protocol, null, transport.bufferPoolSize, parse(localAddress, transports));
+    }
+
+    public Transport(String name, WatchFactory watch, int bufferPoolSize, Collection<InetSocketAddress> addresses) {
+        this(name, DEFAULT_PROTOCOL, watch, bufferPoolSize, addresses);
     }
 
     public Transport(String name, String protocol, WatchFactory watch, int bufferPoolSize, Collection<InetSocketAddress> addresses) {

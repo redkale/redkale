@@ -85,14 +85,8 @@ public final class SncpDynServlet extends SncpServlet {
 
     @Override
     public void execute(SncpRequest request, SncpResponse response) throws IOException {
-        final boolean tcp = request.isTCP();
         if (bufferSupplier == null) {
-            if (tcp) {
-                bufferSupplier = request.getContext().getBufferSupplier();
-            } else { //UDP 需要分包
-                final Supplier<ByteBuffer> supplier = request.getContext().getBufferSupplier();
-                bufferSupplier = () -> supplier.get().put(DEFAULT_HEADER);
-            }
+            bufferSupplier = request.getContext().getBufferSupplier();
         }
         SncpServletAction action = actions.get(request.getActionid());
         //if (finest) logger.log(Level.FINEST, "sncpdyn.execute: " + request + ", " + (action == null ? "null" : action.method));
@@ -100,7 +94,7 @@ public final class SncpDynServlet extends SncpServlet {
             response.finish(SncpResponse.RETCODE_ILLACTIONID, null);  //无效actionid
         } else {
             BsonWriter out = action.convert.pollBsonWriter(bufferSupplier);
-            if (tcp) out.writeTo(DEFAULT_HEADER);
+            out.writeTo(DEFAULT_HEADER);
             BsonReader in = action.convert.pollBsonReader();
             try {
                 in.setBytes(request.getBody());
@@ -130,23 +124,23 @@ public final class SncpDynServlet extends SncpServlet {
         /*
          *
          * public class TestService implements Service {
-         *      public boolean change(TestBean bean, String name, int id) {
+         * public boolean change(TestBean bean, String name, int id) {
          *
-         *      }
+         * }
          * }
          *
          * public class DynActionTestService_change extends SncpServletAction {
          *
-         *      public TestService service;
+         * public TestService service;
          *
-         *      @Override
-         *      public void action(final BsonReader in, final BsonWriter out) throws Throwable {
-         *          TestBean arg1 = convert.convertFrom(in, paramTypes[1]);
-         *          String arg2 = convert.convertFrom(in, paramTypes[2]);
-         *          int arg3 = convert.convertFrom(in, paramTypes[3]);
-         *          Object rs = service.change(arg1, arg2, arg3);
-         *          convert.convertTo(out, paramTypes[0], rs);
-         *      }
+         * @Override
+         * public void action(final BsonReader in, final BsonWriter out) throws Throwable {
+         * TestBean arg1 = convert.convertFrom(in, paramTypes[1]);
+         * String arg2 = convert.convertFrom(in, paramTypes[2]);
+         * int arg3 = convert.convertFrom(in, paramTypes[3]);
+         * Object rs = service.change(arg1, arg2, arg3);
+         * convert.convertTo(out, paramTypes[0], rs);
+         * }
          * }
          */
         /**

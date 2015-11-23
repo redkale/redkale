@@ -269,7 +269,7 @@ public final class Application {
 
             for (AnyValue conf : resources.getAnyValues("group")) {
                 final String group = conf.getValue("name", "");
-                String protocol = conf.getValue("protocol", Sncp.DEFAULT_PROTOCOL).toUpperCase();
+                String protocol = conf.getValue("protocol", Transport.DEFAULT_PROTOCOL).toUpperCase();
                 if (!"TCP".equalsIgnoreCase(protocol) && !"UDP".equalsIgnoreCase(protocol)) {
                     throw new RuntimeException("Not supported Transport Protocol " + conf.getValue("protocol"));
                 }
