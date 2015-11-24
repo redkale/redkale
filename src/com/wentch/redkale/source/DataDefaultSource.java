@@ -525,7 +525,7 @@ public final class DataDefaultSource implements DataSource, Nameable {
 
     public <T> void insertCache(Class<T> clazz, T... values) {
         if (values.length == 0) return;
-        final EntityInfo<T> info = EntityInfo.load(clazz, this.nodeid, this.cacheForbidden, fullloader);
+        final EntityInfo<T> info = loadEntityInfo(clazz); 
         final EntityCache<T> cache = info.getCache();
         if (cache == null) return;
         for (T value : values) {
