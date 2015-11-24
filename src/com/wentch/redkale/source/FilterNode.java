@@ -204,7 +204,7 @@ public class FilterNode {
             sb.append(info.getSQLColumn(column)).append(' ').append(express.value());
             return sb;
         }
-        final StringBuilder val = formatToString(express, getElementValue(bean));
+        final CharSequence val = formatToString(express, getElementValue(bean));
         if (val == null) return null;
         StringBuilder sb = new StringBuilder(32);
         if (tabalis != null) sb.append(tabalis).append('.');
@@ -824,14 +824,14 @@ public class FilterNode {
         return sb.toString();
     }
 
-    protected static String formatToString(Object value) {
-        StringBuilder sb = formatToString(null, value);
+    protected static CharSequence formatToString(Object value) {
+        CharSequence sb = formatToString(null, value);
         return sb == null ? null : sb.toString();
     }
 
-    private static StringBuilder formatToString(FilterExpress express, Object value) {
+    private static CharSequence formatToString(FilterExpress express, Object value) {
         if (value == null) return null;
-        if (value instanceof Number) return new StringBuilder().append(value);
+        if (value instanceof Number) return String.valueOf(value);
         if (value instanceof CharSequence) {
             if (express == LIKE || express == NOTLIKE) {
                 value = "%" + value + '%';
@@ -889,7 +889,7 @@ public class FilterNode {
             }
             return sb.append(')');
         }
-        return new StringBuilder().append(value);
+        return String.valueOf(value);
     }
 
     public final Serializable getValue() {

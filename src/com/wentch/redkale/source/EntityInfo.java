@@ -44,7 +44,9 @@ public final class EntityInfo<T> {
 
     //key是field的name， 不是sql字段。
     //存放所有与数据库对应的字段， 包括主键
-    private final HashMap<String, Attribute<T, Serializable>> attributes = new HashMap<>();
+    private final HashMap<String, Attribute<T, Serializable>> attributeMap = new HashMap<>();
+
+    final Attribute<T, Serializable>[] attributes;
 
     //key是field的name， value是Column的别名，即数据库表的字段名
     //只有field.name 与 Column.name不同才存放在aliasmap里.
@@ -187,11 +189,12 @@ public final class EntityInfo<T> {
                 }
                 queryattrs.add(attr);
                 fields.add(fieldname);
-                attributes.put(fieldname, attr);
+                attributeMap.put(fieldname, attr);
             }
         } while ((cltmp = cltmp.getSuperclass()) != Object.class);
         this.primary = idAttr0;
         this.aliasmap = aliasmap0;
+        this.attributes = attributeMap.values().toArray(new Attribute[attributeMap.size()]);
         this.queryAttributes = queryattrs.toArray(new Attribute[queryattrs.size()]);
         this.insertAttributes = insertattrs.toArray(new Attribute[insertattrs.size()]);
         this.updateAttributes = updateattrs.toArray(new Attribute[updateattrs.size()]);
@@ -270,12 +273,12 @@ public final class EntityInfo<T> {
     }
 
     public void forEachAttribute(BiConsumer<String, Attribute<T, Serializable>> action) {
-        this.attributes.forEach(action);
+        this.attributeMap.forEach(action);
     }
 
     public Attribute<T, Serializable> getAttribute(String fieldname) {
         if (fieldname == null) return null;
-        return this.attributes.get(fieldname);
+        return this.attributeMap.get(fieldname);
     }
 
     public Attribute<T, Serializable> getUpdateAttribute(String fieldname) {
@@ -325,14 +328,14 @@ public final class EntityInfo<T> {
     }
 
     public Map<String, Attribute<T, Serializable>> getAttributes() {
-        return attributes;
+        return attributeMap;
     }
 
     public boolean isLoggable(Level l) {
         return l.intValue() >= this.logLevel;
     }
 
-    public T getValue(SelectColumn sels, ResultSet set) throws SQLException {
+    public T getValue(final SelectColumn sels, final ResultSet set) throws SQLException {
         T obj = creator.create();
         for (Attribute<T, Serializable> attr : queryAttributes) {
             if (sels == null || sels.validate(attr.field())) {

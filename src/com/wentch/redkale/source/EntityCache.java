@@ -109,6 +109,18 @@ public final class EntityCache<T> {
         return rs == null ? null : (needcopy ? reproduce.copy(this.creator.create(), rs) : rs);
     }
 
+    public T find(final SelectColumn selects, final Serializable id) {
+        if (id == null) return null;
+        T rs = map.get(id);
+        if (rs == null) return null;
+        if (selects == null) return (needcopy ? reproduce.copy(this.creator.create(), rs) : rs);
+        T t = this.creator.create();
+        for (Attribute attr : this.info.attributes) {
+            if (selects.validate(attr.field())) attr.set(t, attr.get(rs));
+        }
+        return t;
+    }
+
     public boolean exists(final Predicate<T> filter) {
         return (filter != null) && this.list.stream().filter(filter).findFirst().isPresent();
     }

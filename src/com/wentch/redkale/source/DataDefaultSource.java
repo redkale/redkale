@@ -448,7 +448,7 @@ public final class DataDefaultSource implements DataSource, Nameable {
                 } else {
                     char[] sqlchars = sql.toCharArray();
                     sqls = new String[values.length];
-                    String[] ps = new String[attrs.length];
+                    CharSequence[] ps = new CharSequence[attrs.length];
                     int index = 0;
                     for (final T value : values) {
                         int i = 0;
@@ -525,7 +525,7 @@ public final class DataDefaultSource implements DataSource, Nameable {
 
     public <T> void insertCache(Class<T> clazz, T... values) {
         if (values.length == 0) return;
-        final EntityInfo<T> info = loadEntityInfo(clazz); 
+        final EntityInfo<T> info = loadEntityInfo(clazz);
         final EntityCache<T> cache = info.getCache();
         if (cache == null) return;
         for (T value : values) {
@@ -721,7 +721,7 @@ public final class DataDefaultSource implements DataSource, Nameable {
                 } else {
                     char[] sqlchars = info.updateSQL.toCharArray();
                     sqls = new String[values.length];
-                    String[] ps = new String[attrs.length];
+                    CharSequence[] ps = new CharSequence[attrs.length];
                     int index = 0;
                     for (final T value : values) {
                         int i = 0;
@@ -1175,26 +1175,44 @@ public final class DataDefaultSource implements DataSource, Nameable {
 
     @Override
     public <T> T find(Class<T> clazz, final SelectColumn selects, Serializable pk) {
-        String column = loadEntityInfo(clazz).getPrimary().field();
-        Sheet<T> sheet = querySheet(clazz, selects, FLIPPER_ONE, FilterNode.create(column, pk));
-        return sheet.isEmpty() ? null : sheet.list().get(0);
+        final EntityInfo<T> info = loadEntityInfo(clazz);
+        final EntityCache<T> cache = info.getCache();
+        if (cache != null && cache.isFullLoaded()) return cache.find(selects, pk);
+
+        final Connection conn = createReadSQLConnection();
+        try {
+            final SelectColumn sels = selects;
+            final String sql = "SELECT * FROM " + info.getTable() + " WHERE " + info.getPrimarySQLColumn() + " = " + formatToString(pk);
+            if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(clazz.getSimpleName() + " find sql=" + sql);
+            final PreparedStatement ps = conn.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+            final ResultSet set = ps.executeQuery();
+            T rs = set.next() ? info.getValue(sels, set) : null;
+            set.close();
+            ps.close();
+            return rs;
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        } finally {
+            closeSQLConnection(conn);
+        }
     }
 
     @Override
-    public <T> T findByColumn(Class<T> clazz, String column, Serializable key) {
-        return find(clazz, FilterNode.create(column, key));
+    public <T> T findByColumn(final Class<T> clazz, final String column, final Serializable key) {
+        List<T> list = queryList(clazz, FLIPPER_ONE, column, key);
+        return list.isEmpty() ? null : list.get(0);
     }
 
     @Override
     public <T> T find(final Class<T> clazz, final FilterBean bean) {
-        Sheet<T> sheet = querySheet(clazz, FLIPPER_ONE, bean);
-        return sheet.isEmpty() ? null : sheet.list().get(0);
+        List<T> list = queryList(clazz, FLIPPER_ONE, bean);
+        return list.isEmpty() ? null : list.get(0);
     }
 
     @Override
     public <T> T find(final Class<T> clazz, final FilterNode node) {
-        Sheet<T> sheet = querySheet(clazz, FLIPPER_ONE, node);
-        return sheet.isEmpty() ? null : sheet.list().get(0);
+        List<T> list = queryList(clazz, FLIPPER_ONE, node);
+        return list.isEmpty() ? null : list.get(0);
     }
 
     @Override
