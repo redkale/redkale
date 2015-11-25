@@ -121,6 +121,55 @@ public final class EntityCache<T> {
         return t;
     }
 
+    public T find(final SelectColumn selects, FilterNode node) {
+        return find(selects, node, null);
+    }
+
+    public T find(final SelectColumn selects, FilterNode node, final FilterBean bean) {
+        if (node == null && bean != null) node = FilterBeanNode.load(bean.getClass());
+        final Predicate<T> filter = node == null ? null : node.createPredicate(this, bean);
+        Stream<T> stream = this.list.stream();
+        if (filter != null) stream = stream.filter(filter);
+        Optional<T> opt = stream.findFirst();
+        if (!opt.isPresent()) return null;
+        if (selects == null) return (needcopy ? reproduce.copy(this.creator.create(), opt.get()) : opt.get());
+        T rs = opt.get();
+        T t = this.creator.create();
+        for (Attribute attr : this.info.attributes) {
+            if (selects.validate(attr.field())) attr.set(t, attr.get(rs));
+        }
+        return t;
+    }
+
+    public boolean exists(Serializable id) {
+        if (id == null) return false;
+        final Class atype = this.primary.type();
+        if (id.getClass() != atype && id instanceof Number) {
+            if (atype == int.class || atype == Integer.class) {
+                id = ((Number) id).intValue();
+            } else if (atype == long.class || atype == Long.class) {
+                id = ((Number) id).longValue();
+            } else if (atype == short.class || atype == Short.class) {
+                id = ((Number) id).shortValue();
+            } else if (atype == float.class || atype == Float.class) {
+                id = ((Number) id).floatValue();
+            } else if (atype == byte.class || atype == Byte.class) {
+                id = ((Number) id).byteValue();
+            } else if (atype == double.class || atype == Double.class) {
+                id = ((Number) id).doubleValue();
+            }
+        }
+        return this.map.containsKey(id);
+    }
+
+    public boolean exists(FilterNode node, final FilterBean bean) {
+        if (node == null && bean != null) node = FilterBeanNode.load(bean.getClass());
+        final Predicate<T> filter = node == null ? null : node.createPredicate(this, bean);
+        Stream<T> stream = this.list.stream();
+        if (filter != null) stream = stream.filter(filter);
+        return stream.findFirst().isPresent();
+    }
+
     public boolean exists(final Predicate<T> filter) {
         return (filter != null) && this.list.stream().filter(filter).findFirst().isPresent();
     }
@@ -376,7 +425,7 @@ public final class EntityCache<T> {
         T rs = this.map.get(id);
         if (rs == null) return rs;
         Number numb = (Number) attr.get(rs);
-        return updateColumnIncrAndOr(id, attr, rs, (numb == null) ? orvalue : (numb.longValue() | orvalue));
+        return updateColumnIncrAndOr(attr, rs, (numb == null) ? orvalue : (numb.longValue() | orvalue));
     }
 
     public <V> T updateColumnAnd(final Serializable id, Attribute<T, V> attr, final long andvalue) {
@@ -384,7 +433,7 @@ public final class EntityCache<T> {
         T rs = this.map.get(id);
         if (rs == null) return rs;
         Number numb = (Number) attr.get(rs);
-        return updateColumnIncrAndOr(id, attr, rs, (numb == null) ? 0 : (numb.longValue() & andvalue));
+        return updateColumnIncrAndOr(attr, rs, (numb == null) ? 0 : (numb.longValue() & andvalue));
     }
 
     public <V> T updateColumnIncrement(final Serializable id, Attribute<T, V> attr, final long incvalue) {
@@ -392,10 +441,10 @@ public final class EntityCache<T> {
         T rs = this.map.get(id);
         if (rs == null) return rs;
         Number numb = (Number) attr.get(rs);
-        return updateColumnIncrAndOr(id, attr, rs, (numb == null) ? incvalue : (numb.longValue() + incvalue));
+        return updateColumnIncrAndOr(attr, rs, (numb == null) ? incvalue : (numb.longValue() + incvalue));
     }
 
-    private <V> T updateColumnIncrAndOr(final Serializable id, Attribute<T, V> attr, final T rs, Number numb) {
+    private <V> T updateColumnIncrAndOr(Attribute<T, V> attr, final T rs, Number numb) {
         final Class ft = attr.type();
         if (ft == int.class || ft == Integer.class) {
             numb = numb.intValue();

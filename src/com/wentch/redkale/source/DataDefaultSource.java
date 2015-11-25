@@ -598,8 +598,7 @@ public final class DataDefaultSource implements DataSource, Nameable {
         if (keys.length == 0) return;
         try {
             if (!info.isVirtualEntity()) {
-                String sql = "DELETE FROM " + info.getTable() + " WHERE " + info.getPrimarySQLColumn()
-                        + " IN " + formatToString(keys);
+                String sql = "DELETE FROM " + info.getTable() + " WHERE " + info.getPrimarySQLColumn() + " IN " + formatToString(keys);
                 if (debug.get()) logger.finest(info.getType().getSimpleName() + " delete sql=" + sql);
                 final Statement stmt = conn.createStatement();
                 stmt.execute(sql);
@@ -1020,8 +1019,7 @@ public final class DataDefaultSource implements DataSource, Nameable {
                 }
             }
             if (!virtual) {
-                String sql = "UPDATE " + info.getTable() + " SET " + setsql
-                        + " WHERE " + info.getPrimarySQLColumn() + " = " + formatToString(id);
+                String sql = "UPDATE " + info.getTable() + " SET " + setsql + " WHERE " + info.getPrimarySQLColumn() + " = " + formatToString(id);
                 if (debug.get()) logger.finest(value.getClass().getSimpleName() + ": " + sql);
                 final Statement stmt = conn.createStatement();
                 stmt.execute(sql);
@@ -1199,35 +1197,101 @@ public final class DataDefaultSource implements DataSource, Nameable {
 
     @Override
     public <T> T findByColumn(final Class<T> clazz, final String column, final Serializable key) {
-        List<T> list = queryList(clazz, FLIPPER_ONE, column, key);
-        return list.isEmpty() ? null : list.get(0);
+        return find(clazz, null, FilterNode.create(column, key), null);
     }
 
     @Override
     public <T> T find(final Class<T> clazz, final FilterBean bean) {
-        List<T> list = queryList(clazz, FLIPPER_ONE, bean);
-        return list.isEmpty() ? null : list.get(0);
+        return find(clazz, null, null, bean);
     }
 
     @Override
     public <T> T find(final Class<T> clazz, final FilterNode node) {
-        List<T> list = queryList(clazz, FLIPPER_ONE, node);
-        return list.isEmpty() ? null : list.get(0);
+        return find(clazz, null, node, null);
+    }
+
+    private <T> T find(final Class<T> clazz, final SelectColumn selects, FilterNode node, final FilterBean bean) {
+        final EntityInfo<T> info = loadEntityInfo(clazz);
+        final EntityCache<T> cache = info.getCache();
+        if (node == null && bean != null) node = loadFilterBeanNode(bean.getClass());
+        if (cache != null && cache.isFullLoaded() && (node == null || node.isCacheUseable())) return cache.find(selects, node, bean);
+
+        final Connection conn = createReadSQLConnection();
+        try {
+            final SelectColumn sels = selects;
+            final CharSequence join = node == null ? null : node.createSQLJoin(info);
+            final CharSequence where = node == null ? null : node.createSQLExpress(info, bean);
+            final String sql = "SELECT a.* FROM " + info.getTable() + " a" + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
+            if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(clazz.getSimpleName() + " find sql=" + sql);
+            final PreparedStatement ps = conn.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+            final ResultSet set = ps.executeQuery();
+            T rs = set.next() ? info.getValue(sels, set) : null;
+            set.close();
+            ps.close();
+            return rs;
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        } finally {
+            closeSQLConnection(conn);
+        }
     }
 
     @Override
     public <T> boolean exists(Class<T> clazz, Serializable pk) {
-        return find(clazz, pk) != null;
+        final EntityInfo<T> info = loadEntityInfo(clazz);
+        final EntityCache<T> cache = info.getCache();
+        if (cache != null && cache.isFullLoaded()) return cache.exists(pk);
+
+        final Connection conn = createReadSQLConnection();
+        try {
+            final String sql = "SELECT COUNT(*) FROM " + info.getTable() + " WHERE " + info.getPrimarySQLColumn() + " = " + formatToString(pk);
+            if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(clazz.getSimpleName() + " exists sql=" + sql);
+            final PreparedStatement ps = conn.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+            final ResultSet set = ps.executeQuery();
+            boolean rs = set.next() ? (set.getInt(1) > 0) : false;
+            set.close();
+            ps.close();
+            return rs;
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        } finally {
+            closeSQLConnection(conn);
+        }
     }
 
     @Override
     public <T> boolean exists(final Class<T> clazz, final FilterNode node) {
-        return find(clazz, node) != null;
+        return exists(clazz, node, null);
     }
 
     @Override
     public <T> boolean exists(final Class<T> clazz, final FilterBean bean) {
-        return find(clazz, bean) != null;
+        return exists(clazz, null, bean);
+    }
+
+    private <T> boolean exists(final Class<T> clazz, FilterNode node, final FilterBean bean) {
+        final EntityInfo<T> info = loadEntityInfo(clazz);
+        final EntityCache<T> cache = info.getCache();
+        if (node == null && bean != null) node = loadFilterBeanNode(bean.getClass());
+        if (cache != null && cache.isFullLoaded() && (node == null || node.isCacheUseable())) return cache.exists(node, bean);
+
+        final Connection conn = createReadSQLConnection();
+        try {
+            final CharSequence join = node == null ? null : node.createSQLJoin(info);
+            final CharSequence where = node == null ? null : node.createSQLExpress(info, bean);
+            final String sql = "SELECT COUNT(a.*) FROM " + info.getTable() + " a" + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
+            if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(clazz.getSimpleName() + " exists sql=" + sql);
+            final PreparedStatement ps = conn.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+            final ResultSet set = ps.executeQuery();
+            boolean rs = set.next() ? (set.getInt(1) > 0) : false;
+            set.close();
+            ps.close();
+            return rs;
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        } finally {
+            closeSQLConnection(conn);
+        }
     }
 
     //-----------------------list set----------------------------
