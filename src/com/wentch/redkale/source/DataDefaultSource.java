@@ -1029,8 +1029,8 @@ public final class DataDefaultSource implements DataSource, Nameable {
             //---------------------------------------------------
             final EntityCache<T> cache = info.getCache();
             if (cache == null) return;
-            cache.update(value, attrs);
-            if (cacheListener != null) cacheListener.updateCache(clazz, value);
+            T rs = cache.update(value, attrs);
+            if (cacheListener != null) cacheListener.updateCache(clazz, rs);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }

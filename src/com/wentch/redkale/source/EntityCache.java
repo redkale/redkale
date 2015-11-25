@@ -404,13 +404,14 @@ public final class EntityCache<T> {
         this.reproduce.copy(rs, value);
     }
 
-    public void update(final T value, Collection<Attribute<T, Serializable>> attrs) {
-        if (value == null) return;
+    public T update(final T value, Collection<Attribute<T, Serializable>> attrs) {
+        if (value == null) return value;
         T rs = this.map.get(this.primary.get(value));
-        if (rs == null) return;
+        if (rs == null) return rs;
         for (Attribute attr : attrs) {
             attr.set(rs, attr.get(value));
         }
+        return rs;
     }
 
     public <V> T update(final Serializable id, Attribute<T, V> attr, final V fieldValue) {
@@ -672,6 +673,12 @@ public final class EntityCache<T> {
 
                     @Override
                     public boolean test(FilterNode node) {
+                        if (node == null || node.isOr()) return false;
+                        if (!attribute.field().equals(node.column)) return false;
+                        if (node.nodes == null) return true;
+                        for (FilterNode n : node.nodes) {
+                            if (!test(n)) return false;
+                        }
                         return true;
                     }
                 };
