@@ -31,8 +31,6 @@ public final class EntityCache<T> {
 
     private final Collection<T> list = new ConcurrentLinkedQueue(); // CopyOnWriteArrayList 插入慢、查询快; 10w数据插入需要3.2秒; ConcurrentLinkedQueue 插入快、查询慢；10w数据查询需要 0.062秒，  查询慢40%;
 
-    private final HashMap<UniqueAttribute<T>, ConcurrentHashMap<Serializable, Collection<T>>> uniques = new HashMap<>();
-
     private final Map<String, Comparator<T>> sortComparators = new ConcurrentHashMap<>();
 
     private final Class<T> type;
@@ -65,24 +63,13 @@ public final class EntityCache<T> {
                 return false;
             }
         });
-        for (Unique unique : type.getAnnotationsByType(Unique.class)) {
-            final String[] cols = unique.columns();
-            final Attribute<T, Serializable>[] attrs = new Attribute[cols.length];
-            for (int i = 0; i < attrs.length; i++) {
-                attrs[i] = info.getAttribute(cols[i]);
-                if (info.getUpdateAttribute(cols[i]) != null) throw new RuntimeException(type + "." + cols[i] + " unique but can be updatable");
-            }
-            this.uniques.put(UniqueAttribute.create(attrs), new ConcurrentHashMap<>());
-        }
     }
 
     public void fullLoad(List<T> all) {
         if (all == null) return;
         clear();
-        final HashMap<UniqueAttribute<T>, ConcurrentHashMap<Serializable, Collection<T>>> localUniques = this.uniques;
         all.stream().filter(x -> x != null).forEach(x -> {
             this.map.put(this.primary.get(x), x);
-            localUniques.forEach((k, v) -> v.computeIfAbsent(k.getValue(x), (c) -> new ConcurrentLinkedQueue<>()).add(x));
         });
         this.list.addAll(all);
         this.fullloaded = true;
@@ -95,7 +82,6 @@ public final class EntityCache<T> {
     public void clear() {
         this.fullloaded = false;
         this.list.clear();
-        this.uniques.values().forEach(x -> x.clear());
         this.map.clear();
     }
 
@@ -363,7 +349,6 @@ public final class EntityCache<T> {
         T old = this.map.put(this.primary.get(rs), rs);
         if (old == null) {
             this.list.add(rs);
-            this.uniques.forEach((k, v) -> v.computeIfAbsent(k.getValue(rs), (c) -> new ConcurrentLinkedQueue<>()).add(rs));
         } else {
             logger.log(Level.WARNING, "cache repeat insert data: " + value);
         }
@@ -373,10 +358,6 @@ public final class EntityCache<T> {
         if (id == null) return;
         final T rs = this.map.remove(id);
         if (rs != null) this.list.remove(rs);
-        this.uniques.forEach((k, v) -> v.computeIfPresent(k.getValue(rs), (x, u) -> {
-            u.remove(rs);
-            return u;
-        }));
     }
 
     public Serializable[] delete(final FilterNode node) {
@@ -389,10 +370,6 @@ public final class EntityCache<T> {
             ids[++i] = this.primary.get(t);
             this.map.remove(ids[i]);
             this.list.remove(t);
-            this.uniques.forEach((k, v) -> v.computeIfPresent(k.getValue(t), (x, u) -> {
-                u.remove(t);
-                return u;
-            }));
         }
         return ids;
     }
