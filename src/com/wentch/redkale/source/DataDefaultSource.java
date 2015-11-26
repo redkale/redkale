@@ -1346,12 +1346,12 @@ public final class DataDefaultSource implements DataSource, Nameable {
 
     @Override
     public <K extends Serializable, T> Map<K, T> queryMap(final Class<T> clazz, final SelectColumn selects, final FilterBean bean) {
-        return formatMap(clazz, querySheet(clazz, selects, null, bean).getRows());
+        return formatMap(clazz, queryList(clazz, selects, null, bean));
     }
 
     @Override
     public <K extends Serializable, T> Map<K, T> queryMap(final Class<T> clazz, final SelectColumn selects, final FilterNode node) {
-        return formatMap(clazz, querySheet(clazz, selects, null, node).getRows());
+        return formatMap(clazz, queryList(clazz, selects, null, node));
     }
 
     private <K extends Serializable, T> Map<K, T> formatMap(final Class<T> clazz, Collection<T> list) {
