@@ -4,6 +4,8 @@ ulimit -c unlimited
 
 ulimit -n 1024000
 
+export LANG="zh_CN.UTF-8"
+
 APP_HOME=`dirname "$0"`
 
 if [ ! -a "$APP_HOME"/conf/application.xml ]; then 
