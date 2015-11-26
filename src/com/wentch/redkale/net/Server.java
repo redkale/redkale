@@ -46,7 +46,7 @@ public abstract class Server {
 
     protected int backlog;
 
-    protected ProtocolServer transport;
+    protected ProtocolServer serverChannel;
 
     protected int capacity;
 
@@ -78,7 +78,7 @@ public abstract class Server {
         this.config = config;
         this.address = new InetSocketAddress(config.getValue("host", "0.0.0.0"), config.getIntValue("port", 80));
         this.charset = Charset.forName(config.getValue("charset", "UTF-8"));
-        this.backlog = config.getIntValue("backlog", 10240);
+        this.backlog = config.getIntValue("backlog", 8 * 1024);
         this.readTimeoutSecond = config.getIntValue("readTimeoutSecond", 0);
         this.writeTimeoutSecond = config.getIntValue("writeTimeoutSecond", 0);
         this.capacity = config.getIntValue("capacity", 8 * 1024);
@@ -117,12 +117,13 @@ public abstract class Server {
         this.context = this.createContext();
         this.prepare.init(this.context, config);
         if (this.watch != null) this.watch.inject(this.prepare);
-        this.transport = ProtocolServer.create(this.protocol, context);
-        this.transport.open();
-        transport.setOption(StandardSocketOptions.SO_REUSEADDR, true);
-        transport.setOption(StandardSocketOptions.SO_RCVBUF, 8 * 1024);
-        transport.bind(address, backlog);
-        transport.accept();
+        this.serverChannel = ProtocolServer.create(this.protocol, context);
+        this.serverChannel.open();
+        if (this.serverChannel.supportedOptions().contains(StandardSocketOptions.TCP_NODELAY)) {
+            this.serverChannel.setOption(StandardSocketOptions.TCP_NODELAY, true);
+        }
+        serverChannel.bind(address, backlog);
+        serverChannel.accept();
         final String threadName = "[" + Thread.currentThread().getName() + "] ";
         logger.info(threadName + this.getClass().getSimpleName() + "." + protocol + " listen: " + address
                 + ", threads: " + threads + ", bufferCapacity: " + capacity + ", bufferPoolSize: " + bufferPoolSize + ", responsePoolSize: " + responsePoolSize
@@ -135,7 +136,7 @@ public abstract class Server {
         long s = System.currentTimeMillis();
         logger.info(this.getClass().getSimpleName() + "-" + this.protocol + " shutdowning");
         try {
-            this.transport.close();
+            this.serverChannel.close();
         } catch (Exception e) {
         }
         logger.info(this.getClass().getSimpleName() + "-" + this.protocol + " shutdow prepare servlet");

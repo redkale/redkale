@@ -26,6 +26,19 @@ public final class Transport {
 
     protected static final int MAX_POOL_LIMIT = Runtime.getRuntime().availableProcessors() * 16;
 
+    protected static final boolean supportTcpNoDelay;
+
+    static {
+        boolean tcpNoDelay = false;
+        try {
+            AsynchronousSocketChannel channel = AsynchronousSocketChannel.open();
+            tcpNoDelay = channel.supportedOptions().contains(StandardSocketOptions.TCP_NODELAY);
+            channel.close();
+        } catch (Exception e) {
+        }
+        supportTcpNoDelay = tcpNoDelay;
+    }
+
     protected final String name;
 
     protected final int bufferPoolSize;
@@ -156,7 +169,10 @@ public final class Transport {
                                 if (conn.isOpen()) return conn;
                             }
                         }
-                        if (channel == null) channel = AsynchronousSocketChannel.open(group);
+                        if (channel == null) {
+                            channel = AsynchronousSocketChannel.open(group);
+                            if (supportTcpNoDelay) channel.setOption(StandardSocketOptions.TCP_NODELAY, true);
+                        }
                         try {
                             channel.connect(addr).get(2, TimeUnit.SECONDS);
                             break;
@@ -167,6 +183,7 @@ public final class Transport {
                     }
                 } else {
                     channel = AsynchronousSocketChannel.open(group);
+                    if (supportTcpNoDelay) channel.setOption(StandardSocketOptions.TCP_NODELAY, true);
                     channel.connect(addr).get(2, TimeUnit.SECONDS);
                 }
                 if (channel == null) return null;

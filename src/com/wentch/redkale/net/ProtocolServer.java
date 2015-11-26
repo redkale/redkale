@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
+import java.util.*;
 import java.util.concurrent.*;
 
 /**
@@ -22,6 +23,8 @@ public abstract class ProtocolServer {
     public abstract void open() throws IOException;
 
     public abstract void bind(SocketAddress local, int backlog) throws IOException;
+
+    public abstract <T> Set<SocketOption<?>> supportedOptions();
 
     public abstract <T> void setOption(SocketOption<T> name, T value) throws IOException;
 
@@ -65,6 +68,11 @@ public abstract class ProtocolServer {
         @Override
         public <T> void setOption(SocketOption<T> name, T value) throws IOException {
             this.serverChannel.setOption(name, value);
+        }
+
+        @Override
+        public <T> Set<SocketOption<?>> supportedOptions() {
+            return this.serverChannel.supportedOptions();
         }
 
         @Override
@@ -137,6 +145,11 @@ public abstract class ProtocolServer {
         @Override
         public <T> void setOption(SocketOption<T> name, T value) throws IOException {
             this.serverChannel.setOption(name, value);
+        }
+
+        @Override
+        public <T> Set<SocketOption<?>> supportedOptions() {
+            return this.serverChannel.supportedOptions();
         }
 
         @Override
