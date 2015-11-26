@@ -1279,7 +1279,7 @@ public final class DataDefaultSource implements DataSource, Nameable {
         try {
             final CharSequence join = node == null ? null : node.createSQLJoin(info);
             final CharSequence where = node == null ? null : node.createSQLExpress(info, bean);
-            final String sql = "SELECT COUNT(*) FROM " + info.getTable() + " a" + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
+            final String sql = "SELECT COUNT(a." + info.getPrimarySQLColumn() + ") FROM " + info.getTable() + " a" + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
             if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(clazz.getSimpleName() + " exists sql=" + sql);
             final PreparedStatement ps = conn.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
             final ResultSet set = ps.executeQuery();
