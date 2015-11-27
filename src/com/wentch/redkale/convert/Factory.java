@@ -38,7 +38,7 @@ public abstract class Factory<R extends Reader, W extends Writer> {
     //-----------------------------------------------------------------------------------
     private final HashedMap<Class, Creator> creators = new HashedMap();
 
-    private final Map<String, Class> entitys = new ConcurrentHashMap<>();
+    private final Map<String, Class> entitys = new ConcurrentHashMap();
 
     private final HashedMap<Type, Decodeable<R, ?>> decoders = new HashedMap();
 
@@ -46,7 +46,7 @@ public abstract class Factory<R extends Reader, W extends Writer> {
 
     private final HashMap<AccessibleObject, ConvertColumnEntry> columnEntrys = new HashMap();
 
-    private final Set<Class> skipIgnores = new HashSet<>();
+    private final Set<Class> skipIgnores = new HashSet();
 
     private boolean skipAllIgnore = false;
 

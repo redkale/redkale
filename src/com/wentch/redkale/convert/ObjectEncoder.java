@@ -139,7 +139,7 @@ public final class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T
             if (type == Object.class) return;
             //if (!(type instanceof Class)) throw new ConvertException("[" + type + "] is no a class");
             final Class clazz = this.typeClass;
-            final Set<EnMember> list = new HashSet<>();
+            final Set<EnMember> list = new HashSet();
             final Type[] virGenericTypes = this.typeClass.getTypeParameters();
             final Type[] realGenericTypes = (type instanceof ParameterizedType) ? ((ParameterizedType) type).getActualTypeArguments() : null;
             if (realGenericTypes != null) {

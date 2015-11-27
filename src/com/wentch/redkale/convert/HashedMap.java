@@ -47,7 +47,7 @@ public final class HashedMap<K, V> {
             }
             entry = entry.next;
         }
-        data[index] = new Entry<>(key, value, data[index]);
+        data[index] = new Entry(key, value, data[index]);
         return null;
     }
 

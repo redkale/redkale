@@ -64,7 +64,7 @@ public final class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T
             final Type[] virGenericTypes = this.typeClass.getTypeParameters();
             final Type[] realGenericTypes = (type instanceof ParameterizedType) ? ((ParameterizedType) type).getActualTypeArguments() : TYPEZERO;
             this.creator = factory.loadCreator(clazz);
-            final Set<DeMember> list = new HashSet<>();
+            final Set<DeMember> list = new HashSet();
             try {
                 ConvertColumnEntry ref;
                 for (final Field field : clazz.getFields()) {
