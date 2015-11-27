@@ -11,7 +11,9 @@ import com.wentch.redkale.net.Context;
 import com.wentch.redkale.util.AnyValue;
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.nio.*;
 import java.util.*;
+import java.util.concurrent.*;
 import jdk.internal.org.objectweb.asm.*;
 import static jdk.internal.org.objectweb.asm.Opcodes.*;
 
@@ -33,7 +35,19 @@ public abstract class BasedHttpServlet extends HttpServlet {
         for (Map.Entry<String, Entry> en : actions) {
             if (request.getRequestURI().startsWith(en.getKey())) {
                 Entry entry = en.getValue();
-                if (entry.ignore || authenticate(entry.moduleid, entry.actionid, request, response)) entry.servlet.execute(request, response);
+                if (entry.ignore || authenticate(entry.moduleid, entry.actionid, request, response)) {
+                    if (entry.cachetimeout > 0) {//有缓存设置
+                        CacheEntry ce = entry.cache.get(request.getRequestURI());
+                        if (ce != null && ce.time + entry.cachetimeout > System.currentTimeMillis()) { //缓存有效
+                            response.setStatus(ce.status);
+                            response.setContentType(ce.contentType);
+                            response.finish(ce.getBuffers());
+                            return;
+                        }
+                        response.setInterceptor(entry.cacheInterceptor);
+                    }
+                    entry.servlet.execute(request, response);
+                }
                 return;
             }
         }
@@ -180,11 +194,27 @@ public abstract class BasedHttpServlet extends HttpServlet {
             this.method = method;
             this.servlet = servlet;
             this.ignore = typeIgnore || method.getAnnotation(AuthIgnore.class) != null;
+            HttpCacheable hc = method.getAnnotation(HttpCacheable.class);
+            this.cachetimeout = hc == null ? 0 : hc.timeout() * 1000;
+            this.cache = cachetimeout > 0 ? new ConcurrentHashMap() : null;
+            this.cacheInterceptor = cachetimeout > 0 ? (HttpResponse response, ByteBuffer[] buffers) -> {
+                int status = response.getStatus();
+                if (status != 200) return null;
+                CacheEntry ce = new CacheEntry(response.getStatus(), response.getContentType(), buffers);
+                cache.put(response.getRequest().getRequestURI(), ce);
+                return ce.getBuffers();
+            } : null;
         }
 
         public boolean isNeedCheck() {
             return this.moduleid != 0 || this.actionid != 0;
         }
+
+        public final HttpResponse.Interceptor cacheInterceptor;
+
+        public final ConcurrentHashMap<String, CacheEntry> cache;
+
+        public final int cachetimeout;
 
         public final boolean ignore;
 
@@ -197,5 +227,34 @@ public abstract class BasedHttpServlet extends HttpServlet {
         public final Method method;
 
         public final HttpServlet servlet;
+    }
+
+    private static final class CacheEntry {
+
+        public final long time = System.currentTimeMillis();
+
+        private final ByteBuffer[] buffers;
+
+        private final int status;
+
+        private final String contentType;
+
+        public CacheEntry(int status, String contentType, ByteBuffer[] bufs) {
+            this.status = status;
+            this.contentType = contentType;
+            final ByteBuffer[] newBuffers = new ByteBuffer[bufs.length];
+            for (int i = 0; i < newBuffers.length; i++) {
+                newBuffers[i] = bufs[i].duplicate().asReadOnlyBuffer();
+            }
+            this.buffers = newBuffers;
+        }
+
+        public ByteBuffer[] getBuffers() {
+            final ByteBuffer[] newBuffers = new ByteBuffer[buffers.length];
+            for (int i = 0; i < newBuffers.length; i++) {
+                newBuffers[i] = buffers[i].duplicate();
+            }
+            return newBuffers;
+        }
     }
 }

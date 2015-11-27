@@ -26,6 +26,15 @@ import java.util.concurrent.atomic.*;
  */
 public class HttpResponse<R extends HttpRequest> extends Response<R> {
 
+    /**
+     * HttpResponse.finish 方法内调用
+     *
+     */
+    public static interface Interceptor {
+
+        public ByteBuffer[] invoke(final HttpResponse response, final ByteBuffer[] buffers);
+    }
+
     private static final ByteBuffer buffer304 = ByteBuffer.wrap("HTTP/1.1 304 Not Modified\r\n\r\n".getBytes()).asReadOnlyBuffer();
 
     private static final ByteBuffer buffer404 = ByteBuffer.wrap("HTTP/1.1 404 Not Found\r\nContent-Length:0\r\n\r\n".getBytes()).asReadOnlyBuffer();
@@ -98,6 +107,9 @@ public class HttpResponse<R extends HttpRequest> extends Response<R> {
 
     private boolean headsended = false;
 
+    private Interceptor interceptor;
+    //------------------------------------------------
+
     private final DefaultAnyValue header = new DefaultAnyValue();
 
     private final String[][] defaultAddHeaders;
@@ -130,6 +142,7 @@ public class HttpResponse<R extends HttpRequest> extends Response<R> {
         this.cookies = null;
         this.headsended = false;
         this.header.clear();
+        this.interceptor = null;
         return super.recycle();
     }
 
@@ -140,6 +153,10 @@ public class HttpResponse<R extends HttpRequest> extends Response<R> {
 
     protected String getHttpCode(int status) {
         return httpCodes.get(status);
+    }
+
+    protected HttpRequest getRequest() {
+        return request;
     }
 
     protected String getHttpCode(int status, String defValue) {
@@ -186,6 +203,9 @@ public class HttpResponse<R extends HttpRequest> extends Response<R> {
             return;
         }
         if (context.getCharset() == null) {
+            if (interceptor != null) {
+                interceptor.invoke(this, new ByteBuffer[]{ByteBuffer.wrap(Utility.encodeUTF8(obj))});
+            }
             final char[] chars = Utility.charArray(obj);
             this.contentLength = Utility.encodeUTF8Length(chars);
             final ByteBuffer headbuf = createHeader();
@@ -198,6 +218,10 @@ public class HttpResponse<R extends HttpRequest> extends Response<R> {
             }
         } else {
             ByteBuffer buffer = context.getCharset().encode(obj);
+            if (interceptor != null) {
+                ByteBuffer[] bufs = interceptor.invoke(this, new ByteBuffer[]{buffer});
+                if (bufs != null) buffer = bufs[0];
+            }
             this.contentLength = buffer.remaining();
             final ByteBuffer headbuf = createHeader();
             headbuf.flip();
@@ -247,6 +271,10 @@ public class HttpResponse<R extends HttpRequest> extends Response<R> {
 
     @Override
     public void finish(boolean kill, ByteBuffer... buffers) {
+        if (interceptor != null) {
+            ByteBuffer[] bufs = interceptor.invoke(this, buffers);
+            if (bufs != null) buffers = bufs;
+        }
         if (kill) refuseAlive();
         if (!this.headsended) {
             long len = 0;
@@ -422,6 +450,10 @@ public class HttpResponse<R extends HttpRequest> extends Response<R> {
         this.headsended = true;
     }
 
+    protected DefaultAnyValue duplicateHeader() {
+        return this.header.duplicate();
+    }
+
     public void setHeader(String name, Object value) {
         this.header.setValue(name, String.valueOf(value));
     }
@@ -452,6 +484,14 @@ public class HttpResponse<R extends HttpRequest> extends Response<R> {
 
     public void setContentLength(long contentLength) {
         this.contentLength = contentLength;
+    }
+
+    public Interceptor getInterceptor() {
+        return interceptor;
+    }
+
+    public void setInterceptor(Interceptor interceptor) {
+        this.interceptor = interceptor;
     }
 
     protected final class TransferFileHandler implements CompletionHandler<Integer, ByteBuffer> {
