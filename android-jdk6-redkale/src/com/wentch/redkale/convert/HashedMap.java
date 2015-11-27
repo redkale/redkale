@@ -4,6 +4,8 @@
  */
 package com.wentch.redkale.convert;
 
+import java.lang.reflect.*;
+
 /**
  * 只增不减的伪Map类
  *
@@ -12,7 +14,7 @@ package com.wentch.redkale.convert;
  * @param <V>
  */
 @SuppressWarnings("unchecked")
-public final class HashedMap<K, V> {
+public final class HashedMap<K extends Type, V> {
 
     protected final transient Entry<K, V>[] table;
 
