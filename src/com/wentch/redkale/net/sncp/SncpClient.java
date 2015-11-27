@@ -266,7 +266,7 @@ public final class SncpClient {
                     @Override
                     public void completed(Integer count, Void attachment2) {
                         if (count < 1 && buffer.remaining() == buffer.limit()) {   //没有数据可读
-                            future.set(new RuntimeException(action.method + " sncp remote no response data"));
+                            future.set(new RuntimeException(action.method + " sncp[" + conn.getRemoteAddress() + "] remote no response data"));
                             transport.offerBuffer(buffer);
                             transport.offerConnection(true, conn);
                             return;
