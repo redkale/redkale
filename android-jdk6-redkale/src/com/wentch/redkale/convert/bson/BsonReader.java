@@ -182,7 +182,9 @@ public final class BsonReader implements Reader {
      */
     @Override
     public int readArrayB() {
-        return readInt();
+        short bt = readShort();
+        if (bt == Reader.SIGN_NULL) return bt;
+        return (bt & 0xffff) << 16 | ((content[++this.position] & 0xff) << 8) | (content[++this.position] & 0xff);
     }
 
     @Override
