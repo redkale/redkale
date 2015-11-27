@@ -13,13 +13,13 @@ import java.nio.*;
  *
  * @author zhangjx
  */
-public final class BsonWriter implements Writer {
+public class BsonWriter implements Writer {
 
     private static final int defaultSize = Integer.getInteger("convert.bson.writer.buffer.defsize", 1024);
 
-    protected int count;
-
     private byte[] content;
+
+    protected int count;
 
     protected boolean tiny;
 
@@ -46,8 +46,12 @@ public final class BsonWriter implements Writer {
         return newdata;
     }
 
-    public ByteBuffer toBuffer() {
-        return ByteBuffer.wrap(content, 0, count);
+    public ByteBuffer[] toBuffers() {
+        return new ByteBuffer[]{ByteBuffer.wrap(content, 0, count)};
+    }
+
+    protected BsonWriter(byte[] bs) {
+        this.content = bs;
     }
 
     public BsonWriter() {
@@ -55,60 +59,34 @@ public final class BsonWriter implements Writer {
     }
 
     public BsonWriter(int size) {
-        this.content = new byte[size > 32 ? size : 32];
+        this.content = new byte[size > 128 ? size : 128];
     }
 
     @Override
-    public boolean isTiny() {
+    public final boolean isTiny() {
         return tiny;
     }
 
-    public void setTiny(boolean tiny) {
+    public BsonWriter setTiny(boolean tiny) {
         this.tiny = tiny;
+        return this;
     }
 
     //-----------------------------------------------------------------------
     //-----------------------------------------------------------------------
     /**
-     * 返回指定至少指定长度的缓冲区
+     * 扩充指定长度的缓冲区
      *
      * @param len
      * @return
      */
-    public byte[] expand(int len) {
+    protected int expand(int len) {
         int newcount = count + len;
-        if (newcount <= content.length) return content;
+        if (newcount <= content.length) return 0;
         byte[] newdata = new byte[Math.max(content.length * 3 / 2, newcount)];
         System.arraycopy(content, 0, newdata, 0, count);
         this.content = newdata;
-        return newdata;
-    }
-
-    /**
-     * 往指定的位置写入字节
-     *
-     * @param position
-     * @param chs 
-     */
-    public void rewriteTo(int position, byte... chs) {
-        System.arraycopy(chs, 0, content, position, chs.length);
-    }
-
-    public void rewriteTo(int position, short value) {
-        rewriteTo(position, (byte) (value >> 8), (byte) value);
-    }
-
-    public void rewriteTo(int position, char value) {
-        rewriteTo(position, (byte) ((value & 0xFF00) >> 8), (byte) (value & 0xFF));
-    }
-
-    public void rewriteTo(int position, int value) {
-        rewriteTo(position, (byte) (value >> 24), (byte) (value >> 16), (byte) (value >> 8), (byte) value);
-    }
-
-    public void rewriteTo(int position, long value) {
-        rewriteTo(position, (byte) (value >> 56), (byte) (value >> 48), (byte) (value >> 40), (byte) (value >> 32),
-                (byte) (value >> 24), (byte) (value >> 16), (byte) (value >> 8), (byte) value);
+        return 0;
     }
 
     public void writeTo(final byte ch) {
@@ -116,15 +94,11 @@ public final class BsonWriter implements Writer {
         content[count++] = ch;
     }
 
-    public void writeTo(final byte... chs) {
-        int len = chs.length;
-        expand(len);
-        System.arraycopy(chs, 0, content, count, len);
-        count += len;
+    public final void writeTo(final byte... chs) {
+        writeTo(chs, 0, chs.length);
     }
 
-    public void writeTo(final byte[] chs, final int start, final int end) {
-        int len = end - start;
+    public void writeTo(final byte[] chs, final int start, final int len) {
         expand(len);
         System.arraycopy(chs, start, content, count, len);
         count += len;
@@ -138,68 +112,59 @@ public final class BsonWriter implements Writer {
         return true;
     }
 
-    //------------------------------------------------------------------------
-    public int position() {
-        return this.count;
+    @Override
+    public String toString() {
+        return this.getClass().getSimpleName() + "[count=" + this.count + "]";
     }
 
+    //------------------------------------------------------------------------
     public final int count() {
         return this.count;
     }
 
-    public final void count(int count) {
-        if (count >= 0) this.count = count;
-    }
-
-    //-----------------------------------------------------------------------
     @Override
-    public String toString() {
-        return new String(content, 0, count);
-    }
-
-    @Override
-    public void writeBoolean(boolean value) {
+    public final void writeBoolean(boolean value) {
         writeTo(value ? (byte) 1 : (byte) 0);
     }
 
     @Override
-    public void writeByte(byte value) {
+    public final void writeByte(byte value) {
         writeTo(value);
     }
 
     @Override
-    public void writeChar(final char value) {
+    public final void writeChar(final char value) {
         writeTo((byte) ((value & 0xFF00) >> 8), (byte) (value & 0xFF));
     }
 
     @Override
-    public void writeShort(short value) {
+    public final void writeShort(short value) {
         writeTo((byte) (value >> 8), (byte) value);
     }
 
     @Override
-    public void writeInt(int value) {
+    public final void writeInt(int value) {
         writeTo((byte) (value >> 24), (byte) (value >> 16), (byte) (value >> 8), (byte) value);
     }
 
     @Override
-    public void writeLong(long value) {
+    public final void writeLong(long value) {
         writeTo((byte) (value >> 56), (byte) (value >> 48), (byte) (value >> 40), (byte) (value >> 32),
                 (byte) (value >> 24), (byte) (value >> 16), (byte) (value >> 8), (byte) value);
     }
 
     @Override
-    public void writeFloat(float value) {
+    public final void writeFloat(float value) {
         writeInt(Float.floatToIntBits(value));
     }
 
     @Override
-    public void writeDouble(double value) {
+    public final void writeDouble(double value) {
         writeLong(Double.doubleToLongBits(value));
     }
 
     @Override
-    public void wirteClassName(String clazz) {
+    public final void wirteClassName(String clazz) {
         writeSmallString(clazz == null ? "" : clazz);
     }
 
@@ -267,7 +232,7 @@ public final class BsonWriter implements Writer {
      * @param value
      */
     @Override
-    public void writeSmallString(String value) {
+    public final void writeSmallString(String value) {
         if (value.isEmpty()) {
             writeTo((byte) 0);
             return;
@@ -284,7 +249,7 @@ public final class BsonWriter implements Writer {
     }
 
     @Override
-    public void writeString(String value) {
+    public final void writeString(String value) {
         if (value == null) {
             writeInt(Reader.SIGN_NULL);
             return;
@@ -303,16 +268,16 @@ public final class BsonWriter implements Writer {
     }
 
     @Override
-    public void writeArrayB(int size) {
+    public final void writeArrayB(int size) {
         writeInt(size);
     }
 
     @Override
-    public void writeArrayMark() {
+    public final void writeArrayMark() {
     }
 
     @Override
-    public void writeArrayE() {
+    public final void writeArrayE() {
     }
 
     @Override
@@ -321,11 +286,11 @@ public final class BsonWriter implements Writer {
     }
 
     @Override
-    public void writeMapMark() {
+    public final void writeMapMark() {
     }
 
     @Override
-    public void writeMapE() {
+    public final void writeMapE() {
     }
 
 }

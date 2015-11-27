@@ -32,6 +32,10 @@ public final class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T
 
     protected Factory factory;
 
+    private boolean inited = false;
+
+    private final Object lock = new Object();
+
     protected ObjectDecoder(Type type) {
         this.type = ((type instanceof Class) && ((Class) type).isInterface()) ? Object.class : type;
         if (type instanceof ParameterizedType) {
@@ -45,56 +49,63 @@ public final class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T
 
     public void init(final Factory factory) {
         this.factory = factory;
-        if (type == Object.class) return;
-
-        Class clazz = null;
-        if (type instanceof ParameterizedType) {
-            final ParameterizedType pts = (ParameterizedType) type;
-            clazz = (Class) (pts).getRawType();
-        } else if (!(type instanceof Class)) {
-            throw new ConvertException("[" + type + "] is no a class");
-        } else {
-            clazz = (Class) type;
-        }
-        final Type[] virGenericTypes = this.typeClass.getTypeParameters();
-        final Type[] realGenericTypes = (type instanceof ParameterizedType) ? ((ParameterizedType) type).getActualTypeArguments() : TYPEZERO;
-        this.creator = factory.loadCreator(clazz);
-        final Set<DeMember> list = new HashSet();
         try {
-            ConvertColumnEntry ref;
-            for (final Field field : clazz.getFields()) {
-                if (Modifier.isStatic(field.getModifiers())) continue;
-                ref = factory.findRef(field);
-                if (ref != null && ref.ignore()) continue;
-                Type t = ObjectEncoder.makeGenericType(field.getGenericType(), virGenericTypes, realGenericTypes);
-                list.add(new DeMember(ObjectEncoder.createAttribute(factory, clazz, field, null, null), factory.loadDecoder(t)));
+            if (type == Object.class) return;
+
+            Class clazz = null;
+            if (type instanceof ParameterizedType) {
+                final ParameterizedType pts = (ParameterizedType) type;
+                clazz = (Class) (pts).getRawType();
+            } else if (!(type instanceof Class)) {
+                throw new ConvertException("[" + type + "] is no a class");
+            } else {
+                clazz = (Class) type;
             }
-            final boolean reversible = factory.isReversible();
-            for (final Method method : clazz.getMethods()) {
-                if (Modifier.isStatic(method.getModifiers())) continue;
-                if (Modifier.isAbstract(method.getModifiers())) continue;
-                if (method.isSynthetic()) continue;
-                if (method.getName().length() < 4) continue;
-                if (!method.getName().startsWith("set")) continue;
-                if (method.getParameterTypes().length != 1) continue;
-                if (method.getReturnType() != void.class) continue;
-                if (reversible) {
-                    boolean is = method.getParameterTypes()[0] == boolean.class || method.getParameterTypes()[0] == Boolean.class;
-                    try {
-                        clazz.getMethod(method.getName().replaceFirst("set", is ? "is" : "get"));
-                    } catch (Exception e) {
-                        continue;
-                    }
+            final Type[] virGenericTypes = this.typeClass.getTypeParameters();
+            final Type[] realGenericTypes = (type instanceof ParameterizedType) ? ((ParameterizedType) type).getActualTypeArguments() : TYPEZERO;
+            this.creator = factory.loadCreator(clazz);
+            final Set<DeMember> list = new HashSet();
+            try {
+                ConvertColumnEntry ref;
+                for (final Field field : clazz.getFields()) {
+                    if (Modifier.isStatic(field.getModifiers())) continue;
+                    ref = factory.findRef(field);
+                    if (ref != null && ref.ignore()) continue;
+                    Type t = ObjectEncoder.makeGenericType(field.getGenericType(), virGenericTypes, realGenericTypes);
+                    list.add(new DeMember(ObjectEncoder.createAttribute(factory, clazz, field, null, null), factory.loadDecoder(t)));
                 }
-                ref = factory.findRef(method);
-                if (ref != null && ref.ignore()) continue;
-                Type t = ObjectEncoder.makeGenericType(method.getGenericParameterTypes()[0], virGenericTypes, realGenericTypes);
-                list.add(new DeMember(ObjectEncoder.createAttribute(factory, clazz, null, null, method), factory.loadDecoder(t)));
+                final boolean reversible = factory.isReversible();
+                for (final Method method : clazz.getMethods()) {
+                    if (Modifier.isStatic(method.getModifiers())) continue;
+                    if (Modifier.isAbstract(method.getModifiers())) continue;
+                    if (method.isSynthetic()) continue;
+                    if (method.getName().length() < 4) continue;
+                    if (!method.getName().startsWith("set")) continue;
+                    if (method.getParameterTypes().length != 1) continue;
+                    if (method.getReturnType() != void.class) continue;
+                    if (reversible) {
+                        boolean is = method.getParameterTypes()[0] == boolean.class || method.getParameterTypes()[0] == Boolean.class;
+                        try {
+                            clazz.getMethod(method.getName().replaceFirst("set", is ? "is" : "get"));
+                        } catch (Exception e) {
+                            continue;
+                        }
+                    }
+                    ref = factory.findRef(method);
+                    if (ref != null && ref.ignore()) continue;
+                    Type t = ObjectEncoder.makeGenericType(method.getGenericParameterTypes()[0], virGenericTypes, realGenericTypes);
+                    list.add(new DeMember(ObjectEncoder.createAttribute(factory, clazz, null, null, method), factory.loadDecoder(t)));
+                }
+                this.members = list.toArray(new DeMember[list.size()]);
+                Arrays.sort(this.members);
+            } catch (Exception ex) {
+                throw new ConvertException(ex);
             }
-            this.members = list.toArray(new DeMember[list.size()]);
-            Arrays.sort(this.members);
-        } catch (Exception ex) {
-            throw new ConvertException(ex);
+        } finally {
+            inited = true;
+            synchronized (lock) {
+                lock.notifyAll();
+            }
         }
     }
 
@@ -109,6 +120,15 @@ public final class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T
         final String clazz = in.readClassName();
         if (clazz != null && !clazz.isEmpty()) return (T) factory.loadDecoder(factory.getEntity(clazz)).convertFrom(in);
         if (in.readObjectB() == Reader.SIGN_NULL) return null;
+        if (!this.inited) {
+            synchronized (lock) {
+                try {
+                    lock.wait();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
         final T result = this.creator.create();
         final AtomicInteger index = new AtomicInteger();
         while (in.hasNext()) {

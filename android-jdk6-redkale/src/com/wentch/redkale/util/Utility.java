@@ -255,6 +255,13 @@ public final class Utility {
         return value == null ? null : value.toCharArray();
     }
 
+    public static char[] charArray(StringBuilder value) {
+        if (value == null) return null;
+        char[] chs = new char[value.length()];
+        value.getChars(0, value.length(), chs, 0);
+        return chs;
+    }
+
     public static ByteBuffer encodeUTF8(final ByteBuffer buffer, final char[] array) {
         return encodeUTF8(buffer, array, 0, array.length);
     }
@@ -327,7 +334,7 @@ public final class Utility {
     }
 
     //-----------------------------------------------------------------------------
-    public static javax.net.ssl.SSLContext getDefaultSSLContext(){
+    public static javax.net.ssl.SSLContext getDefaultSSLContext() {
         return DEFAULTSSL_CONTEXT;
     }
 

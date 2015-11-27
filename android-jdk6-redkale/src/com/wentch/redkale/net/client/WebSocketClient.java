@@ -18,6 +18,8 @@ import javax.net.ssl.*;
  */
 public class WebSocketClient {
 
+    protected final boolean ssl;
+
     protected final URI uri;
 
     protected final Map<String, String> headers = new HashMap<String, String>();
@@ -32,6 +34,7 @@ public class WebSocketClient {
 
     private WebSocketClient(URI uri, Map<String, String> headers0) {
         this.uri = uri;
+        this.ssl = "wss".equalsIgnoreCase(uri.getScheme());
         if (headers0 != null) this.headers.putAll(headers0);
     }
 
@@ -65,26 +68,28 @@ public class WebSocketClient {
     public int getPort() {
         int port = uri.getPort();
         if (port > 0) return port;
-        return "wss".equalsIgnoreCase(uri.getScheme()) ? 443 : 80;
+        return ssl ? 443 : 80;
     }
 
     public void connect() throws IOException {
-        if ("wss".equalsIgnoreCase(uri.getScheme())) {
+        if (ssl) {
             if (proxy == null) {
                 this.socket = (sslContext == null ? Utility.getDefaultSSLContext() : sslContext).getSocketFactory().createSocket(uri.getHost(), getPort());
             } else {
                 Socket s = new Socket(proxy);
+                this.socket.setSoTimeout(3000);
                 s.connect(new InetSocketAddress(uri.getHost(), getPort()));
                 this.socket = (sslContext == null ? Utility.getDefaultSSLContext() : sslContext).getSocketFactory().createSocket(s, uri.getHost(), getPort(), true);
             }
         } else {
             this.socket = proxy == null ? new Socket() : new Socket(proxy);
+            this.socket.setSoTimeout(3000);
             this.socket.connect(new InetSocketAddress(uri.getHost(), getPort()));
         }
     }
 
     public static void main(String[] args) throws Exception {
-        URI uri = new URI("ws://10.28.2.207/pipes/ws/listen?test=aa");
+        URI uri = new URI("ws://10.28.2.207:5050/pipes/ws/listen?test=aa");
         WebSocketClient client = WebSocketClient.create(uri);
         client.connect();
         System.out.println();

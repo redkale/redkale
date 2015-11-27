@@ -29,6 +29,10 @@ public final class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T
 
     protected Factory factory;
 
+    private boolean inited = false;
+
+    private final Object lock = new Object();
+
     protected ObjectEncoder(Type type) {
         this.type = type;
         if (type instanceof ParameterizedType) {
@@ -132,52 +136,59 @@ public final class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T
 
     public void init(final Factory factory) {
         this.factory = factory;
-        if (type == Object.class) return;
-        //if (!(type instanceof Class)) throw new ConvertException("[" + type + "] is no a class");
-        final Class clazz = this.typeClass;
-        final Set<EnMember> list = new HashSet();
-        final Type[] virGenericTypes = this.typeClass.getTypeParameters();
-        final Type[] realGenericTypes = (type instanceof ParameterizedType) ? ((ParameterizedType) type).getActualTypeArguments() : null;
-        if (realGenericTypes != null) {
-            //    println(type + "," + Arrays.toString(virGenericTypes) + ", " + Arrays.toString(realGenericTypes));
-        }
         try {
-            ConvertColumnEntry ref;
-            for (final Field field : clazz.getFields()) {
-                if (Modifier.isStatic(field.getModifiers())) continue;
-                ref = factory.findRef(field);
-                if (ref != null && ref.ignore()) continue;
-                Type t = makeGenericType(field.getGenericType(), virGenericTypes, realGenericTypes);
-                list.add(new EnMember(createAttribute(factory, clazz, field, null, null), factory.loadEncoder(t)));
+            if (type == Object.class) return;
+            //if (!(type instanceof Class)) throw new ConvertException("[" + type + "] is no a class");
+            final Class clazz = this.typeClass;
+            final Set<EnMember> list = new HashSet();
+            final Type[] virGenericTypes = this.typeClass.getTypeParameters();
+            final Type[] realGenericTypes = (type instanceof ParameterizedType) ? ((ParameterizedType) type).getActualTypeArguments() : null;
+            if (realGenericTypes != null) {
+                //    println(type + "," + Arrays.toString(virGenericTypes) + ", " + Arrays.toString(realGenericTypes));
             }
-            final boolean reversible = factory.isReversible();
-            for (final Method method : clazz.getMethods()) {
-                if (Modifier.isStatic(method.getModifiers())) continue;
-                if (Modifier.isAbstract(method.getModifiers())) continue;
-                if (method.isSynthetic()) continue;
-                if (method.getName().length() < 3) continue;
-                if (method.getName().equals("getClass")) continue;
-                if (!method.getName().startsWith("is") && !method.getName().startsWith("get")) continue;
-                if (method.getParameterTypes().length != 0) continue;
-                if (method.getReturnType() == void.class) continue;
-                if (reversible) {
-                    boolean is = method.getName().startsWith("is");
-                    try {
-                        clazz.getMethod(method.getName().replaceFirst(is ? "is" : "get", "set"), method.getReturnType());
-                    } catch (Exception e) {
-                        continue;
-                    }
+            try {
+                ConvertColumnEntry ref;
+                for (final Field field : clazz.getFields()) {
+                    if (Modifier.isStatic(field.getModifiers())) continue;
+                    ref = factory.findRef(field);
+                    if (ref != null && ref.ignore()) continue;
+                    Type t = makeGenericType(field.getGenericType(), virGenericTypes, realGenericTypes);
+                    list.add(new EnMember(createAttribute(factory, clazz, field, null, null), factory.loadEncoder(t)));
                 }
-                ref = factory.findRef(method);
-                if (ref != null && ref.ignore()) continue;
-                Type t = makeGenericType(method.getGenericReturnType(), virGenericTypes, realGenericTypes);
-                list.add(new EnMember(createAttribute(factory, clazz, null, method, null), factory.loadEncoder(t)));
-            }
-            this.members = list.toArray(new EnMember[list.size()]);
-            Arrays.sort(this.members);
+                final boolean reversible = factory.isReversible();
+                for (final Method method : clazz.getMethods()) {
+                    if (Modifier.isStatic(method.getModifiers())) continue;
+                    if (Modifier.isAbstract(method.getModifiers())) continue;
+                    if (method.isSynthetic()) continue;
+                    if (method.getName().length() < 3) continue;
+                    if (method.getName().equals("getClass")) continue;
+                    if (!method.getName().startsWith("is") && !method.getName().startsWith("get")) continue;
+                    if (method.getParameterTypes().length != 0) continue;
+                    if (method.getReturnType() == void.class) continue;
+                    if (reversible) {
+                        boolean is = method.getName().startsWith("is");
+                        try {
+                            clazz.getMethod(method.getName().replaceFirst(is ? "is" : "get", "set"), method.getReturnType());
+                        } catch (Exception e) {
+                            continue;
+                        }
+                    }
+                    ref = factory.findRef(method);
+                    if (ref != null && ref.ignore()) continue;
+                    Type t = makeGenericType(method.getGenericReturnType(), virGenericTypes, realGenericTypes);
+                    list.add(new EnMember(createAttribute(factory, clazz, null, method, null), factory.loadEncoder(t)));
+                }
+                this.members = list.toArray(new EnMember[list.size()]);
+                Arrays.sort(this.members);
 
-        } catch (Exception ex) {
-            throw new ConvertException(ex);
+            } catch (Exception ex) {
+                throw new ConvertException(ex);
+            }
+        } finally {
+            inited = true;
+            synchronized (lock) {
+                lock.notifyAll();
+            }
         }
     }
 
@@ -187,6 +198,15 @@ public final class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T
             out.wirteClassName(null);
             out.writeNull();
             return;
+        }
+        if (!this.inited) {
+            synchronized (lock) {
+                try {
+                    lock.wait();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
         }
         if (value != null && value.getClass() != this.typeClass) {
             final Class clz = value.getClass();

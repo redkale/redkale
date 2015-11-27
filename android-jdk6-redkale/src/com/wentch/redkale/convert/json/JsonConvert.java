@@ -8,6 +8,8 @@ package com.wentch.redkale.convert.json;
 import com.wentch.redkale.convert.*;
 import com.wentch.redkale.util.*;
 import java.lang.reflect.*;
+import java.nio.*;
+import java.nio.charset.*;
 
 /**
  *
@@ -28,6 +30,22 @@ public final class JsonConvert extends Convert<JsonReader, JsonWriter> {
     protected JsonConvert(JsonFactory factory, boolean tiny) {
         super(factory);
         this.tiny = tiny;
+    }
+
+    public JsonByteBufferWriter pollJsonWriter(final Supplier<ByteBuffer> supplier) {
+        return new JsonByteBufferWriter(supplier).setTiny(tiny);
+    }
+
+    public JsonByteBufferWriter pollJsonWriter(final Charset charset, final Supplier<ByteBuffer> supplier) {
+        return new JsonByteBufferWriter(charset, supplier).setTiny(tiny);
+    }
+
+    public JsonWriter pollJsonWriter() {
+        return writerPool.get().setTiny(tiny);
+    }
+
+    public void offerJsonWriter(JsonWriter out) {
+        if (out != null) writerPool.offer(out);
     }
 
     @Override
@@ -57,8 +75,7 @@ public final class JsonConvert extends Convert<JsonReader, JsonWriter> {
     public String convertTo(final Type type, Object value) {
         if (type == null) return null;
         if (value == null) return "null";
-        final JsonWriter out = writerPool.get();
-        out.setTiny(tiny);
+        final JsonWriter out = writerPool.get().setTiny(tiny);
         factory.loadEncoder(type).convertTo(out, value);
         String result = out.toString();
         writerPool.offer(out);
@@ -70,19 +87,50 @@ public final class JsonConvert extends Convert<JsonReader, JsonWriter> {
         return convertTo(value.getClass(), value);
     }
 
-    public byte[] convertToUTF8Bytes(Object value) {
-        if (value == null) return new byte[]{110, 117, 108, 108};
-        return convertToUTF8Bytes(value.getClass(), value);
+    public void convertTo(final JsonWriter out, final Type type, Object value) {
+        if (type == null) return;
+        if (value == null) {
+            out.writeNull();
+        } else {
+            factory.loadEncoder(type).convertTo(out, value);
+        }
     }
 
-    public byte[] convertToUTF8Bytes(final Type type, Object value) {
-        if (type == null) return null;
-        if (value == null) return new byte[]{110, 117, 108, 108};
-        final JsonWriter out = writerPool.get();
-        out.setTiny(tiny);
-        factory.loadEncoder(type).convertTo(out, value);
-        byte[] result = out.toUTF8Bytes();
-        writerPool.offer(out);
-        return result;
+    public void convertTo(final JsonWriter out, Object value) {
+        if (value == null) {
+            out.writeNull();
+        } else {
+            factory.loadEncoder(value.getClass()).convertTo(out, value);
+        }
+    }
+
+    public ByteBuffer[] convertTo(final Supplier<ByteBuffer> supplier, final Type type, Object value) {
+        return convertTo(null, supplier, type, value);
+    }
+
+    public ByteBuffer[] convertTo(final Charset charset, final Supplier<ByteBuffer> supplier, final Type type, Object value) {
+        if (supplier == null || type == null) return null;
+        JsonByteBufferWriter out = new JsonByteBufferWriter(charset, supplier);
+        if (value == null) {
+            out.writeNull();
+        } else {
+            factory.loadEncoder(type).convertTo(out, value);
+        }
+        return out.toBuffers();
+    }
+
+    public ByteBuffer[] convertTo(final Supplier<ByteBuffer> supplier, Object value) {
+        return convertTo(null, supplier, value);
+    }
+
+    public ByteBuffer[] convertTo(final Charset charset, final Supplier<ByteBuffer> supplier, Object value) {
+        if (supplier == null) return null;
+        JsonByteBufferWriter out = new JsonByteBufferWriter(charset, supplier);
+        if (value == null) {
+            out.writeNull();
+        } else {
+            factory.loadEncoder(value.getClass()).convertTo(out, value);
+        }
+        return out.toBuffers();
     }
 }
