@@ -11,7 +11,7 @@ import java.util.function.LongSupplier;
  *
  * @author zhangjx
  */
-public final class WatchSupplier implements WatchBean {
+public final class WatchSupplier implements WatchNode {
 
     private final String name;
 

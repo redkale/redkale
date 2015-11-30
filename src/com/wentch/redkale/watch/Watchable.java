@@ -18,7 +18,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Documented
 @Target({FIELD})
 @Retention(RUNTIME)
-public @interface WatchOn {
+public @interface Watchable {
 
     String name();
 

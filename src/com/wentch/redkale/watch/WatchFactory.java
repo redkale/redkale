@@ -19,7 +19,7 @@ public final class WatchFactory {
 
     private static final WatchFactory instance = new WatchFactory(null);
 
-    private final List<WeakReference<WatchBean>> beans = new CopyOnWriteArrayList<>();
+    private final List<WeakReference<WatchNode>> beans = new CopyOnWriteArrayList<>();
 
     private final WatchFactory parent;
 
@@ -27,7 +27,7 @@ public final class WatchFactory {
         this.parent = parent;
     }
 
-    public void register(WatchBean bean) {
+    public void register(WatchNode bean) {
         if (bean != null) beans.add(new WeakReference<>(bean));
     }
 
@@ -35,9 +35,10 @@ public final class WatchFactory {
         return instance;
     }
 
-//    public WatchFactory createChild() {
-//        return new WatchFactory(this);
-//    }
+    public WatchFactory createChild() {
+        return new WatchFactory(this);
+    }
+
     public WatchNumber createWatchNumber(String name) {
         return createWatchNumber(name, "", false, 0);
     }
@@ -86,7 +87,7 @@ public final class WatchFactory {
                     if (Modifier.isFinal(field.getModifiers())) continue;
                     field.setAccessible(true);
                     final Class type = field.getType();
-                    WatchOn wo = field.getAnnotation(WatchOn.class);
+                    Watchable wo = field.getAnnotation(Watchable.class);
 
                 }
             } while ((clazz = clazz.getSuperclass()) != Object.class);

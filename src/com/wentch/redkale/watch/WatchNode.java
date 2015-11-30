@@ -9,7 +9,7 @@ package com.wentch.redkale.watch;
  *
  * @author zhangjx
  */
-public interface WatchBean {
+public interface WatchNode {
 
     public String getName();
 

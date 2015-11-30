@@ -11,7 +11,7 @@ import java.util.concurrent.atomic.*;
  *
  * @author zhangjx
  */
-public final class WatchNumber extends AtomicLong implements WatchBean {
+public final class WatchNumber extends AtomicLong implements WatchNode {
 
     private final boolean interval;
 
