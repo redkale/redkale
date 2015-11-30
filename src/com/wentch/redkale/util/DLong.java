@@ -28,7 +28,7 @@ public final class DLong extends Number implements Comparable<DLong> {
         return second;
     }
 
-    public boolean compare(long one, long two) {
+    public boolean equals(long one, long two) {
         return this.first == one && this.second == two;
     }
 

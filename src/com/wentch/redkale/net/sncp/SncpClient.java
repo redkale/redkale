@@ -348,7 +348,7 @@ public final class SncpClient {
         if (rnameid != nameid) throw new RuntimeException("sncp(" + action.method + ") response.nameid = " + nameid + ", but receive nameid =" + rnameid);
         long ractionid1 = buffer.getLong();
         long ractionid2 = buffer.getLong();
-        if (!action.actionid.compare(ractionid1, ractionid2)) throw new RuntimeException("sncp(" + action.method + ") response.actionid = " + action.actionid + ", but request.actionid =(" + ractionid1 + "_" + ractionid2 + ")");
+        if (!action.actionid.equals(ractionid1, ractionid2)) throw new RuntimeException("sncp(" + action.method + ") response.actionid = " + action.actionid + ", but request.actionid =(" + ractionid1 + "_" + ractionid2 + ")");
         buffer.getInt();  //地址
         buffer.getChar(); //端口
     }
