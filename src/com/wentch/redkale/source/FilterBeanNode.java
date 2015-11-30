@@ -94,12 +94,12 @@ final class FilterBeanNode extends FilterNode {
                                     .append(" ").append(alias).append(" ON a.").append(secinfo.getSQLColumn(jc)).append(" = ")
                                     .append(alias).append(".").append(secinfo.getSQLColumn(jc));
                         }
-                        newnode.foreignEntity = secinfo;
+                        newnode.foreignCache = secinfo.getCache();
                         newnode.tabalis = alias;
                         newnode.columnAttribute = secinfo.getAttribute(newnode.column);
                         newnode.byjoinColumn = jc;
                         newnode.foreignAttribute = secinfo.getAttribute(jc);
-                        if (newnode.foreignEntity != null && newnode.foreignAttribute == null) throw new RuntimeException(clazz.getName() + "." + field.getName() + " have illegal FilterJoinColumn " + joinCol);
+                        if (newnode.foreignCache != null && newnode.foreignAttribute == null) throw new RuntimeException(clazz.getName() + "." + field.getName() + " have illegal FilterJoinColumn " + joinCol);
                     }
                 }
                 //------------------------------------
@@ -147,7 +147,7 @@ final class FilterBeanNode extends FilterNode {
     //---------------------------------------------------------------------------------------------
     private Attribute beanAttribute;
 
-    private EntityInfo foreignEntity; // join 表
+    private EntityCache foreignCache; // join 表
 
     private String byjoinColumn;  //被join表的join字段
 
@@ -202,7 +202,7 @@ final class FilterBeanNode extends FilterNode {
         FilterBeanNode newnode = new FilterBeanNode(this.column, this.or, this.beanAttribute);
         newnode.express = this.express;
         newnode.nodes = this.nodes;
-        newnode.foreignEntity = this.foreignEntity;
+        newnode.foreignCache = this.foreignCache;
         newnode.byjoinColumn = this.byjoinColumn;
         newnode.foreignAttribute = this.foreignAttribute;
         newnode.columnAttribute = this.columnAttribute;
@@ -217,7 +217,7 @@ final class FilterBeanNode extends FilterNode {
         if (node instanceof FilterBeanNode) {
             FilterBeanNode beanNode = ((FilterBeanNode) node);
             this.beanAttribute = beanNode.beanAttribute;
-            this.foreignEntity = beanNode.foreignEntity;
+            this.foreignCache = beanNode.foreignCache;
             this.byjoinColumn = beanNode.byjoinColumn;
             this.foreignAttribute = beanNode.foreignAttribute;
             this.columnAttribute = beanNode.columnAttribute;
@@ -235,14 +235,14 @@ final class FilterBeanNode extends FilterNode {
 
     @Override
     protected <T> Predicate<T> createPredicate(final EntityCache<T> cache, FilterBean bean) {
-        if (this.foreignEntity == null) return super.createPredicate(cache, bean);
-        final Map<EntityInfo, Predicate> foreign = new HashMap<>();
+        if (this.foreignCache == null) return super.createPredicate(cache, bean);
+        final Map<EntityCache, Predicate> foreign = new HashMap<>();
         Predicate<T> result = null;
         putForeignPredicate(cache, foreign, bean);
         if (this.nodes != null) {
             for (FilterNode n : this.nodes) {
                 FilterBeanNode node = (FilterBeanNode) n;
-                if (node.foreignEntity == null) {
+                if (node.foreignCache == null) {
                     Predicate<T> f = node.createPredicate(cache, bean);
                     if (f == null) continue;
                     final Predicate<T> one = result;
@@ -278,16 +278,17 @@ final class FilterBeanNode extends FilterNode {
         if (foreign.isEmpty()) return result;
         final String byjoinCol = this.byjoinColumn;
         final Attribute foreignAttr = this.foreignAttribute;
-        for (final Map.Entry<EntityInfo, Predicate> en : foreign.entrySet()) {
+        for (final Map.Entry<EntityCache, Predicate> en : foreign.entrySet()) {
             Attribute<T, Serializable> byjoinAttr = cache.getAttribute(byjoinCol);
             final Predicate p = en.getValue();
+            final EntityCache joinCache = en.getKey();
             Predicate<T> f = new Predicate<T>() {
 
                 @Override
                 public boolean test(T t) {
                     Serializable key = byjoinAttr.get(t);
                     Predicate k = (e) -> key.equals(foreignAttr.get(e));
-                    return cache.exists(k.and(p));
+                    return joinCache.exists(k.and(p));
                 }
 
                 @Override
@@ -324,8 +325,8 @@ final class FilterBeanNode extends FilterNode {
         return result;
     }
 
-    private <T> void putForeignPredicate(final EntityCache<T> cache, final Map<EntityInfo, Predicate> foreign, FilterBean bean) {
-        if (this.foreignEntity == null) return;
+    private <T> void putForeignPredicate(final EntityCache<T> cache, final Map<EntityCache, Predicate> foreign, FilterBean bean) {
+        if (this.foreignCache == null) return;
         final Serializable val = getElementValue(bean);
         Predicate filter = (val == null && express != ISNULL && express != ISNOTNULL) ? new Predicate<T>() {
 
@@ -340,9 +341,9 @@ final class FilterBeanNode extends FilterNode {
             }
         } : super.createElementPredicate(cache, this.columnAttribute, bean);
         if (filter == null) return;
-        Predicate p = foreign.get(this.foreignEntity);
+        Predicate p = foreign.get(this.foreignCache);
         if (p == null) {
-            foreign.put(foreignEntity, filter);
+            foreign.put(foreignCache, filter);
         } else {
             final Predicate<T> one = p;
             final Predicate<T> two = filter;
@@ -369,7 +370,7 @@ final class FilterBeanNode extends FilterNode {
                     return "(" + one + " AND " + two + ")";
                 }
             };
-            foreign.put(foreignEntity, p);
+            foreign.put(foreignCache, p);
         }
     }
 
