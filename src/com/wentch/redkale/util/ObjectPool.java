@@ -77,9 +77,14 @@ public final class ObjectPool<T> implements Supplier<T> {
     public void offer(final T e) {
         if (e != null && recycler.test(e)) {
             if (cycleCounter != null) cycleCounter.incrementAndGet();
-            if (debug) queue.forEach(t -> {
-                if (t == e) logger.log(Level.WARNING, "[" + Thread.currentThread().getName() + "] repeat offer the same object(" + e + ")", new Exception());
-            });
+            if (debug) {
+                for (T t : queue) {
+                    if (t == e) {
+                        logger.log(Level.WARNING, "[" + Thread.currentThread().getName() + "] repeat offer the same object(" + e + ")", new Exception());
+                        return;
+                    }
+                }
+            }
             queue.offer(e);
         }
     }
