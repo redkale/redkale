@@ -9,6 +9,7 @@ import com.wentch.redkale.convert.*;
 import com.wentch.redkale.convert.ext.*;
 import com.wentch.redkale.util.*;
 import java.util.concurrent.atomic.*;
+import java.util.function.*;
 
 /**
  *
@@ -38,7 +39,19 @@ public final class BsonReader implements Reader {
     }
 
     public static ObjectPool<BsonReader> createPool(int max) {
-        return new ObjectPool<>(max, (Object... params) -> new BsonReader(), null, (x) -> x.recycle());
+        return new ObjectPool<BsonReader>(max, new Creator<BsonReader>() {
+
+            @Override
+            public BsonReader create(Object... params) {
+                return new BsonReader();
+            }
+        }, null, new Predicate<BsonReader>() {
+
+            @Override
+            public boolean test(BsonReader t) {
+                return t.recycle();
+            }
+        });
     }
 
     public BsonReader(byte[] bytes) {

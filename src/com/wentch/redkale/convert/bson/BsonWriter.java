@@ -8,6 +8,7 @@ package com.wentch.redkale.convert.bson;
 import com.wentch.redkale.convert.*;
 import com.wentch.redkale.util.*;
 import java.nio.*;
+import java.util.function.*;
 
 /**
  *
@@ -24,7 +25,19 @@ public class BsonWriter implements Writer {
     protected boolean tiny;
 
     public static ObjectPool<BsonWriter> createPool(int max) {
-        return new ObjectPool<>(max, (Object... params) -> new BsonWriter(), null, (x) -> x.recycle());
+        return new ObjectPool<BsonWriter>(max, new Creator<BsonWriter>() {
+
+            @Override
+            public BsonWriter create(Object... params) {
+                return new BsonWriter();
+            }
+        }, null, new Predicate<BsonWriter>() {
+
+            @Override
+            public boolean test(BsonWriter t) {
+                return t.recycle();
+            }
+        });
     }
 
     public byte[] toArray() {
@@ -66,7 +79,7 @@ public class BsonWriter implements Writer {
      * 扩充指定长度的缓冲区
      *
      * @param len
-     * @return 
+     * @return
      */
     protected int expand(int len) {
         int newcount = count + len;

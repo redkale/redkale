@@ -8,6 +8,7 @@ package com.wentch.redkale.convert.json;
 import com.wentch.redkale.convert.*;
 import com.wentch.redkale.util.*;
 import java.nio.*;
+import java.util.function.*;
 
 /**
  *
@@ -30,7 +31,19 @@ public class JsonWriter implements Writer {
     protected boolean tiny;
 
     public static ObjectPool<JsonWriter> createPool(int max) {
-        return new ObjectPool<>(max, (Object... params) -> new JsonWriter(), null, (x) -> x.recycle());
+        return new ObjectPool<JsonWriter>(max, new Creator<JsonWriter>() {
+
+            @Override
+            public JsonWriter create(Object... params) {
+                return new JsonWriter();
+            }
+        }, null, new Predicate<JsonWriter>() {
+
+            @Override
+            public boolean test(JsonWriter t) {
+                return t.recycle();
+            }
+        });
     }
 
     public JsonWriter() {
