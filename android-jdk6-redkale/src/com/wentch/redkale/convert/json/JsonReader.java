@@ -8,6 +8,7 @@ package com.wentch.redkale.convert.json;
 import com.wentch.redkale.convert.*;
 import com.wentch.redkale.util.*;
 import java.util.concurrent.atomic.*;
+import java.util.function.*;
 
 /**
  *
@@ -22,7 +23,7 @@ public final class JsonReader implements Reader {
     private int limit;
 
     public static ObjectPool<JsonReader> createPool(int max) {
-        return new ObjectPool<JsonReader>(max, new Creator<JsonReader>() {
+        return new ObjectPool<JsonReader>(max, new Creator<JsonReader>() {  //为了兼容 JDK 6
 
             @Override
             public JsonReader create(Object... params) {

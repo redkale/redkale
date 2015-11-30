@@ -9,6 +9,7 @@ import com.wentch.redkale.convert.*;
 import com.wentch.redkale.util.*;
 import java.lang.reflect.*;
 import java.nio.*;
+import java.util.function.*;
 
 /**
  * BSON协议格式: 
@@ -44,7 +45,7 @@ public final class BsonConvert extends Convert<BsonReader, BsonWriter> {
     }
 
     public BsonByteBufferWriter pollBsonWriter(final Supplier<ByteBuffer> supplier) {
-        return new BsonByteBufferWriter(supplier).setTiny(tiny); 
+        return new BsonByteBufferWriter(supplier).setTiny(tiny);
     }
 
     public BsonWriter pollBsonWriter() {

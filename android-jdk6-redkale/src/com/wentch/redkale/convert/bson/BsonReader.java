@@ -9,6 +9,7 @@ import com.wentch.redkale.convert.*;
 import com.wentch.redkale.convert.ext.*;
 import com.wentch.redkale.util.*;
 import java.util.concurrent.atomic.*;
+import java.util.function.*;
 
 /**
  *

@@ -8,6 +8,7 @@ import com.wentch.redkale.util.Creator.Creators;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
+import java.util.function.*;
 import java.util.logging.*;
 
 /**
@@ -63,6 +64,7 @@ public final class ObjectPool<T> implements Supplier<T> {
         this.creator = creator;
     }
 
+    @Override
     public T get() {
         T result = queue.poll();
         if (result == null) {
@@ -78,7 +80,10 @@ public final class ObjectPool<T> implements Supplier<T> {
             if (cycleCounter != null) cycleCounter.incrementAndGet();
             if (debug) {
                 for (T t : queue) {
-                    if (t == e) logger.log(Level.WARNING, "[" + Thread.currentThread().getName() + "] repeat offer the same object(" + e + ")", new Exception());
+                    if (t == e) {
+                        logger.log(Level.WARNING, "[" + Thread.currentThread().getName() + "] repeat offer the same object(" + e + ")", new Exception());
+                        return;
+                    }
                 }
             }
             queue.offer(e);

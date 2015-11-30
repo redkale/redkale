@@ -10,6 +10,7 @@ import com.wentch.redkale.util.*;
 import java.lang.reflect.*;
 import java.nio.*;
 import java.nio.charset.*;
+import java.util.function.*;
 
 /**
  *

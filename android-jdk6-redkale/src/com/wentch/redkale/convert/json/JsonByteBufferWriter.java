@@ -6,10 +6,10 @@
 package com.wentch.redkale.convert.json;
 
 import com.wentch.redkale.util.*;
-import com.wentch.redkale.util.Supplier;
 import java.nio.*;
 import java.nio.charset.*;
 import java.util.*;
+import java.util.function.*;
 
 /**
  *
