@@ -29,14 +29,39 @@ public interface Attribute<T, F> {
 
     public void set(T obj, F value);
 
+    /**
+     * 根据一个Field生成 Attribute 对象。
+     *
+     * @param <T>
+     * @param <F>
+     * @param field
+     * @return
+     */
     public static <T, F> Attribute<T, F> create(final Field field) {
         return create((Class<T>) field.getDeclaringClass(), field.getName(), field, null, null);
     }
 
+    /**
+     * 根据一个Field和field的别名生成 Attribute 对象。
+     *
+     * @param <T>
+     * @param <F>
+     * @param fieldname 别名
+     * @param field
+     * @return
+     */
     public static <T, F> Attribute<T, F> create(String fieldname, final Field field) {
         return create((Class<T>) field.getDeclaringClass(), fieldname, field, null, null);
     }
-
+    /**
+     * 根据一个Class和field名生成 Attribute 对象。
+     * 
+     * @param <T>
+     * @param <F>
+     * @param clazz
+     * @param fieldname  字段名， 如果该字段不存在则抛异常
+     * @return 
+     */
     public static <T, F> Attribute<T, F> create(Class<T> clazz, final String fieldname) {
         try {
             return create(clazz, fieldname, clazz.getDeclaredField(fieldname), null, null);
