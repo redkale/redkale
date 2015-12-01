@@ -14,15 +14,15 @@ import java.util.*;
  */
 public final class HttpClient {
 
-    private List<HttpCookie> cookies;
+    protected List<HttpCookie> cookies;
 
-    private Map<String, String> headers;
+    protected Map<String, String> headers;
 
-    private Map<String, String> params;
+    protected Map<String, String> params;
 
-    private final HttpFactory factory;
+    protected final HttpFactory factory;
 
-    private final URL url;
+    protected final URL url;
 
     HttpClient(HttpFactory factory, URL url) {
         this.factory = factory;
