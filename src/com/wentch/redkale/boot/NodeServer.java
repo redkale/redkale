@@ -153,7 +153,7 @@ public abstract class NodeServer {
                 Resource rs = field.getAnnotation(Resource.class);
                 if (rs == null) return;
                 if ((src instanceof Service) && Sncp.isRemote((Service) src)) return;
-                DataSource source = DataSourceFactory.create(rs.name());
+                DataSource source = new DataDefaultSource(rs.name());
                 application.sources.add(source);
                 regFactory.register(rs.name(), DataSource.class, source);
                 List<Transport> sameGroupTransports = sncpSameGroupTransports;
