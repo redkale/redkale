@@ -23,7 +23,7 @@ import java.util.logging.*;
 import javax.annotation.*;
 
 /**
- * HTTP Server节点的配置Server 
+ * HTTP Server节点的配置Server
  *
  * @author zhangjx
  */
@@ -63,8 +63,9 @@ public final class NodeHttpServer extends NodeServer {
     }
 
     private void initWebSocketService() {
+        final NodeServer self = this;
         final ResourceFactory regFactory = application.getResourceFactory();
-        factory.add(WebSocketNode.class, (ResourceFactory rf, final Object src, Field field) -> {
+        factory.add(WebSocketNode.class, (ResourceFactory rf, final Object src, Field field, Object attachment) -> {
             try {
                 Resource rs = field.getAnnotation(Resource.class);
                 if (rs == null) return;
@@ -77,7 +78,7 @@ public final class NodeHttpServer extends NodeServer {
                         nodeService = Sncp.createLocalService(rcname, getExecutor(), (Class<? extends Service>) WebSocketNodeService.class,
                                 getSncpAddress(), sncpDefaultGroups, sncpSameGroupTransports, sncpDiffGroupTransports);
                         regFactory.register(rcname, WebSocketNode.class, nodeService);
-                        factory.inject(nodeService);
+                        factory.inject(nodeService, self);
                         logger.fine("[" + Thread.currentThread().getName() + "] Load " + nodeService);
                         if (getSncpAddress() != null) {
                             NodeSncpServer sncpServer = null;
@@ -108,7 +109,7 @@ public final class NodeHttpServer extends NodeServer {
             WebServlet ws = clazz.getAnnotation(WebServlet.class);
             if (ws == null || ws.value().length == 0) continue;
             final HttpServlet servlet = clazz.newInstance();
-            factory.inject(servlet);
+            factory.inject(servlet, this);
             String[] mappings = ws.value();
             if (ws.fillurl() && !prefix.isEmpty()) {
                 for (int i = 0; i < mappings.length; i++) {

@@ -476,7 +476,7 @@ public final class Application {
         application.servicecdl = new CountDownLatch(1);
         final NodeServer server = new NodeHttpServer(application, null);
         server.init(application.config);
-        server.factory.inject(service);
+        server.factory.inject(service, server);
         return service;
     }
 

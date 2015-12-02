@@ -142,11 +142,15 @@ public final class ResourceFactory {
         if (parent != null) parent.load(reg, clazz, exclude, result);
     }
 
-    public boolean inject(final Object src) {
-        return inject(src, new ArrayList<>());
+    public <T> boolean inject(final Object src) {
+        return inject(src, null);
     }
 
-    private boolean inject(final Object src, final List<Object> list) {
+    public <T> boolean inject(final Object src, final T attachment) {
+        return inject(src, attachment, new ArrayList<>());
+    }
+
+    private <T> boolean inject(final Object src, final T attachment, final List<Object> list) {
         if (src == null) return false;
         try {
             list.add(src);
@@ -178,17 +182,15 @@ public final class ResourceFactory {
                     if (rs == null) {
                         if (Map.class.isAssignableFrom(classtype)) {
                             rs = find(Pattern.compile(rcname.isEmpty() ? ".*" : rcname), (Class) ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[1], src);
+                        } else if (rcname.startsWith("property.")) {
+                            rs = find(rcname, String.class);
                         } else {
-                            if (rcname.startsWith("property.")) {
-                                rs = find(rcname, String.class);
-                            } else {
-                                rs = find(rcname, classtype);
-                            }
+                            rs = find(rcname, classtype);
                         }
                     }
                     if (rs == null) {
                         Intercepter it = findIntercepter(field.getGenericType(), field);
-                        if (it != null) it.invoke(this, src, field);
+                        if (it != null) it.invoke(this, src, field, attachment);
                         continue;
                     }
                     if (!rs.getClass().isPrimitive() && classtype.isPrimitive()) {
@@ -232,7 +234,7 @@ public final class ResourceFactory {
 
     public static interface Intercepter {
 
-        public void invoke(ResourceFactory factory, Object src, Field field);
+        public void invoke(ResourceFactory factory, Object src, Field field, Object attachment);
     }
 
 }

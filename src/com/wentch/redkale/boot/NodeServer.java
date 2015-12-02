@@ -146,9 +146,10 @@ public abstract class NodeServer {
     protected abstract void loadServlet(ClassFilter<? extends Servlet> servletFilter) throws Exception;
 
     private void initResource() {
+        final NodeServer self = this;
         //---------------------------------------------------------------------------------------------
         final ResourceFactory regFactory = application.getResourceFactory();
-        factory.add(DataSource.class, (ResourceFactory rf, final Object src, Field field) -> {
+        factory.add(DataSource.class, (ResourceFactory rf, final Object src, Field field, final Object attachment) -> {
             try {
                 Resource rs = field.getAnnotation(Resource.class);
                 if (rs == null) return;
@@ -177,10 +178,10 @@ public abstract class NodeServer {
                     ServiceWrapper wrapper = new ServiceWrapper(DataCacheListenerService.class, cacheListenerService, rs.name(), sncpGroup, sncpDefaultGroups, null);
                     localServiceWrappers.add(wrapper);
                     if (consumer != null) consumer.accept(wrapper);
-                    rf.inject(cacheListenerService);
+                    rf.inject(cacheListenerService, self);
                 }
                 field.set(src, source);
-                rf.inject(source); // 给 "datasource.nodeid" 赋值
+                rf.inject(source, self); // 给 "datasource.nodeid" 赋值
             } catch (Exception e) {
                 logger.log(Level.SEVERE, "DataSource inject error", e);
             }
@@ -314,10 +315,10 @@ public abstract class NodeServer {
         final StringBuilder sb = logger.isLoggable(Level.INFO) ? new StringBuilder() : null;
         //---------------- inject ----------------
         new HashSet<>(localServiceWrappers).forEach(y -> {
-            factory.inject(y.getService());
+            factory.inject(y.getService(), NodeServer.this);
         });
         remoteServiceWrappers.forEach(y -> {
-            factory.inject(y.getService());
+            factory.inject(y.getService(), NodeServer.this);
             if (sb != null) {
                 sb.append(threadName).append("RemoteService(").append(y.getType()).append(':').append(y.getName()).append(") loaded").append(LINE_SEPARATOR);
             }
@@ -392,12 +393,10 @@ public abstract class NodeServer {
                 String excludes = list.getValue("excludes", "");
                 filter.setIncludePatterns(includes.split(";"));
                 filter.setExcludePatterns(excludes.split(";"));
-            } else {
-                if (ref2 == null || ref2 == Annotation.class) {  //service如果是autoload=false则不需要加载
-                    filter.setRefused(true);
-                } else if (ref2 != Annotation.class) {
-                    filter.setAnnotationClass(ref2);
-                }
+            } else if (ref2 == null || ref2 == Annotation.class) {  //service如果是autoload=false则不需要加载
+                filter.setRefused(true);
+            } else if (ref2 != Annotation.class) {
+                filter.setAnnotationClass(ref2);
             }
             cf = (cf == null) ? filter : cf.or(filter);
         }
