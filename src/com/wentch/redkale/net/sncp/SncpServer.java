@@ -47,7 +47,7 @@ public final class SncpServer extends Server {
         final int port = this.address.getPort();
         AtomicLong createBufferCounter = watch == null ? new AtomicLong() : watch.createWatchNumber("SNCP_" + port + ".Buffer.creatCounter");
         AtomicLong cycleBufferCounter = watch == null ? new AtomicLong() : watch.createWatchNumber("SNCP_" + port + ".Buffer.cycleCounter");
-        int rcapacity = Math.max(this.capacity, 4 * 1024);
+        final int rcapacity = Math.max(this.capacity, 4 * 1024);
         ObjectPool<ByteBuffer> bufferPool = new ObjectPool<>(createBufferCounter, cycleBufferCounter, this.bufferPoolSize,
                 (Object... params) -> ByteBuffer.allocateDirect(rcapacity), null, (e) -> {
                     if (e == null || e.isReadOnly() || e.capacity() != rcapacity) return false;

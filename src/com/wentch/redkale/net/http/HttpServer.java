@@ -46,7 +46,7 @@ public final class HttpServer extends Server {
         final int port = this.address.getPort();
         AtomicLong createBufferCounter = watch == null ? new AtomicLong() : watch.createWatchNumber("HTTP_" + port + ".Buffer.creatCounter");
         AtomicLong cycleBufferCounter = watch == null ? new AtomicLong() : watch.createWatchNumber("HTTP_" + port + ".Buffer.cycleCounter");
-        int rcapacity = Math.max(this.capacity, 16 * 1024 + 8); //兼容 HTTP 2.0
+        final int rcapacity = Math.max(this.capacity, 16 * 1024 + 8); //兼容 HTTP 2.0
         ObjectPool<ByteBuffer> bufferPool = new ObjectPool<>(createBufferCounter, cycleBufferCounter, this.bufferPoolSize,
                 (Object... params) -> ByteBuffer.allocateDirect(rcapacity), null, (e) -> {
                     if (e == null || e.isReadOnly() || e.capacity() != rcapacity) return false;
