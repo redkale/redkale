@@ -5,8 +5,7 @@
  */
 package com.wentch.redkale.test.source;
 
-import com.wentch.redkale.source.DataSource;
-import com.wentch.redkale.source.DataSourceFactory;
+import com.wentch.redkale.source.*;
 
 /**
  *
@@ -16,7 +15,7 @@ public class JDBCTest {
 
     public static void main(String[] args) throws Exception {
         System.setProperty("persist.type", "jdbc");
-        DataSource source = DataSourceFactory.create();  //耗时：37415
+        DataSource source = new DataDefaultSource();  //耗时：37415
         int count = 1000;
         LoginTestRecord last = null;
         long s = System.currentTimeMillis();
