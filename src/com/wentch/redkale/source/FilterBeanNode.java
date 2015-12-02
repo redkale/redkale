@@ -91,8 +91,7 @@ final class FilterBeanNode extends FilterNode {
                         final String jc = joinCol.column().isEmpty() ? secinfo.getPrimary().field() : joinCol.column();
                         if (first) {
                             joinsb.append(" ").append(joinCol.type().name()).append(" JOIN ").append(secinfo.getTable())
-                                    .append(" ").append(alias).append(" ON a.").append(secinfo.getSQLColumn(jc)).append(" = ")
-                                    .append(alias).append(".").append(secinfo.getSQLColumn(jc));
+                                    .append(" ").append(alias).append(" ON ").append(secinfo.getSQLColumn("a", jc)).append(" = ").append(secinfo.getSQLColumn(alias, jc));
                         }
                         newnode.foreignCache = secinfo.getCache();
                         newnode.tabalis = alias;
@@ -181,9 +180,7 @@ final class FilterBeanNode extends FilterNode {
         if (type.isArray() || Collection.class.isAssignableFrom(type)) {
             if (Range.class.isAssignableFrom(type.getComponentType())) {
                 if (AND != exp) exp = OR;
-            } else {
-                if (NOTIN != exp) exp = IN;
-            }
+            } else if (NOTIN != exp) exp = IN;
         } else if (Range.class.isAssignableFrom(type)) {
             if (NOTBETWEEN != exp) exp = BETWEEN;
         }

@@ -155,15 +155,16 @@ public class FilterNode {
         return true;
     }
 
-    public static FilterNode create(String column, Serializable value) {
-        return create(column, null, value);
-    }
-
-    public static FilterNode create(String column, FilterExpress express, Serializable value) {
-        return new FilterNode(column, express, value);
-    }
-
-    protected final <T> CharSequence createSQLExpress(final EntityInfo<T> info, final FilterBean bean) {
+    /**
+     * 该方法需要重载
+     *
+     * @param <T>
+     * @param func
+     * @param info
+     * @param bean
+     * @return
+     */
+    protected <T> CharSequence createSQLExpress(final Function<Class, EntityInfo> func, final EntityInfo<T> info, final FilterBean bean) {
         CharSequence sb0 = createElementSQLExpress(info, bean);
         if (this.nodes == null) return sb0;
         final StringBuilder rs = new StringBuilder();
@@ -174,7 +175,7 @@ public class FilterNode {
             rs.append(sb0);
         }
         for (FilterNode node : this.nodes) {
-            CharSequence f = node.createSQLExpress(info, bean);
+            CharSequence f = node.createSQLExpress(func, info, bean);
             if (f == null || f.length() < 3) continue;
             if (more) rs.append(or ? " OR " : " AND ");
             rs.append(f);
@@ -185,23 +186,29 @@ public class FilterNode {
         return rs;
     }
 
+    public static FilterNode create(String column, Serializable value) {
+        return create(column, null, value);
+    }
+
+    public static FilterNode create(String column, FilterExpress express, Serializable value) {
+        return new FilterNode(column, express, value);
+    }
+
     protected final <T> CharSequence createElementSQLExpress(final EntityInfo<T> info, final FilterBean bean) {
         if (column == null) return null;
-        final String tabalis = getTabalis();
+        final String talis = getTabalis() == null ? "a" : getTabalis();
         if (express == ISNULL || express == ISNOTNULL) {
             StringBuilder sb = new StringBuilder();
-            if (tabalis != null) sb.append(tabalis).append('.');
-            sb.append(info.getSQLColumn(column)).append(' ').append(express.value());
+            sb.append(info.getSQLColumn(talis, column)).append(' ').append(express.value());
             return sb;
         }
         final CharSequence val = formatToString(express, getElementValue(bean));
         if (val == null) return null;
         StringBuilder sb = new StringBuilder(32);
-        if (tabalis != null) sb.append(tabalis).append('.');
         if (express == IGNORECASELIKE || express == IGNORECASENOTLIKE) {
-            sb.append("LOWER(").append(info.getSQLColumn(column)).append(')');
+            sb.append("LOWER(").append(info.getSQLColumn(talis, column)).append(')');
         } else {
-            sb.append(info.getSQLColumn(column));
+            sb.append(info.getSQLColumn(talis, column));
         }
         sb.append(' ');
         switch (express) {
@@ -794,7 +801,7 @@ public class FilterNode {
         return toString(null);
     }
 
-    public String toString(final FilterBean bean) {
+    protected String toString(final FilterBean bean) {
         StringBuilder sb = new StringBuilder();
         if (nodes == null) {
             if (column != null) {

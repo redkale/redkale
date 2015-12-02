@@ -646,8 +646,8 @@ public final class DataDefaultSource implements DataSource, Nameable, Function<C
         try {
             if (!info.isVirtualEntity()) {
                 CharSequence join = node.createSQLJoin(this, info);
-                CharSequence where = node.createSQLExpress(info, null);
-                String sql = "DELETE FROM " + info.getTable() + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
+                CharSequence where = node.createSQLExpress(this, info, null);
+                String sql = "DELETE FROM " + info.getTable() + " a" + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
                 if (debug.get()) logger.finest(info.getType().getSimpleName() + " delete sql=" + sql);
                 final Statement stmt = conn.createStatement();
                 stmt.execute(sql);
@@ -797,7 +797,7 @@ public final class DataDefaultSource implements DataSource, Nameable, Function<C
     private <T> void updateColumn(Connection conn, final EntityInfo<T> info, Serializable id, String column, Serializable value) {
         try {
             if (!info.isVirtualEntity()) {
-                String sql = "UPDATE " + info.getTable() + " SET " + info.getSQLColumn(column) + " = "
+                String sql = "UPDATE " + info.getTable() + " SET " + info.getSQLColumn(null, column) + " = "
                         + formatToString(value) + " WHERE " + info.getPrimarySQLColumn() + " = " + formatToString(id);
                 if (debug.get()) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
                 final Statement stmt = conn.createStatement();
@@ -849,7 +849,7 @@ public final class DataDefaultSource implements DataSource, Nameable, Function<C
     private <T> void updateColumnIncrement(Connection conn, final EntityInfo<T> info, Serializable id, String column, long incvalue) {
         try {
             if (!info.isVirtualEntity()) {
-                String col = info.getSQLColumn(column);
+                String col = info.getSQLColumn(null, column);
                 String sql = "UPDATE " + info.getTable() + " SET " + col + " = " + col + " + (" + incvalue
                         + ") WHERE " + info.getPrimarySQLColumn() + " = " + formatToString(id);
                 if (debug.get()) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
@@ -903,7 +903,7 @@ public final class DataDefaultSource implements DataSource, Nameable, Function<C
     private <T> void updateColumnAnd(Connection conn, final EntityInfo<T> info, Serializable id, String column, long andvalue) {
         try {
             if (!info.isVirtualEntity()) {
-                String col = info.getSQLColumn(column);
+                String col = info.getSQLColumn(null, column);
                 String sql = "UPDATE " + info.getTable() + " SET " + col + " = " + col + " & (" + andvalue
                         + ") WHERE " + info.getPrimarySQLColumn() + " = " + formatToString(id);
                 if (debug.get()) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
@@ -957,7 +957,7 @@ public final class DataDefaultSource implements DataSource, Nameable, Function<C
     private <T> void updateColumnOr(Connection conn, final EntityInfo<T> info, Serializable id, String column, long orvalue) {
         try {
             if (!info.isVirtualEntity()) {
-                String col = info.getSQLColumn(column);
+                String col = info.getSQLColumn(null, column);
                 String sql = "UPDATE " + info.getTable() + " SET " + col + " = " + col + " | (" + orvalue
                         + ") WHERE " + info.getPrimarySQLColumn() + " = " + formatToString(id);
                 if (debug.get()) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
@@ -1020,7 +1020,7 @@ public final class DataDefaultSource implements DataSource, Nameable, Function<C
                 attrs.add(attr);
                 if (!virtual) {
                     if (setsql.length() > 0) setsql.append(',');
-                    setsql.append(info.getSQLColumn(col)).append(" = ").append(formatToString(attr.get(value)));
+                    setsql.append(info.getSQLColumn(null, col)).append(" = ").append(formatToString(attr.get(value)));
                 }
             }
             if (!virtual) {
@@ -1091,7 +1091,7 @@ public final class DataDefaultSource implements DataSource, Nameable, Function<C
                 }
             }
             final CharSequence join = node == null ? null : node.createSQLJoin(this, info);
-            final CharSequence where = node == null ? null : node.createSQLExpress(info, bean);
+            final CharSequence where = node == null ? null : node.createSQLExpress(this, info, bean);
             final String sql = "SELECT " + reckon.getColumn((column == null || column.isEmpty() ? "*" : ("a." + column))) + " FROM " + info.getTable() + " a"
                     + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
             if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(entityClass.getSimpleName() + " single sql=" + sql);
@@ -1138,9 +1138,9 @@ public final class DataDefaultSource implements DataSource, Nameable, Function<C
                     return cache.getMapResult(keyColumn, reckon, reckonColumn, node, bean);
                 }
             }
-            final String sqlkey = info.getSQLColumn(keyColumn);
+            final String sqlkey = info.getSQLColumn(null, keyColumn);
             final CharSequence join = node == null ? null : node.createSQLJoin(this, info);
-            final CharSequence where = node == null ? null : node.createSQLExpress(info, bean);
+            final CharSequence where = node == null ? null : node.createSQLExpress(this, info, bean);
             final String sql = "SELECT a." + sqlkey + ", " + reckon.getColumn((reckonColumn == null || reckonColumn.isEmpty() ? "*" : ("a." + reckonColumn)))
                     + " FROM " + info.getTable() + " a" + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where)) + " GROUP BY a." + sqlkey;
             if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(entityClass.getSimpleName() + " single sql=" + sql);
@@ -1225,7 +1225,7 @@ public final class DataDefaultSource implements DataSource, Nameable, Function<C
         try {
             final SelectColumn sels = selects;
             final CharSequence join = node == null ? null : node.createSQLJoin(this, info);
-            final CharSequence where = node == null ? null : node.createSQLExpress(info, bean);
+            final CharSequence where = node == null ? null : node.createSQLExpress(this, info, bean);
             final String sql = "SELECT a.* FROM " + info.getTable() + " a" + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
             if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(clazz.getSimpleName() + " find sql=" + sql);
             final PreparedStatement ps = conn.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
@@ -1283,8 +1283,8 @@ public final class DataDefaultSource implements DataSource, Nameable, Function<C
         final Connection conn = createReadSQLConnection();
         try {
             final CharSequence join = node == null ? null : node.createSQLJoin(this, info);
-            final CharSequence where = node == null ? null : node.createSQLExpress(info, bean);
-            final String sql = "SELECT COUNT(a." + info.getPrimarySQLColumn() + ") FROM " + info.getTable() + " a" + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
+            final CharSequence where = node == null ? null : node.createSQLExpress(this, info, bean);
+            final String sql = "SELECT COUNT(" + info.getPrimarySQLColumn("a") + ") FROM " + info.getTable() + " a" + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
             if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(clazz.getSimpleName() + " exists sql=" + sql);
             final PreparedStatement ps = conn.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
             final ResultSet set = ps.executeQuery();
@@ -1537,7 +1537,7 @@ public final class DataDefaultSource implements DataSource, Nameable, Function<C
             final SelectColumn sels = selects;
             final List<T> list = new ArrayList();
             final CharSequence join = node == null ? null : node.createSQLJoin(this, info);
-            final CharSequence where = node == null ? null : node.createSQLExpress(info, bean);
+            final CharSequence where = node == null ? null : node.createSQLExpress(this, info, bean);
             final String sql = "SELECT a.* FROM " + info.getTable() + " a" + (join == null ? "" : join)
                     + ((where == null || where.length() == 0) ? "" : (" WHERE " + where)) + info.createSQLOrderby(flipper);
             if (debug.get() && info.isLoggable(Level.FINEST))

@@ -213,9 +213,9 @@ public final class EntityInfo<T> {
                 if (updatesb.length() > 0) updatesb.append(',');
                 updatesb.append(col).append(" = ?");
             }
-            this.updateSQL = "UPDATE " + table + " SET " + updatesb + " WHERE " + getPrimarySQLColumn() + " = ?";
-            this.deleteSQL = "DELETE FROM " + table + " WHERE " + getPrimarySQLColumn() + " = ?";
-            this.querySQL = "SELECT * FROM " + table + " WHERE " + getPrimarySQLColumn() + " = ?";
+            this.updateSQL = "UPDATE " + table + " SET " + updatesb + " WHERE " + getPrimarySQLColumn(null) + " = ?";
+            this.deleteSQL = "DELETE FROM " + table + " WHERE " + getPrimarySQLColumn(null) + " = ?";
+            this.querySQL = "SELECT * FROM " + table + " WHERE " + getPrimarySQLColumn(null) + " = ?";
         } else {
             this.insertSQL = null;
             this.updateSQL = null;
@@ -305,9 +305,9 @@ public final class EntityInfo<T> {
                 String[] sub = item.split("\\s+");
                 if (flag) sb.append(',');
                 if (sub.length < 2 || sub[1].equalsIgnoreCase("ASC")) {
-                    sb.append("a.").append(getSQLColumn(sub[0])).append(" ASC");
+                    sb.append(getSQLColumn("a", sub[0])).append(" ASC");
                 } else {
-                    sb.append("a.").append(getSQLColumn(sub[0])).append(" DESC");
+                    sb.append(getSQLColumn("a", sub[0])).append(" DESC");
                 }
                 flag = true;
             }
@@ -318,13 +318,18 @@ public final class EntityInfo<T> {
     }
 
     //根据field字段名获取数据库对应的字段名
-    public String getSQLColumn(String fieldname) {
-        return this.aliasmap == null ? fieldname : aliasmap.getOrDefault(fieldname, fieldname);
+    public String getSQLColumn(String tabalis, String fieldname) {
+        return this.aliasmap == null ? (tabalis == null ? fieldname : (tabalis + '.' + fieldname))
+                : (tabalis == null ? aliasmap.getOrDefault(fieldname, fieldname) : (tabalis + '.' + aliasmap.getOrDefault(fieldname, fieldname)));
+    }
+
+    public String getPrimarySQLColumn() {
+        return getSQLColumn(null, this.primary.field());
     }
 
     //数据库字段名
-    public String getPrimarySQLColumn() {
-        return getSQLColumn(this.primary.field());
+    public String getPrimarySQLColumn(String tabalis) {
+        return getSQLColumn(tabalis, this.primary.field());
     }
 
     public Map<String, Attribute<T, Serializable>> getAttributes() {
@@ -339,7 +344,7 @@ public final class EntityInfo<T> {
         T obj = creator.create();
         for (Attribute<T, Serializable> attr : queryAttributes) {
             if (sels == null || sels.validate(attr.field())) {
-                Serializable o = (Serializable) set.getObject(this.getSQLColumn(attr.field()));
+                Serializable o = (Serializable) set.getObject(this.getSQLColumn(null, attr.field()));
                 if (o != null) {
                     Class t = attr.type();
                     if (t == short.class) {
