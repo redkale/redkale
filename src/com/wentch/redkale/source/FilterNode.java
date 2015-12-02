@@ -18,17 +18,6 @@ import java.util.function.*;
  */
 public class FilterNode {
 
-    private static final Map<Class, Class> class2 = new HashMap<>();
-
-    static {
-        class2.put(Integer.class, int.class);
-        class2.put(Long.class, long.class);
-        class2.put(Short.class, short.class);
-        class2.put(Float.class, float.class);
-        class2.put(Byte.class, byte.class);
-        class2.put(Double.class, double.class);
-    }
-
     protected String column;
 
     protected FilterExpress express;
@@ -367,7 +356,21 @@ public class FilterNode {
                 Iterator it = collection.iterator();
                 it.hasNext();
                 Class fs = it.next().getClass();
-                if (Number.class.isAssignableFrom(fs) && atype != fs && atype != class2.get(fs)) { //需要转换
+                Class pfs = fs;
+                if (fs == Integer.class) {
+                    pfs = int.class;
+                } else if (fs == Long.class) {
+                    pfs = long.class;
+                } else if (fs == Short.class) {
+                    pfs = short.class;
+                } else if (fs == Float.class) {
+                    pfs = float.class;
+                } else if (fs == Byte.class) {
+                    pfs = byte.class;
+                } else if (fs == Double.class) {
+                    pfs = double.class;
+                }
+                if (Number.class.isAssignableFrom(fs) && atype != fs && atype != pfs) { //需要转换
                     ArrayList list = new ArrayList(collection.size());
                     if (atype == int.class || atype == Integer.class) {
                         for (Number num : (Collection<Number>) collection) {
