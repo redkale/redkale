@@ -140,10 +140,11 @@ public class FilterNode {
      * 该方法需要重载
      *
      * @param <T>
+     * @param func
      * @param info
      * @return
      */
-    protected <T> CharSequence createSQLJoin(final EntityInfo<T> info) {
+    protected <T> CharSequence createSQLJoin(final Function<Class, EntityInfo> func, final EntityInfo<T> info) {
         return null;
     }
 
@@ -273,28 +274,28 @@ public class FilterNode {
 
         if (express == ISNULL) return new Predicate<T>() {
 
-            @Override
-            public boolean test(T t) {
-                return attr.get(t) == null;
-            }
+                @Override
+                public boolean test(T t) {
+                    return attr.get(t) == null;
+                }
 
-            @Override
-            public String toString() {
-                return attr.field() + " = null";
-            }
-        };
+                @Override
+                public String toString() {
+                    return attr.field() + " = null";
+                }
+            };
         if (express == ISNOTNULL) return new Predicate<T>() {
 
-            @Override
-            public boolean test(T t) {
-                return attr.get(t) != null;
-            }
+                @Override
+                public boolean test(T t) {
+                    return attr.get(t) != null;
+                }
 
-            @Override
-            public String toString() {
-                return attr.field() + " != null";
-            }
-        };
+                @Override
+                public String toString() {
+                    return attr.field() + " != null";
+                }
+            };
         if (attr == null) return null;
         Serializable val0 = getElementValue(bean);
         if (val0 == null) return null;
@@ -401,113 +402,113 @@ public class FilterNode {
         switch (express) {
             case EQUAL: return new Predicate<T>() {
 
-                @Override
-                public boolean test(T t) {
-                    return val.equals(attr.get(t));
-                }
+                    @Override
+                    public boolean test(T t) {
+                        return val.equals(attr.get(t));
+                    }
 
-                @Override
-                public String toString() {
-                    return attr.field() + ' ' + express.value() + ' ' + val;
-                }
-            };
+                    @Override
+                    public String toString() {
+                        return attr.field() + ' ' + express.value() + ' ' + val;
+                    }
+                };
             case NOTEQUAL: return new Predicate<T>() {
 
-                @Override
-                public boolean test(T t) {
-                    return !val.equals(attr.get(t));
-                }
+                    @Override
+                    public boolean test(T t) {
+                        return !val.equals(attr.get(t));
+                    }
 
-                @Override
-                public String toString() {
-                    return attr.field() + ' ' + express.value() + ' ' + val;
-                }
-            };
+                    @Override
+                    public String toString() {
+                        return attr.field() + ' ' + express.value() + ' ' + val;
+                    }
+                };
             case GREATERTHAN: return new Predicate<T>() {
 
-                @Override
-                public boolean test(T t) {
-                    return ((Number) attr.get(t)).longValue() > ((Number) val).longValue();
-                }
+                    @Override
+                    public boolean test(T t) {
+                        return ((Number) attr.get(t)).longValue() > ((Number) val).longValue();
+                    }
 
-                @Override
-                public String toString() {
-                    return attr.field() + ' ' + express.value() + ' ' + val;
-                }
-            };
+                    @Override
+                    public String toString() {
+                        return attr.field() + ' ' + express.value() + ' ' + val;
+                    }
+                };
             case LESSTHAN: return new Predicate<T>() {
 
-                @Override
-                public boolean test(T t) {
-                    return ((Number) attr.get(t)).longValue() < ((Number) val).longValue();
-                }
+                    @Override
+                    public boolean test(T t) {
+                        return ((Number) attr.get(t)).longValue() < ((Number) val).longValue();
+                    }
 
-                @Override
-                public String toString() {
-                    return attr.field() + ' ' + express.value() + ' ' + val;
-                }
-            };
+                    @Override
+                    public String toString() {
+                        return attr.field() + ' ' + express.value() + ' ' + val;
+                    }
+                };
             case GREATERTHANOREQUALTO: return new Predicate<T>() {
 
-                @Override
-                public boolean test(T t) {
-                    return ((Number) attr.get(t)).longValue() >= ((Number) val).longValue();
-                }
+                    @Override
+                    public boolean test(T t) {
+                        return ((Number) attr.get(t)).longValue() >= ((Number) val).longValue();
+                    }
 
-                @Override
-                public String toString() {
-                    return attr.field() + ' ' + express.value() + ' ' + val;
-                }
-            };
+                    @Override
+                    public String toString() {
+                        return attr.field() + ' ' + express.value() + ' ' + val;
+                    }
+                };
             case LESSTHANOREQUALTO: return new Predicate<T>() {
 
-                @Override
-                public boolean test(T t) {
-                    return ((Number) attr.get(t)).longValue() <= ((Number) val).longValue();
-                }
+                    @Override
+                    public boolean test(T t) {
+                        return ((Number) attr.get(t)).longValue() <= ((Number) val).longValue();
+                    }
 
-                @Override
-                public String toString() {
-                    return attr.field() + ' ' + express.value() + ' ' + val;
-                }
-            };
+                    @Override
+                    public String toString() {
+                        return attr.field() + ' ' + express.value() + ' ' + val;
+                    }
+                };
 
             case OPAND: return new Predicate<T>() {
 
-                @Override
-                public boolean test(T t) {
-                    return (((Number) attr.get(t)).longValue() & ((Number) val).longValue()) > 0;
-                }
+                    @Override
+                    public boolean test(T t) {
+                        return (((Number) attr.get(t)).longValue() & ((Number) val).longValue()) > 0;
+                    }
 
-                @Override
-                public String toString() {
-                    return attr.field() + " & " + val + " > 0";
-                }
-            };
+                    @Override
+                    public String toString() {
+                        return attr.field() + " & " + val + " > 0";
+                    }
+                };
             case OPOR: return new Predicate<T>() {
 
-                @Override
-                public boolean test(T t) {
-                    return (((Number) attr.get(t)).longValue() | ((Number) val).longValue()) > 0;
-                }
+                    @Override
+                    public boolean test(T t) {
+                        return (((Number) attr.get(t)).longValue() | ((Number) val).longValue()) > 0;
+                    }
 
-                @Override
-                public String toString() {
-                    return attr.field() + " | " + val + " > 0";
-                }
-            };
+                    @Override
+                    public String toString() {
+                        return attr.field() + " | " + val + " > 0";
+                    }
+                };
             case OPANDNO: return new Predicate<T>() {
 
-                @Override
-                public boolean test(T t) {
-                    return (((Number) attr.get(t)).longValue() & ((Number) val).longValue()) == 0;
-                }
+                    @Override
+                    public boolean test(T t) {
+                        return (((Number) attr.get(t)).longValue() & ((Number) val).longValue()) == 0;
+                    }
 
-                @Override
-                public String toString() {
-                    return attr.field() + " & " + val + " = 0";
-                }
-            };
+                    @Override
+                    public String toString() {
+                        return attr.field() + " & " + val + " = 0";
+                    }
+                };
             case LIKE:
                 return new Predicate<T>() {
 
@@ -573,34 +574,34 @@ public class FilterNode {
                 final Comparable max = range.getMax();
                 if (express == BETWEEN) return new Predicate<T>() {
 
-                    @Override
-                    public boolean test(T t) {
-                        Comparable rs = (Comparable) attr.get(t);
-                        if (rs == null) return false;
-                        if (min != null && min.compareTo(rs) >= 0) return false;
-                        return !(max != null && max.compareTo(rs) <= 0);
-                    }
+                        @Override
+                        public boolean test(T t) {
+                            Comparable rs = (Comparable) attr.get(t);
+                            if (rs == null) return false;
+                            if (min != null && min.compareTo(rs) >= 0) return false;
+                            return !(max != null && max.compareTo(rs) <= 0);
+                        }
 
-                    @Override
-                    public String toString() {
-                        return attr.field() + " BETWEEN " + min + " AND " + max;
-                    }
-                };
+                        @Override
+                        public String toString() {
+                            return attr.field() + " BETWEEN " + min + " AND " + max;
+                        }
+                    };
                 if (express == NOTBETWEEN) return new Predicate<T>() {
 
-                    @Override
-                    public boolean test(T t) {
-                        Comparable rs = (Comparable) attr.get(t);
-                        if (rs == null) return true;
-                        if (min != null && min.compareTo(rs) >= 0) return true;
-                        return (max != null && max.compareTo(rs) <= 0);
-                    }
+                        @Override
+                        public boolean test(T t) {
+                            Comparable rs = (Comparable) attr.get(t);
+                            if (rs == null) return true;
+                            if (min != null && min.compareTo(rs) >= 0) return true;
+                            return (max != null && max.compareTo(rs) <= 0);
+                        }
 
-                    @Override
-                    public String toString() {
-                        return attr.field() + " NOT BETWEEN " + min + " AND " + max;
-                    }
-                };
+                        @Override
+                        public String toString() {
+                            return attr.field() + " NOT BETWEEN " + min + " AND " + max;
+                        }
+                    };
                 return null;
             case IN:
             case NOTIN:

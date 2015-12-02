@@ -228,7 +228,7 @@ final class FilterBeanNode extends FilterNode {
     }
 
     @Override
-    protected <T> CharSequence createSQLJoin(final EntityInfo<T> info) {
+    protected <T> CharSequence createSQLJoin(final Function<Class, EntityInfo> func, final EntityInfo<T> info) {
         if (joinSQL == null) return null;
         return joinSQL;
     }

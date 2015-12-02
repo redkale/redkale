@@ -24,7 +24,7 @@ import javax.xml.stream.*;
  * @author zhangjx
  */
 @SuppressWarnings("unchecked")
-public final class DataDefaultSource implements DataSource, Nameable {
+public final class DataDefaultSource implements DataSource, Nameable, Function<Class, EntityInfo> {
 
     public static final String DATASOURCE_CONFPATH = "DATASOURCE_CONFPATH";
 
@@ -324,6 +324,11 @@ public final class DataDefaultSource implements DataSource, Nameable {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public EntityInfo apply(Class t) {
+        return loadEntityInfo(t);
     }
 
     private <T> EntityInfo<T> loadEntityInfo(Class<T> clazz) {
@@ -640,7 +645,7 @@ public final class DataDefaultSource implements DataSource, Nameable {
     private <T> void delete(final Connection conn, final EntityInfo<T> info, final FilterNode node) {
         try {
             if (!info.isVirtualEntity()) {
-                CharSequence join = node.createSQLJoin(info);
+                CharSequence join = node.createSQLJoin(this, info);
                 CharSequence where = node.createSQLExpress(info, null);
                 String sql = "DELETE FROM " + info.getTable() + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
                 if (debug.get()) logger.finest(info.getType().getSimpleName() + " delete sql=" + sql);
@@ -1085,7 +1090,7 @@ public final class DataDefaultSource implements DataSource, Nameable {
                     return cache.getNumberResult(reckon, column, node, bean);
                 }
             }
-            final CharSequence join = node == null ? null : node.createSQLJoin(info);
+            final CharSequence join = node == null ? null : node.createSQLJoin(this, info);
             final CharSequence where = node == null ? null : node.createSQLExpress(info, bean);
             final String sql = "SELECT " + reckon.getColumn((column == null || column.isEmpty() ? "*" : ("a." + column))) + " FROM " + info.getTable() + " a"
                     + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
@@ -1134,7 +1139,7 @@ public final class DataDefaultSource implements DataSource, Nameable {
                 }
             }
             final String sqlkey = info.getSQLColumn(keyColumn);
-            final CharSequence join = node == null ? null : node.createSQLJoin(info);
+            final CharSequence join = node == null ? null : node.createSQLJoin(this, info);
             final CharSequence where = node == null ? null : node.createSQLExpress(info, bean);
             final String sql = "SELECT a." + sqlkey + ", " + reckon.getColumn((reckonColumn == null || reckonColumn.isEmpty() ? "*" : ("a." + reckonColumn)))
                     + " FROM " + info.getTable() + " a" + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where)) + " GROUP BY a." + sqlkey;
@@ -1219,7 +1224,7 @@ public final class DataDefaultSource implements DataSource, Nameable {
         final Connection conn = createReadSQLConnection();
         try {
             final SelectColumn sels = selects;
-            final CharSequence join = node == null ? null : node.createSQLJoin(info);
+            final CharSequence join = node == null ? null : node.createSQLJoin(this, info);
             final CharSequence where = node == null ? null : node.createSQLExpress(info, bean);
             final String sql = "SELECT a.* FROM " + info.getTable() + " a" + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
             if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(clazz.getSimpleName() + " find sql=" + sql);
@@ -1277,7 +1282,7 @@ public final class DataDefaultSource implements DataSource, Nameable {
 
         final Connection conn = createReadSQLConnection();
         try {
-            final CharSequence join = node == null ? null : node.createSQLJoin(info);
+            final CharSequence join = node == null ? null : node.createSQLJoin(this, info);
             final CharSequence where = node == null ? null : node.createSQLExpress(info, bean);
             final String sql = "SELECT COUNT(a." + info.getPrimarySQLColumn() + ") FROM " + info.getTable() + " a" + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
             if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(clazz.getSimpleName() + " exists sql=" + sql);
@@ -1531,7 +1536,7 @@ public final class DataDefaultSource implements DataSource, Nameable {
         try {
             final SelectColumn sels = selects;
             final List<T> list = new ArrayList();
-            final CharSequence join = node == null ? null : node.createSQLJoin(info);
+            final CharSequence join = node == null ? null : node.createSQLJoin(this, info);
             final CharSequence where = node == null ? null : node.createSQLExpress(info, bean);
             final String sql = "SELECT a.* FROM " + info.getTable() + " a" + (join == null ? "" : join)
                     + ((where == null || where.length() == 0) ? "" : (" WHERE " + where)) + info.createSQLOrderby(flipper);
