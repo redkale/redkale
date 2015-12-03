@@ -173,7 +173,7 @@ public final class ResourceFactory {
                         }
                         if (ns == null) continue;
                         if (ns.getClass().isPrimitive() || ns.getClass().isArray() || ns.getClass().getName().startsWith("java")) continue;
-                        if (flag) this.inject(ns, list);
+                        if (flag) this.inject(ns, attachment, list);
                         continue;
                     }
                     if (Modifier.isFinal(field.getModifiers())) continue;

@@ -163,7 +163,7 @@ public final class SncpClient {
             Method old = actionids.get(actionid);
             if (old != null) {
                 if (old.getDeclaringClass().equals(method.getDeclaringClass()))
-                    throw new RuntimeException(serviceClass.getName() + " have one more same action(Method=" + method + ", actionid=" + actionid + ")");
+                    throw new RuntimeException(serviceClass.getName() + " have one more same action(Method=" + method + ", " + old + ", actionid=" + actionid + ")");
                 continue;
             }
             actionids.put(actionid, method);

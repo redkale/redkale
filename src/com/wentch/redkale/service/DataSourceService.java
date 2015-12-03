@@ -15,6 +15,7 @@ import javax.annotation.*;
  *
  * @author zhangjx
  */
+@AutoLoad(false)
 public class DataSourceService implements DataSource, Service {
 
     @Resource(name = "$")
