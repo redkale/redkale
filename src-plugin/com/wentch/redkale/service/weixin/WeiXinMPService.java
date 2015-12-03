@@ -6,11 +6,11 @@
 package com.wentch.redkale.service.weixin;
 
 import com.wentch.redkale.convert.json.*;
+import static com.wentch.redkale.convert.json.JsonConvert.TYPE_MAP_STRING_STRING;
 import com.wentch.redkale.service.*;
 import com.wentch.redkale.util.*;
 import static com.wentch.redkale.util.Utility.getHttpContent;
 import java.io.*;
-import java.lang.reflect.*;
 import java.security.*;
 import java.util.*;
 import java.util.logging.*;
@@ -22,9 +22,6 @@ import javax.annotation.*;
  * @author zhangjx
  */
 public class WeiXinMPService implements Service {
-
-    protected static final Type MAPTYPE = new TypeToken<Map<String, String>>() {
-    }.getType();
 
     protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
 
@@ -67,7 +64,7 @@ public class WeiXinMPService implements Service {
         String url = "https://api.weixin.qq.com/sns/oauth2/access_token?appid=" + appid + "&secret=" + mpsecrets.get(appid) + "&code=" + code + "&grant_type=authorization_code";
         String json = getHttpContent(url);
         if (finest) logger.finest(url + "--->" + json);
-        Map<String, String> jsonmap = convert.convertFrom(MAPTYPE, json);
+        Map<String, String> jsonmap = convert.convertFrom(TYPE_MAP_STRING_STRING, json);
         return getMPUserTokenByOpenid(jsonmap.get("access_token"), jsonmap.get("openid"));
     }
 
@@ -75,7 +72,7 @@ public class WeiXinMPService implements Service {
         String url = "https://api.weixin.qq.com/sns/userinfo?access_token=" + access_token + "&openid=" + openid;
         String json = getHttpContent(url);
         if (finest) logger.finest(url + "--->" + json);
-        Map<String, String> jsonmap = convert.convertFrom(MAPTYPE, json.replaceFirst("\\[.*\\]", "null"));
+        Map<String, String> jsonmap = convert.convertFrom(TYPE_MAP_STRING_STRING, json.replaceFirst("\\[.*\\]", "null"));
         return jsonmap;
     }
 

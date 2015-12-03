@@ -89,7 +89,7 @@ public class WeiXinPayService implements Service {
             map.put("appid", wxpayappid);
             map.put("mch_id", wxpaymchid);
             map.put("nonce_str", Long.toHexString(System.currentTimeMillis()) + Long.toHexString(System.nanoTime()));
-            map.put("body", "三万英尺服务套餐");
+            map.putIfAbsent("body", "服务");
             map.put("attach", "" + payid);
             map.put("out_trade_no", "" + orderpayid);
             map.put("total_fee", "" + paymoney);
