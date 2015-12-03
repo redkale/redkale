@@ -19,9 +19,9 @@ import jdk.internal.org.objectweb.asm.Type;
  */
 public interface Attribute<T, F> {
 
-    public Class type();
+    public Class<? extends F> type();
 
-    public Class declaringClass();
+    public Class<T> declaringClass();
 
     public String field();
 
