@@ -8,7 +8,7 @@ package com.wentch.redkale.service;
 import com.wentch.redkale.convert.json.*;
 
 /**
- * 通用的结果对象
+ * 通用的结果对象，在常见的HTTP+JSON接口中返回的结果需要含结果码，错误信息，和实体对象。
  *
  * @author zhangjx
  * @param <T>
@@ -63,10 +63,20 @@ public class RetResult<T> {
         this.result = result;
     }
 
+    /**
+     * 判断结果是否成功返回， retcode = 0 视为成功， 否则视为错误码
+     *
+     * @return
+     */
     public boolean isSuccess() {
         return retcode == 0;
     }
 
+    /**
+     * 结果码 0表示成功、 非0表示错误
+     *
+     * @return
+     */
     public int getRetcode() {
         return retcode;
     }
@@ -83,6 +93,11 @@ public class RetResult<T> {
         this.retinfo = retinfo;
     }
 
+    /**
+     * 结果对象， 通常只有在retcode = 0时值才有效
+     *
+     * @return
+     */
     public T getResult() {
         return result;
     }
