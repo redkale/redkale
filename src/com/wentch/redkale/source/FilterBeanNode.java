@@ -90,7 +90,7 @@ final class FilterBeanNode extends FilterNode {
                         }
                         final String jc = joinCol.column().isEmpty() ? secinfo.getPrimary().field() : joinCol.column();
                         if (first) {
-                            joinsb.append(" ").append(joinCol.type().name()).append(" JOIN ").append(secinfo.getTable())
+                            joinsb.append(" INNER JOIN ").append(secinfo.getTable())
                                     .append(" ").append(alias).append(" ON ").append(secinfo.getSQLColumn("a", jc)).append(" = ").append(secinfo.getSQLColumn(alias, jc));
                         }
                         newnode.foreignCache = secinfo.getCache();
