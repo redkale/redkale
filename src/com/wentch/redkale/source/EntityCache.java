@@ -54,9 +54,7 @@ public final class EntityCache<T> {
         this.needcopy = true;
         this.reproduce = Reproduce.create(type, type, (m) -> {
             try {
-                Transient t = type.getDeclaredField(m).getAnnotation(Transient.class);
-                if (t != null) return false;
-                return true;
+                return type.getDeclaredField(m).getAnnotation(Transient.class) == null;
             } catch (Exception e) {
                 return true;
             }
