@@ -82,15 +82,14 @@ public abstract class Sncp {
 
     public static DLong hash(final java.lang.reflect.Method method) {
         if (method == null) return new DLong(-1L, -1L);
-        long rs1 = hash(method.getName());
-        if (rs1 < Integer.MAX_VALUE) {
-            rs1 |= (method.getParameterCount() + 0L) << 32;
-        }
+        String n = method.getName();
+        if (n.length() > 11) n = n.substring(0, 8) + n.substring(n.length() - 3);
+        long rs1 = hash(n);
+        if (rs1 < Integer.MAX_VALUE) rs1 |= (method.getParameterCount() + 0L) << 32;
         rs1 = (rs1 < Integer.MAX_VALUE) ? rs1 | 0xF00000000L : rs1;
+
         long rs2 = hash(wrapName(method), true);
-        if (rs2 < Integer.MAX_VALUE) {
-            rs2 |= (method.getParameterCount() + 0L) << 32;
-        }
+        if (rs2 < Integer.MAX_VALUE) rs2 |= (method.getParameterCount() + 0L) << 32;
         rs2 = (rs2 < Integer.MAX_VALUE) ? rs2 | 0xF00000000L : rs2;
         return new DLong(rs1, rs2);
     }
@@ -101,7 +100,7 @@ public abstract class Sncp {
         StringBuilder sb = new StringBuilder();
         for (Class clzz : params) {
             String s = clzz.getSimpleName();
-            sb.append(s.substring(0, s.length() > 1 ? 2 : 1));
+            sb.append(s.substring(0, s.length() > 1 ? 2 : 1)).append(s.substring(s.length() - 1));
         }
         return method.getName() + sb + Integer.toString(params.length, 36);
     }
