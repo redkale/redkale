@@ -1086,7 +1086,7 @@ public final class DataDefaultSource implements DataSource, Nameable, Function<C
             if (node == null && bean != null) node = loadFilterBeanNode(bean.getClass());
             final EntityCache<T> cache = info.getCache();
             if (cache != null && (info.isVirtualEntity() || cache.isFullLoaded())) {
-                if (node == null || node.isCacheUseable()) {
+                if (node == null || node.isCacheUseable(this)) {
                     return cache.getNumberResult(reckon, column, node, bean);
                 }
             }
@@ -1134,7 +1134,7 @@ public final class DataDefaultSource implements DataSource, Nameable, Function<C
             if (node == null && bean != null) node = loadFilterBeanNode(bean.getClass());
             final EntityCache cache = info.getCache();
             if (cache != null && (info.isVirtualEntity() || cache.isFullLoaded())) {
-                if (node == null || node.isCacheUseable()) {
+                if (node == null || node.isCacheUseable(this)) {
                     return cache.getMapResult(keyColumn, reckon, reckonColumn, node, bean);
                 }
             }
@@ -1219,7 +1219,7 @@ public final class DataDefaultSource implements DataSource, Nameable, Function<C
         final EntityInfo<T> info = loadEntityInfo(clazz);
         final EntityCache<T> cache = info.getCache();
         if (node == null && bean != null) node = loadFilterBeanNode(bean.getClass());
-        if (cache != null && cache.isFullLoaded() && (node == null || node.isCacheUseable())) return cache.find(selects, node, bean);
+        if (cache != null && cache.isFullLoaded() && (node == null || node.isCacheUseable(this))) return cache.find(selects, node, bean);
 
         final Connection conn = createReadSQLConnection();
         try {
@@ -1278,7 +1278,7 @@ public final class DataDefaultSource implements DataSource, Nameable, Function<C
         final EntityInfo<T> info = loadEntityInfo(clazz);
         final EntityCache<T> cache = info.getCache();
         if (node == null && bean != null) node = loadFilterBeanNode(bean.getClass());
-        if (cache != null && cache.isFullLoaded() && (node == null || node.isCacheUseable())) return cache.exists(node, bean);
+        if (cache != null && cache.isFullLoaded() && (node == null || node.isCacheUseable(this))) return cache.exists(node, bean);
 
         final Connection conn = createReadSQLConnection();
         try {
@@ -1526,7 +1526,7 @@ public final class DataDefaultSource implements DataSource, Nameable, Function<C
         final EntityCache<T> cache = info.getCache();
         if (node == null && bean != null) node = loadFilterBeanNode(bean.getClass());
         if (readcache && cache != null) {
-            if (node == null || node.isCacheUseable()) {
+            if (node == null || node.isCacheUseable(this)) {
                 if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(clazz.getSimpleName() + " cache query predicate = " + (node == null ? null : node.createPredicate(cache, bean)));
                 Sheet<T> sheet = cache.querySheet(needtotal, selects, flipper, node, bean);
                 if (!sheet.isEmpty() || info.isVirtualEntity() || cache.isFullLoaded()) return sheet;

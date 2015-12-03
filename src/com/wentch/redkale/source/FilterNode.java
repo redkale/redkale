@@ -149,9 +149,14 @@ public class FilterNode {
     /**
      * 该方法需要重载
      *
+     * @param entityApplyer
      * @return
      */
-    protected boolean isCacheUseable() {
+    protected boolean isCacheUseable(final Function<Class, EntityInfo> entityApplyer) {
+        if (this.nodes == null) return true;
+        for (FilterNode node : this.nodes) {
+            if (!node.isCacheUseable(entityApplyer)) return false;
+        }
         return true;
     }
 
@@ -165,7 +170,7 @@ public class FilterNode {
      * @return
      */
     protected <T> CharSequence createSQLExpress(final Function<Class, EntityInfo> func, final EntityInfo<T> info, final FilterBean bean) {
-        CharSequence sb0 = createElementSQLExpress(info, bean);
+        CharSequence sb0 = createElementSQLExpress(info, getTabalis(), bean);
         if (this.nodes == null) return sb0;
         final StringBuilder rs = new StringBuilder();
         rs.append('(');
@@ -194,9 +199,9 @@ public class FilterNode {
         return new FilterNode(column, express, value);
     }
 
-    protected final <T> CharSequence createElementSQLExpress(final EntityInfo<T> info, final FilterBean bean) {
+    protected final <T> CharSequence createElementSQLExpress(final EntityInfo<T> info, String talis, final FilterBean bean) {
         if (column == null) return null;
-        final String talis = getTabalis() == null ? "a" : getTabalis();
+        if (talis == null) talis = "a";
         if (express == ISNULL || express == ISNOTNULL) {
             StringBuilder sb = new StringBuilder();
             sb.append(info.getSQLColumn(talis, column)).append(' ').append(express.value());

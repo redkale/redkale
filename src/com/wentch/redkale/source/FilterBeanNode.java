@@ -372,7 +372,7 @@ final class FilterBeanNode extends FilterNode {
     }
 
     @Override
-    protected boolean isCacheUseable() {
+    protected boolean isCacheUseable(final Function<Class, EntityInfo> entityApplyer) {
         return joinallcached;
     }
 
