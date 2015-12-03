@@ -10,6 +10,7 @@ import static java.lang.annotation.ElementType.*;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
+ * MultiRun 只对本地模式Service有效
  *
  * @author zhangjx
  */
