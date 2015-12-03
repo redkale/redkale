@@ -1402,7 +1402,7 @@ public final class DataDefaultSource implements DataSource, Nameable, Function<C
     }
 
     /**
-     * 根据过滤对象FilterBean查询对象集合， 对象只填充或排除SelectColumn指定的字段
+     * 根据过滤对象FilterBean查询对象集合， 对象只填充或排除SelectField指定的字段
      *
      * @param <T>
      * @param clazz
@@ -1502,7 +1502,7 @@ public final class DataDefaultSource implements DataSource, Nameable, Function<C
     }
 
     /**
-     * 根据过滤对象FilterBean和翻页对象Flipper查询一页的数据， 对象只填充或排除SelectColumn指定的字段
+     * 根据过滤对象FilterBean和翻页对象Flipper查询一页的数据， 对象只填充或排除SelectField指定的字段
      *
      * @param <T>
      * @param clazz

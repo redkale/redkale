@@ -6,7 +6,6 @@
 package com.wentch.redkale.source;
 
 import java.io.*;
-import java.lang.reflect.Field;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.*;
@@ -54,13 +53,12 @@ public final class EntityCache<T> {
         this.primary = info.primary;
         this.needcopy = true;
         this.reproduce = Reproduce.create(type, type, (m) -> {
-            char[] mn = m.getName().substring(3).toCharArray();
-            if (mn.length < 2 || Character.isLowerCase(mn[1])) mn[0] = Character.toLowerCase(mn[0]);
             try {
-                Field f = type.getDeclaredField(new String(mn));
-                return f.getAnnotation(Transient.class) != null;
+                Transient t = type.getDeclaredField(m).getAnnotation(Transient.class);
+                if (t != null) return false;
+                return true;
             } catch (Exception e) {
-                return false;
+                return true;
             }
         });
     }
@@ -102,7 +100,7 @@ public final class EntityCache<T> {
         if (selects == null) return (needcopy ? reproduce.copy(this.creator.create(), rs) : rs);
         T t = this.creator.create();
         for (Attribute attr : this.info.attributes) {
-            if (selects.validate(attr.field())) attr.set(t, attr.get(rs));
+            if (selects.test(attr.field())) attr.set(t, attr.get(rs));
         }
         return t;
     }
@@ -122,7 +120,7 @@ public final class EntityCache<T> {
         T rs = opt.get();
         T t = this.creator.create();
         for (Attribute attr : this.info.attributes) {
-            if (selects.validate(attr.field())) attr.set(t, attr.get(rs));
+            if (selects.test(attr.field())) attr.set(t, attr.get(rs));
         }
         return t;
     }
@@ -324,7 +322,7 @@ public final class EntityCache<T> {
         } else {
             final List<Attribute<T, Serializable>> attrs = new ArrayList<>();
             info.forEachAttribute((k, v) -> {
-                if (selects.validate(k)) attrs.add(v);
+                if (selects.test(k)) attrs.add(v);
             });
             Consumer<? super T> action = x -> {
                 final T item = creator.create();

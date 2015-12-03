@@ -343,7 +343,7 @@ public final class EntityInfo<T> {
     public T getValue(final SelectColumn sels, final ResultSet set) throws SQLException {
         T obj = creator.create();
         for (Attribute<T, Serializable> attr : queryAttributes) {
-            if (sels == null || sels.validate(attr.field())) {
+            if (sels == null || sels.test(attr.field())) {
                 Serializable o = (Serializable) set.getObject(this.getSQLColumn(null, attr.field()));
                 if (o != null) {
                     Class t = attr.type();

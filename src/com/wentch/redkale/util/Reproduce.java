@@ -14,7 +14,7 @@ public interface Reproduce<D, S> {
     }
 
     @SuppressWarnings("unchecked")
-    public static <D, S> Reproduce<D, S> create(final Class<D> destClass, final Class<S> srcClass, final Predicate<java.lang.reflect.Method> excludeSetterPredicate) {
+    public static <D, S> Reproduce<D, S> create(final Class<D> destClass, final Class<S> srcClass, final Predicate<String> columnPredicate) {
         // ------------------------------------------------------------------------------
         final String supDynName = Reproduce.class.getName().replace('.', '/');
         final String destName = destClass.getName().replace('.', '/');
@@ -60,7 +60,15 @@ public interface Reproduce<D, S> {
                 boolean is = getter.getName().startsWith("is");
                 try {
                     setter = destClass.getMethod(getter.getName().replaceFirst(is ? "is" : "get", "set"), getter.getReturnType());
-                    if (excludeSetterPredicate != null && excludeSetterPredicate.test(setter)) continue;
+                    if (columnPredicate != null) {
+                        String col = setter.getName().substring(3);
+                        if (col.length() < 2 || Character.isLowerCase(col.charAt(1))) {
+                            char[] cs = col.toCharArray();
+                            cs[0] = Character.toLowerCase(cs[0]);
+                            col = new String(cs);
+                        }
+                        if (!columnPredicate.test(col)) continue;
+                    }
                 } catch (Exception e) {
                     continue;
                 }
