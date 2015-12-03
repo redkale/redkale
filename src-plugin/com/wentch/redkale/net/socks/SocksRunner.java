@@ -6,7 +6,6 @@
 package com.wentch.redkale.net.socks;
 
 import com.wentch.redkale.net.*;
-import java.io.*;
 import java.net.*;
 import java.nio.*;
 import java.nio.channels.*;
@@ -65,7 +64,11 @@ public class SocksRunner implements Runnable {
                     channel.write(buffer, null, this);
                     return;
                 }
-                connect();
+                try {
+                    connect();
+                } catch (Exception e) {
+                    closeRunner(e);
+                }
             }
 
             @Override
@@ -119,10 +122,10 @@ public class SocksRunner implements Runnable {
                             closeRunner(exc);
                         }
                     });
-                } catch (IOException e) {
+                } catch (Exception e) {
                     buffer.clear();
                     buffer.putChar((char) 0x0504);
-                    if (finest) logger.finest(remoteAddress + " remote connect error");
+                    if (finest) logger.log(Level.FINEST, remoteAddress + " remote connect error", e);
                     channel.write(buffer, null, new CompletionHandler<Integer, Void>() {
 
                         @Override
