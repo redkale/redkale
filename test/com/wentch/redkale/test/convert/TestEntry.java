@@ -25,6 +25,8 @@ public class TestEntry {
 
     private List<String> lists;
 
+    private String[] strings;
+    
     private Map<String, Integer> map;
 
     public static TestEntry create() {
@@ -32,6 +34,7 @@ public class TestEntry {
         v.setName("this is name\n \"test");
         v.setId(1000000001);
         v.setAddrs(new int[]{22222, 33333, 44444, 55555, 66666, 77777, 88888, 99999});
+        v.setStrings(new String[]{"zzz","yyy","xxx"});
         List<String> list = new ArrayList<>();
         list.add("aaaa");
         list.add("bbbb");
@@ -109,6 +112,14 @@ public class TestEntry {
 
     public void setDesc(String desc) {
         this.desc = desc;
+    }
+
+    public String[] getStrings() {
+        return strings;
+    }
+
+    public void setStrings(String[] strings) {
+        this.strings = strings;
     }
 
 }
