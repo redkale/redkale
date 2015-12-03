@@ -93,7 +93,8 @@ public class SocksRunner implements Runnable {
                     buffer.get(bytes);
                     remoteAddress = new InetSocketAddress((addrtype == 0x0003) ? InetAddress.getByName(new String(bytes)) : InetAddress.getByAddress(bytes), buffer.getChar());
                 } catch (UnknownHostException e) {
-                    throw new RuntimeException(e);
+                    failed(e, attachment);
+                    return;
                 }
                 try {
                     remoteChannel = AsyncConnection.create("TCP", remoteAddress, 6, 6);
