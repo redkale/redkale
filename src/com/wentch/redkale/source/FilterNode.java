@@ -77,7 +77,7 @@ public class FilterNode {
         return or(new FilterNode(column, express, value));
     }
 
-    protected final FilterNode any(FilterNode node, boolean signor) {
+    protected FilterNode any(FilterNode node, boolean signor) {
         Objects.requireNonNull(node);
         if (this.column == null) {
             this.column = node.column;
@@ -97,7 +97,7 @@ public class FilterNode {
             this.nodes = newsiblings;
             return this;
         }
-         FilterNode newnode = new FilterNode(this.column, this.express, this.value);
+        FilterNode newnode = new FilterNode(this.column, this.express, this.value);
         newnode.or = this.or;
         newnode.nodes = this.nodes;
         this.nodes = new FilterNode[]{newnode, node};
@@ -106,15 +106,6 @@ public class FilterNode {
         this.or = signor;
         this.value = null;
         return this;
-    }
-
-    /**
-     * 该方法需要重载
-     *
-     * @param node
-     */
-    protected void check(FilterNode node) {
-        Objects.requireNonNull(node);
     }
 
     /**
@@ -185,11 +176,10 @@ public class FilterNode {
      * @param <T>
      * @param joinTabalis
      * @param info
-     * @param bean
      * @return
      */
     protected <T> CharSequence createSQLExpress(final EntityInfo<T> info, final Map<Class, String> joinTabalis) {
-        CharSequence sb0 = createElementSQLExpress(info, joinTabalis == null ? null : joinTabalis.get(info.getType()));
+        CharSequence sb0 = this.column == null || info == null ? null : createElementSQLExpress(info, joinTabalis == null ? null : joinTabalis.get(info.getType()));
         if (this.nodes == null) return sb0;
         final StringBuilder rs = new StringBuilder();
         rs.append('(');

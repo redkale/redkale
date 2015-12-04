@@ -8,6 +8,7 @@ package com.wentch.redkale.source;
 import com.wentch.redkale.util.*;
 import java.io.*;
 import java.util.*;
+import java.util.concurrent.atomic.*;
 import java.util.function.*;
 
 /**
@@ -39,75 +40,149 @@ public class FilterJoinNode extends FilterNode {
         this.value = value;
     }
 
-    public static FilterNode create(Class joinClass, String joinColumn, String column, Serializable value) {
+    protected FilterJoinNode(FilterJoinNode node) {
+        this(node.joinClass, node.joinColumns, node.column, node.express, node.value);
+        this.joinEntity = node.joinEntity;
+        this.or = node.or;
+        this.nodes = node.nodes;
+    }
+
+    public static FilterJoinNode create(Class joinClass, String joinColumn, String column, Serializable value) {
         return new FilterJoinNode(joinClass, new String[]{joinColumn}, column, value);
     }
 
-    public static FilterNode create(Class joinClass, String joinColumn, String column, FilterExpress express, Serializable value) {
+    public static FilterJoinNode create(Class joinClass, String joinColumn, String column, FilterExpress express, Serializable value) {
         return new FilterJoinNode(joinClass, new String[]{joinColumn}, column, express, value);
     }
 
-    public static FilterNode create(Class joinClass, String[] joinColumns, String column, Serializable value) {
+    public static FilterJoinNode create(Class joinClass, String[] joinColumns, String column, Serializable value) {
         return new FilterJoinNode(joinClass, joinColumns, column, value);
     }
 
-    public static FilterNode create(Class joinClass, String[] joinColumns, String column, FilterExpress express, Serializable value) {
+    public static FilterJoinNode create(Class joinClass, String[] joinColumns, String column, FilterExpress express, Serializable value) {
         return new FilterJoinNode(joinClass, joinColumns, column, express, value);
     }
 
     @Override
-    protected void check(FilterNode node) {
-        Objects.requireNonNull(node);
-        if (!(node instanceof FilterJoinNode)) throw new IllegalArgumentException(this + " check " + String.valueOf(node) + "is not a " + FilterJoinNode.class.getSimpleName());
+    protected FilterNode any(final FilterNode node0, boolean signor) {
+        Objects.requireNonNull(node0);
+        if (!(node0 instanceof FilterJoinNode)) {
+            throw new IllegalArgumentException(this + (signor ? " or " : " and ") + " a node but " + String.valueOf(node0) + "is not a " + FilterJoinNode.class.getSimpleName());
+        }
+        final FilterJoinNode node = (FilterJoinNode) node0;
+        if (this.nodes == null) {
+            this.nodes = new FilterNode[]{node};
+            this.or = signor;
+            return this;
+        }
+        if (or == signor || this.column == null) {
+            FilterNode[] newsiblings = new FilterNode[nodes.length + 1];
+            System.arraycopy(nodes, 0, newsiblings, 0, nodes.length);
+            newsiblings[nodes.length] = node;
+            this.nodes = newsiblings;
+            if (this.column == null) this.or = signor;
+            return this;
+        }
+        this.nodes = new FilterNode[]{new FilterJoinNode(node), node};
+        this.column = null;
+        this.express = null;
+        this.value = null;
+        this.joinClass = null;
+        this.joinEntity = null;
+        this.joinColumns = null;
+        this.or = signor;
+        return this;
     }
 
     @Override
     protected <T> CharSequence createSQLExpress(final EntityInfo<T> info, final Map<Class, String> joinTabalis) {
-        return super.createSQLExpress(this.joinEntity, joinTabalis);
+        return super.createSQLExpress(this.joinEntity == null ? info : this.joinEntity, joinTabalis);
     }
 
     @Override
     protected <T, E> Predicate<T> createPredicate(final EntityCache<T> cache) {
         if (column == null && this.nodes == null) return null;
         final EntityCache<E> joinCache = this.joinEntity.getCache();
-        Predicate<E> filter = createChildPredicate();
-        if (filter == null) return null;
+        final AtomicBoolean more = new AtomicBoolean();
+        Predicate<E> filter = createJoinPredicate(more);
+        Predicate<T> rs = null;
+        if (filter == null && !more.get()) return rs;
+        if (filter != null) {
+            final Predicate<E> inner = filter;
+            rs = new Predicate<T>() {
 
-        final Predicate<E> inner = filter;
-        return new Predicate<T>() {
-
-            @Override
-            public boolean test(final T t) {
-                Predicate<E> joinPredicate = null;
-                for (String joinColumn : joinColumns) {
-                    final Serializable key = cache.getAttribute(joinColumn).get(t);
-                    final Attribute<E, Serializable> joinAttr = joinCache.getAttribute(joinColumn);
-                    Predicate<E> p = (E e) -> key.equals(joinAttr.get(e));
-                    joinPredicate = joinPredicate == null ? p : joinPredicate.and(p);
+                @Override
+                public boolean test(final T t) {
+                    Predicate<E> joinPredicate = null;
+                    for (String joinColumn : joinColumns) {
+                        final Serializable key = cache.getAttribute(joinColumn).get(t);
+                        final Attribute<E, Serializable> joinAttr = joinCache.getAttribute(joinColumn);
+                        Predicate<E> p = (E e) -> key.equals(joinAttr.get(e));
+                        joinPredicate = joinPredicate == null ? p : joinPredicate.and(p);
+                    }
+                    return joinCache.exists(inner.and(joinPredicate));
                 }
-                return joinCache.exists(inner.and(joinPredicate));
-            }
 
-            @Override
-            public String toString() {
-                StringBuilder sb = new StringBuilder();
-                sb.append(" #-- ON ").append(joinColumns[0]).append("=").append(joinClass == null ? "null" : joinClass.getSimpleName()).append(".").append(joinColumns[0]);
-                for (int i = 1; i < joinColumns.length; i++) {
-                    sb.append(" AND ").append(joinColumns[i]).append("=").append(joinClass == null ? "null" : joinClass.getSimpleName()).append(".").append(joinColumns[i]);
+                @Override
+                public String toString() {
+                    StringBuilder sb = new StringBuilder();
+                    sb.append(" #-- ON ").append(joinColumns[0]).append("=").append(joinClass == null ? "null" : joinClass.getSimpleName()).append(".").append(joinColumns[0]);
+                    for (int i = 1; i < joinColumns.length; i++) {
+                        sb.append(" AND ").append(joinColumns[i]).append("=").append(joinClass == null ? "null" : joinClass.getSimpleName()).append(".").append(joinColumns[i]);
+                    }
+                    sb.append(" --# ").append(inner.toString());
+                    return sb.toString();
                 }
-                sb.append(" --# ").append(inner.toString());
-                return sb.toString();
+            };
+        }
+        if (more.get()) {  //存在不同Class的关联表
+            if (this.nodes != null) {
+                for (FilterNode node : this.nodes) {
+                    if (((FilterJoinNode) node).joinClass == this.joinClass) continue;
+                    Predicate<T> f = node.createPredicate(cache);
+                    if (f == null) continue;
+                    final Predicate<T> one = rs;
+                    final Predicate<T> two = f;
+                    rs = (rs == null) ? f : (or ? new Predicate<T>() {
+
+                        @Override
+                        public boolean test(T t) {
+                            return one.test(t) || two.test(t);
+                        }
+
+                        @Override
+                        public String toString() {
+                            return "(" + one + " OR " + two + ")";
+                        }
+                    } : new Predicate<T>() {
+
+                        @Override
+                        public boolean test(T t) {
+                            return one.test(t) && two.test(t);
+                        }
+
+                        @Override
+                        public String toString() {
+                            return "(" + one + " AND " + two + ")";
+                        }
+                    });
+                }
             }
-        };
+        }
+        return rs;
     }
 
-    private <E> Predicate<E> createChildPredicate() {
+    private <E> Predicate<E> createJoinPredicate(final AtomicBoolean more) {
         if (column == null && this.nodes == null) return null;
         final EntityCache<E> joinCache = this.joinEntity.getCache();
         Predicate<E> filter = createElementPredicate(joinCache, true);
         if (this.nodes != null) {
             for (FilterNode node : this.nodes) {
-                Predicate<E> f = ((FilterJoinNode) node).createChildPredicate();
+                if (((FilterJoinNode) node).joinClass != this.joinClass) {
+                    more.set(true);
+                    continue;
+                }
+                Predicate<E> f = ((FilterJoinNode) node).createJoinPredicate(more);
                 if (f == null) continue;
                 final Predicate<E> one = filter;
                 final Predicate<E> two = f;
@@ -141,21 +216,52 @@ public class FilterJoinNode extends FilterNode {
 
     @Override
     protected <T> CharSequence createSQLJoin(final Function<Class, EntityInfo> func, final Map<Class, String> joinTabalis, final EntityInfo<T> info) {
+        boolean morejoin = false;
         if (this.joinEntity == null) {
-            this.joinEntity = func.apply(this.joinClass);
+            if (this.joinClass != null) this.joinEntity = func.apply(this.joinClass);
             if (this.nodes != null) {
                 for (FilterNode node : this.nodes) {
                     if (node instanceof FilterJoinNode) {
-                        ((FilterJoinNode) node).joinEntity = func.apply(((FilterJoinNode) node).joinClass);
+                        FilterJoinNode joinNode = ((FilterJoinNode) node);
+                        if (joinNode.joinClass != null) {
+                            joinNode.joinEntity = func.apply(joinNode.joinClass);
+                            if (this.joinClass != null && this.joinClass != joinNode.joinClass) morejoin = true;
+                        }
                     }
                 }
             }
         }
         StringBuilder sb = new StringBuilder();
-        sb.append(" INNER JOIN ").append(joinEntity.getTable()).append(" ").append(joinTabalis.get(this.joinClass))
-                .append(" ON ").append(info.getSQLColumn("a", joinColumns[0])).append(" = ").append(this.joinEntity.getSQLColumn(joinTabalis.get(this.joinClass), joinColumns[0]));
+        if (this.joinClass != null) {
+            sb.append(createElementSQLJoin(joinTabalis, info, this));
+        }
+        if (morejoin) {
+            Set<Class> set = new HashSet<>();
+            if (this.joinClass != null) set.add(this.joinClass);
+            for (FilterNode node : this.nodes) {
+                if (node instanceof FilterJoinNode) {
+                    FilterJoinNode joinNode = ((FilterJoinNode) node);
+                    if (!set.contains(joinNode.joinClass)) {
+                        CharSequence cs = createElementSQLJoin(joinTabalis, info, joinNode);
+                        if (cs != null) {
+                            sb.append(cs);
+                            set.add(joinNode.joinClass);
+                        }
+                    }
+                }
+            }
+        }
+        return sb;
+    }
+
+    private static CharSequence createElementSQLJoin(final Map<Class, String> joinTabalis, final EntityInfo info, final FilterJoinNode node) {
+        if (node.joinClass == null) return null;
+        StringBuilder sb = new StringBuilder();
+        String[] joinColumns = node.joinColumns;
+        sb.append(" INNER JOIN ").append(node.joinEntity.getTable()).append(" ").append(joinTabalis.get(node.joinClass))
+                .append(" ON ").append(info.getSQLColumn("a", joinColumns[0])).append(" = ").append(node.joinEntity.getSQLColumn(joinTabalis.get(node.joinClass), joinColumns[0]));
         for (int i = 1; i < joinColumns.length; i++) {
-            sb.append(" AND ").append(info.getSQLColumn("a", joinColumns[i])).append(" = ").append(this.joinEntity.getSQLColumn(joinTabalis.get(this.joinClass), joinColumns[i]));
+            sb.append(" AND ").append(info.getSQLColumn("a", joinColumns[i])).append(" = ").append(node.joinEntity.getSQLColumn(joinTabalis.get(node.joinClass), joinColumns[i]));
         }
         return sb;
     }
@@ -173,7 +279,7 @@ public class FilterJoinNode extends FilterNode {
 
     @Override
     protected void putJoinTabalis(Map<Class, String> map) {
-        if (!map.containsKey(this.joinClass)) map.put(joinClass, String.valueOf((char) ('b' + map.size())));
+        if (this.joinClass != null && !map.containsKey(this.joinClass)) map.put(joinClass, String.valueOf((char) ('b' + map.size())));
         if (this.nodes == null) return;
         for (FilterNode node : this.nodes) {
             node.putJoinTabalis(map);

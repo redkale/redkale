@@ -194,6 +194,8 @@ public final class FilterNodeBean<T> implements Comparable<FilterNodeBean<T>> {
                         FilterNodeBean node = nodemap.get(key);
                         if (node == null) {
                             nodemap.put(key, nodeBean);
+                        } else if (nodeBean.joinClass == null && node.joinClass != null) { //非joinNode 关联 joinNode
+                            nodemap.put(key, nodeBean.any(node, key.substring(key.lastIndexOf('.') + 1).contains("[OR]")));
                         } else {
                             node.any(nodeBean, key.substring(key.lastIndexOf('.') + 1).contains("[OR]"));
                         }
