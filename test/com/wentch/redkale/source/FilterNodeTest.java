@@ -25,8 +25,8 @@ public class FilterNodeTest {
         final EntityInfo<UserTestTable> userEntity = EntityInfo.load(UserTestTable.class, 0, false, (t) -> UserTestTable.createList());
         final EntityInfo<CarTypeTestTable> typeEntity = EntityInfo.load(CarTypeTestTable.class, 0, false, (t) -> CarTypeTestTable.createList());
 
-        FilterNode joinNode1 = FilterJoinNode.create(UserTestTable.class, "userid", "username", FilterExpress.LIKE, "用户1")
-                .or(FilterJoinNode.create(UserTestTable.class, "userid", "createtime", FilterExpress.GREATERTHAN, 500));
+        FilterNode joinNode1 = FilterJoinNode.create(UserTestTable.class, new String[]{"userid", "username"}, "username", FilterExpress.LIKE, "用户1")
+                .or(FilterJoinNode.create(UserTestTable.class, new String[]{"userid", "username"}, "createtime", FilterExpress.GREATERTHAN, 500));
         FilterNode joinNode2 = FilterJoinNode.create(CarTypeTestTable.class, "cartype", "typename", FilterExpress.LIKE, "法拉利");
         FilterNode node = FilterNode.create("carid", GREATERTHAN, 1).and(joinNode1).or(joinNode2);
         System.out.println("node = " + node);
@@ -70,6 +70,8 @@ public class FilterNodeTest {
 
         private int userid;
 
+        private String username;
+
         private String cartitle;
 
         public CarTestTable() {
@@ -80,6 +82,7 @@ public class FilterNodeTest {
             this.carid = carid;
             this.cartype = cartype;
             this.userid = userid;
+            this.username = "用户" + userid % 1000;
             this.cartitle = cartitle;
         }
 
@@ -113,6 +116,14 @@ public class FilterNodeTest {
 
         public void setCartype(int cartype) {
             this.cartype = cartype;
+        }
+
+        public String getUsername() {
+            return username;
+        }
+
+        public void setUsername(String username) {
+            this.username = username;
         }
 
         @Override
