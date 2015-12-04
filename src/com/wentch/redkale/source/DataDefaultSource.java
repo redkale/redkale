@@ -52,6 +52,8 @@ public final class DataDefaultSource implements DataSource, Nameable, Function<C
 
     final boolean cacheForbidden;
 
+    private final boolean mysql;
+
     private final JDBCPoolSource readPool;
 
     private final JDBCPoolSource writePool;
@@ -155,6 +157,7 @@ public final class DataDefaultSource implements DataSource, Nameable, Function<C
         this.conf = url;
         this.readPool = new JDBCPoolSource(this, "read", readprop);
         this.writePool = new JDBCPoolSource(this, "write", writeprop);
+        this.mysql = this.writePool.isMysql();
         this.cacheForbidden = "NONE".equalsIgnoreCase(readprop.getProperty("shared-cache-mode"));
     }
 
@@ -163,6 +166,7 @@ public final class DataDefaultSource implements DataSource, Nameable, Function<C
         this.conf = null;
         this.readPool = new JDBCPoolSource(this, "read", readprop);
         this.writePool = new JDBCPoolSource(this, "write", writeprop);
+        this.mysql = this.writePool.isMysql();
         this.cacheForbidden = "NONE".equalsIgnoreCase(readprop.getProperty("shared-cache-mode"));
     }
 
@@ -648,7 +652,7 @@ public final class DataDefaultSource implements DataSource, Nameable, Function<C
                 Map<Class, String> joinTabalis = node.getJoinTabalis();
                 CharSequence join = node.createSQLJoin(this, joinTabalis, info);
                 CharSequence where = node.createSQLExpress(info, joinTabalis, null);
-                String sql = "DELETE a FROM " + info.getTable() + " a" + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
+                String sql = "DELETE " + (mysql ? "a" : "") + " FROM " + info.getTable() + " a" + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
                 if (debug.get()) logger.finest(info.getType().getSimpleName() + " delete sql=" + sql);
                 final Statement stmt = conn.createStatement();
                 stmt.execute(sql);

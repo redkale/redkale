@@ -83,6 +83,10 @@ public class JDBCPoolSource {
         }
     }
 
+    public boolean isMysql() {
+        return source != null && source.getClass().getName().contains(".mysql.");
+    }
+
     private void watch() throws IOException {
         if (dataSource.conf == null || dataSource.name == null) return;
         final String file = dataSource.conf.getFile();
