@@ -53,14 +53,15 @@ public interface Attribute<T, F> {
     public static <T, F> Attribute<T, F> create(String fieldname, final Field field) {
         return create((Class<T>) field.getDeclaringClass(), fieldname, field, null, null);
     }
+
     /**
      * 根据一个Class和field名生成 Attribute 对象。
-     * 
+     *
      * @param <T>
      * @param <F>
      * @param clazz
-     * @param fieldname  字段名， 如果该字段不存在则抛异常
-     * @return 
+     * @param fieldname 字段名， 如果该字段不存在则抛异常
+     * @return
      */
     public static <T, F> Attribute<T, F> create(Class<T> clazz, final String fieldname) {
         try {
@@ -230,6 +231,7 @@ public interface Attribute<T, F> {
                     mv.visitFieldInsn(GETFIELD, interName, field.getName(), Type.getDescriptor(pcolumn));
                     if (pcolumn != column) {
                         mv.visitMethodInsn(INVOKESTATIC, columnName, "valueOf", "(" + Type.getDescriptor(pcolumn) + ")" + columnDesc, false);
+                        m = 2;
                     }
                 }
             } else {
@@ -257,6 +259,7 @@ public interface Attribute<T, F> {
                         try {
                             java.lang.reflect.Method pm = column.getMethod(pcolumn.getSimpleName() + "Value");
                             mv.visitMethodInsn(INVOKEVIRTUAL, columnName, pm.getName(), Type.getMethodDescriptor(pm), false);
+                            m = 3;
                         } catch (Exception ex) {
                             throw new RuntimeException(ex); //不可能会发生
                         }
