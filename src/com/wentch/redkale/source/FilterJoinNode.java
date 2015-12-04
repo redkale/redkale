@@ -20,31 +20,39 @@ public class FilterJoinNode extends FilterNode {
 
     private EntityInfo joinEntity;  //在调用  createSQLJoin  和 isCacheUseable 时会注入
 
-    private String joinColumn;
+    private String[] joinColumns;
 
     public FilterJoinNode() {
     }
 
-    protected FilterJoinNode(Class joinClass, String joinColumn, String column, Serializable value) {
-        this(joinClass, joinColumn, column, null, value);
+    protected FilterJoinNode(Class joinClass, String[] joinColumns, String column, Serializable value) {
+        this(joinClass, joinColumns, column, null, value);
     }
 
-    protected FilterJoinNode(Class joinClass, String joinColumn, String column, FilterExpress express, Serializable value) {
+    protected FilterJoinNode(Class joinClass, String[] joinColumns, String column, FilterExpress express, Serializable value) {
         Objects.requireNonNull(joinClass);
-        Objects.requireNonNull(joinColumn);
+        Objects.requireNonNull(joinColumns);
         this.joinClass = joinClass;
-        this.joinColumn = joinColumn;
+        this.joinColumns = joinColumns;
         this.column = column;
         this.express = express;
         this.value = value;
     }
 
     public static FilterNode create(Class joinClass, String joinColumn, String column, Serializable value) {
-        return new FilterJoinNode(joinClass, joinColumn, column, value);
+        return new FilterJoinNode(joinClass, new String[]{joinColumn}, column, value);
     }
 
     public static FilterNode create(Class joinClass, String joinColumn, String column, FilterExpress express, Serializable value) {
-        return new FilterJoinNode(joinClass, joinColumn, column, express, value);
+        return new FilterJoinNode(joinClass, new String[]{joinColumn}, column, express, value);
+    }
+
+    public static FilterNode create(Class joinClass, String[] joinColumns, String column, Serializable value) {
+        return new FilterJoinNode(joinClass, joinColumns, column, value);
+    }
+
+    public static FilterNode create(Class joinClass, String[] joinColumns, String column, FilterExpress express, Serializable value) {
+        return new FilterJoinNode(joinClass, joinColumns, column, express, value);
     }
 
     @Override
@@ -58,19 +66,31 @@ public class FilterJoinNode extends FilterNode {
         final EntityCache<E> joinCache = this.joinEntity.getCache();
         Predicate<E> filter = createChildPredicate(bean);
         if (filter == null) return null;
-        final Attribute<T, Serializable> attr = cache.getAttribute(this.joinColumn);
-        final Attribute<E, Serializable> joinAttr = joinCache.getAttribute(this.joinColumn);
+
         final Predicate<E> inner = filter;
         return new Predicate<T>() {
 
             @Override
-            public boolean test(T t) {
-                return joinCache.exists(inner.and((e) -> attr.get(t).equals(joinAttr.get(e))));
+            public boolean test(final T t) {
+                Predicate<E> joinPredicate = null;
+                for (String joinColumn : joinColumns) {
+                    final Serializable key = cache.getAttribute(joinColumn).get(t);
+                    final Attribute<E, Serializable> joinAttr = joinCache.getAttribute(joinColumn);
+                    Predicate<E> p = (E e) -> key.equals(joinAttr.get(e));
+                    joinPredicate = joinPredicate == null ? p : joinPredicate.and(p);
+                }
+                return joinCache.exists(inner.and(joinPredicate));
             }
 
             @Override
             public String toString() {
-                return " # ON " + joinColumn + "=" + (joinClass == null ? "null" : joinClass.getSimpleName()) + "." + joinColumn + " # " + inner.toString();
+                StringBuilder sb = new StringBuilder();
+                sb.append(" #-- ON ").append(joinColumns[0]).append("=").append(joinClass == null ? "null" : joinClass.getSimpleName()).append(".").append(joinColumns[0]);
+                for (int i = 1; i < joinColumns.length; i++) {
+                    sb.append(" AND ").append(joinColumns[i]).append("=").append(joinClass == null ? "null" : joinClass.getSimpleName()).append(".").append(joinColumns[i]);
+                }
+                sb.append(" --# ").append(inner.toString());
+                return sb.toString();
             }
         };
     }
@@ -125,8 +145,13 @@ public class FilterJoinNode extends FilterNode {
                 }
             }
         }
-        return new StringBuilder().append(" INNER JOIN ").append(joinEntity.getTable()).append(" ").append(joinTabalis.get(this.joinClass))
-                .append(" ON ").append(info.getSQLColumn("a", joinColumn)).append(" = ").append(this.joinEntity.getSQLColumn(joinTabalis.get(this.joinClass), joinColumn));
+        StringBuilder sb = new StringBuilder();
+        sb.append(" INNER JOIN ").append(joinEntity.getTable()).append(" ").append(joinTabalis.get(this.joinClass))
+                .append(" ON ").append(info.getSQLColumn("a", joinColumns[0])).append(" = ").append(this.joinEntity.getSQLColumn(joinTabalis.get(this.joinClass), joinColumns[0]));
+        for (int i = 1; i < joinColumns.length; i++) {
+            sb.append(" AND ").append(info.getSQLColumn("a", joinColumns[i])).append(" = ").append(this.joinEntity.getSQLColumn(joinTabalis.get(this.joinClass), joinColumns[i]));
+        }
+        return sb;
     }
 
     @Override
@@ -156,7 +181,13 @@ public class FilterJoinNode extends FilterNode {
 
     @Override
     public String toString() {
-        return toString(joinClass == null ? null : joinClass.getSimpleName(), null);
+        StringBuilder sb = new StringBuilder();
+        sb.append("#-- ON ").append(joinColumns[0]).append(" = ").append(joinClass == null ? "null" : joinClass.getSimpleName()).append('.').append(joinColumns[0]);
+        for (int i = 1; i < joinColumns.length; i++) {
+            sb.append(" AND ").append(joinColumns[i]).append(" = ").append(joinClass == null ? "null" : joinClass.getSimpleName()).append('.').append(joinColumns[i]);
+        }
+        sb.append(" --# ").append(toString(joinClass == null ? null : joinClass.getSimpleName(), null));
+        return sb.toString();
     }
 
     public Class getJoinClass() {
@@ -167,12 +198,12 @@ public class FilterJoinNode extends FilterNode {
         this.joinClass = joinClass;
     }
 
-    public String getJoinColumn() {
-        return joinColumn;
+    public String[] getJoinColumns() {
+        return joinColumns;
     }
 
-    public void setJoinColumn(String joinColumn) {
-        this.joinColumn = joinColumn;
+    public void setJoinColumns(String[] joinColumns) {
+        this.joinColumns = joinColumns;
     }
 
 }
