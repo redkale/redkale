@@ -19,11 +19,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface FilterJoinColumn {
 
-    public enum JoinType { //不能支持RIGHT， 因为right获取的主对象都是null
-
-        INNER;
-    }
-
     /**
      * 关联表 通常join表默认别名为b/c/d/...自增， 被join表默认别名为a
      *
@@ -38,5 +33,4 @@ public @interface FilterJoinColumn {
      */
     String column() default "";
 
-    JoinType type() default JoinType.INNER;
 }

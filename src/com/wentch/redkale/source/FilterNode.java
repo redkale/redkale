@@ -13,6 +13,9 @@ import java.util.*;
 import java.util.function.*;
 
 /**
+ * 注意：
+ * 在调用 createSQLExpress 之前必须先调用 createSQLJoin
+ * 在调用 createPredicate 之前必须先调用 isCacheUseable
  *
  * @author zhangjx
  */
@@ -82,8 +85,8 @@ public class FilterNode {
             this.value = node.value;
             return this;
         }
-        if (nodes == null) {
-            nodes = new FilterNode[]{node};
+        if (this.nodes == null) {
+            this.nodes = new FilterNode[]{node};
             this.or = sign;
             return this;
         }
@@ -130,11 +133,20 @@ public class FilterNode {
      *
      * @param <T>
      * @param func
+     * @param joinTabalis
      * @param info
      * @return
      */
-    protected <T> CharSequence createSQLJoin(final Function<Class, EntityInfo> func, final EntityInfo<T> info) {
-        return null;
+    protected <T> CharSequence createSQLJoin(final Function<Class, EntityInfo> func, final Map<Class, String> joinTabalis, final EntityInfo<T> info) {
+        if (joinTabalis == null || this.nodes == null) return null;
+        StringBuilder sb = null;
+        for (FilterNode node : this.nodes) {
+            CharSequence cs = node.createSQLJoin(func, joinTabalis, info);
+            if (cs == null) continue;
+            if (sb == null) sb = new StringBuilder();
+            sb.append(cs);
+        }
+        return sb;
     }
 
     /**
@@ -142,8 +154,26 @@ public class FilterNode {
      *
      * @return
      */
-    protected String getTabalis() {
-        return null;
+    protected boolean isjoin() {
+        if (this.nodes == null) return false;
+        for (FilterNode node : this.nodes) {
+            if (node.isjoin()) return true;
+        }
+        return false;
+    }
+
+    protected final Map<Class, String> getJoinTabalis() {
+        if (!isjoin()) return null;
+        Map<Class, String> map = new HashMap<>();
+        putJoinTabalis(map);
+        return map;
+    }
+
+    protected void putJoinTabalis(Map<Class, String> map) {
+        if (this.nodes == null) return;
+        for (FilterNode node : this.nodes) {
+            node.putJoinTabalis(map);
+        }
     }
 
     /**
@@ -164,13 +194,13 @@ public class FilterNode {
      * 该方法需要重载
      *
      * @param <T>
-     * @param func
+     * @param joinTabalis
      * @param info
      * @param bean
      * @return
      */
-    protected <T> CharSequence createSQLExpress(final Function<Class, EntityInfo> func, final EntityInfo<T> info, final FilterBean bean) {
-        CharSequence sb0 = createElementSQLExpress(info, getTabalis(), bean);
+    protected <T> CharSequence createSQLExpress(final EntityInfo<T> info, final Map<Class, String> joinTabalis, final FilterBean bean) {
+        CharSequence sb0 = createElementSQLExpress(info, joinTabalis == null ? null : joinTabalis.get(info.getType()), bean);
         if (this.nodes == null) return sb0;
         final StringBuilder rs = new StringBuilder();
         rs.append('(');
@@ -180,7 +210,7 @@ public class FilterNode {
             rs.append(sb0);
         }
         for (FilterNode node : this.nodes) {
-            CharSequence f = node.createSQLExpress(func, info, bean);
+            CharSequence f = node.createSQLExpress(info, joinTabalis, bean);
             if (f == null || f.length() < 3) continue;
             if (more) rs.append(or ? " OR " : " AND ");
             rs.append(f);
@@ -203,9 +233,7 @@ public class FilterNode {
         if (column == null) return null;
         if (talis == null) talis = "a";
         if (express == ISNULL || express == ISNOTNULL) {
-            StringBuilder sb = new StringBuilder();
-            sb.append(info.getSQLColumn(talis, column)).append(' ').append(express.value());
-            return sb;
+            return new StringBuilder().append(info.getSQLColumn(talis, column)).append(' ').append(express.value());
         }
         final CharSequence val = formatToString(express, getElementValue(bean));
         if (val == null) return null;
@@ -231,9 +259,9 @@ public class FilterNode {
         return sb;
     }
 
-    protected <T> Predicate<T> createPredicate(final EntityCache<T> cache, final FilterBean bean) {
+    protected <T, E> Predicate<T> createPredicate(final EntityCache<T> cache, final FilterBean bean) {
         if (cache == null || (column == null && this.nodes == null)) return null;
-        Predicate<T> filter = createElementPredicate(cache, bean);
+        Predicate<T> filter = createElementPredicate(cache, false, bean);
         if (this.nodes == null) return filter;
         for (FilterNode node : this.nodes) {
             Predicate<T> f = node.createPredicate(cache, bean);
@@ -267,12 +295,14 @@ public class FilterNode {
         return filter;
     }
 
-    protected final <T> Predicate<T> createElementPredicate(final EntityCache<T> cache, final FilterBean bean) {
-        return createElementPredicate(cache, cache.getAttribute(column), bean);
+    protected final <T> Predicate<T> createElementPredicate(final EntityCache<T> cache, final boolean join, final FilterBean bean) {
+        if (column == null) return null;
+        return createElementPredicate(cache, join, cache.getAttribute(column), bean);
     }
 
-    protected final <T> Predicate<T> createElementPredicate(final EntityCache<T> cache, final Attribute<T, Serializable> attr, final FilterBean bean) {
-
+    protected final <T> Predicate<T> createElementPredicate(final EntityCache<T> cache, final boolean join, final Attribute<T, Serializable> attr, final FilterBean bean) {
+        if (attr == null) return null;
+        final String field = join ? (cache.getType().getSimpleName() + "." + attr.field()) : attr.field();
         if (express == ISNULL) return new Predicate<T>() {
 
                 @Override
@@ -282,7 +312,7 @@ public class FilterNode {
 
                 @Override
                 public String toString() {
-                    return attr.field() + " = null";
+                    return field + " = null";
                 }
             };
         if (express == ISNOTNULL) return new Predicate<T>() {
@@ -294,7 +324,7 @@ public class FilterNode {
 
                 @Override
                 public String toString() {
-                    return attr.field() + " != null";
+                    return field + " != null";
                 }
             };
         if (attr == null) return null;
@@ -424,7 +454,7 @@ public class FilterNode {
 
                     @Override
                     public String toString() {
-                        return attr.field() + ' ' + express.value() + ' ' + val;
+                        return field + ' ' + express.value() + ' ' + formatToString(val);
                     }
                 };
             case NOTEQUAL: return new Predicate<T>() {
@@ -436,7 +466,7 @@ public class FilterNode {
 
                     @Override
                     public String toString() {
-                        return attr.field() + ' ' + express.value() + ' ' + val;
+                        return field + ' ' + express.value() + ' ' + formatToString(val);
                     }
                 };
             case GREATERTHAN: return new Predicate<T>() {
@@ -448,7 +478,7 @@ public class FilterNode {
 
                     @Override
                     public String toString() {
-                        return attr.field() + ' ' + express.value() + ' ' + val;
+                        return field + ' ' + express.value() + ' ' + val;
                     }
                 };
             case LESSTHAN: return new Predicate<T>() {
@@ -460,7 +490,7 @@ public class FilterNode {
 
                     @Override
                     public String toString() {
-                        return attr.field() + ' ' + express.value() + ' ' + val;
+                        return field + ' ' + express.value() + ' ' + val;
                     }
                 };
             case GREATERTHANOREQUALTO: return new Predicate<T>() {
@@ -472,7 +502,7 @@ public class FilterNode {
 
                     @Override
                     public String toString() {
-                        return attr.field() + ' ' + express.value() + ' ' + val;
+                        return field + ' ' + express.value() + ' ' + val;
                     }
                 };
             case LESSTHANOREQUALTO: return new Predicate<T>() {
@@ -484,7 +514,7 @@ public class FilterNode {
 
                     @Override
                     public String toString() {
-                        return attr.field() + ' ' + express.value() + ' ' + val;
+                        return field + ' ' + express.value() + ' ' + val;
                     }
                 };
 
@@ -497,7 +527,7 @@ public class FilterNode {
 
                     @Override
                     public String toString() {
-                        return attr.field() + " & " + val + " > 0";
+                        return field + " & " + val + " > 0";
                     }
                 };
             case OPOR: return new Predicate<T>() {
@@ -509,7 +539,7 @@ public class FilterNode {
 
                     @Override
                     public String toString() {
-                        return attr.field() + " | " + val + " > 0";
+                        return field + " | " + val + " > 0";
                     }
                 };
             case OPANDNO: return new Predicate<T>() {
@@ -521,7 +551,7 @@ public class FilterNode {
 
                     @Override
                     public String toString() {
-                        return attr.field() + " & " + val + " = 0";
+                        return field + " & " + val + " = 0";
                     }
                 };
             case LIKE:
@@ -535,7 +565,7 @@ public class FilterNode {
 
                     @Override
                     public String toString() {
-                        return attr.field() + ' ' + express.value() + ' ' + val;
+                        return field + ' ' + express.value() + ' ' + formatToString(val);
                     }
                 };
             case IGNORECASELIKE:
@@ -550,7 +580,7 @@ public class FilterNode {
 
                     @Override
                     public String toString() {
-                        return "LOWER(" + attr.field() + ") " + express.value() + ' ' + valstr;
+                        return "LOWER(" + field + ") " + express.value() + ' ' + formatToString(valstr);
                     }
                 };
             case NOTLIKE:
@@ -564,7 +594,7 @@ public class FilterNode {
 
                     @Override
                     public String toString() {
-                        return attr.field() + ' ' + express.value() + ' ' + val;
+                        return field + ' ' + express.value() + ' ' + formatToString(val);
                     }
                 };
             case IGNORECASENOTLIKE:
@@ -579,7 +609,7 @@ public class FilterNode {
 
                     @Override
                     public String toString() {
-                        return "LOWER(" + attr.field() + ") " + express.value() + ' ' + valstr2;
+                        return "LOWER(" + field + ") " + express.value() + ' ' + formatToString(valstr2);
                     }
                 };
             case BETWEEN:
@@ -599,7 +629,7 @@ public class FilterNode {
 
                         @Override
                         public String toString() {
-                            return attr.field() + " BETWEEN " + min + " AND " + max;
+                            return field + " BETWEEN " + min + " AND " + max;
                         }
                     };
                 if (express == NOTBETWEEN) return new Predicate<T>() {
@@ -614,7 +644,7 @@ public class FilterNode {
 
                         @Override
                         public String toString() {
-                            return attr.field() + " NOT BETWEEN " + min + " AND " + max;
+                            return field + " NOT BETWEEN " + min + " AND " + max;
                         }
                     };
                 return null;
@@ -633,7 +663,7 @@ public class FilterNode {
 
                             @Override
                             public String toString() {
-                                return attr.field() + ' ' + express.value() + " []";
+                                return field + ' ' + express.value() + " []";
                             }
                         };
                     } else {
@@ -647,7 +677,7 @@ public class FilterNode {
 
                             @Override
                             public String toString() {
-                                return attr.field() + ' ' + express.value() + ' ' + val;
+                                return field + ' ' + express.value() + ' ' + val;
                             }
                         };
                     }
@@ -663,7 +693,7 @@ public class FilterNode {
 
                             @Override
                             public String toString() {
-                                return attr.field() + ' ' + express.value() + " []";
+                                return field + ' ' + express.value() + " []";
                             }
                         };
                     } else if (type == int[].class) {
@@ -682,7 +712,7 @@ public class FilterNode {
 
                             @Override
                             public String toString() {
-                                return attr.field() + ' ' + express.value() + ' ' + Arrays.toString((int[]) val);
+                                return field + ' ' + express.value() + ' ' + Arrays.toString((int[]) val);
                             }
                         };
                     } else if (type == short[].class) {
@@ -701,7 +731,7 @@ public class FilterNode {
 
                             @Override
                             public String toString() {
-                                return attr.field() + ' ' + express.value() + ' ' + Arrays.toString((short[]) val);
+                                return field + ' ' + express.value() + ' ' + Arrays.toString((short[]) val);
                             }
                         };
                     } else if (type == long[].class) {
@@ -720,7 +750,7 @@ public class FilterNode {
 
                             @Override
                             public String toString() {
-                                return attr.field() + ' ' + express.value() + ' ' + Arrays.toString((long[]) val);
+                                return field + ' ' + express.value() + ' ' + Arrays.toString((long[]) val);
                             }
                         };
                     } else if (type == float[].class) {
@@ -739,7 +769,7 @@ public class FilterNode {
 
                             @Override
                             public String toString() {
-                                return attr.field() + ' ' + express.value() + ' ' + Arrays.toString((float[]) val);
+                                return field + ' ' + express.value() + ' ' + Arrays.toString((float[]) val);
                             }
                         };
                     } else if (type == double[].class) {
@@ -758,7 +788,7 @@ public class FilterNode {
 
                             @Override
                             public String toString() {
-                                return attr.field() + ' ' + express.value() + ' ' + Arrays.toString((double[]) val);
+                                return field + ' ' + express.value() + ' ' + Arrays.toString((double[]) val);
                             }
                         };
                     } else {
@@ -776,7 +806,7 @@ public class FilterNode {
 
                             @Override
                             public String toString() {
-                                return attr.field() + ' ' + express.value() + ' ' + Arrays.toString((Object[]) val);
+                                return field + ' ' + express.value() + ' ' + Arrays.toString((Object[]) val);
                             }
                         };
                     }
@@ -803,29 +833,31 @@ public class FilterNode {
 
     @Override
     public String toString() {
-        return toString(null);
+        return toString(null, null);
     }
 
-    protected String toString(final FilterBean bean) {
+    protected String toString(final String prefix, final FilterBean bean) {
         StringBuilder sb = new StringBuilder();
         if (nodes == null) {
             if (column != null) {
+                String col = prefix == null ? column : (prefix + "." + column);
                 Serializable ev = getElementValue(bean);
                 if (express == ISNULL || express == ISNOTNULL) {
-                    sb.append(column).append(' ').append(express.value());
+                    sb.append(col).append(' ').append(express.value());
                 } else if (ev != null) {
-                    sb.append((express == IGNORECASELIKE || express == IGNORECASENOTLIKE) ? ("LOWER(" + column + ')') : column).append(' ').append(express.value()).append(' ').append(formatToString(express, ev));
+                    sb.append((express == IGNORECASELIKE || express == IGNORECASENOTLIKE) ? ("LOWER(" + col + ')') : col).append(' ').append(express.value()).append(' ').append(formatToString(express, ev));
                 }
             }
         } else {
             boolean more = false;
             if (column != null) {
+                String col = prefix == null ? column : (prefix + "." + column);
                 Serializable ev = getElementValue(bean);
                 if (express == ISNULL || express == ISNOTNULL) {
-                    sb.append('(').append(column).append(' ').append(express.value());
+                    sb.append('(').append(col).append(' ').append(express.value());
                     more = true;
                 } else if (ev != null) {
-                    sb.append('(').append((express == IGNORECASELIKE || express == IGNORECASENOTLIKE) ? ("LOWER(" + column + ')') : column).append(' ').append(express.value()).append(' ').append(formatToString(express, ev));
+                    sb.append('(').append((express == IGNORECASELIKE || express == IGNORECASENOTLIKE) ? ("LOWER(" + col + ')') : col).append(' ').append(express.value()).append(' ').append(formatToString(express, ev));
                     more = true;
                 }
             }

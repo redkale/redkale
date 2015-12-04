@@ -247,6 +247,10 @@ public final class EntityInfo<T> {
         return cache;
     }
 
+    public boolean isCacheFullLoaded() {
+        return cache != null && cache.isFullLoaded();
+    }
+
     public Creator<T> getCreator() {
         return creator;
     }

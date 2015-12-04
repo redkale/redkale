@@ -90,7 +90,7 @@ final class FilterBeanNode extends FilterNode {
                         }
                         final String jc = joinCol.column().isEmpty() ? secinfo.getPrimary().field() : joinCol.column();
                         if (first) {
-                            joinsb.append(" ").append(joinCol.type().name()).append(" JOIN ").append(secinfo.getTable())
+                            joinsb.append(" INNER JOIN ").append(secinfo.getTable())
                                     .append(" ").append(alias).append(" ON ").append(secinfo.getSQLColumn("a", jc)).append(" = ").append(secinfo.getSQLColumn(alias, jc));
                         }
                         newnode.foreignCache = secinfo.getCache();
@@ -189,7 +189,6 @@ final class FilterBeanNode extends FilterNode {
         this.tabalis = "a";
     }
 
-    @Override
     protected String getTabalis() {
         return tabalis;
     }
@@ -225,13 +224,13 @@ final class FilterBeanNode extends FilterNode {
     }
 
     @Override
-    protected <T> CharSequence createSQLJoin(final Function<Class, EntityInfo> func, final EntityInfo<T> info) {
+    protected <T> CharSequence createSQLJoin(final Function<Class, EntityInfo> func, final Map<Class, String> joinTabalis, final EntityInfo<T> info) {
         if (joinSQL == null) return null;
         return joinSQL;
     }
 
     @Override
-    protected <T> Predicate<T> createPredicate(final EntityCache<T> cache, FilterBean bean) {
+    protected <T, E> Predicate<T> createPredicate(final EntityCache<T> cache, FilterBean bean) {
         if (this.foreignCache == null) return super.createPredicate(cache, bean);
         final Map<EntityCache, Predicate> foreign = new HashMap<>();
         Predicate<T> result = null;
@@ -336,7 +335,7 @@ final class FilterBeanNode extends FilterNode {
             public String toString() {
                 return "" + or;
             }
-        } : super.createElementPredicate(cache, this.columnAttribute, bean);
+        } : super.createElementPredicate(cache, false, this.columnAttribute, bean);
         if (filter == null) return;
         Predicate p = foreign.get(this.foreignCache);
         if (p == null) {
