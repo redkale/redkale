@@ -55,7 +55,7 @@ public class TestSourceCache {
         System.out.println("node = " + node);
         Sheet<TestEntity> sheet = info.getCache().querySheet(null, flipper, node);
         System.out.println(sheet);
-        System.out.println(info.getCache().querySheet(null, flipper, null, new TestEntityBean(1000, "用户")));
+        System.out.println(info.getCache().querySheet(null, flipper, FilterNodeBean.createFilterNode(new TestEntityBean(1000, "用户"))));
         final CountDownLatch cdl = new CountDownLatch(100);
         s = System.currentTimeMillis();
         for (int i = 0; i < 100; i++) {
