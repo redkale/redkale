@@ -18,8 +18,9 @@ public class DebugMethodVisitor {
 
     private boolean debug = false;
 
-    public void setDebug(boolean d) {
+    public DebugMethodVisitor setDebug(boolean d) {
         debug = d;
+        return this;
     }
 
     private final Map<Label, Integer> labels = new LinkedHashMap<>();
