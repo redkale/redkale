@@ -56,15 +56,21 @@ public class FilterJoinNode extends FilterNode {
     }
 
     @Override
-    protected <T> CharSequence createSQLExpress(final EntityInfo<T> info, final Map<Class, String> joinTabalis, final FilterBean bean) {
-        return super.createSQLExpress(this.joinEntity, joinTabalis, bean);
+    protected void check(FilterNode node) {
+        Objects.requireNonNull(node);
+        if (!(node instanceof FilterJoinNode)) throw new IllegalArgumentException(this + " check " + String.valueOf(node) + "is not a " + FilterJoinNode.class.getSimpleName());
     }
 
     @Override
-    protected <T, E> Predicate<T> createPredicate(final EntityCache<T> cache, final FilterBean bean) {
+    protected <T> CharSequence createSQLExpress(final EntityInfo<T> info, final Map<Class, String> joinTabalis) {
+        return super.createSQLExpress(this.joinEntity, joinTabalis);
+    }
+
+    @Override
+    protected <T, E> Predicate<T> createPredicate(final EntityCache<T> cache) {
         if (column == null && this.nodes == null) return null;
         final EntityCache<E> joinCache = this.joinEntity.getCache();
-        Predicate<E> filter = createChildPredicate(bean);
+        Predicate<E> filter = createChildPredicate();
         if (filter == null) return null;
 
         final Predicate<E> inner = filter;
@@ -95,13 +101,13 @@ public class FilterJoinNode extends FilterNode {
         };
     }
 
-    private <E> Predicate<E> createChildPredicate(final FilterBean bean) {
+    private <E> Predicate<E> createChildPredicate() {
         if (column == null && this.nodes == null) return null;
         final EntityCache<E> joinCache = this.joinEntity.getCache();
-        Predicate<E> filter = createElementPredicate(joinCache, true, bean);
+        Predicate<E> filter = createElementPredicate(joinCache, true);
         if (this.nodes != null) {
             for (FilterNode node : this.nodes) {
-                Predicate<E> f = ((FilterJoinNode) node).createChildPredicate(bean);
+                Predicate<E> f = ((FilterJoinNode) node).createChildPredicate();
                 if (f == null) continue;
                 final Predicate<E> one = filter;
                 final Predicate<E> two = f;
@@ -181,13 +187,7 @@ public class FilterJoinNode extends FilterNode {
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("#-- ON ").append(joinColumns[0]).append(" = ").append(joinClass == null ? "null" : joinClass.getSimpleName()).append('.').append(joinColumns[0]);
-        for (int i = 1; i < joinColumns.length; i++) {
-            sb.append(" AND ").append(joinColumns[i]).append(" = ").append(joinClass == null ? "null" : joinClass.getSimpleName()).append('.').append(joinColumns[i]);
-        }
-        sb.append(" --# ").append(toString(joinClass == null ? null : joinClass.getSimpleName(), null));
-        return sb.toString();
+        return toString(joinClass == null ? null : joinClass.getSimpleName()).toString();
     }
 
     public Class getJoinClass() {

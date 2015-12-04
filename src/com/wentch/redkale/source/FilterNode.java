@@ -77,7 +77,7 @@ public class FilterNode {
         return or(new FilterNode(column, express, value));
     }
 
-    protected final FilterNode any(FilterNode node, boolean sign) {
+    protected final FilterNode any(FilterNode node, boolean signor) {
         Objects.requireNonNull(node);
         if (this.column == null) {
             this.column = node.column;
@@ -87,17 +87,24 @@ public class FilterNode {
         }
         if (this.nodes == null) {
             this.nodes = new FilterNode[]{node};
-            this.or = sign;
+            this.or = signor;
             return this;
         }
-        if (or == sign) {
+        if (or == signor) {
             FilterNode[] newsiblings = new FilterNode[nodes.length + 1];
             System.arraycopy(nodes, 0, newsiblings, 0, nodes.length);
             newsiblings[nodes.length] = node;
             this.nodes = newsiblings;
             return this;
         }
-        this.append(node, sign);
+         FilterNode newnode = new FilterNode(this.column, this.express, this.value);
+        newnode.or = this.or;
+        newnode.nodes = this.nodes;
+        this.nodes = new FilterNode[]{newnode, node};
+        this.column = null;
+        this.express = null;
+        this.or = signor;
+        this.value = null;
         return this;
     }
 
@@ -105,27 +112,9 @@ public class FilterNode {
      * 该方法需要重载
      *
      * @param node
-     * @param sign
      */
-    protected void append(FilterNode node, boolean sign) {
-        FilterNode newnode = new FilterNode(this.column, this.express, this.value);
-        newnode.or = this.or;
-        newnode.nodes = this.nodes;
-        this.nodes = new FilterNode[]{newnode, node};
-        this.column = null;
-        this.express = null;
-        this.or = sign;
-        this.value = null;
-    }
-
-    /**
-     * 该方法需要重载
-     *
-     * @param bean
-     * @return
-     */
-    protected Serializable getElementValue(final FilterBean bean) {
-        return value;
+    protected void check(FilterNode node) {
+        Objects.requireNonNull(node);
     }
 
     /**
@@ -199,8 +188,8 @@ public class FilterNode {
      * @param bean
      * @return
      */
-    protected <T> CharSequence createSQLExpress(final EntityInfo<T> info, final Map<Class, String> joinTabalis, final FilterBean bean) {
-        CharSequence sb0 = createElementSQLExpress(info, joinTabalis == null ? null : joinTabalis.get(info.getType()), bean);
+    protected <T> CharSequence createSQLExpress(final EntityInfo<T> info, final Map<Class, String> joinTabalis) {
+        CharSequence sb0 = createElementSQLExpress(info, joinTabalis == null ? null : joinTabalis.get(info.getType()));
         if (this.nodes == null) return sb0;
         final StringBuilder rs = new StringBuilder();
         rs.append('(');
@@ -210,7 +199,7 @@ public class FilterNode {
             rs.append(sb0);
         }
         for (FilterNode node : this.nodes) {
-            CharSequence f = node.createSQLExpress(info, joinTabalis, bean);
+            CharSequence f = node.createSQLExpress(info, joinTabalis);
             if (f == null || f.length() < 3) continue;
             if (more) rs.append(or ? " OR " : " AND ");
             rs.append(f);
@@ -229,13 +218,13 @@ public class FilterNode {
         return new FilterNode(column, express, value);
     }
 
-    protected final <T> CharSequence createElementSQLExpress(final EntityInfo<T> info, String talis, final FilterBean bean) {
+    protected final <T> CharSequence createElementSQLExpress(final EntityInfo<T> info, String talis) {
         if (column == null) return null;
         if (talis == null) talis = "a";
         if (express == ISNULL || express == ISNOTNULL) {
             return new StringBuilder().append(info.getSQLColumn(talis, column)).append(' ').append(express.value());
         }
-        final CharSequence val = formatToString(express, getElementValue(bean));
+        final CharSequence val = formatToString(express, getValue());
         if (val == null) return null;
         StringBuilder sb = new StringBuilder(32);
         if (express == IGNORECASELIKE || express == IGNORECASENOTLIKE) {
@@ -259,12 +248,12 @@ public class FilterNode {
         return sb;
     }
 
-    protected <T, E> Predicate<T> createPredicate(final EntityCache<T> cache, final FilterBean bean) {
+    protected <T, E> Predicate<T> createPredicate(final EntityCache<T> cache) {
         if (cache == null || (column == null && this.nodes == null)) return null;
-        Predicate<T> filter = createElementPredicate(cache, false, bean);
+        Predicate<T> filter = createElementPredicate(cache, false);
         if (this.nodes == null) return filter;
         for (FilterNode node : this.nodes) {
-            Predicate<T> f = node.createPredicate(cache, bean);
+            Predicate<T> f = node.createPredicate(cache);
             if (f == null) continue;
             final Predicate<T> one = filter;
             final Predicate<T> two = f;
@@ -295,12 +284,12 @@ public class FilterNode {
         return filter;
     }
 
-    protected final <T> Predicate<T> createElementPredicate(final EntityCache<T> cache, final boolean join, final FilterBean bean) {
+    protected final <T> Predicate<T> createElementPredicate(final EntityCache<T> cache, final boolean join) {
         if (column == null) return null;
-        return createElementPredicate(cache, join, cache.getAttribute(column), bean);
+        return createElementPredicate(cache, join, cache.getAttribute(column));
     }
 
-    protected final <T> Predicate<T> createElementPredicate(final EntityCache<T> cache, final boolean join, final Attribute<T, Serializable> attr, final FilterBean bean) {
+    protected final <T> Predicate<T> createElementPredicate(final EntityCache<T> cache, final boolean join, final Attribute<T, Serializable> attr) {
         if (attr == null) return null;
         final String field = join ? (cache.getType().getSimpleName() + "." + attr.field()) : attr.field();
         if (express == ISNULL) return new Predicate<T>() {
@@ -328,7 +317,7 @@ public class FilterNode {
                 }
             };
         if (attr == null) return null;
-        Serializable val0 = getElementValue(bean);
+        Serializable val0 = getValue();
         if (val0 == null) return null;
 
         final Class atype = attr.type();
@@ -833,43 +822,39 @@ public class FilterNode {
 
     @Override
     public String toString() {
-        return toString(null, null);
+        return toString(null).toString();
     }
 
-    protected String toString(final String prefix, final FilterBean bean) {
+    protected StringBuilder toString(final String prefix) {
         StringBuilder sb = new StringBuilder();
-        if (nodes == null) {
-            if (column != null) {
-                String col = prefix == null ? column : (prefix + "." + column);
-                Serializable ev = getElementValue(bean);
-                if (express == ISNULL || express == ISNOTNULL) {
-                    sb.append(col).append(' ').append(express.value());
-                } else if (ev != null) {
-                    sb.append((express == IGNORECASELIKE || express == IGNORECASENOTLIKE) ? ("LOWER(" + col + ')') : col).append(' ').append(express.value()).append(' ').append(formatToString(express, ev));
-                }
-            }
-        } else {
-            boolean more = false;
-            if (column != null) {
-                String col = prefix == null ? column : (prefix + "." + column);
-                Serializable ev = getElementValue(bean);
-                if (express == ISNULL || express == ISNOTNULL) {
-                    sb.append('(').append(col).append(' ').append(express.value());
-                    more = true;
-                } else if (ev != null) {
-                    sb.append('(').append((express == IGNORECASELIKE || express == IGNORECASENOTLIKE) ? ("LOWER(" + col + ')') : col).append(' ').append(express.value()).append(' ').append(formatToString(express, ev));
-                    more = true;
-                }
-            }
+        StringBuilder element = toElementString(prefix);
+        boolean more = element.length() > 0 && this.nodes != null;
+        if (more) sb.append('(');
+        sb.append(element);
+        if (this.nodes != null) {
             for (FilterNode node : this.nodes) {
                 String s = node.toString();
-                if (s.isEmpty()) continue;
-                if (sb.length() > 0) sb.append(or ? " OR " : " AND ");
+                if (s.length() < 1) continue;
+                if (sb.length() > 1) sb.append(or ? " OR " : " AND ");
                 sb.append(s);
             }
-            if (more) sb.append(')');
         }
-        return sb.toString();
+        if (more) sb.append(')');
+        return sb;
+    }
+
+    protected final StringBuilder toElementString(final String prefix) {
+        StringBuilder sb = new StringBuilder();
+        if (column != null) {
+            String col = prefix == null ? column : (prefix + "." + column);
+            Serializable ev = getValue();
+            if (express == ISNULL || express == ISNOTNULL) {
+                sb.append(col).append(' ').append(express.value());
+            } else if (ev != null) {
+                sb.append((express == IGNORECASELIKE || express == IGNORECASENOTLIKE) ? ("LOWER(" + col + ')') : col).append(' ').append(express.value()).append(' ').append(formatToString(express, ev));
+            }
+        }
+        return sb;
     }
 
     protected static CharSequence formatToString(Object value) {

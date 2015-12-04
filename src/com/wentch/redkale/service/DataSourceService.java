@@ -142,8 +142,8 @@ public class DataSourceService implements DataSource, Service {
     }
 
     @Override
-    public Number getNumberResult(Class entityClass, Reckon reckon, String column, FilterBean bean) {
-        return source.getNumberResult(entityClass, reckon, column, bean);
+    public final Number getNumberResult(Class entityClass, Reckon reckon, String column, FilterBean bean) {
+        return getNumberResult(entityClass, reckon, column, FilterNodeBean.createFilterNode(bean));
     }
 
     @Override
@@ -157,8 +157,8 @@ public class DataSourceService implements DataSource, Service {
     }
 
     @Override
-    public <K extends Serializable, V extends Number> Map<K, V> getMapResult(Class entityClass, String keyColumn, Reckon reckon, String reckonColumn, FilterBean bean) {
-        return source.getMapResult(entityClass, keyColumn, reckon, reckonColumn, bean);
+    public final <K extends Serializable, V extends Number> Map<K, V> getMapResult(Class entityClass, String keyColumn, Reckon reckon, String reckonColumn, FilterBean bean) {
+        return getMapResult(entityClass, keyColumn, reckon, reckonColumn, FilterNodeBean.createFilterNode(bean));
     }
 
     @Override
@@ -187,8 +187,8 @@ public class DataSourceService implements DataSource, Service {
     }
 
     @Override
-    public <T> T find(Class<T> clazz, FilterBean bean) {
-        return source.find(clazz, bean);
+    public final <T> T find(Class<T> clazz, FilterBean bean) {
+        return find(clazz, FilterNodeBean.createFilterNode(bean));
     }
 
     @Override
@@ -202,8 +202,8 @@ public class DataSourceService implements DataSource, Service {
     }
 
     @Override
-    public <T> boolean exists(Class<T> clazz, FilterBean bean) {
-        return source.exists(clazz, bean);
+    public final <T> boolean exists(Class<T> clazz, FilterBean bean) {
+        return exists(clazz, FilterNodeBean.createFilterNode(bean));
     }
 
     @Override
@@ -217,8 +217,8 @@ public class DataSourceService implements DataSource, Service {
     }
 
     @Override
-    public <T, V> HashSet<V> queryColumnSet(String selectedColumn, Class<T> clazz, FilterBean bean) {
-        return source.queryColumnSet(selectedColumn, clazz, bean);
+    public final <T, V> HashSet<V> queryColumnSet(String selectedColumn, Class<T> clazz, FilterBean bean) {
+        return queryColumnSet(selectedColumn, clazz, FilterNodeBean.createFilterNode(bean));
     }
 
     @Override
@@ -232,8 +232,8 @@ public class DataSourceService implements DataSource, Service {
     }
 
     @Override
-    public <T, V> List<V> queryColumnList(String selectedColumn, Class<T> clazz, FilterBean bean) {
-        return source.queryColumnList(selectedColumn, clazz, bean);
+    public final <T, V> List<V> queryColumnList(String selectedColumn, Class<T> clazz, FilterBean bean) {
+        return queryColumnList(selectedColumn, clazz, FilterNodeBean.createFilterNode(bean));
     }
 
     @Override
@@ -242,8 +242,8 @@ public class DataSourceService implements DataSource, Service {
     }
 
     @Override
-    public <K extends Serializable, T> Map<K, T> queryMap(Class<T> clazz, FilterBean bean) {
-        return source.queryMap(clazz, bean);
+    public final <K extends Serializable, T> Map<K, T> queryMap(Class<T> clazz, FilterBean bean) {
+        return queryMap(clazz, FilterNodeBean.createFilterNode(bean));
     }
 
     @Override
@@ -252,8 +252,8 @@ public class DataSourceService implements DataSource, Service {
     }
 
     @Override
-    public <K extends Serializable, T> Map<K, T> queryMap(Class<T> clazz, SelectColumn selects, FilterBean bean) {
-        return source.queryMap(clazz, selects, bean);
+    public final <K extends Serializable, T> Map<K, T> queryMap(Class<T> clazz, SelectColumn selects, FilterBean bean) {
+        return queryMap(clazz, selects, FilterNodeBean.createFilterNode(bean));
     }
 
     @Override
@@ -267,8 +267,8 @@ public class DataSourceService implements DataSource, Service {
     }
 
     @Override
-    public <T> List<T> queryList(Class<T> clazz, FilterBean bean) {
-        return source.queryList(clazz, bean);
+    public final <T> List<T> queryList(Class<T> clazz, FilterBean bean) {
+        return queryList(clazz, FilterNodeBean.createFilterNode(bean));
     }
 
     @Override
@@ -277,8 +277,8 @@ public class DataSourceService implements DataSource, Service {
     }
 
     @Override
-    public <T> List<T> queryList(Class<T> clazz, SelectColumn selects, FilterBean bean) {
-        return source.queryList(clazz, bean);
+    public final <T> List<T> queryList(Class<T> clazz, SelectColumn selects, FilterBean bean) {
+        return queryList(clazz, FilterNodeBean.createFilterNode(bean));
     }
 
     @Override
@@ -292,8 +292,8 @@ public class DataSourceService implements DataSource, Service {
     }
 
     @Override
-    public <T> List<T> queryList(Class<T> clazz, Flipper flipper, FilterBean bean) {
-        return source.queryList(clazz, flipper, bean);
+    public final <T> List<T> queryList(Class<T> clazz, Flipper flipper, FilterBean bean) {
+        return queryList(clazz, flipper, FilterNodeBean.createFilterNode(bean));
     }
 
     @Override
@@ -302,13 +302,13 @@ public class DataSourceService implements DataSource, Service {
     }
 
     @Override
-    public <T> List<T> queryList(Class<T> clazz, SelectColumn selects, Flipper flipper, FilterBean bean) {
-        return source.queryList(clazz, selects, flipper, bean);
+    public final <T> List<T> queryList(Class<T> clazz, SelectColumn selects, Flipper flipper, FilterBean bean) {
+        return queryList(clazz, selects, flipper, FilterNodeBean.createFilterNode(bean));
     }
 
     @Override
-    public <T, V> Sheet<V> queryColumnSheet(String selectedColumn, Class<T> clazz, Flipper flipper, FilterBean bean) {
-        return source.queryColumnSheet(selectedColumn, clazz, flipper, bean);
+    public final <T, V> Sheet<V> queryColumnSheet(String selectedColumn, Class<T> clazz, Flipper flipper, FilterBean bean) {
+        return queryColumnSheet(selectedColumn, clazz, flipper, FilterNodeBean.createFilterNode(bean));
     }
 
     @Override
@@ -317,8 +317,8 @@ public class DataSourceService implements DataSource, Service {
     }
 
     @Override
-    public <T> Sheet<T> querySheet(Class<T> clazz, Flipper flipper, FilterBean bean) {
-        return source.querySheet(clazz, flipper, bean);
+    public final <T> Sheet<T> querySheet(Class<T> clazz, Flipper flipper, FilterBean bean) {
+        return querySheet(clazz, flipper, FilterNodeBean.createFilterNode(bean));
     }
 
     @Override
@@ -327,8 +327,8 @@ public class DataSourceService implements DataSource, Service {
     }
 
     @Override
-    public <T> Sheet<T> querySheet(Class<T> clazz, SelectColumn selects, Flipper flipper, FilterBean bean) {
-        return source.querySheet(clazz, selects, flipper, bean);
+    public final <T> Sheet<T> querySheet(Class<T> clazz, SelectColumn selects, Flipper flipper, FilterBean bean) {
+        return querySheet(clazz, selects, flipper, FilterNodeBean.createFilterNode(bean));
     }
 
     @Override

@@ -104,12 +104,7 @@ public final class EntityCache<T> {
     }
 
     public T find(final SelectColumn selects, FilterNode node) {
-        return find(selects, node, null);
-    }
-
-    public T find(final SelectColumn selects, FilterNode node, final FilterBean bean) {
-        if (node == null && bean != null) node = FilterBeanNode.load(bean.getClass());
-        final Predicate<T> filter = node == null ? null : node.createPredicate(this, bean);
+        final Predicate<T> filter = node == null ? null : node.createPredicate(this);
         Stream<T> stream = this.list.stream();
         if (filter != null) stream = stream.filter(filter);
         Optional<T> opt = stream.findFirst();
@@ -144,9 +139,8 @@ public final class EntityCache<T> {
         return this.map.containsKey(id);
     }
 
-    public boolean exists(FilterNode node, final FilterBean bean) {
-        if (node == null && bean != null) node = FilterBeanNode.load(bean.getClass());
-        final Predicate<T> filter = node == null ? null : node.createPredicate(this, bean);
+    public boolean exists(FilterNode node) {
+        final Predicate<T> filter = node == null ? null : node.createPredicate(this);
         Stream<T> stream = this.list.stream();
         if (filter != null) stream = stream.filter(filter);
         return stream.findFirst().isPresent();
@@ -156,14 +150,9 @@ public final class EntityCache<T> {
         return (filter != null) && this.list.stream().filter(filter).findFirst().isPresent();
     }
 
-    public <K, V> Map<Serializable, Number> getMapResult(final String keyColumn, final Reckon reckon, final String reckonColumn, final FilterNode node) {
-        return getMapResult(keyColumn, reckon, reckonColumn, node, null);
-    }
-
-    public <K, V> Map<Serializable, Number> getMapResult(final String keyColumn, final Reckon reckon, final String reckonColumn, FilterNode node, final FilterBean bean) {
-        if (node == null && bean != null) node = FilterBeanNode.load(bean.getClass());
+    public <K, V> Map<Serializable, Number> getMapResult(final String keyColumn, final Reckon reckon, final String reckonColumn, FilterNode node) {
         final Attribute<T, Serializable> keyAttr = info.getAttribute(keyColumn);
-        final Predicate filter = node == null ? null : node.createPredicate(this, bean);
+        final Predicate filter = node == null ? null : node.createPredicate(this);
         final Attribute reckonAttr = reckonColumn == null ? null : info.getAttribute(reckonColumn);
         Stream<T> stream = this.list.stream();
         if (filter != null) stream = stream.filter(filter);
@@ -210,14 +199,9 @@ public final class EntityCache<T> {
         return rs;
     }
 
-    public <V> Number getNumberResult(final Reckon reckon, final String column, final FilterNode node) {
-        return getNumberResult(reckon, column, node, null);
-    }
-
-    public <V> Number getNumberResult(final Reckon reckon, final String column, FilterNode node, final FilterBean bean) {
-        if (node == null && bean != null) node = FilterBeanNode.load(bean.getClass());
+    public <V> Number getNumberResult(final Reckon reckon, final String column, FilterNode node) {
         final Attribute<T, Serializable> attr = column == null ? null : info.getAttribute(column);
-        final Predicate<T> filter = node == null ? null : node.createPredicate(this, bean);
+        final Predicate<T> filter = node == null ? null : node.createPredicate(this);
         Stream<T> stream = this.list.stream();
         if (filter != null) stream = stream.filter(filter);
         switch (reckon) {
@@ -283,20 +267,11 @@ public final class EntityCache<T> {
     }
 
     public Sheet<T> querySheet(final SelectColumn selects, final Flipper flipper, final FilterNode node) {
-        return querySheet(selects, flipper, node, null);
+        return querySheet(true, selects, flipper, node);
     }
 
-    public Sheet<T> querySheet(final SelectColumn selects, final Flipper flipper, final FilterNode node, final FilterBean bean) {
-        return querySheet(true, selects, flipper, node, bean);
-    }
-
-    public Sheet<T> querySheet(final boolean needtotal, final SelectColumn selects, final Flipper flipper, final FilterNode node) {
-        return querySheet(needtotal, selects, flipper, node, null);
-    }
-
-    public Sheet<T> querySheet(final boolean needtotal, final SelectColumn selects, final Flipper flipper, FilterNode node, final FilterBean bean) {
-        if (node == null && bean != null) node = FilterBeanNode.load(bean.getClass());
-        final Predicate<T> filter = node == null ? null : node.createPredicate(this, bean);
+    public Sheet<T> querySheet(final boolean needtotal, final SelectColumn selects, final Flipper flipper, FilterNode node) {
+        final Predicate<T> filter = node == null ? null : node.createPredicate(this);
         final Comparator<T> comparator = createComparator(flipper);
         long total = 0;
         if (needtotal) {
@@ -358,7 +333,7 @@ public final class EntityCache<T> {
 
     public Serializable[] delete(final FilterNode node) {
         if (node == null || this.list.isEmpty()) return new Serializable[0];
-        Object[] rms = this.list.stream().filter(node.createPredicate(this, null)).toArray();
+        Object[] rms = this.list.stream().filter(node.createPredicate(this)).toArray();
         Serializable[] ids = new Serializable[rms.length];
         int i = -1;
         for (Object o : rms) {

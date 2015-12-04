@@ -110,7 +110,7 @@ public final class DataDefaultSource implements DataSource, Nameable, Function<C
         }
     }
 
-    private final Function<Class, List> fullloader = (t) -> querySheet(false, false, t, null, null, (FilterNode) null, null).list(true);
+    private final Function<Class, List> fullloader = (t) -> querySheet(false, false, t, null, null, (FilterNode) null).list(true);
 
     public DataDefaultSource() throws IOException {
         this("");
@@ -337,10 +337,6 @@ public final class DataDefaultSource implements DataSource, Nameable, Function<C
 
     private <T> EntityInfo<T> loadEntityInfo(Class<T> clazz) {
         return EntityInfo.load(clazz, this.nodeid, this.cacheForbidden, fullloader);
-    }
-
-    private <T extends FilterBean> FilterBeanNode loadFilterBeanNode(Class<T> clazz) {
-        return FilterBeanNode.load(clazz, this.nodeid, this.cacheForbidden, fullloader);
     }
 
     /**
@@ -651,7 +647,7 @@ public final class DataDefaultSource implements DataSource, Nameable, Function<C
             if (!info.isVirtualEntity()) {
                 Map<Class, String> joinTabalis = node.getJoinTabalis();
                 CharSequence join = node.createSQLJoin(this, joinTabalis, info);
-                CharSequence where = node.createSQLExpress(info, joinTabalis, null);
+                CharSequence where = node.createSQLExpress(info, joinTabalis);
                 String sql = "DELETE " + (mysql ? "a" : "") + " FROM " + info.getTable() + " a" + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
                 if (debug.get()) logger.finest(info.getType().getSimpleName() + " delete sql=" + sql);
                 final Statement stmt = conn.createStatement();
@@ -1062,7 +1058,7 @@ public final class DataDefaultSource implements DataSource, Nameable, Function<C
         if (cache == null) return;
         String column = info.getPrimary().field();
         for (Serializable id : ids) {
-            Sheet<T> sheet = querySheet(false, true, clazz, null, FLIPPER_ONE, FilterNode.create(column, id), null);
+            Sheet<T> sheet = querySheet(false, true, clazz, null, FLIPPER_ONE, FilterNode.create(column, id));
             T value = sheet.isEmpty() ? null : sheet.list().get(0);
             if (value != null) cache.update(value);
         }
@@ -1071,33 +1067,28 @@ public final class DataDefaultSource implements DataSource, Nameable, Function<C
     //-----------------------getNumberResult-----------------------------
     @Override
     public Number getNumberResult(final Class entityClass, final Reckon reckon, final String column) {
-        return getNumberResult(entityClass, reckon, column, null, null);
+        return getNumberResult(entityClass, reckon, column, (FilterNode) null);
     }
 
     @Override
     public Number getNumberResult(final Class entityClass, final Reckon reckon, final String column, FilterBean bean) {
-        return getNumberResult(entityClass, reckon, column, null, bean);
+        return getNumberResult(entityClass, reckon, column, FilterNodeBean.createFilterNode(bean));
     }
 
     @Override
-    public Number getNumberResult(final Class entityClass, final Reckon reckon, final String column, FilterNode node) {
-        return getNumberResult(entityClass, reckon, column, node, null);
-    }
-
-    private <T> Number getNumberResult(final Class<T> entityClass, final Reckon reckon, final String column, FilterNode node, FilterBean bean) {
+    public Number getNumberResult(final Class entityClass, final Reckon reckon, final String column, final FilterNode node) {
         final Connection conn = createReadSQLConnection();
         try {
-            final EntityInfo<T> info = loadEntityInfo(entityClass);
-            if (node == null && bean != null) node = loadFilterBeanNode(bean.getClass());
-            final EntityCache<T> cache = info.getCache();
+            final EntityInfo info = loadEntityInfo(entityClass);
+            final EntityCache cache = info.getCache();
             if (cache != null && (info.isVirtualEntity() || cache.isFullLoaded())) {
                 if (node == null || node.isCacheUseable(this)) {
-                    return cache.getNumberResult(reckon, column, node, bean);
+                    return cache.getNumberResult(reckon, column, node);
                 }
             }
             final Map<Class, String> joinTabalis = node == null ? null : node.getJoinTabalis();
             final CharSequence join = node == null ? null : node.createSQLJoin(this, joinTabalis, info);
-            final CharSequence where = node == null ? null : node.createSQLExpress(info, joinTabalis, bean);
+            final CharSequence where = node == null ? null : node.createSQLExpress(info, joinTabalis);
             final String sql = "SELECT " + reckon.getColumn((column == null || column.isEmpty() ? "*" : ("a." + column))) + " FROM " + info.getTable() + " a"
                     + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
             if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(entityClass.getSimpleName() + " single sql=" + sql);
@@ -1120,34 +1111,29 @@ public final class DataDefaultSource implements DataSource, Nameable, Function<C
     //-----------------------getMapResult-----------------------------
     @Override
     public <K extends Serializable, V extends Number> Map<K, V> getMapResult(Class entityClass, final String keyColumn, Reckon reckon, final String reckonColumn) {
-        return getMapResult(entityClass, keyColumn, reckon, reckonColumn, null, null);
+        return getMapResult(entityClass, keyColumn, reckon, reckonColumn, (FilterNode) null);
     }
 
     @Override
     public <K extends Serializable, V extends Number> Map<K, V> getMapResult(Class entityClass, final String keyColumn, Reckon reckon, final String reckonColumn, FilterBean bean) {
-        return getMapResult(entityClass, keyColumn, reckon, reckonColumn, null, bean);
+        return getMapResult(entityClass, keyColumn, reckon, reckonColumn, FilterNodeBean.createFilterNode(bean));
     }
 
     @Override
-    public <K extends Serializable, V extends Number> Map<K, V> getMapResult(Class entityClass, final String keyColumn, Reckon reckon, final String reckonColumn, FilterNode node) {
-        return getMapResult(entityClass, keyColumn, reckon, reckonColumn, node, null);
-    }
-
-    private <K extends Serializable, V extends Number> Map<K, V> getMapResult(final Class entityClass, final String keyColumn, final Reckon reckon, final String reckonColumn, FilterNode node, FilterBean bean) {
+    public <K extends Serializable, V extends Number> Map<K, V> getMapResult(final Class entityClass, final String keyColumn, final Reckon reckon, final String reckonColumn, FilterNode node) {
         final Connection conn = createReadSQLConnection();
         try {
             final EntityInfo info = loadEntityInfo(entityClass);
-            if (node == null && bean != null) node = loadFilterBeanNode(bean.getClass());
             final EntityCache cache = info.getCache();
             if (cache != null && (info.isVirtualEntity() || cache.isFullLoaded())) {
                 if (node == null || node.isCacheUseable(this)) {
-                    return cache.getMapResult(keyColumn, reckon, reckonColumn, node, bean);
+                    return cache.getMapResult(keyColumn, reckon, reckonColumn, node);
                 }
             }
             final String sqlkey = info.getSQLColumn(null, keyColumn);
             final Map<Class, String> joinTabalis = node == null ? null : node.getJoinTabalis();
             final CharSequence join = node == null ? null : node.createSQLJoin(this, joinTabalis, info);
-            final CharSequence where = node == null ? null : node.createSQLExpress(info, joinTabalis, bean);
+            final CharSequence where = node == null ? null : node.createSQLExpress(info, joinTabalis);
             final String sql = "SELECT a." + sqlkey + ", " + reckon.getColumn((reckonColumn == null || reckonColumn.isEmpty() ? "*" : ("a." + reckonColumn)))
                     + " FROM " + info.getTable() + " a" + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where)) + " GROUP BY a." + sqlkey;
             if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(entityClass.getSimpleName() + " single sql=" + sql);
@@ -1209,31 +1195,30 @@ public final class DataDefaultSource implements DataSource, Nameable, Function<C
 
     @Override
     public <T> T findByColumn(final Class<T> clazz, final String column, final Serializable key) {
-        return find(clazz, null, FilterNode.create(column, key), null);
+        return find(clazz, null, FilterNode.create(column, key));
     }
 
     @Override
     public <T> T find(final Class<T> clazz, final FilterBean bean) {
-        return find(clazz, null, null, bean);
+        return find(clazz, null, FilterNodeBean.createFilterNode(bean));
     }
 
     @Override
     public <T> T find(final Class<T> clazz, final FilterNode node) {
-        return find(clazz, null, node, null);
+        return find(clazz, null, node);
     }
 
-    private <T> T find(final Class<T> clazz, final SelectColumn selects, FilterNode node, final FilterBean bean) {
+    public <T> T find(final Class<T> clazz, final SelectColumn selects, final FilterNode node) {
         final EntityInfo<T> info = loadEntityInfo(clazz);
         final EntityCache<T> cache = info.getCache();
-        if (node == null && bean != null) node = loadFilterBeanNode(bean.getClass());
-        if (cache != null && cache.isFullLoaded() && (node == null || node.isCacheUseable(this))) return cache.find(selects, node, bean);
+        if (cache != null && cache.isFullLoaded() && (node == null || node.isCacheUseable(this))) return cache.find(selects, node);
 
         final Connection conn = createReadSQLConnection();
         try {
             final SelectColumn sels = selects;
             final Map<Class, String> joinTabalis = node == null ? null : node.getJoinTabalis();
             final CharSequence join = node == null ? null : node.createSQLJoin(this, joinTabalis, info);
-            final CharSequence where = node == null ? null : node.createSQLExpress(info, joinTabalis, bean);
+            final CharSequence where = node == null ? null : node.createSQLExpress(info, joinTabalis);
             final String sql = "SELECT a.* FROM " + info.getTable() + " a" + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
             if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(clazz.getSimpleName() + " find sql=" + sql);
             final PreparedStatement ps = conn.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
@@ -1273,26 +1258,21 @@ public final class DataDefaultSource implements DataSource, Nameable, Function<C
     }
 
     @Override
-    public <T> boolean exists(final Class<T> clazz, final FilterNode node) {
-        return exists(clazz, node, null);
+    public <T> boolean exists(final Class<T> clazz, final FilterBean bean) {
+        return exists(clazz, FilterNodeBean.createFilterNode(bean));
     }
 
     @Override
-    public <T> boolean exists(final Class<T> clazz, final FilterBean bean) {
-        return exists(clazz, null, bean);
-    }
-
-    private <T> boolean exists(final Class<T> clazz, FilterNode node, final FilterBean bean) {
+    public <T> boolean exists(final Class<T> clazz, final FilterNode node) {
         final EntityInfo<T> info = loadEntityInfo(clazz);
         final EntityCache<T> cache = info.getCache();
-        if (node == null && bean != null) node = loadFilterBeanNode(bean.getClass());
-        if (cache != null && cache.isFullLoaded() && (node == null || node.isCacheUseable(this))) return cache.exists(node, bean);
+        if (cache != null && cache.isFullLoaded() && (node == null || node.isCacheUseable(this))) return cache.exists(node);
 
         final Connection conn = createReadSQLConnection();
         try {
             final Map<Class, String> joinTabalis = node == null ? null : node.getJoinTabalis();
             final CharSequence join = node == null ? null : node.createSQLJoin(this, joinTabalis, info);
-            final CharSequence where = node == null ? null : node.createSQLExpress(info, joinTabalis, bean);
+            final CharSequence where = node == null ? null : node.createSQLExpress(info, joinTabalis);
             final String sql = "SELECT COUNT(" + info.getPrimarySQLColumn("a") + ") FROM " + info.getTable() + " a" + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
             if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(clazz.getSimpleName() + " exists sql=" + sql);
             final PreparedStatement ps = conn.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
@@ -1446,12 +1426,12 @@ public final class DataDefaultSource implements DataSource, Nameable, Function<C
 
     @Override
     public <T> List<T> queryList(final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterNode node) {
-        return querySheet(true, false, clazz, selects, flipper, node, null).list(true);
+        return querySheet(true, false, clazz, selects, flipper, node).list(true);
     }
 
     @Override
     public <T> List<T> queryList(final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterBean bean) {
-        return querySheet(true, false, clazz, selects, flipper, null, bean).list(true);
+        return querySheet(true, false, clazz, selects, flipper, FilterNodeBean.createFilterNode(bean)).list(true);
     }
 
     //-----------------------sheet----------------------------
@@ -1468,16 +1448,12 @@ public final class DataDefaultSource implements DataSource, Nameable, Function<C
      */
     @Override
     public <T, V> Sheet<V> queryColumnSheet(String selectedColumn, Class<T> clazz, final Flipper flipper, final FilterBean bean) {
-        return queryColumnSheet(selectedColumn, clazz, flipper, null, bean);
+        return queryColumnSheet(selectedColumn, clazz, flipper, FilterNodeBean.createFilterNode(bean));
     }
 
     @Override
     public <T, V> Sheet<V> queryColumnSheet(String selectedColumn, Class<T> clazz, final Flipper flipper, final FilterNode node) {
-        return queryColumnSheet(selectedColumn, clazz, flipper, node, null);
-    }
-
-    private <T, V> Sheet<V> queryColumnSheet(String selectedColumn, Class<T> clazz, final Flipper flipper, final FilterNode node, final FilterBean bean) {
-        Sheet<T> sheet = querySheet(true, true, clazz, SelectColumn.createIncludes(selectedColumn), flipper, node, bean);
+        Sheet<T> sheet = querySheet(true, true, clazz, SelectColumn.createIncludes(selectedColumn), flipper, node);
         final Sheet<V> rs = new Sheet<>();
         if (sheet.isEmpty()) return rs;
         rs.setTotal(sheet.getTotal());
@@ -1522,22 +1498,21 @@ public final class DataDefaultSource implements DataSource, Nameable, Function<C
      */
     @Override
     public <T> Sheet<T> querySheet(Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterBean bean) {
-        return querySheet(true, true, clazz, selects, flipper, null, bean);
+        return querySheet(true, true, clazz, selects, flipper, FilterNodeBean.createFilterNode(bean));
     }
 
     @Override
     public <T> Sheet<T> querySheet(Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterNode node) {
-        return querySheet(true, true, clazz, selects, flipper, node, null);
+        return querySheet(true, true, clazz, selects, flipper, node);
     }
 
-    private <T> Sheet<T> querySheet(boolean readcache, boolean needtotal, Class<T> clazz, final SelectColumn selects, final Flipper flipper, FilterNode node, final FilterBean bean) {
+    private <T> Sheet<T> querySheet(boolean readcache, boolean needtotal, Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterNode node) {
         final EntityInfo<T> info = loadEntityInfo(clazz);
         final EntityCache<T> cache = info.getCache();
-        if (node == null && bean != null) node = loadFilterBeanNode(bean.getClass());
         if (readcache && cache != null) {
             if (node == null || node.isCacheUseable(this)) {
-                if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(clazz.getSimpleName() + " cache query predicate = " + (node == null ? null : node.createPredicate(cache, bean)));
-                Sheet<T> sheet = cache.querySheet(needtotal, selects, flipper, node, bean);
+                if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(clazz.getSimpleName() + " cache query predicate = " + (node == null ? null : node.createPredicate(cache)));
+                Sheet<T> sheet = cache.querySheet(needtotal, selects, flipper, node);
                 if (!sheet.isEmpty() || info.isVirtualEntity() || cache.isFullLoaded()) return sheet;
             }
         }
@@ -1547,7 +1522,7 @@ public final class DataDefaultSource implements DataSource, Nameable, Function<C
             final List<T> list = new ArrayList();
             final Map<Class, String> joinTabalis = node == null ? null : node.getJoinTabalis();
             final CharSequence join = node == null ? null : node.createSQLJoin(this, joinTabalis, info);
-            final CharSequence where = node == null ? null : node.createSQLExpress(info, joinTabalis, bean);
+            final CharSequence where = node == null ? null : node.createSQLExpress(info, joinTabalis);
             final String sql = "SELECT a.* FROM " + info.getTable() + " a" + (join == null ? "" : join)
                     + ((where == null || where.length() == 0) ? "" : (" WHERE " + where)) + info.createSQLOrderby(flipper);
             if (debug.get() && info.isLoggable(Level.FINEST))
