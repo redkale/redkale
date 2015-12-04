@@ -26,35 +26,38 @@ public class FilterNodeTest {
         final EntityInfo<CarTypeTestTable> typeEntity = EntityInfo.load(CarTypeTestTable.class, 0, false, (t) -> CarTypeTestTable.createList());
 
         final CarTestBean bean = new CarTestBean();
-        bean.carid = 1;
+        bean.carid = 70002;
         bean.username = "用户1";
         bean.createtime = 500;
         bean.typename = "法拉利";
         FilterNode joinNode1 = FilterJoinNode.create(UserTestTable.class, new String[]{"userid", "username"}, "username", LIKE, bean.username)
                 .or(FilterJoinNode.create(UserTestTable.class, new String[]{"userid", "username"}, "createtime", GREATERTHAN, bean.createtime));
         FilterNode joinNode2 = FilterJoinNode.create(CarTypeTestTable.class, "cartype", "typename", LIKE, bean.typename);
-        FilterNode node = FilterNode.create("carid", GREATERTHAN, bean.carid).and(joinNode1).or(joinNode2);
+        FilterNode node = CarTestBean.caridTransient() ? (joinNode2.or(joinNode1)) : FilterNode.create("carid", GREATERTHAN, bean.carid).and(joinNode1).or(joinNode2);
         FilterNode beanNode = FilterNodeBean.createFilterNode(bean);
-        System.out.println("bean = " + beanNode);
-        System.out.println("node = " + node);
-        Map<Class, String> joinTabalis = node.getJoinTabalis();
-        CharSequence joinsql = node.createSQLJoin(func, joinTabalis, carEntity);
-        CharSequence where = node.createSQLExpress(carEntity, joinTabalis);
-        System.out.println("SELECT a.* FROM " + CarTestTable.class.getSimpleName().toLowerCase() + " a" + (joinsql == null ? "" : joinsql) + " WHERE " + where);
+        System.out.println("node.string = " + node);
+        System.out.println("bean.string = " + beanNode);
+        Map<Class, String> nodeJoinTabalis = node.getJoinTabalis();
+        Map<Class, String> beanJoinTabalis = beanNode.getJoinTabalis();
+        CharSequence nodeJoinsql = node.createSQLJoin(func, nodeJoinTabalis, carEntity);
+        CharSequence beanJoinsql = beanNode.createSQLJoin(func, beanJoinTabalis, carEntity);
+        CharSequence nodeWhere = node.createSQLExpress(carEntity, nodeJoinTabalis);
+        CharSequence beanWhere = beanNode.createSQLExpress(carEntity, beanJoinTabalis);
+        System.out.println("node.sql = SELECT a.* FROM " + CarTestTable.class.getSimpleName().toLowerCase() + " a" + (nodeJoinsql == null ? "" : nodeJoinsql) + " WHERE " + nodeWhere);
+        System.out.println("bean.sql = SELECT a.* FROM " + CarTestTable.class.getSimpleName().toLowerCase() + " a" + (beanJoinsql == null ? "" : beanJoinsql) + " WHERE " + beanWhere);
         assert node.isCacheUseable(func) : "isCacheUseable 应该是true";
-       assert  beanNode.isCacheUseable(func): "isCacheUseable 应该是true";
-        System.out.println("isCacheUseable = " + node.isCacheUseable(func));  //应该是true
-        System.out.println(node.createPredicate(carEntity.getCache()));
-        System.out.println(beanNode.createPredicate(carEntity.getCache()));
-        System.out.println(carEntity.getCache().querySheet(null, new Flipper(), node));
-        System.out.println(carEntity.getCache().querySheet(null, new Flipper(), beanNode));
+        assert beanNode.isCacheUseable(func) : "isCacheUseable 应该是true";
+        System.out.println("node.Predicate = " + node.createPredicate(carEntity.getCache()));
+        System.out.println("bean.Predicate = " + beanNode.createPredicate(carEntity.getCache()));
+        System.out.println("node.sheet = " +carEntity.getCache().querySheet(null, new Flipper(), node));
+        System.out.println("bean.sheet = " +carEntity.getCache().querySheet(null, new Flipper(), beanNode));
     }
 
     public static class CarTestBean implements FilterBean {
 
         @FilterGroup("[OR].[AND]a")
         @FilterColumn(express = GREATERTHAN)
-        //@Transient
+        @Transient
         public long carid;
 
         @FilterGroup("[OR].[AND]a.[OR]c")
@@ -75,6 +78,15 @@ public class FilterNodeTest {
         @Override
         public String toString() {
             return JsonFactory.root().getConvert().convertTo(this);
+        }
+
+        public static boolean caridTransient() {
+            try {
+                return CarTestBean.class.getDeclaredField("carid").getAnnotation(Transient.class) != null;
+            } catch (Exception e) {
+                e.printStackTrace();
+                return true;
+            }
         }
     }
 
