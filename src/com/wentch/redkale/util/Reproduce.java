@@ -51,6 +51,25 @@ public interface Reproduce<D, S> {
         {
             mv = (cw.visitMethod(ACC_PUBLIC, "copy", "(" + destDesc + srcDesc + ")" + destDesc, null, null));
             //mv.setDebug(true);
+
+            for (java.lang.reflect.Field field : srcClass.getFields()) {
+                if (Modifier.isStatic(field.getModifiers())) continue;
+                if (Modifier.isFinal(field.getModifiers())) continue;
+                if (!Modifier.isPublic(field.getModifiers())) continue;
+                final String fname = field.getName();
+                try {
+                    if (!field.getType().equals(destClass.getField(fname).getType())) continue;
+                    if (!columnPredicate.test(fname)) continue;
+                } catch (Exception e) {
+                    continue;
+                }
+                mv.visitVarInsn(ALOAD, 1);
+                mv.visitVarInsn(ALOAD, 2);
+                String td = Type.getDescriptor(field.getType());
+                mv.visitFieldInsn(GETFIELD, srcName, fname, td);
+                mv.visitFieldInsn(PUTFIELD, destName, fname, td);
+            }
+
             for (java.lang.reflect.Method getter : srcClass.getMethods()) {
                 if (Modifier.isStatic(getter.getModifiers())) continue;
                 if (getter.getParameterCount() > 0) continue;
