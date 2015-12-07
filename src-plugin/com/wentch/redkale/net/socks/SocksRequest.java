@@ -5,7 +5,6 @@
  */
 package com.wentch.redkale.net.socks;
 
-import com.wentch.redkale.convert.json.*;
 import com.wentch.redkale.net.*;
 import com.wentch.redkale.net.http.*;
 import java.net.*;
@@ -22,7 +21,7 @@ public class SocksRequest extends HttpRequest {
     private short requestid;
 
     protected SocksRequest(HttpContext context) {
-        super(context, JsonFactory.root(), null);
+        super(context, null);
     }
 
     @Override
