@@ -370,7 +370,7 @@ public final class ClassFilter<T> {
                             String entryname = it.nextElement().getName().replace('/', '.');
                             if (entryname.endsWith(".class") && entryname.indexOf('$') < 0) {
                                 String classname = entryname.substring(0, entryname.length() - 6);
-                                if (classname.startsWith("javax.") || classname.startsWith("org.") || classname.startsWith("com.mysql.")) continue;
+                                if (classname.startsWith("javax.") || classname.startsWith("com.sun.") || classname.startsWith("com.mysql.")) continue;
                                 classes.add(classname);
                                 if (debug) debugstr.append(classname).append("\r\n");
                                 for (final ClassFilter filter : filters) {
