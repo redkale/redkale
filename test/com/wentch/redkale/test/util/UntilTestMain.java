@@ -23,12 +23,14 @@ public class UntilTestMain {
         final TestBean bean = new TestBean();
         bean.setId(123456);
         bean.setName("zhangjx");
+        bean.time = 2000;
         final TestXBean beanx = new TestXBean();
         Reproduce<TestXBean, TestBean> action1 = Reproduce.create(TestXBean.class, TestBean.class);
         Reproduce<TestXBean, TestBean> action2 = new Reproduce<TestXBean, TestBean>() {
 
             @Override
             public TestXBean copy(TestXBean dest, TestBean src) {
+                dest.time = src.time;
                 dest.setId(src.getId());
                 dest.setName(src.getName());
                 dest.setMap(src.getMap());
