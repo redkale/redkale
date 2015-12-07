@@ -108,6 +108,10 @@ public final class EntityInfo<T> {
         }
     }
 
+    public static <T> EntityInfo<T> get(Class<T> clazz) {
+        return entityInfos.get(clazz);
+    }
+
     private EntityInfo(Class<T> type, int nodeid, final boolean cacheForbidden) {
         this.type = type;
         //---------------------------------------------
@@ -336,7 +340,7 @@ public final class EntityInfo<T> {
         return getSQLColumn(tabalis, this.primary.field());
     }
 
-    public Map<String, Attribute<T, Serializable>> getAttributes() {
+    protected Map<String, Attribute<T, Serializable>> getAttributes() {
         return attributeMap;
     }
 
@@ -344,7 +348,7 @@ public final class EntityInfo<T> {
         return l.intValue() >= this.logLevel;
     }
 
-    public T getValue(final SelectColumn sels, final ResultSet set) throws SQLException {
+    protected T getValue(final SelectColumn sels, final ResultSet set) throws SQLException {
         T obj = creator.create();
         for (Attribute<T, Serializable> attr : queryAttributes) {
             if (sels == null || sels.test(attr.field())) {
