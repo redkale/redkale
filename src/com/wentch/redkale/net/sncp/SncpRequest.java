@@ -43,9 +43,9 @@ public final class SncpRequest extends Request {
 
     private byte[] bufferbytes = new byte[6];
 
-    protected SncpRequest(SncpContext context, BsonFactory factory) {
+    protected SncpRequest(Context context) {
         super(context);
-        this.convert = factory.getConvert();
+        this.convert = context.getBsonConvert();
     }
 
     @Override

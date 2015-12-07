@@ -5,6 +5,8 @@
  */
 package com.wentch.redkale.net;
 
+import com.wentch.redkale.convert.bson.*;
+import com.wentch.redkale.convert.json.*;
 import java.nio.*;
 import java.util.*;
 
@@ -15,6 +17,10 @@ import java.util.*;
 public abstract class Request {
 
     protected final Context context;
+
+    protected final BsonConvert bsonConvert;
+
+    protected final JsonConvert jsonConvert;
 
     protected long createtime;
 
@@ -32,6 +38,8 @@ public abstract class Request {
 
     protected Request(Context context) {
         this.context = context;
+        this.bsonConvert = context.getBsonConvert();
+        this.jsonConvert = context.getJsonConvert();
     }
 
     /**
@@ -44,8 +52,9 @@ public abstract class Request {
 
     /**
      * 读取buffer，并返回读取的有效数据长度
-     @param buffer
-     @return 
+     *
+     * @param buffer
+     * @return
      */
     protected abstract int readBody(ByteBuffer buffer);
 

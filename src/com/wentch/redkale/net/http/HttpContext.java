@@ -5,8 +5,6 @@
  */
 package com.wentch.redkale.net.http;
 
-import com.wentch.redkale.convert.bson.*;
-import com.wentch.redkale.convert.json.*;
 import com.wentch.redkale.net.*;
 import com.wentch.redkale.util.*;
 import com.wentch.redkale.watch.*;
@@ -58,11 +56,4 @@ public final class HttpContext extends Context {
         return responsePool;
     }
 
-    protected JsonFactory getJsonFactory() {
-        return jsonFactory;
-    }
-
-    protected BsonFactory getBsonFactory() {
-        return bsonFactory;
-    }
 }

@@ -108,7 +108,7 @@ public final class EntityInfo<T> {
         }
     }
 
-    public static <T> EntityInfo<T> get(Class<T> clazz) {
+    static <T> EntityInfo<T> get(Class<T> clazz) {
         return entityInfos.get(clazz);
     }
 

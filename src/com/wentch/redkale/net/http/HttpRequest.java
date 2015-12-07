@@ -5,8 +5,8 @@
  */
 package com.wentch.redkale.net.http;
 
-import com.wentch.redkale.util.ByteArray;
 import com.wentch.redkale.convert.json.*;
+import com.wentch.redkale.util.ByteArray;
 import com.wentch.redkale.net.*;
 import com.wentch.redkale.util.AnyValue.DefaultAnyValue;
 import java.io.*;
@@ -49,8 +49,6 @@ public class HttpRequest extends Request {
 
     protected String newsessionid;
 
-    protected final JsonConvert convert;
-
     protected final DefaultAnyValue header = new DefaultAnyValue();
 
     protected final DefaultAnyValue params = new DefaultAnyValue();
@@ -65,9 +63,8 @@ public class HttpRequest extends Request {
 
     private final String remoteAddrHeader;
 
-    public HttpRequest(Context context, JsonFactory factory, String remoteAddrHeader) {
+    public HttpRequest(Context context, String remoteAddrHeader) {
         super(context);
-        this.convert = factory.getConvert();
         this.remoteAddrHeader = remoteAddrHeader;
     }
 
@@ -81,6 +78,10 @@ public class HttpRequest extends Request {
 
     protected AsyncConnection getChannel() {
         return this.channel;
+    }
+    
+    protected JsonConvert getJsonConvert(){
+        return this.jsonConvert;
     }
 
     @Override
@@ -270,11 +271,11 @@ public class HttpRequest extends Request {
     public final MultiContext getMultiContext() {
         return new MultiContext(context.getCharset(), this.getContentType(),
                 new BufferedInputStream(Channels.newInputStream(this.channel), Math.max(array.count(), 8192)) {
-                    {
-                        array.write(this.buf);
-                        this.count = array.count();
-                    }
-                });
+            {
+                array.write(this.buf);
+                this.count = array.count();
+            }
+        });
     }
 
     @Override
@@ -446,7 +447,7 @@ public class HttpRequest extends Request {
 
     public <T> T getJsonHeader(Class<T> clazz, String name) {
         String v = getHeader(name);
-        return v == null || v.isEmpty() ? null : convert.convertFrom(clazz, v);
+        return v == null || v.isEmpty() ? null : jsonConvert.convertFrom(clazz, v);
     }
 
     public boolean getBooleanHeader(String name, boolean defaultValue) {
@@ -490,7 +491,7 @@ public class HttpRequest extends Request {
 
     public <T> T getJsonParameter(Class<T> clazz, String name) {
         String v = getParameter(name);
-        return v == null || v.isEmpty() ? null : convert.convertFrom(clazz, v);
+        return v == null || v.isEmpty() ? null : jsonConvert.convertFrom(clazz, v);
     }
 
     public boolean getBooleanParameter(String name, boolean defaultValue) {

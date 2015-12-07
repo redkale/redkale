@@ -5,6 +5,7 @@
  */
 package com.wentch.redkale.service;
 
+import com.wentch.redkale.net.sncp.*;
 import com.wentch.redkale.source.*;
 import com.wentch.redkale.util.*;
 import java.io.*;
@@ -32,12 +33,12 @@ public class DataSourceService implements DataSource, Service {
     }
 
     @Override
-    public <T> void insert(T... values) {
+    public <T> void insert(@SncpCall(EntityCallAttribute.class) T... values) {
         source.insert(values);
     }
 
     @Override
-    public <T> void insert(DataConnection conn, T... values) {
+    public <T> void insert(DataConnection conn, @SncpCall(EntityCallAttribute.class) T... values) {
         source.insert(conn, values);
     }
 
