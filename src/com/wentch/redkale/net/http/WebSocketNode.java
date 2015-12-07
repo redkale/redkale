@@ -72,7 +72,7 @@ public abstract class WebSocketNode {
         return dataNodes;
     }
 
-    protected abstract int sendMessage(@SncpParameter InetSocketAddress addr, Serializable groupid, boolean recent, Serializable message, boolean last);
+    protected abstract int sendMessage(@SncpTargetAddress InetSocketAddress addr, Serializable groupid, boolean recent, Serializable message, boolean last);
 
     protected abstract void connect(Serializable groupid, InetSocketAddress addr);
 

@@ -55,7 +55,7 @@ public final class SncpClient {
                 for (int i = 0; i < anns.length; i++) {
                     if (anns[i].length > 0) {
                         for (Annotation ann : anns[i]) {
-                            if (ann.annotationType() == SncpParameter.class && SocketAddress.class.isAssignableFrom(params[i])) {
+                            if (ann.annotationType() == SncpTargetAddress.class && SocketAddress.class.isAssignableFrom(params[i])) {
                                 addrIndex = i;
                                 break;
                             }

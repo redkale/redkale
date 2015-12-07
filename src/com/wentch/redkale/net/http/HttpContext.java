@@ -5,6 +5,7 @@
  */
 package com.wentch.redkale.net.http;
 
+import com.wentch.redkale.convert.bson.*;
 import com.wentch.redkale.convert.json.*;
 import com.wentch.redkale.net.*;
 import com.wentch.redkale.util.*;
@@ -24,8 +25,6 @@ public final class HttpContext extends Context {
 
     protected final String contextPath;
 
-    protected final JsonFactory jsonFactory;
-
     protected final SecureRandom random = new SecureRandom();
 
     public HttpContext(long serverStartTime, Logger logger, ExecutorService executor, int bufferCapacity, ObjectPool<ByteBuffer> bufferPool,
@@ -34,7 +33,6 @@ public final class HttpContext extends Context {
         super(serverStartTime, logger, executor, bufferCapacity, bufferPool, responsePool, maxbody, charset,
                 address, prepare, watch, readTimeoutSecond, writeTimeoutSecond);
         this.contextPath = contextPath;
-        this.jsonFactory = JsonFactory.root();
         random.setSeed(Math.abs(System.nanoTime()));
     }
 
@@ -60,7 +58,11 @@ public final class HttpContext extends Context {
         return responsePool;
     }
 
-    public JsonConvert getJsonConvert() {
-        return jsonFactory.getConvert();
+    protected JsonFactory getJsonFactory() {
+        return jsonFactory;
+    }
+
+    protected BsonFactory getBsonFactory() {
+        return bsonFactory;
     }
 }

@@ -31,7 +31,7 @@ public class WebSocketNodeService extends WebSocketNode implements Service {
     }
 
     @Override
-    public int sendMessage(@SncpParameter InetSocketAddress addr, Serializable groupid, boolean recent, Serializable message, boolean last) {
+    public int sendMessage(@SncpTargetAddress InetSocketAddress addr, Serializable groupid, boolean recent, Serializable message, boolean last) {
         final Set<String> engineids = localNodes.get(groupid);
         if (engineids == null || engineids.isEmpty()) return RETCODE_GROUP_EMPTY;
         int code = RETCODE_GROUP_EMPTY;

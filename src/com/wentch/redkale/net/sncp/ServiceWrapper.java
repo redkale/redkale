@@ -11,6 +11,7 @@ import com.wentch.redkale.util.AnyValue;
 import java.util.*;
 
 /**
+ *  Service对象的封装类
  *
  * @author zhangjx
  * @param <T>

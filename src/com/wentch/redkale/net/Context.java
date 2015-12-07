@@ -5,6 +5,8 @@
  */
 package com.wentch.redkale.net;
 
+import com.wentch.redkale.convert.bson.*;
+import com.wentch.redkale.convert.json.*;
 import com.wentch.redkale.util.*;
 import com.wentch.redkale.watch.*;
 import java.net.*;
@@ -46,6 +48,10 @@ public class Context {
 
     protected final Logger logger;
 
+    protected final BsonFactory bsonFactory;
+
+    protected final JsonFactory jsonFactory;
+
     protected final WatchFactory watch;
 
     public Context(long serverStartTime, Logger logger, ExecutorService executor, int bufferCapacity, ObjectPool<ByteBuffer> bufferPool, ObjectPool<Response> responsePool,
@@ -64,6 +70,8 @@ public class Context {
         this.watch = watch;
         this.readTimeoutSecond = readTimeoutSecond;
         this.writeTimeoutSecond = writeTimeoutSecond;
+        this.jsonFactory = JsonFactory.root();
+        this.bsonFactory = BsonFactory.root();
     }
 
     public int getMaxbody() {
@@ -114,4 +122,11 @@ public class Context {
         return writeTimeoutSecond;
     }
 
+    public JsonConvert getJsonConvert() {
+        return jsonFactory.getConvert();
+    }
+
+    public BsonConvert getBsonConvert() {
+        return bsonFactory.getConvert();
+    }
 }

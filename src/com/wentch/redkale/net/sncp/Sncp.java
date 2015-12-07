@@ -21,6 +21,7 @@ import static jdk.internal.org.objectweb.asm.Opcodes.*;
 import jdk.internal.org.objectweb.asm.Type;
 
 /**
+ * 生成Service的本地模式或远程模式Service-Class的工具类
  *
  * @author zhangjx
  */

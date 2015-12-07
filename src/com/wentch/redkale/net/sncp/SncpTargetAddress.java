@@ -10,7 +10,8 @@ import static java.lang.annotation.ElementType.*;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * 
+ * SNCP协议中标记为目标地址参数, 该注解只能标记在类型为SocketAddress或其之类的参数上。
+ *
  *
  * @author zhangjx
  */
@@ -18,6 +19,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Documented
 @Target({PARAMETER})
 @Retention(RUNTIME)
-public @interface SncpParameter {
+public @interface SncpTargetAddress {
 
 }
