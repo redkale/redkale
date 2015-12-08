@@ -70,7 +70,7 @@ public final class SncpClient {
                                     atts[i + 1] = ((SncpCall) ann).value().newInstance();
                                     hasattr = true;
                                 } catch (Exception e) {
-                                    logger.log(Level.SEVERE, SncpCall.class.getSimpleName() + ".attribute cannot a newInstance for" + method);
+                                    logger.log(Level.SEVERE, SncpCall.class.getSimpleName() + ".attribute cannot a newInstance for" + method, e);
                                 }
                                 break;
                             }

@@ -50,6 +50,12 @@ public class DebugMethodVisitor {
         this.visitor = visitor;
     }
 
+    public AnnotationVisitor visitParameterAnnotation(int i, String string, boolean bln) {
+        AnnotationVisitor av = visitor.visitParameterAnnotation(i, string, bln);
+        if (debug) System.out.println("mv.visitParameterAnnotation(" + i + ", \"" + string + "\", " + bln + ");");
+        return av;
+    }
+
     public AnnotationVisitor visitAnnotation(String desc, boolean flag) {
         AnnotationVisitor av = visitor.visitAnnotation(desc, flag);
         if (debug) System.out.println("mv.visitAnnotation(\"" + desc + "\", " + flag + ");");

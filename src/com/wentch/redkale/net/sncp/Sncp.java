@@ -10,6 +10,7 @@ import com.wentch.redkale.net.*;
 import com.wentch.redkale.net.sncp.SncpClient.SncpAction;
 import com.wentch.redkale.service.*;
 import com.wentch.redkale.util.*;
+import java.lang.annotation.*;
 import java.lang.reflect.*;
 import java.net.*;
 import java.util.*;
@@ -330,6 +331,14 @@ public abstract class Sncp {
             {   //原始方法
                 mv = new DebugMethodVisitor(cw.visitMethod(ACC_PUBLIC + (method.isVarArgs() ? ACC_VARARGS : 0), method.getName(), methodDesc, null, null));
                 //mv.setDebug(true);
+                { //给参数加上 Annotation
+                    final Annotation[][] anns = method.getParameterAnnotations();
+                    for (int k = 0; k < anns.length; k++) {
+                        for (Annotation ann : anns[k]) {
+                            visitAnnotation(mv.visitParameterAnnotation(k, Type.getDescriptor(ann.annotationType()), true), ann);
+                        }
+                    }
+                }
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitInsn(mrun.selfrun() ? ICONST_1 : ICONST_0);
                 mv.visitInsn(mrun.samerun() ? ICONST_1 : ICONST_0);
@@ -373,7 +382,7 @@ public abstract class Sncp {
             }
             {  // _方法
                 mv = new DebugMethodVisitor(cw.visitMethod(ACC_PUBLIC + (method.isVarArgs() ? ACC_VARARGS : 0), "_" + method.getName(), "(ZZZ" + methodDesc.substring(1), null, null));
-                //mv.setDebug(true);
+                //mv.setDebug(true);                
                 av0 = mv.visitAnnotation(sncpDynDesc, true);
                 av0.visit("index", index);
                 av0.visitEnd();
@@ -622,6 +631,52 @@ public abstract class Sncp {
         return (Class<T>) newClazz;
     }
 
+    private static void visitAnnotation(final AnnotationVisitor av, final Annotation ann) {
+        try {
+            for (Method anm : ann.annotationType().getMethods()) {
+                final String mname = anm.getName();
+                if ("equals".equals(mname) || "hashCode".equals(mname) || "toString".equals(mname) || "annotationType".equals(mname)) continue;
+                final Object r = anm.invoke(ann);
+                if (r instanceof String[]) {
+                    AnnotationVisitor av1 = av.visitArray(mname);
+                    for (String item : (String[]) r) {
+                        av1.visit(null, item);
+                    }
+                    av1.visitEnd();
+                } else if (r instanceof Class[]) {
+                    AnnotationVisitor av1 = av.visitArray(mname);
+                    for (Class item : (Class[]) r) {
+                        av1.visit(null, Type.getType(item));
+                    }
+                    av1.visitEnd();
+                } else if (r instanceof Enum[]) {
+                    AnnotationVisitor av1 = av.visitArray(mname);
+                    for (Enum item : (Enum[]) r) {
+                        av1.visitEnum(null, Type.getDescriptor(item.getClass()), ((Enum) item).name());
+                    }
+                    av1.visitEnd();
+                } else if (r instanceof Annotation[]) {
+                    AnnotationVisitor av1 = av.visitArray(mname);
+                    for (Annotation item : (Annotation[]) r) {
+                        visitAnnotation(av1.visitAnnotation(null, Type.getDescriptor(((Annotation) item).annotationType())), item);
+                    }
+                    av1.visitEnd();
+                } else if (r instanceof Class) {
+                    av.visit(mname, Type.getType((Class) r));
+                } else if (r instanceof Enum) {
+                    av.visitEnum(mname, Type.getDescriptor(r.getClass()), ((Enum) r).name());
+                } else if (r instanceof Annotation) {
+                    visitAnnotation(av.visitAnnotation(null, Type.getDescriptor(((Annotation) r).annotationType())), (Annotation) r);
+                } else {
+                    av.visit(mname, r);
+                }
+            }
+            av.visitEnd();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     /**
      *
      * 创建本地模式Service实例
@@ -637,8 +692,12 @@ public abstract class Sncp {
      * @return
      */
     @SuppressWarnings("unchecked")
-    public static <T extends Service> T createLocalService(final String name, final Consumer<Runnable> executor, final Class<T> serviceClass,
-            final InetSocketAddress clientAddress, HashSet<String> groups, Collection<Transport> sameGroupTransports, Collection<Transport> diffGroupTransports) {
+    public static <T extends Service> T createLocalService(
+            final String name,
+            final Consumer<Runnable> executor,
+            final Class<T> serviceClass,
+            final InetSocketAddress clientAddress, HashSet<String> groups, Collection<Transport> sameGroupTransports, Collection<Transport> diffGroupTransports
+    ) {
         try {
             final Class newClazz = createLocalServiceClass(name, serviceClass);
             T rs = (T) newClazz.newInstance();
@@ -794,8 +853,12 @@ public abstract class Sncp {
      * @return
      */
     @SuppressWarnings("unchecked")
-    public static <T extends Service> T createRemoteService(final String name, final Consumer<Runnable> executor,
-            final Class<T> serviceClass, final InetSocketAddress clientAddress, HashSet<String> groups, final Transport transport) {
+    public static <T extends Service> T createRemoteService(
+            final String name,
+            final Consumer<Runnable> executor,
+            final Class<T> serviceClass,
+            final InetSocketAddress clientAddress, HashSet<String> groups, final Transport transport
+    ) {
         if (serviceClass == null) return null;
         if (!Service.class.isAssignableFrom(serviceClass)) return null;
         int mod = serviceClass.getModifiers();
