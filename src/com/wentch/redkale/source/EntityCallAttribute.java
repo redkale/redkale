@@ -6,6 +6,7 @@
 package com.wentch.redkale.source;
 
 import com.wentch.redkale.util.*;
+import java.io.*;
 import java.lang.reflect.*;
 import java.util.concurrent.*;
 
@@ -46,7 +47,7 @@ public final class EntityCallAttribute<T, F> implements Attribute<T[], F[]> {
 
     @Override
     public Class<? extends F[]> type() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return (Class<F[]>) (Class) Serializable[].class;
     }
 
     @Override

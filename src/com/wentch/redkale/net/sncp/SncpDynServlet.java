@@ -10,6 +10,7 @@ import static com.wentch.redkale.net.sncp.SncpRequest.DEFAULT_HEADER;
 import com.wentch.redkale.service.*;
 import com.wentch.redkale.util.*;
 import java.io.*;
+import java.lang.annotation.*;
 import java.lang.reflect.*;
 import java.nio.*;
 import java.util.*;
@@ -26,7 +27,7 @@ import jdk.internal.org.objectweb.asm.Type;
  */
 public final class SncpDynServlet extends SncpServlet {
 
-    private final Logger logger = Logger.getLogger(SncpDynServlet.class.getSimpleName());
+    private static final Logger logger = Logger.getLogger(SncpDynServlet.class.getSimpleName());
 
     private final boolean finest = logger.isLoggable(Level.FINEST);
 
@@ -117,11 +118,25 @@ public final class SncpDynServlet extends SncpServlet {
         @Resource
         protected BsonConvert convert;
 
+        protected com.wentch.redkale.util.Attribute[] paramAttrs; // 为null表示无SncpCall处理，index=0固定为null, 其他为参数标记的SncpCall回调方法
+
         protected java.lang.reflect.Type[] paramTypes;  //index=0表示返回参数的type， void的返回参数类型为null
 
         public abstract void action(final BsonReader in, final BsonWriter out) throws Throwable;
 
-        /*
+        public final void callParameter(final BsonWriter out, final Object... params) {
+            if (paramAttrs != null) {
+                for (int i = 1; i < paramAttrs.length; i++) {
+                    com.wentch.redkale.util.Attribute attr = paramAttrs[i];
+                    if (attr == null) continue;
+                    out.writeByte((byte) i);
+                    convert.convertTo(out, attr.type(), attr.get(params[i - 1]));
+                }
+            }
+            out.writeByte((byte) 0);
+        }
+
+        /** **
          *
          * public class TestService implements Service {
          * public boolean change(TestBean bean, String name, int id) {
@@ -139,6 +154,7 @@ public final class SncpDynServlet extends SncpServlet {
          * String arg2 = convert.convertFrom(in, paramTypes[2]);
          * int arg3 = convert.convertFrom(in, paramTypes[3]);
          * Object rs = service.change(arg1, arg2, arg3);
+         * callParameter(out, arg1, arg2, arg3);
          * convert.convertTo(out, paramTypes[0], rs);
          * }
          * }
@@ -266,12 +282,8 @@ public final class SncpDynServlet extends SncpServlet {
                     mv.visitMethodInsn(INVOKEVIRTUAL, serviceName, method.getName(), Type.getMethodDescriptor(method), false);
                 }
 
-                int maxStack = codes.length > 0 ? codes[codes.length - 1][1] : 1;
-                Class returnClass = method.getReturnType();
-                if (method.getReturnType() == void.class) { //返回
-                    mv.visitInsn(RETURN);
-                    maxStack = 8;
-                } else {
+                final Class returnClass = method.getReturnType();
+                if (returnClass != void.class) {
                     if (returnClass.isPrimitive()) {
                         Class bigClass = Array.get(Array.newInstance(returnClass, 1), 0).getClass();
                         try {
@@ -282,6 +294,51 @@ public final class SncpDynServlet extends SncpServlet {
                         }
                     }
                     mv.visitVarInsn(ASTORE, store);  //11
+                }
+                //------------------------- callParameter 方法 --------------------------------
+                mv.visitVarInsn(ALOAD, 0);
+                mv.visitVarInsn(ALOAD, 2);
+                if (paramClasses.length <= 5) {  //参数总数量
+                    mv.visitInsn(ICONST_0 + paramClasses.length);
+                } else {
+                    mv.visitIntInsn(BIPUSH, paramClasses.length);
+                }
+                mv.visitTypeInsn(ANEWARRAY, "java/lang/Object");
+                int insn = 2;
+                for (int j = 0; j < paramClasses.length; j++) {
+                    final Class pt = paramClasses[j];
+                    mv.visitInsn(DUP);
+                    insn++;
+                    if (j <= 5) {
+                        mv.visitInsn(ICONST_0 + j);
+                    } else {
+                        mv.visitIntInsn(BIPUSH, j);
+                    }
+                    if (pt.isPrimitive()) {
+                        if (pt == long.class) {
+                            mv.visitVarInsn(LLOAD, insn++);
+                        } else if (pt == float.class) {
+                            mv.visitVarInsn(FLOAD, insn++);
+                        } else if (pt == double.class) {
+                            mv.visitVarInsn(DLOAD, insn++);
+                        } else {
+                            mv.visitVarInsn(ILOAD, insn);
+                        }
+                        Class bigclaz = java.lang.reflect.Array.get(java.lang.reflect.Array.newInstance(pt, 1), 0).getClass();
+                        mv.visitMethodInsn(INVOKESTATIC, bigclaz.getName().replace('.', '/'), "valueOf", "(" + Type.getDescriptor(pt) + ")" + Type.getDescriptor(bigclaz), false);
+                    } else {
+                        mv.visitVarInsn(ALOAD, insn);
+                    }
+                    mv.visitInsn(AASTORE);
+                }
+                mv.visitMethodInsn(INVOKEVIRTUAL, newDynName, "callParameter", "(" + convertWriterDesc + "[Ljava/lang/Object;)V", false);
+
+                //-------------------------直接返回  或者  调用convertTo方法 --------------------------------
+                int maxStack = codes.length > 0 ? codes[codes.length - 1][1] : 1;
+                if (returnClass == void.class) { //返回
+                    mv.visitInsn(RETURN);
+                    maxStack = 8;
+                } else {
                     mv.visitVarInsn(ALOAD, 0);
                     mv.visitFieldInsn(GETFIELD, newDynName, "convert", Type.getDescriptor(BsonConvert.class));
                     mv.visitVarInsn(ALOAD, 2);
@@ -319,6 +376,26 @@ public final class SncpDynServlet extends SncpServlet {
                 types[0] = rt;
                 System.arraycopy(ptypes, 0, types, 1, ptypes.length);
                 instance.paramTypes = types;
+
+                com.wentch.redkale.util.Attribute[] atts = new com.wentch.redkale.util.Attribute[ptypes.length + 1];
+                Annotation[][] anns = method.getParameterAnnotations();
+                boolean hasattr = false;
+                for (int i = 0; i < anns.length; i++) {
+                    if (anns[i].length > 0) {
+                        for (Annotation ann : anns[i]) {
+                            if (ann.annotationType() == SncpCall.class) {
+                                try {
+                                    atts[i + 1] = ((SncpCall) ann).value().newInstance();
+                                    hasattr = true;
+                                } catch (Exception e) {
+                                    logger.log(Level.SEVERE, SncpCall.class.getSimpleName() + ".attribute cannot a newInstance for" + method);
+                                }
+                                break;
+                            }
+                        }
+                    }
+                }
+                if (hasattr) instance.paramAttrs = atts;
                 newClazz.getField("service").set(instance, service);
                 return instance;
             } catch (Exception ex) {

@@ -36,6 +36,8 @@ public final class SncpClient {
 
         protected final Type[] paramTypes;
 
+        protected final Attribute[] paramAttrs; // 为null表示无SncpCall处理，index=0固定为null, 其他为参数标记的SncpCall回调方法
+
         protected final int addressParamIndex;
 
         public SncpAction(Method method, DLong actionid) {
@@ -50,6 +52,8 @@ public final class SncpClient {
             this.method = method;
             Annotation[][] anns = method.getParameterAnnotations();
             int addrIndex = -1;
+            boolean hasattr = false;
+            Attribute[] atts = new Attribute[paramTypes.length + 1];
             if (anns.length > 0) {
                 Class<?>[] params = method.getParameterTypes();
                 for (int i = 0; i < anns.length; i++) {
@@ -60,10 +64,22 @@ public final class SncpClient {
                                 break;
                             }
                         }
+                        for (Annotation ann : anns[i]) {
+                            if (ann.annotationType() == SncpCall.class) {
+                                try {
+                                    atts[i + 1] = ((SncpCall) ann).value().newInstance();
+                                    hasattr = true;
+                                } catch (Exception e) {
+                                    logger.log(Level.SEVERE, SncpCall.class.getSimpleName() + ".attribute cannot a newInstance for" + method);
+                                }
+                                break;
+                            }
+                        }
                     }
                 }
             }
             this.addressParamIndex = addrIndex;
+            this.paramAttrs = hasattr ? atts : null;
         }
 
         @Override
@@ -72,7 +88,7 @@ public final class SncpClient {
         }
     }
 
-    private final Logger logger = Logger.getLogger(SncpClient.class.getSimpleName());
+    private static final Logger logger = Logger.getLogger(SncpClient.class.getSimpleName());
 
     private final boolean finest = logger.isLoggable(Level.FINEST);
 
@@ -182,32 +198,45 @@ public final class SncpClient {
 
     public <T> T remote(final BsonConvert convert, Transport transport, final int index, final Object... params) {
         Future<byte[]> future = remote(convert, transport, actions[index], params);
+        final BsonReader in = convert.pollBsonReader();
         try {
-            return convert.convertFrom(actions[index].resultTypes, future.get(5, TimeUnit.SECONDS));
+            final SncpAction action = actions[index];
+            in.setBytes(future.get(5, TimeUnit.SECONDS));
+            byte i = 0;
+            while ((i = in.readByte()) != 0) {
+                final Attribute attr = action.paramAttrs[i];
+                attr.set(params[i - 1], convert.convertFrom(in, attr.type()));
+            }
+            return convert.convertFrom(in, action.resultTypes);
         } catch (InterruptedException | ExecutionException | TimeoutException e) {
             logger.log(Level.SEVERE, actions[index].method + " sncp (params: " + jsonConvert.convertTo(params) + ") remote error", e);
             throw new RuntimeException(actions[index].method + " sncp remote error", e);
+        } finally {
+            convert.offerBsonReader(in);
         }
     }
 
     public <T> void remote(final BsonConvert convert, Transport[] transports, boolean run, final int index, final Object... params) {
-        if (!run) return;
-        for (Transport transport : transports) {
-            remote(convert, transport, actions[index], params);
+        if (!run || transports == null || transports.length < 1) return;
+        remote(convert, transports[0], index, params);
+        for (int i = 1; i < transports.length; i++) {
+            remote(convert, transports[i], actions[index], params);
         }
     }
 
     public <T> void asyncRemote(final BsonConvert convert, Transport[] transports, boolean run, final int index, final Object... params) {
-        if (!run) return;
+        if (!run || transports == null || transports.length < 1) return;
         if (executor != null) {
             executor.accept(() -> {
-                for (Transport transport : transports) {
-                    remote(convert, transport, actions[index], params);
+                remote(convert, transports[0], index, params);
+                for (int i = 1; i < transports.length; i++) {
+                    remote(convert, transports[i], actions[index], params);
                 }
             });
         } else {
-            for (Transport transport : transports) {
-                remote(convert, transport, actions[index], params);
+            remote(convert, transports[0], index, params);
+            for (int i = 1; i < transports.length; i++) {
+                remote(convert, transports[i], actions[index], params);
             }
         }
     }
