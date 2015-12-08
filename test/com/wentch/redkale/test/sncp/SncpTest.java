@@ -70,7 +70,14 @@ public class SncpTest {
 //        }
 //        bean.setContent(sb.toString());
 //        bean.setContent("hello sncp");
-        final int count = 500;
+        SncpTestBean callbean = new SncpTestBean();
+        callbean.setId(1);
+        callbean.setContent("数据X");
+
+        service.updateBean(callbean);
+        System.out.println("bean.id应该会被修改： " + callbean);
+        System.out.println("---------------------------------------------------");
+        final int count = 10;
         final CountDownLatch cld = new CountDownLatch(count);
         final AtomicInteger ai = new AtomicInteger();
         for (int i = 0; i < count; i++) {
@@ -90,8 +97,8 @@ public class SncpTest {
                         }
                         bean.setContent(sb.toString());
 
-                        //service.queryResult(bean);
-                        service.updateBean(bean);
+                        service.queryResult(bean);
+                        //service.updateBean(bean);
                     } catch (Exception e) {
                         e.printStackTrace();
                     } finally {
