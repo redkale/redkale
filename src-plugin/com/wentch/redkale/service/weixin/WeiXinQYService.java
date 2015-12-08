@@ -26,6 +26,8 @@ import javax.crypto.spec.*;
  *
  * @author zhangjx
  */
+@AutoLoad(false)
+@LocalService
 public class WeiXinQYService implements Service {
 
     protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());

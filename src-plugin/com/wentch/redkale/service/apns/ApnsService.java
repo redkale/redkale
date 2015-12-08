@@ -22,6 +22,8 @@ import javax.net.ssl.*;
  *
  * @author zhangjx
  */
+@AutoLoad(false)
+@LocalService
 public class ApnsService implements Service {
 
     private static final Charset UTF8 = Charset.forName("UTF-8");

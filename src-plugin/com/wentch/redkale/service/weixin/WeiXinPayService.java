@@ -20,6 +20,8 @@ import javax.annotation.*;
  *
  * @author zhangjx
  */
+@AutoLoad(false)
+@LocalService
 public class WeiXinPayService implements Service {
 
     private static final DateFormat FORMAT = new SimpleDateFormat("yyyyMMddHHmmss");

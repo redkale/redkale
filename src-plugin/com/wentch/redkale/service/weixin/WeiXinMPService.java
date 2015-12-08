@@ -21,6 +21,8 @@ import javax.annotation.*;
  *
  * @author zhangjx
  */
+@AutoLoad(false)
+@LocalService
 public class WeiXinMPService implements Service {
 
     protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
