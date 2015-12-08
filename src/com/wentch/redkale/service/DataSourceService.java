@@ -13,6 +13,7 @@ import java.util.*;
 import javax.annotation.*;
 
 /**
+ * DataSource对应的Service类， 该类主要特点是将所有含FilterBean参数的方法重载成FilterNode对应的方法。
  *
  * @author zhangjx
  */
