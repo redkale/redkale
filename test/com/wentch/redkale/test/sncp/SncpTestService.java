@@ -7,6 +7,7 @@ package com.wentch.redkale.test.sncp;
 
 import com.wentch.redkale.net.sncp.*;
 import com.wentch.redkale.service.*;
+import com.wentch.redkale.source.*;
 import com.wentch.redkale.util.*;
 
 /**
@@ -34,14 +35,22 @@ public class SncpTestService implements Service {
 
         @Override
         public Long get(SncpTestBean obj) {
+            System.out.println("返回ID: " + obj.getId());
             return obj.getId();
         }
 
         @Override
         public void set(SncpTestBean obj, Long value) {
+            System.out.println("设置ID: " + value);
             obj.setId(value);
         }
 
+    }
+
+    public void insert(@SncpCall(EntityCallAttribute.class) SncpTestBean... beans) {
+        for (SncpTestBean bean : beans) {
+            bean.setId(System.currentTimeMillis());
+        }
     }
 
     public String queryResult(SncpTestBean bean) {
@@ -55,4 +64,5 @@ public class SncpTestService implements Service {
         System.out.println(Thread.currentThread().getName() + " 运行了updateBean方法");
         return "result: " + bean;
     }
+
 }

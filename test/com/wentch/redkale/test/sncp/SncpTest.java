@@ -74,7 +74,7 @@ public class SncpTest {
         callbean.setId(1);
         callbean.setContent("数据X");
 
-        service.updateBean(callbean);
+        service.insert(callbean);
         System.out.println("bean.id应该会被修改： " + callbean);
         System.out.println("---------------------------------------------------");
         final int count = 10;

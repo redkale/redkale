@@ -9,6 +9,7 @@ import com.wentch.redkale.convert.bson.*;
 import com.wentch.redkale.convert.json.*;
 import com.wentch.redkale.source.*;
 import com.wentch.redkale.util.*;
+import javax.persistence.*;
 
 /**
  *
@@ -16,6 +17,7 @@ import com.wentch.redkale.util.*;
  */
 public class SncpTestBean implements FilterBean {
 
+    @Id
     private long id;
 
     private String content;
