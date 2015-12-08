@@ -49,7 +49,7 @@ public final class LongArraySimpledCoder<R extends Reader, W extends Writer> ext
                     System.arraycopy(data, 0, newdata, 0, size);
                     data = newdata;
                 }
-                data[size++] = in.readInt();
+                data[size++] = in.readLong();
             }
             in.readArrayE();
             long[] newdata = new long[size];
@@ -58,7 +58,7 @@ public final class LongArraySimpledCoder<R extends Reader, W extends Writer> ext
         } else {
             long[] values = new long[len];
             for (int i = 0; i < values.length; i++) {
-                values[i] = in.readInt();
+                values[i] = in.readLong();
             }
             in.readArrayE();
             return values;
