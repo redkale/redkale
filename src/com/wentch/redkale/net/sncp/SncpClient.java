@@ -202,7 +202,7 @@ public final class SncpClient {
         try {
             final SncpAction action = actions[index];
             in.setBytes(future.get(5, TimeUnit.SECONDS));
-            byte i = 0;
+            byte i;
             while ((i = in.readByte()) != 0) {
                 final Attribute attr = action.paramAttrs[i];
                 attr.set(params[i - 1], convert.convertFrom(in, attr.type()));

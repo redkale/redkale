@@ -382,7 +382,15 @@ public abstract class Sncp {
             }
             {  // _方法
                 mv = new DebugMethodVisitor(cw.visitMethod(ACC_PUBLIC + (method.isVarArgs() ? ACC_VARARGS : 0), "_" + method.getName(), "(ZZZ" + methodDesc.substring(1), null, null));
-                //mv.setDebug(true);                
+                //mv.setDebug(true);  
+                { //给参数加上 Annotation
+                    final Annotation[][] anns = method.getParameterAnnotations();
+                    for (int k = 0; k < anns.length; k++) {
+                        for (Annotation ann : anns[k]) {
+                            visitAnnotation(mv.visitParameterAnnotation(k, Type.getDescriptor(ann.annotationType()), true), ann);
+                        }
+                    }
+                }
                 av0 = mv.visitAnnotation(sncpDynDesc, true);
                 av0.visit("index", index);
                 av0.visitEnd();

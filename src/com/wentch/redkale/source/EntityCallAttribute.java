@@ -16,7 +16,7 @@ import java.util.concurrent.*;
  * @param <T>
  * @param <F>
  */
-public final class EntityCallAttribute<T, F> implements Attribute<T[], F[]> {
+public final class EntityCallAttribute<T, F> implements Attribute<T[], F> {
 
     public static final EntityCallAttribute instance = new EntityCallAttribute();
 
@@ -46,37 +46,37 @@ public final class EntityCallAttribute<T, F> implements Attribute<T[], F[]> {
     }
 
     @Override
-    public Class<? extends F[]> type() {
-        return (Class<F[]>) (Class) Serializable[].class;
+    public Class<? extends F> type() {
+        return (Class<F>) Object.class;
     }
 
     @Override
     public Class<T[]> declaringClass() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return (Class<T[]>) (Class) Object[].class;
     }
 
     @Override
     public String field() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return "";
     }
 
     @Override
-    public F[] get(final T[] objs) {
+    public F get(final T[] objs) {
         if (objs == null || objs.length == 0) return null;
-        final Attribute<T, F> attr = (Attribute<T, F>) load(objs[0].getClass());
-        final F[] keys = (F[]) Array.newInstance(attr.type(), objs.length);
+        final Attribute<T, Serializable> attr = (Attribute<T, Serializable>) load(objs[0].getClass());
+        final Object keys = Array.newInstance(attr.type(), objs.length);
         for (int i = 0; i < objs.length; i++) {
-            keys[i] = attr.get(objs[i]);
+            Array.set(keys, i, attr.get(objs[i]));
         }
-        return keys;
+        return (F) keys;
     }
 
     @Override
-    public void set(final T[] objs, final F[] keys) {
+    public void set(final T[] objs, final F keys) {
         if (objs == null || objs.length == 0) return;
         final Attribute<T, F> attr = (Attribute<T, F>) load(objs[0].getClass());
         for (int i = 0; i < objs.length; i++) {
-            attr.set(objs[i], (F) keys[i]);
+            attr.set(objs[i], (F) Array.get(keys, i));
         }
     }
 
