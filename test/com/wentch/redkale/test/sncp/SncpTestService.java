@@ -47,7 +47,7 @@ public class SncpTestService implements Service {
 
     }
 
-    public void insert(@SncpCall(EntityCallAttribute.class) SncpTestBean... beans) {
+    public void insert(@SncpCall(DataCallArrayAttribute.class) SncpTestBean... beans) {
         for (SncpTestBean bean : beans) {
             bean.setId(System.currentTimeMillis());
         }
