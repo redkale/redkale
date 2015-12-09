@@ -117,15 +117,13 @@ public final class ClassFilter<T> {
             if (cf.conf != null) {
                 if (property == null) {
                     property = cf.conf;
+                } else if (property instanceof DefaultAnyValue) {
+                    ((DefaultAnyValue) property).addAll(cf.conf);
                 } else {
-                    if (property instanceof DefaultAnyValue) {
-                        ((DefaultAnyValue) property).addAll(cf.conf);
-                    } else {
-                        DefaultAnyValue dav = new DefaultAnyValue();
-                        dav.addAll(property);
-                        dav.addAll(cf.conf);
-                        property = dav;
-                    }
+                    DefaultAnyValue dav = new DefaultAnyValue();
+                    dav.addAll(property);
+                    dav.addAll(cf.conf);
+                    property = dav;
                 }
             }
             entrys.add(new FilterEntry(clazz, autoscan, property));
@@ -349,7 +347,9 @@ public final class ClassFilter<T> {
                     urlfiles.add(url);
                 }
             }
-
+            String selfpkg0 = ClassFilter.class.getPackage().getName();
+            selfpkg0 = selfpkg0.substring(0, selfpkg0.lastIndexOf('.') + 1);
+            final String selfpkg = selfpkg0;
             List<File> files = new ArrayList<>();
             boolean debug = logger.isLoggable(Level.FINEST);
             StringBuilder debugstr = new StringBuilder();
@@ -370,7 +370,7 @@ public final class ClassFilter<T> {
                             String entryname = it.nextElement().getName().replace('/', '.');
                             if (entryname.endsWith(".class") && entryname.indexOf('$') < 0) {
                                 String classname = entryname.substring(0, entryname.length() - 6);
-                                if (classname.startsWith("javax.") || classname.startsWith("com.sun.") || classname.startsWith("com.mysql.")) continue;
+                                if (classname.startsWith("javax.") || classname.startsWith("com.sun.") || classname.startsWith(selfpkg) || classname.startsWith("com.mysql.")) continue;
                                 classes.add(classname);
                                 if (debug) debugstr.append(classname).append("\r\n");
                                 for (final ClassFilter filter : filters) {
