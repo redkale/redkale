@@ -8,6 +8,7 @@ package org.redkale.net.http;
 import java.lang.annotation.*;
 
 /**
+ * 功能同JSR 315 (java-servlet 3.0) 规范中的 @WebInitParam
  *
  * @author zhangjx
  */

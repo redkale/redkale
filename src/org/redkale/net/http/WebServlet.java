@@ -8,12 +8,13 @@ package org.redkale.net.http;
 import java.lang.annotation.*;
 
 /**
+ * 功能同JSR 315 (java-servlet 3.0) 规范中的 @WebServlet
  *
  * @author zhangjx
  */
+@Documented
 @Target({ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
-@Documented
 public @interface WebServlet {
 
     String name() default "";

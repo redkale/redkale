@@ -18,8 +18,6 @@ import java.util.concurrent.*;
  */
 public abstract class ProtocolServer {
 
-    protected static final boolean winos = System.getProperty("os.name").contains("Window");
-
     public abstract void open() throws IOException;
 
     public abstract void bind(SocketAddress local, int backlog) throws IOException;
