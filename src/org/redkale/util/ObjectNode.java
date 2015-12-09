@@ -8,6 +8,7 @@ package org.redkale.util;
 import java.util.*;
 
 /**
+ * 便于操作的HashMap类
  *
  * @author zhangjx
  */

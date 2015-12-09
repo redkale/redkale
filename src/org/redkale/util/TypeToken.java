@@ -8,6 +8,8 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
 /**
+ * 
+ * 获取泛型的Type类
  *
  * @author zhangjx
  * @param <T>

@@ -19,6 +19,8 @@ import javax.net.ssl.*;
  */
 public final class Utility {
 
+    private static final int zoneRawOffset = TimeZone.getDefault().getRawOffset();
+
     private static final String format = "%1$tY-%1$tm-%1$td %1$tH:%1$tM:%1$tS.%tL";
 
     private static final Charset UTF_8 = Charset.forName("UTF-8");
@@ -128,12 +130,41 @@ public final class Utility {
         return back;
     }
 
+    /**
+     * 获取当天凌晨零点的格林时间
+     *
+     * @return
+     */
+    public static long midnight() {
+        return midnight(System.currentTimeMillis());
+    }
+
+    /**
+     * 获取指定时间当天凌晨零点的格林时间
+     *
+     * @param time
+     * @return
+     */
+    public static long midnight(long time) {
+        return (time + zoneRawOffset) / 86400000 * 86400000 - zoneRawOffset;
+    }
+
+    /**
+     * 获取当天20151231格式的int值
+     *
+     * @return
+     */
     public static int today() {
         java.time.LocalDate today = java.time.LocalDate.now();
         return today.getYear() * 10000 + today.getMonthValue() * 100 + today.getDayOfMonth();
     }
 
-    //时间点所在星期的周一
+    /**
+     * 获取时间点所在星期的周一
+     *
+     * @param time
+     * @return
+     */
     public static long monday(long time) {
         ZoneId zid = ZoneId.systemDefault();
         Instant instant = Instant.ofEpochMilli(time);
@@ -142,7 +173,12 @@ public final class Utility {
         return ld.atStartOfDay(zid).toInstant().toEpochMilli();
     }
 
-    //时间点所在星期的周日
+    /**
+     * 获取时间点所在星期的周日
+     *
+     * @param time
+     * @return
+     */
     public static long sunday(long time) {
         ZoneId zid = ZoneId.systemDefault();
         Instant instant = Instant.ofEpochMilli(time);
@@ -151,7 +187,12 @@ public final class Utility {
         return ld.atStartOfDay(zid).toInstant().toEpochMilli();
     }
 
-    //时间点所在月份的1号
+    /**
+     * 获取时间点所在月份的1号
+     *
+     * @param time
+     * @return
+     */
     public static long monthFirstDay(long time) {
         ZoneId zid = ZoneId.systemDefault();
         Instant instant = Instant.ofEpochMilli(time);
