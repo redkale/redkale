@@ -59,7 +59,7 @@ public final class FilterNodeBean<T> implements Comparable<FilterNodeBean<T>> {
     private FilterNodeBean(final FilterJoinColumn joinCol, final FilterColumn filterCol, final Attribute<T, Serializable> attr) {
         this.beanAttr = attr;
         this.joinClass = joinCol == null ? null : joinCol.table();
-        this.joinColumns = joinCol == null ? null : (joinCol.columns().length == 0 ? new String[]{joinCol.column()} : joinCol.columns());
+        this.joinColumns = joinCol == null ? null : joinCol.columns();
 
         final Class type = attr.type();
         this.column = (filterCol != null && !filterCol.name().isEmpty()) ? filterCol.name() : attr.field();
