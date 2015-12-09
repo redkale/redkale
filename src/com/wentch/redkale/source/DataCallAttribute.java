@@ -13,16 +13,14 @@ import java.util.concurrent.*;
 /**
  *
  * @author zhangjx
- * @param <T>
- * @param <F>
  */
-public final class EntityCallAttribute<T, F> implements Attribute<T[], F> {
+public class DataCallAttribute implements Attribute<Object, Serializable> {
 
-    public static final EntityCallAttribute instance = new EntityCallAttribute();
+    public static final DataCallAttribute instance = new DataCallAttribute();
 
     private static final ConcurrentHashMap<Class, Attribute> attributes = new ConcurrentHashMap<>();
 
-    private static Attribute load(final Class clazz) {
+    static <T> Attribute<T, Serializable> load(final Class clazz) {
         Attribute rs = attributes.get(clazz);
         if (rs != null) return rs;
         synchronized (attributes) {
@@ -46,13 +44,13 @@ public final class EntityCallAttribute<T, F> implements Attribute<T[], F> {
     }
 
     @Override
-    public Class<? extends F> type() {
-        return (Class<F>) Object.class;
+    public Class<Serializable> type() {
+        return Serializable.class;
     }
 
     @Override
-    public Class<T[]> declaringClass() {
-        return (Class<T[]>) (Class) Object[].class;
+    public Class<Object> declaringClass() {
+        return Object.class;
     }
 
     @Override
@@ -61,23 +59,14 @@ public final class EntityCallAttribute<T, F> implements Attribute<T[], F> {
     }
 
     @Override
-    public F get(final T[] objs) {
-        if (objs == null || objs.length == 0) return null;
-        final Attribute<T, Serializable> attr = (Attribute<T, Serializable>) load(objs[0].getClass());
-        final Object keys = Array.newInstance(attr.type(), objs.length);
-        for (int i = 0; i < objs.length; i++) {
-            Array.set(keys, i, attr.get(objs[i]));
-        }
-        return (F) keys;
+    public Serializable get(final Object obj) {
+        if (obj == null) return null;
+        return load(obj.getClass()).get(obj);
     }
 
     @Override
-    public void set(final T[] objs, final F keys) {
-        if (objs == null || objs.length == 0) return;
-        final Attribute<T, F> attr = (Attribute<T, F>) load(objs[0].getClass());
-        for (int i = 0; i < objs.length; i++) {
-            attr.set(objs[i], (F) Array.get(keys, i));
-        }
+    public void set(final Object obj, final Serializable key) {
+        if (obj == null) return;
+        load(obj.getClass()).set(obj, key);
     }
-
 }

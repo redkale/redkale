@@ -34,12 +34,12 @@ public class DataSourceService implements DataSource, Service {
     }
 
     @Override
-    public <T> void insert(@SncpCall(EntityCallAttribute.class) T... values) {
+    public <T> void insert(@SncpCall(DataCallArrayAttribute.class) T... values) {
         source.insert(values);
     }
 
     @Override
-    public <T> void insert(DataConnection conn, @SncpCall(EntityCallAttribute.class) T... values) {
+    public <T> void insert(DataConnection conn, @SncpCall(DataCallArrayAttribute.class) T... values) {
         source.insert(conn, values);
     }
 
