@@ -7,7 +7,6 @@ package org.redkale.test.source;
 
 import org.redkale.convert.json.JsonFactory;
 import javax.persistence.*;
-import static javax.persistence.GenerationType.SEQUENCE;
 
 /**
  * CREATE TABLE `LoginTestRecord` (
@@ -26,7 +25,7 @@ import static javax.persistence.GenerationType.SEQUENCE;
 public class LoginTestRecord {
 
     @Id
-    @GeneratedValue(strategy = SEQUENCE, generator = "SEQ")
+    @GeneratedValue
     //@SequenceGenerator(name = "SEQ", initialValue = 100001, allocationSize = 1000)
     private String sessionid;
 
