@@ -38,9 +38,8 @@ public final class LongArraySimpledCoder<R extends Reader, W extends Writer> ext
     @Override
     public long[] convertFrom(R in) {
         int len = in.readArrayB();
-        if (len == Reader.SIGN_NULL) {
-            return null;
-        } else if (len == Reader.SIGN_NOLENGTH) {
+        if (len == Reader.SIGN_NULL) return null;
+        if (len == Reader.SIGN_NOLENGTH) {
             int size = 0;
             long[] data = new long[8];
             while (in.hasNext()) {

@@ -38,9 +38,8 @@ public final class StringArraySimpledCoder<R extends Reader, W extends Writer> e
     @Override
     public String[] convertFrom(R in) {
         int len = in.readArrayB();
-        if (len == Reader.SIGN_NULL) {
-            return null;
-        } else if (len == Reader.SIGN_NOLENGTH) {
+        if (len == Reader.SIGN_NULL) return null;
+        if (len == Reader.SIGN_NOLENGTH) {
             int size = 0;
             String[] data = new String[8];
             while (in.hasNext()) {
