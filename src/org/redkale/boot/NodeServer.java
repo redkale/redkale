@@ -153,7 +153,7 @@ public abstract class NodeServer {
             try {
                 Resource rs = field.getAnnotation(Resource.class);
                 if (rs == null) return;
-                if ((src instanceof Service) && Sncp.isRemote((Service) src)) return;
+                if ((src instanceof Service) && Sncp.isRemote((Service) src)) return; //远程模式不得注入 DataSource
                 DataSource source = new DataDefaultSource(rs.name());
                 application.sources.add(source);
                 regFactory.register(rs.name(), DataSource.class, source);
