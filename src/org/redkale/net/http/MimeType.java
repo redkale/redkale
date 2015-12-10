@@ -169,72 +169,30 @@ public class MimeType {
         contentTypes.put("zip", "application/zip");
     }
 
-    /**
-     * @param extension the extension
-     *
-     * @return the content type associated with <code>extension</code>. If no association is found, this method will return <code>text/plain</code>
-     */
     public static String get(String extension) {
-        return get(extension, "text/plain");
+        return contentTypes.getOrDefault(extension, "text/plain");
     }
 
-    /**
-     * @param extension the extension
-     * @param defaultCt the content type to return if there is no known association for the specified extension
-     *
-     * @return the content type associated with <code>extension</code> or if no associate is found, returns <code>defaultCt</code>
-     */
     public static String get(String extension, String defaultCt) {
-        final String mime = contentTypes.get(extension);
-        return mime == null ? defaultCt : mime;
+        return contentTypes.getOrDefault(extension, defaultCt);
     }
 
-    /**
-     * @param extension the extension
-     *
-     * @return <code>true</code> if the specified extension has been registered otherwise, returns <code>false</code>
-     */
     public static boolean contains(String extension) {
         return contentTypes.containsKey(extension);
     }
 
-    /**
-     * <p>
-     * Associates the specified extension and content type </p>
-     *
-     * @param extension   the extension
-     * @param contentType the content type associated with the extension
-     */
     public static void add(String extension, String contentType) {
-        if (extension != null && extension.length() != 0
-                && contentType != null && contentType.length() != 0) {
+        if (extension != null && extension.length() != 0 && contentType != null && contentType.length() != 0) {
             contentTypes.put(extension, contentType);
         }
     }
 
-    /**
-     * @param fileName the filename
-     *
-     * @return the content type associated with <code>extension</code> of the given filename or if no associate is found, returns <code>null</code>
-     */
     public static String getByFilename(String fileName) {
-        String extn = getExtension(fileName);
-        return extn == null ? null : get(extn);
-    }
-
-    /**
-     * Get extension of file, without fragment id
-     */
-    private static String getExtension(String fileName) {
-        // play it safe and get rid of any fragment id
-        // that might be there
         int length = fileName.length();
-
         int newEnd = fileName.lastIndexOf('#');
         if (newEnd == -1) newEnd = length;
-        // Instead of creating a new string.
-        // if (i != -1) fileName = fileName.substring(0, i);
         int i = fileName.lastIndexOf('.', newEnd);
-        return i == -1 ? null : fileName.substring(i + 1, newEnd);
+        return (i < 0) ? null : get(fileName.substring(i + 1, newEnd));
     }
+
 }

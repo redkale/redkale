@@ -21,6 +21,7 @@ import javax.xml.parsers.*;
 import org.redkale.convert.bson.*;
 import org.redkale.convert.json.*;
 import org.redkale.net.*;
+import org.redkale.net.http.*;
 import org.redkale.net.sncp.*;
 import org.redkale.service.*;
 import org.redkale.source.*;
@@ -248,6 +249,8 @@ public final class Application {
                     if (name == null || value == null) continue;
                     if (name.startsWith("system.property.")) {
                         System.setProperty(name.substring("system.property.".length()), value);
+                    } else if (name.startsWith("mimetype.property.")) {
+                        MimeType.add(name.substring("mimetype.property.".length()), value);
                     } else {
                         factory.register("property." + name, value);
                     }

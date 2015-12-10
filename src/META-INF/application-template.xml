@@ -47,6 +47,7 @@
         <!-- 
             全局的参数配置, 可以通过@Resource(name="property.xxxxxx") 进行注入, 被注解的字段类型只能是String、primitive class
             如果name是system.property.开头的值将会在进程启动时进行System.setProperty("yyyy", "YYYYYY")操作。
+            如果name是mimetype.property.开头的值将会在进程启动时进行MimeType.add("yyyy", "YYYYYY")操作。
             load:  加载文件，多个用;隔开。
             默认置入的system.property.的有：
                System.setProperty("convert.bson.pool.size", "128");
