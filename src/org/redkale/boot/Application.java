@@ -204,6 +204,8 @@ public final class Application {
 
     public void init() throws Exception {
         System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", "" + Runtime.getRuntime().availableProcessors() * 4);
+        System.setProperty("convert.bson.tiny", "true");
+        System.setProperty("convert.json.tiny", "true");
         System.setProperty("convert.bson.pool.size", "128");
         System.setProperty("convert.json.pool.size", "128");
         System.setProperty("convert.bson.writer.buffer.defsize", "4096");
