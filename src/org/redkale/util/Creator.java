@@ -18,66 +18,6 @@ import jdk.internal.org.objectweb.asm.Type;
  * @param <T>
  */
 public interface Creator<T> {
-//
-//    static class PooledCreator<T> implements Creator<T> {
-//
-//        private final T defValue;
-//
-//        private final Reproduce<T, T> reproduce;
-//
-//        private final ReferenceQueue<T> refQueue = new ReferenceQueue();
-//
-//        private final Queue<T> queue;
-//
-//        private final Creator<T> creator;
-//
-//        public PooledCreator(int max, Class<T> clazz, Creator<T> creator) {
-//            this.creator = creator;
-//            this.defValue = creator.create();
-//            this.reproduce = Reproduce.create(clazz, clazz);
-//            this.queue = new ArrayBlockingQueue<>(Math.max(Runtime.getRuntime().availableProcessors() * 2, max));
-//            new Thread() {
-//                {
-//                    setDaemon(true);
-//                    setName(PooledCreator.class.getSimpleName() + " " + clazz.getSimpleName() + " Reference Handler");
-//                }
-//
-//                @Override
-//                public void run() {
-//                    try {
-//                        for (;;) {
-//                            T r = refQueue.remove().get();
-//                            if (r == null) continue;
-//                            reproduce.copy(r, defValue);
-//                            queue.offer(r);
-//                        }
-//                    } catch (Exception e) {
-//                        //do nothind
-//                    }
-//                }
-//            }.start();
-//        }
-//
-//        @Override
-//        public T create(Object... params) {
-//            T rs = queue.poll();
-//            if (rs == null) {
-//                rs = creator.create(params);
-//            }
-//            return new WeakReference<>(rs, refQueue).get();
-//        }
-//
-//    }
-//
-//    @SuppressWarnings("unchecked")
-//    public static <T> Creator<T> create(int max, Class<T> clazz) {
-//        return new PooledCreator<>(max, clazz, create(clazz));
-//    }
-//
-//    @SuppressWarnings("unchecked")
-//    public static <T> Creator<T> create(int max, Class<T> clazz, Creator<T> creator) {
-//        return new PooledCreator<>(max, clazz, creator);
-//    }
 
     public T create(Object... params);
 

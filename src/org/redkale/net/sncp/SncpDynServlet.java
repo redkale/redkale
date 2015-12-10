@@ -188,7 +188,7 @@ public final class SncpDynServlet extends SncpServlet {
             //-------------------------------------------------------------
             ClassWriter cw = new ClassWriter(0);
             FieldVisitor fv;
-            DebugMethodVisitor mv;
+            AsmMethodVisitor mv;
 
             cw.visit(V1_8, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynName, null, supDynName, null);
 
@@ -200,7 +200,7 @@ public final class SncpDynServlet extends SncpServlet {
                 fv.visitEnd();
             }
             {  // constructor方法
-                mv = new DebugMethodVisitor(cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null));
+                mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null));
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitMethodInsn(INVOKESPECIAL, supDynName, "<init>", "()V", false);
                 mv.visitInsn(RETURN);
@@ -214,7 +214,7 @@ public final class SncpDynServlet extends SncpServlet {
                 throw new RuntimeException(ex); //不可能会发生
             }
             { // action方法
-                mv = new DebugMethodVisitor(cw.visitMethod(ACC_PUBLIC, "action", "(" + convertReaderDesc + convertWriterDesc + ")V", null, new String[]{"java/lang/Throwable"}));
+                mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC, "action", "(" + convertReaderDesc + convertWriterDesc + ")V", null, new String[]{"java/lang/Throwable"}));
                 //mv.setDebug(true);
                 int iconst = ICONST_1;
                 int intconst = 1;

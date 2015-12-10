@@ -12,13 +12,13 @@ import jdk.internal.org.objectweb.asm.*;
  *
  * @author zhangjx
  */
-public class DebugMethodVisitor {
+public class AsmMethodVisitor {
 
     private final MethodVisitor visitor;
 
     private boolean debug = false;
 
-    public DebugMethodVisitor setDebug(boolean d) {
+    public AsmMethodVisitor setDebug(boolean d) {
         debug = d;
         return this;
     }
@@ -45,7 +45,7 @@ public class DebugMethodVisitor {
         }
     }
 
-    public DebugMethodVisitor(MethodVisitor visitor) {
+    public AsmMethodVisitor(MethodVisitor visitor) {
         //super(Opcodes.ASM5, visitor);
         this.visitor = visitor;
     }

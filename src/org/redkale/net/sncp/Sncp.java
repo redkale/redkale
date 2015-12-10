@@ -254,7 +254,7 @@ public abstract class Sncp {
         //------------------------------------------------------------------------------
         ClassWriter cw = new ClassWriter(COMPUTE_FRAMES);
         FieldVisitor fv;
-        DebugMethodVisitor mv;
+        AsmMethodVisitor mv;
         AnnotationVisitor av0;
 
         cw.visit(V1_8, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynName, null, supDynName, null);
@@ -287,7 +287,7 @@ public abstract class Sncp {
             fv.visitEnd();
         }
         { //构造函数
-            mv = new DebugMethodVisitor(cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null));
+            mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null));
             //mv.setDebug(true);
             mv.visitVarInsn(ALOAD, 0);
             mv.visitMethodInsn(INVOKESPECIAL, supDynName, "<init>", "()V", false);
@@ -296,14 +296,14 @@ public abstract class Sncp {
             mv.visitEnd();
         }
         { // name()
-            mv = new DebugMethodVisitor(cw.visitMethod(ACC_PUBLIC + ACC_FINAL, "name", "()Ljava/lang/String;", null, null));
+            mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC + ACC_FINAL, "name", "()Ljava/lang/String;", null, null));
             mv.visitLdcInsn(name);
             mv.visitInsn(ARETURN);
             mv.visitMaxs(1, 1);
             mv.visitEnd();
         }
         { // toString()
-            mv = new DebugMethodVisitor(cw.visitMethod(ACC_PUBLIC, "toString", "()Ljava/lang/String;", null, null));
+            mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC, "toString", "()Ljava/lang/String;", null, null));
             mv.visitVarInsn(ALOAD, 0);
             mv.visitFieldInsn(GETFIELD, newDynName, "_selfstring", "Ljava/lang/String;");
             Label l1 = new Label();
@@ -329,7 +329,7 @@ public abstract class Sncp {
             final Class[] paramtypes = method.getParameterTypes();
             final int index = ++i;
             {   //原始方法
-                mv = new DebugMethodVisitor(cw.visitMethod(ACC_PUBLIC + (method.isVarArgs() ? ACC_VARARGS : 0), method.getName(), methodDesc, null, null));
+                mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC + (method.isVarArgs() ? ACC_VARARGS : 0), method.getName(), methodDesc, null, null));
                 //mv.setDebug(true);
                 { //给参数加上 Annotation
                     final Annotation[][] anns = method.getParameterAnnotations();
@@ -381,7 +381,7 @@ public abstract class Sncp {
                 mv.visitEnd();
             }
             {  // _方法
-                mv = new DebugMethodVisitor(cw.visitMethod(ACC_PUBLIC + (method.isVarArgs() ? ACC_VARARGS : 0), "_" + method.getName(), "(ZZZ" + methodDesc.substring(1), null, null));
+                mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC + (method.isVarArgs() ? ACC_VARARGS : 0), "_" + method.getName(), "(ZZZ" + methodDesc.substring(1), null, null));
                 //mv.setDebug(true);  
                 { //给参数加上 Annotation
                     final Annotation[][] anns = method.getParameterAnnotations();
@@ -909,7 +909,7 @@ public abstract class Sncp {
         //------------------------------------------------------------------------------
         ClassWriter cw = new ClassWriter(COMPUTE_FRAMES);
         FieldVisitor fv;
-        DebugMethodVisitor mv;
+        AsmMethodVisitor mv;
         AnnotationVisitor av0;
 
         cw.visit(V1_8, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynName, null, supDynName, null);
@@ -936,7 +936,7 @@ public abstract class Sncp {
             fv.visitEnd();
         }
         { //构造函数
-            mv = new DebugMethodVisitor(cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null));
+            mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null));
             //mv.setDebug(true);
             mv.visitVarInsn(ALOAD, 0);
             mv.visitMethodInsn(INVOKESPECIAL, supDynName, "<init>", "()V", false);
@@ -945,26 +945,26 @@ public abstract class Sncp {
             mv.visitEnd();
         }
         { //init
-            mv = new DebugMethodVisitor(cw.visitMethod(ACC_PUBLIC, "init", "(" + anyValueDesc + ")V", null, null));
+            mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC, "init", "(" + anyValueDesc + ")V", null, null));
             mv.visitInsn(RETURN);
             mv.visitMaxs(0, 2);
             mv.visitEnd();
         }
         { //destroy
-            mv = new DebugMethodVisitor(cw.visitMethod(ACC_PUBLIC, "destroy", "(" + anyValueDesc + ")V", null, null));
+            mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC, "destroy", "(" + anyValueDesc + ")V", null, null));
             mv.visitInsn(RETURN);
             mv.visitMaxs(0, 2);
             mv.visitEnd();
         }
         { // name()
-            mv = new DebugMethodVisitor(cw.visitMethod(ACC_PUBLIC + ACC_FINAL, "name", "()Ljava/lang/String;", null, null));
+            mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC + ACC_FINAL, "name", "()Ljava/lang/String;", null, null));
             mv.visitLdcInsn(name);
             mv.visitInsn(ARETURN);
             mv.visitMaxs(1, 1);
             mv.visitEnd();
         }
         { // toString()
-            mv = new DebugMethodVisitor(cw.visitMethod(ACC_PUBLIC, "toString", "()Ljava/lang/String;", null, null));
+            mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC, "toString", "()Ljava/lang/String;", null, null));
             mv.visitVarInsn(ALOAD, 0);
             mv.visitFieldInsn(GETFIELD, newDynName, "_selfstring", "Ljava/lang/String;");
             Label l1 = new Label();
@@ -986,7 +986,7 @@ public abstract class Sncp {
             final int index = ++i;
             final java.lang.reflect.Method method = entry.method;
             {
-                mv = new DebugMethodVisitor(cw.visitMethod(ACC_PUBLIC, method.getName(), Type.getMethodDescriptor(method), null, null));
+                mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC, method.getName(), Type.getMethodDescriptor(method), null, null));
                 //mv.setDebug(true);
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitFieldInsn(GETFIELD, newDynName, "_client", clientDesc);
