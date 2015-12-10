@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<application port="6560">     
+<application port="5050">     
     <resources>       
         <!-- 
         <properties>
@@ -8,10 +8,8 @@
         </properties>
         -->
     </resources> 
-    <server protocol="SOCKS" host="0.0.0.0" port="4567" bindaddr="127.0.0.1">   
-    </server>
-    
-    <server protocol="HTTP" host="0.0.0.0" port="4568" root="root">         
+
+    <server protocol="HTTP" host="0.0.0.0" port="6060" root="root">         
         <!--
         <request>
             <remoteaddr value="request.headers.X-RemoteAddress"/>
