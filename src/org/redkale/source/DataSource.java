@@ -116,11 +116,11 @@ public interface DataSource {
 
     public Number getNumberResult(final Class entityClass, final Reckon reckon, final String column, FilterNode node);
 
-    public <T, K extends Serializable, N extends Number> Map<K, N> getMapResult(Class<T> entityClass, final String keyColumn, Reckon reckon, final String reckonColumn);
+    public <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMap(Class<T> entityClass, final String keyColumn, Reckon reckon, final String reckonColumn);
 
-    public <T, K extends Serializable, N extends Number> Map<K, N> getMapResult(Class<T> entityClass, final String keyColumn, Reckon reckon, final String reckonColumn, FilterBean bean);
+    public <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMap(Class<T> entityClass, final String keyColumn, Reckon reckon, final String reckonColumn, final FilterBean bean);
 
-    public <T, K extends Serializable, N extends Number> Map<K, N> getMapResult(Class<T> entityClass, final String keyColumn, Reckon reckon, final String reckonColumn, FilterNode node);
+    public <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMap(Class<T> entityClass, final String keyColumn, Reckon reckon, final String reckonColumn, final FilterNode node);
 
     //-----------------------find----------------------------
     /**
@@ -159,17 +159,17 @@ public interface DataSource {
      * @param key
      * @return
      */
-    public <T, V> HashSet<V> queryColumnSet(String selectedColumn, Class<T> clazz, String column, Serializable key);
+    public <T, V extends Serializable> HashSet<V> queryColumnSet(final String selectedColumn, final Class<T> clazz, final String column, final Serializable key);
 
-    public <T, V> HashSet<V> queryColumnSet(String selectedColumn, Class<T> clazz, FilterNode node);
+    public <T, V extends Serializable> HashSet<V> queryColumnSet(final String selectedColumn, final Class<T> clazz, final FilterNode node);
 
-    public <T, V> HashSet<V> queryColumnSet(String selectedColumn, Class<T> clazz, FilterBean bean);
+    public <T, V extends Serializable> HashSet<V> queryColumnSet(final String selectedColumn, final Class<T> clazz, final FilterBean bean);
 
-    public <T, V> List<V> queryColumnList(String selectedColumn, Class<T> clazz, String column, Serializable key);
+    public <T, V extends Serializable> List<V> queryColumnList(final String selectedColumn, final Class<T> clazz, final String column, final Serializable key);
 
-    public <T, V> List<V> queryColumnList(String selectedColumn, Class<T> clazz, FilterNode node);
+    public <T, V extends Serializable> List<V> queryColumnList(final String selectedColumn, final Class<T> clazz, final FilterNode node);
 
-    public <T, V> List<V> queryColumnList(String selectedColumn, Class<T> clazz, FilterBean bean);
+    public <T, V extends Serializable> List<V> queryColumnList(final String selectedColumn, final Class<T> clazz, final FilterBean bean);
 
     /**
      * 根据指定参数查询对象某个字段的集合
@@ -182,26 +182,9 @@ public interface DataSource {
      * @param bean
      * @return
      */
-    public <T, V> Sheet<V> queryColumnSheet(final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterBean bean);
+    public <T, V extends Serializable> Sheet<V> queryColumnSheet(final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterBean bean);
 
-    public <T, V> Sheet<V> queryColumnSheet(final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterNode node);
-
-    /**
-     * Map 接口
-     * <p>
-     * @param <K>
-     * @param <T>
-     * @param clazz
-     * @param node
-     * @return
-     */
-    public <K extends Serializable, T> Map<K, T> queryMap(final Class<T> clazz, final FilterNode node);
-
-    public <K extends Serializable, T> Map<K, T> queryMap(final Class<T> clazz, final FilterBean bean);
-
-    public <K extends Serializable, T> Map<K, T> queryMap(final Class<T> clazz, final SelectColumn selects, final FilterNode node);
-
-    public <K extends Serializable, T> Map<K, T> queryMap(final Class<T> clazz, final SelectColumn selects, final FilterBean bean);
+    public <T, V extends Serializable> Sheet<V> queryColumnSheet(final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterNode node);
 
     /**
      * 根据指定字段值查询对象集合

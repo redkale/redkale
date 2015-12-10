@@ -1108,19 +1108,19 @@ public final class DataDefaultSource implements DataSource, Nameable, Function<C
         }
     }
 
-    //-----------------------getMapResult-----------------------------
+    //-----------------------queryColumnMap-----------------------------
     @Override
-    public <T, K extends Serializable, N extends Number> Map<K, N> getMapResult(final Class<T> entityClass, final String keyColumn, Reckon reckon, final String reckonColumn) {
-        return getMapResult(entityClass, keyColumn, reckon, reckonColumn, (FilterNode) null);
+    public <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMap(final Class<T> entityClass, final String keyColumn, Reckon reckon, final String reckonColumn) {
+        return queryColumnMap(entityClass, keyColumn, reckon, reckonColumn, (FilterNode) null);
     }
 
     @Override
-    public <T, K extends Serializable, N extends Number> Map<K, N> getMapResult(final Class<T> entityClass, final String keyColumn, Reckon reckon, final String reckonColumn, FilterBean bean) {
-        return getMapResult(entityClass, keyColumn, reckon, reckonColumn, FilterNodeBean.createFilterNode(bean));
+    public <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMap(final Class<T> entityClass, final String keyColumn, Reckon reckon, final String reckonColumn, FilterBean bean) {
+        return queryColumnMap(entityClass, keyColumn, reckon, reckonColumn, FilterNodeBean.createFilterNode(bean));
     }
 
     @Override
-    public <T, K extends Serializable, N extends Number> Map<K, N> getMapResult(final Class<T> entityClass, final String keyColumn, final Reckon reckon, final String reckonColumn, FilterNode node) {
+    public <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMap(final Class<T> entityClass, final String keyColumn, final Reckon reckon, final String reckonColumn, FilterNode node) {
         final Connection conn = createReadSQLConnection();
         try {
             final EntityInfo info = loadEntityInfo(entityClass);
@@ -1290,62 +1290,33 @@ public final class DataDefaultSource implements DataSource, Nameable, Function<C
 
     //-----------------------list set----------------------------
     @Override
-    public <T, V> HashSet<V> queryColumnSet(String selectedColumn, Class<T> clazz, String column, Serializable key) {
+    public <T, V extends Serializable> HashSet<V> queryColumnSet(String selectedColumn, Class<T> clazz, String column, Serializable key) {
         return queryColumnSet(selectedColumn, clazz, FilterNode.create(column, key));
     }
 
     @Override
-    public <T, V> HashSet<V> queryColumnSet(String selectedColumn, Class<T> clazz, FilterBean bean) {
+    public <T, V extends Serializable> HashSet<V> queryColumnSet(String selectedColumn, Class<T> clazz, FilterBean bean) {
         return new LinkedHashSet<>(queryColumnList(selectedColumn, clazz, bean));
     }
 
     @Override
-    public <T, V> HashSet<V> queryColumnSet(String selectedColumn, Class<T> clazz, FilterNode node) {
+    public <T, V extends Serializable> HashSet<V> queryColumnSet(String selectedColumn, Class<T> clazz, FilterNode node) {
         return new LinkedHashSet<>(queryColumnList(selectedColumn, clazz, node));
     }
 
     @Override
-    public <T, V> List<V> queryColumnList(String selectedColumn, Class<T> clazz, String column, Serializable key) {
+    public <T, V extends Serializable> List<V> queryColumnList(String selectedColumn, Class<T> clazz, String column, Serializable key) {
         return queryColumnList(selectedColumn, clazz, FilterNode.create(column, key));
     }
 
     @Override
-    public <T, V> List<V> queryColumnList(String selectedColumn, Class<T> clazz, FilterBean bean) {
+    public <T, V extends Serializable> List<V> queryColumnList(String selectedColumn, Class<T> clazz, FilterBean bean) {
         return (List<V>) queryColumnSheet(selectedColumn, clazz, null, bean).list(true);
     }
 
     @Override
-    public <T, V> List<V> queryColumnList(String selectedColumn, Class<T> clazz, FilterNode node) {
+    public <T, V extends Serializable> List<V> queryColumnList(String selectedColumn, Class<T> clazz, FilterNode node) {
         return (List<V>) queryColumnSheet(selectedColumn, clazz, null, node).list(true);
-    }
-
-    /**
-     * 根据过滤对象FilterBean查询对象集合
-     *
-     * @param <K>
-     * @param <T>
-     * @param clazz
-     * @param bean
-     * @return
-     */
-    @Override
-    public <K extends Serializable, T> Map<K, T> queryMap(final Class<T> clazz, final FilterBean bean) {
-        return queryMap(clazz, null, bean);
-    }
-
-    @Override
-    public <K extends Serializable, T> Map<K, T> queryMap(final Class<T> clazz, final FilterNode node) {
-        return queryMap(clazz, null, node);
-    }
-
-    @Override
-    public <K extends Serializable, T> Map<K, T> queryMap(final Class<T> clazz, final SelectColumn selects, final FilterBean bean) {
-        return formatMap(clazz, queryList(clazz, selects, null, bean));
-    }
-
-    @Override
-    public <K extends Serializable, T> Map<K, T> queryMap(final Class<T> clazz, final SelectColumn selects, final FilterNode node) {
-        return formatMap(clazz, queryList(clazz, selects, null, node));
     }
 
     private <K extends Serializable, T> Map<K, T> formatMap(final Class<T> clazz, Collection<T> list) {
@@ -1447,12 +1418,12 @@ public final class DataDefaultSource implements DataSource, Nameable, Function<C
      * @return
      */
     @Override
-    public <T, V> Sheet<V> queryColumnSheet(String selectedColumn, Class<T> clazz, final Flipper flipper, final FilterBean bean) {
+    public <T, V extends Serializable> Sheet<V> queryColumnSheet(String selectedColumn, Class<T> clazz, final Flipper flipper, final FilterBean bean) {
         return queryColumnSheet(selectedColumn, clazz, flipper, FilterNodeBean.createFilterNode(bean));
     }
 
     @Override
-    public <T, V> Sheet<V> queryColumnSheet(String selectedColumn, Class<T> clazz, final Flipper flipper, final FilterNode node) {
+    public <T, V extends Serializable> Sheet<V> queryColumnSheet(String selectedColumn, Class<T> clazz, final Flipper flipper, final FilterNode node) {
         Sheet<T> sheet = querySheet(true, true, clazz, SelectColumn.createIncludes(selectedColumn), flipper, node);
         final Sheet<V> rs = new Sheet<>();
         if (sheet.isEmpty()) return rs;

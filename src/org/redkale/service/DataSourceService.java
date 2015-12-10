@@ -155,18 +155,18 @@ public class DataSourceService implements DataSource, Service {
     }
 
     @Override
-    public <T, K extends Serializable, N extends Number> Map<K, N> getMapResult(Class<T> entityClass, String keyColumn, Reckon reckon, String reckonColumn) {
-        return source.getMapResult(entityClass, keyColumn, reckon, reckonColumn);
+    public <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMap(Class<T> entityClass, String keyColumn, Reckon reckon, String reckonColumn) {
+        return source.queryColumnMap(entityClass, keyColumn, reckon, reckonColumn);
     }
 
     @Override
-    public final <T, K extends Serializable, N extends Number> Map<K, N> getMapResult(Class<T> entityClass, String keyColumn, Reckon reckon, String reckonColumn, FilterBean bean) {
-        return getMapResult(entityClass, keyColumn, reckon, reckonColumn, FilterNodeBean.createFilterNode(bean));
+    public final <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMap(Class<T> entityClass, String keyColumn, Reckon reckon, String reckonColumn, FilterBean bean) {
+        return queryColumnMap(entityClass, keyColumn, reckon, reckonColumn, FilterNodeBean.createFilterNode(bean));
     }
 
     @Override
-    public <T, K extends Serializable, N extends Number> Map<K, N> getMapResult(Class<T> entityClass, String keyColumn, Reckon reckon, String reckonColumn, FilterNode node) {
-        return source.getMapResult(entityClass, keyColumn, reckon, reckonColumn, node);
+    public <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMap(Class<T> entityClass, String keyColumn, Reckon reckon, String reckonColumn, FilterNode node) {
+        return source.queryColumnMap(entityClass, keyColumn, reckon, reckonColumn, node);
     }
 
     @Override
@@ -210,53 +210,33 @@ public class DataSourceService implements DataSource, Service {
     }
 
     @Override
-    public <T, V> HashSet<V> queryColumnSet(String selectedColumn, Class<T> clazz, String column, Serializable key) {
+    public <T, V extends Serializable> HashSet<V> queryColumnSet(String selectedColumn, Class<T> clazz, String column, Serializable key) {
         return source.queryColumnSet(selectedColumn, clazz, column, key);
     }
 
     @Override
-    public <T, V> HashSet<V> queryColumnSet(String selectedColumn, Class<T> clazz, FilterNode node) {
+    public <T, V extends Serializable> HashSet<V> queryColumnSet(String selectedColumn, Class<T> clazz, FilterNode node) {
         return source.queryColumnSet(selectedColumn, clazz, node);
     }
 
     @Override
-    public final <T, V> HashSet<V> queryColumnSet(String selectedColumn, Class<T> clazz, FilterBean bean) {
+    public final <T, V extends Serializable> HashSet<V> queryColumnSet(String selectedColumn, Class<T> clazz, FilterBean bean) {
         return queryColumnSet(selectedColumn, clazz, FilterNodeBean.createFilterNode(bean));
     }
 
     @Override
-    public <T, V> List<V> queryColumnList(String selectedColumn, Class<T> clazz, String column, Serializable key) {
+    public <T, V extends Serializable> List<V> queryColumnList(String selectedColumn, Class<T> clazz, String column, Serializable key) {
         return source.queryColumnList(selectedColumn, clazz, column, key);
     }
 
     @Override
-    public <T, V> List<V> queryColumnList(String selectedColumn, Class<T> clazz, FilterNode node) {
+    public <T, V extends Serializable> List<V> queryColumnList(String selectedColumn, Class<T> clazz, FilterNode node) {
         return source.queryColumnList(selectedColumn, clazz, node);
     }
 
     @Override
-    public final <T, V> List<V> queryColumnList(String selectedColumn, Class<T> clazz, FilterBean bean) {
+    public final <T, V extends Serializable> List<V> queryColumnList(String selectedColumn, Class<T> clazz, FilterBean bean) {
         return queryColumnList(selectedColumn, clazz, FilterNodeBean.createFilterNode(bean));
-    }
-
-    @Override
-    public <K extends Serializable, T> Map<K, T> queryMap(Class<T> clazz, FilterNode node) {
-        return source.queryMap(clazz, node);
-    }
-
-    @Override
-    public final <K extends Serializable, T> Map<K, T> queryMap(Class<T> clazz, FilterBean bean) {
-        return queryMap(clazz, FilterNodeBean.createFilterNode(bean));
-    }
-
-    @Override
-    public <K extends Serializable, T> Map<K, T> queryMap(Class<T> clazz, SelectColumn selects, FilterNode node) {
-        return source.queryMap(clazz, selects, node);
-    }
-
-    @Override
-    public final <K extends Serializable, T> Map<K, T> queryMap(Class<T> clazz, SelectColumn selects, FilterBean bean) {
-        return queryMap(clazz, selects, FilterNodeBean.createFilterNode(bean));
     }
 
     @Override
@@ -310,12 +290,12 @@ public class DataSourceService implements DataSource, Service {
     }
 
     @Override
-    public final <T, V> Sheet<V> queryColumnSheet(String selectedColumn, Class<T> clazz, Flipper flipper, FilterBean bean) {
+    public final <T, V extends Serializable> Sheet<V> queryColumnSheet(String selectedColumn, Class<T> clazz, Flipper flipper, FilterBean bean) {
         return queryColumnSheet(selectedColumn, clazz, flipper, FilterNodeBean.createFilterNode(bean));
     }
 
     @Override
-    public <T, V> Sheet<V> queryColumnSheet(String selectedColumn, Class<T> clazz, Flipper flipper, FilterNode node) {
+    public <T, V extends Serializable> Sheet<V> queryColumnSheet(String selectedColumn, Class<T> clazz, Flipper flipper, FilterNode node) {
         return source.queryColumnSheet(selectedColumn, clazz, flipper, node);
     }
 
