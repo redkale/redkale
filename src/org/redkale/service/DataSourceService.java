@@ -155,17 +155,17 @@ public class DataSourceService implements DataSource, Service {
     }
 
     @Override
-    public <K extends Serializable, V extends Number> Map<K, V> getMapResult(Class entityClass, String keyColumn, Reckon reckon, String reckonColumn) {
+    public <T, K extends Serializable, N extends Number> Map<K, N> getMapResult(Class<T> entityClass, String keyColumn, Reckon reckon, String reckonColumn) {
         return source.getMapResult(entityClass, keyColumn, reckon, reckonColumn);
     }
 
     @Override
-    public final <K extends Serializable, V extends Number> Map<K, V> getMapResult(Class entityClass, String keyColumn, Reckon reckon, String reckonColumn, FilterBean bean) {
+    public final <T, K extends Serializable, N extends Number> Map<K, N> getMapResult(Class<T> entityClass, String keyColumn, Reckon reckon, String reckonColumn, FilterBean bean) {
         return getMapResult(entityClass, keyColumn, reckon, reckonColumn, FilterNodeBean.createFilterNode(bean));
     }
 
     @Override
-    public <K extends Serializable, V extends Number> Map<K, V> getMapResult(Class entityClass, String keyColumn, Reckon reckon, String reckonColumn, FilterNode node) {
+    public <T, K extends Serializable, N extends Number> Map<K, N> getMapResult(Class<T> entityClass, String keyColumn, Reckon reckon, String reckonColumn, FilterNode node) {
         return source.getMapResult(entityClass, keyColumn, reckon, reckonColumn, node);
     }
 

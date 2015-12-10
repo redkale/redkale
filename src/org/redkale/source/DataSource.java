@@ -116,11 +116,11 @@ public interface DataSource {
 
     public Number getNumberResult(final Class entityClass, final Reckon reckon, final String column, FilterNode node);
 
-    public <K extends Serializable, V extends Number> Map<K, V> getMapResult(Class entityClass, final String keyColumn, Reckon reckon, final String reckonColumn);
+    public <T, K extends Serializable, N extends Number> Map<K, N> getMapResult(Class<T> entityClass, final String keyColumn, Reckon reckon, final String reckonColumn);
 
-    public <K extends Serializable, V extends Number> Map<K, V> getMapResult(Class entityClass, final String keyColumn, Reckon reckon, final String reckonColumn, FilterBean bean);
+    public <T, K extends Serializable, N extends Number> Map<K, N> getMapResult(Class<T> entityClass, final String keyColumn, Reckon reckon, final String reckonColumn, FilterBean bean);
 
-    public <K extends Serializable, V extends Number> Map<K, V> getMapResult(Class entityClass, final String keyColumn, Reckon reckon, final String reckonColumn, FilterNode node);
+    public <T, K extends Serializable, N extends Number> Map<K, N> getMapResult(Class<T> entityClass, final String keyColumn, Reckon reckon, final String reckonColumn, FilterNode node);
 
     //-----------------------find----------------------------
     /**
@@ -172,6 +172,21 @@ public interface DataSource {
     public <T, V> List<V> queryColumnList(String selectedColumn, Class<T> clazz, FilterBean bean);
 
     /**
+     * 根据指定参数查询对象某个字段的集合
+     * <p>
+     * @param <T>
+     * @param <V>
+     * @param selectedColumn
+     * @param clazz
+     * @param flipper
+     * @param bean
+     * @return
+     */
+    public <T, V> Sheet<V> queryColumnSheet(final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterBean bean);
+
+    public <T, V> Sheet<V> queryColumnSheet(final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterNode node);
+
+    /**
      * Map 接口
      * <p>
      * @param <K>
@@ -219,20 +234,14 @@ public interface DataSource {
 
     //-----------------------sheet----------------------------
     /**
-     * 根据指定参数查询对象某个字段的集合
+     * 根据指定参数查询对象某个对象的集合页
      * <p>
      * @param <T>
-     * @param <V>
-     * @param selectedColumn
      * @param clazz
      * @param flipper
      * @param bean
      * @return
      */
-    public <T, V> Sheet<V> queryColumnSheet(final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterBean bean);
-
-    public <T, V> Sheet<V> queryColumnSheet(final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterNode node);
-
     public <T> Sheet<T> querySheet(final Class<T> clazz, final Flipper flipper, final FilterBean bean);
 
     public <T> Sheet<T> querySheet(final Class<T> clazz, final Flipper flipper, final FilterNode node);

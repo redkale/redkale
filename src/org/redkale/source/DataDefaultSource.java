@@ -1110,17 +1110,17 @@ public final class DataDefaultSource implements DataSource, Nameable, Function<C
 
     //-----------------------getMapResult-----------------------------
     @Override
-    public <K extends Serializable, V extends Number> Map<K, V> getMapResult(Class entityClass, final String keyColumn, Reckon reckon, final String reckonColumn) {
+    public <T, K extends Serializable, N extends Number> Map<K, N> getMapResult(final Class<T> entityClass, final String keyColumn, Reckon reckon, final String reckonColumn) {
         return getMapResult(entityClass, keyColumn, reckon, reckonColumn, (FilterNode) null);
     }
 
     @Override
-    public <K extends Serializable, V extends Number> Map<K, V> getMapResult(Class entityClass, final String keyColumn, Reckon reckon, final String reckonColumn, FilterBean bean) {
+    public <T, K extends Serializable, N extends Number> Map<K, N> getMapResult(final Class<T> entityClass, final String keyColumn, Reckon reckon, final String reckonColumn, FilterBean bean) {
         return getMapResult(entityClass, keyColumn, reckon, reckonColumn, FilterNodeBean.createFilterNode(bean));
     }
 
     @Override
-    public <K extends Serializable, V extends Number> Map<K, V> getMapResult(final Class entityClass, final String keyColumn, final Reckon reckon, final String reckonColumn, FilterNode node) {
+    public <T, K extends Serializable, N extends Number> Map<K, N> getMapResult(final Class<T> entityClass, final String keyColumn, final Reckon reckon, final String reckonColumn, FilterNode node) {
         final Connection conn = createReadSQLConnection();
         try {
             final EntityInfo info = loadEntityInfo(entityClass);
@@ -1138,12 +1138,12 @@ public final class DataDefaultSource implements DataSource, Nameable, Function<C
                     + " FROM " + info.getTable() + " a" + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where)) + " GROUP BY a." + sqlkey;
             if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(entityClass.getSimpleName() + " single sql=" + sql);
             final PreparedStatement prestmt = conn.prepareStatement(sql);
-            Map<K, V> rs = new LinkedHashMap<>();
+            Map<K, N> rs = new LinkedHashMap<>();
             ResultSet set = prestmt.executeQuery();
             ResultSetMetaData rsd = set.getMetaData();
             boolean smallint = rsd.getColumnType(1) == Types.SMALLINT;
             while (set.next()) {
-                rs.put((K) (smallint ? set.getShort(1) : set.getObject(1)), (V) set.getObject(2));
+                rs.put((K) (smallint ? set.getShort(1) : set.getObject(1)), (N) set.getObject(2));
             }
             set.close();
             prestmt.close();
