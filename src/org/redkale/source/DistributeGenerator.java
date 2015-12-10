@@ -17,22 +17,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface DistributeGenerator {
 
-    /**
-     * 当使用DistributeGenerator控制主键值时， 如果表A删除的数据迁移到表B时， 就需要将表A的class标记：
-     * DistributeTables({B.class})
-     * public class A {
-     * }
-     * 这样DistributeGenerator将从A、B表中取最大值来初始化主键值。
-     *
-     * @author zhangjx
-     */
-    @Target({TYPE})
-    @Retention(RUNTIME)
-    public @interface DistributeTables {
-
-        Class[] value();
-    }
-
     long initialValue() default 1;
 
     /**

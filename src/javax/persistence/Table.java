@@ -58,23 +58,4 @@ public @interface Table {
      */
     String schema() default "";
 
-    /**
-     * (Optional) Unique constraints that are to be placed on 
-     * the table. These are only used if table generation is in 
-     * effect. These constraints apply in addition to any constraints 
-     * specified by the <code>Column</code> and <code>JoinColumn</code> 
-     * annotations and constraints entailed by primary key mappings.
-     * <p> Defaults to no additional constraints.
-     */
-    UniqueConstraint[] uniqueConstraints() default {};
-
-    /**
-     * (Optional) Indexes for the table.  These are only used if
-     * table generation is in effect.  Note that it is not necessary
-     * to specify an index for a primary key, as the primary key
-     * index will be created automatically.
-     *
-     * @since Java Persistence 2.1 
-     */
-    Index[] indexes() default {};
 }

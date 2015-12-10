@@ -1066,30 +1066,30 @@ public final class DataDefaultSource implements DataSource, Nameable, Function<C
 
     //-----------------------getNumberResult-----------------------------
     @Override
-    public Number getNumberResult(final Class entityClass, final Reckon reckon, final String column) {
-        return getNumberResult(entityClass, reckon, column, (FilterNode) null);
+    public Number getNumberResult(final Class entityClass, final FuncEnum func, final String column) {
+        return getNumberResult(entityClass, func, column, (FilterNode) null);
     }
 
     @Override
-    public Number getNumberResult(final Class entityClass, final Reckon reckon, final String column, FilterBean bean) {
-        return getNumberResult(entityClass, reckon, column, FilterNodeBean.createFilterNode(bean));
+    public Number getNumberResult(final Class entityClass, final FuncEnum func, final String column, FilterBean bean) {
+        return getNumberResult(entityClass, func, column, FilterNodeBean.createFilterNode(bean));
     }
 
     @Override
-    public Number getNumberResult(final Class entityClass, final Reckon reckon, final String column, final FilterNode node) {
+    public Number getNumberResult(final Class entityClass, final FuncEnum func, final String column, final FilterNode node) {
         final Connection conn = createReadSQLConnection();
         try {
             final EntityInfo info = loadEntityInfo(entityClass);
             final EntityCache cache = info.getCache();
             if (cache != null && (info.isVirtualEntity() || cache.isFullLoaded())) {
                 if (node == null || node.isCacheUseable(this)) {
-                    return cache.getNumberResult(reckon, column, node);
+                    return cache.getNumberResult(func, column, node);
                 }
             }
             final Map<Class, String> joinTabalis = node == null ? null : node.getJoinTabalis();
             final CharSequence join = node == null ? null : node.createSQLJoin(this, joinTabalis, info);
             final CharSequence where = node == null ? null : node.createSQLExpress(info, joinTabalis);
-            final String sql = "SELECT " + reckon.getColumn((column == null || column.isEmpty() ? "*" : ("a." + column))) + " FROM " + info.getTable() + " a"
+            final String sql = "SELECT " + func.getColumn((column == null || column.isEmpty() ? "*" : ("a." + column))) + " FROM " + info.getTable() + " a"
                     + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
             if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(entityClass.getSimpleName() + " single sql=" + sql);
             final PreparedStatement prestmt = conn.prepareStatement(sql);
@@ -1110,31 +1110,31 @@ public final class DataDefaultSource implements DataSource, Nameable, Function<C
 
     //-----------------------queryColumnMap-----------------------------
     @Override
-    public <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMap(final Class<T> entityClass, final String keyColumn, Reckon reckon, final String reckonColumn) {
-        return queryColumnMap(entityClass, keyColumn, reckon, reckonColumn, (FilterNode) null);
+    public <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMap(final Class<T> entityClass, final String keyColumn, FuncEnum func, final String funcColumn) {
+        return queryColumnMap(entityClass, keyColumn, func, funcColumn, (FilterNode) null);
     }
 
     @Override
-    public <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMap(final Class<T> entityClass, final String keyColumn, Reckon reckon, final String reckonColumn, FilterBean bean) {
-        return queryColumnMap(entityClass, keyColumn, reckon, reckonColumn, FilterNodeBean.createFilterNode(bean));
+    public <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMap(final Class<T> entityClass, final String keyColumn, FuncEnum func, final String funcColumn, FilterBean bean) {
+        return queryColumnMap(entityClass, keyColumn, func, funcColumn, FilterNodeBean.createFilterNode(bean));
     }
 
     @Override
-    public <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMap(final Class<T> entityClass, final String keyColumn, final Reckon reckon, final String reckonColumn, FilterNode node) {
+    public <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMap(final Class<T> entityClass, final String keyColumn, final FuncEnum func, final String funcColumn, FilterNode node) {
         final Connection conn = createReadSQLConnection();
         try {
             final EntityInfo info = loadEntityInfo(entityClass);
             final EntityCache cache = info.getCache();
             if (cache != null && (info.isVirtualEntity() || cache.isFullLoaded())) {
                 if (node == null || node.isCacheUseable(this)) {
-                    return cache.getMapResult(keyColumn, reckon, reckonColumn, node);
+                    return cache.getMapResult(keyColumn, func, funcColumn, node);
                 }
             }
             final String sqlkey = info.getSQLColumn(null, keyColumn);
             final Map<Class, String> joinTabalis = node == null ? null : node.getJoinTabalis();
             final CharSequence join = node == null ? null : node.createSQLJoin(this, joinTabalis, info);
             final CharSequence where = node == null ? null : node.createSQLExpress(info, joinTabalis);
-            final String sql = "SELECT a." + sqlkey + ", " + reckon.getColumn((reckonColumn == null || reckonColumn.isEmpty() ? "*" : ("a." + reckonColumn)))
+            final String sql = "SELECT a." + sqlkey + ", " + func.getColumn((funcColumn == null || funcColumn.isEmpty() ? "*" : ("a." + funcColumn)))
                     + " FROM " + info.getTable() + " a" + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where)) + " GROUP BY a." + sqlkey;
             if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(entityClass.getSimpleName() + " single sql=" + sql);
             final PreparedStatement prestmt = conn.prepareStatement(sql);

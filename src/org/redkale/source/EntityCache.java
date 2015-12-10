@@ -12,8 +12,8 @@ import java.util.function.*;
 import java.util.logging.*;
 import java.util.stream.Stream;
 import javax.persistence.Transient;
-import org.redkale.source.DataSource.Reckon;
-import static org.redkale.source.DataSource.Reckon.*;
+import org.redkale.source.DataSource.FuncEnum;
+import static org.redkale.source.DataSource.FuncEnum.*;
 import java.util.stream.*;
 import org.redkale.util.*;
 
@@ -150,48 +150,48 @@ public final class EntityCache<T> {
         return (filter != null) && this.list.stream().filter(filter).findFirst().isPresent();
     }
 
-    public <K, V> Map<Serializable, Number> getMapResult(final String keyColumn, final Reckon reckon, final String reckonColumn, FilterNode node) {
+    public <K, V> Map<Serializable, Number> getMapResult(final String keyColumn, final FuncEnum func, final String funcColumn, FilterNode node) {
         final Attribute<T, Serializable> keyAttr = info.getAttribute(keyColumn);
         final Predicate filter = node == null ? null : node.createPredicate(this);
-        final Attribute reckonAttr = reckonColumn == null ? null : info.getAttribute(reckonColumn);
+        final Attribute funcAttr = funcColumn == null ? null : info.getAttribute(funcColumn);
         Stream<T> stream = this.list.stream();
         if (filter != null) stream = stream.filter(filter);
         Collector<T, Map, ?> collector = null;
-        final Class valtype = reckonAttr == null ? null : reckonAttr.type();
-        switch (reckon) {
+        final Class valtype = funcAttr == null ? null : funcAttr.type();
+        switch (func) {
             case AVG:
                 if (valtype == float.class || valtype == Float.class || valtype == double.class || valtype == Double.class) {
-                    collector = (Collector<T, Map, ?>) Collectors.averagingDouble((T t) -> ((Number) reckonAttr.get(t)).doubleValue());
+                    collector = (Collector<T, Map, ?>) Collectors.averagingDouble((T t) -> ((Number) funcAttr.get(t)).doubleValue());
                 } else {
-                    collector = (Collector<T, Map, ?>) Collectors.averagingLong((T t) -> ((Number) reckonAttr.get(t)).longValue());
+                    collector = (Collector<T, Map, ?>) Collectors.averagingLong((T t) -> ((Number) funcAttr.get(t)).longValue());
                 }
                 break;
             case COUNT: collector = (Collector<T, Map, ?>) Collectors.counting();
                 break;
             case DISTINCTCOUNT:
-                collector = (Collector<T, Map, ?>) Collectors.mapping((t) -> reckonAttr.get(t), Collectors.toSet());
+                collector = (Collector<T, Map, ?>) Collectors.mapping((t) -> funcAttr.get(t), Collectors.toSet());
                 break;
             case MAX:
             case MIN:
-                Comparator<T> comp = (o1, o2) -> o1 == null ? (o2 == null ? 0 : -1) : ((Comparable) reckonAttr.get(o1)).compareTo(reckonAttr.get(o2));
-                collector = (Collector<T, Map, ?>) ((reckon == MAX) ? Collectors.maxBy(comp) : Collectors.minBy(comp));
+                Comparator<T> comp = (o1, o2) -> o1 == null ? (o2 == null ? 0 : -1) : ((Comparable) funcAttr.get(o1)).compareTo(funcAttr.get(o2));
+                collector = (Collector<T, Map, ?>) ((func == MAX) ? Collectors.maxBy(comp) : Collectors.minBy(comp));
                 break;
             case SUM:
                 if (valtype == float.class || valtype == Float.class || valtype == double.class || valtype == Double.class) {
-                    collector = (Collector<T, Map, ?>) Collectors.summingDouble((T t) -> ((Number) reckonAttr.get(t)).doubleValue());
+                    collector = (Collector<T, Map, ?>) Collectors.summingDouble((T t) -> ((Number) funcAttr.get(t)).doubleValue());
                 } else {
-                    collector = (Collector<T, Map, ?>) Collectors.summingLong((T t) -> ((Number) reckonAttr.get(t)).longValue());
+                    collector = (Collector<T, Map, ?>) Collectors.summingLong((T t) -> ((Number) funcAttr.get(t)).longValue());
                 }
                 break;
         }
         Map rs = stream.collect(Collectors.groupingBy(t -> keyAttr.get(t), LinkedHashMap::new, collector));
-        if (reckon == MAX || reckon == MIN) {
+        if (func == MAX || func == MIN) {
             Map rs2 = new LinkedHashMap();
             rs.forEach((x, y) -> {
-                if (((Optional) y).isPresent()) rs2.put(x, reckonAttr.get((T) ((Optional) y).get()));
+                if (((Optional) y).isPresent()) rs2.put(x, funcAttr.get((T) ((Optional) y).get()));
             });
             rs = rs2;
-        } else if (reckon == DISTINCTCOUNT) {
+        } else if (func == DISTINCTCOUNT) {
             Map rs2 = new LinkedHashMap();
             rs.forEach((x, y) -> rs2.put(x, ((Set) y).size()));
             rs = rs2;
@@ -199,12 +199,12 @@ public final class EntityCache<T> {
         return rs;
     }
 
-    public <V> Number getNumberResult(final Reckon reckon, final String column, FilterNode node) {
+    public <V> Number getNumberResult(final FuncEnum func, final String column, FilterNode node) {
         final Attribute<T, Serializable> attr = column == null ? null : info.getAttribute(column);
         final Predicate<T> filter = node == null ? null : node.createPredicate(this);
         Stream<T> stream = this.list.stream();
         if (filter != null) stream = stream.filter(filter);
-        switch (reckon) {
+        switch (func) {
             case AVG:
                 if (attr.type() == int.class || attr.type() == Integer.class) {
                     return (int) stream.mapToInt(x -> (Integer) attr.get(x)).average().orElse(0);

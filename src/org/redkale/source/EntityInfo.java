@@ -116,7 +116,7 @@ public final class EntityInfo<T> {
         this.type = type;
         //---------------------------------------------
         this.nodeid = nodeid >= 0 ? nodeid : 0;
-        DistributeGenerator.DistributeTables dt = type.getAnnotation(DistributeGenerator.DistributeTables.class);
+        DistributeTables dt = type.getAnnotation(DistributeTables.class);
         this.distributeTables = dt == null ? null : dt.value();
 
         LogLevel ll = type.getAnnotation(LogLevel.class);
@@ -165,12 +165,12 @@ public final class EntityInfo<T> {
                     idAttr0 = attr;
                     GeneratedValue gv = field.getAnnotation(GeneratedValue.class);
                     auto = gv != null;
-                    if (gv != null && gv.strategy() != GenerationType.IDENTITY) {
-                        throw new RuntimeException(cltmp.getName() + "'s @ID primary not a GenerationType.IDENTITY");
-                    }
+//                    if (gv != null && gv.strategy() != GenerationType.IDENTITY) {
+//                        throw new RuntimeException(cltmp.getName() + "'s @ID primary not a GenerationType.IDENTITY");
+//                    }
                     DistributeGenerator dg = field.getAnnotation(DistributeGenerator.class);
                     if (dg != null) {
-                        if (!field.getType().isPrimitive()) throw new RuntimeException(cltmp.getName() + "'s @DistributeGenerator primary must be primitive class type field");
+                        if (!field.getType().isPrimitive()) throw new RuntimeException(cltmp.getName() + "'s @" + DistributeGenerator.class.getSimpleName() + " primary must be primitive class type field");
                         sqldistribute = true;
                         auto = false;
                         allocationSize0 = dg.allocationSize();

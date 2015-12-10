@@ -9,7 +9,7 @@ import java.io.*;
 import java.util.*;
 import javax.annotation.*;
 import org.redkale.net.sncp.*;
-import org.redkale.source.DataSource.Reckon;
+import org.redkale.source.DataSource.FuncEnum;
 import org.redkale.source.*;
 import org.redkale.util.*;
 
@@ -140,33 +140,33 @@ public class DataSourceService implements DataSource, Service {
     }
 
     @Override
-    public Number getNumberResult(Class entityClass, Reckon reckon, String column) {
-        return source.getNumberResult(entityClass, reckon, column);
+    public Number getNumberResult(Class entityClass, FuncEnum func, String column) {
+        return source.getNumberResult(entityClass, func, column);
     }
 
     @Override
-    public final Number getNumberResult(Class entityClass, Reckon reckon, String column, FilterBean bean) {
-        return getNumberResult(entityClass, reckon, column, FilterNodeBean.createFilterNode(bean));
+    public final Number getNumberResult(Class entityClass, FuncEnum func, String column, FilterBean bean) {
+        return getNumberResult(entityClass, func, column, FilterNodeBean.createFilterNode(bean));
     }
 
     @Override
-    public Number getNumberResult(Class entityClass, Reckon reckon, String column, FilterNode node) {
-        return source.getNumberResult(entityClass, reckon, column, node);
+    public Number getNumberResult(Class entityClass, FuncEnum func, String column, FilterNode node) {
+        return source.getNumberResult(entityClass, func, column, node);
     }
 
     @Override
-    public <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMap(Class<T> entityClass, String keyColumn, Reckon reckon, String reckonColumn) {
-        return source.queryColumnMap(entityClass, keyColumn, reckon, reckonColumn);
+    public <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMap(Class<T> entityClass, String keyColumn, FuncEnum func, String funcColumn) {
+        return source.queryColumnMap(entityClass, keyColumn, func, funcColumn);
     }
 
     @Override
-    public final <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMap(Class<T> entityClass, String keyColumn, Reckon reckon, String reckonColumn, FilterBean bean) {
-        return queryColumnMap(entityClass, keyColumn, reckon, reckonColumn, FilterNodeBean.createFilterNode(bean));
+    public final <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMap(Class<T> entityClass, String keyColumn, FuncEnum func, String funcColumn, FilterBean bean) {
+        return queryColumnMap(entityClass, keyColumn, func, funcColumn, FilterNodeBean.createFilterNode(bean));
     }
 
     @Override
-    public <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMap(Class<T> entityClass, String keyColumn, Reckon reckon, String reckonColumn, FilterNode node) {
-        return source.queryColumnMap(entityClass, keyColumn, reckon, reckonColumn, node);
+    public <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMap(Class<T> entityClass, String keyColumn, FuncEnum func, String funcColumn, FilterNode node) {
+        return source.queryColumnMap(entityClass, keyColumn, func, funcColumn, node);
     }
 
     @Override

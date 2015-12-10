@@ -5,12 +5,14 @@
  */
 package org.redkale.source;
 
+import java.util.function.*;
+
 /**
  *
  * @author zhangjx
  * @param <E>
  */
-public interface Range<E extends Comparable> extends java.io.Serializable {
+public interface Range<E extends Comparable> extends java.io.Serializable, Predicate<E> {
 
     public E getMin();
 
@@ -49,9 +51,15 @@ public interface Range<E extends Comparable> extends java.io.Serializable {
         }
 
         @Override
+        public boolean test(Byte t) {
+            return t >= min && t <= max;
+        }
+
+        @Override
         public String toString() {
             return "{min:" + min + ", max:" + max + "}";
         }
+
     }
 
     public static final class ShortRange implements Range<Short> {
@@ -84,6 +92,11 @@ public interface Range<E extends Comparable> extends java.io.Serializable {
 
         public void setMax(Short max) {
             if (max != null) this.max = max;
+        }
+
+        @Override
+        public boolean test(Short t) {
+            return t >= min && t <= max;
         }
 
         @Override
@@ -125,6 +138,11 @@ public interface Range<E extends Comparable> extends java.io.Serializable {
         }
 
         @Override
+        public boolean test(Integer t) {
+            return t >= min && t <= max;
+        }
+
+        @Override
         public String toString() {
             return "{min:" + min + ", max:" + max + "}";
         }
@@ -160,6 +178,11 @@ public interface Range<E extends Comparable> extends java.io.Serializable {
 
         public void setMax(Long max) {
             if (max != null) this.max = max;
+        }
+
+        @Override
+        public boolean test(Long t) {
+            return t >= min && t <= max;
         }
 
         @Override
@@ -201,6 +224,11 @@ public interface Range<E extends Comparable> extends java.io.Serializable {
         }
 
         @Override
+        public boolean test(Float t) {
+            return t >= min && t <= max;
+        }
+
+        @Override
         public String toString() {
             return "{min:" + min + ", max:" + max + "}";
         }
@@ -239,6 +267,11 @@ public interface Range<E extends Comparable> extends java.io.Serializable {
         }
 
         @Override
+        public boolean test(Double t) {
+            return t >= min && t <= max;
+        }
+
+        @Override
         public String toString() {
             return "{min:" + min + ", max:" + max + "}";
         }
@@ -269,11 +302,16 @@ public interface Range<E extends Comparable> extends java.io.Serializable {
         }
 
         public void setMin(String min) {
-            this.min = min;
+            if (min != null) this.min = min;
         }
 
         public void setMax(String max) {
-            this.max = max;
+            if (max != null) this.max = max;
+        }
+
+        @Override
+        public boolean test(String t) {
+            return t.compareTo(min) >= 0 && t.compareTo(max) <= 0;
         }
 
         @Override
