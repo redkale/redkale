@@ -12,7 +12,7 @@ import org.objectweb.asm.*;
  *
  * @author zhangjx
  */
-public class DebugMethodVisitor {
+public class AsmMethodVisitor {
 
     private final MethodVisitor visitor;
 
@@ -44,7 +44,7 @@ public class DebugMethodVisitor {
         }
     }
 
-    public DebugMethodVisitor(MethodVisitor visitor) {
+    public AsmMethodVisitor(MethodVisitor visitor) {
         //super(Opcodes.ASM5, visitor);
         this.visitor = visitor;
     }
