@@ -11,7 +11,6 @@ import org.redkale.convert.json.JsonConvert;
 import org.redkale.util.AutoLoad;
 import org.redkale.service.LocalService;
 import org.redkale.service.Service;
-import org.redkale.convert.json.JsonFactory;
 import java.io.*;
 import java.net.*;
 import java.nio.*;
@@ -151,15 +150,15 @@ public class ApnsService implements Service {
         socket.close();
     }
 
-    public static void main(String[] args) throws Exception {
-        ApnsService service = new ApnsService();
-        service.convert = JsonFactory.root().getConvert();
-        service.init(null);
-
-        final String token = "01727b19 b9f8abf4 0891e31d 3446479d a43902e1 819edc44 a073d951 b8b7db90";
-        ApnsPayload payload = new ApnsPayload("您有新的消息", "这是消息内容", 1);
-        System.out.println(payload);
-        service.pushApnsMessage(new ApnsMessage(token, payload));
-    }
+//    public static void main(String[] args) throws Exception {
+//        ApnsService service = new ApnsService();
+//        service.convert = JsonFactory.root().getConvert();
+//        service.init(null);
+//
+//        final String token = "01727b19 b9f8abf4 0891e31d 3446479d a43902e1 819edc44 a073d951 b8b7db90";
+//        ApnsPayload payload = new ApnsPayload("您有新的消息", "这是消息内容", 1);
+//        System.out.println(payload);
+//        service.pushApnsMessage(new ApnsMessage(token, payload));
+//    }
 
 }

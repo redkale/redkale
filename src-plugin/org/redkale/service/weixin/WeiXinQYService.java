@@ -6,7 +6,6 @@
 package org.redkale.service.weixin;
 
 import org.redkale.util.ByteArray;
-import org.redkale.boot.Application;
 import org.redkale.util.TypeToken;
 import org.redkale.util.Utility;
 import org.redkale.convert.json.JsonConvert;
@@ -85,14 +84,14 @@ public class WeiXinQYService implements Service {
     public WeiXinQYService() {
     }
 
-    public static void main(String[] args) throws Exception {
-        WeiXinQYService service = Application.singleton(WeiXinQYService.class);
-
-        WeiXinQYMessage message = new WeiXinQYMessage();
-        message.setTextMessage("【测试】duang！");
-        message.setAgentid("2");
-        service.sendQYMessage(message);
-    }
+//    public static void main(String[] args) throws Exception {
+//        WeiXinQYService service = Application.singleton(WeiXinQYService.class);
+//
+//        WeiXinQYMessage message = new WeiXinQYMessage();
+//        message.setTextMessage("【测试】duang！");
+//        message.setAgentid("2");
+//        service.sendQYMessage(message);
+//    }
 
     //-----------------------------------微信企业号接口----------------------------------------------------------
     public Map<String, String> getQYUserCode(String code, String agentid) throws IOException {
