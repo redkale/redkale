@@ -71,7 +71,7 @@ public final class NodeHttpServer extends NodeServer {
                 if (rs == null) return;
                 if (!(src instanceof WebSocketServlet)) return;
                 String rcname = rs.name();
-                if (rcname.equals(ResourceFactory.RESOURCE_PARENT_NAME)) rcname = ((WebSocketServlet) src).name();
+                if (rcname.contains(ResourceFactory.RESOURCE_PARENT_NAME)) rcname = rcname.replace(ResourceFactory.RESOURCE_PARENT_NAME, ((WebSocketServlet) src).name());
                 synchronized (regFactory) {
                     Service nodeService = (Service) rf.find(rcname, WebSocketNode.class);
                     if (nodeService == null) {

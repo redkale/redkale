@@ -177,7 +177,7 @@ public final class ResourceFactory {
                         continue;
                     }
                     if (Modifier.isFinal(field.getModifiers())) continue;
-                    final String rcname = (rc.name().equals(RESOURCE_PARENT_NAME) && src instanceof Nameable) ? ((Nameable) src).name() : rc.name();
+                    final String rcname = (rc.name().contains(RESOURCE_PARENT_NAME) && src instanceof Nameable) ? rc.name().replace(RESOURCE_PARENT_NAME, ((Nameable) src).name()) : rc.name();
                     Object rs = genctype == classtype ? null : find(rcname, genctype);
                     if (rs == null) {
                         if (Map.class.isAssignableFrom(classtype)) {
