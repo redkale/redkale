@@ -1,6 +1,6 @@
 <h1>项目介绍</h1>
 <p>
-   &nbsp;&nbsp;&nbsp;&nbsp;RedKale 是基于Java 8的微服务框架， 包含HTTP协议、WebSocket、TCP/UDP服务、数据序列化、数据缓存等功能。 
+   &nbsp;&nbsp;&nbsp;&nbsp;RedKale 是基于Java 8的微服务框架， 包含HTTP协议、WebSocket、TCP/UDP服务、数据序列化、数据缓存、依赖注入等功能。 
    <br/>其功能相当于 Tomcat + Mina + Struts + Spring + Hibernate + RMI + Json + Memcached 的综合体。
 </p>
 <strong>RedKale 有如下主要特点：</strong>
