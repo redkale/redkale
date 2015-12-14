@@ -100,17 +100,17 @@ public interface DataSource {
     public <T> void updateColumnOr(final DataConnection conn, Class<T> clazz, Serializable id, String column, long incvalue);
 
     //-----------------------getXXXXResult-----------------------------
-    public Number getNumberResult(final Class entityClass, final FuncEnum func, final String column);
+    public Number getNumberResult(final Class entityClass, final FilterFunc func, final String column);
 
-    public Number getNumberResult(final Class entityClass, final FuncEnum func, final String column, FilterBean bean);
+    public Number getNumberResult(final Class entityClass, final FilterFunc func, final String column, FilterBean bean);
 
-    public Number getNumberResult(final Class entityClass, final FuncEnum func, final String column, FilterNode node);
+    public Number getNumberResult(final Class entityClass, final FilterFunc func, final String column, FilterNode node);
 
-    public <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMap(Class<T> entityClass, final String keyColumn, FuncEnum func, final String funcColumn);
+    public <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMap(Class<T> entityClass, final String keyColumn, FilterFunc func, final String funcColumn);
 
-    public <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMap(Class<T> entityClass, final String keyColumn, FuncEnum func, final String funcColumn, final FilterBean bean);
+    public <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMap(Class<T> entityClass, final String keyColumn, FilterFunc func, final String funcColumn, final FilterBean bean);
 
-    public <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMap(Class<T> entityClass, final String keyColumn, FuncEnum func, final String funcColumn, final FilterNode node);
+    public <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMap(Class<T> entityClass, final String keyColumn, FilterFunc func, final String funcColumn, final FilterNode node);
 
     //-----------------------find----------------------------
     /**

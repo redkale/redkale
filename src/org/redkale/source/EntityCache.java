@@ -12,7 +12,7 @@ import java.util.function.*;
 import java.util.logging.*;
 import java.util.stream.Stream;
 import javax.persistence.Transient;
-import static org.redkale.source.FuncEnum.*;
+import static org.redkale.source.FilterFunc.*;
 import java.util.stream.*;
 import org.redkale.util.*;
 
@@ -149,7 +149,7 @@ public final class EntityCache<T> {
         return (filter != null) && this.list.stream().filter(filter).findFirst().isPresent();
     }
 
-    public <K, V> Map<Serializable, Number> queryColumnMap(final String keyColumn, final FuncEnum func, final String funcColumn, FilterNode node) {
+    public <K, V> Map<Serializable, Number> queryColumnMap(final String keyColumn, final FilterFunc func, final String funcColumn, FilterNode node) {
         final Attribute<T, Serializable> keyAttr = info.getAttribute(keyColumn);
         final Predicate filter = node == null ? null : node.createPredicate(this);
         final Attribute funcAttr = funcColumn == null ? null : info.getAttribute(funcColumn);
@@ -198,7 +198,7 @@ public final class EntityCache<T> {
         return rs;
     }
 
-    public <V> Number getNumberResult(final FuncEnum func, final String column, FilterNode node) {
+    public <V> Number getNumberResult(final FilterFunc func, final String column, FilterNode node) {
         final Attribute<T, Serializable> attr = column == null ? null : info.getAttribute(column);
         final Predicate<T> filter = node == null ? null : node.createPredicate(this);
         Stream<T> stream = this.list.stream();

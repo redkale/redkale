@@ -1066,17 +1066,17 @@ public final class DataDefaultSource implements DataSource, Nameable, Function<C
 
     //-----------------------getNumberResult-----------------------------
     @Override
-    public Number getNumberResult(final Class entityClass, final FuncEnum func, final String column) {
+    public Number getNumberResult(final Class entityClass, final FilterFunc func, final String column) {
         return getNumberResult(entityClass, func, column, (FilterNode) null);
     }
 
     @Override
-    public Number getNumberResult(final Class entityClass, final FuncEnum func, final String column, FilterBean bean) {
+    public Number getNumberResult(final Class entityClass, final FilterFunc func, final String column, FilterBean bean) {
         return getNumberResult(entityClass, func, column, FilterNodeBean.createFilterNode(bean));
     }
 
     @Override
-    public Number getNumberResult(final Class entityClass, final FuncEnum func, final String column, final FilterNode node) {
+    public Number getNumberResult(final Class entityClass, final FilterFunc func, final String column, final FilterNode node) {
         final Connection conn = createReadSQLConnection();
         try {
             final EntityInfo info = loadEntityInfo(entityClass);
@@ -1110,17 +1110,17 @@ public final class DataDefaultSource implements DataSource, Nameable, Function<C
 
     //-----------------------queryColumnMap-----------------------------
     @Override
-    public <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMap(final Class<T> entityClass, final String keyColumn, FuncEnum func, final String funcColumn) {
+    public <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMap(final Class<T> entityClass, final String keyColumn, FilterFunc func, final String funcColumn) {
         return queryColumnMap(entityClass, keyColumn, func, funcColumn, (FilterNode) null);
     }
 
     @Override
-    public <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMap(final Class<T> entityClass, final String keyColumn, FuncEnum func, final String funcColumn, FilterBean bean) {
+    public <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMap(final Class<T> entityClass, final String keyColumn, FilterFunc func, final String funcColumn, FilterBean bean) {
         return queryColumnMap(entityClass, keyColumn, func, funcColumn, FilterNodeBean.createFilterNode(bean));
     }
 
     @Override
-    public <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMap(final Class<T> entityClass, final String keyColumn, final FuncEnum func, final String funcColumn, FilterNode node) {
+    public <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMap(final Class<T> entityClass, final String keyColumn, final FilterFunc func, final String funcColumn, FilterNode node) {
         final Connection conn = createReadSQLConnection();
         try {
             final EntityInfo info = loadEntityInfo(entityClass);

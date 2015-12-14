@@ -139,32 +139,32 @@ public class DataSourceService implements DataSource, Service {
     }
 
     @Override
-    public Number getNumberResult(Class entityClass, FuncEnum func, String column) {
+    public Number getNumberResult(Class entityClass, FilterFunc func, String column) {
         return source.getNumberResult(entityClass, func, column);
     }
 
     @Override
-    public final Number getNumberResult(Class entityClass, FuncEnum func, String column, FilterBean bean) {
+    public final Number getNumberResult(Class entityClass, FilterFunc func, String column, FilterBean bean) {
         return getNumberResult(entityClass, func, column, FilterNodeBean.createFilterNode(bean));
     }
 
     @Override
-    public Number getNumberResult(Class entityClass, FuncEnum func, String column, FilterNode node) {
+    public Number getNumberResult(Class entityClass, FilterFunc func, String column, FilterNode node) {
         return source.getNumberResult(entityClass, func, column, node);
     }
 
     @Override
-    public <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMap(Class<T> entityClass, String keyColumn, FuncEnum func, String funcColumn) {
+    public <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMap(Class<T> entityClass, String keyColumn, FilterFunc func, String funcColumn) {
         return source.queryColumnMap(entityClass, keyColumn, func, funcColumn);
     }
 
     @Override
-    public final <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMap(Class<T> entityClass, String keyColumn, FuncEnum func, String funcColumn, FilterBean bean) {
+    public final <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMap(Class<T> entityClass, String keyColumn, FilterFunc func, String funcColumn, FilterBean bean) {
         return queryColumnMap(entityClass, keyColumn, func, funcColumn, FilterNodeBean.createFilterNode(bean));
     }
 
     @Override
-    public <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMap(Class<T> entityClass, String keyColumn, FuncEnum func, String funcColumn, FilterNode node) {
+    public <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMap(Class<T> entityClass, String keyColumn, FilterFunc func, String funcColumn, FilterNode node) {
         return source.queryColumnMap(entityClass, keyColumn, func, funcColumn, node);
     }
 

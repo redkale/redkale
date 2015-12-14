@@ -9,8 +9,13 @@ package org.redkale.source;
  *
  * @author zhangjx
  */
-public enum FuncEnum {
-    AVG, COUNT, DISTINCTCOUNT, MAX, MIN, SUM;
+public enum FilterFunc {
+    AVG,
+    COUNT,
+    DISTINCTCOUNT,
+    MAX,
+    MIN,
+    SUM;
 
     public String getColumn(String col) {
         if (this == DISTINCTCOUNT) return "COUNT(DISTINCT " + col + ")";
