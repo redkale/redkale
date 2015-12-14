@@ -37,9 +37,9 @@ public interface DataSource {
      * @param <T>
      * @param values
      */
-    public <T> void insert(T... values);
+    public <T> void insert(final T... values);
 
-    public <T> void insert(final DataConnection conn, T... values);
+    public <T> void insert(final DataConnection conn, final T... values);
 
     /**
      * 将entity的对象全部加载到Cache中去，如果clazz没有被@javax.persistence.Cacheable注解则不做任何事
@@ -47,7 +47,7 @@ public interface DataSource {
      * @param <T>
      * @param clazz
      */
-    public <T> void refreshCache(Class<T> clazz);
+    public <T> void refreshCache(final Class<T> clazz);
 
     //-------------------------delete--------------------------
     /**
@@ -56,17 +56,17 @@ public interface DataSource {
      * @param <T>
      * @param values
      */
-    public <T> void delete(T... values);
+    public <T> void delete(final T... values);
 
-    public <T> void delete(final DataConnection conn, T... values);
+    public <T> void delete(final DataConnection conn, final T... values);
 
-    public <T> void delete(Class<T> clazz, Serializable... ids);
+    public <T> void delete(final Class<T> clazz, final Serializable... ids);
 
-    public <T> void delete(final DataConnection conn, Class<T> clazz, Serializable... ids);
+    public <T> void delete(final DataConnection conn, final Class<T> clazz, final Serializable... ids);
 
-    public <T> void delete(Class<T> clazz, FilterNode node);
+    public <T> void delete(final Class<T> clazz, final FilterNode node);
 
-    public <T> void delete(final DataConnection conn, Class<T> clazz, FilterNode node);
+    public <T> void delete(final DataConnection conn, final Class<T> clazz, final FilterNode node);
 
     //------------------------update---------------------------
     /**
@@ -75,42 +75,42 @@ public interface DataSource {
      * @param <T>
      * @param values
      */
-    public <T> void update(T... values);
+    public <T> void update(final T... values);
 
-    public <T> void update(final DataConnection conn, T... values);
+    public <T> void update(final DataConnection conn, final T... values);
 
-    public <T> void updateColumn(Class<T> clazz, Serializable id, String column, Serializable value);
+    public <T> void updateColumn(final Class<T> clazz, final Serializable id, final String column, final Serializable value);
 
-    public <T> void updateColumn(DataConnection conn, Class<T> clazz, Serializable id, String column, Serializable value);
+    public <T> void updateColumn(final DataConnection conn, final Class<T> clazz, final Serializable id, final String column, final Serializable value);
 
     public <T> void updateColumns(final T value, final String... columns);
 
     public <T> void updateColumns(final DataConnection conn, final T value, final String... columns);
 
-    public <T> void updateColumnIncrement(final Class<T> clazz, Serializable id, String column, long incvalue);
+    public <T> void updateColumnIncrement(final Class<T> clazz, final Serializable id, final String column, long incvalue);
 
-    public <T> void updateColumnIncrement(final DataConnection conn, Class<T> clazz, Serializable id, String column, long incvalue);
+    public <T> void updateColumnIncrement(final DataConnection conn, final Class<T> clazz, final Serializable id, final String column, long incvalue);
 
-    public <T> void updateColumnAnd(final Class<T> clazz, Serializable id, String column, long incvalue);
+    public <T> void updateColumnAnd(final Class<T> clazz, final Serializable id, final String column, long incvalue);
 
-    public <T> void updateColumnAnd(final DataConnection conn, Class<T> clazz, Serializable id, String column, long incvalue);
+    public <T> void updateColumnAnd(final DataConnection conn, final Class<T> clazz, final Serializable id, final String column, long incvalue);
 
-    public <T> void updateColumnOr(final Class<T> clazz, Serializable id, String column, long incvalue);
+    public <T> void updateColumnOr(final Class<T> clazz, final Serializable id, final String column, long incvalue);
 
-    public <T> void updateColumnOr(final DataConnection conn, Class<T> clazz, Serializable id, String column, long incvalue);
+    public <T> void updateColumnOr(final DataConnection conn, final Class<T> clazz, final Serializable id, final String column, long incvalue);
 
     //-----------------------getXXXXResult-----------------------------
     public Number getNumberResult(final Class entityClass, final FilterFunc func, final String column);
 
-    public Number getNumberResult(final Class entityClass, final FilterFunc func, final String column, FilterBean bean);
+    public Number getNumberResult(final Class entityClass, final FilterFunc func, final String column, final FilterBean bean);
 
-    public Number getNumberResult(final Class entityClass, final FilterFunc func, final String column, FilterNode node);
+    public Number getNumberResult(final Class entityClass, final FilterFunc func, final String column, final FilterNode node);
 
-    public <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMap(Class<T> entityClass, final String keyColumn, FilterFunc func, final String funcColumn);
+    public <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMap(final Class<T> entityClass, final String keyColumn, final FilterFunc func, final String funcColumn);
 
-    public <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMap(Class<T> entityClass, final String keyColumn, FilterFunc func, final String funcColumn, final FilterBean bean);
+    public <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMap(final Class<T> entityClass, final String keyColumn, final FilterFunc func, final String funcColumn, final FilterBean bean);
 
-    public <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMap(Class<T> entityClass, final String keyColumn, FilterFunc func, final String funcColumn, final FilterNode node);
+    public <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMap(final Class<T> entityClass, final String keyColumn, final FilterFunc func, final String funcColumn, final FilterNode node);
 
     //-----------------------find----------------------------
     /**
@@ -121,17 +121,17 @@ public interface DataSource {
      * @param pk
      * @return
      */
-    public <T> T find(Class<T> clazz, Serializable pk);
+    public <T> T find(final Class<T> clazz, final Serializable pk);
 
-    public <T> T find(Class<T> clazz, final SelectColumn selects, Serializable pk);
+    public <T> T find(final Class<T> clazz, final SelectColumn selects, final Serializable pk);
 
-    public <T> T findByColumn(Class<T> clazz, String column, Serializable key);
+    public <T> T findByColumn(final Class<T> clazz, final String column, final Serializable key);
 
     public <T> T find(final Class<T> clazz, final FilterNode node);
 
     public <T> T find(final Class<T> clazz, final FilterBean bean);
 
-    public <T> boolean exists(Class<T> clazz, Serializable pk);
+    public <T> boolean exists(final Class<T> clazz, final Serializable pk);
 
     public <T> boolean exists(final Class<T> clazz, final FilterNode node);
 
