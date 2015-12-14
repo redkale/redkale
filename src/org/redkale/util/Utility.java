@@ -46,7 +46,7 @@ public final class Utility {
             fd1 = usafe.objectFieldOffset(String.class.getDeclaredField("value"));
             fd2 = usafe.objectFieldOffset(StringBuilder.class.getSuperclass().getDeclaredField("value"));
         } catch (Exception e) {
-            //android 可能发生异常
+            throw new RuntimeException(e); //不可能会发生
         }
         UNSAFE = usafe;
         strvaloffset = fd1;
@@ -310,7 +310,7 @@ public final class Utility {
 
     public static byte[] encodeUTF8(final String value) {
         if (value == null) return new byte[0];
-        return encodeUTF8(UNSAFE == null ? value.toCharArray() : (char[]) UNSAFE.getObject(value, strvaloffset));
+        return encodeUTF8((char[]) UNSAFE.getObject(value, strvaloffset));
     }
 
     public static byte[] encodeUTF8(final char[] array) {
@@ -351,11 +351,11 @@ public final class Utility {
     }
 
     public static char[] charArray(String value) {
-        return value == null ? null : (UNSAFE == null ? value.toCharArray() : (char[]) UNSAFE.getObject(value, strvaloffset));
+        return value == null ? null : (char[]) UNSAFE.getObject(value, strvaloffset);
     }
 
     public static char[] charArray(StringBuilder value) {
-        return value == null ? null : (UNSAFE == null ? value.toString().toCharArray() : (char[]) UNSAFE.getObject(value, sbvaloffset));
+        return value == null ? null : (char[]) UNSAFE.getObject(value, sbvaloffset);
     }
 
     public static ByteBuffer encodeUTF8(final ByteBuffer buffer, final char[] array) {
@@ -368,7 +368,7 @@ public final class Utility {
 
     public static int encodeUTF8Length(String value) {
         if (value == null) return -1;
-        return encodeUTF8Length((UNSAFE == null ? value.toCharArray() : (char[]) UNSAFE.getObject(value, strvaloffset)));
+        return encodeUTF8Length((char[]) UNSAFE.getObject(value, strvaloffset));
     }
 
     public static int encodeUTF8Length(final char[] text) {
