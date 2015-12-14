@@ -70,8 +70,7 @@ public final class SncpResponse extends Response<SncpRequest> {
         buffer.putLong(request.getServiceid());
         buffer.putLong(request.getNameid());
         DLong actionid = request.getActionid();
-        buffer.putLong(actionid.getFirst());
-        buffer.putLong(actionid.getSecond());
+        actionid.putTo(buffer);
         buffer.put(addrBytes);
         buffer.putChar((char) this.addrPort);
         buffer.putInt(bodyLength);

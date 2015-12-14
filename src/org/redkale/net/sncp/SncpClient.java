@@ -375,9 +375,9 @@ public final class SncpClient {
         if (rserviceid != serviceid) throw new RuntimeException("sncp(" + action.method + ") response.serviceid = " + serviceid + ", but request.serviceid =" + rserviceid);
         long rnameid = buffer.getLong();
         if (rnameid != nameid) throw new RuntimeException("sncp(" + action.method + ") response.nameid = " + nameid + ", but receive nameid =" + rnameid);
-        long ractionid1 = buffer.getLong();
-        long ractionid2 = buffer.getLong();
-        if (!action.actionid.equals(ractionid1, ractionid2)) throw new RuntimeException("sncp(" + action.method + ") response.actionid = " + action.actionid + ", but request.actionid =(" + ractionid1 + "_" + ractionid2 + ")");
+        byte[] bs = new byte[16];
+        buffer.get(bs);
+        if (!action.actionid.equals(bs)) throw new RuntimeException("sncp(" + action.method + ") response.actionid = " + action.actionid + ", but request.actionid =(" + Utility.binToHexString(bs) + ")");
         buffer.getInt();  //地址
         buffer.getChar(); //端口
     }
@@ -390,8 +390,7 @@ public final class SncpClient {
         buffer.putChar((char) HEADER_SIZE); //header长度
         buffer.putLong(this.serviceid);
         buffer.putLong(this.nameid);
-        buffer.putLong(actionid.getFirst());
-        buffer.putLong(actionid.getSecond());
+        actionid.putTo(buffer);
         buffer.put(addrBytes[0]);
         buffer.put(addrBytes[1]);
         buffer.put(addrBytes[2]);

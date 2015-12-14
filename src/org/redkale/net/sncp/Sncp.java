@@ -83,7 +83,7 @@ public abstract class Sncp {
     }
 
     public static DLong hash(final java.lang.reflect.Method method) {
-        if (method == null) return new DLong(-1L, -1L);
+        if (method == null) return new DLong(new byte[16]); 
         String n = method.getName();
         if (n.length() > 11) {
             StringBuilder sb = new StringBuilder();

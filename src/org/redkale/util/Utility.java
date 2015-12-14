@@ -248,6 +248,10 @@ public final class Utility {
         return bytes;
     }
 
+    public static byte[] hexToBin(String str) {
+        return hexToBin(charArray(str));
+    }
+
     public static byte[] hexToBin(char[] src) {
         return hexToBin(src, 0, src.length);
     }

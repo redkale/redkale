@@ -44,8 +44,9 @@ public final class HashedMap<K extends Type, V> {
         Entry<K, V> entry = data[index];
         while (entry != null) {
             if (k == entry.key) {
+                V old = entry.value;
                 entry.value = value;
-                return entry.value;
+                return old;
             }
             entry = entry.next;
         }
