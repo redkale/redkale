@@ -46,7 +46,7 @@ public abstract class Sncp {
 
     private static final byte[] hashes = new byte[255];
 
-    static {
+    static {  //64进制
         //0-9:48-57  A-Z:65-90 a-z:97-122  $:36  _:95
         byte index = 0;
         hashes['_'] = index++;
@@ -83,68 +83,53 @@ public abstract class Sncp {
     }
 
     public static DLong hash(final java.lang.reflect.Method method) {
-        if (method == null) return new DLong(new byte[16]); 
-        String n = method.getName();
-        if (n.length() > 11) {
-            StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < n.length(); i += 2) {
-                sb.append(n.charAt(i));
-            }
-            sb.append(n.length());
-            n = sb.toString();
-        }
-        long rs1 = hash(n);
-        if (rs1 < Integer.MAX_VALUE) rs1 |= (method.getParameterCount() + 0L) << 32;
+        if (method == null) return new DLong(-1, -1);
+        long rs1 = hash(method.getName());
         rs1 = (rs1 < Integer.MAX_VALUE) ? rs1 | 0xF00000000L : rs1;
 
-        long rs2 = hash(wrapName(method), true);
-        if (rs2 < Integer.MAX_VALUE) rs2 |= (method.getParameterCount() + 0L) << 32;
+        final Class[] params = method.getParameterTypes();
+        final StringBuilder sb = new StringBuilder();
+        if (params.length < 1) {
+            sb.append("00");
+        } else {
+            sb.append(params.length);
+            for (Class clzz : params) {
+                String s = clzz.getSimpleName();
+                sb.append(s.substring(0, s.length() > 1 ? 2 : 1)).append(s.substring(s.length() - 1));
+            }
+        }
+        long rs2 = hash(sb.toString());
         rs2 = (rs2 < Integer.MAX_VALUE) ? rs2 | 0xF00000000L : rs2;
         return new DLong(rs1, rs2);
     }
 
-    private static String wrapName(final java.lang.reflect.Method method) {
-        final Class[] params = method.getParameterTypes();
-        if (params.length == 0) return method.getName() + "00";
-        StringBuilder sb = new StringBuilder();
-        for (Class clzz : params) {
-            String s = clzz.getSimpleName();
-            sb.append(s.substring(0, s.length() > 1 ? 2 : 1)).append(s.substring(s.length() - 1));
-        }
-        String n = method.getName();
-        if (n.length() > 11) {
-            StringBuilder zsb = new StringBuilder();
-            for (int i = 0; i < n.length(); i += 2) {
-                zsb.append(n.charAt(i));
-            }
-            zsb.append(n.length());
-            n = zsb.toString();
-        }
-        return n + sb + Integer.toString(params.length, 36);
-    }
-
+    /**
+     * 对类名或者name字符串进行hash。
+     *
+     * @param name
+     * @return
+     */
     public static long hash(final String name) {
-        return hash(name, false);
-    }
-
-    public static long hash(final String name, boolean reverse) {
         if (name == null) return Long.MIN_VALUE;
         if (name.isEmpty()) return 0;
-        char[] chars = Utility.charArray(name);
-        long rs = 0L;
-        if (reverse) {
-            int start = Math.max(chars.length - 10, 0);
-            for (int i = chars.length - 1; i >= start; i--) {
+        final char[] chars = Utility.charArray(name);
+        if (chars.length <= 11) {
+            long rs = 0;
+            for (int i = 0; i < chars.length; i++) {
                 rs = (rs << 6) | hashes[0xff & chars[i]];
             }
-        } else {
-            int end = Math.min(chars.length, 11);
-            for (int i = 0; i < end; i++) {
-                rs = (rs << 6) | hashes[0xff & chars[i]];
-            }
+            return rs;
         }
-        return Math.abs(rs);
+        String len = Integer.toString(chars.length, 36);
+        long rs = len.length() > 1 ? hashes[0xff & len.charAt(0)] : hashes[0xff & '0'];
+        rs = (rs << 6) | hashes[0xff & len.charAt(len.length() - 1)];  //前2位用于存放长度
+        final int step = (chars.length - 1) / 9 + 1;
+        for (int i = 0; i < chars.length; i += step) {
+            rs = (rs << 6) | hashes[0xff & chars[i]];
+        }
+        return rs;
     }
+
 
     public static boolean isRemote(Service service) {
         return service.getClass().getName().startsWith(REMOTEPREFIX);
