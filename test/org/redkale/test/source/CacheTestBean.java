@@ -8,9 +8,9 @@ package org.redkale.test.source;
 import org.redkale.source.EntityInfo;
 import org.redkale.source.EntityCache;
 import org.redkale.util.Attribute;
-import org.redkale.source.DataSource.FuncEnum;
 import java.util.*;
 import javax.persistence.*;
+import org.redkale.source.*;
 
 /**
  *
@@ -37,12 +37,12 @@ public class CacheTestBean {
         EntityCache<CacheTestBean> cache = new EntityCache(EntityInfo.load(CacheTestBean.class, 0, true, null));
         cache.fullLoad(list);
 
-        System.out.println(cache.getMapResult("pkgid", FuncEnum.COUNT, "name", null));
-        System.out.println(cache.getMapResult("pkgid", FuncEnum.DISTINCTCOUNT, "name", null));
-        System.out.println(cache.getMapResult("pkgid", FuncEnum.AVG, "price", null));
-        System.out.println(cache.getMapResult("pkgid", FuncEnum.SUM, "price", null));
-        System.out.println(cache.getMapResult("pkgid", FuncEnum.MAX, "price", null));
-        System.out.println(cache.getMapResult("pkgid", FuncEnum.MIN, "price", null));
+        System.out.println(cache.queryColumnMap("pkgid", FuncEnum.COUNT, "name", null));
+        System.out.println(cache.queryColumnMap("pkgid", FuncEnum.DISTINCTCOUNT, "name", null));
+        System.out.println(cache.queryColumnMap("pkgid", FuncEnum.AVG, "price", null));
+        System.out.println(cache.queryColumnMap("pkgid", FuncEnum.SUM, "price", null));
+        System.out.println(cache.queryColumnMap("pkgid", FuncEnum.MAX, "price", null));
+        System.out.println(cache.queryColumnMap("pkgid", FuncEnum.MIN, "price", null));
     }
 
     public CacheTestBean() {
