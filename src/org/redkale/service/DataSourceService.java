@@ -9,7 +9,6 @@ import java.io.*;
 import java.util.*;
 import javax.annotation.*;
 import org.redkale.net.sncp.*;
-import org.redkale.source.DataSource.FuncEnum;
 import org.redkale.source.*;
 import org.redkale.util.*;
 

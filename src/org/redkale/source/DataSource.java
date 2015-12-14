@@ -16,16 +16,6 @@ import org.redkale.util.*;
 @SuppressWarnings("unchecked")
 public interface DataSource {
 
-    public static enum FuncEnum {
-
-        AVG, COUNT, DISTINCTCOUNT, MAX, MIN, SUM;
-
-        public String getColumn(String col) {
-            if (this == DISTINCTCOUNT) return "COUNT(DISTINCT " + col + ")";
-            return this.name() + "(" + col + ")";
-        }
-    }
-
     /**
      * 创建读连接
      *

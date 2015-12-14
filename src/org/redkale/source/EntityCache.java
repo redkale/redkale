@@ -12,8 +12,7 @@ import java.util.function.*;
 import java.util.logging.*;
 import java.util.stream.Stream;
 import javax.persistence.Transient;
-import org.redkale.source.DataSource.FuncEnum;
-import static org.redkale.source.DataSource.FuncEnum.*;
+import static org.redkale.source.FuncEnum.*;
 import java.util.stream.*;
 import org.redkale.util.*;
 
