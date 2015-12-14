@@ -149,7 +149,7 @@ public final class EntityCache<T> {
         return (filter != null) && this.list.stream().filter(filter).findFirst().isPresent();
     }
 
-    public <K, V> Map<Serializable, Number> getMapResult(final String keyColumn, final FuncEnum func, final String funcColumn, FilterNode node) {
+    public <K, V> Map<Serializable, Number> queryColumnMap(final String keyColumn, final FuncEnum func, final String funcColumn, FilterNode node) {
         final Attribute<T, Serializable> keyAttr = info.getAttribute(keyColumn);
         final Predicate filter = node == null ? null : node.createPredicate(this);
         final Attribute funcAttr = funcColumn == null ? null : info.getAttribute(funcColumn);

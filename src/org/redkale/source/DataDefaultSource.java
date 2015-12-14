@@ -1127,7 +1127,7 @@ public final class DataDefaultSource implements DataSource, Nameable, Function<C
             final EntityCache cache = info.getCache();
             if (cache != null && (info.isVirtualEntity() || cache.isFullLoaded())) {
                 if (node == null || node.isCacheUseable(this)) {
-                    return cache.getMapResult(keyColumn, func, funcColumn, node);
+                    return cache.queryColumnMap(keyColumn, func, funcColumn, node);
                 }
             }
             final String sqlkey = info.getSQLColumn(null, keyColumn);
