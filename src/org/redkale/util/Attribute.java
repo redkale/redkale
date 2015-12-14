@@ -11,7 +11,11 @@ import jdk.internal.org.objectweb.asm.Type;
 
 /**
  * 该类功能是动态映射一个Data类中成员对应的getter、setter方法； 代替低效的反射实现方式。
- * 映射Field时，field要么是public非final，要么存在对应的getter、setter方法。
+ * 映射Field时，field必须满足以下条件之一：
+ *  1、field属性是public且非final
+ *  2、至少存在对应的getter、setter方法中的一个
+ * 当不存在getter方法时，get操作规定返回null
+ * 当不存在setter方法时，set操作为空方法 
  *
  * @author zhangjx
  * @param <T>
@@ -78,19 +82,58 @@ public interface Attribute<T, F> {
     public static <T, F> Attribute<T, F> create(Class<T> clazz, final String fieldname, final java.lang.reflect.Field field) {
         return create(clazz, fieldname, field, null, null);
     }
-
+    
+    /**
+     * getter、setter不能全为null
+     * 
+     * @param <T>
+     * @param <F>
+     * @param getter
+     * @param setter
+     * @return 
+     */
     public static <T, F> Attribute<T, F> create(final Method getter, final Method setter) {
         return create((Class) (getter == null ? setter.getDeclaringClass() : getter.getDeclaringClass()), null, null, getter, setter);
     }
-
+    /**
+     * getter、setter不能全为null
+     * 
+     * @param <T>
+     * @param <F>
+     * @param clazz
+     * @param getter
+     * @param setter
+     * @return 
+     */
     public static <T, F> Attribute<T, F> create(Class<T> clazz, final Method getter, final Method setter) {
         return create(clazz, null, null, getter, setter);
     }
-
+    /**
+     * getter、setter不能全为null
+     * 
+     * @param <T>
+     * @param <F>
+     * @param clazz
+     * @param fieldalias
+     * @param getter
+     * @param setter
+     * @return 
+     */
     public static <T, F> Attribute<T, F> create(Class<T> clazz, final String fieldalias, final Method getter, final Method setter) {
         return create(clazz, fieldalias, null, getter, setter);
     }
-
+    
+    /**
+     * field、getter、setter不能全为null 
+     * @param <T>
+     * @param <F>
+     * @param clazz
+     * @param fieldalias0
+     * @param field0
+     * @param getter0
+     * @param setter0
+     * @return 
+     */
     @SuppressWarnings("unchecked")
     public static <T, F> Attribute<T, F> create(final Class<T> clazz, String fieldalias0, final Field field0, Method getter0, Method setter0) {
         if (fieldalias0 != null && fieldalias0.isEmpty()) fieldalias0 = null;

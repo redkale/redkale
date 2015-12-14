@@ -246,7 +246,6 @@ public abstract class NodeServer {
             if (Modifier.isFinal(type.getModifiers())) continue;
             if (!Modifier.isPublic(type.getModifiers())) continue;
             if (Modifier.isAbstract(type.getModifiers())) continue;
-            if (type.getAnnotation(Ignore.class) != null) continue;
             if (!isSNCP() && factory.find(entry.getName(), type) != null) continue;
             final Set<InetSocketAddress> sameGroupAddrs = new LinkedHashSet<>();
             final Map<String, Set<InetSocketAddress>> diffGroupAddrs = new HashMap<>();

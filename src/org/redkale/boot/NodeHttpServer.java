@@ -27,7 +27,7 @@ import org.redkale.util.*;
  *
  * @author zhangjx
  */
-@NodeProtocol({"HTTP", "HTTPS"})
+@NodeProtocol({"HTTP"})
 public final class NodeHttpServer extends NodeServer {
 
     private final HttpServer httpServer;

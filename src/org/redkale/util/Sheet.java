@@ -8,6 +8,7 @@ package org.redkale.util;
 import java.util.*;
 
 /**
+ * 页集合。 结构由一个total总数和一个List列表组合而成。
  *
  * @author zhangjx
  * @param <T>

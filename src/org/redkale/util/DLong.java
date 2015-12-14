@@ -6,6 +6,7 @@
 package org.redkale.util;
 
 /**
+ * 双long数据结构
  *
  * @author zhangjx
  */
