@@ -37,12 +37,12 @@ public class CacheTestBean {
         EntityCache<CacheTestBean> cache = new EntityCache(EntityInfo.load(CacheTestBean.class, 0, true, null));
         cache.fullLoad(list);
 
-        System.out.println(cache.queryColumnMap("pkgid", FuncEnum.COUNT, "name", null));
-        System.out.println(cache.queryColumnMap("pkgid", FuncEnum.DISTINCTCOUNT, "name", null));
-        System.out.println(cache.queryColumnMap("pkgid", FuncEnum.AVG, "price", null));
-        System.out.println(cache.queryColumnMap("pkgid", FuncEnum.SUM, "price", null));
-        System.out.println(cache.queryColumnMap("pkgid", FuncEnum.MAX, "price", null));
-        System.out.println(cache.queryColumnMap("pkgid", FuncEnum.MIN, "price", null));
+        System.out.println(cache.queryColumnMap("pkgid", FilterFunc.COUNT, "name", null));
+        System.out.println(cache.queryColumnMap("pkgid", FilterFunc.DISTINCTCOUNT, "name", null));
+        System.out.println(cache.queryColumnMap("pkgid", FilterFunc.AVG, "price", null));
+        System.out.println(cache.queryColumnMap("pkgid", FilterFunc.SUM, "price", null));
+        System.out.println(cache.queryColumnMap("pkgid", FilterFunc.MAX, "price", null));
+        System.out.println(cache.queryColumnMap("pkgid", FilterFunc.MIN, "price", null));
     }
 
     public CacheTestBean() {
