@@ -523,7 +523,11 @@ public final class Utility {
         conn.setReadTimeout(3000);
         if (conn instanceof HttpsURLConnection) ((HttpsURLConnection) conn).setSSLSocketFactory((ctx == null ? DEFAULTSSL_CONTEXT : ctx).getSocketFactory());
         conn.setRequestMethod(method);
-        if (headers != null) headers.forEach((x, y) -> conn.setRequestProperty(x, y));
+        if (headers != null) {
+            for (Map.Entry<String, String> en : headers.entrySet()) { //不用forEach是为了兼容JDK 6
+                conn.setRequestProperty(en.getKey(), en.getValue());
+            }
+        }
         if (body != null) {
             conn.setDoInput(true);
             conn.setDoOutput(true);

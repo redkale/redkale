@@ -29,11 +29,11 @@ public final class ResourceFactory {
 
     private static final ResourceFactory instance = new ResourceFactory(null);
 
-    private final ConcurrentHashMap<Type, Intercepter> interceptmap = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<Type, Intercepter> interceptmap = new ConcurrentHashMap();
 
-    private final ConcurrentHashMap<Class<?>, ConcurrentHashMap<String, ?>> store = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<Class<?>, ConcurrentHashMap<String, ?>> store = new ConcurrentHashMap();
 
-    private final ConcurrentHashMap<Type, ConcurrentHashMap<String, ?>> gencstore = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<Type, ConcurrentHashMap<String, ?>> gencstore = new ConcurrentHashMap();
 
     private ResourceFactory(ResourceFactory parent) {
         this.parent = parent;
@@ -71,7 +71,7 @@ public final class ResourceFactory {
     public <A> void register(final String name, final Class<? extends A> clazz, final A rs) {
         ConcurrentHashMap map = this.store.get(clazz);
         if (map == null) {
-            ConcurrentHashMap<String, A> sub = new ConcurrentHashMap<>();
+            ConcurrentHashMap<String, A> sub = new ConcurrentHashMap();
             sub.put(name, rs);
             store.put(clazz, sub);
         } else {
@@ -86,7 +86,7 @@ public final class ResourceFactory {
         }
         ConcurrentHashMap map = this.gencstore.get(clazz);
         if (map == null) {
-            ConcurrentHashMap<String, A> sub = new ConcurrentHashMap<>();
+            ConcurrentHashMap<String, A> sub = new ConcurrentHashMap();
             sub.put(name, rs);
             gencstore.put(clazz, sub);
         } else {
@@ -118,17 +118,19 @@ public final class ResourceFactory {
         return null;
     }
 
-    public <A> A findChild(String name, Class<? extends A> clazz) {
+    public <A> A findChild(final String name, final Class<? extends A> clazz) {
         A rs = find(name, clazz);
         if (rs != null) return rs;
-        Optional<Map.Entry<Class<?>, ConcurrentHashMap<String, ?>>> opt = this.store.entrySet().stream()
-                .filter(x -> clazz.isAssignableFrom(x.getKey()) && x.getValue().containsKey(name))
-                .findFirst();
-        return opt.isPresent() ? (A) opt.get().getValue().get(name) : null;
+        for (Map.Entry<Class<?>, ConcurrentHashMap<String, ?>> en : this.store.entrySet()) {  //不用forEach为兼容JDK 6
+            if (!clazz.isAssignableFrom(en.getKey())) continue;
+            Object v = en.getValue().get(name);
+            if (v != null) return (A) v;
+        }
+        return null;
     }
 
     public <A> Map<String, A> find(final Pattern reg, Class<? extends A> clazz, A exclude) {
-        Map<String, A> result = new LinkedHashMap<>();
+        Map<String, A> result = new LinkedHashMap();
         load(reg, clazz, exclude, result);
         return result;
     }
@@ -136,9 +138,11 @@ public final class ResourceFactory {
     private <A> void load(final Pattern reg, Class<? extends A> clazz, final A exclude, final Map<String, A> result) {
         ConcurrentHashMap<String, ?> map = this.store.get(clazz);
         if (map != null) {
-            map.forEach((x, y) -> {
+            for (Map.Entry<String, ?> en : map.entrySet()) {  // 不用forEach为兼容JDK 6
+                String x = en.getKey();
+                Object y = en.getValue();
                 if (y != exclude && reg.matcher(x).find() && result.get(x) == null) result.put(x, (A) y);
-            });
+            }
         }
         if (parent != null) parent.load(reg, clazz, exclude, result);
     }
@@ -148,7 +152,7 @@ public final class ResourceFactory {
     }
 
     public <T> boolean inject(final Object src, final T attachment) {
-        return inject(src, attachment, new ArrayList<>());
+        return inject(src, attachment, new ArrayList());
     }
 
     private <T> boolean inject(final Object src, final T attachment, final List<Object> list) {

@@ -35,14 +35,14 @@ public class Sheet<T> implements java.io.Serializable {
     }
 
     public static <E> Sheet<E> asSheet(Collection<E> data) {
-        return data == null ? new Sheet<>() : new Sheet<>(data.size(), data);
+        return data == null ? new Sheet() : new Sheet(data.size(), data);
     }
 
     public Sheet<T> copyTo(Sheet<T> copy) {
         if (copy == null) return copy;
         copy.total = this.total;
         if (this.getRows() != null) {
-            copy.setRows(new ArrayList<>(this.getRows()));
+            copy.setRows(new ArrayList(this.getRows()));
         } else {
             copy.rows = null;
         }
@@ -80,8 +80,8 @@ public class Sheet<T> implements java.io.Serializable {
     }
 
     public List<T> list(boolean created) {
-        if (this.rows == null) return created ? new ArrayList<>() : null;
-        return (this.rows instanceof List) ? (List<T>) this.rows : new ArrayList<>(this.rows);
+        if (this.rows == null) return created ? new ArrayList() : null;
+        return (this.rows instanceof List) ? (List<T>) this.rows : new ArrayList(this.rows);
     }
 
     public void setRows(Collection<? extends T> data) {
