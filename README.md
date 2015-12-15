@@ -18,7 +18,7 @@
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;RedKale 的HTTP是基于异步NIO.2实现的，所提供的HttpResponse的输出接口也是异步的，因此并不遵循JSR 340规范(Servlet 3.1)且也没有实现Jsp规范。 HTTP只提供四个对象：HttpContext、HttpRequest、HttpResponse、HttpServlet。 传统Session则由数据层实现。RedKale提倡http+json接口(无论网站、PC客户端、APP移动端、第三方接口都可使用统一接口)， 因此HTTP层内置了json解析与序列化接口，同时内置http缓存机制。
 </p>
 
-<h5>亮点二.  WebSocket分布式</h5>
+<h5>亮点二.  分布式WebSocket</h5>
 <p>
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;RedKale 的WebSocket接口不同于JSR 340(Servlet 3.1)， 除了提供基本的WebSocket功能， 还提供分布式与集中式部署， 当部署多个WebSocket进程时，通过配置文件可以实现WebSocket之间连接信息的数据同步。
 </p>
