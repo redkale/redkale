@@ -1021,7 +1021,7 @@ public final class DataDefaultSource implements DataSource, Nameable, Function<C
                 if (attr == null) continue;
                 attrs.add(attr);
                 if (!virtual) {
-                    if (setsql.length() > 0) setsql.append(',');
+                    if (setsql.length() > 0) setsql.append(", ");
                     setsql.append(info.getSQLColumn(null, col)).append(" = ").append(formatToString(attr.get(value)));
                 }
             }
