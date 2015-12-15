@@ -16,6 +16,12 @@ import org.redkale.convert.json.*;
 import org.redkale.net.*;
 
 /**
+ * Http请求包 与javax.servlet.http.HttpServletRequest 基本类似。
+ * 同时提供json的解析接口: public Object getJsonParameter(Class clazz, String name)
+ * RedKale提倡带简单的参数的GET请求采用类似REST风格。 因此提供了 getRequstURIPath 系列接口
+ * 例如简单的翻页查询 /pipes/record/query/page:2/size:20
+ * 获取页号: int page = request.getRequstURIPath("page:", 1);
+ * 获取一页数量: int size = request.getRequstURIPath("size:", 10);
  *
  * @author zhangjx
  */
@@ -79,8 +85,8 @@ public class HttpRequest extends Request {
     protected AsyncConnection getChannel() {
         return this.channel;
     }
-    
-    protected JsonConvert getJsonConvert(){
+
+    protected JsonConvert getJsonConvert() {
         return this.jsonConvert;
     }
 
