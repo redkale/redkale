@@ -13,6 +13,7 @@ import java.nio.*;
 
 /**
  *
+ * @see http://www.redkale.org
  * @author zhangjx
  */
 public class SocksRequest extends HttpRequest {

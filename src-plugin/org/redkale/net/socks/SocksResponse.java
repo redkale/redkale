@@ -15,6 +15,7 @@ import java.util.concurrent.atomic.*;
 
 /**
  *
+ * @see http://www.redkale.org
  * @author zhangjx
  */
 public class SocksResponse extends HttpResponse<SocksRequest> {

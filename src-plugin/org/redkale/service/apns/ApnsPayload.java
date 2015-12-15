@@ -11,6 +11,7 @@ import java.util.regex.*;
 
 /**
  *
+ * @see http://www.redkale.org
  * @author zhangjx
  */
 public class ApnsPayload {

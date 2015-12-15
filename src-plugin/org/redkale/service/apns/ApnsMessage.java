@@ -9,6 +9,7 @@ import org.redkale.convert.json.JsonFactory;
 
 /**
  *
+ * @see http://www.redkale.org
  * @author zhangjx
  */
 public class ApnsMessage {

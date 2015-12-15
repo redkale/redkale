@@ -9,6 +9,7 @@ import org.redkale.service.RetResult;
 
 /**
  *
+ * @see http://www.redkale.org
  * @author zhangjx
  */
 public class WeiXinPayResult extends RetResult<String> {

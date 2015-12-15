@@ -22,6 +22,7 @@ import java.util.logging.*;
 /**
  * < server protocol="SOCKS" host="0.0.0.0" port="1080" bindaddr="外网IP"> < /server>
  *
+ * @see http://www.redkale.org
  * @author zhangjx
  */
 @NodeProtocol({"SOCKS"})
