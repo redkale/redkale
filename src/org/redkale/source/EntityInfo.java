@@ -215,7 +215,7 @@ public final class EntityInfo<T> {
             this.insertSQL = "INSERT INTO " + table + "(" + insertsb + ") VALUES(" + insertsb2 + ")";
             StringBuilder updatesb = new StringBuilder();
             for (String col : updatecols) {
-                if (updatesb.length() > 0) updatesb.append(',');
+                if (updatesb.length() > 0) updatesb.append(", ");
                 updatesb.append(col).append(" = ?");
             }
             this.updateSQL = "UPDATE " + table + " SET " + updatesb + " WHERE " + getPrimarySQLColumn(null) + " = ?";
