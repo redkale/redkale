@@ -10,7 +10,7 @@ import java.util.*;
 import java.util.function.BiPredicate;
 
 /**
- * 该类主要用于读取xml配置文件
+ * 该类提供类似JSONObject的数据结构，主要用于读取xml配置文件和http-header存储
  *
  * @author zhangjx
  */
