@@ -12,6 +12,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 /**
  * 用于在 Service 中创建自身远程模式的对象
  *
+ * @see http://www.redkale.org
  * @author zhangjx
  */
 @Inherited

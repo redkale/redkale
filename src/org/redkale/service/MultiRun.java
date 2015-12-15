@@ -12,6 +12,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 /**
  * MultiRun 只对本地模式Service有效
  *
+ * @see http://www.redkale.org
  * @author zhangjx
  */
 @Inherited

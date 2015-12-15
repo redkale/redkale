@@ -12,6 +12,7 @@ import java.util.Date;
 
 /**
  *
+ * @see http://www.redkale.org
  * @author zhangjx
  * @param <R>
  * @param <W>

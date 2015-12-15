@@ -25,6 +25,7 @@ import org.redkale.util.*;
  * Service Node Communicate Protocol
  * 生成Service的本地模式或远程模式Service-Class的工具类
  *
+ * @see http://www.redkale.org
  * @author zhangjx
  */
 public abstract class Sncp {

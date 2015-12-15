@@ -9,6 +9,7 @@ import java.io.*;
 
 /**
  *
+ * @see http://www.redkale.org
  * @author zhangjx
  */
 public interface CacheSource {

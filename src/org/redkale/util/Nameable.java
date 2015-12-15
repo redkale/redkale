@@ -7,6 +7,7 @@ package org.redkale.util;
 
 /**
  *
+ * @see http://www.redkale.org
  * @author zhangjx
  */
 public interface Nameable {

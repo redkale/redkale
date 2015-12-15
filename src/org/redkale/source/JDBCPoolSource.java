@@ -20,6 +20,7 @@ import javax.sql.*;
 
 /**
  *
+ * @see http://www.redkale.org
  * @author zhangjx
  */
 public class JDBCPoolSource {

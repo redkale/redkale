@@ -10,6 +10,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 /**
  *
+ * @see http://www.redkale.org
  * @author zhangjx
  */
 public final class MultiPart {

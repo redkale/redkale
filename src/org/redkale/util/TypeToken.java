@@ -11,6 +11,7 @@ import java.lang.reflect.Type;
  * 
  * 获取泛型的Type类
  *
+ * @see http://www.redkale.org
  * @author zhangjx
  * @param <T>
  */

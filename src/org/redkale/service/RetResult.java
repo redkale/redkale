@@ -10,6 +10,7 @@ import org.redkale.convert.json.*;
 /**
  * 通用的结果对象，在常见的HTTP+JSON接口中返回的结果需要含结果码，错误信息，和实体对象。
  *
+ * @see http://www.redkale.org
  * @author zhangjx
  * @param <T>
  */

@@ -9,6 +9,7 @@ import java.lang.reflect.Type;
 
 /**
  *
+ * @see http://www.redkale.org
  * @author zhangjx
  * @param <W>
  * @param <T>

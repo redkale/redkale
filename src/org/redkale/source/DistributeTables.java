@@ -16,6 +16,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * }
  * 这样DistributeGenerator将从A、B表中取最大值来初始化主键值。 常见场景就是表B是数据表A对应的历史表
  *
+ * @see http://www.redkale.org
  * @author zhangjx
  */
 @Target({TYPE})

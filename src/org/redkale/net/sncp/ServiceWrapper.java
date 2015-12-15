@@ -13,6 +13,7 @@ import org.redkale.boot.*;
 /**
  *  Service对象的封装类
  *
+ * @see http://www.redkale.org
  * @author zhangjx
  * @param <T>
  */

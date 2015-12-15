@@ -9,6 +9,7 @@ import java.lang.reflect.*;
 /**
  * 只增不减的伪Map类
  *
+ * @see http://www.redkale.org
  * @author zhangjx
  * @param <K>
  * @param <V>

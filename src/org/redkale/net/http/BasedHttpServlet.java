@@ -22,6 +22,7 @@ import static jdk.internal.org.objectweb.asm.Opcodes.*;
 
 /**
  *
+ * @see http://www.redkale.org
  * @author zhangjx
  */
 public abstract class BasedHttpServlet extends HttpServlet {
@@ -30,7 +31,8 @@ public abstract class BasedHttpServlet extends HttpServlet {
      * 配合 BasedHttpServlet 使用。
      * 当标记为 @AuthIgnore 的方法不会再调用之前调用authenticate 方法。
      *
-     * @author zhangjx
+     * @see http://www.redkale.org
+ * @author zhangjx
      */
     @Inherited
     @Documented
@@ -44,7 +46,8 @@ public abstract class BasedHttpServlet extends HttpServlet {
      * 配合 BasedHttpServlet 使用。 
      * 用于对@WebServlet对应的url进行细分。 其 url
      *
-     * @author zhangjx
+     * @see http://www.redkale.org
+ * @author zhangjx
      */
     @Target({ElementType.METHOD})
     @Retention(RetentionPolicy.RUNTIME)
@@ -61,7 +64,8 @@ public abstract class BasedHttpServlet extends HttpServlet {
      * 当标记为 @HttpCacheable 的方法使用response.finish的参数将被缓存一定时间(默认值timeout=15秒)。
      * 通常情况下 @HttpCacheable 需要与 @AuthIgnore 一起使用，因为没有标记@AuthIgnore的方法一般输出的结果与当前用户信息有关。
      *
-     * @author zhangjx
+     * @see http://www.redkale.org
+ * @author zhangjx
      */
     @Target({ElementType.METHOD})
     @Retention(RetentionPolicy.RUNTIME)

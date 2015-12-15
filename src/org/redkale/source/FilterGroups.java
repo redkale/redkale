@@ -11,6 +11,7 @@ import java.lang.annotation.*;
 
 /**
  *
+ * @see http://www.redkale.org
  * @author zhangjx
  */
 @Inherited

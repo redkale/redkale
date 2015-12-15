@@ -31,6 +31,7 @@ import org.redkale.util.*;
  *                      /           \             /           \  
  *               WebSocket1     WebSocket2   WebSocket3    WebSocket4
  *
+ * @see http://www.redkale.org
  * @author zhangjx
  */
 public abstract class WebSocketServlet extends HttpServlet implements Nameable {

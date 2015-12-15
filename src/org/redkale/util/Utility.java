@@ -15,6 +15,7 @@ import javax.net.ssl.*;
 
 /**
  *
+ * @see http://www.redkale.org
  * @author zhangjx
  */
 public final class Utility {

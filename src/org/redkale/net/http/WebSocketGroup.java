@@ -12,6 +12,7 @@ import java.util.stream.Stream;
 
 /**
  *
+ * @see http://www.redkale.org
  * @author zhangjx
  */
 public final class WebSocketGroup {

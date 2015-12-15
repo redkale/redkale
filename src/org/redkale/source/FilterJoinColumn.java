@@ -11,6 +11,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  *
+ * @see http://www.redkale.org
  * @author zhangjx
  */
 @Inherited

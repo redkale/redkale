@@ -12,6 +12,7 @@ import static java.lang.annotation.RetentionPolicy.*;
 /**
  * ConvertColumn 的多用类
  *
+ * @see http://www.redkale.org
  * @author zhangjx
  */
 @Inherited

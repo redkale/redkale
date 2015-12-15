@@ -15,6 +15,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * 2、被标记为@AutoLoad(false)的Servlet类不会被自动加载
  * 3、被标记为@AutoLoad且同时被标记为@javax.persistence.Cacheable的Entity类在被DataSource初始化时需要将Entity类对应的表数据全量加载进缓存中。
  *
+ * @see http://www.redkale.org
  * @author zhangjx
  */
 @Inherited

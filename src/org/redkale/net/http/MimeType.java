@@ -9,6 +9,7 @@ import java.util.*;
 
 /**
  *
+ * @see http://www.redkale.org
  * @author zhangjx
  */
 public class MimeType {

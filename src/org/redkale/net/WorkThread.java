@@ -9,6 +9,7 @@ import java.util.concurrent.*;
 
 /**
  *
+ * @see http://www.redkale.org
  * @author zhangjx
  */
 public class WorkThread extends Thread {

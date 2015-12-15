@@ -18,6 +18,7 @@ import java.util.logging.Formatter;
 /**
  * 自定义的日志存储类
  * <p>
+ * @see http://www.redkale.org
  * @author zhangjx
  */
 public class LogFileHandler extends Handler {

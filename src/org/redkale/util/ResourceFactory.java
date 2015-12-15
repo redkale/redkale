@@ -15,6 +15,7 @@ import javax.annotation.*;
 /**
  * 如果Resource(name = "$") 表示资源name采用所属对象的name
  *
+ * @see http://www.redkale.org
  * @author zhangjx
  */
 @SuppressWarnings("unchecked")

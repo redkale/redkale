@@ -9,6 +9,7 @@ import java.util.function.*;
 
 /**
  *
+ * @see http://www.redkale.org
  * @author zhangjx
  * @param <E>
  */

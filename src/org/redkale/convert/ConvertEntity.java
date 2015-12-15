@@ -13,6 +13,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * 用于类名的别名， 类似javax.persistence.Table
  * 该值必须是全局唯一
  *
+ * @see http://www.redkale.org
  * @author zhangjx
  */
 @Inherited

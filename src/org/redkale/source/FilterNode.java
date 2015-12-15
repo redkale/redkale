@@ -17,6 +17,7 @@ import org.redkale.util.*;
  * 在调用 createSQLExpress 之前必须先调用 createSQLJoin
  * 在调用 createPredicate 之前必须先调用 isCacheUseable
  *
+ * @see http://www.redkale.org
  * @author zhangjx
  */
 public class FilterNode {

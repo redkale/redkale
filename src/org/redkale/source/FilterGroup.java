@@ -50,6 +50,7 @@ import java.lang.annotation.*;
  * 所以示例二的@FilterGroup("[OR]g1.[AND]subg1") 可以简化为 @FilterGroup("[OR]g1")
  */
 /**
+ * @see http://www.redkale.org
  * @author zhangjx
  */
 @Inherited

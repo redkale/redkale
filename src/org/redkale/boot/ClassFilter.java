@@ -22,6 +22,7 @@ import java.util.regex.*;
 /**
  * class过滤器， 符合条件的class会保留下来存入FilterEntry。
  *
+ * @see http://www.redkale.org
  * @author zhangjx
  * @param <T>
  */

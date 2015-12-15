@@ -12,6 +12,7 @@ import org.redkale.convert.json.*;
 
 /**
  *
+ * @see http://www.redkale.org
  * @author zhangjx
  */
 public abstract class Request {

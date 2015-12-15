@@ -14,6 +14,7 @@ import org.redkale.util.*;
 
 /**
  *
+ * @see http://www.redkale.org
  * @author zhangjx
  */
 public final class SncpResponse extends Response<SncpRequest> {

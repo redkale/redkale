@@ -12,6 +12,7 @@ import java.util.*;
  * 16bytes数据结构
  * 注意： 为了提高性能， DLong中的bytes是直接返回， 不得对bytes的内容进行修改。
  *
+ * @see http://www.redkale.org
  * @author zhangjx
  */
 public final class DLong extends Number implements Comparable<DLong> {

@@ -17,6 +17,7 @@ import jdk.internal.org.objectweb.asm.Type;
  * 当不存在getter方法时，get操作规定返回null
  * 当不存在setter方法时，set操作为空方法 
  *
+ * @see http://www.redkale.org
  * @author zhangjx
  * @param <T>
  * @param <F>

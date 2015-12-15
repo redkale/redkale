@@ -12,6 +12,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 /**
  * 修饰由SNCP协议动态生成的class、和method
  *
+ * @see http://www.redkale.org
  * @author zhangjx
  */
 @Inherited

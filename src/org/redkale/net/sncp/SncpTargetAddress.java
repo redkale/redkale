@@ -13,6 +13,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * SNCP协议中标记为目标地址参数, 该注解只能标记在类型为SocketAddress或其之类的参数上。
  *
  *
+ * @see http://www.redkale.org
  * @author zhangjx
  */
 @Inherited

@@ -11,6 +11,7 @@ import java.nio.charset.*;
 /**
  * 简单的byte[]操作类。
  *
+ * @see http://www.redkale.org
  * @author zhangjx
  */
 public final class ByteArray {
