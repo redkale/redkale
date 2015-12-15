@@ -18,13 +18,13 @@ import org.redkale.util.*;
  */
 public final class SncpResponse extends Response<SncpRequest> {
 
-    public static final int RETCODE_ILLSERVICEID = 10001; //无效serviceid
+    public static final int RETCODE_ILLSERVICEID = (1 << 10); //无效serviceid
 
-    public static final int RETCODE_ILLNAMEID = 10002; //无效nameid
+    public static final int RETCODE_ILLNAMEID = (1 << 11); //无效nameid
 
-    public static final int RETCODE_ILLACTIONID = 10003; //无效actionid
+    public static final int RETCODE_ILLACTIONID = (1 << 12); //无效actionid
 
-    public static final int RETCODE_THROWEXCEPTION = 10011; //内部异常
+    public static final int RETCODE_THROWEXCEPTION = (1 << 30); //内部异常
 
     public static ObjectPool<Response> createPool(AtomicLong creatCounter, AtomicLong cycleCounter, int max, Creator<Response> creator) {
         return new ObjectPool<>(creatCounter, cycleCounter, max, creator, (x) -> ((SncpResponse) x).prepare(), (x) -> ((SncpResponse) x).recycle());
