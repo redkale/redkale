@@ -14,8 +14,7 @@
 <br/>
 <h5>亮点一.  轻量级HTTP</h5>
 <p>
-    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;RedKale 的HTTP是基于异步NIO.2实现的，所提供的HttpResponse的输出接口也是异步的，因此并不遵循JSR 340规范(Servlet 3.1)且也没有实现Jsp规范。 HTTP只提供四个实体：HttpContext、HttpRequest、HttpResponse、HttpServlet。 传统的Session则由数据层实现。 <br/>
-   &nbsp;&nbsp;&nbsp;&nbsp;RedKale提倡http+json接口， 因此HTTP层内置了json解析与序列化接口，同时内置http缓存机制。
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;RedKale 的HTTP是基于异步NIO.2实现的，所提供的HttpResponse的输出接口也是异步的，因此并不遵循JSR 340规范(Servlet 3.1)且也没有实现Jsp规范。 HTTP只提供四个实体：HttpContext、HttpRequest、HttpResponse、HttpServlet。 传统的Session则由数据层实现。RedKale提倡http+json接口， 因此HTTP层内置了json解析与序列化接口，同时内置http缓存机制。
 </p>
 <br/>
 <h5>亮点二.  SNCP协议</h5>
