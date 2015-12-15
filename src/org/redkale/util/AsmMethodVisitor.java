@@ -24,7 +24,7 @@ public class AsmMethodVisitor {
         return this;
     }
 
-    private final Map<Label, Integer> labels = new LinkedHashMap<>();
+    private final Map<Label, Integer> labels = new LinkedHashMap();
 
     private static final String[] opcodes = new String[200]; //0 -18
 
@@ -39,7 +39,7 @@ public class AsmMethodVisitor {
                 if (name.startsWith("H_")) continue;
                 if (name.startsWith("F_")) continue;
                 if (field.getType() != int.class) continue;
-                opcodes[(int) field.get(null)] = name;
+                opcodes[(int) (Integer) field.get(null)] = name;
             }
         } catch (Exception ex) {
             throw new RuntimeException(ex); //不可能会发生
