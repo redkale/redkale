@@ -7,7 +7,7 @@
 <ol>
 <li>大量使用Java 8新特性（接口默认值、Stream、Lambda、JDk8内置的ASM包）</li>
 <li>HTTP层内置json功能与限时缓存功能</li>
-<li>TCP层完全使用NIO.2</li>
+<li>TCP层使用NIO.2，TCP与UDP提供统一接口</li>
 <li>分布式与集中式可以无缝切换</li>
 <li>数据缓存自动同步与简洁的数据层操作接口</li>
 <li>功能强大 但体积不到1.5M，且不依赖任何第三方包</li>
