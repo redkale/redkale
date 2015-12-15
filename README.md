@@ -23,7 +23,7 @@
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;SNCP是RedKale独有的协议层， 类似RMI与WebService的功能结合，主要用于进程间的数据传输。使用者通过配置文件可以轻易的将Service由本地模式变成远程模式。远程模式的Service使用SNCP协议与其他进程的Service通信。<br/>
 </p>
 
-<h5>亮点三.  数据层DataSource</h5>
+<h5>亮点三.  DataSource</h5>
 <p>
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;RedKale提供DataSource类对数据层进行操作， 其功能类似JPA(或Hibernate)+Memcached。 与JPA相比各有优缺点，优点： 1、Datasource中的内存缓存会自动与其他同服务的进程之间同步。2、简易的查询接口，即时复杂的过滤查询都无需写SQL语句。 缺点： 1、不提供复杂的关联表操作与查询。<br/>
 </p>
