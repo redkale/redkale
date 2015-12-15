@@ -22,6 +22,7 @@ import org.redkale.service.*;
 import org.redkale.util.*;
 
 /**
+ * Service Node Communicate Protocol
  * 生成Service的本地模式或远程模式Service-Class的工具类
  *
  * @author zhangjx
