@@ -6,12 +6,13 @@
 package org.redkale.convert;
 
 import org.redkale.util.Attribute;
-import org.redkale.util.Attribute.Attributes;
 import java.lang.reflect.*;
 import java.util.*;
+import org.redkale.util.Attribute.Attributes;
 
 /**
  *
+ * @see http://www.redkale.org
  * @author zhangjx
  * @param <W>
  * @param <T>

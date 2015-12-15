@@ -4,16 +4,17 @@
  */
 package org.redkale.util;
 
-import java.beans.*;
+import java.beans.ConstructorProperties;
 import java.lang.reflect.*;
 import java.util.*;
-import org.objectweb.asm.*;
-import static org.objectweb.asm.Opcodes.*;
-import org.objectweb.asm.Type;
+import jdk.internal.org.objectweb.asm.*;
+import static jdk.internal.org.objectweb.asm.Opcodes.*;
+import jdk.internal.org.objectweb.asm.Type;
 
 /**
- * 实现一个类的构造方法。 代替低效的反射实现方式。
+ * 实现一个类的构造方法。 代替低效的反射实现方式。 不支持数组类
  *
+ * @see http://www.redkale.org
  * @author zhangjx
  * @param <T>
  */
@@ -21,7 +22,7 @@ public interface Creator<T> {
 
     public T create(Object... params);
 
-    public static final class Creators {
+    public static abstract class Creators {
 
         @SuppressWarnings("unchecked")
         public static <T> Creator<T> create(Class<T> clazz) {
@@ -50,7 +51,7 @@ public interface Creator<T> {
             }
             Constructor<T> constructor = null;
             for (Constructor c : clazz.getConstructors()) {
-                if (c.getParameterTypes().length == 0) {
+                if (c.getParameterCount() == 0) {
                     constructor = c;
                     break;
                 }
@@ -69,13 +70,13 @@ public interface Creator<T> {
             FieldVisitor fv;
             MethodVisitor mv;
             AnnotationVisitor av0;
-            cw.visit(V1_6, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynName, "Ljava/lang/Object;L" + supDynName + "<" + interDesc + ">;", "java/lang/Object", new String[]{supDynName});
+            cw.visit(V1_8, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynName, "Ljava/lang/Object;L" + supDynName + "<" + interDesc + ">;", "java/lang/Object", new String[]{supDynName});
 
             {//构造方法
                 mv = cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null);
                 ConstructorProperties cps = constructor.getAnnotation(ConstructorProperties.class);
                 if (cps != null) {
-                    av0 = mv.visitAnnotation("Ljava/beans/ConstructorProperties;", true);
+                    av0 = mv.visitAnnotation(Type.getDescriptor(ConstructorProperties.class), true);
                     AnnotationVisitor av1 = av0.visitArray("value");
                     for (String n : cps.value()) {
                         av1.visit(null, n);
@@ -94,9 +95,8 @@ public interface Creator<T> {
                 mv.visitTypeInsn(NEW, interName);
                 mv.visitInsn(DUP);
                 //---------------------------------------
-                final Class[] params = constructor.getParameterTypes();
                 {
-
+                    Parameter[] params = constructor.getParameters();
                     final int[] iconsts = {ICONST_0, ICONST_1, ICONST_2, ICONST_3, ICONST_4, ICONST_5};
                     for (int i = 0; i < params.length; i++) {
                         mv.visitVarInsn(ALOAD, 1);
@@ -106,7 +106,7 @@ public interface Creator<T> {
                             mv.visitIntInsn(BIPUSH, i);
                         }
                         mv.visitInsn(AALOAD);
-                        Class ct = params[i];
+                        Class ct = params[i].getType();
                         mv.visitTypeInsn(CHECKCAST, Type.getInternalName(ct));
                         if (ct.isPrimitive()) {
                             Class fct = Array.get(Array.newInstance(ct, 1), 0).getClass();
@@ -122,7 +122,7 @@ public interface Creator<T> {
                 //---------------------------------------
                 mv.visitMethodInsn(INVOKESPECIAL, interName, "<init>", Type.getConstructorDescriptor(constructor), false);
                 mv.visitInsn(ARETURN);
-                mv.visitMaxs((params.length > 0 ? (params.length + 3) : 2), 2);
+                mv.visitMaxs((constructor.getParameterCount() > 0 ? (constructor.getParameterCount() + 3) : 2), 2);
                 mv.visitEnd();
             }
             { //虚拟 create 方法

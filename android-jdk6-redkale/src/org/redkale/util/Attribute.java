@@ -11,17 +11,22 @@ import org.objectweb.asm.Type;
 
 /**
  * 该类功能是动态映射一个Data类中成员对应的getter、setter方法； 代替低效的反射实现方式。
- * 映射Field时，field要么是public非final，要么存在对应的getter、setter方法。
+ * 映射Field时，field必须满足以下条件之一：
+ * 1、field属性是public且非final
+ * 2、至少存在对应的getter、setter方法中的一个
+ * 当不存在getter方法时，get操作规定返回null
+ * 当不存在setter方法时，set操作为空方法
  *
+ * @see http://www.redkale.org
  * @author zhangjx
  * @param <T>
  * @param <F>
  */
 public interface Attribute<T, F> {
 
-    public Class type();
+    public Class<? extends F> type();
 
-    public Class declaringClass();
+    public Class<T> declaringClass();
 
     public String field();
 
@@ -29,23 +34,49 @@ public interface Attribute<T, F> {
 
     public void set(T obj, F value);
 
-    public static final class Attributes {
+    public static abstract class Attributes {
 
+        /**
+         * 根据一个Field生成 Attribute 对象。
+         *
+         * @param <T>
+         * @param <F>
+         * @param field
+         * @return
+         */
         public static <T, F> Attribute<T, F> create(final Field field) {
             return create((Class<T>) field.getDeclaringClass(), field.getName(), field, null, null);
         }
 
+        /**
+         * 根据一个Field和field的别名生成 Attribute 对象。
+         *
+         * @param <T>
+         * @param <F>
+         * @param fieldname 别名
+         * @param field
+         * @return
+         */
         public static <T, F> Attribute<T, F> create(String fieldname, final Field field) {
             return create((Class<T>) field.getDeclaringClass(), fieldname, field, null, null);
         }
 
+        /**
+         * 根据一个Class和field名生成 Attribute 对象。
+         *
+         * @param <T>
+         * @param <F>
+         * @param clazz
+         * @param fieldname 字段名， 如果该字段不存在则抛异常
+         * @return
+         */
         public static <T, F> Attribute<T, F> create(Class<T> clazz, final String fieldname) {
             try {
                 return create(clazz, fieldname, clazz.getDeclaredField(fieldname), null, null);
             } catch (NoSuchFieldException ex) {
                 throw new RuntimeException(ex);
-            } catch (SecurityException ex2) {
-                throw new RuntimeException(ex2);
+            } catch (SecurityException ex) {
+                throw new RuntimeException(ex);
             }
         }
 
@@ -57,18 +88,60 @@ public interface Attribute<T, F> {
             return create(clazz, fieldname, field, null, null);
         }
 
+        /**
+         * getter、setter不能全为null
+         *
+         * @param <T>
+         * @param <F>
+         * @param getter
+         * @param setter
+         * @return
+         */
         public static <T, F> Attribute<T, F> create(final Method getter, final Method setter) {
             return create((Class) (getter == null ? setter.getDeclaringClass() : getter.getDeclaringClass()), null, null, getter, setter);
         }
 
+        /**
+         * getter、setter不能全为null
+         *
+         * @param <T>
+         * @param <F>
+         * @param clazz
+         * @param getter
+         * @param setter
+         * @return
+         */
         public static <T, F> Attribute<T, F> create(Class<T> clazz, final Method getter, final Method setter) {
             return create(clazz, null, null, getter, setter);
         }
 
+        /**
+         * getter、setter不能全为null
+         *
+         * @param <T>
+         * @param <F>
+         * @param clazz
+         * @param fieldalias
+         * @param getter
+         * @param setter
+         * @return
+         */
         public static <T, F> Attribute<T, F> create(Class<T> clazz, final String fieldalias, final Method getter, final Method setter) {
             return create(clazz, fieldalias, null, getter, setter);
         }
 
+        /**
+         * field、getter、setter不能全为null
+         *
+         * @param <T>
+         * @param <F>
+         * @param clazz
+         * @param fieldalias0
+         * @param field0
+         * @param getter0
+         * @param setter0
+         * @return
+         */
         @SuppressWarnings("unchecked")
         public static <T, F> Attribute<T, F> create(final Class<T> clazz, String fieldalias0, final Field field0, Method getter0, Method setter0) {
             if (fieldalias0 != null && fieldalias0.isEmpty()) fieldalias0 = null;
@@ -145,10 +218,10 @@ public interface Attribute<T, F> {
             } catch (Exception ex) {
             }
             //---------------------------------------------------
-            final org.objectweb.asm.ClassWriter cw = new org.objectweb.asm.ClassWriter(0);
-            org.objectweb.asm.MethodVisitor mv;
+            final jdk.internal.org.objectweb.asm.ClassWriter cw = new jdk.internal.org.objectweb.asm.ClassWriter(0);
+            jdk.internal.org.objectweb.asm.MethodVisitor mv;
 
-            cw.visit(V1_6, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynName, "Ljava/lang/Object;L" + supDynName + "<" + interDesc + columnDesc + ">;", "java/lang/Object", new String[]{supDynName});
+            cw.visit(V1_8, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynName, "Ljava/lang/Object;L" + supDynName + "<" + interDesc + columnDesc + ">;", "java/lang/Object", new String[]{supDynName});
 
             { //构造方法
                 mv = cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null);
@@ -209,6 +282,7 @@ public interface Attribute<T, F> {
                         mv.visitFieldInsn(GETFIELD, interName, field.getName(), Type.getDescriptor(pcolumn));
                         if (pcolumn != column) {
                             mv.visitMethodInsn(INVOKESTATIC, columnName, "valueOf", "(" + Type.getDescriptor(pcolumn) + ")" + columnDesc, false);
+                            m = 2;
                         }
                     }
                 } else {
@@ -236,6 +310,7 @@ public interface Attribute<T, F> {
                             try {
                                 java.lang.reflect.Method pm = column.getMethod(pcolumn.getSimpleName() + "Value");
                                 mv.visitMethodInsn(INVOKEVIRTUAL, columnName, pm.getName(), Type.getMethodDescriptor(pm), false);
+                                m = 3;
                             } catch (Exception ex) {
                                 throw new RuntimeException(ex); //不可能会发生
                             }

@@ -3,16 +3,14 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.redkale.convert.bson;
-
-import org.redkale.convert.SimpledCoder;
+package org.redkale.util;
 
 /**
  *
  * @see http://www.redkale.org
  * @author zhangjx
- * @param <T>
  */
-public abstract class BsonSimpledCoder<T> extends SimpledCoder<BsonReader, BsonWriter, T> {
+public interface Nameable {
 
+    String name();
 }

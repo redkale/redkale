@@ -8,7 +8,9 @@ package org.redkale.util;
 import java.util.*;
 
 /**
+ * 页集合。 结构由一个total总数和一个List列表组合而成。
  *
+ * @see http://www.redkale.org
  * @author zhangjx
  * @param <T>
  */
@@ -36,14 +38,15 @@ public class Sheet<T> implements java.io.Serializable {
         return data == null ? new Sheet() : new Sheet(data.size(), data);
     }
 
-    public void copyTo(Sheet<T> copy) {
-        if (copy == null) return;
+    public Sheet<T> copyTo(Sheet<T> copy) {
+        if (copy == null) return copy;
         copy.total = this.total;
         if (this.getRows() != null) {
             copy.setRows(new ArrayList(this.getRows()));
         } else {
             copy.rows = null;
         }
+        return copy;
     }
 
     /**

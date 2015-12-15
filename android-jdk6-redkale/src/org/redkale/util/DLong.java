@@ -5,31 +5,46 @@
  */
 package org.redkale.util;
 
+import java.nio.*;
+import java.util.*;
+
 /**
+ * 16bytes数据结构
+ * 注意： 为了提高性能， DLong中的bytes是直接返回， 不得对bytes的内容进行修改。
  *
+ * @see http://www.redkale.org
  * @author zhangjx
  */
 public final class DLong extends Number implements Comparable<DLong> {
 
-    private final long first;
+    private final byte[] bytes;
 
-    private final long second;
-
-    public DLong(long one, long two) {
-        this.first = one;
-        this.second = two;
+    public DLong(long v1, long v2) {
+        this.bytes = new byte[]{(byte) (v1 >> 56), (byte) (v1 >> 48), (byte) (v1 >> 40), (byte) (v1 >> 32),
+            (byte) (v1 >> 24), (byte) (v1 >> 16), (byte) (v1 >> 8), (byte) v1, (byte) (v2 >> 56), (byte) (v2 >> 48), (byte) (v2 >> 40), (byte) (v2 >> 32),
+            (byte) (v2 >> 24), (byte) (v2 >> 16), (byte) (v2 >> 8), (byte) v2};
     }
 
-    public long getFirst() {
-        return first;
+    public DLong(byte[] bytes) {
+        if (bytes == null || bytes.length != 16) throw new NumberFormatException("Not 16 length bytes");
+        this.bytes = bytes;
     }
 
-    public long getSecond() {
-        return second;
+    public byte[] getBytes() {
+        return Arrays.copyOf(bytes, bytes.length);
     }
 
-    public boolean equals(long one, long two) {
-        return this.first == one && this.second == two;
+    public byte[] directBytes() {
+        return bytes;
+    }
+
+    public ByteBuffer putTo(ByteBuffer buffer) {
+        buffer.put(bytes);
+        return buffer;
+    }
+
+    public boolean equals(byte[] bytes) {
+        return Arrays.equals(this.bytes, bytes);
     }
 
     @Override
@@ -37,30 +52,34 @@ public final class DLong extends Number implements Comparable<DLong> {
         if (obj == null) return false;
         if (getClass() != obj.getClass()) return false;
         final DLong other = (DLong) obj;
-        return (this.first == other.first && this.second == other.second);
+        return Arrays.equals(this.bytes, other.bytes);
     }
 
     @Override
     public int hashCode() {
-        int hash = 7;
-        hash = 89 * hash + (int) (this.first ^ (this.first >>> 32));
-        hash = 89 * hash + (int) (this.second ^ (this.second >>> 32));
-        return hash;
+        return Arrays.hashCode(bytes);
     }
 
     @Override
     public String toString() {
-        return this.first + "_" + this.second;
+        return new String(Utility.binToHex(bytes));
     }
 
     @Override
     public int intValue() {
-        return (int) longValue();
+        return ((bytes[12] & 0xff) << 24) | ((bytes[113] & 0xff) << 16) | ((bytes[14] & 0xff) << 8) | (bytes[15] & 0xff);
     }
 
     @Override
     public long longValue() {
-        return first ^ second;
+        return ((((long) bytes[8] & 0xff) << 56)
+                | (((long) bytes[9] & 0xff) << 48)
+                | (((long) bytes[10] & 0xff) << 40)
+                | (((long) bytes[11] & 0xff) << 32)
+                | (((long) bytes[12] & 0xff) << 24)
+                | (((long) bytes[13] & 0xff) << 16)
+                | (((long) bytes[14] & 0xff) << 8)
+                | (((long) bytes[15] & 0xff)));
     }
 
     @Override
@@ -75,7 +94,11 @@ public final class DLong extends Number implements Comparable<DLong> {
 
     @Override
     public int compareTo(DLong o) {
-        return (int) (first == o.first ? (second - o.second) : (first - o.first));
+        if (o == null) return 1;
+        for (int i = 0; i < bytes.length; i++) {
+            if (this.bytes[i] != o.bytes[i]) return this.bytes[i] - o.bytes[i];
+        }
+        return 0;
     }
 
 }

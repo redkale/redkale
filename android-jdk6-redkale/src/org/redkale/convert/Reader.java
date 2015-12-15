@@ -9,6 +9,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  *
+ * @see http://www.redkale.org
  * @author zhangjx
  */
 public interface Reader {

@@ -11,6 +11,7 @@ import org.redkale.convert.Writer;
 
 /**
  *
+ * @see http://www.redkale.org
  * @author zhangjx
  * @param <R>
  * @param <W>
@@ -38,9 +39,8 @@ public final class ShortArraySimpledCoder<R extends Reader, W extends Writer> ex
     @Override
     public short[] convertFrom(R in) {
         int len = in.readArrayB();
-        if (len == Reader.SIGN_NULL) {
-            return null;
-        } else if (len == Reader.SIGN_NOLENGTH) {
+        if (len == Reader.SIGN_NULL) return null;
+        if (len == Reader.SIGN_NOLENGTH) {
             int size = 0;
             short[] data = new short[8];
             while (in.hasNext()) {

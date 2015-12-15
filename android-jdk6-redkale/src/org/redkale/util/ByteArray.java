@@ -9,7 +9,9 @@ import java.nio.*;
 import java.nio.charset.*;
 
 /**
+ * 简单的byte[]操作类。
  *
+ * @see http://www.redkale.org
  * @author zhangjx
  */
 public final class ByteArray {
@@ -134,12 +136,16 @@ public final class ByteArray {
     public String toDecodeString(final int offset, int len, final Charset charset) {
         int index = offset;
         for (int i = offset; i < (offset + len); i++) {
-            if (content[i] == '+') {
-                content[index] = ' ';
-            } else if (content[i] == '%') {
-                content[index] = (byte) ((hexBit(content[++i]) * 16 + hexBit(content[++i])));
-            } else {
-                content[index] = content[i];
+            switch (content[i]) {
+                case '+':
+                    content[index] = ' ';
+                    break;
+                case '%':
+                    content[index] = (byte) ((hexBit(content[++i]) * 16 + hexBit(content[++i])));
+                    break;
+                default:
+                    content[index] = content[i];
+                    break;
             }
             index++;
         }

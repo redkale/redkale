@@ -3,23 +3,23 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.redkale.convert;
+package org.redkale.util;
 
 import java.lang.annotation.*;
-import static java.lang.annotation.ElementType.*;
-import static java.lang.annotation.RetentionPolicy.*;
+import static java.lang.annotation.ElementType.TYPE;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * ConvertColumn 的多用类
+ * 被标记的日志级别以上的才会被记录
  *
  * @see http://www.redkale.org
  * @author zhangjx
  */
 @Inherited
 @Documented
-@Target({METHOD, FIELD})
+@Target({TYPE})
 @Retention(RUNTIME)
-public @interface ConvertColumns {
+public @interface LogLevel {
 
-    ConvertColumn[] value();
+    String value();
 }

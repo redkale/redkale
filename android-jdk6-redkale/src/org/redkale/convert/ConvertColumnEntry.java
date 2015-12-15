@@ -8,6 +8,7 @@ package org.redkale.convert;
 /**
  * ConvertColumn 对应的实体类
  *
+ * @see http://www.redkale.org
  * @author zhangjx
  */
 public final class ConvertColumnEntry {

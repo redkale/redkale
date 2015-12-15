@@ -10,6 +10,7 @@ import org.objectweb.asm.*;
 
 /**
  *
+ * @see http://www.redkale.org
  * @author zhangjx
  */
 public class AsmMethodVisitor {
@@ -18,8 +19,9 @@ public class AsmMethodVisitor {
 
     private boolean debug = false;
 
-    public void setDebug(boolean d) {
+    public AsmMethodVisitor setDebug(boolean d) {
         debug = d;
+        return this;
     }
 
     private final Map<Label, Integer> labels = new LinkedHashMap();
@@ -47,6 +49,12 @@ public class AsmMethodVisitor {
     public AsmMethodVisitor(MethodVisitor visitor) {
         //super(Opcodes.ASM5, visitor);
         this.visitor = visitor;
+    }
+
+    public AnnotationVisitor visitParameterAnnotation(int i, String string, boolean bln) {
+        AnnotationVisitor av = visitor.visitParameterAnnotation(i, string, bln);
+        if (debug) System.out.println("mv.visitParameterAnnotation(" + i + ", \"" + string + "\", " + bln + ");");
+        return av;
     }
 
     public AnnotationVisitor visitAnnotation(String desc, boolean flag) {

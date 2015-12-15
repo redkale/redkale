@@ -4,15 +4,16 @@
  */
 package org.redkale.util;
 
-import org.redkale.util.Creator.Creators;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 import java.util.function.*;
 import java.util.logging.*;
+import org.redkale.util.Creator.Creators;
 
 /**
  *
+ * @see http://www.redkale.org
  * @author zhangjx
  * @param <T>
  */
@@ -56,7 +57,7 @@ public final class ObjectPool<T> implements Supplier<T> {
         this.creator = creator;
         this.prepare = prepare;
         this.recycler = recycler;
-        this.queue = new ArrayBlockingQueue(Math.max(Runtime.getRuntime().availableProcessors() * 2, max));
+        this.queue = new LinkedBlockingQueue(Math.max(Runtime.getRuntime().availableProcessors() * 2, max));
         this.debug = logger.isLoggable(Level.FINER);
     }
 
