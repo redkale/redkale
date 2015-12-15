@@ -385,6 +385,28 @@ public abstract class NodeServer {
             }
             ClassFilter filter = new ClassFilter(ref, inter, prop);
             for (AnyValue av : list.getAnyValues(property)) {
+                final AnyValue[] items = av.getAnyValues("property");
+                if (av instanceof DefaultAnyValue && items.length > 0) {
+                    DefaultAnyValue dav = DefaultAnyValue.create();
+                    final AnyValue.Entry<String>[] strings = av.getStringEntrys();
+                    if (strings != null) {
+                        for (AnyValue.Entry<String> en : strings) {
+                            dav.addValue(en.name, en.getValue());
+                        }
+                    }
+                    final AnyValue.Entry<AnyValue>[] anys = av.getAnyEntrys();
+                    if (anys != null) {
+                        for (AnyValue.Entry<AnyValue> en : anys) {
+                            if (!"property".equals(en.name)) dav.addValue(en.name, en.getValue());
+                        }
+                    }
+                    DefaultAnyValue ps = DefaultAnyValue.create();
+                    for (AnyValue item : items) {
+                        ps.addValue(item.getValue("name"), item.getValue("value"));
+                    }
+                    dav.addValue("property", ps);
+                    av = dav;
+                }
                 filter.filter(av, av.getValue("value"), false);
             }
             if (list.getBoolValue("autoload", true)) {
