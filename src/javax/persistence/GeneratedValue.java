@@ -60,5 +60,20 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 
 public @interface GeneratedValue {
+    /**
+     * (Optional) The primary key generation strategy
+     * that the persistence provider must use to
+     * generate the annotated entity primary key.
+     */
+    @Deprecated
+    GenerationType strategy() default GenerationType.AUTO;
 
+    /**
+     * (Optional) The name of the primary key generator
+     * to use as specified in the {@link SequenceGenerator} 
+     * or {@link TableGenerator} annotation.
+     * <p> Defaults to the id generator supplied by persistence provider.
+     */
+    @Deprecated
+    String generator() default "";
 }
