@@ -1,1 +1,1 @@
-RedKale����չ���� �������õ�QQ��½��΢����ҵ�š�����Ų��ֽӿڣ�IOS��APNS�ӿ�
+RedKale的扩展包。 包含常用的QQ登陆、微信企业号、服务号部分接口，IOS的APNS接口
