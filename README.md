@@ -25,5 +25,11 @@
 
 <h5>亮点三.  DataSource</h5>
 <p>
-    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;RedKale提供DataSource类对数据层进行操作， 其功能类似JPA(或Hibernate)+Memcached。 与JPA相比各有优缺点，优点： 1、Datasource中的内存缓存会自动与其他同服务的进程之间同步。2、简易的查询接口，即时复杂的过滤查询都无需写SQL语句。 3、可以DataSource与业务逻辑层分开， 独立成类似Memcached的内存数据源。缺点： 1、不提供复杂的关联表操作与查询。
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;RedKale提供DataSource类对数据层进行操作， 其功能类似JPA(或Hibernate)+Memcached。 与JPA相比各有优缺点。
+    优点： 
+         1、Datasource中的内存缓存会自动与其他同服务的进程之间同步。
+         2、简易的查询接口，即时复杂的过滤查询都无需写SQL语句。 
+         3、可以DataSource与业务逻辑层分开， 独立成类似Memcached的内存数据源。
+    缺点： 
+         1、不提供复杂的关联表操作与查询。
 </p>
