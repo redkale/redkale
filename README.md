@@ -25,7 +25,7 @@
 
 <h5>亮点三.  SNCP协议</h5>
 <p>
-    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;SNCP是RedKale独有的协议层， 类似RMI与WebService的功能结合，主要用于进程间的数据传输。使用者通过配置文件可以轻易的将Service由本地模式变成远程模式。远程模式的Service使用SNCP协议与其他进程的Service通信。使用者无需对远程通信接口使用类似mina的第三方包自行开发。<br/>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;SNCP(Service Node Communicate Protocol)是RedKale独有的协议层， 类似RMI与WebService的功能结合，主要用于进程间的数据传输。使用者通过配置文件可以轻易的将Service由本地模式变成远程模式。远程模式的Service使用SNCP协议与其他进程的Service通信。使用者无需对远程通信接口使用类似mina的第三方包自行开发。<br/>
 </p>
 
 <h5>亮点四.  DataSource</h5>
