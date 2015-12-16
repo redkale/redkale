@@ -35,7 +35,7 @@ public final class SncpServer extends Server {
     }
 
     public void addService(ServiceWrapper entry) {
-        ((SncpPrepareServlet) this.prepare).addSncpServlet(new SncpDynServlet(BsonFactory.root().getConvert(), entry.getName(), entry.getService(), entry.getConf()));
+        ((SncpPrepareServlet) this.prepare).addSncpServlet(new SncpDynServlet(BsonFactory.root().getConvert(), entry.getName(), entry.getType(), entry.getService(), entry.getConf()));
     }
 
     public List<SncpServlet> getSncpServlets() {

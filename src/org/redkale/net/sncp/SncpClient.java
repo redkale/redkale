@@ -117,7 +117,7 @@ public final class SncpClient {
 
     protected final Consumer<Runnable> executor;
 
-    public SncpClient(final String serviceName, final Consumer<Runnable> executor, final long serviceid0, boolean remote, final Class serviceClass,
+    public SncpClient(final String serviceName, final Consumer<Runnable> executor, final long serviceid, boolean remote, final Class serviceClass,
             boolean onlySncpDyn, final InetSocketAddress clientAddress, final HashSet<String> groups) {
         if (serviceName.length() > 10) throw new RuntimeException(serviceClass + " @Resource name(" + serviceName + ") too long , must less 11");
         this.remote = remote;
@@ -128,10 +128,10 @@ public final class SncpClient {
         //if (subLocalClass != null && !serviceClass.isAssignableFrom(subLocalClass)) throw new RuntimeException(subLocalClass + " is not " + serviceClass + " sub class ");
         this.name = serviceName;
         this.nameid = Sncp.hash(serviceName);
-        this.serviceid = serviceid0 > 0 ? serviceid0 : Sncp.hash(serviceClass);
+        this.serviceid = serviceid;
         final List<SncpAction> methodens = new ArrayList<>();
         //------------------------------------------------------------------------------
-        for (java.lang.reflect.Method method : parseMethod(serviceClass, onlySncpDyn)) {
+        for (java.lang.reflect.Method method : parseMethod(serviceClass, onlySncpDyn)) { //远程模式下onlySncpDyn = false
             SncpAction en = new SncpAction(method, Sncp.hash(method));
             methodens.add(en);
         }
@@ -161,7 +161,7 @@ public final class SncpClient {
                 + ", groups = " + groups + ", actions.size = " + actions.length + ")";
     }
 
-    public static List<Method> parseMethod(final Class serviceClass, boolean onlySncpDyn) {
+    public static List<Method> parseMethod(final Class serviceClass, boolean onlySncpDyn) { //远程模式下onlySncpDyn = false
         final List<Method> list = new ArrayList<>();
         final List<Method> multis = new ArrayList<>();
         final Map<DLong, Method> actionids = new HashMap<>();

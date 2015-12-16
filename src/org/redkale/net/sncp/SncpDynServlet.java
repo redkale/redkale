@@ -44,10 +44,10 @@ public final class SncpDynServlet extends SncpServlet {
 
     private Supplier<ByteBuffer> bufferSupplier;
 
-    public SncpDynServlet(final BsonConvert convert, final String serviceName, final Service service, final AnyValue conf) {
+    public SncpDynServlet(final BsonConvert convert, final String serviceName, final Class<? extends Service> type, final Service service, final AnyValue conf) {
         this.conf = conf;
         this.serviceName = serviceName;
-        this.type = (Class<? extends Service>) service.getClass().getSuperclass();
+        this.type = type;
         this.nameid = Sncp.hash(serviceName);
         this.serviceid = Sncp.hash(type);
         Set<DLong> actionids = new HashSet<>();
