@@ -72,7 +72,7 @@ public final class SncpDynServlet extends SncpServlet {
 
     @Override
     public String toString() {
-        return this.getClass().getSimpleName() + "(type=" + type.getName() + ", serviceid=" + serviceid + ", nameid=" + nameid + ", actions.size=" + actions.size() + ", name=" + serviceName + ")";
+        return this.getClass().getSimpleName() + "(type=" + type.getName() + ", serviceid=" + serviceid + ", name='" + serviceName + "', nameid=" + nameid + ", actions.size=" + actions.size() + ")";
     }
 
     @Override
