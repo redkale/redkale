@@ -32,7 +32,7 @@ public abstract class BasedHttpServlet extends HttpServlet {
      * 当标记为 @AuthIgnore 的方法不会再调用之前调用authenticate 方法。
      *
      * @see http://www.redkale.org
- * @author zhangjx
+     * @author zhangjx
      */
     @Inherited
     @Documented
@@ -43,11 +43,11 @@ public abstract class BasedHttpServlet extends HttpServlet {
     }
 
     /**
-     * 配合 BasedHttpServlet 使用。 
+     * 配合 BasedHttpServlet 使用。
      * 用于对@WebServlet对应的url进行细分。 其 url
      *
      * @see http://www.redkale.org
- * @author zhangjx
+     * @author zhangjx
      */
     @Target({ElementType.METHOD})
     @Retention(RetentionPolicy.RUNTIME)
@@ -65,7 +65,7 @@ public abstract class BasedHttpServlet extends HttpServlet {
      * 通常情况下 @HttpCacheable 需要与 @AuthIgnore 一起使用，因为没有标记@AuthIgnore的方法一般输出的结果与当前用户信息有关。
      *
      * @see http://www.redkale.org
- * @author zhangjx
+     * @author zhangjx
      */
     @Target({ElementType.METHOD})
     @Retention(RetentionPolicy.RUNTIME)
@@ -144,13 +144,12 @@ public abstract class BasedHttpServlet extends HttpServlet {
             Class[] exps = method.getExceptionTypes();
             if (exps.length > 0 && (exps.length != 1 || exps[0] != IOException.class)) continue;
             //-----------------------------------------------
-            String name = methodname;
-            int actionid = 0;
-            WebAction action = method.getAnnotation(WebAction.class);
-            if (action != null) {
-                actionid = action.actionid();
-                name = action.url().trim();
-            }
+
+            final WebAction action = method.getAnnotation(WebAction.class);
+            if (action == null) continue;
+            final int actionid = action.actionid();
+            final String name = action.url().trim();
+
             if (nameset.contains(name)) throw new RuntimeException(this.getClass().getSimpleName() + " has two same " + WebAction.class.getSimpleName() + "(" + name + ")");
             for (String n : nameset) {
                 if (n.contains(name) || name.contains(n)) {
