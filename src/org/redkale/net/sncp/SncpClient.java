@@ -118,8 +118,8 @@ public final class SncpClient {
     protected final Consumer<Runnable> executor;
 
     public SncpClient(final String serviceName, final Consumer<Runnable> executor, final long serviceid, boolean remote, final Class serviceClass,
-            boolean onlySncpDyn, final InetSocketAddress clientAddress, final HashSet<String> groups) {
-        if (serviceName.length() > 10) throw new RuntimeException(serviceClass + " @Resource name(" + serviceName + ") too long , must less 11");
+            boolean onlySncpDyn, final InetSocketAddress clientAddress, final HashSet<String> groups) { // 以下划线_开头的serviceName只能是被系统分配, 且长度可以超过11位
+        if (serviceName.length() > 10 && serviceName.charAt(0) != '_') throw new RuntimeException(serviceClass + " @Resource name(" + serviceName + ") too long , must less 11");
         this.remote = remote;
         this.executor = executor;
         this.serviceClass = serviceClass;
