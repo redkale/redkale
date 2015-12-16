@@ -156,7 +156,7 @@ public final class SncpClient {
         String service = serviceClass.getName();
         if (remote) service = service.replace(Sncp.LOCALPREFIX, Sncp.REMOTEPREFIX);
         return this.getClass().getSimpleName() + "(service = " + service + ", serviceid = " + serviceid + ", nameid = " + nameid
-                + ", name = " + name + ", address = " + (address == null ? "" : (address.getHostString() + ":" + address.getPort()))
+                + ", name = '" + name + "', address = " + (address == null ? "" : (address.getHostString() + ":" + address.getPort()))
                 + ", groups = " + groups + ", actions.size = " + actions.length + ")";
     }
 
