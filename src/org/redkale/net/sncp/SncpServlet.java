@@ -6,7 +6,7 @@
 package org.redkale.net.sncp;
 
 import org.redkale.net.Servlet;
-import org.redkale.util.AnyValue;
+import org.redkale.util.*;
 
 /**
  *
@@ -17,9 +17,9 @@ public abstract class SncpServlet implements Servlet<SncpRequest, SncpResponse> 
 
     AnyValue conf;
 
-    public abstract long getNameid();
+    public abstract DLong getNameid();
 
-    public abstract long getServiceid();
+    public abstract DLong getServiceid();
 
     @Override
     public final boolean equals(Object obj) {

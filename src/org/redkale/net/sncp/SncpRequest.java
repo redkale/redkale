@@ -18,7 +18,7 @@ import org.redkale.util.*;
  */
 public final class SncpRequest extends Request {
 
-    public static final int HEADER_SIZE = 64;
+    public static final int HEADER_SIZE = 72;
 
     public static final byte[] DEFAULT_HEADER = new byte[HEADER_SIZE];
 
@@ -26,17 +26,15 @@ public final class SncpRequest extends Request {
 
     private long seqid;
 
-    private long nameid;
+    private DLong serviceid;
 
-    private long serviceid;
+    private DLong nameid;
 
     private DLong actionid;
 
     private int bodylength;
 
     private int bodyoffset;
-
-    private int framelength;
 
     private boolean ping;
 
@@ -61,15 +59,13 @@ public final class SncpRequest extends Request {
             context.getLogger().finest("sncp buffer header.length not " + HEADER_SIZE);
             return -1;
         }
-        this.serviceid = buffer.getLong();
-        this.nameid = buffer.getLong();
+        this.serviceid = DLong.read(buffer);
+        this.nameid = DLong.read(buffer);
         byte[] bs = new byte[16];
         buffer.get(bs);
         this.actionid = new DLong(bs);
         buffer.get(bufferbytes);
         this.bodylength = buffer.getInt();
-        this.bodyoffset = buffer.getInt();
-        this.framelength = buffer.getInt();
 
         if (buffer.getInt() != 0) {
             context.getLogger().finest("sncp buffer header.retcode not 0");
@@ -101,14 +97,14 @@ public final class SncpRequest extends Request {
         return SncpRequest.class.getSimpleName() + "{seqid=" + this.seqid
                 + ",serviceid=" + this.serviceid + ",actionid=" + this.actionid
                 + ",bodylength=" + this.bodylength + ",bodyoffset=" + this.bodyoffset
-                + ",framelength=" + this.framelength + ",remoteAddress=" + getRemoteAddress() + "}";
+                + ",remoteAddress=" + getRemoteAddress() + "}";
     }
 
     @Override
     protected void recycle() {
         this.seqid = 0;
-        this.framelength = 0;
-        this.serviceid = 0;
+        this.serviceid = null;
+        this.nameid = null;
         this.actionid = null;
         this.bodylength = 0;
         this.bodyoffset = 0;
@@ -130,11 +126,11 @@ public final class SncpRequest extends Request {
         return seqid;
     }
 
-    public long getServiceid() {
+    public DLong getServiceid() {
         return serviceid;
     }
 
-    public long getNameid() {
+    public DLong getNameid() {
         return nameid;
     }
 

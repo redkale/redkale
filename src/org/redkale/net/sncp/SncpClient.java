@@ -109,17 +109,16 @@ public final class SncpClient {
 
     private final int addrPort;
 
-    protected final long nameid;
+    protected final DLong serviceid;
 
-    protected final long serviceid;
+    protected final DLong nameid;
 
     protected final SncpAction[] actions;
 
     protected final Consumer<Runnable> executor;
 
-    public SncpClient(final String serviceName, final Consumer<Runnable> executor, final long serviceid, boolean remote, final Class serviceClass,
-            boolean onlySncpDyn, final InetSocketAddress clientAddress, final HashSet<String> groups) { // 以下划线_开头的serviceName只能是被系统分配, 且长度可以超过11位
-        if (serviceName.length() > 10 && serviceName.charAt(0) != '_') throw new RuntimeException(serviceClass + " @Resource name(" + serviceName + ") too long , must less 11");
+    public SncpClient(final String serviceName, final Consumer<Runnable> executor, final DLong serviceid, boolean remote, final Class serviceClass,
+            boolean onlySncpDyn, final InetSocketAddress clientAddress, final HashSet<String> groups) {
         this.remote = remote;
         this.executor = executor;
         this.serviceClass = serviceClass;
@@ -140,11 +139,11 @@ public final class SncpClient {
         this.addrPort = clientAddress == null ? 0 : clientAddress.getPort();
     }
 
-    public long getNameid() {
+    public DLong getNameid() {
         return nameid;
     }
 
-    public long getServiceid() {
+    public DLong getServiceid() {
         return serviceid;
     }
 
@@ -259,7 +258,7 @@ public final class SncpClient {
             throw new RuntimeException("sncp " + (conn == null ? addr : conn.getRemoteAddress()) + " cannot connect");
         }
         final ByteBuffer[] sendBuffers = writer.toBuffers();
-        fillHeader(sendBuffers[0], seqid, actionid, reqBodyLength, 0, reqBodyLength);
+        fillHeader(sendBuffers[0], seqid, actionid, reqBodyLength);
 
         final ByteBuffer buffer = transport.pollBuffer();
         final SncpFuture<byte[]> future = new SncpFuture();
@@ -321,8 +320,6 @@ public final class SncpClient {
                         checkResult(seqid, action, buffer);
 
                         final int respBodyLength = buffer.getInt();
-                        buffer.getInt();  // bodyOffset
-                        buffer.getInt();  // frameLength
                         final int retcode = buffer.getInt();
                         if (retcode != 0) {
                             logger.log(Level.SEVERE, action.method + " sncp (params: " + jsonConvert.convertTo(params) + ") deal error (retcode=" + retcode + ", retinfo=" + SncpResponse.getRetCodeInfo(retcode) + ")");
@@ -372,34 +369,28 @@ public final class SncpClient {
         long rseqid = buffer.getLong();
         if (rseqid != seqid) throw new RuntimeException("sncp(" + action.method + ") response.seqid = " + seqid + ", but request.seqid =" + rseqid);
         if (buffer.getChar() != HEADER_SIZE) throw new RuntimeException("sncp(" + action.method + ") buffer receive header.length not " + HEADER_SIZE);
-        long rserviceid = buffer.getLong();
-        if (rserviceid != serviceid) throw new RuntimeException("sncp(" + action.method + ") response.serviceid = " + serviceid + ", but request.serviceid =" + rserviceid);
-        long rnameid = buffer.getLong();
-        if (rnameid != nameid) throw new RuntimeException("sncp(" + action.method + ") response.nameid = " + nameid + ", but receive nameid =" + rnameid);
-        byte[] bs = new byte[16];
-        buffer.get(bs);
-        if (!action.actionid.equals(bs)) throw new RuntimeException("sncp(" + action.method + ") response.actionid = " + action.actionid + ", but request.actionid =(" + Utility.binToHexString(bs) + ")");
+        DLong rserviceid = DLong.read(buffer);
+        if (!rserviceid.equals(serviceid)) throw new RuntimeException("sncp(" + action.method + ") response.serviceid = " + serviceid + ", but request.serviceid =" + rserviceid);
+        DLong rnameid = DLong.read(buffer);
+        if (!rnameid.equals(nameid)) throw new RuntimeException("sncp(" + action.method + ") response.nameid = " + nameid + ", but receive nameid =" + rnameid);
+        DLong raction = DLong.read(buffer);
+        if (!action.actionid.equals(raction)) throw new RuntimeException("sncp(" + action.method + ") response.actionid = " + action.actionid + ", but request.actionid =(" + raction + ")");
         buffer.getInt();  //地址
         buffer.getChar(); //端口
     }
 
-    private void fillHeader(ByteBuffer buffer, long seqid, DLong actionid, int bodyLength, int bodyOffset, int frameLength) {
+    private void fillHeader(ByteBuffer buffer, long seqid, DLong actionid, int bodyLength) {
         //---------------------head----------------------------------
         final int currentpos = buffer.position();
         buffer.position(0);
         buffer.putLong(seqid); //序列号
         buffer.putChar((char) HEADER_SIZE); //header长度
-        buffer.putLong(this.serviceid);
-        buffer.putLong(this.nameid);
-        actionid.putTo(buffer);
-        buffer.put(addrBytes[0]);
-        buffer.put(addrBytes[1]);
-        buffer.put(addrBytes[2]);
-        buffer.put(addrBytes[3]);
+        DLong.write(buffer, this.serviceid);
+        DLong.write(buffer, this.nameid);
+        DLong.write(buffer, actionid);
+        buffer.put(addrBytes);
         buffer.putChar((char) this.addrPort);
         buffer.putInt(bodyLength); //body长度        
-        buffer.putInt(bodyOffset);
-        buffer.putInt(frameLength); //一帧数据的长度
         buffer.putInt(0); //结果码， 请求方固定传0
         buffer.position(currentpos);
     }

@@ -36,9 +36,9 @@ public final class SncpDynServlet extends SncpServlet {
 
     private final String serviceName;
 
-    private final long nameid;
+    private final DLong serviceid;
 
-    private final long serviceid;
+    private final DLong nameid;
 
     private final HashMap<DLong, SncpServletAction> actions = new HashMap<>();
 
@@ -76,12 +76,12 @@ public final class SncpDynServlet extends SncpServlet {
     }
 
     @Override
-    public long getNameid() {
+    public DLong getNameid() {
         return nameid;
     }
 
     @Override
-    public long getServiceid() {
+    public DLong getServiceid() {
         return serviceid;
     }
 

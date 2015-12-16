@@ -52,31 +52,28 @@ public final class SncpResponse extends Response<SncpRequest> {
     public void finish(final int retcode, final BsonWriter out) {
         if (out == null) {
             final ByteBuffer buffer = context.pollBuffer();
-            fillHeader(buffer, 0, 0, 0, retcode);
+            fillHeader(buffer, 0, retcode);
             finish(buffer);
             return;
         }
         final int respBodyLength = out.count(); //body总长度
         final ByteBuffer[] buffers = out.toBuffers();
-        fillHeader(buffers[0], respBodyLength - HEADER_SIZE, 0, respBodyLength - HEADER_SIZE, retcode);
+        fillHeader(buffers[0], respBodyLength - HEADER_SIZE, retcode);
         finish(buffers);
     }
 
-    private void fillHeader(ByteBuffer buffer, int bodyLength, int bodyOffset, int framelength, int retcode) {
+    private void fillHeader(ByteBuffer buffer, int bodyLength, int retcode) {
         //---------------------head----------------------------------
         final int currentpos = buffer.position();
         buffer.position(0);
         buffer.putLong(request.getSeqid());
         buffer.putChar((char) SncpRequest.HEADER_SIZE);
-        buffer.putLong(request.getServiceid());
-        buffer.putLong(request.getNameid());
-        DLong actionid = request.getActionid();
-        actionid.putTo(buffer);
+        DLong.write(buffer, request.getServiceid());
+        DLong.write(buffer, request.getNameid());
+        DLong.write(buffer, request.getActionid());
         buffer.put(addrBytes);
         buffer.putChar((char) this.addrPort);
         buffer.putInt(bodyLength);
-        buffer.putInt(bodyOffset);
-        buffer.putInt(framelength);
         buffer.putInt(retcode);
         buffer.position(currentpos);
     }

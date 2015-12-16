@@ -9,6 +9,7 @@ import org.redkale.net.sncp.SncpClient.SncpAction;
 import java.lang.annotation.*;
 import java.lang.reflect.*;
 import java.net.*;
+import java.security.*;
 import java.util.*;
 import java.util.function.*;
 import javax.annotation.*;
@@ -46,22 +47,16 @@ public abstract class Sncp {
 
     static final String REMOTEPREFIX = "_DynRemote";
 
-    private static final byte[] hashes = new byte[255];
+    private static final MessageDigest md5;
 
     static {  //64进制
-        //0-9:48-57  A-Z:65-90 a-z:97-122  $:36  _:95
-        byte index = 0;
-        hashes['_'] = index++;
-        hashes['$'] = index++;
-        for (int i = '0'; i <= '9'; i++) {
-            hashes[i] = index++;
+        MessageDigest d = null;
+        try {
+            d = MessageDigest.getInstance("MD5");
+        } catch (NoSuchAlgorithmException ex) {
+            ex.printStackTrace();
         }
-        for (int i = 'A'; i <= 'Z'; i++) {
-            hashes[i] = index++;
-        }
-        for (int i = 'a'; i <= 'z'; i++) {
-            hashes[i] = index++;
-        }
+        md5 = d;
     }
 
     private Sncp() {
@@ -72,37 +67,19 @@ public abstract class Sncp {
         return ((0L + ip.getPort()) << 32) | ((0xffffffff & bytes[0]) << 24) | ((0xffffff & bytes[1]) << 16) | ((0xffff & bytes[2]) << 8) | (0xff & bytes[3]);
     }
 
-    public static long hash(final Class clazz) {
-        if (clazz == null) return Long.MIN_VALUE;
-        long rs = hash(clazz.getSimpleName());
-        return (rs < Integer.MAX_VALUE) ? rs | 0xF00000000L : rs;
+    public static DLong hash(final Class clazz) {
+        if (clazz == null) return DLong.ZERO;
+        return hash(clazz.getName());
     }
 
-    public static long hashClass(final String clazzName) {
-        if (clazzName == null || clazzName.isEmpty()) return Long.MIN_VALUE;
-        long rs = hash(clazzName.substring(clazzName.lastIndexOf('.') + 1));
-        return (rs < Integer.MAX_VALUE) ? rs | 0xF00000000L : rs;
+    public static DLong hashClass(final String clazzName) {
+        if (clazzName == null || clazzName.isEmpty()) return DLong.ZERO;
+        return hash(clazzName);
     }
 
     public static DLong hash(final java.lang.reflect.Method method) {
-        if (method == null) return new DLong(-1, -1);
-        long rs1 = hash(method.getName());
-        rs1 = (rs1 < Integer.MAX_VALUE) ? rs1 | 0xF00000000L : rs1;
-
-        final Class[] params = method.getParameterTypes();
-        final StringBuilder sb = new StringBuilder();
-        if (params.length < 1) {
-            sb.append("00");
-        } else {
-            sb.append(params.length);
-            for (Class clzz : params) {
-                String s = clzz.getSimpleName();
-                sb.append(s.substring(0, s.length() > 1 ? 2 : 1)).append(s.substring(s.length() - 1));
-            }
-        }
-        long rs2 = hash(sb.toString());
-        rs2 = (rs2 < Integer.MAX_VALUE) ? rs2 | 0xF00000000L : rs2;
-        return new DLong(rs1, rs2);
+        if (method == null) return DLong.ZERO;
+        return hash(method.toString());
     }
 
     /**
@@ -111,25 +88,13 @@ public abstract class Sncp {
      * @param name
      * @return
      */
-    public static long hash(final String name) {
-        if (name == null) return Long.MIN_VALUE;
-        if (name.isEmpty()) return 0;
-        final char[] chars = Utility.charArray(name);
-        if (chars.length <= 11) {
-            long rs = 0;
-            for (int i = 0; i < chars.length; i++) {
-                rs = (rs << 6) | hashes[0xff & chars[i]];
-            }
-            return rs;
+    public static DLong hash(final String name) {
+        if (name == null || name.isEmpty()) return DLong.ZERO;
+        byte[] bytes = name.trim().getBytes();
+        synchronized (md5) {
+            bytes = md5.digest(bytes);
         }
-        String len = Integer.toString(chars.length, 36);
-        long rs = len.length() > 1 ? hashes[0xff & len.charAt(0)] : hashes[0xff & '0'];
-        rs = (rs << 6) | hashes[0xff & len.charAt(len.length() - 1)];  //前2位用于存放长度
-        final int step = (chars.length - 1) / 9 + 1;
-        for (int i = 0; i < chars.length; i += step) {
-            rs = (rs << 6) | hashes[0xff & chars[i]];
-        }
-        return rs;
+        return new DLong(bytes);
     }
 
     public static boolean isRemote(Service service) {
@@ -748,7 +713,7 @@ public abstract class Sncp {
             }
             {
                 StringBuilder sb = new StringBuilder();
-                sb.append(newClazz.getName()).append("{name = ").append(name);
+                sb.append(newClazz.getName()).append("{name = '").append(name).append("'"); 
                 if (client != null) {
                     sb.append(", nameid = ").append(client.getNameid()).append(", serviceid = ").append(client.getServiceid());
                     sb.append(", action.size = ").append(client.getActionCount());

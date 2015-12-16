@@ -9,10 +9,8 @@ import org.redkale.util.*;
 
 /**
  * 所有Service的实现类不得声明为final， 允许远程模式的public方法和public String name()方法都不能声明为final。
- * 注意: 
- * 1、"$"是一个很特殊的Service.name值 。 被标记为@Resource(name = "$") 的Service的资源名与所属父Service的资源名一致。
- * 2、以下划线_开头的Service.name只能是被系统分配, 且长度可以超过11位。使用者定义name不得以_开头。
- * 
+ * 注意: "$"是一个很特殊的Service.name值 。 被标记为@Resource(name = "$") 的Service的资源名与所属父Service的资源名一致。
+ *
  * <p>
  * @Resource(name = ".*")
  * private HashMap<String, XXXService> nodemap;
