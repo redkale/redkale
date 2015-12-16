@@ -26,7 +26,7 @@ public class RetResult<T> {
         }
 
         @Override
-        public void setRetinfo(CharSequence retinfo) {
+        public void setRetinfo(String retinfo) {
         }
 
         @Override
@@ -38,7 +38,7 @@ public class RetResult<T> {
 
     protected int retcode;
 
-    protected CharSequence retinfo;
+    protected String retinfo;
 
     private T result;
 
@@ -53,12 +53,12 @@ public class RetResult<T> {
         this.retcode = retcode;
     }
 
-    public RetResult(int retcode, CharSequence retinfo) {
+    public RetResult(int retcode, String retinfo) {
         this.retcode = retcode;
         this.retinfo = retinfo;
     }
 
-    public RetResult(int retcode, CharSequence retinfo, T result) {
+    public RetResult(int retcode, String retinfo, T result) {
         this.retcode = retcode;
         this.retinfo = retinfo;
         this.result = result;
@@ -86,11 +86,11 @@ public class RetResult<T> {
         this.retcode = retcode;
     }
 
-    public CharSequence getRetinfo() {
+    public String getRetinfo() {
         return retinfo;
     }
 
-    public void setRetinfo(CharSequence retinfo) {
+    public void setRetinfo(String retinfo) {
         this.retinfo = retinfo;
     }
 
