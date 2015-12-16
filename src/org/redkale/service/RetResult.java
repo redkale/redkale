@@ -53,12 +53,12 @@ public class RetResult<T> {
         this.retcode = retcode;
     }
 
-    public RetResult(int retcode, String retinfo) {
+    public RetResult(int retcode, CharSequence retinfo) {
         this.retcode = retcode;
         this.retinfo = retinfo;
     }
 
-    public RetResult(int retcode, String retinfo, T result) {
+    public RetResult(int retcode, CharSequence retinfo, T result) {
         this.retcode = retcode;
         this.retinfo = retinfo;
         this.result = result;
