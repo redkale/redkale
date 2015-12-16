@@ -132,7 +132,6 @@ public abstract class Sncp {
         return rs;
     }
 
-
     public static boolean isRemote(Service service) {
         return service.getClass().getName().startsWith(REMOTEPREFIX);
     }
@@ -687,12 +686,8 @@ public abstract class Sncp {
      * @return
      */
     @SuppressWarnings("unchecked")
-    public static <T extends Service> T createLocalService(
-            final String name,
-            final Consumer<Runnable> executor,
-            final Class<T> serviceClass,
-            final InetSocketAddress clientAddress, HashSet<String> groups, Collection<Transport> sameGroupTransports, Collection<Transport> diffGroupTransports
-    ) {
+    public static <T extends Service> T createLocalService(final String name, final Consumer<Runnable> executor, final Class<T> serviceClass,
+            final InetSocketAddress clientAddress, HashSet<String> groups, Collection<Transport> sameGroupTransports, Collection<Transport> diffGroupTransports) {
         try {
             final Class newClazz = createLocalServiceClass(name, serviceClass);
             T rs = (T) newClazz.newInstance();
@@ -848,12 +843,8 @@ public abstract class Sncp {
      * @return
      */
     @SuppressWarnings("unchecked")
-    public static <T extends Service> T createRemoteService(
-            final String name,
-            final Consumer<Runnable> executor,
-            final Class<T> serviceClass,
-            final InetSocketAddress clientAddress, HashSet<String> groups, final Transport transport
-    ) {
+    public static <T extends Service> T createRemoteService(final String name, final Consumer<Runnable> executor, final Class<T> serviceClass,
+            final InetSocketAddress clientAddress, HashSet<String> groups, final Transport transport) {
         if (serviceClass == null) return null;
         if (!Service.class.isAssignableFrom(serviceClass)) return null;
         int mod = serviceClass.getModifiers();
