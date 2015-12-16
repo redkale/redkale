@@ -41,11 +41,11 @@ public class WebSocketNodeService extends WebSocketNode implements Service {
             if (engine != null) { //在本地
                 final WebSocketGroup group = engine.getWebSocketGroup(groupid);
                 if (group == null || group.isEmpty()) {
-                    if (finest) logger.finest("receive websocket message {engineid:'" + engineid + "', groupid:" + groupid + ", content:'" + message + "'} but result is " + RETCODE_GROUP_EMPTY);
+                    if (finest) logger.finest("receive websocket message {engineid:'" + engineid + "', groupid:" + groupid + ", content:'" + message + "'} from " + addr + " but send result is " + RETCODE_GROUP_EMPTY);
                     return RETCODE_GROUP_EMPTY;
                 }
                 code = group.send(recent, message, last);
-                if (finest) logger.finest("websocket node send message (" + message + ") result is " + code);
+                if (finest) logger.finest("websocket node send message (" + message + ") from " + addr + " result is " + code);
             }
         }
         return code;
