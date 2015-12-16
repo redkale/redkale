@@ -71,6 +71,7 @@ public final class DLong extends Number implements Comparable<DLong> {
 
     @Override
     public String toString() {
+        if(this == ZERO) return "0";
         return new String(Utility.binToHex(bytes));
     }
 
