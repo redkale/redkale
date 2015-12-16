@@ -35,7 +35,7 @@ public abstract class WebSocketNode {
     //存放所有用户分布在节点上的队列信息,Set<InetSocketAddress> 为 sncpnode 的集合
     protected final ConcurrentHashMap<Serializable, LinkedHashSet<InetSocketAddress>> dataNodes = new ConcurrentHashMap();
 
-    //存放所有用户分布在节点上的队列信息,Set<String> 为 engineid 的集合
+    //存放本地节点上所有在线用户的队列信息,Set<String> 为 engineid 的集合
     protected final ConcurrentHashMap<Serializable, Set<String>> localNodes = new ConcurrentHashMap();
 
     protected final ConcurrentHashMap<String, WebSocketEngine> engines = new ConcurrentHashMap();
@@ -73,7 +73,7 @@ public abstract class WebSocketNode {
         return dataNodes;
     }
 
-    protected abstract int sendMessage(@SncpTargetAddress InetSocketAddress addr, Serializable groupid, boolean recent, Serializable message, boolean last);
+    protected abstract int sendMessage(@SncpParam(SncpParamType.TargetAddress) InetSocketAddress targetAddress, Serializable groupid, boolean recent, Serializable message, boolean last);
 
     protected abstract void connect(Serializable groupid, InetSocketAddress addr);
 
