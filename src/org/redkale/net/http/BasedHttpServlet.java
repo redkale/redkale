@@ -154,7 +154,7 @@ public abstract class BasedHttpServlet extends HttpServlet {
             if (nameset.contains(name)) throw new RuntimeException(this.getClass().getSimpleName() + " has two same " + WebAction.class.getSimpleName() + "(" + name + ")");
             for (String n : nameset) {
                 if (n.contains(name) || name.contains(n)) {
-                    throw new RuntimeException(this.getClass().getSimpleName() + " has two overlap " + WebAction.class.getSimpleName() + "(" + name + ", " + n + ")");
+                    throw new RuntimeException(this.getClass().getSimpleName() + " has two sub-contains " + WebAction.class.getSimpleName() + "(" + name + ", " + n + ")");
                 }
             }
             nameset.add(name);
