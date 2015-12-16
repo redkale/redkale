@@ -19,7 +19,7 @@ import org.redkale.convert.ext.*;
 import org.redkale.util.*;
 
 /**
- * 
+ *
  * @see http://www.redkale.org
  * @author zhangjx
  * @param <R>
@@ -82,6 +82,7 @@ public abstract class Factory<R extends Reader, W extends Writer> {
 
             this.register(Number.class, NumberSimpledCoder.instance);
             this.register(String.class, StringSimpledCoder.instance);
+            this.register(CharSequence.class, CharSequenceSimpledCoder.instance);
             this.register(java.util.Date.class, DateSimpledCoder.instance);
             this.register(BigInteger.class, BigIntegerSimpledCoder.instance);
             this.register(InetAddress.class, InetAddressSimpledCoder.instance);
