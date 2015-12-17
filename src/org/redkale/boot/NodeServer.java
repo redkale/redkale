@@ -193,7 +193,7 @@ public abstract class NodeServer {
                 List<Transport> sameGroupTransports = sncpSameGroupTransports;
                 List<Transport> diffGroupTransports = sncpDiffGroupTransports;
                 try {
-                    Field ts = src.getClass().getDeclaredField("_sameGroupTransports"); 
+                    Field ts = src.getClass().getDeclaredField("_sameGroupTransports");
                     ts.setAccessible(true);
                     Transport[] lts = (Transport[]) ts.get(src);
                     sameGroupTransports = Arrays.asList(lts);
@@ -211,6 +211,16 @@ public abstract class NodeServer {
                 field.set(src, source);
                 rf.inject(source, self); //
                 ((Service) source).init(null);
+                if (getSncpAddress() != null) {
+                    NodeSncpServer sncpServer = null;
+                    for (NodeServer node : application.servers) {
+                        if (node.isSNCP() && getSncpAddress().equals(node.getSncpAddress())) {
+                            sncpServer = (NodeSncpServer) node;
+                        }
+                    }
+                    ServiceWrapper wrapper = new ServiceWrapper(CacheSourceService.class, (Service) source, resourceName, getSncpGroup(), sncpDefaultGroups, null);
+                    sncpServer.getSncpServer().addService(wrapper);
+                }
             } catch (Exception e) {
                 logger.log(Level.SEVERE, "DataSource inject error", e);
             }
