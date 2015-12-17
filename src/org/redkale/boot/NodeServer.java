@@ -205,7 +205,8 @@ public abstract class NodeServer {
                 } catch (Exception e) {
                     //src 不含 MultiRun 方法
                 }
-                CacheSource source = Sncp.createLocalService(resourceName, getExecutor(), CacheSourceService.class, this.sncpAddress, sncpDefaultGroups, sameGroupTransports, diffGroupTransports);
+                CacheSourceService source = Sncp.createLocalService(resourceName, getExecutor(), CacheSourceService.class, this.sncpAddress, sncpDefaultGroups, sameGroupTransports, diffGroupTransports);
+                source.setNeedStore(field.getAnnotation(CacheStore.class) != null);
                 application.cacheSources.add(source);
                 regFactory.register(resourceName, CacheSource.class, source);
                 field.set(src, source);

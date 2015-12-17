@@ -10,16 +10,27 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.*;
 import java.util.logging.*;
+import javax.annotation.*;
 import org.redkale.convert.json.*;
+import org.redkale.net.sncp.*;
 import org.redkale.source.*;
 import org.redkale.util.*;
 
 /**
  *
+ * @see http://www.redkale.org
  * @author zhangjx
  */
 @AutoLoad(false)
 public class CacheSourceService implements CacheSource, Service {
+
+    @Resource(name = "APP_HOME")
+    private File home;
+
+    @Resource
+    private JsonConvert convert;
+
+    private boolean needStore;
 
     private ScheduledThreadPoolExecutor scheduler;
 
@@ -29,10 +40,19 @@ public class CacheSourceService implements CacheSource, Service {
 
     protected final ConcurrentHashMap<Serializable, CacheEntry> container = new ConcurrentHashMap<>();
 
+    public CacheSourceService() {
+    }
+
+    public CacheSourceService setNeedStore(boolean needstore) {
+        this.needStore = needstore;
+        return this;
+    }
+
     @Override
     public void init(AnyValue conf) {
         final CacheSourceService self = this;
         AnyValue prop = conf == null ? null : conf.getAnyValue("property");
+        if (!needStore && prop != null) this.needStore = prop.getBoolValue("cachestore", false);
         String expireHandlerClass = prop == null ? null : prop.getValue("expirehandler");
         if (expireHandlerClass != null) {
             try {
@@ -63,21 +83,55 @@ public class CacheSourceService implements CacheSource, Service {
             }, 10, 10, TimeUnit.SECONDS);
             logger.finest(self.getClass().getSimpleName() + ":" + self.name() + " start schedule expire executor");
         }
+        if (!needStore || Sncp.isRemote(self)) return;
+        try {
+            CacheEntry.initCreator();
+            File store = new File(home, "cache/" + name());
+            if (!store.isFile() || !store.canRead()) return;
+            LineNumberReader reader = new LineNumberReader(new FileReader(store));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                if (line.isEmpty()) continue;
+                CacheEntry entry = convert.convertFrom(CacheEntry.class, line);
+                container.put(entry.key, entry);
+            }
+            reader.close();
+            store.delete();
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, CacheSource.class.getSimpleName() + "(" + name() + ") load store file error ", e);
+        }
     }
 
     public void close() {  //给Application 关闭时调用
-        if (scheduler != null) scheduler.shutdownNow();
+        destroy(null);
     }
 
     @Override
     public void destroy(AnyValue conf) {
         if (scheduler != null) scheduler.shutdownNow();
+        if (!needStore || Sncp.isRemote(this) || container.isEmpty()) return;
+        try {
+            CacheEntry.initCreator();
+            File store = new File(home, "cache/" + name());
+            store.getParentFile().mkdirs();
+            PrintStream stream = new PrintStream(store, "UTF-8");
+            Collection<CacheEntry> values = container.values();
+            for (CacheEntry entry : values) {
+                stream.println(convert.convertTo(entry));
+            }
+            container.clear();
+            stream.close();
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, CacheSource.class.getSimpleName() + "(" + name() + ") store to file error ", e);
+        }
     }
 
     @Override
     public boolean exists(Serializable key) {
         if (key == null) return false;
-        return container.containsKey(key);
+        CacheEntry entry = container.get(key);
+        if (entry == null) return false;
+        return !(entry.expireSeconds > 0 && entry.lastAccessed + entry.expireSeconds < (System.currentTimeMillis() / 1000));
     }
 
     @Override
@@ -85,12 +139,13 @@ public class CacheSourceService implements CacheSource, Service {
         if (key == null) return null;
         CacheEntry entry = container.get(key);
         if (entry == null) return null;
+        if (entry.expireSeconds > 0 && entry.lastAccessed + entry.expireSeconds < (System.currentTimeMillis() / 1000)) return null;
         return (T) entry.getValue();
     }
 
     @Override
     @MultiRun
-    public <T> T refreshAndGet(Serializable key) {
+    public <T> T getAndRefresh(Serializable key) {
         if (key == null) return null;
         CacheEntry entry = container.get(key);
         if (entry == null) return null;
@@ -116,7 +171,9 @@ public class CacheSourceService implements CacheSource, Service {
             entry = new CacheEntry(key, value);
             container.putIfAbsent(key, entry);
         } else {
+            entry.expireSeconds = 0;
             entry.value = value;
+            entry.lastAccessed = (int) (System.currentTimeMillis() / 1000);
         }
     }
 
@@ -139,6 +196,7 @@ public class CacheSourceService implements CacheSource, Service {
             container.putIfAbsent(key, entry);
         } else {
             if (expireSeconds > 0) entry.expireSeconds = expireSeconds;
+            entry.lastAccessed = (int) (System.currentTimeMillis() / 1000);
             entry.value = value;
         }
     }
@@ -202,25 +260,48 @@ public class CacheSourceService implements CacheSource, Service {
 
     public static final class CacheEntry<T> {
 
-        private final int createTime; //创建时间
+        public static class CacheEntryCreator implements Creator<CacheEntry> {
 
-        private volatile int lastAccessed; //最后刷新时间
+            public static final CacheEntryCreator CREATOR = new CacheEntryCreator();
+
+            @java.beans.ConstructorProperties({"expireSeconds", "lastAccessed", "key", "value"})
+            public CacheEntryCreator() {
+            }
+
+            @Override
+            public CacheEntry create(Object... params) {
+                return new CacheEntry((Integer) params[0], (Integer) params[1], (Serializable) params[2], params[3]);
+            }
+
+        }
+
+        static void initCreator() {
+            if (JsonFactory.root().findCreator(CacheEntry.class) == null) {
+                JsonFactory.root().register(CacheEntry.class, CacheEntryCreator.CREATOR);
+            }
+        }
+
+        private final Serializable key;
 
         //<=0表示永久保存
         private int expireSeconds;
 
-        private T value;
+        private volatile int lastAccessed; //最后刷新时间
 
-        private final Serializable key;
+        private T value;
 
         public CacheEntry(Serializable key, T value) {
             this(0, key, value);
         }
 
-        public CacheEntry(int expireSecond, Serializable key, T value) {
-            this.expireSeconds = expireSecond;
-            this.createTime = (int) (System.currentTimeMillis() / 1000);
-            this.lastAccessed = this.createTime;
+        public CacheEntry(int expireSeconds, Serializable key, T value) {
+            this(expireSeconds, (int) (System.currentTimeMillis() / 1000), key, value);
+        }
+
+        @java.beans.ConstructorProperties({"expireSeconds", "lastAccessed", "key", "value"})
+        private CacheEntry(int expireSeconds, int lastAccessed, Serializable key, T value) {
+            this.expireSeconds = expireSeconds;
+            this.lastAccessed = lastAccessed;
             this.key = key;
             this.value = value;
         }
@@ -230,11 +311,11 @@ public class CacheSourceService implements CacheSource, Service {
             return JsonFactory.root().getConvert().convertTo(this);
         }
 
-        public long getCreateTime() {
-            return createTime;
+        public int getExpireSeconds() {
+            return expireSeconds;
         }
 
-        public long getLastAccessed() {
+        public int getLastAccessed() {
             return lastAccessed;
         }
 

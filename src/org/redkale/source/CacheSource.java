@@ -22,7 +22,7 @@ public interface CacheSource {
 
     public <T> T get(final Serializable key);
 
-    public <T> T refreshAndGet(final Serializable key);
+    public <T> T getAndRefresh(final Serializable key);
 
     public void refresh(final Serializable key);
 
