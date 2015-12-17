@@ -6,6 +6,7 @@
 package org.redkale.service;
 
 import java.io.*;
+import java.lang.reflect.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.*;
@@ -30,7 +31,9 @@ public class CacheSourceService implements CacheSource, Service {
     @Resource
     private JsonConvert convert;
 
-    private boolean needStore;
+    private Class storeKeyType;
+
+    private Class storeValueType;
 
     private ScheduledThreadPoolExecutor scheduler;
 
@@ -43,8 +46,9 @@ public class CacheSourceService implements CacheSource, Service {
     public CacheSourceService() {
     }
 
-    public CacheSourceService setNeedStore(boolean needstore) {
-        this.needStore = needstore;
+    public CacheSourceService setStoreType(Class storeKeyType, Class storeValueType) {
+        this.storeKeyType = storeKeyType;
+        this.storeValueType = storeValueType;
         return this;
     }
 
@@ -52,7 +56,18 @@ public class CacheSourceService implements CacheSource, Service {
     public void init(AnyValue conf) {
         final CacheSourceService self = this;
         AnyValue prop = conf == null ? null : conf.getAnyValue("property");
-        if (!needStore && prop != null) this.needStore = prop.getBoolValue("cachestore", false);
+        if (storeKeyType == null && prop != null) {
+            String storeKeyStr = prop.getValue("store-key-type");
+            String storeValueStr = prop.getValue("store-value-type");
+            if (storeKeyStr != null && storeValueStr != null) {
+                try {
+                    this.storeKeyType = Class.forName(storeKeyStr);
+                    this.storeValueType = Class.forName(storeValueStr);
+                } catch (Exception e) {
+                    logger.log(Level.SEVERE, self.getClass().getSimpleName() + " load key & value store class (" + storeKeyStr + ", " + storeValueStr + ") error", e);
+                }
+            }
+        }
         String expireHandlerClass = prop == null ? null : prop.getValue("expirehandler");
         if (expireHandlerClass != null) {
             try {
@@ -83,16 +98,33 @@ public class CacheSourceService implements CacheSource, Service {
             }, 10, 10, TimeUnit.SECONDS);
             logger.finest(self.getClass().getSimpleName() + ":" + self.name() + " start schedule expire executor");
         }
-        if (!needStore || Sncp.isRemote(self)) return;
+        if (this.storeKeyType == null || Sncp.isRemote(self)) return;
         try {
             CacheEntry.initCreator();
             File store = new File(home, "cache/" + name());
             if (!store.isFile() || !store.canRead()) return;
             LineNumberReader reader = new LineNumberReader(new FileReader(store));
+            final ParameterizedType storeType = new ParameterizedType() {
+                @Override
+                public Type[] getActualTypeArguments() {
+                    return new Type[]{storeKeyType, storeValueType};
+                }
+
+                @Override
+                public Type getRawType() {
+                    return CacheEntry.class;
+                }
+
+                @Override
+                public Type getOwnerType() {
+                    return null;
+                }
+
+            };
             String line;
             while ((line = reader.readLine()) != null) {
                 if (line.isEmpty()) continue;
-                CacheEntry entry = convert.convertFrom(CacheEntry.class, line);
+                CacheEntry entry = convert.convertFrom(storeType, line);
                 container.put(entry.key, entry);
             }
             reader.close();
@@ -109,15 +141,32 @@ public class CacheSourceService implements CacheSource, Service {
     @Override
     public void destroy(AnyValue conf) {
         if (scheduler != null) scheduler.shutdownNow();
-        if (!needStore || Sncp.isRemote(this) || container.isEmpty()) return;
+        if (this.storeKeyType == null || Sncp.isRemote(this) || container.isEmpty()) return;
         try {
             CacheEntry.initCreator();
             File store = new File(home, "cache/" + name());
             store.getParentFile().mkdirs();
             PrintStream stream = new PrintStream(store, "UTF-8");
             Collection<CacheEntry> values = container.values();
+            final ParameterizedType storeType = new ParameterizedType() {
+                @Override
+                public Type[] getActualTypeArguments() {
+                    return new Type[]{storeKeyType, storeValueType};
+                }
+
+                @Override
+                public Type getRawType() {
+                    return CacheEntry.class;
+                }
+
+                @Override
+                public Type getOwnerType() {
+                    return null;
+                }
+
+            };
             for (CacheEntry entry : values) {
-                stream.println(convert.convertTo(entry));
+                stream.println(convert.convertTo(storeType, entry));
             }
             container.clear();
             stream.close();
@@ -258,7 +307,7 @@ public class CacheSourceService implements CacheSource, Service {
         ((Set) entry.getValue()).remove(value);
     }
 
-    public static final class CacheEntry<T> {
+    public static final class CacheEntry<K extends Serializable, T> {
 
         public static class CacheEntryCreator implements Creator<CacheEntry> {
 
@@ -281,7 +330,7 @@ public class CacheSourceService implements CacheSource, Service {
             }
         }
 
-        private final Serializable key;
+        private final K key;
 
         //<=0表示永久保存
         private int expireSeconds;
@@ -290,16 +339,16 @@ public class CacheSourceService implements CacheSource, Service {
 
         private T value;
 
-        public CacheEntry(Serializable key, T value) {
+        public CacheEntry(K key, T value) {
             this(0, key, value);
         }
 
-        public CacheEntry(int expireSeconds, Serializable key, T value) {
+        public CacheEntry(int expireSeconds, K key, T value) {
             this(expireSeconds, (int) (System.currentTimeMillis() / 1000), key, value);
         }
 
         @java.beans.ConstructorProperties({"expireSeconds", "lastAccessed", "key", "value"})
-        private CacheEntry(int expireSeconds, int lastAccessed, Serializable key, T value) {
+        private CacheEntry(int expireSeconds, int lastAccessed, K key, T value) {
             this.expireSeconds = expireSeconds;
             this.lastAccessed = lastAccessed;
             this.key = key;
@@ -323,7 +372,7 @@ public class CacheSourceService implements CacheSource, Service {
             return value;
         }
 
-        public Serializable getKey() {
+        public K getKey() {
             return key;
         }
 

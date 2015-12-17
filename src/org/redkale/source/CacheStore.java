@@ -20,4 +20,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface CacheStore {
 
+    Class keyType(); //key对应的class
+
+    Class valueType();  //value 对应的class
 }
