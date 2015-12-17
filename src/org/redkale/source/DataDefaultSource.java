@@ -25,7 +25,7 @@ import org.redkale.util.*;
  * @author zhangjx
  */
 @SuppressWarnings("unchecked")
-public final class DataDefaultSource implements DataSource, Nameable, Function<Class, EntityInfo> {
+public final class DataDefaultSource implements DataSource, Function<Class, EntityInfo> {
 
     public static final String DATASOURCE_CONFPATH = "DATASOURCE_CONFPATH";
 
@@ -264,7 +264,6 @@ public final class DataDefaultSource implements DataSource, Nameable, Function<C
         return (ConnectionPoolDataSource) pdsource;
     }
 
-    @Override
     public final String name() {
         return name;
     }

@@ -13,6 +13,7 @@ import java.util.concurrent.*;
 import java.util.logging.*;
 import javax.annotation.*;
 import org.redkale.net.sncp.*;
+import org.redkale.source.*;
 import org.redkale.util.*;
 
 /**
@@ -33,7 +34,8 @@ public abstract class WebSocketNode {
     protected WebSocketNode remoteNode;
 
     //存放所有用户分布在节点上的队列信息,Set<InetSocketAddress> 为 sncpnode 的集合
-    protected final ConcurrentHashMap<Serializable, LinkedHashSet<InetSocketAddress>> dataNodes = new ConcurrentHashMap();
+    @Resource(name = "$_nodeaddress_source")
+    protected CacheSource source;
 
     //存放本地节点上所有在线用户的队列信息,Set<String> 为 engineid 的集合
     protected final ConcurrentHashMap<Serializable, Set<String>> localNodes = new ConcurrentHashMap();
@@ -41,23 +43,7 @@ public abstract class WebSocketNode {
     protected final ConcurrentHashMap<String, WebSocketEngine> engines = new ConcurrentHashMap();
 
     public void init(AnyValue conf) {
-        if (remoteNode != null) {
-            new Thread() {
-                {
-                    setDaemon(true);
-                }
 
-                @Override
-                public void run() {
-                    try {
-                        Map<Serializable, LinkedHashSet<InetSocketAddress>> map = remoteNode.getDataNodes();
-                        if (map != null) dataNodes.putAll(map);
-                    } catch (Exception e) {
-                        logger.log(Level.INFO, WebSocketNode.class.getSimpleName() + "(" + localSncpAddress + ") not load data nodes ", e);
-                    }
-                }
-            }.start();
-        }
     }
 
     public void destroy(AnyValue conf) {
@@ -67,10 +53,6 @@ public abstract class WebSocketNode {
                 if (engines.containsKey(e)) disconnect(k, e);
             });
         });
-    }
-
-    public Map<Serializable, LinkedHashSet<InetSocketAddress>> getDataNodes() {
-        return dataNodes;
     }
 
     protected abstract int sendMessage(@SncpParam(SncpParamType.TargetAddress) InetSocketAddress targetAddress, Serializable groupid, boolean recent, Serializable message, boolean last);
@@ -124,7 +106,7 @@ public abstract class WebSocketNode {
             }
         }
         if ((recent && rscode == 0) || remoteNode == null) return rscode;
-        LinkedHashSet<InetSocketAddress> addrs = dataNodes.get(groupid);
+        LinkedHashSet<InetSocketAddress> addrs = source.get(groupid);
         if (addrs != null && !addrs.isEmpty()) {   //对方连接在远程节点      
             if (recent) {
                 InetSocketAddress one = null;

@@ -30,6 +30,8 @@ public interface CacheSource {
 
     public <T> void set(final int expireSeconds, final Serializable key, final T value);
 
+    public void setExpireSeconds(Serializable key, int expireSeconds);
+    
     public void remove(final Serializable key);
 
     public <V> void appendListItem(final Serializable key, final V value);

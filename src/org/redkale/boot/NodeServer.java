@@ -150,14 +150,13 @@ public abstract class NodeServer {
         final NodeServer self = this;
         //---------------------------------------------------------------------------------------------
         final ResourceFactory regFactory = application.getResourceFactory();
-        factory.add(DataSource.class, (ResourceFactory rf, final Object src, Field field, final Object attachment) -> {
+        factory.add(DataSource.class, (ResourceFactory rf, final Object src, String resourceName, Field field, final Object attachment) -> {
             try {
-                Resource rs = field.getAnnotation(Resource.class);
-                if (rs == null) return;
+                if (field.getAnnotation(Resource.class) == null) return;
                 if ((src instanceof Service) && Sncp.isRemote((Service) src)) return; //远程模式不得注入 DataSource
-                DataSource source = new DataDefaultSource(rs.name());
-                application.sources.add(source);
-                regFactory.register(rs.name(), DataSource.class, source);
+                DataSource source = new DataDefaultSource(resourceName);
+                application.dataSources.add(source);
+                regFactory.register(resourceName, DataSource.class, source);
                 List<Transport> sameGroupTransports = sncpSameGroupTransports;
                 List<Transport> diffGroupTransports = sncpDiffGroupTransports;
                 try {
@@ -173,16 +172,45 @@ public abstract class NodeServer {
                 } catch (Exception e) {
                     //src 不含 MultiRun 方法
                 }
-                if (factory.find(rs.name(), DataCacheListener.class) == null) {
-                    Service cacheListenerService = Sncp.createLocalService(rs.name(), getExecutor(), DataCacheListenerService.class, this.sncpAddress, sncpDefaultGroups, sameGroupTransports, diffGroupTransports);
-                    regFactory.register(rs.name(), DataCacheListener.class, cacheListenerService);
-                    ServiceWrapper wrapper = new ServiceWrapper(DataCacheListenerService.class, cacheListenerService, rs.name(), sncpGroup, sncpDefaultGroups, null);
+                if (factory.find(resourceName, DataCacheListener.class) == null) {
+                    Service cacheListenerService = Sncp.createLocalService(resourceName, getExecutor(), DataCacheListenerService.class, this.sncpAddress, sncpDefaultGroups, sameGroupTransports, diffGroupTransports);
+                    regFactory.register(resourceName, DataCacheListener.class, cacheListenerService);
+                    ServiceWrapper wrapper = new ServiceWrapper(DataCacheListenerService.class, cacheListenerService, resourceName, sncpGroup, sncpDefaultGroups, null);
                     localServiceWrappers.add(wrapper);
                     if (consumer != null) consumer.accept(wrapper);
                     rf.inject(cacheListenerService, self);
                 }
                 field.set(src, source);
                 rf.inject(source, self); // 给 "datasource.nodeid" 赋值
+            } catch (Exception e) {
+                logger.log(Level.SEVERE, "DataSource inject error", e);
+            }
+        });
+        factory.add(CacheSource.class, (ResourceFactory rf, final Object src, final String resourceName, Field field, final Object attachment) -> {
+            try {
+                if (field.getAnnotation(Resource.class) == null) return;
+                if ((src instanceof Service) && Sncp.isRemote((Service) src)) return; //远程模式不得注入 CacheSource                
+                List<Transport> sameGroupTransports = sncpSameGroupTransports;
+                List<Transport> diffGroupTransports = sncpDiffGroupTransports;
+                try {
+                    Field ts = src.getClass().getDeclaredField("_sameGroupTransports"); 
+                    ts.setAccessible(true);
+                    Transport[] lts = (Transport[]) ts.get(src);
+                    sameGroupTransports = Arrays.asList(lts);
+
+                    ts = src.getClass().getDeclaredField("_diffGroupTransports");
+                    ts.setAccessible(true);
+                    lts = (Transport[]) ts.get(src);
+                    diffGroupTransports = Arrays.asList(lts);
+                } catch (Exception e) {
+                    //src 不含 MultiRun 方法
+                }
+                CacheSource source = Sncp.createLocalService(resourceName, getExecutor(), CacheSourceService.class, this.sncpAddress, sncpDefaultGroups, sameGroupTransports, diffGroupTransports);
+                application.cacheSources.add(source);
+                regFactory.register(resourceName, CacheSource.class, source);
+                field.set(src, source);
+                rf.inject(source, self); //
+                ((Service) source).init(null);
             } catch (Exception e) {
                 logger.log(Level.SEVERE, "DataSource inject error", e);
             }

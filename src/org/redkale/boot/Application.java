@@ -77,7 +77,9 @@ public final class Application {
 
     protected final InetAddress localAddress;
 
-    protected final List<DataSource> sources = new CopyOnWriteArrayList<>();
+    protected final List<CacheSource> cacheSources = new CopyOnWriteArrayList<>();
+
+    protected final List<DataSource> dataSources = new CopyOnWriteArrayList<>();
 
     protected final List<NodeServer> servers = new CopyOnWriteArrayList<>();
 
@@ -527,11 +529,19 @@ public final class Application {
                 serversLatch.countDown();
             }
         });
-        for (DataSource source : sources) {
+
+        for (DataSource source : dataSources) {
             try {
                 source.getClass().getMethod("close").invoke(source);
             } catch (Exception e) {
                 logger.log(Level.FINER, "close DataSource erroneous", e);
+            }
+        }
+        for (CacheSource source : cacheSources) {
+            try {
+                source.getClass().getMethod("close").invoke(source);
+            } catch (Exception e) {
+                logger.log(Level.FINER, "close CacheSource erroneous", e);
             }
         }
     }

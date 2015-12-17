@@ -19,7 +19,7 @@ import org.redkale.util.*;
  * @see http://www.redkale.org
  * @author zhangjx
  */
-public interface Service extends Nameable {
+public interface Service {
 
     /**
      * 该方法必须是可以重复调用， 当reload时需要重复调用init方法
@@ -39,7 +39,6 @@ public interface Service extends Nameable {
      * <p>
      * @return
      */
-    @Override
     default String name() {
         return "";
     }

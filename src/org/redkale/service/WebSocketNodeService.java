@@ -54,24 +54,14 @@ public class WebSocketNodeService extends WebSocketNode implements Service {
     @Override
     @MultiRun
     public void connect(Serializable groupid, InetSocketAddress addr) {
-        LinkedHashSet<InetSocketAddress> addrs = dataNodes.get(groupid);
-        if (addrs == null) {
-            addrs = new LinkedHashSet<>();
-            dataNodes.put(groupid, addrs);
-        }
-        addrs.add(addr);
+        source.appendSetItem(groupid, addr);
         if (finest) logger.finest(WebSocketNodeService.class.getSimpleName() + ".event: " + groupid + " connect from " + addr);
     }
 
     @Override
     @MultiRun
     public void disconnect(Serializable groupid, InetSocketAddress addr) {
-        Set<InetSocketAddress> addrs = dataNodes.get(groupid);
-        if (addrs == null) return;
-        synchronized (addrs) {
-            addrs.remove(addr);
-        }
-        if (addrs.isEmpty()) dataNodes.remove(groupid);
+        source.removeSetItem(groupid, addr);
         if (finest) logger.finest(WebSocketNodeService.class.getSimpleName() + ".event: " + groupid + " disconnect from " + addr);
     }
 }
