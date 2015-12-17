@@ -15,7 +15,7 @@ import org.redkale.convert.json.*;
  */
 public class NotEmptyConstructorParamsBean {
 
-    private int userid;
+    private final int userid;
 
     private String name;
 
@@ -26,11 +26,11 @@ public class NotEmptyConstructorParamsBean {
         this.userid = userid;
         this.name = name;
     }
-    
+
     public static void main(String[] args) throws Exception {
         final JsonConvert jsonConvert = JsonFactory.root().getConvert();
         final BsonConvert bsonConvert = BsonFactory.root().getConvert();
-        NotEmptyConstructorParamsBean bean = new NotEmptyConstructorParamsBean(12345678,"哈哈");
+        NotEmptyConstructorParamsBean bean = new NotEmptyConstructorParamsBean(12345678, "哈哈");
         bean.setCreatetime(System.currentTimeMillis());
         String json = jsonConvert.convertTo(bean);
         System.out.println(json);
@@ -41,10 +41,6 @@ public class NotEmptyConstructorParamsBean {
 
     public int getUserid() {
         return userid;
-    }
-
-    public void setUserid(int userid) {
-        this.userid = userid;
     }
 
     public String getName() {
