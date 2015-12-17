@@ -176,6 +176,7 @@ public class CacheSourceService implements CacheSource, Service {
     }
 
     @Override
+    @MultiRun
     public <V> void appendSetItem(Serializable key, V value) {
         if (key == null) return;
         CacheEntry entry = container.get(key);
