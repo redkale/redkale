@@ -35,6 +35,10 @@ public final class DeMember<R extends Reader, T, F> implements Comparable<DeMemb
         this.attribute.set(obj, decoder.convertFrom(in));
     }
 
+    public final F read(R in) {
+        return decoder.convertFrom(in);
+    }
+
     public Attribute<T, F> getAttribute() {
         return this.attribute;
     }
