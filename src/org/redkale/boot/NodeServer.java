@@ -221,6 +221,7 @@ public abstract class NodeServer {
                     ServiceWrapper wrapper = new ServiceWrapper(CacheSourceService.class, (Service) source, resourceName, getSncpGroup(), sncpDefaultGroups, null);
                     sncpServer.getSncpServer().addService(wrapper);
                 }
+                logger.fine("[" + Thread.currentThread().getName() + "] Load " + source);
             } catch (Exception e) {
                 logger.log(Level.SEVERE, "DataSource inject error", e);
             }
