@@ -71,6 +71,7 @@ public final class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T
             this.creator = factory.loadCreator(clazz);
 
             final Set<DeMember> list = new HashSet();
+            final ConstructorProperties cps = ObjectEncoder.findConstructorProperties(this.creator);
             try {
                 ConvertColumnEntry ref;
                 for (final Field field : clazz.getFields()) {
@@ -89,7 +90,7 @@ public final class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T
                     if (!method.getName().startsWith("set")) continue;
                     if (method.getParameterTypes().length != 1) continue;
                     if (method.getReturnType() != void.class) continue;
-                    if (reversible) {
+                    if (reversible && (cps == null || !ObjectEncoder.contains(cps.value(), ObjectEncoder.readGetSetFieldName(method)))) {
                         boolean is = method.getParameterTypes()[0] == boolean.class || method.getParameterTypes()[0] == Boolean.class;
                         try {
                             clazz.getMethod(method.getName().replaceFirst("set", is ? "is" : "get"));
@@ -102,24 +103,51 @@ public final class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T
                     Type t = ObjectEncoder.makeGenericType(method.getGenericParameterTypes()[0], virGenericTypes, realGenericTypes);
                     list.add(new DeMember(ObjectEncoder.createAttribute(factory, clazz, null, null, method), factory.loadDecoder(t)));
                 }
-                this.members = list.toArray(new DeMember[list.size()]);
-                Arrays.sort(this.members);
-                try {
-                    ConstructorProperties cps = this.creator.getClass().getConstructor().getAnnotation(ConstructorProperties.class);
-                    if (cps != null) {
-                        final String[] fields = cps.value();
-                        final DeMember<R, T, ?>[] ms = new DeMember[fields.length];
-                        for (int i = 0; i < fields.length; i++) {
-                            for (DeMember m : this.members) {
-                                if (m.attribute.field().equals(fields[i])) {
-                                    ms[i] = m;
-                                    break;
-                                }
+                if (cps != null) { //可能存在某些构造函数中的字段名不存在setter方法
+                    for (final String constructorField : cps.value()) {
+                        boolean flag = false;
+                        for (DeMember m : list) {
+                            if (m.attribute.field().equals(constructorField)) {
+                                flag = true;
+                                break;
                             }
                         }
-                        this.creatorConstructorMembers = ms;
+                        if (flag) continue;
+                        //不存在setter方法
+                        try {
+                            Field f = clazz.getDeclaredField(constructorField);
+                            Type t = ObjectEncoder.makeGenericType(f.getGenericType(), virGenericTypes, realGenericTypes);
+                            list.add(new DeMember(ObjectEncoder.createAttribute(factory, clazz, f, null, null), factory.loadDecoder(t)));
+                        } catch (NoSuchFieldException nsfe) { //不存在field， 可能存在getter方法
+                            char[] fs = constructorField.toCharArray();
+                            fs[0] = Character.toUpperCase(fs[0]);
+                            String mn = new String(fs);
+                            Method getter = null;
+                            try {
+                                getter = clazz.getMethod("get" + mn);
+                            } catch (NoSuchMethodException ex) {
+                                getter = clazz.getMethod("is" + mn);
+                            }
+                            Type t = ObjectEncoder.makeGenericType(getter.getGenericParameterTypes()[0], virGenericTypes, realGenericTypes);
+                            list.add(new DeMember(ObjectEncoder.createAttribute(factory, clazz, null, getter, null), factory.loadDecoder(t)));
+                        }
                     }
-                } catch (Exception e) { //不存在则忽略
+                }
+                this.members = list.toArray(new DeMember[list.size()]);
+                Arrays.sort(this.members);
+
+                if (cps != null) {
+                    final String[] fields = cps.value();
+                    final DeMember<R, T, ?>[] ms = new DeMember[fields.length];
+                    for (int i = 0; i < fields.length; i++) {
+                        for (DeMember m : this.members) {
+                            if (m.attribute.field().equals(fields[i])) {
+                                ms[i] = m;
+                                break;
+                            }
+                        }
+                    }
+                    this.creatorConstructorMembers = ms;
                 }
             } catch (Exception ex) {
                 throw new ConvertException(ex);

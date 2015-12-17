@@ -5,9 +5,11 @@
  */
 package org.redkale.convert;
 
+import java.beans.*;
 import org.redkale.util.Attribute;
 import java.lang.reflect.*;
 import java.util.*;
+import org.redkale.util.*;
 
 /**
  *
@@ -92,7 +94,14 @@ public final class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T
         return type;
     }
 
-    private static String readGetSetFieldName(Method method) {
+    static boolean contains(String[] values, String value) {
+        for (String str : values) {
+            if (str.equals(value)) return true;
+        }
+        return false;
+    }
+
+    static String readGetSetFieldName(Method method) {
         if (method == null) return null;
         String fname = method.getName();
         if (!fname.startsWith("is") && !fname.startsWith("get") && !fname.startsWith("set")) return fname;
@@ -103,6 +112,14 @@ public final class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T
             fname = "" + Character.toLowerCase(fname.charAt(0));
         }
         return fname;
+    }
+
+    static ConstructorProperties findConstructorProperties(Creator creator) {
+        try {
+            return creator.getClass().getConstructor().getAnnotation(ConstructorProperties.class);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     static Attribute createAttribute(final Factory factory, Class clazz, final Field field, final Method getter, final Method setter) {
@@ -146,6 +163,7 @@ public final class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T
             if (realGenericTypes != null) {
                 //    println(type + "," + Arrays.toString(virGenericTypes) + ", " + Arrays.toString(realGenericTypes));
             }
+            final ConstructorProperties cps = ObjectEncoder.findConstructorProperties(factory.loadCreator(this.typeClass));
             try {
                 ConvertColumnEntry ref;
                 for (final Field field : clazz.getFields()) {
@@ -165,7 +183,7 @@ public final class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T
                     if (!method.getName().startsWith("is") && !method.getName().startsWith("get")) continue;
                     if (method.getParameterTypes().length != 0) continue;
                     if (method.getReturnType() == void.class) continue;
-                    if (reversible) {
+                    if (reversible && (cps == null || !contains(cps.value(), readGetSetFieldName(method)))) {
                         boolean is = method.getName().startsWith("is");
                         try {
                             clazz.getMethod(method.getName().replaceFirst(is ? "is" : "get", "set"), method.getReturnType());
