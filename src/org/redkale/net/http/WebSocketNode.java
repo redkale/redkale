@@ -106,7 +106,7 @@ public abstract class WebSocketNode {
             }
         }
         if ((recent && rscode == 0) || remoteNode == null) return rscode;
-        LinkedHashSet<InetSocketAddress> addrs = source.get(groupid);
+        Set<InetSocketAddress> addrs = source.get(groupid);
         if (addrs != null && !addrs.isEmpty()) {   //对方连接在远程节点      
             if (recent) {
                 InetSocketAddress one = null;
