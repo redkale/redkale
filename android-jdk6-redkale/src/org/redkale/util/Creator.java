@@ -106,16 +106,18 @@ public interface Creator<T> {
                             mv.visitIntInsn(BIPUSH, i);
                         }
                         mv.visitInsn(AALOAD);
-                        Class ct = params[i].getType();
-                        mv.visitTypeInsn(CHECKCAST, Type.getInternalName(ct));
+                        final Class ct = params[i].getType();
                         if (ct.isPrimitive()) {
-                            Class fct = Array.get(Array.newInstance(ct, 1), 0).getClass();
+                            final Class bigct = Array.get(Array.newInstance(ct, 1), 0).getClass();
+                            mv.visitTypeInsn(CHECKCAST, bigct.getName().replace('.', '/'));
                             try {
-                                Method pm = ct.getMethod(ct.getSimpleName() + "Value");
-                                mv.visitMethodInsn(INVOKEVIRTUAL, fct.getName().replace('.', '/'), pm.getName(), Type.getMethodDescriptor(pm), false);
+                                Method pm = bigct.getMethod(ct.getSimpleName() + "Value");
+                                mv.visitMethodInsn(INVOKEVIRTUAL, bigct.getName().replace('.', '/'), pm.getName(), Type.getMethodDescriptor(pm), false);
                             } catch (Exception ex) {
                                 throw new RuntimeException(ex); //不可能会发生
                             }
+                        } else {
+                            mv.visitTypeInsn(CHECKCAST, ct.getName().replace('.', '/'));
                         }
                     }
                 }

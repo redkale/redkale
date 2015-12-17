@@ -5,6 +5,7 @@
  */
 package org.redkale.convert;
 
+import java.beans.*;
 import static org.redkale.convert.ObjectEncoder.TYPEZERO;
 import org.redkale.util.Creator;
 import java.lang.reflect.*;
@@ -12,6 +13,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.redkale.util.*;
 
 /**
  *
@@ -28,6 +30,8 @@ public final class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T
     protected final Class typeClass;
 
     protected Creator<T> creator;
+
+    protected DeMember<R, T, ?>[] creatorConstructorMembers;
 
     protected DeMember<R, T, ?>[] members;
 
@@ -65,6 +69,7 @@ public final class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T
             final Type[] virGenericTypes = this.typeClass.getTypeParameters();
             final Type[] realGenericTypes = (type instanceof ParameterizedType) ? ((ParameterizedType) type).getActualTypeArguments() : TYPEZERO;
             this.creator = factory.loadCreator(clazz);
+
             final Set<DeMember> list = new HashSet();
             try {
                 ConvertColumnEntry ref;
@@ -99,6 +104,23 @@ public final class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T
                 }
                 this.members = list.toArray(new DeMember[list.size()]);
                 Arrays.sort(this.members);
+                try {
+                    ConstructorProperties cps = this.creator.getClass().getConstructor().getAnnotation(ConstructorProperties.class);
+                    if (cps != null) {
+                        final String[] fields = cps.value();
+                        final DeMember<R, T, ?>[] ms = new DeMember[fields.length];
+                        for (int i = 0; i < fields.length; i++) {
+                            for (DeMember m : this.members) {
+                                if (m.attribute.field().equals(fields[i])) {
+                                    ms[i] = m;
+                                    break;
+                                }
+                            }
+                        }
+                        this.creatorConstructorMembers = ms;
+                    }
+                } catch (Exception e) { //不存在则忽略
+                }
             } catch (Exception ex) {
                 throw new ConvertException(ex);
             }
@@ -130,20 +152,75 @@ public final class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T
                 }
             }
         }
-        final T result = this.creator.create();
-        final AtomicInteger index = new AtomicInteger();
-        while (in.hasNext()) {
-            DeMember member = in.readField(index, members);
-            in.skipBlank();
-            if (member == null) {
-                in.skipValue(); //跳过该属性的值
-            } else {
-                member.read(in, result);
+        if (this.creatorConstructorMembers == null) {  //空构造函数
+            final T result = this.creator.create();
+            final AtomicInteger index = new AtomicInteger();
+            while (in.hasNext()) {
+                DeMember member = in.readField(index, members);
+                in.skipBlank();
+                if (member == null) {
+                    in.skipValue(); //跳过该属性的值
+                } else {
+                    member.read(in, result);
+                }
+                index.incrementAndGet();
             }
-            index.incrementAndGet();
+            in.readObjectE();
+            return result;
+        } else {  //带参数的构造函数
+            final DeMember<R, T, ?>[] fields = this.creatorConstructorMembers;
+            final Object[] constructorParams = new Object[fields.length];
+            final Object[][] otherParams = new Object[this.members.length][2];
+            final AtomicInteger index = new AtomicInteger();
+            int oc = 0;
+            while (in.hasNext()) {
+                DeMember member = in.readField(index, members);
+                in.skipBlank();
+                if (member == null) {
+                    in.skipValue(); //跳过该属性的值
+                } else {
+                    Object val = member.read(in);
+                    boolean flag = true;
+                    for (int i = 0; i < fields.length; i++) {
+                        if (member == fields[i]) {
+                            constructorParams[i] = val;
+                            flag = false;
+                            break;
+                        }
+                    }
+                    if (flag) otherParams[oc++] = new Object[]{member.attribute, val};
+                }
+                index.incrementAndGet();
+            }
+            in.readObjectE();
+            for (int i = 0; i < fields.length; i++) {
+                final Class t = fields[i].attribute.type();
+                if (t.isPrimitive() && constructorParams[i] == null) {
+                    Object a = 0;
+                    if (t == boolean.class) {
+                        a = Boolean.FALSE;
+                    } else if (t == byte.class) {
+                        a = (byte) 0;
+                    } else if (t == short.class) {
+                        a = (short) 0;
+                    } else if (t == char.class) {
+                        a = (char) 0;
+                    } else if (t == long.class) {
+                        a = (long) 0L;
+                    } else if (t == float.class) {
+                        a = (float) 0.0f;
+                    } else if (t == double.class) {
+                        a = (double) 0.0;
+                    }
+                    constructorParams[i] = a;
+                }
+            }
+            final T result = this.creator.create(constructorParams);
+            for (int i = 0; i < oc; i++) {
+                ((Attribute) otherParams[i][0]).set(result, otherParams[i][1]);
+            }
+            return result;
         }
-        in.readObjectE();
-        return result;
     }
 
     @Override
