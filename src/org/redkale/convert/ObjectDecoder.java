@@ -6,7 +6,6 @@
 package org.redkale.convert;
 
 import java.beans.*;
-import static org.redkale.convert.ObjectEncoder.TYPEZERO;
 import org.redkale.util.Creator;
 import java.lang.reflect.*;
 import java.util.Arrays;
@@ -66,8 +65,6 @@ public final class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T
             } else {
                 clazz = (Class) type;
             }
-            final Type[] virGenericTypes = this.typeClass.getTypeParameters();
-            final Type[] realGenericTypes = (type instanceof ParameterizedType) ? ((ParameterizedType) type).getActualTypeArguments() : TYPEZERO;
             this.creator = factory.loadCreator(clazz);
 
             final Set<DeMember> list = new HashSet();
@@ -78,7 +75,7 @@ public final class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T
                     if (Modifier.isStatic(field.getModifiers())) continue;
                     ref = factory.findRef(field);
                     if (ref != null && ref.ignore()) continue;
-                    Type t = ObjectEncoder.makeGenericType(field.getGenericType(), virGenericTypes, realGenericTypes);
+                    Type t = ObjectEncoder.createClassType(field.getGenericType(), this.type);
                     list.add(new DeMember(ObjectEncoder.createAttribute(factory, clazz, field, null, null), factory.loadDecoder(t)));
                 }
                 final boolean reversible = factory.isReversible();
@@ -100,7 +97,7 @@ public final class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T
                     }
                     ref = factory.findRef(method);
                     if (ref != null && ref.ignore()) continue;
-                    Type t = ObjectEncoder.makeGenericType(method.getGenericParameterTypes()[0], virGenericTypes, realGenericTypes);
+                    Type t = ObjectEncoder.createClassType(method.getGenericParameterTypes()[0], this.type);
                     list.add(new DeMember(ObjectEncoder.createAttribute(factory, clazz, null, null, method), factory.loadDecoder(t)));
                 }
                 if (cps != null) { //可能存在某些构造函数中的字段名不存在setter方法
@@ -116,19 +113,19 @@ public final class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T
                         //不存在setter方法
                         try {
                             Field f = clazz.getDeclaredField(constructorField);
-                            Type t = ObjectEncoder.makeGenericType(f.getGenericType(), virGenericTypes, realGenericTypes);
+                            Type t = ObjectEncoder.createClassType(f.getGenericType(), this.type);
                             list.add(new DeMember(ObjectEncoder.createAttribute(factory, clazz, f, null, null), factory.loadDecoder(t)));
                         } catch (NoSuchFieldException nsfe) { //不存在field， 可能存在getter方法
                             char[] fs = constructorField.toCharArray();
                             fs[0] = Character.toUpperCase(fs[0]);
                             String mn = new String(fs);
-                            Method getter = null;
+                            Method getter;
                             try {
                                 getter = clazz.getMethod("get" + mn);
                             } catch (NoSuchMethodException ex) {
                                 getter = clazz.getMethod("is" + mn);
                             }
-                            Type t = ObjectEncoder.makeGenericType(getter.getGenericParameterTypes()[0], virGenericTypes, realGenericTypes);
+                            Type t = ObjectEncoder.createClassType(getter.getGenericParameterTypes()[0], this.type);
                             list.add(new DeMember(ObjectEncoder.createAttribute(factory, clazz, null, getter, null), factory.loadDecoder(t)));
                         }
                     }
