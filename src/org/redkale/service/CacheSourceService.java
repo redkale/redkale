@@ -104,7 +104,7 @@ public class CacheSourceService implements CacheSource, Service {
             File store = new File(home, "cache/" + name());
             if (!store.isFile() || !store.canRead()) return;
             LineNumberReader reader = new LineNumberReader(new FileReader(store));
-            final Type storeType = TypeToken.createParameterizedType(CacheEntry.class, storeKeyType, storeValueType);
+            final Type storeType = TypeToken.createParameterizedType(null, CacheEntry.class, storeKeyType, storeValueType);
             String line;
             while ((line = reader.readLine()) != null) {
                 if (line.isEmpty()) continue;
@@ -132,7 +132,7 @@ public class CacheSourceService implements CacheSource, Service {
             store.getParentFile().mkdirs();
             PrintStream stream = new PrintStream(store, "UTF-8");
             Collection<CacheEntry> values = container.values();
-            final Type storeType = TypeToken.createParameterizedType(CacheEntry.class, storeKeyType, storeValueType);;
+            final Type storeType = TypeToken.createParameterizedType(null, CacheEntry.class, storeKeyType, storeValueType);;
             for (CacheEntry entry : values) {
                 stream.println(convert.convertTo(storeType, entry));
             }

@@ -29,7 +29,7 @@ public abstract class TypeToken<T> {
         return type;
     }
 
-    public static Type createParameterizedType(final Class rawType, final Class... actualTypeArguments) {
+    public static Type createParameterizedType(final Type ownerType, final Type rawType, final Type... actualTypeArguments) {
         ClassLoader loader = TypeToken.class.getClassLoader();
         String newDynName = TypeToken.class.getName().replace('.', '/') + "_Dyn" + System.currentTimeMillis();
         for (;;) {
@@ -44,11 +44,11 @@ public abstract class TypeToken<T> {
         FieldVisitor fv;
         MethodVisitor mv;
         cw.visit(V1_8, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynName, null, "java/lang/Object", null);
-        String rawTypeDesc = jdk.internal.org.objectweb.asm.Type.getDescriptor(rawType);
+        String rawTypeDesc = jdk.internal.org.objectweb.asm.Type.getDescriptor((Class) rawType);
         StringBuilder sb = new StringBuilder();
         sb.append(rawTypeDesc.substring(0, rawTypeDesc.length() - 1)).append('<');
-        for (Class c : actualTypeArguments) {
-            sb.append(jdk.internal.org.objectweb.asm.Type.getDescriptor(c));
+        for (Type c : actualTypeArguments) {
+            sb.append(jdk.internal.org.objectweb.asm.Type.getDescriptor((Class) c));
         }
         sb.append(">;");
         {
