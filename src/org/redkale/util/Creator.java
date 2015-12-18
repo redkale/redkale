@@ -8,8 +8,8 @@ import java.beans.ConstructorProperties;
 import java.lang.reflect.*;
 import java.util.*;
 import jdk.internal.org.objectweb.asm.*;
-import static jdk.internal.org.objectweb.asm.Opcodes.*;
 import jdk.internal.org.objectweb.asm.Type;
+import static jdk.internal.org.objectweb.asm.Opcodes.*;
 
 /**
  * 实现一个类的构造方法。 代替低效的反射实现方式。 不支持数组类

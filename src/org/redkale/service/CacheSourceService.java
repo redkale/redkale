@@ -104,23 +104,7 @@ public class CacheSourceService implements CacheSource, Service {
             File store = new File(home, "cache/" + name());
             if (!store.isFile() || !store.canRead()) return;
             LineNumberReader reader = new LineNumberReader(new FileReader(store));
-            final ParameterizedType storeType = new ParameterizedType() {
-                @Override
-                public Type[] getActualTypeArguments() {
-                    return new Type[]{storeKeyType, storeValueType};
-                }
-
-                @Override
-                public Type getRawType() {
-                    return CacheEntry.class;
-                }
-
-                @Override
-                public Type getOwnerType() {
-                    return null;
-                }
-
-            };
+            final Type storeType = TypeToken.createParameterizedType(CacheEntry.class, storeKeyType, storeValueType);
             String line;
             while ((line = reader.readLine()) != null) {
                 if (line.isEmpty()) continue;
@@ -148,23 +132,7 @@ public class CacheSourceService implements CacheSource, Service {
             store.getParentFile().mkdirs();
             PrintStream stream = new PrintStream(store, "UTF-8");
             Collection<CacheEntry> values = container.values();
-            final ParameterizedType storeType = new ParameterizedType() {
-                @Override
-                public Type[] getActualTypeArguments() {
-                    return new Type[]{storeKeyType, storeValueType};
-                }
-
-                @Override
-                public Type getRawType() {
-                    return CacheEntry.class;
-                }
-
-                @Override
-                public Type getOwnerType() {
-                    return null;
-                }
-
-            };
+            final Type storeType = TypeToken.createParameterizedType(CacheEntry.class, storeKeyType, storeValueType);;
             for (CacheEntry entry : values) {
                 stream.println(convert.convertTo(storeType, entry));
             }
