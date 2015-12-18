@@ -19,7 +19,7 @@ import org.redkale.util.*;
  * @author zhangjx
  */
 @AutoLoad(false)
-public class DataSourceService implements DataSource, Service {
+public class DataSourceService implements DataSource, Service, AutoCloseable {
 
     @Resource(name = "$")
     private DataSource source;
@@ -319,4 +319,8 @@ public class DataSourceService implements DataSource, Service {
         return source.querySheet(clazz, selects, flipper, node);
     }
 
+    @Override
+    public void close() throws Exception {
+        source.getClass().getMethod("close").invoke(source);
+    }
 }

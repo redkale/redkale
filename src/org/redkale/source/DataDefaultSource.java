@@ -25,7 +25,7 @@ import org.redkale.util.*;
  * @author zhangjx
  */
 @SuppressWarnings("unchecked")
-public final class DataDefaultSource implements DataSource, Function<Class, EntityInfo> {
+public final class DataDefaultSource implements DataSource, Function<Class, EntityInfo>, AutoCloseable {
 
     public static final String DATASOURCE_CONFPATH = "DATASOURCE_CONFPATH";
 
@@ -278,7 +278,8 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
         return new DataJDBCConnection(createWriteSQLConnection());
     }
 
-    public void close() {
+    @Override
+    public void close() throws Exception {
         readPool.close();
         writePool.close();
     }

@@ -23,7 +23,7 @@ import org.redkale.util.*;
  * @author zhangjx
  */
 @AutoLoad(false)
-public class CacheSourceService implements CacheSource, Service {
+public class CacheSourceService implements CacheSource, Service, AutoCloseable {
 
     @Resource(name = "APP_HOME")
     private File home;
@@ -118,7 +118,8 @@ public class CacheSourceService implements CacheSource, Service {
         }
     }
 
-    public void close() {  //给Application 关闭时调用
+    @Override
+    public void close() throws Exception {  //给Application 关闭时调用
         destroy(null);
     }
 
