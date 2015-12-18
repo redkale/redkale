@@ -77,11 +77,11 @@ public abstract class TypeToken<T> {
 
             private final Type ownerType = ownerType0;
 
-            private final Type[] argTypes = actualTypeArguments0;
+            private final Type[] actualTypeArguments = actualTypeArguments0;
 
             @Override
             public Type[] getActualTypeArguments() {
-                return argTypes.clone();
+                return actualTypeArguments.clone();
             }
 
             @Override
@@ -96,7 +96,7 @@ public abstract class TypeToken<T> {
 
             @Override
             public int hashCode() {
-                return Arrays.hashCode(argTypes) ^ Objects.hashCode(rawType) ^ Objects.hashCode(ownerType);
+                return Arrays.hashCode(actualTypeArguments) ^ Objects.hashCode(rawType) ^ Objects.hashCode(ownerType);
             }
 
             @Override
@@ -106,7 +106,7 @@ public abstract class TypeToken<T> {
                 if (this == that) return true;
                 return Objects.equals(ownerType, that.getOwnerType())
                         && Objects.equals(rawType, that.getRawType())
-                        && Arrays.equals(argTypes, that.getActualTypeArguments());
+                        && Arrays.equals(actualTypeArguments, that.getActualTypeArguments());
             }
 
             @Override
@@ -115,10 +115,10 @@ public abstract class TypeToken<T> {
                 if (ownerType != null) sb.append((ownerType instanceof Class) ? (((Class) ownerType).getName()) : ownerType.toString()).append(".");
                 sb.append(rawType.getName());
 
-                if (argTypes != null && argTypes.length > 0) {
+                if (actualTypeArguments != null && actualTypeArguments.length > 0) {
                     sb.append("<");
                     boolean first = true;
-                    for (Type t : argTypes) {
+                    for (Type t : actualTypeArguments) {
                         if (!first) sb.append(", ");
                         sb.append(t.getTypeName());
                         first = false;
