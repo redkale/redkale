@@ -62,15 +62,11 @@ public abstract class TypeToken<T> {
      */
     public static Type createParameterizedType(final Type ownerType0, final Type rawType0, final Type... actualTypeArguments0) {
         if (ownerType0 == null && rawType0 instanceof Class) {
-            final Class[] actualClassArguments = new Class[actualTypeArguments0.length];
             int count = 0;
-            for (int i = 0; i < actualTypeArguments0.length; i++) {
-                if (actualTypeArguments0[i] instanceof Class) {
-                    actualClassArguments[i] = (Class) actualTypeArguments0[i];
-                    count++;
-                }
+            for (Type t : actualTypeArguments0) {
+                if (isClassType(t)) count++;
             }
-            if (count == actualClassArguments.length) return createParameterizedType((Class) rawType0, actualClassArguments);
+            if (count == actualTypeArguments0.length) return createParameterizedType((Class) rawType0, actualTypeArguments0);
         }
         return new ParameterizedType() {
             private final Class<?> rawType = (Class<?>) rawType0;
@@ -130,7 +126,7 @@ public abstract class TypeToken<T> {
         };
     }
 
-    private static Type createParameterizedType(final Class rawType, final Class... actualTypeArguments) {
+    private static Type createParameterizedType(final Class rawType, final Type... actualTypeArguments) {
         ClassLoader loader = TypeToken.class.getClassLoader();
         String newDynName = TypeToken.class.getName().replace('.', '/') + "_Dyn" + System.currentTimeMillis();
         for (;;) {
@@ -148,8 +144,8 @@ public abstract class TypeToken<T> {
         String rawTypeDesc = jdk.internal.org.objectweb.asm.Type.getDescriptor(rawType);
         StringBuilder sb = new StringBuilder();
         sb.append(rawTypeDesc.substring(0, rawTypeDesc.length() - 1)).append('<');
-        for (Class c : actualTypeArguments) {
-            sb.append(jdk.internal.org.objectweb.asm.Type.getDescriptor(c));
+        for (Type c : actualTypeArguments) {
+            sb.append(getClassTypeDescriptor(c));
         }
         sb.append(">;");
         {
@@ -176,5 +172,19 @@ public abstract class TypeToken<T> {
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
+    }
+
+    private static CharSequence getClassTypeDescriptor(Type type) {
+        if (!isClassType(type)) throw new IllegalArgumentException(type + " not a class type");
+        if (type instanceof Class) return jdk.internal.org.objectweb.asm.Type.getDescriptor((Class) type);
+        final ParameterizedType pt = (ParameterizedType) type;
+        CharSequence rawTypeDesc = getClassTypeDescriptor(pt.getRawType());
+        StringBuilder sb = new StringBuilder();
+        sb.append(rawTypeDesc.subSequence(0, rawTypeDesc.length() - 1)).append('<');
+        for (Type c : pt.getActualTypeArguments()) {
+            sb.append(getClassTypeDescriptor(c));
+        }
+        sb.append(">;");
+        return sb;
     }
 }
