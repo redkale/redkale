@@ -33,7 +33,7 @@ public class CacheSourceService implements CacheSource, Service, AutoCloseable {
 
     private Class storeKeyType;
 
-    private Class storeValueType;
+    private Type storeValueType;
 
     private ScheduledThreadPoolExecutor scheduler;
 
@@ -46,9 +46,15 @@ public class CacheSourceService implements CacheSource, Service, AutoCloseable {
     public CacheSourceService() {
     }
 
-    public CacheSourceService setStoreType(Class storeKeyType, Class storeValueType) {
+    public CacheSourceService setStoreType(Class storeKeyType, Class storeValueType, CacheStore.CacheEntryType entryType) {
         this.storeKeyType = storeKeyType;
-        this.storeValueType = storeValueType;
+        if (entryType == CacheStore.CacheEntryType.SET) {
+            this.storeValueType = TypeToken.createParameterizedType(null, CopyOnWriteArraySet.class, storeValueType);
+        } else if (entryType == CacheStore.CacheEntryType.LIST) {
+            this.storeValueType = TypeToken.createParameterizedType(null, CopyOnWriteArrayList.class, storeValueType);
+        } else {
+            this.storeValueType = storeValueType;
+        }
         return this;
     }
 
@@ -59,10 +65,10 @@ public class CacheSourceService implements CacheSource, Service, AutoCloseable {
         if (storeKeyType == null && prop != null) {
             String storeKeyStr = prop.getValue("store-key-type");
             String storeValueStr = prop.getValue("store-value-type");
+            String storeEntryStr = prop.getValue("store-entry-type", CacheStore.CacheEntryType.OBJECT.name()).toUpperCase();
             if (storeKeyStr != null && storeValueStr != null) {
                 try {
-                    this.storeKeyType = Class.forName(storeKeyStr);
-                    this.storeValueType = Class.forName(storeValueStr);
+                    this.setStoreType(Class.forName(storeKeyStr), Class.forName(storeValueStr), CacheStore.CacheEntryType.valueOf(storeEntryStr));
                 } catch (Exception e) {
                     logger.log(Level.SEVERE, self.getClass().getSimpleName() + " load key & value store class (" + storeKeyStr + ", " + storeValueStr + ") error", e);
                 }

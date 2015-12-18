@@ -207,7 +207,7 @@ public abstract class NodeServer {
                 }
                 CacheSourceService source = Sncp.createLocalService(resourceName, getExecutor(), CacheSourceService.class, this.sncpAddress, sncpDefaultGroups, sameGroupTransports, diffGroupTransports);
                 CacheStore store = field.getAnnotation(CacheStore.class);
-                if (store != null) source.setStoreType(store.keyType(), store.valueType());
+                if (store != null) source.setStoreType(store.keyType(), store.valueType(), store.entryType());
                 application.cacheSources.add(source);
                 regFactory.register(resourceName, CacheSource.class, source);
                 field.set(src, source);

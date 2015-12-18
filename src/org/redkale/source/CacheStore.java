@@ -20,7 +20,13 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface CacheStore {
 
+    public static enum CacheEntryType {
+        OBJECT, SET, LIST;
+    }
+
     Class keyType(); //key对应的class
 
     Class valueType();  //value 对应的class
+
+    CacheEntryType entryType() default CacheEntryType.OBJECT;
 }
