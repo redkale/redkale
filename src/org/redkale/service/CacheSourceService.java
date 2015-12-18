@@ -98,7 +98,12 @@ public class CacheSourceService implements CacheSource, Service, AutoCloseable {
             }, 10, 10, TimeUnit.SECONDS);
             logger.finest(self.getClass().getSimpleName() + ":" + self.name() + " start schedule expire executor");
         }
-        if (this.storeKeyType == null || Sncp.isRemote(self)) return;
+        if (Sncp.isRemote(self)) return;
+
+        boolean datasync = false; //是否从远程同步过数据
+        //----------同步数据……-----------
+        // TODO
+        if (this.storeKeyType == null) return;
         try {
             CacheEntry.initCreator();
             File store = new File(home, "cache/" + name());
@@ -109,6 +114,8 @@ public class CacheSourceService implements CacheSource, Service, AutoCloseable {
             while ((line = reader.readLine()) != null) {
                 if (line.isEmpty()) continue;
                 CacheEntry entry = convert.convertFrom(storeType, line);
+                if (entry.isExpired()) continue;
+                if (datasync && container.containsKey(entry.key)) continue; //已经同步了
                 container.put(entry.key, entry);
             }
             reader.close();
@@ -149,15 +156,14 @@ public class CacheSourceService implements CacheSource, Service, AutoCloseable {
         if (key == null) return false;
         CacheEntry entry = container.get(key);
         if (entry == null) return false;
-        return !(entry.expireSeconds > 0 && entry.lastAccessed + entry.expireSeconds < (System.currentTimeMillis() / 1000));
+        return !entry.isExpired();
     }
 
     @Override
     public <T> T get(Serializable key) {
         if (key == null) return null;
         CacheEntry entry = container.get(key);
-        if (entry == null) return null;
-        if (entry.expireSeconds > 0 && entry.lastAccessed + entry.expireSeconds < (System.currentTimeMillis() / 1000)) return null;
+        if (entry == null || entry.isExpired()) return null;
         return (T) entry.getValue();
     }
 
@@ -327,6 +333,11 @@ public class CacheSourceService implements CacheSource, Service, AutoCloseable {
         @Override
         public String toString() {
             return JsonFactory.root().getConvert().convertTo(this);
+        }
+
+        @Ignore
+        public boolean isExpired() {
+            return (expireSeconds > 0 && lastAccessed + expireSeconds < (System.currentTimeMillis() / 1000));
         }
 
         public int getExpireSeconds() {
