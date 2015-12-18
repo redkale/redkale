@@ -7,8 +7,6 @@ package org.redkale.test.convert;
 
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.convert.json.JsonFactory;
-import org.redkale.util.TypeToken;
-import java.lang.reflect.*;
 import java.nio.*;
 import java.util.*;
 
@@ -18,15 +16,12 @@ import java.util.*;
  */
 public class JsonTestMain {
 
-    private static final Type MAPTYPE = new TypeToken<Map<String, String>>() {
-    }.getType();
-
     public static void main(String[] args) throws Exception {
         JsonFactory factory = JsonFactory.root();
         factory.setTiny(true); 
         final JsonConvert convert = JsonFactory.root().getConvert();
         String json = "{\"access_token\":\"vVX2bIjN5P9TMOphDkStM96eNWapAehTuWAlVDO74aFaYxLwj2b-9-T9p_W2mfr9\",\"expires_in\":7200, \"aa\":\"\"}"; 
-        Map<String, String> map = convert.convertFrom(MAPTYPE, json);
+        Map<String, String> map = convert.convertFrom(JsonConvert.TYPE_MAP_STRING_STRING, json);
         System.out.println(map);
         System.out.println(convert.convertTo(map));
         ByteBuffer[] buffers = convert.convertTo(() -> ByteBuffer.allocate(1024), map);

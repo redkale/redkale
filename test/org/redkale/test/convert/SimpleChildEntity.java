@@ -13,12 +13,12 @@ import java.util.*;
  * @author zhangjx
  */
 @ConvertEntity("myname")
-public class TestEntry2 extends TestEntry {
+public class SimpleChildEntity extends SimpleEntity {
 
     private String extend;
 
-    public static TestEntry2 create() {
-        TestEntry2 v = new TestEntry2();
+    public static SimpleChildEntity create() {
+        SimpleChildEntity v = new SimpleChildEntity();
         v.setName("this is name\n \"test");
         v.setId(1000000001);
         v.setAddrs(new int[]{22222, 33333, 44444, 55555, 66666, 77777, 88888, 99999});

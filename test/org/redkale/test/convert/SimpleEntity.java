@@ -13,7 +13,7 @@ import java.util.*;
  *
  * @author zhangjx
  */
-public class TestEntry {
+public class SimpleEntity {
 
     private String name;
 
@@ -29,8 +29,8 @@ public class TestEntry {
     
     private Map<String, Integer> map;
 
-    public static TestEntry create() {
-        TestEntry v = new TestEntry();
+    public static SimpleEntity create() {
+        SimpleEntity v = new SimpleEntity();
         v.setName("this is name\n \"test");
         v.setId(1000000001);
         v.setAddrs(new int[]{22222, 33333, 44444, 55555, 66666, 77777, 88888, 99999});
@@ -50,8 +50,8 @@ public class TestEntry {
 
     public static void main(String[] args) throws Exception {
         System.out.println(JsonFactory.root().getConvert().convertTo(create()));
-        Creator<TestEntry> creator = Creator.create(TestEntry.class); //Creator.create(10, TestEntry.class);
-        TestEntry entry = creator.create();
+        Creator<SimpleEntity> creator = Creator.create(SimpleEntity.class); //Creator.create(10, SimpleEntity.class);
+        SimpleEntity entry = creator.create();
         System.out.println(entry);
         for(int i =0; i < 10000000; i++){
             creator.create();

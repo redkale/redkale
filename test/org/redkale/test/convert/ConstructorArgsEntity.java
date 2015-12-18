@@ -10,10 +10,11 @@ import org.redkale.convert.bson.*;
 import org.redkale.convert.json.*;
 
 /**
+ * 测试不存在无参数的构造函数的bean类解析
  *
  * @author zhangjx
  */
-public class NotEmptyConstructorParamsBean {
+public class ConstructorArgsEntity {
 
     private final int userid;
 
@@ -22,7 +23,7 @@ public class NotEmptyConstructorParamsBean {
     private long createtime;
 
     @ConstructorProperties({"userid", "name"})
-    public NotEmptyConstructorParamsBean(int userid, String name) {
+    public ConstructorArgsEntity(int userid, String name) {
         this.userid = userid;
         this.name = name;
     }
@@ -30,13 +31,13 @@ public class NotEmptyConstructorParamsBean {
     public static void main(String[] args) throws Exception {
         final JsonConvert jsonConvert = JsonFactory.root().getConvert();
         final BsonConvert bsonConvert = BsonFactory.root().getConvert();
-        NotEmptyConstructorParamsBean bean = new NotEmptyConstructorParamsBean(12345678, "哈哈");
+        ConstructorArgsEntity bean = new ConstructorArgsEntity(12345678, "哈哈");
         bean.setCreatetime(System.currentTimeMillis());
         String json = jsonConvert.convertTo(bean);
         System.out.println(json);
-        System.out.println(jsonConvert.convertFrom(NotEmptyConstructorParamsBean.class, json).toString());
+        System.out.println(jsonConvert.convertFrom(ConstructorArgsEntity.class, json).toString());
         byte[] bytes = bsonConvert.convertTo(bean);
-        System.out.println(bsonConvert.convertFrom(NotEmptyConstructorParamsBean.class, bytes).toString());
+        System.out.println(bsonConvert.convertFrom(ConstructorArgsEntity.class, bytes).toString());
     }
 
     public int getUserid() {
