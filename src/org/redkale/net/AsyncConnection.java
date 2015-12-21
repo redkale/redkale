@@ -82,8 +82,8 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
     }
 
     //------------------------------------------------------------------------------------------------------------------------------
-    public static AsyncConnection create(final String protocol, final SocketAddress address) throws IOException {
-        return create(protocol, address, 0, 0);
+    public static AsyncConnection create(final String protocol, final AsynchronousChannelGroup group, final SocketAddress address) throws IOException {
+        return create(protocol, group, address, 0, 0);
     }
 
     /**
@@ -91,15 +91,16 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
      *
      * @param protocol
      * @param address
+     * @param group
      * @param readTimeoutSecond0
      * @param writeTimeoutSecond0
      * @return
      * @throws java.io.IOException
      */
-    public static AsyncConnection create(final String protocol, final SocketAddress address,
+    public static AsyncConnection create(final String protocol, final AsynchronousChannelGroup group, final SocketAddress address,
             final int readTimeoutSecond0, final int writeTimeoutSecond0) throws IOException {
         if ("TCP".equalsIgnoreCase(protocol)) {
-            AsynchronousSocketChannel channel = AsynchronousSocketChannel.open();
+            AsynchronousSocketChannel channel = AsynchronousSocketChannel.open(group);
             try {
                 channel.connect(address).get(3, TimeUnit.SECONDS);
             } catch (Exception e) {
@@ -177,7 +178,7 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
                 int rs = 0;
                 for (int i = offset; i < offset + length; i++) {
                     rs += channel.send(srcs[i], remoteAddress);
-                    if(i != offset) Thread.sleep(10);
+                    if (i != offset) Thread.sleep(10);
                 }
                 if (handler != null) handler.completed(rs, attachment);
             } catch (Exception e) {
@@ -425,9 +426,10 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
     }
 
     /**
-     * 通常用于 ssl socket 
+     * 通常用于 ssl socket
+     *
      * @param socket
-     * @return 
+     * @return
      */
     public static AsyncConnection create(final Socket socket) {
         return create(socket, null, 0, 0);
@@ -485,17 +487,17 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
             channel.write(srcs, offset, length, writeTimeoutSecond > 0 ? writeTimeoutSecond : 60, TimeUnit.SECONDS,
                     attachment, new CompletionHandler<Long, A>() {
 
-                        @Override
-                        public void completed(Long result, A attachment) {
-                            handler.completed(result.intValue(), attachment);
-                        }
+                @Override
+                public void completed(Long result, A attachment) {
+                    handler.completed(result.intValue(), attachment);
+                }
 
-                        @Override
-                        public void failed(Throwable exc, A attachment) {
-                            handler.failed(exc, attachment);
-                        }
+                @Override
+                public void failed(Throwable exc, A attachment) {
+                    handler.failed(exc, attachment);
+                }
 
-                    });
+            });
         }
 
         @Override

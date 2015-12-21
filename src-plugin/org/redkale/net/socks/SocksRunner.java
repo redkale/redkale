@@ -6,7 +6,6 @@
 package org.redkale.net.socks;
 
 import org.redkale.net.AsyncConnection;
-import org.redkale.net.Context;
 import java.net.*;
 import java.nio.*;
 import java.nio.channels.*;
@@ -25,7 +24,7 @@ public class SocksRunner implements Runnable {
 
     private final boolean finest;
 
-    private final Context context;
+    private final SocksContext context;
 
     private final byte[] bindAddressBytes;
 
@@ -37,7 +36,7 @@ public class SocksRunner implements Runnable {
 
     private AsyncConnection remoteChannel;
 
-    public SocksRunner(Context context, AsyncConnection channel, final byte[] bindAddressBytes) {
+    public SocksRunner(SocksContext context, AsyncConnection channel, final byte[] bindAddressBytes) {
         this.context = context;
         this.logger = context.getLogger();
         this.finest = this.context.getLogger().isLoggable(Level.FINEST);
@@ -102,12 +101,14 @@ public class SocksRunner implements Runnable {
                     return;
                 }
                 try {
-                    remoteChannel = AsyncConnection.create("TCP", remoteAddress, 6, 6);
+                    remoteChannel = AsyncConnection.create("TCP", context.getAsynchronousChannelGroup(), remoteAddress, 6, 6);
                     buffer.clear();
                     buffer.putChar((char) 0x0500);
                     buffer.put((byte) 0x00);  //rsv
                     buffer.put(bindAddressBytes);
                     buffer.flip();
+                    final ByteBuffer rbuffer = context.pollBuffer();
+                    final ByteBuffer wbuffer = context.pollBuffer();
                     channel.write(buffer, null, new CompletionHandler<Integer, Void>() {
 
                         @Override
@@ -121,6 +122,8 @@ public class SocksRunner implements Runnable {
 
                         @Override
                         public void failed(Throwable exc, Void attachment) {
+                            context.offerBuffer(rbuffer);
+                            context.offerBuffer(wbuffer);
                             closeRunner(exc);
                         }
                     });
@@ -155,8 +158,8 @@ public class SocksRunner implements Runnable {
     }
 
     private void stream() {
-        new StreamCompletionHandler(channel, remoteChannel).completed(0, null);
-        new StreamCompletionHandler(remoteChannel, channel).completed(0, null);
+        new StreamCompletionHandler(channel, remoteChannel).completed(1, null);
+        new StreamCompletionHandler(remoteChannel, channel).completed(1, null);
     }
 
     public void closeRunner(final Throwable e) {
@@ -178,15 +181,15 @@ public class SocksRunner implements Runnable {
 
     private class StreamCompletionHandler implements CompletionHandler<Integer, Void> {
 
-        private final AsyncConnection conn1;
+        private final AsyncConnection readconn;
 
-        private final AsyncConnection conn2;
+        private final AsyncConnection writeconn;
 
         private final ByteBuffer rbuffer;
 
         public StreamCompletionHandler(AsyncConnection conn1, AsyncConnection conn2) {
-            this.conn1 = conn1;
-            this.conn2 = conn2;
+            this.readconn = conn1;
+            this.writeconn = conn2;
             this.rbuffer = context.pollBuffer();
             this.rbuffer.flip();
         }
@@ -195,16 +198,24 @@ public class SocksRunner implements Runnable {
         public void completed(Integer result0, Void v0) {
             final CompletionHandler self = this;
             if (rbuffer.hasRemaining()) {
-                conn2.write(rbuffer, null, self);
+                writeconn.write(rbuffer, null, self);
+                return;
+            }
+            if (result0 < 1) {
+                self.failed(null, v0);
                 return;
             }
             rbuffer.clear();
-            conn1.read(rbuffer, null, new CompletionHandler<Integer, Void>() {
+            readconn.read(rbuffer, null, new CompletionHandler<Integer, Void>() {
 
                 @Override
                 public void completed(Integer result, Void attachment) {
+                    if (result < 1) {
+                        self.failed(null, attachment);
+                        return;
+                    }
                     rbuffer.flip();
-                    conn2.write(rbuffer, attachment, self);
+                    writeconn.write(rbuffer, attachment, self);
                 }
 
                 @Override
@@ -217,8 +228,8 @@ public class SocksRunner implements Runnable {
         @Override
         public void failed(Throwable exc, Void v) {
             context.offerBuffer(rbuffer);
-            conn1.dispose();
-            conn2.dispose();
+            readconn.dispose();
+            writeconn.dispose();
             if (finest) logger.log(Level.FINEST, "StreamCompletionHandler closed", exc);
         }
     }

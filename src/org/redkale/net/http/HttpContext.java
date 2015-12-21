@@ -20,7 +20,7 @@ import org.redkale.watch.*;
  * @see http://www.redkale.org
  * @author zhangjx
  */
-public final class HttpContext extends Context {
+public class HttpContext extends Context {
 
     protected final String contextPath;
 

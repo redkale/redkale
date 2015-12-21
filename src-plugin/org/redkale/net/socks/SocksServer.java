@@ -7,7 +7,6 @@ package org.redkale.net.socks;
 
 import org.redkale.util.AnyValue;
 import org.redkale.net.Server;
-import org.redkale.net.http.HttpContext;
 import org.redkale.util.ObjectPool;
 import org.redkale.net.Context;
 import org.redkale.watch.WatchFactory;
@@ -57,7 +56,7 @@ public final class SocksServer extends Server {
         AtomicLong createResponseCounter = watch == null ? new AtomicLong() : watch.createWatchNumber("SOCKS_" + port + ".Response.creatCounter");
         AtomicLong cycleResponseCounter = watch == null ? new AtomicLong() : watch.createWatchNumber("SOCKS_" + port + ".Response.cycleCounter");
         ObjectPool<Response> responsePool = SocksResponse.createPool(createResponseCounter, cycleResponseCounter, this.responsePoolSize, null);
-        HttpContext localcontext = new HttpContext(this.serverStartTime, this.logger, executor, rcapacity, bufferPool, responsePool,
+        SocksContext localcontext = new SocksContext(this.serverStartTime, this.logger, executor, rcapacity, bufferPool, responsePool,
                 this.maxbody, this.charset, this.address, this.prepare, this.watch, this.readTimeoutSecond, this.writeTimeoutSecond, "");
         responsePool.setCreator((Object... params) -> new SocksResponse(localcontext, new SocksRequest(localcontext)));
         return localcontext;

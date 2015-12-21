@@ -6,10 +6,10 @@
 package org.redkale.net.socks;
 
 import org.redkale.net.AsyncConnection;
-import org.redkale.net.http.HttpContext;
 import org.redkale.net.http.HttpRequest;
 import java.net.*;
 import java.nio.*;
+import java.nio.channels.*;
 
 /**
  *
@@ -22,7 +22,7 @@ public class SocksRequest extends HttpRequest {
 
     private short requestid;
 
-    protected SocksRequest(HttpContext context) {
+    protected SocksRequest(SocksContext context) {
         super(context, null);
     }
 
@@ -41,6 +41,10 @@ public class SocksRequest extends HttpRequest {
 
     protected InetSocketAddress parseSocketAddress() {
         return HttpRequest.parseSocketAddress(getRequestURI());
+    }
+
+    public AsynchronousChannelGroup getAsynchronousChannelGroup() {
+        return ((SocksContext) context).getAsynchronousChannelGroup();
     }
 
     @Override

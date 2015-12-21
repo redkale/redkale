@@ -7,7 +7,6 @@ package org.redkale.net.socks;
 
 import org.redkale.net.AsyncConnection;
 import org.redkale.util.ObjectPool;
-import org.redkale.net.Context;
 import org.redkale.net.http.HttpResponse;
 import org.redkale.util.Creator;
 import org.redkale.net.Response;
@@ -20,7 +19,7 @@ import java.util.concurrent.atomic.*;
  */
 public class SocksResponse extends HttpResponse<SocksRequest> {
 
-    protected SocksResponse(Context context, SocksRequest request) {
+    protected SocksResponse(SocksContext context, SocksRequest request) {
         super(context, request, (String[][]) null, (String[][]) null, null);
     }
 
