@@ -74,7 +74,7 @@ public interface Reproduce<D, S> {
 
                 for (java.lang.reflect.Method getter : srcClass.getMethods()) {
                     if (Modifier.isStatic(getter.getModifiers())) continue;
-                    if (getter.getParameterCount() > 0) continue;
+                     if (getter.getParameterTypes().length > 0) continue;
                     if ("getClass".equals(getter.getName())) continue;
                     if (!getter.getName().startsWith("get") && !getter.getName().startsWith("is")) continue;
                     java.lang.reflect.Method setter;
