@@ -116,7 +116,7 @@ public abstract class TypeToken<T> {
                     boolean first = true;
                     for (Type t : actualTypeArguments) {
                         if (!first) sb.append(", ");
-                        sb.append(t.getTypeName());
+                        sb.append(t);
                         first = false;
                     }
                     sb.append(">");
