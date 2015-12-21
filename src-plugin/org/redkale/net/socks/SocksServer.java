@@ -42,6 +42,8 @@ public final class SocksServer extends Server {
     @Override
     @SuppressWarnings("unchecked")
     protected Context createContext() {
+        if (this.readTimeoutSecond < 1) this.readTimeoutSecond = 6;
+        if (this.writeTimeoutSecond < 1) this.writeTimeoutSecond = 6;
         final int port = this.address.getPort();
         AtomicLong createBufferCounter = watch == null ? new AtomicLong() : watch.createWatchNumber("SOCKS_" + port + ".Buffer.creatCounter");
         AtomicLong cycleBufferCounter = watch == null ? new AtomicLong() : watch.createWatchNumber("SOCKS_" + port + ".Buffer.cycleCounter");

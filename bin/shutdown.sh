@@ -1,6 +1,6 @@
 #!/bin/sh
 
-export LANG="zh_CN.UTF-8"
+export LC_ALL="zh_CN.UTF-8"
 
 APP_HOME=`dirname "$0"`
 
