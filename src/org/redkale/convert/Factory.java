@@ -37,13 +37,13 @@ public abstract class Factory<R extends Reader, W extends Writer> {
     private final Encodeable<W, ?> anyEncoder = new AnyEncoder(this);
 
     //-----------------------------------------------------------------------------------
-    private final HashedMap<Class, Creator> creators = new HashedMap();
+    private final ConcurrentHashMap<Class, Creator> creators = new ConcurrentHashMap();
 
-    private final Map<String, Class> entitys = new ConcurrentHashMap();
+    private final ConcurrentHashMap<String, Class> entitys = new ConcurrentHashMap();
 
-    private final HashedMap<Type, Decodeable<R, ?>> decoders = new HashedMap();
+    private final ConcurrentHashMap<Type, Decodeable<R, ?>> decoders = new ConcurrentHashMap();
 
-    private final HashedMap<Type, Encodeable<W, ?>> encoders = new HashedMap();
+    private final ConcurrentHashMap<Type, Encodeable<W, ?>> encoders = new ConcurrentHashMap();
 
     private final HashMap<AccessibleObject, ConvertColumnEntry> columnEntrys = new HashMap();
 
