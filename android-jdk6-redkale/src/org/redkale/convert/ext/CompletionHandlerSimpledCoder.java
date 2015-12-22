@@ -15,7 +15,7 @@ import org.redkale.convert.*;
  * @param <R>
  * @param <W>
  */
-public class CompletionHandlerSimpledCoder<R extends Reader, W extends Writer> extends SimpledCoder<R, W, CompletionHandler> {
+public final class CompletionHandlerSimpledCoder<R extends Reader, W extends Writer> extends SimpledCoder<R, W, CompletionHandler> {
 
     public static final CompletionHandlerSimpledCoder instance = new CompletionHandlerSimpledCoder();
 
