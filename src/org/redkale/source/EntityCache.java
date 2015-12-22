@@ -42,7 +42,7 @@ public final class EntityCache<T> {
 
     private final Reproduce<T, T> reproduce;
 
-    private boolean fullloaded;
+    private volatile boolean fullloaded;
 
     final EntityInfo<T> info;
 
