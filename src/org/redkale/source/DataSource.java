@@ -42,14 +42,6 @@ public interface DataSource {
 
     public <T> void insert(final DataConnection conn, final T... values);
 
-    /**
-     * 将entity的对象全部加载到Cache中去，如果clazz没有被@javax.persistence.Cacheable注解则不做任何事
-     * <p>
-     * @param <T>
-     * @param clazz
-     */
-    public <T> void refreshCache(final Class<T> clazz);
-
     //-------------------------delete--------------------------
     /**
      * 删除对象， 必须是Entity对象

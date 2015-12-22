@@ -346,7 +346,6 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
      * @param <T>
      * @param clazz
      */
-    @Override
     public <T> void refreshCache(Class<T> clazz) {
         EntityInfo<T> info = loadEntityInfo(clazz);
         EntityCache<T> cache = info.getCache();

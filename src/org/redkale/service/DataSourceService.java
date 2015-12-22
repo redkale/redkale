@@ -45,11 +45,6 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
-    public <T> void refreshCache(Class<T> clazz) {
-        source.refreshCache(clazz);
-    }
-
-    @Override
     public <T> void delete(T... values) {
         source.delete(values);
     }
