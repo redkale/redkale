@@ -11,6 +11,7 @@ import java.util.Map;
 import java.lang.reflect.*;
 import java.math.BigInteger;
 import java.net.*;
+import java.nio.channels.*;
 import static org.redkale.convert.ext.InetAddressSimpledCoder.*;
 import java.util.*;
 import java.util.concurrent.*;
@@ -90,6 +91,7 @@ public abstract class Factory<R extends Reader, W extends Writer> {
             this.register(Class.class, TypeSimpledCoder.instance);
             this.register(InetSocketAddress.class, InetSocketAddressSimpledCoder.instance);
             this.register(Pattern.class, PatternSimpledCoder.instance);
+            this.register(CompletionHandler.class, CompletionHandlerSimpledCoder.instance);
             //---------------------------------------------------------
             this.register(boolean[].class, BoolArraySimpledCoder.instance);
             this.register(byte[].class, ByteArraySimpledCoder.instance);
