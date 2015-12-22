@@ -39,7 +39,7 @@ public interface Reproduce<D, S> {
             MethodVisitor mv;
             AnnotationVisitor av0;
 
-            cw.visit(V1_8, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynName, "Ljava/lang/Object;L" + supDynName + "<" + destDesc + srcDesc + ">;", "java/lang/Object", new String[]{supDynName});
+            cw.visit(V1_7, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynName, "Ljava/lang/Object;L" + supDynName + "<" + destDesc + srcDesc + ">;", "java/lang/Object", new String[]{supDynName});
 
             { // 构造函数
                 mv = (cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null));

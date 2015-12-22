@@ -143,7 +143,7 @@ public abstract class TypeToken<T> {
         ClassWriter cw = new ClassWriter(0);
         FieldVisitor fv;
         MethodVisitor mv;
-        cw.visit(V1_8, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynName, null, "java/lang/Object", null);
+        cw.visit(V1_7, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynName, null, "java/lang/Object", null);
         String rawTypeDesc = org.objectweb.asm.Type.getDescriptor(rawType);
         StringBuilder sb = new StringBuilder();
         sb.append(rawTypeDesc.substring(0, rawTypeDesc.length() - 1)).append('<');

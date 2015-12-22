@@ -70,7 +70,7 @@ public interface Creator<T> {
             FieldVisitor fv;
             MethodVisitor mv;
             AnnotationVisitor av0;
-            cw.visit(V1_8, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynName, "Ljava/lang/Object;L" + supDynName + "<" + interDesc + ">;", "java/lang/Object", new String[]{supDynName});
+            cw.visit(V1_7, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynName, "Ljava/lang/Object;L" + supDynName + "<" + interDesc + ">;", "java/lang/Object", new String[]{supDynName});
 
             {//构造方法
                 mv = cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null);
