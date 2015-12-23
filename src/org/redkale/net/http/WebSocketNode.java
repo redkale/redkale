@@ -67,7 +67,7 @@ public abstract class WebSocketNode {
         Set<String> engineids = localNodes.get(groupid);
         if (engineids == null) {
             engineids = new CopyOnWriteArraySet<>();
-            localNodes.put(groupid, engineids);
+            localNodes.putIfAbsent(groupid, engineids);
         }
         if (localSncpAddress != null && engineids.isEmpty()) connect(groupid, localSncpAddress);
         engineids.add(engineid);
