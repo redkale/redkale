@@ -281,6 +281,28 @@ public abstract class Factory<R extends Reader, W extends Writer> {
         if (type instanceof ParameterizedType) {
             final ParameterizedType pts = (ParameterizedType) type;
             clazz = (Class) (pts).getRawType();
+        } else if (type instanceof TypeVariable) { // e.g.  <? extends E>
+            final TypeVariable tv = (TypeVariable) type;
+            Class cz = tv.getBounds().length == 0 ? Object.class : null;
+            for (Type f : tv.getBounds()) {
+                if (f instanceof Class) {
+                    cz = (Class) f;
+                    break;
+                }
+            }
+            clazz = cz;
+            if (cz == null) throw new ConvertException("not support the type (" + type + ")");
+        } else if (type instanceof WildcardType) { // e.g. <? extends Serializable>
+            final WildcardType wt = (WildcardType) type;
+            Class cz = null;
+            for (Type f : wt.getUpperBounds()) {
+                if (f instanceof Class) {
+                    cz = (Class) f;
+                    break;
+                }
+            }
+            clazz = cz;
+            if (cz == null) throw new ConvertException("not support the type (" + type + ")");
         } else if (type instanceof Class) {
             clazz = (Class) type;
         } else {
