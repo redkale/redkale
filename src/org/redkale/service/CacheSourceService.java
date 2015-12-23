@@ -34,7 +34,7 @@ public class CacheSourceService<K extends Serializable, V extends Object> implem
     @Resource
     private JsonConvert convert;
 
-    private boolean needStore = true;
+    private boolean needStore;
 
     private Class keyType;
 
@@ -53,6 +53,7 @@ public class CacheSourceService<K extends Serializable, V extends Object> implem
     protected final ConcurrentHashMap<K, CacheEntry<K, ?>> container = new ConcurrentHashMap<>();
 
     public CacheSourceService() {
+         CacheEntry.initCreator();
     }
 
     public final CacheSourceService setStoreType(Class keyType, Class valueType) {
@@ -60,6 +61,7 @@ public class CacheSourceService<K extends Serializable, V extends Object> implem
         this.objValueType = valueType;
         this.setValueType = TypeToken.createParameterizedType(null, CopyOnWriteArraySet.class, valueType);
         this.listValueType = TypeToken.createParameterizedType(null, ConcurrentLinkedQueue.class, valueType);
+        this.setNeedStore(this.keyType != null && this.keyType != Serializable.class && this.objValueType != null);
         return this;
     }
 
@@ -72,7 +74,6 @@ public class CacheSourceService<K extends Serializable, V extends Object> implem
         final CacheSourceService self = this;
         AnyValue prop = conf == null ? null : conf.getAnyValue("property");
         if (keyType == null && prop != null) {
-            this.needStore = prop.getBoolValue("store-value", true);
             String storeKeyStr = prop.getValue("key-type");
             String storeValueStr = prop.getValue("value-type");
             if (storeKeyStr != null && storeValueStr != null) {
@@ -82,6 +83,7 @@ public class CacheSourceService<K extends Serializable, V extends Object> implem
                     logger.log(Level.SEVERE, self.getClass().getSimpleName() + " load key & value store class (" + storeKeyStr + ", " + storeValueStr + ") error", e);
                 }
             }
+            if (prop.getBoolValue("store-ignore", false)) setNeedStore(false);
         }
         String expireHandlerClass = prop == null ? null : prop.getValue("expirehandler");
         if (expireHandlerClass != null) {
@@ -136,7 +138,7 @@ public class CacheSourceService<K extends Serializable, V extends Object> implem
             String line;
             while ((line = reader.readLine()) != null) {
                 if (line.isEmpty()) continue;
-                CacheEntry<K, ?> entry = convert.convertFrom(line.contains(CacheEntry.JSON_SET_KEY) ? storeSetType : (line.contains(CacheEntry.JSON_LIST_KEY) ? storeListType : storeObjType), line);
+                CacheEntry<K, ?> entry = convert.convertFrom(line.startsWith(CacheEntry.JSON_SET_KEY) ? storeSetType : (line.startsWith(CacheEntry.JSON_LIST_KEY) ? storeListType : storeObjType), line);
                 if (entry.isExpired()) continue;
                 if (datasync && container.containsKey(entry.key)) continue; //已经同步了
                 container.put(entry.key, entry);
@@ -162,11 +164,11 @@ public class CacheSourceService<K extends Serializable, V extends Object> implem
             File store = new File(home, "cache/" + name());
             store.getParentFile().mkdirs();
             PrintStream stream = new PrintStream(store, "UTF-8");
-            Collection<CacheEntry<K, ?>> values = (Collection<CacheEntry<K, ?>>) container.values();
             final Type storeObjType = TypeToken.createParameterizedType(null, CacheEntry.class, keyType, objValueType);
             final Type storeSetType = TypeToken.createParameterizedType(null, CacheEntry.class, keyType, setValueType);
             final Type storeListType = TypeToken.createParameterizedType(null, CacheEntry.class, keyType, listValueType);
-            for (CacheEntry entry : values) {
+            Collection<CacheEntry<K, ?>> entrys = (Collection<CacheEntry<K, ?>>) container.values();
+            for (CacheEntry entry : entrys) {
                 stream.println(convert.convertTo(entry.isSetCacheType() ? storeSetType : (entry.isListCacheType() ? storeListType : storeObjType), entry));
             }
             container.clear();
@@ -407,9 +409,9 @@ public class CacheSourceService<K extends Serializable, V extends Object> implem
 
     public static final class CacheEntry<K extends Serializable, T> {
 
-        public static final String JSON_SET_KEY = "\"cacheType\":\"" + CacheEntryType.SET + "\"";
+        public static final String JSON_SET_KEY = "{\"cacheType\":\"" + CacheEntryType.SET + "\"";
 
-        public static final String JSON_LIST_KEY = "\"cacheType\":\"" + CacheEntryType.LIST + "\"";
+        public static final String JSON_LIST_KEY = "{\"cacheType\":\"" + CacheEntryType.LIST + "\"";
 
         public static class CacheEntryCreator implements Creator<CacheEntry> {
 

@@ -210,8 +210,8 @@ public abstract class NodeServer {
                 Type genericType = field.getGenericType();
                 ParameterizedType pt = (genericType instanceof ParameterizedType) ? (ParameterizedType) genericType : null;
                 Type valType = pt == null ? null : pt.getActualTypeArguments()[1];
-                source.setNeedStore(field.getAnnotation(Transient.class) == null);
                 source.setStoreType(pt == null ? Serializable.class : (Class) pt.getActualTypeArguments()[0], valType instanceof Class ? (Class) valType : Object.class);
+                if (field.getAnnotation(Transient.class) != null) source.setNeedStore(false); //必须在setStoreType之后
                 application.cacheSources.add(source);
                 regFactory.register(resourceName, CacheSource.class, source);
                 field.set(src, source);

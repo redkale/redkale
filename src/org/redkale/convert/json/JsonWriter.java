@@ -165,7 +165,7 @@ public class JsonWriter implements Writer {
 
     @Override
     public void writeSmallString(String value) {
-        writeTo(false, value);
+        writeTo(true, value);
     }
 
     @Override
@@ -200,22 +200,22 @@ public class JsonWriter implements Writer {
 
     @Override
     public final void writeInt(int value) {
-        writeSmallString(String.valueOf(value));
+        writeTo(false, String.valueOf(value));
     }
 
     @Override
     public final void writeLong(long value) {
-        writeSmallString(String.valueOf(value));
+        writeTo(false, String.valueOf(value));
     }
 
     @Override
     public final void writeFloat(float value) {
-        writeSmallString(String.valueOf(value));
+        writeTo(false, String.valueOf(value));
     }
 
     @Override
     public final void writeDouble(double value) {
-        writeSmallString(String.valueOf(value));
+        writeTo(false, String.valueOf(value));
     }
 
     @Override
