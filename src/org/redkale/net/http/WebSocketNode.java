@@ -35,7 +35,7 @@ public abstract class WebSocketNode {
 
     //存放所有用户分布在节点上的队列信息,Set<InetSocketAddress> 为 sncpnode 的集合
     @Resource(name = "$_nodeaddress_source")
-    protected CacheSource source;
+    protected CacheSource<Serializable, InetSocketAddress> source;
 
     //存放本地节点上所有在线用户的队列信息,Set<String> 为 engineid 的集合
     protected final ConcurrentHashMap<Serializable, Set<String>> localNodes = new ConcurrentHashMap();
@@ -106,7 +106,7 @@ public abstract class WebSocketNode {
             }
         }
         if ((recent && rscode == 0) || remoteNode == null) return rscode;
-        Set<InetSocketAddress> addrs = source.get(groupid);
+        Collection<InetSocketAddress> addrs = source.getCollection(groupid);
         if (addrs != null && !addrs.isEmpty()) {   //对方连接在远程节点      
             if (recent) {
                 InetSocketAddress one = null;

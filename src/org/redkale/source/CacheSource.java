@@ -7,66 +7,77 @@ package org.redkale.source;
 
 import java.io.*;
 import java.nio.channels.*;
+import java.util.*;
 
 /**
  *
+ * @param <K>
+ * @param <V>
  * @see http://www.redkale.org
  * @author zhangjx
  */
-public interface CacheSource {
+public interface CacheSource<K extends Serializable, V> { 
 
     default boolean isOpen() {
         return true;
     }
 
-    public boolean exists(final Serializable key);
+    public boolean exists(final K key);
 
-    public <T> T get(final Serializable key);
+    public V get(final K key);
 
-    public <T> T getAndRefresh(final Serializable key);
+    public V getAndRefresh(final K key);
 
-    public void refresh(final Serializable key);
+    public void refresh(final K key);
 
-    public <T> void set(final Serializable key, final T value);
+    public void set(final K key, final V value);
 
-    public <T> void set(final int expireSeconds, final Serializable key, final T value);
+    public void set(final int expireSeconds, final K key, final V value);
 
-    public void setExpireSeconds(final Serializable key, final int expireSeconds);
+    public void setExpireSeconds(final K key, final int expireSeconds);
 
-    public void remove(final Serializable key);
+    public void remove(final K key);
 
-    public <T> void appendListItem(final Serializable key, final T value);
+    public Collection<V> getCollection(final K key);
 
-    public <T> void removeListItem(final Serializable key, final T value);
+    public Collection<V> getCollectionAndRefresh(final K key);
 
-    public <T> void appendSetItem(final Serializable key, final T value);
+    public void appendListItem(final K key, final V value);
 
-    public <T> void removeSetItem(final Serializable key, final T value);
+    public void removeListItem(final K key, final V value);
+
+    public void appendSetItem(final K key, final V value);
+
+    public void removeSetItem(final K key, final V value);
 
     //----------------------异步版---------------------------------
-    public void exists(final CompletionHandler<Boolean, Serializable> handler, final Serializable key);
+    public void exists(final CompletionHandler<Boolean, K> handler, final K key);
 
-    public <T> void get(final CompletionHandler<T, Serializable> handler, final Serializable key);
+    public void get(final CompletionHandler<V, K> handler, final K key);
 
-    public <T> void getAndRefresh(final CompletionHandler<T, Serializable> handler, final Serializable key);
+    public void getAndRefresh(final CompletionHandler<V, K> handler, final K key);
 
-    public <T> void refresh(final CompletionHandler<Void, Serializable> handler, final Serializable key);
+    public void refresh(final CompletionHandler<Void, K> handler, final K key);
 
-    public <T> void set(final CompletionHandler<Void, Serializable> handler, final Serializable key, final T value);
+    public void set(final CompletionHandler<Void, K> handler, final K key, final V value);
 
-    public <T> void set(final CompletionHandler<Void, Serializable> handler, final int expireSeconds, final Serializable key, final T value);
+    public void set(final CompletionHandler<Void, K> handler, final int expireSeconds, final K key, final V value);
 
-    public void setExpireSeconds(final CompletionHandler<Void, Serializable> handler, final Serializable key, final int expireSeconds);
+    public void setExpireSeconds(final CompletionHandler<Void, K> handler, final K key, final int expireSeconds);
 
-    public void remove(final CompletionHandler<Void, Serializable> handler, final Serializable key);
+    public void remove(final CompletionHandler<Void, K> handler, final K key);
 
-    public <T> void appendListItem(final CompletionHandler<Void, Serializable> handler, final Serializable key, final T value);
+    public void getCollection(final CompletionHandler<Collection<V>, K> handler, final K key);
 
-    public <T> void removeListItem(final CompletionHandler<Void, Serializable> handler, final Serializable key, final T value);
+    public void getCollectionAndRefresh(final CompletionHandler<Collection<V>, K> handler, final K key);
 
-    public <T> void appendSetItem(final CompletionHandler<Void, Serializable> handler, final Serializable key, final T value);
+    public void appendListItem(final CompletionHandler<Void, K> handler, final K key, final V value);
 
-    public <T> void removeSetItem(final CompletionHandler<Void, Serializable> handler, final Serializable key, final T value);
+    public void removeListItem(final CompletionHandler<Void, K> handler, final K key, final V value);
+
+    public void appendSetItem(final CompletionHandler<Void, K> handler, final K key, final V value);
+
+    public void removeSetItem(final CompletionHandler<Void, K> handler, final K key, final V value);
 
     default void isOpen(final CompletionHandler<Boolean, Void> handler) {
         if (handler != null) handler.completed(Boolean.TRUE, null);

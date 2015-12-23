@@ -206,8 +206,10 @@ public abstract class NodeServer {
                     //src 不含 MultiRun 方法
                 }
                 CacheSourceService source = Sncp.createLocalService(resourceName, getExecutor(), CacheSourceService.class, this.sncpAddress, sncpDefaultGroups, sameGroupTransports, diffGroupTransports);
-                CacheStore store = field.getAnnotation(CacheStore.class);
-                if (store != null) source.setStoreType(store.keyType(), store.valueType(), store.entryType());
+                Type genericType = field.getGenericType();
+                ParameterizedType pt = (genericType instanceof ParameterizedType) ? (ParameterizedType) genericType : null;
+                Type valType = pt == null ? null : pt.getActualTypeArguments()[1];
+                source.setStoreType(pt == null ? Serializable.class : (Class) pt.getActualTypeArguments()[0], valType instanceof Class ? (Class) valType : Object.class);
                 application.cacheSources.add(source);
                 regFactory.register(resourceName, CacheSource.class, source);
                 field.set(src, source);

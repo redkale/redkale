@@ -20,11 +20,13 @@ import org.redkale.util.*;
 
 /**
  *
+ * @param <K>
+ * @param <V>
  * @see http://www.redkale.org
  * @author zhangjx
  */
 @AutoLoad(false)
-public class CacheSourceService implements CacheSource, Service, AutoCloseable {
+public class CacheSourceService<K extends Serializable, V> implements CacheSource<K, V>, Service, AutoCloseable {
 
     @Resource(name = "APP_HOME")
     private File home;
@@ -32,9 +34,13 @@ public class CacheSourceService implements CacheSource, Service, AutoCloseable {
     @Resource
     private JsonConvert convert;
 
-    private Class storeKeyType;
+    private Class keyType;
 
-    private Type storeValueType;
+    private Type objValueType;
+
+    private Type setValueType;
+
+    private Type listValueType;
 
     private ScheduledThreadPoolExecutor scheduler;
 
@@ -42,20 +48,16 @@ public class CacheSourceService implements CacheSource, Service, AutoCloseable {
 
     private final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
 
-    protected final ConcurrentHashMap<Serializable, CacheEntry> container = new ConcurrentHashMap<>();
+    protected final ConcurrentHashMap<K, CacheEntry<K, ?>> container = new ConcurrentHashMap<>();
 
     public CacheSourceService() {
     }
 
-    public CacheSourceService setStoreType(Class storeKeyType, Class storeValueType, CacheStore.CacheEntryType entryType) {
-        this.storeKeyType = storeKeyType;
-        if (entryType == CacheStore.CacheEntryType.SET) {
-            this.storeValueType = TypeToken.createParameterizedType(null, CopyOnWriteArraySet.class, storeValueType);
-        } else if (entryType == CacheStore.CacheEntryType.LIST) {
-            this.storeValueType = TypeToken.createParameterizedType(null, CopyOnWriteArrayList.class, storeValueType);
-        } else {
-            this.storeValueType = storeValueType;
-        }
+    public CacheSourceService setStoreType(Class keyType, Class valueType) {
+        this.keyType = keyType;
+        this.objValueType = valueType;
+        this.setValueType = TypeToken.createParameterizedType(null, CopyOnWriteArraySet.class, valueType);
+        this.listValueType = TypeToken.createParameterizedType(null, ConcurrentLinkedQueue.class, valueType);
         return this;
     }
 
@@ -63,13 +65,12 @@ public class CacheSourceService implements CacheSource, Service, AutoCloseable {
     public void init(AnyValue conf) {
         final CacheSourceService self = this;
         AnyValue prop = conf == null ? null : conf.getAnyValue("property");
-        if (storeKeyType == null && prop != null) {
-            String storeKeyStr = prop.getValue("store-key-type");
-            String storeValueStr = prop.getValue("store-value-type");
-            String storeEntryStr = prop.getValue("store-entry-type", CacheStore.CacheEntryType.OBJECT.name()).toUpperCase();
+        if (keyType == null && prop != null) {
+            String storeKeyStr = prop.getValue("key-type");
+            String storeValueStr = prop.getValue("value-type");
             if (storeKeyStr != null && storeValueStr != null) {
                 try {
-                    this.setStoreType(Class.forName(storeKeyStr), Class.forName(storeValueStr), CacheStore.CacheEntryType.valueOf(storeEntryStr));
+                    this.setStoreType(Class.forName(storeKeyStr), Class.forName(storeValueStr));
                 } catch (Exception e) {
                     logger.log(Level.SEVERE, self.getClass().getSimpleName() + " load key & value store class (" + storeKeyStr + ", " + storeValueStr + ") error", e);
                 }
@@ -89,7 +90,7 @@ public class CacheSourceService implements CacheSource, Service, AutoCloseable {
                 t.setDaemon(true);
                 return t;
             });
-            final List<Serializable> keys = new ArrayList<>();
+            final List<K> keys = new ArrayList<>();
             scheduler.scheduleWithFixedDelay(() -> {
                 keys.clear();
                 int now = (int) (System.currentTimeMillis() / 1000);
@@ -98,7 +99,7 @@ public class CacheSourceService implements CacheSource, Service, AutoCloseable {
                         keys.add(x.key);
                     }
                 });
-                for (Serializable key : keys) {
+                for (K key : keys) {
                     CacheEntry entry = container.remove(key);
                     if (expireHandler != null && entry != null) expireHandler.accept(entry);
                 }
@@ -110,17 +111,25 @@ public class CacheSourceService implements CacheSource, Service, AutoCloseable {
         boolean datasync = false; //是否从远程同步过数据
         //----------同步数据……-----------
         // TODO
-        if (this.storeKeyType == null) return;
+        if (this.keyType == null) return;
         try {
             CacheEntry.initCreator();
             File store = new File(home, "cache/" + name());
             if (!store.isFile() || !store.canRead()) return;
             LineNumberReader reader = new LineNumberReader(new FileReader(store));
-            final Type storeType = TypeToken.createParameterizedType(null, CacheEntry.class, storeKeyType, storeValueType);
+            if (this.keyType == null) this.keyType = Serializable.class;
+            if (this.objValueType == null) {
+                this.objValueType = Object.class;
+                this.setValueType = TypeToken.createParameterizedType(null, CopyOnWriteArraySet.class, this.objValueType);
+                this.listValueType = TypeToken.createParameterizedType(null, ConcurrentLinkedQueue.class, this.objValueType);
+            }
+            final Type storeObjType = TypeToken.createParameterizedType(null, CacheEntry.class, keyType, objValueType);
+            final Type storeSetType = TypeToken.createParameterizedType(null, CacheEntry.class, keyType, setValueType);
+            final Type storeListType = TypeToken.createParameterizedType(null, CacheEntry.class, keyType, listValueType);
             String line;
             while ((line = reader.readLine()) != null) {
                 if (line.isEmpty()) continue;
-                CacheEntry entry = convert.convertFrom(storeType, line);
+                CacheEntry<K, ?> entry = convert.convertFrom(line.contains(CacheEntry.JSON_SET_KEY) ? storeSetType : (line.contains(CacheEntry.JSON_LIST_KEY) ? storeListType : storeObjType), line);
                 if (entry.isExpired()) continue;
                 if (datasync && container.containsKey(entry.key)) continue; //已经同步了
                 container.put(entry.key, entry);
@@ -140,16 +149,18 @@ public class CacheSourceService implements CacheSource, Service, AutoCloseable {
     @Override
     public void destroy(AnyValue conf) {
         if (scheduler != null) scheduler.shutdownNow();
-        if (this.storeKeyType == null || Sncp.isRemote(this) || container.isEmpty()) return;
+        if (this.keyType == null || Sncp.isRemote(this) || container.isEmpty()) return;
         try {
             CacheEntry.initCreator();
             File store = new File(home, "cache/" + name());
             store.getParentFile().mkdirs();
             PrintStream stream = new PrintStream(store, "UTF-8");
-            Collection<CacheEntry> values = container.values();
-            final Type storeType = TypeToken.createParameterizedType(null, CacheEntry.class, storeKeyType, storeValueType);;
+            Collection<CacheEntry<K, ?>> values = (Collection<CacheEntry<K, ?>>) container.values();
+            final Type storeObjType = TypeToken.createParameterizedType(null, CacheEntry.class, keyType, objValueType);
+            final Type storeSetType = TypeToken.createParameterizedType(null, CacheEntry.class, keyType, setValueType);
+            final Type storeListType = TypeToken.createParameterizedType(null, CacheEntry.class, keyType, listValueType);
             for (CacheEntry entry : values) {
-                stream.println(convert.convertTo(storeType, entry));
+                stream.println(convert.convertTo(entry.isSetCacheType() ? storeSetType : (entry.isListCacheType() ? storeListType : storeObjType), entry));
             }
             container.clear();
             stream.close();
@@ -159,7 +170,7 @@ public class CacheSourceService implements CacheSource, Service, AutoCloseable {
     }
 
     @Override
-    public boolean exists(Serializable key) {
+    public boolean exists(K key) {
         if (key == null) return false;
         CacheEntry entry = container.get(key);
         if (entry == null) return false;
@@ -167,42 +178,46 @@ public class CacheSourceService implements CacheSource, Service, AutoCloseable {
     }
 
     @Override
-    public void exists(final CompletionHandler<Boolean, Serializable> handler, @DynAttachment final Serializable key) {
+    public void exists(final CompletionHandler<Boolean, K> handler, @DynAttachment final K key) {
         if (handler != null) handler.completed(exists(key), key);
     }
 
     @Override
-    public <T> T get(Serializable key) {
+    public V get(K key) {
         if (key == null) return null;
         CacheEntry entry = container.get(key);
-        if (entry == null || entry.isExpired()) return null;
-        return (T) entry.getValue();
+        if (entry == null || entry.isExpired() || entry.value == null) return null;
+        if (entry.isListCacheType()) return (V) new ArrayList((Collection) entry.value);
+        if (entry.isSetCacheType()) return (V) new HashSet((Collection) entry.value);
+        return (V) entry.getValue();
     }
 
     @Override
-    public <T> void get(final CompletionHandler<T, Serializable> handler, @DynAttachment final Serializable key) {
+    public void get(final CompletionHandler<V, K> handler, @DynAttachment final K key) {
         if (handler != null) handler.completed(get(key), key);
     }
 
     @Override
     @MultiRun
-    public <T> T getAndRefresh(Serializable key) {
+    public V getAndRefresh(K key) {
         if (key == null) return null;
         CacheEntry entry = container.get(key);
-        if (entry == null) return null;
+        if (entry == null || entry.isExpired() || entry.value == null) return null;
         entry.lastAccessed = (int) (System.currentTimeMillis() / 1000);
-        return (T) entry.getValue();
+        if (entry.isListCacheType()) return (V) new ArrayList((Collection) entry.value);
+        if (entry.isSetCacheType()) return (V) new HashSet((Collection) entry.value);
+        return (V) entry.getValue();
     }
 
     @Override
-    public <T> void getAndRefresh(final CompletionHandler<T, Serializable> handler, @DynAttachment final Serializable key) {
-        T rs = getAndRefresh(key);
+    public void getAndRefresh(final CompletionHandler<V, K> handler, @DynAttachment final K key) {
+        V rs = getAndRefresh(key);
         if (handler != null) handler.completed(rs, key);
     }
 
     @Override
     @MultiRun
-    public void refresh(Serializable key) {
+    public void refresh(K key) {
         if (key == null) return;
         CacheEntry entry = container.get(key);
         if (entry == null) return;
@@ -210,18 +225,18 @@ public class CacheSourceService implements CacheSource, Service, AutoCloseable {
     }
 
     @Override
-    public <T> void refresh(final CompletionHandler<Void, Serializable> handler, final Serializable key) {
+    public void refresh(final CompletionHandler<Void, K> handler, final K key) {
         refresh(key);
         if (handler != null) handler.completed(null, key);
     }
 
     @Override
     @MultiRun
-    public <T> void set(Serializable key, T value) {
+    public void set(K key, V value) {
         if (key == null) return;
         CacheEntry entry = container.get(key);
         if (entry == null) {
-            entry = new CacheEntry(key, value);
+            entry = new CacheEntry(CacheEntryType.OBJECT, key, value);
             container.putIfAbsent(key, entry);
         } else {
             entry.expireSeconds = 0;
@@ -231,18 +246,18 @@ public class CacheSourceService implements CacheSource, Service, AutoCloseable {
     }
 
     @Override
-    public <T> void set(final CompletionHandler<Void, Serializable> handler, @DynAttachment final Serializable key, final T value) {
+    public void set(final CompletionHandler<Void, K> handler, @DynAttachment final K key, final V value) {
         set(key, value);
         if (handler != null) handler.completed(null, key);
     }
 
     @Override
     @MultiRun
-    public <T> void set(int expireSeconds, Serializable key, T value) {
+    public void set(int expireSeconds, K key, V value) {
         if (key == null) return;
         CacheEntry entry = container.get(key);
         if (entry == null) {
-            entry = new CacheEntry(expireSeconds, key, value);
+            entry = new CacheEntry(CacheEntryType.OBJECT, expireSeconds, key, value);
             container.putIfAbsent(key, entry);
         } else {
             if (expireSeconds > 0) entry.expireSeconds = expireSeconds;
@@ -252,14 +267,14 @@ public class CacheSourceService implements CacheSource, Service, AutoCloseable {
     }
 
     @Override
-    public <T> void set(final CompletionHandler<Void, Serializable> handler, final int expireSeconds, @DynAttachment final Serializable key, final T value) {
+    public void set(final CompletionHandler<Void, K> handler, final int expireSeconds, @DynAttachment final K key, final V value) {
         set(expireSeconds, key, value);
         if (handler != null) handler.completed(null, key);
     }
 
     @Override
     @MultiRun
-    public void setExpireSeconds(Serializable key, int expireSeconds) {
+    public void setExpireSeconds(K key, int expireSeconds) {
         if (key == null) return;
         CacheEntry entry = container.get(key);
         if (entry == null) return;
@@ -267,86 +282,106 @@ public class CacheSourceService implements CacheSource, Service, AutoCloseable {
     }
 
     @Override
-    public void setExpireSeconds(final CompletionHandler<Void, Serializable> handler, @DynAttachment final Serializable key, final int expireSeconds) {
+    public void setExpireSeconds(final CompletionHandler<Void, K> handler, @DynAttachment final K key, final int expireSeconds) {
         setExpireSeconds(key, expireSeconds);
         if (handler != null) handler.completed(null, key);
     }
 
     @Override
     @MultiRun
-    public void remove(Serializable key) {
+    public void remove(K key) {
         if (key == null) return;
         container.remove(key);
     }
 
     @Override
-    public void remove(final CompletionHandler<Void, Serializable> handler, @DynAttachment final Serializable key) {
+    public void remove(final CompletionHandler<Void, K> handler, @DynAttachment final K key) {
         remove(key);
         if (handler != null) handler.completed(null, key);
     }
 
     @Override
+    public Collection<V> getCollection(final K key) {
+        return (Collection<V>) get(key);
+    }
+
+    @Override
+    public void getCollection(final CompletionHandler<Collection<V>, K> handler, @DynAttachment final K key) {
+        if (handler != null) handler.completed(getCollection(key), key);
+    }
+
+    @Override
+    public Collection<V> getCollectionAndRefresh(final K key) {
+        return (Collection<V>) getAndRefresh(key);
+    }
+
+    @Override
+    public void getCollectionAndRefresh(final CompletionHandler<Collection<V>, K> handler, @DynAttachment final K key) {
+        if (handler != null) handler.completed(getCollectionAndRefresh(key), key);
+    }
+
+    @Override
     @MultiRun
-    public <V> void appendListItem(Serializable key, V value) {
+    public void appendListItem(K key, V value) {
         if (key == null) return;
         CacheEntry entry = container.get(key);
-        if (entry == null || !(entry.value instanceof List)) {
-            List<V> list = new CopyOnWriteArrayList<>();
-            entry = new CacheEntry(key, list);
+        if (entry == null || !entry.isListCacheType()) {
+            Collection<V> list = new ConcurrentLinkedQueue<>();
+            entry = new CacheEntry(CacheEntryType.LIST, key, list);
             CacheEntry old = container.putIfAbsent(key, entry);
-            if (old != null) list = (List) old.value;
+            if (old != null) list = (Collection) old.value;
             list.add(value);
         } else {
-            ((List) entry.getValue()).add(value);
+            ((Collection) entry.getValue()).add(value);
         }
     }
 
     @Override
-    public <T> void appendListItem(final CompletionHandler<Void, Serializable> handler, @DynAttachment final Serializable key, final T value) {
+    public void appendListItem(final CompletionHandler<Void, K> handler, @DynAttachment final K key, final V value) {
         appendListItem(key, value);
         if (handler != null) handler.completed(null, key);
     }
 
     @Override
     @MultiRun
-    public <V> void removeListItem(Serializable key, V value) {
+    public void removeListItem(K key, V value) {
         if (key == null) return;
         CacheEntry entry = container.get(key);
-        if (entry == null || !(entry.value instanceof List)) return;
-        ((List) entry.getValue()).remove(value);
+        if (entry == null || !entry.isListCacheType()) return;
+        ((Collection) entry.getValue()).remove(value);
     }
 
     @Override
-    public <T> void removeListItem(final CompletionHandler<Void, Serializable> handler, @DynAttachment final Serializable key, final T value) {
+    public void removeListItem(final CompletionHandler<Void, K> handler, @DynAttachment final K key, final V value) {
         removeListItem(key, value);
         if (handler != null) handler.completed(null, key);
     }
 
     @Override
     @MultiRun
-    public <V> void appendSetItem(Serializable key, V value) {
+    public void appendSetItem(K key, V value) {
         if (key == null) return;
         CacheEntry entry = container.get(key);
-        if (entry == null || !(entry.value instanceof Set)) {
-            Set<V> set = new CopyOnWriteArraySet();
-            entry = new CacheEntry(key, set);
+        if (entry == null || !entry.isSetCacheType()) {
+            Collection<V> set = new CopyOnWriteArraySet();
+            entry = new CacheEntry(CacheEntryType.SET, key, set);
             CacheEntry old = container.putIfAbsent(key, entry);
-            if (old != null) set = (Set) old.value;
+            if (old != null) set = (Collection) old.value;
             set.add(value);
         } else {
-            ((Set) entry.getValue()).add(value);
+            ((Collection) entry.getValue()).add(value);
         }
     }
 
     @Override
-    public <T> void appendSetItem(final CompletionHandler<Void, Serializable> handler, @DynAttachment final Serializable key, final T value) {
+    public void appendSetItem(final CompletionHandler<Void, K> handler, @DynAttachment final K key, final V value) {
         appendSetItem(key, value);
         if (handler != null) handler.completed(null, key);
     }
 
     @Override
     @MultiRun
-    public <V> void removeSetItem(Serializable key, V value) {
+    public void removeSetItem(K key, V value) {
         if (key == null) return;
         CacheEntry entry = container.get(key);
         if (entry == null || !(entry.value instanceof Set)) return;
@@ -354,24 +389,32 @@ public class CacheSourceService implements CacheSource, Service, AutoCloseable {
     }
 
     @Override
-    public <T> void removeSetItem(final CompletionHandler<Void, Serializable> handler, @DynAttachment final Serializable key, final T value) {
+    public void removeSetItem(final CompletionHandler<Void, K> handler, @DynAttachment final K key, final V value) {
         removeSetItem(key, value);
         if (handler != null) handler.completed(null, key);
     }
 
+    public static enum CacheEntryType {
+        OBJECT, SET, LIST;
+    }
+
     public static final class CacheEntry<K extends Serializable, T> {
+
+        public static final String JSON_SET_KEY = "\"cacheType\":\"" + CacheEntryType.SET + "\"";
+
+        public static final String JSON_LIST_KEY = "\"cacheType\":\"" + CacheEntryType.LIST + "\"";
 
         public static class CacheEntryCreator implements Creator<CacheEntry> {
 
             public static final CacheEntryCreator CREATOR = new CacheEntryCreator();
 
-            @java.beans.ConstructorProperties({"expireSeconds", "lastAccessed", "key", "value"})
+            @java.beans.ConstructorProperties({"cacheType", "expireSeconds", "lastAccessed", "key", "value"})
             public CacheEntryCreator() {
             }
 
             @Override
             public CacheEntry create(Object... params) {
-                return new CacheEntry((Integer) params[0], (Integer) params[1], (Serializable) params[2], params[3]);
+                return new CacheEntry((CacheEntryType) params[0], (Integer) params[1], (Integer) params[2], (Serializable) params[3], params[4]);
             }
 
         }
@@ -382,6 +425,8 @@ public class CacheSourceService implements CacheSource, Service, AutoCloseable {
             }
         }
 
+        private final CacheEntryType cacheType;
+
         private final K key;
 
         //<=0表示永久保存
@@ -391,16 +436,17 @@ public class CacheSourceService implements CacheSource, Service, AutoCloseable {
 
         private T value;
 
-        public CacheEntry(K key, T value) {
-            this(0, key, value);
+        public CacheEntry(CacheEntryType cacheType, K key, T value) {
+            this(cacheType, 0, key, value);
         }
 
-        public CacheEntry(int expireSeconds, K key, T value) {
-            this(expireSeconds, (int) (System.currentTimeMillis() / 1000), key, value);
+        public CacheEntry(CacheEntryType cacheType, int expireSeconds, K key, T value) {
+            this(cacheType, expireSeconds, (int) (System.currentTimeMillis() / 1000), key, value);
         }
 
-        @java.beans.ConstructorProperties({"expireSeconds", "lastAccessed", "key", "value"})
-        private CacheEntry(int expireSeconds, int lastAccessed, K key, T value) {
+        @java.beans.ConstructorProperties({"cacheType", "expireSeconds", "lastAccessed", "key", "value"})
+        private CacheEntry(CacheEntryType cacheType, int expireSeconds, int lastAccessed, K key, T value) {
+            this.cacheType = cacheType;
             this.expireSeconds = expireSeconds;
             this.lastAccessed = lastAccessed;
             this.key = key;
@@ -410,6 +456,20 @@ public class CacheSourceService implements CacheSource, Service, AutoCloseable {
         @Override
         public String toString() {
             return JsonFactory.root().getConvert().convertTo(this);
+        }
+
+        public CacheEntryType getCacheType() {
+            return cacheType;
+        }
+
+        @Ignore
+        public boolean isListCacheType() {
+            return cacheType == CacheEntryType.LIST;
+        }
+
+        @Ignore
+        public boolean isSetCacheType() {
+            return cacheType == CacheEntryType.SET;
         }
 
         @Ignore
