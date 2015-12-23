@@ -21,6 +21,7 @@ import org.redkale.convert.bson.*;
 import org.redkale.net.*;
 import org.redkale.service.*;
 import org.redkale.util.*;
+import org.redkale.service.DynRemote;
 
 /**
  * Service Node Communicate Protocol
@@ -669,7 +670,7 @@ public abstract class Sncp {
                     for (Field field : loop.getDeclaredFields()) {
                         int mod = field.getModifiers();
                         if (Modifier.isFinal(mod) || Modifier.isStatic(mod)) continue;
-                        if (field.getAnnotation(SncpRemote.class) != null) {
+                        if (field.getAnnotation(DynRemote.class) != null) {
                             field.setAccessible(true);
                             if (remoteTransport == null) {
                                 List<Transport> list = new ArrayList<>();

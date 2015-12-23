@@ -5,7 +5,6 @@
  */
 package org.redkale.net.sncp;
 
-import static org.redkale.net.sncp.SncpRequest.*;
 import java.lang.annotation.*;
 import java.lang.reflect.*;
 import java.net.*;
@@ -18,7 +17,10 @@ import java.util.logging.*;
 import org.redkale.convert.bson.*;
 import org.redkale.convert.json.*;
 import org.redkale.net.*;
+import static org.redkale.net.sncp.SncpRequest.*;
+import org.redkale.service.*;
 import org.redkale.util.*;
+import org.redkale.service.DynCall;
 
 /**
  *
@@ -39,9 +41,13 @@ public final class SncpClient {
 
         protected final Attribute[] paramAttrs; // 为null表示无SncpCall处理，index=0固定为null, 其他为参数标记的SncpCall回调方法
 
-        protected final int targetAddressParamIndex;
+        protected final int handlerFuncParamIndex;
 
-        protected final int sourceAddressParamIndex;
+        protected final int handlerAttachParamIndex;
+
+        protected final int addressTargetParamIndex;
+
+        protected final int addressSourceParamIndex;
 
         public SncpAction(Method method, DLong actionid) {
             this.actionid = actionid;
@@ -56,29 +62,36 @@ public final class SncpClient {
             Annotation[][] anns = method.getParameterAnnotations();
             int targetAddrIndex = -1;
             int sourceAddrIndex = -1;
+            int handlerAttachIndex = -1;
+            int handlerFuncIndex = -1;
             boolean hasattr = false;
             Attribute[] atts = new Attribute[paramTypes.length + 1];
             if (anns.length > 0) {
                 Class<?>[] params = method.getParameterTypes();
+                for (int i = 0; i < params.length; i++) {
+                    if (CompletionHandler.class.isAssignableFrom(params[i])) {
+                        handlerFuncIndex = i;
+                        break;
+                    }
+                }
                 for (int i = 0; i < anns.length; i++) {
                     if (anns[i].length > 0) {
                         for (Annotation ann : anns[i]) {
-                            if (ann.annotationType() == SncpParam.class) {
-                                SncpParam sncpParam = (SncpParam) ann;
-                                if (sncpParam.value() == SncpParamType.TargetAddress && SocketAddress.class.isAssignableFrom(params[i])) {
-                                    targetAddrIndex = i;
-                                } else if (sncpParam.value() == SncpParamType.SourceAddress && SocketAddress.class.isAssignableFrom(params[i])) {
-                                    sourceAddrIndex = i;
-                                }
+                            if (ann.annotationType() == DynAttachment.class) {
+                                handlerAttachIndex = i;
+                            } else if (ann.annotationType() == DynTargetAddress.class && SocketAddress.class.isAssignableFrom(params[i])) {
+                                targetAddrIndex = i;
+                            } else if (ann.annotationType() == DynSourceAddress.class && SocketAddress.class.isAssignableFrom(params[i])) {
+                                sourceAddrIndex = i;
                             }
                         }
                         for (Annotation ann : anns[i]) {
-                            if (ann.annotationType() == SncpCall.class) {
+                            if (ann.annotationType() == DynCall.class) {
                                 try {
-                                    atts[i + 1] = ((SncpCall) ann).value().newInstance();
+                                    atts[i + 1] = ((DynCall) ann).value().newInstance();
                                     hasattr = true;
                                 } catch (Exception e) {
-                                    logger.log(Level.SEVERE, SncpCall.class.getSimpleName() + ".attribute cannot a newInstance for" + method, e);
+                                    logger.log(Level.SEVERE, DynCall.class.getSimpleName() + ".attribute cannot a newInstance for" + method, e);
                                 }
                                 break;
                             }
@@ -86,9 +99,12 @@ public final class SncpClient {
                     }
                 }
             }
-            this.targetAddressParamIndex = targetAddrIndex;
-            this.sourceAddressParamIndex = sourceAddrIndex;
+            this.addressTargetParamIndex = targetAddrIndex;
+            this.addressSourceParamIndex = sourceAddrIndex;
+            this.handlerFuncParamIndex = handlerFuncIndex;
+            this.handlerAttachParamIndex = handlerAttachIndex;
             this.paramAttrs = hasattr ? atts : null;
+            if (this.handlerFuncParamIndex >= 0 && method.getReturnType() != void.class) throw new RuntimeException(method + " has CompletionHandler type parameter but return type is not void");
         }
 
         @Override
@@ -209,10 +225,13 @@ public final class SncpClient {
     }
 
     public <T> T remote(final BsonConvert convert, Transport transport, final int index, final Object... params) {
-        Future<byte[]> future = remote(convert, transport, actions[index], params);
+        final SncpAction action = actions[index];
+        final CompletionHandler handlerFunc = action.handlerFuncParamIndex >= 0 ? (CompletionHandler) params[action.handlerFuncParamIndex] : null;
+        if (action.handlerFuncParamIndex >= 0) params[action.handlerFuncParamIndex] = null;
+        Future<byte[]> future = remote0(handlerFunc, convert, transport, action, params);
+        if (handlerFunc != null) return null;
         final BsonReader in = convert.pollBsonReader();
         try {
-            final SncpAction action = actions[index];
             in.setBytes(future.get(5, TimeUnit.SECONDS));
             byte i;
             while ((i = in.readByte()) != 0) {
@@ -232,7 +251,7 @@ public final class SncpClient {
         if (!run || transports == null || transports.length < 1) return;
         remote(convert, transports[0], index, params);
         for (int i = 1; i < transports.length; i++) {
-            remote(convert, transports[i], actions[index], params);
+            remote0(null, convert, transports[i], actions[index], params);
         }
     }
 
@@ -240,22 +259,16 @@ public final class SncpClient {
         if (!run || transports == null || transports.length < 1) return;
         if (executor != null) {
             executor.accept(() -> {
-                remote(convert, transports[0], index, params);
-                for (int i = 1; i < transports.length; i++) {
-                    remote(convert, transports[i], actions[index], params);
-                }
+                remote(convert, transports, run, index, params);
             });
         } else {
-            remote(convert, transports[0], index, params);
-            for (int i = 1; i < transports.length; i++) {
-                remote(convert, transports[i], actions[index], params);
-            }
+            remote(convert, transports, run, index, params);
         }
     }
 
-    private Future<byte[]> remote(final BsonConvert convert, final Transport transport, final SncpAction action, final Object... params) {
+    private Future<byte[]> remote0(final CompletionHandler handler, final BsonConvert convert, final Transport transport, final SncpAction action, final Object... params) {
         Type[] myparamtypes = action.paramTypes;
-        if (action.sourceAddressParamIndex >= 0) params[action.sourceAddressParamIndex] = this.address;
+        if (action.addressSourceParamIndex >= 0) params[action.addressSourceParamIndex] = this.address;
         final BsonWriter writer = convert.pollBsonWriter(transport.getBufferSupplier()); // 将head写入
         writer.writeTo(DEFAULT_HEADER);
         for (int i = 0; i < params.length; i++) {
@@ -264,7 +277,7 @@ public final class SncpClient {
         final int reqBodyLength = writer.count() - HEADER_SIZE; //body总长度
         final long seqid = System.nanoTime();
         final DLong actionid = action.actionid;
-        final SocketAddress addr = action.targetAddressParamIndex >= 0 ? (SocketAddress) params[action.targetAddressParamIndex] : null;
+        final SocketAddress addr = action.addressTargetParamIndex >= 0 ? (SocketAddress) params[action.addressTargetParamIndex] : null;
         final AsyncConnection conn = transport.pollConnection(addr);
         if (conn == null || !conn.isOpen()) {
             logger.log(Level.SEVERE, action.method + " sncp (params: " + jsonConvert.convertTo(params) + ") cannot connect " + (conn == null ? addr : conn.getRemoteAddress()));
@@ -356,6 +369,24 @@ public final class SncpClient {
                         future.set(this.body);
                         transport.offerBuffer(buffer);
                         transport.offerConnection(false, conn);
+                        if (handler != null) {
+                            final Object handlerAttach = action.handlerAttachParamIndex >= 0 ? params[action.handlerAttachParamIndex] : null;
+                            final BsonReader in = convert.pollBsonReader();
+                            try {
+                                in.setBytes(this.body);
+                                byte i;
+                                while ((i = in.readByte()) != 0) {
+                                    final Attribute attr = action.paramAttrs[i];
+                                    attr.set(params[i - 1], convert.convertFrom(in, attr.type()));
+                                }
+                                Object rs = convert.convertFrom(in, action.resultTypes);
+                                handler.completed(rs, handlerAttach);
+                            } catch (Exception e) {
+                                handler.failed(e, handlerAttach);
+                            } finally {
+                                convert.offerBsonReader(in);
+                            }
+                        }
                     }
 
                     @Override
@@ -364,6 +395,10 @@ public final class SncpClient {
                         future.set(new RuntimeException(action.method + " sncp remote exec failed"));
                         transport.offerBuffer(buffer);
                         transport.offerConnection(true, conn);
+                        if (handler != null) {
+                            final Object handlerAttach = action.handlerAttachParamIndex >= 0 ? params[action.handlerAttachParamIndex] : null;
+                            handler.failed(exc, handlerAttach);
+                        }
                     }
                 });
             }

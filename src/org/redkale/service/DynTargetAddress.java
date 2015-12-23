@@ -3,23 +3,23 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.redkale.net.sncp;
+package org.redkale.service;
 
 import java.lang.annotation.*;
+import static java.lang.annotation.ElementType.PARAMETER;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
-import org.redkale.util.*;
 
 /**
- * 参数回写, 当Service的方法需要更改参数对象内部的数据时，需要使用SncpCall
+ * SNCP协议中标记为目标地址参数, 该注解只能标记在类型为SocketAddress或InetSocketAddress的参数上。
+ *
  *
  * @see http://www.redkale.org
  * @author zhangjx
  */
 @Inherited
 @Documented
-@Target({ElementType.PARAMETER})
+@Target({PARAMETER})
 @Retention(RUNTIME)
-public @interface SncpCall {
-
-    Class<? extends Attribute> value();
+public @interface DynTargetAddress {
+    
 }

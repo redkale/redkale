@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.redkale.net.sncp;
+package org.redkale.service;
 
 import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.*;
@@ -19,6 +19,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Documented
 @Target({FIELD})
 @Retention(RUNTIME)
-public @interface SncpRemote {
+public @interface DynRemote {
 
 }

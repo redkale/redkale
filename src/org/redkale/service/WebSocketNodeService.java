@@ -10,7 +10,6 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 import org.redkale.net.http.*;
-import org.redkale.net.sncp.*;
 import org.redkale.util.*;
 
 /**
@@ -32,7 +31,7 @@ public class WebSocketNodeService extends WebSocketNode implements Service {
     }
 
     @Override
-    public int sendMessage(@SncpParam(SncpParamType.TargetAddress) InetSocketAddress addr, Serializable groupid, boolean recent, Serializable message, boolean last) {
+    public int sendMessage(@DynTargetAddress InetSocketAddress addr, Serializable groupid, boolean recent, Serializable message, boolean last) {
         final Set<String> engineids = localNodes.get(groupid);
         if (engineids == null || engineids.isEmpty()) return RETCODE_GROUP_EMPTY;
         int code = RETCODE_GROUP_EMPTY;

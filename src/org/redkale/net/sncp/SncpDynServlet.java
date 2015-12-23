@@ -20,6 +20,7 @@ import jdk.internal.org.objectweb.asm.Type;
 import org.redkale.convert.bson.*;
 import org.redkale.service.*;
 import org.redkale.util.*;
+import org.redkale.service.DynCall;
 
 /**
  *
@@ -384,12 +385,12 @@ public final class SncpDynServlet extends SncpServlet {
                 for (int i = 0; i < anns.length; i++) {
                     if (anns[i].length > 0) {
                         for (Annotation ann : anns[i]) {
-                            if (ann.annotationType() == SncpCall.class) {
+                            if (ann.annotationType() == DynCall.class) {
                                 try {
-                                    atts[i + 1] = ((SncpCall) ann).value().newInstance();
+                                    atts[i + 1] = ((DynCall) ann).value().newInstance();
                                     hasattr = true;
                                 } catch (Exception e) {
-                                    logger.log(Level.SEVERE, SncpCall.class.getSimpleName() + ".attribute cannot a newInstance for" + method, e);
+                                    logger.log(Level.SEVERE, DynCall.class.getSimpleName() + ".attribute cannot a newInstance for" + method, e);
                                 }
                                 break;
                             }

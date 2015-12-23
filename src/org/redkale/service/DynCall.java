@@ -3,24 +3,23 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.redkale.net.sncp;
+package org.redkale.service;
 
 import java.lang.annotation.*;
-import static java.lang.annotation.ElementType.PARAMETER;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import org.redkale.util.*;
 
 /**
- * SNCP协议中Service方法的参数标记。 只有Service的方法为远程模式或@MultiRun时该注解才有效。
- *
+ * 参数回写, 当Service的方法需要更改参数对象内部的数据时，需要使用SncpCall
  *
  * @see http://www.redkale.org
  * @author zhangjx
  */
 @Inherited
 @Documented
-@Target({PARAMETER})
+@Target({ElementType.PARAMETER})
 @Retention(RUNTIME)
-public @interface SncpParam {
+public @interface DynCall {
 
-    SncpParamType value();
+    Class<? extends Attribute> value();
 }

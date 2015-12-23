@@ -12,7 +12,7 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.logging.*;
 import javax.annotation.*;
-import org.redkale.net.sncp.*;
+import org.redkale.service.*;
 import org.redkale.source.*;
 import org.redkale.util.*;
 
@@ -30,7 +30,7 @@ public abstract class WebSocketNode {
     @Resource(name = "SERVER_ADDR")
     protected InetSocketAddress localSncpAddress;  //为SncpServer的服务address
 
-    @SncpRemote
+    @DynRemote
     protected WebSocketNode remoteNode;
 
     //存放所有用户分布在节点上的队列信息,Set<InetSocketAddress> 为 sncpnode 的集合
@@ -55,7 +55,7 @@ public abstract class WebSocketNode {
         });
     }
 
-    protected abstract int sendMessage(@SncpParam(SncpParamType.TargetAddress) InetSocketAddress targetAddress, Serializable groupid, boolean recent, Serializable message, boolean last);
+    protected abstract int sendMessage(@DynTargetAddress InetSocketAddress targetAddress, Serializable groupid, boolean recent, Serializable message, boolean last);
 
     protected abstract void connect(Serializable groupid, InetSocketAddress addr);
 

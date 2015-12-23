@@ -6,6 +6,7 @@
 package org.redkale.source;
 
 import java.io.*;
+import java.nio.channels.*;
 
 /**
  *
@@ -30,16 +31,44 @@ public interface CacheSource {
 
     public <T> void set(final int expireSeconds, final Serializable key, final T value);
 
-    public void setExpireSeconds(Serializable key, int expireSeconds);
-    
+    public void setExpireSeconds(final Serializable key, final int expireSeconds);
+
     public void remove(final Serializable key);
 
-    public <V> void appendListItem(final Serializable key, final V value);
+    public <T> void appendListItem(final Serializable key, final T value);
 
-    public <V> void removeListItem(final Serializable key, final V value);
+    public <T> void removeListItem(final Serializable key, final T value);
 
-    public <V> void appendSetItem(final Serializable key, final V value);
+    public <T> void appendSetItem(final Serializable key, final T value);
 
-    public <V> void removeSetItem(final Serializable key, final V value);
+    public <T> void removeSetItem(final Serializable key, final T value);
 
+    //----------------------异步版---------------------------------
+    public void exists(final CompletionHandler<Boolean, Serializable> handler, final Serializable key);
+
+    public <T> void get(final CompletionHandler<T, Serializable> handler, final Serializable key);
+
+    public <T> void getAndRefresh(final CompletionHandler<T, Serializable> handler, final Serializable key);
+
+    public <T> void refresh(final CompletionHandler<Void, Serializable> handler, final Serializable key);
+
+    public <T> void set(final CompletionHandler<Void, Serializable> handler, final Serializable key, final T value);
+
+    public <T> void set(final CompletionHandler<Void, Serializable> handler, final int expireSeconds, final Serializable key, final T value);
+
+    public void setExpireSeconds(final CompletionHandler<Void, Serializable> handler, final Serializable key, final int expireSeconds);
+
+    public void remove(final CompletionHandler<Void, Serializable> handler, final Serializable key);
+
+    public <T> void appendListItem(final CompletionHandler<Void, Serializable> handler, final Serializable key, final T value);
+
+    public <T> void removeListItem(final CompletionHandler<Void, Serializable> handler, final Serializable key, final T value);
+
+    public <T> void appendSetItem(final CompletionHandler<Void, Serializable> handler, final Serializable key, final T value);
+
+    public <T> void removeSetItem(final CompletionHandler<Void, Serializable> handler, final Serializable key, final T value);
+
+    default void isOpen(final CompletionHandler<Boolean, Void> handler) {
+        if (handler != null) handler.completed(Boolean.TRUE, null);
+    }
 }

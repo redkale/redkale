@@ -7,6 +7,7 @@ package org.redkale.service;
 
 import java.io.*;
 import java.lang.reflect.*;
+import java.nio.channels.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.*;
@@ -166,11 +167,21 @@ public class CacheSourceService implements CacheSource, Service, AutoCloseable {
     }
 
     @Override
+    public void exists(final CompletionHandler<Boolean, Serializable> handler, @DynAttachment final Serializable key) {
+        if (handler != null) handler.completed(exists(key), key);
+    }
+
+    @Override
     public <T> T get(Serializable key) {
         if (key == null) return null;
         CacheEntry entry = container.get(key);
         if (entry == null || entry.isExpired()) return null;
         return (T) entry.getValue();
+    }
+
+    @Override
+    public <T> void get(final CompletionHandler<T, Serializable> handler, @DynAttachment final Serializable key) {
+        if (handler != null) handler.completed(get(key), key);
     }
 
     @Override
@@ -184,12 +195,24 @@ public class CacheSourceService implements CacheSource, Service, AutoCloseable {
     }
 
     @Override
+    public <T> void getAndRefresh(final CompletionHandler<T, Serializable> handler, @DynAttachment final Serializable key) {
+        T rs = getAndRefresh(key);
+        if (handler != null) handler.completed(rs, key);
+    }
+
+    @Override
     @MultiRun
     public void refresh(Serializable key) {
         if (key == null) return;
         CacheEntry entry = container.get(key);
         if (entry == null) return;
         entry.lastAccessed = (int) (System.currentTimeMillis() / 1000);
+    }
+
+    @Override
+    public <T> void refresh(final CompletionHandler<Void, Serializable> handler, final Serializable key) {
+        refresh(key);
+        if (handler != null) handler.completed(null, key);
     }
 
     @Override
@@ -208,12 +231,9 @@ public class CacheSourceService implements CacheSource, Service, AutoCloseable {
     }
 
     @Override
-    @MultiRun
-    public void setExpireSeconds(Serializable key, int expireSeconds) {
-        if (key == null) return;
-        CacheEntry entry = container.get(key);
-        if (entry == null) return;
-        entry.expireSeconds = expireSeconds;
+    public <T> void set(final CompletionHandler<Void, Serializable> handler, @DynAttachment final Serializable key, final T value) {
+        set(key, value);
+        if (handler != null) handler.completed(null, key);
     }
 
     @Override
@@ -232,10 +252,37 @@ public class CacheSourceService implements CacheSource, Service, AutoCloseable {
     }
 
     @Override
+    public <T> void set(final CompletionHandler<Void, Serializable> handler, final int expireSeconds, @DynAttachment final Serializable key, final T value) {
+        set(expireSeconds, key, value);
+        if (handler != null) handler.completed(null, key);
+    }
+
+    @Override
+    @MultiRun
+    public void setExpireSeconds(Serializable key, int expireSeconds) {
+        if (key == null) return;
+        CacheEntry entry = container.get(key);
+        if (entry == null) return;
+        entry.expireSeconds = expireSeconds;
+    }
+
+    @Override
+    public void setExpireSeconds(final CompletionHandler<Void, Serializable> handler, @DynAttachment final Serializable key, final int expireSeconds) {
+        setExpireSeconds(key, expireSeconds);
+        if (handler != null) handler.completed(null, key);
+    }
+
+    @Override
     @MultiRun
     public void remove(Serializable key) {
         if (key == null) return;
         container.remove(key);
+    }
+
+    @Override
+    public void remove(final CompletionHandler<Void, Serializable> handler, @DynAttachment final Serializable key) {
+        remove(key);
+        if (handler != null) handler.completed(null, key);
     }
 
     @Override
@@ -255,12 +302,24 @@ public class CacheSourceService implements CacheSource, Service, AutoCloseable {
     }
 
     @Override
+    public <T> void appendListItem(final CompletionHandler<Void, Serializable> handler, @DynAttachment final Serializable key, final T value) {
+        appendListItem(key, value);
+        if (handler != null) handler.completed(null, key);
+    }
+
+    @Override
     @MultiRun
     public <V> void removeListItem(Serializable key, V value) {
         if (key == null) return;
         CacheEntry entry = container.get(key);
         if (entry == null || !(entry.value instanceof List)) return;
         ((List) entry.getValue()).remove(value);
+    }
+
+    @Override
+    public <T> void removeListItem(final CompletionHandler<Void, Serializable> handler, @DynAttachment final Serializable key, final T value) {
+        removeListItem(key, value);
+        if (handler != null) handler.completed(null, key);
     }
 
     @Override
@@ -280,12 +339,24 @@ public class CacheSourceService implements CacheSource, Service, AutoCloseable {
     }
 
     @Override
+    public <T> void appendSetItem(final CompletionHandler<Void, Serializable> handler, @DynAttachment final Serializable key, final T value) {
+        appendSetItem(key, value);
+        if (handler != null) handler.completed(null, key);
+    }
+
+    @Override
     @MultiRun
     public <V> void removeSetItem(Serializable key, V value) {
         if (key == null) return;
         CacheEntry entry = container.get(key);
         if (entry == null || !(entry.value instanceof Set)) return;
         ((Set) entry.getValue()).remove(value);
+    }
+
+    @Override
+    public <T> void removeSetItem(final CompletionHandler<Void, Serializable> handler, @DynAttachment final Serializable key, final T value) {
+        removeSetItem(key, value);
+        if (handler != null) handler.completed(null, key);
     }
 
     public static final class CacheEntry<K extends Serializable, T> {
