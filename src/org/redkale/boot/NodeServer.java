@@ -333,6 +333,8 @@ public abstract class NodeServer {
                 regFactory.register(wrapper.getName(), wrapper.getType(), wrapper.getService());
                 if (wrapper.getService() instanceof DataSource) {
                     regFactory.register(wrapper.getName(), DataSource.class, wrapper.getService());
+                } else if (wrapper.getService() instanceof CacheSource) {
+                    regFactory.register(wrapper.getName(), CacheSource.class, wrapper.getService());
                 } else if (wrapper.getService() instanceof DataCacheListener) {
                     regFactory.register(wrapper.getName(), DataCacheListener.class, wrapper.getService());
                 } else if (wrapper.getService() instanceof DataSQLListener) {
