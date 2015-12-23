@@ -21,6 +21,7 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.logging.*;
 import javax.annotation.*;
+import javax.persistence.*;
 import org.redkale.net.*;
 import org.redkale.net.http.*;
 import org.redkale.service.*;
@@ -209,6 +210,7 @@ public abstract class NodeServer {
                 Type genericType = field.getGenericType();
                 ParameterizedType pt = (genericType instanceof ParameterizedType) ? (ParameterizedType) genericType : null;
                 Type valType = pt == null ? null : pt.getActualTypeArguments()[1];
+                source.setNeedStore(field.getAnnotation(Transient.class) == null);
                 source.setStoreType(pt == null ? Serializable.class : (Class) pt.getActualTypeArguments()[0], valType instanceof Class ? (Class) valType : Object.class);
                 application.cacheSources.add(source);
                 regFactory.register(resourceName, CacheSource.class, source);

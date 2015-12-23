@@ -16,7 +16,7 @@ import java.util.*;
  * @see http://www.redkale.org
  * @author zhangjx
  */
-public interface CacheSource<K extends Serializable, V> { 
+public interface CacheSource<K extends Serializable, V extends Object> { 
 
     default boolean isOpen() {
         return true;

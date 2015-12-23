@@ -26,13 +26,15 @@ import org.redkale.util.*;
  * @author zhangjx
  */
 @AutoLoad(false)
-public class CacheSourceService<K extends Serializable, V> implements CacheSource<K, V>, Service, AutoCloseable {
+public class CacheSourceService<K extends Serializable, V extends Object> implements CacheSource<K, V>, Service, AutoCloseable {
 
     @Resource(name = "APP_HOME")
     private File home;
 
     @Resource
     private JsonConvert convert;
+
+    private boolean needStore = true;
 
     private Class keyType;
 
@@ -53,7 +55,7 @@ public class CacheSourceService<K extends Serializable, V> implements CacheSourc
     public CacheSourceService() {
     }
 
-    public CacheSourceService setStoreType(Class keyType, Class valueType) {
+    public final CacheSourceService setStoreType(Class keyType, Class valueType) {
         this.keyType = keyType;
         this.objValueType = valueType;
         this.setValueType = TypeToken.createParameterizedType(null, CopyOnWriteArraySet.class, valueType);
@@ -61,11 +63,16 @@ public class CacheSourceService<K extends Serializable, V> implements CacheSourc
         return this;
     }
 
+    public final void setNeedStore(boolean needStore) {
+        this.needStore = needStore;
+    }
+
     @Override
     public void init(AnyValue conf) {
         final CacheSourceService self = this;
         AnyValue prop = conf == null ? null : conf.getAnyValue("property");
         if (keyType == null && prop != null) {
+            this.needStore = prop.getBoolValue("store-value", true);
             String storeKeyStr = prop.getValue("key-type");
             String storeValueStr = prop.getValue("value-type");
             if (storeKeyStr != null && storeValueStr != null) {
@@ -111,7 +118,7 @@ public class CacheSourceService<K extends Serializable, V> implements CacheSourc
         boolean datasync = false; //是否从远程同步过数据
         //----------同步数据……-----------
         // TODO
-        if (this.keyType == null) return;
+        if (!this.needStore) return;
         try {
             CacheEntry.initCreator();
             File store = new File(home, "cache/" + name());
@@ -149,7 +156,7 @@ public class CacheSourceService<K extends Serializable, V> implements CacheSourc
     @Override
     public void destroy(AnyValue conf) {
         if (scheduler != null) scheduler.shutdownNow();
-        if (this.keyType == null || Sncp.isRemote(this) || container.isEmpty()) return;
+        if (!this.needStore || Sncp.isRemote(this) || container.isEmpty()) return;
         try {
             CacheEntry.initCreator();
             File store = new File(home, "cache/" + name());
