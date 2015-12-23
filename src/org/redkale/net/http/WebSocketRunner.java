@@ -48,7 +48,7 @@ public class WebSocketRunner implements Runnable {
 
     public WebSocketRunner(Context context, WebSocket webSocket, AsyncConnection channel, final boolean wsbinary) {
         this.context = context;
-        this.engine = webSocket.engine;
+        this.engine = webSocket._engine;
         this.webSocket = webSocket;
         this.channel = channel;
         this.wsbinary = wsbinary;
@@ -63,7 +63,6 @@ public class WebSocketRunner implements Runnable {
     public void run() {
         final boolean debug = this.coder.debugable;
         try {
-            if (webSocket.node != null) webSocket.node.connect(webSocket.groupid, webSocket.engine.getEngineid());
             webSocket.onConnected();
             channel.setReadTimeoutSecond(300); //读取超时5分钟
             if (channel.isOpen()) {
@@ -119,7 +118,7 @@ public class WebSocketRunner implements Runnable {
                                 readBuffer.clear();
                                 channel.read(readBuffer, null, this);
                             }
-                            webSocket.group.setRecentWebSocket(webSocket);
+                            webSocket._group.setRecentWebSocket(webSocket);
                             try {
                                 if (packet.type == FrameType.TEXT) {
                                     webSocket.onMessage(packet.getPayload());
@@ -244,10 +243,6 @@ public class WebSocketRunner implements Runnable {
             readBuffer = null;
             writeBuffer = null;
             engine.remove(webSocket);
-            if (webSocket.node != null) {
-                WebSocketGroup group = webSocket.getWebSocketGroup();
-                if (group == null || group.isEmpty()) webSocket.node.disconnect(webSocket.groupid, webSocket.engine.getEngineid());
-            }
             webSocket.onClose(0, null);
         }
     }
@@ -370,27 +365,28 @@ public class WebSocketRunner implements Runnable {
         private Logger logger;
 
         /**
-         0                   1                   2                   3
-         0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-         +-+-+-+-+-------+-+-------------+-------------------------------+
-         |F|R|R|R| opcode|M| Payload len |    Extended payload length    |
-         |I|S|S|S|  (4)  |A|     (7)     |             (16/64)           |
-         |N|V|V|V|       |S|             |   (if payload len==126/127)   |
-         | |1|2|3|       |K|             |                               |
-         +-+-+-+-+-------+-+-------------+ - - - - - - - - - - - - - - - +
-         |     Extended payload length continued, if payload len == 127  |
-         + - - - - - - - - - - - - - - - +-------------------------------+
-         |                               |Masking-key, if MASK set to 1  |
-         +-------------------------------+-------------------------------+
-         | Masking-key (continued)       |          Payload Data         |
-         +-------------------------------- - - - - - - - - - - - - - - - +
-         :                     Payload Data continued                    :
-         + - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - +
-         |                     Payload Data continued                      |
-         +-----------------------------------------------------------------------+ 
-         @param buffer
-         @param exbuffers
-         @return 
+         * 0 1 2 3
+         * 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+         * +-+-+-+-+-------+-+-------------+-------------------------------+
+         * |F|R|R|R| opcode|M| Payload len | Extended payload length |
+         * |I|S|S|S| (4) |A| (7) | (16/64) |
+         * |N|V|V|V| |S| | (if payload len==126/127) |
+         * | |1|2|3| |K| | |
+         * +-+-+-+-+-------+-+-------------+ - - - - - - - - - - - - - - - +
+         * | Extended payload length continued, if payload len == 127 |
+         * + - - - - - - - - - - - - - - - +-------------------------------+
+         * | |Masking-key, if MASK set to 1 |
+         * +-------------------------------+-------------------------------+
+         * | Masking-key (continued) | Payload Data |
+         * +-------------------------------- - - - - - - - - - - - - - - - +
+         * : Payload Data continued :
+         * + - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - +
+         * | Payload Data continued |
+         * +-----------------------------------------------------------------------+
+         *
+         * @param buffer
+         * @param exbuffers
+         * @return
          */
         public WebSocketPacket decode(final ByteBuffer buffer, ByteBuffer... exbuffers) {
             final boolean debug = this.debugable;

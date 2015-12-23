@@ -27,6 +27,8 @@ public final class WebSocketEngine {
 
     private final String engineid;
 
+    protected final WebSocketNode node;
+
     private final Map<Serializable, WebSocketGroup> containers = new ConcurrentHashMap<>();
 
     private ScheduledThreadPoolExecutor scheduler;
@@ -35,8 +37,9 @@ public final class WebSocketEngine {
 
     protected final boolean finest;
 
-    protected WebSocketEngine(String engineid, Logger logger) {
+    protected WebSocketEngine(String engineid, WebSocketNode node, Logger logger) {
         this.engineid = engineid;
+        this.node = node;
         this.logger = logger;
         this.index = sequence.getAndIncrement();
         this.finest = logger.isLoggable(Level.FINEST);
@@ -60,19 +63,26 @@ public final class WebSocketEngine {
     }
 
     void add(WebSocket socket) {
-        WebSocketGroup group = containers.get(socket.groupid);
+        WebSocketGroup group = containers.get(socket._groupid);
         if (group == null) {
-            group = new WebSocketGroup(socket.groupid);
-            containers.put(socket.groupid, group);
+            group = new WebSocketGroup(socket._groupid);
+            containers.putIfAbsent(socket._groupid, group);
         }
         group.add(socket);
+        if (node != null) node.connect(socket._groupid, engineid);
     }
 
     void remove(WebSocket socket) {
-        WebSocketGroup group = containers.get(socket.groupid);
-        if (group == null) return;
+        final WebSocketGroup group = containers.get(socket._groupid);
+        if (group == null) {
+            if (node != null) node.disconnect(socket._groupid, engineid);
+            return;
+        }
         group.remove(socket);
-        if (group.isEmpty()) containers.remove(socket.groupid);
+        if (group.isEmpty()) {
+            containers.remove(socket._groupid);
+            if (node != null) node.disconnect(socket._groupid, engineid);
+        }
     }
 
     Collection<WebSocketGroup> getWebSocketGroups() {

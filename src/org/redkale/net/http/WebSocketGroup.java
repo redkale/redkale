@@ -42,7 +42,7 @@ public final class WebSocketGroup {
     }
 
     void add(WebSocket socket) {
-        socket.group = this;
+        socket._group = this;
         this.recentWebSocket = socket;
         list.add(socket);
     }

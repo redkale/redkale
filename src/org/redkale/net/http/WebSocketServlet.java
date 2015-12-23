@@ -63,7 +63,7 @@ public abstract class WebSocketServlet extends HttpServlet {
     @Override
     public void init(Context context, AnyValue conf) {
         InetSocketAddress addr = context.getServerAddress();
-        this.engine = new WebSocketEngine(addr.getHostString() + ":" + addr.getPort() + "-" + name(), logger);
+        this.engine = new WebSocketEngine(addr.getHostString() + ":" + addr.getPort() + "-" + name(), this.node, logger);
         this.node.putWebSocketEngine(engine);
         this.node.init(conf);
         this.engine.init(conf);
@@ -97,15 +97,14 @@ public abstract class WebSocketServlet extends HttpServlet {
             return;
         }
         final WebSocket webSocket = this.createWebSocket();
-        webSocket.engine = engine;
-        webSocket.node = node;
+        webSocket._engine = engine;
         Serializable sessionid = webSocket.onOpen(request);
         if (sessionid == null) {
             if (debug) logger.finest("WebSocket connect abort, Not found sessionid. request=" + request);
             response.finish(true);
             return;
         }
-        webSocket.sessionid = sessionid;
+        webSocket._sessionid = sessionid;
         request.setKeepAlive(true);
         byte[] bytes = (key + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11").getBytes();
         synchronized (digest) {
@@ -127,7 +126,7 @@ public abstract class WebSocketServlet extends HttpServlet {
                     response.finish(true);
                     return;
                 }
-                webSocket.groupid = groupid;
+                webSocket._groupid = groupid;
                 engine.add(webSocket);
                 context.submit(new WebSocketRunner(context, webSocket, response.removeChannel(), wsbinary));
                 response.finish(true);
