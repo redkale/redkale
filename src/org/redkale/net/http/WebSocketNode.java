@@ -90,6 +90,7 @@ public abstract class WebSocketNode {
 
     public final int sendMessage(Serializable groupid, boolean recent, Serializable message, boolean last) {
         final Set<String> engineids = localNodes.get(groupid);
+        if (finest) logger.finest("websocket want send message {groupid:" + groupid + ", content:'" + message + "'} from locale node to " + engineids);
         int rscode = RETCODE_GROUP_EMPTY;
         if (engineids != null && !engineids.isEmpty()) {
             for (String engineid : engineids) {
@@ -97,7 +98,7 @@ public abstract class WebSocketNode {
                 if (engine != null) { //在本地
                     final WebSocketGroup group = engine.getWebSocketGroup(groupid);
                     if (group == null || group.isEmpty()) {
-                        if (finest) logger.finest("receive websocket but result is " + RETCODE_GROUP_EMPTY + " in message {engineid:'" + engineid + "', groupid:" + groupid + ", content:'" + message + "'}");
+                        if (finest) logger.finest("websocket want send message {engineid:'" + engineid + "', groupid:" + groupid + ", content:'" + message + "'} but websocket group is empty ");
                         rscode = RETCODE_GROUP_EMPTY;
                         break;
                     }
@@ -105,9 +106,19 @@ public abstract class WebSocketNode {
                 }
             }
         }
-        if ((recent && rscode == 0) || remoteNode == null) return rscode;
+        if ((recent && rscode == 0) || remoteNode == null) {
+            if (finest) {
+                if ((recent && rscode == 0)) {
+                    logger.finest("websocket want send recent message success");
+                } else {
+                    logger.finest("websocket remote node is null");
+                }
+            }
+            return rscode;
+        }
+        //-----------------------发送远程的-----------------------------
         Collection<InetSocketAddress> addrs = source.getCollection(groupid);
-        if (addrs != null && !addrs.isEmpty()) {   //对方连接在远程节点      
+        if (addrs != null && !addrs.isEmpty()) {   //对方连接在远程节点(包含本地节点)，所以正常情况下addrs不会为空。
             if (recent) {
                 InetSocketAddress one = null;
                 for (InetSocketAddress addr : addrs) {
