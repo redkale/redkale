@@ -6,10 +6,10 @@
 package org.redkale.test.sncp;
 
 import org.redkale.service.Service;
-import org.redkale.net.sncp.SncpCall;
 import org.redkale.util.Attribute;
 import org.redkale.service.MultiRun;
 import org.redkale.source.DataCallArrayAttribute;
+import org.redkale.service.DynCall;
 
 /**
  *
@@ -48,7 +48,7 @@ public class SncpTestService implements Service {
 
     }
 
-    public void insert(@SncpCall(DataCallArrayAttribute.class) SncpTestBean... beans) {
+    public void insert(@DynCall(DataCallArrayAttribute.class) SncpTestBean... beans) {
         for (SncpTestBean bean : beans) {
             bean.setId(System.currentTimeMillis());
         }
@@ -60,7 +60,7 @@ public class SncpTestService implements Service {
     }
 
     @MultiRun
-    public String updateBean(@SncpCall(CallAttribute.class) SncpTestBean bean) {
+    public String updateBean(@DynCall(CallAttribute.class) SncpTestBean bean) {
         bean.setId(System.currentTimeMillis());
         System.out.println(Thread.currentThread().getName() + " 运行了updateBean方法");
         return "result: " + bean;
