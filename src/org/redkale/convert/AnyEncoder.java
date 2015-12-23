@@ -26,9 +26,10 @@ public final class AnyEncoder<T> implements Encodeable<Writer, T> {
     @SuppressWarnings("unchecked")
     public void convertTo(final Writer out, final T value) {
         if (value == null) {
+            out.wirteClassName(null);
             out.writeNull();
         } else {
-            out.wirteClassName(factory.getEntity(value.getClass())); 
+            out.wirteClassName(factory.getEntity(value.getClass()));
             factory.loadEncoder(value.getClass()).convertTo(out, value);
         }
     }
