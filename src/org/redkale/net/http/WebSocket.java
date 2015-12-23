@@ -7,6 +7,7 @@ package org.redkale.net.http;
 
 import org.redkale.net.http.WebSocketPacket.FrameType;
 import java.io.*;
+import java.net.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import org.redkale.net.*;
@@ -258,6 +259,10 @@ public abstract class WebSocket {
     private int sendMessage(Serializable groupid, boolean recent, byte[] data, boolean last) {
         if (_engine.node == null) return RETCODE_NODESERVICE_NULL;
         return _engine.node.sendMessage(groupid, recent, data, last);
+    }
+
+    protected final Collection<InetSocketAddress> getOnlineNodes(Serializable groupid) {
+        return _engine.node.getOnlineNodes(groupid);
     }
 
     /**

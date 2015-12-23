@@ -62,6 +62,16 @@ public abstract class WebSocketNode {
     protected abstract void disconnect(Serializable groupid, InetSocketAddress addr);
 
     //--------------------------------------------------------------------------------
+    /**
+     * 获取在线的节点地址列表
+     *
+     * @param groupid
+     * @return
+     */
+    public Collection<InetSocketAddress> getOnlineNodes(Serializable groupid) {
+        return source.getCollection(groupid);
+    }
+
     public final void connect(Serializable groupid, String engineid) {
         if (finest) logger.finest(localSncpAddress + " receive websocket connect event (" + groupid + " on " + engineid + ").");
         Set<String> engineids = localNodes.get(groupid);
@@ -84,7 +94,7 @@ public abstract class WebSocketNode {
         }
     }
 
-    public final void putWebSocketEngine(WebSocketEngine engine) {
+    final void putWebSocketEngine(WebSocketEngine engine) {
         engines.put(engine.getEngineid(), engine);
     }
 
