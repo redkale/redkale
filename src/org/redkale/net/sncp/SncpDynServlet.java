@@ -120,7 +120,7 @@ public final class SncpDynServlet extends SncpServlet {
         @Resource
         protected BsonConvert convert;
 
-        protected org.redkale.util.Attribute[] paramAttrs; // 为null表示无SncpCall处理，index=0固定为null, 其他为参数标记的SncpCall回调方法
+        protected org.redkale.util.Attribute[] paramAttrs; // 为null表示无DynCall处理，index=0固定为null, 其他为参数标记的DynCall回调方法
 
         protected java.lang.reflect.Type[] paramTypes;  //index=0表示返回参数的type， void的返回参数类型为null
 

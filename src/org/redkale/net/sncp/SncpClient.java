@@ -39,7 +39,7 @@ public final class SncpClient {
 
         protected final Type[] paramTypes;
 
-        protected final Attribute[] paramAttrs; // 为null表示无SncpCall处理，index=0固定为null, 其他为参数标记的SncpCall回调方法
+        protected final Attribute[] paramAttrs; // 为null表示无DynCall处理，index=0固定为null, 其他为参数标记的DynCall回调方法
 
         protected final int handlerFuncParamIndex;
 

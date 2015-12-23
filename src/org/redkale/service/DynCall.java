@@ -10,7 +10,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import org.redkale.util.*;
 
 /**
- * 参数回写, 当Service的方法需要更改参数对象内部的数据时，需要使用SncpCall
+ * 参数回写, 当Service的方法需要更改参数对象内部的数据时，需要使用DynCall
  *
  * @see http://www.redkale.org
  * @author zhangjx
