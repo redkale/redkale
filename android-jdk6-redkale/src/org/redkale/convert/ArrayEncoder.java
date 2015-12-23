@@ -45,6 +45,7 @@ public final class ArrayEncoder<T> implements Encodeable<Writer, T[]> {
     @Override
     public void convertTo(Writer out, T[] value) {
         if (value == null) {
+            out.wirteClassName(null);
             out.writeNull();
             return;
         }
