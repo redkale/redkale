@@ -47,7 +47,10 @@ public class CreatorRecord {
     }
 
     public static void main(String[] args) throws Exception {
-        System.out.println(Creator.create(CreatorRecord.class).create(new Object[]{null, "ss", null, null, null, (short)45, null, 4.3f, null}));
+        CreatorRecord record = Creator.create(CreatorRecord.class).create(new Object[]{null, "ss", null, true, null, (short)45, null, 4.3f, null});
+        String json = record.toString();
+        System.out.println(json);
+        System.out.println(JsonFactory.root().getConvert().convertFrom(CreatorRecord.class, json).toString()); 
     }
 
     @Override
@@ -67,56 +70,28 @@ public class CreatorRecord {
         return lval;
     }
 
-    public void setLval(long lval) {
-        this.lval = lval;
-    }
-
     public boolean isTval() {
         return tval;
-    }
-
-    public void setTval(boolean tval) {
-        this.tval = tval;
     }
 
     public byte getBval() {
         return bval;
     }
 
-    public void setBval(byte bval) {
-        this.bval = bval;
-    }
-
     public short getSval() {
         return sval;
-    }
-
-    public void setSval(short sval) {
-        this.sval = sval;
     }
 
     public char getCval() {
         return cval;
     }
 
-    public void setCval(char cval) {
-        this.cval = cval;
-    }
-
     public float getFval() {
         return fval;
     }
 
-    public void setFval(float fval) {
-        this.fval = fval;
-    }
-
     public double getDval() {
         return dval;
-    }
-
-    public void setDval(double dval) {
-        this.dval = dval;
     }
 
 }
