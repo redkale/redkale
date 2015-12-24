@@ -336,8 +336,24 @@ public abstract class Factory<R extends Reader, W extends Writer> {
             od = new ObjectDecoder(type);
             decoder = od;
         } else if (!clazz.getName().startsWith("java.")) {
-            od = new ObjectDecoder(type);
-            decoder = od;
+            SimpledCoder simpleCoder = null;
+            for (final Method method : clazz.getDeclaredMethods()) {
+                if (!Modifier.isStatic(method.getModifiers())) continue;
+                if (method.getParameterTypes().length != 0) continue;
+                if (method.getReturnType() != SimpledCoder.class) continue;
+                try {
+                    method.setAccessible(true);
+                    simpleCoder = (SimpledCoder) method.invoke(null);
+                    break;
+                } catch (Exception e) {
+                }
+            }
+            if (simpleCoder == null) {
+                od = new ObjectDecoder(type);
+                decoder = od;
+            } else {
+                decoder = simpleCoder;
+            }
         }
         if (decoder == null) throw new ConvertException("not support the type (" + type + ")");
         register(type, decoder);
@@ -398,8 +414,24 @@ public abstract class Factory<R extends Reader, W extends Writer> {
         } else if (clazz == Object.class) {
             return (Encodeable<W, E>) this.anyEncoder;
         } else if (!clazz.getName().startsWith("java.")) {
-            oe = new ObjectEncoder(type);
-            encoder = oe;
+            SimpledCoder simpleCoder = null;
+            for (final Method method : clazz.getDeclaredMethods()) {
+                if (!Modifier.isStatic(method.getModifiers())) continue;
+                if (method.getParameterTypes().length != 0) continue;
+                if (method.getReturnType() != SimpledCoder.class) continue;
+                try {
+                    method.setAccessible(true);
+                    simpleCoder = (SimpledCoder) method.invoke(null);
+                    break;
+                } catch (Exception e) {
+                }
+            }
+            if (simpleCoder == null) {
+                oe = new ObjectEncoder(type);
+                encoder = oe;
+            } else {
+                encoder = simpleCoder;
+            }
         }
         if (encoder == null) throw new ConvertException("not support the type (" + type + ")");
         register(type, encoder);

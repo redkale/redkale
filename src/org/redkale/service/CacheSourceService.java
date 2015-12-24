@@ -53,7 +53,6 @@ public class CacheSourceService<K extends Serializable, V extends Object> implem
     protected final ConcurrentHashMap<K, CacheEntry<K, ?>> container = new ConcurrentHashMap<>();
 
     public CacheSourceService() {
-         CacheEntry.initCreator();
     }
 
     public final CacheSourceService setStoreType(Class keyType, Class valueType) {
@@ -122,7 +121,6 @@ public class CacheSourceService<K extends Serializable, V extends Object> implem
         // TODO
         if (!this.needStore) return;
         try {
-            CacheEntry.initCreator();
             File store = new File(home, "cache/" + name());
             if (!store.isFile() || !store.canRead()) return;
             LineNumberReader reader = new LineNumberReader(new FileReader(store));
@@ -160,7 +158,6 @@ public class CacheSourceService<K extends Serializable, V extends Object> implem
         if (scheduler != null) scheduler.shutdownNow();
         if (!this.needStore || Sncp.isRemote(this) || container.isEmpty()) return;
         try {
-            CacheEntry.initCreator();
             File store = new File(home, "cache/" + name());
             store.getParentFile().mkdirs();
             PrintStream stream = new PrintStream(store, "UTF-8");
@@ -413,27 +410,6 @@ public class CacheSourceService<K extends Serializable, V extends Object> implem
 
         public static final String JSON_LIST_KEY = "{\"cacheType\":\"" + CacheEntryType.LIST + "\"";
 
-        public static class CacheEntryCreator implements Creator<CacheEntry> {
-
-            public static final CacheEntryCreator CREATOR = new CacheEntryCreator();
-
-            @java.beans.ConstructorProperties({"cacheType", "expireSeconds", "lastAccessed", "key", "value"})
-            public CacheEntryCreator() {
-            }
-
-            @Override
-            public CacheEntry create(Object... params) {
-                return new CacheEntry((CacheEntryType) params[0], (Integer) params[1], (Integer) params[2], (Serializable) params[3], params[4]);
-            }
-
-        }
-
-        static void initCreator() {
-            if (JsonFactory.root().findCreator(CacheEntry.class) == null) {
-                JsonFactory.root().register(CacheEntry.class, CacheEntryCreator.CREATOR);
-            }
-        }
-
         private final CacheEntryType cacheType;
 
         private final K key;
@@ -453,13 +429,21 @@ public class CacheSourceService<K extends Serializable, V extends Object> implem
             this(cacheType, expireSeconds, (int) (System.currentTimeMillis() / 1000), key, value);
         }
 
-        @java.beans.ConstructorProperties({"cacheType", "expireSeconds", "lastAccessed", "key", "value"})
         private CacheEntry(CacheEntryType cacheType, int expireSeconds, int lastAccessed, K key, T value) {
             this.cacheType = cacheType;
             this.expireSeconds = expireSeconds;
             this.lastAccessed = lastAccessed;
             this.key = key;
             this.value = value;
+        }
+
+        private static Creator createCreator() {
+            return new Creator<CacheEntry>() {
+                @Override
+                public CacheEntry create(Object... params) {
+                    return new CacheEntry((CacheEntryType) params[0], (Integer) params[1], (Integer) params[2], (Serializable) params[3], params[4]);
+                }
+            };
         }
 
         @Override
