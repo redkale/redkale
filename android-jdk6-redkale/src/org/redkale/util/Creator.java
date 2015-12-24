@@ -63,7 +63,7 @@ import org.objectweb.asm.Type;
 public interface Creator<T> {
 
     @Documented
-    @Target({CONSTRUCTOR, TYPE})
+    @Target({METHOD})
     @Retention(RUNTIME)
     public static @interface ConstructorParameters {
 
@@ -72,7 +72,7 @@ public interface Creator<T> {
 
     public T create(Object... params);
 
-    public abstract class Creators {
+    public static abstract class Creators {
 
         @SuppressWarnings("unchecked")
         public static <T> Creator<T> create(Class<T> clazz) {
@@ -118,21 +118,21 @@ public interface Creator<T> {
                 }
             }
             if (constructor == null) {
-                for (Constructor c : clazz.getDeclaredConstructors()) {
-                    if (Modifier.isPrivate(c.getModifiers())) continue;
-                    if (c.getAnnotation(ConstructorProperties.class) != null || c.getAnnotation(ConstructorParameters.class) != null) {
+                for (Constructor c : clazz.getConstructors()) {
+                    //if (Modifier.isPrivate(c.getModifiers())) continue;
+                    if (c.getAnnotation(ConstructorProperties.class) != null) {
                         constructor = c;
                         break;
                     }
                 }
             }
-            if (constructor == null) throw new RuntimeException("[" + clazz + "] have no public or java.beans.ConstructorProperties-Annotation or ConstructorParameters-Annotation constructor.");
+            if (constructor == null) throw new RuntimeException("[" + clazz + "] have no public or java.beans.ConstructorProperties-Annotation constructor.");
             //-------------------------------------------------------------
-            ClassWriter cw = new ClassWriter(0);
+            ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
             FieldVisitor fv;
             MethodVisitor mv;
             AnnotationVisitor av0;
-            cw.visit(V1_8, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynName, "Ljava/lang/Object;L" + supDynName + "<" + interDesc + ">;", "java/lang/Object", new String[]{supDynName});
+            cw.visit(V1_7, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynName, "Ljava/lang/Object;L" + supDynName + "<" + interDesc + ">;", "java/lang/Object", new String[]{supDynName});
 
             {//构造方法
                 mv = cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null);
@@ -145,8 +145,7 @@ public interface Creator<T> {
             {//create 方法
                 mv = cw.visitMethod(ACC_PUBLIC + ACC_VARARGS, "create", "([Ljava/lang/Object;)L" + interName + ";", null, null);
                 ConstructorProperties cps = constructor.getAnnotation(ConstructorProperties.class);
-                ConstructorParameters cts = constructor.getAnnotation(ConstructorParameters.class);
-                final String[] cparams = cps == null ? (cts == null ? null : cts.value()) : cps.value();
+                final String[] cparams = cps == null ? null : cps.value();
                 if (cparams != null) {
                     av0 = mv.visitAnnotation(Type.getDescriptor(ConstructorParameters.class), true);
                     AnnotationVisitor av1 = av0.visitArray("value");
@@ -156,13 +155,12 @@ public interface Creator<T> {
                     av1.visitEnd();
                     av0.visitEnd();
                 }
-                mv.visitTypeInsn(NEW, interName);
-                mv.visitInsn(DUP);
-                //---------------------------------------
-                Class[] params = constructor.getParameterTypes();
-                {
-                    final int[] iconsts = {ICONST_0, ICONST_1, ICONST_2, ICONST_3, ICONST_4, ICONST_5};
-                    for (int i = 0; i < params.length; i++) {
+                final Class[] paramTypes = constructor.getParameterTypes();
+                final int[] iconsts = {ICONST_0, ICONST_1, ICONST_2, ICONST_3, ICONST_4, ICONST_5};
+                {  //有Primitive数据类型且值为null的参数需要赋默认值
+                    for (int i = 0; i < paramTypes.length; i++) {
+                        final Class pt = paramTypes[i];
+                        if (!pt.isPrimitive()) continue;
                         mv.visitVarInsn(ALOAD, 1);
                         if (i < 6) {
                             mv.visitInsn(iconsts[i]);
@@ -170,7 +168,55 @@ public interface Creator<T> {
                             mv.visitIntInsn(BIPUSH, i);
                         }
                         mv.visitInsn(AALOAD);
-                        final Class ct = params[i];
+                        Label lab = new Label();
+                        mv.visitJumpInsn(IFNONNULL, lab);
+                        mv.visitVarInsn(ALOAD, 1);
+                        if (i < 6) {
+                            mv.visitInsn(iconsts[i]);
+                        } else {
+                            mv.visitIntInsn(BIPUSH, i);
+                        }
+                        if (pt == int.class) {
+                            mv.visitInsn(ICONST_0);
+                            mv.visitMethodInsn(INVOKESTATIC, "java/lang/Integer", "valueOf", "(I)Ljava/lang/Integer;", false);
+                        } else if (pt == long.class) {
+                            mv.visitInsn(LCONST_0);
+                            mv.visitMethodInsn(INVOKESTATIC, "java/lang/Long", "valueOf", "(J)Ljava/lang/Long;", false);
+                        } else if (pt == boolean.class) {
+                            mv.visitFieldInsn(GETSTATIC, "java/lang/Boolean", "FALSE", "Ljava/lang/Boolean;");
+                        } else if (pt == short.class) {
+                            mv.visitInsn(ICONST_0);
+                            mv.visitMethodInsn(INVOKESTATIC, "java/lang/Short", "valueOf", "(S)Ljava/lang/Short;", false);
+                        } else if (pt == float.class) {
+                            mv.visitInsn(FCONST_0);
+                            mv.visitMethodInsn(INVOKESTATIC, "java/lang/Float", "valueOf", "(F)Ljava/lang/Float;", false);
+                        } else if (pt == byte.class) {
+                            mv.visitInsn(ICONST_0);
+                            mv.visitMethodInsn(INVOKESTATIC, "java/lang/Byte", "valueOf", "(B)Ljava/lang/Byte;", false);
+                        } else if (pt == double.class) {
+                            mv.visitInsn(DCONST_0);
+                            mv.visitMethodInsn(INVOKESTATIC, "java/lang/Double", "valueOf", "(D)Ljava/lang/Double;", false);
+                        } else if (pt == char.class) {
+                            mv.visitInsn(ICONST_0);
+                            mv.visitMethodInsn(INVOKESTATIC, "java/lang/Character", "valueOf", "(C)Ljava/lang/Character;", false);
+                        }
+                        mv.visitInsn(AASTORE);
+                        mv.visitLabel(lab);
+                    }
+                }
+                mv.visitTypeInsn(NEW, interName);
+                mv.visitInsn(DUP);
+                //---------------------------------------
+                {
+                    for (int i = 0; i < paramTypes.length; i++) {
+                        mv.visitVarInsn(ALOAD, 1);
+                        if (i < 6) {
+                            mv.visitInsn(iconsts[i]);
+                        } else {
+                            mv.visitIntInsn(BIPUSH, i);
+                        }
+                        mv.visitInsn(AALOAD);
+                        final Class ct = paramTypes[i];
                         if (ct.isPrimitive()) {
                             final Class bigct = Array.get(Array.newInstance(ct, 1), 0).getClass();
                             mv.visitTypeInsn(CHECKCAST, bigct.getName().replace('.', '/'));
@@ -188,7 +234,7 @@ public interface Creator<T> {
                 //---------------------------------------
                 mv.visitMethodInsn(INVOKESPECIAL, interName, "<init>", Type.getConstructorDescriptor(constructor), false);
                 mv.visitInsn(ARETURN);
-                mv.visitMaxs((params.length > 0 ? (params.length + 3) : 2), 2);
+                mv.visitMaxs((paramTypes.length > 0 ? (paramTypes.length + 3) : 2), 2);
                 mv.visitEnd();
             }
             { //虚拟 create 方法
