@@ -86,7 +86,7 @@ public final class HttpClient {
     }
 
     public static void main(String[] args) throws Exception {
-        URL url = new URL("https://www.wentch.com");
+        URL url = new URL("https://www.redkale.org");
         System.out.println(url.openConnection().getClass());
     }
 }
