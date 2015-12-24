@@ -9,7 +9,6 @@ import java.io.*;
 import java.nio.channels.*;
 import java.util.*;
 import javax.annotation.*;
-import org.redkale.net.sncp.*;
 import org.redkale.source.*;
 import org.redkale.util.*;
 
@@ -20,7 +19,7 @@ import org.redkale.util.*;
  * @author zhangjx
  */
 @AutoLoad(false)
-public class DataSourceService implements DataSource, Service, AutoCloseable {
+public class DataSourceService implements DataSource, Service, AutoCloseable { 
 
     @Resource(name = "$")
     private DataSource source;
