@@ -5,7 +5,8 @@
  */
 package org.redkale.test.util;
 
-import java.util.*;
+import java.beans.*;
+import org.redkale.convert.json.*;
 import org.redkale.util.*;
 
 /**
@@ -14,30 +15,108 @@ import org.redkale.util.*;
  */
 public class CreatorRecord {
 
-    private final int id;
+    private int id = -1;
 
     private String name;
 
-    public CreatorRecord(int id, String name) {
+    private long lval;
+
+    private boolean tval;
+
+    private byte bval;
+
+    private short sval;
+
+    private char cval;
+
+    private float fval;
+
+    private double dval;
+
+    @ConstructorProperties({"id", "name", "lval", "tval", "bval", "sval", "cval", "fval", "dval"})
+    public CreatorRecord(int id, String name, long lval, boolean tval, byte bval, short sval, char cval, float fval, double dval) {
         this.id = id;
         this.name = name;
-    }
-
-    private static Creator createCreator() {
-        return new Creator() {
-            @Override
-            public Object create(Object... params) {
-                return new CreatorRecord((Integer) params[0], (String) params[1]);
-            }
-            
-            @Override
-            public String toString(){
-                return "CreatorRecord_Creator" + Objects.hashCode(this);
-            }
-        };
+        this.lval = lval;
+        this.tval = tval;
+        this.bval = bval;
+        this.sval = sval;
+        this.cval = cval;
+        this.fval = fval;
+        this.dval = dval;
     }
 
     public static void main(String[] args) throws Exception {
-        System.out.println(Creator.create(CreatorRecord.class));
+        System.out.println(Creator.create(CreatorRecord.class).create(new Object[]{null, "ss", null, null, null, (short)45, null, 4.3f, null}));
     }
+
+    @Override
+    public String toString() {
+        return JsonFactory.root().getConvert().convertTo(this);
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public long getLval() {
+        return lval;
+    }
+
+    public void setLval(long lval) {
+        this.lval = lval;
+    }
+
+    public boolean isTval() {
+        return tval;
+    }
+
+    public void setTval(boolean tval) {
+        this.tval = tval;
+    }
+
+    public byte getBval() {
+        return bval;
+    }
+
+    public void setBval(byte bval) {
+        this.bval = bval;
+    }
+
+    public short getSval() {
+        return sval;
+    }
+
+    public void setSval(short sval) {
+        this.sval = sval;
+    }
+
+    public char getCval() {
+        return cval;
+    }
+
+    public void setCval(char cval) {
+        this.cval = cval;
+    }
+
+    public float getFval() {
+        return fval;
+    }
+
+    public void setFval(float fval) {
+        this.fval = fval;
+    }
+
+    public double getDval() {
+        return dval;
+    }
+
+    public void setDval(double dval) {
+        this.dval = dval;
+    }
+
 }
