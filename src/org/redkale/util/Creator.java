@@ -28,9 +28,9 @@ import static jdk.internal.org.objectweb.asm.Opcodes.*;
  *    }
  * 
  *    private static Creator createCreator() {
- *        return new Creator() {
+ *        return new Creator<Record>() { 
  *            @Override
- *            public Object create(Object... params) {
+ *            public Record create(Object... params) {
  *                return new Record((Integer) params[0], (String) params[1]);
  *            }
  *         };
