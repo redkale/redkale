@@ -5,7 +5,6 @@
  */
 package org.redkale.convert;
 
-import java.beans.*;
 import org.redkale.util.Creator;
 import java.lang.reflect.*;
 import java.util.Arrays;
@@ -68,7 +67,7 @@ public final class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T
             this.creator = factory.loadCreator(clazz);
 
             final Set<DeMember> list = new HashSet();
-            final ConstructorProperties cps = ObjectEncoder.findConstructorProperties(this.creator);
+            final String[] cps = ObjectEncoder.findConstructorProperties(this.creator);
             try {
                 ConvertColumnEntry ref;
                 for (final Field field : clazz.getFields()) {
@@ -87,7 +86,7 @@ public final class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T
                     if (!method.getName().startsWith("set")) continue;
                     if (method.getParameterTypes().length != 1) continue;
                     if (method.getReturnType() != void.class) continue;
-                    if (reversible && (cps == null || !ObjectEncoder.contains(cps.value(), ObjectEncoder.readGetSetFieldName(method)))) {
+                    if (reversible && (cps == null || !ObjectEncoder.contains(cps, ObjectEncoder.readGetSetFieldName(method)))) {
                         boolean is = method.getParameterTypes()[0] == boolean.class || method.getParameterTypes()[0] == Boolean.class;
                         try {
                             clazz.getMethod(method.getName().replaceFirst("set", is ? "is" : "get"));
@@ -101,7 +100,7 @@ public final class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T
                     list.add(new DeMember(ObjectEncoder.createAttribute(factory, clazz, null, null, method), factory.loadDecoder(t)));
                 }
                 if (cps != null) { //可能存在某些构造函数中的字段名不存在setter方法
-                    for (final String constructorField : cps.value()) {
+                    for (final String constructorField : cps) {
                         boolean flag = false;
                         for (DeMember m : list) {
                             if (m.attribute.field().equals(constructorField)) {
@@ -134,7 +133,7 @@ public final class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T
                 Arrays.sort(this.members);
 
                 if (cps != null) {
-                    final String[] fields = cps.value();
+                    final String[] fields = cps;
                     final DeMember<R, T, ?>[] ms = new DeMember[fields.length];
                     for (int i = 0; i < fields.length; i++) {
                         for (DeMember m : this.members) {
