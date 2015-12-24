@@ -437,7 +437,7 @@ public class CacheSourceService<K extends Serializable, V extends Object> implem
             this.value = value;
         }
 
-        private static Creator createCreator() { //供 Creator.create 调用
+        protected static Creator createCreator() { //供 Creator.create 调用
             return (Creator<CacheEntry>) (Object... params) -> new CacheEntry((CacheEntryType) params[0], (Integer) params[1], (Integer) params[2], (Serializable) params[3], params[4]);
         }
 
