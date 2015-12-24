@@ -12,7 +12,30 @@ import jdk.internal.org.objectweb.asm.Type;
 import static jdk.internal.org.objectweb.asm.Opcodes.*;
 
 /**
- * 实现一个类的构造方法。 代替低效的反射实现方式。 不支持数组类
+ * 实现一个类的构造方法。 代替低效的反射实现方式。 不支持数组类。
+ * 常见的无参数的构造函数类都可以自动生成Creator， 对应自定义的类可以提供一个静态构建Creator方法。
+ * 
+ * 例如: 
+ * public class Record {
+ * 
+ *    private final int id;
+ * 
+ *    private String name;
+ * 
+ *    public Record(int id, String name) {
+ *        this.id = id;
+ *        this.name = name;
+ *    }
+ * 
+ *    private static Creator createCreator() {
+ *        return new Creator() {
+ *            @Override
+ *            public Object create(Object... params) {
+ *                return new Record((Integer) params[0], (String) params[1]);
+ *            }
+ *         };
+ *    }
+ * }
  *
  * @see http://www.redkale.org
  * @author zhangjx
@@ -33,6 +56,17 @@ public interface Creator<T> {
         }
         if (clazz.isInterface() || Modifier.isAbstract(clazz.getModifiers())) {
             throw new RuntimeException("[" + clazz + "] is a interface or abstract class, cannot create it's Creator.");
+        }
+        for (final Method method : clazz.getDeclaredMethods()) {
+            if (!Modifier.isStatic(method.getModifiers())) continue;
+            if (method.getParameterTypes().length != 0) continue;
+            if (method.getReturnType() != Creator.class) continue;
+            try {
+                method.setAccessible(true); 
+                return (Creator<T>) method.invoke(null);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
         }
         final String supDynName = Creator.class.getName().replace('.', '/');
         final String interName = clazz.getName().replace('.', '/');
