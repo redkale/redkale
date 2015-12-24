@@ -17,15 +17,17 @@ import java.util.*;
  */
 public final class DLong extends Number implements Comparable<DLong> {
 
-    private final byte[] bytes;
+    public static final DLong ZERO = new DLong(new byte[16]);
 
-    public DLong(long v1, long v2) {
+    protected final byte[] bytes;
+
+    protected DLong(long v1, long v2) {  //暂时不用
         this.bytes = new byte[]{(byte) (v1 >> 56), (byte) (v1 >> 48), (byte) (v1 >> 40), (byte) (v1 >> 32),
             (byte) (v1 >> 24), (byte) (v1 >> 16), (byte) (v1 >> 8), (byte) v1, (byte) (v2 >> 56), (byte) (v2 >> 48), (byte) (v2 >> 40), (byte) (v2 >> 32),
             (byte) (v2 >> 24), (byte) (v2 >> 16), (byte) (v2 >> 8), (byte) v2};
     }
 
-    public DLong(byte[] bytes) {
+    protected DLong(byte[] bytes) {
         if (bytes == null || bytes.length != 16) throw new NumberFormatException("Not 16 length bytes");
         this.bytes = bytes;
     }
@@ -38,8 +40,20 @@ public final class DLong extends Number implements Comparable<DLong> {
         return bytes;
     }
 
-    public ByteBuffer putTo(ByteBuffer buffer) {
-        buffer.put(bytes);
+    public static DLong create(byte[] bytes) {
+        if (ZERO.equals(bytes)) return ZERO;
+        return new DLong(bytes);
+    }
+
+    public static DLong read(ByteBuffer buffer) {
+        byte[] bs = new byte[16];
+        buffer.get(bs);
+        if (ZERO.equals(bs)) return ZERO;
+        return new DLong(bs);
+    }
+
+    public static ByteBuffer write(ByteBuffer buffer, DLong value) {
+        buffer.put(value.bytes);
         return buffer;
     }
 
@@ -62,6 +76,7 @@ public final class DLong extends Number implements Comparable<DLong> {
 
     @Override
     public String toString() {
+        if (this == ZERO) return "0";
         return new String(Utility.binToHex(bytes));
     }
 

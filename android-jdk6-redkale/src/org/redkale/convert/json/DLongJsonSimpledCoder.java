@@ -29,6 +29,6 @@ public class DLongJsonSimpledCoder extends JsonSimpledCoder<DLong> {
     public DLong convertFrom(JsonReader in) {
         final String str = in.readString();
         if (str == null) return null;
-        return new DLong(Utility.hexToBin(str));
+        return DLong.create(Utility.hexToBin(str));
     }
 }
