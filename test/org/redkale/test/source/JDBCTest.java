@@ -15,7 +15,6 @@ import org.redkale.source.DataSource;
 public class JDBCTest {
 
     public static void main(String[] args) throws Exception {
-        System.setProperty("persist.type", "jdbc");
         DataSource source = new DataDefaultSource();  //耗时：37415
         int count = 1000;
         LoginTestRecord last = null;
