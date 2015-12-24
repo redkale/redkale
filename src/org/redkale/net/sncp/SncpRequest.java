@@ -61,9 +61,7 @@ public final class SncpRequest extends Request {
         }
         this.serviceid = DLong.read(buffer);
         this.nameid = DLong.read(buffer);
-        byte[] bs = new byte[16];
-        buffer.get(bs);
-        this.actionid = new DLong(bs);
+        this.actionid = DLong.read(buffer);
         buffer.get(bufferbytes);
         this.bodylength = buffer.getInt();
 
