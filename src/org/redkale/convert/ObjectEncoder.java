@@ -53,7 +53,7 @@ public final class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T
             //if (!(type instanceof Class)) throw new ConvertException("[" + type + "] is no a class");
             final Class clazz = this.typeClass;
             final Set<EnMember> list = new HashSet();
-            final ConstructorProperties cps = ObjectEncoder.findConstructorProperties(factory.loadCreator(this.typeClass));
+            final String[] cps = ObjectEncoder.findConstructorProperties(factory.loadCreator(this.typeClass));
             try {
                 ConvertColumnEntry ref;
                 for (final Field field : clazz.getFields()) {
@@ -73,7 +73,7 @@ public final class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T
                     if (!method.getName().startsWith("is") && !method.getName().startsWith("get")) continue;
                     if (method.getParameterTypes().length != 0) continue;
                     if (method.getReturnType() == void.class) continue;
-                    if (reversible && (cps == null || !contains(cps.value(), readGetSetFieldName(method)))) {
+                    if (reversible && (cps == null || !contains(cps, readGetSetFieldName(method)))) {
                         boolean is = method.getName().startsWith("is");
                         try {
                             clazz.getMethod(method.getName().replaceFirst(is ? "is" : "get", "set"), method.getReturnType());
@@ -239,9 +239,10 @@ public final class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T
         return fname;
     }
 
-    static ConstructorProperties findConstructorProperties(Creator creator) {
+    static String[] findConstructorProperties(Creator creator) {
         try {
-            return creator.getClass().getConstructor().getAnnotation(ConstructorProperties.class);
+            ConstructorProperties cps = creator.getClass().getConstructor().getAnnotation(ConstructorProperties.class);
+            return cps == null ? null : cps.value();
         } catch (Exception e) {
             return null;
         }
