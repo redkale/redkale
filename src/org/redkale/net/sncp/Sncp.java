@@ -106,71 +106,71 @@ public abstract class Sncp {
     /**
      * public class TestService implements Service{
      *
-     *      public String queryNode(){
-     *          return "hello";
-     *      }
+     * public String queryNode(){
+     * return "hello";
+     * }
      *
-     *      @MultiRun
-     *      public String updateSomeThing(String id){
-     *          return "hello" + id;
-     *      }
+     * @MultiRun
+     * public String updateSomeThing(String id){
+     * return "hello" + id;
+     * }
      *
-     *      @MultiRun(selfrun = false)
-     *      public void createSomeThing(TestBean bean){
-     *          "xxxxx" + bean;
-     *      }
+     * @MultiRun(selfrun = false)
+     * public void createSomeThing(TestBean bean){
+     * "xxxxx" + bean;
+     * }
      * }
      *
      * @SncpDyn
      * public final class _DynLocalTestService extends TestService{
      *
-     *      @Resource
-     *      private BsonConvert _convert;
+     * @Resource
+     * private BsonConvert _convert;
      *
-     *      private Transport[] _sameGroupTransports;
+     * private Transport[] _sameGroupTransports;
      *
-     *      private Transport[] _diffGroupTransports;
+     * private Transport[] _diffGroupTransports;
      *
-     *      private SncpClient _client;
+     * private SncpClient _client;
      *
-     *      private String _selfstring;
+     * private String _selfstring;
      *
-     *      @Override
-     *      public final String name() {
-     *          return "";
-     *      }
+     * @Override
+     * public final String name() {
+     * return "";
+     * }
      *
-     *      @Override
-     *      public String toString() {
-     *          return _selfstring == null ? super.toString() : _selfstring;
-     *      }
+     * @Override
+     * public String toString() {
+     * return _selfstring == null ? super.toString() : _selfstring;
+     * }
      *
-     *      @Override
-     *      public String updateSomeThing(String id){
-     *          return _updateSomeThing(true, true, true, id);
-     *      }
+     * @Override
+     * public String updateSomeThing(String id){
+     * return _updateSomeThing(true, true, true, id);
+     * }
      *
-     *      @SncpDyn
-     *      public String _updateSomeThing(boolean canselfrun, boolean cansamerun, boolean candiffrun, String id){
-     *          String rs = super.updateSomeThing(id);
-     *          if (_client== null) return;
-     *          _client.remote(_convert, _sameGroupTransports, cansamerun, 0, true, false, false, id);
-     *          _client.remote(_convert, _diffGroupTransports, candiffrun, 0, true, true, false, id);
-     *          return rs;
-     *      }
+     * @SncpDyn
+     * public String _updateSomeThing(boolean canselfrun, boolean cansamerun, boolean candiffrun, String id){
+     * String rs = super.updateSomeThing(id);
+     * if (_client== null) return;
+     * _client.remote(_convert, _sameGroupTransports, cansamerun, 0, true, false, false, id);
+     * _client.remote(_convert, _diffGroupTransports, candiffrun, 0, true, true, false, id);
+     * return rs;
+     * }
      *
-     *      @Override
-     *      public void createSomeThing(TestBean bean){
-     *          _createSomeThing(false, true, true, bean);
-     *      }
+     * @Override
+     * public void createSomeThing(TestBean bean){
+     * _createSomeThing(false, true, true, bean);
+     * }
      *
-     *      @SncpDyn
-     *      public void _createSomeThing(boolean canselfrun, boolean cansamerun, boolean candiffrun, TestBean bean){
-     *          if(canselfrun) super.createSomeThing(bean);
-     *          if (_client== null) return;
-     *          _client.remote(_convert, _sameGroupTransports, cansamerun, 1, true, false, false, bean);
-     *          _client.remote(_convert, _diffGroupTransports, candiffrun, 1, true, true, false, bean);
-     *      }
+     * @SncpDyn
+     * public void _createSomeThing(boolean canselfrun, boolean cansamerun, boolean candiffrun, TestBean bean){
+     * if(canselfrun) super.createSomeThing(bean);
+     * if (_client== null) return;
+     * _client.remote(_convert, _sameGroupTransports, cansamerun, 1, true, false, false, bean);
+     * _client.remote(_convert, _diffGroupTransports, candiffrun, 1, true, true, false, bean);
+     * }
      * }
      *
      * 创建Service的本地模式Class
@@ -187,14 +187,7 @@ public abstract class Sncp {
         if (!java.lang.reflect.Modifier.isPublic(mod)) return serviceClass;
         if (java.lang.reflect.Modifier.isAbstract(mod)) return serviceClass;
         final List<Method> methods = SncpClient.parseMethod(serviceClass, false);
-        boolean hasMultiRun0 = false;
-        for (Method method : methods) {
-            if (method.getAnnotation(MultiRun.class) != null) {
-                hasMultiRun0 = true;
-                break;
-            }
-        }
-        final boolean hasMultiRun = hasMultiRun0;
+        final boolean hasMultiRun = methods.stream().filter(x -> x.getAnnotation(MultiRun.class) != null).findAny().isPresent();
         final String supDynName = serviceClass.getName().replace('.', '/');
         final String clientName = SncpClient.class.getName().replace('.', '/');
         final String clientDesc = Type.getDescriptor(SncpClient.class);
@@ -769,39 +762,39 @@ public abstract class Sncp {
      * @SncpDyn(remote = true)
      * public final class _DynRemoteTestService extends TestService{
      *
-     *      @Resource
-     *      private BsonConvert _convert;
+     * @Resource
+     * private BsonConvert _convert;
      *
-     *      private Transport _transport;
+     * private Transport _transport;
      *
-     *      private SncpClient _client;
+     * private SncpClient _client;
      *
-     *      private String _selfstring;
+     * private String _selfstring;
      *
-     *      @Override
-     *      public final String name() {
-     *          return "";
-     *      }
+     * @Override
+     * public final String name() {
+     * return "";
+     * }
      *
-     *      @Override
-     *      public String toString() {
-     *          return _selfstring == null ? super.toString() : _selfstring;
-     *      }
+     * @Override
+     * public String toString() {
+     * return _selfstring == null ? super.toString() : _selfstring;
+     * }
      *
-     *      @Override
-     *      public boolean testChange(TestBean bean) {
-     *          return _client.remote(_convert, _transport, 0, bean);
-     *      }
+     * @Override
+     * public boolean testChange(TestBean bean) {
+     * return _client.remote(_convert, _transport, 0, bean);
+     * }
      *
-     *      @Override
-     *      public TestBean findTestBean(long id) {
-     *          return _client.remote(_convert, _transport, 1, id);
-     *      }
+     * @Override
+     * public TestBean findTestBean(long id) {
+     * return _client.remote(_convert, _transport, 1, id);
+     * }
      *
-     *      @Override
-     *      public void runTestBean(long id, TestBean bean) {
-     *          _client.remote(_convert, _transport, 2, id, bean);
-     *      }
+     * @Override
+     * public void runTestBean(long id, TestBean bean) {
+     * _client.remote(_convert, _transport, 2, id, bean);
+     * }
      * }
      *
      * 创建远程模式的Service实例
