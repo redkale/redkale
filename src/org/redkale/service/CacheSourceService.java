@@ -5,6 +5,7 @@
  */
 package org.redkale.service;
 
+import java.beans.*;
 import java.io.*;
 import java.lang.reflect.*;
 import java.nio.channels.*;
@@ -429,7 +430,8 @@ public class CacheSourceService<K extends Serializable, V extends Object> implem
             this(cacheType, expireSeconds, (int) (System.currentTimeMillis() / 1000), key, value);
         }
 
-        private CacheEntry(CacheEntryType cacheType, int expireSeconds, int lastAccessed, K key, T value) {
+        @ConstructorProperties({"cacheType", "expireSeconds", "lastAccessed", "key", "value"})
+        protected CacheEntry(CacheEntryType cacheType, int expireSeconds, int lastAccessed, K key, T value) {
             this.cacheType = cacheType;
             this.expireSeconds = expireSeconds;
             this.lastAccessed = lastAccessed;
@@ -437,17 +439,9 @@ public class CacheSourceService<K extends Serializable, V extends Object> implem
             this.value = value;
         }
 
-        protected static Creator createCreator() { //供 Creator.create 调用
-            return (Creator<CacheEntry>) (Object... params) -> new CacheEntry((CacheEntryType) params[0], (Integer) params[1], (Integer) params[2], (Serializable) params[3], params[4]);
-        }
-
         @Override
         public String toString() {
             return JsonFactory.root().getConvert().convertTo(this);
-        }
-
-        public CacheEntryType getCacheType() {
-            return cacheType;
         }
 
         @Ignore
@@ -463,6 +457,10 @@ public class CacheSourceService<K extends Serializable, V extends Object> implem
         @Ignore
         public boolean isExpired() {
             return (expireSeconds > 0 && lastAccessed + expireSeconds < (System.currentTimeMillis() / 1000));
+        }
+
+        public CacheEntryType getCacheType() {
+            return cacheType;
         }
 
         public int getExpireSeconds() {

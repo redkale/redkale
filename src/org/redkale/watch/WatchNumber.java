@@ -5,6 +5,7 @@
  */
 package org.redkale.watch;
 
+import java.beans.*;
 import java.util.concurrent.atomic.*;
 
 /**
@@ -20,11 +21,12 @@ public final class WatchNumber extends AtomicLong implements WatchNode {
 
     private final String description;
 
-    WatchNumber(String name, String description, boolean interval, long v) {
+    @ConstructorProperties({"name", "description", "interval", "value"})
+    protected WatchNumber(String name, String description, boolean interval, long value) {
         this.name = name;
         this.description = description;
         this.interval = interval;
-        this.set(v);
+        this.set(value);
     }
 
     @Override

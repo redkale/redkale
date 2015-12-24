@@ -4,7 +4,10 @@
  */
 package org.redkale.util;
 
-import java.beans.ConstructorProperties;
+import java.beans.*;
+import java.lang.annotation.*;
+import static java.lang.annotation.ElementType.*;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.lang.reflect.*;
 import java.util.*;
 import jdk.internal.org.objectweb.asm.*;
@@ -22,18 +25,33 @@ import static jdk.internal.org.objectweb.asm.Opcodes.*;
  * 
  *    private String name;
  * 
- *    public Record(int id, String name) {
+ *    Record(int id, String name) {
  *        this.id = id;
  *        this.name = name;
  *    }
  * 
  *    private static Creator createCreator() {
- *        return new Creator<Record>() { 
+ *        return new Creator<Record>() {
  *            @Override
+ *            @ConstructorParameters({"id", "name"})
  *            public Record create(Object... params) {
  *                return new Record((Integer) params[0], (String) params[1]);
  *            }
  *         };
+ *    }
+ * }
+ * 
+ * 或者: 
+ * public class Record {
+ * 
+ *    private final int id;
+ * 
+ *    private String name;
+ *    
+ *    @ConstructorProperties({"id", "name"})
+ *    public Record(int id, String name) {
+ *        this.id = id;
+ *        this.name = name;
  *    }
  * }
  *
@@ -43,10 +61,18 @@ import static jdk.internal.org.objectweb.asm.Opcodes.*;
  */
 public interface Creator<T> {
 
+    @Documented
+    @Target({CONSTRUCTOR, TYPE})
+    @Retention(RUNTIME)
+    public static @interface ConstructorParameters {
+
+        String[] value();
+    }
+
     public T create(Object... params);
 
     @SuppressWarnings("unchecked")
-    public static <T> Creator<T> create(Class<T> clazz) {
+    public static <T> Creator<T> create(Class<T> clazz) { 
         if (clazz.isAssignableFrom(ArrayList.class)) {
             clazz = (Class<T>) ArrayList.class;
         } else if (clazz.isAssignableFrom(HashMap.class)) {
@@ -62,7 +88,7 @@ public interface Creator<T> {
             if (method.getParameterTypes().length != 0) continue;
             if (method.getReturnType() != Creator.class) continue;
             try {
-                method.setAccessible(true); 
+                method.setAccessible(true);
                 return (Creator<T>) method.invoke(null);
             } catch (Exception e) {
                 throw new RuntimeException(e);
@@ -89,14 +115,15 @@ public interface Creator<T> {
             }
         }
         if (constructor == null) {
-            for (Constructor c : clazz.getConstructors()) {
-                if (c.getAnnotation(ConstructorProperties.class) != null) {
+            for (Constructor c : clazz.getDeclaredConstructors()) {
+                if (Modifier.isPrivate(c.getModifiers())) continue;
+                if (c.getAnnotation(ConstructorProperties.class) != null || c.getAnnotation(ConstructorParameters.class) != null) {
                     constructor = c;
                     break;
                 }
             }
         }
-        if (constructor == null) throw new RuntimeException("[" + clazz + "] have no public or java.beans.ConstructorProperties-Annotation constructor.");
+        if (constructor == null) throw new RuntimeException("[" + clazz + "] have no public or java.beans.ConstructorProperties-Annotation or ConstructorParameters-Annotation constructor.");
         //-------------------------------------------------------------
         ClassWriter cw = new ClassWriter(0);
         FieldVisitor fv;
@@ -106,16 +133,6 @@ public interface Creator<T> {
 
         {//构造方法
             mv = cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null);
-            ConstructorProperties cps = constructor.getAnnotation(ConstructorProperties.class);
-            if (cps != null) {
-                av0 = mv.visitAnnotation(Type.getDescriptor(ConstructorProperties.class), true);
-                AnnotationVisitor av1 = av0.visitArray("value");
-                for (String n : cps.value()) {
-                    av1.visit(null, n);
-                }
-                av1.visitEnd();
-                av0.visitEnd();
-            }
             mv.visitVarInsn(ALOAD, 0);
             mv.visitMethodInsn(INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false);
             mv.visitInsn(RETURN);
@@ -124,6 +141,18 @@ public interface Creator<T> {
         }
         {//create 方法
             mv = cw.visitMethod(ACC_PUBLIC + ACC_VARARGS, "create", "([Ljava/lang/Object;)L" + interName + ";", null, null);
+            ConstructorProperties cps = constructor.getAnnotation(ConstructorProperties.class);
+            ConstructorParameters cts = constructor.getAnnotation(ConstructorParameters.class);
+            final String[] cparams = cps == null ? (cts == null ? null : cts.value()) : cps.value();
+            if (cparams != null) {
+                av0 = mv.visitAnnotation(Type.getDescriptor(ConstructorParameters.class), true);
+                AnnotationVisitor av1 = av0.visitArray("value");
+                for (String n : cps.value()) {
+                    av1.visit(null, n);
+                }
+                av1.visitEnd();
+                av0.visitEnd();
+            }
             mv.visitTypeInsn(NEW, interName);
             mv.visitInsn(DUP);
             //---------------------------------------
