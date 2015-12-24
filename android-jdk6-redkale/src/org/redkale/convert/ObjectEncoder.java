@@ -5,7 +5,6 @@
  */
 package org.redkale.convert;
 
-import java.beans.*;
 import org.redkale.util.Attribute;
 import java.lang.reflect.*;
 import java.util.*;
@@ -242,7 +241,7 @@ public final class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T
 
     static String[] findConstructorProperties(Creator creator) {
         try {
-            ConstructorProperties cps = creator.getClass().getConstructor().getAnnotation(ConstructorProperties.class);
+            Creator.ConstructorParameters cps = creator.getClass().getMethod("create", Object[].class).getAnnotation(Creator.ConstructorParameters.class);
             return cps == null ? null : cps.value();
         } catch (Exception e) {
             return null;
