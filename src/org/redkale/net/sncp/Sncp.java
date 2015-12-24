@@ -95,7 +95,7 @@ public abstract class Sncp {
         synchronized (md5) {
             bytes = md5.digest(bytes);
         }
-        return new DLong(bytes);
+        return DLong.create(bytes);
     }
 
     public static boolean isRemote(Service service) {

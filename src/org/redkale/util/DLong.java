@@ -27,7 +27,7 @@ public final class DLong extends Number implements Comparable<DLong> {
             (byte) (v2 >> 24), (byte) (v2 >> 16), (byte) (v2 >> 8), (byte) v2};
     }
 
-    public DLong(byte[] bytes) {
+    protected DLong(byte[] bytes) {
         if (bytes == null || bytes.length != 16) throw new NumberFormatException("Not 16 length bytes");
         this.bytes = bytes;
     }
@@ -38,6 +38,11 @@ public final class DLong extends Number implements Comparable<DLong> {
 
     public byte[] directBytes() {
         return bytes;
+    }
+
+    public static DLong create(byte[] bytes) {
+        if (ZERO.equals(bytes)) return ZERO;
+        return new DLong(bytes);
     }
 
     public static DLong read(ByteBuffer buffer) {
@@ -71,7 +76,7 @@ public final class DLong extends Number implements Comparable<DLong> {
 
     @Override
     public String toString() {
-        if(this == ZERO) return "0";
+        if (this == ZERO) return "0";
         return new String(Utility.binToHex(bytes));
     }
 

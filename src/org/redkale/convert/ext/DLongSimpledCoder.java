@@ -36,7 +36,7 @@ public final class DLongSimpledCoder<R extends Reader, W extends Writer> extends
     public DLong convertFrom(R in) {
         byte[] bs = bsSimpledCoder.convertFrom(in);
         if (bs == null) return null;
-        return new DLong(bs);
+        return DLong.create(bs);
     }
 
 }
