@@ -21,7 +21,7 @@ public class HttpFactory {
 
     final HttpFactory parent;
 
-    final List<HttpCookie> defaultCookies = new CopyOnWriteArrayList<HttpCookie>();
+    final Map<String, HttpCookie> defaultCookies = new ConcurrentHashMap<String, HttpCookie>();
 
     final Map<String, String> defaultHeaders = new ConcurrentHashMap<String, String>();
 
@@ -56,28 +56,21 @@ public class HttpFactory {
     }
 
     public HttpFactory addDefaultCookie(HttpCookie cookie) {
-        if (cookie != null) defaultCookies.add(cookie);
+        if (cookie != null) defaultCookies.put(cookie.getName(), cookie);
         return this;
     }
 
     public HttpFactory addDefaultCookie(HttpCookie... cookies) {
         if (cookies != null) {
             for (HttpCookie c : cookies) {
-                if (c != null) defaultCookies.add(c);
+                if (c != null) defaultCookies.put(c.getName(), c);
             }
         }
         return this;
     }
 
     public HttpFactory removeDefaultCookie(String name) {
-        HttpCookie cookie = null;
-        for (HttpCookie c : defaultCookies) {
-            if (c.getName().equals(name)) {
-                cookie = c;
-                break;
-            }
-        }
-        defaultCookies.remove(cookie);
+        defaultCookies.remove(name);
         return this;
     }
 
