@@ -217,28 +217,6 @@ public final class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T
                 index.incrementAndGet();
             }
             in.readObjectE();
-            for (int i = 0; i < fields.length; i++) {
-                final Class t = fields[i].attribute.type();
-                if (t.isPrimitive() && constructorParams[i] == null) {
-                    Object a = 0;
-                    if (t == boolean.class) {
-                        a = Boolean.FALSE;
-                    } else if (t == byte.class) {
-                        a = (byte) 0;
-                    } else if (t == short.class) {
-                        a = (short) 0;
-                    } else if (t == char.class) {
-                        a = (char) 0;
-                    } else if (t == long.class) {
-                        a = (long) 0L;
-                    } else if (t == float.class) {
-                        a = (float) 0.0f;
-                    } else if (t == double.class) {
-                        a = (double) 0.0;
-                    }
-                    constructorParams[i] = a;
-                }
-            }
             final T result = this.creator.create(constructorParams);
             for (int i = 0; i < oc; i++) {
                 ((Attribute) otherParams[i][0]).set(result, otherParams[i][1]);
