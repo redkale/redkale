@@ -16,20 +16,30 @@ import java.util.function.BiPredicate;
  * @author zhangjx
  */
 @SuppressWarnings("unchecked")
-public interface AnyValue {
+public abstract class AnyValue {
 
     /**
      * 可读写的AnyValue默认实现类
      *
      * @see http://www.redkale.org
- * @author zhangjx
+     * @author zhangjx
      */
     @SuppressWarnings("unchecked")
-    public static final class DefaultAnyValue implements AnyValue {
+    public static final class DefaultAnyValue extends AnyValue {
 
-        public static final BiPredicate<String, String> EQUALS = (String name1, String name2) -> name1.equals(name2);
+        public static final BiPredicate<String, String> EQUALS = new BiPredicate<String, String>() { //为了兼容Android
+            @Override
+            public boolean test(String name1, String name2) {
+                return name1.equals(name2);
+            }
+        };
 
-        public static final BiPredicate<String, String> EQUALSIGNORE = (String name1, String name2) -> name1.equalsIgnoreCase(name2);
+        public static final BiPredicate<String, String> EQUALSIGNORE = new BiPredicate<String, String>() { //为了兼容Android
+            @Override
+            public boolean test(String name1, String name2) {
+                return name1.equalsIgnoreCase(name2);
+            }
+        };
 
         private final BiPredicate<String, String> predicate;
 
@@ -259,7 +269,7 @@ public interface AnyValue {
 
     }
 
-    public final class Entry<T> {
+    public static final class Entry<T> {
 
         public final String name;
 
@@ -321,7 +331,7 @@ public interface AnyValue {
         return new DefaultAnyValue();
     }
 
-    default String toString(int len) {
+    protected String toString(int len) {
         if (len < 0) len = 0;
         char[] chars = new char[len];
         Arrays.fill(chars, ' ');
@@ -338,97 +348,97 @@ public interface AnyValue {
         return sb.toString();
     }
 
-    public Entry<String>[] getStringEntrys();
+    public abstract Entry<String>[] getStringEntrys();
 
-    public Entry<AnyValue>[] getAnyEntrys();
+    public abstract Entry<AnyValue>[] getAnyEntrys();
 
-    public String[] getNames();
+    public abstract String[] getNames();
 
-    public String[] getValues(String name);
+    public abstract String[] getValues(String name);
 
-    public String[] getValues(String... names);
+    public abstract String[] getValues(String... names);
 
-    public AnyValue[] getAnyValues(String name);
+    public abstract AnyValue[] getAnyValues(String name);
 
-    public AnyValue[] getAnyValues(String... names);
+    public abstract AnyValue[] getAnyValues(String... names);
 
-    public AnyValue getAnyValue(String name);
+    public abstract AnyValue getAnyValue(String name);
 
-    public String getValue(String name);
+    public abstract String getValue(String name);
 
-    default boolean getBoolValue(String name) {
+    public boolean getBoolValue(String name) {
         return Boolean.parseBoolean(getValue(name));
     }
 
-    default boolean getBoolValue(String name, boolean defaultValue) {
+    public boolean getBoolValue(String name, boolean defaultValue) {
         String value = getValue(name);
         return value == null ? defaultValue : Boolean.parseBoolean(value);
     }
 
-    default byte getByteValue(String name) {
+    public byte getByteValue(String name) {
         return Byte.parseByte(getValue(name));
     }
 
-    default byte getByteValue(String name, byte defaultValue) {
+    public byte getByteValue(String name, byte defaultValue) {
         String value = getValue(name);
         return value == null ? defaultValue : Byte.decode(value);
     }
 
-    default char getCharValue(String name) {
+    public char getCharValue(String name) {
         return getValue(name).charAt(0);
     }
 
-    default char getCharValue(String name, char defaultValue) {
+    public char getCharValue(String name, char defaultValue) {
         String value = getValue(name);
         return value == null || value.length() == 0 ? defaultValue : value.charAt(0);
     }
 
-    default short getShortValue(String name) {
+    public short getShortValue(String name) {
         return Short.decode(getValue(name));
     }
 
-    default short getShortValue(String name, short defaultValue) {
+    public short getShortValue(String name, short defaultValue) {
         String value = getValue(name);
         return value == null ? defaultValue : Short.decode(value);
     }
 
-    default int getIntValue(String name) {
+    public int getIntValue(String name) {
         return Integer.decode(getValue(name));
     }
 
-    default int getIntValue(String name, int defaultValue) {
+    public int getIntValue(String name, int defaultValue) {
         String value = getValue(name);
         return value == null ? defaultValue : Integer.decode(value);
     }
 
-    default long getLongValue(String name) {
+    public long getLongValue(String name) {
         return Long.decode(getValue(name));
     }
 
-    default long getLongValue(String name, long defaultValue) {
+    public long getLongValue(String name, long defaultValue) {
         String value = getValue(name);
         return value == null ? defaultValue : Long.decode(value);
     }
 
-    default float getFloatValue(String name) {
+    public float getFloatValue(String name) {
         return Float.parseFloat(getValue(name));
     }
 
-    default float getFloatValue(String name, float defaultValue) {
+    public float getFloatValue(String name, float defaultValue) {
         String value = getValue(name);
         return value == null ? defaultValue : Float.parseFloat(value);
     }
 
-    default double getDoubleValue(String name) {
+    public double getDoubleValue(String name) {
         return Double.parseDouble(getValue(name));
     }
 
-    default double getDoubleValue(String name, double defaultValue) {
+    public double getDoubleValue(String name, double defaultValue) {
         String value = getValue(name);
         return value == null ? defaultValue : Double.parseDouble(value);
     }
 
-    default String getValue(String name, String defaultValue) {
+    public String getValue(String name, String defaultValue) {
         String value = getValue(name);
         return value == null ? defaultValue : value;
     }

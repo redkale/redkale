@@ -5,9 +5,8 @@
  */
 package org.redkale.util;
 
-import java.lang.reflect.*;
 import static jdk.internal.org.objectweb.asm.Opcodes.*;
-import jdk.internal.org.objectweb.asm.Type;
+import jdk.internal.org.objectweb.asm.*;
 
 /**
  * 该类功能是动态映射一个Data类中成员对应的getter、setter方法； 代替低效的反射实现方式。
@@ -42,7 +41,7 @@ public interface Attribute<T, F> {
      * @param field
      * @return
      */
-    public static <T, F> Attribute<T, F> create(final Field field) {
+    public static <T, F> Attribute<T, F> create(final java.lang.reflect.Field field) {
         return create((Class<T>) field.getDeclaringClass(), field.getName(), field, null, null);
     }
 
@@ -55,7 +54,7 @@ public interface Attribute<T, F> {
      * @param field
      * @return
      */
-    public static <T, F> Attribute<T, F> create(String fieldname, final Field field) {
+    public static <T, F> Attribute<T, F> create(String fieldname, final java.lang.reflect.Field field) {
         return create((Class<T>) field.getDeclaringClass(), fieldname, field, null, null);
     }
 
@@ -93,7 +92,7 @@ public interface Attribute<T, F> {
      * @param setter
      * @return 
      */
-    public static <T, F> Attribute<T, F> create(final Method getter, final Method setter) {
+    public static <T, F> Attribute<T, F> create(final java.lang.reflect.Method getter, final java.lang.reflect.Method setter) {
         return create((Class) (getter == null ? setter.getDeclaringClass() : getter.getDeclaringClass()), null, null, getter, setter);
     }
     /**
@@ -106,7 +105,7 @@ public interface Attribute<T, F> {
      * @param setter
      * @return 
      */
-    public static <T, F> Attribute<T, F> create(Class<T> clazz, final Method getter, final Method setter) {
+    public static <T, F> Attribute<T, F> create(Class<T> clazz, final java.lang.reflect.Method getter, final java.lang.reflect.Method setter) {
         return create(clazz, null, null, getter, setter);
     }
     /**
@@ -120,7 +119,7 @@ public interface Attribute<T, F> {
      * @param setter
      * @return 
      */
-    public static <T, F> Attribute<T, F> create(Class<T> clazz, final String fieldalias, final Method getter, final Method setter) {
+    public static <T, F> Attribute<T, F> create(Class<T> clazz, final String fieldalias, final java.lang.reflect.Method getter, final java.lang.reflect.Method setter) {
         return create(clazz, fieldalias, null, getter, setter);
     }
     
@@ -136,10 +135,10 @@ public interface Attribute<T, F> {
      * @return 
      */
     @SuppressWarnings("unchecked")
-    public static <T, F> Attribute<T, F> create(final Class<T> clazz, String fieldalias0, final Field field0, Method getter0, Method setter0) {
+    public static <T, F> Attribute<T, F> create(final Class<T> clazz, String fieldalias0, final java.lang.reflect.Field field0, java.lang.reflect.Method getter0, java.lang.reflect.Method setter0) {
         if (fieldalias0 != null && fieldalias0.isEmpty()) fieldalias0 = null;
-        int mod = field0 == null ? Modifier.STATIC : field0.getModifiers();
-        if (field0 != null && !Modifier.isStatic(mod) && !Modifier.isPublic(mod)) {
+        int mod = field0 == null ? java.lang.reflect.Modifier.STATIC : field0.getModifiers();
+        if (field0 != null && !java.lang.reflect.Modifier.isStatic(mod) && !java.lang.reflect.Modifier.isPublic(mod)) {
             Class t = field0.getType();
             char[] fs = field0.getName().toCharArray();
             fs[0] = Character.toUpperCase(fs[0]);
@@ -158,7 +157,7 @@ public interface Attribute<T, F> {
                 }
             }
         }
-        final Field field = field0 == null ? null : (!Modifier.isPublic(mod) || Modifier.isStatic(mod) ? null : field0);
+        final java.lang.reflect.Field field = field0 == null ? null : (!java.lang.reflect.Modifier.isPublic(mod) || java.lang.reflect.Modifier.isStatic(mod) ? null : field0);
         final java.lang.reflect.Method getter = getter0;
         final java.lang.reflect.Method setter = setter0;
         if (fieldalias0 == null) {
@@ -191,7 +190,7 @@ public interface Attribute<T, F> {
             column = setter.getParameterTypes()[0];
         }
         final Class pcolumn = column;
-        if (column.isPrimitive()) column = Array.get(Array.newInstance(column, 1), 0).getClass();
+        if (column.isPrimitive()) column = java.lang.reflect.Array.get(java.lang.reflect.Array.newInstance(column, 1), 0).getClass();
         final String supDynName = Attribute.class.getName().replace('.', '/');
         final String interName = clazz.getName().replace('.', '/');
         final String columnName = column.getName().replace('.', '/');
@@ -211,8 +210,8 @@ public interface Attribute<T, F> {
         } catch (Throwable ex) {
         }
         //---------------------------------------------------
-        final jdk.internal.org.objectweb.asm.ClassWriter cw = new jdk.internal.org.objectweb.asm.ClassWriter(0);
-        jdk.internal.org.objectweb.asm.MethodVisitor mv;
+        final ClassWriter cw = new ClassWriter(0);
+        MethodVisitor mv;
 
         cw.visit(V1_8, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynName, "Ljava/lang/Object;L" + supDynName + "<" + interDesc + columnDesc + ">;", "java/lang/Object", new String[]{supDynName});
 
@@ -294,7 +293,7 @@ public interface Attribute<T, F> {
             mv = cw.visitMethod(ACC_PUBLIC, "set", "(" + interDesc + columnDesc + ")V", null, null);
             int m = 2;
             if (setter == null) {
-                if (field == null || Modifier.isFinal(field.getModifiers())) {
+                if (field == null || java.lang.reflect.Modifier.isFinal(field.getModifiers())) {
                     m = 0;
                 } else { //public field
                     mv.visitVarInsn(ALOAD, 1);
