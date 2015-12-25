@@ -34,7 +34,7 @@ public class CreatorRecord {
     private double dval;
 
     @ConstructorProperties({"id", "name", "lval", "tval", "bval", "sval", "cval", "fval", "dval"})
-    public CreatorRecord(int id, String name, long lval, boolean tval, byte bval, short sval, char cval, float fval, double dval) {
+    CreatorRecord(int id, String name, long lval, boolean tval, byte bval, short sval, char cval, float fval, double dval) {
         this.id = id;
         this.name = name;
         this.lval = lval;
@@ -47,10 +47,10 @@ public class CreatorRecord {
     }
 
     public static void main(String[] args) throws Exception {
-        CreatorRecord record = Creator.create(CreatorRecord.class).create(new Object[]{null, "ss", null, true, null, (short)45, null, 4.3f, null});
+        CreatorRecord record = Creator.create(CreatorRecord.class).create(new Object[]{null, "ss", null, true, null, (short) 45, null, 4.3f, null});
         String json = record.toString();
         System.out.println(json);
-        System.out.println(JsonFactory.root().getConvert().convertFrom(CreatorRecord.class, json).toString()); 
+        System.out.println(JsonFactory.root().getConvert().convertFrom(CreatorRecord.class, json).toString());
     }
 
     @Override
