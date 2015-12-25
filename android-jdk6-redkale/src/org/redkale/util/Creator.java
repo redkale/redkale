@@ -5,10 +5,12 @@
 package org.redkale.util;
 
 import java.beans.*;
+import java.io.*;
 import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.*;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.lang.reflect.*;
+import java.net.*;
 import java.util.*;
 
 import org.objectweb.asm.*;
@@ -72,7 +74,7 @@ public interface Creator<T> {
 
     public T create(Object... params);
 
-    public static abstract class Creators {
+    public abstract class Creators {
 
         @SuppressWarnings("unchecked")
         public static <T> Creator<T> create(Class<T> clazz) {
@@ -110,22 +112,23 @@ public interface Creator<T> {
                 return (Creator) Class.forName(newDynName.replace('/', '.')).newInstance();
             } catch (Exception ex) {
             }
-            Constructor<T> constructor = null;
+            Constructor<T> constructor0 = null;
             for (Constructor c : clazz.getConstructors()) {
                 if (c.getParameterTypes().length == 0) { //为了兼容android 而不使用 getParameterCount()
-                    constructor = c;
+                    constructor0 = c;
                     break;
                 }
             }
-            if (constructor == null) {
-                for (Constructor c : clazz.getConstructors()) {
-                    //if (Modifier.isPrivate(c.getModifiers())) continue;
+            if (constructor0 == null) {
+                for (Constructor c : clazz.getDeclaredConstructors()) {
+                    if (Modifier.isPrivate(c.getModifiers())) continue;
                     if (c.getAnnotation(ConstructorProperties.class) != null) {
-                        constructor = c;
+                        constructor0 = c;
                         break;
                     }
                 }
             }
+            final Constructor<T> constructor = constructor0;
             if (constructor == null) throw new RuntimeException("[" + clazz + "] have no public or java.beans.ConstructorProperties-Annotation constructor.");
             //-------------------------------------------------------------
             ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
@@ -247,14 +250,44 @@ public interface Creator<T> {
                 mv.visitEnd();
             }
             cw.visitEnd();
-            byte[] bytes = cw.toByteArray();
-            Class<?> creatorClazz = new ClassLoader(loader) {
-                public final Class<?> loadClass(String name, byte[] b) {
-                    return defineClass(name, b, 0, b.length);
+            final byte[] bytes = cw.toByteArray();
+            Class<?> resultClazz = null;
+            if (loader instanceof URLClassLoader) {
+                try {
+                    final URLClassLoader urlLoader = (URLClassLoader) loader;
+                    final URL url = new URL("memclass", "localhost", -1, "/" + newDynName.replace('/', '.') + "/", new URLStreamHandler() {
+                        @Override
+                        protected URLConnection openConnection(URL u) throws IOException {
+                            return new URLConnection(u) {
+                                @Override
+                                public void connect() throws IOException {
+                                }
+
+                                @Override
+                                public InputStream getInputStream() throws IOException {
+                                    return new ByteArrayInputStream(bytes);
+                                }
+                            };
+                        }
+                    });
+                    Method addURLMethod = URLClassLoader.class.getDeclaredMethod("addURL", URL.class);
+                    addURLMethod.setAccessible(true);
+                    addURLMethod.invoke(urlLoader, url);
+                    resultClazz = urlLoader.loadClass(newDynName.replace('/', '.'));
+                } catch (Throwable t) { //异常无需理会， 使用下一种loader方式
+                    t.printStackTrace();
                 }
-            }.loadClass(newDynName.replace('/', '.'), bytes);
+            }
             try {
-                return (Creator) creatorClazz.newInstance();
+                if (resultClazz == null) {
+                    if (!Modifier.isPublic(constructor.getModifiers())) throw new RuntimeException("[" + clazz + "] have no public or java.beans.ConstructorProperties-Annotation constructor.");
+                    resultClazz = new ClassLoader(loader) {
+                        public final Class<?> loadClass(String name, byte[] b) {
+                            return defineClass(name, b, 0, b.length);
+                        }
+                    }.loadClass(newDynName.replace('/', '.'), bytes);
+                }
+                return (Creator) resultClazz.newInstance();
             } catch (Exception ex) {
                 throw new RuntimeException(ex);
             }

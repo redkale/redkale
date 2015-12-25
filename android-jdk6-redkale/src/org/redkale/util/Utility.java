@@ -382,8 +382,8 @@ public final class Utility {
      * @param low
      * @return
      */
-    public static long merge(long high, long low) {
-        return high << 32 | low;
+    public static long merge(int high, int low) {
+        return (0L + high) << 32 | low;
     }
 
     public static ByteBuffer encodeUTF8(final ByteBuffer buffer, final char[] text, final int start, final int len) {
