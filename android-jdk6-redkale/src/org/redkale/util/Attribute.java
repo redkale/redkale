@@ -215,7 +215,7 @@ public interface Attribute<T, F> {
             }
             try {
                 return (Attribute) Class.forName(newDynName.replace('/', '.')).newInstance();
-            } catch (Exception ex) {
+            } catch (Throwable ex) {
             }
             //---------------------------------------------------
             final org.objectweb.asm.ClassWriter cw = new org.objectweb.asm.ClassWriter(0);
