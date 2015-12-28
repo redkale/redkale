@@ -64,8 +64,6 @@ public class HttpRequest extends Request {
 
     private boolean bodyparsed = false;
 
-    protected boolean flashPolicy = false;
-
     protected boolean boundary = false;
 
     private final String remoteAddrHeader;
@@ -93,13 +91,7 @@ public class HttpRequest extends Request {
 
     @Override
     protected int readHeader(final ByteBuffer buffer) {
-        if (!readLine(buffer, array)) {
-            if (array.equal(flashRequestContent1) || array.equal(flashRequestContent2)) { //兼容 flash socket <policy-file-request/>
-                this.flashPolicy = true;
-                return 0;
-            }
-            return -1;
-        }
+        if (!readLine(buffer, array)) return -1;
         Charset charset = this.context.getCharset();
         int index = 0;
         int offset = array.find(index, ' ');
@@ -299,7 +291,6 @@ public class HttpRequest extends Request {
         this.contentLength = -1;
         this.boundary = false;
         this.bodyparsed = false;
-        this.flashPolicy = false;
 
         this.header.clear();
         this.params.clear();

@@ -72,18 +72,6 @@ public final class HttpPrepareServlet extends PrepareServlet<HttpRequest, HttpRe
     @Override
     public void execute(HttpRequest request, HttpResponse response) throws IOException {
         try {
-            if (request.flashPolicy) {
-                response.skipHeader();
-                if (flashPolicyBuffer == null) {
-                    flashPolicyBuffer = ByteBuffer.wrap(("<?xml version=\"1.0\"?>"
-                            + "<!DOCTYPE cross-domain-policy SYSTEM \"http://www.macromedia.com/xml/dtds/cross-domain-policy.dtd\">"
-                            + "<cross-domain-policy><allow-access-from domain=\"" + flashdomain + "\"  to-ports=\""
-                            + flashports.replace("$", "" + request.getContext().getServerAddress().getPort()) + "\"/>"
-                            + "</cross-domain-policy>").getBytes()).asReadOnlyBuffer();
-                }
-                response.finish(true, flashPolicyBuffer.duplicate());
-                return;
-            }
             final String uri = request.getRequestURI();
             HttpServlet servlet = this.strmaps.isEmpty() ? null : this.strmaps.get(uri);
             if (servlet == null && this.regArray != null) {
