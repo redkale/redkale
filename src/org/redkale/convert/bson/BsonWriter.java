@@ -244,7 +244,7 @@ public class BsonWriter implements Writer {
         byte[] bytes = new byte[chars.length + 1];
         bytes[0] = (byte) chars.length;
         for (int i = 0; i < chars.length; i++) {
-            if (chars[i] > Byte.MAX_VALUE) throw new ConvertException("'" + value + "'  has  double-word");
+            if (chars[i] > Byte.MAX_VALUE) throw new ConvertException("'" + value + "'  has double-word");
             bytes[i + 1] = (byte) chars[i];
         }
         writeTo(bytes);
