@@ -188,7 +188,7 @@ public abstract class Response<R extends Request> {
         });
     }
 
-    protected <A> void send(final ByteBuffer[] buffers, A attachment, CompletionHandler<Integer, A> handler) {
+    protected <A> void send(final ByteBuffer[] buffers, A attachment, final CompletionHandler<Integer, A> handler) {
         this.channel.write(buffers, attachment, new CompletionHandler<Integer, A>() {
 
             @Override
@@ -207,9 +207,7 @@ public abstract class Response<R extends Request> {
                     ByteBuffer[] newattachs = new ByteBuffer[buffers.length - index];
                     System.arraycopy(buffers, index, newattachs, 0, newattachs.length);
                     channel.write(newattachs, attachment, this);
-                } else {
-                    if (handler != null) handler.completed(result, attachment);
-                }
+                } else if (handler != null) handler.completed(result, attachment);
             }
 
             @Override

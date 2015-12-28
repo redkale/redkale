@@ -15,14 +15,14 @@ import java.io.IOException;
  * @param <R>
  * @param <P>
  */
-public interface Servlet<R extends Request, P extends Response<R>> {
+public abstract class Servlet<R extends Request, P extends Response<R>> {
 
-    default void init(Context context, AnyValue config) {
+    public void init(Context context, AnyValue config) {
     }
 
-    public void execute(R request, P response) throws IOException;
+    public abstract void execute(R request, P response) throws IOException;
 
-    default void destroy(Context context, AnyValue config) {
+    public void destroy(Context context, AnyValue config) {
     }
 
 }

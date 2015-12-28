@@ -13,7 +13,7 @@ import org.redkale.util.*;
  * @see http://www.redkale.org
  * @author zhangjx
  */
-public abstract class HttpServlet implements Servlet<HttpRequest, HttpResponse<HttpRequest>> {
+public abstract class HttpServlet extends Servlet<HttpRequest, HttpResponse<HttpRequest>> {
 
     AnyValue conf; //当前HttpServlet的配置
 

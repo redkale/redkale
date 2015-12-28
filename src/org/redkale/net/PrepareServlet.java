@@ -18,7 +18,7 @@ import java.util.logging.*;
  * @param <R>
  * @param <P>
  */
-public abstract class PrepareServlet<R extends Request, P extends Response<R>> implements Servlet<R, P> {
+public abstract class PrepareServlet<R extends Request, P extends Response<R>> extends Servlet<R, P> {
 
     protected final AtomicLong executeCounter = new AtomicLong(); //执行请求次数
 

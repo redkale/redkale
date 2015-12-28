@@ -13,7 +13,7 @@ import org.redkale.util.*;
  * @see http://www.redkale.org
  * @author zhangjx
  */
-public abstract class SncpServlet implements Servlet<SncpRequest, SncpResponse> {
+public abstract class SncpServlet extends Servlet<SncpRequest, SncpResponse> {
 
     AnyValue conf;
 
