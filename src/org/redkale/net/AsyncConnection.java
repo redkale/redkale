@@ -483,7 +483,7 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
         }
 
         @Override
-        public <A> void write(ByteBuffer[] srcs, int offset, int length, A attachment, CompletionHandler<Integer, ? super A> handler) {
+        public <A> void write(ByteBuffer[] srcs, int offset, int length, A attachment, final CompletionHandler<Integer, ? super A> handler) {
             channel.write(srcs, offset, length, writeTimeoutSecond > 0 ? writeTimeoutSecond : 60, TimeUnit.SECONDS,
                     attachment, new CompletionHandler<Long, A>() {
 
