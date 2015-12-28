@@ -34,10 +34,6 @@ public final class HttpPrepareServlet extends PrepareServlet<HttpRequest, HttpRe
 
     private HttpServlet resourceHttpServlet = new HttpResourceServlet();
 
-    private String flashdomain = "*";
-
-    private String flashports = "80,443,$";
-
     @Override
     public void init(Context context, AnyValue config) {
         this.servlets.stream().forEach(s -> {
@@ -64,8 +60,6 @@ public final class HttpPrepareServlet extends PrepareServlet<HttpRequest, HttpRe
                 }
                 this.resourceHttpServlet.init(context, resConfig);
             }
-            this.flashdomain = config.getValue("crossdomain-domain", "*");
-            this.flashports = config.getValue("crossdomain-ports", "80,443,$");
         }
     }
 
