@@ -19,20 +19,10 @@ import org.redkale.util.*;
  * @author zhangjx
  */
 @AutoLoad(false)
-public class DataSourceService implements DataSource, Service, AutoCloseable { 
+public class DataSourceService implements DataSource, Service, AutoCloseable {
 
     @Resource(name = "$")
     private DataSource source;
-
-    @Override
-    public DataConnection createReadConnection() {
-        return source.createReadConnection();
-    }
-
-    @Override
-    public DataConnection createWriteConnection() {
-        return source.createWriteConnection();
-    }
 
     @Override
     public <T> void insert(@DynCall(DataCallArrayAttribute.class) T... values) {
@@ -43,11 +33,6 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     public <T> void insert(final CompletionHandler<Void, T[]> handler, @DynAttachment @DynCall(DataCallArrayAttribute.class) final T... values) {
         source.insert(values);
         if (handler != null) handler.completed(null, values);
-    }
-
-    @Override
-    public <T> void insert(DataConnection conn, @DynCall(DataCallArrayAttribute.class) T... values) {
-        source.insert(conn, values);
     }
 
     @Override
@@ -62,11 +47,6 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
-    public <T> void delete(DataConnection conn, T... values) {
-        source.delete(conn, values);
-    }
-
-    @Override
     public <T> void delete(final Class<T> clazz, final Serializable... ids) {
         source.delete(clazz, ids);
     }
@@ -75,11 +55,6 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     public <T> void delete(final CompletionHandler<Void, Serializable[]> handler, final Class<T> clazz, @DynAttachment final Serializable... ids) {
         source.delete(clazz, ids);
         if (handler != null) handler.completed(null, ids);
-    }
-
-    @Override
-    public <T> void delete(DataConnection conn, Class<T> clazz, final Serializable... ids) {
-        source.delete(conn, clazz, ids);
     }
 
     @Override
@@ -94,11 +69,6 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
-    public <T> void delete(DataConnection conn, Class<T> clazz, FilterNode node) {
-        source.delete(conn, clazz, node);
-    }
-
-    @Override
     public <T> void update(T... values) {
         source.update(values);
     }
@@ -107,11 +77,6 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     public <T> void update(final CompletionHandler<Void, T[]> handler, @DynAttachment final T... values) {
         source.update(values);
         if (handler != null) handler.completed(null, values);
-    }
-
-    @Override
-    public <T> void update(DataConnection conn, T... values) {
-        source.update(conn, values);
     }
 
     @Override
@@ -126,11 +91,6 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
-    public <T> void updateColumn(DataConnection conn, Class<T> clazz, final Serializable id, final String column, final Serializable value) {
-        source.updateColumn(conn, clazz, id, column, value);
-    }
-
-    @Override
     public <T> void updateColumnIncrement(final Class<T> clazz, final Serializable id, final String column, long incvalue) {
         source.updateColumnIncrement(clazz, id, column, incvalue);
     }
@@ -139,11 +99,6 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     public <T> void updateColumnIncrement(final CompletionHandler<Void, Serializable> handler, final Class<T> clazz, @DynAttachment final Serializable id, final String column, long incvalue) {
         source.updateColumnIncrement(clazz, id, column, incvalue);
         if (handler != null) handler.completed(null, id);
-    }
-
-    @Override
-    public <T> void updateColumnIncrement(DataConnection conn, Class<T> clazz, final Serializable id, final String column, long incvalue) {
-        source.updateColumnIncrement(conn, clazz, id, column, incvalue);
     }
 
     @Override
@@ -158,11 +113,6 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
-    public <T> void updateColumnAnd(DataConnection conn, Class<T> clazz, final Serializable id, final String column, long incvalue) {
-        source.updateColumnAnd(conn, clazz, id, column, incvalue);
-    }
-
-    @Override
     public <T> void updateColumnOr(final Class<T> clazz, final Serializable id, final String column, long incvalue) {
         source.updateColumnOr(clazz, id, column, incvalue);
     }
@@ -174,11 +124,6 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
-    public <T> void updateColumnOr(DataConnection conn, Class<T> clazz, final Serializable id, final String column, long incvalue) {
-        source.updateColumnOr(conn, clazz, id, column, incvalue);
-    }
-
-    @Override
     public <T> void updateColumns(T value, final String... columns) {
         source.updateColumns(value, columns);
     }
@@ -187,11 +132,6 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     public <T> void updateColumns(final CompletionHandler<Void, T> handler, @DynAttachment final T value, final String... columns) {
         source.updateColumns(value, columns);
         if (handler != null) handler.completed(null, value);
-    }
-
-    @Override
-    public <T> void updateColumns(DataConnection conn, T value, final String... columns) {
-        source.updateColumns(conn, value, columns);
     }
 
     @Override

@@ -18,20 +18,6 @@ import org.redkale.util.*;
 @SuppressWarnings("unchecked")
 public interface DataSource {
 
-    /**
-     * 创建读连接
-     *
-     * @return
-     */
-    public DataConnection createReadConnection();
-
-    /**
-     * 创建写连接
-     *
-     * @return
-     */
-    public DataConnection createWriteConnection();
-
     //----------------------insert-----------------------------
     /**
      * 新增对象， 必须是Entity对象
@@ -40,8 +26,6 @@ public interface DataSource {
      * @param values
      */
     public <T> void insert(final T... values);
-
-    public <T> void insert(final DataConnection conn, final T... values);
 
     //----------------------异步版---------------------------------
     public <T> void insert(final CompletionHandler<Void, T[]> handler, final T... values);
@@ -55,15 +39,9 @@ public interface DataSource {
      */
     public <T> void delete(final T... values);
 
-    public <T> void delete(final DataConnection conn, final T... values);
-
     public <T> void delete(final Class<T> clazz, final Serializable... ids);
 
-    public <T> void delete(final DataConnection conn, final Class<T> clazz, final Serializable... ids);
-
     public <T> void delete(final Class<T> clazz, final FilterNode node);
-
-    public <T> void delete(final DataConnection conn, final Class<T> clazz, final FilterNode node);
 
     //----------------------异步版---------------------------------
     public <T> void delete(final CompletionHandler<Void, T[]> handler, final T... values);
@@ -81,27 +59,15 @@ public interface DataSource {
      */
     public <T> void update(final T... values);
 
-    public <T> void update(final DataConnection conn, final T... values);
-
     public <T> void updateColumn(final Class<T> clazz, final Serializable id, final String column, final Serializable value);
-
-    public <T> void updateColumn(final DataConnection conn, final Class<T> clazz, final Serializable id, final String column, final Serializable value);
 
     public <T> void updateColumnIncrement(final Class<T> clazz, final Serializable id, final String column, long incvalue);
 
-    public <T> void updateColumnIncrement(final DataConnection conn, final Class<T> clazz, final Serializable id, final String column, long incvalue);
-
     public <T> void updateColumnAnd(final Class<T> clazz, final Serializable id, final String column, long incvalue);
-
-    public <T> void updateColumnAnd(final DataConnection conn, final Class<T> clazz, final Serializable id, final String column, long incvalue);
 
     public <T> void updateColumnOr(final Class<T> clazz, final Serializable id, final String column, long incvalue);
 
-    public <T> void updateColumnOr(final DataConnection conn, final Class<T> clazz, final Serializable id, final String column, long incvalue);
-
     public <T> void updateColumns(final T value, final String... columns);
-
-    public <T> void updateColumns(final DataConnection conn, final T value, final String... columns);
 
     //----------------------异步版---------------------------------
     public <T> void update(final CompletionHandler<Void, T[]> handler, final T... values);
