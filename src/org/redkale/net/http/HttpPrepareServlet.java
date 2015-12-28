@@ -7,7 +7,6 @@ package org.redkale.net.http;
 
 import org.redkale.util.AnyValue.DefaultAnyValue;
 import java.io.*;
-import java.nio.*;
 import java.util.*;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.function.*;
@@ -23,8 +22,6 @@ import org.redkale.watch.*;
  * @author zhangjx
  */
 public final class HttpPrepareServlet extends PrepareServlet<HttpRequest, HttpResponse<HttpRequest>> {
-
-    private ByteBuffer flashPolicyBuffer;
 
     private final List<HttpServlet> servlets = new ArrayList<>();
 
