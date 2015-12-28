@@ -69,54 +69,6 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
     @Resource(name = "$")
     private DataCacheListener cacheListener;
 
-    private static class DataJDBCConnection extends DataConnection {
-
-        private final Connection sqlconn;
-
-        private DataJDBCConnection(Connection c) {
-            super(c);
-            this.sqlconn = c;
-            try {
-                this.sqlconn.setAutoCommit(true);
-            } catch (Exception e) {
-                //do nothing
-            }
-        }
-
-        @Override
-        public boolean close() {
-            try {
-                if(sqlconn == null || sqlconn.isClosed()) return true;
-                sqlconn.close();
-                return true;
-            } catch (Exception e) {
-                //do nothing
-                return false;
-            }
-        }
-
-        @Override
-        public boolean commit() {
-            try {
-                sqlconn.commit();
-                return true;
-            } catch (Exception e) {
-                return false;
-            }
-        }
-
-        @Override
-        public boolean rollback() {
-            try {
-                sqlconn.rollback();
-                return true;
-            } catch (Exception e) {
-                //do nothing
-                return false;
-            }
-        }
-    }
-
     private final Function<Class, List> fullloader = (t) -> querySheet(false, false, t, null, null, (FilterNode) null).list(true);
 
     public DataDefaultSource() throws IOException {
@@ -276,12 +228,12 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
 
     @Override
     public DataConnection createReadConnection() {
-        return new DataJDBCConnection(createReadSQLConnection());
+        return new DataConnection(createReadSQLConnection());
     }
 
     @Override
     public DataConnection createWriteConnection() {
-        return new DataJDBCConnection(createWriteSQLConnection());
+        return new DataConnection(createWriteSQLConnection());
     }
 
     @Override

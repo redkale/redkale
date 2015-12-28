@@ -5,26 +5,52 @@
  */
 package org.redkale.source;
 
+import java.sql.*;
+
 /**
  *
  * @see http://www.redkale.org
  * @author zhangjx
  */
-public abstract class DataConnection {
+public class DataConnection {
 
-    private final Object connection;
+    private final Connection conn;
 
-    protected DataConnection(Object connection) {
-        this.connection = connection;
+    protected DataConnection(Connection connection) {
+        this.conn = connection;
     }
 
-    protected <T> T getConnection() {
-        return (T) this.connection;
+    protected Connection getConnection() {
+        return this.conn;
     }
 
-    public abstract boolean commit();
+    public boolean close() {
+        try {
+            if (conn == null || conn.isClosed()) return true;
+            conn.close();
+            return true;
+        } catch (Exception e) {
+            //do nothing
+            return false;
+        }
+    }
 
-    public abstract boolean rollback();
+    public boolean commit() {
+        try {
+            conn.commit();
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
 
-    public abstract boolean close();
+    public boolean rollback() {
+        try {
+            conn.rollback();
+            return true;
+        } catch (Exception e) {
+            //do nothing
+            return false;
+        }
+    }
 }
