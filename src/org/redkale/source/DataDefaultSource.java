@@ -84,11 +84,14 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
         }
 
         @Override
-        public void close() {
+        public boolean close() {
             try {
+                if(sqlconn == null || sqlconn.isClosed()) return true;
                 sqlconn.close();
+                return true;
             } catch (Exception e) {
                 //do nothing
+                return false;
             }
         }
 
@@ -103,11 +106,13 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
         }
 
         @Override
-        public void rollback() {
+        public boolean rollback() {
             try {
                 sqlconn.rollback();
+                return true;
             } catch (Exception e) {
                 //do nothing
+                return false;
             }
         }
     }

@@ -24,7 +24,7 @@ public abstract class DataConnection {
 
     public abstract boolean commit();
 
-    public abstract void rollback();
+    public abstract boolean rollback();
 
-    public abstract void close();
+    public abstract boolean close();
 }
