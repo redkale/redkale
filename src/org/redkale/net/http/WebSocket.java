@@ -57,7 +57,7 @@ public abstract class WebSocket {
 
     public static final int RETCODE_WSOFFLINE = 1 << 8; //256
 
-    WebSocketRunner runner; //不可能为空 
+    WebSocketRunner _runner; //不可能为空 
 
     WebSocketEngine _engine; //不可能为空 
 
@@ -86,15 +86,17 @@ public abstract class WebSocket {
      * @return
      */
     public final int send(WebSocketPacket packet) {
-        if (this.runner != null) return this.runner.sendMessage(packet);
-        return RETCODE_WSOCKET_CLOSED;
+        int rs = RETCODE_WSOCKET_CLOSED;
+        if (this._runner != null) rs = this._runner.sendMessage(packet);
+        if(_engine.finest) _engine.logger.finest("groupid:" + getGroupid() + " websocket send result is " + rs + " on " + this + " by message(" + packet + ")");
+        return rs;
     }
 
     /**
      * 显式地关闭WebSocket
      */
     public final void close() {
-        if (this.runner != null) this.runner.closeRunner();
+        if (this._runner != null) this._runner.closeRunner();
     }
 
     /**

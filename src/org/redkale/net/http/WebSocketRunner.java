@@ -52,7 +52,7 @@ public class WebSocketRunner implements Runnable {
         this.webSocket = webSocket;
         this.channel = channel;
         this.wsbinary = wsbinary;
-        webSocket.runner = this;
+        webSocket._runner = this;
         this.coder.logger = context.getLogger();
         this.coder.debugable = false;//context.getLogger().isLoggable(Level.FINEST);
         this.readBuffer = context.pollBuffer();
