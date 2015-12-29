@@ -7,7 +7,6 @@ package org.redkale.net.http;
 
 import org.redkale.util.Utility;
 import java.io.*;
-import java.util.*;
 
 /**
  *
@@ -16,7 +15,7 @@ import java.util.*;
  */
 public final class WebSocketPacket {
 
-    public static final WebSocketPacket DEFAULT_PING_PACKET  = new WebSocketPacket(FrameType.PING, new byte[0]);
+    public static final WebSocketPacket DEFAULT_PING_PACKET = new WebSocketPacket(FrameType.PING, new byte[0]);
 
     public static enum FrameType {
 
@@ -119,6 +118,6 @@ public final class WebSocketPacket {
 
     @Override
     public String toString() {
-        return this.getClass().getSimpleName() + "[type=" + type + ", last=" + last + (payload != null ? (", payload=" + payload) : "") + (bytes != null ? (", bytes=" + Arrays.toString(bytes)) : "") + "]";
+        return this.getClass().getSimpleName() + "[type=" + type + ", last=" + last + (payload != null ? (", payload=" + payload) : "") + (bytes != null ? (", bytes=[" + bytes.length + ']') : "") + "]";
     }
 }
