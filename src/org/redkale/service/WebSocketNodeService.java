@@ -32,7 +32,7 @@ public class WebSocketNodeService extends WebSocketNode implements Service {
 
     @Override
     public List<String> getOnlineRemoteAddresses(@DynTargetAddress InetSocketAddress targetAddress, Serializable groupid) {
-        if (localSncpAddress == null || !localSncpAddress.equals(targetAddress)) return ((WebSocketNodeService) remoteNode).getOnlineRemoteAddresses(targetAddress, groupid);
+        if (localSncpAddress == null || !localSncpAddress.equals(targetAddress)) return remoteOnlineRemoteAddresses(targetAddress, groupid);
         final Set<String> engineids = localNodes.get(groupid);
         if (engineids == null || engineids.isEmpty()) return null;
         final List<String> rs = new ArrayList<>();

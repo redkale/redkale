@@ -54,9 +54,9 @@ public abstract class WebSocketNode {
             });
         });
     }
-    
+
     protected abstract List<String> getOnlineRemoteAddresses(@DynTargetAddress InetSocketAddress targetAddress, Serializable groupid);
-    
+
     protected abstract int sendMessage(@DynTargetAddress InetSocketAddress targetAddress, Serializable groupid, boolean recent, Serializable message, boolean last);
 
     protected abstract void connect(Serializable groupid, InetSocketAddress addr);
@@ -64,6 +64,10 @@ public abstract class WebSocketNode {
     protected abstract void disconnect(Serializable groupid, InetSocketAddress addr);
 
     //--------------------------------------------------------------------------------
+    protected List<String> remoteOnlineRemoteAddresses(@DynTargetAddress InetSocketAddress targetAddress, Serializable groupid) {
+        return remoteNode.getOnlineRemoteAddresses(targetAddress, groupid);
+    }
+
     /**
      * 获取在线用户的节点地址列表
      *
@@ -73,25 +77,25 @@ public abstract class WebSocketNode {
     public Collection<InetSocketAddress> getOnlineNodes(final Serializable groupid) {
         return source.getCollection(groupid);
     }
-    
+
     /**
      * 获取在线用户的详细连接信息
-     * 
+     *
      * @param groupid
-     * @return 
+     * @return
      */
     public Map<InetSocketAddress, List<String>> getOnlineRemoteAddress(final Serializable groupid) {
-       Collection<InetSocketAddress> nodes = getOnlineNodes(groupid);
-       if(nodes == null) return null;
-       final Map<InetSocketAddress, List<String>> map = new HashMap();
-       for(InetSocketAddress nodeAddress : nodes) {
-           List<String> list = getOnlineRemoteAddresses(nodeAddress, groupid);
-           if(list == null) list = new ArrayList();
-           map.put(nodeAddress, list);
-       }
-       return map;
+        Collection<InetSocketAddress> nodes = getOnlineNodes(groupid);
+        if (nodes == null) return null;
+        final Map<InetSocketAddress, List<String>> map = new HashMap();
+        for (InetSocketAddress nodeAddress : nodes) {
+            List<String> list = getOnlineRemoteAddresses(nodeAddress, groupid);
+            if (list == null) list = new ArrayList();
+            map.put(nodeAddress, list);
+        }
+        return map;
     }
-    
+
     public final void connect(Serializable groupid, String engineid) {
         if (finest) logger.finest(localSncpAddress + " receive websocket connect event (" + groupid + " on " + engineid + ").");
         Set<String> engineids = localNodes.get(groupid);
