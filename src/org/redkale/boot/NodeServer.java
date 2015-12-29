@@ -227,7 +227,7 @@ public abstract class NodeServer {
                     ServiceWrapper wrapper = new ServiceWrapper(CacheSourceService.class, (Service) source, resourceName, getSncpGroup(), sncpDefaultGroups, null);
                     sncpServer.getSncpServer().addService(wrapper);
                 }
-                logger.fine("[" + Thread.currentThread().getName() + "] Load " + source);
+                logger.fine("[" + Thread.currentThread().getName() + "] Load Source " + source);
             } catch (Exception e) {
                 logger.log(Level.SEVERE, "DataSource inject error", e);
             }
@@ -319,7 +319,7 @@ public abstract class NodeServer {
                 }
                 Service service = Sncp.createLocalService(entry.getName(), getExecutor(), type, this.sncpAddress, groups, sameGroupTransports, diffGroupTransports);
                 wrapper = new ServiceWrapper(type, service, this.sncpGroup, entry);
-                if (fine) logger.fine("[" + Thread.currentThread().getName() + "] " + service + " loaded");
+                if (fine) logger.fine("[" + Thread.currentThread().getName() + "] Load Service " + service);
             } else {
                 sameGroupAddrs.remove(this.sncpAddress);
                 StringBuilder g = new StringBuilder();
@@ -331,7 +331,7 @@ public abstract class NodeServer {
                 if (sameGroupAddrs.isEmpty()) throw new RuntimeException(type.getName() + " has no remote address on group (" + groups + ")");
                 Service service = Sncp.createRemoteService(entry.getName(), getExecutor(), type, this.sncpAddress, groups, loadTransport(g.toString(), server.getProtocol(), sameGroupAddrs));
                 wrapper = new ServiceWrapper(type, service, "", entry);
-                if (fine) logger.fine("[" + Thread.currentThread().getName() + "] " + service + " loaded");
+                if (fine) logger.fine("[" + Thread.currentThread().getName() + "] Load Service " + service);
             }
             if (factory.find(wrapper.getName(), wrapper.getType()) == null) {
                 regFactory.register(wrapper.getName(), wrapper.getType(), wrapper.getService());
@@ -367,7 +367,7 @@ public abstract class NodeServer {
         remoteServiceWrappers.forEach(y -> {
             factory.inject(y.getService(), NodeServer.this);
             if (sb != null) {
-                sb.append(threadName).append("RemoteService(").append(y.getType()).append(':').append(y.getName()).append(") loaded").append(LINE_SEPARATOR);
+                sb.append(threadName).append("RemoteService(").append(y.getType()).append(':').append(y.getName()).append(") injected").append(LINE_SEPARATOR);
             }
         });
         //----------------- init -----------------

@@ -77,7 +77,7 @@ public final class NodeHttpServer extends NodeServer {
                                 getSncpAddress(), sncpDefaultGroups, sncpSameGroupTransports, sncpDiffGroupTransports);
                         regFactory.register(resourceName, WebSocketNode.class, nodeService);
                         factory.inject(nodeService, self);
-                        logger.fine("[" + Thread.currentThread().getName() + "] Load " + nodeService);
+                        logger.fine("[" + Thread.currentThread().getName() + "] Load Service " + nodeService);
                         if (getSncpAddress() != null) {
                             NodeSncpServer sncpServer = null;
                             for (NodeServer node : application.servers) {
@@ -101,7 +101,15 @@ public final class NodeHttpServer extends NodeServer {
         final StringBuilder sb = logger.isLoggable(Level.FINE) ? new StringBuilder() : null;
         final String prefix = conf == null ? "" : conf.getValue("prefix", "");
         final String threadName = "[" + Thread.currentThread().getName() + "] ";
-        for (FilterEntry<? extends Servlet> en : filter.getFilterEntrys()) {
+        List<FilterEntry<? extends Servlet>> list = new ArrayList(filter.getFilterEntrys());
+        list.sort((FilterEntry<? extends Servlet> o1, FilterEntry<? extends Servlet> o2) -> {  //必须保证WebSocketServlet优先加载， 因为要确保其他的HttpServlet可以注入本地模式的WebSocketNode
+            boolean ws1 = WebSocketServlet.class.isAssignableFrom(o1.getType());
+            boolean ws2 = WebSocketServlet.class.isAssignableFrom(o2.getType());
+            if (ws1 == ws2) return 0;
+            return ws1 ? -1 : 1;
+        }
+        );
+        for (FilterEntry<? extends Servlet> en : list) {
             Class<HttpServlet> clazz = (Class<HttpServlet>) en.getType();
             if (Modifier.isAbstract(clazz.getModifiers())) continue;
             WebServlet ws = clazz.getAnnotation(WebServlet.class);

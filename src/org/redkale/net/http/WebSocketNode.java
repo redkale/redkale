@@ -54,6 +54,7 @@ public abstract class WebSocketNode {
             });
         });
     }
+    
     protected abstract List<String> getOnlineRemoteAddresses(@DynTargetAddress InetSocketAddress targetAddress, Serializable groupid);
     
     protected abstract int sendMessage(@DynTargetAddress InetSocketAddress targetAddress, Serializable groupid, boolean recent, Serializable message, boolean last);
