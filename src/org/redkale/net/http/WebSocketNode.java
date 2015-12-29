@@ -65,6 +65,7 @@ public abstract class WebSocketNode {
 
     //--------------------------------------------------------------------------------
     protected List<String> remoteOnlineRemoteAddresses(@DynTargetAddress InetSocketAddress targetAddress, Serializable groupid) {
+        if(remoteNode == null) return null;
         try {
             return remoteNode.getOnlineRemoteAddresses(targetAddress, groupid);
         } catch (Exception e) {
