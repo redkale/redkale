@@ -34,7 +34,7 @@ public abstract class WebSocketNode {
     protected WebSocketNode remoteNode;
 
     //存放所有用户分布在节点上的队列信息,Set<InetSocketAddress> 为 sncpnode 的集合
-    @Resource(name = "$_nodeaddress_source")
+    @Resource(name = "$_webscoket_source")
     protected CacheSource<Serializable, InetSocketAddress> source;
 
     //存放本地节点上所有在线用户的队列信息,Set<String> 为 engineid 的集合
