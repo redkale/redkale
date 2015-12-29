@@ -88,7 +88,7 @@ public abstract class WebSocket {
     public final int send(WebSocketPacket packet) {
         int rs = RETCODE_WSOCKET_CLOSED;
         if (this._runner != null) rs = this._runner.sendMessage(packet);
-        if(_engine.finest) _engine.logger.finest("groupid:" + getGroupid() + " websocket send result is " + rs + " on " + this + " by message(" + packet + ")");
+        if(_engine.finest) _engine.logger.finest("wsgroupid:" + getGroupid() + " websocket send result is " + rs + " on " + this + " by message(" + packet + ")");
         return rs;
     }
 
@@ -260,14 +260,14 @@ public abstract class WebSocket {
     private int sendMessage(Serializable groupid, boolean recent, String text, boolean last) {
         if (_engine.node == null) return RETCODE_NODESERVICE_NULL;
         int rs = _engine.node.sendMessage(groupid, recent, text, last);
-        if(_engine.finest) _engine.logger.finest("groupid:" + groupid + " websocket "+(recent ? "recent " : "") + "send result is " + rs + " on " + this + " by message(" + text + ")");
+        if(_engine.finest) _engine.logger.finest("wsgroupid:" + groupid + " websocket "+(recent ? "recent " : "") + "send result is " + rs + " on " + this + " by message(" + text + ")");
         return rs;
     }
 
     private int sendMessage(Serializable groupid, boolean recent, byte[] data, boolean last) {
         if (_engine.node == null) return RETCODE_NODESERVICE_NULL;
         int rs = _engine.node.sendMessage(groupid, recent, data, last);
-        if(_engine.finest) _engine.logger.finest("groupid:" + groupid + " websocket "+(recent ? "recent " : "") + "send result is " + rs + " on " + this + " by message(byte[" + data.length + "])");
+        if(_engine.finest) _engine.logger.finest("wsgroupid:" + groupid + " websocket "+(recent ? "recent " : "") + "send result is " + rs + " on " + this + " by message(byte[" + data.length + "])");
         return rs;
     }
     
