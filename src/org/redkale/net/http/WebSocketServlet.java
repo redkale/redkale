@@ -98,6 +98,8 @@ public abstract class WebSocketServlet extends HttpServlet {
         }
         final WebSocket webSocket = this.createWebSocket();
         webSocket._engine = engine;
+        webSocket._remoteAddress = request.getRemoteAddress();
+        webSocket._remoteAddr = request.getRemoteAddr();
         Serializable sessionid = webSocket.onOpen(request);
         if (sessionid == null) {
             if (debug) logger.finest("WebSocket connect abort, Not found sessionid. request=" + request);

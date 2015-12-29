@@ -431,7 +431,7 @@ public class CacheSourceService<K extends Serializable, V extends Object> implem
         }
 
         @ConstructorProperties({"cacheType", "expireSeconds", "lastAccessed", "key", "value"})
-        protected CacheEntry(CacheEntryType cacheType, int expireSeconds, int lastAccessed, K key, T value) {
+        public CacheEntry(CacheEntryType cacheType, int expireSeconds, int lastAccessed, K key, T value) {
             this.cacheType = cacheType;
             this.expireSeconds = expireSeconds;
             this.lastAccessed = lastAccessed;

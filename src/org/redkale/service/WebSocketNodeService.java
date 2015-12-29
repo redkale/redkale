@@ -31,6 +31,21 @@ public class WebSocketNodeService extends WebSocketNode implements Service {
     }
 
     @Override
+    public List<String> getOnlineRemoteAddresses(@DynTargetAddress InetSocketAddress targetAddress, Serializable groupid) {
+        if (localSncpAddress != null && !localSncpAddress.equals(targetAddress)) return null;
+        final Set<String> engineids = localNodes.get(groupid);
+        if (engineids == null || engineids.isEmpty()) return null;
+        final List<String> rs = new ArrayList<>();
+        for (String engineid : engineids) {
+            final WebSocketEngine engine = engines.get(engineid);
+            if (engine == null) continue;
+            final WebSocketGroup group = engine.getWebSocketGroup(groupid);
+            group.getWebSockets().forEach(x -> rs.add(x.getRemoteAddr()));
+        }
+        return rs;
+    }
+
+    @Override
     public int sendMessage(@DynTargetAddress InetSocketAddress addr, Serializable groupid, boolean recent, Serializable message, boolean last) {
         final Set<String> engineids = localNodes.get(groupid);
         if (engineids == null || engineids.isEmpty()) return RETCODE_GROUP_EMPTY;
