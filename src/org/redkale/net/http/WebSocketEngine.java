@@ -69,7 +69,7 @@ public final class WebSocketEngine {
             containers.putIfAbsent(socket._groupid, group);
         }
         group.add(socket);
-        if (node != null) node.connect(socket._groupid, engineid);
+        if (node != null) node.connect(socket._groupid, engineid, socket.toString());
     }
 
     void remove(WebSocket socket) {

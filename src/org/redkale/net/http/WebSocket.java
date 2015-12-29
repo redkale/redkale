@@ -257,12 +257,16 @@ public abstract class WebSocket {
 
     private int sendMessage(Serializable groupid, boolean recent, String text, boolean last) {
         if (_engine.node == null) return RETCODE_NODESERVICE_NULL;
-        return _engine.node.sendMessage(groupid, recent, text, last);
+        int rs = _engine.node.sendMessage(groupid, recent, text, last);
+        if(_engine.finest) _engine.logger.finest("groupid:" + groupid + " websocket "+(recent ? "recent " : "") + "send result is " + rs + " on " + this + " by message(" + text + ")");
+        return rs;
     }
 
     private int sendMessage(Serializable groupid, boolean recent, byte[] data, boolean last) {
         if (_engine.node == null) return RETCODE_NODESERVICE_NULL;
-        return _engine.node.sendMessage(groupid, recent, data, last);
+        int rs = _engine.node.sendMessage(groupid, recent, data, last);
+        if(_engine.finest) _engine.logger.finest("groupid:" + groupid + " websocket "+(recent ? "recent " : "") + "send result is " + rs + " on " + this + " by message(byte[" + data.length + "])");
+        return rs;
     }
     
     /**
@@ -425,5 +429,10 @@ public abstract class WebSocket {
     }
 
     public void onClose(int code, String reason) {
+    }
+    
+    @Override
+    public String toString() {
+        return "ws" + Objects.hashCode(this) + "@" + _remoteAddr;
     }
 }

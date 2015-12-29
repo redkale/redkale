@@ -102,7 +102,7 @@ public abstract class WebSocketNode {
         return map;
     }
 
-    public final void connect(Serializable groupid, String engineid) {
+    public final void connect(Serializable groupid, String engineid, String wsinfo) {
         if (finest) logger.finest(localSncpAddress + " receive websocket connect event (" + groupid + " on " + engineid + ").");
         Set<String> engineids = localNodes.get(groupid);
         if (engineids == null) {
