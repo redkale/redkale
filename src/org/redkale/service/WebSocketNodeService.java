@@ -40,7 +40,7 @@ public class WebSocketNodeService extends WebSocketNode implements Service {
             final WebSocketEngine engine = engines.get(engineid);
             if (engine == null) continue;
             final WebSocketGroup group = engine.getWebSocketGroup(groupid);
-            group.getWebSockets().forEach(x -> rs.add(x.getRemoteAddr()));
+            group.getWebSockets().forEach(x -> rs.add("ws" + Objects.hashCode(x) + '@' + x.getRemoteAddr()));
         }
         return rs;
     }
