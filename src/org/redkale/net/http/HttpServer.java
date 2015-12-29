@@ -34,7 +34,7 @@ public final class HttpServer extends Server {
     public void init(AnyValue config) throws Exception {
         super.init(config);
         AnyValue conf = config == null ? null : config.getAnyValue("servlets");
-        this.contextPath = conf == null ? "" : conf.getValue("prefix", "");
+        this.contextPath = conf == null ? "" : conf.getValue("path", "");
     }
 
     public void addHttpServlet(HttpServlet servlet, AnyValue conf, String... mappings) {

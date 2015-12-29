@@ -10,6 +10,7 @@ import java.lang.annotation.*;
 /**
  * 功能同JSR 315 (java-servlet 3.0) 规范中的 @WebServlet
  *
+ *
  * @see http://www.redkale.org
  * @author zhangjx
  */
@@ -20,7 +21,7 @@ public @interface WebServlet {
 
     String name() default "";
 
-    boolean fillurl() default true;
+    boolean repair() default true;
 
     String[] value() default {};
 

@@ -99,7 +99,7 @@ public final class NodeHttpServer extends NodeServer {
 
     protected void loadHttpServlet(final AnyValue conf, final ClassFilter<? extends Servlet> filter) throws Exception {
         final StringBuilder sb = logger.isLoggable(Level.FINE) ? new StringBuilder() : null;
-        final String prefix = conf == null ? "" : conf.getValue("prefix", "");
+        final String prefix = conf == null ? "" : conf.getValue("path", "");
         final String threadName = "[" + Thread.currentThread().getName() + "] ";
         List<FilterEntry<? extends Servlet>> list = new ArrayList(filter.getFilterEntrys());
         list.sort((FilterEntry<? extends Servlet> o1, FilterEntry<? extends Servlet> o2) -> {  //必须保证WebSocketServlet优先加载， 因为要确保其他的HttpServlet可以注入本地模式的WebSocketNode
@@ -117,7 +117,7 @@ public final class NodeHttpServer extends NodeServer {
             final HttpServlet servlet = clazz.newInstance();
             factory.inject(servlet, this);
             String[] mappings = ws.value();
-            if (ws.fillurl() && !prefix.isEmpty()) {
+            if (ws.repair() && !prefix.isEmpty()) {
                 for (int i = 0; i < mappings.length; i++) {
                     mappings[i] = prefix + mappings[i];
                 }

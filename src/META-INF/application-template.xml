@@ -135,14 +135,14 @@
             
         <!-- 
            加载所有的Servlet服务;
-           prefix:  servlet的ContextPath前缀 默认为空
+           path:  servlet的ContextPath前缀 默认为空
            autoload="true"  默认值. 自动加载以下目录（如果存在的话）下所有的Servlet类:
                                  ${APP_HOME}/lib;    ${APP_HOME}/root/lib/*;    ${APP_HOME}/root/classes;   
            autoload="false" 需要显著的指定Service类
            includes： 当autoload="true"， 拉取类名与includes中的正则表达式匹配的类, 多个正则表达式用分号;隔开
            excludes： 当autoload="true"， 排除类名与excludes中的正则表达式匹配的类, 多个正则表达式用分号;隔开
         -->
-        <servlets prefix="/pipes" autoload="true" includes="" excludes="">
+        <servlets path="/pipes" autoload="true" includes="" excludes="">
             <!-- 
                当Server为HTTP协议时，ResourceServlet才有效. 默认存在一个有默认属性的resource-servlet节点
                webroot: web资源的根目录, 多个目录用;分隔，请求页面url时，如果第一个目录不存在则会查询下一个目录是否存在该文件至到所有目录集合， 默认取server节点中的root值

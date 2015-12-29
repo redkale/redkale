@@ -115,7 +115,7 @@ public abstract class BasedHttpServlet extends HttpServlet {
     public void init(Context context, AnyValue config) {
         String path = ((HttpContext) context).getContextPath();
         WebServlet ws = this.getClass().getAnnotation(WebServlet.class);
-        if (ws != null && !ws.fillurl()) path = "";
+        if (ws != null && !ws.repair()) path = "";
         HashMap<String, Entry> map = load();
         this.actions = new Map.Entry[map.size()];
         int i = -1;
