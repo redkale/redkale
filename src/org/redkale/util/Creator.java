@@ -5,12 +5,10 @@
 package org.redkale.util;
 
 import java.beans.*;
-import java.io.*;
 import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.*;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.lang.reflect.*;
-import java.net.*;
 import java.util.*;
 import jdk.internal.org.objectweb.asm.*;
 import jdk.internal.org.objectweb.asm.Type;
@@ -248,42 +246,13 @@ public interface Creator<T> {
         }
         cw.visitEnd();
         final byte[] bytes = cw.toByteArray();
-        Class<?> resultClazz = null;
-        if (loader instanceof URLClassLoader) {
-            try {
-                final URLClassLoader urlLoader = (URLClassLoader) loader;
-                final URL url = new URL("memclass", "localhost", -1, "/" + newDynName.replace('/', '.') + "/", new URLStreamHandler() {
-                    @Override
-                    protected URLConnection openConnection(URL u) throws IOException {
-                        return new URLConnection(u) {
-                            @Override
-                            public void connect() throws IOException {
-                            }
-
-                            @Override
-                            public InputStream getInputStream() throws IOException {
-                                return new ByteArrayInputStream(bytes);
-                            }
-                        };
-                    }
-                });
-                Method addURLMethod = URLClassLoader.class.getDeclaredMethod("addURL", URL.class);
-                addURLMethod.setAccessible(true);
-                addURLMethod.invoke(urlLoader, url);
-                resultClazz = urlLoader.loadClass(newDynName.replace('/', '.'));
-            } catch (Throwable t) { //异常无需理会， 使用下一种loader方式
-                t.printStackTrace();
-            }
-        }
         try {
-            if (resultClazz == null) {
-                if (!Modifier.isPublic(constructor.getModifiers())) throw new RuntimeException("[" + clazz + "] have no public or java.beans.ConstructorProperties-Annotation constructor.");
-                resultClazz = new ClassLoader(loader) {
-                    public final Class<?> loadClass(String name, byte[] b) {
-                        return defineClass(name, b, 0, b.length);
-                    }
-                }.loadClass(newDynName.replace('/', '.'), bytes);
-            }
+            if (!Modifier.isPublic(constructor.getModifiers())) throw new RuntimeException("[" + clazz + "] have no public or java.beans.ConstructorProperties-Annotation constructor.");
+                Class<?> resultClazz = new ClassLoader(loader) {
+                public final Class<?> loadClass(String name, byte[] b) {
+                    return defineClass(name, b, 0, b.length);
+                }
+            }.loadClass(newDynName.replace('/', '.'), bytes);
             return (Creator) resultClazz.newInstance();
         } catch (Exception ex) {
             throw new RuntimeException(ex);
