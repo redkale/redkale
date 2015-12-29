@@ -65,7 +65,7 @@ public abstract class WebSocketNode {
 
     //--------------------------------------------------------------------------------
     protected List<String> remoteOnlineRemoteAddresses(@DynTargetAddress InetSocketAddress targetAddress, Serializable groupid) {
-        if(remoteNode == null) return null;
+        if (remoteNode == null) return null;
         try {
             return remoteNode.getOnlineRemoteAddresses(targetAddress, groupid);
         } catch (Exception e) {
@@ -138,6 +138,7 @@ public abstract class WebSocketNode {
                 if (engine != null) { //在本地
                     final WebSocketGroup group = engine.getWebSocketGroup(groupid);
                     if (group == null || group.isEmpty()) {
+                        engineids.remove(engineid);
                         if (finest) logger.finest("websocket want send message {engineid:'" + engineid + "', groupid:" + groupid + ", content:'" + message + "'} but websocket group is empty ");
                         rscode = RETCODE_GROUP_EMPTY;
                         break;
