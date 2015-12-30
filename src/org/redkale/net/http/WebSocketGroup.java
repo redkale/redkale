@@ -101,6 +101,14 @@ public final class WebSocketGroup {
         return rs;
     }
 
+    public final int sendEachPing() {
+        int rs = 0;
+        for (WebSocket s : list) {
+            rs |= s.sendPing();
+        }
+        return rs;
+    }
+
     public final int sendRecent(Serializable message) {
         return sendRecent(message, true);
     }

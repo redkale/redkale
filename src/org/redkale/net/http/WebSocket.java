@@ -32,6 +32,7 @@ import org.redkale.net.*;
  *  此模式下 以上方法都应该被重载。
  * <p>
  *
+ * 
  * @see http://www.redkale.org
  * @author zhangjx
  */
@@ -88,7 +89,7 @@ public abstract class WebSocket {
     public final int send(WebSocketPacket packet) {
         int rs = RETCODE_WSOCKET_CLOSED;
         if (this._runner != null) rs = this._runner.sendMessage(packet);
-        if(_engine.finest) _engine.logger.finest("wsgroupid:" + getGroupid() + " send websocket result is " + rs + " on " + this + " by message(" + packet + ")");
+        if (_engine.finest) _engine.logger.finest("wsgroupid:" + getGroupid() + " send websocket result is " + rs + " on " + this + " by message(" + packet + ")");
         return rs;
     }
 
@@ -128,6 +129,11 @@ public abstract class WebSocket {
      */
     public final int send(byte[] data) {
         return send(data, true);
+    }
+
+    public final int sendPing() {
+        //if (_engine.finest) _engine.logger.finest(this + " on "+_engine.getEngineid()+" ping...");
+        return send(WebSocketPacket.DEFAULT_PING_PACKET);
     }
 
     public final int sendPing(byte[] data) {
@@ -260,17 +266,17 @@ public abstract class WebSocket {
     private int sendMessage(Serializable groupid, boolean recent, String text, boolean last) {
         if (_engine.node == null) return RETCODE_NODESERVICE_NULL;
         int rs = _engine.node.sendMessage(groupid, recent, text, last);
-        if(_engine.finest) _engine.logger.finest("wsgroupid:" + groupid + " "+(recent ? "recent " : "") + "send websocket result is " + rs + " on " + this + " by message(" + text + ")");
+        if (_engine.finest) _engine.logger.finest("wsgroupid:" + groupid + " " + (recent ? "recent " : "") + "send websocket result is " + rs + " on " + this + " by message(" + text + ")");
         return rs;
     }
 
     private int sendMessage(Serializable groupid, boolean recent, byte[] data, boolean last) {
         if (_engine.node == null) return RETCODE_NODESERVICE_NULL;
         int rs = _engine.node.sendMessage(groupid, recent, data, last);
-        if(_engine.finest) _engine.logger.finest("wsgroupid:" + groupid + " "+(recent ? "recent " : "") + "send websocket result is " + rs + " on " + this + " by message(byte[" + data.length + "])");
+        if (_engine.finest) _engine.logger.finest("wsgroupid:" + groupid + " " + (recent ? "recent " : "") + "send websocket result is " + rs + " on " + this + " by message(byte[" + data.length + "])");
         return rs;
     }
-    
+
     /**
      * 获取在线用户的节点地址列表
      *
@@ -280,17 +286,17 @@ public abstract class WebSocket {
     protected final Collection<InetSocketAddress> getOnlineNodes(Serializable groupid) {
         return _engine.node.getOnlineNodes(groupid);
     }
-    
+
     /**
      * 获取在线用户的详细连接信息
-     * 
+     *
      * @param groupid
-     * @return 
+     * @return
      */
     protected final Map<InetSocketAddress, List<String>> getOnlineRemoteAddress(Serializable groupid) {
         return _engine.node.getOnlineRemoteAddress(groupid);
     }
-    
+
     /**
      * 获取当前WebSocket下的属性
      * <p>
@@ -432,7 +438,7 @@ public abstract class WebSocket {
 
     public void onClose(int code, String reason) {
     }
-    
+
     @Override
     public String toString() {
         return "ws" + Objects.hashCode(this) + "@" + _remoteAddr;
