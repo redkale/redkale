@@ -50,6 +50,14 @@ public final class JsonConvert extends Convert<JsonReader, JsonWriter> {
         if (out != null) writerPool.offer(out);
     }
 
+    public JsonReader pollJsonReader() {
+        return readerPool.get();
+    }
+
+    public void offerJsonReader(JsonReader in) {
+        if (in != null) readerPool.offer(in);
+    }
+
     @Override
     public JsonFactory getFactory() {
         return (JsonFactory) factory;
@@ -72,6 +80,11 @@ public final class JsonConvert extends Convert<JsonReader, JsonWriter> {
         T rs = (T) factory.loadDecoder(type).convertFrom(in);
         readerPool.offer(in);
         return rs;
+    }
+
+    public <T> T convertFrom(final Type type, final ByteBuffer... buffers) {
+        if (type == null || buffers == null || buffers.length == 0) return null;
+        return (T) factory.loadDecoder(type).convertFrom(new JsonByteBufferReader(buffers));
     }
 
     public String convertTo(final Type type, Object value) {
