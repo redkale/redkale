@@ -17,7 +17,7 @@ import org.redkale.util.*;
  * @see http://www.redkale.org
  * @author zhangjx
  */
-public final class BsonReader implements Reader {
+public class BsonReader implements Reader {
 
     public static final short SIGN_OBJECTB = (short) 0xBB;
 
@@ -31,9 +31,9 @@ public final class BsonReader implements Reader {
 
     public static final byte VERBOSE_YES = 2;
 
-    private int position = -1;
+    protected byte typeval;  //字段的类型值  对应  BsonWriter.writeField
 
-    private byte typeval;  //字段的类型值  对应  BsonWriter.writeField
+    protected int position = -1;
 
     private byte[] content;
 
@@ -178,12 +178,12 @@ public final class BsonReader implements Reader {
     }
 
     @Override
-    public int readMapB() {
+    public final int readMapB() {
         return readArrayB();
     }
 
     @Override
-    public void readMapE() {
+    public final void readMapE() {
     }
 
     /**
@@ -199,14 +199,14 @@ public final class BsonReader implements Reader {
     }
 
     @Override
-    public void readArrayE() {
+    public final void readArrayE() {
     }
 
     /**
      * 判断下一个非空白字节是否:
      */
     @Override
-    public void skipBlank() {
+    public final void skipBlank() {
     }
 
     /**
@@ -215,7 +215,7 @@ public final class BsonReader implements Reader {
      * @return
      */
     @Override
-    public boolean hasNext() {
+    public final boolean hasNext() {
         byte b = readByte();
         if (b == SIGN_HASNEXT) return true;
         if (b != SIGN_NONEXT) throw new ConvertException("hasNext option must be (" + (SIGN_HASNEXT)
@@ -224,7 +224,7 @@ public final class BsonReader implements Reader {
     }
 
     @Override
-    public DeMember readField(final AtomicInteger index, final DeMember[] members) {
+    public final DeMember readField(final AtomicInteger index, final DeMember[] members) {
         final String exceptedfield = readSmallString();
         this.typeval = readByte();
         final int len = members.length;
