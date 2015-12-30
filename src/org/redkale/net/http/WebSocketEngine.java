@@ -47,7 +47,7 @@ public final class WebSocketEngine {
 
     void init(AnyValue conf) {
         final int liveinterval = conf == null ? DEFAILT_LIVEINTERVAL : conf.getIntValue("liveinterval", DEFAILT_LIVEINTERVAL);
-        if (liveinterval == 0) return;
+        if (liveinterval <= 0) return;
         if (scheduler != null) return;
         this.scheduler = new ScheduledThreadPoolExecutor(1, (Runnable r) -> {
             final Thread t = new Thread(r, engineid + "-WebSocket-LiveInterval-Thread");
