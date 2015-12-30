@@ -39,4 +39,24 @@ public final class DLongSimpledCoder<R extends Reader, W extends Writer> extends
         return DLong.create(bs);
     }
 
+    public static class DLongJsonSimpledCoder<R extends Reader, W extends Writer> extends SimpledCoder<R, W, DLong> {
+
+        public static final DLongJsonSimpledCoder instance = new DLongJsonSimpledCoder();
+
+        @Override
+        public void convertTo(final Writer out, final DLong value) {
+            if (value == null) {
+                out.writeNull();
+            } else {
+                out.writeSmallString(value.toString());
+            }
+        }
+
+        @Override
+        public DLong convertFrom(Reader in) {
+            final String str = in.readString();
+            if (str == null) return null;
+            return DLong.create(Utility.hexToBin(str));
+        }
+    }
 }

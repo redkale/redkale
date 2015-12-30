@@ -9,6 +9,7 @@ import org.redkale.convert.ConvertType;
 import org.redkale.convert.Factory;
 import java.io.Serializable;
 import java.net.*;
+import org.redkale.convert.ext.*;
 import org.redkale.util.*;
 
 /**
@@ -21,9 +22,9 @@ public final class JsonFactory extends Factory<JsonReader, JsonWriter> {
     private static final JsonFactory instance = new JsonFactory(null, Boolean.getBoolean("convert.json.tiny"));
 
     static {
-        instance.register(InetAddress.class, InetAddressJsonSimpledCoder.instance);
-        instance.register(InetSocketAddress.class, InetAddressJsonSimpledCoder.InetSocketAddressJsonSimpledCoder.instance);
-        instance.register(DLong.class, DLongJsonSimpledCoder.instance);
+        instance.register(InetAddress.class, InetAddressSimpledCoder.InetAddressJsonSimpledCoder.instance);
+        instance.register(InetSocketAddress.class, InetAddressSimpledCoder.InetSocketAddressJsonSimpledCoder.instance);
+        instance.register(DLong.class, DLongSimpledCoder.DLongJsonSimpledCoder.instance);
         instance.register(Serializable.class, instance.loadEncoder(Object.class));
     }
 

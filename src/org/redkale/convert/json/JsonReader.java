@@ -16,7 +16,7 @@ import org.redkale.util.*;
  * @see http://www.redkale.org
  * @author zhangjx
  */
-public final class JsonReader implements Reader {
+public class JsonReader implements Reader {
 
     private int position = -1;
 
