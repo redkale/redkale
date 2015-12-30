@@ -31,7 +31,6 @@ public class BsonTestMain {
     }
 
     public static void main2(String[] args) throws Exception {
-        System.out.println(new String(new byte[]{109, 121, 110, 97, 109, 101}));
         final BsonConvert convert = BsonFactory.root().getConvert();
         SimpleChildEntity entry = SimpleChildEntity.create();
         byte[] bytes = convert.convertTo(SimpleEntity.class, entry);

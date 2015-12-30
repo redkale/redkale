@@ -5,6 +5,7 @@
  */
 package org.redkale.test.convert;
 
+import java.net.*;
 import org.redkale.convert.json.JsonFactory;
 import org.redkale.util.Creator;
 import java.util.*;
@@ -17,8 +18,8 @@ public class SimpleEntity {
 
     private String name;
 
-    private String desc="";
-    
+    private String desc = "";
+
     private int id = (int) System.currentTimeMillis();
 
     private int[] addrs;
@@ -26,15 +27,17 @@ public class SimpleEntity {
     private List<String> lists;
 
     private String[] strings;
-    
+
     private Map<String, Integer> map;
+
+    private InetSocketAddress addr;
 
     public static SimpleEntity create() {
         SimpleEntity v = new SimpleEntity();
         v.setName("this is name\n \"test");
         v.setId(1000000001);
         v.setAddrs(new int[]{22222, 33333, 44444, 55555, 66666, 77777, 88888, 99999});
-        v.setStrings(new String[]{"zzz","yyy","xxx"});
+        v.setStrings(new String[]{"zzz", "yyy", "xxx"});
         List<String> list = new ArrayList<>();
         list.add("aaaa");
         list.add("bbbb");
@@ -45,6 +48,7 @@ public class SimpleEntity {
         map.put("BBB", 222);
         map.put("CCC", 333);
         v.setMap(map);
+        v.setAddr(new InetSocketAddress("127.0.0.1", 6666));
         return v;
     }
 
@@ -53,17 +57,25 @@ public class SimpleEntity {
         Creator<SimpleEntity> creator = Creator.create(SimpleEntity.class); //Creator.create(10, SimpleEntity.class);
         SimpleEntity entry = creator.create();
         System.out.println(entry);
-        for(int i =0; i < 10000000; i++){
+        for (int i = 0; i < 10000000; i++) {
             creator.create();
         }
         System.gc();
-        Thread.sleep(2000) ;
+        Thread.sleep(2000);
         System.out.println(creator.create());
     }
 
     @Override
     public String toString() {
         return JsonFactory.root().getConvert().convertTo(this);
+    }
+
+    public InetSocketAddress getAddr() {
+        return addr;
+    }
+
+    public void setAddr(InetSocketAddress addr) {
+        this.addr = addr;
     }
 
     public int[] getAddrs() {

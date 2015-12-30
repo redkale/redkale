@@ -5,6 +5,7 @@
  */
 package org.redkale.test.convert;
 
+import java.net.*;
 import org.redkale.convert.ConvertEntity;
 import java.util.*;
 
@@ -36,6 +37,7 @@ public class SimpleChildEntity extends SimpleEntity {
         map.put("CCC", 333);
         v.setMap(map);
         v.setExtend("hahaha");
+        v.setAddr(new InetSocketAddress("127.0.0.1", 6666));
         return v;
     }
 
