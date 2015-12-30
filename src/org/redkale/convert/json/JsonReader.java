@@ -146,7 +146,7 @@ public class JsonReader implements Reader {
      *
      * @return
      */
-    protected final char nextGoodChar() {
+    protected char nextGoodChar() {
         char c = nextChar();
         if (c > ' ') return c;
         for (;;) {
