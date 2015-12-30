@@ -159,22 +159,26 @@ public class BsonReader implements Reader {
      *
      */
     @Override
-    public int readObjectB() {
+    public final int readObjectB() {
         short bt = readShort();
         if (bt == Reader.SIGN_NULL) return bt;
         if (bt != SIGN_OBJECTB) {
             throw new ConvertException("a bson object must begin with " + (SIGN_OBJECTB)
-                    + " (position = " + position + ") but '" + this.content[this.position] + "'");
+                    + " (position = " + position + ") but '" + currentByte() + "'");
         }
         return bt;
     }
 
     @Override
-    public void readObjectE() {
+    public final void readObjectE() {
         if (readShort() != SIGN_OBJECTE) {
             throw new ConvertException("a bson object must end with " + (SIGN_OBJECTE)
-                    + " (position = " + position + ") but '" + this.content[this.position] + "'");
+                    + " (position = " + position + ") but '" + currentByte() + "'");
         }
+    }
+
+    protected byte currentByte() {
+        return this.content[this.position];
     }
 
     @Override
@@ -288,17 +292,17 @@ public class BsonReader implements Reader {
     }
 
     @Override
-    public float readFloat() {
+    public final float readFloat() {
         return Float.intBitsToFloat(readInt());
     }
 
     @Override
-    public double readDouble() {
+    public final double readDouble() {
         return Double.longBitsToDouble(readLong());
     }
 
     @Override
-    public String readClassName() {
+    public final String readClassName() {
         return readSmallString();
     }
 
@@ -307,7 +311,7 @@ public class BsonReader implements Reader {
         int len = 0xff & readByte();
         if (len == 0) return "";
         String value = new String(content, ++this.position, len);
-        this.position += len - 1;
+        this.position += len - 1; //上一行已经++this.position，所以此处要-1
         return value;
     }
 
@@ -317,7 +321,7 @@ public class BsonReader implements Reader {
         if (len == SIGN_NULL) return null;
         if (len == 0) return "";
         String value = new String(Utility.decodeUTF8(content, ++this.position, len));
-        this.position += len - 1;
+        this.position += len - 1;//上一行已经++this.position，所以此处要-1
         return value;
     }
 
