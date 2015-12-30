@@ -18,7 +18,7 @@ import org.redkale.util.*;
  */
 public class JsonReader implements Reader {
 
-    private int position = -1;
+    protected int position = -1;
 
     private char[] text;
 
@@ -56,7 +56,7 @@ public class JsonReader implements Reader {
     }
 
     public final void setText(String text) {
-        JsonReader.this.setText(Utility.charArray(text));
+        setText(Utility.charArray(text));
     }
 
     public final void setText(char[] text) {
@@ -146,7 +146,7 @@ public class JsonReader implements Reader {
      *
      * @return
      */
-    protected char nextGoodChar() {
+    protected final char nextGoodChar() {
         char c = nextChar();
         if (c > ' ') return c;
         for (;;) {
@@ -185,7 +185,7 @@ public class JsonReader implements Reader {
     }
 
     @Override
-    public void readObjectE() {
+    public final void readObjectE() {
     }
 
     /**
@@ -193,12 +193,12 @@ public class JsonReader implements Reader {
      *
      */
     @Override
-    public int readMapB() {
+    public final int readMapB() {
         return readArrayB();
     }
 
     @Override
-    public void readMapE() {
+    public final void readMapE() {
     }
 
     /**
@@ -225,7 +225,7 @@ public class JsonReader implements Reader {
     }
 
     @Override
-    public void readArrayE() {
+    public final void readArrayE() {
     }
 
     /**
@@ -268,7 +268,7 @@ public class JsonReader implements Reader {
     }
 
     @Override
-    public String readClassName() {
+    public final String readClassName() {
         return null;
     }
 
@@ -325,7 +325,7 @@ public class JsonReader implements Reader {
      * @return
      */
     @Override
-    public final int readInt() {
+    public int readInt() {
         final char[] text0 = this.text;
         final int eof = this.limit;
         int currpos = this.position;
@@ -371,7 +371,7 @@ public class JsonReader implements Reader {
      * @return
      */
     @Override
-    public final long readLong() {
+    public long readLong() {
         final char[] text0 = this.text;
         final int eof = this.limit;
         int currpos = this.position;
@@ -412,7 +412,7 @@ public class JsonReader implements Reader {
     }
 
     @Override
-    public DeMember readField(final AtomicInteger index, final DeMember[] members) {
+    public final DeMember readField(final AtomicInteger index, final DeMember[] members) {
         final String exceptedfield = this.readSmallString();
         final int len = members.length;
         int v = index.get();
@@ -438,34 +438,34 @@ public class JsonReader implements Reader {
 //------------------------------------------------------------
 
     @Override
-    public boolean readBoolean() {
+    public final boolean readBoolean() {
         return "true".equalsIgnoreCase(this.readSmallString());
     }
 
     @Override
-    public byte readByte() {
+    public final byte readByte() {
         return (byte) readInt();
     }
 
     @Override
-    public char readChar() {
+    public final char readChar() {
         return (char) readInt();
     }
 
     @Override
-    public short readShort() {
+    public final short readShort() {
         return (short) readInt();
     }
 
     @Override
-    public float readFloat() {
+    public final float readFloat() {
         String chars = readSmallString();
         if (chars == null || chars.isEmpty()) return 0.f;
         return Float.parseFloat(chars);
     }
 
     @Override
-    public double readDouble() {
+    public final double readDouble() {
         String chars = readSmallString();
         if (chars == null || chars.isEmpty()) return 0.0;
         return Double.parseDouble(chars);
