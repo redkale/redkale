@@ -15,6 +15,8 @@ import java.util.*;
 @ConvertEntity("myname")
 public class SimpleChildEntity extends SimpleEntity {
 
+    private short st = -1234;
+
     private String extend;
 
     public static SimpleChildEntity create() {
@@ -22,7 +24,7 @@ public class SimpleChildEntity extends SimpleEntity {
         v.setName("this is name\n \"test");
         v.setId(1000000001);
         v.setAddrs(new int[]{22222, 33333, 44444, 55555, 66666, 77777, 88888, 99999});
-        v.setStrings(new String[]{"zzz","yyy","xxx"});
+        v.setStrings(new String[]{"zzz", "yyy", "xxx"});
         List<String> list = new ArrayList<>();
         list.add("aaaa");
         list.add("bbbb");
@@ -35,6 +37,14 @@ public class SimpleChildEntity extends SimpleEntity {
         v.setMap(map);
         v.setExtend("hahaha");
         return v;
+    }
+
+    public short getSt() {
+        return st;
+    }
+
+    public void setSt(short st) {
+        this.st = st;
     }
 
     public String getExtend() {
