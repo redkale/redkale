@@ -139,19 +139,25 @@ public final class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T
         return "ObjectEncoder{" + "type=" + type + ", members=" + Arrays.toString(members) + '}';
     }
 
-    static Type createClassType(final Type type, final Type declaringType) {
+    static Type createClassType(final Type type, final Type declaringType0) {
         if (TypeToken.isClassType(type)) return type;
-        //存在通配符则declaringType 必须是 ParameterizedType
-        if (!(declaringType instanceof ParameterizedType)) return Object.class;
         if (type instanceof ParameterizedType) {  // e.g. Map<String, String>
             final ParameterizedType pt = (ParameterizedType) type;
             final Type[] paramTypes = pt.getActualTypeArguments();
             for (int i = 0; i < paramTypes.length; i++) {
-                paramTypes[i] = createClassType(paramTypes[i], declaringType);
+                paramTypes[i] = createClassType(paramTypes[i], declaringType0);
             }
             return TypeToken.createParameterizedType(pt.getOwnerType(), pt.getRawType(), paramTypes);
         }
-
+        Type declaringType = declaringType0;
+        if (declaringType instanceof Class) {
+            do {
+                declaringType = ((Class) declaringType).getGenericSuperclass();
+                if (declaringType == Object.class) return Object.class;
+            } while (declaringType instanceof Class);
+        }
+        //存在通配符则declaringType 必须是 ParameterizedType
+        if (!(declaringType instanceof ParameterizedType)) return Object.class;
         final ParameterizedType declaringPType = (ParameterizedType) declaringType;
         final Type[] virTypes = ((Class) declaringPType.getRawType()).getTypeParameters();
         final Type[] desTypes = declaringPType.getActualTypeArguments();
