@@ -18,18 +18,18 @@ import org.redkale.util.*;
 
 /**
  * 当WebSocketServlet接收一个TCP连接后，进行协议判断，如果成功就会创建一个WebSocket。
- * 
- *                                    WebSocketServlet
- *                                            |
- *                                            |
- *                                    WebSocketEngine   
- *                                    /             \
- *                                 /                  \
- *                              /                       \
- *                     WebSocketGroup1            WebSocketGroup2
- *                        /        \                /        \
- *                      /           \             /           \  
- *               WebSocket1     WebSocket2   WebSocket3    WebSocket4
+ *
+ * WebSocketServlet
+ * |
+ * |
+ * WebSocketEngine
+ *                                    / \
+ *                                 / \
+ *                              / \
+ * WebSocketGroup1 WebSocketGroup2
+ *                        / \ / \
+ *                      / \ / \
+ * WebSocket1 WebSocket2 WebSocket3 WebSocket4
  *
  * @see http://www.redkale.org
  * @author zhangjx
@@ -63,7 +63,7 @@ public abstract class WebSocketServlet extends HttpServlet {
     @Override
     public void init(Context context, AnyValue conf) {
         InetSocketAddress addr = context.getServerAddress();
-        this.engine = new WebSocketEngine(addr.getHostString() + ":" + addr.getPort() + "-" + name(), this.node, logger);
+        this.engine = new WebSocketEngine(addr.getHostString() + ":" + addr.getPort() + "-[" + name() + "]", this.node, logger);
         this.node.putWebSocketEngine(engine);
         this.node.init(conf);
         this.engine.init(conf);
