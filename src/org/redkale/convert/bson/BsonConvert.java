@@ -18,7 +18,7 @@ import org.redkale.util.*;
  *  3). String: length(4 bytes) + byte[](utf8);
  *  4). 数组: length(4 bytes) + byte[]...
  *  5). Object:
- *      1. realclass (SmallString) (如果指定格式化的class与实体对象的class不一致才会有该值)
+ *      1. realclass (SmallString) (如果指定格式化的class与实体对象的class不一致才会有该值, 该值可以使用@ConvertEntity给其取个别名)
  *      2. 空字符串(SmallString)
  *      3. SIGN_OBJECTB 标记位，值固定为0xBB (short)
  *      4. 循环字段值:
