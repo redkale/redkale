@@ -22,10 +22,10 @@ import org.redkale.util.*;
  *      2. 空字符串(SmallString)
  *      3. SIGN_OBJECTB 标记位，值固定为0xBB (short)
  *      4. 循环字段值:
- *      4.1 SIGN_HASNEXT 标记位，值固定为1 (byte)
- *      4.2 字段类型; 1-9为基本类型&字符串; 101-109为基本类型&字符串的数组; 127为Object
- *      4.3 字段名 (SmallString)
- *      4.4 字段的值Object
+ *          4.1 SIGN_HASNEXT 标记位，值固定为1 (byte)
+ *          4.2 字段类型; 1-9为基本类型&字符串; 101-109为基本类型&字符串的数组; 127为Object
+ *          4.3 字段名 (SmallString)
+ *          4.4 字段的值Object
  *      5. SIGN_NONEXT 标记位，值固定为0 (byte)
  *      6. SIGN_OBJECTE 标记位，值固定为0xEE (short)
  *
