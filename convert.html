@@ -7,6 +7,7 @@
         <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
         <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
         <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
+        <link rel="stylesheet" type="text/css" href="stylesheets/highlight.css" media="screen">
     </head>
     <body>
         <section class="page-header">
@@ -23,11 +24,56 @@
         </section>
 
         <section class="main-content">
-            <h3>
-                <a id="welcome-to-github-pages" class="anchor" href="#welcome-to-github-pages" aria-hidden="true"><span class="octicon octicon-link"></span></a>Convert 组件介绍</h3>
+            <h3><a id="welcome-to-github-pages" class="anchor" href="#welcome-to-github-pages" aria-hidden="true"><span class="octicon octicon-link"></span></a>Convert 组件介绍</h3>
 
-            <p>敬请期待…… <br/>
-            </p>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Convert 是一个比较独立的组件，仅依赖于util包。提供Java对象的序列化与反解析功能。支持JSON(JavaScript Object Notation)、BSON(Binary Stream Object Notation)两种格式化。 两种格式使用方式完全一样，其性能都大幅度超过其他JSON框架。<br/></p>
+
+            <h3><a id="welcome-to-github-pages" class="anchor" href="#welcome-to-github-pages" aria-hidden="true"><span class="octicon octicon-link"></span></a>Convert 快速上手</h3>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;本介绍仅以JSON为例(BSON与JSON使用方式雷同)。其操作类主要是JsonConvert，配置类主要是JsonFactory、ConvertColumn。</br></p>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;JsonConvert 序列化方法：</p>
+            
+            <div class="highlight"><pre>    <span class="kd">public</span> <span class="n">String</span> <span class="nf">convertTo</span><span class="o">(</span><span class="n">Object</span> <span class="n">value</span><span class="o">);</span>
+
+    <span class="kd">public</span> <span class="n">String</span> <span class="nf">convertTo</span><span class="o">(</span><span class="kd">final</span> <span class="n">Type</span> <span class="n">type</span><span class="o">,</span> <span class="n">Object</span> <span class="n">value</span><span class="o">);</span>
+
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">convertTo</span><span class="o">(</span><span class="kd">final</span> <span class="n">JsonWriter</span> <span class="n">out</span><span class="o">,</span> <span class="n">Object</span> <span class="n">value</span><span class="o">);</span>
+
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">convertTo</span><span class="o">(</span><span class="kd">final</span> <span class="n">JsonWriter</span> <span class="n">out</span><span class="o">,</span> <span class="kd">final</span> <span class="n">Type</span> <span class="n">type</span><span class="o">,</span> <span class="n">Object</span> <span class="n">value</span><span class="o">);</span>
+
+    <span class="kd">public</span> <span class="n">ByteBuffer</span><span class="o">[]</span> <span class="nf">convertTo</span><span class="o">(</span><span class="kd">final</span> <span class="n">Supplier</span><span class="o">&lt;</span><span class="n">ByteBuffer</span><span class="o">&gt;</span> <span class="n">supplier</span><span class="o">,</span> <span class="kd">final</span> <span class="n">Type</span> <span class="n">type</span><span class="o">,</span> <span class="n">Object</span> <span class="n">value</span><span class="o">);</span>
+
+    <span class="kd">public</span> <span class="n">ByteBuffer</span><span class="o">[]</span> <span class="nf">convertTo</span><span class="o">(</span><span class="kd">final</span> <span class="n">Charset</span> <span class="n">charset</span><span class="o">,</span> <span class="kd">final</span> <span class="n">Supplier</span><span class="o">&lt;</span><span class="n">ByteBuffer</span><span class="o">&gt;</span> <span class="n">supplier</span><span class="o">,</span> <span class="kd">final</span> <span class="n">Type</span> <span class="n">type</span><span class="o">,</span> <span class="n">Object</span> <span class="n">value</span><span class="o">);</span>
+
+    <span class="kd">public</span> <span class="n">ByteBuffer</span><span class="o">[]</span> <span class="nf">convertTo</span><span class="o">(</span><span class="kd">final</span> <span class="n">Supplier</span><span class="o">&lt;</span><span class="n">ByteBuffer</span><span class="o">&gt;</span> <span class="n">supplier</span><span class="o">,</span> <span class="n">Object</span> <span class="n">value</span><span class="o">);</span>
+
+    <span class="kd">public</span> <span class="n">ByteBuffer</span><span class="o">[]</span> <span class="nf">convertTo</span><span class="o">(</span><span class="kd">final</span> <span class="n">Charset</span> <span class="n">charset</span><span class="o">,</span> <span class="kd">final</span> <span class="n">Supplier</span><span class="o">&lt;</span><span class="n">ByteBuffer</span><span class="o">&gt;</span> <span class="n">supplier</span><span class="o">,</span> <span class="n">Object</span> <span class="n">value</span><span class="o">);</span>
+</pre></div>
+            
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;JsonConvert 反解析方法：</p>
+            <div class="highlight"><pre>    <span class="kd">public</span> <span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">T</span> <span class="nf">convertFrom</span><span class="o">(</span><span class="kd">final</span> <span class="n">Type</span> <span class="n">type</span><span class="o">,</span> <span class="kd">final</span> <span class="n">String</span> <span class="n">text</span><span class="o">);</span>
+
+    <span class="kd">public</span> <span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">T</span> <span class="nf">convertFrom</span><span class="o">(</span><span class="kd">final</span> <span class="n">Type</span> <span class="n">type</span><span class="o">,</span> <span class="kd">final</span> <span class="kt">char</span><span class="o">[]</span> <span class="n">text</span><span class="o">);</span>
+
+    <span class="kd">public</span> <span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">T</span> <span class="nf">convertFrom</span><span class="o">(</span><span class="kd">final</span> <span class="n">Type</span> <span class="n">type</span><span class="o">,</span> <span class="kd">final</span> <span class="kt">char</span><span class="o">[]</span> <span class="n">text</span><span class="o">,</span> <span class="kt">int</span> <span class="n">start</span><span class="o">,</span> <span class="kt">int</span> <span class="n">len</span><span class="o">);</span>
+
+    <span class="kd">public</span> <span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">T</span> <span class="nf">convertFrom</span><span class="o">(</span><span class="kd">final</span> <span class="n">Type</span> <span class="n">type</span><span class="o">,</span> <span class="kd">final</span> <span class="n">ByteBuffer</span><span class="o">...</span> <span class="n">buffers</span><span class="o">);</span>
+                </pre></div>
+
+            <div class="highlight"><pre>    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">Exception</span> <span class="o">{</span>
+        <span class="n">JsonFactory</span> <span class="n">factory</span> <span class="o">=</span> <span class="n">JsonFactory</span><span class="o">.</span><span class="na">root</span><span class="o">();</span>
+        <span class="n">factory</span><span class="o">.</span><span class="na">setTiny</span><span class="o">(</span><span class="kc">true</span><span class="o">);</span> 
+        <span class="kd">final</span> <span class="n">JsonConvert</span> <span class="n">convert</span> <span class="o">=</span> <span class="n">JsonFactory</span><span class="o">.</span><span class="na">root</span><span class="o">().</span><span class="na">getConvert</span><span class="o">();</span>
+        <span class="n">String</span> <span class="n">json</span> <span class="o">=</span> <span class="s">&quot;{\&quot;access_token\&quot;:\&quot;vVX2bIjN5P9TMOphDkStM96eNWapAehTuWAlVDO74aFaYxLwj2b-9-T9p_W2mfr9\&quot;,\&quot;expires_in\&quot;:7200, \&quot;aa\&quot;:\&quot;\&quot;}&quot;</span><span class="o">;</span> 
+        <span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">String</span><span class="o">&gt;</span> <span class="n">map</span> <span class="o">=</span> <span class="n">convert</span><span class="o">.</span><span class="na">convertFrom</span><span class="o">(</span><span class="n">JsonConvert</span><span class="o">.</span><span class="na">TYPE_MAP_STRING_STRING</span><span class="o">,</span> <span class="n">json</span><span class="o">);</span>
+        <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">map</span><span class="o">);</span>
+        <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">convert</span><span class="o">.</span><span class="na">convertTo</span><span class="o">(</span><span class="n">map</span><span class="o">));</span>
+        <span class="n">ByteBuffer</span><span class="o">[]</span> <span class="n">buffers</span> <span class="o">=</span> <span class="n">convert</span><span class="o">.</span><span class="na">convertTo</span><span class="o">(()</span> <span class="o">-&gt;</span> <span class="n">ByteBuffer</span><span class="o">.</span><span class="na">allocate</span><span class="o">(</span><span class="mi">1024</span><span class="o">),</span> <span class="n">map</span><span class="o">);</span>
+        <span class="kt">byte</span><span class="o">[]</span> <span class="n">bs</span> <span class="o">=</span> <span class="k">new</span> <span class="kt">byte</span><span class="o">[</span><span class="n">buffers</span><span class="o">[</span><span class="mi">0</span><span class="o">].</span><span class="na">remaining</span><span class="o">()];</span>
+        <span class="n">buffers</span><span class="o">[</span><span class="mi">0</span><span class="o">].</span><span class="na">get</span><span class="o">(</span><span class="n">bs</span><span class="o">);</span>
+        <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="k">new</span> <span class="nf">String</span><span class="o">(</span><span class="n">bs</span><span class="o">));</span> 
+        <span class="n">main2</span><span class="o">(</span><span class="n">args</span><span class="o">);</span>
+    <span class="o">}</span>
+                </pre></div>
 
             <footer class="site-footer">
                 <span class="site-footer-owner"><a href="https://github.com/wentch/redkale">RedKale</a> © <a href="https://github.com/wentch">wentch</a> &nbsp;&nbsp;&nbsp;&nbsp;欢迎加入RedKale技术交流QQ群: 527523235</span>
