@@ -219,6 +219,16 @@ public abstract class Factory<R extends Reader, W extends Writer> {
         return true;
     }
 
+    public final void reloadCoder(final Type type) {
+        this.register(type, this.createDecoder(type));
+        this.register(type, this.createEncoder(type));
+    }
+
+    public final void reloadCoder(final Type type, final Class clazz) {
+        this.register(type, this.createDecoder(type, clazz));
+        this.register(type, this.createEncoder(type, clazz));
+    }
+
     public final <E> void register(final Class<E> clazz, final Creator<? extends E> creator) {
         creators.put(clazz, creator);
     }
