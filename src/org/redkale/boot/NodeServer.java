@@ -30,21 +30,29 @@ import org.redkale.util.*;
 
 /**
  *
- * <p> 详情见: http://www.redkale.org
+ * <p>
+ * 详情见: http://www.redkale.org
+ *
  * @author zhangjx
  */
 public abstract class NodeServer {
 
+    //INFO日志的换行符
     public static final String LINE_SEPARATOR = "\r\n";
 
+    //日志输出对象
     protected final Logger logger;
 
+    //日志是否为FINE级别
     protected final boolean fine;
 
+    //进程主类
     protected final Application application;
 
+    //依赖注入工厂类
     protected final ResourceFactory factory;
 
+    //当前Server对象
     protected final Server server;
 
     private String sncpGroup = null;  //当前Server的SNCP协议的组

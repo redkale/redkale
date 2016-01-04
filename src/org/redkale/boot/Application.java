@@ -37,7 +37,9 @@ import org.w3c.dom.*;
  * 最后进行Service、Servlet与其他资源之间的依赖注入。
  *
  *
- * <p> 详情见: http://www.redkale.org
+ * <p>
+ * 详情见: http://www.redkale.org
+ *
  * @author zhangjx
  */
 public final class Application {
@@ -69,21 +71,21 @@ public final class Application {
     //当前Service所属的组  类型: Set<String>、String[]
     public static final String RESNAME_SNCP_GROUPS = Sncp.RESNAME_SNCP_GROUPS; // SNCP_GROUPS
 
-    protected final Map<InetSocketAddress, String> globalNodes = new HashMap<>();
+    final Map<InetSocketAddress, String> globalNodes = new HashMap<>();
 
-    private final Map<String, Set<InetSocketAddress>> globalGroups = new HashMap<>();
+    final Map<String, Set<InetSocketAddress>> globalGroups = new HashMap<>();
 
-    protected final List<Transport> transports = new ArrayList<>();
+    final List<Transport> transports = new ArrayList<>();
 
-    protected final InetAddress localAddress;
+    final InetAddress localAddress;
 
-    protected final List<CacheSource> cacheSources = new CopyOnWriteArrayList<>();
+    final List<CacheSource> cacheSources = new CopyOnWriteArrayList<>();
 
-    protected final List<DataSource> dataSources = new CopyOnWriteArrayList<>();
+    final List<DataSource> dataSources = new CopyOnWriteArrayList<>();
 
-    protected final List<NodeServer> servers = new CopyOnWriteArrayList<>();
+    final List<NodeServer> servers = new CopyOnWriteArrayList<>();
 
-    protected CountDownLatch servicecdl;  //会出现两次赋值
+    CountDownLatch servicecdl;  //会出现两次赋值
 
     //--------------------------------------------------------------------------------------------    
     private final ResourceFactory factory = ResourceFactory.root();

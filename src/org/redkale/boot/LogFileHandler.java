@@ -16,13 +16,17 @@ import java.util.logging.*;
 import java.util.logging.Formatter;
 
 /**
- * 自定义的日志存储类
+ * 自定义的日志输出类
  * <p>
- * <p> 详情见: http://www.redkale.org
+ * 详情见: http://www.redkale.org
+ *
  * @author zhangjx
  */
 public class LogFileHandler extends Handler {
 
+    /**
+     * SNCP的日志输出Handler
+     */
     public static class SncpLogFileHandler extends LogFileHandler {
 
         @Override
@@ -31,6 +35,10 @@ public class LogFileHandler extends Handler {
         }
     }
 
+    /**
+     * 默认的日志时间格式化类
+     *
+     */
     public static class LoggingFormater extends Formatter {
 
         private static final String format = "%1$tY-%1$tm-%1$td %1$tH:%1$tM:%1$tS.%tL %4$s %2$s\r\n%5$s%6$s\r\n";
