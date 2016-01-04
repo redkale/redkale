@@ -12,9 +12,11 @@ import java.util.logging.*;
 
 /**
  *
- * <p> 详情见: http://www.redkale.org
+ * <p>
+ * 详情见: http://www.redkale.org
+ *
  * @author zhangjx
- * @param <T>
+ * @param <T> 对象池元素的数据类型
  */
 public final class ObjectPool<T> implements Supplier<T> {
 

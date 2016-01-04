@@ -12,7 +12,9 @@ import org.redkale.convert.json.*;
 
 /**
  *
- * <p> 详情见: http://www.redkale.org
+ * <p>
+ * 详情见: http://www.redkale.org
+ *
  * @author zhangjx
  */
 public abstract class Request {
@@ -44,18 +46,18 @@ public abstract class Request {
     }
 
     /**
-     * 返回值：Integer.MIN_VALUE: 帧数据； -1：数据不合法； 0：解析完毕； >0: 需再读取的字节数。
+     * 返回值：Integer.MIN_VALUE: 帧数据； -1：数据不合法； 0：解析完毕； &gt;0: 需再读取的字节数。
      *
-     * @param buffer
-     * @return
+     * @param buffer ByteBuffer对象
+     * @return 缺少的字节数
      */
     protected abstract int readHeader(ByteBuffer buffer);
 
     /**
      * 读取buffer，并返回读取的有效数据长度
      *
-     * @param buffer
-     * @return
+     * @param buffer ByteBuffer对象
+     * @return 有效数据长度
      */
     protected abstract int readBody(ByteBuffer buffer);
 

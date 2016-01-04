@@ -22,16 +22,20 @@ import static jdk.internal.org.objectweb.asm.Opcodes.*;
 
 /**
  *
- * <p> 详情见: http://www.redkale.org
+ * <p>
+ * 详情见: http://www.redkale.org
+ *
  * @author zhangjx
  */
 public abstract class BasedHttpServlet extends HttpServlet {
 
     /**
      * 配合 BasedHttpServlet 使用。
-     * 当标记为 @AuthIgnore 的方法不会再调用之前调用authenticate 方法。
+     * 当标记为 &#64;AuthIgnore 的方法不会再调用之前调用authenticate 方法。
      *
-     * <p> 详情见: http://www.redkale.org
+     * <p>
+     * 详情见: http://www.redkale.org
+     *
      * @author zhangjx
      */
     @Inherited
@@ -44,9 +48,11 @@ public abstract class BasedHttpServlet extends HttpServlet {
 
     /**
      * 配合 BasedHttpServlet 使用。
-     * 用于对@WebServlet对应的url进行细分。 其 url
+     * 用于对&#64;WebServlet对应的url进行细分。 其 url
      *
-     * <p> 详情见: http://www.redkale.org
+     * <p>
+     * 详情见: http://www.redkale.org
+     *
      * @author zhangjx
      */
     @Target({ElementType.METHOD})
@@ -61,10 +67,12 @@ public abstract class BasedHttpServlet extends HttpServlet {
 
     /**
      * 配合 BasedHttpServlet 使用。
-     * 当标记为 @HttpCacheable 的方法使用response.finish的参数将被缓存一定时间(默认值timeout=15秒)。
-     * 通常情况下 @HttpCacheable 需要与 @AuthIgnore 一起使用，因为没有标记@AuthIgnore的方法一般输出的结果与当前用户信息有关。
+     * 当标记为 &#64;HttpCacheable 的方法使用response.finish的参数将被缓存一定时间(默认值timeout=15秒)。
+     * 通常情况下 &#64;HttpCacheable 需要与 &#64;AuthIgnore 一起使用，因为没有标记&#64;AuthIgnore的方法一般输出的结果与当前用户信息有关。
      *
-     * <p> 详情见: http://www.redkale.org
+     * <p>
+     * 详情见: http://www.redkale.org
+     *
      * @author zhangjx
      */
     @Target({ElementType.METHOD})
@@ -75,7 +83,7 @@ public abstract class BasedHttpServlet extends HttpServlet {
         /**
          * 超时的秒数
          *
-         * @return
+         * @return 超时秒数
          */
         int timeout() default 15;
     }

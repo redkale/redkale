@@ -15,7 +15,7 @@ import java.util.Collection;
  *
  * <p> 详情见: http://www.redkale.org
  * @author zhangjx
- * @param <T>
+ * @param <T> 序列化的集合元素类型
  */
 @SuppressWarnings("unchecked")
 public final class CollectionEncoder<T> implements Encodeable<Writer, Collection<T>> {

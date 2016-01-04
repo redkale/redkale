@@ -22,7 +22,9 @@ import java.util.regex.*;
 /**
  * class过滤器， 符合条件的class会保留下来存入FilterEntry。
  *
- * <p> 详情见: http://www.redkale.org
+ * <p>
+ * 详情见: http://www.redkale.org
+ *
  * @author zhangjx
  * @param <T>
  */
@@ -70,8 +72,8 @@ public final class ClassFilter<T> {
 
     /**
      * 获取符合条件的class集合
-     * <p>
-     * @return
+     *
+     * @return Set&lt;FilterEntry&lt;T&gt;&gt;
      */
     public final Set<FilterEntry<T>> getFilterEntrys() {
         return entrys;
@@ -79,9 +81,9 @@ public final class ClassFilter<T> {
 
     /**
      * 自动扫描地过滤指定的class
-     * <p>
-     * @param property
-     * @param clazzname
+     *
+     * @param property  AnyValue
+     * @param clazzname String
      */
     @SuppressWarnings("unchecked")
     public final void filter(AnyValue property, String clazzname) {
@@ -90,7 +92,7 @@ public final class ClassFilter<T> {
 
     /**
      * 过滤指定的class
-     * <p>
+     *
      * @param property  application.xml中对应class节点下的property属性项
      * @param clazzname class名称
      * @param autoscan  为true表示自动扫描的， false表示显著调用filter， AutoLoad的注解将被忽略
@@ -149,10 +151,10 @@ public final class ClassFilter<T> {
 
     /**
      * 判断class是否有效
-     * <p>
-     * @param property
-     * @param classname
-     * @return
+     *
+     * @param property  AnyValue
+     * @param classname String
+     * @return boolean
      */
     public boolean accept(AnyValue property, String classname) {
         boolean r = accept0(property, classname);
@@ -187,11 +189,11 @@ public final class ClassFilter<T> {
 
     /**
      * 判断class是否有效
-     * <p>
-     * @param property
-     * @param clazz
-     * @param autoscan
-     * @return
+     *
+     * @param property AnyValue
+     * @param clazz    Class
+     * @param autoscan boolean
+     * @return boolean
      */
     @SuppressWarnings("unchecked")
     public boolean accept(AnyValue property, Class clazz, boolean autoscan) {
@@ -247,8 +249,8 @@ public final class ClassFilter<T> {
 
     /**
      * 存放符合条件的class与class指定的属性项
-     * <p>
-     * @param <T>
+     *
+     * @param <T> 泛型
      */
     public static final class FilterEntry<T> {
 
@@ -330,10 +332,10 @@ public final class ClassFilter<T> {
 
         /**
          * 加载当前线程的classpath扫描所有class进行过滤
-         * <p>
+         *
          * @param exclude 不需要扫描的文件夹， 可以为null
-         * @param filters
-         * @throws IOException
+         * @param filters 过滤器
+         * @throws IOException 异常
          */
         public static void load(final File exclude, final ClassFilter... filters) throws IOException {
             URLClassLoader loader = (URLClassLoader) Thread.currentThread().getContextClassLoader();

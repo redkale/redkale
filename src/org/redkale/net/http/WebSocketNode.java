@@ -18,7 +18,9 @@ import org.redkale.util.*;
 
 /**
  *
- * <p> 详情见: http://www.redkale.org
+ * <p>
+ * 详情见: http://www.redkale.org
+ *
  * @author zhangjx
  */
 public abstract class WebSocketNode {
@@ -77,8 +79,8 @@ public abstract class WebSocketNode {
     /**
      * 获取在线用户的节点地址列表
      *
-     * @param groupid
-     * @return
+     * @param groupid groupid
+     * @return 地址列表
      */
     public Collection<InetSocketAddress> getOnlineNodes(final Serializable groupid) {
         return source.getCollection(groupid);
@@ -87,8 +89,8 @@ public abstract class WebSocketNode {
     /**
      * 获取在线用户的详细连接信息
      *
-     * @param groupid
-     * @return
+     * @param groupid groupid
+     * @return 地址集合
      */
     public Map<InetSocketAddress, List<String>> getOnlineRemoteAddress(final Serializable groupid) {
         Collection<InetSocketAddress> nodes = getOnlineNodes(groupid);

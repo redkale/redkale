@@ -14,8 +14,8 @@ import org.redkale.util.*;
  *
  * <p> 详情见: http://www.redkale.org
  * @author zhangjx
- * @param <W>
- * @param <T>
+ * @param <W> Writer输出的子类
+ * @param <T> 序列化的数据类型
  */
 @SuppressWarnings("unchecked")
 public final class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {

@@ -9,7 +9,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  *
- * <p> 详情见: http://www.redkale.org
+ * <p>
+ * 详情见: http://www.redkale.org
+ *
  * @author zhangjx
  */
 public interface Reader {
@@ -21,7 +23,7 @@ public interface Reader {
     /**
      * 是否还存在下个元素或字段
      *
-     * @return
+     * @return 是否还存在下个元素或字段
      */
     public boolean hasNext();
 
@@ -38,7 +40,7 @@ public interface Reader {
     /**
      * 读取对象的开头 返回字段数
      *
-     * @return
+     * @return 返回字段数
      */
     public int readObjectB();
 
@@ -51,7 +53,7 @@ public interface Reader {
     /**
      * 读取数组的开头并返回数组的长度
      *
-     * @return
+     * @return 返回数组的长度
      */
     public int readArrayB();
 
@@ -64,7 +66,7 @@ public interface Reader {
     /**
      * 读取map的开头并返回map的size
      *
-     * @return
+     * @return 返回map的size
      */
     public int readMapB();
 
@@ -77,37 +79,87 @@ public interface Reader {
     /**
      * 根据字段读取字段对应的DeMember
      *
-     * @param index
-     * @param members
-     * @return
+     * @param index   当前members的游标位置
+     * @param members DeMember的全量集合
+     * @return 匹配的DeMember
      */
     public DeMember readField(final AtomicInteger index, final DeMember[] members);
 
+    /**
+     * 读取一个boolean值
+     *
+     * @return boolean值
+     */
     public boolean readBoolean();
 
+    /**
+     * 读取一个byte值
+     *
+     * @return byte值
+     */
     public byte readByte();
 
+    /**
+     * 读取一个char值
+     *
+     * @return char值
+     */
     public char readChar();
 
+    /**
+     * 读取一个short值
+     *
+     * @return short值
+     */
     public short readShort();
 
+    /**
+     * 读取一个int值
+     *
+     * @return int值
+     */
     public int readInt();
 
+    /**
+     * 读取一个long值
+     *
+     * @return long值
+     */
     public long readLong();
 
+    /**
+     * 读取一个float值
+     *
+     * @return float值
+     */
     public float readFloat();
 
+    /**
+     * 读取一个double值
+     *
+     * @return double值
+     */
     public double readDouble();
 
     /**
      * 读取无转义字符长度不超过255的字符串， 例如枚举值、字段名、类名字符串等
      *
-     * @return
+     * @return String值
      */
     public String readSmallString();
 
+    /**
+     * 读取反解析对象的类名
+     *
+     * @return 类名
+     */
     public String readClassName();
 
+    /**
+     * 读取一个String值
+     *
+     * @return String值
+     */
     public String readString();
 
 }

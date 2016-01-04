@@ -39,6 +39,7 @@ public @interface Cacheable {
 
     /**
      * (Optional) Whether or not the entity should be cached.
+     * @return boolean
      */
     boolean value() default true;
 }

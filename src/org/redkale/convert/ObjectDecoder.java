@@ -17,8 +17,8 @@ import org.redkale.util.*;
  *
  * <p> 详情见: http://www.redkale.org
  * @author zhangjx
- * @param <R>
- * @param <T>
+ * @param <R> Reader输入的子类
+ * @param <T> 反解析的数据类型
  */
 @SuppressWarnings("unchecked")
 public final class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
@@ -159,8 +159,8 @@ public final class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T
     /**
      * 对象格式: [0x1][short字段个数][字段名][字段值]...[0x2]
      *
-     * @param in
-     * @return
+     * @param in 输入流
+     * @return 反解析后的对象结果
      */
     @Override
     public final T convertFrom(final R in) {

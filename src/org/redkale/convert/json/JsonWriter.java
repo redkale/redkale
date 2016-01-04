@@ -14,7 +14,9 @@ import org.redkale.util.*;
  *
  * writeTo系列的方法输出的字符不能含特殊字符
  *
- * <p> 详情见: http://www.redkale.org
+ * <p>
+ * 详情见: http://www.redkale.org
+ *
  * @author zhangjx
  */
 public class JsonWriter implements Writer {
@@ -96,8 +98,8 @@ public class JsonWriter implements Writer {
     /**
      * <b>注意：</b> 该String值不能为null且不会进行转义， 只用于不含需要转义字符的字符串，例如enum、double、BigInteger转换的String
      *
-     * @param quote
-     * @param value
+     * @param quote 是否加双引号
+     * @param value 非null且不含需要转义的字符的String值
      */
     public void writeTo(final boolean quote, final String value) {
         int len = value.length();

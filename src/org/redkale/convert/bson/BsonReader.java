@@ -14,7 +14,9 @@ import org.redkale.util.*;
 
 /**
  *
- * <p> 详情见: http://www.redkale.org
+ * <p>
+ * 详情见: http://www.redkale.org
+ *
  * @author zhangjx
  */
 public class BsonReader implements Reader {
@@ -193,7 +195,7 @@ public class BsonReader implements Reader {
     /**
      * 判断下一个非空白字节是否为[
      *
-     * @return
+     * @return 数组长度或SIGN_NULL
      */
     @Override
     public int readArrayB() {
@@ -216,7 +218,7 @@ public class BsonReader implements Reader {
     /**
      * 判断对象是否存在下一个属性或者数组是否存在下一个元素
      *
-     * @return
+     * @return 是否存在
      */
     @Override
     public final boolean hasNext() {

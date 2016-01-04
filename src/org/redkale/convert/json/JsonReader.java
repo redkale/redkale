@@ -13,7 +13,9 @@ import org.redkale.util.*;
 
 /**
  *
- * <p> 详情见: http://www.redkale.org
+ * <p>
+ * 详情见: http://www.redkale.org
+ *
  * @author zhangjx
  */
 public class JsonReader implements Reader {
@@ -83,7 +85,7 @@ public class JsonReader implements Reader {
     /**
      * 找到指定的属性值 例如: {id : 1, data : { name : 'a', items : [1,2,3]}} seek('data.items') 直接跳转到 [1,2,3];
      *
-     * @param key
+     * @param key 指定的属性名
      */
     public final void seek(String key) {
         if (key == null || key.length() < 1) return;
@@ -135,7 +137,7 @@ public class JsonReader implements Reader {
     /**
      * 读取下一个字符， 不跳过空白字符
      *
-     * @return
+     * @return 空白字符或有效字符
      */
     protected char nextChar() {
         return this.text[++this.position];
@@ -144,7 +146,7 @@ public class JsonReader implements Reader {
     /**
      * 跳过空白字符， 返回一个非空白字符
      *
-     * @return
+     * @return 有效字符
      */
     protected char nextGoodChar() {
         char c = nextChar();
@@ -158,7 +160,7 @@ public class JsonReader implements Reader {
     /**
      * 回退最后读取的字符
      *
-     * @param ch
+     * @param ch 后退的字符
      */
     protected void backChar(char ch) {
         this.position--;
@@ -167,6 +169,7 @@ public class JsonReader implements Reader {
     /**
      * 判断下一个非空白字符是否为{
      *
+     * @return SIGN_NOLENGTH 或 SIGN_NULL
      */
     @Override
     public int readObjectB() {
@@ -191,6 +194,7 @@ public class JsonReader implements Reader {
     /**
      * 判断下一个非空白字符是否为{
      *
+     * @return SIGN_NOLENGTH 或 SIGN_NULL
      */
     @Override
     public final int readMapB() {
@@ -204,7 +208,7 @@ public class JsonReader implements Reader {
     /**
      * 判断下一个非空白字符是否为[
      *
-     * @return
+     * @return SIGN_NOLENGTH 或 SIGN_NULL
      */
     @Override
     public int readArrayB() {
@@ -248,7 +252,7 @@ public class JsonReader implements Reader {
     /**
      * 判断对象是否存在下一个属性或者数组是否存在下一个元素
      *
-     * @return
+     * @return 是否存在
      */
     @Override
     public boolean hasNext() {
@@ -320,9 +324,9 @@ public class JsonReader implements Reader {
     }
 
     /**
-     * 读取一个int
+     * 读取一个int值
      *
-     * @return
+     * @return int值
      */
     @Override
     public int readInt() {
@@ -366,9 +370,9 @@ public class JsonReader implements Reader {
     }
 
     /**
-     * 读取一个long
+     * 读取一个long值
      *
-     * @return
+     * @return long值
      */
     @Override
     public long readLong() {
@@ -474,7 +478,7 @@ public class JsonReader implements Reader {
     /**
      * 读取字符串， 必须是"或者'包围的字符串值
      *
-     * @return
+     * @return String值
      */
     @Override
     public String readString() {

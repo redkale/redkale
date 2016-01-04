@@ -10,12 +10,14 @@ import java.util.*;
 
 /**
  * 对象数组的序列化，不包含int[]、long[]这样的primitive class数组.
- * 数组长度不能超过 32767。  在BSON中数组长度设定的是short，对于大于32767长度的数组传输会影响性能，所以没有采用int存储。
+ * 数组长度不能超过 32767。 在BSON中数组长度设定的是short，对于大于32767长度的数组传输会影响性能，所以没有采用int存储。
  * 支持一定程度的泛型。
- * 
- * <p> 详情见: http://www.redkale.org
+ *
+ * <p>
+ * 详情见: http://www.redkale.org
+ *
  * @author zhangjx
- * @param <T>
+ * @param <T> 反解析的数组元素类型
  */
 @SuppressWarnings("unchecked")
 public final class ArrayDecoder<T> implements Decodeable<Reader, T[]> {

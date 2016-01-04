@@ -15,7 +15,9 @@ import javax.net.ssl.*;
 
 /**
  *
- * <p> 详情见: http://www.redkale.org
+ * <p>
+ * 详情见: http://www.redkale.org
+ *
  * @author zhangjx
  */
 public final class Utility {
@@ -108,8 +110,8 @@ public final class Utility {
 
     /**
      * 返回本机的第一个内网IPv4地址， 没有则返回null
-     * <p>
-     * @return
+     *
+     * @return IPv4地址
      */
     public static InetAddress localInetAddress() {
         InetAddress back = null;
@@ -134,7 +136,7 @@ public final class Utility {
     /**
      * 获取当天凌晨零点的格林时间
      *
-     * @return
+     * @return 毫秒数
      */
     public static long midnight() {
         return midnight(System.currentTimeMillis());
@@ -143,8 +145,8 @@ public final class Utility {
     /**
      * 获取指定时间当天凌晨零点的格林时间
      *
-     * @param time
-     * @return
+     * @param time 指定时间
+     * @return 毫秒数
      */
     public static long midnight(long time) {
         return (time + zoneRawOffset) / 86400000 * 86400000 - zoneRawOffset;
@@ -153,7 +155,7 @@ public final class Utility {
     /**
      * 获取当天20151231格式的int值
      *
-     * @return
+     * @return 20151231格式的int值
      */
     public static int today() {
         java.time.LocalDate today = java.time.LocalDate.now();
@@ -163,8 +165,8 @@ public final class Utility {
     /**
      * 获取时间点所在星期的周一
      *
-     * @param time
-     * @return
+     * @param time 指定时间
+     * @return 毫秒数
      */
     public static long monday(long time) {
         ZoneId zid = ZoneId.systemDefault();
@@ -177,8 +179,8 @@ public final class Utility {
     /**
      * 获取时间点所在星期的周日
      *
-     * @param time
-     * @return
+     * @param time 指定时间
+     * @return 毫秒数
      */
     public static long sunday(long time) {
         ZoneId zid = ZoneId.systemDefault();
@@ -191,8 +193,8 @@ public final class Utility {
     /**
      * 获取时间点所在月份的1号
      *
-     * @param time
-     * @return
+     * @param time 指定时间
+     * @return 毫秒数
      */
     public static long monthFirstDay(long time) {
         ZoneId zid = ZoneId.systemDefault();
@@ -390,10 +392,10 @@ public final class Utility {
 
     /**
      * 将两个数字组装成一个long
-     * <p>
-     * @param high
-     * @param low
-     * @return
+     *
+     * @param high 高位值
+     * @param low  低位值
+     * @return long值
      */
     public static long merge(int high, int low) {
         return (0L + high) << 32 | low;

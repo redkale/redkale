@@ -10,10 +10,12 @@ import java.io.IOException;
 
 /**
  *
- * <p> 详情见: http://www.redkale.org
+ * <p>
+ * 详情见: http://www.redkale.org
+ *
  * @author zhangjx
- * @param <R>
- * @param <P>
+ * @param <R> Request的子类型
+ * @param <P> Response的子类型
  */
 public abstract class Servlet<R extends Request, P extends Response<R>> {
 

@@ -9,9 +9,11 @@ import org.redkale.convert.SimpledCoder;
 
 /**
  *
- * <p> 详情见: http://www.redkale.org
+ * <p>
+ * 详情见: http://www.redkale.org
+ *
  * @author zhangjx
- * @param <T>
+ * @param <T> 序列化/反解析的数据类型
  */
 public abstract class JsonSimpledCoder<T> extends SimpledCoder<JsonReader, JsonWriter, T> {
 

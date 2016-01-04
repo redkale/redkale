@@ -811,7 +811,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
     }
 
     /**
-     * 根据主键值给对象的column对应的值 & andvalue， 必须是Entity Class
+     * 根据主键值给对象的column对应的值 &#38; andvalue， 必须是Entity Class
      *
      * @param <T>
      * @param clazz

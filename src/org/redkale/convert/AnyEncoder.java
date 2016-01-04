@@ -12,7 +12,7 @@ import java.lang.reflect.Type;
  *
  * <p> 详情见: http://www.redkale.org
  * @author zhangjx
- * @param <T>
+ * @param <T> 序列化的泛型类型
  */
 public final class AnyEncoder<T> implements Encodeable<Writer, T> {
 

@@ -57,7 +57,7 @@ public class JsonByteBufferReader extends JsonReader {
     /**
      * 读取下一个字符， 不跳过空白字符
      *
-     * @return
+     * @return 有效字符或空白字符
      */
     @Override
     protected char nextChar() {
@@ -80,6 +80,11 @@ public class JsonByteBufferReader extends JsonReader {
         }
     }
 
+    /**
+     * 读取下一个有效字符
+     *
+     * @return 有效字符
+     */
     @Override
     protected char nextGoodChar() {
         char c = nextChar();
@@ -93,7 +98,7 @@ public class JsonByteBufferReader extends JsonReader {
     /**
      * 回退最后读取的字符
      *
-     * @param ch
+     * @param ch 回退的字符
      */
     @Override
     protected void backChar(char ch) {
@@ -103,6 +108,7 @@ public class JsonByteBufferReader extends JsonReader {
     /**
      * 判断下一个非空白字符是否为{
      *
+     * @return SIGN_NOLENGTH 或 SIGN_NULL
      */
     @Override
     public int readObjectB() {
@@ -116,7 +122,7 @@ public class JsonByteBufferReader extends JsonReader {
     /**
      * 判断下一个非空白字符是否为[
      *
-     * @return
+     * @return SIGN_NOLENGTH 或 SIGN_NULL
      */
     @Override
     public int readArrayB() {
@@ -140,7 +146,7 @@ public class JsonByteBufferReader extends JsonReader {
     /**
      * 判断对象是否存在下一个属性或者数组是否存在下一个元素
      *
-     * @return
+     * @return 是否存在
      */
     @Override
     public boolean hasNext() {
@@ -151,6 +157,11 @@ public class JsonByteBufferReader extends JsonReader {
         return true;
     }
 
+    /**
+     * 读取小字符串
+     *
+     * @return String值
+     */
     @Override
     public String readSmallString() {
         char ch = nextGoodChar();
@@ -243,9 +254,9 @@ public class JsonByteBufferReader extends JsonReader {
     }
 
     /**
-     * 读取一个int
+     * 读取一个int值
      *
-     * @return
+     * @return int值
      */
     @Override
     public int readInt() {
@@ -277,9 +288,9 @@ public class JsonByteBufferReader extends JsonReader {
     }
 
     /**
-     * 读取一个long
+     * 读取一个long值
      *
-     * @return
+     * @return long值
      */
     @Override
     public long readLong() {
@@ -313,7 +324,7 @@ public class JsonByteBufferReader extends JsonReader {
     /**
      * 读取字符串， 必须是"或者'包围的字符串值
      *
-     * @return
+     * @return String值
      */
     @Override
     public String readString() {

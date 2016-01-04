@@ -14,9 +14,11 @@ import static jdk.internal.org.objectweb.asm.Opcodes.*;
  *
  * 获取泛型的Type类
  *
- * <p> 详情见: http://www.redkale.org
+ * <p>
+ * 详情见: http://www.redkale.org
+ *
  * @author zhangjx
- * @param <T>
+ * @param <T> 泛型
  */
 public abstract class TypeToken<T> {
 
@@ -34,8 +36,8 @@ public abstract class TypeToken<T> {
      * 判断Type是否能确定最终的class， 是则返回true，存在通配符或者不确定类型则返回false。
      * 例如: Map&#60; String, String &#62; 返回 ture; Map&#60; ? extends Serializable, String &#62; 返回false;
      *
-     * @param type
-     * @return
+     * @param type Type对象
+     * @return 是否可反解析
      */
     public final static boolean isClassType(final Type type) {
         if (type instanceof Class) return true;
@@ -55,10 +57,10 @@ public abstract class TypeToken<T> {
     /**
      * 动态创建 ParameterizedType
      *
-     * @param ownerType0
-     * @param rawType0
-     * @param actualTypeArguments0
-     * @return
+     * @param ownerType0           ParameterizedType 的 ownerType
+     * @param rawType0             ParameterizedType 的 rawType
+     * @param actualTypeArguments0 ParameterizedType 的 actualTypeArguments
+     * @return Type
      */
     public static Type createParameterizedType(final Type ownerType0, final Type rawType0, final Type... actualTypeArguments0) {
         if (ownerType0 == null && rawType0 instanceof Class) {

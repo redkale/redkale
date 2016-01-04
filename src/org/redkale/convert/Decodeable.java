@@ -9,10 +9,12 @@ import java.lang.reflect.Type;
 
 /**
  *
- * <p> 详情见: http://www.redkale.org
+ * <p>
+ * 详情见: http://www.redkale.org
+ *
  * @author zhangjx
- * @param <R>
- * @param <T>
+ * @param <R> Reader输入的子类
+ * @param <T> 反解析的数据类型
  */
 public interface Decodeable<R extends Reader, T> {
 
@@ -21,7 +23,7 @@ public interface Decodeable<R extends Reader, T> {
     /**
      * 泛型映射接口
      *
-     * @return
+     * @return 反解析的数据类型
      */
     public Type getType();
 

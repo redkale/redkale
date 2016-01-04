@@ -235,8 +235,8 @@ public final class JsonByteBufferWriter extends JsonWriter {
     /**
      * <b>注意：</b> 该String值不能为null且不会进行转义， 只用于不含需要转义字符的字符串，例如enum、double、BigInteger转换的String
      *
-     * @param quote
-     * @param value
+     * @param quote 是否写入双引号
+     * @param value String值
      */
     @Override
     public void writeTo(final boolean quote, final String value) {

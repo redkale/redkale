@@ -37,6 +37,7 @@ public @interface Entity {
 	 * name of the entity class. This name is used to refer to the
 	 * entity in queries. The name must not be a reserved literal
 	 * in the Java Persistence query language.
+     * @return String
 	 */
 	String name() default "";
 }

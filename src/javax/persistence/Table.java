@@ -22,8 +22,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Specifies the primary table for the annotated entity. Additional
- * tables may be specified using {@link SecondaryTable} or {@link
- * SecondaryTables} annotation.
+ * tables may be specified using  SecondaryTable or  SecondaryTables annotation.
  *
  * <p> If no <code>Table</code> annotation is specified for an entity 
  * class, the default values apply.
@@ -45,16 +44,19 @@ public @interface Table {
     /**
      * (Optional) The name of the table.
      * <p> Defaults to the entity name.
+     * @return String
      */
     String name() default "";
 
     /** (Optional) The catalog of the table.
      * <p> Defaults to the default catalog.
+     * @return String
      */
     String catalog() default "";
 
     /** (Optional) The schema of the table.
      * <p> Defaults to the default schema for user.
+     * @return String
      */
     String schema() default "";
 

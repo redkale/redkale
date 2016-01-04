@@ -16,21 +16,21 @@ import static jdk.internal.org.objectweb.asm.Opcodes.*;
 
 /**
  * <p>
- * 实现一个类的构造方法。 代替低效的反射实现方式。 不支持数组类。 <br/>
- * 常见的无参数的构造函数类都可以自动生成Creator， 对应自定义的类可以提供一个静态构建Creator方法。  <br/>
- * 例如: 
+ * 实现一个类的构造方法。 代替低效的反射实现方式。 不支持数组类。
+ * 常见的无参数的构造函数类都可以自动生成Creator， 对应自定义的类可以提供一个静态构建Creator方法。
+ * 例如:
  * <blockquote><pre>
  * public class Record {
- * 
+ *
  *    private final int id;
- * 
+ *
  *    private String name;
- * 
+ *
  *    Record(int id, String name) {
  *        this.id = id;
  *        this.name = name;
  *    }
- * 
+ *
  *    private static Creator createCreator() {
  *        return new Creator&lt;Record&gt;() {
  *            &#64;Override
@@ -43,15 +43,15 @@ import static jdk.internal.org.objectweb.asm.Opcodes.*;
  *    }
  * }
  * </pre></blockquote>
- * 
- * 或者: 
+ *
+ * 或者:
  * <blockquote><pre>
  * public class Record {
- * 
+ *
  *    private final int id;
- * 
+ *
  *    private String name;
- *    
+ *
  *    &#64;java.beans.ConstructorProperties({"id", "name"})
  *    public Record(int id, String name) {
  *        this.id = id;
@@ -59,15 +59,18 @@ import static jdk.internal.org.objectweb.asm.Opcodes.*;
  *    }
  * }
  * </pre></blockquote>
- * 
- * <p> 详情见: http://www.redkale.org
+ *
+ * <p>
+ * 详情见: http://www.redkale.org
+ *
  * @author zhangjx
- * @param <T>
+ * @param <T> 构建对象的数据类型
  */
 public interface Creator<T> {
+
     /**
      * 该注解只用于Creator.create方法上， 与 java.beans.ConstructorProperties 类似。
-     * 
+     *
      */
     @Documented
     @Target({METHOD})
@@ -76,20 +79,21 @@ public interface Creator<T> {
 
         String[] value();
     }
+
     /**
      * 创建对象
-     * 
-     * @param params  构造函数的参数
-     * @return 
+     *
+     * @param params 构造函数的参数
+     * @return 构建的对象
      */
     public T create(Object... params);
-    
+
     /**
      * 根据指定的class采用ASM技术生产Creator。
-     * 
-     * @param <T> 构建类的数据类型
-     * @param clazz  构建类
-     * @return 
+     *
+     * @param <T>   构建类的数据类型
+     * @param clazz 构建类
+     * @return Creator对象
      */
     @SuppressWarnings("unchecked")
     public static <T> Creator<T> create(Class<T> clazz) {
@@ -268,7 +272,7 @@ public interface Creator<T> {
         final byte[] bytes = cw.toByteArray();
         try {
             if (!Modifier.isPublic(constructor.getModifiers())) throw new RuntimeException("[" + clazz + "] have no public or java.beans.ConstructorProperties-Annotation constructor.");
-                Class<?> resultClazz = new ClassLoader(loader) {
+            Class<?> resultClazz = new ClassLoader(loader) {
                 public final Class<?> loadClass(String name, byte[] b) {
                     return defineClass(name, b, 0, b.length);
                 }

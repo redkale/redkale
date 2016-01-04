@@ -14,7 +14,7 @@ import java.util.*;
  * 详情见: http://www.redkale.org
  *
  * @author zhangjx
- * @param <T>
+ * @param <T> 集合元素的数据类型
  */
 @SuppressWarnings("unchecked")
 public class Sheet<T> implements java.io.Serializable {
@@ -54,7 +54,7 @@ public class Sheet<T> implements java.io.Serializable {
     /**
      * 判断数据列表是否为空
      *
-     * @return
+     * @return 是否为空
      */
     public boolean isEmpty() {
         return this.rows == null || this.rows.isEmpty();

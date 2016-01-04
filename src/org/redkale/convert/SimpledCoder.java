@@ -10,11 +10,13 @@ import java.lang.reflect.Type;
 
 /**
  *
- * <p> 详情见: http://www.redkale.org
+ * <p>
+ * 详情见: http://www.redkale.org
+ *
  * @author zhangjx
- * @param <R>
- * @param <W>
- * @param <T>
+ * @param <R> Reader输入的子类
+ * @param <W> Writer输出的子类
+ * @param <T> 序列化/反解析的数据类型
  */
 public abstract class SimpledCoder<R extends Reader, W extends Writer, T> implements Decodeable<R, T>, Encodeable<W, T> {
 

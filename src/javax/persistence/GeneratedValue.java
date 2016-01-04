@@ -51,8 +51,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * </pre>
  *
  * @see Id
- * @see TableGenerator
- * @see SequenceGenerator
  *
  * @since Java Persistence 1.0
  */
@@ -64,15 +62,17 @@ public @interface GeneratedValue {
      * (Optional) The primary key generation strategy
      * that the persistence provider must use to
      * generate the annotated entity primary key.
+     * @return GenerationType
      */
     @Deprecated
     GenerationType strategy() default GenerationType.AUTO;
 
     /**
      * (Optional) The name of the primary key generator
-     * to use as specified in the {@link SequenceGenerator} 
-     * or {@link TableGenerator} annotation.
+     * to use as specified in the SequenceGenerator
+     * or TableGenerator annotation.
      * <p> Defaults to the id generator supplied by persistence provider.
+     * @return  String
      */
     @Deprecated
     String generator() default "";

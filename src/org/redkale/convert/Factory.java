@@ -21,10 +21,12 @@ import org.redkale.util.*;
 
 /**
  *
- * <p> 详情见: http://www.redkale.org
+ * <p>
+ * 详情见: http://www.redkale.org
+ *
  * @author zhangjx
- * @param <R>
- * @param <W>
+ * @param <R> Reader输入的子类
+ * @param <W> Writer输出的子类
  */
 @SuppressWarnings("unchecked")
 public abstract class Factory<R extends Reader, W extends Writer> {
@@ -168,8 +170,8 @@ public abstract class Factory<R extends Reader, W extends Writer> {
 
     /**
      * 使所有类的所有被声明为ConvertColumn.ignore = true 的字段或方法变为ConvertColumn.ignore = false
-     * <p>
-     * @param skipIgnore
+     *
+     * @param skipIgnore 是否忽略Ignore注解
      */
     public final void registerSkipAllIgnore(final boolean skipIgnore) {
         this.skipAllIgnore = skipIgnore;
@@ -177,8 +179,8 @@ public abstract class Factory<R extends Reader, W extends Writer> {
 
     /**
      * 使该类所有被声明为ConvertColumn.ignore = true 的字段或方法变为ConvertColumn.ignore = false
-     * <p>
-     * @param type
+     *
+     * @param type 指定的类
      */
     public final void registerSkipIgnore(final Class type) {
         skipIgnores.add(type);

@@ -57,8 +57,8 @@ public final class MultiPart {
      * 将文件流读进bytes， 如果超出max指定的值则返回null
      *
      * @param max 最大长度限制
-     * @return
-     * @throws IOException
+     * @return 内容
+     * @throws IOException 异常
      */
     public byte[] getContentBytes(long max) throws IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -73,9 +73,9 @@ public final class MultiPart {
      * 将文件流写进out， 如果超出max指定的值则中断并返回false
      *
      * @param max 最大长度限制
-     * @param out
-     * @return
-     * @throws IOException
+     * @param out 输出流
+     * @return 是否成功
+     * @throws IOException 异常
      */
     public boolean save(long max, OutputStream out) throws IOException {
         byte[] bytes = new byte[4096];

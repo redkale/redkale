@@ -44,7 +44,7 @@ public final class BsonByteBufferReader extends BsonReader {
     /**
      * 判断下一个非空白字节是否为[
      *
-     * @return
+     * @return 数组长度或 SIGN_NULL
      */
     @Override
     public int readArrayB() {

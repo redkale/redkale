@@ -11,7 +11,9 @@ import java.util.regex.*;
 
 /**
  *
- * <p> 详情见: http://www.redkale.org
+ * <p>
+ * 详情见: http://www.redkale.org
+ *
  * @author zhangjx
  */
 public class SelectColumn implements Predicate<String> {
@@ -69,8 +71,8 @@ public class SelectColumn implements Predicate<String> {
     /**
      * class中的字段名
      *
-     * @param columns
-     * @return
+     * @param columns 包含的字段名集合
+     * @return SelectColumn
      */
     public static SelectColumn createIncludes(String... columns) {
         return new SelectColumn(columns, false);
@@ -79,8 +81,8 @@ public class SelectColumn implements Predicate<String> {
     /**
      * class中的字段名
      *
-     * @param columns
-     * @return
+     * @param columns 排除的字段名集合
+     * @return SelectColumn
      */
     public static SelectColumn createExcludes(String... columns) {
         return new SelectColumn(columns, true);

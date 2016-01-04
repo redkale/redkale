@@ -14,8 +14,8 @@ import java.util.Map;
  *
  * <p> 详情见: http://www.redkale.org
  * @author zhangjx
- * @param <K>
- * @param <V>
+ * @param <K> Map key的数据类型
+ * @param <V> Map value的数据类型
  */
 @SuppressWarnings("unchecked")
 public final class MapDecoder<K, V> implements Decodeable<Reader, Map<K, V>> {

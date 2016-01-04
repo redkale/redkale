@@ -10,9 +10,11 @@ import java.nio.channels.*;
 
 /**
  *
- * <p> 详情见: http://www.redkale.org
+ * <p>
+ * 详情见: http://www.redkale.org
+ *
  * @author zhangjx
- * @param <R>
+ * @param <R> Request的子类型
  */
 @SuppressWarnings("unchecked")
 public abstract class Response<R extends Request> {

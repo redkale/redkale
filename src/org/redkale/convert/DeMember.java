@@ -9,11 +9,13 @@ import org.redkale.util.Attribute;
 
 /**
  *
- * <p> 详情见: http://www.redkale.org
+ * <p>
+ * 详情见: http://www.redkale.org
+ *
  * @author zhangjx
- * @param <R>
- * @param <T>
- * @param <F>
+ * @param <R> Reader输入的子类
+ * @param <T> 字段依附的类
+ * @param <F> 字段的数据类型
  */
 @SuppressWarnings("unchecked")
 public final class DeMember<R extends Reader, T, F> implements Comparable<DeMember<R, T, F>> {

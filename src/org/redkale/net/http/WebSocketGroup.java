@@ -12,7 +12,9 @@ import java.util.stream.Stream;
 
 /**
  *
- * <p> 详情见: http://www.redkale.org
+ * <p>
+ * 详情见: http://www.redkale.org
+ *
  * @author zhangjx
  */
 public final class WebSocketGroup {
@@ -61,8 +63,8 @@ public final class WebSocketGroup {
 
     /**
      * 最近发送消息的WebSocket
-     * <p>
-     * @return
+     *
+     * @return WebSocket
      */
     public final WebSocket getRecentWebSocket() {
         return recentWebSocket;

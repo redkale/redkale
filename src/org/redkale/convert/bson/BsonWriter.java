@@ -79,8 +79,8 @@ public class BsonWriter implements Writer {
     /**
      * 扩充指定长度的缓冲区
      *
-     * @param len
-     * @return
+     * @param len 扩容长度
+     * @return 固定0
      */
     protected int expand(int len) {
         int newcount = count + len;
@@ -231,7 +231,7 @@ public class BsonWriter implements Writer {
     /**
      * 对于类的字段名、枚举值这些长度一般不超过255且不会出现双字节字符的字符串采用writeSmallString处理, readSmallString用于读取
      *
-     * @param value
+     * @param value String值
      */
     @Override
     public final void writeSmallString(String value) {

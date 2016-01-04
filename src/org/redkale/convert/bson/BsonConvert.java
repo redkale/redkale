@@ -12,6 +12,7 @@ import org.redkale.convert.*;
 import org.redkale.util.*;
 
 /**
+ * <blockquote><pre>
  * BSON协议格式:
  *  1). 基本数据类型: 直接转换成byte[]
  *  2). SmallString(无特殊字符且长度小于256的字符串): length(1 byte) + byte[](utf8); 通常用于类名、字段名、枚举。
@@ -23,13 +24,16 @@ import org.redkale.util.*;
  *      3. SIGN_OBJECTB 标记位，值固定为0xBB (short)
  *      4. 循环字段值:
  *          4.1 SIGN_HASNEXT 标记位，值固定为1 (byte)
- *          4.2 字段类型; 1-9为基本类型&字符串; 101-109为基本类型&字符串的数组; 127为Object
+ *          4.2 字段类型; 1-9为基本类型和字符串; 101-109为基本类型和字符串的数组; 127为Object
  *          4.3 字段名 (SmallString)
  *          4.4 字段的值Object
  *      5. SIGN_NONEXT 标记位，值固定为0 (byte)
  *      6. SIGN_OBJECTE 标记位，值固定为0xEE (short)
  *
- * <p> 详情见: http://www.redkale.org
+ * </pre></blockquote>
+ * <p>
+ * 详情见: http://www.redkale.org
+ *
  * @author zhangjx
  */
 public final class BsonConvert extends Convert<BsonReader, BsonWriter> {

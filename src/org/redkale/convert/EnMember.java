@@ -9,11 +9,13 @@ import org.redkale.util.Attribute;
 
 /**
  *
- * <p> 详情见: http://www.redkale.org
+ * <p>
+ * 详情见: http://www.redkale.org
+ *
  * @author zhangjx
- * @param <W>
- * @param <T>
- * @param <F>
+ * @param <W> Writer输出的子类
+ * @param <T> 字段依附的类
+ * @param <F> 字段的数据类型
  */
 @SuppressWarnings("unchecked")
 public final class EnMember<W extends Writer, T, F> implements Comparable<EnMember<W, T, F>> {

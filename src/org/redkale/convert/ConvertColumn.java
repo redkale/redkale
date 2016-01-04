@@ -12,7 +12,9 @@ import static java.lang.annotation.RetentionPolicy.*;
 /**
  * 依附在setter、getter方法、字段进行简单的配置
  *
- * <p> 详情见: http://www.redkale.org
+ * <p>
+ * 详情见: http://www.redkale.org
+ *
  * @author zhangjx
  */
 @Inherited
@@ -25,21 +27,21 @@ public @interface ConvertColumn {
     /**
      * 给字段取个别名， 只对JSON有效
      *
-     * @return
+     * @return 字段别名
      */
     String name() default "";
 
     /**
      * 解析/序列化时是否屏蔽该字段
      *
-     * @return
+     * @return 是否屏蔽该字段
      */
     boolean ignore() default false;
 
     /**
      * 解析/序列化定制化的TYPE
      *
-     * @return
+     * @return JSON or BSON or ALL
      */
     ConvertType type() default ConvertType.ALL;
 }

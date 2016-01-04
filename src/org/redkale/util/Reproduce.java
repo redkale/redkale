@@ -11,8 +11,8 @@ import jdk.internal.org.objectweb.asm.*;
  * 详情见: http://www.redkale.org
  *
  * @author zhangjx
- * @param <D>
- * @param <S>
+ * @param <D> 目标对象的数据类型
+ * @param <S> 源对象的数据类型
  */
 public interface Reproduce<D, S> {
 

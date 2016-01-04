@@ -9,10 +9,12 @@ import java.lang.reflect.Type;
 
 /**
  *
- * <p> 详情见: http://www.redkale.org
+ * <p>
+ * 详情见: http://www.redkale.org
+ *
  * @author zhangjx
- * @param <W>
- * @param <T>
+ * @param <W> Writer输出的子类
+ * @param <T> 序列化的数据类型
  */
 public interface Encodeable<W extends Writer, T> {
 

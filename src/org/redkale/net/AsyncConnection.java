@@ -14,7 +14,9 @@ import java.util.concurrent.*;
 
 /**
  *
- * <p> 详情见: http://www.redkale.org
+ * <p>
+ * 详情见: http://www.redkale.org
+ *
  * @author zhangjx
  */
 public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCloseable {
@@ -89,13 +91,13 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
     /**
      * 创建客户端连接
      *
-     * @param protocol
-     * @param address
-     * @param group
-     * @param readTimeoutSecond0
-     * @param writeTimeoutSecond0
-     * @return
-     * @throws java.io.IOException
+     * @param protocol            连接类型 只能是TCP或UDP
+     * @param address             连接点子
+     * @param group               连接AsynchronousChannelGroup
+     * @param readTimeoutSecond0  读取超时秒数
+     * @param writeTimeoutSecond0 写入超时秒数
+     * @return 连接
+     * @throws java.io.IOException 异常
      */
     public static AsyncConnection create(final String protocol, final AsynchronousChannelGroup group, final SocketAddress address,
             final int readTimeoutSecond0, final int writeTimeoutSecond0) throws IOException {
@@ -428,8 +430,8 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
     /**
      * 通常用于 ssl socket
      *
-     * @param socket
-     * @return
+     * @param socket Socket对象
+     * @return 连接对象
      */
     public static AsyncConnection create(final Socket socket) {
         return create(socket, null, 0, 0);

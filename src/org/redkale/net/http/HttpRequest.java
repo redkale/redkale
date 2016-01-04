@@ -379,7 +379,7 @@ public class HttpRequest extends Request {
     /**
      * 截取getRequestURI最后的一个/后面的部分
      *
-     * @return
+     * @return String
      */
     public String getRequstURILastPath() {
         if (requestURI == null) return "";
@@ -390,8 +390,8 @@ public class HttpRequest extends Request {
      *
      * 从prefix之后截取getRequestURI再对"/"进行分隔
      * <p>
-     * @param prefix
-     * @return
+     * @param prefix 前缀
+     * @return String[]
      */
     public String[] getRequstURIPaths(String prefix) {
         if (requestURI == null || prefix == null) return new String[0];
