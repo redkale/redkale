@@ -9,6 +9,7 @@ import java.util.*;
 import jdk.internal.org.objectweb.asm.*;
 
 /**
+ * MethodVisitor 的调试类
  *
  * <p> 详情见: http://www.redkale.org
  * @author zhangjx
@@ -73,7 +74,7 @@ public class AsmMethodVisitor {
         if (debug) System.out.println("mv.visitVarInsn(" + opcodes[opcode] + ", " + var + ");");
     }
 
-    public void visitJumpInsn(int opcode, Label var) {   //调用次方法的 ClassWriter 必须由 COMPUTE_FRAMES 构建
+    public void visitJumpInsn(int opcode, Label var) {   //调用此方法的 ClassWriter 必须由 COMPUTE_FRAMES 构建
         visitor.visitJumpInsn(opcode, var);
         if (debug) {
             Integer index = labels.get(var);
