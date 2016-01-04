@@ -11,12 +11,16 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * 当使用DistributeGenerator控制主键值时， 如果表A与表B使用同一主键时， 就需要将表A的class标记：
- * DistributeTables({B.class})
- * public class A {
- * }
+ * <blockquote><pre>
+ *  &#64;DistributeTables({B.class})
+ *  public class A {
+ *  }
+ * </pre></blockquote>
  * 这样DistributeGenerator将从A、B表中取最大值来初始化主键值。 常见场景就是表B是数据表A对应的历史表
  *
- * @see http://www.redkale.org
+ * <p>
+ * 详情见: http://www.redkale.org
+ *
  * @author zhangjx
  */
 @Target({TYPE})

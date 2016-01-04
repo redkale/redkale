@@ -12,7 +12,7 @@ import static java.lang.annotation.RetentionPolicy.*;
 /**
  * 依附在setter、getter方法、字段进行简单的配置
  *
- * @see http://www.redkale.org
+ * <p> 详情见: http://www.redkale.org
  * @author zhangjx
  */
 @Inherited

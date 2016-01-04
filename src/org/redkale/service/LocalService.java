@@ -13,7 +13,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * 本地模式注解。
  * 声明为LocalService的Service将不会变成远程模式，只能以本地模式存在， 无论配置文件中是否配置成远程模式都会被忽略。
  *
- * @see http://www.redkale.org
+ * <p> 详情见: http://www.redkale.org
  * @author zhangjx
  */
 @Inherited

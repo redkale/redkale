@@ -13,6 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.redkale.net.*;
 
 /**
+ * <blockquote><pre>
  * 一个WebSocket连接对应一个WebSocket实体，即一个WebSocket会绑定一个TCP连接。
  * WebSocket 有两种模式:
  *  1) 普通模式: 协议上符合HTML5规范, 其流程顺序如下:
@@ -30,10 +31,11 @@ import org.redkale.net.*;
  *      2.3 onRead WebSocket成功连接后回调此方法， 由此方法处理原始的TCP连接， 同时业务代码去控制WebSocket的关闭。
  *
  *  此模式下 以上方法都应该被重载。
+ * </pre></blockquote>
  * <p>
  *
- * 
- * @see http://www.redkale.org
+ *
+ * <p> 详情见: http://www.redkale.org
  * @author zhangjx
  */
 public abstract class WebSocket {

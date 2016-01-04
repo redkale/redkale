@@ -5,6 +5,15 @@ import java.util.function.Predicate;
 import static jdk.internal.org.objectweb.asm.Opcodes.*;
 import jdk.internal.org.objectweb.asm.*;
 
+/**
+ *
+ * <p>
+ * 详情见: http://www.redkale.org
+ *
+ * @author zhangjx
+ * @param <D>
+ * @param <S>
+ */
 public interface Reproduce<D, S> {
 
     public D copy(D dest, S src);

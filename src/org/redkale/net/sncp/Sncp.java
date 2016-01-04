@@ -27,7 +27,7 @@ import org.redkale.service.DynRemote;
  * Service Node Communicate Protocol
  * 生成Service的本地模式或远程模式Service-Class的工具类
  *
- * @see http://www.redkale.org
+ * <p> 详情见: http://www.redkale.org
  * @author zhangjx
  */
 public abstract class Sncp {
@@ -104,27 +104,30 @@ public abstract class Sncp {
     }
 
     /**
+     * <blockquote><pre>
      * public class TestService implements Service{
      *
      *      public String queryNode(){
      *          return "hello";
      *      }
      *
-     *      @MultiRun
+     *      &#64;MultiRun
      *      public String updateSomeThing(String id){
      *          return "hello" + id;
      *      }
      *
-     *      @MultiRun(selfrun = false)
+     *      &#64;MultiRun(selfrun = false)
      *      public void createSomeThing(TestBean bean){
      *          "xxxxx" + bean;
      *      }
      * }
+     * </pre></blockquote>
      *
-     * @SncpDyn(remote = false)
+     * <blockquote><pre>
+     * &#64;SncpDyn(remote = false)
      * public final class _DynLocalTestService extends TestService{
      *
-     *      @Resource
+     *      &#64;Resource
      *      private BsonConvert _convert;
      *
      *      private Transport[] _sameGroupTransports;
@@ -135,22 +138,22 @@ public abstract class Sncp {
      *
      *      private String _selfstring;
      *
-     *      @Override
+     *      &#64;Override
      *      public final String name() {
      *          return "";
      *      }
      *
-     *      @Override
+     *      &#64;Override
      *      public String toString() {
      *          return _selfstring == null ? super.toString() : _selfstring;
      *      }
      *
-     *      @Override
+     *      &#64;Override
      *      public String updateSomeThing(String id){
      *          return _updateSomeThing(true, true, true, id);
      *      }
      *
-     *      @SncpDyn(remote = false)
+     *      &#64;SncpDyn(remote = false)
      *      public String _updateSomeThing(boolean canselfrun, boolean cansamerun, boolean candiffrun, String id){
      *          String rs = super.updateSomeThing(id);
      *          if (_client== null) return;
@@ -159,12 +162,12 @@ public abstract class Sncp {
      *          return rs;
      *      }
      *
-     *      @Override
+     *      &#64;Override
      *      public void createSomeThing(TestBean bean){
      *          _createSomeThing(false, true, true, bean);
      *      }
      *
-     *      @SncpDyn(remote = false)
+     *      &#64;SncpDyn(remote = false)
      *      public void _createSomeThing(boolean canselfrun, boolean cansamerun, boolean candiffrun, TestBean bean){
      *          if(canselfrun) super.createSomeThing(bean);
      *          if (_client== null) return;
@@ -172,8 +175,10 @@ public abstract class Sncp {
      *          _client.remote(_convert, _diffGroupTransports, candiffrun, 1, true, true, false, bean);
      *      }
      * }
+     * </pre></blockquote>
      *
      * 创建Service的本地模式Class
+     *
      * @param <T>
      * @param name
      * @param serviceClass
@@ -759,10 +764,11 @@ public abstract class Sncp {
     }
 
     /**
-     * @SncpDyn(remote = true)
+     * <blockquote><pre>
+     * &#64;SncpDyn(remote = true)
      * public final class _DynRemoteTestService extends TestService{
      *
-     *      @Resource
+     *      &#64;Resource
      *      private BsonConvert _convert;
      *
      *      private Transport _transport;
@@ -771,31 +777,32 @@ public abstract class Sncp {
      *
      *      private String _selfstring;
      *
-     *      @Override
+     *      &#64;Override
      *      public final String name() {
      *          return "";
      *      }
      *
-     *      @Override
+     *      &#64;Override
      *      public String toString() {
      *          return _selfstring == null ? super.toString() : _selfstring;
      *      }
      *
-     *      @Override
+     *      &#64;Override
      *      public boolean testChange(TestBean bean) {
      *          return _client.remote(_convert, _transport, 0, bean);
      *      }
      *
-     *      @Override
+     *      &#64;Override
      *      public TestBean findTestBean(long id) {
      *          return _client.remote(_convert, _transport, 1, id);
      *      }
      *
-     *      @Override
+     *      &#64;Override
      *      public void runTestBean(long id, TestBean bean) {
      *          _client.remote(_convert, _transport, 2, id, bean);
      *      }
      * }
+     * </pre></blockquote>
      *
      * 创建远程模式的Service实例
      * <p>

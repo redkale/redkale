@@ -13,7 +13,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * SNCP协议中用于CompletionHandler回调函数中的attach字段。
  *
  *
- * @see http://www.redkale.org
+ * <p> 详情见: http://www.redkale.org
  * @author zhangjx
  */
 @Inherited

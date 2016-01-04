@@ -24,7 +24,7 @@ import org.redkale.util.*;
  * 同时提供发送json的系列接口: public void finishJson(Type type, Object obj)
  * RedKale提倡http+json的接口风格， 所以主要输出的数据格式为json， 同时提供异步接口。
  *
- * @see http://www.redkale.org
+ * <p> 详情见: http://www.redkale.org
  * @author zhangjx
  *
  * @param <R>

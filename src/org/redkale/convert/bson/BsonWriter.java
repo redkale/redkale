@@ -12,7 +12,7 @@ import org.redkale.util.*;
 
 /**
  *
- * @see http://www.redkale.org
+ * <p> 详情见: http://www.redkale.org
  * @author zhangjx
  */
 public class BsonWriter implements Writer {

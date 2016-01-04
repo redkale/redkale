@@ -15,7 +15,9 @@ import org.redkale.util.*;
 
 /**
  *
- * @see http://www.redkale.org
+ * <p>
+ * 详情见: http://www.redkale.org
+ *
  * @author zhangjx
  */
 public final class FilterNodeBean<T> implements Comparable<FilterNodeBean<T>> {

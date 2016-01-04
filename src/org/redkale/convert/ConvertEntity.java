@@ -14,7 +14,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * 该值必须是全局唯一
  * 使用场景: 当BSON序列化为了不指定class可以使用@ConvertEntity来取个别名。关联方法:  Reader.readClassName() 和  Writer.wirteClassName(String value) 。
  *
- * @see http://www.redkale.org
+ * <p> 详情见: http://www.redkale.org
  * @author zhangjx
  */
 @Inherited

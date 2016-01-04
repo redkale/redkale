@@ -10,7 +10,7 @@ import org.redkale.convert.*;
 
 /**
  *
- * @see http://www.redkale.org
+ * <p> 详情见: http://www.redkale.org
  * @author zhangjx
  * @param <R>
  * @param <W>

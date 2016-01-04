@@ -14,7 +14,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * 本地模式：动态生成的_DynLocalXXXService类、其带有@MultiRun方法均会打上@SncpDyn(remote = false, index=N) 的注解
  * 远程模式：动态生成的_DynRemoteXXXService类会打上@SncpDyn(remote = true) 的注解
  *
- * @see http://www.redkale.org
+ * <p> 详情见: http://www.redkale.org
  * @author zhangjx
  */
 @Inherited

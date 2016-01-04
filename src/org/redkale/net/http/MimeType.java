@@ -9,7 +9,7 @@ import java.util.*;
 
 /**
  *
- * @see http://www.redkale.org
+ * <p> 详情见: http://www.redkale.org
  * @author zhangjx
  */
 public class MimeType {

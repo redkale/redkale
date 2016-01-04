@@ -24,7 +24,7 @@ import org.redkale.service.DynCall;
 
 /**
  *
- * @see http://www.redkale.org
+ * <p> 详情见: http://www.redkale.org
  * @author zhangjx
  */
 public final class SncpClient {

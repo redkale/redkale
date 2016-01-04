@@ -16,7 +16,7 @@ import org.redkale.util.*;
  * private HashMap<String, XXXService> nodemap;
  * 被注入的多个XXXService实例 但不会包含自身的XXXService。
  *
- * @see http://www.redkale.org
+ * <p> 详情见: http://www.redkale.org
  * @author zhangjx
  */
 public interface Service {

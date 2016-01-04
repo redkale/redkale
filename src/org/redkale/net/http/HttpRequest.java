@@ -23,7 +23,7 @@ import org.redkale.net.*;
  * 获取页号: int page = request.getRequstURIPath("page:", 1);
  * 获取行数: int size = request.getRequstURIPath("size:", 10);
  *
- * @see http://www.redkale.org
+ * <p> 详情见: http://www.redkale.org
  * @author zhangjx
  */
 public class HttpRequest extends Request {

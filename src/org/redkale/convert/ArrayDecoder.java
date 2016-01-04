@@ -13,7 +13,7 @@ import java.util.*;
  * 数组长度不能超过 32767。  在BSON中数组长度设定的是short，对于大于32767长度的数组传输会影响性能，所以没有采用int存储。
  * 支持一定程度的泛型。
  * 
- * @see http://www.redkale.org
+ * <p> 详情见: http://www.redkale.org
  * @author zhangjx
  * @param <T>
  */

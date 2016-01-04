@@ -14,7 +14,7 @@ import java.util.concurrent.*;
 
 /**
  *
- * @see http://www.redkale.org
+ * <p> 详情见: http://www.redkale.org
  * @author zhangjx
  */
 public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCloseable {

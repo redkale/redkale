@@ -9,7 +9,7 @@ import java.lang.reflect.Type;
 
 /**
  *
- * @see http://www.redkale.org
+ * <p> 详情见: http://www.redkale.org
  * @author zhangjx
  * @param <W>
  * @param <T>
@@ -21,7 +21,7 @@ public interface Encodeable<W extends Writer, T> {
     /**
      * 泛型映射接口
      *
-     * @return
+     * @return 返回序列化对象类的数据类型
      */
     public Type getType();
 

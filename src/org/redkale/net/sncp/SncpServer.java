@@ -16,7 +16,7 @@ import org.redkale.watch.*;
 /**
  * Service Node Communicate Protocol
  *
- * @see http://www.redkale.org
+ * <p> 详情见: http://www.redkale.org
  * @author zhangjx
  */
 public final class SncpServer extends Server {

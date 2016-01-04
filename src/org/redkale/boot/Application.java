@@ -37,7 +37,7 @@ import org.w3c.dom.*;
  * 最后进行Service、Servlet与其他资源之间的依赖注入。
  *
  *
- * @see http://www.redkale.org
+ * <p> 详情见: http://www.redkale.org
  * @author zhangjx
  */
 public final class Application {

@@ -16,7 +16,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * 3、被标记为@Ignore的Service类不会被自动加载
  * 4、被标记为@Ignore的Servlet类不会被自动加载
  *
- * @see http://www.redkale.org
+ * <p> 详情见: http://www.redkale.org
  * @author zhangjx
  */
 @Inherited

@@ -11,7 +11,7 @@ import java.util.Map;
 
 /**
  *
- * @see http://www.redkale.org
+ * <p> 详情见: http://www.redkale.org
  * @author zhangjx
  * @param <K>
  * @param <V>

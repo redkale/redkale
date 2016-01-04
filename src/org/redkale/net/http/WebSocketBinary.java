@@ -12,7 +12,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 /**
  * 被标记为 @WebSocketBinary 的WebSocketServlet 将使用原始的TCP传输,  通常用于类似音频/视频传输场景
  *
- * @see http://www.redkale.org
+ * <p> 详情见: http://www.redkale.org
  * @author zhangjx
  */
 @Inherited

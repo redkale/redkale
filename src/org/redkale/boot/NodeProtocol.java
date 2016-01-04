@@ -9,7 +9,7 @@ import java.lang.annotation.*;
 
 /**
  *
- * @see http://www.redkale.org
+ * <p> 详情见: http://www.redkale.org
  * @author zhangjx
  */
 @Target({ElementType.TYPE})

@@ -29,7 +29,7 @@ import org.redkale.util.*;
  *      5. SIGN_NONEXT 标记位，值固定为0 (byte)
  *      6. SIGN_OBJECTE 标记位，值固定为0xEE (short)
  *
- * @see http://www.redkale.org
+ * <p> 详情见: http://www.redkale.org
  * @author zhangjx
  */
 public final class BsonConvert extends Convert<BsonReader, BsonWriter> {

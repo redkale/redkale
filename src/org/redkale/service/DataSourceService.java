@@ -15,7 +15,7 @@ import org.redkale.util.*;
 /**
  * DataSource对应的Service类， 该类主要特点是将所有含FilterBean参数的方法重载成FilterNode对应的方法。
  *
- * @see http://www.redkale.org
+ * <p> 详情见: http://www.redkale.org
  * @author zhangjx
  */
 @AutoLoad(false)

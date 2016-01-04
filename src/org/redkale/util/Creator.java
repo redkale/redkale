@@ -15,10 +15,11 @@ import jdk.internal.org.objectweb.asm.Type;
 import static jdk.internal.org.objectweb.asm.Opcodes.*;
 
 /**
- * 实现一个类的构造方法。 代替低效的反射实现方式。 不支持数组类。
- * 常见的无参数的构造函数类都可以自动生成Creator， 对应自定义的类可以提供一个静态构建Creator方法。
- * 
+ * <p>
+ * 实现一个类的构造方法。 代替低效的反射实现方式。 不支持数组类。 <br/>
+ * 常见的无参数的构造函数类都可以自动生成Creator， 对应自定义的类可以提供一个静态构建Creator方法。  <br/>
  * 例如: 
+ * <blockquote><pre>
  * public class Record {
  * 
  *    private final int id;
@@ -31,36 +32,43 @@ import static jdk.internal.org.objectweb.asm.Opcodes.*;
  *    }
  * 
  *    private static Creator createCreator() {
- *        return new Creator<Record>() {
- *            @Override
- *            @ConstructorParameters({"id", "name"})
+ *        return new Creator&lt;Record&gt;() {
+ *            &#64;Override
+ *            &#64;ConstructorParameters({"id", "name"})
  *            public Record create(Object... params) {
+ *                if(params[0] == null) params[0] = 0;
  *                return new Record((Integer) params[0], (String) params[1]);
  *            }
  *         };
  *    }
  * }
+ * </pre></blockquote>
  * 
  * 或者: 
+ * <blockquote><pre>
  * public class Record {
  * 
  *    private final int id;
  * 
  *    private String name;
  *    
- *    @ConstructorProperties({"id", "name"})
+ *    &#64;java.beans.ConstructorProperties({"id", "name"})
  *    public Record(int id, String name) {
  *        this.id = id;
  *        this.name = name;
  *    }
  * }
- *
- * @see http://www.redkale.org
+ * </pre></blockquote>
+ * 
+ * <p> 详情见: http://www.redkale.org
  * @author zhangjx
  * @param <T>
  */
 public interface Creator<T> {
-
+    /**
+     * 该注解只用于Creator.create方法上， 与 java.beans.ConstructorProperties 类似。
+     * 
+     */
     @Documented
     @Target({METHOD})
     @Retention(RUNTIME)
@@ -68,9 +76,21 @@ public interface Creator<T> {
 
         String[] value();
     }
-
+    /**
+     * 创建对象
+     * 
+     * @param params  构造函数的参数
+     * @return 
+     */
     public T create(Object... params);
-
+    
+    /**
+     * 根据指定的class采用ASM技术生产Creator。
+     * 
+     * @param <T> 构建类的数据类型
+     * @param clazz  构建类
+     * @return 
+     */
     @SuppressWarnings("unchecked")
     public static <T> Creator<T> create(Class<T> clazz) {
         if (clazz.isAssignableFrom(ArrayList.class)) {

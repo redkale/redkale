@@ -10,7 +10,9 @@ import java.util.*;
 /**
  * 页集合。 结构由一个total总数和一个List列表组合而成。
  *
- * @see http://www.redkale.org
+ * <p>
+ * 详情见: http://www.redkale.org
+ *
  * @author zhangjx
  * @param <T>
  */

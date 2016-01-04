@@ -17,21 +17,24 @@ import org.redkale.net.*;
 import org.redkale.util.*;
 
 /**
+ * <blockquote><pre>
  * 当WebSocketServlet接收一个TCP连接后，进行协议判断，如果成功就会创建一个WebSocket。
- * 
+ *
  *                                    WebSocketServlet
  *                                            |
  *                                            |
- *                                    WebSocketEngine   
+ *                                    WebSocketEngine
  *                                    /             \
  *                                 /                  \
  *                              /                       \
  *                     WebSocketGroup1            WebSocketGroup2
  *                        /        \                /        \
- *                      /           \             /           \  
+ *                      /           \             /           \
  *               WebSocket1     WebSocket2   WebSocket3    WebSocket4
  *
- * @see http://www.redkale.org
+ * </pre></blockquote>
+ *
+ * <p> 详情见: http://www.redkale.org
  * @author zhangjx
  */
 public abstract class WebSocketServlet extends HttpServlet {

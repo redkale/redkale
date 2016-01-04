@@ -9,36 +9,113 @@ import static jdk.internal.org.objectweb.asm.Opcodes.*;
 import jdk.internal.org.objectweb.asm.*;
 
 /**
- * 该类功能是动态映射一个Data类中成员对应的getter、setter方法； 代替低效的反射实现方式。
- * 映射Field时，field必须满足以下条件之一：
- *  1、field属性是public且非final
- *  2、至少存在对应的getter、setter方法中的一个
- * 当不存在getter方法时，get操作规定返回null
- * 当不存在setter方法时，set操作为空方法 
+ * 该类实现动态映射一个JavaBean类中成员对应的getter、setter方法； 代替低效的反射实现方式。 <br>
+ * <p>
+ * <blockquote><pre>
+ *  public class Record {
  *
- * @see http://www.redkale.org
+ *      private String name;
+ *
+ *      public String getName() {
+ *          return name;
+ *      }
+ *
+ *      public void setName(String name) {
+ *          this.name = name;
+ *      }
+ *  }
+ * </pre></blockquote>
+ * 获取name的 Attribute ：
+ * <blockquote><pre>
+ *  Attribute&lt;Record, String&gt; nameAction = Attribute.create(Record.class.getDeclaredField("name"));
+ * </pre></blockquote>
+ * 等价于:
+ * <blockquote><pre>
+ *  Attribute&lt;Record, String&gt; nameAction = new Attribute&lt;Record, String&gt;() {
+ *
+ *      &#64;Override
+ *      public String field() {
+ *          return "name";
+ *      }
+ *
+ *      &#64;Override
+ *      public String get(Record obj) {
+ *          return obj.getName();
+ *      }
+ *
+ *      &#64;Override
+ *      public void set(Record obj, String value) {
+ *          obj.setName(value);
+ *      }
+ *
+ *      &#64;Override
+ *      public Class type() {
+ *          return String.class;
+ *      }
+ *
+ *      &#64;Override
+ *      public Class declaringClass() {
+ *          return Record.class;
+ *      }
+ *  };
+ * </pre></blockquote>
+ * <p>
+ * 映射Field时，field必须满足以下条件之一： <br>
+ * 1、field属性是public且非final <br>
+ * 2、至少存在对应的getter、setter方法中的一个 <br>
+ * 当不存在getter方法时，get操作固定返回null <br>
+ * 当不存在setter方法时，set操作为空方法  <br>
+ *
+ * <p> 详情见: http://www.redkale.org
  * @author zhangjx
  * @param <T>
  * @param <F>
  */
 public interface Attribute<T, F> {
 
+    /**
+     * 返回字段的数据类型
+     *
+     * @return
+     */
     public Class<? extends F> type();
 
+    /**
+     * 返回字段依附的类名
+     *
+     * @return
+     */
     public Class<T> declaringClass();
 
+    /**
+     * 返回字段名
+     *
+     * @return
+     */
     public String field();
 
+    /**
+     * 获取指定对象的该字段的值
+     *
+     * @param obj 指定对象
+     * @return
+     */
     public F get(T obj);
 
+    /**
+     * 给指定对象的该字段赋值
+     *
+     * @param obj   指定对象
+     * @param value 字段新值
+     */
     public void set(T obj, F value);
 
     /**
      * 根据一个Field生成 Attribute 对象。
      *
-     * @param <T>
-     * @param <F>
-     * @param field
+     * @param <T>   依附类的类型
+     * @param <F>   字段类型
+     * @param field 字段，如果该字段不存在则抛异常
      * @return
      */
     public static <T, F> Attribute<T, F> create(final java.lang.reflect.Field field) {
@@ -48,23 +125,23 @@ public interface Attribute<T, F> {
     /**
      * 根据一个Field和field的别名生成 Attribute 对象。
      *
-     * @param <T>
-     * @param <F>
-     * @param fieldname 别名
-     * @param field
+     * @param <T>        依附类的类型
+     * @param <F>        字段类型
+     * @param fieldalias 别名
+     * @param field      字段，如果该字段不存在则抛异常
      * @return
      */
-    public static <T, F> Attribute<T, F> create(String fieldname, final java.lang.reflect.Field field) {
-        return create((Class<T>) field.getDeclaringClass(), fieldname, field, null, null);
+    public static <T, F> Attribute<T, F> create(String fieldalias, final java.lang.reflect.Field field) {
+        return create((Class<T>) field.getDeclaringClass(), fieldalias, field, null, null);
     }
 
     /**
-     * 根据一个Class和field名生成 Attribute 对象。
+     * 根据一个Class和field真实名称生成 Attribute 对象。
      *
-     * @param <T>
-     * @param <F>
-     * @param clazz
-     * @param fieldname 字段名， 如果该字段不存在则抛异常
+     * @param <T>       依附类的类型
+     * @param <F>       字段类型
+     * @param clazz     指定依附的类
+     * @param fieldname 字段名，如果该字段不存在则抛异常
      * @return
      */
     public static <T, F> Attribute<T, F> create(Class<T> clazz, final String fieldname) {
@@ -75,119 +152,145 @@ public interface Attribute<T, F> {
         }
     }
 
+    /**
+     * 根据一个Class和Field生成 Attribute 对象。
+     *
+     * @param <T>   依附类的类型
+     * @param <F>   字段类型
+     * @param clazz 指定依附的类
+     * @param field 字段，如果该字段不存在则抛异常
+     * @return
+     */
     public static <T, F> Attribute<T, F> create(Class<T> clazz, final java.lang.reflect.Field field) {
         return create(clazz, field.getName(), field);
     }
 
-    public static <T, F> Attribute<T, F> create(Class<T> clazz, final String fieldname, final java.lang.reflect.Field field) {
-        return create(clazz, fieldname, field, null, null);
-    }
-    
     /**
-     * getter、setter不能全为null
-     * 
-     * @param <T>
-     * @param <F>
-     * @param getter
-     * @param setter
-     * @return 
+     * 根据一个Class、field别名和Field生成 Attribute 对象。
+     *
+     * @param <T>        依附类的类型
+     * @param <F>        字段类型
+     * @param clazz      指定依附的类
+     * @param fieldalias 字段别名
+     * @param field      字段，如果该字段不存在则抛异常
+     * @return
+     */
+    public static <T, F> Attribute<T, F> create(Class<T> clazz, final String fieldalias, final java.lang.reflect.Field field) {
+        return create(clazz, fieldalias, field, null, null);
+    }
+
+    /**
+     * 根据一个getter和setter方法生成 Attribute 对象。 <br/>
+     * tgetter、setter不能同时为null
+     *
+     * @param <T>    依附类的类型
+     * @param <F>    字段类型
+     * @param getter getter方法
+     * @param setter setter方法
+     * @return
      */
     public static <T, F> Attribute<T, F> create(final java.lang.reflect.Method getter, final java.lang.reflect.Method setter) {
         return create((Class) (getter == null ? setter.getDeclaringClass() : getter.getDeclaringClass()), null, null, getter, setter);
     }
+
     /**
-     * getter、setter不能全为null
-     * 
-     * @param <T>
-     * @param <F>
-     * @param clazz
-     * @param getter
-     * @param setter
-     * @return 
+     * 根据Class、getter和setter方法生成 Attribute 对象。 <br/>
+     * tgetter、setter不能同时为null
+     *
+     * @param <T>    依附类的类型
+     * @param <F>    字段类型
+     * @param clazz  指定依附的类
+     * @param getter getter方法
+     * @param setter setter方法
+     * @return
      */
     public static <T, F> Attribute<T, F> create(Class<T> clazz, final java.lang.reflect.Method getter, final java.lang.reflect.Method setter) {
         return create(clazz, null, null, getter, setter);
     }
+
     /**
-     * getter、setter不能全为null
-     * 
-     * @param <T>
-     * @param <F>
-     * @param clazz
-     * @param fieldalias
-     * @param getter
-     * @param setter
-     * @return 
+     * 根据Class、字段别名、getter和setter方法生成 Attribute 对象。 <br/>
+     * tgetter、setter不能同时为null
+     *
+     * @param <T>        依附类的类型
+     * @param <F>        字段类型
+     * @param clazz      指定依附的类
+     * @param fieldalias 字段别名
+     * @param getter     getter方法
+     * @param setter     setter方法
+     * @return
      */
     public static <T, F> Attribute<T, F> create(Class<T> clazz, final String fieldalias, final java.lang.reflect.Method getter, final java.lang.reflect.Method setter) {
         return create(clazz, fieldalias, null, getter, setter);
     }
-    
+
     /**
-     * field、getter、setter不能全为null 
-     * @param <T>
-     * @param <F>
-     * @param clazz
-     * @param fieldalias0
-     * @param field0
-     * @param getter0
-     * @param setter0
-     * @return 
+     * 根据Class、字段别名、Field、getter和setter方法生成 Attribute 对象。 <br/>
+     * Field、tgetter、setter不能同时为null
+     *
+     * @param <T>        依附类的类型
+     * @param <F>        字段类型
+     * @param clazz      指定依附的类
+     * @param fieldalias 字段别名
+     * @param field      字段
+     * @param getter     getter方法
+     * @param setter     setter方法
+     * @return
      */
     @SuppressWarnings("unchecked")
-    public static <T, F> Attribute<T, F> create(final Class<T> clazz, String fieldalias0, final java.lang.reflect.Field field0, java.lang.reflect.Method getter0, java.lang.reflect.Method setter0) {
-        if (fieldalias0 != null && fieldalias0.isEmpty()) fieldalias0 = null;
-        int mod = field0 == null ? java.lang.reflect.Modifier.STATIC : field0.getModifiers();
-        if (field0 != null && !java.lang.reflect.Modifier.isStatic(mod) && !java.lang.reflect.Modifier.isPublic(mod)) {
-            Class t = field0.getType();
-            char[] fs = field0.getName().toCharArray();
+    public static <T, F> Attribute<T, F> create(final Class<T> clazz, String fieldalias, final java.lang.reflect.Field field, java.lang.reflect.Method getter, java.lang.reflect.Method setter) {
+        if (fieldalias != null && fieldalias.isEmpty()) fieldalias = null;
+        int mod = field == null ? java.lang.reflect.Modifier.STATIC : field.getModifiers();
+        if (field != null && !java.lang.reflect.Modifier.isStatic(mod) && !java.lang.reflect.Modifier.isPublic(mod)) {
+            Class t = field.getType();
+            char[] fs = field.getName().toCharArray();
             fs[0] = Character.toUpperCase(fs[0]);
             String mn = new String(fs);
-            if (getter0 == null) {
+            if (getter == null) {
                 String prefix = t == boolean.class || t == Boolean.class ? "is" : "get";
                 try {
-                    getter0 = clazz.getMethod(prefix + mn);
+                    getter = clazz.getMethod(prefix + mn);
                 } catch (Exception ex) {
                 }
             }
-            if (setter0 == null) {
+            if (setter == null) {
                 try {
-                    setter0 = clazz.getMethod("set" + mn, field0.getType());
+                    setter = clazz.getMethod("set" + mn, field.getType());
                 } catch (Exception ex) {
                 }
             }
         }
-        final java.lang.reflect.Field field = field0 == null ? null : (!java.lang.reflect.Modifier.isPublic(mod) || java.lang.reflect.Modifier.isStatic(mod) ? null : field0);
-        final java.lang.reflect.Method getter = getter0;
-        final java.lang.reflect.Method setter = setter0;
-        if (fieldalias0 == null) {
-            if (field0 != null) {
-                fieldalias0 = field0.getName();
+        final java.lang.reflect.Field tfield = field == null ? null : (!java.lang.reflect.Modifier.isPublic(mod) || java.lang.reflect.Modifier.isStatic(mod) ? null : field);
+        final java.lang.reflect.Method tgetter = getter;
+        final java.lang.reflect.Method tsetter = setter;
+        if (fieldalias == null) {
+            if (field != null) {
+                fieldalias = field.getName();
             } else {
                 String s;
-                if (getter0 != null) {
-                    s = getter0.getName().substring(getter0.getName().startsWith("is") ? 2 : 3);
+                if (getter != null) {
+                    s = getter.getName().substring(getter.getName().startsWith("is") ? 2 : 3);
                 } else {
-                    s = setter0.getName().substring(3);
+                    s = setter.getName().substring(3);
                 }
                 char[] d = s.toCharArray();
                 if (d.length < 2 || Character.isLowerCase(d[1])) {
                     d[0] = Character.toLowerCase(d[0]);
                 }
-                fieldalias0 = new String(d);
+                fieldalias = new String(d);
             }
         }
-        if (getter == null && setter == null && field == null) {
+        if (tgetter == null && tsetter == null && tfield == null) {
             throw new RuntimeException("[" + clazz + "]have no public field or setter or getter");
         }
-        final String fieldname = fieldalias0;
+        final String fieldname = fieldalias;
         Class column;
-        if (field != null) { // public field
-            column = field.getType();
-        } else if (getter != null) {
-            column = getter.getReturnType();
-        } else { // setter != null
-            column = setter.getParameterTypes()[0];
+        if (tfield != null) { // public tfield
+            column = tfield.getType();
+        } else if (tgetter != null) {
+            column = tgetter.getReturnType();
+        } else { // tsetter != null
+            column = tsetter.getParameterTypes()[0];
         }
         final Class pcolumn = column;
         if (column.isPrimitive()) column = java.lang.reflect.Array.get(java.lang.reflect.Array.newInstance(column, 1), 0).getClass();
@@ -266,12 +369,12 @@ public interface Attribute<T, F> {
         { //get 方法
             mv = cw.visitMethod(ACC_PUBLIC, "get", "(" + interDesc + ")" + columnDesc, null, null);
             int m = 1;
-            if (getter == null) {
-                if (field == null) {
+            if (tgetter == null) {
+                if (tfield == null) {
                     mv.visitInsn(ACONST_NULL);
-                } else {  //public field
+                } else {  //public tfield
                     mv.visitVarInsn(ALOAD, 1);
-                    mv.visitFieldInsn(GETFIELD, interName, field.getName(), Type.getDescriptor(pcolumn));
+                    mv.visitFieldInsn(GETFIELD, interName, tfield.getName(), Type.getDescriptor(pcolumn));
                     if (pcolumn != column) {
                         mv.visitMethodInsn(INVOKESTATIC, columnName, "valueOf", "(" + Type.getDescriptor(pcolumn) + ")" + columnDesc, false);
                         m = 2;
@@ -279,7 +382,7 @@ public interface Attribute<T, F> {
                 }
             } else {
                 mv.visitVarInsn(ALOAD, 1);
-                mv.visitMethodInsn(INVOKEVIRTUAL, interName, getter.getName(), Type.getMethodDescriptor(getter), false);
+                mv.visitMethodInsn(INVOKEVIRTUAL, interName, tgetter.getName(), Type.getMethodDescriptor(tgetter), false);
                 if (pcolumn != column) {
                     mv.visitMethodInsn(INVOKESTATIC, columnName, "valueOf", "(" + Type.getDescriptor(pcolumn) + ")" + columnDesc, false);
                     m = 2;
@@ -292,10 +395,10 @@ public interface Attribute<T, F> {
         { //set 方法
             mv = cw.visitMethod(ACC_PUBLIC, "set", "(" + interDesc + columnDesc + ")V", null, null);
             int m = 2;
-            if (setter == null) {
-                if (field == null || java.lang.reflect.Modifier.isFinal(field.getModifiers())) {
+            if (tsetter == null) {
+                if (tfield == null || java.lang.reflect.Modifier.isFinal(tfield.getModifiers())) {
                     m = 0;
-                } else { //public field
+                } else { //public tfield
                     mv.visitVarInsn(ALOAD, 1);
                     mv.visitVarInsn(ALOAD, 2);
                     if (pcolumn != column) {
@@ -307,7 +410,7 @@ public interface Attribute<T, F> {
                             throw new RuntimeException(ex); //不可能会发生
                         }
                     }
-                    mv.visitFieldInsn(PUTFIELD, interName, field.getName(), Type.getDescriptor(pcolumn));
+                    mv.visitFieldInsn(PUTFIELD, interName, tfield.getName(), Type.getDescriptor(pcolumn));
                 }
             } else {
                 mv.visitVarInsn(ALOAD, 1);
@@ -321,7 +424,7 @@ public interface Attribute<T, F> {
                         throw new RuntimeException(ex); //不可能会发生
                     }
                 }
-                mv.visitMethodInsn(INVOKEVIRTUAL, interName, setter.getName(), Type.getMethodDescriptor(setter), false);
+                mv.visitMethodInsn(INVOKEVIRTUAL, interName, tsetter.getName(), Type.getMethodDescriptor(tsetter), false);
             }
             mv.visitInsn(RETURN);
             mv.visitMaxs(m, 3);

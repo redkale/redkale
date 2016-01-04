@@ -10,7 +10,7 @@ import org.redkale.util.*;
 
 /**
  *
- * @see http://www.redkale.org
+ * <p> 详情见: http://www.redkale.org
  * @author zhangjx
  */
 public abstract class HttpServlet extends Servlet<HttpRequest, HttpResponse<HttpRequest>> {
