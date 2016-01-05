@@ -116,7 +116,7 @@
     <span class="o">}</span>
 <span class="o">}</span>
                 </pre></div>
-            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;由以上等价的代码可见，本地模式Service会重载被@MultiRun注解的方法。@MultiRun有以下几个参数: </p>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;由以上等价的代码可以看出来，本地模式Service会重载被@MultiRun注解的方法。@MultiRun有以下几个参数: </p>
             <div class="highlight"><pre><span class="kd">public</span> <span class="nd">@interface</span> <span class="n">MultiRun</span> <span class="o">{</span>
 
     <span class="kt">boolean</span> <span class="nf">selfrun</span><span class="o">()</span> <span class="k">default</span> <span class="kc">true</span><span class="o">;</span> <span class="c1">//当前本地实例是否运行指定操作；只有当指定操作的方法的返回值为void时，该值才能为true，否则忽略。</span>
