@@ -113,14 +113,14 @@ public abstract class Sncp {
      *          return "hello";
      *      }
      *
-     *      &#64;MultiRun
-     *      public String updateSomeThing(String id){
-     *          return "hello" + id;
-     *      }
-     *
      *      &#64;MultiRun(selfrun = false)
      *      public void createSomeThing(TestBean bean){
      *          "xxxxx" + bean;
+     *      }
+     * 
+     *      &#64;MultiRun
+     *      public String updateSomeThing(String id){
+     *          return "hello" + id;
      *      }
      * }
      * </pre></blockquote>
@@ -151,30 +151,30 @@ public abstract class Sncp {
      *      }
      *
      *      &#64;Override
+     *      public void createSomeThing(TestBean bean){
+     *          _createSomeThing(false, true, true, bean);
+     *      }
+     *
+     *      &#64;SncpDyn(remote = false, index = 0)
+     *      public void _createSomeThing(boolean selfrunnable, boolean samerunnable, boolean diffrunnable, TestBean bean){
+     *          if(selfrunnable) super.createSomeThing(bean);
+     *          if (_client== null) return;
+     *          if (samerunnable) _client.remote(_convert, _sameGroupTransports, 1, true, false, false, bean);
+     *          if (diffrunnable) _client.remote(_convert, _diffGroupTransports, 1, true, true, false, bean);
+     *      }
+     * 
+     *      &#64;Override
      *      public String updateSomeThing(String id){
      *          return _updateSomeThing(true, true, true, id);
      *      }
      *
-     *      &#64;SncpDyn(remote = false)
+     *      &#64;SncpDyn(remote = false, index = 1)
      *      public String _updateSomeThing(boolean selfrunnable, boolean samerunnable, boolean diffrunnable, String id){
      *          String rs = super.updateSomeThing(id);
      *          if (_client== null) return;
      *          if (samerunnable) _client.remote(_convert, _sameGroupTransports, 0, true, false, false, id);
      *          if (diffrunnable) _client.remote(_convert, _diffGroupTransports, 0, true, true, false, id);
      *          return rs;
-     *      }
-     *
-     *      &#64;Override
-     *      public void createSomeThing(TestBean bean){
-     *          _createSomeThing(false, true, true, bean);
-     *      }
-     *
-     *      &#64;SncpDyn(remote = false)
-     *      public void _createSomeThing(boolean selfrunnable, boolean samerunnable, boolean diffrunnable, TestBean bean){
-     *          if(selfrunnable) super.createSomeThing(bean);
-     *          if (_client== null) return;
-     *          if (samerunnable) _client.remote(_convert, _sameGroupTransports, 1, true, false, false, bean);
-     *          if (diffrunnable) _client.remote(_convert, _diffGroupTransports, 1, true, true, false, bean);
      *      }
      * }
      * </pre></blockquote>
