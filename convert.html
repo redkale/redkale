@@ -24,11 +24,11 @@
         </section>
 
         <section class="main-content">
-            <h3><a id="welcome-to-github-pages" class="anchor" href="#" aria-hidden="true"><span class="octicon octicon-link"></span></a>Convert 组件介绍</h3>
+            <h3><a id="convert_intro" class="anchor" href="#" aria-hidden="true"><span class="octicon octicon-link"></span></a>Convert 组件介绍</h3>
 
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Convert 是一个比较独立的组件，仅依赖于util包。提供Java对象的序列化与反解析功能。支持JSON(JavaScript Object Notation)、BSON(Binary Stream Object Notation)两种格式化。 两种格式使用方式完全一样，其性能都大幅度超过其他JSON框架。同时JSON内置于HTTP协议中，BSON也是SNCP协议数据序列化的基础。<br/></p>
 
-            <h3><a id="welcome-to-github-pages" class="anchor" href="#" aria-hidden="true"><span class="octicon octicon-link"></span></a>Convert 快速上手</h3>
+            <h3><a id="convert_study" class="anchor" href="#" aria-hidden="true"><span class="octicon octicon-link"></span></a>Convert 快速上手</h3>
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;本介绍仅以JSON为例(BSON与JSON使用方式雷同)。其操作类主要是JsonConvert，配置类主要是JsonFactory、ConvertColumn。</br></p>
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;JsonConvert 序列化encode方法：</p>
 
@@ -65,8 +65,8 @@
         <span class="n">resp</span><span class="o">.</span><span class="na">setContentType</span><span class="o">(</span><span class="s">&quot;text/json; charset=UTF-8&quot;</span><span class="o">);</span>
         <span class="n">resp</span><span class="o">.</span><span class="na">getOutputStream</span><span class="o">().</span><span class="na">write</span><span class="o">(</span><span class="n">json</span><span class="o">.</span><span class="na">getBytes</span><span class="o">(</span><span class="s">&quot;UTF-8&quot;</span><span class="o">));</span>
     <span class="o">}</span></pre></div>
-    <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;几乎所有的JSON框架提供的接口以String作为返回结果为主，其内在都是以char[]作为JsonWriter的载体。以Gson为例，Gson拼接JSON默认使用的是StringWriter，StringWriter的扩容策略是翻倍。为了方便计算，假设一个对象转换成JSON字符串大小为了10K。Gson在转换过程中产生的临时的char[]的大小: 16 + 32 + 64 + 128 + 256 + 512 + 1K + 2K + 4K + 8K + 16K = 32K, char[]转换成最终的String结果又会产生10K的char[], 最后在response输出时又回产生10K的byte[]（方便计算不考虑双字节）,也就是说整个对象输出过程中会产生52K的临时数据。而且常见的HTTP服务器(如实现java-servlet规范的服务器)不会把底层的ByteBuffer对象池暴露给上层。所以目前所有使用其他JSON框架输出数据都会产生5倍于数据体积大小(其他低于1倍扩容策略的框架会产生更多)的垃圾数据。<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;RedKale框架的HTTP服务内置了Convert的JSON接口，避免了这么大量的垃圾数据产生。finishJson方法将HTTP服务的ByteBuffer对象池传给Convert， 使Convert在序列化过程中直接以UTF-8编码方式输出到ByteBuffer里。</p>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;几乎所有的JSON框架提供的接口以String作为返回结果为主，其内在都是以char[]作为JsonWriter的载体。以Gson为例，Gson拼接JSON默认使用的是StringWriter，StringWriter的扩容策略是翻倍。为了方便计算，假设一个对象转换成JSON字符串大小为了10K。Gson在转换过程中产生的临时的char[]的大小: 16 + 32 + 64 + 128 + 256 + 512 + 1K + 2K + 4K + 8K + 16K = 32K, char[]转换成最终的String结果又会产生10K的char[], 最后在response输出时又回产生10K的byte[]（方便计算不考虑双字节）,也就是说整个对象输出过程中会产生52K的临时数据。而且常见的HTTP服务器(如实现java-servlet规范的服务器)不会把底层的ByteBuffer对象池暴露给上层。所以目前所有使用其他JSON框架输出数据都会产生5倍于数据体积大小(其他低于1倍扩容策略的框架会产生更多)的垃圾数据。<br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;RedKale框架的HTTP服务内置了Convert的JSON接口，避免了这么大量的垃圾数据产生。finishJson方法将HTTP服务的ByteBuffer对象池传给Convert， 使Convert在序列化过程中直接以UTF-8编码方式输出到ByteBuffer里。</p>
             <div class="highlight"><pre>    <span class="kd">protected</span> <span class="kt">void</span> <span class="nf">execute</span><span class="o">(</span><span class="n">HttpRequest</span> <span class="n">req</span><span class="o">,</span> <span class="n">HttpResponse</span> <span class="n">resp</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
         <span class="n">resp</span><span class="o">.</span><span class="na">finishJson</span><span class="o">(</span><span class="n">record</span><span class="o">);</span>
     <span class="o">}</span></pre></div>
@@ -170,7 +170,7 @@
 <span class="n">BsonFactory</span><span class="o">.</span><span class="na">root</span><span class="o">().</span><span class="na">register</span><span class="o">(</span><span class="n">java</span><span class="o">.</span><span class="na">io</span><span class="o">.</span><span class="na">File</span><span class="o">.</span><span class="kd">class</span><span class="o">,</span> <span class="n">FileSimpleCoder</span><span class="o">.</span><span class="na">instance</span><span class="o">);</span>
                 </pre></div>
 
-            <h3><a id="welcome-to-github-pages" class="anchor" href="#" aria-hidden="true"><span class="octicon octicon-link"></span></a>BSON的协议格式</h3>
+            <h3><a id="convert_bson_buffer" class="anchor" href="#" aria-hidden="true"><span class="octicon octicon-link"></span></a>BSON的协议格式</h3>
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;BSON类似Java自带的Serializable， 其格式如下: <br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1). 基本数据类型: 直接转换成byte[] <br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2). SmallString(无特殊字符且长度小于256的字符串): length(1 byte) + byte[](utf8); 通常用于类名、字段名、枚举。 <br/>
