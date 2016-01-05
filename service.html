@@ -26,7 +26,7 @@
         <section class="main-content">
             <h3><a id="service_intro" class="anchor" href="#" aria-hidden="true"><span class="octicon octicon-link"></span></a>Service 组件介绍</h3>
 
-            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Service 是RedKale最核心的组件，依赖于Convert、SNCP协议、Resource依赖注入。Service主要处理业务逻辑和操作数据层，是微服务架构中的单一原子服务。每一个Service实例分两种模式: <b>本地模式</b>和<b>远程模式</b>。其模式由 conf/application.xml 文件来配置。调用者其实不需要区分当前Service实例是哪种模式。<br/>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Service 是RedKale最核心的组件，依赖于Convert、SNCP协议、Resource依赖注入。Service主要处理业务逻辑和操作数据层，是微服务架构中的单一原子服务。每一个Service实例分两种模式: <b>本地模式</b>和<b>远程模式</b>。其模式由 conf/application.xml 文件来配置。使用者在调用过程中通常不需要区分当前Service实例是哪种模式。<br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 为了能确保本地模式与远程模式自由切换，对Service的实现类有一定的约束: <br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1. Service实现类会被继承，不能修饰为 <span style="color: #0000FF;">final</span>  <br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2. public String name()方法会被重载，不能修饰为 <span style="color: #0000FF;">final</span>  <br/>
@@ -95,7 +95,7 @@
 
     <span class="nd">@Override</span>
     <span class="kd">public</span> <span class="kt">void</span> <span class="nf">register</span><span class="o">(</span><span class="n">UserInfo</span> <span class="n">user</span><span class="o">)</span> <span class="o">{</span>
-        <span class="n">_register</span><span class="o">(</span><span class="kc">true</span><span class="o">,</span> <span class="kc">true</span><span class="o">,</span> <span class="kc">true</span><span class="o">,</span> <span class="n">user</span><span class="o">);</span>
+        <span class="kd">this</span><span class="o">.</span><span class="na">_register</span><span class="o">(</span><span class="kc">true</span><span class="o">,</span> <span class="kc">true</span><span class="o">,</span> <span class="kc">true</span><span class="o">,</span> <span class="n">user</span><span class="o">);</span>
     <span class="o">}</span>
 
     <span class="nd">@SncpDyn</span><span class="o">(</span><span class="n">remote</span> <span class="o">=</span> <span class="kc">false</span><span class="o">,</span> <span class="n">index</span> <span class="o">=</span> <span class="mi">0</span><span class="o">)</span>
@@ -108,7 +108,7 @@
 
     <span class="nd">@Override</span>
     <span class="kd">public</span> <span class="n">UserInfo</span> <span class="nf">updateUsername</span><span class="o">(</span><span class="kt">int</span> <span class="n">userid</span><span class="o">,</span> <span class="n">String</span> <span class="n">username</span><span class="o">)</span> <span class="o">{</span>
-        <span class="k">return</span> <span class="nf">_updateUsername</span><span class="o">(</span><span class="kc">true</span><span class="o">,</span> <span class="kc">true</span><span class="o">,</span> <span class="kc">false</span><span class="o">,</span> <span class="n">userid</span><span class="o">,</span> <span class="n">username</span><span class="o">);</span>
+        <span class="k">return</span> <span class="kd">this</span><span class="o">.</span><span class="na">_updateUsername</span><span class="o">(</span><span class="kc">true</span><span class="o">,</span> <span class="kc">true</span><span class="o">,</span> <span class="kc">false</span><span class="o">,</span> <span class="n">userid</span><span class="o">,</span> <span class="n">username</span><span class="o">);</span>
     <span class="o">}</span>
 
     <span class="nd">@SncpDyn</span><span class="o">(</span><span class="n">remote</span> <span class="o">=</span> <span class="kc">false</span><span class="o">,</span> <span class="n">index</span> <span class="o">=</span> <span class="mi">1</span><span class="o">)</span>
@@ -133,7 +133,28 @@
     <span class="kt">boolean</span> <span class="nf">async</span><span class="o">()</span> <span class="k">default</span> <span class="kc">true</span><span class="o">;</span> <span class="c1">//分布式运行是否采用异步模式</span>
 <span class="o">}</span> </pre></div>
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在动态生成的远程模式UserService时会根据不同参数生成相应的方法。若一个Service类没有含@MultiRun注解的方法，那么动态类只会重载public String name()和toString方法。当UserService服务仅需要部署了一个进程，由于没有其他等同服务的进程因此在UserService实例化时_client会赋值为null。</p>
+<div class="highlight"><pre><span class="nt">&lt;resources&gt;</span>  
+    <span class="nt">&lt;group</span> <span class="na">name=</span><span class="s">&quot;GROUP-A&quot;</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;node</span> <span class="na">addr=</span><span class="s">&quot;192.168.10.111&quot;</span> <span class="na">port=</span><span class="s">&quot;7070&quot;</span><span class="nt">/&gt;</span>
+        <span class="nt">&lt;node</span> <span class="na">addr=</span><span class="s">&quot;192.168.10.112&quot;</span> <span class="na">port=</span><span class="s">&quot;7070&quot;</span><span class="nt">/&gt;</span>
+        <span class="nt">&lt;node</span> <span class="na">addr=</span><span class="s">&quot;192.168.10.113&quot;</span> <span class="na">port=</span><span class="s">&quot;7070&quot;</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;/group&gt;</span>
+    <span class="nt">&lt;group</span> <span class="na">name=</span><span class="s">&quot;GROUP-B&quot;</span><span class="nt">&gt;</span>            
+        <span class="nt">&lt;node</span> <span class="na">addr=</span><span class="s">&quot;192.168.20.121&quot;</span> <span class="na">port=</span><span class="s">&quot;7070&quot;</span><span class="nt">/&gt;</span>
+        <span class="nt">&lt;node</span> <span class="na">addr=</span><span class="s">&quot;192.168.20.122&quot;</span> <span class="na">port=</span><span class="s">&quot;7070&quot;</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;/group&gt;</span>
+    <span class="nt">&lt;group</span> <span class="na">name=</span><span class="s">&quot;GROUP-C&quot;</span><span class="nt">&gt;</span>            
+        <span class="nt">&lt;node</span> <span class="na">addr=</span><span class="s">&quot;192.168.30.131&quot;</span> <span class="na">port=</span><span class="s">&quot;7070&quot;</span><span class="nt">/&gt;</span>
+        <span class="nt">&lt;node</span> <span class="na">addr=</span><span class="s">&quot;192.168.30.132&quot;</span> <span class="na">port=</span><span class="s">&quot;7070&quot;</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;/group&gt;</span>
+<span class="nt">&lt;/resources&gt;</span>
 
+
+<span class="c">&lt;!-- 配置UserService的节点组  ---&gt;</span>
+<span class="nt">&lt;service</span> <span class="na">name=</span><span class="s">&quot;&quot;</span> <span class="na">value=</span><span class="s">&quot;org.redkale.demo.user.UserService&quot;</span> <span class="na">groups=</span><span class="s">&quot;GROUP-A;GROUP-B;GROUP-C&quot;</span><span class="nt">/&gt;</span>
+</pre></div>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如上配置，若当前进程所在IP是192.168.10.111，则UserService采用本地模式加载。执行register方法时， 先本地执行超类的register，然后远程执行同组的进程(192.168.10.112、192.168.10.113)，最后远程执行异组的进程(192.168.20.121、192.168.20.122、192.168.30.131、192.168.30.132)。若当前进程所在IP是192.168.10.100，则UserService采用远程模式加载。需要注意的一点是，每个IP所在的服务必须开通SNCP协议服务以便能接收远程的调用请求。</p>
+            
             <h3><a id="service_remote" class="anchor" href="#" aria-hidden="true"><span class="octicon octicon-link"></span></a>Service 远程模式</h3>
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;动态生成的远程模式UserService：</p>
             <div class="highlight"><pre><span class="nd">@SncpDyn</span><span class="o">(</span><span class="n">remote</span> <span class="o">=</span> <span class="kc">true</span><span class="o">)</span>
