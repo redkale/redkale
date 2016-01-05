@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- 
     文件说明:
-        ${APP_HOME} 指当前程序的总目录APP_HOME
+        ${APP_HOME} 指当前程序的根目录APP_HOME
         required： 被声明required的属性值不能为空
         
                                             group
@@ -14,7 +14,7 @@
                        /                   \
                     /                         \
              serviceid1                       serviceid2
-            /       \                        /       \
+            /       \                        /           \
   serviceid1_name1  serviceid1_name2   serviceid2_name1  serviceid2_name2    
 -->
 <!--     
@@ -32,7 +32,7 @@
             一个组包含多个NODE， 同一Service服务可以由多个进程提供，这些进程称为一个GROUP，且同一GROUP内的进程必须在同一机房或局域网内
             name: 服务组ID，长度不能超过11个字节. 默认为空字符串。
             protocol：值只能是UDP TCP， 默认TCP
-            注意: 一个node只能所属一个group。只要存在protocol == SNCP的Server节点信息， 就必须有group节点信息。
+            注意: 一个node只能所属一个group。只要存在protocol=SNCP的Server节点信息， 就必须有group节点信息。
         -->
         <group name="" protocol="TCP">
             <!--
@@ -78,19 +78,18 @@
         bufferPoolSize： ByteBuffer池的大小，默认: CPU核数*512
         responsePoolSize： Response池的大小，默认: CPU核数*256
         readTimeoutSecond: 读操作超时秒数， 默认0， 表示永久不超时
-        writeTimeoutSecond:  写操作超时秒数， 默认0， 表示永久不超时
-        
+        writeTimeoutSecond:  写操作超时秒数， 默认0， 表示永久不超时        
     -->
     <server protocol="HTTP" host="127.0.0.1" port="6060" root="root" lib=""> 
         
         <!-- 
            加载所有的Service服务;
-           在同一个进程中所有LOCAL模式的Service， 同一个name的将共用同一个实例
+           在同一个进程中同一个name同一类型的Service将共用同一个实例
            autoload="true"  默认值. 自动加载以下目录（如果存在的话）下所有的Service类:
                                  server.lib;    server.lib/*;    server.classes;    
            autoload="false" 需要显著的指定Service类
            includes： 当autoload="true"， 拉取类名与includes中的正则表达式匹配的类, 多个正则表达式用分号;隔开
-           excludes： 当autoload="true"， 排除类名与includes中的正则表达式匹配的类, 多个正则表达式用分号;隔开           
+           excludes： 当autoload="true"， 排除类名与excludes中的正则表达式匹配的类, 多个正则表达式用分号;隔开           
            groups:   所属组的节点,多个节点值用;隔开，如果配置文件中存在多个SNCP协议的Server节点，需要显式指定group属性.
                     当 protocol == SNCP 时 group表示当前Server与哪些节点组关联。
                     当 protocol != SNCP 时 group只能是空或者一个group的节点值，不能为多个节点值。
