@@ -24,7 +24,9 @@ import org.redkale.service.DynCall;
 
 /**
  *
- * <p> 详情见: http://www.redkale.org
+ * <p>
+ * 详情见: http://www.redkale.org
+ *
  * @author zhangjx
  */
 public final class SncpClient {
@@ -247,22 +249,22 @@ public final class SncpClient {
         }
     }
 
-    public <T> void remote(final BsonConvert convert, Transport[] transports, boolean run, final int index, final Object... params) {
-        if (!run || transports == null || transports.length < 1) return;
+    public <T> void remote(final BsonConvert convert, Transport[] transports, final int index, final Object... params) {
+        if (transports == null || transports.length < 1) return;
         remote(convert, transports[0], index, params);
         for (int i = 1; i < transports.length; i++) {
             remote0(null, convert, transports[i], actions[index], params);
         }
     }
 
-    public <T> void asyncRemote(final BsonConvert convert, Transport[] transports, boolean run, final int index, final Object... params) {
-        if (!run || transports == null || transports.length < 1) return;
+    public <T> void asyncRemote(final BsonConvert convert, Transport[] transports, final int index, final Object... params) {
+        if (transports == null || transports.length < 1) return;
         if (executor != null) {
             executor.accept(() -> {
-                remote(convert, transports, run, index, params);
+                remote(convert, transports, index, params);
             });
         } else {
-            remote(convert, transports, run, index, params);
+            remote(convert, transports, index, params);
         }
     }
 

@@ -156,11 +156,11 @@ public abstract class Sncp {
      *      }
      *
      *      &#64;SncpDyn(remote = false)
-     *      public String _updateSomeThing(boolean canselfrun, boolean cansamerun, boolean candiffrun, String id){
+     *      public String _updateSomeThing(boolean selfrunnable, boolean samerunnable, boolean diffrunnable, String id){
      *          String rs = super.updateSomeThing(id);
      *          if (_client== null) return;
-     *          _client.remote(_convert, _sameGroupTransports, cansamerun, 0, true, false, false, id);
-     *          _client.remote(_convert, _diffGroupTransports, candiffrun, 0, true, true, false, id);
+     *          if (samerunnable) _client.remote(_convert, _sameGroupTransports, 0, true, false, false, id);
+     *          if (diffrunnable) _client.remote(_convert, _diffGroupTransports, 0, true, true, false, id);
      *          return rs;
      *      }
      *
@@ -170,11 +170,11 @@ public abstract class Sncp {
      *      }
      *
      *      &#64;SncpDyn(remote = false)
-     *      public void _createSomeThing(boolean canselfrun, boolean cansamerun, boolean candiffrun, TestBean bean){
-     *          if(canselfrun) super.createSomeThing(bean);
+     *      public void _createSomeThing(boolean selfrunnable, boolean samerunnable, boolean diffrunnable, TestBean bean){
+     *          if(selfrunnable) super.createSomeThing(bean);
      *          if (_client== null) return;
-     *          _client.remote(_convert, _sameGroupTransports, cansamerun, 1, true, false, false, bean);
-     *          _client.remote(_convert, _diffGroupTransports, candiffrun, 1, true, true, false, bean);
+     *          if (samerunnable) _client.remote(_convert, _sameGroupTransports, 1, true, false, false, bean);
+     *          if (diffrunnable) _client.remote(_convert, _diffGroupTransports, 1, true, true, false, bean);
      *      }
      * }
      * </pre></blockquote>
@@ -187,7 +187,7 @@ public abstract class Sncp {
      * @return Service实例
      */
     @SuppressWarnings("unchecked")
-    public static <T extends Service> Class<? extends T> createLocalServiceClass(final String name, final Class<T> serviceClass) {
+    protected static <T extends Service> Class<? extends T> createLocalServiceClass(final String name, final Class<T> serviceClass) {
         if (serviceClass == null) return null;
         if (!Service.class.isAssignableFrom(serviceClass)) return serviceClass;
         int mod = serviceClass.getModifiers();
@@ -337,7 +337,7 @@ public abstract class Sncp {
                 mv.visitMaxs(varindex + 3, varindex + 1);
                 mv.visitEnd();
             }
-            {  // _方法
+            {  // _方法   _方法比无_方法多了三个参数
                 mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC + (method.isVarArgs() ? ACC_VARARGS : 0), "_" + method.getName(), "(ZZZ" + methodDesc.substring(1), null, null));
                 //mv.setDebug(true);  
                 { //给参数加上 Annotation
@@ -352,13 +352,14 @@ public abstract class Sncp {
                 av0.visit("remote", Boolean.FALSE);
                 av0.visit("index", index);
                 av0.visitEnd();
-                Label l1 = new Label();
+                //---------------------------- 调用selfrun ---------------------------------
+                Label selfLabel = new Label();
                 if (returnType == void.class) {  // if
                     mv.visitVarInsn(ILOAD, 1);
-                    mv.visitJumpInsn(IFEQ, l1);
+                    mv.visitJumpInsn(IFEQ, selfLabel);
                 }
                 mv.visitVarInsn(ALOAD, 0);
-                int varindex = 3;
+                int varindex = 3; //空3给selfrunnable、samerunnable、diffrunnable
                 for (Class pt : paramtypes) {
                     if (pt.isPrimitive()) {
                         if (pt == long.class) {
@@ -378,7 +379,7 @@ public abstract class Sncp {
                 }
                 mv.visitMethodInsn(INVOKESPECIAL, supDynName, method.getName(), methodDesc, false);
                 if (returnType == void.class) {  // end if
-                    mv.visitLabel(l1);
+                    mv.visitLabel(selfLabel);
                 }
                 if (returnType == void.class) {
                 } else if (returnType.isPrimitive()) {
@@ -401,8 +402,8 @@ public abstract class Sncp {
                 //---------------------------if (_client== null)  return ----------------------------------
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitFieldInsn(GETFIELD, newDynName, "_client", clientDesc);
-                Label ifrt = new Label();
-                mv.visitJumpInsn(IFNONNULL, ifrt);
+                Label clientLabel = new Label();
+                mv.visitJumpInsn(IFNONNULL, clientLabel);
                 if (returnType == void.class) {
                     mv.visitInsn(RETURN);
                 } else if (returnType.isPrimitive()) {
@@ -423,16 +424,18 @@ public abstract class Sncp {
                     mv.visitVarInsn(ALOAD, rsindex);
                     mv.visitInsn(ARETURN);
                 }
-                mv.visitLabel(ifrt);
-                //-------------------------------------------------------------
+                mv.visitLabel(clientLabel);
+                //---------------------------- 调用samerun ---------------------------------
+                mv.visitVarInsn(ILOAD, 2); //读取 samerunnable
+                Label sameLabel = new Label();
+                mv.visitJumpInsn(IFEQ, sameLabel);  //判断 samerunnable
+
                 mv.visitVarInsn(ALOAD, 0);//调用 _client
                 mv.visitFieldInsn(GETFIELD, newDynName, "_client", clientDesc);
                 mv.visitVarInsn(ALOAD, 0);  //传递 _convert
                 mv.visitFieldInsn(GETFIELD, newDynName, "_convert", convertDesc);
                 mv.visitVarInsn(ALOAD, 0);  //传递 _sameGroupTransports
                 mv.visitFieldInsn(GETFIELD, newDynName, "_sameGroupTransports", transportsDesc);
-
-                mv.visitVarInsn(ILOAD, 2);   //传递 cansamerun
 
                 if (index <= 5) {  //第几个 SncpAction 
                     mv.visitInsn(ICONST_0 + index);
@@ -449,19 +452,19 @@ public abstract class Sncp {
 
                 mv.visitInsn(DUP);
                 mv.visitInsn(ICONST_0);
-                mv.visitInsn(ICONST_1);   //第一个参数  canselfrun
+                mv.visitInsn(ICONST_1);   //第一个参数  selfrunnable
                 mv.visitMethodInsn(INVOKESTATIC, "java/lang/Boolean", "valueOf", "(Z)Ljava/lang/Boolean;", false);
                 mv.visitInsn(AASTORE);
 
                 mv.visitInsn(DUP);
                 mv.visitInsn(ICONST_1);
-                mv.visitInsn(ICONST_0);   //第一个参数  cansamerun
+                mv.visitInsn(ICONST_0);   //第一个参数  samerunnable
                 mv.visitMethodInsn(INVOKESTATIC, "java/lang/Boolean", "valueOf", "(Z)Ljava/lang/Boolean;", false);
                 mv.visitInsn(AASTORE);
 
                 mv.visitInsn(DUP);
                 mv.visitInsn(ICONST_2);
-                mv.visitInsn(ICONST_0);   //第二个参数  candiffrun
+                mv.visitInsn(ICONST_0);   //第二个参数  diffrunnable
                 mv.visitMethodInsn(INVOKESTATIC, "java/lang/Boolean", "valueOf", "(Z)Ljava/lang/Boolean;", false);
                 mv.visitInsn(AASTORE);
 
@@ -492,7 +495,12 @@ public abstract class Sncp {
                     }
                     mv.visitInsn(AASTORE);
                 }
-                mv.visitMethodInsn(INVOKEVIRTUAL, clientName, mrun.async() ? "asyncRemote" : "remote", "(" + convertDesc + transportsDesc + "ZI[Ljava/lang/Object;)V", false);
+                mv.visitMethodInsn(INVOKEVIRTUAL, clientName, mrun.async() ? "asyncRemote" : "remote", "(" + convertDesc + transportsDesc + "I[Ljava/lang/Object;)V", false);
+                mv.visitLabel(sameLabel);
+                //---------------------------- 调用diffrun ---------------------------------
+                mv.visitVarInsn(ILOAD, 3); //读取 diffrunnable
+                Label diffLabel = new Label();
+                mv.visitJumpInsn(IFEQ, diffLabel);  //判断 diffrunnable
 
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitFieldInsn(GETFIELD, newDynName, "_client", clientDesc);
@@ -501,7 +509,6 @@ public abstract class Sncp {
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitFieldInsn(GETFIELD, newDynName, "_diffGroupTransports", transportsDesc);
 
-                mv.visitVarInsn(ILOAD, 3);   //传递 candiffrun
                 if (index <= 5) {  //第几个 SncpAction 
                     mv.visitInsn(ICONST_0 + index);
                 } else {
@@ -517,19 +524,19 @@ public abstract class Sncp {
 
                 mv.visitInsn(DUP);
                 mv.visitInsn(ICONST_0);
-                mv.visitInsn(ICONST_1);   //第一个参数  cansamerun
+                mv.visitInsn(ICONST_1);   //第一个参数  samerunnable
                 mv.visitMethodInsn(INVOKESTATIC, "java/lang/Boolean", "valueOf", "(Z)Ljava/lang/Boolean;", false);
                 mv.visitInsn(AASTORE);
 
                 mv.visitInsn(DUP);
                 mv.visitInsn(ICONST_1);
-                mv.visitInsn(ICONST_1);   //第二个参数  candiffrun
+                mv.visitInsn(ICONST_1);   //第二个参数  diffrunnable
                 mv.visitMethodInsn(INVOKESTATIC, "java/lang/Boolean", "valueOf", "(Z)Ljava/lang/Boolean;", false);
                 mv.visitInsn(AASTORE);
 
                 mv.visitInsn(DUP);
                 mv.visitInsn(ICONST_2);
-                mv.visitInsn(ICONST_0);   //第二个参数  candiffrun
+                mv.visitInsn(ICONST_0);   //第二个参数  diffrunnable
                 mv.visitMethodInsn(INVOKESTATIC, "java/lang/Boolean", "valueOf", "(Z)Ljava/lang/Boolean;", false);
                 mv.visitInsn(AASTORE);
 
@@ -560,7 +567,8 @@ public abstract class Sncp {
                     }
                     mv.visitInsn(AASTORE);
                 }
-                mv.visitMethodInsn(INVOKEVIRTUAL, clientName, mrun.async() ? "asyncRemote" : "remote", "(" + convertDesc + transportsDesc + "ZI[Ljava/lang/Object;)V", false);
+                mv.visitMethodInsn(INVOKEVIRTUAL, clientName, mrun.async() ? "asyncRemote" : "remote", "(" + convertDesc + transportsDesc + "I[Ljava/lang/Object;)V", false);
+                mv.visitLabel(diffLabel);
 
                 if (returnType == void.class) {
                     mv.visitInsn(RETURN);
