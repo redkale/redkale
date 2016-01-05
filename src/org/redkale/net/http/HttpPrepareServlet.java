@@ -18,7 +18,9 @@ import org.redkale.watch.*;
 
 /**
  *
- * <p> 详情见: http://www.redkale.org
+ * <p>
+ * 详情见: http://www.redkale.org
+ *
  * @author zhangjx
  */
 public final class HttpPrepareServlet extends PrepareServlet<HttpRequest, HttpResponse<HttpRequest>> {
@@ -34,7 +36,7 @@ public final class HttpPrepareServlet extends PrepareServlet<HttpRequest, HttpRe
     @Override
     public void init(Context context, AnyValue config) {
         this.servlets.stream().forEach(s -> {
-            s.init(context, s.conf);
+            s.init(context, s._conf);
         });
         final WatchFactory watch = ((HttpContext) context).getWatchFactory();
         if (watch != null) {
@@ -101,7 +103,7 @@ public final class HttpPrepareServlet extends PrepareServlet<HttpRequest, HttpRe
                 strmaps.put(mapping, servlet);
             }
         }
-        servlet.conf = conf;
+        servlet._conf = conf;
         this.servlets.add(servlet);
     }
 
@@ -125,7 +127,7 @@ public final class HttpPrepareServlet extends PrepareServlet<HttpRequest, HttpRe
     public void destroy(Context context, AnyValue config) {
         this.resourceHttpServlet.destroy(context, config);
         this.servlets.stream().forEach(s -> {
-            s.destroy(context, s.conf);
+            s.destroy(context, s._conf);
         });
     }
 

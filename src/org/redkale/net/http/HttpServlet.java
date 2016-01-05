@@ -15,7 +15,7 @@ import org.redkale.util.*;
  */
 public abstract class HttpServlet extends Servlet<HttpRequest, HttpResponse<HttpRequest>> {
 
-    AnyValue conf; //当前HttpServlet的配置
+    AnyValue _conf; //当前HttpServlet的配置
 
     @Override
     public final boolean equals(Object obj) {
