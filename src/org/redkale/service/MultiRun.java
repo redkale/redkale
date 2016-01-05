@@ -21,7 +21,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface MultiRun {
 
-    boolean selfrun() default true; //当前本地实例是否运行指定操作；只有当指定操作的方法的返回值为void时，该值才有效。
+    boolean selfrun() default true; //当前本地实例是否运行指定操作；只有当指定操作的方法的返回值为void时，该值才能为true，否则忽略。
 
     boolean samerun() default true;  //是否同组节点也运行指定操作
 
