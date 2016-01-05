@@ -22,8 +22,8 @@ public @interface DistributeGenerator {
 
     /**
      * 如果allocationSize的值小于或等于1,则主键不会加上nodeid
-     * <p>
-     * @return
+     * 
+     * @return allocationSize
      */
     int allocationSize() default 1000;
 }

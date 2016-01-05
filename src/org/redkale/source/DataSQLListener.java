@@ -6,7 +6,7 @@
 package org.redkale.source;
 
 /**
- * @Resource(name = "property.datasource.nodeid")
+ * &#64;Resource(name = "property.datasource.nodeid")
  *
  * <p> 详情见: http://www.redkale.org
  * @author zhangjx

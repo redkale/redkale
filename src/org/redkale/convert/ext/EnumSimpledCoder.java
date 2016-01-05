@@ -15,9 +15,9 @@ import org.redkale.convert.Writer;
  * 详情见: http://www.redkale.org
  *
  * @author zhangjx
- * @param <R>
- * @param <W>
- * @param <E>
+ * @param <R> Reader输入的子类型
+ * @param <W> Writer输出的子类型
+ * @param <E> Enum的子类
  */
 public final class EnumSimpledCoder<R extends Reader, W extends Writer, E extends Enum> extends SimpledCoder<R, W, E> {
 

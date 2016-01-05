@@ -15,7 +15,7 @@ import org.redkale.boot.*;
  *
  * <p> 详情见: http://www.redkale.org
  * @author zhangjx
- * @param <T>
+ * @param <T> Service的子类
  */
 public final class ServiceWrapper<T extends Service> {
 

@@ -19,9 +19,11 @@ import org.redkale.util.*;
 
 /**
  *
- * <p> 详情见: http://www.redkale.org
+ * <p>
+ * 详情见: http://www.redkale.org
+ *
  * @author zhangjx
- * @param <T>
+ * @param <T> Entity类的泛型
  */
 @SuppressWarnings("unchecked")
 public final class EntityInfo<T> {
@@ -266,8 +268,8 @@ public final class EntityInfo<T> {
 
     /**
      * 是否虚拟类
-     * <p>
-     * @return
+     *
+     * @return 是否虚拟类
      */
     public boolean isVirtualEntity() {
         return table == null;

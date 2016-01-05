@@ -18,9 +18,11 @@ import org.redkale.util.*;
 
 /**
  *
- * <p> 详情见: http://www.redkale.org
+ * <p>
+ * 详情见: http://www.redkale.org
+ *
  * @author zhangjx
- * @param <T>
+ * @param <T> Entity类的泛型
  */
 public final class EntityCache<T> {
 

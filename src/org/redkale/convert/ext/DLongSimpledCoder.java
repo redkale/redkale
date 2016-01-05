@@ -14,8 +14,8 @@ import org.redkale.util.*;
  *
  * <p> 详情见: http://www.redkale.org
  * @author zhangjx
- * @param <R>
- * @param <W>
+ * @param <R> Reader输入的子类型
+ * @param <W> Writer输出的子类型
  */
 public final class DLongSimpledCoder<R extends Reader, W extends Writer> extends SimpledCoder<R, W, DLong> {
 

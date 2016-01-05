@@ -17,7 +17,9 @@ import org.redkale.util.*;
  * 在调用 createSQLExpress 之前必须先调用 createSQLJoin
  * 在调用 createPredicate 之前必须先调用 isCacheUseable
  *
- * <p> 详情见: http://www.redkale.org
+ * <p>
+ * 详情见: http://www.redkale.org
+ *
  * @author zhangjx
  */
 public class FilterNode {
@@ -112,11 +114,11 @@ public class FilterNode {
     /**
      * 该方法需要重载
      *
-     * @param <T>
-     * @param func
-     * @param joinTabalis
-     * @param info
-     * @return
+     * @param <T>         Entity类的泛型
+     * @param func        EntityInfo的加载器
+     * @param joinTabalis 关联表集合
+     * @param info        Entity类的EntityInfo
+     * @return SQL的join语句 不存在返回null
      */
     protected <T> CharSequence createSQLJoin(final Function<Class, EntityInfo> func, final Map<Class, String> joinTabalis, final EntityInfo<T> info) {
         if (joinTabalis == null || this.nodes == null) return null;
@@ -133,7 +135,7 @@ public class FilterNode {
     /**
      * 该方法需要重载
      *
-     * @return
+     * @return 是否存在关联表
      */
     protected boolean isjoin() {
         if (this.nodes == null) return false;
@@ -160,8 +162,8 @@ public class FilterNode {
     /**
      * 该方法需要重载
      *
-     * @param entityApplyer
-     * @return
+     * @param entityApplyer EntityInfo的加载器
+     * @return 是否可以使用缓存
      */
     protected boolean isCacheUseable(final Function<Class, EntityInfo> entityApplyer) {
         if (this.nodes == null) return true;
@@ -174,10 +176,10 @@ public class FilterNode {
     /**
      * 该方法需要重载
      *
-     * @param <T>
-     * @param joinTabalis
-     * @param info
-     * @return
+     * @param <T>         Entity类的泛型
+     * @param joinTabalis 关联表的集合
+     * @param info        EntityInfo
+     * @return JOIN的SQL语句
      */
     protected <T> CharSequence createSQLExpress(final EntityInfo<T> info, final Map<Class, String> joinTabalis) {
         CharSequence sb0 = this.column == null || info == null ? null : createElementSQLExpress(info, joinTabalis == null ? null : joinTabalis.get(info.getType()));

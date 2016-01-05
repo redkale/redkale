@@ -24,7 +24,9 @@ import org.redkale.service.DynCall;
 
 /**
  *
- * <p> 详情见: http://www.redkale.org
+ * <p>
+ * 详情见: http://www.redkale.org
+ *
  * @author zhangjx
  */
 public final class SncpDynServlet extends SncpServlet {
@@ -138,35 +140,34 @@ public final class SncpDynServlet extends SncpServlet {
             out.writeByte((byte) 0);
         }
 
-        /** **
-         *
-         * public class TestService implements Service {
-         * public boolean change(TestBean bean, String name, int id) {
-         *
-         * }
-         * }
-         *
-         * public class DynActionTestService_change extends SncpServletAction {
-         *
-         * public TestService service;
-         *
-         * @Override
-         * public void action(final BsonReader in, final BsonWriter out) throws Throwable {
-         * TestBean arg1 = convert.convertFrom(in, paramTypes[1]);
-         * String arg2 = convert.convertFrom(in, paramTypes[2]);
-         * int arg3 = convert.convertFrom(in, paramTypes[3]);
-         * Object rs = service.change(arg1, arg2, arg3);
-         * callParameter(out, arg1, arg2, arg3);
-         * convert.convertTo(out, paramTypes[0], rs);
-         * }
-         * }
-         */
         /**
+         * <blockquote><pre>
+         *  public class TestService implements Service {
+         *      public boolean change(TestBean bean, String name, int id) {
          *
-         * @param service
-         * @param actionid
-         * @param method
-         * @return
+         *      }
+         *  }
+         *
+         *  public class DynActionTestService_change extends SncpServletAction {
+         *
+         *      public TestService service;
+         *
+         *      &#64;Override
+         *      public void action(final BsonReader in, final BsonWriter out) throws Throwable {
+         *          TestBean arg1 = convert.convertFrom(in, paramTypes[1]);
+         *          String arg2 = convert.convertFrom(in, paramTypes[2]);
+         *          int arg3 = convert.convertFrom(in, paramTypes[3]);
+         *          Object rs = service.change(arg1, arg2, arg3);
+         *          callParameter(out, arg1, arg2, arg3);
+         *          convert.convertTo(out, paramTypes[0], rs);
+         *      }
+         *  }
+         * </pre></blockquote>
+         *
+         * @param service  Service
+         * @param actionid 操作ID
+         * @param method   方法
+         * @return SncpServletAction
          */
         @SuppressWarnings("unchecked")
         public static SncpServletAction create(final Service service, final DLong actionid, final Method method) {

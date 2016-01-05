@@ -26,7 +26,7 @@ import java.util.regex.*;
  * 详情见: http://www.redkale.org
  *
  * @author zhangjx
- * @param <T>
+ * @param <T> 泛型
  */
 public final class ClassFilter<T> {
 

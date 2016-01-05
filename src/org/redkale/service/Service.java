@@ -12,11 +12,13 @@ import org.redkale.util.*;
  * 注意: "$"是一个很特殊的Service.name值 。 被标记为@Resource(name = "$") 的Service的资源名与所属父Service的资源名一致。
  *
  * <p>
- * @Resource(name = ".*")
- * private HashMap<String, XXXService> nodemap;
+ * &#64;Resource(name = ".*")
+ * private HashMap&lt;String, XXXService&gt; nodemap;
  * 被注入的多个XXXService实例 但不会包含自身的XXXService。
  *
- * <p> 详情见: http://www.redkale.org
+ * <p>
+ * 详情见: http://www.redkale.org
+ *
  * @author zhangjx
  */
 public interface Service {
@@ -24,20 +26,25 @@ public interface Service {
     /**
      * 该方法必须是可以重复调用， 当reload时需要重复调用init方法
      *
-     * @param config
+     * @param config 配置参数
      */
     default void init(AnyValue config) {
 
     }
 
+    /**
+     * 进程退出时，调用Service销毁
+     *
+     * @param config 配置参数
+     */
     default void destroy(AnyValue config) {
 
     }
 
     /**
      * Service的name， 一个Service在同一进程内可以包含多个实例， 使用name区分
-     * <p>
-     * @return
+     *
+     * @return 资源名
      */
     default String name() {
         return "";

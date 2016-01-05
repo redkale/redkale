@@ -27,7 +27,9 @@ import org.redkale.service.DynRemote;
  * Service Node Communicate Protocol
  * 生成Service的本地模式或远程模式Service-Class的工具类
  *
- * <p> 详情见: http://www.redkale.org
+ * <p>
+ * 详情见: http://www.redkale.org
+ *
  * @author zhangjx
  */
 public abstract class Sncp {
@@ -86,8 +88,8 @@ public abstract class Sncp {
     /**
      * 对类名或者name字符串进行hash。
      *
-     * @param name
-     * @return
+     * @param name String
+     * @return hash值
      */
     public static DLong hash(final String name) {
         if (name == null || name.isEmpty()) return DLong.ZERO;
@@ -179,10 +181,10 @@ public abstract class Sncp {
      *
      * 创建Service的本地模式Class
      *
-     * @param <T>
-     * @param name
-     * @param serviceClass
-     * @return
+     * @param <T>          Service子类
+     * @param name         资源名
+     * @param serviceClass Service类
+     * @return Service实例
      */
     @SuppressWarnings("unchecked")
     public static <T extends Service> Class<? extends T> createLocalServiceClass(final String name, final Class<T> serviceClass) {
@@ -645,15 +647,15 @@ public abstract class Sncp {
      *
      * 创建本地模式Service实例
      *
-     * @param <T>
-     * @param name
-     * @param executor
-     * @param serviceClass
-     * @param clientAddress
-     * @param groups
-     * @param sameGroupTransports
-     * @param diffGroupTransports
-     * @return
+     * @param <T>                 Service泛型
+     * @param name                资源名
+     * @param executor            线程池
+     * @param serviceClass        Service类
+     * @param clientAddress       本地IP地址
+     * @param groups              含同组和异组的组集合
+     * @param sameGroupTransports 同组的通信组件列表
+     * @param diffGroupTransports 异组的通信组件列表
+     * @return Service的本地模式实例
      */
     @SuppressWarnings("unchecked")
     public static <T extends Service> T createLocalService(final String name, final Consumer<Runnable> executor, final Class<T> serviceClass,
@@ -805,15 +807,16 @@ public abstract class Sncp {
      * </pre></blockquote>
      *
      * 创建远程模式的Service实例
-     * <p>
-     * @param <T>
-     * @param name
-     * @param executor
-     * @param serviceClass
-     * @param clientAddress
-     * @param groups
-     * @param transport
-     * @return
+     *
+     * @param <T>           Service泛型
+     * @param name          资源名
+     * @param executor      线程池
+     * @param serviceClass  Service类
+     * @param clientAddress 本地IP地址
+     * @param groups        含同组和异组的组集合
+     *
+     * @param transport     通信组件
+     * @return Service的远程模式实例
      */
     @SuppressWarnings("unchecked")
     public static <T extends Service> T createRemoteService(final String name, final Consumer<Runnable> executor, final Class<T> serviceClass,

@@ -22,7 +22,9 @@ import org.redkale.util.*;
 
 /**
  *
- * <p> 详情见: http://www.redkale.org
+ * <p>
+ * 详情见: http://www.redkale.org
+ *
  * @author zhangjx
  */
 @SuppressWarnings("unchecked")
@@ -286,9 +288,9 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
 
     /**
      * 将entity的对象全部加载到Cache中去，如果clazz没有被@javax.persistence.Cacheable注解则不做任何事
-     * <p>
-     * @param <T>
-     * @param clazz
+     *
+     * @param <T>   Entity类泛型
+     * @param clazz Entity类
      */
     public <T> void refreshCache(Class<T> clazz) {
         EntityInfo<T> info = loadEntityInfo(clazz);
@@ -301,8 +303,8 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
     /**
      * 新增对象， 必须是Entity对象
      *
-     * @param <T>
-     * @param values
+     * @param <T>    Entity类泛型
+     * @param values Entity对象
      */
     @Override
     public <T> void insert(T... values) {
@@ -478,8 +480,8 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
     /**
      * 删除对象， 必须是Entity对象
      *
-     * @param <T>
-     * @param values
+     * @param <T>    Entity类泛型
+     * @param values Entity对象
      */
     @Override
     public <T> void delete(T... values) {
@@ -616,8 +618,8 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
     /**
      * 更新对象， 必须是Entity对象
      *
-     * @param <T>
-     * @param values
+     * @param <T>    Entity类泛型
+     * @param values Entity对象
      */
     @Override
     public <T> void update(T... values) {
@@ -705,11 +707,11 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
     /**
      * 根据主键值更新对象的column对应的值， 必须是Entity Class
      *
-     * @param <T>
-     * @param clazz
-     * @param id
-     * @param column
-     * @param value
+     * @param <T>    Entity类的泛型
+     * @param clazz  Entity类
+     * @param id     主键值
+     * @param column 过滤字段名
+     * @param value  过滤字段值
      */
     @Override
     public <T> void updateColumn(Class<T> clazz, Serializable id, String column, Serializable value) {
@@ -757,12 +759,13 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
 
     /**
      * 根据主键值给对象的column对应的值+incvalue， 必须是Entity Class
+     * 等价SQL: UPDATE {clazz} SET {column} = {column} + {incvalue} WHERE {primary} = {id}
      *
-     * @param <T>
-     * @param clazz
-     * @param id
-     * @param column
-     * @param incvalue
+     * @param <T>      Entity类的泛型
+     * @param clazz    Entity类
+     * @param id       主键值
+     * @param column   字段名
+     * @param incvalue 字段加值
      */
     @Override
     public <T> void updateColumnIncrement(Class<T> clazz, Serializable id, String column, long incvalue) {
@@ -812,12 +815,13 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
 
     /**
      * 根据主键值给对象的column对应的值 &#38; andvalue， 必须是Entity Class
+     * 等价SQL: UPDATE {clazz} SET {column} = {column} &#38; {incvalue} WHERE {primary} = {id}
      *
-     * @param <T>
-     * @param clazz
-     * @param id
-     * @param column
-     * @param andvalue
+     * @param <T>      Entity类的泛型
+     * @param clazz    Entity类
+     * @param id       主键值
+     * @param column   字段名
+     * @param andvalue 字段与值
      */
     @Override
     public <T> void updateColumnAnd(Class<T> clazz, Serializable id, String column, long andvalue) {
@@ -867,12 +871,13 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
 
     /**
      * 根据主键值给对象的column对应的值 | andvalue， 必须是Entity Class
+     * 等价SQL: UPDATE {clazz} SET {column} = {column} | {incvalue} WHERE {primary} = {id}
      *
-     * @param <T>
-     * @param clazz
-     * @param id
-     * @param column
-     * @param orvalue
+     * @param <T>     Entity类的泛型
+     * @param clazz   Entity类
+     * @param id      主键值
+     * @param column  字段名
+     * @param orvalue 字段或值
      */
     @Override
     public <T> void updateColumnOr(Class<T> clazz, Serializable id, String column, long orvalue) {
@@ -923,9 +928,9 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
     /**
      * 更新对象指定的一些字段， 必须是Entity对象
      *
-     * @param <T>
-     * @param value
-     * @param columns
+     * @param <T>     Entity类的泛型
+     * @param value   Entity对象
+     * @param columns 需要更新的字段
      */
     @Override
     public <T> void updateColumns(final T value, final String... columns) {
@@ -1134,10 +1139,10 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
     /**
      * 根据主键获取对象
      *
-     * @param <T>
-     * @param clazz
-     * @param pk
-     * @return
+     * @param <T>   Entity类的泛型
+     * @param clazz Entity类
+     * @param pk    主键值
+     * @return Entity对象
      */
     @Override
     public <T> T find(Class<T> clazz, Serializable pk) {
@@ -1404,13 +1409,13 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
     /**
      * 根据指定参数查询对象某个字段的集合
      * <p>
-     * @param <T>
-     * @param <V>
-     * @param selectedColumn
-     * @param clazz
-     * @param flipper
-     * @param bean
-     * @return
+     * @param <T>            Entity类的泛型
+     * @param <V>            字段值的类型
+     * @param selectedColumn 字段名
+     * @param clazz          Entity类
+     * @param flipper        翻页对象
+     * @param bean           过滤Bean
+     * @return 字段集合
      */
     @Override
     public <T, V extends Serializable> Sheet<V> queryColumnSheet(final String selectedColumn, Class<T> clazz, final Flipper flipper, final FilterBean bean) {
@@ -1459,11 +1464,11 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
     /**
      * 根据指定字段值查询对象集合
      *
-     * @param <T>
-     * @param clazz
-     * @param column
-     * @param key
-     * @return
+     * @param <T>    Entity类的泛型
+     * @param clazz  Entity类
+     * @param column 过滤字段名
+     * @param key    过滤字段值
+     * @return Entity对象的集合
      */
     @Override
     public <T> List<T> queryList(final Class<T> clazz, final String column, final Serializable key) {
@@ -1479,10 +1484,10 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
     /**
      * 根据过滤对象FilterBean查询对象集合
      *
-     * @param <T>
-     * @param clazz
-     * @param bean
-     * @return
+     * @param <T>   Entity类的泛型
+     * @param clazz Entity类
+     * @param bean  过滤Bean
+     * @return Entity对象集合
      */
     @Override
     public <T> List<T> queryList(final Class<T> clazz, final FilterBean bean) {
@@ -1510,11 +1515,11 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
     /**
      * 根据过滤对象FilterBean查询对象集合， 对象只填充或排除SelectField指定的字段
      *
-     * @param <T>
-     * @param clazz
-     * @param selects
-     * @param bean
-     * @return
+     * @param <T>     Entity类的泛型
+     * @param clazz   Entity类
+     * @param selects 收集的字段
+     * @param bean    过滤Bean
+     * @return Entity对象的集合
      */
     @Override
     public <T> List<T> queryList(final Class<T> clazz, final SelectColumn selects, final FilterBean bean) {
@@ -1600,11 +1605,11 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
     /**
      * 根据过滤对象FilterBean和翻页对象Flipper查询一页的数据
      *
-     * @param <T>
-     * @param clazz
-     * @param flipper
-     * @param bean
-     * @return
+     * @param <T>     Entity类的泛型
+     * @param clazz   Entity类
+     * @param flipper 翻页对象
+     * @param bean    过滤Bean
+     * @return Entity对象的集合
      */
     @Override
     public <T> Sheet<T> querySheet(final Class<T> clazz, final Flipper flipper, final FilterBean bean) {
@@ -1632,12 +1637,12 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
     /**
      * 根据过滤对象FilterBean和翻页对象Flipper查询一页的数据， 对象只填充或排除SelectField指定的字段
      *
-     * @param <T>
-     * @param clazz
-     * @param selects
-     * @param flipper
-     * @param bean
-     * @return
+     * @param <T>     Entity类的泛型
+     * @param clazz   Entity类
+     * @param selects 收集的字段集合
+     * @param flipper 翻页对象
+     * @param bean    过滤Bean
+     * @return Entity对象的集合
      */
     @Override
     public <T> Sheet<T> querySheet(final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterBean bean) {

@@ -10,9 +10,11 @@ import org.redkale.convert.json.*;
 /**
  * 通用的结果对象，在常见的HTTP+JSON接口中返回的结果需要含结果码，错误信息，和实体对象。
  *
- * <p> 详情见: http://www.redkale.org
+ * <p>
+ * 详情见: http://www.redkale.org
+ *
  * @author zhangjx
- * @param <T>
+ * @param <T> 结果对象的泛型
  */
 public class RetResult<T> {
 
@@ -67,7 +69,7 @@ public class RetResult<T> {
     /**
      * 判断结果是否成功返回， retcode = 0 视为成功， 否则视为错误码
      *
-     * @return
+     * @return 是否成功
      */
     public boolean isSuccess() {
         return retcode == 0;
@@ -76,7 +78,7 @@ public class RetResult<T> {
     /**
      * 结果码 0表示成功、 非0表示错误
      *
-     * @return
+     * @return 结果码
      */
     public int getRetcode() {
         return retcode;
@@ -97,7 +99,7 @@ public class RetResult<T> {
     /**
      * 结果对象， 通常只有在retcode = 0时值才有效
      *
-     * @return
+     * @return 结果对象
      */
     public T getResult() {
         return result;

@@ -11,7 +11,9 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  *
- * <p> 详情见: http://www.redkale.org
+ * <p>
+ * 详情见: http://www.redkale.org
+ *
  * @author zhangjx
  */
 @Inherited
@@ -23,24 +25,24 @@ public @interface FilterColumn {
     /**
      * 对应Entity Class中字段的名称， 而不是SQL字段名称
      *
-     * @return
+     * @return 字段名
      */
     String name() default "";
 
     /**
-     * 当字段类型是Number时， 如果值>=least() 则需要过滤， 否则跳过该字段
+     * 当字段类型是Number时， 如果值&gt;=least() 则需要过滤， 否则跳过该字段
      *
-     * @return
+     * @return 最小可过滤值
      */
     long least() default 1;
 
     /**
      * express的默认值根据字段类型的不同而不同:
-     * 数组 --> IN
-     * Range --> Between
-     * 其他 --> =
+     * 数组 --&gt; IN
+     * Range --&gt; Between
+     * 其他 --&gt; =
      *
-     * @return
+     * @return 字段表达式
      */
     FilterExpress express() default FilterExpress.EQUAL;
 

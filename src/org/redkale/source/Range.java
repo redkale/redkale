@@ -13,7 +13,7 @@ import java.util.function.*;
  * 详情见: http://www.redkale.org
  *
  * @author zhangjx
- * @param <E>
+ * @param <E> Comparable的子类型
  */
 public interface Range<E extends Comparable> extends java.io.Serializable, Predicate<E> {
 

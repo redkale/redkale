@@ -12,7 +12,9 @@ import org.redkale.util.*;
 
 /**
  *
- * <p> 详情见: http://www.redkale.org
+ * <p>
+ * 详情见: http://www.redkale.org
+ *
  * @author zhangjx
  */
 @SuppressWarnings("unchecked")
@@ -22,8 +24,8 @@ public interface DataSource {
     /**
      * 新增对象， 必须是Entity对象
      *
-     * @param <T>
-     * @param values
+     * @param <T>    泛型
+     * @param values Entity对象
      */
     public <T> void insert(final T... values);
 
@@ -34,11 +36,19 @@ public interface DataSource {
     /**
      * 删除对象， 必须是Entity对象
      *
-     * @param <T>
-     * @param values
+     * @param <T>    泛型
+     * @param values Entity对象
      */
     public <T> void delete(final T... values);
 
+    /**
+     * 根据主键值删除数据
+     * 等价SQL: DELETE FROM WHERE {primary} IN {ids}
+     *
+     * @param <T>   Entity类的泛型
+     * @param clazz Entity类
+     * @param ids   主键值
+     */
     public <T> void delete(final Class<T> clazz, final Serializable... ids);
 
     public <T> void delete(final Class<T> clazz, final FilterNode node);
@@ -54,8 +64,8 @@ public interface DataSource {
     /**
      * 更新对象， 必须是Entity对象
      *
-     * @param <T>
-     * @param values
+     * @param <T>    泛型
+     * @param values Entity对象
      */
     public <T> void update(final T... values);
 
@@ -112,10 +122,10 @@ public interface DataSource {
     /**
      * 根据主键获取对象
      *
-     * @param <T>
-     * @param clazz
-     * @param pk
-     * @return
+     * @param <T>   泛型
+     * @param clazz Entity类
+     * @param pk    主键值
+     * @return Entity对象
      */
     public <T> T find(final Class<T> clazz, final Serializable pk);
 
@@ -162,13 +172,13 @@ public interface DataSource {
     /**
      * 根据指定字段值查询对象某个字段的集合
      *
-     * @param <T>
-     * @param <V>
-     * @param selectedColumn
-     * @param clazz
-     * @param column
-     * @param key
-     * @return
+     * @param <T>            Entity泛型
+     * @param <V>            字段类型
+     * @param selectedColumn 字段名
+     * @param clazz          Entity类
+     * @param column         过滤字段名
+     * @param key            过滤字段值
+     * @return 字段值的集合
      */
     public <T, V extends Serializable> HashSet<V> queryColumnSet(final String selectedColumn, final Class<T> clazz, final String column, final Serializable key);
 
@@ -197,14 +207,14 @@ public interface DataSource {
 
     /**
      * 根据指定参数查询对象某个字段的集合
-     * <p>
-     * @param <T>
-     * @param <V>
-     * @param selectedColumn
-     * @param clazz
-     * @param flipper
-     * @param bean
-     * @return
+     *
+     * @param <T>            Entity泛型
+     * @param <V>            字段类型
+     * @param selectedColumn 字段名
+     * @param clazz          Entity类
+     * @param flipper        翻页对象
+     * @param bean           过滤Bean
+     * @return 结果集合
      */
     public <T, V extends Serializable> Sheet<V> queryColumnSheet(final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterBean bean);
 
@@ -218,11 +228,11 @@ public interface DataSource {
     /**
      * 根据指定字段值查询对象集合
      *
-     * @param <T>
-     * @param clazz
-     * @param column
-     * @param key
-     * @return
+     * @param <T>    Entity泛型
+     * @param clazz  Entity类
+     * @param column 过滤字段名
+     * @param key    过滤字段值
+     * @return Entity的List
      */
     public <T> List<T> queryList(final Class<T> clazz, final String column, final Serializable key);
 
@@ -269,11 +279,11 @@ public interface DataSource {
     /**
      * 根据指定参数查询对象某个对象的集合页
      * <p>
-     * @param <T>
-     * @param clazz
-     * @param flipper
-     * @param bean
-     * @return
+     * @param <T>     Entity泛型
+     * @param clazz   Entity类
+     * @param flipper 翻页对象
+     * @param bean    过滤Bean
+     * @return Entity的Sheet
      */
     public <T> Sheet<T> querySheet(final Class<T> clazz, final Flipper flipper, final FilterBean bean);
 

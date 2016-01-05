@@ -21,9 +21,10 @@ import org.redkale.util.*;
 
 /**
  *
- * @param <K>
- * @param <V>
- * <p> 详情见: http://www.redkale.org
+ * @param <K> key类型
+ * @param <V> value类型
+ * <p>
+ * 详情见: http://www.redkale.org
  * @author zhangjx
  */
 @AutoLoad(false)
