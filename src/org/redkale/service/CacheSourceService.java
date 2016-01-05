@@ -156,6 +156,10 @@ public class CacheSourceService<K extends Serializable, V extends Object> implem
         destroy(null);
     }
 
+    public String name() {
+        return this.getClass().getAnnotation(Resource.class).name();
+    }
+
     @Override
     public void destroy(AnyValue conf) {
         if (scheduler != null) scheduler.shutdownNow();

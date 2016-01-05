@@ -117,7 +117,7 @@ public abstract class Sncp {
      *      public void createSomeThing(TestBean bean){
      *          "xxxxx" + bean;
      *      }
-     * 
+     *
      *      &#64;MultiRun
      *      public String updateSomeThing(String id){
      *          return "hello" + id;
@@ -126,6 +126,7 @@ public abstract class Sncp {
      * </pre></blockquote>
      *
      * <blockquote><pre>
+     * &#64;Resource(name = "")
      * &#64;SncpDyn(remote = false)
      * public final class _DynLocalTestService extends TestService{
      *
@@ -139,11 +140,6 @@ public abstract class Sncp {
      *      private SncpClient _client;
      *
      *      private String _selfstring;
-     *
-     *      &#64;Override
-     *      public final String name() {
-     *          return "";
-     *      }
      *
      *      &#64;Override
      *      public String toString() {
@@ -162,7 +158,7 @@ public abstract class Sncp {
      *          if (samerunnable) _client.remote(_convert, _sameGroupTransports, 1, true, false, false, bean);
      *          if (diffrunnable) _client.remote(_convert, _diffGroupTransports, 1, true, true, false, bean);
      *      }
-     * 
+     *
      *      &#64;Override
      *      public String updateSomeThing(String id){
      *          return _updateSomeThing(true, true, true, id);
@@ -215,6 +211,11 @@ public abstract class Sncp {
 
         cw.visit(V1_8, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynName, null, supDynName, null);
         {
+            av0 = cw.visitAnnotation("Ljavax/annotation/Resource;", true);
+            av0.visit("name", name);
+            av0.visitEnd();
+        }
+        {
             av0 = cw.visitAnnotation(sncpDynDesc, true);
             av0.visit("remote", Boolean.FALSE);
             av0.visitEnd();
@@ -249,13 +250,6 @@ public abstract class Sncp {
             mv.visitVarInsn(ALOAD, 0);
             mv.visitMethodInsn(INVOKESPECIAL, supDynName, "<init>", "()V", false);
             mv.visitInsn(RETURN);
-            mv.visitMaxs(1, 1);
-            mv.visitEnd();
-        }
-        { // name()
-            mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC + ACC_FINAL, "name", "()Ljava/lang/String;", null, null));
-            mv.visitLdcInsn(name);
-            mv.visitInsn(ARETURN);
             mv.visitMaxs(1, 1);
             mv.visitEnd();
         }
@@ -775,6 +769,7 @@ public abstract class Sncp {
 
     /**
      * <blockquote><pre>
+     * &#64;Resource(name = "")
      * &#64;SncpDyn(remote = true)
      * public final class _DynRemoteTestService extends TestService{
      *
@@ -786,11 +781,6 @@ public abstract class Sncp {
      *      private SncpClient _client;
      *
      *      private String _selfstring;
-     *
-     *      &#64;Override
-     *      public final String name() {
-     *          return "";
-     *      }
      *
      *      &#64;Override
      *      public String toString() {
@@ -876,6 +866,11 @@ public abstract class Sncp {
 
         cw.visit(V1_8, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynName, null, supDynName, null);
         {
+            av0 = cw.visitAnnotation("Ljavax/annotation/Resource;", true);
+            av0.visit("name", name);
+            av0.visitEnd();
+        }
+        {
             av0 = cw.visitAnnotation(sncpDynDesc, true);
             av0.visit("remote", Boolean.TRUE);
             av0.visitEnd();
@@ -917,13 +912,6 @@ public abstract class Sncp {
             mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC, "destroy", "(" + anyValueDesc + ")V", null, null));
             mv.visitInsn(RETURN);
             mv.visitMaxs(0, 2);
-            mv.visitEnd();
-        }
-        { // name()
-            mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC + ACC_FINAL, "name", "()Ljava/lang/String;", null, null));
-            mv.visitLdcInsn(name);
-            mv.visitInsn(ARETURN);
-            mv.visitMaxs(1, 1);
             mv.visitEnd();
         }
         { // toString()

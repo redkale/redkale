@@ -19,7 +19,9 @@ import javax.annotation.Resource;
 /**
  * 暂时不实现
  *
- * <p> 详情见: http://www.redkale.org
+ * <p>
+ * 详情见: http://www.redkale.org
+ *
  * @author zhangjx
  */
 @AutoLoad(false)
@@ -62,6 +64,10 @@ public class DataSQLListenerService implements DataSQLListener, Service {
             }
         }.start();
 
+    }
+
+    public String name() {
+        return this.getClass().getAnnotation(Resource.class).name();
     }
 
     @Override

@@ -15,7 +15,9 @@ import javax.annotation.*;
 /**
  * 如果Resource(name = "$") 表示资源name采用所属对象的name
  *
- * <p> 详情见: http://www.redkale.org
+ * <p>
+ * 详情见: http://www.redkale.org
+ *
  * @author zhangjx
  */
 @SuppressWarnings("unchecked")
@@ -185,10 +187,15 @@ public final class ResourceFactory {
                     String tname = rc.name();
                     if (tname.contains(RESOURCE_PARENT_NAME)) {
                         try {
-                            String srcname = (String) src.getClass().getMethod("name").invoke(src);
-                            tname = tname.replace(RESOURCE_PARENT_NAME, srcname);
+                            Resource res = src.getClass().getAnnotation(Resource.class);
+                            if (res == null) {
+                                String srcname = (String) src.getClass().getMethod("name").invoke(src);
+                                tname = tname.replace(RESOURCE_PARENT_NAME, srcname);
+                            } else {
+                                tname = res.name();
+                            }
                         } catch (Exception e) { // 获取src中的name()方法的值， 异常则忽略
-                            logger.log(Level.SEVERE, src.getClass().getName() + " not found [public String name()] method", e);
+                            logger.log(Level.SEVERE, src.getClass().getName() + " not found @Resource on Class or [public String name()] method", e);
                         }
                     }
                     final String rcname = tname;

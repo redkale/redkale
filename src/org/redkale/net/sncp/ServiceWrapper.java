@@ -79,7 +79,7 @@ public final class ServiceWrapper<T extends Service> {
     }
 
     public String getName() {
-        return service.name();
+        return name;
     }
 
     public boolean isRemote() {

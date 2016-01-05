@@ -41,12 +41,4 @@ public interface Service {
 
     }
 
-    /**
-     * Service的name， 一个Service在同一进程内可以包含多个实例， 使用name区分
-     *
-     * @return 资源名
-     */
-    default String name() {
-        return "";
-    }
 }
