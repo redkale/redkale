@@ -5,7 +5,6 @@
  */
 package org.redkale.boot;
 
-import org.redkale.util.Ignore;
 import org.redkale.util.AutoLoad;
 import org.redkale.util.AnyValue;
 import org.redkale.util.AnyValue.DefaultAnyValue;
@@ -198,7 +197,6 @@ public final class ClassFilter<T> {
     @SuppressWarnings("unchecked")
     public boolean accept(AnyValue property, Class clazz, boolean autoscan) {
         if (this.refused || !Modifier.isPublic(clazz.getModifiers())) return false;
-        if (clazz.getAnnotation(Ignore.class) != null) return false;
         if (autoscan) {
             AutoLoad auto = (AutoLoad) clazz.getAnnotation(AutoLoad.class);
             if (auto != null && !auto.value()) return false;

@@ -14,6 +14,7 @@ import java.util.concurrent.*;
 import java.util.function.*;
 import java.util.logging.*;
 import javax.annotation.*;
+import org.redkale.convert.*;
 import org.redkale.convert.json.*;
 import org.redkale.net.sncp.*;
 import org.redkale.source.*;
@@ -445,17 +446,17 @@ public class CacheSourceService<K extends Serializable, V extends Object> implem
             return JsonFactory.root().getConvert().convertTo(this);
         }
 
-        @Ignore
+        @ConvertColumn(ignore = true)
         public boolean isListCacheType() {
             return cacheType == CacheEntryType.LIST;
         }
 
-        @Ignore
+        @ConvertColumn(ignore = true)
         public boolean isSetCacheType() {
             return cacheType == CacheEntryType.SET;
         }
 
-        @Ignore
+        @ConvertColumn(ignore = true)
         public boolean isExpired() {
             return (expireSeconds > 0 && lastAccessed + expireSeconds < (System.currentTimeMillis() / 1000));
         }
