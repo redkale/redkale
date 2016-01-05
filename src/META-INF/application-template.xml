@@ -144,7 +144,7 @@
         <servlets path="/pipes" autoload="true" includes="" excludes="">
             <!-- 
                当Server为HTTP协议时，ResourceServlet才有效. 默认存在一个有默认属性的resource-servlet节点
-               webroot: web资源的根目录, 多个目录用;分隔，请求页面url时，如果第一个目录不存在则会查询下一个目录是否存在该文件至到所有目录集合， 默认取server节点中的root值
+               webroot: web资源的根目录, 默认取server节点中的root值
             -->
             <resource-servlet webroot="root">
                 <!--
