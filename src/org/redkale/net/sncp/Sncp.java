@@ -199,6 +199,13 @@ public abstract class Sncp {
         final String transportsDesc = Type.getDescriptor(Transport[].class);
         ClassLoader loader = Sncp.class.getClassLoader();
         String newDynName = supDynName.substring(0, supDynName.lastIndexOf('/') + 1) + LOCALPREFIX + serviceClass.getSimpleName();
+        if (!name.isEmpty()) {
+            boolean normal = true;
+            for (char ch : name.toCharArray()) {
+                if (!((ch >= '0' && ch <= '9') || ch == '_' || (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z'))) normal = false;
+            }
+            newDynName += "_" + (normal ? name : hash(name));
+        }
         try {
             return (Class<T>) Class.forName(newDynName.replace('/', '.'));
         } catch (Exception ex) {
