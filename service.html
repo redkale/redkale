@@ -29,8 +29,7 @@
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Service 是RedKale最核心的组件，依赖于Convert、SNCP协议、Resource依赖注入。Service主要处理业务逻辑和操作数据层，是微服务架构中的单一原子服务。每一个Service实例分两种模式: <b>本地模式</b>和<b>远程模式</b>。其模式由 conf/application.xml 文件来配置。使用者在调用过程中通常不需要区分当前Service实例是哪种模式。<br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 为了能确保本地模式与远程模式自由切换，对Service的实现类有一定的约束: <br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1. Service实现类会被继承，不能修饰为 <span style="color: #0000FF;">final</span>  <br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2. public String name()方法会被重载，不能修饰为 <span style="color: #0000FF;">final</span>  <br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 3. 带@MultiRun注解的方法会被重载，不能修饰为 <span style="color: #0000FF;">final</span>  <br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2. 带@MultiRun注解的方法会被重载，不能修饰为 <span style="color: #0000FF;">final</span>  <br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; RedKale进程启动时扫描可加载的Service实现类，根据配置文件配置的模式采用JDK 8内置的ASM技术动态生成相应的Service临时类进行实例化，并注册到ResourceFactory同其他Service、Servlet依赖注入。
             </p>
 
@@ -69,7 +68,8 @@
                 </pre></div>
 
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;动态生成的本地模式UserService：</p>
-            <div class="highlight"><pre><span class="nd">@SncpDyn</span><span class="o">(</span><span class="n">remote</span> <span class="o">=</span> <span class="kc">false</span><span class="o">)</span>
+            <div class="highlight"><pre><span class="nd">@Resource</span><span class="o">(</span><span class="n">name</span> <span class="o">=</span> <span class="s">""</span><span class="o">)</span>
+<span class="nd">@SncpDyn</span><span class="o">(</span><span class="n">remote</span> <span class="o">=</span> <span class="kc">false</span><span class="o">)</span>
 <span class="kd">public</span> <span class="kd">final</span> <span class="kd">class</span> <span class="nc">_DynLocalUserService</span> <span class="kd">extends</span> <span class="n">UserService</span> <span class="o">{</span>
 
     <span class="nd">@Resource</span>
@@ -82,11 +82,6 @@
     <span class="kd">private</span> <span class="n">SncpClient</span> <span class="n">_client</span><span class="o">;</span>
 
     <span class="kd">private</span> <span class="n">String</span> <span class="n">_selfstring</span><span class="o">;</span>
-
-    <span class="nd">@Override</span>
-    <span class="kd">public</span> <span class="kd">final</span> <span class="n">String</span> <span class="nf">name</span><span class="o">()</span> <span class="o">{</span>
-        <span class="k">return</span> <span class="s">&quot;&quot;</span><span class="o">;</span>
-    <span class="o">}</span>
 
     <span class="nd">@Override</span>
     <span class="kd">public</span> <span class="n">String</span> <span class="nf">toString</span><span class="o">()</span> <span class="o">{</span>
@@ -132,7 +127,7 @@
 
     <span class="kt">boolean</span> <span class="nf">async</span><span class="o">()</span> <span class="k">default</span> <span class="kc">true</span><span class="o">;</span> <span class="c1">//分布式运行是否采用异步模式</span>
 <span class="o">}</span> </pre></div>
-            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在动态生成的远程模式UserService时会根据不同参数生成相应的方法。若一个Service类没有含@MultiRun注解的方法，那么动态类只会重载public String name()和toString方法。当UserService服务仅需要部署了一个进程，由于没有其他等同服务的进程因此在UserService实例化时_client会赋值为null。</p>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在动态生成的远程模式UserService时会根据不同参数生成相应的方法。若一个Service类没有含@MultiRun注解的方法，那么动态类只会重载public String name()和toString方法。当UserService服务仅需要部署一个进程，由于没有其他等同服务的进程因此在UserService实例化时_client会赋值为null。</p>
 <div class="highlight"><pre><span class="nt">&lt;resources&gt;</span>  
     <span class="nt">&lt;group</span> <span class="na">name=</span><span class="s">&quot;GROUP-A&quot;</span><span class="nt">&gt;</span>
         <span class="nt">&lt;node</span> <span class="na">addr=</span><span class="s">&quot;192.168.10.111&quot;</span> <span class="na">port=</span><span class="s">&quot;7070&quot;</span><span class="nt">/&gt;</span>
@@ -157,7 +152,8 @@
             
             <h3><a id="service_remote" class="anchor" href="#" aria-hidden="true"><span class="octicon octicon-link"></span></a>Service 远程模式</h3>
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;动态生成的远程模式UserService：</p>
-            <div class="highlight"><pre><span class="nd">@SncpDyn</span><span class="o">(</span><span class="n">remote</span> <span class="o">=</span> <span class="kc">true</span><span class="o">)</span>
+            <div class="highlight"><pre><span class="nd">@Resource</span><span class="o">(</span><span class="n">name</span> <span class="o">=</span> <span class="s">""</span><span class="o">)</span>
+<span class="nd">@SncpDyn</span><span class="o">(</span><span class="n">remote</span> <span class="o">=</span> <span class="kc">true</span><span class="o">)</span>
 <span class="kd">public</span> <span class="kd">final</span> <span class="kd">class</span> <span class="nc">_DynRemoteUserService</span> <span class="kd">extends</span> <span class="n">UserService</span> <span class="o">{</span>
 
     <span class="nd">@Resource</span>
@@ -168,11 +164,6 @@
     <span class="kd">private</span> <span class="n">SncpClient</span> <span class="n">_client</span><span class="o">;</span>
 
     <span class="kd">private</span> <span class="n">String</span> <span class="n">_selfstring</span><span class="o">;</span>
-
-    <span class="nd">@Override</span>
-    <span class="kd">public</span> <span class="kd">final</span> <span class="n">String</span> <span class="nf">name</span><span class="o">()</span> <span class="o">{</span>
-        <span class="k">return</span> <span class="s">&quot;&quot;</span><span class="o">;</span>
-    <span class="o">}</span>
 
     <span class="nd">@Override</span>
     <span class="kd">public</span> <span class="n">String</span> <span class="nf">toString</span><span class="o">()</span> <span class="o">{</span>
