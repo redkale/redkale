@@ -8,7 +8,8 @@ package org.redkale.convert.ext;
 import java.nio.channels.*;
 import org.redkale.convert.*;
 
-/**
+/** 
+ * java.nio.channels.CompletionHandler 的SimpledCoder实现, 只输出null
  * 
  * <p> 详情见: http://www.redkale.org
  * @author zhangjx

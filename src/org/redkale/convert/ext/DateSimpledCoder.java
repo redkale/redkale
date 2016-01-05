@@ -11,6 +11,7 @@ import org.redkale.convert.Writer;
 import java.util.Date;
 
 /**
+ * Date 的SimpledCoder实现
  *
  * <p> 详情见: http://www.redkale.org
  * @author zhangjx

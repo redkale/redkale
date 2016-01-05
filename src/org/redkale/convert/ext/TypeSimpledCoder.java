@@ -10,8 +10,11 @@ import org.redkale.convert.Writer;
 import org.redkale.convert.SimpledCoder;
 
 /**
+ * Type 的SimpledCoder实现 只支持Type的子类Class
  *
- * <p> 详情见: http://www.redkale.org
+ * <p>
+ * 详情见: http://www.redkale.org
+ *
  * @author zhangjx
  * @param <R> Reader输入的子类型
  * @param <W> Writer输出的子类型

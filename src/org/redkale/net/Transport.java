@@ -18,7 +18,9 @@ import org.redkale.watch.*;
 /**
  * 传输客户端
  *
- * <p> 详情见: http://www.redkale.org
+ * <p>
+ * 详情见: http://www.redkale.org
+ *
  * @author zhangjx
  */
 public final class Transport {

@@ -11,8 +11,11 @@ import org.redkale.convert.SimpledCoder;
 import org.redkale.util.*;
 
 /**
+ * Dlong 的SimpledCoder实现
  *
- * <p> 详情见: http://www.redkale.org
+ * <p>
+ * 详情见: http://www.redkale.org
+ *
  * @author zhangjx
  * @param <R> Reader输入的子类型
  * @param <W> Writer输出的子类型
@@ -39,6 +42,12 @@ public final class DLongSimpledCoder<R extends Reader, W extends Writer> extends
         return DLong.create(bs);
     }
 
+    /**
+     * DLong 的JsonSimpledCoder实现
+     *
+     * @param <R> Reader输入的子类型
+     * @param <W> Writer输出的子类型
+     */
     public static class DLongJsonSimpledCoder<R extends Reader, W extends Writer> extends SimpledCoder<R, W, DLong> {
 
         public static final DLongJsonSimpledCoder instance = new DLongJsonSimpledCoder();

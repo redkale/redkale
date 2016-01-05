@@ -8,6 +8,7 @@ package org.redkale.convert.ext;
 import org.redkale.convert.*;
 
 /**
+ *  CharSequence 的SimpledCoder实现
  *
  * <p> 详情见: http://www.redkale.org
  * @author zhangjx

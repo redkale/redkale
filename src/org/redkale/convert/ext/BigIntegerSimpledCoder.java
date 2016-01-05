@@ -11,6 +11,7 @@ import org.redkale.convert.Reader;
 import java.math.BigInteger;
 
 /**
+ * BigInteger 的SimpledCoder实现
  *
  * <p>
  * 详情见: http://www.redkale.org

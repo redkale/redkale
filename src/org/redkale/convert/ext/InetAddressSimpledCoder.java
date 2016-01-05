@@ -11,8 +11,11 @@ import org.redkale.convert.Reader;
 import java.net.*;
 
 /**
+ * InetAddress 的SimpledCoder实现
  *
- * <p> 详情见: http://www.redkale.org
+ * <p>
+ * 详情见: http://www.redkale.org
+ *
  * @author zhangjx
  * @param <R> Reader输入的子类型
  * @param <W> Writer输出的子类型
@@ -41,6 +44,12 @@ public final class InetAddressSimpledCoder<R extends Reader, W extends Writer> e
         }
     }
 
+    /**
+     * InetSocketAddress 的SimpledCoder实现
+     *
+     * @param <R> Reader输入的子类型
+     * @param <W> Writer输出的子类型
+     */
     public final static class InetSocketAddressSimpledCoder<R extends Reader, W extends Writer> extends SimpledCoder<R, W, InetSocketAddress> {
 
         public static final InetSocketAddressSimpledCoder instance = new InetSocketAddressSimpledCoder();
@@ -69,6 +78,12 @@ public final class InetAddressSimpledCoder<R extends Reader, W extends Writer> e
 
     }
 
+    /**
+     * InetAddress 的JsonSimpledCoder实现
+     *
+     * @param <R> Reader输入的子类型
+     * @param <W> Writer输出的子类型
+     */
     public final static class InetAddressJsonSimpledCoder<R extends Reader, W extends Writer> extends SimpledCoder<R, W, InetAddress> {
 
         public static final InetAddressJsonSimpledCoder instance = new InetAddressJsonSimpledCoder();
@@ -95,6 +110,12 @@ public final class InetAddressSimpledCoder<R extends Reader, W extends Writer> e
 
     }
 
+    /**
+     * InetSocketAddress 的JsonSimpledCoder实现
+     *
+     * @param <R> Reader输入的子类型
+     * @param <W> Writer输出的子类型
+     */
     public final static class InetSocketAddressJsonSimpledCoder<R extends Reader, W extends Writer> extends SimpledCoder<R, W, InetSocketAddress> {
 
         public static final InetSocketAddressJsonSimpledCoder instance = new InetSocketAddressJsonSimpledCoder();

@@ -10,6 +10,7 @@ import org.redkale.convert.SimpledCoder;
 import org.redkale.convert.Writer;
 
 /**
+ * long[] 的SimpledCoder实现
  *
  * <p>
  * 详情见: http://www.redkale.org
