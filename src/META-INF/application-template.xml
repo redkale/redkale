@@ -149,7 +149,7 @@
             <resource-servlet webroot="root">
                 <!--
                     资源缓存的配置, 默认存在一个含默认属性的caches节点
-                    limit:  资源缓存最大容量， 默认: 128M, 为0表示不缓存
+                    limit:  资源缓存最大容量， 默认: 128M, 为0表示不缓存， 单位可以是B、K、M、G，不区分大小写
                     lengthmax: 可缓存的文件大小上限， 默认: 1M（超过1M的文件不会被缓存）
                 -->
                 <caches  limit="128M" lengthmax="1M" />
@@ -167,7 +167,7 @@
             <servlet value="com.xxx.XXX2Servlet" />
             <servlet value="com.xxx.XXX3Servlet" >
                 <property name="xxxxxx" value="XXXXXXXX"/>
-                <property name="xxxxxx" value="XXXXXXXX"/>
+                <property name="yyyyyy" value="YYYYYYYY"/>
             </servlet>
         </servlets>
     </server>
