@@ -75,7 +75,7 @@
         <span class="n">resp</span><span class="o">.</span><span class="na">finishJson</span><span class="o">(</span><span class="n">record</span><span class="o">);</span>
     <span class="o">}</span></pre></div>
 
-            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;JSON基本用法：</p>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Convert 基本用法：</p>
             <div class="highlight"><pre>    <span class="kd">public</span> <span class="kd">class</span> <span class="nc">UserRecord</span> <span class="o">{</span>
 
         <span class="kd">private</span> <span class="kt">int</span> <span class="n">userid</span><span class="o">;</span>
@@ -111,8 +111,8 @@
 <span class="cm">         *      }</span>
 <span class="cm">         **/</span>
         <span class="kd">final</span> <span class="n">JsonFactory</span> <span class="n">childFactory</span> <span class="o">=</span> <span class="n">JsonFactory</span><span class="o">.</span><span class="na">root</span><span class="o">().</span><span class="na">createChild</span><span class="o">();</span>
-        <span class="n">childFactory</span><span class="o">.</span><span class="na">register</span><span class="o">(</span><span class="n">UserRecord</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="kc">true</span><span class="o">,</span> <span class="s">&quot;password&quot;</span><span class="o">);</span>
-        <span class="n">childFactory</span><span class="o">.</span><span class="na">reloadCoder</span><span class="o">(</span><span class="n">UserRecord</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+        <span class="n">childFactory</span><span class="o">.</span><span class="na">register</span><span class="o">(</span><span class="n">UserRecord</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="kc">true</span><span class="o">,</span> <span class="s">&quot;password&quot;</span><span class="o">);</span> <span class="c1">//屏蔽掉password字段使其不输出</span>
+        <span class="n">childFactory</span><span class="o">.</span><span class="na">reloadCoder</span><span class="o">(</span><span class="n">UserRecord</span><span class="o">.</span><span class="na">class</span><span class="o">);</span> <span class="c1">//重新加载Coder使之覆盖父Factory的配置</span>
         <span class="kd">final</span> <span class="n">JsonConvert</span> <span class="n">childConvert</span> <span class="o">=</span> <span class="n">childFactory</span><span class="o">.</span><span class="na">getConvert</span><span class="o">();</span>
         <span class="n">json</span> <span class="o">=</span> <span class="n">childConvert</span><span class="o">.</span><span class="na">convertTo</span><span class="o">(</span><span class="n">user</span><span class="o">);</span>
         <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">json</span><span class="o">);</span>  <span class="c1">//应该是 {&quot;userid&quot;:100,&quot;username&quot;:&quot;redkalename&quot;}</span>
