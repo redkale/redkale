@@ -43,10 +43,14 @@ public class InnerCoderEntity {
         return new SimpledCoder<Reader, Writer, InnerCoderEntity>() {
 
             //必须与EnMember[] 顺序一致
-            private final DeMember[] deMembers = new DeMember[]{DeMember.create(factory, InnerCoderEntity.class, "id"), DeMember.create(factory, InnerCoderEntity.class, "val")};
+            private final DeMember[] deMembers = new DeMember[]{
+                DeMember.create(factory, InnerCoderEntity.class, "id"),
+                DeMember.create(factory, InnerCoderEntity.class, "val")};
 
             //必须与DeMember[] 顺序一致
-            private final EnMember[] enMembers = new EnMember[]{EnMember.create(factory, InnerCoderEntity.class, "id"), EnMember.create(factory, InnerCoderEntity.class, "val")};
+            private final EnMember[] enMembers = new EnMember[]{
+                EnMember.create(factory, InnerCoderEntity.class, "id"),
+                EnMember.create(factory, InnerCoderEntity.class, "val")};
 
             @Override
             public void convertTo(Writer out, InnerCoderEntity value) {
