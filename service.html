@@ -248,7 +248,9 @@
 <span class="o">}</span>
                 </pre></div>
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;生成远程模式Service时发现参数带有@DynCall注解的方法，在远程调用返回结果时会进行回调处理。</p>
-
+            <br/>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;异步调用 </p>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;远程模式不仅对@DynCall注解进行处理，而且对方法含有 <b>java.nio.channels.CompletionHandler</b> 的参数也进行异步特殊处理。</p>
             <footer class="site-footer">
                 <span class="site-footer-owner"><a href="https://github.com/wentch/redkale">RedKale</a> © <a href="https://github.com/wentch">wentch</a> &nbsp;&nbsp;&nbsp;&nbsp;欢迎加入RedKale技术交流QQ群: 527523235</span>
             </footer>
