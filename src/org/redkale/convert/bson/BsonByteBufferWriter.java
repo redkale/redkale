@@ -10,10 +10,12 @@ import java.util.function.*;
 
 /**
  *
- * <p> 详情见: http://www.redkale.org
+ * <p>
+ * 详情见: http://www.redkale.org
+ *
  * @author zhangjx
  */
-public final class BsonByteBufferWriter extends BsonWriter {
+public class BsonByteBufferWriter extends BsonWriter {
 
     private final Supplier<ByteBuffer> supplier;
 
@@ -21,8 +23,9 @@ public final class BsonByteBufferWriter extends BsonWriter {
 
     private int index;
 
-    protected BsonByteBufferWriter(Supplier<ByteBuffer> supplier) {
+    protected BsonByteBufferWriter(boolean tiny, Supplier<ByteBuffer> supplier) {
         super((byte[]) null);
+        this.tiny = tiny;
         this.supplier = supplier;
     }
 
@@ -56,7 +59,7 @@ public final class BsonByteBufferWriter extends BsonWriter {
     }
 
     @Override
-    public BsonByteBufferWriter setTiny(boolean tiny) {
+    public BsonByteBufferWriter tiny(boolean tiny) {
         this.tiny = tiny;
         return this;
     }

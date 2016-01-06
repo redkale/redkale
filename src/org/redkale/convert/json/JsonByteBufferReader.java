@@ -27,7 +27,7 @@ public class JsonByteBufferReader extends JsonReader {
 
     protected JsonByteBufferReader(ByteBuffer... buffers) {
         this.buffers = buffers;
-        this.currentBuffer = buffers[currentIndex];
+        if (buffers != null && buffers.length > 0) this.currentBuffer = buffers[currentIndex];
     }
 
     @Override
@@ -66,8 +66,10 @@ public class JsonByteBufferReader extends JsonReader {
             this.currentChar = 0;
             return ch;
         }
-        int remain = this.currentBuffer.remaining();
-        if (remain == 0 && this.currentIndex + 1 >= this.buffers.length) return 0;
+        if (this.currentBuffer != null) {
+            int remain = this.currentBuffer.remaining();
+            if (remain == 0 && this.currentIndex + 1 >= this.buffers.length) return 0;
+        }
         byte b1 = nextByte();
         if (b1 >= 0) {// 1 byte, 7 bits: 0xxxxxxx
             return (char) b1;
@@ -268,7 +270,7 @@ public class JsonByteBufferReader extends JsonReader {
         int value = 0;
         final boolean negative = firstchar == '-';
         if (!negative) {
-            if (firstchar < '0' || firstchar > '9') throw new NumberFormatException("illegal escape(" + firstchar + ") (position = " + position + ")");
+            if (firstchar < '0' || firstchar > '9') throw new ConvertException("illegal escape(" + firstchar + ") (position = " + position + ")");
             value = firstchar - '0';
         }
         for (;;) {
@@ -281,7 +283,7 @@ public class JsonByteBufferReader extends JsonReader {
                 backChar(ch);
                 break;
             } else {
-                throw new NumberFormatException("illegal escape(" + ch + ") (position = " + position + ")");
+                throw new ConvertException("illegal escape(" + ch + ") (position = " + position + ")");
             }
         }
         return negative ? -value : value;
@@ -302,7 +304,7 @@ public class JsonByteBufferReader extends JsonReader {
         long value = 0;
         final boolean negative = firstchar == '-';
         if (!negative) {
-            if (firstchar < '0' || firstchar > '9') throw new NumberFormatException("illegal escape(" + firstchar + ") (position = " + position + ")");
+            if (firstchar < '0' || firstchar > '9') throw new ConvertException("illegal escape(" + firstchar + ") (position = " + position + ")");
             value = firstchar - '0';
         }
         for (;;) {
@@ -315,7 +317,7 @@ public class JsonByteBufferReader extends JsonReader {
                 backChar(ch);
                 break;
             } else {
-                throw new NumberFormatException("illegal escape(" + ch + ") (position = " + position + ")");
+                throw new ConvertException("illegal escape(" + ch + ") (position = " + position + ")");
             }
         }
         return negative ? -value : value;

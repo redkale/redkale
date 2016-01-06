@@ -41,7 +41,7 @@ public final class EnMember<W extends Writer, T, F> implements Comparable<EnMemb
     public boolean write(final W out, final boolean comma, final T obj) {
         F value = attribute.get(obj);
         if (value == null) return comma;
-        if (out.isTiny()) {
+        if (out.tiny()) {
             if (istring) {
                 if (((CharSequence) value).length() == 0) return comma;
             } else if (isbool) {

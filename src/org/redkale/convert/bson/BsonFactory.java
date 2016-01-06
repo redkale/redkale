@@ -10,7 +10,9 @@ import org.redkale.convert.*;
 
 /**
  *
- * <p> 详情见: http://www.redkale.org
+ * <p>
+ * 详情见: http://www.redkale.org
+ *
  * @author zhangjx
  */
 public final class BsonFactory extends Factory<BsonReader, BsonWriter> {
@@ -28,6 +30,12 @@ public final class BsonFactory extends Factory<BsonReader, BsonWriter> {
 
     private BsonFactory(BsonFactory parent, boolean tiny) {
         super(parent, tiny);
+    }
+
+    @Override
+    public BsonFactory tiny(boolean tiny) {
+        this.tiny = tiny;
+        return this;
     }
 
     public static BsonFactory root() {

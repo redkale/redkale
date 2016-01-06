@@ -124,8 +124,9 @@ public abstract class Factory<R extends Reader, W extends Writer> {
         return convert;
     }
 
-    public void setTiny(boolean tiny) {
+    public Factory tiny(boolean tiny) {
         this.tiny = tiny;
+        return this;
     }
 
     public ConvertColumnEntry findRef(AccessibleObject field) {

@@ -14,7 +14,7 @@ import org.redkale.util.*;
  *
  * @author zhangjx
  */
-public final class BsonByteBufferReader extends BsonReader {
+public class BsonByteBufferReader extends BsonReader {
 
     private ByteBuffer[] buffers;
 
@@ -24,7 +24,7 @@ public final class BsonByteBufferReader extends BsonReader {
 
     protected BsonByteBufferReader(ByteBuffer... buffers) {
         this.buffers = buffers;
-        this.currentBuffer = buffers[currentIndex];
+        if (buffers != null && buffers.length > 0) this.currentBuffer = buffers[currentIndex];
     }
 
     @Override
@@ -47,7 +47,7 @@ public final class BsonByteBufferReader extends BsonReader {
      * @return 数组长度或 SIGN_NULL
      */
     @Override
-    public int readArrayB() {
+    public final int readArrayB() {
         short bt = readShort();
         if (bt == Reader.SIGN_NULL) return bt;
         short lt = readShort();
@@ -56,7 +56,7 @@ public final class BsonByteBufferReader extends BsonReader {
 //------------------------------------------------------------
 
     @Override
-    public boolean readBoolean() {
+    public final boolean readBoolean() {
         return readByte() == 1;
     }
 
@@ -76,41 +76,49 @@ public final class BsonByteBufferReader extends BsonReader {
     }
 
     @Override
-    public char readChar() {
-        int remain = this.currentBuffer.remaining();
-        if (remain >= 2) {
-            this.position += 2;
-            return this.currentBuffer.getChar();
+    public final char readChar() {
+        if (this.currentBuffer != null) {
+            int remain = this.currentBuffer.remaining();
+            if (remain >= 2) {
+                this.position += 2;
+                return this.currentBuffer.getChar();
+            }
         }
         return (char) ((0xff00 & (readByte() << 8)) | (0xff & readByte()));
     }
 
     @Override
-    public short readShort() {
-        int remain = this.currentBuffer.remaining();
-        if (remain >= 2) {
-            this.position += 2;
-            return this.currentBuffer.getShort();
+    public final short readShort() {
+        if (this.currentBuffer != null) {
+            int remain = this.currentBuffer.remaining();
+            if (remain >= 2) {
+                this.position += 2;
+                return this.currentBuffer.getShort();
+            }
         }
         return (short) ((0xff00 & (readByte() << 8)) | (0xff & readByte()));
     }
 
     @Override
-    public int readInt() {
-        int remain = this.currentBuffer.remaining();
-        if (remain >= 4) {
-            this.position += 4;
-            return this.currentBuffer.getInt();
+    public final int readInt() {
+        if (this.currentBuffer != null) {
+            int remain = this.currentBuffer.remaining();
+            if (remain >= 4) {
+                this.position += 4;
+                return this.currentBuffer.getInt();
+            }
         }
         return ((readByte() & 0xff) << 24) | ((readByte() & 0xff) << 16) | ((readByte() & 0xff) << 8) | (readByte() & 0xff);
     }
 
     @Override
-    public long readLong() {
-        int remain = this.currentBuffer.remaining();
-        if (remain >= 8) {
-            this.position += 8;
-            return this.currentBuffer.getLong();
+    public final long readLong() {
+        if (this.currentBuffer != null) {
+            int remain = this.currentBuffer.remaining();
+            if (remain >= 8) {
+                this.position += 8;
+                return this.currentBuffer.getLong();
+            }
         }
         return ((((long) readByte() & 0xff) << 56)
                 | (((long) readByte() & 0xff) << 48)
@@ -128,7 +136,7 @@ public final class BsonByteBufferReader extends BsonReader {
         return bs;
     }
 
-    protected void read(final byte[] bs, final int pos) {
+    private void read(final byte[] bs, final int pos) {
         int remain = this.currentBuffer.remaining();
         if (remain < 1) {
             this.currentBuffer = this.buffers[++this.currentIndex];
@@ -148,14 +156,14 @@ public final class BsonByteBufferReader extends BsonReader {
     }
 
     @Override
-    public String readSmallString() {
+    public final String readSmallString() {
         int len = 0xff & readByte();
         if (len == 0) return "";
         return new String(read(len));
     }
 
     @Override
-    public String readString() {
+    public final String readString() {
         int len = readInt();
         if (len == SIGN_NULL) return null;
         if (len == 0) return "";

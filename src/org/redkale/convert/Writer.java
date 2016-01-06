@@ -21,7 +21,7 @@ public interface Writer {
      *
      * @return 是否简化
      */
-    public boolean isTiny();
+    public boolean tiny();
 
     /**
      * 输出null值

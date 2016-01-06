@@ -350,7 +350,7 @@ public class JsonReader implements Reader {
         int value = 0;
         final boolean negative = firstchar == '-';
         if (!negative) {
-            if (firstchar < '0' || firstchar > '9') throw new NumberFormatException("illegal escape(" + firstchar + ") (position = " + currpos + ") in (" + new String(this.text) + ")");
+            if (firstchar < '0' || firstchar > '9') throw new ConvertException("illegal escape(" + firstchar + ") (position = " + currpos + ") in (" + new String(this.text) + ")");
             value = firstchar - '0';
         }
         for (;;) {
@@ -362,7 +362,7 @@ public class JsonReader implements Reader {
             } else if (ch == ',' || ch == '}' || ch == ']' || ch <= ' ' || ch == ':') {
                 break;
             } else {
-                throw new NumberFormatException("illegal escape(" + ch + ") (position = " + currpos + ") in (" + new String(this.text) + ")");
+                throw new ConvertException("illegal escape(" + ch + ") (position = " + currpos + ") in (" + new String(this.text) + ")");
             }
         }
         this.position = currpos - 1;
@@ -396,7 +396,7 @@ public class JsonReader implements Reader {
         long value = 0;
         final boolean negative = firstchar == '-';
         if (!negative) {
-            if (firstchar < '0' || firstchar > '9') throw new NumberFormatException("illegal escape(" + firstchar + ") (position = " + currpos + ") in (" + new String(this.text) + ")");
+            if (firstchar < '0' || firstchar > '9') throw new ConvertException("illegal escape(" + firstchar + ") (position = " + currpos + ") in (" + new String(this.text) + ")");
             value = firstchar - '0';
         }
         for (;;) {
@@ -408,7 +408,7 @@ public class JsonReader implements Reader {
             } else if (ch == ',' || ch == '}' || ch == ']' || ch <= ' ' || ch == ':') {
                 break;
             } else {
-                throw new NumberFormatException("illegal escape(" + ch + ") (position = " + currpos + ") but '" + ch + "' in (" + new String(this.text) + ")");
+                throw new ConvertException("illegal escape(" + ch + ") (position = " + currpos + ") but '" + ch + "' in (" + new String(this.text) + ")");
             }
         }
         this.position = currpos - 1;

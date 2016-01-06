@@ -9,18 +9,21 @@ import java.nio.*;
 import java.nio.charset.*;
 import java.util.*;
 import java.util.function.*;
+import org.redkale.convert.*;
 import org.redkale.util.*;
 
 /**
  *
- * <p> 详情见: http://www.redkale.org
+ * <p>
+ * 详情见: http://www.redkale.org
+ *
  * @author zhangjx
  */
-public final class JsonByteBufferWriter extends JsonWriter {
+public class JsonByteBufferWriter extends JsonWriter {
 
-    private static final Charset UTF8 = Charset.forName("UTF-8");
+    protected static final Charset UTF8 = Charset.forName("UTF-8");
 
-    private final Charset charset;
+    protected Charset charset;
 
     private final Supplier<ByteBuffer> supplier;
 
@@ -28,17 +31,18 @@ public final class JsonByteBufferWriter extends JsonWriter {
 
     private int index;
 
-    protected JsonByteBufferWriter(Supplier<ByteBuffer> supplier) {
-        this(null, supplier);
+    protected JsonByteBufferWriter(boolean tiny, Supplier<ByteBuffer> supplier) {
+        this(tiny, null, supplier);
     }
 
-    protected JsonByteBufferWriter(Charset charset, Supplier<ByteBuffer> supplier) {
+    protected JsonByteBufferWriter(boolean tiny, Charset charset, Supplier<ByteBuffer> supplier) {
+        this.tiny = tiny;
         this.charset = UTF8.equals(charset) ? null : charset;
         this.supplier = supplier;
     }
 
     @Override
-    public JsonByteBufferWriter setTiny(boolean tiny) {
+    public JsonByteBufferWriter tiny(boolean tiny) {
         this.tiny = tiny;
         return this;
     }
@@ -46,6 +50,7 @@ public final class JsonByteBufferWriter extends JsonWriter {
     @Override
     protected boolean recycle() {
         this.index = 0;
+        this.charset = null;
         this.buffers = null;
         return false;
     }
@@ -101,13 +106,13 @@ public final class JsonByteBufferWriter extends JsonWriter {
 
     @Override
     public void writeTo(final char ch) {
-        if (ch > Byte.MAX_VALUE) throw new RuntimeException("writeTo char(int.value = " + (int) ch + ") must be less 127");
+        if (ch > Byte.MAX_VALUE) throw new ConvertException("writeTo char(int.value = " + (int) ch + ") must be less 127");
         expand(1);
         this.buffers[index].put((byte) ch);
     }
 
     @Override
-    public final void writeTo(final char[] chs, final int start, final int len) {
+    public void writeTo(final char[] chs, final int start, final int len) {
         writeTo(-1, false, chs, start, len);
     }
 
@@ -239,7 +244,7 @@ public final class JsonByteBufferWriter extends JsonWriter {
      * @param value String值
      */
     @Override
-    public final void writeTo(final boolean quote, final String value) {
+    public void writeTo(final boolean quote, final String value) {
         char[] chs = Utility.charArray(value);
         writeTo(-1, quote, chs, 0, chs.length);
     }
@@ -328,18 +333,6 @@ public final class JsonByteBufferWriter extends JsonWriter {
         }
         char[] cs = Utility.charArray(sb);
         writeTo(expandsize, true, cs, 0, sb.length());
-    }
-
-    @Override
-    public final void writeField(boolean comma, Attribute attribute) {
-        if (comma) writeTo(',');
-        writeTo(true, attribute.field());
-        writeTo(':');
-    }
-
-    @Override
-    public final void writeSmallString(String value) {
-        writeTo(false, value);
     }
 
     @Override

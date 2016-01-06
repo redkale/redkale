@@ -58,11 +58,11 @@ public class JsonWriter implements Writer {
     }
 
     @Override
-    public boolean isTiny() {
+    public boolean tiny() {
         return tiny;
     }
 
-    public JsonWriter setTiny(boolean tiny) {
+    public JsonWriter tiny(boolean tiny) {
         this.tiny = tiny;
         return this;
     }
@@ -159,14 +159,14 @@ public class JsonWriter implements Writer {
     }
 
     @Override
-    public void writeField(boolean comma, Attribute attribute) {
+    public final void writeField(boolean comma, Attribute attribute) {
         if (comma) writeTo(',');
         writeTo(true, attribute.field());
         writeTo(':');
     }
 
     @Override
-    public void writeSmallString(String value) {
+    public final void writeSmallString(String value) {
         writeTo(true, value);
     }
 

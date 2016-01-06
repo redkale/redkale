@@ -65,11 +65,11 @@ public class BsonWriter implements Writer {
     }
 
     @Override
-    public final boolean isTiny() {
+    public final boolean tiny() {
         return tiny;
     }
 
-    public BsonWriter setTiny(boolean tiny) {
+    public BsonWriter tiny(boolean tiny) {
         this.tiny = tiny;
         return this;
     }

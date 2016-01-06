@@ -189,17 +189,17 @@ public class HttpResponse<R extends HttpRequest> extends Response<R> {
 
     public void finishJson(Object obj) {
         this.contentType = "text/plain; charset=utf-8";
-        finish(request.getJsonConvert().convertTo(context.getCharset(), context.getBufferSupplier(), obj));
+        finish(request.getJsonConvert().convertTo(context.getBufferSupplier(), obj));
     }
 
     public void finishJson(Type type, Object obj) {
         this.contentType = "text/plain; charset=utf-8";
-        finish(request.getJsonConvert().convertTo(context.getCharset(), context.getBufferSupplier(), type, obj));
+        finish(request.getJsonConvert().convertTo(context.getBufferSupplier(), type, obj));
     }
 
     public void finishJson(Object... objs) {
         this.contentType = "text/plain; charset=utf-8";
-        finish(request.getJsonConvert().convertTo(context.getCharset(), context.getBufferSupplier(), objs));
+        finish(request.getJsonConvert().convertTo(context.getBufferSupplier(), objs));
     }
 
     public void finish(String obj) {

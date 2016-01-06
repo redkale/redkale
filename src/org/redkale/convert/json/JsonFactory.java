@@ -14,7 +14,9 @@ import org.redkale.util.*;
 
 /**
  *
- * <p> 详情见: http://www.redkale.org
+ * <p>
+ * 详情见: http://www.redkale.org
+ *
  * @author zhangjx
  */
 public final class JsonFactory extends Factory<JsonReader, JsonWriter> {
@@ -30,6 +32,12 @@ public final class JsonFactory extends Factory<JsonReader, JsonWriter> {
 
     private JsonFactory(JsonFactory parent, boolean tiny) {
         super(parent, tiny);
+    }
+
+    @Override
+    public JsonFactory tiny(boolean tiny) {
+        this.tiny = tiny;
+        return this;
     }
 
     public static JsonFactory root() {
