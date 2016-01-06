@@ -144,7 +144,7 @@ public final class SncpClient {
     protected final Consumer<Runnable> executor;
 
     public SncpClient(final String serviceName, final Consumer<Runnable> executor, final DLong serviceid, boolean remote, final Class serviceClass,
-            boolean onlySncpDyn, final InetSocketAddress clientAddress, final HashSet<String> groups) {
+            final InetSocketAddress clientAddress, final HashSet<String> groups) {
         this.remote = remote;
         this.executor = executor;
         this.serviceClass = serviceClass;
@@ -156,7 +156,7 @@ public final class SncpClient {
         this.serviceid = serviceid;
         final List<SncpAction> methodens = new ArrayList<>();
         //------------------------------------------------------------------------------
-        for (java.lang.reflect.Method method : parseMethod(serviceClass, onlySncpDyn)) { //远程模式下onlySncpDyn = false
+        for (java.lang.reflect.Method method : parseMethod(serviceClass)) {
             SncpAction en = new SncpAction(method, Sncp.hash(method));
             methodens.add(en);
         }
@@ -190,7 +190,7 @@ public final class SncpClient {
                 + ", groups = " + groups + ", actions.size = " + actions.length + ")";
     }
 
-    public static List<Method> parseMethod(final Class serviceClass, boolean onlySncpDyn) { //远程模式下onlySncpDyn = false
+    public static List<Method> parseMethod(final Class serviceClass) {
         final List<Method> list = new ArrayList<>();
         final List<Method> multis = new ArrayList<>();
         final Map<DLong, Method> actionids = new HashMap<>();
@@ -204,7 +204,7 @@ public final class SncpClient {
             if (method.getName().equals("equals") || method.getName().equals("hashCode")) continue;
             if (method.getName().equals("notify") || method.getName().equals("notifyAll") || method.getName().equals("wait")) continue;
             if (method.getName().equals("init") || method.getName().equals("destroy")) continue;
-            if (onlySncpDyn && method.getAnnotation(SncpDyn.class) == null) continue;
+            //if (onlySncpDyn && method.getAnnotation(SncpDyn.class) == null) continue;
             DLong actionid = Sncp.hash(method);
             Method old = actionids.get(actionid);
             if (old != null) {
@@ -219,11 +219,15 @@ public final class SncpClient {
                 list.add(method);
             }
         }
-        list.addAll(multis);
-        if (onlySncpDyn && list.size() > 1) {
-            list.sort((m1, m2) -> m1.getAnnotation(SncpDyn.class).index() - m2.getAnnotation(SncpDyn.class).index());
-        }
-        return list;
+        multis.sort((m1, m2) -> m1.getAnnotation(SncpDyn.class).index() - m2.getAnnotation(SncpDyn.class).index());
+        list.sort((Method o1, Method o2) -> {
+            if (!o1.getName().equals(o2.getName())) return o1.getName().compareTo(o2.getName());
+            if (o1.getParameterCount() != o2.getParameterCount()) return o1.getParameterCount() - o2.getParameterCount();
+            return 0;
+        });
+        //带SncpDyn必须排在前面
+        multis.addAll(list);
+        return multis;
     }
 
     public <T> T remote(final BsonConvert convert, Transport transport, final int index, final Object... params) {

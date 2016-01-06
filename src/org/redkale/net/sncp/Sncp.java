@@ -109,13 +109,13 @@ public abstract class Sncp {
      * <blockquote><pre>
      * public class TestService implements Service{
      *
-     *      public String queryNode(){
+     *      public String findSomeThing(){
      *          return "hello";
      *      }
      *
      *      &#64;MultiRun(selfrun = false)
      *      public void createSomeThing(TestBean bean){
-     *          "xxxxx" + bean;
+     *          //do something
      *      }
      *
      *      &#64;MultiRun
@@ -148,28 +148,28 @@ public abstract class Sncp {
      *
      *      &#64;Override
      *      public void createSomeThing(TestBean bean){
-     *          _createSomeThing(false, true, true, bean);
+     *          this._createSomeThing(false, true, true, bean);
      *      }
      *
      *      &#64;SncpDyn(remote = false, index = 0)
      *      public void _createSomeThing(boolean selfrunnable, boolean samerunnable, boolean diffrunnable, TestBean bean){
      *          if(selfrunnable) super.createSomeThing(bean);
      *          if (_client== null) return;
-     *          if (samerunnable) _client.remote(_convert, _sameGroupTransports, 1, true, false, false, bean);
-     *          if (diffrunnable) _client.remote(_convert, _diffGroupTransports, 1, true, true, false, bean);
+     *          if (samerunnable) _client.remote(_convert, _sameGroupTransports, 0, true, false, false, bean);
+     *          if (diffrunnable) _client.remote(_convert, _diffGroupTransports, 0, true, true, false, bean);
      *      }
      *
      *      &#64;Override
      *      public String updateSomeThing(String id){
-     *          return _updateSomeThing(true, true, true, id);
+     *          return this._updateSomeThing(true, true, true, id);
      *      }
      *
      *      &#64;SncpDyn(remote = false, index = 1)
      *      public String _updateSomeThing(boolean selfrunnable, boolean samerunnable, boolean diffrunnable, String id){
      *          String rs = super.updateSomeThing(id);
      *          if (_client== null) return;
-     *          if (samerunnable) _client.remote(_convert, _sameGroupTransports, 0, true, false, false, id);
-     *          if (diffrunnable) _client.remote(_convert, _diffGroupTransports, 0, true, true, false, id);
+     *          if (samerunnable) _client.remote(_convert, _sameGroupTransports, 1, true, false, false, id);
+     *          if (diffrunnable) _client.remote(_convert, _diffGroupTransports, 1, true, true, false, id);
      *          return rs;
      *      }
      * }
@@ -189,7 +189,7 @@ public abstract class Sncp {
         int mod = serviceClass.getModifiers();
         if (!java.lang.reflect.Modifier.isPublic(mod)) return serviceClass;
         if (java.lang.reflect.Modifier.isAbstract(mod)) return serviceClass;
-        final List<Method> methods = SncpClient.parseMethod(serviceClass, false);
+        final List<Method> methods = SncpClient.parseMethod(serviceClass);
         final boolean hasMultiRun = methods.stream().filter(x -> x.getAnnotation(MultiRun.class) != null).findAny().isPresent();
         final String supDynName = serviceClass.getName().replace('.', '/');
         final String clientName = SncpClient.class.getName().replace('.', '/');
@@ -293,6 +293,7 @@ public abstract class Sncp {
                     final Annotation[][] anns = method.getParameterAnnotations();
                     for (int k = 0; k < anns.length; k++) {
                         for (Annotation ann : anns[k]) {
+                            if (ann instanceof SncpDyn || ann instanceof MultiRun) continue; //必须过滤掉 MultiRun、SncpDyn，否则生成远程模式Service时会出错
                             visitAnnotation(mv.visitParameterAnnotation(k, Type.getDescriptor(ann.annotationType()), true), ann);
                         }
                     }
@@ -345,6 +346,7 @@ public abstract class Sncp {
                     final Annotation[][] anns = method.getParameterAnnotations();
                     for (int k = 0; k < anns.length; k++) {
                         for (Annotation ann : anns[k]) {
+                            if (ann instanceof SncpDyn || ann instanceof MultiRun) continue; //必须过滤掉 MultiRun、SncpDyn，否则生成远程模式Service时会出错
                             visitAnnotation(mv.visitParameterAnnotation(k, Type.getDescriptor(ann.annotationType()), true), ann);
                         }
                     }
@@ -722,7 +724,7 @@ public abstract class Sncp {
                 try {
                     Field e = newClazz.getDeclaredField("_client");
                     e.setAccessible(true);
-                    client = new SncpClient(name, executor, hash(serviceClass), false, newClazz, true, clientAddress, groups);
+                    client = new SncpClient(name, executor, hash(serviceClass), false, newClazz, clientAddress, groups);
                     e.set(rs, client);
                 } catch (NoSuchFieldException ne) {
                 }
@@ -794,19 +796,29 @@ public abstract class Sncp {
      *          return _selfstring == null ? super.toString() : _selfstring;
      *      }
      *
-     *      &#64;Override
-     *      public boolean testChange(TestBean bean) {
-     *          return _client.remote(_convert, _transport, 0, bean);
+     *      &#64;SncpDyn(remote = false, index = 0)
+     *      public void _createSomeThing(boolean selfrunnable, boolean samerunnable, boolean diffrunnable, TestBean bean){
+     *          _client.remote(_convert, _transport, 0, selfrunnable, samerunnable, diffrunnable, bean);
+     *      }
+     *
+     *      &#64;SncpDyn(remote = false, index = 1)
+     *      public String _updateSomeThing(boolean selfrunnable, boolean samerunnable, boolean diffrunnable, String id){
+     *          return _client.remote(_convert, _transport, 1, selfrunnable, samerunnable, diffrunnable, id);
      *      }
      *
      *      &#64;Override
-     *      public TestBean findTestBean(long id) {
-     *          return _client.remote(_convert, _transport, 1, id);
+     *      public void createSomeThing(TestBean bean){
+     *          _client.remote(_convert, _transport, 2, bean);
      *      }
      *
      *      &#64;Override
-     *      public void runTestBean(long id, TestBean bean) {
-     *          _client.remote(_convert, _transport, 2, id, bean);
+     *      public String findSomeThing(){
+     *          return _client.remote(_convert, _transport, 3);
+     *      }
+     * 
+     *      &#64;Override
+     *      public String updateSomeThing(String id){
+     *          return  _client.remote(_convert, _transport, 4, id);
      *      }
      * }
      * </pre></blockquote>
@@ -840,7 +852,7 @@ public abstract class Sncp {
         final String anyValueDesc = Type.getDescriptor(AnyValue.class);
         ClassLoader loader = Sncp.class.getClassLoader();
         String newDynName = supDynName.substring(0, supDynName.lastIndexOf('/') + 1) + REMOTEPREFIX + serviceClass.getSimpleName();
-        final SncpClient client = new SncpClient(name, executor, hash(serviceClass), true, createLocalServiceClass(name, serviceClass), false, clientAddress, groups);
+        final SncpClient client = new SncpClient(name, executor, hash(serviceClass), true, createLocalServiceClass(name, serviceClass), clientAddress, groups);
         try {
             Class newClazz = Class.forName(newDynName.replace('/', '.'));
             T rs = (T) newClazz.newInstance();
@@ -946,6 +958,14 @@ public abstract class Sncp {
             {
                 mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC, method.getName(), Type.getMethodDescriptor(method), null, null));
                 //mv.setDebug(true);
+                { //给参数加上 Annotation
+                    final Annotation[][] anns = method.getParameterAnnotations();
+                    for (int k = 0; k < anns.length; k++) {
+                        for (Annotation ann : anns[k]) {
+                            visitAnnotation(mv.visitParameterAnnotation(k, Type.getDescriptor(ann.annotationType()), true), ann);
+                        }
+                    }
+                }
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitFieldInsn(GETFIELD, newDynName, "_client", clientDesc);
                 mv.visitVarInsn(ALOAD, 0);
