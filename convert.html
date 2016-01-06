@@ -173,6 +173,92 @@
 
 <span class="n">BsonFactory</span><span class="o">.</span><span class="na">root</span><span class="o">().</span><span class="na">register</span><span class="o">(</span><span class="n">java</span><span class="o">.</span><span class="na">io</span><span class="o">.</span><span class="na">File</span><span class="o">.</span><span class="kd">class</span><span class="o">,</span> <span class="n">FileSimpleCoder</span><span class="o">.</span><span class="na">instance</span><span class="o">);</span>
                 </pre></div>
+            <!--    -->
+            <div class="highlight"><pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">InnerCoderEntity</span> <span class="o">{</span>
+
+    <span class="kd">private</span> <span class="kd">final</span> <span class="n">String</span> <span class="n">val</span><span class="o">;</span>
+
+    <span class="kd">private</span> <span class="kd">final</span> <span class="kt">int</span> <span class="n">id</span><span class="o">;</span>
+
+    <span class="kd">private</span> <span class="nf">InnerCoderEntity</span><span class="o">(</span><span class="kt">int</span> <span class="n">id</span><span class="o">,</span> <span class="n">String</span> <span class="n">value</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">id</span> <span class="o">=</span> <span class="n">id</span><span class="o">;</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">val</span> <span class="o">=</span> <span class="n">value</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="kd">static</span> <span class="n">InnerCoderEntity</span> <span class="nf">create</span><span class="o">(</span><span class="kt">int</span> <span class="n">id</span><span class="o">,</span> <span class="n">String</span> <span class="n">value</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="k">new</span> <span class="nf">InnerCoderEntity</span><span class="o">(</span><span class="n">id</span><span class="o">,</span> <span class="n">value</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="cm">/**</span>
+<span class="cm">     * 该方法提供给Convert组件自动加载。</span>
+<span class="cm">     * 1) 方法名可以随意。</span>
+<span class="cm">     * 2) 方法必须是static</span>
+<span class="cm">     * 3）方法的参数有且只能有一个， 且必须是org.redkale.convert.Factory。</span>
+<span class="cm">     * 4）方法的返回类型必须是org.redkale.convert.Decodeable/org.redkale.convert.Encodeable/org.redkale.convert.SimpledCoder</span>
+<span class="cm">     * 若返回类型不是org.redkale.convert.SimpledCoder, 就必须提供两个方法： 一个返回Decodeable 一个返回 Encodeable。</span>
+<span class="cm">     *</span>
+<span class="cm">     * @param factory</span>
+<span class="cm">     * @return</span>
+<span class="cm">     */</span>
+    <span class="kd">private</span> <span class="kd">static</span> <span class="n">SimpledCoder</span><span class="o">&lt;</span><span class="n">Reader</span><span class="o">,</span> <span class="n">Writer</span><span class="o">,</span> <span class="n">InnerCoderEntity</span><span class="o">&gt;</span> <span class="nf">createConvertCoder</span><span class="o">(</span><span class="kd">final</span> <span class="n">Factory</span> <span class="n">factory</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="k">new</span> <span class="n">SimpledCoder</span><span class="o">&lt;</span><span class="n">Reader</span><span class="o">,</span> <span class="n">Writer</span><span class="o">,</span> <span class="n">InnerCoderEntity</span><span class="o">&gt;()</span> <span class="o">{</span>
+
+            <span class="c1">//必须与EnMember[] 顺序一致</span>
+            <span class="kd">private</span> <span class="kd">final</span> <span class="n">DeMember</span><span class="o">[]</span> <span class="n">deMembers</span> <span class="o">=</span> <span class="k">new</span> <span class="n">DeMember</span><span class="o">[]{</span>
+                <span class="n">DeMember</span><span class="o">.</span><span class="na">create</span><span class="o">(</span><span class="n">factory</span><span class="o">,</span> <span class="n">InnerCoderEntity</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="s">&quot;id&quot;</span><span class="o">),</span>
+                <span class="n">DeMember</span><span class="o">.</span><span class="na">create</span><span class="o">(</span><span class="n">factory</span><span class="o">,</span> <span class="n">InnerCoderEntity</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="s">&quot;val&quot;</span><span class="o">)};</span>
+
+            <span class="c1">//必须与DeMember[] 顺序一致</span>
+            <span class="kd">private</span> <span class="kd">final</span> <span class="n">EnMember</span><span class="o">[]</span> <span class="n">enMembers</span> <span class="o">=</span> <span class="k">new</span> <span class="n">EnMember</span><span class="o">[]{</span>
+                <span class="n">EnMember</span><span class="o">.</span><span class="na">create</span><span class="o">(</span><span class="n">factory</span><span class="o">,</span> <span class="n">InnerCoderEntity</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="s">&quot;id&quot;</span><span class="o">),</span>
+                <span class="n">EnMember</span><span class="o">.</span><span class="na">create</span><span class="o">(</span><span class="n">factory</span><span class="o">,</span> <span class="n">InnerCoderEntity</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="s">&quot;val&quot;</span><span class="o">)};</span>
+
+            <span class="nd">@Override</span>
+            <span class="kd">public</span> <span class="kt">void</span> <span class="nf">convertTo</span><span class="o">(</span><span class="n">Writer</span> <span class="n">out</span><span class="o">,</span> <span class="n">InnerCoderEntity</span> <span class="n">value</span><span class="o">)</span> <span class="o">{</span>
+                <span class="k">if</span> <span class="o">(</span><span class="n">value</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+                    <span class="n">out</span><span class="o">.</span><span class="na">wirteClassName</span><span class="o">(</span><span class="kc">null</span><span class="o">);</span>
+                    <span class="n">out</span><span class="o">.</span><span class="na">writeNull</span><span class="o">();</span>
+                    <span class="k">return</span><span class="o">;</span>
+                <span class="o">}</span>
+                <span class="n">out</span><span class="o">.</span><span class="na">writeObjectB</span><span class="o">(</span><span class="n">enMembers</span><span class="o">.</span><span class="na">length</span><span class="o">,</span> <span class="n">value</span><span class="o">);</span>
+                <span class="kt">boolean</span> <span class="n">comma</span> <span class="o">=</span> <span class="kc">false</span><span class="o">;</span>
+                <span class="k">for</span> <span class="o">(</span><span class="n">EnMember</span> <span class="n">member</span> <span class="o">:</span> <span class="n">enMembers</span><span class="o">)</span> <span class="o">{</span>
+                    <span class="n">comma</span> <span class="o">=</span> <span class="n">member</span><span class="o">.</span><span class="na">write</span><span class="o">(</span><span class="n">out</span><span class="o">,</span> <span class="n">comma</span><span class="o">,</span> <span class="n">value</span><span class="o">);</span>
+                <span class="o">}</span>
+                <span class="n">out</span><span class="o">.</span><span class="na">writeObjectE</span><span class="o">(</span><span class="n">value</span><span class="o">);</span>
+            <span class="o">}</span>
+
+            <span class="nd">@Override</span>
+            <span class="kd">public</span> <span class="n">InnerCoderEntity</span> <span class="nf">convertFrom</span><span class="o">(</span><span class="n">Reader</span> <span class="n">in</span><span class="o">)</span> <span class="o">{</span>
+                <span class="n">in</span><span class="o">.</span><span class="na">readClassName</span><span class="o">();</span> <span class="c1">//必须先读Class 用于BSON</span>
+                <span class="k">if</span> <span class="o">(</span><span class="n">in</span><span class="o">.</span><span class="na">readObjectB</span><span class="o">()</span> <span class="o">==</span> <span class="n">Reader</span><span class="o">.</span><span class="na">SIGN_NULL</span><span class="o">)</span> <span class="k">return</span> <span class="kc">null</span><span class="o">;</span>
+                <span class="kd">final</span> <span class="n">AtomicInteger</span> <span class="n">index</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">AtomicInteger</span><span class="o">();</span>
+                <span class="kd">final</span> <span class="n">Object</span><span class="o">[]</span> <span class="n">params</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Object</span><span class="o">[</span><span class="n">deMembers</span><span class="o">.</span><span class="na">length</span><span class="o">];</span>
+                <span class="k">while</span> <span class="o">(</span><span class="n">in</span><span class="o">.</span><span class="na">hasNext</span><span class="o">())</span> <span class="o">{</span>
+                    <span class="n">DeMember</span> <span class="n">member</span> <span class="o">=</span> <span class="n">in</span><span class="o">.</span><span class="na">readField</span><span class="o">(</span><span class="n">index</span><span class="o">,</span> <span class="n">deMembers</span><span class="o">);</span>
+                    <span class="n">in</span><span class="o">.</span><span class="na">skipBlank</span><span class="o">();</span> <span class="c1">//跳过冒号:</span>
+                    <span class="k">if</span> <span class="o">(</span><span class="n">member</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+                        <span class="n">in</span><span class="o">.</span><span class="na">skipValue</span><span class="o">();</span> <span class="c1">//跳过该属性的值, 一般不会发生</span>
+                    <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+                        <span class="n">params</span><span class="o">[</span><span class="n">index</span><span class="o">.</span><span class="na">get</span><span class="o">()]</span> <span class="o">=</span> <span class="n">member</span><span class="o">.</span><span class="na">read</span><span class="o">(</span><span class="n">in</span><span class="o">);</span>
+                    <span class="o">}</span>
+                    <span class="n">index</span><span class="o">.</span><span class="na">incrementAndGet</span><span class="o">();</span>
+                <span class="o">}</span>
+                <span class="n">in</span><span class="o">.</span><span class="na">readObjectE</span><span class="o">();</span>
+                <span class="k">return</span> <span class="n">InnerCoderEntity</span><span class="o">.</span><span class="na">create</span><span class="o">(</span><span class="n">params</span><span class="o">[</span><span class="mi">0</span><span class="o">]</span> <span class="o">==</span> <span class="kc">null</span> <span class="o">?</span> <span class="mi">0</span> <span class="o">:</span> <span class="o">(</span><span class="n">Integer</span><span class="o">)</span> <span class="n">params</span><span class="o">[</span><span class="mi">0</span><span class="o">],</span> <span class="o">(</span><span class="n">String</span><span class="o">)</span> <span class="n">params</span><span class="o">[</span><span class="mi">1</span><span class="o">]);</span>
+            <span class="o">}</span>
+        <span class="o">};</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="kt">int</span> <span class="nf">getId</span><span class="o">()</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="n">id</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="n">String</span> <span class="nf">getVal</span><span class="o">()</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="n">val</span><span class="o">;</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+                </pre></div>
 
             <h3><a id="convert_bson_buffer" class="anchor" href="#" aria-hidden="true"><span class="octicon octicon-link"></span></a>BSON的协议格式</h3>
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;BSON类似Java自带的Serializable， 其格式如下: <br/>
