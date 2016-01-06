@@ -150,6 +150,7 @@
 <span class="o">}</span></pre></div>
 
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Convert 支持自定义Decode、Encode。</p>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;通过Factory显著注册：</p>
             <div class="highlight"><pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">FileSimpleCoder</span><span class="o">&lt;</span><span class="n">R</span> <span class="kd">extends</span> <span class="n">Reader</span><span class="o">,</span> <span class="n">W</span> <span class="kd">extends</span> <span class="n">Writer</span><span class="o">&gt;</span> <span class="kd">extends</span> <span class="n">SimpledCoder</span><span class="o">&lt;</span><span class="n">R</span><span class="o">,</span> <span class="n">W</span><span class="o">,</span> <span class="n">File</span><span class="o">&gt;</span> <span class="o">{</span>
 
     <span class="kd">public</span> <span class="kd">static</span> <span class="kd">final</span> <span class="n">FileSimpleCoder</span> <span class="n">instance</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">FileSimpleCoder</span><span class="o">();</span>
@@ -173,7 +174,8 @@
 
 <span class="n">BsonFactory</span><span class="o">.</span><span class="na">root</span><span class="o">().</span><span class="na">register</span><span class="o">(</span><span class="n">java</span><span class="o">.</span><span class="na">io</span><span class="o">.</span><span class="na">File</span><span class="o">.</span><span class="kd">class</span><span class="o">,</span> <span class="n">FileSimpleCoder</span><span class="o">.</span><span class="na">instance</span><span class="o">);</span>
                 </pre></div>
-            <!--    -->
+            
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;通过JavaBean类自定义：</p>
             <div class="highlight"><pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">InnerCoderEntity</span> <span class="o">{</span>
 
     <span class="kd">private</span> <span class="kd">final</span> <span class="n">String</span> <span class="n">val</span><span class="o">;</span>
