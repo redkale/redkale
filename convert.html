@@ -174,7 +174,7 @@
 
 <span class="n">BsonFactory</span><span class="o">.</span><span class="na">root</span><span class="o">().</span><span class="na">register</span><span class="o">(</span><span class="n">java</span><span class="o">.</span><span class="na">io</span><span class="o">.</span><span class="na">File</span><span class="o">.</span><span class="kd">class</span><span class="o">,</span> <span class="n">FileSimpleCoder</span><span class="o">.</span><span class="na">instance</span><span class="o">);</span>
                 </pre></div>
-            
+
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;通过JavaBean类自定义：</p>
             <div class="highlight"><pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">InnerCoderEntity</span> <span class="o">{</span>
 
@@ -191,6 +191,14 @@
         <span class="k">return</span> <span class="k">new</span> <span class="nf">InnerCoderEntity</span><span class="o">(</span><span class="n">id</span><span class="o">,</span> <span class="n">value</span><span class="o">);</span>
     <span class="o">}</span>
 
+    <span class="kd">public</span> <span class="kt">int</span> <span class="nf">getId</span><span class="o">()</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="n">id</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="n">String</span> <span class="nf">getVal</span><span class="o">()</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="n">val</span><span class="o">;</span>
+    <span class="o">}</span>
+
     <span class="cm">/**</span>
 <span class="cm">     * 该方法提供给Convert组件自动加载。</span>
 <span class="cm">     * 1) 方法名可以随意。</span>
@@ -202,7 +210,7 @@
 <span class="cm">     * @param factory</span>
 <span class="cm">     * @return</span>
 <span class="cm">     */</span>
-    <span class="kd">private</span> <span class="kd">static</span> <span class="n">SimpledCoder</span><span class="o">&lt;</span><span class="n">Reader</span><span class="o">,</span> <span class="n">Writer</span><span class="o">,</span> <span class="n">InnerCoderEntity</span><span class="o">&gt;</span> <span class="nf">createConvertCoder</span><span class="o">(</span><span class="kd">final</span> <span class="n">Factory</span> <span class="n">factory</span><span class="o">)</span> <span class="o">{</span>
+    <span class="kd">private</span> <span class="kd">static</span> <span class="n">SimpledCoder</span><span class="o">&lt;</span><span class="n">Reader</span><span class="o">,</span> <span class="n">Writer</span><span class="o">,</span> <span class="n">InnerCoderEntity</span><span class="o">&gt;</span> <span class="nf">createConvertCoder</span><span class="o">(</span><span class="kd">final</span> <span class="n">org.redkale.convert.Factory</span> <span class="n">factory</span><span class="o">)</span> <span class="o">{</span>
         <span class="k">return</span> <span class="k">new</span> <span class="n">SimpledCoder</span><span class="o">&lt;</span><span class="n">Reader</span><span class="o">,</span> <span class="n">Writer</span><span class="o">,</span> <span class="n">InnerCoderEntity</span><span class="o">&gt;()</span> <span class="o">{</span>
 
             <span class="c1">//必须与EnMember[] 顺序一致</span>
@@ -237,10 +245,10 @@
                 <span class="kd">final</span> <span class="n">AtomicInteger</span> <span class="n">index</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">AtomicInteger</span><span class="o">();</span>
                 <span class="kd">final</span> <span class="n">Object</span><span class="o">[]</span> <span class="n">params</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Object</span><span class="o">[</span><span class="n">deMembers</span><span class="o">.</span><span class="na">length</span><span class="o">];</span>
                 <span class="k">while</span> <span class="o">(</span><span class="n">in</span><span class="o">.</span><span class="na">hasNext</span><span class="o">())</span> <span class="o">{</span>
-                    <span class="n">DeMember</span> <span class="n">member</span> <span class="o">=</span> <span class="n">in</span><span class="o">.</span><span class="na">readField</span><span class="o">(</span><span class="n">index</span><span class="o">,</span> <span class="n">deMembers</span><span class="o">);</span>
+                    <span class="n">DeMember</span> <span class="n">member</span> <span class="o">=</span> <span class="n">in</span><span class="o">.</span><span class="na">readField</span><span class="o">(</span><span class="n">index</span><span class="o">,</span> <span class="n">deMembers</span><span class="o">);</span> <span class="c1">//读取字段名</span>
                     <span class="n">in</span><span class="o">.</span><span class="na">skipBlank</span><span class="o">();</span> <span class="c1">//跳过冒号:</span>
                     <span class="k">if</span> <span class="o">(</span><span class="n">member</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
-                        <span class="n">in</span><span class="o">.</span><span class="na">skipValue</span><span class="o">();</span> <span class="c1">//跳过不存在的属性的值, 一般不会发生</span>
+                        <span class="n">in</span><span class="o">.</span><span class="na">skipValue</span><span class="o">();</span> <span class="c1">//跳过不存在的字段的值, 一般不会发生</span>
                     <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
                         <span class="n">params</span><span class="o">[</span><span class="n">index</span><span class="o">.</span><span class="na">get</span><span class="o">()]</span> <span class="o">=</span> <span class="n">member</span><span class="o">.</span><span class="na">read</span><span class="o">(</span><span class="n">in</span><span class="o">);</span>
                     <span class="o">}</span>
@@ -250,14 +258,6 @@
                 <span class="k">return</span> <span class="n">InnerCoderEntity</span><span class="o">.</span><span class="na">create</span><span class="o">(</span><span class="n">params</span><span class="o">[</span><span class="mi">0</span><span class="o">]</span> <span class="o">==</span> <span class="kc">null</span> <span class="o">?</span> <span class="mi">0</span> <span class="o">:</span> <span class="o">(</span><span class="n">Integer</span><span class="o">)</span> <span class="n">params</span><span class="o">[</span><span class="mi">0</span><span class="o">],</span> <span class="o">(</span><span class="n">String</span><span class="o">)</span> <span class="n">params</span><span class="o">[</span><span class="mi">1</span><span class="o">]);</span>
             <span class="o">}</span>
         <span class="o">};</span>
-    <span class="o">}</span>
-
-    <span class="kd">public</span> <span class="kt">int</span> <span class="nf">getId</span><span class="o">()</span> <span class="o">{</span>
-        <span class="k">return</span> <span class="n">id</span><span class="o">;</span>
-    <span class="o">}</span>
-
-    <span class="kd">public</span> <span class="n">String</span> <span class="nf">getVal</span><span class="o">()</span> <span class="o">{</span>
-        <span class="k">return</span> <span class="n">val</span><span class="o">;</span>
     <span class="o">}</span>
 <span class="o">}</span>
                 </pre></div>
