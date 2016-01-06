@@ -29,11 +29,12 @@ public class InnerCoderEntity {
     }
 
     /**
-     * 该方法提供给Convert动态加载，
+     * 该方法提供给Convert动态加载。
      * 1) 方法名可以随意。
      * 2) 方法必须是static
      * 3）方法的参数有且只能有一个， 且必须是org.redkale.convert.Factory。
      * 4）方法的返回类型必须是org.redkale.convert.Decodeable/org.redkale.convert.Encodeable/org.redkale.convert.SimpledCoder
+     * 若返回类型不是org.redkale.convert.SimpledCoder, 就必须提供两个方法： 一个返回Decodeable 一个返回 Encodeable。
      *
      * @param factory
      * @return
