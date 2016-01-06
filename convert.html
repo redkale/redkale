@@ -29,7 +29,7 @@
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Convert 是一个比较独立的组件，仅依赖于util包。提供Java对象的序列化与反解析功能。支持JSON(JavaScript Object Notation)、BSON(Binary Stream Object Notation)两种格式化。 两种格式使用方式完全一样，其性能都大幅度超过其他JSON框架。同时JSON内置于HTTP协议中，BSON也是SNCP协议数据序列化的基础。<br/></p>
 
             <h3><a id="convert_study" class="anchor" href="#" aria-hidden="true"><span class="octicon octicon-link"></span></a>Convert 快速上手</h3>
-            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;本介绍仅以JSON为例(BSON与JSON使用方式雷同)。其操作类主要是JsonConvert，配置类主要是JsonFactory、ConvertColumn。</br></p>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;本介绍仅以JSON为例(BSON与JSON使用方式雷同)。其操作类主要是JsonConvert，配置类主要是JsonFactory、ConvertColumn。JsonFactory采用同ClassLoader类似的双亲委托方式设计。</br></p>
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;JsonConvert 序列化encode方法：</p>
 
             <div class="highlight"><pre>    <span class="kd">public</span> <span class="n">String</span> <span class="nf">convertTo</span><span class="o">(</span><span class="n">Object</span> <span class="n">value</span><span class="o">);</span>
