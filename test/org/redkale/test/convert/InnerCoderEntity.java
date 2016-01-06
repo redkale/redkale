@@ -29,7 +29,7 @@ public class InnerCoderEntity {
     }
 
     /**
-     * 该提供给Convert动态加载，
+     * 该方法提供给Convert动态加载，
      * 1) 方法名可以随意。
      * 2) 方法必须是static
      * 3）方法的参数有且只能有一个， 且必须是org.redkale.convert.Factory。
