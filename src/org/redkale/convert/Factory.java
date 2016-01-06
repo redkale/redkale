@@ -353,7 +353,7 @@ public abstract class Factory<R extends Reader, W extends Writer> {
             for (final Method method : clazz.getDeclaredMethods()) {
                 if (!Modifier.isStatic(method.getModifiers())) continue;
                 if (method.getParameterTypes().length != 0) continue;
-                if (method.getReturnType() != SimpledCoder.class) continue;
+                if (!SimpledCoder.class.isAssignableFrom(method.getReturnType())) continue;
                 try {
                     method.setAccessible(true);
                     simpleCoder = (SimpledCoder) method.invoke(null);
@@ -431,7 +431,7 @@ public abstract class Factory<R extends Reader, W extends Writer> {
             for (final Method method : clazz.getDeclaredMethods()) {
                 if (!Modifier.isStatic(method.getModifiers())) continue;
                 if (method.getParameterTypes().length != 0) continue;
-                if (method.getReturnType() != SimpledCoder.class) continue;
+                if (!SimpledCoder.class.isAssignableFrom(method.getReturnType())) continue;
                 try {
                     method.setAccessible(true);
                     simpleCoder = (SimpledCoder) method.invoke(null);
