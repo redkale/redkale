@@ -19,31 +19,31 @@ import org.redkale.convert.json.*;
 public class JsonTestMain {
 
     public static void main(String[] args) throws Exception {
-        JsonFactory factory = JsonFactory.root();
-        factory.setTiny(true); 
+        JsonFactory factory = JsonFactory.root().tiny(true);
         final JsonConvert convert = JsonFactory.root().getConvert();
-        String json = "{\"access_token\":\"vVX2bIjN5P9TMOphDkStM96eNWapAehTuWAlVDO74aFaYxLwj2b-9-T9p_W2mfr9\",\"expires_in\":7200, \"aa\":\"\"}"; 
+        String json = "{\"access_token\":\"vVX2bIjN5P9TMOphDkStM96eNWapAehTuWAlVDO74aFaYxLwj2b-9-T9p_W2mfr9\",\"expires_in\":7200, \"aa\":\"\"}";
         Map<String, String> map = convert.convertFrom(JsonConvert.TYPE_MAP_STRING_STRING, json);
         System.out.println(map);
         System.out.println(convert.convertTo(map));
         ByteBuffer[] buffers = convert.convertTo(() -> ByteBuffer.allocate(1024), map);
         byte[] bs = new byte[buffers[0].remaining()];
         buffers[0].get(bs);
-        System.out.println(new String(bs)); 
+        System.out.println(new String(bs));
         main2(args);
+        main3(args);
     }
-    
+
     public static void main2(String[] args) throws Exception {
         final JsonConvert convert = JsonFactory.root().getConvert();
         SimpleChildEntity entry = SimpleChildEntity.create();
         String json = convert.convertTo(SimpleEntity.class, entry);
         System.out.println("长度: " + json.length());
         JsonByteBufferWriter writer = convert.pollJsonWriter(() -> ByteBuffer.allocate(1));
-        convert.convertTo(writer,SimpleEntity.class,  entry);
+        convert.convertTo(writer, SimpleEntity.class, entry);
         ByteBuffer[] buffers = writer.toBuffers();
         int len = 0;
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        for(ByteBuffer b : buffers){
+        for (ByteBuffer b : buffers) {
             len += b.remaining();
             byte[] ts = new byte[b.remaining()];
             b.get(ts);
@@ -57,4 +57,17 @@ public class JsonTestMain {
         System.out.println(entry2);
     }
 
+    public static void main3(String[] args) throws Exception {
+        final JsonConvert convert = JsonFactory.root().getConvert();
+        SimpleChildEntity entry = SimpleChildEntity.create();
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        convert.convertTo(out, SimpleEntity.class, entry);
+        String json = out.toString("UTF-8");
+        System.out.println("长度: " + json.length());
+        System.out.println(json);
+        ByteArrayInputStream in = new ByteArrayInputStream(out.toByteArray());
+        SimpleChildEntity entry2 = convert.convertFrom(SimpleChildEntity.class, in);
+        System.out.println(entry);
+        System.out.println(entry2);
+    }
 }
