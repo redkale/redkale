@@ -107,7 +107,7 @@ public final class JsonByteBufferWriter extends JsonWriter {
     }
 
     @Override
-    public void writeTo(final char[] chs, final int start, final int len) {
+    public final void writeTo(final char[] chs, final int start, final int len) {
         writeTo(-1, false, chs, start, len);
     }
 
@@ -194,7 +194,7 @@ public final class JsonByteBufferWriter extends JsonWriter {
         return this.buffers[++this.index];
     }
 
-    private static int encodeUTF8Length(final char[] text, final int start, final int len) {
+    protected static int encodeUTF8Length(final char[] text, final int start, final int len) {
         char c;
         int size = 0;
         final char[] chars = text;
@@ -206,7 +206,7 @@ public final class JsonByteBufferWriter extends JsonWriter {
         return size;
     }
 
-    private static int encodeEscapeUTF8Length(final char[] text, final int start, final int len) {
+    protected static int encodeEscapeUTF8Length(final char[] text, final int start, final int len) {
         char c;
         int size = 0;
         final char[] chars = text;
@@ -239,7 +239,7 @@ public final class JsonByteBufferWriter extends JsonWriter {
      * @param value String值
      */
     @Override
-    public void writeTo(final boolean quote, final String value) {
+    public final void writeTo(final boolean quote, final String value) {
         char[] chs = Utility.charArray(value);
         writeTo(-1, quote, chs, 0, chs.length);
     }
@@ -331,14 +331,14 @@ public final class JsonByteBufferWriter extends JsonWriter {
     }
 
     @Override
-    public void writeField(boolean comma, Attribute attribute) {
+    public final void writeField(boolean comma, Attribute attribute) {
         if (comma) writeTo(',');
         writeTo(true, attribute.field());
         writeTo(':');
     }
 
     @Override
-    public void writeSmallString(String value) {
+    public final void writeSmallString(String value) {
         writeTo(false, value);
     }
 

@@ -60,7 +60,7 @@ public class JsonByteBufferReader extends JsonReader {
      * @return 有效字符或空白字符
      */
     @Override
-    protected char nextChar() {
+    protected final char nextChar() {
         if (currentChar != 0) {
             char ch = currentChar;
             this.currentChar = 0;
@@ -86,7 +86,7 @@ public class JsonByteBufferReader extends JsonReader {
      * @return 有效字符
      */
     @Override
-    protected char nextGoodChar() {
+    protected final char nextGoodChar() {
         char c = nextChar();
         if (c > ' ' || c == 0) return c; // 0 表示buffer结尾了
         for (;;) {
@@ -101,7 +101,7 @@ public class JsonByteBufferReader extends JsonReader {
      * @param ch 回退的字符
      */
     @Override
-    protected void backChar(char ch) {
+    protected final void backChar(char ch) {
         this.currentChar = ch;
     }
 
@@ -111,7 +111,7 @@ public class JsonByteBufferReader extends JsonReader {
      * @return SIGN_NOLENGTH 或 SIGN_NULL
      */
     @Override
-    public int readObjectB() {
+    public final int readObjectB() {
         char ch = nextGoodChar();
         if (ch == '{') return SIGN_NOLENGTH;
         if (ch == 'n' && nextChar() == 'u' && nextChar() == 'l' && nextChar() == 'l') return SIGN_NULL;
@@ -125,7 +125,7 @@ public class JsonByteBufferReader extends JsonReader {
      * @return SIGN_NOLENGTH 或 SIGN_NULL
      */
     @Override
-    public int readArrayB() {
+    public final int readArrayB() {
         char ch = nextGoodChar();
         if (ch == '[' || ch == '{') return SIGN_NOLENGTH;
         if (ch == 'n' && nextChar() == 'u' && nextChar() == 'l' && nextChar() == 'l') return SIGN_NULL;
@@ -137,7 +137,7 @@ public class JsonByteBufferReader extends JsonReader {
      * 判断下一个非空白字符是否:
      */
     @Override
-    public void skipBlank() {
+    public final void skipBlank() {
         char ch = nextGoodChar();
         if (ch == ':') return;
         throw new ConvertException("expected a ':' but '" + ch + "'(position = " + position + ")");
@@ -149,7 +149,7 @@ public class JsonByteBufferReader extends JsonReader {
      * @return 是否存在
      */
     @Override
-    public boolean hasNext() {
+    public final boolean hasNext() {
         char ch = nextGoodChar();
         if (ch == ',') return true;
         if (ch == '}' || ch == ']') return false;
@@ -163,7 +163,7 @@ public class JsonByteBufferReader extends JsonReader {
      * @return String值
      */
     @Override
-    public String readSmallString() {
+    public final String readSmallString() {
         char ch = nextGoodChar();
         if (ch == 0) return null;
         final StringBuilder sb = new StringBuilder();
@@ -259,7 +259,7 @@ public class JsonByteBufferReader extends JsonReader {
      * @return int值
      */
     @Override
-    public int readInt() {
+    public final int readInt() {
         char firstchar = nextGoodChar();
         if (firstchar == '"' || firstchar == '\'') {
             firstchar = nextChar();
@@ -293,7 +293,7 @@ public class JsonByteBufferReader extends JsonReader {
      * @return long值
      */
     @Override
-    public long readLong() {
+    public final long readLong() {
         char firstchar = nextGoodChar();
         if (firstchar == '"' || firstchar == '\'') {
             firstchar = nextChar();
@@ -327,7 +327,7 @@ public class JsonByteBufferReader extends JsonReader {
      * @return String值
      */
     @Override
-    public String readString() {
+    public final String readString() {
         return readSmallString();
     }
 
