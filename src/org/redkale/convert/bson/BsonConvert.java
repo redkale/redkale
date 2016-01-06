@@ -105,14 +105,14 @@ public final class BsonConvert extends Convert<BsonReader, BsonWriter> {
         return rs;
     }
 
-    public <T> T convertFrom(final Type type, final ByteBuffer... buffers) {
-        if (type == null || buffers.length < 1) return null;
-        return (T) factory.loadDecoder(type).convertFrom(new BsonByteBufferReader(buffers));
-    }
-
     public <T> T convertFrom(final Type type, final InputStream in) {
         if (type == null || in == null) return null;
         return (T) factory.loadDecoder(type).convertFrom(new BsonStreamReader(in));
+    }
+
+    public <T> T convertFrom(final Type type, final ByteBuffer... buffers) {
+        if (type == null || buffers.length < 1) return null;
+        return (T) factory.loadDecoder(type).convertFrom(new BsonByteBufferReader(buffers));
     }
 
     public <T> T convertFrom(final Type type, final BsonReader reader) {

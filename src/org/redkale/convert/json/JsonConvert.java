@@ -100,14 +100,14 @@ public final class JsonConvert extends Convert<JsonReader, JsonWriter> {
         return rs;
     }
 
-    public <T> T convertFrom(final Type type, final ByteBuffer... buffers) {
-        if (type == null || buffers == null || buffers.length == 0) return null;
-        return (T) factory.loadDecoder(type).convertFrom(new JsonByteBufferReader(buffers));
-    }
-
     public <T> T convertFrom(final Type type, final InputStream in) {
         if (type == null || in == null) return null;
         return (T) factory.loadDecoder(type).convertFrom(new JsonStreamReader(in));
+    }
+
+    public <T> T convertFrom(final Type type, final ByteBuffer... buffers) {
+        if (type == null || buffers == null || buffers.length == 0) return null;
+        return (T) factory.loadDecoder(type).convertFrom(new JsonByteBufferReader(buffers));
     }
 
     public <T> T convertFrom(final Type type, final JsonReader reader) {
