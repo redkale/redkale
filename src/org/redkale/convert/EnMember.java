@@ -5,6 +5,7 @@
  */
 package org.redkale.convert;
 
+import java.lang.reflect.*;
 import org.redkale.util.Attribute;
 
 /**
@@ -36,6 +37,19 @@ public final class EnMember<W extends Writer, T, F> implements Comparable<EnMemb
         this.istring = CharSequence.class.isAssignableFrom(t);
         this.isbool = t == Boolean.class || t == boolean.class;
         //this.isnumber = Number.class.isAssignableFrom(t) || (!this.isbool && t.isPrimitive());
+    }
+
+    public static <W extends Writer, T, F> EnMember<W, T, F> create(final Factory factory, final Class<T> clazz, final String fieldname) {
+        try {
+            Field field = clazz.getDeclaredField(fieldname);
+            return new EnMember<>(Attribute.create(field), factory.loadEncoder(field.getGenericType()));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public final boolean match(String name) {
+        return attribute.field().equals(name);
     }
 
     public boolean write(final W out, final boolean comma, final T obj) {

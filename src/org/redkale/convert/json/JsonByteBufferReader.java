@@ -155,7 +155,7 @@ public class JsonByteBufferReader extends JsonReader {
         char ch = nextGoodChar();
         if (ch == ',') return true;
         if (ch == '}' || ch == ']') return false;
-        backChar(ch);
+        backChar(ch); // { [ 交由 readObjectB 或 readMapB 或 readArrayB 读取
         return true;
     }
 

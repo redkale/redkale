@@ -5,6 +5,7 @@
  */
 package org.redkale.convert;
 
+import java.lang.reflect.*;
 import org.redkale.util.Attribute;
 
 /**
@@ -31,6 +32,19 @@ public final class DeMember<R extends Reader, T, F> implements Comparable<DeMemb
     public DeMember(Attribute<T, F> attribute, Decodeable<R, F> decoder) {
         this(attribute);
         this.decoder = decoder;
+    }
+
+    public static <R extends Reader, T, F> DeMember<R, T, F> create(final Factory factory, final Class<T> clazz, final String fieldname) {
+        try {
+            Field field = clazz.getDeclaredField(fieldname);
+            return new DeMember<>(Attribute.create(field), factory.loadDecoder(field.getGenericType()));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public final boolean match(String name) {
+        return attribute.field().equals(name);
     }
 
     public final void read(R in, T obj) {

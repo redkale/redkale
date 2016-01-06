@@ -267,7 +267,7 @@ public class JsonReader implements Reader {
             if (ch == ',') return true;
             if (ch == '}' || ch == ']') return false;
         }
-        this.position--;
+        this.position--; // { [ 交由 readObjectB 或 readMapB 或 readArrayB 读取
         return true;
     }
 

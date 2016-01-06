@@ -349,14 +349,15 @@ public abstract class Factory<R extends Reader, W extends Writer> {
             od = new ObjectDecoder(type);
             decoder = od;
         } else if (!clazz.getName().startsWith("java.")) {
-            SimpledCoder simpleCoder = null;
+            Decodeable simpleCoder = null;
             for (final Method method : clazz.getDeclaredMethods()) {
                 if (!Modifier.isStatic(method.getModifiers())) continue;
-                if (method.getParameterTypes().length != 0) continue;
-                if (!SimpledCoder.class.isAssignableFrom(method.getReturnType())) continue;
+                Class[] paramTypes = method.getParameterTypes();
+                if (paramTypes.length != 1 || paramTypes[0] != Factory.class) continue;
+                if (!Decodeable.class.isAssignableFrom(method.getReturnType())) continue;
                 try {
                     method.setAccessible(true);
-                    simpleCoder = (SimpledCoder) method.invoke(null);
+                    simpleCoder = (Decodeable) method.invoke(null, this);
                     break;
                 } catch (Exception e) {
                 }
@@ -427,14 +428,15 @@ public abstract class Factory<R extends Reader, W extends Writer> {
         } else if (clazz == Object.class) {
             return (Encodeable<W, E>) this.anyEncoder;
         } else if (!clazz.getName().startsWith("java.")) {
-            SimpledCoder simpleCoder = null;
+            Encodeable simpleCoder = null;
             for (final Method method : clazz.getDeclaredMethods()) {
                 if (!Modifier.isStatic(method.getModifiers())) continue;
-                if (method.getParameterTypes().length != 0) continue;
-                if (!SimpledCoder.class.isAssignableFrom(method.getReturnType())) continue;
+                Class[] paramTypes = method.getParameterTypes();
+                if (paramTypes.length != 1 || paramTypes[0] != Factory.class) continue;
+                if (!Encodeable.class.isAssignableFrom(method.getReturnType())) continue;
                 try {
                     method.setAccessible(true);
-                    simpleCoder = (SimpledCoder) method.invoke(null);
+                    simpleCoder = (Encodeable) method.invoke(null, this);
                     break;
                 } catch (Exception e) {
                 }
