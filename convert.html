@@ -69,12 +69,13 @@
         <span class="n">resp</span><span class="o">.</span><span class="na">setContentType</span><span class="o">(</span><span class="s">&quot;text/json; charset=UTF-8&quot;</span><span class="o">);</span>
         <span class="n">resp</span><span class="o">.</span><span class="na">getOutputStream</span><span class="o">().</span><span class="na">write</span><span class="o">(</span><span class="n">json</span><span class="o">.</span><span class="na">getBytes</span><span class="o">(</span><span class="s">&quot;UTF-8&quot;</span><span class="o">));</span>
     <span class="o">}</span></pre></div>
-            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;几乎所有的JSON框架提供的接口以String作为返回结果为主，其内在都是以char[]作为JsonWriter的载体。以Gson为例，Gson拼接JSON默认使用的是StringWriter，StringWriter的扩容策略是翻倍。为了方便计算，假设一个对象转换成JSON字符串大小为了10K。Gson在转换过程中产生的临时的char[]的大小: 16 + 32 + 64 + 128 + 256 + 512 + 1K + 2K + 4K + 8K + 16K = 32K, char[]转换成最终的String结果又会产生10K的char[], 最后在response输出时又回产生10K的byte[]（方便计算不考虑双字节）,也就是说整个对象输出过程中会产生52K的临时数据。而且常见的HTTP服务器(如实现java-servlet规范的服务器)不会把底层的ByteBuffer对象池暴露给上层。所以目前所有使用其他JSON框架输出String数据都会产生5倍于数据体积大小(其他低于1倍扩容策略的框架会产生更多)的垃圾数据。<br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;RedKale框架的HTTP服务内置了Convert的JSON接口，避免了这么大量的垃圾数据产生。finishJson方法将HTTP服务的ByteBuffer对象池传给Convert， 使Convert在序列化过程中直接以UTF-8编码方式输出到ByteBuffer里。</p>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;几乎所有的JSON框架提供的接口以String作为返回结果为主，其内在都是以char[]作为JsonWriter的载体。以Gson为例，Gson拼接JSON默认使用的是StringWriter，StringWriter的扩容策略是翻倍。为了方便计算，假设一个对象转换成JSON字符串大小为了10K。Gson在转换过程中产生的临时的char[]的大小: 16 + 32 + 64 + 128 + 256 + 512 + 1K + 2K + 4K + 8K + 16K = 32K, char[]转换成最终的String结果又会产生10K的char[], 最后在response输出时又回产生10K的byte[]（方便计算不考虑双字节）,也就是说整个对象输出过程中会产生52K的临时数据。而且常见的HTTP服务器(如实现java-servlet规范的服务器)不会把底层的ByteBuffer对象池暴露给上层。所以以String为输出结果的JSON方法都会产生5倍于数据体积大小(其他低于1倍扩容策略的框架会产生更多)的垃圾数据。<br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;RedKale框架的HTTP服务内置了Convert的JSON接口，避免了大量的垃圾数据产生。RedKale的HTTP是基于AIO(NIO.2)实现且存在ByteBuffer对象池，response的finishJson系列方法将HTTP服务的ByteBuffer对象池传给Convert， 使Convert在序列化过程中直接以UTF-8编码方式输出到ByteBuffer里，输出结束后将ByteBuffer交给对象池回收，从而减少大量构建bye[]、char[]所产生的临时数据。</p>
             <div class="highlight"><pre>    <span class="kd">protected</span> <span class="kt">void</span> <span class="nf">execute</span><span class="o">(</span><span class="n">HttpRequest</span> <span class="n">req</span><span class="o">,</span> <span class="n">HttpResponse</span> <span class="n">resp</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
         <span class="n">resp</span><span class="o">.</span><span class="na">finishJson</span><span class="o">(</span><span class="n">record</span><span class="o">);</span>
     <span class="o">}</span></pre></div>
-
+            <br/>
+            
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Convert 基本用法：</p>
             <div class="highlight"><pre>    <span class="kd">public</span> <span class="kd">class</span> <span class="nc">UserRecord</span> <span class="o">{</span>
 
@@ -119,8 +120,30 @@
         <span class="n">user2</span> <span class="o">=</span> <span class="n">childConvert</span><span class="o">.</span><span class="na">convertFrom</span><span class="o">(</span><span class="n">UserRecord</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="n">json</span><span class="o">);</span>
         <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">childConvert</span><span class="o">.</span><span class="na">convertTo</span><span class="o">(</span><span class="n">user2</span><span class="o">));</span> <span class="c1">//应该也是 {&quot;userid&quot;:100,&quot;username&quot;:&quot;redkalename&quot;}</span>
     <span class="o">}</span></pre></div>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在RedKale里存在默认的JsonConvert、BsonConvert对象。 只需在所有Service、Servlet中增加依赖注入资源。</p>
+            <div class="highlight"><pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">XXXService</span> <span class="kd">implements</span> <span class="n">Service</span> <span class="o">{</span>
 
-            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Convert 支持非空构造函数, 必须在其构造函数加上 @ConstructorProperties 注释，且构造函数必须是public修饰。</p>
+    <span class="nd">@Resource</span>
+    <span class="kd">private</span> <span class="n">JsonConvert</span> <span class="n">jsonConvert</span><span class="o">;</span>
+
+    <span class="nd">@Resource</span>
+    <span class="kd">private</span> <span class="n">BsonConvert</span> <span class="n">bsonConvert</span><span class="o">;</span>
+<span class="o">}</span>
+
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">XXXServlet</span> <span class="kd">extends</span> <span class="n">HttpServlet</span> <span class="o">{</span>
+
+    <span class="nd">@Resource</span>
+    <span class="kd">private</span> <span class="n">JsonConvert</span> <span class="n">jsonConvert</span><span class="o">;</span>
+
+    <span class="nd">@Resource</span>
+    <span class="kd">private</span> <span class="n">BsonConvert</span> <span class="n">bsonConvert</span><span class="o">;</span>
+    
+<span class="o">}</span>
+                </pre></div>
+            <br/>
+            
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Convert 支持非空构造函数。</p>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1. <b>public</b> 的非空构造函数加上 @java.beans.ConstructorProperties 注解：</p>
             <div class="highlight"><pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">UserRecord</span> <span class="o">{</span>
 
     <span class="kd">private</span> <span class="kt">int</span> <span class="n">userid</span><span class="o">;</span>
@@ -148,26 +171,71 @@
         <span class="k">return</span> <span class="n">password</span><span class="o">;</span>
     <span class="o">}</span>
 <span class="o">}</span></pre></div>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2. 非<b>public</b> 的非空构造函数类自定义Creator：</p>
+            <div class="highlight"><pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">UserRecord</span> <span class="o">{</span>
 
+    <span class="kd">private</span> <span class="kt">int</span> <span class="n">userid</span><span class="o">;</span>
+
+    <span class="kd">private</span> <span class="n">String</span> <span class="n">username</span> <span class="o">=</span> <span class="s">&quot;&quot;</span><span class="o">;</span>
+
+    <span class="kd">private</span> <span class="n">String</span> <span class="n">password</span> <span class="o">=</span> <span class="s">&quot;&quot;</span><span class="o">;</span>
+
+    <span class="n">UserRecord</span><span class="o">(</span><span class="kt">int</span> <span class="n">userid</span><span class="o">,</span> <span class="n">String</span> <span class="n">username</span><span class="o">,</span> <span class="n">String</span> <span class="n">password</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">userid</span> <span class="o">=</span> <span class="n">userid</span><span class="o">;</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">username</span> <span class="o">=</span> <span class="n">username</span><span class="o">;</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">password</span> <span class="o">=</span> <span class="n">password</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="kt">int</span> <span class="nf">getUserid</span><span class="o">()</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="n">userid</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="n">String</span> <span class="nf">getUsername</span><span class="o">()</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="n">username</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="n">String</span> <span class="nf">getPassword</span><span class="o">()</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="n">password</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="cm">/**</span>
+<span class="cm">     * 无法提供public的构造函数可以自定义Creator方法。</span>
+<span class="cm">     * 1) 方法名可以随意。</span>
+<span class="cm">     * 2) 方法必须是static。</span>
+<span class="cm">     * 3）方法的参数必须为空。</span>
+<span class="cm">     * 4）方法的返回类型必须是Creator。</span>
+<span class="cm">     *</span>
+<span class="cm">     * @return</span>
+<span class="cm">     */</span>
+    <span class="kd">private</span> <span class="kd">static</span> <span class="n">Creator</span><span class="o">&lt;</span><span class="n">UserRecord</span><span class="o">&gt;</span> <span class="nf">creator</span><span class="o">()</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="k">new</span> <span class="n">Creator</span><span class="o">&lt;</span><span class="n">UserRecord</span><span class="o">&gt;()</span> <span class="o">{</span>
+            <span class="nd">@Override</span>
+            <span class="nd">@Creator.ConstructorParameters</span><span class="o">({</span><span class="s">&quot;userid&quot;</span><span class="o">,</span> <span class="s">&quot;username&quot;</span><span class="o">,</span> <span class="s">&quot;password&quot;</span><span class="o">})</span> <span class="c1">//非空构造函数必须有ConstructorParameters注解</span>
+            <span class="kd">public</span> <span class="n">UserRecord</span> <span class="nf">create</span><span class="o">(</span><span class="n">Object</span><span class="o">...</span> <span class="n">params</span><span class="o">)</span> <span class="o">{</span>
+                <span class="k">return</span> <span class="k">new</span> <span class="nf">UserRecord</span><span class="o">((</span><span class="n">params</span><span class="o">[</span><span class="mi">0</span><span class="o">]</span> <span class="o">==</span> <span class="kc">null</span> <span class="o">?</span> <span class="mi">0</span> <span class="o">:</span> <span class="o">(</span><span class="n">Integer</span><span class="o">)</span> <span class="n">params</span><span class="o">[</span><span class="mi">0</span><span class="o">]),</span> <span class="o">(</span><span class="n">String</span><span class="o">)</span> <span class="n">params</span><span class="o">[</span><span class="mi">1</span><span class="o">],</span> <span class="o">(</span><span class="n">String</span><span class="o">)</span> <span class="n">params</span><span class="o">[</span><span class="mi">2</span><span class="o">]);</span>
+            <span class="o">}</span>
+        <span class="o">};</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+                </pre></div>
+            <br/>
+            
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Convert 支持自定义Decode、Encode。</p>
-            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;通过Factory显式的注册：</p>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1. 通过Factory显式的注册：</p>
             <div class="highlight"><pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">FileSimpleCoder</span><span class="o">&lt;</span><span class="n">R</span> <span class="kd">extends</span> <span class="n">Reader</span><span class="o">,</span> <span class="n">W</span> <span class="kd">extends</span> <span class="n">Writer</span><span class="o">&gt;</span> <span class="kd">extends</span> <span class="n">SimpledCoder</span><span class="o">&lt;</span><span class="n">R</span><span class="o">,</span> <span class="n">W</span><span class="o">,</span> <span class="n">File</span><span class="o">&gt;</span> <span class="o">{</span>
 
     <span class="kd">public</span> <span class="kd">static</span> <span class="kd">final</span> <span class="n">FileSimpleCoder</span> <span class="n">instance</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">FileSimpleCoder</span><span class="o">();</span>
 
-    <span class="kd">private</span> <span class="kd">static</span> <span class="kd">final</span> <span class="n">org</span><span class="o">.</span><span class="na">redkale</span><span class="o">.</span><span class="na">convert</span><span class="o">.</span><span class="na">ext</span><span class="o">.</span><span class="na">StringSimpledCoder</span> <span class="n">stringCoder</span> <span class="o">=</span> <span class="n">org</span><span class="o">.</span><span class="na">redkale</span><span class="o">.</span><span class="na">convert</span><span class="o">.</span><span class="na">ext</span><span class="o">.</span><span class="na">StringSimpledCoder</span><span class="o">.</span><span class="na">instance</span><span class="o">;</span>
-
     <span class="nd">@Override</span>
     <span class="kd">public</span> <span class="kt">void</span> <span class="nf">convertTo</span><span class="o">(</span><span class="n">W</span> <span class="n">out</span><span class="o">,</span> <span class="n">File</span> <span class="n">value</span><span class="o">)</span> <span class="o">{</span>
-        <span class="n">stringCoder</span><span class="o">.</span><span class="na">convertTo</span><span class="o">(</span><span class="n">out</span><span class="o">,</span> <span class="n">value</span> <span class="o">==</span> <span class="kc">null</span> <span class="o">?</span> <span class="kc">null</span> <span class="o">:</span> <span class="n">value</span><span class="o">.</span><span class="na">getPath</span><span class="o">());</span>
+        <span class="n">out</span><span class="o">.</span><span class="na">writeString</span><span class="o">(</span><span class="n">value</span> <span class="o">==</span> <span class="kc">null</span> <span class="o">?</span> <span class="kc">null</span> <span class="o">:</span> <span class="n">value</span><span class="o">.</span><span class="na">getPath</span><span class="o">());</span>
     <span class="o">}</span>
 
     <span class="nd">@Override</span>
     <span class="kd">public</span> <span class="n">File</span> <span class="nf">convertFrom</span><span class="o">(</span><span class="n">R</span> <span class="n">in</span><span class="o">)</span> <span class="o">{</span>
-        <span class="n">String</span> <span class="n">path</span> <span class="o">=</span> <span class="n">stringCoder</span><span class="o">.</span><span class="na">convertFrom</span><span class="o">(</span><span class="n">in</span><span class="o">);</span>
+        <span class="n">String</span> <span class="n">path</span> <span class="o">=</span> <span class="n">in</span><span class="o">.</span><span class="na">readString</span><span class="o">();</span>
         <span class="k">return</span> <span class="n">path</span> <span class="o">==</span> <span class="kc">null</span> <span class="o">?</span> <span class="kc">null</span> <span class="o">:</span> <span class="k">new</span> <span class="nf">File</span><span class="o">(</span><span class="n">path</span><span class="o">);</span>
     <span class="o">}</span>
-
 <span class="o">}</span>
 
 <span class="n">JsonFactory</span><span class="o">.</span><span class="na">root</span><span class="o">().</span><span class="na">register</span><span class="o">(</span><span class="n">java</span><span class="o">.</span><span class="na">io</span><span class="o">.</span><span class="na">File</span><span class="o">.</span><span class="kd">class</span><span class="o">,</span> <span class="n">FileSimpleCoder</span><span class="o">.</span><span class="na">instance</span><span class="o">);</span>
@@ -175,7 +243,7 @@
 <span class="n">BsonFactory</span><span class="o">.</span><span class="na">root</span><span class="o">().</span><span class="na">register</span><span class="o">(</span><span class="n">java</span><span class="o">.</span><span class="na">io</span><span class="o">.</span><span class="na">File</span><span class="o">.</span><span class="kd">class</span><span class="o">,</span> <span class="n">FileSimpleCoder</span><span class="o">.</span><span class="na">instance</span><span class="o">);</span>
                 </pre></div>
 
-            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;通过JavaBean类自定义：</p>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2. 通过JavaBean类自定义静态方法自动加载：</p>
             <div class="highlight"><pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">InnerCoderEntity</span> <span class="o">{</span>
 
     <span class="kd">private</span> <span class="kd">final</span> <span class="n">String</span> <span class="n">val</span><span class="o">;</span>
@@ -261,7 +329,8 @@
     <span class="o">}</span>
 <span class="o">}</span>
                 </pre></div>
-
+            <br/>
+            
             <h3><a id="convert_bson_buffer" class="anchor" href="#" aria-hidden="true"><span class="octicon octicon-link"></span></a>BSON的协议格式</h3>
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;BSON类似Java自带的Serializable， 其格式如下: <br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1). 基本数据类型: 直接转换成byte[] <br/>
