@@ -5,6 +5,10 @@
  */
 package org.redkale.test.sncp;
 
+import java.lang.reflect.*;
+import java.net.*;
+import java.util.*;
+import org.redkale.net.sncp.*;
 import org.redkale.service.Service;
 import org.redkale.util.Attribute;
 import org.redkale.service.MultiRun;
@@ -66,4 +70,24 @@ public class SncpTestService implements Service {
         return "result: " + bean;
     }
 
+    public static void main(String[] args) throws Exception {
+        SncpTestService service = Sncp.createLocalService("", null, SncpTestService.class, new InetSocketAddress("127.0.0.1", 7070), new HashSet(), null, null);
+        for(Method method :service.getClass().getDeclaredMethods()) {
+            System.out.println(method);
+        }
+        System.out.println("-----------------------------------");
+        for(Method method :SncpClient.parseMethod(service.getClass())) { 
+            System.out.println(method);
+        }
+        System.out.println("-----------------------------------");
+        service = Sncp.createRemoteService("", null, SncpTestService.class, new InetSocketAddress("127.0.0.1", 7070), new HashSet(), null);
+        for(Method method :service.getClass().getDeclaredMethods()) {
+            System.out.println(method);
+        }
+        System.out.println("-----------------------------------");
+        for(Method method :SncpClient.parseMethod(service.getClass())) { 
+            System.out.println(method);
+        }
+        System.out.println("-----------------------------------");
+    }
 }
