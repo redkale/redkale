@@ -203,7 +203,7 @@ public final class SncpClient {
             if (method.getName().equals("getClass") || method.getName().equals("toString")) continue;
             if (method.getName().equals("equals") || method.getName().equals("hashCode")) continue;
             if (method.getName().equals("notify") || method.getName().equals("notifyAll") || method.getName().equals("wait")) continue;
-            if (method.getName().equals("init") || method.getName().equals("destroy") || method.getName().equals("name")) continue;
+            if (method.getName().equals("init") || method.getName().equals("destroy")) continue;
             if (onlySncpDyn && method.getAnnotation(SncpDyn.class) == null) continue;
             DLong actionid = Sncp.hash(method);
             Method old = actionids.get(actionid);
