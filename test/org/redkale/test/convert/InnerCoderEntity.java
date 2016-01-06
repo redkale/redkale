@@ -41,7 +41,7 @@ public class InnerCoderEntity {
      * @param factory
      * @return
      */
-    private static SimpledCoder<Reader, Writer, InnerCoderEntity> createConvertCoder(final Factory factory) {
+    private static SimpledCoder<Reader, Writer, InnerCoderEntity> createConvertCoder(final org.redkale.convert.Factory factory) {
         return new SimpledCoder<Reader, Writer, InnerCoderEntity>() {
 
             //必须与EnMember[] 顺序一致
@@ -76,10 +76,10 @@ public class InnerCoderEntity {
                 final AtomicInteger index = new AtomicInteger();
                 final Object[] params = new Object[deMembers.length];
                 while (in.hasNext()) {
-                    DeMember member = in.readField(index, deMembers);
+                    DeMember member = in.readField(index, deMembers); //读取字段名
                     in.skipBlank(); //跳过冒号:
                     if (member == null) {
-                        in.skipValue(); //跳过该属性的值, 一般不会发生
+                        in.skipValue(); //跳过不存在的字段的值, 一般不会发生
                     } else {
                         params[index.get()] = member.read(in);
                     }
