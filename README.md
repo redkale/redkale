@@ -13,29 +13,4 @@
 <li>功能强大 但体积不到1.5M，且不依赖任何第三方包</li>
 </ol>
 
-<h5>亮点一.  轻量级HTTP</h5>
-<p>
-    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;RedKale 的HTTP是基于异步NIO.2实现的，所提供的HttpResponse的输出接口也是异步的，因此并不遵循JSR 340规范(Servlet 3.1)且也没有实现Jsp规范。 HTTP只提供四个对象：HttpContext、HttpRequest、HttpResponse、HttpServlet。 传统Session则由数据层实现。RedKale提倡http+json接口(无论网站、PC客户端、APP移动端、第三方接口都可使用统一接口)， 因此HTTP层内置了json解析与序列化接口，同时内置http缓存机制。
-</p>
-
-<h5>亮点二.  分布式WebSocket</h5>
-<p>
-    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;RedKale 的WebSocket接口不同于JSR 340(Servlet 3.1)， 除了提供基本的WebSocket功能， 还提供分布式与集中式部署， 当部署多个WebSocket进程时，通过配置文件可以实现WebSocket之间连接信息的数据同步。
-</p>
-
-<h5>亮点三.  SNCP协议</h5>
-<p>
-    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;SNCP(Service Node Communicate Protocol)是RedKale独有的协议， 类似RMI与WebService的功能结合，主要用于进程间的数据传输。使用者通过配置文件可以轻易的将Service由本地模式变成远程模式。远程模式的Service使用SNCP协议与其他进程的Service通信。使用者无需对远程通信接口使用类似mina的第三方包自行开发。<br/>
-</p>
-
-<h5>亮点四.  DataSource</h5>
-<p>
-    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;RedKale提供DataSource类对数据层进行操作， 其功能类似JPA(或Hibernate)+Memcached。 与JPA相比各有优缺点。<br/>
-    优点： <br/>
-         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1、Datasource中的内存缓存会自动与其他同服务的进程之间同步。 <br/>
-         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2、简易的查询接口，即时复杂的过滤查询都无需写SQL语句。  <br/>
-         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3、可以DataSource与业务逻辑层分开， 独立成类似Memcached的内存数据源。 <br/>
-         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4、读写分离。动态切换数据库连接配置。 <br/>
-    缺点： <br/>
-         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1、不提供复杂的关联表操作与查询。 <br/>
-</p>
+<h5>详情请访问:  <a href='http://www.redkale.or'>http://www.redkale.org</a></h5>
