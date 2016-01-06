@@ -7,7 +7,9 @@ package org.redkale.test.convert;
 
 import java.util.concurrent.atomic.*;
 import org.redkale.convert.*;
+import org.redkale.convert.bson.*;
 import org.redkale.convert.json.*;
+import org.redkale.util.*;
 
 /**
  *
@@ -69,6 +71,7 @@ public class InnerCoderEntity {
 
             @Override
             public InnerCoderEntity convertFrom(Reader in) {
+                in.readClassName(); //必须先读Class 用于BSON
                 if (in.readObjectB() == Reader.SIGN_NULL) return null;
                 final AtomicInteger index = new AtomicInteger();
                 final Object[] params = new Object[deMembers.length];
@@ -107,6 +110,11 @@ public class InnerCoderEntity {
         String json = convert.convertTo(record);
         System.out.println(json);
         System.out.println(convert.convertFrom(InnerCoderEntity.class, json).toString());
+        
+        final BsonConvert convert2= BsonFactory.root().getConvert();
+        byte[] bs = convert2.convertTo(record);
+        Utility.println("--", bs); 
+        System.out.println(convert2.convertFrom(InnerCoderEntity.class, bs).toString());
     }
 
 }
