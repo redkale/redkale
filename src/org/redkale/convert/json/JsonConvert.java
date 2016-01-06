@@ -110,10 +110,10 @@ public final class JsonConvert extends Convert<JsonReader, JsonWriter> {
         return (T) factory.loadDecoder(type).convertFrom(new JsonStreamReader(in));
     }
 
-    public <T> T convertFrom(final JsonReader in, final Type type) {
+    public <T> T convertFrom(final Type type, final JsonReader reader) {
         if (type == null) return null;
         @SuppressWarnings("unchecked")
-        T rs = (T) factory.loadDecoder(type).convertFrom(in);
+        T rs = (T) factory.loadDecoder(type).convertFrom(reader);
         return rs;
     }
 
@@ -131,23 +131,6 @@ public final class JsonConvert extends Convert<JsonReader, JsonWriter> {
         String result = out.toString();
         writerPool.offer(out);
         return result;
-    }
-
-    public void convertTo(final JsonWriter out, Object value) {
-        if (value == null) {
-            out.writeNull();
-        } else {
-            factory.loadEncoder(value.getClass()).convertTo(out, value);
-        }
-    }
-
-    public void convertTo(final JsonWriter out, final Type type, Object value) {
-        if (type == null) return;
-        if (value == null) {
-            out.writeNull();
-        } else {
-            factory.loadEncoder(type).convertTo(out, value);
-        }
     }
 
     public void convertTo(final OutputStream out, Object value) {
@@ -187,6 +170,23 @@ public final class JsonConvert extends Convert<JsonReader, JsonWriter> {
             factory.loadEncoder(type).convertTo(out, value);
         }
         return out.toBuffers();
+    }
+
+    public void convertTo(final JsonWriter writer, Object value) {
+        if (value == null) {
+            writer.writeNull();
+        } else {
+            factory.loadEncoder(value.getClass()).convertTo(writer, value);
+        }
+    }
+
+    public void convertTo(final JsonWriter writer, final Type type, Object value) {
+        if (type == null) return;
+        if (value == null) {
+            writer.writeNull();
+        } else {
+            factory.loadEncoder(type).convertTo(writer, value);
+        }
     }
 
     public JsonWriter convertToWriter(Object value) {

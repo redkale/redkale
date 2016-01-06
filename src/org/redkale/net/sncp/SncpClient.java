@@ -1,7 +1,7 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
+ * To change this license header, choose License Headers reader Project Properties.
  * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * and open the template reader the editor.
  */
 package org.redkale.net.sncp;
 
@@ -236,20 +236,20 @@ public final class SncpClient {
         if (action.handlerFuncParamIndex >= 0) params[action.handlerFuncParamIndex] = null;
         Future<byte[]> future = remote0(handlerFunc, convert, transport, action, params);
         if (handlerFunc != null) return null;
-        final BsonReader in = convert.pollBsonReader();
+        final BsonReader reader = convert.pollBsonReader();
         try {
-            in.setBytes(future.get(5, TimeUnit.SECONDS));
+            reader.setBytes(future.get(5, TimeUnit.SECONDS));
             byte i;
-            while ((i = in.readByte()) != 0) {
+            while ((i = reader.readByte()) != 0) {
                 final Attribute attr = action.paramAttrs[i];
-                attr.set(params[i - 1], convert.convertFrom(in, attr.type()));
+                attr.set(params[i - 1], convert.convertFrom(attr.type(), reader));
             }
-            return convert.convertFrom(in, action.resultTypes);
+            return convert.convertFrom(action.resultTypes, reader);
         } catch (InterruptedException | ExecutionException | TimeoutException e) {
             logger.log(Level.SEVERE, actions[index].method + " sncp (params: " + jsonConvert.convertTo(params) + ") remote error", e);
             throw new RuntimeException(actions[index].method + " sncp remote error", e);
         } finally {
-            convert.offerBsonReader(in);
+            convert.offerBsonReader(reader);
         }
     }
 
@@ -377,20 +377,20 @@ public final class SncpClient {
                         transport.offerConnection(false, conn);
                         if (handler != null) {
                             final Object handlerAttach = action.handlerAttachParamIndex >= 0 ? params[action.handlerAttachParamIndex] : null;
-                            final BsonReader in = convert.pollBsonReader();
+                            final BsonReader reader = convert.pollBsonReader();
                             try {
-                                in.setBytes(this.body);
+                                reader.setBytes(this.body);
                                 byte i;
-                                while ((i = in.readByte()) != 0) {
+                                while ((i = reader.readByte()) != 0) {
                                     final Attribute attr = action.paramAttrs[i];
-                                    attr.set(params[i - 1], convert.convertFrom(in, attr.type()));
+                                    attr.set(params[i - 1], convert.convertFrom(attr.type(), reader));
                                 }
-                                Object rs = convert.convertFrom(in, action.resultTypes);
+                                Object rs = convert.convertFrom(action.resultTypes, reader);
                                 handler.completed(rs, handlerAttach);
                             } catch (Exception e) {
                                 handler.failed(e, handlerAttach);
                             } finally {
-                                convert.offerBsonReader(in);
+                                convert.offerBsonReader(reader);
                             }
                         }
                     }
