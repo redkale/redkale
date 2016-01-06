@@ -55,7 +55,7 @@ public final class JsonConvert extends Convert<JsonReader, JsonWriter> {
         return readerPool.get();
     }
 
-    public void offerJsonReader(JsonReader in) {
+    public void offerJsonReader(final JsonReader in) {
         if (in != null) readerPool.offer(in);
     }
 
@@ -76,7 +76,7 @@ public final class JsonConvert extends Convert<JsonReader, JsonWriter> {
         return writerPool.get().tiny(tiny);
     }
 
-    public void offerJsonWriter(JsonWriter out) {
+    public void offerJsonWriter(final JsonWriter out) {
         if (out != null) writerPool.offer(out);
     }
 
@@ -91,7 +91,7 @@ public final class JsonConvert extends Convert<JsonReader, JsonWriter> {
         return convertFrom(type, text, 0, text.length);
     }
 
-    public <T> T convertFrom(final Type type, final char[] text, int start, int len) {
+    public <T> T convertFrom(final Type type, final char[] text, final int start, final int len) {
         if (text == null || type == null) return null;
         final JsonReader in = readerPool.get();
         in.setText(text, start, len);
@@ -118,12 +118,12 @@ public final class JsonConvert extends Convert<JsonReader, JsonWriter> {
     }
 
     //------------------------------ convertTo -----------------------------------------------------------
-    public String convertTo(Object value) {
+    public String convertTo(final Object value) {
         if (value == null) return "null";
         return convertTo(value.getClass(), value);
     }
 
-    public String convertTo(final Type type, Object value) {
+    public String convertTo(final Type type, final Object value) {
         if (type == null) return null;
         if (value == null) return "null";
         final JsonWriter out = writerPool.get().tiny(tiny);
@@ -133,7 +133,7 @@ public final class JsonConvert extends Convert<JsonReader, JsonWriter> {
         return result;
     }
 
-    public void convertTo(final OutputStream out, Object value) {
+    public void convertTo(final OutputStream out, final Object value) {
         if (value == null) {
             new JsonStreamWriter(tiny, out).writeNull();
         } else {
@@ -141,7 +141,7 @@ public final class JsonConvert extends Convert<JsonReader, JsonWriter> {
         }
     }
 
-    public void convertTo(final OutputStream out, final Type type, Object value) {
+    public void convertTo(final OutputStream out, final Type type, final Object value) {
         if (type == null) return;
         if (value == null) {
             new JsonStreamWriter(tiny, out).writeNull();
@@ -150,7 +150,7 @@ public final class JsonConvert extends Convert<JsonReader, JsonWriter> {
         }
     }
 
-    public ByteBuffer[] convertTo(final Supplier<ByteBuffer> supplier, Object value) {
+    public ByteBuffer[] convertTo(final Supplier<ByteBuffer> supplier, final Object value) {
         if (supplier == null) return null;
         JsonByteBufferWriter out = new JsonByteBufferWriter(tiny, null, supplier);
         if (value == null) {
@@ -161,7 +161,7 @@ public final class JsonConvert extends Convert<JsonReader, JsonWriter> {
         return out.toBuffers();
     }
 
-    public ByteBuffer[] convertTo(final Supplier<ByteBuffer> supplier, final Type type, Object value) {
+    public ByteBuffer[] convertTo(final Supplier<ByteBuffer> supplier, final Type type, final Object value) {
         if (supplier == null || type == null) return null;
         JsonByteBufferWriter out = new JsonByteBufferWriter(tiny, null, supplier);
         if (value == null) {
@@ -172,7 +172,7 @@ public final class JsonConvert extends Convert<JsonReader, JsonWriter> {
         return out.toBuffers();
     }
 
-    public void convertTo(final JsonWriter writer, Object value) {
+    public void convertTo(final JsonWriter writer, final Object value) {
         if (value == null) {
             writer.writeNull();
         } else {
@@ -180,7 +180,7 @@ public final class JsonConvert extends Convert<JsonReader, JsonWriter> {
         }
     }
 
-    public void convertTo(final JsonWriter writer, final Type type, Object value) {
+    public void convertTo(final JsonWriter writer, final Type type, final Object value) {
         if (type == null) return;
         if (value == null) {
             writer.writeNull();
@@ -189,12 +189,12 @@ public final class JsonConvert extends Convert<JsonReader, JsonWriter> {
         }
     }
 
-    public JsonWriter convertToWriter(Object value) {
+    public JsonWriter convertToWriter(final Object value) {
         if (value == null) return null;
         return convertToWriter(value.getClass(), value);
     }
 
-    public JsonWriter convertToWriter(final Type type, Object value) {
+    public JsonWriter convertToWriter(final Type type, final Object value) {
         if (type == null) return null;
         final JsonWriter out = writerPool.get().tiny(tiny);
         factory.loadEncoder(type).convertTo(out, value);
