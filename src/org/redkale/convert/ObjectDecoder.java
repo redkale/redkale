@@ -183,7 +183,7 @@ public final class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T
                 DeMember member = in.readField(index, members);
                 in.skipBlank();
                 if (member == null) {
-                    in.skipValue(); //跳过该属性的值
+                    in.skipValue(); //跳过不存在的属性的值
                 } else {
                     member.read(in, result);
                 }
@@ -201,7 +201,7 @@ public final class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T
                 DeMember member = in.readField(index, members);
                 in.skipBlank();
                 if (member == null) {
-                    in.skipValue(); //跳过该属性的值
+                    in.skipValue(); //跳过不存在的属性的值
                 } else {
                     Object val = member.read(in);
                     boolean flag = true;
