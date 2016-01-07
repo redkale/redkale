@@ -14,18 +14,16 @@
             <h1 class="project-name">RedKale</h1>
             <h2 class="project-tagline"></h2>
             <a href="index.html" class="btn">RedKale</a> 
-            <a href="redkale.html" class="btn">RedKale入门</a> 
+            <a href="redkale.html" class="btn">RedKale 入门</a> 
             <a href="convert.html" class="btn">Convert 组件</a> 
             <a href="service.html" class="btn">Service 组件</a> 
             <a href="source.html" class="btn">Source 组件</a> 
             <a href="net.html" class="btn">Net 组件</a> 
-            <a href="net_http.html" class="btn">HTTP 协议</a> 
-            <a href="net_sncp.html" class="btn">SNCP 协议</a> 
             <a href="https://github.com/wentch/redkale" class="btn">Github 源码</a>
         </section>
 
         <section class="main-content">
-            <h3><a id="redkale_start" class="anchor" href="#" aria-hidden="true"><span class="octicon octicon-link"></span></a>RedKale 入门介绍</h3>
+            <h3><a id="redkale_start" class="anchor" href="#" aria-hidden="true"><span class="octicon octicon-link"></span></a>RedKale 功能</h3>
 
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;RedKale虽然只有1.xM大小，但是麻雀虽小五脏俱全。既可作为服务器使用，也可当工具包使用。作为独立的工具包提供以下功能：<br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1、convert包提供JSON的序列化和反解析功能，类似Gson、Jackson。 <br/>
@@ -40,7 +38,7 @@
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;RedKale作为服务器的目录如下: <br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>bin</b>&nbsp;&nbsp;&nbsp;： 存放启动关闭脚本(start.sh、shutdown.sh、start.bat、shutdown.bat) <br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>conf</b>&nbsp;： 存放服务器所需配置文件:<br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; application.xml： 服务配置文件 (必需)；<br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#redkale_confxml">application.xml</a>： 服务配置文件 (必需)；<br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; logging.properties：日志配置文件 (可选)； <br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; persistence.xml：数据库配置文件 (可选)；<br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>lib</b>&nbsp;&nbsp;&nbsp;&nbsp;： 存放服务所依赖的第三方包，redkale.jar 放在此处。 <br/>
@@ -49,21 +47,22 @@
             </p>
 
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;RedKale启动的流程如下：<br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1、加载 application.xml 并解析。 <br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1、加载 <a href="#redkale_confxml">application.xml</a> 并解析。 <br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2、初始化 <b>&lt;resources&gt;</b> 节点中的资源。 <br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3、解析所有的 <b>&lt;server&gt;</b> 节点。 <br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4、先初始化所有的SNCP协议 <b>&lt;server&gt;</b> 节点，再初始化非SNCP协议的节点。 <br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4、初始化并启动所有<b>&lt;server&gt;</b> 节点的Server服务 (优先加载SNCP协议的Server)。 <br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;5、初始化单个Server： <br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;5.1、扫描classpath加载所有可用Service实现类并实例化，然后相互依赖注入。 <br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;5.2、Service实例在依赖注入过程中加载所需的DataSource、CacheSource资源。 <br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;5.3、调用所有本地模式Service的init方法。 <br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;5.4、扫描classpath加载所有可用Servlet实现类并实例化。<br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;5.5、调用所有Servlet的init方法。 <br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;5.6、启动Server的服务监听。 <br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;5.4、扫描classpath加载所有可用Servlet实现类并实例化 (优先实例化WebSocketServlet)。<br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;5.5、给所有Servlet依赖注入所需的Service。 <br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;5.6、调用所有Servlet的init方法。 <br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;5.7、启动Server的服务监听。 <br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;6、启动进程本身的监听服务。 <br/>
             </p>
 
-            <h3><a id="redkale_xml" class="anchor" href="#" aria-hidden="true"><span class="octicon octicon-link"></span></a>appplication.xml 配置说明</h3>
+            <h3><a id="redkale_confxml" class="anchor" href="#" aria-hidden="true"><span class="octicon octicon-link"></span></a>appplication.xml 配置说明</h3>
             <div class="highlight"><pre><span class="cp">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;</span>
 <span class="c">&lt;!-- </span>
 <span class="c">    文件说明:</span>
