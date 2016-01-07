@@ -26,8 +26,7 @@
 <application port="6560" lib="">   
     
     <!-- 所有服务所需的资源 -->      
-    <resources>
-        
+    <resources>        
          <!--
             一个组包含多个NODE， 同一Service服务可以由多个进程提供，这些进程称为一个GROUP，且同一GROUP内的进程必须在同一机房或局域网内
             name: 服务组ID，长度不能超过11个字节. 默认为空字符串。
@@ -173,9 +172,7 @@
     </server>
     
     <server protocol="SNCP" host="127.0.0.1" port="7070" root="root" lib=""> 
-        <!--
-            参数完全同上
-        -->
+        <!-- 参数完全同上 -->
         <services autoload="true" includes="" excludes="" />
     </server>
 </application>
