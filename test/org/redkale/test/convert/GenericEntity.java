@@ -9,6 +9,7 @@ import org.redkale.util.TypeToken;
 import org.redkale.convert.json.JsonFactory;
 import java.lang.reflect.*;
 import java.util.*;
+import org.redkale.convert.json.*;
 
 /**
  * 支持泛型的
@@ -35,10 +36,10 @@ public class GenericEntity<T, K, V> {
         bean.setEntry(new Entry<>("aaaa", SimpleEntity.create()));
         final Type type = new TypeToken<GenericEntity<Long, String, SimpleEntity>>() {
         }.getType();
-        JsonFactory.root().setTiny(true);
-        String json = JsonFactory.root().getConvert().convertTo(bean);
+        JsonFactory.root().tiny(true);
+        String json = JsonConvert.root().convertTo(bean);
         System.out.println(json);
-        System.out.println(JsonFactory.root().getConvert().convertFrom(type, json).toString());
+        System.out.println(JsonConvert.root().convertFrom(type, json).toString());
     }
 
     @Override
@@ -86,7 +87,7 @@ public class GenericEntity<T, K, V> {
 
         @Override
         public String toString() {
-            return JsonFactory.root().getConvert().convertTo(this);
+            return JsonConvert.root().convertTo(this);
         }
 
         public K getKey() {

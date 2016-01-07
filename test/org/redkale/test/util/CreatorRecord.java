@@ -50,12 +50,12 @@ public class CreatorRecord {
         CreatorRecord record = Creator.create(CreatorRecord.class).create(new Object[]{null, "ss", null, true, null, (short) 45, null, 4.3f, null});
         String json = record.toString();
         System.out.println(json);
-        System.out.println(JsonFactory.root().getConvert().convertFrom(CreatorRecord.class, json).toString());
+        System.out.println(JsonConvert.root().convertFrom(CreatorRecord.class, json).toString());
     }
 
     @Override
     public String toString() {
-        return JsonFactory.root().getConvert().convertTo(this);
+        return JsonConvert.root().convertTo(this);
     }
 
     public int getId() {

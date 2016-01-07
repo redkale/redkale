@@ -5,8 +5,8 @@
  */
 package org.redkale.test.convert;
 
-import org.redkale.convert.json.JsonFactory;
 import java.io.Serializable;
+import org.redkale.convert.json.*;
 
 /**
  *
@@ -16,6 +16,6 @@ public abstract class BasedEntity implements Serializable {
 
     @Override
     public String toString() {
-        return JsonFactory.root().getConvert().convertTo(this);
+        return JsonConvert.root().convertTo(this);
     }
 }

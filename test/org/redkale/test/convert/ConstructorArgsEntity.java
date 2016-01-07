@@ -29,7 +29,7 @@ public class ConstructorArgsEntity {
     }
 
     public static void main(String[] args) throws Exception {
-        final JsonConvert jsonConvert = JsonFactory.root().getConvert();
+        final JsonConvert jsonConvert = JsonConvert.root();
         final BsonConvert bsonConvert = BsonFactory.root().getConvert();
         ConstructorArgsEntity bean = new ConstructorArgsEntity(12345678, "哈哈");
         bean.setCreatetime(System.currentTimeMillis());
@@ -62,6 +62,6 @@ public class ConstructorArgsEntity {
 
     @Override
     public String toString() {
-        return JsonFactory.root().getConvert().convertTo(this);
+        return JsonConvert.root().convertTo(this);
     }
 }

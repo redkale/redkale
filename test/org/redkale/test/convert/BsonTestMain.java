@@ -10,9 +10,9 @@ import org.redkale.convert.bson.BsonByteBufferWriter;
 import org.redkale.convert.bson.BsonFactory;
 import org.redkale.util.Utility;
 import org.redkale.convert.bson.BsonConvert;
-import org.redkale.convert.json.JsonFactory;
 import java.nio.*;
 import java.util.Arrays;
+import org.redkale.convert.json.*;
 
 /**
  *
@@ -59,10 +59,10 @@ public class BsonTestMain {
         SimpleChildEntity entry = SimpleChildEntity.create();
         byte[] bytes = convert.convertTo(SimpleEntity.class, entry);
         Utility.println(null, bytes);
-        System.out.println(JsonFactory.root().getConvert().convertTo(entry));
+        System.out.println(JsonConvert.root().convertTo(entry));
         SimpleEntity rs = convert.convertFrom(SimpleEntity.class, bytes);
         System.out.println(rs.toString());
-        System.out.println(JsonFactory.root().getConvert().convertTo(rs));
+        System.out.println(JsonConvert.root().convertTo(rs));
 
         ComplextEntity bean = new ComplextEntity();
         byte[] bytes2 = convert.convertTo(Object.class, bean);
@@ -80,7 +80,7 @@ public class BsonTestMain {
         convert.convertTo(out, SimpleEntity.class, entry);
         byte[] bytes = out.toByteArray();
         Utility.println(null, bytes);
-        System.out.println(JsonFactory.root().getConvert().convertTo(entry));
+        System.out.println(JsonConvert.root().convertTo(entry));
         SimpleEntity rs = convert.convertFrom(SimpleEntity.class, new ByteArrayInputStream(bytes));
         System.out.println(rs.toString());
 

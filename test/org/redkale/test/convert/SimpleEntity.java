@@ -6,9 +6,9 @@
 package org.redkale.test.convert;
 
 import java.net.*;
-import org.redkale.convert.json.JsonFactory;
 import org.redkale.util.Creator;
 import java.util.*;
+import org.redkale.convert.json.*;
 
 /**
  *
@@ -53,7 +53,7 @@ public class SimpleEntity {
     }
 
     public static void main(String[] args) throws Exception {
-        System.out.println(JsonFactory.root().getConvert().convertTo(create()));
+        System.out.println(JsonConvert.root().convertTo(create()));
         Creator<SimpleEntity> creator = Creator.create(SimpleEntity.class); //Creator.create(10, SimpleEntity.class);
         SimpleEntity entry = creator.create();
         System.out.println(entry);
@@ -67,7 +67,7 @@ public class SimpleEntity {
 
     @Override
     public String toString() {
-        return JsonFactory.root().getConvert().convertTo(this);
+        return JsonConvert.root().convertTo(this);
     }
 
     public InetSocketAddress getAddr() {

@@ -5,8 +5,8 @@
  */
 package org.redkale.test.source;
 
-import org.redkale.convert.json.JsonFactory;
 import javax.persistence.*;
+import org.redkale.convert.json.*;
 
 /**
  * CREATE TABLE `LoginTestRecord` (
@@ -41,7 +41,7 @@ public class LoginTestRecord {
 
     @Override
     public String toString() {
-        return JsonFactory.root().getConvert().convertTo(this);
+        return JsonConvert.root().convertTo(this);
     }
 
     public String getSessionid() {

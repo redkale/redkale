@@ -101,12 +101,12 @@ public class InnerCoderEntity {
 
     @Override
     public String toString() {
-        return JsonFactory.root().getConvert().convertTo(this);
+        return JsonConvert.root().convertTo(this);
     }
 
     public static void main(String[] args) throws Exception {
         InnerCoderEntity record = InnerCoderEntity.create(200, "haha");
-        final JsonConvert convert = JsonFactory.root().getConvert();
+        final JsonConvert convert = JsonConvert.root();
         String json = convert.convertTo(record);
         System.out.println(json);
         System.out.println(convert.convertFrom(InnerCoderEntity.class, json).toString());

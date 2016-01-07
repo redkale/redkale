@@ -13,10 +13,10 @@ import org.redkale.util.Sheet;
 import org.redkale.source.FilterBean;
 import org.redkale.source.Flipper;
 import org.redkale.source.EntityInfo;
-import org.redkale.convert.json.JsonFactory;
 import org.redkale.source.FilterNode;
 import java.util.concurrent.*;
 import javax.persistence.*;
+import org.redkale.convert.json.*;
 
 /**
  *
@@ -127,7 +127,7 @@ public class TestSourceCache {
 
         @Override
         public String toString() {
-            return JsonFactory.root().getConvert().convertTo(this);
+            return JsonConvert.root().convertTo(this);
         }
     }
 }

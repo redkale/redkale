@@ -6,11 +6,11 @@
 package org.redkale.source;
 
 import org.redkale.util.AutoLoad;
-import org.redkale.convert.json.JsonFactory;
 import static org.redkale.source.FilterExpress.*;
 import java.util.*;
 import java.util.function.*;
 import javax.persistence.*;
+import org.redkale.convert.json.*;
 
 /**
  *
@@ -77,7 +77,7 @@ public class FilterNodeTest {
 
         @Override
         public String toString() {
-            return JsonFactory.root().getConvert().convertTo(this);
+            return JsonConvert.root().convertTo(this);
         }
 
         public static boolean caridTransient() {
@@ -178,7 +178,7 @@ public class FilterNodeTest {
 
         @Override
         public String toString() {
-            return JsonFactory.root().getConvert().convertTo(this);
+            return JsonConvert.root().convertTo(this);
         }
 
     }
@@ -219,7 +219,7 @@ public class FilterNodeTest {
 
         @Override
         public String toString() {
-            return JsonFactory.root().getConvert().convertTo(this);
+            return JsonConvert.root().convertTo(this);
         }
 
         public int getCartype() {
@@ -271,7 +271,7 @@ public class FilterNodeTest {
 
         @Override
         public String toString() {
-            return JsonFactory.root().getConvert().convertTo(this);
+            return JsonConvert.root().convertTo(this);
         }
 
         public int getUserid() {
