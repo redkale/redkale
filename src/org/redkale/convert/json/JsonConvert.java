@@ -42,6 +42,10 @@ public final class JsonConvert extends Convert<JsonReader, JsonWriter> {
         return (JsonFactory) factory;
     }
 
+    public static JsonConvert root() {
+        return JsonFactory.root().getConvert();
+    }
+
     //------------------------------ reader -----------------------------------------------------------
     public JsonReader pollJsonReader(final ByteBuffer... buffers) {
         return new JsonByteBufferReader(buffers);

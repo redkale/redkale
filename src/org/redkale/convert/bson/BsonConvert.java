@@ -55,6 +55,10 @@ public final class BsonConvert extends Convert<BsonReader, BsonWriter> {
         return (BsonFactory) factory;
     }
 
+    public static BsonConvert root() {
+        return BsonFactory.root().getConvert();
+    }
+
     //------------------------------ reader -----------------------------------------------------------
     public BsonReader pollBsonReader(final ByteBuffer... buffers) {
         return new BsonByteBufferReader(buffers);
