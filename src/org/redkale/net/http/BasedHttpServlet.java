@@ -42,7 +42,7 @@ public abstract class BasedHttpServlet extends HttpServlet {
     @Documented
     @Target({METHOD, TYPE})
     @Retention(RUNTIME)
-    public static @interface AuthIgnore {
+    protected @interface AuthIgnore {
 
     }
 
@@ -58,7 +58,7 @@ public abstract class BasedHttpServlet extends HttpServlet {
     @Target({ElementType.METHOD})
     @Retention(RetentionPolicy.RUNTIME)
     @Documented
-    public static @interface WebAction {
+    protected @interface WebAction {
 
         int actionid() default 0;
 
@@ -78,7 +78,7 @@ public abstract class BasedHttpServlet extends HttpServlet {
     @Target({ElementType.METHOD})
     @Retention(RetentionPolicy.RUNTIME)
     @Documented
-    public static @interface HttpCacheable {
+    protected @interface HttpCacheable {
 
         /**
          * 超时的秒数
