@@ -13,6 +13,7 @@
             <h1 class="project-name">RedKale</h1>
             <h2 class="project-tagline"></h2>
             <a href="index.html" class="btn">RedKale</a> 
+            <a href="redkale.html" class="btn">RedKale入门</a> 
             <a href="convert.html" class="btn">Convert 组件</a> 
             <a href="service.html" class="btn">Service 组件</a> 
             <a href="source.html" class="btn">Source 组件</a> 
@@ -30,30 +31,30 @@
                 其功能相当于 Tomcat + Mina + Struts + Spring + Hibernate + RMI + Json + Memcached 的综合体。 <br/>
                 RedKale 有如下主要特点： <br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1、大量使用Java 8新特性（接口默认值、Stream、Lambda、JDk8内置的ASM包） <br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2、HTTP层内置json功能与限时缓存功能 <br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3、TCP层使用NIO.2，TCP与UDP提供统一接口 <br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4、分布式与集中式可以无缝切换 <br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;5、数据缓存自动同步与简洁的数据层操作接口 <br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2、提供HTTP服务，同时内置JSON功能与限时缓存功能 <br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3、TCP层完全使用NIO.2，并统一TCP与UDP的接口 <br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4、提供分布式与集中式部署的无缝切换 <br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;5、提供类似JPA功能，并包含数据缓存自动同步与简洁的数据层操作接口 <br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;6、功能强大 但体积不到1.5M，且不依赖任何第三方包 <br/>
             </p>
 
             <h3>
-                <a id="designer-templates" class="anchor" href="#designer-templates" aria-hidden="true"><span class="octicon octicon-link"></span></a>亮点一. 轻量级HTTP</h3>
+                <a class="anchor" href="#designer-templates" aria-hidden="true"><span class="octicon octicon-link"></span></a>亮点一. 轻量级HTTP</h3>
 
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;RedKale 的HTTP是基于异步NIO.2实现的，所提供的HttpResponse的输出接口也是异步的，因此并不遵循JSR 340规范(Servlet 3.1)且也没有实现Jsp规范。 HTTP只提供四个对象：HttpContext、HttpRequest、HttpResponse、HttpServlet。 传统Session则由数据层实现。RedKale提倡http+json接口(无论网站、PC客户端、APP移动端、第三方接口都可使用统一接口)， 因此HTTP层内置了json解析与序列化接口，同时内置http缓存机制。</p>
 
             <h3>
-                <a id="creating-pages-manually" class="anchor" href="#creating-pages-manually" aria-hidden="true"><span class="octicon octicon-link"></span></a>亮点二. 分布式WebSocket</h3>
+                <a class="anchor" href="#creating-pages-manually" aria-hidden="true"><span class="octicon octicon-link"></span></a>亮点二. 分布式WebSocket</h3>
 
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;RedKale 的WebSocket接口不同于JSR 340(Servlet 3.1)， 除了提供基本的WebSocket功能， 还提供分布式与集中式部署， 当部署多个WebSocket进程时，通过配置文件可以实现WebSocket之间连接信息的数据同步。</p>
 
             <h3>
-                <a id="authors-and-contributors" class="anchor" href="#authors-and-contributors" aria-hidden="true"><span class="octicon octicon-link"></span></a>亮点三. SNCP协议</h3>
+                <a class="anchor" href="#authors-and-contributors" aria-hidden="true"><span class="octicon octicon-link"></span></a>亮点三. SNCP协议</h3>
 
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;SNCP(Service Node Communicate Protocol)是RedKale独有的协议， 类似RMI与WebService的功能结合，主要用于进程间的数据传输。使用者通过配置文件可以轻易的将Service由本地模式变成远程模式。远程模式的Service使用SNCP协议与其他进程的Service通信。使用者无需对远程通信接口使用类似mina的第三方包自行开发。</p>
 
             <h3>
-                <a id="support-or-contact" class="anchor" href="#support-or-contact" aria-hidden="true"><span class="octicon octicon-link"></span></a>亮点四. DataSource</h3>
+                <a class="anchor" href="#support-or-contact" aria-hidden="true"><span class="octicon octicon-link"></span></a>亮点四. DataSource</h3>
 
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;RedKale提供DataSource类对数据层进行操作，其功能类似JPA+Memcached。与JPA相比各有优缺点。 <br/>
                 优点：  <br/>

@@ -14,6 +14,7 @@
             <h1 class="project-name">RedKale</h1>
             <h2 class="project-tagline"></h2>
             <a href="index.html" class="btn">RedKale</a> 
+            <a href="redkale.html" class="btn">RedKale入门</a> 
             <a href="convert.html" class="btn">Convert 组件</a> 
             <a href="service.html" class="btn">Service 组件</a> 
             <a href="source.html" class="btn">Source 组件</a> 
@@ -96,7 +97,7 @@
         <span class="n">user</span><span class="o">.</span><span class="na">setUserid</span><span class="o">(</span><span class="mi">100</span><span class="o">);</span>
         <span class="n">user</span><span class="o">.</span><span class="na">setUsername</span><span class="o">(</span><span class="s">&quot;redkalename&quot;</span><span class="o">);</span>
         <span class="n">user</span><span class="o">.</span><span class="na">setPassword</span><span class="o">(</span><span class="s">&quot;123456&quot;</span><span class="o">);</span>
-        <span class="kd">final</span> <span class="n">JsonConvert</span> <span class="n">convert</span> <span class="o">=</span> <span class="n">JsonFactory</span><span class="o">.</span><span class="na">root</span><span class="o">().</span><span class="na">getConvert</span><span class="o">();</span>
+        <span class="kd">final</span> <span class="n">JsonConvert</span> <span class="n">convert</span> <span class="o">=</span> <span class="n">JsonConvert</span><span class="o">.</span><span class="na">root</span><span class="o">();</span>
         <span class="n">String</span> <span class="n">json</span> <span class="o">=</span> <span class="n">convert</span><span class="o">.</span><span class="na">convertTo</span><span class="o">(</span><span class="n">user</span><span class="o">);</span>
         <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">json</span><span class="o">);</span>  <span class="c1">//应该是 {&quot;password&quot;:&quot;123456&quot;,&quot;userid&quot;:100,&quot;username&quot;:&quot;redkalename&quot;}</span>
         <span class="n">UserRecord</span> <span class="n">user2</span> <span class="o">=</span> <span class="n">convert</span><span class="o">.</span><span class="na">convertFrom</span><span class="o">(</span><span class="n">UserRecord</span><span class="o">.</span><span class="k">class</span><span class="o">,</span> <span class="n">json</span><span class="o">);</span>
