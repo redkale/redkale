@@ -9,17 +9,15 @@ import java.lang.reflect.*;
 import java.net.*;
 import java.util.*;
 import org.redkale.net.sncp.*;
-import org.redkale.service.Service;
+import org.redkale.service.*;
 import org.redkale.util.Attribute;
-import org.redkale.service.MultiRun;
 import org.redkale.source.DataCallArrayAttribute;
-import org.redkale.service.DynCall;
 
 /**
  *
  * @author zhangjx
  */
-public class SncpTestService implements Service {
+public class SncpTestService implements SncpTestIService {
 
     public static class CallAttribute implements Attribute<SncpTestBean, Long> {
 
@@ -71,7 +69,7 @@ public class SncpTestService implements Service {
     }
 
     public static void main(String[] args) throws Exception {
-        SncpTestService service = Sncp.createLocalService("", null, SncpTestService.class, new InetSocketAddress("127.0.0.1", 7070), new HashSet(), null, null);
+        Service service = Sncp.createLocalService("", null, SncpTestService.class, new InetSocketAddress("127.0.0.1", 7070), new HashSet(), null, null);
         for(Method method :service.getClass().getDeclaredMethods()) {
             System.out.println(method);
         }
@@ -81,6 +79,14 @@ public class SncpTestService implements Service {
         }
         System.out.println("-----------------------------------");
         service = Sncp.createRemoteService("", null, SncpTestService.class, new InetSocketAddress("127.0.0.1", 7070), new HashSet(), null);
+        for(Method method :service.getClass().getDeclaredMethods()) {
+            System.out.println(method);
+        }
+        System.out.println("-----------------------------------");
+        for(Method method :SncpClient.parseMethod(service.getClass())) { 
+            System.out.println(method);
+        }
+        System.out.println("-----------------------------------");service = Sncp.createRemoteService("", null, SncpTestIService.class, new InetSocketAddress("127.0.0.1", 7070), new HashSet(), null);
         for(Method method :service.getClass().getDeclaredMethods()) {
             System.out.println(method);
         }
