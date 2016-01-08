@@ -13,4 +13,6 @@
 <li>功能强大 但体积不到1.5M，且不依赖任何第三方包</li>
 </ol>
 
+&nbsp;&nbsp;&nbsp;由于RedKale使用了JDK 8 内置的ASM包，所以需要在源码工程中的编译器选项中加入： -XDignore.symbol.file=true
+
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<h5>详情请访问:&nbsp;&nbsp;&nbsp;&nbsp;<a href='http://www.redkale.or'>http://www.redkale.org</a></h5>
