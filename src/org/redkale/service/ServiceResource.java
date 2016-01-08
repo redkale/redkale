@@ -15,7 +15,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * 业务逻辑的Service通常有两种编写方式：
  *    1、只写一个Service实现类。
  *    2、先定义业务的Service接口或抽象类，再编写具体实现类。
- * &#64;ServiceType用于第二种方式， 在具体实现类上需要使用&#64;ServiceType指明资源注入的类型。
+ * &#64;ServiceResource用于第二种方式， 在具体实现类上需要使用&#64;ServiceResource指明资源注入的类型。
  * </pre></blockquote>
  * <p>
  * 详情见: http://www.redkale.org
@@ -26,7 +26,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Documented
 @Target({TYPE})
 @Retention(RUNTIME)
-public @interface ServiceType {
+public @interface ServiceResource {
 
     Class<? extends Service> value();
 

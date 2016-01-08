@@ -315,7 +315,7 @@ public abstract class NodeServer {
             diffGroupAddrs.forEach((k, v) -> diffGroupTransports.add(loadTransport(k, server.getProtocol(), v)));
             final boolean localed = (sameGroupAddrs.isEmpty() && diffGroupAddrs.isEmpty()) || sameGroupAddrs.contains(this.sncpAddress) || type.getAnnotation(LocalService.class) != null;//本地模式
             if (localed && (type.isInterface() || Modifier.isAbstract(type.getModifiers()))) continue; //本地模式不能实例化接口和抽象类的Service类
-            final ServiceType st = type.getAnnotation(ServiceType.class);
+            final ServiceResource st = type.getAnnotation(ServiceResource.class);
             final Class<? extends Service> resType = st == null ? type : st.value();
             if (st != null && (!isSNCP() && factory.find(entry.getName(), resType) != null)) continue;
             ServiceWrapper wrapper;
