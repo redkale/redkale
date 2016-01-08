@@ -36,11 +36,12 @@ public abstract class Reader {
     /**
      * /跳过字段与值之间的多余内容， json就是跳过:符, map跳过:
      */
-    public abstract void skipBlank();
+    public abstract void readBlank();
 
     /**
      * 读取对象的类名， 返回 null 表示对象为null， 返回空字符串表示当前class与返回的class一致，返回非空字符串表示class是当前class的子类。
      *
+     * @param clazz 类名
      * @return 返回字段数
      */
     public String readObjectB(final Class clazz) {
@@ -51,8 +52,9 @@ public abstract class Reader {
     /**
      * 读取对象的尾端
      *
+     * @param clazz 类名
      */
-    public abstract void readObjectE();
+    public abstract void readObjectE(final Class clazz);
 
     /**
      * 读取数组的开头并返回数组的长度

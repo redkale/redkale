@@ -93,7 +93,7 @@ public class JsonReader extends Reader {
         for (String key1 : keys) {
             while (this.hasNext()) {
                 String field = this.readSmallString();
-                skipBlank();
+                readBlank();
                 if (key1.equals(field)) break;
                 skipValue();
             }
@@ -113,7 +113,7 @@ public class JsonReader extends Reader {
         } else if (ch == '{') {
             while (hasNext()) {
                 this.readSmallString(); //读掉field
-                this.skipBlank();
+                this.readBlank();
                 this.skipValue();
             }
         } else if (ch == '[') {
@@ -189,7 +189,7 @@ public class JsonReader extends Reader {
     }
 
     @Override
-    public final void readObjectE() {
+    public final void readObjectE(final Class clazz) {
     }
 
     /**
@@ -237,7 +237,7 @@ public class JsonReader extends Reader {
      * 判断下一个非空白字符是否:
      */
     @Override
-    public void skipBlank() {
+    public void readBlank() {
         char ch = this.text[++this.position];
         if (ch == ':') return;
         if (ch <= ' ') {

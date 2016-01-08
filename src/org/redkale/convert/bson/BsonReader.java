@@ -170,7 +170,7 @@ public class BsonReader extends Reader {
     }
 
     @Override
-    public final void readObjectE() {
+    public final void readObjectE(final Class clazz) {
         if (readShort() != SIGN_OBJECTE) {
             throw new ConvertException("a bson object must end with " + (SIGN_OBJECTE)
                     + " (position = " + position + ") but '" + currentByte() + "'");
@@ -210,7 +210,7 @@ public class BsonReader extends Reader {
      * 判断下一个非空白字节是否:
      */
     @Override
-    public final void skipBlank() {
+    public final void readBlank() {
     }
 
     /**

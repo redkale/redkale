@@ -139,7 +139,7 @@ public class JsonByteBufferReader extends JsonReader {
      * 判断下一个非空白字符是否:
      */
     @Override
-    public final void skipBlank() {
+    public final void readBlank() {
         char ch = nextGoodChar();
         if (ch == ':') return;
         throw new ConvertException("expected a ':' but '" + ch + "'(position = " + position + ")");

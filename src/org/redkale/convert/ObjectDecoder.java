@@ -181,14 +181,14 @@ public final class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T
             final T result = this.creator.create();
             while (in.hasNext()) {
                 DeMember member = in.readFieldName(members);
-                in.skipBlank();
+                in.readBlank();
                 if (member == null) {
                     in.skipValue(); //跳过不存在的属性的值
                 } else {
                     member.read(in, result);
                 }
             }
-            in.readObjectE();
+            in.readObjectE(typeClass);
             return result;
         } else {  //带参数的构造函数
             final DeMember<R, T, ?>[] fields = this.creatorConstructorMembers;
@@ -197,7 +197,7 @@ public final class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T
             int oc = 0;
             while (in.hasNext()) {
                 DeMember member = in.readFieldName(members);
-                in.skipBlank();
+                in.readBlank();
                 if (member == null) {
                     in.skipValue(); //跳过不存在的属性的值
                 } else {
@@ -213,7 +213,7 @@ public final class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T
                     if (flag) otherParams[oc++] = new Object[]{member.attribute, val};
                 }
             }
-            in.readObjectE();
+            in.readObjectE(typeClass);
             final T result = this.creator.create(constructorParams);
             for (int i = 0; i < oc; i++) {
                 ((Attribute) otherParams[i][0]).set(result, otherParams[i][1]);

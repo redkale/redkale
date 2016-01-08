@@ -55,14 +55,14 @@ public final class MapDecoder<K, V> implements Decodeable<Reader, Map<K, V>> {
         if (len == Reader.SIGN_NOLENGTH) {
             while (in.hasNext()) {
                 K key = keyDecoder.convertFrom(in);
-                in.skipBlank();
+                in.readBlank();
                 V value = valueDecoder.convertFrom(in);
                 result.put(key, value);
             }
         } else {
             for (int i = 0; i < len; i++) {
                 K key = keyDecoder.convertFrom(in);
-                in.skipBlank();
+                in.readBlank();
                 V value = valueDecoder.convertFrom(in);
                 result.put(key, value);
             }
