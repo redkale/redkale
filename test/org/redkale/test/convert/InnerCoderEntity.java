@@ -73,14 +73,14 @@ public class InnerCoderEntity {
                 final Object[] params = new Object[deMembers.length];
                 while (in.hasNext()) {
                     DeMember member = in.readFieldName(deMembers); //读取字段名
-                    in.skipBlank(); //读取字段名与字段值之间的间隔符，JSON则是跳过冒号:
+                    in.readBlank(); //读取字段名与字段值之间的间隔符，JSON则是跳过冒号:
                     if (member == null) {
                         in.skipValue(); //跳过不存在的字段的值, 一般不会发生
                     } else {
                         params[index++] = member.read(in);
                     }
                 }
-                in.readObjectE();
+                in.readObjectE(InnerCoderEntity.class);
                 return InnerCoderEntity.create(params[0] == null ? 0 : (Integer) params[0], (String) params[1]);
             }
         };
