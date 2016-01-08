@@ -296,10 +296,8 @@ public abstract class NodeServer {
         final Set<InetSocketAddress> sg = application.findGlobalGroup(this.sncpGroup);
         for (FilterEntry<Service> entry : entrys) { //service实现类
             final Class<? extends Service> type = entry.getType();
-            if (type.isInterface()) continue;
             if (Modifier.isFinal(type.getModifiers())) continue;
             if (!Modifier.isPublic(type.getModifiers())) continue;
-            if (Modifier.isAbstract(type.getModifiers())) continue;
             if (!isSNCP() && factory.find(entry.getName(), type) != null) continue;
             final Set<InetSocketAddress> sameGroupAddrs = new LinkedHashSet<>();
             final Map<String, Set<InetSocketAddress>> diffGroupAddrs = new HashMap<>();
@@ -315,9 +313,13 @@ public abstract class NodeServer {
             }
             List<Transport> diffGroupTransports = new ArrayList<>();
             diffGroupAddrs.forEach((k, v) -> diffGroupTransports.add(loadTransport(k, server.getProtocol(), v)));
-
+            final boolean localed = (sameGroupAddrs.isEmpty() && diffGroupAddrs.isEmpty()) || sameGroupAddrs.contains(this.sncpAddress) || type.getAnnotation(LocalService.class) != null;//本地模式
+            if (localed && (type.isInterface() || Modifier.isAbstract(type.getModifiers()))) continue; //本地模式不能实例化接口和抽象类的Service类
+            final ServiceType st = type.getAnnotation(ServiceType.class);
+            final Class<? extends Service> resType = st == null ? type : st.value();
+            if (st != null && (!isSNCP() && factory.find(entry.getName(), resType) != null)) continue;
             ServiceWrapper wrapper;
-            if ((sameGroupAddrs.isEmpty() && diffGroupAddrs.isEmpty()) || sameGroupAddrs.contains(this.sncpAddress) || type.getAnnotation(LocalService.class) != null) { //本地模式
+            if (localed) { //本地模式
                 sameGroupAddrs.remove(this.sncpAddress);
                 List<Transport> sameGroupTransports = new ArrayList<>();
                 for (InetSocketAddress iaddr : sameGroupAddrs) {
@@ -326,7 +328,7 @@ public abstract class NodeServer {
                     sameGroupTransports.add(loadTransport(this.sncpGroup, server.getProtocol(), tset));
                 }
                 Service service = Sncp.createLocalService(entry.getName(), getExecutor(), type, this.sncpAddress, groups, sameGroupTransports, diffGroupTransports);
-                wrapper = new ServiceWrapper(type, service, this.sncpGroup, entry);
+                wrapper = new ServiceWrapper(resType, service, this.sncpGroup, entry);
                 if (fine) logger.fine("[" + Thread.currentThread().getName() + "] Load Service " + service);
             } else {
                 sameGroupAddrs.remove(this.sncpAddress);
@@ -338,7 +340,7 @@ public abstract class NodeServer {
                 });
                 if (sameGroupAddrs.isEmpty()) throw new RuntimeException(type.getName() + " has no remote address on group (" + groups + ")");
                 Service service = Sncp.createRemoteService(entry.getName(), getExecutor(), type, this.sncpAddress, groups, loadTransport(g.toString(), server.getProtocol(), sameGroupAddrs));
-                wrapper = new ServiceWrapper(type, service, "", entry);
+                wrapper = new ServiceWrapper(resType, service, "", entry);
                 if (fine) logger.fine("[" + Thread.currentThread().getName() + "] Load Service " + service);
             }
             if (factory.find(wrapper.getName(), wrapper.getType()) == null) {

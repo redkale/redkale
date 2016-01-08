@@ -815,7 +815,7 @@ public abstract class Sncp {
      *      public String findSomeThing(){
      *          return _client.remote(_convert, _transport, 3);
      *      }
-     * 
+     *
      *      &#64;Override
      *      public String updateSomeThing(String id){
      *          return  _client.remote(_convert, _transport, 4, id);
@@ -841,8 +841,8 @@ public abstract class Sncp {
         if (serviceClass == null) return null;
         if (!Service.class.isAssignableFrom(serviceClass)) return null;
         int mod = serviceClass.getModifiers();
+        boolean realed = !(java.lang.reflect.Modifier.isAbstract(mod) || serviceClass.isInterface());
         if (!java.lang.reflect.Modifier.isPublic(mod)) return null;
-        if (java.lang.reflect.Modifier.isAbstract(mod)) return null;
         final String supDynName = serviceClass.getName().replace('.', '/');
         final String clientName = SncpClient.class.getName().replace('.', '/');
         final String clientDesc = Type.getDescriptor(SncpClient.class);
@@ -852,7 +852,7 @@ public abstract class Sncp {
         final String anyValueDesc = Type.getDescriptor(AnyValue.class);
         ClassLoader loader = Sncp.class.getClassLoader();
         String newDynName = supDynName.substring(0, supDynName.lastIndexOf('/') + 1) + REMOTEPREFIX + serviceClass.getSimpleName();
-        final SncpClient client = new SncpClient(name, executor, hash(serviceClass), true, createLocalServiceClass(name, serviceClass), clientAddress, groups);
+        final SncpClient client = new SncpClient(name, executor, hash(serviceClass), true, realed ? createLocalServiceClass(name, serviceClass) : serviceClass, clientAddress, groups);
         try {
             Class newClazz = Class.forName(newDynName.replace('/', '.'));
             T rs = (T) newClazz.newInstance();
@@ -883,7 +883,7 @@ public abstract class Sncp {
         AsmMethodVisitor mv;
         AnnotationVisitor av0;
 
-        cw.visit(V1_8, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynName, null, supDynName, null);
+        cw.visit(V1_8, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynName, null, serviceClass.isInterface() ? "java/lang/Object" : supDynName, serviceClass.isInterface() ? new String[]{supDynName} : null);
         {
             av0 = cw.visitAnnotation("Ljavax/annotation/Resource;", true);
             av0.visit("name", name);
@@ -916,7 +916,7 @@ public abstract class Sncp {
             mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null));
             //mv.setDebug(true);
             mv.visitVarInsn(ALOAD, 0);
-            mv.visitMethodInsn(INVOKESPECIAL, supDynName, "<init>", "()V", false);
+            mv.visitMethodInsn(INVOKESPECIAL, serviceClass.isInterface() ? "java/lang/Object" : supDynName, "<init>", "()V", false);
             mv.visitInsn(RETURN);
             mv.visitMaxs(1, 1);
             mv.visitEnd();
