@@ -8,10 +8,12 @@ package org.redkale.convert.ext;
 import java.nio.channels.*;
 import org.redkale.convert.*;
 
-/** 
+/**
  * java.nio.channels.CompletionHandler 的SimpledCoder实现, 只输出null
- * 
- * <p> 详情见: http://www.redkale.org
+ *
+ * <p>
+ * 详情见: http://www.redkale.org
+ *
  * @author zhangjx
  * @param <R> Reader输入的子类型
  * @param <W> Writer输出的子类型
@@ -22,12 +24,12 @@ public final class CompletionHandlerSimpledCoder<R extends Reader, W extends Wri
 
     @Override
     public void convertTo(W out, CompletionHandler value) {
-        out.writeNull();
+        out.writeObjectNull(CompletionHandler.class);
     }
 
     @Override
     public CompletionHandler convertFrom(R in) {
-        in.readObjectB();
+        in.readObjectB(CompletionHandler.class);
         return null;
     }
 

@@ -5,7 +5,6 @@
  */
 package org.redkale.convert.bson;
 
-import java.util.concurrent.atomic.*;
 import java.util.function.*;
 import org.redkale.convert.*;
 import static org.redkale.convert.Reader.SIGN_NULL;
@@ -19,7 +18,7 @@ import org.redkale.util.*;
  *
  * @author zhangjx
  */
-public class BsonReader implements Reader {
+public class BsonReader extends Reader {
 
     public static final short SIGN_OBJECTB = (short) 0xBB;
 
@@ -156,19 +155,18 @@ public class BsonReader implements Reader {
         }
     }
 
-    /**
-     * 判断下一个非空白字节是否为{
-     *
-     */
     @Override
-    public final int readObjectB() {
+    public final String readObjectB(final Class clazz) {
+        this.fieldIndex = 0; //必须要重置为0
+        final String newcls = readClassName();
+        if (newcls != null && !newcls.isEmpty()) return newcls;
         short bt = readShort();
-        if (bt == Reader.SIGN_NULL) return bt;
+        if (bt == Reader.SIGN_NULL) return null;
         if (bt != SIGN_OBJECTB) {
             throw new ConvertException("a bson object must begin with " + (SIGN_OBJECTB)
                     + " (position = " + position + ") but '" + currentByte() + "'");
         }
-        return bt;
+        return "";
     }
 
     @Override
@@ -230,24 +228,20 @@ public class BsonReader implements Reader {
     }
 
     @Override
-    public final DeMember readField(final AtomicInteger index, final DeMember[] members) {
+    public final DeMember readFieldName(final DeMember[] members) {
         final String exceptedfield = readSmallString();
         this.typeval = readByte();
         final int len = members.length;
-        int v = index.get();
-        if (v >= len) {
-            v = 0;
-            index.set(0);
-        }
-        for (int k = v; k < len; k++) {
+        if (this.fieldIndex >= len) this.fieldIndex = 0;
+        for (int k = this.fieldIndex; k < len; k++) {
             if (exceptedfield.equals(members[k].getAttribute().field())) {
-                index.set(k);
+                this.fieldIndex = k;
                 return members[k];
             }
         }
-        for (int k = 0; k < v; k++) {
+        for (int k = 0; k < this.fieldIndex; k++) {
             if (exceptedfield.equals(members[k].getAttribute().field())) {
-                index.set(k);
+                this.fieldIndex = k;
                 return members[k];
             }
         }

@@ -19,7 +19,7 @@ import org.redkale.util.*;
  *
  * @author zhangjx
  */
-public class JsonWriter implements Writer {
+public class JsonWriter extends Writer {
 
     private static final char[] CHARS_TUREVALUE = "true".toCharArray();
 
@@ -159,8 +159,8 @@ public class JsonWriter implements Writer {
     }
 
     @Override
-    public final void writeField(boolean comma, Attribute attribute) {
-        if (comma) writeTo(',');
+    public final void writeFieldName(Attribute attribute) {
+        if (this.comma) writeTo(',');
         writeTo(true, attribute.field());
         writeTo(':');
     }
@@ -225,7 +225,8 @@ public class JsonWriter implements Writer {
     }
 
     @Override
-    public final void writeObjectB(int fieldCount, Object obj) {
+    public final void writeObjectB(Object obj) {
+        super.writeObjectB(obj);
         writeTo('{');
     }
 

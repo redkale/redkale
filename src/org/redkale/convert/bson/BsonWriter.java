@@ -12,10 +12,12 @@ import org.redkale.util.*;
 
 /**
  *
- * <p> 详情见: http://www.redkale.org
+ * <p>
+ * 详情见: http://www.redkale.org
+ *
  * @author zhangjx
  */
-public class BsonWriter implements Writer {
+public class BsonWriter extends Writer {
 
     private static final int defaultSize = Integer.getInteger("convert.bson.writer.buffer.defsize", 1024);
 
@@ -171,7 +173,8 @@ public class BsonWriter implements Writer {
     }
 
     @Override
-    public final void writeObjectB(int fieldCount, Object obj) {
+    public final void writeObjectB(Object obj) {
+        super.writeObjectB(obj);
         writeSmallString("");
         writeShort(BsonReader.SIGN_OBJECTB);
     }
@@ -183,7 +186,7 @@ public class BsonWriter implements Writer {
     }
 
     @Override
-    public final void writeField(boolean comma, Attribute attribute) {
+    public final void writeFieldName( Attribute attribute) {
         writeByte(BsonReader.SIGN_HASNEXT);
         writeSmallString(attribute.field());
         byte typeval = 127;  //字段的类型值

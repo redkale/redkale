@@ -12,7 +12,9 @@ import org.redkale.util.*;
 
 /**
  *
- * <p> 详情见: http://www.redkale.org
+ * <p>
+ * 详情见: http://www.redkale.org
+ *
  * @author zhangjx
  * @param <W> Writer输出的子类
  * @param <T> 序列化的数据类型
@@ -102,8 +104,7 @@ public final class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T
     @Override
     public final void convertTo(W out, T value) {
         if (value == null) {
-            out.wirteClassName(null);
-            out.writeNull();
+            out.writeObjectNull(null);
             return;
         }
         if (!this.inited) {
@@ -121,10 +122,9 @@ public final class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T
             factory.loadEncoder(clz).convertTo(out, value);
             return;
         }
-        out.writeObjectB(members.length, value);
-        boolean comma = false;
+        out.writeObjectB(value);
         for (EnMember member : members) {
-            comma = member.write(out, comma, value);
+            out.writeObjectField(member, value);
         }
         out.writeObjectE(value);
     }

@@ -5,7 +5,6 @@
  */
 package org.redkale.convert.json;
 
-import java.util.concurrent.atomic.*;
 import java.util.function.*;
 import org.redkale.convert.*;
 import static org.redkale.convert.Reader.*;
@@ -18,7 +17,7 @@ import org.redkale.util.*;
  *
  * @author zhangjx
  */
-public class JsonReader implements Reader {
+public class JsonReader extends Reader {
 
     protected int position = -1;
 
@@ -169,21 +168,23 @@ public class JsonReader implements Reader {
     /**
      * 判断下一个非空白字符是否为{
      *
-     * @return SIGN_NOLENGTH 或 SIGN_NULL
+     * @param clazz 类名
+     * @return 返回 null 表示对象为null， 返回空字符串表示当前class与返回的class一致，返回非空字符串表示class是当前class的子类。
      */
     @Override
-    public int readObjectB() {
+    public String readObjectB(final Class clazz) {
+        this.fieldIndex = 0; //必须要重置为0
         char ch = this.text[++this.position];
-        if (ch == '{') return SIGN_NOLENGTH;
+        if (ch == '{') return "";
         if (ch <= ' ') {
             for (;;) {
                 ch = this.text[++this.position];
                 if (ch > ' ') break;
             }
-            if (ch == '{') return SIGN_NOLENGTH;
+            if (ch == '{') return "";
         }
-        if (ch == 'n' && text[++position] == 'u' && text[++position] == 'l' && text[++position] == 'l') return SIGN_NULL;
-        if (ch == 'N' && text[++position] == 'U' && text[++position] == 'L' && text[++position] == 'L') return SIGN_NULL;
+        if (ch == 'n' && text[++position] == 'u' && text[++position] == 'l' && text[++position] == 'l') return null;
+        if (ch == 'N' && text[++position] == 'U' && text[++position] == 'L' && text[++position] == 'L') return null;
         throw new ConvertException("a json object text must begin with '{' (position = " + position + ") but '" + ch + "' in (" + new String(this.text) + ")");
     }
 
@@ -416,23 +417,19 @@ public class JsonReader implements Reader {
     }
 
     @Override
-    public final DeMember readField(final AtomicInteger index, final DeMember[] members) {
+    public final DeMember readFieldName(final DeMember[] members) {
         final String exceptedfield = this.readSmallString();
         final int len = members.length;
-        int v = index.get();
-        if (v >= len) {
-            v = 0;
-            index.set(0);
-        }
-        for (int k = v; k < len; k++) {
+        if (this.fieldIndex >= len) this.fieldIndex = 0;
+        for (int k = this.fieldIndex; k < len; k++) {
             if (exceptedfield.equals(members[k].getAttribute().field())) {
-                index.set(k);
+                this.fieldIndex = k;
                 return members[k];
             }
         }
-        for (int k = 0; k < v; k++) {
+        for (int k = 0; k < this.fieldIndex; k++) {
             if (exceptedfield.equals(members[k].getAttribute().field())) {
-                index.set(k);
+                this.fieldIndex = k;
                 return members[k];
             }
         }

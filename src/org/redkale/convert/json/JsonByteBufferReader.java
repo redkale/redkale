@@ -113,11 +113,11 @@ public class JsonByteBufferReader extends JsonReader {
      * @return SIGN_NOLENGTH 或 SIGN_NULL
      */
     @Override
-    public final int readObjectB() {
+    public final String readObjectB(final Class clazz) {
         char ch = nextGoodChar();
-        if (ch == '{') return SIGN_NOLENGTH;
-        if (ch == 'n' && nextChar() == 'u' && nextChar() == 'l' && nextChar() == 'l') return SIGN_NULL;
-        if (ch == 'N' && nextChar() == 'U' && nextChar() == 'L' && nextChar() == 'L') return SIGN_NULL;
+        if (ch == '{') return "";
+        if (ch == 'n' && nextChar() == 'u' && nextChar() == 'l' && nextChar() == 'l') return null;
+        if (ch == 'N' && nextChar() == 'U' && nextChar() == 'L' && nextChar() == 'L') return null;
         throw new ConvertException("a json object text must begin with '{' (position = " + position + ") but '" + ch + "'");
     }
 

@@ -10,12 +10,13 @@ import java.lang.reflect.*;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 import org.redkale.util.*;
 
 /**
  *
- * <p> 详情见: http://www.redkale.org
+ * <p>
+ * 详情见: http://www.redkale.org
+ *
  * @author zhangjx
  * @param <R> Reader输入的子类
  * @param <T> 反解析的数据类型
@@ -164,9 +165,9 @@ public final class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T
      */
     @Override
     public final T convertFrom(final R in) {
-        final String clazz = in.readClassName();
-        if (clazz != null && !clazz.isEmpty()) return (T) factory.loadDecoder(factory.getEntity(clazz)).convertFrom(in);
-        if (in.readObjectB() == Reader.SIGN_NULL) return null;
+        final String clazz = in.readObjectB(typeClass);
+        if (clazz == null) return null;
+        if (!clazz.isEmpty()) return (T) factory.loadDecoder(factory.getEntity(clazz)).convertFrom(in);
         if (!this.inited) {
             synchronized (lock) {
                 try {
@@ -178,16 +179,14 @@ public final class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T
         }
         if (this.creatorConstructorMembers == null) {  //空构造函数
             final T result = this.creator.create();
-            final AtomicInteger index = new AtomicInteger();
             while (in.hasNext()) {
-                DeMember member = in.readField(index, members);
+                DeMember member = in.readFieldName(members);
                 in.skipBlank();
                 if (member == null) {
                     in.skipValue(); //跳过不存在的属性的值
                 } else {
                     member.read(in, result);
                 }
-                index.incrementAndGet();
             }
             in.readObjectE();
             return result;
@@ -195,10 +194,9 @@ public final class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T
             final DeMember<R, T, ?>[] fields = this.creatorConstructorMembers;
             final Object[] constructorParams = new Object[fields.length];
             final Object[][] otherParams = new Object[this.members.length][2];
-            final AtomicInteger index = new AtomicInteger();
             int oc = 0;
             while (in.hasNext()) {
-                DeMember member = in.readField(index, members);
+                DeMember member = in.readFieldName(members);
                 in.skipBlank();
                 if (member == null) {
                     in.skipValue(); //跳过不存在的属性的值
@@ -214,7 +212,6 @@ public final class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T
                     }
                     if (flag) otherParams[oc++] = new Object[]{member.attribute, val};
                 }
-                index.incrementAndGet();
             }
             in.readObjectE();
             final T result = this.creator.create(constructorParams);

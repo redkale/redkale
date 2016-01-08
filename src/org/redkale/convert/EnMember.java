@@ -21,14 +21,14 @@ import org.redkale.util.Attribute;
 @SuppressWarnings("unchecked")
 public final class EnMember<W extends Writer, T, F> implements Comparable<EnMember<W, T, F>> {
 
-    private final Attribute<T, F> attribute;
+    final Attribute<T, F> attribute;
 
     final Encodeable<W, F> encoder;
 
-    private final boolean istring;
+    final boolean istring;
 
-    //private final boolean isnumber;
-    private final boolean isbool;
+    //final boolean isnumber;
+    final boolean isbool;
 
     public EnMember(Attribute<T, F> attribute, Encodeable<W, F> encoder) {
         this.attribute = attribute;
@@ -50,21 +50,6 @@ public final class EnMember<W extends Writer, T, F> implements Comparable<EnMemb
 
     public final boolean match(String name) {
         return attribute.field().equals(name);
-    }
-
-    public boolean write(final W out, final boolean comma, final T obj) {
-        F value = attribute.get(obj);
-        if (value == null) return comma;
-        if (out.tiny()) {
-            if (istring) {
-                if (((CharSequence) value).length() == 0) return comma;
-            } else if (isbool) {
-                if (!((Boolean) value)) return comma;
-            }
-        }
-        out.writeField(comma, attribute);
-        encoder.convertTo(out, value);
-        return true;
     }
 
     @Override
