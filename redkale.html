@@ -64,7 +64,7 @@
 
             <h3><a id="redkale_confxml" class="anchor" href="#" aria-hidden="true"><span class="octicon octicon-link"></span></a>RedKale 集中式与分布式</h3>
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;通常一个系统会分为三层：接入层、业务层、数据层。对应到RedKale的组件是： Servlet、Service、Source。大部分系统提供的是HTTP服务，为了方便演示RedKale从集中式到分布式的变化，以一个简单的HTTP服务作为范例。<br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;假设一个极简单的公司内部论坛系统包含三个模块： <br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;开发一个极简单的小论坛系统。包含三个模块： <br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;用户模块 &nbsp;&nbsp;&nbsp;UserSerivice: &nbsp;&nbsp;&nbsp;&nbsp;提供用户注册、登录、更新资料等功能， UserServlet作为接入层。<br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;帖子模块 ForumSerivice: &nbsp;&nbsp;&nbsp;&nbsp;提供看帖、发帖、删帖等功能， ForumServlet作为接入层。<br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;通知模块 &nbsp;NotifySerivice: &nbsp;&nbsp;&nbsp;&nbsp;提供用户操作、回帖等消息通知功能， NotifyWebSocket是WebSocket的Servlet，作为接入层。 <br/>
@@ -253,8 +253,11 @@
         <span class="nt">&lt;servlets</span> <span class="na">autoload=</span><span class="s">&quot;true&quot;</span> <span class="nt">/&gt;</span>
     <span class="nt">&lt;/server&gt;</span> 	
 <span class="nt">&lt;/application&gt;</span></pre></div>
-            <br/>
-            
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;由这个范例可以看出，RedKale提供了非常强大的架构，集中式到微服务架构不需要增加修改一行代码即可随意切换，复杂的系统都可以如小系统般快速地开发出来。当年Spring抓住了JavaEE笨重且学习成本高的痛点迅速走红，经过了十多年的发展后，如今的Spring也已笨重不堪了。<br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;主流的SSH、SSM框架的复杂程度并不比JavaEE低多少，开发之前，不算功能性的工具包(如jfreechart、jdbc驱动)就已经需要几十M的框架包。当一个初级程序员使用传统SSM框架开发一个简单系统单点部署后，运行一段时间随着业务发展需要多个进程部署时，就会发现两个进程间的MyBatis缓存不能自动同步，可能就想到Memcached之类框架。于是就得学习Memcached的Java Client API，同时还得学习使用JSON或其他的序列化的第三方框架， 更麻烦的是已有的数据层的操作代码需要进行修改，查询得先查Memcached，没有再查数据库，修改操作得同步更新到Memcached。如今移动应用成为主流，Android的消息推送通常使用WebSocket，当使用了WebSocket时发现连接到不同进程上的用户间通信也是个麻烦事，于是又得找一套WebSocket节点之间通信的框架。<br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;而使用RedKale可以省去很多不必须要的学习成本，内置了很多微服务常用的功能, 待续……。
+            </p>
+
             <h3><a id="redkale_confxml" class="anchor" href="#" aria-hidden="true"><span class="octicon octicon-link"></span></a>appplication.xml 配置说明</h3>
             <div class="highlight"><pre><span class="cp">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;</span>
 <span class="c">&lt;!-- </span>
