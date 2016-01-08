@@ -74,15 +74,12 @@
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在早期用户量很少或者开发、调试环境中只需部署一个进程就可满足需求。 </p>
             <p style="text-align: center;"><img src="images/distributeimg_1.png" alt=""/></p>
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如上图，所有模块的HttpServlet、Service与Source数据库操作全部署在一起。 application.xml作简单的配置即可:</p>
-            <div class="highlight"><pre><span class="nt">&lt;application</span> <span class="na">port=</span><span class="s">&quot;5050&quot;</span><span class="nt">&gt;</span>   
-    
+            <div class="highlight"><pre><span class="nt">&lt;application</span> <span class="na">port=</span><span class="s">&quot;5050&quot;</span><span class="nt">&gt;</span>       
     <span class="nt">&lt;server</span> <span class="na">protocol=</span><span class="s">&quot;HTTP&quot;</span> <span class="na">port=</span><span class="s">&quot;6060&quot;</span> <span class="na">root=</span><span class="s">&quot;root&quot;</span><span class="nt">&gt;</span> 
         <span class="nt">&lt;services</span> <span class="na">autoload=</span><span class="s">&quot;true&quot;</span> <span class="nt">/&gt;</span>  
         <span class="nt">&lt;servlets</span> <span class="na">autoload=</span><span class="s">&quot;true&quot;</span><span class="nt">/&gt;</span>
-    <span class="nt">&lt;/server&gt;</span> 
-    	
-<span class="nt">&lt;/application&gt;</span>
-                </pre></div>
+    <span class="nt">&lt;/server&gt;</span>     	
+<span class="nt">&lt;/application&gt;</span></pre></div>
             <br/>
 
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>2、多点部署</b></p>
@@ -91,7 +88,6 @@
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如上图，两个进程间的Serivce都是本地模式，两者会通过SNCP服务保持数据同步，若DataSource开启了数据缓存也会自动同步。两套的配置文件相同，配置如下:</p>
             <div class="highlight"><pre>
 <span class="nt">&lt;application</span> <span class="na">port=</span><span class="s">&quot;5050&quot;</span><span class="nt">&gt;</span>   
-
     <span class="nt">&lt;resources&gt;</span>	
         <span class="nt">&lt;group</span> <span class="na">name=</span><span class="s">&quot;ALL&quot;</span><span class="nt">&gt;</span>
             <span class="nt">&lt;node</span> <span class="na">addr=</span><span class="s">&quot;192.168.50.110&quot;</span> <span class="na">port=</span><span class="s">&quot;7070&quot;</span><span class="nt">/&gt;</span>
@@ -112,8 +108,7 @@
     <span class="c">&lt;!-- SNCP 监听 Server --&gt;</span>
     <span class="nt">&lt;server</span> <span class="na">protocol=</span><span class="s">&quot;SNCP&quot;</span> <span class="na">port=</span><span class="s">&quot;7070&quot;</span><span class="nt">&gt;</span> 
         <span class="nt">&lt;services</span> <span class="na">autoload=</span><span class="s">&quot;true&quot;</span>  <b><span class="na">groups=</span><span class="s">&quot;ALL&quot;</span></b><span class="nt">/&gt;</span>
-    <span class="nt">&lt;/server&gt;</span>
-	
+    <span class="nt">&lt;/server&gt;</span>	
 <span class="nt">&lt;/application&gt;</span></pre></div>
             <br/>
 
@@ -122,8 +117,7 @@
             <p style="text-align: center;"><img src="images/distributeimg_3.png" alt=""/></p>
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如上图，对HttpServlet与Service进行了分离。每个接入层的Service都是远程模式，业务层只需提供SNCP供远程调用。</p>
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;接入层中每个进程的配置相同，配置如下:</p>
-            <div class="highlight"><pre><span class="nt">&lt;application</span> <span class="na">port=</span><span class="s">&quot;5050&quot;</span><span class="nt">&gt;</span>   
-
+            <div class="highlight"><pre><span class="nt">&lt;application</span> <span class="na">port=</span><span class="s">&quot;5050&quot;</span><span class="nt">&gt;</span>  
     <span class="nt">&lt;resources&gt;</span>	
         <span class="nt">&lt;group</span> <span class="na">name=</span><span class="s">&quot;ALL&quot;</span><span class="nt">&gt;</span>
             <span class="nt">&lt;node</span> <span class="na">addr=</span><span class="s">&quot;192.168.50.110&quot;</span> <span class="na">port=</span><span class="s">&quot;7070&quot;</span><span class="nt">/&gt;</span>
@@ -141,11 +135,9 @@
         <span class="nt">&lt;servlets</span> <span class="na">autoload=</span><span class="s">&quot;true&quot;</span> <span class="nt">/&gt;</span>
     <span class="nt">&lt;/server&gt;</span> 
 	
-<span class="nt">&lt;/application&gt;</span>
-                </pre></div>
-            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;业务层中每个进程的配置相同，置如下:</p>
-            <div class="highlight"><pre><span class="nt">&lt;application</span> <span class="na">port=</span><span class="s">&quot;5050&quot;</span><span class="nt">&gt;</span>   
-
+<span class="nt">&lt;/application&gt;</span></pre></div>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;业务层中每个进程的配置相同，配置如下:</p>
+            <div class="highlight"><pre><span class="nt">&lt;application</span> <span class="na">port=</span><span class="s">&quot;5050&quot;</span><span class="nt">&gt;</span>  
     <span class="nt">&lt;resources&gt;</span>	
         <span class="nt">&lt;group</span> <span class="na">name=</span><span class="s">&quot;ALL&quot;</span><span class="nt">&gt;</span>
             <span class="nt">&lt;node</span> <span class="na">addr=</span><span class="s">&quot;192.168.50.110&quot;</span> <span class="na">port=</span><span class="s">&quot;7070&quot;</span><span class="nt">/&gt;</span>
@@ -156,17 +148,113 @@
     <span class="c">&lt;!-- SNCP 监听 Server --&gt;</span>
     <span class="nt">&lt;server</span> <span class="na">protocol=</span><span class="s">&quot;SNCP&quot;</span> <span class="na">port=</span><span class="s">&quot;7070&quot;</span><span class="nt">&gt;</span> 
         <span class="nt">&lt;services</span> <span class="na">autoload=</span><span class="s">&quot;true&quot;</span>  <span class="na">groups=</span><span class="s">&quot;ALL&quot;</span><span class="nt">/&gt;</span>
-    <span class="nt">&lt;/server&gt;</span>
-	
-<span class="nt">&lt;/application&gt;</span>
-                </pre></div>
+    <span class="nt">&lt;/server&gt;</span>	
+<span class="nt">&lt;/application&gt;</span></pre></div>
             <br/>
 
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>4、微服务部署</b></p>
-            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在生产环境需要避免单点问题，一个服务一般会部署多套。在此做个简单的容灾部署，最前端部署一个nginx作反向代理和负载均衡服务器，后面部署两套系统。 </p>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;当用户量和发帖量增加到上百万的时候，明显地将所有模块的服务部署到一个进程里是不行的。 因此需要将Service服务都独立部署形成微服务架构。</p>
             <p style="text-align: center;"><img src="images/distributeimg_4.png" alt=""/></p>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如上图，将Serivice都独立部署并进行容灾部署，当然如果有需要，Servlet之间、Source都可以各自分离独立部署。不同类型的Service之间都是远程模式调用。</p>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;接入层中每个进程的配置相同，配置如下:</p>
+            <div class="highlight"><pre><span class="nt">&lt;application</span> <span class="na">port=</span><span class="s">&quot;5050&quot;</span><span class="nt">&gt;</span>   
+    <span class="nt">&lt;resources&gt;</span>	
+        <span class="nt">&lt;group</span> <span class="na">name=</span><span class="s">&quot;USER_SERVICE&quot;</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;node</span> <span class="na">addr=</span><span class="s">&quot;192.168.50.110&quot;</span> <span class="na">port=</span><span class="s">&quot;7070&quot;</span><span class="nt">/&gt;</span>
+            <span class="nt">&lt;node</span> <span class="na">addr=</span><span class="s">&quot;192.168.50.111&quot;</span> <span class="na">port=</span><span class="s">&quot;7070&quot;</span><span class="nt">/&gt;</span>
+        <span class="nt">&lt;/group&gt;</span>
+        <span class="nt">&lt;group</span> <span class="na">name=</span><span class="s">&quot;NOTIFY_SERVICE&quot;</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;node</span> <span class="na">addr=</span><span class="s">&quot;192.168.50.120&quot;</span> <span class="na">port=</span><span class="s">&quot;7070&quot;</span><span class="nt">/&gt;</span>
+            <span class="nt">&lt;node</span> <span class="na">addr=</span><span class="s">&quot;192.168.50.121&quot;</span> <span class="na">port=</span><span class="s">&quot;7070&quot;</span><span class="nt">/&gt;</span>
+        <span class="nt">&lt;/group&gt;</span>
+        <span class="nt">&lt;group</span> <span class="na">name=</span><span class="s">&quot;FORUM_SERVICE&quot;</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;node</span> <span class="na">addr=</span><span class="s">&quot;192.168.50.130&quot;</span> <span class="na">port=</span><span class="s">&quot;7070&quot;</span><span class="nt">/&gt;</span>
+            <span class="nt">&lt;node</span> <span class="na">addr=</span><span class="s">&quot;192.168.50.131&quot;</span> <span class="na">port=</span><span class="s">&quot;7070&quot;</span><span class="nt">/&gt;</span>
+        <span class="nt">&lt;/group&gt;</span>
+    <span class="nt">&lt;/resources&gt;</span>
 
+    <span class="c">&lt;!-- HTTP 监听 Server --&gt;</span>
+    <span class="nt">&lt;server</span> <span class="na">protocol=</span><span class="s">&quot;HTTP&quot;</span> <span class="na">port=</span><span class="s">&quot;6060&quot;</span> <span class="na">root=</span><span class="s">&quot;root&quot;</span><span class="nt">&gt;</span> 
+        <span class="c">&lt;!-- 前端配置了nginx，需要配置才能获取客户端真实的IP地址 --&gt;</span>
+        <span class="nt">&lt;request&gt;</span>
+            <span class="nt">&lt;remoteaddr</span> <span class="na">value=</span><span class="s">&quot;request.headers.X-RemoteAddress&quot;</span><span class="nt">/&gt;</span>
+        <span class="nt">&lt;/request&gt;</span>
+        <span class="nt">&lt;services</span> <span class="na">autoload=</span><span class="s">&quot;true&quot;</span><span class="nt">&gt;</span>	
+            <span class="nt">&lt;service</span> <span class="na">value=</span><span class="s">&quot;org.redkale.demo.UserService&quot;</span> <span class="na">groups=</span><span class="s">&quot;USER_SERVICE&quot;</span><span class="nt">/&gt;</span>
+            <span class="nt">&lt;service</span> <span class="na">value=</span><span class="s">&quot;org.redkale.demo.NotifyService&quot;</span> <span class="na">groups=</span><span class="s">&quot;NOTIFY_SERVICE&quot;</span><span class="nt">/&gt;</span>
+            <span class="nt">&lt;service</span> <span class="na">value=</span><span class="s">&quot;org.redkale.demo.ForumService&quot;</span> <span class="na">groups=</span><span class="s">&quot;FORUM_SERVICE&quot;</span><span class="nt">/&gt;</span>
+        <span class="nt">&lt;/services&gt;</span>
+        <span class="nt">&lt;servlets</span> <span class="na">autoload=</span><span class="s">&quot;true&quot;</span> <span class="nt">/&gt;</span>
+    <span class="nt">&lt;/server&gt;</span> 	
+<span class="nt">&lt;/application&gt;</span></pre></div>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;用户模块UserService服务群中各个进程的配置相同，配置如下:</p>
+            <div class="highlight"><pre><span class="nt">&lt;application</span> <span class="na">port=</span><span class="s">&quot;5050&quot;</span><span class="nt">&gt;</span>  
+    <span class="nt">&lt;resources&gt;</span>	
+        <span class="nt">&lt;group</span> <span class="na">name=</span><span class="s">&quot;NOTIFY_SERVICE&quot;</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;node</span> <span class="na">addr=</span><span class="s">&quot;192.168.50.120&quot;</span> <span class="na">port=</span><span class="s">&quot;7070&quot;</span><span class="nt">/&gt;</span>
+            <span class="nt">&lt;node</span> <span class="na">addr=</span><span class="s">&quot;192.168.50.121&quot;</span> <span class="na">port=</span><span class="s">&quot;7070&quot;</span><span class="nt">/&gt;</span>
+        <span class="nt">&lt;/group&gt;</span>
+        <span class="nt">&lt;group</span> <span class="na">name=</span><span class="s">&quot;FORUM_SERVICE&quot;</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;node</span> <span class="na">addr=</span><span class="s">&quot;192.168.50.130&quot;</span> <span class="na">port=</span><span class="s">&quot;7070&quot;</span><span class="nt">/&gt;</span>
+            <span class="nt">&lt;node</span> <span class="na">addr=</span><span class="s">&quot;192.168.50.131&quot;</span> <span class="na">port=</span><span class="s">&quot;7070&quot;</span><span class="nt">/&gt;</span>
+        <span class="nt">&lt;/group&gt;</span>
+    <span class="nt">&lt;/resources&gt;</span>
 
+    <span class="c">&lt;!-- SNCP 监听 Server --&gt;</span>
+    <span class="nt">&lt;server</span> <span class="na">protocol=</span><span class="s">&quot;SNCP&quot;</span> <span class="na">port=</span><span class="s">&quot;7070&quot;</span><span class="nt">&gt;</span> 
+        <span class="nt">&lt;services</span> <span class="na">autoload=</span><span class="s">&quot;true&quot;</span><span class="nt">&gt;</span>	
+            <span class="nt">&lt;service</span> <span class="na">value=</span><span class="s">&quot;org.redkale.demo.NotifyService&quot;</span> <span class="na">groups=</span><span class="s">&quot;NOTIFY_SERVICE&quot;</span><span class="nt">/&gt;</span>
+            <span class="nt">&lt;service</span> <span class="na">value=</span><span class="s">&quot;org.redkale.demo.ForumService&quot;</span> <span class="na">groups=</span><span class="s">&quot;FORUM_SERVICE&quot;</span><span class="nt">/&gt;</span>
+        <span class="nt">&lt;/services&gt;</span>
+        <span class="nt">&lt;servlets</span> <span class="na">autoload=</span><span class="s">&quot;true&quot;</span> <span class="nt">/&gt;</span>
+    <span class="nt">&lt;/server&gt;</span> 	
+<span class="nt">&lt;/application&gt;</span></pre></div>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;通知模块NotifyService服务群中各个进程的配置相同，配置如下:</p>
+            <div class="highlight"><pre><span class="nt">&lt;application</span> <span class="na">port=</span><span class="s">&quot;5050&quot;</span><span class="nt">&gt;</span>  
+    <span class="nt">&lt;resources&gt;</span>	
+        <span class="nt">&lt;group</span> <span class="na">name=</span><span class="s">&quot;USER_SERVICE&quot;</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;node</span> <span class="na">addr=</span><span class="s">&quot;192.168.50.110&quot;</span> <span class="na">port=</span><span class="s">&quot;7070&quot;</span><span class="nt">/&gt;</span>
+            <span class="nt">&lt;node</span> <span class="na">addr=</span><span class="s">&quot;192.168.50.111&quot;</span> <span class="na">port=</span><span class="s">&quot;7070&quot;</span><span class="nt">/&gt;</span>
+        <span class="nt">&lt;/group&gt;</span>
+        <span class="nt">&lt;group</span> <span class="na">name=</span><span class="s">&quot;FORUM_SERVICE&quot;</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;node</span> <span class="na">addr=</span><span class="s">&quot;192.168.50.130&quot;</span> <span class="na">port=</span><span class="s">&quot;7070&quot;</span><span class="nt">/&gt;</span>
+            <span class="nt">&lt;node</span> <span class="na">addr=</span><span class="s">&quot;192.168.50.131&quot;</span> <span class="na">port=</span><span class="s">&quot;7070&quot;</span><span class="nt">/&gt;</span>
+        <span class="nt">&lt;/group&gt;</span>
+    <span class="nt">&lt;/resources&gt;</span>
+
+    <span class="c">&lt;!-- SNCP 监听 Server --&gt;</span>
+    <span class="nt">&lt;server</span> <span class="na">protocol=</span><span class="s">&quot;SNCP&quot;</span> <span class="na">port=</span><span class="s">&quot;7070&quot;</span><span class="nt">&gt;</span> 
+        <span class="nt">&lt;services</span> <span class="na">autoload=</span><span class="s">&quot;true&quot;</span><span class="nt">&gt;</span>	
+            <span class="nt">&lt;service</span> <span class="na">value=</span><span class="s">&quot;org.redkale.demo.UserService&quot;</span> <span class="na">groups=</span><span class="s">&quot;USER_SERVICE&quot;</span><span class="nt">/&gt;</span>
+            <span class="nt">&lt;service</span> <span class="na">value=</span><span class="s">&quot;org.redkale.demo.ForumService&quot;</span> <span class="na">groups=</span><span class="s">&quot;FORUM_SERVICE&quot;</span><span class="nt">/&gt;</span>
+        <span class="nt">&lt;/services&gt;</span>
+        <span class="nt">&lt;servlets</span> <span class="na">autoload=</span><span class="s">&quot;true&quot;</span> <span class="nt">/&gt;</span>
+    <span class="nt">&lt;/server&gt;</span> 	
+<span class="nt">&lt;/application&gt;</span></pre></div>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;帖子模块ForumService服务群中各个进程的配置相同，配置如下:</p>
+            <div class="highlight"><pre><span class="nt">&lt;application</span> <span class="na">port=</span><span class="s">&quot;5050&quot;</span><span class="nt">&gt;</span>  
+    <span class="nt">&lt;resources&gt;</span>	
+        <span class="nt">&lt;group</span> <span class="na">name=</span><span class="s">&quot;USER_SERVICE&quot;</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;node</span> <span class="na">addr=</span><span class="s">&quot;192.168.50.110&quot;</span> <span class="na">port=</span><span class="s">&quot;7070&quot;</span><span class="nt">/&gt;</span>
+            <span class="nt">&lt;node</span> <span class="na">addr=</span><span class="s">&quot;192.168.50.111&quot;</span> <span class="na">port=</span><span class="s">&quot;7070&quot;</span><span class="nt">/&gt;</span>
+        <span class="nt">&lt;/group&gt;</span>
+        <span class="nt">&lt;group</span> <span class="na">name=</span><span class="s">&quot;NOTIFY_SERVICE&quot;</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;node</span> <span class="na">addr=</span><span class="s">&quot;192.168.50.120&quot;</span> <span class="na">port=</span><span class="s">&quot;7070&quot;</span><span class="nt">/&gt;</span>
+            <span class="nt">&lt;node</span> <span class="na">addr=</span><span class="s">&quot;192.168.50.121&quot;</span> <span class="na">port=</span><span class="s">&quot;7070&quot;</span><span class="nt">/&gt;</span>
+        <span class="nt">&lt;/group&gt;</span>
+    <span class="nt">&lt;/resources&gt;</span>
+
+    <span class="c">&lt;!-- SNCP 监听 Server --&gt;</span>
+    <span class="nt">&lt;server</span> <span class="na">protocol=</span><span class="s">&quot;SNCP&quot;</span> <span class="na">port=</span><span class="s">&quot;7070&quot;</span><span class="nt">&gt;</span> 
+        <span class="nt">&lt;services</span> <span class="na">autoload=</span><span class="s">&quot;true&quot;</span><span class="nt">&gt;</span>	
+            <span class="nt">&lt;service</span> <span class="na">value=</span><span class="s">&quot;org.redkale.demo.UserService&quot;</span> <span class="na">groups=</span><span class="s">&quot;USER_SERVICE&quot;</span><span class="nt">/&gt;</span>
+            <span class="nt">&lt;service</span> <span class="na">value=</span><span class="s">&quot;org.redkale.demo.NotifyService&quot;</span> <span class="na">groups=</span><span class="s">&quot;NOTIFY_SERVICE&quot;</span><span class="nt">/&gt;</span>
+        <span class="nt">&lt;/services&gt;</span>
+        <span class="nt">&lt;servlets</span> <span class="na">autoload=</span><span class="s">&quot;true&quot;</span> <span class="nt">/&gt;</span>
+    <span class="nt">&lt;/server&gt;</span> 	
+<span class="nt">&lt;/application&gt;</span></pre></div>
+            <br/>
+            
             <h3><a id="redkale_confxml" class="anchor" href="#" aria-hidden="true"><span class="octicon octicon-link"></span></a>appplication.xml 配置说明</h3>
             <div class="highlight"><pre><span class="cp">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;</span>
 <span class="c">&lt;!-- </span>
