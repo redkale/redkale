@@ -5,7 +5,6 @@
  */
 package org.redkale.test.convert;
 
-import java.util.concurrent.atomic.*;
 import org.redkale.convert.*;
 import org.redkale.convert.bson.*;
 import org.redkale.convert.json.*;
@@ -57,33 +56,29 @@ public class InnerCoderEntity {
             @Override
             public void convertTo(Writer out, InnerCoderEntity value) {
                 if (value == null) {
-                    out.wirteClassName(null);
-                    out.writeNull();
+                    out.writeObjectNull(InnerCoderEntity.class);
                     return;
                 }
-                out.writeObjectB(enMembers.length, value);
-                boolean comma = false;
+                out.writeObjectB(value);
                 for (EnMember member : enMembers) {
-                    comma = member.write(out, comma, value);
+                    out.writeObjectField(member, value);
                 }
                 out.writeObjectE(value);
             }
 
             @Override
             public InnerCoderEntity convertFrom(Reader in) {
-                in.readClassName(); //必须先读Class 用于BSON
-                if (in.readObjectB() == Reader.SIGN_NULL) return null;
-                final AtomicInteger index = new AtomicInteger();
+                if (in.readObjectB(InnerCoderEntity.class) == null) return null;
+                int index = 0;
                 final Object[] params = new Object[deMembers.length];
                 while (in.hasNext()) {
-                    DeMember member = in.readField(index, deMembers); //读取字段名
-                    in.skipBlank(); //跳过冒号:
+                    DeMember member = in.readFieldName(deMembers); //读取字段名
+                    in.skipBlank(); //读取字段名与字段值之间的间隔符，JSON则是跳过冒号:
                     if (member == null) {
                         in.skipValue(); //跳过不存在的字段的值, 一般不会发生
                     } else {
-                        params[index.get()] = member.read(in);
+                        params[index++] = member.read(in);
                     }
-                    index.incrementAndGet();
                 }
                 in.readObjectE();
                 return InnerCoderEntity.create(params[0] == null ? 0 : (Integer) params[0], (String) params[1]);
@@ -110,11 +105,12 @@ public class InnerCoderEntity {
         String json = convert.convertTo(record);
         System.out.println(json);
         System.out.println(convert.convertFrom(InnerCoderEntity.class, json).toString());
-        
-        final BsonConvert convert2= BsonFactory.root().getConvert();
-        byte[] bs = convert2.convertTo(record);
-        Utility.println("--", bs); 
-        System.out.println(convert2.convertFrom(InnerCoderEntity.class, bs).toString());
+
+        final BsonConvert convert2 = BsonFactory.root().getConvert();
+        byte[] bs = convert2.convertTo(InnerCoderEntity.class, null);
+        Utility.println("--", bs);
+        InnerCoderEntity r = convert2.convertFrom(InnerCoderEntity.class, bs);
+        System.out.println(r);
     }
 
 }

@@ -24,6 +24,7 @@ public class BsonTestMain {
         Serializable[] sers = new Serializable[]{"aaa", 4};
         final BsonConvert convert = BsonFactory.root().getConvert();
         byte[] bytes = convert.convertTo(sers);
+        Utility.println("---", bytes); 
         Serializable[] a = convert.convertFrom(Serializable[].class, bytes);
         System.out.println(Arrays.toString(a));
         main2(args);
