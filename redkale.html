@@ -361,7 +361,7 @@
 <span class="c">           当Server为HTTP协议时, request节点才有效。</span>
 <span class="c">           remoteaddr 节点: 替换请求方节点的IP地址， 通常请求方是由nginx等web静态服务器转发过的则需要配置该节点。</span>
 <span class="c">           且value值只能是以request.headers.开头，表示从request.headers中获取对应的header值。</span>
-<span class="c">           例如下面例子获取request.getRemoteAddr()值，如果header存在X-RemoteAddress值则返回X-RemoteAddress值，不存在返回request.getRemoteAddress()。</span>
+<span class="c">           例如下面例子获取request.getRemoteAddr()值，若header存在X-RemoteAddress值则返回X-RemoteAddress值，否则返回getRemoteAddress()。</span>
 <span class="c">        --&gt;</span>
         <span class="nt">&lt;request&gt;</span>
             <span class="nt">&lt;remoteaddr</span> <span class="na">value=</span><span class="s">&quot;request.headers.X-RemoteAddress&quot;</span><span class="nt">/&gt;</span>
