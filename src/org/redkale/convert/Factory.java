@@ -353,7 +353,8 @@ public abstract class Factory<R extends Reader, W extends Writer> {
             for (final Method method : clazz.getDeclaredMethods()) {
                 if (!Modifier.isStatic(method.getModifiers())) continue;
                 Class[] paramTypes = method.getParameterTypes();
-                if (paramTypes.length != 1 || paramTypes[0] != Factory.class) continue;
+                if (paramTypes.length != 1) continue;
+                if (paramTypes[0] != Factory.class && paramTypes[0] != this.getClass()) continue;
                 if (!Decodeable.class.isAssignableFrom(method.getReturnType())) continue;
                 try {
                     method.setAccessible(true);
@@ -432,7 +433,8 @@ public abstract class Factory<R extends Reader, W extends Writer> {
             for (final Method method : clazz.getDeclaredMethods()) {
                 if (!Modifier.isStatic(method.getModifiers())) continue;
                 Class[] paramTypes = method.getParameterTypes();
-                if (paramTypes.length != 1 || paramTypes[0] != Factory.class) continue;
+                if (paramTypes.length != 1) continue;
+                if (paramTypes[0] != Factory.class && paramTypes[0] != this.getClass()) continue;
                 if (!Encodeable.class.isAssignableFrom(method.getReturnType())) continue;
                 try {
                     method.setAccessible(true);
