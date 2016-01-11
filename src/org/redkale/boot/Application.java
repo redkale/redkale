@@ -47,7 +47,7 @@ public final class Application {
     //当前进程启动的时间， 类型： long
     public static final String RESNAME_APP_TIME = "APP_TIME";
 
-    //当前进程的根目录， 类型：String
+    //当前进程的根目录， 类型：String、File、Path
     public static final String RESNAME_APP_HOME = "APP_HOME";
 
     //application.xml 文件中resources节点的内容， 类型： AnyValue
@@ -116,9 +116,9 @@ public final class Application {
             throw new RuntimeException(e);
         }
         String localaddr = config.getValue("address", "").trim();
-        this.localAddress = localaddr.isEmpty() ? Utility.localInetAddress() : new InetSocketAddress(localaddr, 0).getAddress();
-        Application.this.factory.register(RESNAME_APP_ADDR, Application.this.localAddress.getHostAddress());
-        Application.this.factory.register(RESNAME_APP_ADDR, InetAddress.class, Application.this.localAddress);
+        this.localAddress = localaddr.isEmpty() ? Utility.localInetAddress() : new InetSocketAddress(localaddr, config.getIntValue("port")).getAddress();
+        this.factory.register(RESNAME_APP_ADDR, this.localAddress.getHostAddress());
+        this.factory.register(RESNAME_APP_ADDR, InetAddress.class, this.localAddress);
         {
             String node = config.getValue("node", "").trim();
             if (node.isEmpty()) {
@@ -132,7 +132,7 @@ public final class Application {
                 sb.append(Integer.toHexString(v2));
                 node = sb.toString();
             }
-            Application.this.factory.register(RESNAME_APP_NODE, node);
+            this.factory.register(RESNAME_APP_NODE, node);
             System.setProperty(RESNAME_APP_NODE, node);
         }
         //以下是初始化日志配置
