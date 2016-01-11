@@ -59,7 +59,7 @@ public final class Application {
     //当前进程节点的IP地址， 类型：InetAddress、String
     public static final String RESNAME_APP_ADDR = "APP_ADDR";
 
-    //当前SNCP Server的IP地址+端口集合 类型: Map<InetSocketAddress, String>、HashMap<InetSocketAddress, String> 
+    //当前SNCP Server的IP地址+端口集合 类型: Map<InetSocketAddress, String>、 Map<String, Set<InetSocketAddress>>
     public static final String RESNAME_APP_NODES = "APP_NODES";
 
     //当前Service的IP地址+端口 类型: SocketAddress、InetSocketAddress、String
