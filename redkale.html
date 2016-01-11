@@ -62,7 +62,7 @@
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;6、启动进程本身的监听服务。 <br/>
             </p>
 
-            <h3><a id="redkale_confxml" class="anchor" href="#" aria-hidden="true"><span class="octicon octicon-link"></span></a>RedKale 集中式与分布式</h3>
+            <h3><a id="redkale_deploy" class="anchor" href="#" aria-hidden="true"><span class="octicon octicon-link"></span></a>RedKale 集中式与分布式</h3>
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;通常一个系统会分为三层：接入层、业务层、数据层。对应到RedKale的组件是： Servlet、Service、Source。大部分系统提供的是HTTP服务，为了方便演示RedKale从集中式到分布式的变化，以一个简单的HTTP服务作为范例。<br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;开发一个极简单的小论坛系统。包含三个模块： <br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;用户模块 &nbsp;&nbsp;&nbsp;UserSerivice: &nbsp;&nbsp;&nbsp;&nbsp;提供用户注册、登录、更新资料等功能， UserServlet作为接入层。<br/>
@@ -190,6 +190,10 @@
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;用户模块UserService服务群中各个进程的配置相同，配置如下:</p>
             <div class="highlight"><pre><span class="nt">&lt;application</span> <span class="na">port=</span><span class="s">&quot;5050&quot;</span><span class="nt">&gt;</span>  
     <span class="nt">&lt;resources&gt;</span>	
+        <span class="nt">&lt;group</span> <span class="na">name=</span><span class="s">&quot;USER_SERVICE&quot;</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;node</span> <span class="na">addr=</span><span class="s">&quot;192.168.50.110&quot;</span> <span class="na">port=</span><span class="s">&quot;7070&quot;</span><span class="nt">/&gt;</span>
+            <span class="nt">&lt;node</span> <span class="na">addr=</span><span class="s">&quot;192.168.50.111&quot;</span> <span class="na">port=</span><span class="s">&quot;7070&quot;</span><span class="nt">/&gt;</span>
+        <span class="nt">&lt;/group&gt;</span>
         <span class="nt">&lt;group</span> <span class="na">name=</span><span class="s">&quot;NOTIFY_SERVICE&quot;</span><span class="nt">&gt;</span>
             <span class="nt">&lt;node</span> <span class="na">addr=</span><span class="s">&quot;192.168.50.120&quot;</span> <span class="na">port=</span><span class="s">&quot;7070&quot;</span><span class="nt">/&gt;</span>
             <span class="nt">&lt;node</span> <span class="na">addr=</span><span class="s">&quot;192.168.50.121&quot;</span> <span class="na">port=</span><span class="s">&quot;7070&quot;</span><span class="nt">/&gt;</span>
@@ -215,6 +219,10 @@
         <span class="nt">&lt;group</span> <span class="na">name=</span><span class="s">&quot;USER_SERVICE&quot;</span><span class="nt">&gt;</span>
             <span class="nt">&lt;node</span> <span class="na">addr=</span><span class="s">&quot;192.168.50.110&quot;</span> <span class="na">port=</span><span class="s">&quot;7070&quot;</span><span class="nt">/&gt;</span>
             <span class="nt">&lt;node</span> <span class="na">addr=</span><span class="s">&quot;192.168.50.111&quot;</span> <span class="na">port=</span><span class="s">&quot;7070&quot;</span><span class="nt">/&gt;</span>
+        <span class="nt">&lt;/group&gt;</span>
+        <span class="nt">&lt;group</span> <span class="na">name=</span><span class="s">&quot;NOTIFY_SERVICE&quot;</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;node</span> <span class="na">addr=</span><span class="s">&quot;192.168.50.120&quot;</span> <span class="na">port=</span><span class="s">&quot;7070&quot;</span><span class="nt">/&gt;</span>
+            <span class="nt">&lt;node</span> <span class="na">addr=</span><span class="s">&quot;192.168.50.121&quot;</span> <span class="na">port=</span><span class="s">&quot;7070&quot;</span><span class="nt">/&gt;</span>
         <span class="nt">&lt;/group&gt;</span>
         <span class="nt">&lt;group</span> <span class="na">name=</span><span class="s">&quot;FORUM_SERVICE&quot;</span><span class="nt">&gt;</span>
             <span class="nt">&lt;node</span> <span class="na">addr=</span><span class="s">&quot;192.168.50.130&quot;</span> <span class="na">port=</span><span class="s">&quot;7070&quot;</span><span class="nt">/&gt;</span>
@@ -242,6 +250,10 @@
             <span class="nt">&lt;node</span> <span class="na">addr=</span><span class="s">&quot;192.168.50.120&quot;</span> <span class="na">port=</span><span class="s">&quot;7070&quot;</span><span class="nt">/&gt;</span>
             <span class="nt">&lt;node</span> <span class="na">addr=</span><span class="s">&quot;192.168.50.121&quot;</span> <span class="na">port=</span><span class="s">&quot;7070&quot;</span><span class="nt">/&gt;</span>
         <span class="nt">&lt;/group&gt;</span>
+        <span class="nt">&lt;group</span> <span class="na">name=</span><span class="s">&quot;FORUM_SERVICE&quot;</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;node</span> <span class="na">addr=</span><span class="s">&quot;192.168.50.130&quot;</span> <span class="na">port=</span><span class="s">&quot;7070&quot;</span><span class="nt">/&gt;</span>
+            <span class="nt">&lt;node</span> <span class="na">addr=</span><span class="s">&quot;192.168.50.131&quot;</span> <span class="na">port=</span><span class="s">&quot;7070&quot;</span><span class="nt">/&gt;</span>
+        <span class="nt">&lt;/group&gt;</span>
     <span class="nt">&lt;/resources&gt;</span>
 
     <span class="c">&lt;!-- SNCP 监听 Server --&gt;</span>
@@ -258,7 +270,7 @@
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;而使用RedKale可以省去很多不必须要的学习成本，内置了很多微服务常用的功能, 待续……。
             </p>
 
-            <h3><a id="redkale_confxml" class="anchor" href="#" aria-hidden="true"><span class="octicon octicon-link"></span></a>appplication.xml 配置说明</h3>
+            <h3><a id="redkale_confxml" href="#" aria-hidden="true"><span class="octicon octicon-link"></span></a>appplication.xml 配置说明</h3>
             <div class="highlight"><pre><span class="cp">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;</span>
 <span class="c">&lt;!-- </span>
 <span class="c">    文件说明:</span>
