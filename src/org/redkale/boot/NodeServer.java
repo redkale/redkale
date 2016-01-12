@@ -300,7 +300,9 @@ public abstract class NodeServer {
         if (groups == null) return null;
         final List<Transport> transports = new ArrayList<>();
         for (String group : groups) {
-            transports.add(loadTransport(group));
+            if (this.sncpGroup == null || !this.sncpGroup.equals(group)) {
+                transports.add(loadTransport(group));
+            }
         }
         return transports;
     }
