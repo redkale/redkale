@@ -12,10 +12,13 @@ import org.redkale.util.*;
 
 /**
  *
- * <p> 详情见: http://www.redkale.org
+ * <p>
+ * 详情见: http://www.redkale.org
+ *
  * @author zhangjx
  */
 @AutoLoad(false)
+@ResourceType({DataCacheListenerService.class, DataCacheListener.class})
 public class DataCacheListenerService implements DataCacheListener, Service {
 
     @Resource(name = "$")

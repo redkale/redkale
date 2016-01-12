@@ -63,19 +63,18 @@ public final class Application {
     public static final String RESNAME_APP_NODES = "APP_NODES";
 
     //当前Service的IP地址+端口 类型: SocketAddress、InetSocketAddress、String
-    public static final String RESNAME_SERVER_ADDR = "SERVER_ADDR"; // SERVER_ADDR
+    public static final String RESNAME_SERVER_ADDR = "SERVER_ADDR";
 
     //当前SNCP Server所属的组  类型: String
     public static final String RESNAME_SERVER_GROUP = "SERVER_GROUP";
-
-    //当前Service所属的组  类型: Set<String>、String[]
-    public static final String RESNAME_SNCP_GROUPS = Sncp.RESNAME_SNCP_GROUPS; // SNCP_GROUPS
 
     final Map<InetSocketAddress, String> globalNodes = new HashMap<>();
 
     final Map<String, Set<InetSocketAddress>> globalGroups = new HashMap<>();
 
-    final List<Transport> transports = new ArrayList<>();
+    final Map<String, String> globalGroupProtocols = new HashMap<>();
+
+    final Map<String, Transport> transports = new HashMap<>();
 
     final InetAddress localAddress;
 
@@ -87,12 +86,18 @@ public final class Application {
 
     CountDownLatch servicecdl;  //会出现两次赋值
 
+    final ObjectPool<ByteBuffer> transportBufferPool;
+
+    final ExecutorService transportExecutor;
+
+    final AsynchronousChannelGroup transportChannelGroup;
+
     //--------------------------------------------------------------------------------------------    
     private final ResourceFactory factory = ResourceFactory.root();
 
     private final WatchFactory watch = WatchFactory.root();
 
-    private File home;
+    private final File home;
 
     private final Logger logger;
 
@@ -185,6 +190,47 @@ public final class Application {
         }
         this.logger = Logger.getLogger(this.getClass().getSimpleName());
         this.serversLatch = new CountDownLatch(config.getAnyValues("server").length + 1);
+        //------------------配置 <transport> 节点 ------------------
+        ObjectPool<ByteBuffer> transportPool = null;
+        ExecutorService transportExec = null;
+        AsynchronousChannelGroup transportGroup = null;
+        final AnyValue resources = config.getAnyValue("resources");
+        if (resources != null) {
+            AnyValue transportConf = resources.getAnyValue("transport");
+            int groupsize = resources.getAnyValues("group").length;
+            if (groupsize > 0 && transportConf == null) transportConf = new DefaultAnyValue();
+            if (transportConf != null) {
+                //--------------transportBufferPool-----------
+                AtomicLong createBufferCounter = watch == null ? new AtomicLong() : watch.createWatchNumber(Transport.class.getSimpleName() + ".Buffer.creatCounter");
+                AtomicLong cycleBufferCounter = watch == null ? new AtomicLong() : watch.createWatchNumber(Transport.class.getSimpleName() + ".Buffer.cycleCounter");
+                final int bufferCapacity = transportConf.getIntValue("bufferCapacity", 8 * 1024);
+                final int bufferPoolSize = transportConf.getIntValue("bufferPoolSize", groupsize * Runtime.getRuntime().availableProcessors() * 8);
+                final int threads = transportConf.getIntValue("threads", groupsize * Runtime.getRuntime().availableProcessors() * 8);
+                transportPool = new ObjectPool<>(createBufferCounter, cycleBufferCounter, bufferPoolSize,
+                        (Object... params) -> ByteBuffer.allocateDirect(bufferCapacity), null, (e) -> {
+                            if (e == null || e.isReadOnly() || e.capacity() != bufferCapacity) return false;
+                            e.clear();
+                            return true;
+                        });
+                //-----------transportChannelGroup--------------
+                try {
+                    final AtomicInteger counter = new AtomicInteger();
+                    transportExec = Executors.newFixedThreadPool(threads, (Runnable r) -> {
+                        Thread t = new Thread(r);
+                        t.setDaemon(true);
+                        t.setName("Transport-Thread-" + counter.incrementAndGet());
+                        return t;
+                    });
+                    transportGroup = AsynchronousChannelGroup.withCachedThreadPool(transportExec, 1);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+                logger.log(Level.INFO, Transport.class.getSimpleName() + " configure bufferCapacity = " + bufferCapacity + "; bufferPoolSize = " + bufferPoolSize + "; threads = " + threads + ";");
+            }
+        }
+        this.transportBufferPool = transportPool;
+        this.transportExecutor = transportExec;
+        this.transportChannelGroup = transportGroup;
     }
 
     public ResourceFactory getResourceFactory() {
@@ -279,13 +325,14 @@ public final class Application {
 
             for (AnyValue conf : resources.getAnyValues("group")) {
                 final String group = conf.getValue("name", "");
-                String protocol = conf.getValue("protocol", Transport.DEFAULT_PROTOCOL).toUpperCase();
+                final String protocol = conf.getValue("protocol", Transport.DEFAULT_PROTOCOL).toUpperCase();
                 if (!"TCP".equalsIgnoreCase(protocol) && !"UDP".equalsIgnoreCase(protocol)) {
                     throw new RuntimeException("Not supported Transport Protocol " + conf.getValue("protocol"));
                 }
                 Set<InetSocketAddress> addrs = globalGroups.get(group);
                 if (addrs == null) {
                     addrs = new LinkedHashSet<>();
+                    globalGroupProtocols.put(group, protocol);
                     globalGroups.put(group, addrs);
                 }
                 for (AnyValue node : conf.getAnyValues("node")) {
@@ -479,8 +526,8 @@ public final class Application {
     public static <T extends Service> T singleton(Class<T> serviceClass, boolean remote) throws Exception {
         final Application application = Application.create();
         Consumer<Runnable> executor = (x) -> Executors.newFixedThreadPool(8).submit(x);
-        T service = remote ? Sncp.createRemoteService("", executor, serviceClass, null, new LinkedHashSet<>(), null)
-                : Sncp.createLocalService("", executor, serviceClass, null, new LinkedHashSet<>(), null, null);
+        T service = remote ? Sncp.createRemoteService("", executor, serviceClass, null, null)
+                : Sncp.createLocalService("", executor, serviceClass, null, null, null);
         application.init();
         application.factory.register(service);
         application.servicecdl = new CountDownLatch(1);
@@ -515,6 +562,11 @@ public final class Application {
         System.exit(0);
     }
 
+    String findGroupProtocol(String group) {
+        if (group == null) return null;
+        return globalGroupProtocols.get(group);
+    }
+
     Set<InetSocketAddress> findGlobalGroup(String group) {
         if (group == null) return null;
         Set<InetSocketAddress> set = globalGroups.get(group);
@@ -544,6 +596,13 @@ public final class Application {
                 source.getClass().getMethod("close").invoke(source);
             } catch (Exception e) {
                 logger.log(Level.FINER, "close CacheSource erroneous", e);
+            }
+        }
+        if (this.transportChannelGroup != null) {
+            try {
+                this.transportChannelGroup.shutdownNow();
+            } catch (Exception e) {
+                logger.log(Level.FINER, "close transportChannelGroup erroneous", e);
             }
         }
     }

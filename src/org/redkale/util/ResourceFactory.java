@@ -67,7 +67,15 @@ public final class ResourceFactory {
     }
 
     public void register(final String name, final Object rs) {
-        register(name, rs.getClass(), rs);
+        final Class claz = rs.getClass();
+        ResourceType rtype = (ResourceType) claz.getAnnotation(ResourceType.class);
+        if (rtype == null) {
+            register(name, claz, rs);
+        } else {
+            for (Class cl : rtype.value()) {
+                register(name, cl, rs);
+            }
+        }
     }
 
     public <A> void register(final String name, final Class<? extends A> clazz, final A rs) {

@@ -8,9 +8,16 @@ package org.redkale.service;
 import org.redkale.util.*;
 
 /**
- * 所有Service的实现类不得声明为final， 允许远程模式的public方法和public String name()方法都不能声明为final。
+ * 所有Service的实现类不得声明为final， 允许远程模式的public方法都不能声明为final。
  * 注意: "$"是一个很特殊的Service.name值 。 被标记为@Resource(name = "$") 的Service的资源名与所属父Service的资源名一致。
- *
+ * <p>
+ * <blockquote><pre>
+ * Service的资源类型
+ * 业务逻辑的Service通常有两种编写方式：
+ *    1、只写一个Service实现类。
+ *    2、先定义业务的Service接口或抽象类，再编写具体实现类。
+ * 第二种方式需要在具体实现类上使用&#64;ResourceType指明资源注入的类型。
+ * </pre></blockquote>
  * <p>
  * &#64;Resource(name = ".*")
  * private HashMap&lt;String, XXXService&gt; nodemap;

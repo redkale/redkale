@@ -154,9 +154,9 @@ public final class SncpDynServlet extends SncpServlet {
          *
          *      &#64;Override
          *      public void action(final BsonReader in, final BsonWriter out) throws Throwable {
-         *          TestBean arg1 = convert.convertFrom(in, paramTypes[1]);
-         *          String arg2 = convert.convertFrom(in, paramTypes[2]);
-         *          int arg3 = convert.convertFrom(in, paramTypes[3]);
+         *          TestBean arg1 = convert.convertFrom(paramTypes[1], in);
+         *          String arg2 = convert.convertFrom(paramTypes[2], in);
+         *          int arg3 = convert.convertFrom(paramTypes[3], in);
          *          Object rs = service.change(arg1, arg2, arg3);
          *          callParameter(out, arg1, arg2, arg3);
          *          convert.convertTo(out, paramTypes[0], rs);
@@ -210,9 +210,9 @@ public final class SncpDynServlet extends SncpServlet {
                 mv.visitMaxs(1, 1);
                 mv.visitEnd();
             }
-            String convertFromDesc = "(" + convertReaderDesc + "Ljava/lang/reflect/Type;)Ljava/lang/Object;";
+            String convertFromDesc = "(Ljava/lang/reflect/Type;" + convertReaderDesc + ")Ljava/lang/Object;";
             try {
-                convertFromDesc = Type.getMethodDescriptor(BsonConvert.class.getMethod("convertFrom", BsonReader.class, java.lang.reflect.Type.class));
+                convertFromDesc = Type.getMethodDescriptor(BsonConvert.class.getMethod("convertFrom", java.lang.reflect.Type.class, BsonReader.class));
             } catch (Exception ex) {
                 throw new RuntimeException(ex); //不可能会发生
             }
@@ -227,7 +227,6 @@ public final class SncpDynServlet extends SncpServlet {
                 for (int i = 0; i < paramClasses.length; i++) { //参数
                     mv.visitVarInsn(ALOAD, 0);
                     mv.visitFieldInsn(GETFIELD, newDynName, "convert", Type.getDescriptor(BsonConvert.class));
-                    mv.visitVarInsn(ALOAD, 1);
                     mv.visitVarInsn(ALOAD, 0);
                     mv.visitFieldInsn(GETFIELD, newDynName, "paramTypes", "[Ljava/lang/reflect/Type;");
                     if (iconst > ICONST_5) {
@@ -236,6 +235,7 @@ public final class SncpDynServlet extends SncpServlet {
                         mv.visitInsn(iconst);  //
                     }
                     mv.visitInsn(AALOAD);
+                    mv.visitVarInsn(ALOAD, 1);
 
                     mv.visitMethodInsn(INVOKEVIRTUAL, convertName, "convertFrom", convertFromDesc, false);
                     int load = ALOAD;

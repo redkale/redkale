@@ -129,8 +129,6 @@ public final class SncpClient {
 
     protected final InetSocketAddress address;
 
-    protected final HashSet<String> groups;
-
     private final byte[] addrBytes;
 
     private final int addrPort;
@@ -144,12 +142,11 @@ public final class SncpClient {
     protected final Consumer<Runnable> executor;
 
     public SncpClient(final String serviceName, final Consumer<Runnable> executor, final DLong serviceid, boolean remote, final Class serviceClass,
-            final InetSocketAddress clientAddress, final HashSet<String> groups) {
+            final InetSocketAddress clientAddress) {
         this.remote = remote;
         this.executor = executor;
         this.serviceClass = serviceClass;
         this.address = clientAddress;
-        this.groups = groups;
         //if (subLocalClass != null && !serviceClass.isAssignableFrom(subLocalClass)) throw new RuntimeException(subLocalClass + " is not " + serviceClass + " sub class ");
         this.name = serviceName;
         this.nameid = Sncp.hash(serviceName);
@@ -187,7 +184,7 @@ public final class SncpClient {
         if (remote) service = service.replace(Sncp.LOCALPREFIX, Sncp.REMOTEPREFIX);
         return this.getClass().getSimpleName() + "(service = " + service + ", serviceid = " + serviceid + ", nameid = " + nameid
                 + ", name = '" + name + "', address = " + (address == null ? "" : (address.getHostString() + ":" + address.getPort()))
-                + ", groups = " + groups + ", actions.size = " + actions.length + ")";
+                + ", actions.size = " + actions.length + ")";
     }
 
     public static List<Method> parseMethod(final Class serviceClass) {
@@ -230,11 +227,50 @@ public final class SncpClient {
         return multis;
     }
 
+    public void remoteSameGroup(final BsonConvert convert, Transport transport, final int index, final Object... params) {
+        final SncpAction action = actions[index];
+        if (action.handlerFuncParamIndex >= 0) params[action.handlerFuncParamIndex] = null; //不能让远程调用handler，因为之前本地方法已经调用过了
+        for (InetSocketAddress addr : transport.getRemoteAddresses()) {
+            remote0(null, convert, transport, addr, action, params);
+        }
+    }
+
+    public void asyncRemoteSameGroup(final BsonConvert convert, Transport transport, final int index, final Object... params) {
+        if (executor != null) {
+            executor.accept(() -> {
+                remoteSameGroup(convert, transport, index, params);
+            });
+        } else {
+            remoteSameGroup(convert, transport, index, params);
+        }
+    }
+
+    public void remoteDiffGroup(final BsonConvert convert, Transport[] transports, final int index, final Object... params) {
+        if (transports == null || transports.length < 1) return;
+        final SncpAction action = actions[index];
+        if (action.handlerFuncParamIndex >= 0) params[action.handlerFuncParamIndex] = null; //不能让远程调用handler，因为之前本地方法已经调用过了
+        for (Transport transport : transports) {
+            remote0(null, convert, transport, null, action, params);
+        }
+    }
+
+    public void asyncRemoteDiffGroup(final BsonConvert convert, Transport[] transports, final int index, final Object... params) {
+        if (transports == null || transports.length < 1) return;
+        if (executor != null) {
+            executor.accept(() -> {
+                remoteDiffGroup(convert, transports, index, params);
+            });
+        } else {
+            remoteDiffGroup(convert, transports, index, params);
+        }
+    }
+
+    //只给远程模式调用的
     public <T> T remote(final BsonConvert convert, Transport transport, final int index, final Object... params) {
         final SncpAction action = actions[index];
         final CompletionHandler handlerFunc = action.handlerFuncParamIndex >= 0 ? (CompletionHandler) params[action.handlerFuncParamIndex] : null;
         if (action.handlerFuncParamIndex >= 0) params[action.handlerFuncParamIndex] = null;
-        Future<byte[]> future = remote0(handlerFunc, convert, transport, action, params);
+        Future<byte[]> future = remote0(handlerFunc, convert, transport, null, action, params);
         if (handlerFunc != null) return null;
         final BsonReader reader = convert.pollBsonReader();
         try {
@@ -257,22 +293,11 @@ public final class SncpClient {
         if (transports == null || transports.length < 1) return;
         remote(convert, transports[0], index, params);
         for (int i = 1; i < transports.length; i++) {
-            remote0(null, convert, transports[i], actions[index], params);
+            remote0(null, convert, transports[i], null, actions[index], params);
         }
     }
 
-    public <T> void asyncRemote(final BsonConvert convert, Transport[] transports, final int index, final Object... params) {
-        if (transports == null || transports.length < 1) return;
-        if (executor != null) {
-            executor.accept(() -> {
-                remote(convert, transports, index, params);
-            });
-        } else {
-            remote(convert, transports, index, params);
-        }
-    }
-
-    private Future<byte[]> remote0(final CompletionHandler handler, final BsonConvert convert, final Transport transport, final SncpAction action, final Object... params) {
+    private Future<byte[]> remote0(final CompletionHandler handler, final BsonConvert convert, final Transport transport, final SocketAddress addr0, final SncpAction action, final Object... params) {
         Type[] myparamtypes = action.paramTypes;
         if (action.addressSourceParamIndex >= 0) params[action.addressSourceParamIndex] = this.address;
         final BsonWriter writer = convert.pollBsonWriter(transport.getBufferSupplier()); // 将head写入
@@ -283,7 +308,7 @@ public final class SncpClient {
         final int reqBodyLength = writer.count() - HEADER_SIZE; //body总长度
         final long seqid = System.nanoTime();
         final DLong actionid = action.actionid;
-        final SocketAddress addr = action.addressTargetParamIndex >= 0 ? (SocketAddress) params[action.addressTargetParamIndex] : null;
+        final SocketAddress addr = addr0 == null ? (action.addressTargetParamIndex >= 0 ? (SocketAddress) params[action.addressTargetParamIndex] : null) : addr0;
         final AsyncConnection conn = transport.pollConnection(addr);
         if (conn == null || !conn.isOpen()) {
             logger.log(Level.SEVERE, action.method + " sncp (params: " + jsonConvert.convertTo(params) + ") cannot connect " + (conn == null ? addr : conn.getRemoteAddress()));

@@ -25,7 +25,9 @@ import org.redkale.util.*;
 /**
  * HTTP Server节点的配置Server
  *
- * <p> 详情见: http://www.redkale.org
+ * <p>
+ * 详情见: http://www.redkale.org
+ *
  * @author zhangjx
  */
 @NodeProtocol({"HTTP"})
@@ -34,7 +36,7 @@ public final class NodeHttpServer extends NodeServer {
     private final HttpServer httpServer;
 
     public NodeHttpServer(Application application, AnyValue serconf) {
-        super(application, application.getResourceFactory().createChild(), createServer(application, serconf));
+        super(application, createServer(application, serconf));
         this.httpServer = (HttpServer) server;
     }
 
@@ -54,7 +56,7 @@ public final class NodeHttpServer extends NodeServer {
 
     @Override
     protected void loadServlet(ClassFilter<? extends Servlet> servletFilter) throws Exception {
-        if (httpServer != null) loadHttpServlet(this.nodeConf.getAnyValue("servlets"), servletFilter);
+        if (httpServer != null) loadHttpServlet(this.serverConf.getAnyValue("servlets"), servletFilter);
     }
 
     @Override
@@ -66,28 +68,17 @@ public final class NodeHttpServer extends NodeServer {
     private void initWebSocketService() {
         final NodeServer self = this;
         final ResourceFactory regFactory = application.getResourceFactory();
-        factory.add(WebSocketNode.class, (ResourceFactory rf, final Object src, final String resourceName, Field field, Object attachment) -> {
+        factory.add(WebSocketNode.class, (ResourceFactory rf, final Object src, final String resourceName, Field field, Object attachment) -> { //主要用于单点的服务
             try {
                 if (field.getAnnotation(Resource.class) == null) return;
                 if (!(src instanceof WebSocketServlet)) return;
                 synchronized (regFactory) {
                     Service nodeService = (Service) rf.find(resourceName, WebSocketNode.class);
                     if (nodeService == null) {
-                        nodeService = Sncp.createLocalService(resourceName, getExecutor(), (Class<? extends Service>) WebSocketNodeService.class,
-                                getSncpAddress(), sncpDefaultGroups, sncpSameGroupTransports, sncpDiffGroupTransports);
+                        nodeService = Sncp.createLocalService(resourceName, getExecutor(), WebSocketNodeService.class, (InetSocketAddress) null, (Transport) null, (Collection<Transport>) null);
                         regFactory.register(resourceName, WebSocketNode.class, nodeService);
                         factory.inject(nodeService, self);
                         logger.fine("[" + Thread.currentThread().getName() + "] Load Service " + nodeService);
-                        if (getSncpAddress() != null) {
-                            NodeSncpServer sncpServer = null;
-                            for (NodeServer node : application.servers) {
-                                if (node.isSNCP() && getSncpAddress().equals(node.getSncpAddress())) {
-                                    sncpServer = (NodeSncpServer) node;
-                                }
-                            }
-                            ServiceWrapper wrapper = new ServiceWrapper(WebSocketNodeService.class, nodeService, resourceName, getSncpGroup(), sncpDefaultGroups, null);
-                            sncpServer.getSncpServer().addService(wrapper);
-                        }
                     }
                     field.set(src, nodeService);
                 }

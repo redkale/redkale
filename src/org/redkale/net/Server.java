@@ -19,7 +19,9 @@ import org.redkale.watch.*;
 
 /**
  *
- * <p> 详情见: http://www.redkale.org
+ * <p>
+ * 详情见: http://www.redkale.org
+ *
  * @author zhangjx
  */
 public abstract class Server {
@@ -49,7 +51,7 @@ public abstract class Server {
 
     protected ProtocolServer serverChannel;
 
-    protected int capacity;
+    protected int bufferCapacity;
 
     protected int threads;
 
@@ -82,8 +84,8 @@ public abstract class Server {
         this.backlog = config.getIntValue("backlog", 8 * 1024);
         this.readTimeoutSecond = config.getIntValue("readTimeoutSecond", 0);
         this.writeTimeoutSecond = config.getIntValue("writeTimeoutSecond", 0);
-        this.capacity = config.getIntValue("capacity", 8 * 1024);
         this.maxbody = config.getIntValue("maxbody", 64 * 1024);
+        this.bufferCapacity = config.getIntValue("bufferCapacity", 8 * 1024);
         this.threads = config.getIntValue("threads", Runtime.getRuntime().availableProcessors() * 16);
         this.bufferPoolSize = config.getIntValue("bufferPoolSize", Runtime.getRuntime().availableProcessors() * 512);
         this.responsePoolSize = config.getIntValue("responsePoolSize", Runtime.getRuntime().availableProcessors() * 256);
@@ -127,7 +129,7 @@ public abstract class Server {
         serverChannel.accept();
         final String threadName = "[" + Thread.currentThread().getName() + "] ";
         logger.info(threadName + this.getClass().getSimpleName() + "." + protocol + " listen: " + address
-                + ", threads: " + threads + ", bufferCapacity: " + capacity + ", bufferPoolSize: " + bufferPoolSize + ", responsePoolSize: " + responsePoolSize
+                + ", threads: " + threads + ", bufferCapacity: " + bufferCapacity + ", bufferPoolSize: " + bufferPoolSize + ", responsePoolSize: " + responsePoolSize
                 + ", started in " + (System.currentTimeMillis() - context.getServerStartTime()) + " ms");
     }
 

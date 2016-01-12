@@ -269,6 +269,10 @@ public final class ClassFilter<T> {
         public FilterEntry(Class<T> type, final boolean autoload, AnyValue property) {
             this.type = type;
             String str = property == null ? null : property.getValue("groups");
+            if (str != null) {
+                str = str.trim();
+                if (str.endsWith(";")) str = str.substring(0, str.length() - 1);
+            }
             if (str != null) groups.addAll(Arrays.asList(str.split(";")));
             this.property = property;
             this.autoload = autoload;

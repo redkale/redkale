@@ -15,6 +15,7 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.logging.*;
 import javax.annotation.Resource;
+import org.redkale.util.*;
 
 /**
  * 暂时不实现
@@ -25,6 +26,7 @@ import javax.annotation.Resource;
  * @author zhangjx
  */
 @AutoLoad(false)
+@ResourceType({DataSQLListenerService.class, DataSQLListener.class})
 public class DataSQLListenerService implements DataSQLListener, Service {
 
     private static final String format = "%1$tY-%1$tm-%1$td %1$tH:%1$tM:%1$tS.%tL";

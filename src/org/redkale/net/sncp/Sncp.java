@@ -12,7 +12,6 @@ import java.net.*;
 import java.security.*;
 import java.util.*;
 import java.util.function.*;
-import javax.annotation.*;
 import jdk.internal.org.objectweb.asm.*;
 import static jdk.internal.org.objectweb.asm.ClassWriter.COMPUTE_FRAMES;
 import static jdk.internal.org.objectweb.asm.Opcodes.*;
@@ -33,12 +32,6 @@ import org.redkale.service.DynRemote;
  * @author zhangjx
  */
 public abstract class Sncp {
-
-    //当前SNCP Server的IP地址+端口 类型: SocketAddress、InetSocketAddress、String
-    public static final String RESNAME_SNCP_ADDR = "SNCP_ADDR";
-
-    //当前Service所属的组  类型: Set<String>、String[]
-    public static final String RESNAME_SNCP_GROUPS = "SNCP_GROUPS";
 
     private static final java.lang.reflect.Type GROUPS_TYPE1 = new TypeToken<Set<String>>() {
     }.getType();
@@ -128,12 +121,13 @@ public abstract class Sncp {
      * <blockquote><pre>
      * &#64;Resource(name = "")
      * &#64;SncpDyn(remote = false)
+     * &#64;ResourceType({TestService.class})
      * public final class _DynLocalTestService extends TestService{
      *
      *      &#64;Resource
      *      private BsonConvert _convert;
      *
-     *      private Transport[] _sameGroupTransports;
+     *      private Transport _sameGroupTransport;
      *
      *      private Transport[] _diffGroupTransports;
      *
@@ -155,8 +149,8 @@ public abstract class Sncp {
      *      public void _createSomeThing(boolean selfrunnable, boolean samerunnable, boolean diffrunnable, TestBean bean){
      *          if(selfrunnable) super.createSomeThing(bean);
      *          if (_client== null) return;
-     *          if (samerunnable) _client.remote(_convert, _sameGroupTransports, 0, true, false, false, bean);
-     *          if (diffrunnable) _client.remote(_convert, _diffGroupTransports, 0, true, true, false, bean);
+     *          if (samerunnable) _client.remoteSameGroup(_convert, _sameGroupTransport, 0, true, false, false, bean);
+     *          if (diffrunnable) _client.remoteDiffGroup(_convert, _diffGroupTransports, 0, true, true, false, bean);
      *      }
      *
      *      &#64;Override
@@ -168,8 +162,8 @@ public abstract class Sncp {
      *      public String _updateSomeThing(boolean selfrunnable, boolean samerunnable, boolean diffrunnable, String id){
      *          String rs = super.updateSomeThing(id);
      *          if (_client== null) return;
-     *          if (samerunnable) _client.remote(_convert, _sameGroupTransports, 1, true, false, false, id);
-     *          if (diffrunnable) _client.remote(_convert, _diffGroupTransports, 1, true, true, false, id);
+     *          if (samerunnable) _client.remoteSameGroup(_convert, _sameGroupTransport, 1, true, false, false, id);
+     *          if (diffrunnable) _client.remoteDiffGroup(_convert, _diffGroupTransports, 1, true, true, false, id);
      *          return rs;
      *      }
      * }
@@ -196,6 +190,7 @@ public abstract class Sncp {
         final String clientDesc = Type.getDescriptor(SncpClient.class);
         final String convertDesc = Type.getDescriptor(BsonConvert.class);
         final String sncpDynDesc = Type.getDescriptor(SncpDyn.class);
+        final String transportDesc = Type.getDescriptor(Transport.class);
         final String transportsDesc = Type.getDescriptor(Transport[].class);
         ClassLoader loader = Sncp.class.getClassLoader();
         String newDynName = supDynName.substring(0, supDynName.lastIndexOf('/') + 1) + LOCALPREFIX + serviceClass.getSimpleName();
@@ -227,6 +222,22 @@ public abstract class Sncp {
             av0.visit("remote", Boolean.FALSE);
             av0.visitEnd();
         }
+        {
+            av0 = cw.visitAnnotation(Type.getDescriptor(ResourceType.class), true);
+            {
+                AnnotationVisitor av1 = av0.visitArray("value");
+                ResourceType rty = serviceClass.getAnnotation(ResourceType.class);
+                if (rty == null) {
+                    av1.visit(null, Type.getType(Type.getDescriptor(serviceClass)));
+                } else {
+                    for (Class cl : rty.value()) {
+                        av1.visit(null, Type.getType(Type.getDescriptor(cl)));
+                    }
+                }
+                av1.visitEnd();
+            }
+            av0.visitEnd();
+        }
         if (hasMultiRun) {
             {
                 fv = cw.visitField(ACC_PRIVATE, "_convert", convertDesc, null, null);
@@ -235,7 +246,7 @@ public abstract class Sncp {
                 fv.visitEnd();
             }
             {
-                fv = cw.visitField(ACC_PRIVATE, "_sameGroupTransports", transportsDesc, null, null);
+                fv = cw.visitField(ACC_PRIVATE, "_sameGroupTransport", transportDesc, null, null);
                 fv.visitEnd();
             }
             {
@@ -437,8 +448,8 @@ public abstract class Sncp {
                 mv.visitFieldInsn(GETFIELD, newDynName, "_client", clientDesc);
                 mv.visitVarInsn(ALOAD, 0);  //传递 _convert
                 mv.visitFieldInsn(GETFIELD, newDynName, "_convert", convertDesc);
-                mv.visitVarInsn(ALOAD, 0);  //传递 _sameGroupTransports
-                mv.visitFieldInsn(GETFIELD, newDynName, "_sameGroupTransports", transportsDesc);
+                mv.visitVarInsn(ALOAD, 0);  //传递 _sameGroupTransport
+                mv.visitFieldInsn(GETFIELD, newDynName, "_sameGroupTransport", transportDesc);
 
                 if (index <= 5) {  //第几个 SncpAction 
                     mv.visitInsn(ICONST_0 + index);
@@ -498,7 +509,7 @@ public abstract class Sncp {
                     }
                     mv.visitInsn(AASTORE);
                 }
-                mv.visitMethodInsn(INVOKEVIRTUAL, clientName, mrun.async() ? "asyncRemote" : "remote", "(" + convertDesc + transportsDesc + "I[Ljava/lang/Object;)V", false);
+                mv.visitMethodInsn(INVOKEVIRTUAL, clientName, mrun.async() ? "asyncRemoteSameGroup" : "remoteSameGroup", "(" + convertDesc + transportDesc + "I[Ljava/lang/Object;)V", false);
                 mv.visitLabel(sameLabel);
                 //---------------------------- 调用diffrun ---------------------------------
                 mv.visitVarInsn(ILOAD, 3); //读取 diffrunnable
@@ -570,7 +581,7 @@ public abstract class Sncp {
                     }
                     mv.visitInsn(AASTORE);
                 }
-                mv.visitMethodInsn(INVOKEVIRTUAL, clientName, mrun.async() ? "asyncRemote" : "remote", "(" + convertDesc + transportsDesc + "I[Ljava/lang/Object;)V", false);
+                mv.visitMethodInsn(INVOKEVIRTUAL, clientName, mrun.async() ? "asyncRemoteDiffGroup" : "remoteDiffGroup", "(" + convertDesc + transportsDesc + "I[Ljava/lang/Object;)V", false);
                 mv.visitLabel(diffLabel);
 
                 if (returnType == void.class) {
@@ -669,53 +680,33 @@ public abstract class Sncp {
      * @return Service的本地模式实例
      */
     @SuppressWarnings("unchecked")
-    public static <T extends Service> T createLocalService(final String name, final Consumer<Runnable> executor, final Class<T> serviceClass,
-            final InetSocketAddress clientAddress, HashSet<String> groups, Collection<Transport> sameGroupTransports, Collection<Transport> diffGroupTransports) {
+    public static <T extends Service> T createLocalService(final String name, final Consumer<Runnable> executor,
+            final Class<T> serviceClass, final InetSocketAddress clientAddress, final Transport sameGroupTransport, final Collection<Transport> diffGroupTransports) {
         try {
             final Class newClazz = createLocalServiceClass(name, serviceClass);
             T rs = (T) newClazz.newInstance();
             //--------------------------------------            
-            if (sameGroupTransports == null) sameGroupTransports = new ArrayList<>();
-            if (diffGroupTransports == null) diffGroupTransports = new ArrayList<>();
+            Service remoteService = null;
             Transport remoteTransport = null;
             {
                 Class loop = newClazz;
-                String[] groupArray = null;
                 do {
                     for (Field field : loop.getDeclaredFields()) {
                         int mod = field.getModifiers();
                         if (Modifier.isFinal(mod) || Modifier.isStatic(mod)) continue;
-                        if (field.getAnnotation(DynRemote.class) != null) {
-                            field.setAccessible(true);
-                            if (remoteTransport == null) {
-                                List<Transport> list = new ArrayList<>();
-                                list.addAll(sameGroupTransports);
-                                list.addAll(diffGroupTransports);
-                                if (!list.isEmpty()) remoteTransport = new Transport(list.get(0), clientAddress, list);
-                            }
-                            if (field.getType().isAssignableFrom(newClazz) && remoteTransport != null) {
-                                field.set(rs, createRemoteService(name, executor, serviceClass, clientAddress, groups, remoteTransport));
-                            }
-                            continue;
-                        }
-                        Resource res = field.getAnnotation(Resource.class);
-                        if (res == null) continue;
+                        if (field.getAnnotation(DynRemote.class) == null) continue;
+                        if (!field.getType().isAssignableFrom(newClazz)) continue;
                         field.setAccessible(true);
-                        if (res.name().equals(RESNAME_SNCP_GROUPS)) {
-                            if (groups == null) groups = new LinkedHashSet<>();
-                            if (groupArray == null) groupArray = groups.toArray(new String[groups.size()]);
-                            if (field.getGenericType().equals(GROUPS_TYPE1)) {
-                                field.set(rs, groups);
-                            } else if (field.getGenericType().equals(GROUPS_TYPE2)) {
-                                field.set(rs, groupArray);
-                            }
-                        } else if (res.name().endsWith(RESNAME_SNCP_ADDR)) {
-                            if (field.getType() == String.class) {
-                                field.set(rs, clientAddress == null ? null : (clientAddress.getHostString() + ":" + clientAddress.getPort()));
-                            } else {
-                                field.set(rs, clientAddress);
-                            }
+                        if (remoteTransport == null) {
+                            List<Transport> list = new ArrayList<>();
+                            if (sameGroupTransport != null) list.add(sameGroupTransport);
+                            if (diffGroupTransports != null) list.addAll(diffGroupTransports);
+                            if (!list.isEmpty()) remoteTransport = new Transport(list);
                         }
+                        if (remoteService == null && remoteTransport != null) {
+                            remoteService = createRemoteService(name, executor, serviceClass, clientAddress, remoteTransport);
+                        }
+                        if (remoteService != null) field.set(rs, remoteService);
                     }
                 } while ((loop = loop.getSuperclass()) != Object.class);
             }
@@ -724,7 +715,7 @@ public abstract class Sncp {
                 try {
                     Field e = newClazz.getDeclaredField("_client");
                     e.setAccessible(true);
-                    client = new SncpClient(name, executor, hash(serviceClass), false, newClazz, clientAddress, groups);
+                    client = new SncpClient(name, executor, hash(serviceClass), false, newClazz, clientAddress);
                     e.set(rs, client);
                 } catch (NoSuchFieldException ne) {
                 }
@@ -735,19 +726,23 @@ public abstract class Sncp {
                 if (client != null) {
                     sb.append(", nameid = ").append(client.getNameid()).append(", serviceid = ").append(client.getServiceid());
                     sb.append(", action.size = ").append(client.getActionCount());
-
+                    List<String> groups = new ArrayList<>();
+                    if (sameGroupTransport != null) groups.add(sameGroupTransport.getName());
+                    if (diffGroupTransports != null) {
+                        for (Transport t : diffGroupTransports) {
+                            groups.add(t.getName());
+                        }
+                    }
                     sb.append(", address = ").append(clientAddress).append(", groups = ").append(groups);
-                    List<InetSocketAddress> addrs = new ArrayList<>();
-                    for (Transport t : sameGroupTransports) {
-                        addrs.addAll(Arrays.asList(t.getRemoteAddress()));
-                    }
-                    sb.append(", samegroups = ").append(addrs);
+                    sb.append(", sameaddrs = ").append(sameGroupTransport == null ? null : Arrays.asList(sameGroupTransport.getRemoteAddresses()));
 
-                    addrs.clear();
-                    for (Transport t : diffGroupTransports) {
-                        addrs.addAll(Arrays.asList(t.getRemoteAddress()));
+                    List<InetSocketAddress> addrs = new ArrayList<>();
+                    if (diffGroupTransports != null) {
+                        for (Transport t : diffGroupTransports) {
+                            addrs.addAll(Arrays.asList(t.getRemoteAddresses()));
+                        }
                     }
-                    sb.append(", diffgroups = ").append(addrs);
+                    sb.append(", diffaddrs = ").append(addrs);
                 } else {
                     sb.append(", ").append(MultiRun.class.getSimpleName().toLowerCase()).append(" = false");
                 }
@@ -758,11 +753,11 @@ public abstract class Sncp {
             }
             if (client == null) return rs;
             {
-                Field c = newClazz.getDeclaredField("_sameGroupTransports");
+                Field c = newClazz.getDeclaredField("_sameGroupTransport");
                 c.setAccessible(true);
-                c.set(rs, sameGroupTransports.toArray(new Transport[sameGroupTransports.size()]));
+                c.set(rs, sameGroupTransport);
             }
-            {
+            if (diffGroupTransports != null) {
                 Field t = newClazz.getDeclaredField("_diffGroupTransports");
                 t.setAccessible(true);
                 t.set(rs, diffGroupTransports.toArray(new Transport[diffGroupTransports.size()]));
@@ -780,6 +775,7 @@ public abstract class Sncp {
      * <blockquote><pre>
      * &#64;Resource(name = "")
      * &#64;SncpDyn(remote = true)
+     * &#64;ResourceType({TestService.class})
      * public final class _DynRemoteTestService extends TestService{
      *
      *      &#64;Resource
@@ -837,7 +833,7 @@ public abstract class Sncp {
      */
     @SuppressWarnings("unchecked")
     public static <T extends Service> T createRemoteService(final String name, final Consumer<Runnable> executor, final Class<T> serviceClass,
-            final InetSocketAddress clientAddress, HashSet<String> groups, final Transport transport) {
+            final InetSocketAddress clientAddress, final Transport transport) {
         if (serviceClass == null) return null;
         if (!Service.class.isAssignableFrom(serviceClass)) return null;
         int mod = serviceClass.getModifiers();
@@ -852,7 +848,7 @@ public abstract class Sncp {
         final String anyValueDesc = Type.getDescriptor(AnyValue.class);
         ClassLoader loader = Sncp.class.getClassLoader();
         String newDynName = supDynName.substring(0, supDynName.lastIndexOf('/') + 1) + REMOTEPREFIX + serviceClass.getSimpleName();
-        final SncpClient client = new SncpClient(name, executor, hash(serviceClass), true, realed ? createLocalServiceClass(name, serviceClass) : serviceClass, clientAddress, groups);
+        final SncpClient client = new SncpClient(name, executor, hash(serviceClass), true, realed ? createLocalServiceClass(name, serviceClass) : serviceClass, clientAddress);
         try {
             Class newClazz = Class.forName(newDynName.replace('/', '.'));
             T rs = (T) newClazz.newInstance();
@@ -867,8 +863,8 @@ public abstract class Sncp {
                 sb.append(newClazz.getName()).append("{name = ").append(name);
                 sb.append(", nameid = ").append(client.getNameid()).append(", serviceid = ").append(client.getServiceid());
                 sb.append(", action.size = ").append(client.getActionCount());
-                sb.append(", address = ").append(clientAddress).append(", groups = ").append(groups);
-                sb.append(", remotes = ").append(transport == null ? null : Arrays.asList(transport.getRemoteAddress()));
+                sb.append(", address = ").append(clientAddress).append(", groups = ").append(transport == null ? null : transport.getName());
+                sb.append(", remoteaddrs = ").append(transport == null ? null : Arrays.asList(transport.getRemoteAddresses()));
                 sb.append("}");
                 Field s = newClazz.getDeclaredField("_selfstring");
                 s.setAccessible(true);
@@ -887,6 +883,22 @@ public abstract class Sncp {
         {
             av0 = cw.visitAnnotation("Ljavax/annotation/Resource;", true);
             av0.visit("name", name);
+            av0.visitEnd();
+        }
+        {
+            av0 = cw.visitAnnotation(Type.getDescriptor(ResourceType.class), true);
+            {
+                AnnotationVisitor av1 = av0.visitArray("value");
+                ResourceType rty = serviceClass.getAnnotation(ResourceType.class);
+                if (rty == null) {
+                    av1.visit(null, Type.getType(Type.getDescriptor(serviceClass)));
+                } else {
+                    for (Class cl : rty.value()) {
+                        av1.visit(null, Type.getType(Type.getDescriptor(cl)));
+                    }
+                }
+                av1.visitEnd();
+            }
             av0.visitEnd();
         }
         {
@@ -1070,8 +1082,8 @@ public abstract class Sncp {
                 sb.append(newClazz.getName()).append("{name = ").append(name);
                 sb.append(", nameid = ").append(client.getNameid()).append(", serviceid = ").append(client.getServiceid());
                 sb.append(", action.size = ").append(client.getActionCount());
-                sb.append(", address = ").append(clientAddress).append(", groups = ").append(groups);
-                sb.append(", remotes = ").append(transport == null ? null : Arrays.asList(transport.getRemoteAddress()));
+                sb.append(", address = ").append(clientAddress).append(", groups = ").append(transport == null ? null : transport.getName());
+                sb.append(", remotes = ").append(transport == null ? null : Arrays.asList(transport.getRemoteAddresses()));
                 sb.append("}");
                 Field s = newClazz.getDeclaredField("_selfstring");
                 s.setAccessible(true);

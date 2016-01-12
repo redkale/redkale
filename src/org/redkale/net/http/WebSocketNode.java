@@ -12,6 +12,7 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.logging.*;
 import javax.annotation.*;
+import org.redkale.boot.*;
 import org.redkale.service.*;
 import org.redkale.source.*;
 import org.redkale.util.*;
@@ -29,7 +30,7 @@ public abstract class WebSocketNode {
 
     protected final boolean finest = logger.isLoggable(Level.FINEST);
 
-    @Resource(name = "SERVER_ADDR")
+    @Resource(name = Application.RESNAME_SERVER_GROUP)
     protected InetSocketAddress localSncpAddress;  //为SncpServer的服务address
 
     @DynRemote

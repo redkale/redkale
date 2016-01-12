@@ -13,7 +13,9 @@ import org.redkale.util.*;
 
 /**
  *
- * <p> 详情见: http://www.redkale.org
+ * <p>
+ * 详情见: http://www.redkale.org
+ *
  * @author zhangjx
  */
 @NodeProtocol({"SNCP"})
@@ -22,7 +24,7 @@ public final class NodeSncpServer extends NodeServer {
     private final SncpServer sncpServer;
 
     public NodeSncpServer(Application application, AnyValue serconf) {
-        super(application, application.getResourceFactory().createChild(), createServer(application, serconf));
+        super(application, createServer(application, serconf));
         this.sncpServer = (SncpServer) this.server;
         this.consumer = sncpServer == null ? null : x -> sncpServer.addService(x);
     }

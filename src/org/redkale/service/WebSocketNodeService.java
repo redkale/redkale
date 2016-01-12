@@ -14,10 +14,13 @@ import org.redkale.util.*;
 
 /**
  *
- * <p> 详情见: http://www.redkale.org
+ * <p>
+ * 详情见: http://www.redkale.org
+ *
  * @author zhangjx
  */
 @AutoLoad(false)
+@ResourceType({WebSocketNodeService.class, WebSocketNode.class})
 public class WebSocketNodeService extends WebSocketNode implements Service {
 
     @Override

@@ -15,10 +15,13 @@ import org.redkale.util.*;
 /**
  * DataSource对应的Service类， 该类主要特点是将所有含FilterBean参数的方法重载成FilterNode对应的方法。
  *
- * <p> 详情见: http://www.redkale.org
+ * <p>
+ * 详情见: http://www.redkale.org
+ *
  * @author zhangjx
  */
 @AutoLoad(false)
+@ResourceType({DataSourceService.class, DataSource.class})
 public class DataSourceService implements DataSource, Service, AutoCloseable {
 
     @Resource(name = "$")

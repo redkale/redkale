@@ -10,7 +10,6 @@ import java.nio.*;
 import java.nio.channels.*;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.*;
 import java.util.function.*;
 import org.redkale.util.*;
 import org.redkale.watch.*;
@@ -42,97 +41,104 @@ public final class Transport {
         supportTcpNoDelay = tcpNoDelay;
     }
 
-    protected final String name;
-
-    protected final int bufferPoolSize;
-
-    protected final int bufferCapacity;
+    protected final String name; //即<group>的name属性
 
     protected final boolean tcp;
 
     protected final String protocol;
 
+    protected final WatchFactory watch;
+
     protected final AsynchronousChannelGroup group;
 
-    protected final InetSocketAddress[] remoteAddres;
+    protected final InetSocketAddress clientAddress;
+
+    protected InetSocketAddress[] remoteAddres = new InetSocketAddress[0]; 
 
     protected final ObjectPool<ByteBuffer> bufferPool;
 
     protected final ConcurrentHashMap<SocketAddress, BlockingQueue<AsyncConnection>> connPool = new ConcurrentHashMap<>();
 
-    public Transport(Transport transport, InetSocketAddress localAddress, Collection<Transport> transports) {
-        this(transport.name, transport.protocol, null, transport.bufferPoolSize, parse(localAddress, transports));
+    public Transport(String name, WatchFactory watch, final ObjectPool<ByteBuffer> transportBufferPool,
+            final AsynchronousChannelGroup transportChannelGroup, final InetSocketAddress clientAddress, final Collection<InetSocketAddress> addresses) {
+        this(name, DEFAULT_PROTOCOL, watch, transportBufferPool, transportChannelGroup, clientAddress, addresses);
     }
 
-    public Transport(String name, WatchFactory watch, int bufferPoolSize, Collection<InetSocketAddress> addresses) {
-        this(name, DEFAULT_PROTOCOL, watch, bufferPoolSize, addresses);
-    }
-
-    public Transport(String name, String protocol, WatchFactory watch, int bufferPoolSize, Collection<InetSocketAddress> addresses) {
+    public Transport(String name, String protocol, WatchFactory watch, final ObjectPool<ByteBuffer> transportBufferPool,
+            final AsynchronousChannelGroup transportChannelGroup, final InetSocketAddress clientAddress, final Collection<InetSocketAddress> addresses) {
         this.name = name;
+        this.watch = watch;
         this.protocol = protocol;
         this.tcp = "TCP".equalsIgnoreCase(protocol);
-        this.bufferPoolSize = bufferPoolSize;
-        this.bufferCapacity = 8192;
-        AsynchronousChannelGroup g = null;
-        try {
-            final AtomicInteger counter = new AtomicInteger();
-            ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 8, (Runnable r) -> {
-                Thread t = new Thread(r);
-                t.setDaemon(true);
-                t.setName("Transport-" + name + "-Thread-" + counter.incrementAndGet());
-                return t;
-            });
-            g = AsynchronousChannelGroup.withCachedThreadPool(executor, 1);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-        this.group = g;
-        AtomicLong createBufferCounter = watch == null ? new AtomicLong() : watch.createWatchNumber(Transport.class.getSimpleName() + "-" + name + "-" + protocol + ".Buffer.creatCounter");
-        AtomicLong cycleBufferCounter = watch == null ? new AtomicLong() : watch.createWatchNumber(Transport.class.getSimpleName() + "-" + name + "-" + protocol + ".Buffer.cycleCounter");
-        final int rcapacity = bufferCapacity;
-        this.bufferPool = new ObjectPool<>(createBufferCounter, cycleBufferCounter, bufferPoolSize,
-                (Object... params) -> ByteBuffer.allocateDirect(rcapacity), null, (e) -> {
-                    if (e == null || e.isReadOnly() || e.capacity() != rcapacity) return false;
-                    e.clear();
-                    return true;
-                });
-        this.remoteAddres = addresses.toArray(new InetSocketAddress[addresses.size()]);
+        this.group = transportChannelGroup;
+        this.bufferPool = transportBufferPool;
+        this.clientAddress = clientAddress;
+        updateRemoteAddresses(addresses);
     }
 
-    private static Collection<InetSocketAddress> parse(InetSocketAddress addr, Collection<Transport> transports) {
-        final Set<InetSocketAddress> set = new LinkedHashSet<>();
+    public Transport(final Collection<Transport> transports) {
+        Transport first = null;
+        List<String> tmpgroup = new ArrayList<>();
         for (Transport t : transports) {
-            set.addAll(Arrays.asList(t.remoteAddres));
+            if (first == null) first = t;
+            tmpgroup.add(t.name);
         }
-        set.remove(addr);
-        return set;
+        Collections.sort(tmpgroup);  //按字母排列顺序
+        boolean flag = false;
+        StringBuilder sb = new StringBuilder();
+        for (String g : tmpgroup) {
+            if (flag) sb.append(';');
+            sb.append(g);
+            flag = true;
+        }
+        this.name = sb.toString();
+        this.watch = first.watch;
+        this.protocol = first.protocol;
+        this.tcp = "TCP".equalsIgnoreCase(first.protocol);
+        this.group = first.group;
+        this.bufferPool = first.bufferPool;
+        this.clientAddress = first.clientAddress;
+        Set<InetSocketAddress> addrs = new HashSet();
+        for (Transport t : transports) {
+            for (InetSocketAddress addr : t.getRemoteAddresses()) {
+                addrs.add(addr);
+            }
+        }
+        updateRemoteAddresses(addrs);
+    }
+
+    public final InetSocketAddress[] updateRemoteAddresses(final Collection<InetSocketAddress> addresses) {
+        InetSocketAddress[] oldAddresses = this.remoteAddres;
+        List<InetSocketAddress> list = new ArrayList<>();
+        if (addresses != null) {
+            for (InetSocketAddress addr : addresses) {
+                if (clientAddress != null && clientAddress.equals(addr)) continue;
+                list.add(addr);
+            }
+        }
+        this.remoteAddres = list.toArray(new InetSocketAddress[list.size()]);
+        return oldAddresses;
+    }
+
+    public String getName() {
+        return name;
     }
 
     public void close() {
         connPool.forEach((k, v) -> v.forEach(c -> c.dispose()));
     }
 
-    public boolean match(Collection<InetSocketAddress> addrs) {
-        if (addrs == null) return false;
-        if (addrs.size() != this.remoteAddres.length) return false;
-        for (InetSocketAddress addr : this.remoteAddres) {
-            if (!addrs.contains(addr)) return false;
-        }
-        return true;
+    public InetSocketAddress getClientAddress() {
+        return clientAddress;
     }
 
-    public InetSocketAddress[] getRemoteAddress() {
+    public InetSocketAddress[] getRemoteAddresses() {
         return remoteAddres;
     }
 
     @Override
     public String toString() {
-        return Transport.class.getSimpleName() + "{name=" + name + ",protocol=" + protocol + ",remoteAddres=" + Arrays.toString(remoteAddres) + "}";
-    }
-
-    public int getBufferCapacity() {
-        return bufferCapacity;
+        return Transport.class.getSimpleName() + "{name = " + name + ", protocol = " + protocol + ", clientAddress = " + clientAddress + ", remoteAddres = " + Arrays.toString(remoteAddres) + "}";
     }
 
     public ByteBuffer pollBuffer() {
@@ -207,7 +213,7 @@ public final class Transport {
     }
 
     public void offerConnection(final boolean forceClose, AsyncConnection conn) {
-        if (!forceClose && conn.isTCP()) {  //暂时每次都关闭
+        if (!forceClose && conn.isTCP()) {
             if (conn.isOpen()) {
                 BlockingQueue<AsyncConnection> queue = connPool.get(conn.getRemoteAddress());
                 if (queue == null) {
