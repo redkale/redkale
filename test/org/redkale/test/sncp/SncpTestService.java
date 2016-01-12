@@ -11,11 +11,13 @@ import org.redkale.net.sncp.*;
 import org.redkale.service.*;
 import org.redkale.util.Attribute;
 import org.redkale.source.DataCallArrayAttribute;
+import org.redkale.util.*;
 
 /**
  *
  * @author zhangjx
  */
+@ResourceType({SncpTestIService.class})
 public class SncpTestService implements SncpTestIService {
 
     public static class CallAttribute implements Attribute<SncpTestBean, Long> {
