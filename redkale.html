@@ -67,7 +67,7 @@
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;开发一个极简单的小论坛系统。包含三个模块： <br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;用户模块 &nbsp;&nbsp;&nbsp;UserSerivice: &nbsp;&nbsp;&nbsp;&nbsp;提供用户注册、登录、更新资料等功能， UserServlet作为接入层。<br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;帖子模块 ForumSerivice: &nbsp;&nbsp;&nbsp;&nbsp;提供看帖、发帖、删帖等功能， ForumServlet作为接入层。<br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;通知模块 &nbsp;NotifySerivice: &nbsp;&nbsp;&nbsp;&nbsp;提供用户操作、回帖等消息通知功能， NotifyWebSocket是WebSocket的Servlet，作为接入层。 <br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;通知模块 &nbsp;NotifySerivice: &nbsp;&nbsp;&nbsp;&nbsp;提供用户操作、回帖等消息通知功能， NotifyWebSocket是WebSocket的Servlet, 且name为 <b>ws_notify</b>，作为接入层。 <br/>
             </p>
             <br/>
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>1、单点部署</b></p>
@@ -86,8 +86,7 @@
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在生产环境需要避免单点问题，一个服务一般会部署多套。在此做个简单的容灾部署，最前端部署一个nginx作反向代理和负载均衡服务器，后面部署两套系统。 </p>
             <p style="text-align: center;"><img src="images/distributeimg_2.png" alt=""/></p>
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如上图，两个进程间的Serivce都是本地模式，两者会通过SNCP服务保持数据同步，若DataSource开启了数据缓存也会自动同步。两套的配置文件相同，配置如下:</p>
-            <div class="highlight"><pre>
-<span class="nt">&lt;application</span> <span class="na">port=</span><span class="s">&quot;5050&quot;</span><span class="nt">&gt;</span>   
+            <div class="highlight"><pre><span class="nt">&lt;application</span> <span class="na">port=</span><span class="s">&quot;5050&quot;</span><span class="nt">&gt;</span>   
     <span class="nt">&lt;resources&gt;</span>	
         <span class="nt">&lt;group</span> <span class="na">name=</span><span class="s">&quot;ALL&quot;</span><span class="nt">&gt;</span>
             <span class="nt">&lt;node</span> <span class="na">addr=</span><span class="s">&quot;192.168.50.110&quot;</span> <span class="na">port=</span><span class="s">&quot;7070&quot;</span><span class="nt">/&gt;</span>
@@ -101,13 +100,16 @@
         <span class="nt">&lt;request&gt;</span>
             <span class="nt">&lt;remoteaddr</span> <span class="na">value=</span><span class="s">&quot;request.headers.X-RemoteAddress&quot;</span><span class="nt">/&gt;</span>
         <span class="nt">&lt;/request&gt;</span>
-        <span class="nt">&lt;services</span> <span class="na">autoload=</span><span class="s">&quot;true&quot;</span> <b><span class="na">groups=</span><span class="s">&quot;ALL&quot;</span></b><span class="nt">/&gt;</span>	
+        <span class="nt">&lt;services</span> <span class="na">autoload=</span><span class="s">&quot;true&quot;</span> <span class="na">groups=</span><span class="s">&quot;ALL&quot;</span><span class="nt">/&gt;</span>	
         <span class="nt">&lt;servlets</span> <span class="na">autoload=</span><span class="s">&quot;true&quot;</span> <span class="nt">/&gt;</span>
     <span class="nt">&lt;/server&gt;</span> 
 
     <span class="c">&lt;!-- SNCP 监听 Server --&gt;</span>
     <span class="nt">&lt;server</span> <span class="na">protocol=</span><span class="s">&quot;SNCP&quot;</span> <span class="na">port=</span><span class="s">&quot;7070&quot;</span><span class="nt">&gt;</span> 
-        <span class="nt">&lt;services</span> <span class="na">autoload=</span><span class="s">&quot;true&quot;</span>  <b><span class="na">groups=</span><span class="s">&quot;ALL&quot;</span></b><span class="nt">/&gt;</span>
+        <span class="nt">&lt;services</span> <span class="na">autoload=</span><span class="s">&quot;true&quot;</span>  <span class="na">groups=</span><span class="s">&quot;ALL&quot;</span><span class="nt">&gt;</span>
+            <span class="c">&lt;!-- 有WebSocketServlet的服务必须配置WebSocketNodeService --&gt;</span>
+            <span class="nt">&lt;service</span> <span class="na">name=</span><span class="s">&quot;ws_notify&quot;</span> <span class="na">value=</span><span class="s">&quot;org.redkale.service.WebSocketNodeService&quot;</span><span class="nt">/&gt;</span>
+        <span class="nt">&lt;/services&gt;</span>
     <span class="nt">&lt;/server&gt;</span>	
 <span class="nt">&lt;/application&gt;</span></pre></div>
             <br/>
@@ -131,10 +133,12 @@
         <span class="nt">&lt;request&gt;</span>
             <span class="nt">&lt;remoteaddr</span> <span class="na">value=</span><span class="s">&quot;request.headers.X-RemoteAddress&quot;</span><span class="nt">/&gt;</span>
         <span class="nt">&lt;/request&gt;</span>
-        <span class="nt">&lt;services</span> <span class="na">autoload=</span><span class="s">&quot;true&quot;</span> <span class="na">groups=</span><span class="s">&quot;ALL&quot;</span><span class="nt">/&gt;</span>	
+        <span class="nt">&lt;services</span> <span class="na">autoload=</span><span class="s">&quot;true&quot;</span> <span class="na">groups=</span><span class="s">&quot;ALL&quot;</span><span class="nt">&gt;</span>
+            <span class="c">&lt;!-- 有WebSocketServlet的服务必须配置WebSocketNodeService --&gt;</span>
+            <span class="nt">&lt;service</span> <span class="na">name=</span><span class="s">&quot;ws_notify&quot;</span> <span class="na">value=</span><span class="s">&quot;org.redkale.service.WebSocketNodeService&quot;</span><span class="nt">/&gt;</span>
+        <span class="nt">&lt;/services&gt;</span>
         <span class="nt">&lt;servlets</span> <span class="na">autoload=</span><span class="s">&quot;true&quot;</span> <span class="nt">/&gt;</span>
-    <span class="nt">&lt;/server&gt;</span> 
-	
+    <span class="nt">&lt;/server&gt;</span> 	
 <span class="nt">&lt;/application&gt;</span></pre></div>
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;业务层中每个进程的配置相同，配置如下:</p>
             <div class="highlight"><pre><span class="nt">&lt;application</span> <span class="na">port=</span><span class="s">&quot;5050&quot;</span><span class="nt">&gt;</span>  
@@ -147,7 +151,10 @@
 
     <span class="c">&lt;!-- SNCP 监听 Server --&gt;</span>
     <span class="nt">&lt;server</span> <span class="na">protocol=</span><span class="s">&quot;SNCP&quot;</span> <span class="na">port=</span><span class="s">&quot;7070&quot;</span><span class="nt">&gt;</span> 
-        <span class="nt">&lt;services</span> <span class="na">autoload=</span><span class="s">&quot;true&quot;</span>  <span class="na">groups=</span><span class="s">&quot;ALL&quot;</span><span class="nt">/&gt;</span>
+        <span class="nt">&lt;services</span> <span class="na">autoload=</span><span class="s">&quot;true&quot;</span> <span class="na">groups=</span><span class="s">&quot;ALL&quot;</span><span class="nt">&gt;</span>
+            <span class="c">&lt;!-- 有WebSocketServlet的服务必须配置WebSocketNodeService --&gt;</span>
+            <span class="nt">&lt;service</span> <span class="na">name=</span><span class="s">&quot;ws_notify&quot;</span> <span class="na">value=</span><span class="s">&quot;org.redkale.service.WebSocketNodeService&quot;</span><span class="nt">/&gt;</span>
+        <span class="nt">&lt;/services&gt;</span>
     <span class="nt">&lt;/server&gt;</span>	
 <span class="nt">&lt;/application&gt;</span></pre></div>
             <br/>
@@ -183,6 +190,8 @@
             <span class="nt">&lt;service</span> <span class="na">value=</span><span class="s">&quot;org.redkale.demo.UserService&quot;</span> <span class="na">groups=</span><span class="s">&quot;USER_SERVICE&quot;</span><span class="nt">/&gt;</span>
             <span class="nt">&lt;service</span> <span class="na">value=</span><span class="s">&quot;org.redkale.demo.NotifyService&quot;</span> <span class="na">groups=</span><span class="s">&quot;NOTIFY_SERVICE&quot;</span><span class="nt">/&gt;</span>
             <span class="nt">&lt;service</span> <span class="na">value=</span><span class="s">&quot;org.redkale.demo.ForumService&quot;</span> <span class="na">groups=</span><span class="s">&quot;FORUM_SERVICE&quot;</span><span class="nt">/&gt;</span>
+            <span class="c">&lt;!-- 有WebSocketServlet的服务必须配置WebSocketNodeService --&gt;</span>
+            <span class="nt">&lt;service</span> <span class="na">name=</span><span class="s">&quot;ws_notify&quot;</span> <span class="na">value=</span><span class="s">&quot;org.redkale.service.WebSocketNodeService&quot;</span> <span class="na">groups=</span><span class="s">&quot;NOTIFY_SERVICE&quot;</span><span class="nt">/&gt;</span>
         <span class="nt">&lt;/services&gt;</span>
         <span class="nt">&lt;servlets</span> <span class="na">autoload=</span><span class="s">&quot;true&quot;</span> <span class="nt">/&gt;</span>
     <span class="nt">&lt;/server&gt;</span> 	
@@ -235,6 +244,8 @@
         <span class="nt">&lt;services</span> <span class="na">autoload=</span><span class="s">&quot;true&quot;</span><span class="nt">&gt;</span>	
             <span class="nt">&lt;service</span> <span class="na">value=</span><span class="s">&quot;org.redkale.demo.UserService&quot;</span> <span class="na">groups=</span><span class="s">&quot;USER_SERVICE&quot;</span><span class="nt">/&gt;</span>
             <span class="nt">&lt;service</span> <span class="na">value=</span><span class="s">&quot;org.redkale.demo.ForumService&quot;</span> <span class="na">groups=</span><span class="s">&quot;FORUM_SERVICE&quot;</span><span class="nt">/&gt;</span>
+            <span class="c">&lt;!-- 有WebSocketServlet的服务必须配置WebSocketNodeService --&gt;</span>
+            <span class="nt">&lt;service</span> <span class="na">name=</span><span class="s">&quot;ws_notify&quot;</span> <span class="na">value=</span><span class="s">&quot;org.redkale.service.WebSocketNodeService&quot;</span> <span class="na">groups=</span><span class="s">&quot;NOTIFY_SERVICE&quot;</span><span class="nt">/&gt;</span>
         <span class="nt">&lt;/services&gt;</span>
         <span class="nt">&lt;servlets</span> <span class="na">autoload=</span><span class="s">&quot;true&quot;</span> <span class="nt">/&gt;</span>
     <span class="nt">&lt;/server&gt;</span> 	
