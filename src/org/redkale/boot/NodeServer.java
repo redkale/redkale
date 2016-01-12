@@ -241,7 +241,7 @@ public abstract class NodeServer {
             if (Modifier.isFinal(type.getModifiers())) continue; //修饰final的类跳过
             if (!Modifier.isPublic(type.getModifiers())) continue;
             if (entry.getName().contains("$")) throw new RuntimeException("<name> value cannot contains '$' in " + entry.getProperty());
-            if (!isSNCP() && factory.find(entry.getName(), type) != null) continue; //非SNCP的Server加载Service时需要判断是否在SNCP的Server已经加载过了。
+            if (factory.find(entry.getName(), type) != null) continue; //Server加载Service时需要判断是否已经加载过了。
             final HashSet<String> groups = entry.getGroups(); //groups.isEmpty()表示<services>没有配置groups属性。
             if (groups.isEmpty() && isSNCP()) groups.add(this.sncpGroup);
 
