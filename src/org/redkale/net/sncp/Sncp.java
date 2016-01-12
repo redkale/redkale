@@ -1079,8 +1079,8 @@ public abstract class Sncp {
             t.set(rs, transport);
             {
                 StringBuilder sb = new StringBuilder();
-                sb.append(newClazz.getName()).append("{name = ").append(name);
-                sb.append(", nameid = ").append(client.getNameid()).append(", serviceid = ").append(client.getServiceid());
+                sb.append(newClazz.getName()).append("{name = '").append(name);
+                sb.append("', nameid = ").append(client.getNameid()).append(", serviceid = ").append(client.getServiceid());
                 sb.append(", action.size = ").append(client.getActionCount());
                 sb.append(", address = ").append(clientAddress).append(", groups = ").append(transport == null ? null : transport.getName());
                 sb.append(", remotes = ").append(transport == null ? null : Arrays.asList(transport.getRemoteAddresses()));
