@@ -19,7 +19,11 @@ import org.redkale.util.*;
  * @author zhangjx
  * @param <T> Service的子类
  */
-public final class ServiceWrapper<T extends Service> {
+public final class ServiceWrapper<T extends Service> implements Comparable<ServiceWrapper> {
+
+    private static volatile int maxClassNameLength = 0;
+
+    private static volatile int maxNameLength = 0;
 
     private final Class<T> type;
 
@@ -47,6 +51,24 @@ public final class ServiceWrapper<T extends Service> {
         this.remote = Sncp.isRemote(service);
         ResourceType rty = service.getClass().getAnnotation(ResourceType.class);
         this.resTypes = rty == null ? new Class[]{this.type} : rty.value();
+
+        maxNameLength = Math.max(maxNameLength, name.length() + 1);
+        maxClassNameLength = Math.max(maxClassNameLength, type.getName().length());
+    }
+
+    public String toSimpleString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(remote ? "RemoteService" : "LocalService ").append("(type=").append(type.getName());
+        int len = maxClassNameLength - type.getName().length();
+        for (int i = 0; i < len; i++) {
+            sb.append(' ');
+        }
+        sb.append(", name='").append(name).append("'");
+        for (int i = 0; i < maxNameLength - name.length(); i++) {
+            sb.append(' ');
+        }
+        sb.append(")");
+        return sb.toString();
     }
 
     @Override
@@ -66,6 +88,13 @@ public final class ServiceWrapper<T extends Service> {
         hash = 67 * hash + Objects.hashCode(this.name);
         hash = 67 * hash + (this.remote ? 1 : 0);
         return hash;
+    }
+
+    @Override
+    public int compareTo(ServiceWrapper o) {
+        int rs = this.type.getName().compareTo(o.type.getName());
+        if (rs == 0) rs = this.name.compareTo(o.name);
+        return rs;
     }
 
     public Class<? extends Service> getType() {

@@ -31,6 +31,10 @@ import org.redkale.service.DynCall;
  */
 public final class SncpDynServlet extends SncpServlet {
 
+    private static volatile int maxClassNameLength = 0;
+
+    private static volatile int maxNameLength = 0;
+
     private static final Logger logger = Logger.getLogger(SncpDynServlet.class.getSimpleName());
 
     private final boolean finest = logger.isLoggable(Level.FINEST);
@@ -71,11 +75,24 @@ public final class SncpDynServlet extends SncpServlet {
             actions.put(actionid, action);
             actionids.add(actionid);
         }
+        maxNameLength = Math.max(maxNameLength, serviceName.length() + 1);
+        maxClassNameLength = Math.max(maxClassNameLength, type.getName().length());
     }
 
     @Override
     public String toString() {
-        return this.getClass().getSimpleName() + "(type=" + type.getName() + ", serviceid=" + serviceid + ", name='" + serviceName + "', nameid=" + nameid + ", actions.size=" + actions.size() + ")";
+        StringBuilder sb = new StringBuilder();
+        sb.append(this.getClass().getSimpleName()).append("(type=").append(type.getName());
+        int len = maxClassNameLength - type.getName().length();
+        for (int i = 0; i < len; i++) {
+            sb.append(' ');
+        }
+        sb.append(", serviceid=").append(serviceid).append(", name='").append(serviceName).append("'");
+        for (int i = 0; i < maxNameLength - serviceName.length(); i++) {
+            sb.append(' ');
+        }
+        sb.append(", nameid=").append(nameid).append(", actions.size=").append(actions.size() > 9 ? "" : " ").append(actions.size()).append(")");
+        return sb.toString();
     }
 
     @Override
@@ -86,6 +103,15 @@ public final class SncpDynServlet extends SncpServlet {
     @Override
     public DLong getServiceid() {
         return serviceid;
+    }
+
+    @Override
+    public int compareTo(SncpServlet o0) {
+        if (!(o0 instanceof SncpDynServlet)) return 1;
+        SncpDynServlet o = (SncpDynServlet) o0;
+        int rs = this.type.getName().compareTo(o.type.getName());
+        if (rs == 0) rs = this.serviceName.compareTo(o.serviceName);
+        return rs;
     }
 
     @Override

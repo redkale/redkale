@@ -6,6 +6,7 @@
 package org.redkale.boot;
 
 import java.net.*;
+import java.util.*;
 import java.util.logging.*;
 import org.redkale.net.*;
 import org.redkale.net.sncp.*;
@@ -38,6 +39,10 @@ public final class NodeSncpServer extends NodeServer {
         return sncpServer == null ? null : sncpServer.getSocketAddress();
     }
 
+    public void consumerAccept(ServiceWrapper wrapper) {
+        if (this.consumer != null) this.consumer.accept(wrapper);
+    }
+
     @Override
     public void init(AnyValue config) throws Exception {
         super.init(config);
@@ -45,7 +50,9 @@ public final class NodeSncpServer extends NodeServer {
         if (sncpServer == null) return; //调试时server才可能为null
         final StringBuilder sb = logger.isLoggable(Level.FINE) ? new StringBuilder() : null;
         final String threadName = "[" + Thread.currentThread().getName() + "] ";
-        for (SncpServlet en : sncpServer.getSncpServlets()) {
+        List<SncpServlet> servlets = sncpServer.getSncpServlets();
+        Collections.sort(servlets);
+        for (SncpServlet en : servlets) {
             if (sb != null) sb.append(threadName).append(" Loaded ").append(en).append(LINE_SEPARATOR);
         }
         if (sb != null && sb.length() > 0) logger.log(Level.FINE, sb.toString());

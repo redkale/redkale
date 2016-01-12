@@ -115,9 +115,9 @@ public final class SncpClient {
         }
     }
 
-    private static final Logger logger = Logger.getLogger(SncpClient.class.getSimpleName());
+    protected static final Logger logger = Logger.getLogger(SncpClient.class.getSimpleName());
 
-    private final boolean finest = logger.isLoggable(Level.FINEST);
+    protected final boolean finest = logger.isLoggable(Level.FINEST);
 
     protected final JsonConvert jsonConvert = JsonFactory.root().getConvert();
 
@@ -127,7 +127,7 @@ public final class SncpClient {
 
     private final Class serviceClass;
 
-    protected final InetSocketAddress address;
+    protected final InetSocketAddress clientAddress;
 
     private final byte[] addrBytes;
 
@@ -141,13 +141,12 @@ public final class SncpClient {
 
     protected final Consumer<Runnable> executor;
 
-    public SncpClient(final String serviceName, final Consumer<Runnable> executor, final DLong serviceid, boolean remote, final Class serviceClass,
-            final InetSocketAddress clientAddress) {
+    public SncpClient(final String serviceName, final Consumer<Runnable> executor, final DLong serviceid, boolean remote,
+            final Class serviceClass, final InetSocketAddress clientAddress) {
         this.remote = remote;
         this.executor = executor;
         this.serviceClass = serviceClass;
-        this.address = clientAddress;
-        //if (subLocalClass != null && !serviceClass.isAssignableFrom(subLocalClass)) throw new RuntimeException(subLocalClass + " is not " + serviceClass + " sub class ");
+        this.clientAddress = clientAddress;
         this.name = serviceName;
         this.nameid = Sncp.hash(serviceName);
         this.serviceid = serviceid;
@@ -163,7 +162,7 @@ public final class SncpClient {
     }
 
     public InetSocketAddress getClientAddress() {
-        return address;
+        return clientAddress;
     }
 
     public DLong getNameid() {
@@ -183,7 +182,7 @@ public final class SncpClient {
         String service = serviceClass.getName();
         if (remote) service = service.replace(Sncp.LOCALPREFIX, Sncp.REMOTEPREFIX);
         return this.getClass().getSimpleName() + "(service = " + service + ", serviceid = " + serviceid + ", nameid = " + nameid
-                + ", name = '" + name + "', address = " + (address == null ? "" : (address.getHostString() + ":" + address.getPort()))
+                + ", name = '" + name + "', address = " + (clientAddress == null ? "" : (clientAddress.getHostString() + ":" + clientAddress.getPort()))
                 + ", actions.size = " + actions.length + ")";
     }
 
@@ -299,7 +298,7 @@ public final class SncpClient {
 
     private Future<byte[]> remote0(final CompletionHandler handler, final BsonConvert convert, final Transport transport, final SocketAddress addr0, final SncpAction action, final Object... params) {
         Type[] myparamtypes = action.paramTypes;
-        if (action.addressSourceParamIndex >= 0) params[action.addressSourceParamIndex] = this.address;
+        if (action.addressSourceParamIndex >= 0) params[action.addressSourceParamIndex] = this.clientAddress;
         final BsonWriter writer = convert.pollBsonWriter(transport.getBufferSupplier()); // 将head写入
         writer.writeTo(DEFAULT_HEADER);
         for (int i = 0; i < params.length; i++) {

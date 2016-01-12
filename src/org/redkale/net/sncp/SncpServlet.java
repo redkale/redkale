@@ -13,7 +13,7 @@ import org.redkale.util.*;
  * <p> 详情见: http://www.redkale.org
  * @author zhangjx
  */
-public abstract class SncpServlet extends Servlet<SncpRequest, SncpResponse> {
+public abstract class SncpServlet extends Servlet<SncpRequest, SncpResponse> implements Comparable<SncpServlet> {
 
     AnyValue conf;
 
@@ -29,5 +29,10 @@ public abstract class SncpServlet extends Servlet<SncpRequest, SncpResponse> {
     @Override
     public final int hashCode() {
         return this.getClass().hashCode();
+    }
+    
+    @Override
+    public int compareTo(SncpServlet o) {
+        return 0;
     }
 }

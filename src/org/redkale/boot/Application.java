@@ -562,6 +562,26 @@ public final class Application {
         System.exit(0);
     }
 
+    Set<String> findSncpGroups(Transport sameGroupTransport, Collection<Transport> diffGroupTransports) {
+        Set<String> gs = new HashSet<>();
+        if (sameGroupTransport != null) gs.add(sameGroupTransport.getName());
+        if (diffGroupTransports != null) {
+            for (Transport t : diffGroupTransports) {
+                gs.add(t.getName());
+            }
+        }
+        return gs;
+    }
+
+    NodeSncpServer findNodeSncpServer(final InetSocketAddress sncpAddr) {
+        for (NodeServer node : servers) {
+            if (node.isSNCP() && sncpAddr.equals(node.getSncpAddress())) {
+                return (NodeSncpServer) node;
+            }
+        }
+        return null;
+    }
+
     String findGroupProtocol(String group) {
         if (group == null) return null;
         return globalGroupProtocols.get(group);

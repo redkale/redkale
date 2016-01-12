@@ -16,7 +16,9 @@ import org.redkale.watch.*;
 /**
  * Service Node Communicate Protocol
  *
- * <p> 详情见: http://www.redkale.org
+ * <p>
+ * 详情见: http://www.redkale.org
+ *
  * @author zhangjx
  */
 public final class SncpServer extends Server {
@@ -34,8 +36,10 @@ public final class SncpServer extends Server {
         super.init(config);
     }
 
-    public void addService(ServiceWrapper entry) {
-        ((SncpPrepareServlet) this.prepare).addSncpServlet(new SncpDynServlet(BsonFactory.root().getConvert(), entry.getName(), entry.getType(), entry.getService(), entry.getConf()));
+    public SncpDynServlet addService(ServiceWrapper entry) {
+        SncpDynServlet sds = new SncpDynServlet(BsonFactory.root().getConvert(), entry.getName(), entry.getType(), entry.getService(), entry.getConf());
+        ((SncpPrepareServlet) this.prepare).addSncpServlet(sds);
+        return sds;
     }
 
     public List<SncpServlet> getSncpServlets() {
