@@ -12,17 +12,19 @@ import org.redkale.service.Service;
 import org.redkale.net.sncp.SncpServer;
 import org.redkale.convert.bson.BsonConvert;
 import org.redkale.util.Utility;
-import org.redkale.boot.ClassFilter;
 import org.redkale.net.sncp.ServiceWrapper;
 import org.redkale.util.AnyValue;
 import org.redkale.watch.WatchFactory;
 import org.redkale.util.ResourceFactory;
 import java.io.*;
 import java.net.*;
+import java.nio.*;
+import java.nio.channels.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 import java.util.logging.*;
+import org.redkale.util.*;
 
 /**
  *
@@ -36,7 +38,7 @@ public class SncpTest {
 
     private static final int port = 4040;
 
-    private static final int port2 = 0; // 4240;
+    private static final int port2 = 4240;
 
     public static void main(String[] args) throws Exception {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -59,13 +61,34 @@ public class SncpTest {
         }
     }
 
+    public static AsynchronousChannelGroup newChannelGroup() throws IOException {
+        final AtomicInteger counter = new AtomicInteger();
+        ExecutorService transportExec = Executors.newFixedThreadPool(16, (Runnable r) -> {
+            Thread t = new Thread(r);
+            t.setDaemon(true);
+            t.setName("Transport-Thread-" + counter.incrementAndGet());
+            return t;
+        });
+        return AsynchronousChannelGroup.withCachedThreadPool(transportExec, 1);
+    }
+
+    public static ObjectPool<ByteBuffer> newBufferPool() {
+        return new ObjectPool<>(new AtomicLong(), new AtomicLong(), 16,
+                (Object... params) -> ByteBuffer.allocateDirect(8192), null, (e) -> {
+                    if (e == null || e.isReadOnly() || e.capacity() != 8192) return false;
+                    e.clear();
+                    return true;
+                });
+    }
+
     private static void runClient() throws Exception {
         InetSocketAddress addr = new InetSocketAddress(myhost, port);
         Set<InetSocketAddress> set = new LinkedHashSet<>();
         set.add(addr);
         if (port2 > 0) set.add(new InetSocketAddress(myhost, port2));
-        final Transport transport = new Transport("", WatchFactory.root(), 50, set);
-        final SncpTestService service = Sncp.createRemoteService(serviceName, null, SncpTestService.class, null, new LinkedHashSet<>(), transport);
+        //String name, WatchFactory, ObjectPool<ByteBuffer>, AsynchronousChannelGroup, InetSocketAddress clientAddress, Collection<InetSocketAddress>
+        final Transport transport = new Transport("", WatchFactory.root(), newBufferPool(), newChannelGroup(), null, set);
+        final SncpTestService service = Sncp.createRemoteService(serviceName, null, SncpTestService.class, null, transport);
         ResourceFactory.root().inject(service);
 
 //        SncpTestBean bean = new SncpTestBean();
@@ -123,18 +146,20 @@ public class SncpTest {
         InetSocketAddress addr = new InetSocketAddress(myhost, port);
         final CountDownLatch cdl = new CountDownLatch(1);
         new Thread() {
+            {
+                setName("Thread-Server-01");
+            }
             @Override
             public void run() {
                 try {
                     SncpServer server = new SncpServer();
                     Set<InetSocketAddress> set = new LinkedHashSet<>();
                     if (port2 > 0) set.add(new InetSocketAddress(myhost, port2));
-                    Transport transport = new Transport("", WatchFactory.root(), 50, set);
-                    List<Transport> sameTransports = new ArrayList<>();
-                    if (port2 > 0) sameTransports.add(transport);
-                    SncpTestService service = Sncp.createLocalService("", null, SncpTestService.class, addr, new LinkedHashSet<>(), sameTransports, null);
+                    //String name, WatchFactory, ObjectPool<ByteBuffer>, AsynchronousChannelGroup, InetSocketAddress clientAddress, Collection<InetSocketAddress>
+                    final Transport transport = new Transport("", WatchFactory.root(), newBufferPool(), newChannelGroup(), null, set);
+                    SncpTestService service = Sncp.createLocalService("", null, SncpTestService.class, addr, transport, null);
                     ResourceFactory.root().inject(service);
-                    server.addService(new ServiceWrapper(SncpTestService.class, service, "", new ClassFilter.FilterEntry(SncpTestService.class, null)));
+                    server.addService(new ServiceWrapper(SncpTestService.class, service, "", "", new HashSet<>(), null));
                     System.out.println(service);
                     AnyValue.DefaultAnyValue conf = new AnyValue.DefaultAnyValue();
                     conf.addValue("host", "0.0.0.0");
@@ -154,17 +179,19 @@ public class SncpTest {
         InetSocketAddress addr = new InetSocketAddress(myhost, port2);
         final CountDownLatch cdl = new CountDownLatch(1);
         new Thread() {
+            {
+                setName("Thread-Server-02");
+            }
             @Override
             public void run() {
                 try {
                     SncpServer server = new SncpServer();
                     Set<InetSocketAddress> set = new LinkedHashSet<>();
                     set.add(new InetSocketAddress(myhost, port));
-                    Transport transport = new Transport("", WatchFactory.root(), 50, set);
-                    List<Transport> sameTransports = new ArrayList<>();
-                    sameTransports.add(transport);
-                    Service service = Sncp.createLocalService("", null, SncpTestService.class, addr, new LinkedHashSet<>(), sameTransports, null);
-                    server.addService(new ServiceWrapper(SncpTestService.class, service, "", new ClassFilter.FilterEntry(SncpTestService.class, null)));
+                    //String name, WatchFactory, ObjectPool<ByteBuffer>, AsynchronousChannelGroup, InetSocketAddress clientAddress, Collection<InetSocketAddress>
+                    final Transport transport = new Transport("", WatchFactory.root(), newBufferPool(), newChannelGroup(), null, set);
+                    Service service = Sncp.createLocalService("", null, SncpTestService.class, addr, transport, null);
+                    server.addService(new ServiceWrapper(SncpTestService.class, service, "", "", new HashSet<>(), null));
                     AnyValue.DefaultAnyValue conf = new AnyValue.DefaultAnyValue();
                     conf.addValue("host", "0.0.0.0");
                     conf.addValue("port", "" + port2);

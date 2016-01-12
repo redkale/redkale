@@ -7,7 +7,6 @@ package org.redkale.test.sncp;
 
 import java.lang.reflect.*;
 import java.net.*;
-import java.util.*;
 import org.redkale.net.sncp.*;
 import org.redkale.service.*;
 import org.redkale.util.Attribute;
@@ -69,29 +68,30 @@ public class SncpTestService implements SncpTestIService {
     }
 
     public static void main(String[] args) throws Exception {
-        Service service = Sncp.createLocalService("", null, SncpTestService.class, new InetSocketAddress("127.0.0.1", 7070), new HashSet(), null, null);
-        for(Method method :service.getClass().getDeclaredMethods()) {
+        Service service = Sncp.createLocalService("", null, SncpTestService.class, new InetSocketAddress("127.0.0.1", 7070), null, null);
+        for (Method method : service.getClass().getDeclaredMethods()) {
             System.out.println(method);
         }
         System.out.println("-----------------------------------");
-        for(Method method :SncpClient.parseMethod(service.getClass())) { 
+        for (Method method : SncpClient.parseMethod(service.getClass())) {
             System.out.println(method);
         }
         System.out.println("-----------------------------------");
-        service = Sncp.createRemoteService("", null, SncpTestService.class, new InetSocketAddress("127.0.0.1", 7070), new HashSet(), null);
-        for(Method method :service.getClass().getDeclaredMethods()) {
+        service = Sncp.createRemoteService("", null, SncpTestService.class, new InetSocketAddress("127.0.0.1", 7070), null);
+        for (Method method : service.getClass().getDeclaredMethods()) {
             System.out.println(method);
         }
         System.out.println("-----------------------------------");
-        for(Method method :SncpClient.parseMethod(service.getClass())) { 
-            System.out.println(method);
-        }
-        System.out.println("-----------------------------------");service = Sncp.createRemoteService("", null, SncpTestIService.class, new InetSocketAddress("127.0.0.1", 7070), new HashSet(), null);
-        for(Method method :service.getClass().getDeclaredMethods()) {
+        for (Method method : SncpClient.parseMethod(service.getClass())) {
             System.out.println(method);
         }
         System.out.println("-----------------------------------");
-        for(Method method :SncpClient.parseMethod(service.getClass())) { 
+        service = Sncp.createRemoteService("", null, SncpTestIService.class, new InetSocketAddress("127.0.0.1", 7070), null);
+        for (Method method : service.getClass().getDeclaredMethods()) {
+            System.out.println(method);
+        }
+        System.out.println("-----------------------------------");
+        for (Method method : SncpClient.parseMethod(service.getClass())) {
             System.out.println(method);
         }
         System.out.println("-----------------------------------");
