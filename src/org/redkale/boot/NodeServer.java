@@ -48,7 +48,7 @@ public abstract class NodeServer {
     protected final boolean fine;
 
     //日志是否为FINE级别
-    protected final boolean finest;
+    protected final boolean finer;
 
     //进程主类
     protected final Application application;
@@ -77,7 +77,7 @@ public abstract class NodeServer {
         this.server = server;
         this.logger = Logger.getLogger(this.getClass().getSimpleName());
         this.fine = logger.isLoggable(Level.FINE);
-        this.finest = logger.isLoggable(Level.FINEST);
+        this.finer = logger.isLoggable(Level.FINER);
     }
 
     protected Consumer<Runnable> getExecutor() throws Exception {
@@ -241,9 +241,9 @@ public abstract class NodeServer {
                     Set<String> gs = application.findSncpGroups(sameGroupTransport, diffGroupTransports);
                     ServiceWrapper wrapper = new ServiceWrapper(CacheSourceService.class, (Service) source, resourceName, sncpServer.getSncpGroup(), gs, null);
                     sncpServer.getSncpServer().addService(wrapper);
-                    if (finest) logger.finest("[" + Thread.currentThread().getName() + "] Load Service " + wrapper.getService());
+                    if (finer) logger.finer("[" + Thread.currentThread().getName() + "] Load Service " + wrapper.getService());
                 }
-                logger.finest("[" + Thread.currentThread().getName() + "] Load Source " + source);
+                logger.finer("[" + Thread.currentThread().getName() + "] Load Source " + source);
             } catch (Exception e) {
                 logger.log(Level.SEVERE, "DataSource inject error", e);
             }
