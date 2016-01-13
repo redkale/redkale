@@ -358,14 +358,7 @@ public final class ClassFilter<T> {
             for (final URL url : urljares) {
                 Set<String> classes = cache.get(url);
                 if (classes == null) {
-                    synchronized (cache) {
-                        if (cache.get(url) == null) {
-                            classes = new CopyOnWriteArraySet<>();
-                            cache.put(url, classes);
-                        } else {
-                            classes = cache.get(url);
-                        }
-                    }
+                    classes = new LinkedHashSet<>();
                     try (JarFile jar = new JarFile(URLDecoder.decode(url.getFile(), "UTF-8"))) {
                         Enumeration<JarEntry> it = jar.entries();
                         while (it.hasMoreElements()) {
@@ -381,6 +374,7 @@ public final class ClassFilter<T> {
                             }
                         }
                     }
+                    cache.put(url, classes);
                 } else {
                     for (String classname : classes) {
                         for (final ClassFilter filter : filters) {
@@ -392,14 +386,7 @@ public final class ClassFilter<T> {
             for (final URL url : urlfiles) {
                 Set<String> classes = cache.get(url);
                 if (classes == null) {
-                    synchronized (cache) {
-                        if (cache.get(url) == null) {
-                            classes = new CopyOnWriteArraySet<>();
-                            cache.put(url, classes);
-                        } else {
-                            classes = cache.get(url);
-                        }
-                    }
+                    classes = new LinkedHashSet<>();
                     files.clear();
                     File root = new File(url.getFile());
                     String rootpath = root.getPath();
@@ -413,6 +400,7 @@ public final class ClassFilter<T> {
                             if (filter != null) filter.filter(null, classname);
                         }
                     }
+                    cache.put(url, classes);
                 } else {
                     for (String classname : classes) {
                         for (final ClassFilter filter : filters) {

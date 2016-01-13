@@ -18,6 +18,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
 import java.net.*;
 import java.util.*;
+import java.util.concurrent.*;
 import java.util.function.Consumer;
 import java.util.logging.*;
 import javax.annotation.*;
@@ -57,7 +58,7 @@ public abstract class NodeServer {
 
     private String sncpGroup = null;  //当前Server的SNCP协议的组
 
-    private InetSocketAddress sncpAddress; //HttpServer中的sncpAddress 为所属group对应的SncpServer, 为null表示只是单节点，没有分布式结构
+    private InetSocketAddress sncpAddress; //SNCP服务的地址， 非SNCP为null
 
     protected Consumer<ServiceWrapper> consumer;
 
@@ -175,10 +176,10 @@ public abstract class NodeServer {
                     ts.setAccessible(true);
                     client = (SncpClient) ts.get(src);
                 } catch (Exception e) {
-                    //src 不含 MultiRun 方法
+                    throw new RuntimeException(src.getClass().getName() + " not found _sameGroupTransport or _diffGroupTransports at " + field, e);
                 }
                 final InetSocketAddress sncpAddr = client == null ? null : client.getClientAddress();
-                if (sncpAddr != null && factory.find(resourceName, DataCacheListener.class) == null) {
+                if ((src instanceof DataSource) && sncpAddr != null && factory.find(resourceName, DataCacheListener.class) == null) { //只有DataSourceService 才能赋值 DataCacheListener
                     Service cacheListenerService = Sncp.createLocalService(resourceName, getExecutor(), DataCacheListenerService.class, sncpAddr, sameGroupTransport, diffGroupTransports);
                     regFactory.register(resourceName, DataCacheListener.class, cacheListenerService);
                     final NodeSncpServer sncpServer = application.findNodeSncpServer(sncpAddr);
@@ -216,10 +217,10 @@ public abstract class NodeServer {
                     ts.setAccessible(true);
                     client = (SncpClient) ts.get(src);
                 } catch (Exception e) {
-                    //src 不含 MultiRun 方法
+                    throw new RuntimeException(src.getClass().getName() + " not found _sameGroupTransport or _diffGroupTransports at " + field, e);
                 }
                 final InetSocketAddress sncpAddr = client == null ? null : client.getClientAddress();
-                CacheSourceService source = Sncp.createLocalService(resourceName, getExecutor(), CacheSourceService.class, sncpAddr, sameGroupTransport, diffGroupTransports);
+                final CacheSourceService source = Sncp.createLocalService(resourceName, getExecutor(), CacheSourceService.class, sncpAddr, sameGroupTransport, diffGroupTransports);
                 Type genericType = field.getGenericType();
                 ParameterizedType pt = (genericType instanceof ParameterizedType) ? (ParameterizedType) genericType : null;
                 Type valType = pt == null ? null : pt.getActualTypeArguments()[1];
@@ -231,7 +232,7 @@ public abstract class NodeServer {
                 rf.inject(source, self); //
                 ((Service) source).init(null);
 
-                if (sncpAddr != null) {
+                if ((src instanceof WebSocketNodeService) && sncpAddr != null) { //只有WebSocketNodeService的服务才需要给SNCP服务注入CacheSourceService
                     NodeSncpServer sncpServer = application.findNodeSncpServer(sncpAddr);
                     Set<String> gs = application.findSncpGroups(sameGroupTransport, diffGroupTransports);
                     ServiceWrapper wrapper = new ServiceWrapper(CacheSourceService.class, (Service) source, resourceName, sncpServer.getSncpGroup(), gs, null);
@@ -304,16 +305,19 @@ public abstract class NodeServer {
         Collections.sort(swlist);
         localServiceWrappers.clear();
         localServiceWrappers.addAll(swlist);
+        final List<String> slist = sb == null ? null : new CopyOnWriteArrayList<>();
         localServiceWrappers.parallelStream().forEach(y -> {
             long s = System.currentTimeMillis();
             y.getService().init(y.getConf());
             long e = System.currentTimeMillis() - s;
-            if (sb != null) {
-                synchronized (sb) { //parallelStream 必须要锁
-                    sb.append(threadName).append(y.toSimpleString()).append(" loaded and init ").append(e).append(" ms").append(LINE_SEPARATOR);
-                }
-            }
+            if (slist != null) slist.add(new StringBuilder().append(threadName).append(y.toSimpleString()).append(" loaded and init ").append(e).append(" ms").append(LINE_SEPARATOR).toString());
         });
+        Collections.sort(slist);
+        if (slist != null && sb != null) {
+            for (String s : slist) {
+                sb.append(s);
+            }
+        }
         if (sb != null && sb.length() > 0) logger.log(Level.INFO, sb.toString());
     }
 

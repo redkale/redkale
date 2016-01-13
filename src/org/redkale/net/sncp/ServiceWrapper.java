@@ -52,8 +52,8 @@ public final class ServiceWrapper<T extends Service> implements Comparable<Servi
         ResourceType rty = service.getClass().getAnnotation(ResourceType.class);
         this.resTypes = rty == null ? new Class[]{this.type} : rty.value();
 
-        maxNameLength = Math.max(maxNameLength, name.length() + 1);
-        maxClassNameLength = Math.max(maxClassNameLength, type.getName().length());
+        maxNameLength = Math.max(maxNameLength, name.length());
+        maxClassNameLength = Math.max(maxClassNameLength, type.getName().length() + 1);
     }
 
     public String toSimpleString() {

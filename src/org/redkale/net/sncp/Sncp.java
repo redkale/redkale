@@ -184,7 +184,6 @@ public abstract class Sncp {
         if (!java.lang.reflect.Modifier.isPublic(mod)) return serviceClass;
         if (java.lang.reflect.Modifier.isAbstract(mod)) return serviceClass;
         final List<Method> methods = SncpClient.parseMethod(serviceClass);
-        final boolean hasMultiRun = methods.stream().filter(x -> x.getAnnotation(MultiRun.class) != null).findAny().isPresent();
         final String supDynName = serviceClass.getName().replace('.', '/');
         final String clientName = SncpClient.class.getName().replace('.', '/');
         final String clientDesc = Type.getDescriptor(SncpClient.class);
@@ -238,26 +237,26 @@ public abstract class Sncp {
             }
             av0.visitEnd();
         }
-        if (hasMultiRun) {
-            {
-                fv = cw.visitField(ACC_PRIVATE, "_convert", convertDesc, null, null);
-                av0 = fv.visitAnnotation("Ljavax/annotation/Resource;", true);
-                av0.visitEnd();
-                fv.visitEnd();
-            }
-            {
-                fv = cw.visitField(ACC_PRIVATE, "_sameGroupTransport", transportDesc, null, null);
-                fv.visitEnd();
-            }
-            {
-                fv = cw.visitField(ACC_PRIVATE, "_diffGroupTransports", transportsDesc, null, null);
-                fv.visitEnd();
-            }
-            {
-                fv = cw.visitField(ACC_PRIVATE, "_client", clientDesc, null, null);
-                fv.visitEnd();
-            }
+
+        {
+            fv = cw.visitField(ACC_PRIVATE, "_convert", convertDesc, null, null);
+            av0 = fv.visitAnnotation("Ljavax/annotation/Resource;", true);
+            av0.visitEnd();
+            fv.visitEnd();
         }
+        {
+            fv = cw.visitField(ACC_PRIVATE, "_sameGroupTransport", transportDesc, null, null);
+            fv.visitEnd();
+        }
+        {
+            fv = cw.visitField(ACC_PRIVATE, "_diffGroupTransports", transportsDesc, null, null);
+            fv.visitEnd();
+        }
+        {
+            fv = cw.visitField(ACC_PRIVATE, "_client", clientDesc, null, null);
+            fv.visitEnd();
+        }
+
         {
             fv = cw.visitField(ACC_PRIVATE, "_selfstring", "Ljava/lang/String;", null, null);
             fv.visitEnd();

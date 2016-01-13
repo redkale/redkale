@@ -96,10 +96,10 @@ public final class NodeHttpServer extends NodeServer {
         list.sort((FilterEntry<? extends Servlet> o1, FilterEntry<? extends Servlet> o2) -> {  //必须保证WebSocketServlet优先加载， 因为要确保其他的HttpServlet可以注入本地模式的WebSocketNode
             boolean ws1 = WebSocketServlet.class.isAssignableFrom(o1.getType());
             boolean ws2 = WebSocketServlet.class.isAssignableFrom(o2.getType());
-            if (ws1 == ws2) return 0;
+            if (ws1 == ws2) return o1.getType().getName().compareTo(o2.getType().getName());
             return ws1 ? -1 : 1;
-        }
-        );
+        });
+        final List<AbstractMap.SimpleEntry<String, String[]>> ss = sb == null ? null : new ArrayList<>();
         for (FilterEntry<? extends Servlet> en : list) {
             Class<HttpServlet> clazz = (Class<HttpServlet>) en.getType();
             if (Modifier.isAbstract(clazz.getModifiers())) continue;
@@ -122,7 +122,21 @@ public final class NodeHttpServer extends NodeServer {
                 }
             }
             this.httpServer.addHttpServlet(servlet, servletConf, mappings);
-            if (sb != null) sb.append(threadName).append(" Loaded ").append(clazz.getName()).append(" --> ").append(Arrays.toString(mappings)).append(LINE_SEPARATOR);
+            if (ss != null) ss.add(new AbstractMap.SimpleEntry<>(clazz.getName(), mappings));
+        }
+        if (ss != null) {
+            Collections.sort(ss, (AbstractMap.SimpleEntry<String, String[]> o1, AbstractMap.SimpleEntry<String, String[]> o2) -> o1.getKey().compareTo(o2.getKey()));
+            int max = 0;
+            for (AbstractMap.SimpleEntry<String, String[]> as : ss) {
+                if (as.getKey().length() > max) max = as.getKey().length();
+            }
+            for (AbstractMap.SimpleEntry<String, String[]> as : ss) {
+                sb.append(threadName).append(" Loaded ").append(as.getKey());
+                for (int i = 0; i < max - as.getKey().length(); i++) {
+                    sb.append(' ');
+                }
+                sb.append("  mapping to  ").append(Arrays.toString(as.getValue())).append(LINE_SEPARATOR);
+            }
         }
         if (sb != null && sb.length() > 0) logger.log(Level.FINE, sb.toString());
     }

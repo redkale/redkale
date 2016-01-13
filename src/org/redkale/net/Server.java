@@ -128,7 +128,7 @@ public abstract class Server {
         serverChannel.bind(address, backlog);
         serverChannel.accept();
         final String threadName = "[" + Thread.currentThread().getName() + "] ";
-        logger.info(threadName + this.getClass().getSimpleName() + "." + protocol + " listen: " + address
+        logger.info(threadName + this.getClass().getSimpleName() + ("TCP".equalsIgnoreCase(protocol) ? "" : ("." + protocol)) + " listen: " + address
                 + ", threads: " + threads + ", bufferCapacity: " + bufferCapacity + ", bufferPoolSize: " + bufferPoolSize + ", responsePoolSize: " + responsePoolSize
                 + ", started in " + (System.currentTimeMillis() - context.getServerStartTime()) + " ms");
     }
@@ -156,8 +156,8 @@ public abstract class Server {
         return new DecimalFormat(sf);
     }
 
-    public static void loadLib(final Logger logger, final String lib) throws Exception {
-        if (lib == null || lib.isEmpty()) return;
+    public static URL[] loadLib(final Logger logger, final String lib) throws Exception {
+        if (lib == null || lib.isEmpty()) return new URL[0];
         final Set<URL> set = new HashSet<>();
         for (String s : lib.split(";")) {
             if (s.isEmpty()) continue;
@@ -173,7 +173,7 @@ public abstract class Server {
                 if (f.canRead()) set.add(f.toURI().toURL());
             }
         }
-        if (set.isEmpty()) return;
+        if (set.isEmpty()) return new URL[0];
         ClassLoader cl = Thread.currentThread().getContextClassLoader();
         if (cl instanceof URLClassLoader) {
             URLClassLoader loader = (URLClassLoader) cl;
@@ -186,6 +186,9 @@ public abstract class Server {
         } else {
             Thread.currentThread().setContextClassLoader(new URLClassLoader(set.toArray(new URL[set.size()]), cl));
         }
+        List<URL> list = new ArrayList<>(set);
+        Collections.sort(list, (URL o1, URL o2) -> o1.getFile().compareTo(o2.getFile()));
+        return list.toArray(new URL[list.size()]);
     }
 
 }
