@@ -111,11 +111,11 @@
     <span class="nt">&lt;server</span> <span class="na">protocol=</span><span class="s">&quot;SNCP&quot;</span> <span class="na">port=</span><span class="s">&quot;7070&quot;</span><span class="nt">&gt;</span> 
         <span class="nt">&lt;services</span> <span class="na">autoload=</span><span class="s">&quot;true&quot;</span>  <span class="na">groups=</span><span class="s">&quot;ALL&quot;</span><span class="nt">&gt;</span>
             <span class="c">&lt;!-- 有WebSocketServlet的服务必须配置WebSocketNodeService，且RedKale同时会自动创建一个同名(ws_notify)的 CacheSource --&gt;</span>
-            <span class="nt">&lt;service</span> <span class="na">name=</span><span class="s">&quot;ws_notify&quot;</span> <span class="na">value=</span><span class="s">&quot;org.redkale.service.WebSocketNodeService&quot;</span><span class="nt">/&gt;</span>
+            <span class="nt">&lt;service</span> <span class="na">name=</span><span class="s">&quot;ws_notify&quot;</span> <span class="na">value=</span><span class="s">&quot;<b>org.redkale.service.WebSocketNodeService</b>&quot;</span><span class="nt">/&gt;</span>
             <span class="c">&lt;!-- 存在DataSource必须配置DataSourceService --&gt;</span>
-            <span class="nt">&lt;service</span> <span class="na">name=</span><span class="s">&quot;demodb&quot;</span> <span class="na">value=</span><span class="s">&quot;org.redkale.service.DataSourceService&quot;</span><span class="nt">/&gt;</span>
+            <span class="nt">&lt;service</span> <span class="na">name=</span><span class="s">&quot;demodb&quot;</span> <span class="na">value=</span><span class="s">&quot;<b>org.redkale.service.DataSourceService</b>&quot;</span><span class="nt">/&gt;</span>
             <span class="c">&lt;!-- 存放用户HTTP session信息的CacheSource --&gt;</span>
-            <span class="nt">&lt;service</span> <span class="na">name=</span><span class="s">&quot;usersessions&quot;</span> <span class="na">value=</span><span class="s">&quot;org.redkale.service.CacheSourceService&quot;</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;service</span> <span class="na">name=</span><span class="s">&quot;usersessions&quot;</span> <span class="na">value=</span><span class="s">&quot;<b>org.redkale.service.CacheSourceService</b>&quot;</span><span class="nt">&gt;</span>
                 <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">&quot;key-type&quot;</span> <span class="na">value=</span><span class="s">&quot;java.lang.String&quot;</span><span class="nt">/&gt;</span>
                 <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">&quot;value-type&quot;</span> <span class="na">value=</span><span class="s">&quot;java.lang.Integer&quot;</span><span class="nt">/&gt;</span>
             <span class="nt">&lt;/service&gt;</span>
@@ -145,7 +145,7 @@
         <span class="nt">&lt;/request&gt;</span>
         <span class="nt">&lt;services</span> <span class="na">autoload=</span><span class="s">&quot;true&quot;</span> <span class="na">groups=</span><span class="s">&quot;ALL&quot;</span><span class="nt">&gt;</span>
             <span class="c">&lt;!-- 有WebSocketServlet的服务必须配置WebSocketNodeService，且RedKale同时会自动创建一个同名(ws_notify)的 CacheSource --&gt;</span>
-            <span class="nt">&lt;service</span> <span class="na">name=</span><span class="s">&quot;ws_notify&quot;</span> <span class="na">value=</span><span class="s">&quot;org.redkale.service.WebSocketNodeService&quot;</span><span class="nt">/&gt;</span>
+            <span class="nt">&lt;service</span> <span class="na">name=</span><span class="s">&quot;ws_notify&quot;</span> <span class="na">value=</span><span class="s">&quot;<b>org.redkale.service.WebSocketNodeService</b>&quot;</span><span class="nt">/&gt;</span>
         <span class="nt">&lt;/services&gt;</span>
         <span class="nt">&lt;servlets</span> <span class="na">autoload=</span><span class="s">&quot;true&quot;</span> <span class="nt">/&gt;</span>
     <span class="nt">&lt;/server&gt;</span> 	
@@ -163,11 +163,11 @@
     <span class="nt">&lt;server</span> <span class="na">protocol=</span><span class="s">&quot;SNCP&quot;</span> <span class="na">port=</span><span class="s">&quot;7070&quot;</span><span class="nt">&gt;</span> 
         <span class="nt">&lt;services</span> <span class="na">autoload=</span><span class="s">&quot;true&quot;</span> <span class="na">groups=</span><span class="s">&quot;ALL&quot;</span><span class="nt">&gt;</span>
             <span class="c">&lt;!-- 有WebSocketServlet的服务必须配置WebSocketNodeService，且RedKale同时会自动创建一个同名(ws_notify)的 CacheSource --&gt;</span>
-            <span class="nt">&lt;service</span> <span class="na">name=</span><span class="s">&quot;ws_notify&quot;</span> <span class="na">value=</span><span class="s">&quot;org.redkale.service.WebSocketNodeService&quot;</span><span class="nt">/&gt;</span>
+            <span class="nt">&lt;service</span> <span class="na">name=</span><span class="s">&quot;ws_notify&quot;</span> <span class="na">value=</span><span class="s">&quot;<b>org.redkale.service.WebSocketNodeService</b>&quot;</span><span class="nt">/&gt;</span>
             <span class="c">&lt;!-- 存在DataSource必须配置DataSourceService --&gt;</span>
-            <span class="nt">&lt;service</span> <span class="na">name=</span><span class="s">&quot;demodb&quot;</span> <span class="na">value=</span><span class="s">&quot;org.redkale.service.DataSourceService&quot;</span><span class="nt">/&gt;</span>
+            <span class="nt">&lt;service</span> <span class="na">name=</span><span class="s">&quot;demodb&quot;</span> <span class="na">value=</span><span class="s">&quot;<b>org.redkale.service.DataSourceService</b>&quot;</span><span class="nt">/&gt;</span>
             <span class="c">&lt;!-- 存放用户HTTP session信息的CacheSource --&gt;</span>
-            <span class="nt">&lt;service</span> <span class="na">name=</span><span class="s">&quot;usersessions&quot;</span> <span class="na">value=</span><span class="s">&quot;org.redkale.service.CacheSourceService&quot;</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;service</span> <span class="na">name=</span><span class="s">&quot;usersessions&quot;</span> <span class="na">value=</span><span class="s">&quot;<b>org.redkale.service.CacheSourceService</b>&quot;</span><span class="nt">&gt;</span>
                 <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">&quot;key-type&quot;</span> <span class="na">value=</span><span class="s">&quot;java.lang.String&quot;</span><span class="nt">/&gt;</span>
                 <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">&quot;value-type&quot;</span> <span class="na">value=</span><span class="s">&quot;java.lang.Integer&quot;</span><span class="nt">/&gt;</span>
             <span class="nt">&lt;/service&gt;</span>
@@ -208,7 +208,7 @@
             <span class="nt">&lt;service</span> <span class="na">value=</span><span class="s">&quot;org.redkale.demo.NotifyService&quot;</span> <span class="na">groups=</span><span class="s">&quot;NOTIFY_SERVICE&quot;</span><span class="nt">/&gt;</span>
             <span class="nt">&lt;service</span> <span class="na">value=</span><span class="s">&quot;org.redkale.demo.ForumService&quot;</span> <span class="na">groups=</span><span class="s">&quot;FORUM_SERVICE&quot;</span><span class="nt">/&gt;</span>
             <span class="c">&lt;!-- 有WebSocketServlet的服务必须配置WebSocketNodeService，且RedKale同时会自动创建一个同名(ws_notify)的 CacheSource --&gt;</span>
-            <span class="nt">&lt;service</span> <span class="na">name=</span><span class="s">&quot;ws_notify&quot;</span> <span class="na">value=</span><span class="s">&quot;org.redkale.service.WebSocketNodeService&quot;</span> <span class="na">groups=</span><span class="s">&quot;NOTIFY_SERVICE&quot;</span><span class="nt">/&gt;</span>
+            <span class="nt">&lt;service</span> <span class="na">name=</span><span class="s">&quot;ws_notify&quot;</span> <span class="na">value=</span><span class="s">&quot;<b>org.redkale.service.WebSocketNodeService</b>&quot;</span> <span class="na">groups=</span><span class="s">&quot;NOTIFY_SERVICE&quot;</span><span class="nt">/&gt;</span>
         <span class="nt">&lt;/services&gt;</span>
         <span class="nt">&lt;servlets</span> <span class="na">autoload=</span><span class="s">&quot;true&quot;</span> <span class="nt">/&gt;</span>
     <span class="nt">&lt;/server&gt;</span> 	
@@ -236,9 +236,9 @@
             <span class="nt">&lt;service</span> <span class="na">value=</span><span class="s">&quot;org.redkale.demo.NotifyService&quot;</span> <span class="na">groups=</span><span class="s">&quot;NOTIFY_SERVICE&quot;</span><span class="nt">/&gt;</span>
             <span class="nt">&lt;service</span> <span class="na">value=</span><span class="s">&quot;org.redkale.demo.ForumService&quot;</span> <span class="na">groups=</span><span class="s">&quot;FORUM_SERVICE&quot;</span><span class="nt">/&gt;</span>
             <span class="c">&lt;!-- 存在DataSource必须配置DataSourceService --&gt;</span>
-            <span class="nt">&lt;service</span> <span class="na">name=</span><span class="s">&quot;demodb&quot;</span> <span class="na">value=</span><span class="s">&quot;org.redkale.service.DataSourceService&quot;</span> <span class="na">groups=</span><span class="s">&quot;USER_SERVICE&quot;</span><span class="nt">/&gt;</span>
+            <span class="nt">&lt;service</span> <span class="na">name=</span><span class="s">&quot;demodb&quot;</span> <span class="na">value=</span><span class="s">&quot;<b>org.redkale.service.DataSourceService</b>&quot;</span> <span class="na">groups=</span><span class="s">&quot;USER_SERVICE&quot;</span><span class="nt">/&gt;</span>
             <span class="c">&lt;!-- 存放用户HTTP session信息的CacheSource --&gt;</span>
-            <span class="nt">&lt;service</span> <span class="na">name=</span><span class="s">&quot;usersessions&quot;</span> <span class="na">value=</span><span class="s">&quot;org.redkale.service.CacheSourceService&quot;</span> <span class="na">groups=</span><span class="s">&quot;USER_SERVICE&quot;</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;service</span> <span class="na">name=</span><span class="s">&quot;usersessions&quot;</span> <span class="na">value=</span><span class="s">&quot;<b>org.redkale.service.CacheSourceService</b>&quot;</span> <span class="na">groups=</span><span class="s">&quot;USER_SERVICE&quot;</span><span class="nt">&gt;</span>
                 <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">&quot;key-type&quot;</span> <span class="na">value=</span><span class="s">&quot;java.lang.String&quot;</span><span class="nt">/&gt;</span>
                 <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">&quot;value-type&quot;</span> <span class="na">value=</span><span class="s">&quot;java.lang.Integer&quot;</span><span class="nt">/&gt;</span>
             <span class="nt">&lt;/service&gt;</span>
@@ -269,9 +269,9 @@
             <span class="nt">&lt;service</span> <span class="na">value=</span><span class="s">&quot;org.redkale.demo.UserService&quot;</span> <span class="na">groups=</span><span class="s">&quot;USER_SERVICE&quot;</span><span class="nt">/&gt;</span>
             <span class="nt">&lt;service</span> <span class="na">value=</span><span class="s">&quot;org.redkale.demo.ForumService&quot;</span> <span class="na">groups=</span><span class="s">&quot;FORUM_SERVICE&quot;</span><span class="nt">/&gt;</span>
             <span class="c">&lt;!-- 有WebSocketServlet的服务必须配置WebSocketNodeService，且RedKale同时会自动创建一个同名(ws_notify)的 CacheSource --&gt;</span>
-            <span class="nt">&lt;service</span> <span class="na">name=</span><span class="s">&quot;ws_notify&quot;</span> <span class="na">value=</span><span class="s">&quot;org.redkale.service.WebSocketNodeService&quot;</span> <span class="na">groups=</span><span class="s">&quot;NOTIFY_SERVICE&quot;</span><span class="nt">/&gt;</span>
+            <span class="nt">&lt;service</span> <span class="na">name=</span><span class="s">&quot;ws_notify&quot;</span> <span class="na">value=</span><span class="s">&quot;<b>org.redkale.service.WebSocketNodeService</b>&quot;</span> <span class="na">groups=</span><span class="s">&quot;NOTIFY_SERVICE&quot;</span><span class="nt">/&gt;</span>
             <span class="c">&lt;!-- 存在DataSource必须配置DataSourceService --&gt;</span>
-            <span class="nt">&lt;service</span> <span class="na">name=</span><span class="s">&quot;demodb&quot;</span> <span class="na">value=</span><span class="s">&quot;org.redkale.service.DataSourceService&quot;</span> <span class="na">groups=</span><span class="s">&quot;NOTIFY_SERVICE&quot;</span><span class="nt">/&gt;</span>
+            <span class="nt">&lt;service</span> <span class="na">name=</span><span class="s">&quot;demodb&quot;</span> <span class="na">value=</span><span class="s">&quot;<b>org.redkale.service.DataSourceService</b>&quot;</span> <span class="na">groups=</span><span class="s">&quot;NOTIFY_SERVICE&quot;</span><span class="nt">/&gt;</span>
         <span class="nt">&lt;/services&gt;</span>
         <span class="nt">&lt;servlets</span> <span class="na">autoload=</span><span class="s">&quot;true&quot;</span> <span class="nt">/&gt;</span>
     <span class="nt">&lt;/server&gt;</span> 	
@@ -299,7 +299,7 @@
             <span class="nt">&lt;service</span> <span class="na">value=</span><span class="s">&quot;org.redkale.demo.UserService&quot;</span> <span class="na">groups=</span><span class="s">&quot;USER_SERVICE&quot;</span><span class="nt">/&gt;</span>
             <span class="nt">&lt;service</span> <span class="na">value=</span><span class="s">&quot;org.redkale.demo.NotifyService&quot;</span> <span class="na">groups=</span><span class="s">&quot;NOTIFY_SERVICE&quot;</span><span class="nt">/&gt;</span>
             <span class="c">&lt;!-- 存在DataSource必须配置DataSourceService --&gt;</span>
-            <span class="nt">&lt;service</span> <span class="na">name=</span><span class="s">&quot;demodb&quot;</span> <span class="na">value=</span><span class="s">&quot;org.redkale.service.DataSourceService&quot;</span> <span class="na">groups=</span><span class="s">&quot;FORUM_SERVICE&quot;</span><span class="nt">/&gt;</span>
+            <span class="nt">&lt;service</span> <span class="na">name=</span><span class="s">&quot;demodb&quot;</span> <span class="na">value=</span><span class="s">&quot;<b>org.redkale.service.DataSourceService</b>&quot;</span> <span class="na">groups=</span><span class="s">&quot;FORUM_SERVICE&quot;</span><span class="nt">/&gt;</span>
         <span class="nt">&lt;/services&gt;</span>
         <span class="nt">&lt;servlets</span> <span class="na">autoload=</span><span class="s">&quot;true&quot;</span> <span class="nt">/&gt;</span>
     <span class="nt">&lt;/server&gt;</span> 	
