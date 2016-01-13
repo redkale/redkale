@@ -545,6 +545,7 @@ public final class Application {
     }
 
     public static void main(String[] args) throws Exception {
+        Utility.midnight(); //先初始化一下Utility
         //运行主程序
         final Application application = Application.create();
         if (System.getProperty("SHUTDOWN") != null) {
