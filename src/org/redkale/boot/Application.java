@@ -15,7 +15,6 @@ import java.nio.file.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
-import java.util.function.*;
 import java.util.logging.*;
 import javax.xml.parsers.*;
 import org.redkale.convert.bson.*;
@@ -93,6 +92,8 @@ public final class Application {
     final AsynchronousChannelGroup transportChannelGroup;
 
     //--------------------------------------------------------------------------------------------    
+    private final boolean singletonrun;
+
     private final ResourceFactory factory = ResourceFactory.root();
 
     private final WatchFactory watch = WatchFactory.root();
@@ -108,6 +109,11 @@ public final class Application {
     private final CountDownLatch serversLatch;
 
     private Application(final AnyValue config) {
+        this(false, config);
+    }
+
+    private Application(final boolean singletonrun, final AnyValue config) {
+        this.singletonrun = singletonrun;
         this.config = config;
 
         final File root = new File(System.getProperty(RESNAME_APP_HOME));
@@ -446,7 +452,7 @@ public final class Application {
         runServers(timecd, others);
         timecd.await();
         logger.info(this.getClass().getSimpleName() + " started in " + (System.currentTimeMillis() - startTime) + " ms");
-        this.serversLatch.await();
+        if (!singletonrun) this.serversLatch.await();
     }
 
     @SuppressWarnings("unchecked")
@@ -505,7 +511,7 @@ public final class Application {
                         }
                         servers.add(server);
                         server.init(serconf);
-                        server.start();
+                        if (!singletonrun) server.start();
                         timecd.countDown();
                         sercdl.countDown();
                     } catch (Exception ex) {
@@ -520,34 +526,27 @@ public final class Application {
     }
 
     public static <T extends Service> T singleton(Class<T> serviceClass) throws Exception {
-        return singleton(serviceClass, false);
+        return singleton("", serviceClass);
     }
 
-    public static <T extends Service> T singleton(Class<T> serviceClass, boolean remote) throws Exception {
-        final Application application = Application.create();
-        Consumer<Runnable> executor = (x) -> Executors.newFixedThreadPool(8).submit(x);
-        T service = remote ? Sncp.createRemoteService("", executor, serviceClass, null, null)
-                : Sncp.createLocalService("", executor, serviceClass, null, null, null);
+    public static <T extends Service> T singleton(String name, Class<T> serviceClass) throws Exception {
+        final Application application = Application.create(true);
         application.init();
-        application.factory.register(service);
-        application.servicecdl = new CountDownLatch(1);
-        final NodeServer server = new NodeHttpServer(application, null);
-        server.init(application.config);
-        server.factory.inject(service, server);
-        return service;
+        application.start();
+        return application.factory.find(name, serviceClass);
     }
 
-    private static Application create() throws IOException {
+    private static Application create(final boolean singleton) throws IOException {
         final String home = new File(System.getProperty(RESNAME_APP_HOME, "")).getCanonicalPath();
         System.setProperty(RESNAME_APP_HOME, home);
         File appfile = new File(home, "conf/application.xml");
-        return new Application(load(new FileInputStream(appfile)));
+        return new Application(singleton, load(new FileInputStream(appfile)));
     }
 
     public static void main(String[] args) throws Exception {
         Utility.midnight(); //先初始化一下Utility
         //运行主程序
-        final Application application = Application.create();
+        final Application application = Application.create(false);
         if (System.getProperty("SHUTDOWN") != null) {
             application.sendShutDown();
             return;
