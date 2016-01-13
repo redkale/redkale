@@ -68,6 +68,7 @@
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;用户模块 &nbsp;&nbsp;&nbsp;UserSerivice: &nbsp;&nbsp;&nbsp;&nbsp;提供用户注册、登录、更新资料等功能， UserServlet作为接入层。<br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;帖子模块 ForumSerivice: &nbsp;&nbsp;&nbsp;&nbsp;提供看帖、发帖、删帖等功能， ForumServlet作为接入层。<br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;通知模块 &nbsp;NotifySerivice: &nbsp;&nbsp;&nbsp;&nbsp;提供用户操作、回帖等消息通知功能， NotifyWebSocket是WebSocket的Servlet, 且name为 <b>ws_notify</b>，作为接入层。 <br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;其中在persistence.xml里配置的数据库Source的name为demodb ,三个模块都需要使用demodb。<br/>
             </p>
             <br/>
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>1、单点部署</b></p>
@@ -109,6 +110,8 @@
         <span class="nt">&lt;services</span> <span class="na">autoload=</span><span class="s">&quot;true&quot;</span>  <span class="na">groups=</span><span class="s">&quot;ALL&quot;</span><span class="nt">&gt;</span>
             <span class="c">&lt;!-- 有WebSocketServlet的服务必须配置WebSocketNodeService --&gt;</span>
             <span class="nt">&lt;service</span> <span class="na">name=</span><span class="s">&quot;ws_notify&quot;</span> <span class="na">value=</span><span class="s">&quot;org.redkale.service.WebSocketNodeService&quot;</span><span class="nt">/&gt;</span>
+            <span class="c">&lt;!-- 存在DataSource必须配置DataSourceService --&gt;</span>
+            <span class="nt">&lt;service</span> <span class="na">name=</span><span class="s">&quot;demodb&quot;</span> <span class="na">value=</span><span class="s">&quot;org.redkale.service.DataSourceService&quot;</span><span class="nt">/&gt;</span>
         <span class="nt">&lt;/services&gt;</span>
     <span class="nt">&lt;/server&gt;</span>	
 <span class="nt">&lt;/application&gt;</span></pre></div>
@@ -154,6 +157,8 @@
         <span class="nt">&lt;services</span> <span class="na">autoload=</span><span class="s">&quot;true&quot;</span> <span class="na">groups=</span><span class="s">&quot;ALL&quot;</span><span class="nt">&gt;</span>
             <span class="c">&lt;!-- 有WebSocketServlet的服务必须配置WebSocketNodeService --&gt;</span>
             <span class="nt">&lt;service</span> <span class="na">name=</span><span class="s">&quot;ws_notify&quot;</span> <span class="na">value=</span><span class="s">&quot;org.redkale.service.WebSocketNodeService&quot;</span><span class="nt">/&gt;</span>
+            <span class="c">&lt;!-- 存在DataSource必须配置DataSourceService --&gt;</span>
+            <span class="nt">&lt;service</span> <span class="na">name=</span><span class="s">&quot;demodb&quot;</span> <span class="na">value=</span><span class="s">&quot;org.redkale.service.DataSourceService&quot;</span><span class="nt">/&gt;</span>
         <span class="nt">&lt;/services&gt;</span>
     <span class="nt">&lt;/server&gt;</span>	
 <span class="nt">&lt;/application&gt;</span></pre></div>
@@ -218,6 +223,8 @@
         <span class="nt">&lt;services</span> <span class="na">autoload=</span><span class="s">&quot;true&quot;</span><span class="nt">&gt;</span>	
             <span class="nt">&lt;service</span> <span class="na">value=</span><span class="s">&quot;org.redkale.demo.NotifyService&quot;</span> <span class="na">groups=</span><span class="s">&quot;NOTIFY_SERVICE&quot;</span><span class="nt">/&gt;</span>
             <span class="nt">&lt;service</span> <span class="na">value=</span><span class="s">&quot;org.redkale.demo.ForumService&quot;</span> <span class="na">groups=</span><span class="s">&quot;FORUM_SERVICE&quot;</span><span class="nt">/&gt;</span>
+            <span class="c">&lt;!-- 存在DataSource必须配置DataSourceService --&gt;</span>
+            <span class="nt">&lt;service</span> <span class="na">name=</span><span class="s">&quot;demodb&quot;</span> <span class="na">value=</span><span class="s">&quot;org.redkale.service.DataSourceService&quot;</span> <span class="na">groups=</span><span class="s">&quot;USER_SERVICE&quot;</span><span class="nt">/&gt;</span>
         <span class="nt">&lt;/services&gt;</span>
         <span class="nt">&lt;servlets</span> <span class="na">autoload=</span><span class="s">&quot;true&quot;</span> <span class="nt">/&gt;</span>
     <span class="nt">&lt;/server&gt;</span> 	
@@ -246,6 +253,8 @@
             <span class="nt">&lt;service</span> <span class="na">value=</span><span class="s">&quot;org.redkale.demo.ForumService&quot;</span> <span class="na">groups=</span><span class="s">&quot;FORUM_SERVICE&quot;</span><span class="nt">/&gt;</span>
             <span class="c">&lt;!-- 有WebSocketServlet的服务必须配置WebSocketNodeService --&gt;</span>
             <span class="nt">&lt;service</span> <span class="na">name=</span><span class="s">&quot;ws_notify&quot;</span> <span class="na">value=</span><span class="s">&quot;org.redkale.service.WebSocketNodeService&quot;</span> <span class="na">groups=</span><span class="s">&quot;NOTIFY_SERVICE&quot;</span><span class="nt">/&gt;</span>
+            <span class="c">&lt;!-- 存在DataSource必须配置DataSourceService --&gt;</span>
+            <span class="nt">&lt;service</span> <span class="na">name=</span><span class="s">&quot;demodb&quot;</span> <span class="na">value=</span><span class="s">&quot;org.redkale.service.DataSourceService&quot;</span> <span class="na">groups=</span><span class="s">&quot;NOTIFY_SERVICE&quot;</span><span class="nt">/&gt;</span>
         <span class="nt">&lt;/services&gt;</span>
         <span class="nt">&lt;servlets</span> <span class="na">autoload=</span><span class="s">&quot;true&quot;</span> <span class="nt">/&gt;</span>
     <span class="nt">&lt;/server&gt;</span> 	
@@ -272,6 +281,8 @@
         <span class="nt">&lt;services</span> <span class="na">autoload=</span><span class="s">&quot;true&quot;</span><span class="nt">&gt;</span>	
             <span class="nt">&lt;service</span> <span class="na">value=</span><span class="s">&quot;org.redkale.demo.UserService&quot;</span> <span class="na">groups=</span><span class="s">&quot;USER_SERVICE&quot;</span><span class="nt">/&gt;</span>
             <span class="nt">&lt;service</span> <span class="na">value=</span><span class="s">&quot;org.redkale.demo.NotifyService&quot;</span> <span class="na">groups=</span><span class="s">&quot;NOTIFY_SERVICE&quot;</span><span class="nt">/&gt;</span>
+            <span class="c">&lt;!-- 存在DataSource必须配置DataSourceService --&gt;</span>
+            <span class="nt">&lt;service</span> <span class="na">name=</span><span class="s">&quot;demodb&quot;</span> <span class="na">value=</span><span class="s">&quot;org.redkale.service.DataSourceService&quot;</span> <span class="na">groups=</span><span class="s">&quot;FORUM_SERVICE&quot;</span><span class="nt">/&gt;</span>
         <span class="nt">&lt;/services&gt;</span>
         <span class="nt">&lt;servlets</span> <span class="na">autoload=</span><span class="s">&quot;true&quot;</span> <span class="nt">/&gt;</span>
     <span class="nt">&lt;/server&gt;</span> 	
