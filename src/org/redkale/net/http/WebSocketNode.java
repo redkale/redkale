@@ -30,7 +30,7 @@ public abstract class WebSocketNode {
 
     protected final boolean finest = logger.isLoggable(Level.FINEST);
 
-    @Resource(name = Application.RESNAME_SERVER_GROUP)
+    @Resource(name = Application.RESNAME_SERVER_ADDR)
     protected InetSocketAddress localSncpAddress;  //为SncpServer的服务address
 
     @DynRemote
