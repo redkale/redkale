@@ -52,15 +52,35 @@
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3、解析所有的 <b>&lt;server&gt;</b> 节点。 <br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4、初始化并启动所有<b>&lt;server&gt;</b> 节点的Server服务 (优先加载SNCP协议的Server)。 <br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;5、初始化单个Server： <br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;5.1、扫描classpath加载所有可用Service实现类并实例化，然后相互依赖注入。 <br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;5.1、扫描classpath加载所有可用的Service实现类(没有标记为@AutoLoad(<span style="color: #0000FF;">false</span>)的类)并实例化，然后相互依赖注入。 <br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;5.2、Service实例在依赖注入过程中加载所需的DataSource、CacheSource资源。 <br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;5.3、调用所有本地模式Service的init方法。 <br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;5.4、扫描classpath加载所有可用Servlet实现类并实例化 (优先实例化WebSocketServlet)。<br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;5.4、扫描classpath加载所有可用的Servlet实现类(没有标记为@AutoLoad(<span style="color: #0000FF;">false</span>)的类)并实例化 (优先实例化WebSocketServlet)。<br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;5.5、给所有Servlet依赖注入所需的Service。 <br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;5.6、调用所有Servlet的init方法。 <br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;5.7、启动Server的服务监听。 <br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;6、启动进程本身的监听服务。 <br/>
             </p>
+
+            <h3><a id="redkale_dev" class="anchor" href="#" aria-hidden="true"><span class="octicon octicon-link"></span></a>基于RedKale的开发与调试</h3>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;基于RedKale创建一个Java应用程序工程(即使是Web项目也不要创建Java-Web工程)，引用redkale.jar 并创建RedKale所需的几个目录和文件。一个普通的Web项目只需要编写业务层的Service和接入层的HttpServlet的代码。数据库DataSource通过配置文件进行设置。<br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;编写完代码可以通过启动脚本进行调试， 也可以在IDE设置项目的主类为 org.redkale.boot.Application 或者工程内定义主类进行启动调试: 
+            </p>
+            <div class="highlight"><pre><span class="kd">public</span> <span class="kd">final</span> <span class="kd">class</span> <span class="nc">Bootstrap</span> <span class="o">{</span>
+
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">Exception</span> <span class="o">{</span>
+        <span class="n">com</span><span class="o">.</span><span class="na">swyc</span><span class="o">.</span><span class="na">redkale</span><span class="o">.</span><span class="na">boot</span><span class="o">.</span><span class="na">Application</span><span class="o">.</span><span class="na">main</span><span class="o">(</span><span class="n">args</span><span class="o">);</span>
+    <span class="o">}</span>
+<span class="o">}</span></pre></div>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;若需要调试单个Service，可以通过 <b>Application.singleton</b> 方法进行调试： </p>
+            <div class="highlight"><pre>    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">Exception</span> <span class="o">{</span>
+        <span class="n">UserService</span> <span class="n">service</span> <span class="o">=</span> <b><span class="n">Application</span><span class="o">.</span><span class="na">singleton</span></b><span class="o">(</span><span class="n">UserService</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+        <span class="n">LoginBean</span> <span class="n">bean</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">LoginBean</span><span class="o">();</span>
+        <span class="n">bean</span><span class="o">.</span><span class="na">setAccount</span><span class="o">(</span><span class="s">&quot;myaccount&quot;</span><span class="o">);</span>
+        <span class="n">bean</span><span class="o">.</span><span class="na">setPassword</span><span class="o">(</span><span class="s">&quot;123456&quot;</span><span class="o">);</span>
+        <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">service</span><span class="o">.</span><span class="na">login</span><span class="o">(</span><span class="n">bean</span><span class="o">));</span>
+    <span class="o">}</span></pre></div>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Application.singleton 运行流程与通过bin脚本启动的流程基本一致，区别在于singleton运行时不会启动Server和Application自身的服务监听。RedKale提倡接入层(Servlet)与业务层(Service)分开，Service在代码上不能依赖于Servlet，因此调试Service自身逻辑时不需要启动接入层服务(类似WebSocket依赖Servlet的功能除外)。 </p>
 
             <h3><a id="redkale_deploy" class="anchor" href="#" aria-hidden="true"><span class="octicon octicon-link"></span></a>RedKale 集中式与分布式</h3>
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;通常一个系统会分为三层：接入层、业务层、数据层。对应到RedKale的组件是： Servlet、Service、Source。大部分系统提供的是HTTP服务，为了方便演示RedKale从集中式到分布式的变化，以一个简单的HTTP服务作为范例。<br/>

@@ -23,10 +23,20 @@
         </section>
 
         <section class="main-content">
-            <h3>
-                <a id="welcome-to-github-pages" class="anchor" href="#welcome-to-github-pages" aria-hidden="true"><span class="octicon octicon-link"></span></a>Source 组件介绍</h3>
+            <h3><a id="source_intro" class="anchor" href="#" aria-hidden="true"><span class="octicon octicon-link"></span></a>Source 组件介绍</h3>
 
-            <p>敬请期待…… <br/>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Source 提供两种类型的数据源：DataSource 和 CacheSource。DataSource 为数据库或内存数据库，提供类似JPA、Hibernate的接口与功能。CacheSource 为缓存数据 提供类似Memcached、Redis的接口和功能。两者也提供了异步接口(基于<a href="service.html#service_remote" target="_blank">远程模式的Service</a>)。<br/></p>
+
+            <h3><a id="datasource_study" class="anchor" href="#" aria-hidden="true"><span class="octicon octicon-link"></span></a>DataSource 入门</h3>
+            <p>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;与JPA相比，DataSource有以下几个特点：<br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1. 提供非常方便过滤查询接口，但仅支持简单的表关联查询。 <br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2. 提供分布式的主键自增功能。 <br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 3. 提供动态修改数据库连接参数功能。 <br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 4. 提供读写分离的简易配置功能。 <br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 5. 提供进程间缓存自动同步功能。 <br/>
+            </p>
+            <p>未完待续…… <br/>
             </p>
 
             <footer class="site-footer">
