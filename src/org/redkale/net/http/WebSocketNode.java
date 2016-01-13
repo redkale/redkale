@@ -37,7 +37,7 @@ public abstract class WebSocketNode {
     protected WebSocketNode remoteNode;
 
     //存放所有用户分布在节点上的队列信息,Set<InetSocketAddress> 为 sncpnode 的集合
-    @Resource(name = "$_websocket_nodes")
+    @Resource(name = "$")
     protected CacheSource<Serializable, InetSocketAddress> source;
 
     //存放本地节点上所有在线用户的队列信息,Set<String> 为 engineid 的集合
@@ -162,6 +162,7 @@ public abstract class WebSocketNode {
         }
         //-----------------------发送远程的-----------------------------
         Collection<InetSocketAddress> addrs = source.getCollection(groupid);
+        if (finest) logger.finest("websocket found groupid:" + groupid + " on " + addrs);
         if (addrs != null && !addrs.isEmpty()) {   //对方连接在远程节点(包含本地节点)，所以正常情况下addrs不会为空。
             if (recent) {
                 InetSocketAddress one = null;
