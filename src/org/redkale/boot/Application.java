@@ -270,11 +270,6 @@ public final class Application {
         lib = lib.isEmpty() ? (homepath + "/conf") : (lib + ";" + homepath + "/conf");
         Server.loadLib(logger, lib);
         initLogging();
-        if (this.localAddress != null) {
-            byte[] bs = this.localAddress.getAddress();
-            int v = (0xff & bs[bs.length - 2]) % 10 * 100 + (0xff & bs[bs.length - 1]);
-            this.factory.register("property.datasource.nodeid", "" + v);
-        }
         //------------------------------------------------------------------------
         final AnyValue resources = config.getAnyValue("resources");
         if (resources != null) {
@@ -309,6 +304,11 @@ public final class Application {
                     }
                 }
             }
+        }
+        if (this.localAddress != null && this.factory.find("property.datasource.nodeid", String.class) == null) {
+            byte[] bs = this.localAddress.getAddress();
+            int v = (0xff & bs[bs.length - 2]) % 10 * 100 + (0xff & bs[bs.length - 1]);
+            this.factory.register("property.datasource.nodeid", "" + v);
         }
         this.factory.register(BsonFactory.root());
         this.factory.register(JsonFactory.root());
