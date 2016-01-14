@@ -104,10 +104,12 @@ a:hover {
 
 .project-name {
     margin-top: 0;
-    margin-left:1.5rem;
+    margin-left:1.2rem;
+    padding-left: 6.4rem;
     position:absolute;
     float: left;
-    width: 4em;
+    background: url(/logo_96.png) no-repeat left  center ;
+    background-size: 1.98em;
 }
 
 @media screen and (min-width: 64em) {
