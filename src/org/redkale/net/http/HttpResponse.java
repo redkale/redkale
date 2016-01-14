@@ -16,6 +16,7 @@ import java.nio.file.*;
 import java.text.*;
 import java.util.*;
 import java.util.concurrent.atomic.*;
+import org.redkale.convert.json.*;
 import org.redkale.net.*;
 import org.redkale.util.*;
 
@@ -187,17 +188,27 @@ public class HttpResponse<R extends HttpRequest> extends Response<R> {
         }
     }
 
-    public void finishJson(Object obj) {
+    public void finishJson(final Object obj) {
         this.contentType = "text/plain; charset=utf-8";
         finish(request.getJsonConvert().convertTo(context.getBufferSupplier(), obj));
     }
 
-    public void finishJson(Type type, Object obj) {
+    public void finishJson(final JsonConvert convert, final Object obj) {
+        this.contentType = "text/plain; charset=utf-8";
+        finish(convert.convertTo(context.getBufferSupplier(), obj));
+    }
+
+    public void finishJson(final Type type, final Object obj) {
         this.contentType = "text/plain; charset=utf-8";
         finish(request.getJsonConvert().convertTo(context.getBufferSupplier(), type, obj));
     }
 
-    public void finishJson(Object... objs) {
+    public void finishJson(final JsonConvert convert, final Type type, final Object obj) {
+        this.contentType = "text/plain; charset=utf-8";
+        finish(convert.convertTo(context.getBufferSupplier(), type, obj));
+    }
+
+    public void finishJson(final Object... objs) {
         this.contentType = "text/plain; charset=utf-8";
         finish(request.getJsonConvert().convertTo(context.getBufferSupplier(), objs));
     }
