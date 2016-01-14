@@ -139,6 +139,91 @@
     
 <span class="o">}</span>
                 </pre></div>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;同一类型数据通过设置新的JsonFactory可以有不同的输出。</p>
+            <div class="highlight"><pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">UserSimpleInfo</span> <span class="o">{</span>
+
+    <span class="kd">private</span> <span class="kt">int</span> <span class="n">userid</span><span class="o">;</span>
+
+    <span class="kd">private</span> <span class="n">String</span> <span class="n">username</span> <span class="o">=</span> <span class="s">&quot;&quot;</span><span class="o">;</span>
+
+    <span class="kd">private</span> <span class="kt">long</span> <span class="n">regtime</span><span class="o">;</span> <span class="c1">//注册时间</span>
+
+    <span class="kd">private</span> <span class="n">String</span> <span class="n">regaddr</span> <span class="o">=</span> <span class="s">&quot;&quot;</span><span class="o">;</span> <span class="c1">//注册IP</span>
+
+    <span class="nd">@ConvertColumn</span><span class="o">(</span><span class="n">ignore</span> <span class="o">=</span> <span class="kc">true</span><span class="o">,</span> <span class="n">type</span> <span class="o">=</span> <span class="n">ConvertType</span><span class="o">.</span><span class="na">JSON</span><span class="o">)</span>
+    <span class="kd">public</span> <span class="kt">long</span> <span class="nf">getRegtime</span><span class="o">()</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="n">regtime</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">setRegtime</span><span class="o">(</span><span class="kt">long</span> <span class="n">regtime</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">regtime</span> <span class="o">=</span> <span class="n">regtime</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="nd">@ConvertColumn</span><span class="o">(</span><span class="n">ignore</span> <span class="o">=</span> <span class="kc">true</span><span class="o">,</span> <span class="n">type</span> <span class="o">=</span> <span class="n">ConvertType</span><span class="o">.</span><span class="na">JSON</span><span class="o">)</span>
+    <span class="kd">public</span> <span class="n">String</span> <span class="nf">getRegaddr</span><span class="o">()</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="n">regaddr</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">setRegaddr</span><span class="o">(</span><span class="n">String</span> <span class="n">regaddr</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">regaddr</span> <span class="o">=</span> <span class="n">regaddr</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="kt">int</span> <span class="nf">getUserid</span><span class="o">()</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="n">userid</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">setUserid</span><span class="o">(</span><span class="kt">int</span> <span class="n">userid</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">userid</span> <span class="o">=</span> <span class="n">userid</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="n">String</span> <span class="nf">getUsername</span><span class="o">()</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="n">username</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">setUsername</span><span class="o">(</span><span class="n">String</span> <span class="n">username</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">username</span> <span class="o">=</span> <span class="n">username</span><span class="o">;</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+
+
+
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">UserInfoServlet</span> <span class="kd">extends</span> <span class="n">BasedHttpServlet</span> <span class="o">{</span>
+
+    <span class="nd">@Resource</span>
+    <span class="kd">private</span> <span class="n">UserSerice</span> <span class="n">service</span><span class="o">;</span>
+
+    <span class="nd">@Resource</span>
+    <span class="kd">private</span> <span class="n">JsonFactory</span> <span class="n">jsonRootFactory</span><span class="o">;</span>
+
+    <span class="nd">@Resource</span>
+    <span class="kd">private</span> <span class="n">JsonConvert</span> <span class="n">detailConvert</span><span class="o">;</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">init</span><span class="o">(</span><span class="n">Context</span> <span class="n">context</span><span class="o">,</span> <span class="n">AnyValue</span> <span class="n">config</span><span class="o">)</span> <span class="o">{</span>
+        <span class="kd">final</span> <span class="n">JsonFactory</span> <span class="n">childFactory</span> <span class="o">=</span> <span class="n">jsonRootFactory</span><span class="o">.</span><span class="na">createChild</span><span class="o">();</span>
+        <span class="n">childFactory</span><span class="o">.</span><span class="na">register</span><span class="o">(</span><span class="n">UserSimpleInfo</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="kc">false</span><span class="o">,</span> <span class="s">&quot;regtime&quot;</span><span class="o">,</span> <span class="s">&quot;regaddr&quot;</span><span class="o">);</span> <span class="c1">//允许输出注册时间与注册地址</span>
+        <span class="n">childFactory</span><span class="o">.</span><span class="na">reloadCoder</span><span class="o">(</span><span class="n">UserSimpleInfo</span><span class="o">.</span><span class="na">class</span><span class="o">);</span> <span class="c1">//重新加载Coder使之覆盖父Factory的配置</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">detailConvert</span> <span class="o">=</span> <span class="n">childFactory</span><span class="o">.</span><span class="na">getConvert</span><span class="o">();</span>
+    <span class="o">}</span>
+
+    <span class="c1">// 获取他人基本信息</span>
+    <span class="nd">@AuthIgnore</span>
+    <span class="nd">@WebAction</span><span class="o">(</span><span class="n">url</span> <span class="o">=</span> <span class="s">&quot;/user/info/&quot;</span><span class="o">)</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">info</span><span class="o">(</span><span class="n">HttpRequest</span> <span class="n">req</span><span class="o">,</span> <span class="n">HttpResponse</span> <span class="n">resp</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
+        <span class="kt">int</span> <span class="n">userid</span> <span class="o">=</span> <span class="n">Integer</span><span class="o">.</span><span class="na">parseInt</span><span class="o">(</span><span class="n">req</span><span class="o">.</span><span class="na">getRequstURILastPath</span><span class="o">());</span>
+        <span class="n">UserSimpleInfo</span> <span class="n">user</span> <span class="o">=</span> <span class="n">service</span><span class="o">.</span><span class="na">findUserInfo</span><span class="o">(</span><span class="n">userid</span><span class="o">);</span>
+        <span class="n">resp</span><span class="o">.</span><span class="na">finishJson</span><span class="o">(</span><span class="n">user</span><span class="o">);</span>  <span class="c1">// 不包含用户的注册时间和注册地址字段信息</span>
+    <span class="o">}</span>
+
+    <span class="c1">//获取用户自己的信息</span>
+    <span class="nd">@WebAction</span><span class="o">(</span><span class="n">url</span> <span class="o">=</span> <span class="s">&quot;/user/myinfo&quot;</span><span class="o">)</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">mydetail</span><span class="o">(</span><span class="n">HttpRequest</span> <span class="n">req</span><span class="o">,</span> <span class="n">HttpResponse</span> <span class="n">resp</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
+        <span class="kt">int</span> <span class="n">userid</span> <span class="o">=</span> <span class="n">currentUser</span><span class="o">(</span><span class="n">req</span><span class="o">).</span><span class="na">getUserid</span><span class="o">();</span> <span class="c1">//获取当前用户ID</span>
+        <span class="n">UserSimpleInfo</span> <span class="n">user</span> <span class="o">=</span> <span class="n">service</span><span class="o">.</span><span class="na">findUserInfo</span><span class="o">(</span><span class="n">userid</span><span class="o">);</span>
+        <span class="n">resp</span><span class="o">.</span><span class="na">finishJson</span><span class="o">(</span><span class="n">detailConvert</span><span class="o">,</span> <span class="n">req</span><span class="o">);</span>  <span class="c1">// 包含用户的注册时间和注册地址字段信息</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+                </pre></div>
             <br/>
 
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Convert 支持非空构造函数。</p>
