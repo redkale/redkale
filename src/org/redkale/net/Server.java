@@ -26,7 +26,7 @@ import org.redkale.watch.*;
  */
 public abstract class Server {
 
-    public static final String RESNAME_ROOT = "SER_ROOT";
+    public static final String RESNAME_ROOT = "SERVER_ROOT";
 
     protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
 
