@@ -10,7 +10,7 @@ import org.redkale.util.*;
 /**
  * 所有Service的实现类不得声明为final， 允许远程模式的public方法都不能声明为final。
  * 注意: "$"是一个很特殊的Service.name值 。 被标记为@Resource(name = "$") 的Service的资源名与所属父Service的资源名一致。
- * <p>
+ * 
  * <blockquote><pre>
  * Service的资源类型
  * 业务逻辑的Service通常有两种编写方式：

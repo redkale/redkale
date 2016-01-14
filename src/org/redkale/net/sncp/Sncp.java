@@ -673,8 +673,7 @@ public abstract class Sncp {
      * @param executor            线程池
      * @param serviceClass        Service类
      * @param clientAddress       本地IP地址
-     * @param groups              含同组和异组的组集合
-     * @param sameGroupTransports 同组的通信组件列表
+     * @param sameGroupTransport 同组的通信组件
      * @param diffGroupTransports 异组的通信组件列表
      * @return Service的本地模式实例
      */
@@ -825,9 +824,8 @@ public abstract class Sncp {
      * @param executor      线程池
      * @param serviceClass  Service类
      * @param clientAddress 本地IP地址
-     * @param groups        含同组和异组的组集合
-     *
      * @param transport     通信组件
+     * 
      * @return Service的远程模式实例
      */
     @SuppressWarnings("unchecked")
