@@ -38,9 +38,9 @@ public class HttpResponse<R extends HttpRequest> extends Response<R> {
      * HttpResponse.finish 方法内调用
      *
      */
-    public static interface Interceptor {
+    public static interface BufferHandler {
 
-        public ByteBuffer[] invoke(final HttpResponse response, final ByteBuffer[] buffers);
+        public ByteBuffer[] execute(final HttpResponse response, final ByteBuffer[] buffers);
     }
 
     private static final ByteBuffer buffer304 = ByteBuffer.wrap("HTTP/1.1 304 Not Modified\r\n\r\n".getBytes()).asReadOnlyBuffer();
@@ -115,7 +115,7 @@ public class HttpResponse<R extends HttpRequest> extends Response<R> {
 
     private boolean headsended = false;
 
-    private Interceptor interceptor;
+    private BufferHandler bufferHandler;
     //------------------------------------------------
 
     private final DefaultAnyValue header = new DefaultAnyValue();
@@ -150,7 +150,7 @@ public class HttpResponse<R extends HttpRequest> extends Response<R> {
         this.cookies = null;
         this.headsended = false;
         this.header.clear();
-        this.interceptor = null;
+        this.bufferHandler = null;
         return super.recycle();
     }
 
@@ -221,8 +221,8 @@ public class HttpResponse<R extends HttpRequest> extends Response<R> {
             return;
         }
         if (context.getCharset() == null) {
-            if (interceptor != null) {
-                interceptor.invoke(this, new ByteBuffer[]{ByteBuffer.wrap(Utility.encodeUTF8(obj))});
+            if (bufferHandler != null) {
+                bufferHandler.execute(this, new ByteBuffer[]{ByteBuffer.wrap(Utility.encodeUTF8(obj))});
             }
             final char[] chars = Utility.charArray(obj);
             this.contentLength = Utility.encodeUTF8Length(chars);
@@ -236,8 +236,8 @@ public class HttpResponse<R extends HttpRequest> extends Response<R> {
             }
         } else {
             ByteBuffer buffer = context.getCharset().encode(obj);
-            if (interceptor != null) {
-                ByteBuffer[] bufs = interceptor.invoke(this, new ByteBuffer[]{buffer});
+            if (bufferHandler != null) {
+                ByteBuffer[] bufs = bufferHandler.execute(this, new ByteBuffer[]{buffer});
                 if (bufs != null) buffer = bufs[0];
             }
             this.contentLength = buffer.remaining();
@@ -289,8 +289,8 @@ public class HttpResponse<R extends HttpRequest> extends Response<R> {
 
     @Override
     public void finish(boolean kill, ByteBuffer... buffers) {
-        if (interceptor != null) {
-            ByteBuffer[] bufs = interceptor.invoke(this, buffers);
+        if (bufferHandler != null) {
+            ByteBuffer[] bufs = bufferHandler.execute(this, buffers);
             if (bufs != null) buffers = bufs;
         }
         if (kill) refuseAlive();
@@ -504,12 +504,12 @@ public class HttpResponse<R extends HttpRequest> extends Response<R> {
         this.contentLength = contentLength;
     }
 
-    public Interceptor getInterceptor() {
-        return interceptor;
+    public BufferHandler getBufferHandler() {
+        return bufferHandler;
     }
 
-    public void setInterceptor(Interceptor interceptor) {
-        this.interceptor = interceptor;
+    public void setBufferHandler(BufferHandler bufferHandler) {
+        this.bufferHandler = bufferHandler;
     }
 
     protected final class TransferFileHandler implements CompletionHandler<Integer, ByteBuffer> {

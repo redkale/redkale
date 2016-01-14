@@ -109,7 +109,7 @@ public abstract class BasedHttpServlet extends HttpServlet {
                             response.finish(ce.getBuffers());
                             return;
                         }
-                        response.setInterceptor(entry.cacheInterceptor);
+                        response.setBufferHandler(entry.cacheInterceptor);
                     }
                     entry.servlet.execute(request, response);
                 }
@@ -274,7 +274,7 @@ public abstract class BasedHttpServlet extends HttpServlet {
             return this.moduleid != 0 || this.actionid != 0;
         }
 
-        public final HttpResponse.Interceptor cacheInterceptor;
+        public final HttpResponse.BufferHandler cacheInterceptor;
 
         public final ConcurrentHashMap<String, CacheEntry> cache;
 
