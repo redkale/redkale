@@ -22,6 +22,7 @@ a:hover {
 
 .btn {
     display: inline-block;
+    margin-top: 1rem;
     margin-bottom: 1rem;
     color: rgba(255, 255, 255, 0.7);
     background-color: rgba(255, 255, 255, 0.08);
@@ -103,10 +104,9 @@ a:hover {
 
 .project-name {
     margin-top: 0;
-    left:1em;
-    margin-right: 1em;
-    margin-bottom: 0;
-    display: inline-block;
+    margin-left:1.5rem;
+    position:absolute;
+    float: left;
     width: 4em;
 }
 
