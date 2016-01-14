@@ -263,7 +263,6 @@
                 <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">&quot;value-type&quot;</span> <span class="na">value=</span><span class="s">&quot;java.lang.Integer&quot;</span><span class="nt">/&gt;</span>
             <span class="nt">&lt;/service&gt;</span>
         <span class="nt">&lt;/services&gt;</span>
-        <span class="nt">&lt;servlets</span> <span class="na">autoload=</span><span class="s">&quot;true&quot;</span> <span class="nt">/&gt;</span>
     <span class="nt">&lt;/server&gt;</span> 	
 <span class="nt">&lt;/application&gt;</span></pre></div>
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;通知模块NotifyService服务群中各个进程的配置相同，配置如下:</p>
@@ -293,7 +292,6 @@
             <span class="c">&lt;!-- 存在DataSource必须配置DataSourceService --&gt;</span>
             <span class="nt">&lt;service</span> <span class="na">name=</span><span class="s">&quot;demodb&quot;</span> <span class="na">value=</span><span class="s">&quot;<b>org.redkale.service.DataSourceService</b>&quot;</span> <span class="na">groups=</span><span class="s">&quot;NOTIFY_SERVICE&quot;</span><span class="nt">/&gt;</span>
         <span class="nt">&lt;/services&gt;</span>
-        <span class="nt">&lt;servlets</span> <span class="na">autoload=</span><span class="s">&quot;true&quot;</span> <span class="nt">/&gt;</span>
     <span class="nt">&lt;/server&gt;</span> 	
 <span class="nt">&lt;/application&gt;</span></pre></div>
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;帖子模块ForumService服务群中各个进程的配置相同，配置如下:</p>
@@ -321,12 +319,113 @@
             <span class="c">&lt;!-- 存在DataSource必须配置DataSourceService --&gt;</span>
             <span class="nt">&lt;service</span> <span class="na">name=</span><span class="s">&quot;demodb&quot;</span> <span class="na">value=</span><span class="s">&quot;<b>org.redkale.service.DataSourceService</b>&quot;</span> <span class="na">groups=</span><span class="s">&quot;FORUM_SERVICE&quot;</span><span class="nt">/&gt;</span>
         <span class="nt">&lt;/services&gt;</span>
-        <span class="nt">&lt;servlets</span> <span class="na">autoload=</span><span class="s">&quot;true&quot;</span> <span class="nt">/&gt;</span>
     <span class="nt">&lt;/server&gt;</span> 	
 <span class="nt">&lt;/application&gt;</span></pre></div>
-            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;由这个范例可以看出，RedKale提供了非常强大的架构，集中式到微服务架构不需要增加修改一行代码即可随意切换，复杂的系统都可以如小系统般快速地开发出来。<br/>
+            <br/>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>5、API网关式部署</b></p>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;随着用户量到了上千万时，一个UserService的服务进程是无法提供全部用户服务。 因此可以考虑按用户段进行分布式部署。将192.168.50.110、192.168.50.111上的UserService服务改成网关式的服务。下面是以 <a href="service.html#service_local" target="_blank">Service本地模式介绍中的UserService</a> 为范例进行编写：</p>
+            <div class="highlight"><pre><span class="nd">@ResourceType</span><span class="o">({</span><span class="n">UserService</span><span class="o">.</span><span class="kd">class</span><span class="o">})</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">UserServiceGateWay</span> <span class="kd">extends</span> <span class="n">UserService</span> <span class="o">{</span>
+
+    <span class="nd">@Resource</span><span class="o">(</span><span class="n">name</span> <span class="o">=</span> <span class="s">&quot;userservice_reg&quot;</span><span class="o">)</span>
+    <span class="kd">private</span> <span class="n">UserService</span> <span class="n">regUserService</span><span class="o">;</span>  <span class="c1">//只用于注册的服务节点</span>
+
+    <span class="nd">@Resource</span><span class="o">(</span><span class="n">name</span> <span class="o">=</span> <span class="s">&quot;userservice_mob&quot;</span><span class="o">)</span>
+    <span class="kd">private</span> <span class="n">UserService</span> <span class="n">mobUserService</span><span class="o">;</span>  <span class="c1">//只用于查询手机号码对应的userid的服务节点</span>
+
+    <span class="nd">@Resource</span><span class="o">(</span><span class="n">name</span> <span class="o">=</span> <span class="s">&quot;userservice_node01&quot;</span><span class="o">)</span>
+    <span class="kd">private</span> <span class="n">UserService</span> <span class="n">userService01</span><span class="o">;</span>  <span class="c1">//userid小于2000000的用户的服务节点</span>
+
+    <span class="nd">@Resource</span><span class="o">(</span><span class="n">name</span> <span class="o">=</span> <span class="s">&quot;userservice_node02&quot;</span><span class="o">)</span>
+    <span class="kd">private</span> <span class="n">UserService</span> <span class="n">userService02</span><span class="o">;</span>  <span class="c1">//userid小于4000000的用户的服务节点</span>
+
+    <span class="nd">@Resource</span><span class="o">(</span><span class="n">name</span> <span class="o">=</span> <span class="s">&quot;userservice_node03&quot;</span><span class="o">)</span>
+    <span class="kd">private</span> <span class="n">UserService</span> <span class="n">userService03</span><span class="o">;</span>  <span class="c1">//userid小于6000000的用户的服务节点</span>
+
+    <span class="nd">@Resource</span><span class="o">(</span><span class="n">name</span> <span class="o">=</span> <span class="s">&quot;userservice_node04&quot;</span><span class="o">)</span>
+    <span class="kd">private</span> <span class="n">UserService</span> <span class="n">userService04</span><span class="o">;</span>  <span class="c1">//userid大于6000000的用户的服务节点</span>
+
+    <span class="kd">private</span> <span class="n">UserService</span> <span class="nf">getService</span><span class="o">(</span><span class="kt">int</span> <span class="n">userid</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">userid</span> <span class="o">&lt;=</span> <span class="mi">200_0000</span><span class="o">)</span> <span class="k">return</span> <span class="n">userService01</span><span class="o">;</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">userid</span> <span class="o">&lt;=</span> <span class="mi">400_0000</span><span class="o">)</span> <span class="k">return</span> <span class="n">userService02</span><span class="o">;</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">userid</span> <span class="o">&lt;=</span> <span class="mi">600_0000</span><span class="o">)</span> <span class="k">return</span> <span class="n">userService03</span><span class="o">;</span>
+        <span class="k">return</span> <span class="n">userService04</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="n">UserInfo</span> <span class="nf">findUserInfo</span><span class="o">(</span><span class="kt">int</span> <span class="n">userid</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="k">this</span><span class="o">.</span><span class="na">getService</span><span class="o">(</span><span class="n">userid</span><span class="o">).</span><span class="na">findUserInfo</span><span class="o">(</span><span class="n">userid</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="n">RetResult</span><span class="o">&lt;</span><span class="n">UserInfo</span><span class="o">&gt;</span> <span class="nf">login</span><span class="o">(</span><span class="n">LoginBean</span> <span class="n">bean</span><span class="o">)</span> <span class="o">{</span> <span class="c1">//手机号码用long存储，0表示无手机号码</span>
+        <span class="kt">int</span> <span class="n">userid</span> <span class="o">=</span> <span class="n">mobUserService</span><span class="o">.</span><span class="na">findUserid</span><span class="o">(</span><span class="n">bean</span><span class="o">.</span><span class="na">getMobile</span><span class="o">());</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">userid</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="o">)</span> <span class="k">return</span> <span class="k">new</span> <span class="n">RetResult</span><span class="o">&lt;&gt;(</span><span class="mi">10001</span><span class="o">,</span> <span class="s">&quot;not found mobile &quot;</span> <span class="o">+</span> <span class="n">bean</span><span class="o">.</span><span class="na">getMobile</span><span class="o">());</span>
+        <span class="k">return</span> <span class="k">this</span><span class="o">.</span><span class="na">getService</span><span class="o">(</span><span class="n">userid</span><span class="o">).</span><span class="na">login</span><span class="o">(</span><span class="n">bean</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">register</span><span class="o">(</span><span class="n">UserInfo</span> <span class="n">user</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">regUserService</span><span class="o">.</span><span class="na">register</span><span class="o">(</span><span class="n">user</span><span class="o">);</span> <span class="c1">//会生成userid</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">getService</span><span class="o">(</span><span class="n">user</span><span class="o">.</span><span class="na">getUserid</span><span class="o">()).</span><span class="na">putUserInfo</span><span class="o">(</span><span class="n">user</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="n">UserInfo</span> <span class="nf">updateUsername</span><span class="o">(</span><span class="kt">int</span> <span class="n">userid</span><span class="o">,</span> <span class="n">String</span> <span class="n">username</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="k">this</span><span class="o">.</span><span class="na">getService</span><span class="o">(</span><span class="n">userid</span><span class="o">).</span><span class="na">updateUsername</span><span class="o">(</span><span class="n">userid</span><span class="o">,</span> <span class="n">username</span><span class="o">);</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+                </pre></div>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;从代码看出，UserServiceGateWay继承了UserService， 确保了UserService对外的服务接口不变，上面代码是用户量在600-800万之间的写法，通过简单的用户ID分段，根据不同用户ID调不同的服务节点。</p>
+            <p style="text-align: center;"><img src="images/distributeimg_5.png" alt=""/></p>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如上图，网关下的UserService部署分三类： userservice_reg只用于注册用户；userservice_mob提供查询手机号码与用户ID间的关系的服务；userservice_node按用户段提供已有用户的服务。且每个UserService的实例在UserServiceGateWay都是远程模式。每种类型可以部署多个节点（为了结构图简单，上图每个类型只部署一个节点）。UserServiceGateWay（192.168.50.110、192.168.50.111）的配置如下：</p>
+            <div class="highlight"><pre><span class="nt">&lt;application</span> <span class="na">port=</span><span class="s">&quot;5050&quot;</span><span class="nt">&gt;</span>  
+    <span class="nt">&lt;resources&gt;</span>	
+        <span class="nt">&lt;group</span> <span class="na">name=</span><span class="s">&quot;USER_SERVICE_REG&quot;</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;node</span> <span class="na">addr=</span><span class="s">&quot;192.168.70.110&quot;</span> <span class="na">port=</span><span class="s">&quot;7070&quot;</span><span class="nt">/&gt;</span>
+        <span class="nt">&lt;/group&gt;</span>
+        <span class="nt">&lt;group</span> <span class="na">name=</span><span class="s">&quot;USER_SERVICE_MOB&quot;</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;node</span> <span class="na">addr=</span><span class="s">&quot;192.168.70.150&quot;</span> <span class="na">port=</span><span class="s">&quot;7070&quot;</span><span class="nt">/&gt;</span>
+        <span class="nt">&lt;/group&gt;</span>
+        <span class="nt">&lt;group</span> <span class="na">name=</span><span class="s">&quot;USER_SERVICE_NODE01&quot;</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;node</span> <span class="na">addr=</span><span class="s">&quot;192.168.70.201&quot;</span> <span class="na">port=</span><span class="s">&quot;7070&quot;</span><span class="nt">/&gt;</span>
+        <span class="nt">&lt;/group&gt;</span>
+        <span class="nt">&lt;group</span> <span class="na">name=</span><span class="s">&quot;USER_SERVICE_NODE02&quot;</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;node</span> <span class="na">addr=</span><span class="s">&quot;192.168.70.202&quot;</span> <span class="na">port=</span><span class="s">&quot;7070&quot;</span><span class="nt">/&gt;</span>
+        <span class="nt">&lt;/group&gt;</span>
+        <span class="nt">&lt;group</span> <span class="na">name=</span><span class="s">&quot;USER_SERVICE_NODE03&quot;</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;node</span> <span class="na">addr=</span><span class="s">&quot;192.168.70.203&quot;</span> <span class="na">port=</span><span class="s">&quot;7070&quot;</span><span class="nt">/&gt;</span>
+        <span class="nt">&lt;/group&gt;</span>
+        <span class="nt">&lt;group</span> <span class="na">name=</span><span class="s">&quot;USER_SERVICE_NODE04&quot;</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;node</span> <span class="na">addr=</span><span class="s">&quot;192.168.70.204&quot;</span> <span class="na">port=</span><span class="s">&quot;7070&quot;</span><span class="nt">/&gt;</span>
+        <span class="nt">&lt;/group&gt;</span>
+        
+        <span class="nt">&lt;group</span> <span class="na">name=</span><span class="s">&quot;USER_SERVICE&quot;</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;node</span> <span class="na">addr=</span><span class="s">&quot;192.168.50.110&quot;</span> <span class="na">port=</span><span class="s">&quot;7070&quot;</span><span class="nt">/&gt;</span>
+            <span class="nt">&lt;node</span> <span class="na">addr=</span><span class="s">&quot;192.168.50.111&quot;</span> <span class="na">port=</span><span class="s">&quot;7070&quot;</span><span class="nt">/&gt;</span>
+        <span class="nt">&lt;/group&gt;</span>        
+    <span class="nt">&lt;/resources&gt;</span>
+
+    <span class="c">&lt;!-- SNCP 监听 Server --&gt;</span>
+    <span class="nt">&lt;server</span> <span class="na">protocol=</span><span class="s">&quot;SNCP&quot;</span> <span class="na">port=</span><span class="s">&quot;7070&quot;</span><span class="nt">&gt;</span> 
+        <span class="nt">&lt;services</span> <span class="na">autoload=</span><span class="s">&quot;true&quot;</span><span class="nt">&gt;</span>	
+            <span class="c">&lt;!-- 配置UserService网关 --&gt;</span>
+            <span class="nt">&lt;service</span> <span class="na">name=</span><span class="s">&quot;&quot;</span> <span class="na">value=</span><span class="s">&quot;org.redkale.demo.UserServiceGateWay&quot;</span> <span class="na">groups=</span><span class="s">&quot;USER_SERVICE&quot;</span><span class="nt">/&gt;</span>
+            <span class="c">&lt;!-- 配置UserService分段节点 --&gt;</span>
+            <span class="nt">&lt;service</span> <span class="na">name=</span><span class="s">&quot;userservice_reg&quot;</span> <span class="na">value=</span><span class="s">&quot;org.redkale.demo.UserService&quot;</span> <span class="na">groups=</span><span class="s">&quot;USER_SERVICE_REG&quot;</span><span class="nt">/&gt;</span>
+            <span class="nt">&lt;service</span> <span class="na">name=</span><span class="s">&quot;userservice_mob&quot;</span> <span class="na">value=</span><span class="s">&quot;org.redkale.demo.UserService&quot;</span> <span class="na">groups=</span><span class="s">&quot;USER_SERVICE_MOB&quot;</span><span class="nt">/&gt;</span>
+            <span class="nt">&lt;service</span> <span class="na">name=</span><span class="s">&quot;userservice_node01&quot;</span> <span class="na">value=</span><span class="s">&quot;org.redkale.demo.UserService&quot;</span> <span class="na">groups=</span><span class="s">&quot;USER_SERVICE_NODE01&quot;</span><span class="nt">/&gt;</span>
+            <span class="nt">&lt;service</span> <span class="na">name=</span><span class="s">&quot;userservice_node02&quot;</span> <span class="na">value=</span><span class="s">&quot;org.redkale.demo.UserService&quot;</span> <span class="na">groups=</span><span class="s">&quot;USER_SERVICE_NODE02&quot;</span><span class="nt">/&gt;</span>
+            <span class="nt">&lt;service</span> <span class="na">name=</span><span class="s">&quot;userservice_node03&quot;</span> <span class="na">value=</span><span class="s">&quot;org.redkale.demo.UserService&quot;</span> <span class="na">groups=</span><span class="s">&quot;USER_SERVICE_NODE03&quot;</span><span class="nt">/&gt;</span>
+            <span class="nt">&lt;service</span> <span class="na">name=</span><span class="s">&quot;userservice_node04&quot;</span> <span class="na">value=</span><span class="s">&quot;org.redkale.demo.UserService&quot;</span> <span class="na">groups=</span><span class="s">&quot;USER_SERVICE_NODE03&quot;</span><span class="nt">/&gt;</span>
+        <span class="nt">&lt;/services&gt;</span>
+    <span class="nt">&lt;/server&gt;</span> 
+<span class="nt">&lt;/application&gt;</span></pre></div>
+            <br/>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;由以上几种部署方式的范例可以看出，RedKale提供了非常强大的架构，集中式到微服务架构不需要增加修改一行代码即可随意切换，即使网关式部署也只是新增很少的代码就可切换，且不影响其他服务。复杂的系统都可以如小系统般快速地开发出来。<br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;为了降低接入层与业务层代码的耦合， 可以将Service分接口与实现两个类，接入层只加载接口包、业务层使用实现包。
             </p>
+            <br/>
 
             <h3><a id="redkale_confxml" href="#" aria-hidden="true"><span class="octicon octicon-link"></span></a>appplication.xml 配置说明</h3>
             <div class="highlight"><pre><span class="cp">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;</span>
