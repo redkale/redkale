@@ -109,7 +109,7 @@ public abstract class BasedHttpServlet extends HttpServlet {
                             response.finish(ce.getBuffers());
                             return;
                         }
-                        response.setBufferHandler(entry.cacheInterceptor);
+                        response.setBufferHandler(entry.cacheHandler);
                     }
                     entry.servlet.execute(request, response);
                 }
@@ -261,7 +261,7 @@ public abstract class BasedHttpServlet extends HttpServlet {
             HttpCacheable hc = method.getAnnotation(HttpCacheable.class);
             this.cachetimeout = hc == null ? 0 : hc.timeout() * 1000;
             this.cache = cachetimeout > 0 ? new ConcurrentHashMap() : null;
-            this.cacheInterceptor = cachetimeout > 0 ? (HttpResponse response, ByteBuffer[] buffers) -> {
+            this.cacheHandler = cachetimeout > 0 ? (HttpResponse response, ByteBuffer[] buffers) -> {
                 int status = response.getStatus();
                 if (status != 200) return null;
                 CacheEntry ce = new CacheEntry(response.getStatus(), response.getContentType(), buffers);
@@ -274,7 +274,7 @@ public abstract class BasedHttpServlet extends HttpServlet {
             return this.moduleid != 0 || this.actionid != 0;
         }
 
-        public final HttpResponse.BufferHandler cacheInterceptor;
+        public final HttpResponse.BufferHandler cacheHandler;
 
         public final ConcurrentHashMap<String, CacheEntry> cache;
 

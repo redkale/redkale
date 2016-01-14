@@ -7,6 +7,7 @@ package org.redkale.net;
 
 import java.nio.*;
 import java.nio.channels.*;
+import java.util.function.*;
 
 /**
  *
@@ -27,7 +28,7 @@ public abstract class Response<R extends Request> {
 
     private boolean inited = true;
 
-    protected Runnable recycleListener;
+    protected BiConsumer<Request, Response> recycleListener;
 
     private final CompletionHandler finishHandler = new CompletionHandler<Integer, ByteBuffer>() {
 
@@ -103,7 +104,7 @@ public abstract class Response<R extends Request> {
         boolean keepAlive = request.keepAlive;
         if (recycleListener != null) {
             try {
-                recycleListener.run();
+                recycleListener.accept(request, this);
             } catch (Exception e) {
                 System.err.println(request);
                 e.printStackTrace();
@@ -136,7 +137,7 @@ public abstract class Response<R extends Request> {
         this.request.createtime = System.currentTimeMillis();
     }
 
-    public void setRecycleListener(Runnable recycleListener) {
+    public void setRecycleListener(BiConsumer<Request, Response> recycleListener) {
         this.recycleListener = recycleListener;
     }
 

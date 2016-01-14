@@ -36,9 +36,10 @@ public class HttpResponse<R extends HttpRequest> extends Response<R> {
 
     /**
      * HttpResponse.finish 方法内调用
+     * 主要给@HttpCacheable使用
      *
      */
-    public static interface BufferHandler {
+    protected static interface BufferHandler {
 
         public ByteBuffer[] execute(final HttpResponse response, final ByteBuffer[] buffers);
     }
@@ -504,11 +505,11 @@ public class HttpResponse<R extends HttpRequest> extends Response<R> {
         this.contentLength = contentLength;
     }
 
-    public BufferHandler getBufferHandler() {
+    protected BufferHandler getBufferHandler() {
         return bufferHandler;
     }
 
-    public void setBufferHandler(BufferHandler bufferHandler) {
+    protected void setBufferHandler(BufferHandler bufferHandler) {
         this.bufferHandler = bufferHandler;
     }
 
