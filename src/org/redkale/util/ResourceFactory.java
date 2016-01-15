@@ -263,8 +263,10 @@ public final class ResourceFactory {
                     }
                     if (re == null) {
                         ResourceLoader it = findLoader(field.getGenericType(), field);
-                        Object rs = it.load(this, src, rcname, field, attachment);
-                        if (rs != null) re = genctype == classtype ? findEntry(rcname, classtype) : findEntry(rcname, genctype);
+                        if (it != null) {
+                            it.load(this, src, rcname, field, attachment);
+                            re = genctype == classtype ? findEntry(rcname, classtype) : findEntry(rcname, genctype);
+                        }
                     }
                     if (re == null) continue;
                     Object rs = re.value;
@@ -373,7 +375,7 @@ public final class ResourceFactory {
 
     public static interface ResourceLoader {
 
-        public Object load(ResourceFactory factory, Object src, String resourceName, Field field, Object attachment);
+        public void load(ResourceFactory factory, Object src, String resourceName, Field field, Object attachment);
     }
 
 }

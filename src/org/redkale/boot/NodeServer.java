@@ -158,8 +158,8 @@ public abstract class NodeServer {
         final ResourceFactory regFactory = application.getResourceFactory();
         factory.add(DataSource.class, (ResourceFactory rf, final Object src, String resourceName, Field field, final Object attachment) -> {
             try {
-                if (field.getAnnotation(Resource.class) == null) return null;
-                if ((src instanceof Service) && Sncp.isRemote((Service) src)) return null; //远程模式不得注入 DataSource
+                if (field.getAnnotation(Resource.class) == null) return;
+                if ((src instanceof Service) && Sncp.isRemote((Service) src)) return; //远程模式不得注入 DataSource
                 DataSource source = new DataDefaultSource(resourceName);
                 application.dataSources.add(source);
                 regFactory.register(resourceName, DataSource.class, source);
@@ -196,16 +196,14 @@ public abstract class NodeServer {
                 }
                 field.set(src, source);
                 rf.inject(source, self); // 给 "datasource.nodeid" 赋值;
-                return source;
             } catch (Exception e) {
                 logger.log(Level.SEVERE, "DataSource inject error", e);
-                return null;
             }
         });
         factory.add(CacheSource.class, (ResourceFactory rf, final Object src, final String resourceName, Field field, final Object attachment) -> {
             try {
-                if (field.getAnnotation(Resource.class) == null) return null;
-                if ((src instanceof Service) && Sncp.isRemote((Service) src)) return null; //远程模式不得注入 CacheSource   
+                if (field.getAnnotation(Resource.class) == null) return;
+                if ((src instanceof Service) && Sncp.isRemote((Service) src)) return; //远程模式不得注入 CacheSource   
 
                 SncpClient client = null;
                 Transport sameGroupTransport = null;
@@ -246,10 +244,8 @@ public abstract class NodeServer {
                     if (finer) logger.finer("[" + Thread.currentThread().getName() + "] Load Service " + wrapper.getService());
                 }
                 logger.finer("[" + Thread.currentThread().getName() + "] Load Source " + source);
-                return source;
             } catch (Exception e) {
                 logger.log(Level.SEVERE, "DataSource inject error", e);
-                return null;
             }
         });
     }
