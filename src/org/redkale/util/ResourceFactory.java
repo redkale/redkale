@@ -236,7 +236,9 @@ public final class ResourceFactory {
         return null;
     }
 
-    public <A> Map<String, A> find(final Pattern reg, Class<? extends A> clazz, A exclude) {
+    //Map无法保证ResourceEntry的自动同步， 暂时不提供该功能
+    @Deprecated
+    private <A> Map<String, A> find(final Pattern reg, Class<? extends A> clazz, A exclude) {
         Map<String, A> result = new LinkedHashMap();
         load(reg, clazz, exclude, result);
         return result;
@@ -308,10 +310,11 @@ public final class ResourceFactory {
                     final String rcname = tname;
                     ResourceEntry re = genctype == classtype ? null : findEntry(rcname, genctype);
                     if (re == null) {
-                        if (Map.class.isAssignableFrom(classtype)) {
-                            Map map = find(Pattern.compile(rcname.isEmpty() ? ".*" : rcname), (Class) ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[1], src);
-                            if (map != null) re = new ResourceEntry(map);
-                        } else if (rcname.startsWith("property.")) {
+//                        if (Map.class.isAssignableFrom(classtype)) {
+//                            Map map = find(Pattern.compile(rcname.isEmpty() ? ".*" : rcname), (Class) ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[1], src);
+//                            if (map != null) re = new ResourceEntry(map);
+//                        } else 
+                        if (rcname.startsWith("property.")) {
                             re = findEntry(rcname, String.class);
                         } else {
                             re = findEntry(rcname, classtype);

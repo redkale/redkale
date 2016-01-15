@@ -25,6 +25,7 @@ import org.redkale.util.*;
  *
  * @author zhangjx
  */
+@Deprecated
 @AutoLoad(false)
 @ResourceType({DataSQLListenerService.class, DataSQLListener.class})
 public class DataSQLListenerService implements DataSQLListener, Service {
