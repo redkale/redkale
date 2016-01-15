@@ -28,7 +28,7 @@ public abstract class Response<R extends Request> {
 
     private boolean inited = true;
 
-    protected BiConsumer<Request, Response> recycleListener;
+    protected BiConsumer<R, Response<R>> recycleListener;
 
     private final CompletionHandler finishHandler = new CompletionHandler<Integer, ByteBuffer>() {
 
@@ -137,7 +137,7 @@ public abstract class Response<R extends Request> {
         this.request.createtime = System.currentTimeMillis();
     }
 
-    public void setRecycleListener(BiConsumer<Request, Response> recycleListener) {
+    public void setRecycleListener(BiConsumer<R, Response<R>> recycleListener) {
         this.recycleListener = recycleListener;
     }
 
