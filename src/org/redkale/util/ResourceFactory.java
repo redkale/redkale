@@ -55,11 +55,19 @@ public final class ResourceFactory {
     }
 
     public void register(final Class clazz, final Object rs) {
-        register("", clazz, rs);
+        register(true, clazz, rs);
+    }
+
+    public void register(final boolean autoSync, final Class clazz, final Object rs) {
+        register(autoSync, "", clazz, rs);
     }
 
     public void register(final Object rs) {
-        if (rs != null) register("", rs.getClass(), rs);
+        register(true, rs);
+    }
+
+    public void register(final boolean autoSync, final Object rs) {
+        if (rs != null) register(autoSync, "", rs.getClass(), rs);
     }
 
     public void add(final Type clazz, final ResourceLoader rs) {
@@ -68,18 +76,26 @@ public final class ResourceFactory {
     }
 
     public void register(final String name, final Object rs) {
+        register(true, name, rs);
+    }
+
+    public void register(final boolean autoSync, final String name, final Object rs) {
         final Class claz = rs.getClass();
         ResourceType rtype = (ResourceType) claz.getAnnotation(ResourceType.class);
         if (rtype == null) {
-            register(name, claz, rs);
+            register(autoSync, name, claz, rs);
         } else {
             for (Class cl : rtype.value()) {
-                register(name, cl, rs);
+                register(autoSync, name, cl, rs);
             }
         }
     }
 
     public <A> void register(final String name, final Class<? extends A> clazz, final A rs) {
+        register(true, name, clazz, rs);
+    }
+
+    public <A> void register(final boolean autoSync, final String name, final Class<? extends A> clazz, final A rs) {
         ConcurrentHashMap<String, ResourceEntry> map = this.store.get(clazz);
         if (map == null) {
             ConcurrentHashMap<String, ResourceEntry> sub = new ConcurrentHashMap();
@@ -90,14 +106,18 @@ public final class ResourceFactory {
             if (re == null) {
                 map.put(name, new ResourceEntry(rs));
             } else {
-                map.put(name, new ResourceEntry(rs, re.elements));
+                map.put(name, new ResourceEntry(rs, re.elements, autoSync));
             }
         }
     }
 
     public <A> void register(final String name, final Type clazz, final A rs) {
+        register(true, name, clazz, rs);
+    }
+
+    public <A> void register(final boolean autoSync, final String name, final Type clazz, final A rs) {
         if (clazz instanceof Class) {
-            register(name, (Class) clazz, rs);
+            register(autoSync, name, (Class) clazz, rs);
             return;
         }
         ConcurrentHashMap<String, ResourceEntry> map = this.gencstore.get(clazz);
@@ -110,7 +130,7 @@ public final class ResourceFactory {
             if (re == null) {
                 map.put(name, new ResourceEntry(rs));
             } else {
-                map.put(name, new ResourceEntry(rs, re.elements));
+                map.put(name, new ResourceEntry(rs, re.elements, autoSync));
             }
         }
     }
@@ -299,10 +319,10 @@ public final class ResourceFactory {
             this.elements = new CopyOnWriteArrayList<>();
         }
 
-        public ResourceEntry(T value, final List<ResourceElement> elements) {
+        public ResourceEntry(T value, final List<ResourceElement> elements, boolean sync) {
             this.value = value;
             this.elements = elements == null ? new CopyOnWriteArrayList<>() : elements;
-            if (elements != null && !elements.isEmpty()) {
+            if (sync && elements != null && !elements.isEmpty()) {
 
                 for (ResourceElement element : elements) {
                     Object dest = element.dest.get();
