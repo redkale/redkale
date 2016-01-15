@@ -58,14 +58,14 @@ public final class Application {
     //当前进程节点的IP地址， 类型：InetAddress、String
     public static final String RESNAME_APP_ADDR = "APP_ADDR";
 
-    //当前SNCP Server的IP地址+端口集合 类型: Map<InetSocketAddress, String>、 Map<String, Set<InetSocketAddress>>
-    public static final String RESNAME_APP_NODES = "APP_NODES";
-
     //当前Service的IP地址+端口 类型: SocketAddress、InetSocketAddress、String
     public static final String RESNAME_SERVER_ADDR = "SERVER_ADDR";
 
     //当前SNCP Server所属的组  类型: String
     public static final String RESNAME_SERVER_GROUP = "SERVER_GROUP";
+
+    //当前Server的ROOt目录 类型：String、File、Path
+    public static final String RESNAME_SERVER_ROOT = Server.RESNAME_SERVER_ROOT;
 
     final Map<InetSocketAddress, String> globalNodes = new HashMap<>();
 
@@ -437,16 +437,6 @@ public final class Application {
             }
         }
         if (!sncps.isEmpty() && globalNodes.isEmpty()) throw new RuntimeException("found SNCP Server node but not found <group> node info.");
-
-        factory.register(RESNAME_APP_NODES, new TypeToken<Map<InetSocketAddress, String>>() {
-        }.getType(), globalNodes);
-        factory.register(RESNAME_APP_NODES, new TypeToken<HashMap<InetSocketAddress, String>>() {
-        }.getType(), globalNodes);
-
-        factory.register(RESNAME_APP_NODES, new TypeToken<Map<String, Set<InetSocketAddress>>>() {
-        }.getType(), globalGroups);
-        factory.register(RESNAME_APP_NODES, new TypeToken<HashMap<String, Set<InetSocketAddress>>>() {
-        }.getType(), globalGroups);
 
         runServers(timecd, sncps);  //必须确保sncp都启动后再启动其他协议
         runServers(timecd, others);

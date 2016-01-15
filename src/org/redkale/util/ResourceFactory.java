@@ -75,6 +75,62 @@ public final class ResourceFactory {
         loadermap.put(clazz, rs);
     }
 
+    public void register(final String name, final boolean value) {
+        register(true, name, boolean.class, value);
+    }
+
+    public void register(final boolean autoSync, final String name, final boolean value) {
+        register(autoSync, name, boolean.class, value);
+    }
+
+    public void register(final String name, final byte value) {
+        register(true, name, byte.class, value);
+    }
+
+    public void register(final boolean autoSync, final String name, final byte value) {
+        register(autoSync, name, byte.class, value);
+    }
+
+    public void register(final String name, final short value) {
+        register(true, name, short.class, value);
+    }
+
+    public void register(final boolean autoSync, final String name, final short value) {
+        register(autoSync, name, short.class, value);
+    }
+
+    public void register(final String name, final int value) {
+        register(true, name, int.class, value);
+    }
+
+    public void register(final boolean autoSync, final String name, final int value) {
+        register(autoSync, name, int.class, value);
+    }
+
+    public void register(final String name, final float value) {
+        register(true, name, float.class, value);
+    }
+
+    public void register(final boolean autoSync, final String name, final float value) {
+        register(autoSync, name, float.class, value);
+    }
+
+    public void register(final String name, final long value) {
+        register(true, name, long.class, value);
+    }
+
+    public void register(final boolean autoSync, final String name, final long value) {
+        register(autoSync, name, long.class, value);
+    }
+
+    public void register(final String name, final double value) {
+        register(true, name, double.class, value);
+    }
+
+    public void register(final boolean autoSync, final String name, final double value) {
+        register(autoSync, name, double.class, value);
+    }
+
     public void register(final String name, final Object rs) {
         register(true, name, rs);
     }
@@ -268,9 +324,16 @@ public final class ResourceFactory {
                             re = genctype == classtype ? findEntry(rcname, classtype) : findEntry(rcname, genctype);
                         }
                     }
+                    if (re == null) {
+                        register(rcname, genctype, null); //自动注入null的值
+                        re = genctype == classtype ? findEntry(rcname, classtype) : findEntry(rcname, genctype);
+                        System.out.println(field + "-----------" + genctype + "---------" + rcname + "--------" + re);
+                    }
                     if (re == null) continue;
+                    re.elements.add(new ResourceElement<>(src, field));
+
                     Object rs = re.value;
-                    if (!re.value.getClass().isPrimitive() && classtype.isPrimitive()) {
+                    if (rs != null && !rs.getClass().isPrimitive() && classtype.isPrimitive()) {
                         if (classtype == int.class) {
                             rs = Integer.decode(rs.toString());
                         } else if (classtype == long.class) {
@@ -287,13 +350,12 @@ public final class ResourceFactory {
                             rs = Double.parseDouble(rs.toString());
                         }
                     }
-                    field.set(src, rs);
-                    re.elements.add(new ResourceElement<>(src, field));
+                    if (rs != null) field.set(src, rs);
                 }
             } while ((clazz = clazz.getSuperclass()) != Object.class);
             return true;
         } catch (Exception ex) {
-            logger.log(Level.FINER, "inject " + src + " error", ex);
+            logger.log(Level.SEVERE, "inject " + src + " error", ex);
             return false;
         }
     }
@@ -348,6 +410,7 @@ public final class ResourceFactory {
                             rs = Double.parseDouble(rs.toString());
                         }
                     }
+                    if (rs == null && classtype.isPrimitive()) rs = Array.get(Array.newInstance(classtype, 1), 0);
                     try {
                         element.field.set(dest, rs);
                     } catch (Exception e) {

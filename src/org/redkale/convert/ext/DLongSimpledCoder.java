@@ -63,7 +63,7 @@ public final class DLongSimpledCoder<R extends Reader, W extends Writer> extends
 
         @Override
         public DLong convertFrom(Reader in) {
-            final String str = in.readString();
+            final String str = in.readSmallString();
             if (str == null) return null;
             return DLong.create(Utility.hexToBin(str));
         }

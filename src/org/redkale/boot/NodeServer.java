@@ -17,6 +17,7 @@ import java.io.*;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
 import java.net.*;
+import java.nio.file.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.Consumer;
@@ -129,6 +130,11 @@ public abstract class NodeServer {
             if (!webroot.contains(":") && !webroot.startsWith("/")) {
                 myroot = new File(System.getProperty(Application.RESNAME_APP_HOME), webroot);
             }
+            
+            factory.register(Server.RESNAME_SERVER_ROOT, String.class, myroot.getCanonicalPath());
+            factory.register(Server.RESNAME_SERVER_ROOT, File.class, myroot.getCanonicalFile());
+            factory.register(Server.RESNAME_SERVER_ROOT, Path.class, myroot.toPath());
+
             final String homepath = myroot.getCanonicalPath();
             Server.loadLib(logger, config.getValue("lib", "") + ";" + homepath + "/lib/*;" + homepath + "/classes");
             if (server != null) server.init(config);
