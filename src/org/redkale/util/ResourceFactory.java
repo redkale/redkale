@@ -5,6 +5,7 @@
  */
 package org.redkale.util;
 
+import java.lang.ref.*;
 import java.lang.reflect.*;
 import java.util.*;
 import java.util.concurrent.*;
@@ -33,9 +34,9 @@ public final class ResourceFactory {
 
     private final ConcurrentHashMap<Type, ResourceLoader> loadermap = new ConcurrentHashMap();
 
-    private final ConcurrentHashMap<Class<?>, ConcurrentHashMap<String, ?>> store = new ConcurrentHashMap();
+    private final ConcurrentHashMap<Class<?>, ConcurrentHashMap<String, ResourceEntry>> store = new ConcurrentHashMap();
 
-    private final ConcurrentHashMap<Type, ConcurrentHashMap<String, ?>> gencstore = new ConcurrentHashMap();
+    private final ConcurrentHashMap<Type, ConcurrentHashMap<String, ResourceEntry>> gencstore = new ConcurrentHashMap();
 
     private ResourceFactory(ResourceFactory parent) {
         this.parent = parent;
@@ -79,13 +80,18 @@ public final class ResourceFactory {
     }
 
     public <A> void register(final String name, final Class<? extends A> clazz, final A rs) {
-        ConcurrentHashMap map = this.store.get(clazz);
+        ConcurrentHashMap<String, ResourceEntry> map = this.store.get(clazz);
         if (map == null) {
-            ConcurrentHashMap<String, A> sub = new ConcurrentHashMap();
-            sub.put(name, rs);
+            ConcurrentHashMap<String, ResourceEntry> sub = new ConcurrentHashMap();
+            sub.put(name, new ResourceEntry(rs));
             store.put(clazz, sub);
         } else {
-            map.put(name, rs);
+            ResourceEntry re = map.get(name);
+            if (re == null) {
+                map.put(name, new ResourceEntry(rs));
+            } else {
+                map.put(name, new ResourceEntry(rs, re.elements));
+            }
         }
     }
 
@@ -94,13 +100,18 @@ public final class ResourceFactory {
             register(name, (Class) clazz, rs);
             return;
         }
-        ConcurrentHashMap map = this.gencstore.get(clazz);
+        ConcurrentHashMap<String, ResourceEntry> map = this.gencstore.get(clazz);
         if (map == null) {
-            ConcurrentHashMap<String, A> sub = new ConcurrentHashMap();
-            sub.put(name, rs);
+            ConcurrentHashMap<String, ResourceEntry> sub = new ConcurrentHashMap();
+            sub.put(name, new ResourceEntry(rs));
             gencstore.put(clazz, sub);
         } else {
-            map.put(name, rs);
+            ResourceEntry re = map.get(name);
+            if (re == null) {
+                map.put(name, new ResourceEntry(rs));
+            } else {
+                map.put(name, new ResourceEntry(rs, re.elements));
+            }
         }
     }
 
@@ -109,32 +120,42 @@ public final class ResourceFactory {
     }
 
     public <A> A find(String name, Type clazz) {
-        Map<String, ?> map = this.gencstore.get(clazz);
+        ResourceEntry re = findEntry(name, clazz);
+        return re == null ? null : (A) re.value;
+    }
+
+    private ResourceEntry findEntry(String name, Type clazz) {
+        Map<String, ResourceEntry> map = this.gencstore.get(clazz);
         if (map != null) {
-            A rs = (A) map.get(name);
-            if (rs != null) return rs;
+            ResourceEntry re = map.get(name);
+            if (re != null) return re;
         }
-        if (parent != null) return parent.find(name, clazz);
+        if (parent != null) return parent.findEntry(name, clazz);
         return null;
     }
 
     public <A> A find(String name, Class<? extends A> clazz) {
-        Map<String, ?> map = this.store.get(clazz);
+        ResourceEntry<A> re = findEntry(name, clazz);
+        return re == null ? null : re.value;
+    }
+
+    private <A> ResourceEntry<A> findEntry(String name, Class<? extends A> clazz) {
+        Map<String, ResourceEntry> map = this.store.get(clazz);
         if (map != null) {
-            A rs = (A) map.get(name);
+            ResourceEntry rs = map.get(name);
             if (rs != null) return rs;
         }
-        if (parent != null) return parent.find(name, clazz);
+        if (parent != null) return parent.findEntry(name, clazz);
         return null;
     }
 
     public <A> A findChild(final String name, final Class<? extends A> clazz) {
         A rs = find(name, clazz);
         if (rs != null) return rs;
-        for (Map.Entry<Class<?>, ConcurrentHashMap<String, ?>> en : this.store.entrySet()) {  //不用forEach为兼容JDK 6
+        for (Map.Entry<Class<?>, ConcurrentHashMap<String, ResourceEntry>> en : this.store.entrySet()) {  //不用forEach为兼容JDK 6
             if (!clazz.isAssignableFrom(en.getKey())) continue;
-            Object v = en.getValue().get(name);
-            if (v != null) return (A) v;
+            ResourceEntry v = en.getValue().get(name);
+            if (v != null) return (A) v.value;
         }
         return null;
     }
@@ -146,11 +167,13 @@ public final class ResourceFactory {
     }
 
     private <A> void load(final Pattern reg, Class<? extends A> clazz, final A exclude, final Map<String, A> result) {
-        ConcurrentHashMap<String, ?> map = this.store.get(clazz);
+        ConcurrentHashMap<String, ResourceEntry> map = this.store.get(clazz);
         if (map != null) {
-            for (Map.Entry<String, ?> en : map.entrySet()) {  // 不用forEach为兼容JDK 6
+            for (Map.Entry<String, ResourceEntry> en : map.entrySet()) {  // 不用forEach为兼容JDK 6
                 String x = en.getKey();
-                Object y = en.getValue();
+                ResourceEntry re = en.getValue();
+                if (re == null) continue;
+                Object y = re.value;
                 if (y != exclude && reg.matcher(x).find() && result.get(x) == null) result.put(x, (A) y);
             }
         }
@@ -207,22 +230,25 @@ public final class ResourceFactory {
                         }
                     }
                     final String rcname = tname;
-                    Object rs = genctype == classtype ? null : find(rcname, genctype);
-                    if (rs == null) {
+                    ResourceEntry re = genctype == classtype ? null : findEntry(rcname, genctype);
+                    if (re == null) {
                         if (Map.class.isAssignableFrom(classtype)) {
-                            rs = find(Pattern.compile(rcname.isEmpty() ? ".*" : rcname), (Class) ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[1], src);
+                            Map map = find(Pattern.compile(rcname.isEmpty() ? ".*" : rcname), (Class) ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[1], src);
+                            if (map != null) re = new ResourceEntry(map);
                         } else if (rcname.startsWith("property.")) {
-                            rs = find(rcname, String.class);
+                            re = findEntry(rcname, String.class);
                         } else {
-                            rs = find(rcname, classtype);
+                            re = findEntry(rcname, classtype);
                         }
                     }
-                    if (rs == null) {
+                    if (re == null) {
                         ResourceLoader it = findLoader(field.getGenericType(), field);
-                        rs = it.load(this, src, rcname, field, attachment);
+                        Object rs = it.load(this, src, rcname, field, attachment);
+                        if (rs != null) re = genctype == classtype ? findEntry(rcname, classtype) : findEntry(rcname, genctype);
                     }
-                    if (rs == null) continue;
-                    if (!rs.getClass().isPrimitive() && classtype.isPrimitive()) {
+                    if (re == null) continue;
+                    Object rs = re.value;
+                    if (!re.value.getClass().isPrimitive() && classtype.isPrimitive()) {
                         if (classtype == int.class) {
                             rs = Integer.decode(rs.toString());
                         } else if (classtype == long.class) {
@@ -240,6 +266,7 @@ public final class ResourceFactory {
                         }
                     }
                     field.set(src, rs);
+                    re.elements.add(new ResourceElement<>(src, field));
                 }
             } while ((clazz = clazz.getSuperclass()) != Object.class);
             return true;
@@ -259,6 +286,69 @@ public final class ResourceFactory {
             if (t instanceof Class && (((Class) t)).isAssignableFrom(c)) return en.getValue();
         }
         return parent == null ? null : parent.findLoader(ft, field);
+    }
+
+    private static class ResourceEntry<T> {
+
+        public final T value;
+
+        public final List<ResourceElement> elements;
+
+        public ResourceEntry(T value) {
+            this.value = value;
+            this.elements = new CopyOnWriteArrayList<>();
+        }
+
+        public ResourceEntry(T value, final List<ResourceElement> elements) {
+            this.value = value;
+            this.elements = elements == null ? new CopyOnWriteArrayList<>() : elements;
+            if (elements != null && !elements.isEmpty()) {
+
+                for (ResourceElement element : elements) {
+                    Object dest = element.dest.get();
+                    if (dest == null) continue;
+                    Object rs = value;
+                    final Class classtype = element.fieldType;
+                    if (rs != null && !rs.getClass().isPrimitive() && classtype.isPrimitive()) {
+                        if (classtype == int.class) {
+                            rs = Integer.decode(rs.toString());
+                        } else if (classtype == long.class) {
+                            rs = Long.decode(rs.toString());
+                        } else if (classtype == short.class) {
+                            rs = Short.decode(rs.toString());
+                        } else if (classtype == boolean.class) {
+                            rs = "true".equalsIgnoreCase(rs.toString());
+                        } else if (classtype == byte.class) {
+                            rs = Byte.decode(rs.toString());
+                        } else if (classtype == float.class) {
+                            rs = Float.parseFloat(rs.toString());
+                        } else if (classtype == double.class) {
+                            rs = Double.parseDouble(rs.toString());
+                        }
+                    }
+                    try {
+                        element.field.set(dest, rs);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
+    }
+
+    private static class ResourceElement<T> {
+
+        public final WeakReference<T> dest;
+
+        public final Field field;
+
+        public final Class fieldType;
+
+        public ResourceElement(T dest, Field field) {
+            this.dest = new WeakReference(dest);
+            this.field = field;
+            this.fieldType = field.getType();
+        }
     }
 
     public static interface ResourceLoader {
