@@ -327,7 +327,6 @@ public final class ResourceFactory {
                     if (re == null) {
                         register(rcname, genctype, null); //自动注入null的值
                         re = genctype == classtype ? findEntry(rcname, classtype) : findEntry(rcname, genctype);
-                        System.out.println(field + "-----------" + genctype + "---------" + rcname + "--------" + re);
                     }
                     if (re == null) continue;
                     re.elements.add(new ResourceElement<>(src, field));
