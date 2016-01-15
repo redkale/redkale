@@ -290,7 +290,12 @@
     <span class="o">}</span></pre></div>
             <p>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如上图DataSourceService的源码，当DataSource为本地实例时，异步接口(含<b>CompletionHandler</b>参数的)与同步接口执行流程相同。当DataSource为远程模式时，调用异步接口时，通信接口发到远程服务器时CompletionHandler参数的值传<b>null</b>，返回数据后再调用本地的CompletionHandler参数值执行。<br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;异步调用方式是提高服务并发性的有效手段，特别是在远程模式Service比较多的情况下效果更明显。以HTTP服务为例，在Tomcat刚刚改版成NIO的时候，网上随处可见都是大谈NIO性能比BIO多好，认为BIO与NIO的不同，是BIO往往会引入多线程，每个连接一个单独的线程；而NIO则是使用单线程或者只使用少量的多线程，每个连接共用一个线程。
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;异步调用方式是提高服务并发性的有效手段，特别是在远程模式Service比较多的情况下效果更明显。以HTTP服务为例，在Tomcat刚刚改版成NIO的时候，网上随处可见都是大谈NIO性能比BIO多好，认为BIO与NIO的不同，是BIO往往会引入多线程，每个连接一个单独的线程；NIO则是使用单线程或者只使用少量的多线程，每个连接共用一个线程。而事实上呢，通常还是通过增加线程数来提高并发量。为什么NIO作用不大呢， 因为一个HTTP动态请求耗时最多的业务逻辑层，IO操作的耗时比重小得多，只有在静态资源请求这种纯IO操作才能体现NIO、AIO(NIO.2)的优势。举例一个很简单的数据查询请求，采用BIO方式耗时（为了方便比较将所耗时间扩大几倍）如下: <br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1、服务器TCP连接开始到进入HttpServlet，耗时  10ms  <br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2、用户态判断和参数验证，&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 耗时  10ms <br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3、调用远程数据源(DataSource)查询数据，耗时 150ms <br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4、数据序列化与response的IO输出，      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 耗时  10ms <br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如上描述，一个请求处理耗时 180ms，同时占用一个线程的时间也是 180ms。若换成NIO使IO耗时减少，为了方便计算假设IO耗时为0(当然实际情况是不可能的), 那么步骤1、4的耗时忽略不计，线程的占用时间由180ms变成160ms。 假设数据查询接口IO操作本身耗时也是10ms，那么有140ms是用于等待。若采用DataSource异步接口， 则140ms的等待时间可以释放当前线程资源。虽然整个请求的处理时间还是180ms，但是线程的占用时间却只有20ms。可以看出减少耗时多的步骤的等待时间才能事半功倍，大幅度地提高性能。异步接口的主要作用是远程请求在等待过程中释放当前线程资源。大大减少线程数，也减少大量线程之间的切换消耗。
             </p>
             <footer class="site-footer">
                 <span class="site-footer-owner"><a href="https://github.com/wentch/redkale">RedKale</a> © <a href="https://github.com/wentch">wentch</a> &nbsp;&nbsp;&nbsp;&nbsp;欢迎加入RedKale技术交流QQ群: 527523235</span>
