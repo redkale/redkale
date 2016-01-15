@@ -26,11 +26,11 @@
         <section class="main-content">
             <h3><a id="convert_intro" class="anchor" href="#" aria-hidden="true"><span class="octicon octicon-link"></span></a>Convert 组件介绍</h3>
 
-            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Convert 是一个比较独立的组件，仅依赖于util包。提供Java对象的序列化与反解析功能。支持JSON(JavaScript Object Notation)、BSON(Binary Stream Object Notation)两种格式化。 两种格式使用方式完全一样，其性能都大幅度超过其他JSON框架。同时JSON内置于HTTP协议中，BSON也是SNCP协议数据序列化的基础。<br/></p>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Convert 是一个比较独立的组件，仅依赖于util包。提供Java对象的序列化与反解析功能。支持JSON(JavaScript Object Notation)、BSON(Binary Stream Object Notation)两种格式化。 两种格式使用方式完全一样，其性能都大幅度超过其他JSON框架。同时JSON内置于HTTP协议中，BSON也是SNCP协议数据序列化的基础。<br/></p>
 
             <h3><a id="convert_study" class="anchor" href="#" aria-hidden="true"><span class="octicon octicon-link"></span></a>Convert 快速上手</h3>
-            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;本介绍仅以JSON为例(BSON与JSON使用方式雷同)。其操作类主要是JsonConvert，配置类主要是JsonFactory、ConvertColumn。JsonFactory采用同ClassLoader类似的双亲委托方式设计。</br></p>
-            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;JsonConvert 序列化encode方法：</p>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;本介绍仅以JSON为例(BSON与JSON使用方式雷同)。其操作类主要是JsonConvert，配置类主要是JsonFactory、ConvertColumn。JsonFactory采用同ClassLoader类似的双亲委托方式设计。</br></p>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;JsonConvert 序列化encode方法：</p>
 
             <div class="highlight"><pre>    <span class="kd">public</span> <span class="n">String</span> <span class="nf">convertTo</span><span class="o">(<span class="kd">final</span> </span><span class="n">Object</span> <span class="n">value</span><span class="o">);</span>
 
@@ -48,7 +48,7 @@
 
     <span class="kd">public</span> <span class="kt">void</span> <span class="nf">convertTo</span><span class="o">(</span><span class="kd">final</span> <span class="n">JsonWriter</span> <span class="n">writer</span><span class="o">,</span> <span class="kd">final</span> <span class="n">Type</span> <span class="n">type</span><span class="o">,</span> <span class="kd">final</span> <span class="n">Object</span> <span class="n">value</span><span class="o">);</span></pre></div>
 
-            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;JsonConvert 反解析decode方法：</p>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;JsonConvert 反解析decode方法：</p>
             <div class="highlight"><pre>    <span class="kd">public</span> <span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">T</span> <span class="nf">convertFrom</span><span class="o">(</span><span class="kd">final</span> <span class="n">Type</span> <span class="n">type</span><span class="o">,</span> <span class="kd">final</span> <span class="n">String</span> <span class="n">text</span><span class="o">);</span>
 
     <span class="kd">public</span> <span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">T</span> <span class="nf">convertFrom</span><span class="o">(</span><span class="kd">final</span> <span class="n">Type</span> <span class="n">type</span><span class="o">,</span> <span class="kd">final</span> <span class="kt">char</span><span class="o">[]</span> <span class="n">text</span><span class="o">);</span>
@@ -61,22 +61,22 @@
 
     <span class="kd">public</span> <span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">T</span> <span class="nf">convertFrom</span><span class="o">(</span><span class="kd">final</span> <span class="n">Type</span> <span class="n">type</span><span class="o">,</span> <span class="kd">final</span> <span class="n">JsonReader</span> <span class="n">reader</span><span class="o">);</span></pre></div>
 
-            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Convert 与 ByteBuffer 的结合 </p>      
-            <p id="json_net_bytebuffer">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;从以上的方法可以看出，与其他JSON框架相比Convert多了与ByteBuffer结合的方法。特别是convertTo方法加了Supplier&lt;ByteBuffer&gt;方法，这么做是为了提高数据传输的性能。在大部分情况下JSON序列化得到的数据流是为了传输出去，常见的场景就是HTTP+JSON接口。Convert提供ByteBuffer接口会大量减少中间临时数据的产生。大部分输出JSON数据的方法如下:
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Convert 与 ByteBuffer 的结合 </p>      
+            <p id="json_net_bytebuffer">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;从以上的方法可以看出，与其他JSON框架相比Convert多了与ByteBuffer结合的方法。特别是convertTo方法加了Supplier&lt;ByteBuffer&gt;方法，这么做是为了提高数据传输的性能。在大部分情况下JSON序列化得到的数据流是为了传输出去，常见的场景就是HTTP+JSON接口。Convert提供ByteBuffer接口会大量减少中间临时数据的产生。大部分输出JSON数据的方法如下:
             </p>
             <div class="highlight"><pre>    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">doPost</span><span class="o">(</span><span class="n">HttpServletRequest</span> <span class="n">req</span><span class="o">,</span> <span class="n">HttpServletResponse</span> <span class="n">resp</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">ServletException</span><span class="o">,</span> <span class="n">IOException</span> <span class="o">{</span>
         <span class="n">String</span> <span class="n">json</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Gson()</span><span class="o">.</span><span class="na">toJson</span><span class="o">(record);</span>
         <span class="n">resp</span><span class="o">.</span><span class="na">setContentType</span><span class="o">(</span><span class="s">&quot;text/json; charset=UTF-8&quot;</span><span class="o">);</span>
         <span class="n">resp</span><span class="o">.</span><span class="na">getOutputStream</span><span class="o">().</span><span class="na">write</span><span class="o">(</span><span class="n">json</span><span class="o">.</span><span class="na">getBytes</span><span class="o">(</span><span class="s">&quot;UTF-8&quot;</span><span class="o">));</span>
     <span class="o">}</span></pre></div>
-            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;几乎所有的JSON框架提供的接口以String作为返回结果为主，其内在都是以char[]作为JsonWriter的载体。以Gson为例，Gson拼接JSON默认使用的是StringWriter，StringWriter的扩容策略是翻倍。为了方便计算，假设一个对象转换成JSON字符串大小为了10K。Gson在转换过程中产生的临时的char[]的大小: 16 + 32 + 64 + 128 + 256 + 512 + 1K + 2K + 4K + 8K + 16K = 32K, char[]转换成最终的String结果又会产生10K的char[], 最后在response输出时又回产生10K的byte[]（方便计算不考虑双字节）,也就是说整个对象输出过程中会产生52K的临时数据。而且常见的HTTP服务器(如实现java-servlet规范的服务器)不会把底层的ByteBuffer对象池暴露给上层。所以以String为输出结果的JSON方法都会产生5倍于数据体积大小(其他低于1倍扩容策略的框架会产生更多)的垃圾数据。<br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;RedKale框架的HTTP服务内置了Convert的JSON接口，避免了大量的垃圾数据产生。RedKale的HTTP是基于AIO(NIO.2)实现且存在ByteBuffer对象池，response的finishJson系列方法将HTTP服务的ByteBuffer对象池传给Convert， 使Convert在序列化过程中直接以UTF-8编码方式输出到ByteBuffer里，输出结束后将ByteBuffer交给对象池回收，从而减少大量构建bye[]、char[]所产生的临时数据。</p>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;几乎所有的JSON框架提供的接口以String作为返回结果为主，其内在都是以char[]作为JsonWriter的载体。以Gson为例，Gson拼接JSON默认使用的是StringWriter，StringWriter的扩容策略是翻倍。为了方便计算，假设一个对象转换成JSON字符串大小为了10K。Gson在转换过程中产生的临时的char[]的大小: 16 + 32 + 64 + 128 + 256 + 512 + 1K + 2K + 4K + 8K + 16K = 32K, char[]转换成最终的String结果又会产生10K的char[], 最后在response输出时又回产生10K的byte[]（方便计算不考虑双字节）,也就是说整个对象输出过程中会产生52K的临时数据。而且常见的HTTP服务器(如实现java-servlet规范的服务器)不会把底层的ByteBuffer对象池暴露给上层。所以以String为输出结果的JSON方法都会产生5倍于数据体积大小(其他低于1倍扩容策略的框架会产生更多)的垃圾数据。<br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;RedKale框架的HTTP服务内置了Convert的JSON接口，避免了大量的垃圾数据产生。RedKale的HTTP是基于AIO(NIO.2)实现且存在ByteBuffer对象池，response的finishJson系列方法将HTTP服务的ByteBuffer对象池传给Convert， 使Convert在序列化过程中直接以UTF-8编码方式输出到ByteBuffer里，输出结束后将ByteBuffer交给对象池回收，从而减少大量构建bye[]、char[]所产生的临时数据。</p>
             <div class="highlight"><pre>    <span class="kd">protected</span> <span class="kt">void</span> <span class="nf">execute</span><span class="o">(</span><span class="n">HttpRequest</span> <span class="n">req</span><span class="o">,</span> <span class="n">HttpResponse</span> <span class="n">resp</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
         <span class="n">resp</span><span class="o">.</span><span class="na">finishJson</span><span class="o">(</span><span class="n">record</span><span class="o">);</span>
     <span class="o">}</span></pre></div>
             <br/>
 
-            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Convert 基本用法：</p>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Convert 基本用法：</p>
             <div class="highlight"><pre>    <span class="kd">public</span> <span class="kd">class</span> <span class="nc">UserRecord</span> <span class="o">{</span>
 
         <span class="kd">private</span> <span class="kt">int</span> <span class="n">userid</span><span class="o">;</span>
@@ -120,7 +120,7 @@
         <span class="n">user2</span> <span class="o">=</span> <span class="n">childConvert</span><span class="o">.</span><span class="na">convertFrom</span><span class="o">(</span><span class="n">UserRecord</span><span class="o">.</span><span class="k">class</span><span class="o">,</span> <span class="n">json</span><span class="o">);</span>
         <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">childConvert</span><span class="o">.</span><span class="na">convertTo</span><span class="o">(</span><span class="n">user2</span><span class="o">));</span> <span class="c1">//应该也是 {&quot;userid&quot;:100,&quot;username&quot;:&quot;redkalename&quot;}</span>
     <span class="o">}</span></pre></div>
-            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在RedKale里存在默认的JsonConvert、BsonConvert对象。 只需在所有Service、Servlet中增加依赖注入资源。</p>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在RedKale里存在默认的JsonConvert、BsonConvert对象。 只需在所有Service、Servlet中增加依赖注入资源。</p>
             <div class="highlight"><pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">XXXService</span> <span class="kd">implements</span> <span class="n">Service</span> <span class="o">{</span>
 
     <span class="nd">@Resource</span>
@@ -140,7 +140,7 @@
     
 <span class="o">}</span>
                 </pre></div>
-            <p id="convert_diffout">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;同一类型数据通过设置新的JsonFactory可以有不同的输出。</p>
+            <p id="convert_diffout">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;同一类型数据通过设置新的JsonFactory可以有不同的输出。</p>
             <div class="highlight"><pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">UserSimpleInfo</span> <span class="o">{</span>
 
     <span class="kd">private</span> <span class="kt">int</span> <span class="n">userid</span><span class="o">;</span>
@@ -227,8 +227,8 @@
                 </pre></div>
             <br/>
 
-            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Convert 支持非空构造函数。</p>
-            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1. <b>public</b> 的非空构造函数加上 @java.beans.ConstructorProperties 注解：</p>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Convert 支持非空构造函数。</p>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1. <b>public</b> 的非空构造函数加上 @java.beans.ConstructorProperties 注解：</p>
             <div class="highlight"><pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">UserRecord</span> <span class="o">{</span>
 
     <span class="kd">private</span> <span class="kt">int</span> <span class="n">userid</span><span class="o">;</span>
@@ -256,7 +256,7 @@
         <span class="k">return</span> <span class="n">password</span><span class="o">;</span>
     <span class="o">}</span>
 <span class="o">}</span></pre></div>
-            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2. 非<b>public</b> 的非空构造函数类自定义Creator：</p>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2. 非<b>public</b> 的非空构造函数类自定义Creator：</p>
             <div class="highlight"><pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">UserRecord</span> <span class="o">{</span>
 
     <span class="kd">private</span> <span class="kt">int</span> <span class="n">userid</span><span class="o">;</span>
@@ -305,8 +305,8 @@
                 </pre></div>
             <br/>
 
-            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Convert 支持自定义Decode、Encode。</p>
-            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1. 通过Factory显式的注册：</p>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Convert 支持自定义Decode、Encode。</p>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1. 通过Factory显式的注册：</p>
             <div class="highlight"><pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">FileSimpleCoder</span><span class="o">&lt;</span><span class="n">R</span> <span class="kd">extends</span> <span class="n">Reader</span><span class="o">,</span> <span class="n">W</span> <span class="kd">extends</span> <span class="n">Writer</span><span class="o">&gt;</span> <span class="kd">extends</span> <span class="n">SimpledCoder</span><span class="o">&lt;</span><span class="n">R</span><span class="o">,</span> <span class="n">W</span><span class="o">,</span> <span class="n">File</span><span class="o">&gt;</span> <span class="o">{</span>
 
     <span class="kd">public</span> <span class="kd">static</span> <span class="kd">final</span> <span class="n">FileSimpleCoder</span> <span class="n">instance</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">FileSimpleCoder</span><span class="o">();</span>
@@ -328,7 +328,7 @@
 <span class="n">BsonFactory</span><span class="o">.</span><span class="na">root</span><span class="o">().</span><span class="na">register</span><span class="o">(</span><span class="n">java</span><span class="o">.</span><span class="na">io</span><span class="o">.</span><span class="na">File</span><span class="o">.</span><span class="kd">class</span><span class="o">,</span> <span class="n">FileSimpleCoder</span><span class="o">.</span><span class="na">instance</span><span class="o">);</span>
                 </pre></div>
 
-            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2. 通过JavaBean类自定义静态方法自动加载：</p>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2. 通过JavaBean类自定义静态方法自动加载：</p>
             <div class="highlight"><pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">InnerCoderEntity</span> <span class="o">{</span>
 
     <span class="kd">private</span> <span class="kd">final</span> <span class="n">String</span> <span class="n">val</span><span class="o">;</span>
@@ -422,22 +422,22 @@
             <br/>
 
             <h3><a id="convert_bson_buffer" class="anchor" href="#" aria-hidden="true"><span class="octicon octicon-link"></span></a>BSON的协议格式</h3>
-            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;BSON类似Java自带的Serializable， 其格式如下: <br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1). 基本数据类型: 直接转换成byte[] <br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2). SmallString(无特殊字符且长度小于256的字符串): length(1 byte) + byte[](utf8); 通常用于类名、字段名、枚举。 <br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3). String: length(4 bytes) + byte[](utf8); <br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4). 数组: length(4 bytes) + byte[]... <br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;5). Object: <br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1. realclass (SmallString) (如果指定格式化的class与实体对象的class不一致才会有该值, 该值可以使用@ConvertEntity给其取个别名) <br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2. 空字符串(SmallString) <br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3. SIGN_OBJECTB 标记位，值固定为0xBB (short)<br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4. 循环字段值:<br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4.1 SIGN_HASNEXT 标记位，值固定为1 (byte) <br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4.2 字段类型; 1-9为基本类型&字符串; 101-109为基本类型&字符串的数组; 127为Object <br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4.3 字段名 (SmallString) <br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4.4 字段的值Object <br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;5. SIGN_NONEXT 标记位，值固定为0 (byte)<br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;6. SIGN_OBJECTE 标记位，值固定为0xEE (short)<br/>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;BSON类似Java自带的Serializable， 其格式如下: <br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1). 基本数据类型: 直接转换成byte[] <br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2). SmallString(无特殊字符且长度小于256的字符串): length(1 byte) + byte[](utf8); 通常用于类名、字段名、枚举。 <br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3). String: length(4 bytes) + byte[](utf8); <br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4). 数组: length(4 bytes) + byte[]... <br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;5). Object: <br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1. realclass (SmallString) (如果指定格式化的class与实体对象的class不一致才会有该值, 该值可以使用@ConvertEntity给其取个别名) <br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2. 空字符串(SmallString) <br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3. SIGN_OBJECTB 标记位，值固定为0xBB (short)<br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4. 循环字段值:<br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4.1 SIGN_HASNEXT 标记位，值固定为1 (byte) <br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4.2 字段类型; 1-9为基本类型&字符串; 101-109为基本类型&字符串的数组; 127为Object <br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4.3 字段名 (SmallString) <br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4.4 字段的值Object <br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;5. SIGN_NONEXT 标记位，值固定为0 (byte)<br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;6. SIGN_OBJECTE 标记位，值固定为0xEE (short)<br/>
             </p>
             <footer class="site-footer">
                 <span class="site-footer-owner"><a href="https://github.com/wentch/redkale">RedKale</a> © <a href="https://github.com/wentch">wentch</a> &nbsp;&nbsp;&nbsp;&nbsp;欢迎加入RedKale技术交流QQ群: 527523235</span>
