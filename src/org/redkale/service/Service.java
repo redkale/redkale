@@ -18,11 +18,7 @@ import org.redkale.util.*;
  *    2、先定义业务的Service接口或抽象类，再编写具体实现类。
  * 第二种方式需要在具体实现类上使用&#64;ResourceType指明资源注入的类型。
  * </pre></blockquote>
- * <p>
- * &#64;Resource(name = ".*")
- * private HashMap&lt;String, XXXService&gt; nodemap;
- * 被注入的多个XXXService实例 但不会包含自身的XXXService。
- *
+ * 
  * <p>
  * 详情见: http://www.redkale.org
  *
