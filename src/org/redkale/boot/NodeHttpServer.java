@@ -70,8 +70,8 @@ public final class NodeHttpServer extends NodeServer {
         final ResourceFactory regFactory = application.getResourceFactory();
         factory.add(WebSocketNode.class, (ResourceFactory rf, final Object src, final String resourceName, Field field, Object attachment) -> { //主要用于单点的服务
             try {
-                if (field.getAnnotation(Resource.class) == null) return;
-                if (!(src instanceof WebSocketServlet)) return;
+                if (field.getAnnotation(Resource.class) == null) return null;
+                if (!(src instanceof WebSocketServlet)) return null;
                 synchronized (regFactory) {
                     Service nodeService = (Service) rf.find(resourceName, WebSocketNode.class);
                     if (nodeService == null) {
@@ -81,9 +81,11 @@ public final class NodeHttpServer extends NodeServer {
                         logger.fine("[" + Thread.currentThread().getName() + "] Load Service " + nodeService);
                     }
                     field.set(src, nodeService);
+                    return nodeService; 
                 }
             } catch (Exception e) {
                 logger.log(Level.SEVERE, "WebSocketNode inject error", e);
+                return null;
             }
         });
     }

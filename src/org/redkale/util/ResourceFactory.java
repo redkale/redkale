@@ -31,7 +31,7 @@ public final class ResourceFactory {
 
     private static final ResourceFactory instance = new ResourceFactory(null);
 
-    private final ConcurrentHashMap<Type, ResourceHandler> interceptmap = new ConcurrentHashMap();
+    private final ConcurrentHashMap<Type, ResourceLoader> loadermap = new ConcurrentHashMap();
 
     private final ConcurrentHashMap<Class<?>, ConcurrentHashMap<String, ?>> store = new ConcurrentHashMap();
 
@@ -61,9 +61,9 @@ public final class ResourceFactory {
         if (rs != null) register("", rs.getClass(), rs);
     }
 
-    public void add(final Type clazz, final ResourceHandler rs) {
+    public void add(final Type clazz, final ResourceLoader rs) {
         if (clazz == null || rs == null) return;
-        interceptmap.put(clazz, rs);
+        loadermap.put(clazz, rs);
     }
 
     public void register(final String name, final Object rs) {
@@ -218,10 +218,10 @@ public final class ResourceFactory {
                         }
                     }
                     if (rs == null) {
-                        ResourceHandler it = findHandler(field.getGenericType(), field);
-                        if (it != null) it.execute(this, src, rcname, field, attachment);
-                        continue;
+                        ResourceLoader it = findLoader(field.getGenericType(), field);
+                        rs = it.load(this, src, rcname, field, attachment);
                     }
+                    if (rs == null) continue;
                     if (!rs.getClass().isPrimitive() && classtype.isPrimitive()) {
                         if (classtype == int.class) {
                             rs = Integer.decode(rs.toString());
@@ -249,21 +249,21 @@ public final class ResourceFactory {
         }
     }
 
-    private ResourceHandler findHandler(Type ft, Field field) {
-        ResourceHandler it = this.interceptmap.get(ft);
+    private ResourceLoader findLoader(Type ft, Field field) {
+        ResourceLoader it = this.loadermap.get(ft);
         if (it != null) return it;
         Class c = field.getType();
-        for (Map.Entry<Type, ResourceHandler> en : this.interceptmap.entrySet()) {
+        for (Map.Entry<Type, ResourceLoader> en : this.loadermap.entrySet()) {
             Type t = en.getKey();
             if (t == ft) return en.getValue();
             if (t instanceof Class && (((Class) t)).isAssignableFrom(c)) return en.getValue();
         }
-        return parent == null ? null : parent.findHandler(ft, field);
+        return parent == null ? null : parent.findLoader(ft, field);
     }
 
-    public static interface ResourceHandler {
+    public static interface ResourceLoader {
 
-        public void execute(ResourceFactory factory, Object src, String resourceName, Field field, Object attachment);
+        public Object load(ResourceFactory factory, Object src, String resourceName, Field field, Object attachment);
     }
 
 }
