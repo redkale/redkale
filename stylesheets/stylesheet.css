@@ -17,7 +17,7 @@ a {
 }
 
 a:hover {
-    text-decoration: underline;
+    text-decoration: none;
 }
 
 .btn {
@@ -52,7 +52,9 @@ a:hover {
 
 @media screen and (min-width: 42em) and (max-width: 80em) {
     .btn {
-        padding: 0.6rem 0.9rem;
+        margin-top: 0;
+        padding: 0.4rem 0.6rem;
+        font-size: 0.95rem;
     }
 }
 
@@ -103,34 +105,48 @@ a:hover {
 }
 
 .project-name {
+    display: inline-block;
     margin-top: 0;
-    margin-left:1.2rem;
-    padding-left: 6.4rem;
-    position:absolute;
-    float: left;
+    margin-left:0.6rem;
+    margin-right: 1rem;
+    padding-left: 2.4rem;
+    text-decoration: none;
+    text-decoration-color: #FFFFFF;
     background: url(/logo_96.png) no-repeat left  center ;
     background-size: 1.98em;
     letter-spacing: 0;
     text-shadow: 0px 1px 0px #999, 0px 1px 0px #888, 0px 2px 0px #777, 0px 2px 0px #666, 0px 3px 0px #555, 0px 3px 0px #444, 0px 4px 0px #333, 0px 4px 7px #001135;
     font-style: italic;
     color: #E6E6E6;
+    width: 18rem;
 }
 
-@media screen and (min-width: 64em) {
+@media screen and (min-width: 80em) {
     .project-name {
         font-size: 3.25rem;
+    }
+}
+
+@media screen and (min-width: 64em) and (max-width: 80em) {
+    .project-name {
+        margin-left:0.2rem;
+        font-size: 1.8rem;
+        background-size: 1.6em;
+        width: 11rem;
     }
 }
 
 @media screen and (min-width: 42em) and (max-width: 64em) {
     .project-name {
         font-size: 2.25rem;
+        background-size: 1.6em;
     }
 }
 
 @media screen and (max-width: 42em) {
     .project-name {
         font-size: 1.75rem;
+        background-size: 1.2em;
     }
 }
 
