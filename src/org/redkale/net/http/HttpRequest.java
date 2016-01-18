@@ -441,18 +441,6 @@ public class HttpRequest extends Request<HttpContext> {
         return host;
     }
 
-    protected InetSocketAddress parseSocketAddress(String host) {
-        if (host == null || host.isEmpty()) return null;
-        int pos = host.indexOf(':');
-        String hostname = pos < 0 ? host : host.substring(0, pos);
-        int port = pos < 0 ? 80 : Integer.parseInt(host.substring(pos + 1));
-        return new InetSocketAddress(hostname, port);
-    }
-
-    protected InetSocketAddress getHostSocketAddress() {
-        return parseSocketAddress(host);
-    }
-
     /**
      * 截取getRequestURI最后的一个/后面的部分
      *
