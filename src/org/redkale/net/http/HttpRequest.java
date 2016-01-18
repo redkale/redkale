@@ -441,7 +441,7 @@ public class HttpRequest extends Request<HttpContext> {
         return host;
     }
 
-    protected static InetSocketAddress parseSocketAddress(String host) {
+    protected InetSocketAddress parseSocketAddress(String host) {
         if (host == null || host.isEmpty()) return null;
         int pos = host.indexOf(':');
         String hostname = pos < 0 ? host : host.substring(0, pos);

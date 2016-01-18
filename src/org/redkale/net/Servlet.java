@@ -18,7 +18,7 @@ import java.io.IOException;
  * @param <R> Request的子类型
  * @param <P> Response的子类型
  */
-public abstract class Servlet<C extends Context, R extends Request<C>, P extends Response<R>> {
+public abstract class Servlet<C extends Context, R extends Request<C>, P extends Response<C, R>> {
 
     public void init(C context, AnyValue config) {
     }

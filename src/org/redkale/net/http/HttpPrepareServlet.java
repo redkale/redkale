@@ -23,7 +23,7 @@ import org.redkale.watch.*;
  *
  * @author zhangjx
  */
-public final class HttpPrepareServlet extends PrepareServlet<HttpContext, HttpRequest, HttpResponse<HttpRequest>> {
+public final class HttpPrepareServlet extends PrepareServlet<HttpContext, HttpRequest, HttpResponse> {
 
     private final List<HttpServlet> servlets = new ArrayList<>();
 

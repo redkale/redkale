@@ -18,9 +18,9 @@ import java.util.function.*;
  * @param <R> Request的子类型
  */
 @SuppressWarnings("unchecked")
-public abstract class Response<R extends Request> {
+public abstract class Response<C extends Context, R extends Request<C>> {
 
-    protected final Context context;
+    protected final C context;
 
     protected final R request;
 
@@ -28,7 +28,7 @@ public abstract class Response<R extends Request> {
 
     private boolean inited = true;
 
-    protected BiConsumer<R, Response<R>> recycleListener;
+    protected BiConsumer<R, Response<C, R>> recycleListener;
 
     private final CompletionHandler finishHandler = new CompletionHandler<Integer, ByteBuffer>() {
 
@@ -84,7 +84,7 @@ public abstract class Response<R extends Request> {
 
     };
 
-    protected Response(Context context, final R request) {
+    protected Response(C context, final R request) {
         this.context = context;
         this.request = request;
     }
@@ -137,7 +137,7 @@ public abstract class Response<R extends Request> {
         this.request.createtime = System.currentTimeMillis();
     }
 
-    public void setRecycleListener(BiConsumer<R, Response<R>> recycleListener) {
+    public void setRecycleListener(BiConsumer<R, Response<C, R>> recycleListener) {
         this.recycleListener = recycleListener;
     }
 
@@ -224,7 +224,7 @@ public abstract class Response<R extends Request> {
         });
     }
 
-    public Context getContext() {
+    public C getContext() {
         return context;
     }
 }

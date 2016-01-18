@@ -14,10 +14,12 @@ import org.redkale.util.*;
 
 /**
  *
- * <p> 详情见: http://www.redkale.org
+ * <p>
+ * 详情见: http://www.redkale.org
+ *
  * @author zhangjx
  */
-public final class SncpResponse extends Response<SncpRequest> {
+public final class SncpResponse extends Response<SncpContext, SncpRequest> {
 
     public static final int RETCODE_ILLSERVICEID = (1 << 10); //无效serviceid
 
@@ -43,7 +45,7 @@ public final class SncpResponse extends Response<SncpRequest> {
         return null;
     }
 
-    protected SncpResponse(Context context, SncpRequest request) {
+    protected SncpResponse(SncpContext context, SncpRequest request) {
         super(context, request);
         this.addrBytes = context.getServerAddress().getAddress().getAddress();
         this.addrPort = context.getServerAddress().getPort();

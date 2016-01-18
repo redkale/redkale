@@ -32,7 +32,7 @@ import org.redkale.util.*;
  *
  * @param <R> HttpRequest的子类型
  */
-public class HttpResponse<R extends HttpRequest> extends Response<R> {
+public class HttpResponse extends Response<HttpContext, HttpRequest> {
 
     /**
      * HttpResponse.finish 方法内调用
@@ -131,7 +131,7 @@ public class HttpResponse<R extends HttpRequest> extends Response<R> {
         return new ObjectPool<>(creatCounter, cycleCounter, max, creator, (x) -> ((HttpResponse) x).prepare(), (x) -> ((HttpResponse) x).recycle());
     }
 
-    public HttpResponse(Context context, R request, String[][] defaultAddHeaders, String[][] defaultSetHeaders, HttpCookie defcookie) {
+    public HttpResponse(HttpContext context, HttpRequest request, String[][] defaultAddHeaders, String[][] defaultSetHeaders, HttpCookie defcookie) {
         super(context, request);
         this.defaultAddHeaders = defaultAddHeaders;
         this.defaultSetHeaders = defaultSetHeaders;
@@ -160,6 +160,12 @@ public class HttpResponse<R extends HttpRequest> extends Response<R> {
         super.init(channel);
     }
 
+    /**
+     * 获取状态码对应的状态描述
+     *
+     * @param status 状态码
+     * @return 状态描述
+     */
     protected String getHttpCode(int status) {
         return httpCodes.get(status);
     }
@@ -173,11 +179,11 @@ public class HttpResponse<R extends HttpRequest> extends Response<R> {
         return v == null ? defValue : v;
     }
 
-    @Override
-    public HttpContext getContext() {
-        return (HttpContext) context;
-    }
-
+    /**
+     * 增加Cookie值
+     *
+     * @param cookies
+     */
     public void addCookie(HttpCookie... cookies) {
         if (this.cookies == null) {
             this.cookies = cookies;
@@ -189,31 +195,65 @@ public class HttpResponse<R extends HttpRequest> extends Response<R> {
         }
     }
 
+    /**
+     * 将对象以JSON格式输出
+     *
+     * @param obj 输出对象
+     */
     public void finishJson(final Object obj) {
         this.contentType = "text/plain; charset=utf-8";
         finish(request.getJsonConvert().convertTo(context.getBufferSupplier(), obj));
     }
 
+    /**
+     * 将对象以JSON格式输出
+     *
+     * @param convert 指定的JsonConvert
+     * @param obj     输出对象
+     */
     public void finishJson(final JsonConvert convert, final Object obj) {
         this.contentType = "text/plain; charset=utf-8";
         finish(convert.convertTo(context.getBufferSupplier(), obj));
     }
 
+    /**
+     * 将对象以JSON格式输出
+     *
+     * @param type 指定的类型
+     * @param obj  输出对象
+     */
     public void finishJson(final Type type, final Object obj) {
         this.contentType = "text/plain; charset=utf-8";
         finish(request.getJsonConvert().convertTo(context.getBufferSupplier(), type, obj));
     }
 
+    /**
+     * 将对象以JSON格式输出
+     *
+     * @param convert 指定的JsonConvert
+     * @param type    指定的类型
+     * @param obj     输出对象
+     */
     public void finishJson(final JsonConvert convert, final Type type, final Object obj) {
         this.contentType = "text/plain; charset=utf-8";
         finish(convert.convertTo(context.getBufferSupplier(), type, obj));
     }
 
+    /**
+     * 将对象以JSON格式输出
+     *
+     * @param objs 输出对象
+     */
     public void finishJson(final Object... objs) {
         this.contentType = "text/plain; charset=utf-8";
         finish(request.getJsonConvert().convertTo(context.getBufferSupplier(), objs));
     }
 
+    /**
+     * 将指定字符串以响应结果输出
+     *
+     * @param obj 输出内容
+     */
     public void finish(String obj) {
         if (obj == null || obj.isEmpty()) {
             final ByteBuffer headbuf = createHeader();
@@ -248,25 +288,50 @@ public class HttpResponse<R extends HttpRequest> extends Response<R> {
         }
     }
 
+    /**
+     * 以指定响应码附带内容输出
+     *
+     * @param status  响应码
+     * @param message 输出内容
+     */
     public void finish(int status, String message) {
         this.status = status;
         if (status != 200) super.refuseAlive();
         finish(message);
     }
 
+    /**
+     * 以304状态码输出
+     *
+     */
     public void finish304() {
         super.finish(buffer304.duplicate());
     }
 
+    /**
+     * 以404状态码输出
+     *
+     */
     public void finish404() {
         super.finish(buffer404.duplicate());
     }
 
+    /**
+     * 将指定ByteBuffer按响应结果输出
+     *
+     * @param buffer 输出内容
+     */
     @Override
     public void finish(ByteBuffer buffer) {
         finish(false, buffer);
     }
 
+    /**
+     * 将指定ByteBuffer按响应结果输出
+     *
+     * @param kill   输出后是否强制关闭连接
+     * @param buffer 输出内容
+     */
     @Override
     public void finish(boolean kill, ByteBuffer buffer) {
         if (!this.headsended) {
@@ -283,11 +348,22 @@ public class HttpResponse<R extends HttpRequest> extends Response<R> {
         }
     }
 
+    /**
+     * 将指定ByteBuffer数组按响应结果输出
+     *
+     * @param buffers 输出内容
+     */
     @Override
     public void finish(ByteBuffer... buffers) {
         finish(false, buffers);
     }
 
+    /**
+     * 将指定ByteBuffer数组按响应结果输出
+     *
+     * @param kill    输出后是否强制关闭连接
+     * @param buffers 输出内容
+     */
     @Override
     public void finish(boolean kill, ByteBuffer... buffers) {
         if (bufferHandler != null) {
@@ -316,6 +392,14 @@ public class HttpResponse<R extends HttpRequest> extends Response<R> {
         }
     }
 
+    /**
+     * 异步输出指定内容
+     *
+     * @param <A>        泛型
+     * @param buffer     输出内容
+     * @param attachment 异步回调参数
+     * @param handler    异步回调函数
+     */
     public <A> void sendBody(ByteBuffer buffer, A attachment, CompletionHandler<Integer, A> handler) {
         if (!this.headsended) {
             if (this.contentLength < 0) this.contentLength = buffer == null ? 0 : buffer.remaining();
@@ -331,10 +415,21 @@ public class HttpResponse<R extends HttpRequest> extends Response<R> {
         }
     }
 
+    /**
+     * 将指定文件按响应结果输出
+     *
+     * @param file 输出文件
+     */
     public <A> void finish(File file) throws IOException {
         finishFile(file, null);
     }
 
+    /**
+     * 将指定文件句柄或文件内容按响应结果输出，若fileBody不为null则只输出fileBody内容
+     *
+     * @param file     输出文件
+     * @param fileBody 文件内容， 没有则输出file
+     */
     protected <A> void finishFile(final File file, ByteBuffer fileBody) throws IOException {
         if (file == null || !file.isFile() || !file.canRead()) {
             finish404();
@@ -465,6 +560,11 @@ public class HttpResponse<R extends HttpRequest> extends Response<R> {
         return sb;
     }
 
+    /**
+     * 跳过header的输出
+     * 通常应用场景是，调用者的输出内容里已经包含了HTTP的响应头信息，因此需要调用此方法避免重复输出HTTP响应头信息。
+     *
+     */
     public void skipHeader() {
         this.headsended = true;
     }
@@ -473,42 +573,94 @@ public class HttpResponse<R extends HttpRequest> extends Response<R> {
         return this.header.duplicate();
     }
 
+    /**
+     * 设置Header值
+     *
+     * @param name  header名
+     * @param value header值
+     */
     public void setHeader(String name, Object value) {
         this.header.setValue(name, String.valueOf(value));
     }
 
+    /**
+     * 添加Header值
+     *
+     * @param name  header名
+     * @param value header值
+     */
     public void addHeader(String name, Object value) {
         this.header.addValue(name, String.valueOf(value));
     }
 
+    /**
+     * 设置状态码
+     *
+     * @param status 状态码
+     */
     public void setStatus(int status) {
         this.status = status;
     }
 
+    /**
+     * 获取状态码
+     *
+     * @return 状态码
+     */
     public int getStatus() {
         return this.status;
     }
 
+    /**
+     * 获取 ContentType
+     *
+     * @return ContentType
+     */
     public String getContentType() {
         return contentType;
     }
 
+    /**
+     * 设置 ContentType
+     *
+     * @param contentType ContentType
+     */
     public void setContentType(String contentType) {
         this.contentType = contentType;
     }
 
+    /**
+     * 获取内容长度
+     *
+     * @return 内容长度
+     */
     public long getContentLength() {
         return contentLength;
     }
 
+    /**
+     * 设置内容长度
+     *
+     * @param contentLength 内容长度
+     */
     public void setContentLength(long contentLength) {
         this.contentLength = contentLength;
     }
 
+    /**
+     * 获取输出时的拦截器
+     *
+     * @return 拦截器
+     */
     protected BufferHandler getBufferHandler() {
         return bufferHandler;
     }
 
+    /**
+     * 设置输出时的拦截器
+     *
+     * @param bufferHandler 拦截器
+     */
     protected void setBufferHandler(BufferHandler bufferHandler) {
         this.bufferHandler = bufferHandler;
     }
