@@ -12,10 +12,13 @@ import java.util.*;
 import java.util.concurrent.atomic.*;
 import java.util.logging.*;
 import java.util.regex.*;
+import org.redkale.util.AnyValue.DefaultAnyValue;
 
 /**
  *
- * <p> 详情见: http://www.redkale.org
+ * <p>
+ * 详情见: http://www.redkale.org
+ *
  * @author zhangjx
  */
 public final class MultiContext {
@@ -36,7 +39,7 @@ public final class MultiContext {
 
     private final ByteArray buf = new ByteArray(64);
 
-    private final Map<String, String> parameters = new HashMap<>();
+    private final DefaultAnyValue parameters;
 
     private final Pattern fielnamePattern;
 
@@ -53,56 +56,14 @@ public final class MultiContext {
         }
     };
 
-    public MultiContext(final String contentType, final InputStream in) {
-        this(null, contentType, in);
-    }
-
-    public MultiContext(final Charset charsetName, final String contentType, final InputStream in) {
-        this(charsetName, contentType, in, null);
-    }
-
-    public MultiContext(final String contentType, final InputStream in, String extregex) {
-        this(null, contentType, in, extregex);
-    }
-
-    public MultiContext(final Charset charsetName, final String contentType, final InputStream in, String fielnameRegex) {
+    public MultiContext(final Charset charsetName, final String contentType, final DefaultAnyValue params, final InputStream in, String fielnameRegex) {
         this.charset = charsetName == null ? UTF8 : charsetName;
         this.contentType = contentType.trim();
+        this.parameters = params;
         this.boundary = parseBoundary(this.contentType);
         this.endboundarray = ("--" + this.boundary + "--").getBytes();
         this.in = in instanceof BufferedInputStream ? in : new BufferedInputStream(in);
         this.fielnamePattern = fielnameRegex == null || fielnameRegex.isEmpty() ? null : Pattern.compile(fielnameRegex);
-    }
-
-    public Map<String, String> getParameters() {
-        return parameters;
-    }
-
-    public String getParameter(String name) {
-        return getParameters().get(name);
-    }
-
-    public final String getParameter(String name, String defaultValue) {
-        String value = this.getParameter(name);
-        return value == null ? defaultValue : value;
-    }
-
-    public final int getIntParameter(String name, int defaultValue) {
-        String value = this.getParameter(name);
-        try {
-            return value == null ? defaultValue : Integer.decode(value);
-        } catch (NumberFormatException e) {
-            return defaultValue;
-        }
-    }
-
-    public final long getLongParameter(String name, long defaultValue) {
-        String value = this.getParameter(name);
-        try {
-            return value == null ? defaultValue : Long.decode(value);
-        } catch (NumberFormatException e) {
-            return defaultValue;
-        }
     }
 
     private String parseBoundary(String contentType) {
@@ -120,16 +81,15 @@ public final class MultiContext {
         return this.boundary != null;
     }
 
-    public Iterable<MultiPart> listMultiPart() throws IOException {
+    public Iterable<MultiPart> parts() throws IOException {
         if (!isMultipart()) return emptyIterable;
-        final boolean debug = true;
         final String boundarystr = "--" + this.boundary;
         final Pattern fielnameReg = this.fielnamePattern;
         final String endboundary = boundarystr + "--";
         final byte[] boundarray = ("\n" + boundarystr).getBytes();
         final byte[] buffer = new byte[boundarray.length];
         final InputStream input = this.in;
-        final Map<String, String> params = this.parameters;
+        final DefaultAnyValue params = this.parameters;
         final AtomicBoolean finaled = new AtomicBoolean(false);
         return () -> new Iterator<MultiPart>() {
 
@@ -225,13 +185,13 @@ public final class MultiContext {
                         return true;
                     } else { //不是文件
                         readLine(); //读掉空白
-                        params.put(parseValue(disposition, "name"), readLine());
+                        params.addValue(parseValue(disposition, "name"), readLine());
                         this.boundaryline = null;
                         this.lastentry = null;
                         return this.hasNext();
                     }
                 } catch (IOException ex) {
-                    logger.log(Level.FINER, "listMultiPart abort", ex);
+                    logger.log(Level.FINER, "list multiparts abort", ex);
                     return false;
                 }
             }

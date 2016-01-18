@@ -260,14 +260,18 @@ public class HttpRequest extends Request<HttpContext> {
                 + ", host:" + this.host + ", params:" + this.params + ", header:" + this.header + "}";
     }
 
+    public final Iterable<MultiPart> multiParts() throws IOException {
+        return getMultiContext().parts();
+    }
+
     public final MultiContext getMultiContext() {
-        return new MultiContext(context.getCharset(), this.getContentType(),
+        return new MultiContext(context.getCharset(), this.getContentType(), this.params,
                 new BufferedInputStream(Channels.newInputStream(this.channel), Math.max(array.count(), 8192)) {
             {
                 array.write(this.buf);
                 this.count = array.count();
             }
-        });
+        }, null);
     }
 
     @Override
