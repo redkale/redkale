@@ -125,7 +125,7 @@ public class VideoWebSocketServlet extends WebSocketServlet {
         resConf.setValue("cacheMaxItemLength", "10M");
         config.setValue("ResourceServlet", resConf);
         HttpServer server = new HttpServer();
-        server.addHttpServlet(new VideoWebSocketServlet(), "/pipes", null, "/pipes/listen/*");
+        server.addHttpServlet(new VideoWebSocketServlet(), "/pipes", null, "/listen/*");
         server.init(config);
         server.start();
         cdl.await();
