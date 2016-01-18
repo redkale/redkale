@@ -10,12 +10,16 @@ import org.redkale.util.*;
 
 /**
  *
- * <p> 详情见: http://www.redkale.org
+ * <p>
+ * 详情见: http://www.redkale.org
+ *
  * @author zhangjx
  */
-public abstract class HttpServlet extends Servlet<HttpRequest, HttpResponse<HttpRequest>> {
+public abstract class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse<HttpRequest>> {
 
     AnyValue _conf; //当前HttpServlet的配置
+
+    String _prefix = ""; //当前HttpServlet的path前缀
 
     @Override
     public final boolean equals(Object obj) {

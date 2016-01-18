@@ -16,12 +16,13 @@ import java.util.concurrent.atomic.*;
 import java.util.function.*;
 import java.util.logging.*;
 import java.util.regex.*;
-import org.redkale.net.*;
 import org.redkale.util.*;
 
 /**
  *
- * <p> 详情见: http://www.redkale.org
+ * <p>
+ * 详情见: http://www.redkale.org
+ *
  * @author zhangjx
  */
 public final class HttpResourceServlet extends HttpServlet {
@@ -98,7 +99,7 @@ public final class HttpResourceServlet extends HttpServlet {
     protected Predicate<String> ranges;
 
     @Override
-    public void init(Context context, AnyValue config) {
+    public void init(HttpContext context, AnyValue config) {
         if (config != null) {
             String rootstr = config.getValue("webroot", "root");
             if (rootstr.indexOf(':') < 0 && rootstr.indexOf('/') != 0 && System.getProperty("APP_HOME") != null) {
@@ -140,7 +141,7 @@ public final class HttpResourceServlet extends HttpServlet {
     }
 
     @Override
-    public void destroy(Context context, AnyValue config) {
+    public void destroy(HttpContext context, AnyValue config) {
         if (this.watchThread != null) {
             try {
                 this.watchThread.watcher.close();

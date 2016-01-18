@@ -17,9 +17,9 @@ import org.redkale.convert.json.*;
  *
  * @author zhangjx
  */
-public abstract class Request {
+public abstract class Request<C extends Context> {
 
-    protected final Context context;
+    protected final C context;
 
     protected final BsonConvert bsonConvert;
 
@@ -39,7 +39,7 @@ public abstract class Request {
 
     protected final Map<String, Object> attributes = new HashMap<>();
 
-    protected Request(Context context) {
+    protected Request(C context) {
         this.context = context;
         this.bsonConvert = context.getBsonConvert();
         this.jsonConvert = context.getJsonConvert();
@@ -104,7 +104,7 @@ public abstract class Request {
         return attributes;
     }
 
-    public Context getContext() {
+    public C getContext() {
         return this.context;
     }
 

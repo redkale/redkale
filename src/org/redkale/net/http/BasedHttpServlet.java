@@ -7,7 +7,6 @@ package org.redkale.net.http;
 
 import org.redkale.net.Response;
 import org.redkale.net.Request;
-import org.redkale.net.Context;
 import org.redkale.util.AnyValue;
 import java.io.IOException;
 import java.lang.annotation.*;
@@ -120,8 +119,8 @@ public abstract class BasedHttpServlet extends HttpServlet {
     }
 
     @Override
-    public void init(Context context, AnyValue config) {
-        String path = ((HttpContext) context).getContextPath();
+    public void init(HttpContext context, AnyValue config) {
+        String path = _prefix == null ? "" : _prefix;
         WebServlet ws = this.getClass().getAnnotation(WebServlet.class);
         if (ws != null && !ws.repair()) path = "";
         HashMap<String, Entry> map = load();
@@ -194,7 +193,7 @@ public abstract class BasedHttpServlet extends HttpServlet {
         FieldVisitor fv;
         MethodVisitor mv;
         AnnotationVisitor av0;
-        final String factfield = "factServlet";
+        final String factfield = "_factServlet";
         cw.visit(V1_8, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynName, null, supDynName, null);
         {
             fv = cw.visitField(ACC_PUBLIC, factfield, interDesc, null, null);

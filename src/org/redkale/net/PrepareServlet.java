@@ -13,12 +13,15 @@ import java.util.logging.*;
 
 /**
  *
- * <p> 详情见: http://www.redkale.org
+ * <p>
+ * 详情见: http://www.redkale.org
+ *
  * @author zhangjx
+ * @param <C> Context的子类型
  * @param <R> Request的子类型
  * @param <P> Response的子类型
  */
-public abstract class PrepareServlet<R extends Request, P extends Response<R>> extends Servlet<R, P> {
+public abstract class PrepareServlet<C extends Context, R extends Request<C>, P extends Response<R>> extends Servlet<C, R, P> {
 
     protected final AtomicLong executeCounter = new AtomicLong(); //执行请求次数
 

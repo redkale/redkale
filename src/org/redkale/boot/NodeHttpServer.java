@@ -107,12 +107,8 @@ public final class NodeHttpServer extends NodeServer {
             if (ws == null || ws.value().length == 0) continue;
             final HttpServlet servlet = clazz.newInstance();
             factory.inject(servlet, this);
-            String[] mappings = ws.value();
-            if (ws.repair() && !prefix.isEmpty()) {
-                for (int i = 0; i < mappings.length; i++) {
-                    mappings[i] = prefix + mappings[i];
-                }
-            }
+            final String[] mappings = ws.value();
+            String pref = ws.repair() ? prefix : "";
             DefaultAnyValue servletConf = (DefaultAnyValue) en.getProperty();
             WebInitParam[] webparams = ws.initParams();
             if (webparams.length > 0) {
@@ -121,8 +117,13 @@ public final class NodeHttpServer extends NodeServer {
                     servletConf.addValue(webparam.name(), webparam.value());
                 }
             }
-            this.httpServer.addHttpServlet(servlet, servletConf, mappings);
-            if (ss != null) ss.add(new AbstractMap.SimpleEntry<>(clazz.getName(), mappings));
+            this.httpServer.addHttpServlet(servlet, pref, servletConf, mappings);
+            if (ss != null) {
+                for (int i = 0; i < mappings.length; i++) {
+                    mappings[i] = pref + mappings[i];
+                }
+                ss.add(new AbstractMap.SimpleEntry<>(clazz.getName(), mappings));
+            }
         }
         if (ss != null) {
             Collections.sort(ss, (AbstractMap.SimpleEntry<String, String[]> o1, AbstractMap.SimpleEntry<String, String[]> o2) -> o1.getKey().compareTo(o2.getKey()));

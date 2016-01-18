@@ -13,7 +13,6 @@ import java.security.*;
 import java.util.*;
 import java.util.logging.*;
 import javax.annotation.*;
-import org.redkale.net.*;
 import org.redkale.util.*;
 
 /**
@@ -64,7 +63,7 @@ public abstract class WebSocketServlet extends HttpServlet {
     protected WebSocketEngine engine;
 
     @Override
-    public void init(Context context, AnyValue conf) {
+    public void init(HttpContext context, AnyValue conf) {
         InetSocketAddress addr = context.getServerAddress();
         this.engine = new WebSocketEngine(addr.getHostString() + ":" + addr.getPort() + "-[" + name() + "]", this.node, logger);
         this.node.putWebSocketEngine(engine);
@@ -73,7 +72,7 @@ public abstract class WebSocketServlet extends HttpServlet {
     }
 
     @Override
-    public void destroy(Context context, AnyValue conf) {
+    public void destroy(HttpContext context, AnyValue conf) {
         this.node.destroy(conf);
         super.destroy(context, conf);
         engine.close();

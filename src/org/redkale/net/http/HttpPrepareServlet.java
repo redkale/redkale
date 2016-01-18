@@ -23,7 +23,7 @@ import org.redkale.watch.*;
  *
  * @author zhangjx
  */
-public final class HttpPrepareServlet extends PrepareServlet<HttpRequest, HttpResponse<HttpRequest>> {
+public final class HttpPrepareServlet extends PrepareServlet<HttpContext, HttpRequest, HttpResponse<HttpRequest>> {
 
     private final List<HttpServlet> servlets = new ArrayList<>();
 
@@ -34,11 +34,11 @@ public final class HttpPrepareServlet extends PrepareServlet<HttpRequest, HttpRe
     private HttpServlet resourceHttpServlet = new HttpResourceServlet();
 
     @Override
-    public void init(Context context, AnyValue config) {
+    public void init(HttpContext context, AnyValue config) {
         this.servlets.stream().forEach(s -> {
             s.init(context, s._conf);
         });
-        final WatchFactory watch = ((HttpContext) context).getWatchFactory();
+        final WatchFactory watch = context.getWatchFactory();
         if (watch != null) {
             this.servlets.stream().forEach(s -> {
                 watch.inject(s);
@@ -83,14 +83,15 @@ public final class HttpPrepareServlet extends PrepareServlet<HttpRequest, HttpRe
         }
     }
 
-    public void addHttpServlet(HttpServlet servlet, AnyValue conf, String... mappings) {
+    public void addHttpServlet(HttpServlet servlet, String prefix, AnyValue conf, String... mappings) {
+        if (prefix == null) prefix = "";
         for (String mapping : mappings) {
             if (contains(mapping, '.', '*', '{', '[', '(', '|', '^', '$', '+', '?', '\\')) { //是否是正则表达式))
                 if (mapping.charAt(0) != '^') mapping = '^' + mapping;
                 if (mapping.endsWith("/*")) {
-                    mapping = mapping.substring(0, mapping.length() - 1) + ".*";
+                    mapping = prefix + mapping.substring(0, mapping.length() - 1) + ".*";
                 } else {
-                    mapping += "$";
+                    mapping = prefix + mapping + "$";
                 }
                 if (regArray == null) {
                     regArray = new SimpleEntry[1];
@@ -100,10 +101,11 @@ public final class HttpPrepareServlet extends PrepareServlet<HttpRequest, HttpRe
                     regArray[regArray.length - 1] = new SimpleEntry<>(Pattern.compile(mapping).asPredicate(), servlet);
                 }
             } else if (mapping != null && !mapping.isEmpty()) {
-                strmaps.put(mapping, servlet);
+                strmaps.put(prefix + mapping, servlet);
             }
         }
         servlet._conf = conf;
+        servlet._prefix = prefix == null ? "" : prefix;
         this.servlets.add(servlet);
     }
 
@@ -124,7 +126,7 @@ public final class HttpPrepareServlet extends PrepareServlet<HttpRequest, HttpRe
     }
 
     @Override
-    public void destroy(Context context, AnyValue config) {
+    public void destroy(HttpContext context, AnyValue config) {
         this.resourceHttpServlet.destroy(context, config);
         this.servlets.stream().forEach(s -> {
             s.destroy(context, s._conf);

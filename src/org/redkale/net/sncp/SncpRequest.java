@@ -16,7 +16,7 @@ import org.redkale.util.*;
  * <p> 详情见: http://www.redkale.org
  * @author zhangjx
  */
-public final class SncpRequest extends Request {
+public final class SncpRequest extends Request<SncpContext> {
 
     public static final int HEADER_SIZE = 72;
 
@@ -42,7 +42,7 @@ public final class SncpRequest extends Request {
 
     private byte[] bufferbytes = new byte[6];
 
-    protected SncpRequest(Context context) {
+    protected SncpRequest(SncpContext context) {
         super(context);
         this.convert = context.getBsonConvert();
     }

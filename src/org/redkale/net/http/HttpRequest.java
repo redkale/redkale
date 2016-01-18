@@ -23,18 +23,16 @@ import org.redkale.net.*;
  * 获取页号: int page = request.getRequstURIPath("page:", 1);
  * 获取行数: int size = request.getRequstURIPath("size:", 10);
  *
- * <p> 详情见: http://www.redkale.org
+ * <p>
+ * 详情见: http://www.redkale.org
+ *
  * @author zhangjx
  */
-public class HttpRequest extends Request {
+public class HttpRequest extends Request<HttpContext> {
 
     protected static final Charset UTF8 = Charset.forName("UTF-8");
 
     protected static final String SESSIONID_NAME = "JSESSIONID";
-
-    private static final byte[] flashRequestContent1 = "<policy-file-request/>\0".getBytes();
-
-    private static final byte[] flashRequestContent2 = "<policy-file-request/>".getBytes();
 
     private String method;
 
@@ -68,7 +66,7 @@ public class HttpRequest extends Request {
 
     private final String remoteAddrHeader;
 
-    public HttpRequest(Context context, String remoteAddrHeader) {
+    public HttpRequest(HttpContext context, String remoteAddrHeader) {
         super(context);
         this.remoteAddrHeader = remoteAddrHeader;
     }
@@ -224,11 +222,6 @@ public class HttpRequest extends Request {
     @Override
     protected void removeProperty(String name) {
         super.removeProperty(name);
-    }
-
-    @Override
-    public HttpContext getContext() {
-        return (HttpContext) this.context;
     }
 
     public String getRemoteAddr() {

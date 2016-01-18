@@ -15,12 +15,12 @@ import org.redkale.watch.*;
 
 /**
  *
- * <p> 详情见: http://www.redkale.org
+ * <p>
+ * 详情见: http://www.redkale.org
+ *
  * @author zhangjx
  */
 public final class HttpServer extends Server {
-
-    private String contextPath;
 
     public HttpServer() {
         this(System.currentTimeMillis(), null);
@@ -34,11 +34,10 @@ public final class HttpServer extends Server {
     public void init(AnyValue config) throws Exception {
         super.init(config);
         AnyValue conf = config == null ? null : config.getAnyValue("servlets");
-        this.contextPath = conf == null ? "" : conf.getValue("path", "");
     }
 
-    public void addHttpServlet(HttpServlet servlet, AnyValue conf, String... mappings) {
-        ((HttpPrepareServlet) this.prepare).addHttpServlet(servlet, conf, mappings);
+    public void addHttpServlet(HttpServlet servlet, final String prefix, AnyValue conf, String... mappings) {
+        ((HttpPrepareServlet) this.prepare).addHttpServlet(servlet, prefix, conf, mappings);
     }
 
     @Override
@@ -120,7 +119,7 @@ public final class HttpServer extends Server {
         AtomicLong cycleResponseCounter = watch == null ? new AtomicLong() : watch.createWatchNumber("HTTP_" + port + ".Response.cycleCounter");
         ObjectPool<Response> responsePool = HttpResponse.createPool(createResponseCounter, cycleResponseCounter, this.responsePoolSize, null);
         HttpContext httpcontext = new HttpContext(this.serverStartTime, this.logger, executor, rcapacity, bufferPool, responsePool,
-                this.maxbody, this.charset, this.address, this.prepare, this.watch, this.readTimeoutSecond, this.writeTimeoutSecond, contextPath);
+                this.maxbody, this.charset, this.address, this.prepare, this.watch, this.readTimeoutSecond, this.writeTimeoutSecond);
         responsePool.setCreator((Object... params) -> new HttpResponse(httpcontext, new HttpRequest(httpcontext, addrHeader), addHeaders, setHeaders, defCookie));
         return httpcontext;
     }

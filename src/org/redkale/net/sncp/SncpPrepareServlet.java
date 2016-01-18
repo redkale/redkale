@@ -6,7 +6,6 @@
 package org.redkale.net.sncp;
 
 import org.redkale.net.PrepareServlet;
-import org.redkale.net.Context;
 import org.redkale.util.AnyValue;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -15,10 +14,12 @@ import org.redkale.util.*;
 
 /**
  *
- * <p> 详情见: http://www.redkale.org
+ * <p>
+ * 详情见: http://www.redkale.org
+ *
  * @author zhangjx
  */
-public class SncpPrepareServlet extends PrepareServlet<SncpRequest, SncpResponse> {
+public class SncpPrepareServlet extends PrepareServlet<SncpContext, SncpRequest, SncpResponse> {
 
     private static final ByteBuffer pongBuffer = ByteBuffer.wrap("PONG".getBytes()).asReadOnlyBuffer();
 
@@ -50,7 +51,7 @@ public class SncpPrepareServlet extends PrepareServlet<SncpRequest, SncpResponse
     }
 
     @Override
-    public void init(Context context, AnyValue config) {
+    public void init(SncpContext context, AnyValue config) {
         Collection<Map<DLong, SncpServlet>> values = this.maps.values();
         values.stream().forEach((en) -> {
             en.values().stream().forEach(s -> s.init(context, s.conf));
@@ -58,7 +59,7 @@ public class SncpPrepareServlet extends PrepareServlet<SncpRequest, SncpResponse
     }
 
     @Override
-    public void destroy(Context context, AnyValue config) {
+    public void destroy(SncpContext context, AnyValue config) {
         Collection<Map<DLong, SncpServlet>> values = this.maps.values();
         values.stream().forEach((en) -> {
             en.values().stream().forEach(s -> s.destroy(context, s.conf));
