@@ -244,6 +244,7 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取请求内容指定的编码字符串
      *
+     * @param charset 编码
      * @return
      */
     public String getBody(final Charset charset) {
