@@ -28,8 +28,8 @@
 
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Service 是RedKale最核心的组件，依赖于Convert、SNCP协议、Resource依赖注入。Service主要处理业务逻辑和操作数据层，是微服务架构中的单一原子服务。每一个Service实例分两种模式: <b>本地模式</b>和<b>远程模式</b>。其模式由 conf/application.xml 文件来配置。使用者在调用过程中通常不需要区分当前Service实例是哪种模式。<br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 为了能确保本地模式与远程模式自由切换，对Service的实现类有一定的约束: <br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1. Service实现类会被继承，不能修饰为 <b>final</b>  <br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2. 带@MultiRun注解的方法会被重载，不能修饰为 <b>final</b>  <br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1、Service实现类会被继承，不能修饰为 <b>final</b>  <br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2、带@MultiRun注解的方法会被重载，不能修饰为 <b>final</b>  <br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; RedKale进程启动时扫描可加载的Service实现类，根据配置文件配置的模式采用JDK 8内置的ASM技术动态生成相应的Service临时类进行实例化，并注册到ResourceFactory同其他Service、Servlet依赖注入。
             </p>
 
