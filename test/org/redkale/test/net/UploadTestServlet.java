@@ -9,7 +9,6 @@ import org.redkale.net.http.HttpServlet;
 import org.redkale.net.http.MultiPart;
 import org.redkale.net.http.HttpRequest;
 import org.redkale.net.http.HttpResponse;
-import org.redkale.net.http.MultiContext;
 import java.io.*;
 
 /**
@@ -42,8 +41,7 @@ public class UploadTestServlet extends HttpServlet {
     }
 
     public void send(HttpRequest req, HttpResponse resp) throws IOException {
-        MultiContext context = req.getMultiContext();
-        for (MultiPart entry : context.listMultiPart()) {
+        for (MultiPart entry : req.multiParts()) {
             entry.skip();
             System.out.println(entry);
         }
