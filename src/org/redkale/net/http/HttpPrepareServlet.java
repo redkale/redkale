@@ -86,12 +86,13 @@ public final class HttpPrepareServlet extends PrepareServlet<HttpContext, HttpRe
     public void addHttpServlet(HttpServlet servlet, String prefix, AnyValue conf, String... mappings) {
         if (prefix == null) prefix = "";
         for (String mapping : mappings) {
+            if (!prefix.isEmpty()) mapping = prefix + mapping;
             if (contains(mapping, '.', '*', '{', '[', '(', '|', '^', '$', '+', '?', '\\')) { //是否是正则表达式))
                 if (mapping.charAt(0) != '^') mapping = '^' + mapping;
                 if (mapping.endsWith("/*")) {
-                    mapping = prefix + mapping.substring(0, mapping.length() - 1) + ".*";
+                    mapping = mapping.substring(0, mapping.length() - 1) + ".*";
                 } else {
-                    mapping = prefix + mapping + "$";
+                    mapping = mapping + "$";
                 }
                 if (regArray == null) {
                     regArray = new SimpleEntry[1];
@@ -101,7 +102,7 @@ public final class HttpPrepareServlet extends PrepareServlet<HttpContext, HttpRe
                     regArray[regArray.length - 1] = new SimpleEntry<>(Pattern.compile(mapping).asPredicate(), servlet);
                 }
             } else if (mapping != null && !mapping.isEmpty()) {
-                strmaps.put(prefix + mapping, servlet);
+                strmaps.put(mapping, servlet);
             }
         }
         servlet._conf = conf;
