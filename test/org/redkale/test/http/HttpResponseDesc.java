@@ -49,6 +49,9 @@ public interface HttpResponseDesc {
     //增加Cookie值
     public void addCookie(HttpCookie... cookies);
 
+    //异步输出指定内容
+    public <A> void sendBody(ByteBuffer buffer, A attachment, CompletionHandler<Integer, A> handler);
+
     //关闭HTTP连接，如果是keep-alive则不强制关闭
     public void finish();
 
@@ -99,6 +102,4 @@ public interface HttpResponseDesc {
     //将指定文件按响应结果输出
     public void finish(File file) throws IOException;
 
-    //异步输出指定内容
-    public <A> void sendBody(ByteBuffer buffer, A attachment, CompletionHandler<Integer, A> handler);
 }
