@@ -24,10 +24,423 @@
         </section>
 
         <section class="main-content">
-            <h3>
-                <a id="welcome-to-github-pages" class="anchor" href="#welcome-to-github-pages" aria-hidden="true"><span class="octicon octicon-link"></span></a>Net 组件介绍</h3>
+            <h3><a id="net_intro" class="anchor" href="#" aria-hidden="true"><span class="octicon octicon-link"></span></a>Net 组件介绍</h3>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Net 组件是基于AIO(NIO.2)的一套TCP/UDP的网络框架，且只提供异步接口。org.redkale.net 是所有网络协议服务的基础包。RedKale内置HTTP和远程模式Service依赖的SNCP(Service Node Communicate Protocol)协议的实现包。RedKale启动的<b>&lt;server&gt;</b>节点服务都是基于Net组件实现的协议服务。</p>
 
-            <p>敬请期待…… <br/>
+            <h3><a id="net_http" class="anchor" href="#" aria-hidden="true"><span class="octicon octicon-link"></span></a>HTTP 服务</h3>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;RedKale自实现的HTTP服务接口并不遵循Java EE规范JSR 340(Servlet 3.1)，RedKale提倡的是HTTP+JSON的服务接口方式因此没有实现JSP规范，HTTP+JSON服务接口几乎适合所有类型的客户端(PC应用程序、PC Web、微信H5、移动APP、移动Web)开发。其与JSR 340(Servlet 3.1)的主要区别如下：<br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1、内置参数的JSON反序列化和响应结果的序列化接口。<br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2、对数值型的参数和header值提供简易接口。<br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3、不支持JSP，提倡的是HTTP+JSON的服务接口方式。<br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4、无HttpSession对象，session可通过配置CacheSource实现。<br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;5、内置文件上传接口，且可自实现断点续传。<br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;6、对响应结果内容可以进行短期缓存从而减少数据源操作的压力。<br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;7、内置WebSocket的集群与组功能，且提供伪WebSocket连接功能。<br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;8、HttpResponse只能异步输出。<br/>
+            </p> 
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HttpRequest 方法如下： </p>
+            <div class="highlight"><pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">HttpRequest</span> <span class="o">{</span>
+
+    <span class="c1">//获取请求方法 GET、POST等</span>
+    <span class="kd">public</span> <span class="n">String</span> <span class="nf">getMethod</span><span class="o">();</span>
+
+    <span class="c1">//获取协议名 http、https、ws、wss等</span>
+    <span class="kd">public</span> <span class="n">String</span> <span class="nf">getProtocol</span><span class="o">();</span>
+
+    <span class="c1">//获取Host的Header值</span>
+    <span class="kd">public</span> <span class="n">String</span> <span class="nf">getHost</span><span class="o">();</span>
+
+    <span class="c1">//获取请求内容的长度, 为-1表示内容长度不确定</span>
+    <span class="kd">public</span> <span class="kt">long</span> <span class="nf">getContentLength</span><span class="o">();</span>
+
+    <span class="c1">//获取Content-Type的header值</span>
+    <span class="kd">public</span> <span class="n">String</span> <span class="nf">getContentType</span><span class="o">();</span>
+
+    <span class="c1">//获取Connection的Header值</span>
+    <span class="kd">public</span> <span class="n">String</span> <span class="nf">getConnection</span><span class="o">();</span>
+
+    <span class="c1">//获取客户端地址IP</span>
+    <span class="kd">public</span> <span class="n">SocketAddress</span> <span class="nf">getRemoteAddress</span><span class="o">();</span>
+
+    <span class="c1">//获取客户端地址IP, 与getRemoteAddres() 的区别在于：本方法优先取header中指定为RemoteAddress名的值，没有则返回getRemoteAddres()的getHostAddress()。</span>
+    <span class="c1">//本方法适用于服务前端有如nginx的代理服务器进行中转，通过getRemoteAddres()是获取不到客户端的真实IP。</span>
+    <span class="kd">public</span> <span class="n">String</span> <span class="nf">getRemoteAddr</span><span class="o">();</span>
+
+    <span class="c1">//获取请求内容指定的编码字符串</span>
+    <span class="kd">public</span> <span class="n">String</span> <span class="nf">getBody</span><span class="o">(</span><span class="n">Charset</span> <span class="n">charset</span><span class="o">);</span>
+
+    <span class="c1">//获取请求内容的UTF-8编码字符串</span>
+    <span class="kd">public</span> <span class="n">String</span> <span class="nf">getBodyUTF8</span><span class="o">();</span>
+
+    <span class="c1">//获取文件上传对象</span>
+    <span class="kd">public</span> <span class="n">MultiContext</span> <span class="nf">getMultiContext</span><span class="o">();</span>
+
+    <span class="c1">//获取文件上传信息列表 等价于 getMultiContext().parts();</span>
+    <span class="kd">public</span> <span class="n">Iterable</span><span class="o">&lt;</span><span class="n">MultiPart</span><span class="o">&gt;</span> <span class="nf">multiParts</span><span class="o">()</span> <span class="kd">throws</span> <span class="n">IOException</span><span class="o">;</span>
+
+    <span class="c1">//获取sessionid</span>
+    <span class="kd">public</span> <span class="n">String</span> <span class="nf">getSessionid</span><span class="o">(</span><span class="kt">boolean</span> <span class="n">autoCreate</span><span class="o">);</span>
+
+    <span class="c1">//更新sessionid</span>
+    <span class="kd">public</span> <span class="n">String</span> <span class="nf">changeSessionid</span><span class="o">();</span>
+
+    <span class="c1">//使sessionid失效</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">invalidateSession</span><span class="o">();</span>
+
+    <span class="c1">//获取所有Cookie对象</span>
+    <span class="kd">public</span> <span class="n">java</span><span class="o">.</span><span class="na">net</span><span class="o">.</span><span class="na">HttpCookie</span><span class="o">[]</span> <span class="nf">getCookies</span><span class="o">();</span>
+
+    <span class="c1">//获取Cookie值， 没有返回默认值</span>
+    <span class="kd">public</span> <span class="n">String</span> <span class="nf">getCookie</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">,</span> <span class="n">String</span> <span class="n">defaultValue</span><span class="o">);</span>
+
+    <span class="c1">//获取Cookie值</span>
+    <span class="kd">public</span> <span class="n">String</span> <span class="nf">getCookie</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">);</span>
+
+    <span class="c1">//获取请求的URL</span>
+    <span class="kd">public</span> <span class="n">String</span> <span class="nf">getRequestURI</span><span class="o">();</span>
+
+    <span class="c1">//截取getRequestURI最后的一个/后面的部分</span>
+    <span class="kd">public</span> <span class="n">String</span> <span class="nf">getRequstURILastPath</span><span class="o">();</span>
+
+    <span class="c1">//从prefix之后截取getRequestURI再对&quot;/&quot;进行分隔</span>
+    <span class="kd">public</span> <span class="n">String</span><span class="o">[]</span> <span class="nf">getRequstURIPaths</span><span class="o">(</span><span class="n">String</span> <span class="n">prefix</span><span class="o">);</span>
+
+    <span class="c1">//获取请求URL分段中含prefix段的long值</span>
+    <span class="c1">// 例如请求URL /pipes/record/query/time:1453104341363/id:40</span>
+    <span class="c1">// 获取time参数: long time = request.getRequstURIPath(&quot;time:&quot;, 0L);</span>
+    <span class="kd">public</span> <span class="kt">long</span> <span class="nf">getRequstURIPath</span><span class="o">(</span><span class="n">String</span> <span class="n">prefix</span><span class="o">,</span> <span class="kt">long</span> <span class="n">defaultValue</span><span class="o">);</span>
+
+    <span class="c1">//获取请求URL分段中含prefix段的int值</span>
+    <span class="c1">// 例如请求URL /pipes/record/query/page:2/size:50</span>
+    <span class="c1">// 获取page参数: int page = request.getRequstURIPath(&quot;page:&quot;, 1);</span>
+    <span class="c1">// 获取size参数: int size = request.getRequstURIPath(&quot;size:&quot;, 20);</span>
+    <span class="kd">public</span> <span class="kt">int</span> <span class="nf">getRequstURIPath</span><span class="o">(</span><span class="n">String</span> <span class="n">prefix</span><span class="o">,</span> <span class="kt">int</span> <span class="n">defaultValue</span><span class="o">);</span>
+
+    <span class="c1">//获取请求URL分段中含prefix段的值</span>
+    <span class="c1">//例如请求URL /pipes/record/query/name:hello</span>
+    <span class="c1">//获取name参数: String name = request.getRequstURIPath(&quot;name:&quot;, &quot;none&quot;);</span>
+    <span class="kd">public</span> <span class="n">String</span> <span class="nf">getRequstURIPath</span><span class="o">(</span><span class="n">String</span> <span class="n">prefix</span><span class="o">,</span> <span class="n">String</span> <span class="n">defaultValue</span><span class="o">);</span>
+
+    <span class="c1">// 获取请求URL分段中含prefix段的short值</span>
+    <span class="c1">// 例如请求URL /pipes/record/query/type:10</span>
+    <span class="c1">// 获取type参数: short type = request.getRequstURIPath(&quot;type:&quot;, (short)0);</span>
+    <span class="kd">public</span> <span class="kt">short</span> <span class="nf">getRequstURIPath</span><span class="o">(</span><span class="n">String</span> <span class="n">prefix</span><span class="o">,</span> <span class="kt">short</span> <span class="n">defaultValue</span><span class="o">);</span>
+
+    <span class="c1">//获取所有的header名</span>
+    <span class="kd">public</span> <span class="n">String</span><span class="o">[]</span> <span class="nf">getHeaderNames</span><span class="o">();</span>
+
+    <span class="c1">// 获取指定的header值</span>
+    <span class="kd">public</span> <span class="n">String</span> <span class="nf">getHeader</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">);</span>
+
+    <span class="c1">//获取指定的header值, 没有返回默认值</span>
+    <span class="kd">public</span> <span class="n">String</span> <span class="nf">getHeader</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">,</span> <span class="n">String</span> <span class="n">defaultValue</span><span class="o">);</span>
+
+    <span class="c1">//获取指定的header的json值</span>
+    <span class="kd">public</span> <span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">T</span> <span class="nf">getJsonHeader</span><span class="o">(</span><span class="n">JsonConvert</span> <span class="n">convert</span><span class="o">,</span> <span class="n">Class</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">clazz</span><span class="o">,</span> <span class="n">String</span> <span class="n">name</span><span class="o">);</span>
+
+    <span class="c1">//获取指定的header的json值</span>
+    <span class="kd">public</span> <span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">T</span> <span class="nf">getJsonHeader</span><span class="o">(</span><span class="n">Class</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">clazz</span><span class="o">,</span> <span class="n">String</span> <span class="n">name</span><span class="o">);</span>
+
+    <span class="c1">//获取指定的header的boolean值, 没有返回默认boolean值</span>
+    <span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">getBooleanHeader</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">,</span> <span class="kt">boolean</span> <span class="n">defaultValue</span><span class="o">);</span>
+
+    <span class="c1">// 获取指定的header的short值, 没有返回默认short值</span>
+    <span class="kd">public</span> <span class="kt">short</span> <span class="nf">getShortHeader</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">,</span> <span class="kt">short</span> <span class="n">defaultValue</span><span class="o">);</span>
+
+    <span class="c1">//获取指定的header的int值, 没有返回默认int值</span>
+    <span class="kd">public</span> <span class="kt">int</span> <span class="nf">getIntHeader</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">,</span> <span class="kt">int</span> <span class="n">defaultValue</span><span class="o">);</span>
+
+    <span class="c1">// 获取指定的header的float值, 没有返回默认float值</span>
+    <span class="kd">public</span> <span class="kt">float</span> <span class="nf">getFloatHeader</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">,</span> <span class="kt">float</span> <span class="n">defaultValue</span><span class="o">);</span>
+
+    <span class="c1">// 获取指定的header的long值, 没有返回默认long值</span>
+    <span class="kd">public</span> <span class="kt">long</span> <span class="nf">getLongHeader</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">,</span> <span class="kt">long</span> <span class="n">defaultValue</span><span class="o">);</span>
+
+    <span class="c1">//获取指定的header的double值, 没有返回默认double值</span>
+    <span class="kd">public</span> <span class="kt">double</span> <span class="nf">getDoubleHeader</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">,</span> <span class="kt">double</span> <span class="n">defaultValue</span><span class="o">);</span>
+
+    <span class="c1">//获取所有参数名</span>
+    <span class="kd">public</span> <span class="n">String</span><span class="o">[]</span> <span class="nf">getParameterNames</span><span class="o">();</span>
+
+    <span class="c1">//获取指定的参数值</span>
+    <span class="kd">public</span> <span class="n">String</span> <span class="nf">getParameter</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">);</span>
+
+    <span class="c1">//获取指定的参数值, 没有返回默认值</span>
+    <span class="kd">public</span> <span class="n">String</span> <span class="nf">getParameter</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">,</span> <span class="n">String</span> <span class="n">defaultValue</span><span class="o">);</span>
+
+    <span class="c1">//获取指定的参数json值</span>
+    <span class="kd">public</span> <span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">T</span> <span class="nf">getJsonParameter</span><span class="o">(</span><span class="n">JsonConvert</span> <span class="n">convert</span><span class="o">,</span> <span class="n">Class</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">clazz</span><span class="o">,</span> <span class="n">String</span> <span class="n">name</span><span class="o">);</span>
+
+    <span class="c1">//获取指定的参数json值</span>
+    <span class="kd">public</span> <span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">T</span> <span class="nf">getJsonParameter</span><span class="o">(</span><span class="n">Class</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">clazz</span><span class="o">,</span> <span class="n">String</span> <span class="n">name</span><span class="o">);</span>
+
+    <span class="c1">//获取指定的参数boolean值, 没有返回默认boolean值</span>
+    <span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">getBooleanParameter</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">,</span> <span class="kt">boolean</span> <span class="n">defaultValue</span><span class="o">);</span>
+
+    <span class="c1">//获取指定的参数short值, 没有返回默认short值</span>
+    <span class="kd">public</span> <span class="kt">short</span> <span class="nf">getShortParameter</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">,</span> <span class="kt">short</span> <span class="n">defaultValue</span><span class="o">);</span>
+
+    <span class="c1">//获取指定的参数int值, 没有返回默认int值</span>
+    <span class="kd">public</span> <span class="kt">int</span> <span class="nf">getIntParameter</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">,</span> <span class="kt">int</span> <span class="n">defaultValue</span><span class="o">);</span>
+
+    <span class="c1">//获取指定的参数float值, 没有返回默认float值</span>
+    <span class="kd">public</span> <span class="kt">float</span> <span class="nf">getFloatParameter</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">,</span> <span class="kt">float</span> <span class="n">defaultValue</span><span class="o">);</span>
+
+    <span class="c1">//获取指定的参数long值, 没有返回默认long值</span>
+    <span class="kd">public</span> <span class="kt">long</span> <span class="nf">getLongParameter</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">,</span> <span class="kt">long</span> <span class="n">defaultValue</span><span class="o">);</span>
+
+    <span class="c1">//获取指定的参数double值, 没有返回默认double值</span>
+    <span class="kd">public</span> <span class="kt">double</span> <span class="nf">getDoubleParameter</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">,</span> <span class="kt">double</span> <span class="n">defaultValue</span><span class="o">);</span>
+
+    <span class="c1">//获取HTTP上下文对象</span>
+    <span class="kd">public</span> <span class="n">HttpContext</span> <span class="nf">getContext</span><span class="o">();</span>
+
+    <span class="c1">//获取所有属性值, servlet执行完后会被清空</span>
+    <span class="kd">public</span> <span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">Object</span><span class="o">&gt;</span> <span class="nf">getAttributes</span><span class="o">();</span>
+
+    <span class="c1">//获取指定属性值</span>
+    <span class="kd">public</span> <span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">T</span> <span class="nf">getAttribute</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">);</span>
+
+    <span class="c1">//删除指定属性</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">removeAttribute</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">);</span>
+
+    <span class="c1">//设置属性值</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">setAttribute</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">,</span> <span class="n">Object</span> <span class="n">value</span><span class="o">);</span>
+
+    <span class="c1">//获取request创建时间</span>
+    <span class="kd">public</span> <span class="kt">long</span> <span class="nf">getCreatetime</span><span class="o">();</span>
+<span class="o">}</span></pre></div>
+
+
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HttpResponse 方法如下： </p>
+            <div class="highlight"><pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">HttpResponse</span> <span class="o">{</span>
+
+    <span class="c1">//设置状态码</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">setStatus</span><span class="o">(</span><span class="kt">int</span> <span class="n">status</span><span class="o">);</span>
+
+    <span class="c1">//获取状态码</span>
+    <span class="kd">public</span> <span class="kt">int</span> <span class="nf">getStatus</span><span class="o">();</span>
+
+    <span class="c1">//获取 ContentType</span>
+    <span class="kd">public</span> <span class="n">String</span> <span class="nf">getContentType</span><span class="o">();</span>
+
+    <span class="c1">//设置 ContentType</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">setContentType</span><span class="o">(</span><span class="n">String</span> <span class="n">contentType</span><span class="o">);</span>
+
+    <span class="c1">//获取内容长度</span>
+    <span class="kd">public</span> <span class="kt">long</span> <span class="nf">getContentLength</span><span class="o">();</span>
+
+    <span class="c1">//设置内容长度</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">setContentLength</span><span class="o">(</span><span class="kt">long</span> <span class="n">contentLength</span><span class="o">);</span>
+
+    <span class="c1">//设置Header值</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">setHeader</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">,</span> <span class="n">Object</span> <span class="n">value</span><span class="o">);</span>
+
+    <span class="c1">//添加Header值</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">addHeader</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">,</span> <span class="n">Object</span> <span class="n">value</span><span class="o">);</span>
+
+    <span class="c1">//跳过header的输出</span>
+    <span class="c1">//通常应用场景是，调用者的输出内容里已经包含了HTTP的响应头信息，因此需要调用此方法避免重复输出HTTP响应头信息。</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">skipHeader</span><span class="o">();</span>
+
+    <span class="c1">//增加Cookie值</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">addCookie</span><span class="o">(</span><span class="n">HttpCookie</span><span class="o">...</span> <span class="n">cookies</span><span class="o">);</span>
+
+    <span class="c1">//异步输出指定内容</span>
+    <span class="kd">public</span> <span class="o">&lt;</span><span class="n">A</span><span class="o">&gt;</span> <span class="kt">void</span> <span class="nf">sendBody</span><span class="o">(</span><span class="n">ByteBuffer</span> <span class="n">buffer</span><span class="o">,</span> <span class="n">A</span> <span class="n">attachment</span><span class="o">,</span> <span class="n">CompletionHandler</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">,</span> <span class="n">A</span><span class="o">&gt;</span> <span class="n">handler</span><span class="o">);</span>
+
+    <span class="c1">//关闭HTTP连接，如果是keep-alive则不强制关闭</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">finish</span><span class="o">();</span>
+
+    <span class="c1">//强制关闭HTTP连接</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">finish</span><span class="o">(</span><span class="kt">boolean</span> <span class="n">kill</span><span class="o">);</span>
+
+    <span class="c1">//将对象以JSON格式输出</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">finishJson</span><span class="o">(</span><span class="n">Object</span> <span class="n">obj</span><span class="o">);</span>
+
+    <span class="c1">//将对象以JSON格式输出</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">finishJson</span><span class="o">(</span><span class="n">JsonConvert</span> <span class="n">convert</span><span class="o">,</span> <span class="n">Object</span> <span class="n">obj</span><span class="o">);</span>
+
+    <span class="c1">//将对象以JSON格式输出</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">finishJson</span><span class="o">(</span><span class="n">Type</span> <span class="n">type</span><span class="o">,</span> <span class="n">Object</span> <span class="n">obj</span><span class="o">);</span>
+
+    <span class="c1">//将对象以JSON格式输出</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">finishJson</span><span class="o">(</span><span class="kd">final</span> <span class="n">JsonConvert</span> <span class="n">convert</span><span class="o">,</span> <span class="kd">final</span> <span class="n">Type</span> <span class="n">type</span><span class="o">,</span> <span class="kd">final</span> <span class="n">Object</span> <span class="n">obj</span><span class="o">);</span>
+
+    <span class="c1">//将对象以JSON格式输出</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">finishJson</span><span class="o">(</span><span class="kd">final</span> <span class="n">Object</span><span class="o">...</span> <span class="n">objs</span><span class="o">);</span>
+
+    <span class="c1">//将指定字符串以响应结果输出</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">finish</span><span class="o">(</span><span class="n">String</span> <span class="n">obj</span><span class="o">);</span>
+
+    <span class="c1">//以指定响应码附带内容输出, message 可以为null</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">finish</span><span class="o">(</span><span class="kt">int</span> <span class="n">status</span><span class="o">,</span> <span class="n">String</span> <span class="n">message</span><span class="o">);</span>
+
+    <span class="c1">//以304状态码输出</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">finish304</span><span class="o">();</span>
+
+    <span class="c1">//以404状态码输出</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">finish404</span><span class="o">();</span>
+
+    <span class="c1">//将指定ByteBuffer按响应结果输出</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">finish</span><span class="o">(</span><span class="n">ByteBuffer</span> <span class="n">buffer</span><span class="o">);</span>
+
+    <span class="c1">//将指定ByteBuffer按响应结果输出</span>
+    <span class="c1">//kill   输出后是否强制关闭连接</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">finish</span><span class="o">(</span><span class="kt">boolean</span> <span class="n">kill</span><span class="o">,</span> <span class="n">ByteBuffer</span> <span class="n">buffer</span><span class="o">);</span>
+
+    <span class="c1">//将指定ByteBuffer数组按响应结果输出</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">finish</span><span class="o">(</span><span class="n">ByteBuffer</span><span class="o">...</span> <span class="n">buffers</span><span class="o">);</span>
+
+    <span class="c1">//将指定ByteBuffer数组按响应结果输出</span>
+    <span class="c1">//kill   输出后是否强制关闭连接</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">finish</span><span class="o">(</span><span class="kt">boolean</span> <span class="n">kill</span><span class="o">,</span> <span class="n">ByteBuffer</span><span class="o">...</span> <span class="n">buffers</span><span class="o">);</span>
+
+    <span class="c1">//将指定文件按响应结果输出</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">finish</span><span class="o">(</span><span class="n">File</span> <span class="n">file</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span><span class="o">;</span>
+<span class="o">}</span></pre></div>
+
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;WebSocket 方法如下： </p>
+            <div class="highlight"><pre><span class="kd">public</span> <span class="kd">abstract</span> <span class="kd">class</span> <span class="nc">WebSocket</span> <span class="o">{</span>
+
+    <span class="c1">//发送消息体, 包含二进制/文本  返回结果0表示成功，非0表示错误码</span>
+    <span class="kd">public</span> <span class="kt">int</span> <span class="nf">send</span><span class="o">(</span><span class="n">WebSocketPacket</span> <span class="n">packet</span><span class="o">);</span>
+
+    <span class="c1">//发送单一的文本消息  返回结果0表示成功，非0表示错误码</span>
+    <span class="kd">public</span> <span class="kt">int</span> <span class="nf">send</span><span class="o">(</span><span class="n">String</span> <span class="n">text</span><span class="o">);</span>
+
+    <span class="c1">//发送文本消息  返回结果0表示成功，非0表示错误码</span>
+    <span class="kd">public</span> <span class="kt">int</span> <span class="nf">send</span><span class="o">(</span><span class="n">String</span> <span class="n">text</span><span class="o">,</span> <span class="kt">boolean</span> <span class="n">last</span><span class="o">);</span>
+
+    <span class="c1">//发送单一的二进制消息  返回结果0表示成功，非0表示错误码</span>
+    <span class="kd">public</span> <span class="kt">int</span> <span class="nf">send</span><span class="o">(</span><span class="kt">byte</span><span class="o">[]</span> <span class="n">data</span><span class="o">);</span>
+
+    <span class="c1">//发送单一的二进制消息  返回结果0表示成功，非0表示错误码</span>
+    <span class="kd">public</span> <span class="kt">int</span> <span class="nf">send</span><span class="o">(</span><span class="kt">byte</span><span class="o">[]</span> <span class="n">data</span><span class="o">,</span> <span class="kt">boolean</span> <span class="n">last</span><span class="o">);</span>
+
+    <span class="c1">//发送消息, 消息类型是String或byte[]  返回结果0表示成功，非0表示错误码</span>
+    <span class="kd">public</span> <span class="kt">int</span> <span class="nf">send</span><span class="o">(</span><span class="n">Serializable</span> <span class="n">message</span><span class="o">,</span> <span class="kt">boolean</span> <span class="n">last</span><span class="o">);</span>
+
+    <span class="c1">//给指定groupid的WebSocketGroup下所有WebSocket节点发送文本消息</span>
+    <span class="kd">public</span> <span class="kt">int</span> <span class="nf">sendEachMessage</span><span class="o">(</span><span class="n">Serializable</span> <span class="n">groupid</span><span class="o">,</span> <span class="n">String</span> <span class="n">text</span><span class="o">);</span>
+
+    <span class="c1">//给指定groupid的WebSocketGroup下所有WebSocket节点发送文本消息</span>
+    <span class="kd">public</span> <span class="kt">int</span> <span class="nf">sendEachMessage</span><span class="o">(</span><span class="n">Serializable</span> <span class="n">groupid</span><span class="o">,</span> <span class="n">String</span> <span class="n">text</span><span class="o">,</span> <span class="kt">boolean</span> <span class="n">last</span><span class="o">);</span>
+
+    <span class="c1">//给指定groupid的WebSocketGroup下所有WebSocket节点发送二进制消息</span>
+    <span class="kd">public</span> <span class="kt">int</span> <span class="nf">sendEachMessage</span><span class="o">(</span><span class="n">Serializable</span> <span class="n">groupid</span><span class="o">,</span> <span class="kt">byte</span><span class="o">[]</span> <span class="n">data</span><span class="o">);</span>
+
+    <span class="c1">//给指定groupid的WebSocketGroup下所有WebSocket节点发送二进制消息</span>
+    <span class="kd">public</span> <span class="kt">int</span> <span class="nf">sendEachMessage</span><span class="o">(</span><span class="n">Serializable</span> <span class="n">groupid</span><span class="o">,</span> <span class="kt">byte</span><span class="o">[]</span> <span class="n">data</span><span class="o">,</span> <span class="kt">boolean</span> <span class="n">last</span><span class="o">);</span>
+
+    <span class="c1">//给指定groupid的WebSocketGroup下最近接入的WebSocket节点发送文本消息</span>
+    <span class="kd">public</span> <span class="kt">int</span> <span class="nf">sendRecentMessage</span><span class="o">(</span><span class="n">Serializable</span> <span class="n">groupid</span><span class="o">,</span> <span class="n">String</span> <span class="n">text</span><span class="o">);</span>
+
+    <span class="c1">//给指定groupid的WebSocketGroup下最近接入的WebSocket节点发送文本消息</span>
+    <span class="kd">public</span> <span class="kt">int</span> <span class="nf">sendRecentMessage</span><span class="o">(</span><span class="n">Serializable</span> <span class="n">groupid</span><span class="o">,</span> <span class="n">String</span> <span class="n">text</span><span class="o">,</span> <span class="kt">boolean</span> <span class="n">last</span><span class="o">);</span>
+
+    <span class="c1">//给指定groupid的WebSocketGroup下最近接入的WebSocket节点发送二进制消息</span>
+    <span class="kd">public</span> <span class="kt">int</span> <span class="nf">sendRecentMessage</span><span class="o">(</span><span class="n">Serializable</span> <span class="n">groupid</span><span class="o">,</span> <span class="kt">byte</span><span class="o">[]</span> <span class="n">data</span><span class="o">);</span>
+
+    <span class="c1">//给指定groupid的WebSocketGroup下最近接入的WebSocket节点发送二进制消息</span>
+    <span class="kd">public</span> <span class="kt">int</span> <span class="nf">sendRecentMessage</span><span class="o">(</span><span class="n">Serializable</span> <span class="n">groupid</span><span class="o">,</span> <span class="kt">byte</span><span class="o">[]</span> <span class="n">data</span><span class="o">,</span> <span class="kt">boolean</span> <span class="n">last</span><span class="o">);</span>
+
+    <span class="c1">//发送PING消息  返回结果0表示成功，非0表示错误码</span>
+    <span class="kd">public</span> <span class="kt">int</span> <span class="nf">sendPing</span><span class="o">();</span>
+
+    <span class="c1">//发送PING消息，附带其他信息  返回结果0表示成功，非0表示错误码</span>
+    <span class="kd">public</span> <span class="kt">int</span> <span class="nf">sendPing</span><span class="o">(</span><span class="kt">byte</span><span class="o">[]</span> <span class="n">data</span><span class="o">);</span>
+
+    <span class="c1">//发送PONG消息，附带其他信息  返回结果0表示成功，非0表示错误码</span>
+    <span class="kd">public</span> <span class="kt">int</span> <span class="nf">sendPong</span><span class="o">(</span><span class="kt">byte</span><span class="o">[]</span> <span class="n">data</span><span class="o">);</span>
+
+    <span class="c1">//获取当前WebSocket下的属性</span>
+    <span class="kd">public</span> <span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">T</span> <span class="nf">getAttribute</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">);</span>
+
+    <span class="c1">//移出当前WebSocket下的属性</span>
+    <span class="kd">public</span> <span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">T</span> <span class="nf">removeAttribute</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">);</span>
+
+    <span class="c1">//给当前WebSocket下的增加属性</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">setAttribute</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">,</span> <span class="n">Object</span> <span class="n">value</span><span class="o">);</span>
+
+    <span class="c1">//获取当前WebSocket所属的groupid</span>
+    <span class="kd">public</span> <span class="n">Serializable</span> <span class="nf">getGroupid</span><span class="o">();</span>
+
+    <span class="c1">//获取当前WebSocket的会话ID， 不会为null</span>
+    <span class="kd">public</span> <span class="n">Serializable</span> <span class="nf">getSessionid</span><span class="o">();</span>
+
+    <span class="c1">//获取客户端直接地址, 当WebSocket连接是由代理服务器转发的，则该值固定为代理服务器的IP地址</span>
+    <span class="kd">public</span> <span class="n">SocketAddress</span> <span class="nf">getRemoteAddress</span><span class="o">();</span>
+
+    <span class="c1">//获取客户端真实地址 同 HttpRequest.getRemoteAddr()</span>
+    <span class="kd">public</span> <span class="n">String</span> <span class="nf">getRemoteAddr</span><span class="o">();</span>
+
+    <span class="c1">//获取WebSocket创建时间</span>
+    <span class="kd">public</span> <span class="kt">long</span> <span class="nf">getCreatetime</span><span class="o">();</span>
+
+    <span class="c1">//显式地关闭WebSocket</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">close</span><span class="o">();</span>
+
+    <span class="c1">//获取当前WebSocket所属的WebSocketGroup， 不会为null</span>
+    <span class="kd">protected</span> <span class="n">WebSocketGroup</span> <span class="nf">getWebSocketGroup</span><span class="o">();</span>
+
+    <span class="c1">//获取指定groupid的WebSocketGroup, 没有返回null</span>
+    <span class="kd">protected</span> <span class="n">WebSocketGroup</span> <span class="nf">getWebSocketGroup</span><span class="o">(</span><span class="n">Serializable</span> <span class="n">groupid</span><span class="o">);</span>
+
+    <span class="c1">//获取当前进程节点所有在线的WebSocketGroup</span>
+    <span class="kd">protected</span> <span class="n">Collection</span><span class="o">&lt;</span><span class="n">WebSocketGroup</span><span class="o">&gt;</span> <span class="nf">getWebSocketGroups</span><span class="o">();</span>
+
+    <span class="c1">//获取在线用户的节点地址列表</span>
+    <span class="kd">protected</span> <span class="n">Collection</span><span class="o">&lt;</span><span class="n">InetSocketAddress</span><span class="o">&gt;</span> <span class="nf">getOnlineNodes</span><span class="o">(</span><span class="n">Serializable</span> <span class="n">groupid</span><span class="o">);</span>
+
+    <span class="c1">//获取在线用户的详细连接信息</span>
+    <span class="kd">protected</span> <span class="n">Map</span><span class="o">&lt;</span><span class="n">InetSocketAddress</span><span class="o">,</span> <span class="n">List</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;&gt;</span> <span class="nf">getOnlineRemoteAddress</span><span class="o">(</span><span class="n">Serializable</span> <span class="n">groupid</span><span class="o">);</span>
+
+    <span class="c1">//返回sessionid, null表示连接不合法或异常,默认实现是request.getSessionid(false)，通常需要重写该方法</span>
+    <span class="kd">public</span> <span class="n">Serializable</span> <span class="nf">onOpen</span><span class="o">(</span><span class="kd">final</span> <span class="n">HttpRequest</span> <span class="n">request</span><span class="o">);</span>
+
+    <span class="c1">//创建groupid， null表示异常， 必须实现该方法， 通常为用户ID为groupid</span>
+    <span class="kd">protected</span> <span class="kd">abstract</span> <span class="n">Serializable</span> <span class="nf">createGroupid</span><span class="o">();</span>
+
+    <span class="c1">//标记为@WebSocketBinary才需要重写此方法</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onRead</span><span class="o">(</span><span class="n">AsyncConnection</span> <span class="n">channel</span><span class="o">)</span> <span class="o">{</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onConnected</span><span class="o">()</span> <span class="o">{</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onMessage</span><span class="o">(</span><span class="n">String</span> <span class="n">text</span><span class="o">)</span> <span class="o">{</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onPing</span><span class="o">(</span><span class="kt">byte</span><span class="o">[]</span> <span class="n">bytes</span><span class="o">)</span> <span class="o">{</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onPong</span><span class="o">(</span><span class="kt">byte</span><span class="o">[]</span> <span class="n">bytes</span><span class="o">)</span> <span class="o">{</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onMessage</span><span class="o">(</span><span class="kt">byte</span><span class="o">[]</span> <span class="n">bytes</span><span class="o">)</span> <span class="o">{</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onFragment</span><span class="o">(</span><span class="n">String</span> <span class="n">text</span><span class="o">,</span> <span class="kt">boolean</span> <span class="n">last</span><span class="o">)</span> <span class="o">{</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onFragment</span><span class="o">(</span><span class="kt">byte</span><span class="o">[]</span> <span class="n">bytes</span><span class="o">,</span> <span class="kt">boolean</span> <span class="n">last</span><span class="o">)</span> <span class="o">{</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onClose</span><span class="o">(</span><span class="kt">int</span> <span class="n">code</span><span class="o">,</span> <span class="n">String</span> <span class="n">reason</span><span class="o">)</span> <span class="o">{</span>
+    <span class="o">}</span>
+<span class="o">}</span></pre></div>
+
+            <h3><a id="net_sncp" class="anchor" href="#" aria-hidden="true"><span class="octicon octicon-link"></span></a>SNCP 协议</h3>
+
+            <h3><a id="net_diy" class="anchor" href="#" aria-hidden="true"><span class="octicon octicon-link"></span></a>自定义协议</h3>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;协议的网络框架包含五种对象: <br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Context &nbsp;&nbsp;&nbsp;&nbsp;: 协议上下文对象 <br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Request &nbsp;&nbsp;&nbsp;: 服务请求对象 <br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Response : 服务响应对象 <br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Servlet &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: 服务逻辑处理对象 <br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Server &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: 服务监听对象 <br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;通常自定义协议需要继承上面五种对象类，同时为了让RedKale能识别和加载自定义协议服务需要继承 <b>org.redkale.boot.NodeServer</b> 并指明 <b>@NodeProtocol</b>，实现可以参考 <a href="https://github.com/wentch/redkale-plugins/tree/master/src/org/redkale/net/socks" target="_blank" >基于SOCKS5协议的反向代理服务器</a>
             </p>
 
             <footer class="site-footer">
