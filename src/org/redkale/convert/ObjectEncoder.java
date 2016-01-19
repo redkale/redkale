@@ -54,7 +54,14 @@ public final class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T
             //if (!(type instanceof Class)) throw new ConvertException("[" + type + "] is no a class");
             final Class clazz = this.typeClass;
             final Set<EnMember> list = new HashSet();
-            final String[] cps = ObjectEncoder.findConstructorProperties(factory.loadCreator(this.typeClass));
+            final boolean reversible = factory.isReversible();
+            Creator creator = null;
+            try {
+                creator = factory.loadCreator(this.typeClass);
+            } catch (RuntimeException e) {
+                if (reversible) throw e;
+            }
+            final String[] cps = creator == null ? null : ObjectEncoder.findConstructorProperties(creator);
             try {
                 ConvertColumnEntry ref;
                 for (final Field field : clazz.getFields()) {
@@ -64,7 +71,6 @@ public final class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T
                     Type t = createClassType(field.getGenericType(), this.type);
                     list.add(new EnMember(createAttribute(factory, clazz, field, null, null), factory.loadEncoder(t)));
                 }
-                final boolean reversible = factory.isReversible();
                 for (final Method method : clazz.getMethods()) {
                     if (Modifier.isStatic(method.getModifiers())) continue;
                     if (Modifier.isAbstract(method.getModifiers())) continue;
