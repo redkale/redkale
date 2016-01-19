@@ -29,8 +29,6 @@ import org.redkale.util.*;
  * 详情见: http://www.redkale.org
  *
  * @author zhangjx
- *
- * @param <R> HttpRequest的子类型
  */
 public class HttpResponse extends Response<HttpContext, HttpRequest> {
 
@@ -182,7 +180,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
     /**
      * 增加Cookie值
      *
-     * @param cookies
+     * @param cookies cookie
      */
     public void addCookie(HttpCookie... cookies) {
         if (this.cookies == null) {
@@ -419,8 +417,9 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * 将指定文件按响应结果输出
      *
      * @param file 输出文件
+     * @throws IOException IO异常
      */
-    public <A> void finish(File file) throws IOException {
+    public void finish(File file) throws IOException {
         finishFile(file, null);
     }
 
@@ -429,8 +428,9 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      *
      * @param file     输出文件
      * @param fileBody 文件内容， 没有则输出file
+     * @throws IOException IO异常
      */
-    protected <A> void finishFile(final File file, ByteBuffer fileBody) throws IOException {
+    protected void finishFile(final File file, ByteBuffer fileBody) throws IOException {
         if (file == null || !file.isFile() || !file.canRead()) {
             finish404();
             return;
@@ -475,7 +475,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         }
     }
 
-    private <A> void finishFile(ByteBuffer hbuffer, File file, long offset, long length) throws IOException {
+    private void finishFile(ByteBuffer hbuffer, File file, long offset, long length) throws IOException {
         this.channel.write(hbuffer, hbuffer, new TransferFileHandler(AsynchronousFileChannel.open(file.toPath(), options, ((HttpContext) context).getExecutor()), offset, length));
     }
 

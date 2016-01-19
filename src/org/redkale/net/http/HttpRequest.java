@@ -245,7 +245,7 @@ public class HttpRequest extends Request<HttpContext> {
      * 获取请求内容指定的编码字符串
      *
      * @param charset 编码
-     * @return
+     * @return 内容
      */
     public String getBody(final Charset charset) {
         return charset == null ? array.toString() : array.toString(charset);
@@ -254,7 +254,7 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取请求内容的UTF-8编码字符串
      *
-     * @return
+     * @return 内容
      */
     public String getBodyUTF8() {
         return array.toString(UTF8);
@@ -282,7 +282,7 @@ public class HttpRequest extends Request<HttpContext> {
      * 获取文件上传信息列表
      *
      * @return 文件上传对象集合
-     * @throws IOException
+     * @throws IOException IO异常
      */
     public final Iterable<MultiPart> multiParts() throws IOException {
         return getMultiContext().parts();
@@ -342,7 +342,7 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 更新sessionid
      *
-     * @return
+     * @return 新的sessionid值
      */
     public String changeSessionid() {
         this.newsessionid = context.createSessionid();
@@ -575,6 +575,7 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取指定的header的json值
      *
+     * @param <T>   泛型
      * @param clazz 反序列化的类名
      * @param name  header名
      * @return header值
@@ -587,6 +588,7 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取指定的header的json值
      *
+     * @param <T>     泛型
      * @param convert JsonConvert对象
      * @param clazz   反序列化的类名
      * @param name    header名
@@ -699,6 +701,7 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取指定的参数json值
      *
+     * @param <T>   泛型
      * @param clazz 反序列化的类名
      * @param name  参数名
      * @return 参数值
@@ -711,6 +714,7 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取指定的参数json值
      *
+     * @param <T>     泛型
      * @param convert JsonConvert对象
      * @param clazz   反序列化的类名
      * @param name    参数名
