@@ -225,6 +225,15 @@ public class HttpRequest extends Request<HttpContext> {
     }
 
     /**
+     * 获取客户端地址IP
+     *
+     * @return 地址
+     */
+    public SocketAddress getRemoteAddress() {
+        return this.channel.getRemoteAddress();
+    }
+
+    /**
      * 获取客户端地址IP, 与getRemoteAddres() 的区别在于：本方法优先取header中指定为RemoteAddress名的值，没有则返回getRemoteAddres()的getHostAddress()。
      * 本方法适用于服务前端有如nginx的代理服务器进行中转，通过getRemoteAddres()是获取不到客户端的真实IP。
      *
@@ -260,15 +269,6 @@ public class HttpRequest extends Request<HttpContext> {
         return array.toString(UTF8);
     }
 
-    /**
-     * 获取客户端地址IP
-     *
-     * @return 地址
-     */
-    public SocketAddress getRemoteAddress() {
-        return this.channel.getRemoteAddress();
-    }
-
     @Override
     public String toString() {
         parseBody();
@@ -276,16 +276,6 @@ public class HttpRequest extends Request<HttpContext> {
                 + ", contentType:" + this.contentType + ", connection:" + this.connection + ", protocol:" + this.protocol
                 + ", contentLength:" + this.contentLength + ", cookies:" + this.cookiestr
                 + ", host:" + this.host + ", params:" + this.params + ", header:" + this.header + "}";
-    }
-
-    /**
-     * 获取文件上传信息列表
-     *
-     * @return 文件上传对象集合
-     * @throws IOException IO异常
-     */
-    public final Iterable<MultiPart> multiParts() throws IOException {
-        return getMultiContext().parts();
     }
 
     /**
@@ -301,6 +291,16 @@ public class HttpRequest extends Request<HttpContext> {
                 this.count = array.count();
             }
         }, null);
+    }
+
+    /**
+     * 获取文件上传信息列表
+     *
+     * @return 文件上传对象集合
+     * @throws IOException IO异常
+     */
+    public final Iterable<MultiPart> multiParts() throws IOException {
+        return getMultiContext().parts();
     }
 
     @Override
@@ -407,12 +407,12 @@ public class HttpRequest extends Request<HttpContext> {
     }
 
     /**
-     * 获取Connection的Header值
+     * 获取协议名 http、https、ws、wss等
      *
-     * @return Connection
+     * @return protocol
      */
-    public String getConnection() {
-        return connection;
+    public String getProtocol() {
+        return protocol;
     }
 
     /**
@@ -425,12 +425,30 @@ public class HttpRequest extends Request<HttpContext> {
     }
 
     /**
-     * 获取协议名 http、https、ws、wss等
+     * 获取Content-Type的header值
      *
-     * @return protocol
+     * @return contentType
      */
-    public String getProtocol() {
-        return protocol;
+    public String getContentType() {
+        return contentType;
+    }
+
+    /**
+     * 获取请求内容的长度, 为-1表示内容长度不确定
+     *
+     * @return 内容长度
+     */
+    public long getContentLength() {
+        return contentLength;
+    }
+
+    /**
+     * 获取Connection的Header值
+     *
+     * @return Connection
+     */
+    public String getConnection() {
+        return connection;
     }
 
     /**
@@ -440,6 +458,15 @@ public class HttpRequest extends Request<HttpContext> {
      */
     public String getHost() {
         return host;
+    }
+
+    /**
+     * 获取请求的URL
+     *
+     * @return 请求的URL
+     */
+    public String getRequestURI() {
+        return requestURI;
     }
 
     /**
@@ -525,33 +552,6 @@ public class HttpRequest extends Request<HttpContext> {
         return val == null ? defvalue : Long.parseLong(val);
     }
 
-    /**
-     * 获取请求的URL
-     *
-     * @return 请求的URL
-     */
-    public String getRequestURI() {
-        return requestURI;
-    }
-
-    /**
-     * 获取请求内容的长度, 为-1表示内容长度不确定
-     *
-     * @return 内容长度
-     */
-    public long getContentLength() {
-        return contentLength;
-    }
-
-    /**
-     * 获取Content-Type的header值
-     *
-     * @return contentType
-     */
-    public String getContentType() {
-        return contentType;
-    }
-
     //------------------------------------------------------------------------------
     /**
      * 获取所有的header名
@@ -570,6 +570,17 @@ public class HttpRequest extends Request<HttpContext> {
      */
     public String getHeader(String name) {
         return header.getValue(name);
+    }
+
+    /**
+     * 获取指定的header值, 没有返回默认值
+     *
+     * @param name         header名
+     * @param defaultValue 默认值
+     * @return header值
+     */
+    public String getHeader(String name, String defaultValue) {
+        return header.getValue(name, defaultValue);
     }
 
     /**
@@ -665,17 +676,6 @@ public class HttpRequest extends Request<HttpContext> {
         return header.getDoubleValue(name, defaultValue);
     }
 
-    /**
-     * 获取指定的header值, 没有返回默认值
-     *
-     * @param name         header名
-     * @param defaultValue 默认值
-     * @return header值
-     */
-    public String getHeader(String name, String defaultValue) {
-        return header.getValue(name, defaultValue);
-    }
-
     //------------------------------------------------------------------------------
     /**
      * 获取所有参数名
@@ -696,6 +696,18 @@ public class HttpRequest extends Request<HttpContext> {
     public String getParameter(String name) {
         parseBody();
         return params.getValue(name);
+    }
+
+    /**
+     * 获取指定的参数值, 没有返回默认值
+     *
+     * @param name         参数名
+     * @param defaultValue 默认值
+     * @return 参数值
+     */
+    public String getParameter(String name, String defaultValue) {
+        parseBody();
+        return params.getValue(name, defaultValue);
     }
 
     /**
@@ -797,15 +809,4 @@ public class HttpRequest extends Request<HttpContext> {
         return params.getDoubleValue(name, defaultValue);
     }
 
-    /**
-     * 获取指定的参数值, 没有返回默认值
-     *
-     * @param name         参数名
-     * @param defaultValue 默认值
-     * @return 参数值
-     */
-    public String getParameter(String name, String defaultValue) {
-        parseBody();
-        return params.getValue(name, defaultValue);
-    }
 }
