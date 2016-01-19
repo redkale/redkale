@@ -95,13 +95,6 @@ public abstract class WebSocket {
     }
 
     /**
-     * 显式地关闭WebSocket
-     */
-    public final void close() {
-        if (this._runner != null) this._runner.closeRunner();
-    }
-
-    /**
      * 发送单一的文本消息
      *
      * @param text 不可为空
@@ -122,16 +115,6 @@ public abstract class WebSocket {
         return send(new WebSocketPacket(text, last));
     }
 
-    /**
-     * 发送单一的二进制消息
-     *
-     * @param data byte[]
-     * @return 0表示成功， 非0表示错误码
-     */
-    public final int send(byte[] data) {
-        return send(data, true);
-    }
-
     public final int sendPing() {
         //if (_engine.finest) _engine.logger.finest(this + " on "+_engine.getEngineid()+" ping...");
         return send(WebSocketPacket.DEFAULT_PING_PACKET);
@@ -147,6 +130,16 @@ public abstract class WebSocket {
 
     public final long getCreatetime() {
         return createtime;
+    }
+
+    /**
+     * 发送单一的二进制消息
+     *
+     * @param data byte[]
+     * @return 0表示成功， 非0表示错误码
+     */
+    public final int send(byte[] data) {
+        return send(data, true);
     }
 
     /**
@@ -219,7 +212,7 @@ public abstract class WebSocket {
     }
 
     /**
-     * 给指定groupid的WebSocketGroup下最近活跃的WebSocket节点发送文本消息
+     * 给指定groupid的WebSocketGroup下最近接入的WebSocket节点发送文本消息
      *
      * @param groupid groupid
      * @param text    不可为空
@@ -230,7 +223,7 @@ public abstract class WebSocket {
     }
 
     /**
-     * 给指定groupid的WebSocketGroup下最近活跃的WebSocket节点发送二进制消息
+     * 给指定groupid的WebSocketGroup下最近接入的WebSocket节点发送二进制消息
      *
      * @param groupid groupid
      * @param data    不可为空
@@ -241,7 +234,7 @@ public abstract class WebSocket {
     }
 
     /**
-     * 给指定groupid的WebSocketGroup下最近活跃的WebSocket节点发送文本消息
+     * 给指定groupid的WebSocketGroup下最近接入的WebSocket节点发送文本消息
      *
      * @param groupid groupid
      * @param text    不可为空
@@ -253,7 +246,7 @@ public abstract class WebSocket {
     }
 
     /**
-     * 给指定groupid的WebSocketGroup下最近活跃的WebSocket节点发送二进制消息
+     * 给指定groupid的WebSocketGroup下最近接入的WebSocket节点发送二进制消息
      *
      * @param groupid groupid
      * @param data    不可为空
@@ -359,7 +352,7 @@ public abstract class WebSocket {
     }
 
     /**
-     * 获取客户端真实地址
+     * 获取客户端真实地址 同 HttpRequest.getRemoteAddr()
      *
      * @return String
      */
@@ -387,13 +380,18 @@ public abstract class WebSocket {
         return _engine.getWebSocketGroup(groupid);
     }
 
+    /**
+     * 获取当前进程节点所有在线的WebSocketGroup
+     *
+     * @return
+     */
     protected final Collection<WebSocketGroup> getWebSocketGroups() {
         return _engine.getWebSocketGroups();
     }
 
     //-------------------------------------------------------------------
     /**
-     * 返回sessionid, null表示连接不合法或异常
+     * 返回sessionid, null表示连接不合法或异常,默认实现是request.getSessionid(false)，通常需要重写该方法
      *
      * @param request HttpRequest
      * @return sessionid
@@ -403,13 +401,14 @@ public abstract class WebSocket {
     }
 
     /**
-     * 创建groupid， null表示异常
+     * 创建groupid， null表示异常， 必须实现该方法， 通常为用户ID为groupid
      *
      * @return groupid
      */
     protected abstract Serializable createGroupid();
 
     /**
+     * 标记为WebSocketBinary才需要重写此方法
      *
      * @param channel 请求连接
      */
@@ -438,6 +437,13 @@ public abstract class WebSocket {
     }
 
     public void onClose(int code, String reason) {
+    }
+
+    /**
+     * 显式地关闭WebSocket
+     */
+    public final void close() {
+        if (this._runner != null) this._runner.closeRunner();
     }
 
     @Override
