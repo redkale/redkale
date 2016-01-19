@@ -130,7 +130,7 @@ public abstract class NodeServer {
             if (!webroot.contains(":") && !webroot.startsWith("/")) {
                 myroot = new File(System.getProperty(Application.RESNAME_APP_HOME), webroot);
             }
-            
+
             factory.register(Server.RESNAME_SERVER_ROOT, String.class, myroot.getCanonicalPath());
             factory.register(Server.RESNAME_SERVER_ROOT, File.class, myroot.getCanonicalFile());
             factory.register(Server.RESNAME_SERVER_ROOT, Path.class, myroot.toPath());
@@ -221,7 +221,8 @@ public abstract class NodeServer {
 
                     ts = src.getClass().getDeclaredField("_diffGroupTransports");
                     ts.setAccessible(true);
-                    diffGroupTransports = Arrays.asList((Transport[]) ts.get(src));
+                    Transport[] dts = (Transport[]) ts.get(src);
+                    if (dts != null) diffGroupTransports = Arrays.asList(dts);
 
                     ts = src.getClass().getDeclaredField("_client");
                     ts.setAccessible(true);
