@@ -129,6 +129,7 @@ public interface WebSocketDesc {
     default void onConnected() {
     }
 
+    //接收文本消息响应事件，可能会接收到文本消息需要重写该方法
     default void onMessage(String text) {
     }
 
@@ -137,7 +138,8 @@ public interface WebSocketDesc {
 
     default void onPong(byte[] bytes) {
     }
-
+    
+    //接收二进制消息响应事件，可能会接收到二进制消息需要重写该方法
     default void onMessage(byte[] bytes) {
     }
 
