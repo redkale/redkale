@@ -163,6 +163,56 @@
     <span class="nt">&lt;servlets</span> <b><span class="na">path=</span><span class="s">&quot;/pipes&quot;</span></b> <span class="na">autoload=</span><span class="s">&quot;true&quot;</span><span class="nt">/&gt;</span>
 <span class="nt">&lt;/server&gt;</span></pre></div>
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如上, 配置了/pipes 前缀后，客户端发送Servlet请求需带上前缀，请求当前用户信息的url就变成：/pipes/user/myinfo 。</p>
+            <div class="highlight"><pre><span class="nd">@WebServlet</span><span class="o">(</span><span class="s">&quot;/ws/chat&quot;</span><span class="o">)</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">ChatWebSocketServlet</span> <span class="kd">extends</span> <span class="n">WebSocketServlet</span> <span class="o">{</span>
+
+    <span class="nd">@Resource</span> <span class="c1">//[RedKale内置资源]</span>
+    <span class="kd">protected</span> <span class="n">JsonConvert</span> <span class="n">jsonConvert</span><span class="o">;</span>
+
+    <span class="nd">@Resource</span>
+    <span class="kd">private</span> <span class="n">UserService</span> <span class="n">userService</span><span class="o">;</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">protected</span> <span class="n">WebSocket</span> <span class="nf">createWebSocket</span><span class="o">()</span> <span class="o">{</span>
+
+        <span class="k">return</span> <span class="k">new</span> <span class="nf">WebSocket</span><span class="o">()</span> <span class="o">{</span>
+
+            <span class="kd">private</span> <span class="n">UserInfo</span> <span class="n">user</span><span class="o">;</span>
+
+            <span class="nd">@Override</span>
+            <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onMessage</span><span class="o">(</span><span class="n">String</span> <span class="n">text</span><span class="o">)</span> <span class="o">{</span> <span class="c1">// text 接收的格式:  {&quot;receiveid&quot;:200000001, &quot;content&quot;:&quot;Hi Redkale!&quot;}</span>
+                <span class="kd">final</span> <span class="n">ChatMessage</span> <span class="n">message</span> <span class="o">=</span> <span class="n">jsonConvert</span><span class="o">.</span><span class="na">convertFrom</span><span class="o">(</span><span class="n">ChatMessage</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="n">text</span><span class="o">);</span> <span class="c1">//获取给对方的消息体信息</span>
+                <span class="n">message</span><span class="o">.</span><span class="na">sendid</span> <span class="o">=</span> <span class="n">user</span><span class="o">.</span><span class="na">getUserid</span><span class="o">();</span> <span class="c1">//将当前用户设为消息的发送方</span>
+                <span class="n">message</span><span class="o">.</span><span class="na">sendtime</span> <span class="o">=</span> <span class="n">System</span><span class="o">.</span><span class="na">currentTimeMillis</span><span class="o">();</span> <span class="c1">//设置消息发送时间</span>
+                <span class="c1">//给接收方发送消息, 即使接收方在其他WebSocket进程节点上有链接，RedKale也会自动发送到其他链接进程节点上。</span>
+                <span class="kd">super</span><span class="o">.</span><span class="na">sendEachMessage</span><span class="o">(</span><span class="n">message</span><span class="o">.</span><span class="na">receiveid</span><span class="o">,</span> <span class="n">jsonConvert</span><span class="o">.</span><span class="na">convertTo</span><span class="o">(</span><span class="n">message</span><span class="o">));</span> 
+            <span class="o">}</span>
+
+            <span class="nd">@Override</span>
+            <span class="kd">protected</span> <span class="n">Serializable</span> <span class="nf">createGroupid</span><span class="o">()</span> <span class="o">{</span> <span class="c1">//以用户ID作为WebSocketGroup的groupid</span>
+                <span class="k">this</span><span class="o">.</span><span class="na">user</span> <span class="o">=</span> <span class="n">userService</span><span class="o">.</span><span class="na">current</span><span class="o">(</span><span class="n">String</span><span class="o">.</span><span class="na">valueOf</span><span class="o">(</span><span class="kd">super</span><span class="o">.</span><span class="n">getSessionid</span><span class="o">()));</span>
+                <span class="k">return</span> <span class="k">this</span><span class="o">.</span><span class="na">user</span> <span class="o">==</span> <span class="kc">null</span> <span class="o">?</span> <span class="kc">null</span> <span class="o">:</span> <span class="k">this</span><span class="o">.</span><span class="na">user</span><span class="o">.</span><span class="na">getUserid</span><span class="o">();</span>
+            <span class="o">}</span>
+
+            <span class="nd">@Override</span>
+            <span class="kd">public</span> <span class="n">Serializable</span> <span class="nf">onOpen</span><span class="o">(</span><span class="n">HttpRequest</span> <span class="n">request</span><span class="o">)</span> <span class="o">{</span>
+                <span class="k">return</span> <span class="n">request</span><span class="o">.</span><span class="na">getSessionid</span><span class="o">(</span><span class="kc">false</span><span class="o">);</span> <span class="c1">//以request中的sessionid字符串作为WebSocket的sessionid</span>
+            <span class="o">}</span>
+
+        <span class="o">};</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kd">class</span> <span class="nc">ChatMessage</span> <span class="o">{</span>
+
+        <span class="kd">public</span> <span class="kt">int</span> <span class="n">sendid</span><span class="o">;</span> <span class="c1">//发送方用户ID</span>
+
+        <span class="kd">public</span> <span class="kt">int</span> <span class="n">receiveid</span><span class="o">;</span> <span class="c1">//接收方用户ID        </span>
+
+        <span class="kd">public</span> <span class="n">String</span> <span class="n">content</span><span class="o">;</span> <span class="c1">//文本消息内容</span>
+
+        <span class="kd">public</span> <span class="kt">long</span> <span class="n">sendtime</span><span class="o">;</span>  <span class="c1">//消息发送时间</span>
+    <span class="o">}</span>
+<span class="o">}</span></pre></div>
 
             <p id="net_httprequest">&nbsp;&nbsp;<b>. HttpRequest 对象</b> </p>
             <div class="highlight"><pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">HttpRequest</span> <span class="o">{</span>
