@@ -125,16 +125,16 @@ a:hover {
     .project-name {
         margin-left:-2.0rem;
         font-size: 3.0rem;
-        padding-left: 5.4rem;
-        width: 18rem;
+        padding-left: 4.0rem;
+        width: 22rem;
     }
 }
 
 @media screen and (min-width: 80em) and (max-width: 90em) {
     .project-name {
-        font-size: 3.25rem;
-        padding-left: 2.8rem;
-        width: 22rem;
+        font-size: 2.4rem;
+        padding-left: 2.2rem;
+        width: 16rem;
     }
 }
 
@@ -142,8 +142,8 @@ a:hover {
     .project-name {
         margin-left:0.2rem;
         font-size: 1.8rem;
-        background-size: 1.6em;
-        width: 11rem;
+        background-size: 2.0em;
+        width: 12rem;
     }
 }
 
