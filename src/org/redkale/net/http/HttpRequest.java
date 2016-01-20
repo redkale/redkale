@@ -148,6 +148,7 @@ public class HttpRequest extends Request<HttpContext> {
         if (this.contentType != null && this.contentType.contains("boundary=")) {
             this.boundary = true;
         }
+        if(this.boundary) this.keepAlive = false; //文件上传必须设置keepAlive为false，因为文件过大时用户不一定会skip掉多余的数据
         if (this.contentLength > 0 && (this.contentType == null || !this.boundary)) {
             if (this.contentLength > context.getMaxbody()) return -1;
             int lr = (int) this.contentLength - array.count();
