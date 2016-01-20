@@ -64,7 +64,7 @@ public final class Application {
     //当前SNCP Server所属的组  类型: String
     public static final String RESNAME_SERVER_GROUP = "SERVER_GROUP";
 
-    //当前Server的ROOt目录 类型：String、File、Path
+    //当前Server的ROOT目录 类型：String、File、Path
     public static final String RESNAME_SERVER_ROOT = Server.RESNAME_SERVER_ROOT;
 
     final Map<InetSocketAddress, String> globalNodes = new HashMap<>();
