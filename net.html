@@ -182,7 +182,7 @@
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2.3 onRead &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; WebSocket成功连接后回调此方法， 由此方法处理原始的TCP连接， 同时业务代码去控制WebSocket的关闭。<br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;此模式下 以上方法都应该被重载。<br/>
             </p>
-            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;实现一个WebSocket服务需要继承 org.redkale.net.http.WebSocketServlet，以下是一个典型的聊天范例：</p>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;实现一个WebSocket服务需要继承 org.redkale.net.http.WebSocketServlet，以下是一个简单的聊天范例：</p>
             <div class="highlight"><pre><span class="nd">@WebServlet</span><span class="o">(</span><span class="s">&quot;/ws/chat&quot;</span><span class="o">)</span>
 <span class="kd">public</span> <span class="kd">class</span> <span class="nc">ChatWebSocketServlet</span> <span class="kd">extends</span> <span class="n">WebSocketServlet</span> <span class="o">{</span>
 
@@ -191,6 +191,17 @@
 
     <span class="nd">@Resource</span>
     <span class="kd">private</span> <span class="n">UserService</span> <span class="n">userService</span><span class="o">;</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">init</span><span class="o">(</span><span class="n">HttpContext</span> <span class="n">context</span><span class="o">,</span> <span class="n">AnyValue</span> <span class="n">conf</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">&quot;本实例的WebSocketEngine: &quot;</span> <span class="o">+</span> <span class="kd">super</span><span class="o">.</span><span class="na">engine</span><span class="o">);</span>
+        <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">&quot;本实例的WebSocketNode: &quot;</span> <span class="o">+</span> <span class="kd">super</span><span class="o">.</span><span class="na">node</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">destroy</span><span class="o">(</span><span class="n">HttpContext</span> <span class="n">context</span><span class="o">,</span> <span class="n">AnyValue</span> <span class="n">conf</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">&quot;关闭了ChatWebSocketServlet&quot;</span><span class="o">);</span>
+    <span class="o">}</span>
 
     <span class="nd">@Override</span>
     <span class="kd">protected</span> <span class="n">WebSocket</span> <span class="nf">createWebSocket</span><span class="o">()</span> <span class="o">{</span>
@@ -205,12 +216,12 @@
                 <span class="n">message</span><span class="o">.</span><span class="na">sendid</span> <span class="o">=</span> <span class="n">user</span><span class="o">.</span><span class="na">getUserid</span><span class="o">();</span> <span class="c1">//将当前用户设为消息的发送方</span>
                 <span class="n">message</span><span class="o">.</span><span class="na">sendtime</span> <span class="o">=</span> <span class="n">System</span><span class="o">.</span><span class="na">currentTimeMillis</span><span class="o">();</span> <span class="c1">//设置消息发送时间</span>
                 <span class="c1">//给接收方发送消息, 即使接收方在其他WebSocket进程节点上有链接，RedKale也会自动发送到其他链接进程节点上。</span>
-                <span class="kd">super</span><span class="o">.</span><span class="na">sendEachMessage</span><span class="o">(</span><span class="n">message</span><span class="o">.</span><span class="na">receiveid</span><span class="o">,</span> <span class="n">jsonConvert</span><span class="o">.</span><span class="na">convertTo</span><span class="o">(</span><span class="n">message</span><span class="o">));</span> 
+                <span class="kd">super</span><span class="o">.</span><span class="na">sendEachMessage</span><span class="o">(</span><span class="n">message</span><span class="o">.</span><span class="na">receiveid</span><span class="o">,</span> <span class="n">jsonConvert</span><span class="o">.</span><span class="na">convertTo</span><span class="o">(</span><span class="n">message</span><span class="o">));</span>
             <span class="o">}</span>
 
             <span class="nd">@Override</span>
             <span class="kd">protected</span> <span class="n">Serializable</span> <span class="nf">createGroupid</span><span class="o">()</span> <span class="o">{</span> <span class="c1">//以用户ID作为WebSocketGroup的groupid</span>
-                <span class="k">this</span><span class="o">.</span><span class="na">user</span> <span class="o">=</span> <span class="n">userService</span><span class="o">.</span><span class="na">current</span><span class="o">(</span><span class="n">String</span><span class="o">.</span><span class="na">valueOf</span><span class="o">(</span><span class="kd">super</span><span class="o">.</span><span class="n">getSessionid</span><span class="o">()));</span>
+                <span class="k">this</span><span class="o">.</span><span class="na">user</span> <span class="o">=</span> <span class="n">userService</span><span class="o">.</span><span class="na">current</span><span class="o">(</span><span class="n">String</span><span class="o">.</span><span class="na">valueOf</span><span class="o">(</span><span class="kd">super</span><span class="o">.</span><span class="na">getSessionid</span><span class="o">()));</span>
                 <span class="k">return</span> <span class="k">this</span><span class="o">.</span><span class="na">user</span> <span class="o">==</span> <span class="kc">null</span> <span class="o">?</span> <span class="kc">null</span> <span class="o">:</span> <span class="k">this</span><span class="o">.</span><span class="na">user</span><span class="o">.</span><span class="na">getUserid</span><span class="o">();</span>
             <span class="o">}</span>
 
