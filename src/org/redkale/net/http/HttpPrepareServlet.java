@@ -36,6 +36,7 @@ public final class HttpPrepareServlet extends PrepareServlet<HttpContext, HttpRe
     @Override
     public void init(HttpContext context, AnyValue config) {
         this.servlets.stream().forEach(s -> {
+            if (s instanceof WebSocketServlet) ((WebSocketServlet) s).preInit(context, s._conf);
             s.init(context, s._conf);
         });
         final WatchFactory watch = context.getWatchFactory();
@@ -131,6 +132,7 @@ public final class HttpPrepareServlet extends PrepareServlet<HttpContext, HttpRe
         this.resourceHttpServlet.destroy(context, config);
         this.servlets.stream().forEach(s -> {
             s.destroy(context, s._conf);
+            if (s instanceof WebSocketServlet) ((WebSocketServlet) s).postDestroy(context, s._conf);
         });
     }
 

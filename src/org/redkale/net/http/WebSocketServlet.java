@@ -33,7 +33,9 @@ import org.redkale.util.*;
  *
  * </pre></blockquote>
  *
- * <p> 详情见: http://www.redkale.org
+ * <p>
+ * 详情见: http://www.redkale.org
+ *
  * @author zhangjx
  */
 public abstract class WebSocketServlet extends HttpServlet {
@@ -62,8 +64,7 @@ public abstract class WebSocketServlet extends HttpServlet {
 
     protected WebSocketEngine engine;
 
-    @Override
-    public void init(HttpContext context, AnyValue conf) {
+    final void preInit(HttpContext context, AnyValue conf) {
         InetSocketAddress addr = context.getServerAddress();
         this.engine = new WebSocketEngine(addr.getHostString() + ":" + addr.getPort() + "-[" + name() + "]", this.node, logger);
         this.node.putWebSocketEngine(engine);
@@ -71,8 +72,7 @@ public abstract class WebSocketServlet extends HttpServlet {
         this.engine.init(conf);
     }
 
-    @Override
-    public void destroy(HttpContext context, AnyValue conf) {
+    final void postDestroy(HttpContext context, AnyValue conf) {
         this.node.destroy(conf);
         super.destroy(context, conf);
         engine.close();
