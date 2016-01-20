@@ -17,17 +17,17 @@ import org.redkale.net.*;
  * 一个WebSocket连接对应一个WebSocket实体，即一个WebSocket会绑定一个TCP连接。
  * WebSocket 有两种模式:
  *  1) 普通模式: 协议上符合HTML5规范, 其流程顺序如下:
- *      1.1 onOpen 如果方法返回null，则视为WebSocket的连接不合法，框架会强制关闭WebSocket连接；通常用于判断登录态。
- *      1.2 createGroupid 如果方法返回null，则视为WebSocket的连接不合法，框架会强制关闭WebSocket连接；通常用于判断用户权限是否符合。
+ *      1.1 onOpen 如果方法返回null，视为WebSocket的连接不合法，强制关闭WebSocket连接；通常用于判断登录态。
+ *      1.2 createGroupid 如果方法返回null，视为WebSocket的连接不合法，强制关闭WebSocket连接；通常用于判断用户权限是否符合。
  *      1.3 onConnected WebSocket成功连接后在准备接收数据前回调此方法。
  *      1.4 onMessage/onFragment+ WebSocket接收到消息后回调此消息类方法。
  *      1.5 onClose WebSocket被关闭后回调此方法。
  *
  *  此模式下 以上方法都应该被重载。
  *
- *  2) 原始二进制模式: 此模式有别于HTML5规范，可以视为原始的TCP连接。通常用于音频视频通讯场景。期流程顺序如下:
- *      2.1 onOpen 如果方法返回null，则视为WebSocket的连接不合法，框架会强制关闭WebSocket连接；通常用于判断登录态。
- *      2.2 createGroupid 如果方法返回null，则视为WebSocket的连接不合法，框架会强制关闭WebSocket连接；通常用于判断用户权限是否符合。
+ *  2) 原始二进制模式: 此模式有别于HTML5规范，可以视为原始的TCP连接。通常用于音频视频通讯场景。其流程顺序如下:
+ *      2.1 onOpen 如果方法返回null，视为WebSocket的连接不合法，强制关闭WebSocket连接；通常用于判断登录态。
+ *      2.2 createGroupid 如果方法返回null，视为WebSocket的连接不合法，强制关闭WebSocket连接；通常用于判断用户权限是否符合。
  *      2.3 onRead WebSocket成功连接后回调此方法， 由此方法处理原始的TCP连接， 同时业务代码去控制WebSocket的关闭。
  *
  *  此模式下 以上方法都应该被重载。
