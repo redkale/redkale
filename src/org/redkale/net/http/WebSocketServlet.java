@@ -64,7 +64,7 @@ public abstract class WebSocketServlet extends HttpServlet {
 
     protected WebSocketEngine engine;
 
-    final void preInit(HttpContext context, AnyValue conf) {
+    public final void preInit(HttpContext context, AnyValue conf) {
         InetSocketAddress addr = context.getServerAddress();
         this.engine = new WebSocketEngine(addr.getHostString() + ":" + addr.getPort() + "-[" + name() + "]", this.node, logger);
         this.node.putWebSocketEngine(engine);
@@ -72,7 +72,7 @@ public abstract class WebSocketServlet extends HttpServlet {
         this.engine.init(conf);
     }
 
-    final void postDestroy(HttpContext context, AnyValue conf) {
+    public final void postDestroy(HttpContext context, AnyValue conf) {
         this.node.destroy(conf);
         super.destroy(context, conf);
         engine.close();
