@@ -31,7 +31,7 @@
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;RedKale自实现的HTTP服务接口并不遵循Java EE规范JSR 340(Servlet 3.1)，RedKale提倡的是HTTP+JSON的服务接口方式因此没有实现JSP规范，HTTP+JSON服务接口几乎适合所有类型的客户端(PC应用程序、PC Web、微信H5、移动APP、移动Web)开发。其与JSR 340(Servlet 3.1)的主要区别如下：<br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1、内置参数的JSON反序列化和响应结果的序列化接口。<br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2、对数值型的参数和header值提供简易接口。<br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3、不支持JSP，提倡的是HTTP+JSON的服务接口方式。<br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3、不支持JSP，提倡的是HTTP+JSON接口方式。<br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4、无HttpSession对象，session可通过配置CacheSource实现。<br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;5、内置文件上传接口，且可自实现断点续传。<br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;6、对响应结果内容可以进行短期缓存从而减少数据源操作的压力。<br/>
@@ -101,7 +101,7 @@
 <span class="o">}</span></pre></div>
 
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;继承BasedHttpServlet的子类可以使用其自带的鉴权、请求分支、缓存等功能， 一个典型的操作用户HttpServlet: </p> 
-            <div class="highlight"><pre><span class="nd">@WebServlet</span><span class="o">({</span><span class="s">&quot;/user/*&quot;</span><span class="o">})</span> <span class="c1">//拦截所有 /user/ 开头的请求</span>
+            <div class="highlight"><pre><span class="nd">@WebServlet</span><span class="o">({</span><span class="s">&quot;/user/*&quot;</span><span class="o">})</span>  <span class="c1">//拦截所有 /user/ 开头的请求</span>
 <span class="kd">public</span> <span class="kd">class</span> <span class="nc">UserServlet</span> <span class="kd">extends</span> <span class="n">BaseSerlvet</span> <span class="o">{</span>
 
     <span class="nd">@Resource</span>
@@ -137,6 +137,24 @@
     <span class="kd">public</span> <span class="kt">void</span> <span class="nf">userinfo</span><span class="o">(</span><span class="n">HttpRequest</span> <span class="n">req</span><span class="o">,</span> <span class="n">HttpResponse</span> <span class="n">resp</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
         <span class="n">UserInfo</span> <span class="n">user</span> <span class="o">=</span> <span class="n">service</span><span class="o">.</span><span class="na">findUserInfo</span><span class="o">(</span><span class="n">Integer</span><span class="o">.</span><span class="na">parseInt</span><span class="o">(</span><span class="n">req</span><span class="o">.</span><span class="na">getRequstURILastPath</span><span class="o">()));</span>
         <span class="n">resp</span><span class="o">.</span><span class="na">finishJson</span><span class="o">(</span><span class="n">user</span><span class="o">);</span>  <span class="c1">//输出用户信息</span>
+    <span class="o">}</span>
+
+    <span class="c1">//更新个人头像</span>
+    <span class="nd">@WebAction</span><span class="o">(</span><span class="n">url</span> <span class="o">=</span> <span class="s">&quot;/user/updateface&quot;</span><span class="o">)</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">updateface</span><span class="o">(</span><span class="n">HttpRequest</span> <span class="n">req</span><span class="o">,</span> <span class="n">HttpResponse</span> <span class="n">resp</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
+        <span class="n">UserInfo</span> <span class="n">user</span> <span class="o">=</span> <span class="n">service</span><span class="o">.</span><span class="na">current</span><span class="o">(</span><span class="n">req</span><span class="o">.</span><span class="na">getSessionid</span><span class="o">(</span><span class="kc">false</span><span class="o">));</span>
+        <span class="k">for</span> <span class="o">(</span><span class="n">MultiPart</span> <span class="n">part</span> <span class="o">:</span> <span class="n">req</span><span class="o">.</span><span class="na">multiParts</span><span class="o">())</span> <span class="o">{</span> <span class="c1">//遍历上传文件列表 </span>
+            <span class="kt">byte</span><span class="o">[]</span> <span class="n">byts</span> <span class="o">=</span> <span class="n">part</span><span class="o">.</span><span class="na">getContentBytes</span><span class="o">(</span><span class="mi">5</span> <span class="o">*</span> <span class="mi">1024</span> <span class="o">*</span> <span class="mi">1024L</span><span class="o">);</span>  <span class="c1">//图片大小不能超过5M，超过5M返回null</span>
+            <span class="k">if</span> <span class="o">(</span><span class="n">byts</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+                <span class="n">resp</span><span class="o">.</span><span class="na">finishJson</span><span class="o">(</span><span class="k">new</span> <span class="nf">RetResult</span><span class="o">(</span><span class="mi">102</span><span class="o">,</span> <span class="s">&quot;上传的文件过大&quot;</span><span class="o">));</span>
+            <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+                <span class="n">BufferedImage</span> <span class="n">img</span> <span class="o">=</span> <span class="n">ImageIO</span><span class="o">.</span><span class="na">read</span><span class="o">(</span><span class="k">new</span> <span class="nf">ByteArrayInputStream</span><span class="o">(</span><span class="n">byts</span><span class="o">));</span>
+                <span class="c1">//... 此处处理并存储头像图片</span>
+                <span class="n">resp</span><span class="o">.</span><span class="na">finishJson</span><span class="o">(</span><span class="n">RetResult</span><span class="o">.</span><span class="na">SUCCESS</span><span class="o">);</span>  <span class="c1">//输出成功信息</span>
+            <span class="o">}</span>
+            <span class="k">return</span><span class="o">;</span> <span class="c1">//头像图片仅会传一个， 只需要读取一个即可返回</span>
+        <span class="o">}</span>
+        <span class="n">resp</span><span class="o">.</span><span class="na">finishJson</span><span class="o">(</span><span class="k">new</span> <span class="nf">RetResult</span><span class="o">(</span><span class="mi">103</span><span class="o">,</span> <span class="s">&quot;没有上传图片&quot;</span><span class="o">));</span>
     <span class="o">}</span>
 <span class="o">}</span></pre></div>
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如上，所有/user/前缀的请求都会进入UserServlet，若没匹配的则返回505错误，为了方便以后编写前方静动分离服务器转发规则，比较好的习惯是将项目中所有动态Servlet加一个固定前缀，在 <a href="redkale.html#redkale_confxml" target="_blank">application.xml</a> 里设置path即可。</p>
