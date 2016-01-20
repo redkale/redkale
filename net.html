@@ -74,19 +74,18 @@
         <span class="k">if</span> <span class="o">(!</span><span class="n">request</span><span class="o">.</span><span class="na">getHeader</span><span class="o">(</span><span class="s">&quot;User-Agent&quot;</span><span class="o">,</span> <span class="s">&quot;&quot;</span><span class="o">).</span><span class="na">contains</span><span class="o">(</span><span class="s">&quot;RedKale-Agent&quot;</span><span class="o">))</span> <span class="o">{</span>  <span class="c1">//只用移动APP的接口可以判断User-Agent是否正确</span>
             <span class="n">response</span><span class="o">.</span><span class="na">addHeader</span><span class="o">(</span><span class="s">&quot;retcode&quot;</span><span class="o">,</span> <span class="s">&quot;10001&quot;</span><span class="o">);</span>
             <span class="n">response</span><span class="o">.</span><span class="na">addHeader</span><span class="o">(</span><span class="s">&quot;retmessage&quot;</span><span class="o">,</span> <span class="s">&quot;User-Agent error&quot;</span><span class="o">);</span>
-            <span class="n">response</span><span class="o">.</span><span class="na">setStatus</span><span class="o">(</span><span class="mi">201</span><span class="o">);</span>
-            <span class="n">response</span><span class="o">.</span><span class="na">finish</span><span class="o">(</span><span class="s">&quot;{&#39;success&#39;:false, &#39;message&#39;:&#39;User-Agent error, must be RedKale-Agent&#39;}&quot;</span><span class="o">);</span>
+            <span class="n">response</span><span class="o">.</span><span class="na">finish</span><span class="o">(</span><span class="mi">201</span><span class="o">,</span> <span class="s">&quot;{&#39;success&#39;:false, &#39;message&#39;:&#39;User-Agent error, must be RedKale-Agent&#39;}&quot;</span><span class="o">);</span>
             <span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
         <span class="o">}</span>
         <span class="c1">//可以加上一些统计操作</span>
         <span class="k">if</span> <span class="o">(</span><span class="n">fine</span><span class="o">)</span> <span class="n">response</span><span class="o">.</span><span class="na">setRecycleListener</span><span class="o">((</span><span class="n">req</span><span class="o">,</span> <span class="n">resp</span><span class="o">)</span> <span class="o">-&gt;</span> <span class="o">{</span>  <span class="c1">//记录处理时间太长的请求操作</span>
                 <span class="kt">long</span> <span class="n">e</span> <span class="o">=</span> <span class="n">System</span><span class="o">.</span><span class="na">currentTimeMillis</span><span class="o">()</span> <span class="o">-</span> <span class="n">request</span><span class="o">.</span><span class="na">getCreatetime</span><span class="o">();</span>
-                <span class="k">if</span> <span class="o">(</span><span class="n">e</span> <span class="o">&gt;</span> <span class="mi">500</span><span class="o">)</span> <span class="n">logger</span><span class="o">.</span><span class="na">fine</span><span class="o">(</span><span class="s">&quot;耗时居然用了 &quot;</span> <span class="o">+</span> <span class="n">e</span> <span class="o">+</span> <span class="s">&quot; 毫秒. 请求为: &quot;</span> <span class="o">+</span> <span class="n">request</span><span class="o">);</span>
+                <span class="k">if</span> <span class="o">(</span><span class="n">e</span> <span class="o">&gt;</span> <span class="mi">500</span><span class="o">)</span> <span class="n">logger</span><span class="o">.</span><span class="na">fine</span><span class="o">(</span><span class="s">&quot;耗时居然用了 &quot;</span> <span class="o">+</span> <span class="n">e</span> <span class="o">+</span> <span class="s">&quot; 毫秒. 请求为: &quot;</span> <span class="o">+</span> <span class="n">req</span><span class="o">);</span>
             <span class="o">});</span>
         <span class="k">return</span> <span class="kc">true</span><span class="o">;</span>
     <span class="o">}</span>
 
-    <span class="c1">//方法标记为@AuthIgnore 的将不会调用authenticate方法</span>
+    <span class="c1">//标记为@AuthIgnore 的方法将不会调用authenticate方法</span>
     <span class="c1">//一般用于判断用户的登录态, 返回false表示鉴权失败</span>
     <span class="c1">//moduleid值来自 @WebServlet.moduleid()  用于定义模块ID; actionid值自来@WebAction.actionid() 用于定义操作ID; 需要系统化的鉴权需要定义这两个值</span>
     <span class="nd">@Override</span>
@@ -100,8 +99,8 @@
         <span class="k">return</span> <span class="n">user</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">;</span> <span class="c1">//存在用户表示登录态正常</span>
     <span class="o">}</span>
 <span class="o">}</span></pre></div>
-            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;继承BasedHttpServlet的子类可以使用其自带的鉴权、请求分支、缓存等功能， 一个典型的操作用户的HttpServlet:
-            </p> 
+
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;继承BasedHttpServlet的子类可以使用其自带的鉴权、请求分支、缓存等功能， 一个典型的操作用户HttpServlet: </p> 
             <div class="highlight"><pre><span class="nd">@WebServlet</span><span class="o">({</span><span class="s">&quot;/user/*&quot;</span><span class="o">})</span> <span class="c1">//拦截所有 /user/ 开头的请求</span>
 <span class="kd">public</span> <span class="kd">class</span> <span class="nc">UserServlet</span> <span class="kd">extends</span> <span class="n">BaseSerlvet</span> <span class="o">{</span>
 
@@ -131,7 +130,8 @@
     <span class="c1">//获取指定用户ID的用户信息, 请求如: /user/username/43565443</span>
     <span class="nd">@AuthIgnore</span>
     <span class="c1">// 默认缓存时间是15秒，BasedHttpServlet会将每个进入该方法的请求的响应结果缓存15秒，缓存命中时不会再进入该方法，过期会清空。</span>
-    <span class="c1">// @HttpCacheable 必须配合  @AuthIgnore 使用， 因为跟当前用户有关的请求一般不适合所有用户请求。</span>
+    <span class="c1">// @HttpCacheable 必须配合  @AuthIgnore 使用， 因为跟当前用户有关的请求一般不适合所有用户请求。 </span>
+    <span class="c1">// 翻页查询想缓存就需要将翻页信息带进url: /user/query/page:2/size:50 。</span>
     <span class="nd">@HttpCacheable</span><span class="o">(</span><span class="n">timeout</span> <span class="o">=</span> <span class="mi">30</span><span class="o">)</span>  <span class="c1">//有效期30秒</span>
     <span class="nd">@WebAction</span><span class="o">(</span><span class="n">url</span> <span class="o">=</span> <span class="s">&quot;/user/userinfo/&quot;</span><span class="o">)</span>
     <span class="kd">public</span> <span class="kt">void</span> <span class="nf">userinfo</span><span class="o">(</span><span class="n">HttpRequest</span> <span class="n">req</span><span class="o">,</span> <span class="n">HttpResponse</span> <span class="n">resp</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
@@ -139,6 +139,12 @@
         <span class="n">resp</span><span class="o">.</span><span class="na">finishJson</span><span class="o">(</span><span class="n">user</span><span class="o">);</span>  <span class="c1">//输出用户信息</span>
     <span class="o">}</span>
 <span class="o">}</span></pre></div>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如上，所有/user/前缀的请求都会进入UserServlet，若没匹配的则返回505错误，为了方便以后编写前方静动分离服务器转发规则，比较好的习惯是将项目中所有动态Servlet加一个固定前缀，在 <a href="redkale.html#redkale_confxml" target="_blank">application.xml</a> 里设置path即可。</p>
+            <div class="highlight"><pre><span class="nt">&lt;server</span> <span class="na">protocol=</span><span class="s">&quot;HTTP&quot;</span> <span class="na">port=</span><span class="s">&quot;6060&quot;</span> <span class="na">root=</span><span class="s">&quot;root&quot;</span><span class="nt">&gt;</span> 
+    <span class="nt">&lt;services</span> <span class="na">autoload=</span><span class="s">&quot;true&quot;</span> <span class="nt">/&gt;</span>  
+    <span class="nt">&lt;servlets</span> <b><span class="na">path=</span><span class="s">&quot;/pipes&quot;</span></b> <span class="na">autoload=</span><span class="s">&quot;true&quot;</span><span class="nt">/&gt;</span>
+<span class="nt">&lt;/server&gt;</span></pre></div>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如上, 配置了/pipes 前缀后，客户端发送Servlet请求需带上前缀，请求当前用户信息的url就变成：/pipes/user/myinfo 。</p>
 
             <p id="net_httprequest">&nbsp;&nbsp;<b>. HttpRequest 对象</b> </p>
             <div class="highlight"><pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">HttpRequest</span> <span class="o">{</span>
