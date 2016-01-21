@@ -1722,7 +1722,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
     public final void directQuery(String sql, Consumer<ResultSet> consumer) {
         final Connection conn = createReadSQLConnection();
         try {
-            if (debug.get()) logger.finest("queryDirect sql=" + sql);
+            if (debug.get()) logger.finest("direct query sql=" + sql);
             final PreparedStatement ps = conn.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
             final ResultSet set = ps.executeQuery();
             consumer.accept(set);
