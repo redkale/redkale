@@ -7,7 +7,9 @@ package org.redkale.source;
 
 import java.io.*;
 import java.nio.channels.*;
+import java.sql.*;
 import java.util.*;
+import java.util.function.*;
 import org.redkale.util.*;
 
 /**
@@ -302,4 +304,22 @@ public interface DataSource {
 
     public <T> void querySheet(final CompletionHandler<Sheet<T>, FilterNode> handler, final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterNode node);
 
+    //-----------------------direct----------------------------
+    /**
+     * 直接本地执行SQL语句进行查询，远程模式不可用
+     * 通常用于复杂的关联查询
+     *
+     * @param sql      SQL语句
+     * @param consumer 回调函数
+     */
+    public void directQuery(String sql, final Consumer<ResultSet> consumer);
+
+    /**
+     * 直接本地执行SQL语句进行增删改操作，远程模式不可用
+     * 通常用于复杂的更新操作
+     *
+     * @param sqls SQL语句
+     * @return 结果数组
+     */
+    public int[] directExecute(String... sqls);
 }

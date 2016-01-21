@@ -122,7 +122,7 @@ public class DataSQLListenerService implements DataSQLListener, Service {
 
     @MultiRun
     public void send(String... sqls) {
-        ((DataDefaultSource) source).execute(sqls);
+        ((DataDefaultSource) source).directExecute(sqls);
     }
 
 }

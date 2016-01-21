@@ -7,7 +7,9 @@ package org.redkale.service;
 
 import java.io.*;
 import java.nio.channels.*;
+import java.sql.*;
 import java.util.*;
+import java.util.function.*;
 import javax.annotation.*;
 import org.redkale.source.*;
 import org.redkale.util.*;
@@ -545,4 +547,15 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     public void close() throws Exception {
         source.getClass().getMethod("close").invoke(source);
     }
+
+    @Override
+    public final void directQuery(String sql, Consumer<ResultSet> consumer) {
+        source.directQuery(sql, consumer);
+    }
+
+    @Override
+    public final int[] directExecute(String... sqls) {
+        return source.directExecute(sqls);
+    }
+
 }
