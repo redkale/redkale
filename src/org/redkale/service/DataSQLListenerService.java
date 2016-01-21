@@ -120,7 +120,7 @@ public class DataSQLListenerService implements DataSQLListener, Service {
         }
     }
 
-    @MultiRun
+    @MultiRun(selfrun = false, async = true)
     public void send(String... sqls) {
         ((DataDefaultSource) source).directExecute(sqls);
     }
