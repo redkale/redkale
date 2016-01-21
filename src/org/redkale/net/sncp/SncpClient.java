@@ -404,8 +404,8 @@ public final class SncpClient {
                             final BsonReader reader = convert.pollBsonReader();
                             try {
                                 reader.setBytes(this.body);
-                                byte i;
-                                while ((i = reader.readByte()) != 0) {
+                                int i;
+                                while ((i = (reader.readByte() & 0xff)) != 0) {
                                     final Attribute attr = action.paramAttrs[i];
                                     attr.set(params[i - 1], convert.convertFrom(attr.type(), reader));
                                 }
