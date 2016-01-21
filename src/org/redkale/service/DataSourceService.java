@@ -226,13 +226,13 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
-    public <T> T findByColumn(final Class<T> clazz, final String column, final Serializable key) {
-        return source.findByColumn(clazz, column, key);
+    public <T> T find(final Class<T> clazz, final String column, final Serializable key) {
+        return source.find(clazz, column, key);
     }
 
     @Override
-    public <T> void findByColumn(final CompletionHandler<T, Serializable> handler, final Class<T> clazz, final String column, @DynAttachment final Serializable key) {
-        T rs = source.findByColumn(clazz, column, key);
+    public <T> void find(final CompletionHandler<T, Serializable> handler, final Class<T> clazz, final String column, @DynAttachment final Serializable key) {
+        T rs = source.find(clazz, column, key);
         if (handler != null) handler.completed(rs, key);
     }
 

@@ -133,7 +133,7 @@ public interface DataSource {
 
     public <T> T find(final Class<T> clazz, final SelectColumn selects, final Serializable pk);
 
-    public <T> T findByColumn(final Class<T> clazz, final String column, final Serializable key);
+    public <T> T find(final Class<T> clazz, final String column, final Serializable key);
 
     public <T> T find(final Class<T> clazz, final FilterBean bean);
 
@@ -154,7 +154,7 @@ public interface DataSource {
 
     public <T> void find(final CompletionHandler<T, Serializable> handler, final Class<T> clazz, final SelectColumn selects, final Serializable pk);
 
-    public <T> void findByColumn(final CompletionHandler<T, Serializable> handler, final Class<T> clazz, final String column, final Serializable key);
+    public <T> void find(final CompletionHandler<T, Serializable> handler, final Class<T> clazz, final String column, final Serializable key);
 
     public <T> void find(final CompletionHandler<T, FilterNode> handler, final Class<T> clazz, final FilterBean bean);
 

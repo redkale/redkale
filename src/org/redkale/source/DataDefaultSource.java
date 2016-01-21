@@ -1191,13 +1191,13 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
     }
 
     @Override
-    public <T> T findByColumn(final Class<T> clazz, final String column, final Serializable key) {
+    public <T> T find(final Class<T> clazz, final String column, final Serializable key) {
         return find(clazz, null, FilterNode.create(column, key));
     }
 
     @Override
-    public <T> void findByColumn(final CompletionHandler<T, Serializable> handler, final Class<T> clazz, final String column, final Serializable key) {
-        T rs = findByColumn(clazz, column, key);
+    public <T> void find(final CompletionHandler<T, Serializable> handler, final Class<T> clazz, final String column, final Serializable key) {
+        T rs = find(clazz, column, key);
         if (handler != null) handler.completed(rs, key);
     }
 
