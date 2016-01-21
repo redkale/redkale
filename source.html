@@ -31,14 +31,68 @@
             <h3><a id="datasource_study" class="anchor" href="#" aria-hidden="true"><span class="octicon octicon-link"></span></a>DataSource 入门</h3>
             <p>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;与JPA相比，DataSource有以下几个特点：<br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1、提供非常方便过滤查询接口，但仅支持简单的表关联查询。 <br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2、提供分布式的主键自增功能。 <br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 3、提供动态修改数据库连接参数功能。 <br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 4、提供读写分离的简易配置功能。 <br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 5、提供进程间缓存自动同步功能。 <br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1、简易的过滤查询接口，但仅支持简单的表关联查询。 <br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2、分布式的主键的分布式自增策略。 <br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 3、动态更新变更后的数据库连接参数。 <br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 4、读写分离的简易配置。 <br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 5、进程间的缓存会自动同步。 <br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;为了降低学习成本，DataSource重用了JPA里的部分注解与配置文件，使用方法基本相同，与JPA用法唯一区别是注解只能标记于字段，不能标记在方法上。
             </p>
+            <table style="margin: auto;">
+                <tr><th>注 解</th><th>描 述</th></tr>
+                <tr><td style="text-align: left;">javax.persistence.Cacheable</td><td>标记Entity类是否需要缓存，与JPA用法一致</td></tr>
+                <tr><td style="text-align: left;">javax.persistence.Column</td><td>标记字段，只使用其name()、insertable()、updatable()属性</td></tr>
+                <tr><td style="text-align: left;">javax.persistence.Entity</td><td>JPA的Entity类必须标记为@Entity, 而RedKale不强制要求，所以该注解一般无用</td></tr>
+                <tr><td style="text-align: left;">javax.persistence.GeneratedValue</td><td>仅用于标记主键是否为数据库自增长，其内值的两属性废弃</td></tr>
+                <tr><td style="text-align: left;">javax.persistence.GenerationType</td><td>被@GeneratedValue的属性引用，在RedKale内不被使用到</td></tr>
+                <tr><td style="text-align: left;">javax.persistence.Id<td>标记主键字段，与JPA用法一致</td></tr>
+                <tr><td style="text-align: left;">javax.persistence.Table<td>标记表的别名，与JPA用法一致</td></tr>
+                <tr><td style="text-align: left;">javax.persistence.Transient<td>标记是否为表对应的字段，与JPA用法一致</td></tr>
+                <tr><td style="text-align: center;font-size: 0.9rem;" colspan="2"><b>以下是RedKale自定义的注解</b></td></tr>
+                <tr><td style="text-align: left;"><b>@VirtualEntity</b></td><td>用于非数据库表对应的Entity类，且仅用于开启缓存模式的DataSource</td></tr>
+                <tr><td style="text-align: left;"><b>@DistributeGenerator</b></td><td>标记主键是否采用分布式自增长策略，不能与@GeneratedValue同用</td></tr>
+                <tr><td style="text-align: left;"><b>@DistributeTables</b></td><td>当多个表的主键唯一性公用时需要该注解</td></tr>
+                <tr><td style="text-align: left;"><b>@FilterColumn</b></td><td>用于FilterBean过滤类的字段设置</td></tr>
+                <tr><td style="text-align: left;"><b>@FilterJoinColumn</b></td><td>用于FilterBean过滤类的关联表字段设置</td></tr>
+                <tr><td style="text-align: left;"><b>@FilterGroup</b></td><td>用于FilterBean过滤类的过滤条件分组设置</td></tr>
+            </table>
             <p>未完待续…… <br/>
             </p>
+            <h3><a id="source_confxml" href="#" aria-hidden="true"><span class="octicon octicon-link"></span></a>persistence.xml 配置说明</h3>
+            <div class="highlight"><pre><span class="c">&lt;!-- 其配置算是标准的JPA配置文件的缩略版 --&gt;</span>
+<span class="nt">&lt;persistence&gt;</span>	
+    <span class="c">&lt;!-- 系统基本库 --&gt;</span>
+    <span class="nt">&lt;persistence-unit</span> <span class="na">name=</span><span class="s">&quot;demouser&quot;</span><span class="nt">&gt;</span>
+        <span class="c">&lt;!-- 为NONE表示不启动缓存，@Cacheable 失效； 非NONE值(通常用ALL)表示开启缓存。 --&gt;</span>
+        <span class="nt">&lt;shared-cache-mode&gt;</span>NONE<span class="nt">&lt;/shared-cache-mode&gt;</span>
+        <span class="nt">&lt;properties&gt;</span>
+            <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">&quot;javax.persistence.jdbc.url&quot;</span> <span class="na">value=</span><span class="s">&quot;jdbc:mysql://127.0.0.1:3306/dbuser?characterEncoding=utf8&quot;</span><span class="nt">/&gt;</span>
+            <span class="c">&lt;!-- </span>
+<span class="c">                javax.persistence.jdbc.driver在JPA的值是JDBC驱动，RedKale有所不同，值应该是javax.sql.DataSource的子类。 </span>
+<span class="c">                为了兼容用户习惯，RedKale内置常见JDBC驱动到javax.sql.DataSource的映射关系：</span>
+<span class="c">                                       com.mysql.jdbc.Driver  ——————  com.mysql.jdbc.jdbc2.optional.MysqlConnectionPoolDataSource</span>
+<span class="c">                                     org.mariadb.jdbc.Driver  ——————  org.mariadb.jdbc.MySQLDataSource</span>
+<span class="c">                             oracle.jdbc.driver.OracleDriver  ——————  oracle.jdbc.pool.OracleConnectionPoolDataSource</span>
+<span class="c">                com.microsoft.sqlserver.jdbc.SQLServerDriver  ——————  com.microsoft.sqlserver.jdbc.SQLServerConnectionPoolDataSource</span>
+<span class="c">                因此 com.mysql.jdbc.Driver 会被自动转换成 com.mysql.jdbc.jdbc2.optional.MysqlConnectionPoolDataSource</span>
+<span class="c">            --&gt;</span>
+            <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">&quot;javax.persistence.jdbc.driver&quot;</span> <span class="na">value=</span><span class="s">&quot;com.mysql.jdbc.Driver&quot;</span><span class="nt">/&gt;</span>
+            <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">&quot;javax.persistence.jdbc.user&quot;</span> <span class="na">value=</span><span class="s">&quot;root&quot;</span><span class="nt">/&gt;</span>
+            <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">&quot;javax.persistence.jdbc.password&quot;</span> <span class="na">value=</span><span class="s">&quot;123456&quot;</span><span class="nt">/&gt;</span>
+        <span class="nt">&lt;/properties&gt;</span>
+    <span class="nt">&lt;/persistence-unit&gt;</span>
+    <span class="c">&lt;!-- IM消息库 --&gt;</span>
+    <span class="nt">&lt;persistence-unit</span> <span class="na">name=</span><span class="s">&quot;demoim&quot;</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;shared-cache-mode&gt;</span>NONE<span class="nt">&lt;/shared-cache-mode&gt;</span>
+        <span class="nt">&lt;properties&gt;</span>
+            <span class="c">&lt;!-- jdbc:mysql://127.0.0.1:3306/dbim?autoReconnect=true&amp;amp;autoReconnectForPools=true&amp;amp;characterEncoding=utf8 --&gt;</span>
+            <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">&quot;javax.persistence.jdbc.url&quot;</span> <span class="na">value=</span><span class="s">&quot;jdbc:mysql://127.0.0.1:3306/dbim?characterEncoding=utf8&quot;</span><span class="nt">/&gt;</span>
+            <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">&quot;javax.persistence.jdbc.driver&quot;</span> <span class="na">value=</span><span class="s">&quot;com.mysql.jdbc.Driver&quot;</span><span class="nt">/&gt;</span>
+            <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">&quot;javax.persistence.jdbc.user&quot;</span> <span class="na">value=</span><span class="s">&quot;root&quot;</span><span class="nt">/&gt;</span>
+            <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">&quot;javax.persistence.jdbc.password&quot;</span> <span class="na">value=</span><span class="s">&quot;123456&quot;</span><span class="nt">/&gt;</span>
+        <span class="nt">&lt;/properties&gt;</span>
+    <span class="nt">&lt;/persistence-unit&gt;</span>
+<span class="nt">&lt;/persistence&gt;</span></pre></div>
 
             <footer class="site-footer">
                 <span class="site-footer-owner"><a href="https://github.com/wentch/redkale">RedKale</a> © <a href="https://github.com/wentch">wentch</a> &nbsp;&nbsp;&nbsp;&nbsp;欢迎加入RedKale技术交流QQ群: 527523235</span>
