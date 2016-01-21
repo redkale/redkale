@@ -26,10 +26,11 @@
         <section class="main-content">
             <h3><a id="source_intro" class="anchor" href="#" aria-hidden="true"><span class="octicon octicon-link"></span></a>Source 组件介绍</h3>
 
-            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Source 提供两种类型的数据源：DataSource 和 CacheSource。DataSource 为数据库或内存数据库，提供类似JPA、Hibernate的接口与功能。CacheSource 为缓存数据提供类似Memcached、Redis的接口和功能。两者也提供了异步接口(基于<a href="service.html#service_remote" target="_blank">远程模式Service</a>)。<br/></p>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Source 主要为数据源提供简易的操作接口，使底层的具体数据源（传统数据库、文件系统、内存数据库、缓存）对上层是透明的。Source 提供两种类型的数据源：DataSource 和 CacheSource。DataSource 为数据库或内存数据库，提供类似JPA、Hibernate的接口与功能。CacheSource 为缓存数据提供类似Memcached、Redis的接口和功能。两者也提供了异步接口(基于<a href="service.html#service_remote" target="_blank">远程模式Service</a>)。<br/></p>
 
             <h3><a id="datasource_study" class="anchor" href="#" aria-hidden="true"><span class="octicon octicon-link"></span></a>DataSource 入门</h3>
             <p>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DataSource：<br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;与JPA相比，DataSource有以下几个特点：<br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1、简易的过滤查询接口，但仅支持简单的表关联查询。 <br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2、分布式的主键的分布式自增策略。 <br/>
@@ -39,7 +40,7 @@
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;为了降低学习成本，DataSource重用了JPA里的部分注解与配置文件，使用方法基本相同，与JPA用法唯一区别是注解只能标记于字段，不能标记在方法上。
             </p>
             <table style="margin: auto;">
-                <tr><th>注 解</th><th>描 述</th></tr>
+                <tr><th>注解类名</th><th>功能描述</th></tr>
                 <tr><td style="text-align: left;">javax.persistence.Cacheable</td><td>标记Entity类是否需要缓存，与JPA用法一致</td></tr>
                 <tr><td style="text-align: left;">javax.persistence.Column</td><td>标记字段，只使用其name()、insertable()、updatable()属性</td></tr>
                 <tr><td style="text-align: left;">javax.persistence.Entity</td><td>JPA的Entity类必须标记为@Entity, 而RedKale不强制要求，所以该注解一般无用</td></tr>
@@ -56,6 +57,24 @@
                 <tr><td style="text-align: left;"><b>@FilterJoinColumn</b></td><td>用于FilterBean过滤类的关联表字段设置</td></tr>
                 <tr><td style="text-align: left;"><b>@FilterGroup</b></td><td>用于FilterBean过滤类的过滤条件分组设置</td></tr>
             </table>
+            <p>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DataSource提供的接口分几种系列：
+            </p>
+            
+            <table style="margin: auto;">
+                <tr><th>系列方法</th><th>功能描述</th></tr>
+                <tr><td style="text-align: left;">insert</td><td>插入数据</td></tr>
+                <tr><td style="text-align: left;">delete</td><td>删除数据</td></tr>
+                <tr><td style="text-align: left;">update</td><td>更新数据</td></tr>
+                <tr><td style="text-align: left;">updateColumnXXX</td><td>更新数据的部分字段</td></tr>
+                <tr><td style="text-align: left;">getNumberResult</td><td>统计查询，用于查询字段的总和、最大值、平均值等数据</td></tr>
+                <tr><td style="text-align: left;">queryColumnXXX<td>单个字段数据查询和字段的统计查询</td></tr>
+                <tr><td style="text-align: left;">find<td>查找单个对象</td></tr>
+                <tr><td style="text-align: left;">queryList<td>查询对象的List集合</td></tr>
+                <tr><td style="text-align: left;">querySheet</td><td>查询对象的Sheet页式集合</td></tr>
+                <tr><td style="text-align: left;">directXXX<td>直接运行SQL语句，用于复杂的关联查询与更新</td></tr>
+            </table>
+            
             <p>未完待续…… <br/>
             </p>
             <h3><a id="source_confxml" href="#" aria-hidden="true"><span class="octicon octicon-link"></span></a>persistence.xml 配置说明</h3>
