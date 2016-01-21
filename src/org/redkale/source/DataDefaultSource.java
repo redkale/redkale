@@ -1719,7 +1719,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
     }
 
     @Override
-    public void directQuery(String sql, Consumer<ResultSet> consumer) {
+    public final void directQuery(String sql, Consumer<ResultSet> consumer) {
         final Connection conn = createReadSQLConnection();
         try {
             if (debug.get()) logger.finest("queryDirect sql=" + sql);
