@@ -10,9 +10,9 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * 当使用DistributeGenerator控制主键值时， 如果表A与表B使用同一主键时， 就需要将表A的class标记：
+ * 当使用DistributeGenerator控制主键值时， 如果表A与表AHistory使用同一主键时， 就需要将表A的class标记：
  * <blockquote><pre>
- *  &#64;DistributeTables({B.class})
+ *  &#64;DistributeTables({AHistory.class})
  *  public class A {
  *  }
  * </pre></blockquote>
