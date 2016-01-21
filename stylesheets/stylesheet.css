@@ -44,6 +44,7 @@ a:hover {
     border-color: rgba(255, 255, 255, 0.3);
 }
 
+
 @media screen and (min-width: 80em) {
     .btn {
         padding: 0.75rem 1rem;
@@ -301,7 +302,7 @@ a:hover {
     width: 100%;
     overflow: auto;
     word-break: normal;
-    word-break: keep-all;
+    word-break: keep-all;    
 }
 
 .main-content table th {
@@ -309,8 +310,8 @@ a:hover {
 }
 
 .main-content table th, .main-content table td {
-    padding: 0.5rem 1rem;
-    border: 1px solid #e9ebec;
+    padding: 0.4rem 1.2rem 0.4rem 1.2rem;
+    border: 1px solid #90139E;
 }
 
 .main-content dl {
@@ -343,6 +344,10 @@ a:hover {
         padding: 2rem 6rem;
         margin: 0 auto;
         font-size: 1.1rem;
+    }
+    .main-content table {
+        width: 60em;
+        min-width: 60em;
     }
 }
 

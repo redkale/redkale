@@ -233,7 +233,10 @@
     <span class="o">}</span>
 <span class="o">}</span>
                 </pre></div>
-            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;由以上代码可以看出来，远程模式Service是根据本地模式Service临时类动态生成的。远程类执行方法时通过SNCP协议将参数序列化并带上当前方法信息传输到远程服务器上，执行完后将结果流反序列化并返回, 其流程与WebService类似。与WebService最大的区别在于，远程模式的Service允许修改参数本身的内容。范例如下：</p>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;由以上代码可以看出来，远程模式Service是根据本地模式Service临时类动态生成的。远程类执行方法时通过SNCP协议将参数序列化并带上当前方法信息传输到远程服务器上，执行完后将结果流反序列化并返回, 其流程与WebService类似。</p>
+            
+            <p id="service_dyncall">&nbsp;&nbsp;<b>远程模式的@DynCall回调</b>  </p>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;与WebService的区别除了更具性能的二进制的数据格式，更差异的是远程模式的Service允许修改参数本身的内容。范例如下：</p>
             <div class="highlight"><pre><span class="cm">/**</span>
 <span class="cm"> * 由于该方法在处理过程中修改了参数bean的内容，为了保证本地模式与远程模式的一致性，需要提供@DynCall回调接口</span>
 <span class="cm"> *</span>
