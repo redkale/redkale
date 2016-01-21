@@ -383,7 +383,7 @@ public abstract class WebSocket {
     /**
      * 获取当前进程节点所有在线的WebSocketGroup
      *
-     * @return
+     * @return WebSocketGroup列表
      */
     protected final Collection<WebSocketGroup> getWebSocketGroups() {
         return _engine.getWebSocketGroups();
