@@ -421,7 +421,7 @@
                 </pre></div>
             <br/>
 
-            <h3><a id="convert_bson_buffer" class="anchor" href="#" aria-hidden="true"><span class="octicon octicon-link"></span></a>BSON的协议格式</h3>
+            <h3><a id="convert_bson_struct" class="anchor" href="#" aria-hidden="true"><span class="octicon octicon-link"></span></a>BSON的协议格式</h3>
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;BSON类似Java自带的Serializable， 其格式如下: <br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1). 基本数据类型: 直接转换成byte[] <br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2). SmallString(无特殊字符且长度小于256的字符串): length(1 byte) + byte[](utf8); 通常用于类名、字段名、枚举。 <br/>
