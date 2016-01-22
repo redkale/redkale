@@ -48,7 +48,7 @@ public abstract class Factory<R extends Reader, W extends Writer> {
 
     private final ConcurrentHashMap<Type, Encodeable<W, ?>> encoders = new ConcurrentHashMap();
 
-    private final HashMap<AccessibleObject, ConvertColumnEntry> columnEntrys = new HashMap();
+    private final ConcurrentHashMap<AccessibleObject, ConvertColumnEntry> columnEntrys = new ConcurrentHashMap();
 
     private final Set<Class> skipIgnores = new HashSet();
 
