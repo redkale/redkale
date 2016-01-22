@@ -25,7 +25,7 @@ import static java.lang.annotation.RetentionPolicy.*;
 public @interface ConvertColumn {
 
     /**
-     * 给字段取个别名， 只对JSON有效
+     * 给字段取个别名
      *
      * @return 字段别名
      */
