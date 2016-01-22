@@ -247,7 +247,7 @@ public final class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T
     }
 
     static Attribute createAttribute(final Factory factory, Class clazz, final Field field, final Method getter, final Method setter) {
-        String fieldalias = null;
+        String fieldalias;
         if (field != null) { // public field
             ConvertColumnEntry ref = factory.findRef(field);
             fieldalias = ref == null || ref.name().isEmpty() ? field.getName() : ref.name();
