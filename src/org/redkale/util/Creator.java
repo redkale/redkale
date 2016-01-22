@@ -149,6 +149,26 @@ public interface Creator<T> {
                 }
             }
         }
+        if (constructor0 == null) {//再次找非private且带-parameters编译项的构造函数 java 8以上才支持
+            for (Constructor c : clazz.getDeclaredConstructors()) {
+                if (Modifier.isPrivate(c.getModifiers())) continue;
+                Parameter[] params = c.getParameters();
+                if (params.length == 0) continue;
+                boolean flag = true;
+                for (Parameter param : params) {
+                    try {
+                        clazz.getDeclaredField(param.getName());
+                    } catch (Exception e) {
+                        flag = false;
+                        break;
+                    }
+                }
+                if (flag) {
+                    constructor0 = c;
+                    break;
+                }
+            }
+        }
         if (constructor0 == null) {//最后找非private的构造函数
             for (Constructor c : clazz.getDeclaredConstructors()) {
                 if (Modifier.isPrivate(c.getModifiers())) continue;
@@ -176,11 +196,25 @@ public interface Creator<T> {
         {//create 方法
             mv = cw.visitMethod(ACC_PUBLIC + ACC_VARARGS, "create", "([Ljava/lang/Object;)L" + interName + ";", null, null);
             ConstructorProperties cps = constructor.getAnnotation(ConstructorProperties.class);
-            final String[] cparams = cps == null ? null : cps.value();
+            String[] cparams = cps == null ? null : cps.value();
+            if (cparams == null && constructor.getParameterCount() > 0) { // java 8 以上版本才支持的 -parameters 编译项
+                Parameter[] params = constructor.getParameters();
+                String[] ss = new String[params.length];
+                for (int i = 0; i < ss.length; i++) {
+                    try {
+                        clazz.getDeclaredField(params[i].getName());
+                    } catch (Exception e) { //没有该字段，直接退出
+                        ss = null;
+                        break;
+                    }
+                    ss[i] = params[i].getName();
+                }
+                cparams = ss;
+            }
             if (cparams != null) {
                 av0 = mv.visitAnnotation(Type.getDescriptor(ConstructorParameters.class), true);
                 AnnotationVisitor av1 = av0.visitArray("value");
-                for (String n : cps.value()) {
+                for (String n : cparams) {
                     av1.visit(null, n);
                 }
                 av1.visitEnd();
@@ -307,8 +341,8 @@ public interface Creator<T> {
                 t.printStackTrace();
             }
         }
+        if (!ispub && resultClazz == null) throw new RuntimeException("[" + clazz + "] have no public or java.beans.ConstructorProperties-Annotation constructor.");
         try {
-            if (!ispub) throw new RuntimeException("[" + clazz + "] have no public or java.beans.ConstructorProperties-Annotation constructor.");
             if (resultClazz == null) resultClazz = new ClassLoader(loader) {
                     public final Class<?> loadClass(String name, byte[] b) {
                         return defineClass(name, b, 0, b.length);
