@@ -80,7 +80,7 @@ public final class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T
                     if (!method.getName().startsWith("is") && !method.getName().startsWith("get")) continue;
                     if (method.getParameterTypes().length != 0) continue;
                     if (method.getReturnType() == void.class) continue;
-                    if (reversible && (cps == null || !contains(cps, readGetSetFieldName(method)))) {
+                    if (reversible && (cps == null || !contains(cps, Factory.readGetSetFieldName(method)))) {
                         boolean is = method.getName().startsWith("is");
                         try {
                             clazz.getMethod(method.getName().replaceFirst(is ? "is" : "get", "set"), method.getReturnType());
@@ -237,19 +237,6 @@ public final class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T
         return false;
     }
 
-    static String readGetSetFieldName(Method method) {
-        if (method == null) return null;
-        String fname = method.getName();
-        if (!fname.startsWith("is") && !fname.startsWith("get") && !fname.startsWith("set")) return fname;
-        fname = fname.substring(fname.startsWith("is") ? 2 : 3);
-        if (fname.length() > 1 && !(fname.charAt(1) >= 'A' && fname.charAt(1) <= 'Z')) {
-            fname = Character.toLowerCase(fname.charAt(0)) + fname.substring(1);
-        } else if (fname.length() == 1) {
-            fname = "" + Character.toLowerCase(fname.charAt(0));
-        }
-        return fname;
-    }
-
     static String[] findConstructorProperties(Creator creator) {
         try {
             Creator.ConstructorParameters cps = creator.getClass().getMethod("create", Object[].class).getAnnotation(Creator.ConstructorParameters.class);
@@ -266,7 +253,7 @@ public final class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T
             fieldalias = ref == null || ref.name().isEmpty() ? field.getName() : ref.name();
         } else if (getter != null) {
             ConvertColumnEntry ref = factory.findRef(getter);
-            String mfieldname = readGetSetFieldName(getter);
+            String mfieldname = Factory.readGetSetFieldName(getter);
             if (ref == null) {
                 try {
                     ref = factory.findRef(clazz.getDeclaredField(mfieldname));
@@ -276,7 +263,7 @@ public final class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T
             fieldalias = ref == null || ref.name().isEmpty() ? mfieldname : ref.name();
         } else { // setter != null
             ConvertColumnEntry ref = factory.findRef(setter);
-            String mfieldname = readGetSetFieldName(setter);
+            String mfieldname = Factory.readGetSetFieldName(setter);
             if (ref == null) {
                 try {
                     ref = factory.findRef(clazz.getDeclaredField(mfieldname));

@@ -129,12 +129,23 @@ public abstract class Factory<R extends Reader, W extends Writer> {
         return this;
     }
 
-    public ConvertColumnEntry findRef(AccessibleObject field) {
-        if (field == null) return null;
-        ConvertColumnEntry en = this.columnEntrys.get(field);
+    public ConvertColumnEntry findRef(AccessibleObject element) {
+        if (element == null) return null;
+        ConvertColumnEntry en = this.columnEntrys.get(element);
         if (en != null) return en;
         final ConvertType ct = this.getConvertType();
-        for (ConvertColumn ref : field.getAnnotationsByType(ConvertColumn.class)) {
+        ConvertColumn[] ccs = element.getAnnotationsByType(ConvertColumn.class);
+        if (ccs.length == 0 && element instanceof Method) {
+            final Method method = (Method) element;
+            String fieldName = readGetSetFieldName(method);
+            if (fieldName != null) {
+                try {
+                    ccs = method.getDeclaringClass().getDeclaredField(fieldName).getAnnotationsByType(ConvertColumn.class);
+                } catch (Exception e) { //说明没有该字段，忽略异常
+                }
+            }
+        }
+        for (ConvertColumn ref : ccs) {
             if (ref.type().contains(ct)) {
                 ConvertColumnEntry entry = new ConvertColumnEntry(ref);
                 if (skipAllIgnore) {
@@ -142,11 +153,24 @@ public abstract class Factory<R extends Reader, W extends Writer> {
                     return entry;
                 }
                 if (skipIgnores.isEmpty()) return entry;
-                if (skipIgnores.contains(((Member) field).getDeclaringClass())) entry.setIgnore(false);
+                if (skipIgnores.contains(((Member) element).getDeclaringClass())) entry.setIgnore(false);
                 return entry;
             }
         }
         return null;
+    }
+
+    static String readGetSetFieldName(Method method) {
+        if (method == null) return null;
+        String fname = method.getName();
+        if (!fname.startsWith("is") && !fname.startsWith("get") && !fname.startsWith("set")) return fname;
+        fname = fname.substring(fname.startsWith("is") ? 2 : 3);
+        if (fname.length() > 1 && !(fname.charAt(1) >= 'A' && fname.charAt(1) <= 'Z')) {
+            fname = Character.toLowerCase(fname.charAt(0)) + fname.substring(1);
+        } else if (fname.length() == 1) {
+            fname = "" + Character.toLowerCase(fname.charAt(0));
+        }
+        return fname;
     }
 
     final String getEntity(Class clazz) {

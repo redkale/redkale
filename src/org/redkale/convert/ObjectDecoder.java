@@ -87,7 +87,7 @@ public final class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T
                     if (!method.getName().startsWith("set")) continue;
                     if (method.getParameterTypes().length != 1) continue;
                     if (method.getReturnType() != void.class) continue;
-                    if (reversible && (cps == null || !ObjectEncoder.contains(cps, ObjectEncoder.readGetSetFieldName(method)))) {
+                    if (reversible && (cps == null || !ObjectEncoder.contains(cps, Factory.readGetSetFieldName(method)))) {
                         boolean is = method.getParameterTypes()[0] == boolean.class || method.getParameterTypes()[0] == Boolean.class;
                         try {
                             clazz.getMethod(method.getName().replaceFirst("set", is ? "is" : "get"));
