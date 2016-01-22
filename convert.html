@@ -147,43 +147,13 @@
 
     <span class="kd">private</span> <span class="n">String</span> <span class="n">username</span> <span class="o">=</span> <span class="s">&quot;&quot;</span><span class="o">;</span>
 
+    <span class="nd">@ConvertColumn</span><span class="o">(</span><span class="n">ignore</span> <span class="o">=</span> <span class="kc">true</span><span class="o">,</span> <span class="n">type</span> <span class="o">=</span> <span class="n">ConvertType</span><span class="o">.</span><span class="na">JSON</span><span class="o">)</span>
     <span class="kd">private</span> <span class="kt">long</span> <span class="n">regtime</span><span class="o">;</span> <span class="c1">//注册时间</span>
 
+    <span class="nd">@ConvertColumn</span><span class="o">(</span><span class="n">ignore</span> <span class="o">=</span> <span class="kc">true</span><span class="o">,</span> <span class="n">type</span> <span class="o">=</span> <span class="n">ConvertType</span><span class="o">.</span><span class="na">JSON</span><span class="o">)</span>
     <span class="kd">private</span> <span class="n">String</span> <span class="n">regaddr</span> <span class="o">=</span> <span class="s">&quot;&quot;</span><span class="o">;</span> <span class="c1">//注册IP</span>
 
-    <span class="nd">@ConvertColumn</span><span class="o">(</span><span class="n">ignore</span> <span class="o">=</span> <span class="kc">true</span><span class="o">,</span> <span class="n">type</span> <span class="o">=</span> <span class="n">ConvertType</span><span class="o">.</span><span class="na">JSON</span><span class="o">)</span>
-    <span class="kd">public</span> <span class="kt">long</span> <span class="nf">getRegtime</span><span class="o">()</span> <span class="o">{</span>
-        <span class="k">return</span> <span class="n">regtime</span><span class="o">;</span>
-    <span class="o">}</span>
-
-    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">setRegtime</span><span class="o">(</span><span class="kt">long</span> <span class="n">regtime</span><span class="o">)</span> <span class="o">{</span>
-        <span class="k">this</span><span class="o">.</span><span class="na">regtime</span> <span class="o">=</span> <span class="n">regtime</span><span class="o">;</span>
-    <span class="o">}</span>
-
-    <span class="nd">@ConvertColumn</span><span class="o">(</span><span class="n">ignore</span> <span class="o">=</span> <span class="kc">true</span><span class="o">,</span> <span class="n">type</span> <span class="o">=</span> <span class="n">ConvertType</span><span class="o">.</span><span class="na">JSON</span><span class="o">)</span>
-    <span class="kd">public</span> <span class="n">String</span> <span class="nf">getRegaddr</span><span class="o">()</span> <span class="o">{</span>
-        <span class="k">return</span> <span class="n">regaddr</span><span class="o">;</span>
-    <span class="o">}</span>
-
-    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">setRegaddr</span><span class="o">(</span><span class="n">String</span> <span class="n">regaddr</span><span class="o">)</span> <span class="o">{</span>
-        <span class="k">this</span><span class="o">.</span><span class="na">regaddr</span> <span class="o">=</span> <span class="n">regaddr</span><span class="o">;</span>
-    <span class="o">}</span>
-
-    <span class="kd">public</span> <span class="kt">int</span> <span class="nf">getUserid</span><span class="o">()</span> <span class="o">{</span>
-        <span class="k">return</span> <span class="n">userid</span><span class="o">;</span>
-    <span class="o">}</span>
-
-    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">setUserid</span><span class="o">(</span><span class="kt">int</span> <span class="n">userid</span><span class="o">)</span> <span class="o">{</span>
-        <span class="k">this</span><span class="o">.</span><span class="na">userid</span> <span class="o">=</span> <span class="n">userid</span><span class="o">;</span>
-    <span class="o">}</span>
-
-    <span class="kd">public</span> <span class="n">String</span> <span class="nf">getUsername</span><span class="o">()</span> <span class="o">{</span>
-        <span class="k">return</span> <span class="n">username</span><span class="o">;</span>
-    <span class="o">}</span>
-
-    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">setUsername</span><span class="o">(</span><span class="n">String</span> <span class="n">username</span><span class="o">)</span> <span class="o">{</span>
-        <span class="k">this</span><span class="o">.</span><span class="na">username</span> <span class="o">=</span> <span class="n">username</span><span class="o">;</span>
-    <span class="o">}</span>
+    <span class="o">/**</span> <span class="n">以下省略getter</span> <span class="n">setter方法</span> <span class="o">*/</span>
 <span class="o">}</span>
 
 
