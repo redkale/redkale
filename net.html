@@ -87,7 +87,7 @@
 
     <span class="c1">//标记为@AuthIgnore 的方法将不会调用authenticate方法</span>
     <span class="c1">//一般用于判断用户的登录态, 返回false表示鉴权失败</span>
-    <span class="c1">//moduleid值来自 @WebServlet.moduleid()  用于定义模块ID; actionid值自来@WebAction.actionid() 用于定义操作ID; 需要系统化的鉴权需要定义这两个值</span>
+    <span class="c1">//moduleid值来自 @WebServlet.moduleid()用于定义模块ID; actionid值自来@WebAction.actionid()用于定义操作ID; 需要系统化的鉴权需要定义这两个值</span>
     <span class="nd">@Override</span>
     <span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">authenticate</span><span class="o">(</span><span class="kt">int</span> <span class="n">moduleid</span><span class="o">,</span> <span class="kt">int</span> <span class="n">actionid</span><span class="o">,</span> <span class="n">HttpRequest</span> <span class="n">request</span><span class="o">,</span> <span class="n">HttpResponse</span> <span class="n">response</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
         <span class="n">UserInfo</span> <span class="n">user</span> <span class="o">=</span> <span class="o">(</span><span class="n">UserInfo</span><span class="o">)</span> <span class="n">request</span><span class="o">.</span><span class="na">getAttribute</span><span class="o">(</span><span class="s">&quot;_current_userinfo&quot;</span><span class="o">);</span>
@@ -123,7 +123,7 @@
     <span class="nd">@WebAction</span><span class="o">(</span><span class="n">url</span> <span class="o">=</span> <span class="s">&quot;/user/myinfo&quot;</span><span class="o">)</span>
     <span class="kd">public</span> <span class="kt">void</span> <span class="nf">myinfo</span><span class="o">(</span><span class="n">HttpRequest</span> <span class="n">req</span><span class="o">,</span> <span class="n">HttpResponse</span> <span class="n">resp</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
         <span class="n">UserInfo</span> <span class="n">user</span> <span class="o">=</span> <span class="n">service</span><span class="o">.</span><span class="na">current</span><span class="o">(</span><span class="n">req</span><span class="o">.</span><span class="na">getSessionid</span><span class="o">(</span><span class="kc">false</span><span class="o">));</span>
-        <span class="c1">//或者使用 UserInfo user = req.getAttribute(&quot;_current_userinfo&quot;); 因为BaseSerlvet.authenticate方法已经将UserInfo注入到_current_userinfo属性中</span>
+        <span class="c1">//或者使用 user = req.getAttribute(&quot;_current_userinfo&quot;); 因为BaseSerlvet.authenticate方法已经将UserInfo注入到_current_userinfo属性中</span>
         <span class="n">resp</span><span class="o">.</span><span class="na">finishJson</span><span class="o">(</span><span class="n">user</span><span class="o">);</span>  <span class="c1">//输出用户信息</span>
     <span class="o">}</span>
 
@@ -269,7 +269,7 @@
     <span class="c1">//获取客户端地址IP</span>
     <span class="kd">public</span> <span class="n">SocketAddress</span> <span class="nf">getRemoteAddress</span><span class="o">();</span>
 
-    <span class="c1">//获取客户端地址IP, 与getRemoteAddres() 的区别在于：本方法优先取header中指定为RemoteAddress名的值，没有则返回getRemoteAddres()的getHostAddress()。</span>
+    <span class="c1">//获取客户端地址IP, 与getRemoteAddres() 的区别在于：本方法优先取header中指定为RemoteAddress名的值，没有则返回getRemoteAddres()。</span>
     <span class="c1">//本方法适用于服务前端有如nginx的代理服务器进行中转，通过getRemoteAddres()是获取不到客户端的真实IP。</span>
     <span class="kd">public</span> <span class="n">String</span> <span class="nf">getRemoteAddr</span><span class="o">();</span>
 
