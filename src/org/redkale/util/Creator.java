@@ -135,7 +135,7 @@ public interface Creator<T> {
         }
         Constructor<T> constructor0 = null;
         for (Constructor c : clazz.getConstructors()) {  //优先找public 的构造函数
-            if (c.getParameterTypes().length == 0) { //为了兼容android 而不使用 getParameterCount()
+            if (c.getParameterCount() == 0) {
                 constructor0 = c;
                 break;
             }
@@ -169,11 +169,13 @@ public interface Creator<T> {
                 }
             }
         }
-        if (constructor0 == null) {//最后找非private的构造函数
+        if (constructor0 == null) {//最后找非private的空构造函数
             for (Constructor c : clazz.getDeclaredConstructors()) {
                 if (Modifier.isPrivate(c.getModifiers())) continue;
-                constructor0 = c;
-                break;
+                if (c.getParameterCount() == 0) {
+                    constructor0 = c;
+                    break;
+                }
             }
         }
         final Constructor<T> constructor = constructor0;
