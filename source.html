@@ -58,7 +58,7 @@
                 <tr><td style="text-align: left;"><b>@FilterGroup</b></td><td>用于FilterBean过滤类的过滤条件分组设置</td></tr>
             </table>
             <p>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DataSource提供的接口分几种系列：
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;操作数据源主要使用的对象有 DataSource、FilterBean、FilterNode。DataSource 提供的接口分几种系列：
             </p>
             
             <table style="margin: auto;">
@@ -74,6 +74,9 @@
                 <tr><td style="text-align: left;">querySheet</td><td>查询对象的Sheet页式集合</td></tr>
                 <tr><td style="text-align: left;">directXXX<td>直接运行SQL语句，用于复杂的关联查询与更新</td></tr>
             </table>
+            <p>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;以上接口除了directXXX，其他都有等同的异步接口。DataSource提供了丰富的查询接口，
+            </p>
             
             <p>未完待续…… <br/>
             </p>
