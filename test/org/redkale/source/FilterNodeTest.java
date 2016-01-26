@@ -19,11 +19,12 @@ import org.redkale.convert.json.*;
 public class FilterNodeTest {
 
     public static void main(String[] args) throws Exception {
+        final Properties props = new Properties();
         final Function<Class, List> fullloader = (Class t) -> new ArrayList();
-        final Function<Class, EntityInfo> func = (Class t) -> EntityInfo.load(t, 0, false, fullloader);
-        final EntityInfo<CarTestTable> carEntity = EntityInfo.load(CarTestTable.class, 0, false, (t) -> CarTestTable.createList());
-        final EntityInfo<UserTestTable> userEntity = EntityInfo.load(UserTestTable.class, 0, false, (t) -> UserTestTable.createList());
-        final EntityInfo<CarTypeTestTable> typeEntity = EntityInfo.load(CarTypeTestTable.class, 0, false, (t) -> CarTypeTestTable.createList());
+        final Function<Class, EntityInfo> func = (Class t) -> EntityInfo.load(t, 0, false, props, fullloader);
+        final EntityInfo<CarTestTable> carEntity = EntityInfo.load(CarTestTable.class, 0, false, props, (t) -> CarTestTable.createList());
+        final EntityInfo<UserTestTable> userEntity = EntityInfo.load(UserTestTable.class, 0, false, props, (t) -> UserTestTable.createList());
+        final EntityInfo<CarTypeTestTable> typeEntity = EntityInfo.load(CarTypeTestTable.class, 0, false, props, (t) -> CarTypeTestTable.createList());
 
         final CarTestBean bean = new CarTestBean();
         bean.carid = 70002;
@@ -49,8 +50,8 @@ public class FilterNodeTest {
         assert beanNode.isCacheUseable(func) : "isCacheUseable 应该是true";
         System.out.println("node.Predicate = " + node.createPredicate(carEntity.getCache()));
         System.out.println("bean.Predicate = " + beanNode.createPredicate(carEntity.getCache()));
-        System.out.println("node.sheet = " +carEntity.getCache().querySheet(null, new Flipper(), node));
-        System.out.println("bean.sheet = " +carEntity.getCache().querySheet(null, new Flipper(), beanNode));
+        System.out.println("node.sheet = " + carEntity.getCache().querySheet(null, new Flipper(), node));
+        System.out.println("bean.sheet = " + carEntity.getCache().querySheet(null, new Flipper(), beanNode));
     }
 
     public static class CarTestBean implements FilterBean {
