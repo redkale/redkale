@@ -60,7 +60,7 @@
             <p>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;操作数据源主要使用的对象有 DataSource、FilterBean、FilterNode。DataSource 提供的接口分几种系列：
             </p>
-            
+
             <table style="margin: auto;">
                 <tr><th>系列方法</th><th>功能描述</th></tr>
                 <tr><td style="text-align: left;">insert</td><td>插入数据</td></tr>
@@ -79,12 +79,78 @@
             </p>
             <p>&nbsp;&nbsp;&nbsp;&nbsp;<b>过滤条件</b></p>
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;FilterBean、FilterNode对象用于构造过滤条件。FilterBean可以转化为FilterNode。FilterBean主要用于接收外界构建的过滤条件，而FilterNode为了构建内部的过滤条件且降低过滤条件变化的耦合性。</p>
-            
+            <div class="highlight"><pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">UserBean</span> <span class="kd">implements</span> <span class="n">FilterBean</span> <span class="o">{</span>
+
+    <span class="kd">private</span> <span class="kt">int</span> <span class="n">userid</span><span class="o">;</span>
+
+    <span class="nd">@FilterColumn</span><span class="o">(</span><span class="n">express</span> <span class="o">=</span> <span class="n">FilterExpress</span><span class="o">.</span><span class="na">LIKE</span><span class="o">)</span>
+    <span class="kd">private</span> <span class="n">String</span> <span class="n">username</span><span class="o">;</span>
+
+    <span class="kd">private</span> <span class="n">Range</span> <span class="n">age</span><span class="o">;</span>
+
+    <span class="kd">public</span> <span class="nf">UserBean</span><span class="o">(</span><span class="kt">int</span> <span class="n">userid</span><span class="o">,</span> <span class="n">String</span> <span class="n">username</span><span class="o">,</span> <span class="n">Range</span> <span class="n">age</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">userid</span> <span class="o">=</span> <span class="n">userid</span><span class="o">;</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">username</span> <span class="o">=</span> <span class="n">username</span><span class="o">;</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">age</span> <span class="o">=</span> <span class="n">age</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="o">/**</span> <span class="n">以下省略getter</span> <span class="n">setter方法</span> <span class="o">*/</span>
+
+<span class="o">}</span>
+
+
+
+ <span class="k">new</span> <span class="nf">UserBean</span><span class="o">(</span><span class="mi">200001</span><span class="o">,</span> <span class="s">&quot;redkale&quot;</span><span class="o">,</span> <span class="k">new</span> <span class="nf">IntRange</span><span class="o">(</span><span class="mi">14</span><span class="o">,</span> <span class="mi">36</span><span class="o">))</span> <span class="o">等价于</span> 
+ <span class="n">FilterNode</span><span class="o">.</span><span class="na">create</span><span class="o">(</span><span class="s">&quot;userid&quot;</span><span class="o">,</span> <span class="mi">200001</span><span class="o">).</span><span class="na">and</span><span class="o">(</span><span class="s">&quot;username&quot;</span><span class="o">,</span> <span class="n">FilterExpress</span><span class="o">.</span><span class="na">LIKE</span><span class="o">,</span> <span class="s">&quot;redkale&quot;</span><span class="o">).</span><span class="na">and</span><span class="o">(</span><span class="s">&quot;age&quot;</span><span class="o">,</span> <span class="k">new</span> <span class="n">Range</span><span class="o">.</span><span class="na">IntRange</span><span class="o">(</span><span class="mi">14</span><span class="o">,</span> <span class="mi">36</span><span class="o">))</span>
+ 
+ <span class="k">new</span> <span class="nf">UserBean</span><span class="o">(</span><span class="mi">200001</span><span class="o">,</span> <span class="s">&quot;redkale&quot;</span><span class="o">,</span> <span class="k">new</span> <span class="nf">IntRange</span><span class="o">(</span><span class="mi">14</span><span class="o">,</span> <span class="mi">36</span><span class="o">))</span> <span class="o">等价于</span> <span class="s">&quot;WHERE userid = 200001 AND username LIKE &#39;%redkale%&#39; AND age BETWEEN 14 AND 36&quot;</span>
+ <span class="k">new</span> <span class="nf">UserBean</span><span class="o">(</span><span class="mi">200001</span><span class="o">,</span> <span class="s">&quot;redkale&quot;</span><span class="o">,</span> <span class="kc">null</span><span class="o">)</span> <span class="o">等价于</span> <span class="s">&quot;WHERE userid = 200001 AND username LIKE &#39;%redkale%&#39;&quot;</span>
+ <span class="k">new</span> <span class="nf">UserBean</span><span class="o">(</span><span class="mi">0</span><span class="o">,</span> <span class="s">&quot;redkale&quot;</span><span class="o">,</span> <span class="kc">null</span><span class="o">)</span> <span class="o">等价于</span> <span class="s">&quot;WHERE username LIKE &#39;%redkale%&#39;&quot;</span>
+
+                </pre></div>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如上定义UserBean过滤条件，当非数值类字段值为null、字符串值为空、数值类字段值小于@FilterColumn.least()值(least的默认值为1)都不会构建成过滤条件。@FilterColumn.express根据字段的类型有不同的默认值，若字段类型为Collection子类或数组则express默认为FilterExpress.IN；若字段类型为Range的子类则express默认为FilterExpress.BETWEEN；其他类型则express默认为FilterExpress.EQUAL。默认字段之间是AND关系，若想使用OR关系则需要使用@FilterGroup进行标记：</p>
+            <div class="highlight"><pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">UserBean</span> <span class="kd">implements</span> <span class="n">FilterBean</span> <span class="o">{</span>
+
+    <span class="kd">private</span> <span class="kt">int</span> <span class="n">userid</span><span class="o">;</span>
+
+    <span class="nd">@FilterGroup</span><span class="o">(</span><span class="s">&quot;[OR]a&quot;</span><span class="o">)</span>
+    <span class="nd">@FilterColumn</span><span class="o">(</span><span class="n">express</span> <span class="o">=</span> <span class="n">FilterExpress</span><span class="o">.</span><span class="na">LIKE</span><span class="o">)</span>
+    <span class="kd">private</span> <span class="n">String</span> <span class="n">username</span><span class="o">;</span>
+
+    <span class="nd">@FilterGroup</span><span class="o">(</span><span class="s">&quot;[OR]a&quot;</span><span class="o">)</span>
+    <span class="kd">private</span> <span class="n">Range</span> <span class="n">age</span><span class="o">;</span>
+
+    <span class="kd">public</span> <span class="nf">UserBean</span><span class="o">(</span><span class="kt">int</span> <span class="n">userid</span><span class="o">,</span> <span class="n">String</span> <span class="n">username</span><span class="o">,</span> <span class="n">Range</span> <span class="n">age</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">userid</span> <span class="o">=</span> <span class="n">userid</span><span class="o">;</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">username</span> <span class="o">=</span> <span class="n">username</span><span class="o">;</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">age</span> <span class="o">=</span> <span class="n">age</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="o">/**</span> <span class="n">以下省略getter</span> <span class="n">setter方法</span> <span class="o">*/</span>
+
+<span class="o">}</span>
+
+
+
+ <span class="k">new</span> <span class="nf">UserBean</span><span class="o">(</span><span class="mi">200001</span><span class="o">,</span> <span class="s">&quot;redkale&quot;</span><span class="o">,</span> <span class="k">new</span> <span class="nf">IntRange</span><span class="o">(</span><span class="mi">14</span><span class="o">,</span> <span class="mi">36</span><span class="o">))</span> <span class="o">等价于</span> 
+ <span class="n">FilterNode</span> <span class="n">orNode</span> <span class="o">=</span> <span class="n">FilterNode</span><span class="o">.</span><span class="na">create</span><span class="o">(</span><span class="s">&quot;username&quot;</span> <span class="o">,</span> <span class="n">FilterExpress</span><span class="o">.</span><span class="na">LIKE</span><span class="o">,</span> <span class="s">&quot;redkale&quot;</span><span class="o">).</span><span class="na">or</span><span class="o">(</span><span class="s">&quot;age&quot;</span><span class="o">,</span> <span class="k">new</span> <span class="n">Range</span><span class="o">.</span><span class="na">IntRange</span><span class="o">(</span><span class="mi">14</span><span class="o">,</span> <span class="mi">36</span><span class="o">));</span> 
+ <span class="n">FilterNode</span> <span class="n">node</span> <span class="o">=</span> <span class="n">FilterNode</span><span class="o">.</span><span class="na">create</span><span class="o">(</span><span class="s">&quot;userid&quot;</span><span class="o">,</span> <span class="mi">200001</span><span class="o">).</span><span class="na">and</span><span class="o">(</span><span class="n">orNode</span><span class="o">));</span>
+ 
+ <span class="k">new</span> <span class="nf">UserBean</span><span class="o">(</span><span class="mi">200001</span><span class="o">,</span> <span class="s">&quot;redkale&quot;</span><span class="o">,</span> <span class="k">new</span> <span class="nf">IntRange</span><span class="o">(</span><span class="mi">14</span><span class="o">,</span> <span class="mi">36</span><span class="o">))</span> <span class="o">等价于</span> <span class="s">&quot;WHERE userid = 200001 AND (username LIKE &#39;%redkale%&#39; OR age BETWEEN 14 AND 36)&quot;</span>
+ <span class="k">new</span> <span class="nf">UserBean</span><span class="o">(</span><span class="mi">200001</span><span class="o">,</span> <span class="s">&quot;redkale&quot;</span><span class="o">,</span> <span class="kc">null</span><span class="o">)</span> <span class="o">等价于</span> <span class="s">&quot;WHERE userid = 200001 AND username LIKE &#39;%redkale%&#39;&quot;</span>
+ <span class="k">new</span> <span class="nf">UserBean</span><span class="o">(</span><span class="mi">0</span><span class="o">,</span> <span class="s">&quot;redkale&quot;</span><span class="o">,</span> <span class="kc">null</span><span class="o">)</span> <span class="o">等价于</span> <span class="s">&quot;WHERE username LIKE &#39;%redkale%&#39;&quot;</span>
+
+
+ <span class="n">source</span><span class="o">.</span><span class="na">getNumberResult</span><span class="o">(</span><span class="n">User</span><span class="o">.</span><span class="k">class</span><span class="o">,</span> <span class="n">FilterFunc</span><span class="o">.</span><span class="na">COUNT</span><span class="o">,</span> <span class="kc">null</span><span class="o">,</span> <span class="k">new</span> <span class="nf">UserBean</span><span class="o">(</span><span class="mi">0</span><span class="o">,</span> <span class="s">&quot;redkale&quot;</span><span class="o">,</span> <span class="k">new</span> <span class="nf">IntRange</span><span class="o">(</span><span class="mi">14</span><span class="o">,</span> <span class="mi">36</span><span class="o">))).</span><span class="na">intValue</span><span class="o">()</span> <span class="o">等价于</span>
+ <span class="s">&quot;SELECT COUNT(*) FROM user WHERE username LIKE &#39;%redkale%&#39; AND  age BETWEEN 14 AND 36&quot;</span>
+                </pre></div>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如上@FilterGroup 的value 必须是[OR]或者[AND]开头，没有标记@FilterGroup的字段等价于标记了@FilterGroup(value = "[AND]")。[AND]、[OR]后面的字符串为GROUP_NAME，默认的GROUP_NAME为空字符串。如上"[OR]a"可以直接使用"[OR]"，有多个[OR]或者[AND]则需要加上不同的NAME。</p>
+
             <p>未完待续…… <br/>
             </p>
-            
+
             <h3><a id="source_cachesource" class="anchor" href="#" aria-hidden="true"><span class="octicon octicon-link"></span></a>CacheSource 入门</h3>
-            
+
             <h3><a id="source_confxml" href="#" aria-hidden="true"><span class="octicon octicon-link"></span></a>persistence.xml 配置说明</h3>
             <div class="highlight"><pre><span class="c">&lt;!-- 其配置算是标准的JPA配置文件的缩略版 --&gt;</span>
 <span class="nt">&lt;persistence&gt;</span>	
