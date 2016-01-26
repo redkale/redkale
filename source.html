@@ -28,7 +28,7 @@
 
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Source 主要为数据源提供简易的操作接口，使底层的具体数据源(传统数据库、文件系统、内存数据库、Memcached/Redis缓存)对上层是透明的。其提供两种类型的数据源：DataSource 和 CacheSource。DataSource 为数据库或内存数据库，提供类似JPA、Hibernate的接口与功能。CacheSource 为缓存数据提供类似Memcached、Redis的接口和功能。两者也提供了异步接口(基于<a href="service.html#service_remote" target="_blank">远程模式Service</a>)。<br/></p>
 
-            <h3><a id="datasource_study" class="anchor" href="#" aria-hidden="true"><span class="octicon octicon-link"></span></a>DataSource 入门</h3>
+            <h3><a id="source_datasource" class="anchor" href="#" aria-hidden="true"><span class="octicon octicon-link"></span></a>DataSource 入门</h3>
             <p>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;JPA虽然已经提供了简洁成熟的数据库操作接口，但当数据、业务量很庞大的时候就显得捉襟见肘，与JPA相比，DataSource有以下几个特点：<br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1、简易的过滤查询接口，但仅支持简单的表关联查询。 <br/>
@@ -75,11 +75,16 @@
                 <tr><td style="text-align: left;">directXXX<td>直接运行SQL语句，用于复杂的关联查询与更新</td></tr>
             </table>
             <p>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;以上接口除了directXXX，其他都有等同的异步接口。insert、delete、update接口与JPA同名接口用法一样。DataSource提供了丰富的查询接口，且有独特的翻页查询功能。
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;以上接口除了directXXX，其他都有等同的异步接口。insert、delete、update接口与JPA同名接口用法一样。DataSource提供了丰富的查询接口，且有独特的翻页查询功能。每以系列的方法主要重载三类： 单个字段过滤、FilterBean过滤和FilterNode过滤。
             </p>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;<b>过滤条件</b></p>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;FilterBean、FilterNode对象用于构造过滤条件。FilterBean可以转化为FilterNode。FilterBean主要用于接收外界构建的过滤条件，而FilterNode为了构建内部的过滤条件且降低过滤条件变化的耦合性。</p>
             
             <p>未完待续…… <br/>
             </p>
+            
+            <h3><a id="source_cachesource" class="anchor" href="#" aria-hidden="true"><span class="octicon octicon-link"></span></a>CacheSource 入门</h3>
+            
             <h3><a id="source_confxml" href="#" aria-hidden="true"><span class="octicon octicon-link"></span></a>persistence.xml 配置说明</h3>
             <div class="highlight"><pre><span class="c">&lt;!-- 其配置算是标准的JPA配置文件的缩略版 --&gt;</span>
 <span class="nt">&lt;persistence&gt;</span>	
@@ -101,6 +106,15 @@
             <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">&quot;javax.persistence.jdbc.driver&quot;</span> <span class="na">value=</span><span class="s">&quot;com.mysql.jdbc.Driver&quot;</span><span class="nt">/&gt;</span>
             <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">&quot;javax.persistence.jdbc.user&quot;</span> <span class="na">value=</span><span class="s">&quot;root&quot;</span><span class="nt">/&gt;</span>
             <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">&quot;javax.persistence.jdbc.password&quot;</span> <span class="na">value=</span><span class="s">&quot;123456&quot;</span><span class="nt">/&gt;</span>
+	    <span class="c">&lt;!-- </span>
+<span class="c">		最大连接数，默认值：CPU数*16</span>
+<span class="c">            &lt;property name=&quot;javax.persistence.connections.limit&quot; value=&quot;32&quot;/&gt;</span>
+<span class="c">	    --&gt;</span>
+	    <span class="c">&lt;!-- </span>
+<span class="c">		包含的SQL模板，相当于反向LIKE，不同的JDBC驱动的SQL语句不一样，RedKale内置了MySQL、Oracle、Sqlserver的语句</span>
+<span class="c">            &lt;property name=&quot;javax.persistence.contain.sqltemplate&quot; value=&quot;LOCATE(${keystr}, ${column}) &gt; 0&quot;/&gt;</span>
+<span class="c">            &lt;property name=&quot;javax.persistence.notcontain.sqltemplate&quot; value=&quot;LOCATE(${keystr}, ${column}) = 0&quot;/&gt;</span>
+<span class="c">	    --&gt;</span>
         <span class="nt">&lt;/properties&gt;</span>
     <span class="nt">&lt;/persistence-unit&gt;</span>
     <span class="c">&lt;!-- IM消息库 --&gt;</span>
