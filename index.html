@@ -25,45 +25,39 @@
 
         <section class="main-content">
             <h3>
-                <a id="welcome-to-github-pages" class="anchor" href="#" aria-hidden="true"><span class="octicon octicon-link"></span></a>RedKale 介绍</h3>
+                <a id="welcome-to-github-pages" class="anchor" href="#" aria-hidden="true"></a>RedKale 介绍</h3>
 
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;RedKale (中文名: 红菜苔，湖北武汉的一种特产蔬菜) 是基于Java 8全新的微服务框架， 包含HTTP、WebSocket、TCP/UDP、数据序列化、数据缓存、依赖注入等功能。 
-                其功能相当于 Tomcat + Mina + Struts + Spring + Hibernate + RMI + JSON + Memcached 的综合体。 <br/>
+                本框架致力于简化集中式和微服务架构的开发，在增强开发敏捷性的同时保持高性能。<br/>
                 RedKale 有如下主要特点： <br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1、大量使用Java 8新特性（接口默认值、Stream、Lambda、JDk8内置的ASM包） <br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2、提供HTTP服务，同时内置JSON功能与限时缓存功能 <br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3、TCP层完全使用NIO.2，并统一TCP与UDP的接口 <br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4、提供分布式与集中式部署的无缝切换 <br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;5、提供类似JPA功能，并包含数据缓存自动同步与简洁的数据层操作接口 <br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;6、功能强大 但体积不到1.5M，且不依赖任何第三方包 <br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1、大量使用Java 8新特性（接口默认值、Stream、Lambda、JDk8内置的ASM等） <br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2、提供HTTP服务，同时内置JSON功能与限时缓存功能 <br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3、TCP层完全使用NIO.2，并统一TCP与UDP的接口 <br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4、提供分布式与集中式部署的无缝切换 <br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;5、提供类似JPA功能，并包含数据缓存自动同步与简洁的数据层操作接口 <br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;6、可以动态修改已依赖注入的资源。 <br/>
             </p>
 
-            <h3>
-                <a class="anchor" href="#designer-templates" aria-hidden="true"><span class="octicon octicon-link"></span></a>亮点一. 轻量级HTTP</h3>
 
-            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;RedKale 的HTTP是基于异步NIO.2实现的，所提供的HttpResponse的输出接口也是异步的，因此并不遵循JSR 340规范(Servlet 3.1)且也没有实现Jsp规范。 HTTP只提供四个对象：HttpContext、HttpRequest、HttpResponse、HttpServlet。 传统Session则由数据层实现。RedKale提倡http+json接口(无论网站、PC客户端、APP移动端、第三方接口都可使用统一接口)， 因此HTTP层内置了json解析与序列化接口，同时内置http缓存机制。</p>
+            <h3><a class="anchor" href="convert.html" target="_blank" aria-hidden="true">亮点一. 序列化与反序列化</a></h3>
 
-            <h3>
-                <a class="anchor" href="#creating-pages-manually" aria-hidden="true"><span class="octicon octicon-link"></span></a>亮点二. 分布式WebSocket</h3>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Convert包是RedKale内一个独立的组件， 用于数据的序列化与反序列化。包分三块：基本包、JSON包、BSON(Binary Stream Object Notation)包。基本包可以用于扩展其他序列化格式(如: XML)，其JSON性能是其他任何JSON框架不能媲美的，对于非常规的POJO类也提供了方便的自定义接口。BSON用于数据的二进制序列化与反序列化，支持很复杂的泛型数据，是SNCP协议的基础。</p>
 
-            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;RedKale 的WebSocket接口不同于JSR 340(Servlet 3.1)， 除了提供基本的WebSocket功能， 还提供分布式与集中式部署， 当部署多个WebSocket进程时，通过配置文件可以实现WebSocket之间连接信息的数据同步。</p>
 
-            <h3>
-                <a class="anchor" href="#authors-and-contributors" aria-hidden="true"><span class="octicon octicon-link"></span></a>亮点三. SNCP协议</h3>
+            <h3><a class="anchor" href="net.html#net_http" target="_blank" aria-hidden="true">亮点二. 轻量级HTTP</a></h3>
 
-            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;SNCP(Service Node Communicate Protocol)是RedKale独有的协议， 类似RMI与WebService的功能结合，主要用于进程间的数据传输。使用者通过配置文件可以轻易的将Service由本地模式变成远程模式。远程模式的Service使用SNCP协议与其他进程的Service通信。使用者无需对远程通信接口使用类似mina的第三方包自行开发。</p>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;RedKale 的HTTP是基于异步NIO.2实现的，所提供的HttpResponse的输出接口也是异步的，因此并不遵循JSR 340规范(Servlet 3.1)且也没有实现JSP规范。 HTTP只提供四个对象：HttpContext、HttpRequest、HttpResponse、HttpServlet。 传统Session则由数据层实现。RedKale提倡HTTP+JSON接口(无论网站、PC客户端、APP移动端、第三方接口都可使用统一接口)， 因此HTTP层内置了JSON序列化与反序列化接口，同时内置HTTP缓存机制。<br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;RedKale 的<a href="net.html#net_ws" target="_blank">WebSocket服务</a>接口不同于JSR 340(Servlet 3.1)， 除了提供基本的WebSocket功能， 还提供分布式与集中式部署， 当部署多个WebSocket进程时，通过配置文件可以实现WebSocket之间连接信息的数据同步。</p>
 
-            <h3>
-                <a class="anchor" href="#support-or-contact" aria-hidden="true"><span class="octicon octicon-link"></span></a>亮点四. DataSource</h3>
 
-            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;RedKale提供DataSource类对数据层进行操作，其功能类似JPA+Memcached。与JPA相比各有优缺点。 <br/>
-                优点：  <br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1、Datasource中的内存缓存会自动与其他同服务的进程之间同步。  <br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2、简易的查询接口，即时复杂的过滤查询都无需写SQL语句。  <br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3、可以DataSource与业务逻辑层分开， 独立成类似Memcached的内存数据源。  <br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4、读写分离。动态切换数据库连接配置。  <br/>
-                缺点：  <br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1、不提供复杂的关联表操作与查询。 </p>
+            <h3><a class="anchor" href="net.html#net_sncp" target="_blank" aria-hidden="true">亮点三. SNCP协议</a></h3>
+
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;SNCP(Service Node Communicate Protocol)是RedKale独有的协议， 类似RMI与WebService的功能结合，主要用于进程间的数据传输。使用者通过配置文件可以轻易的将Service由<a href="service.html#service_local" target="_blank">本地模式</a>变成<a href="service.html#service_remote" target="_blank">远程模式</a>。<a href="service.html#service_remote" target="_blank">远程模式Service</a>使用SNCP协议与其他进程的Service通信。使用者无需对远程通信接口使用类似Mina的第三方包自行开发。SNCP是RedKale的核心功能，其微服务架构都是基于<a href="service.html#service_local" target="_blank">本地模式Service</a>和<a href="service.html#service_remote" target="_blank">远程模式Service</a>。</p>
+
+
+            <h3><a class="anchor" href="source.html#source_datasource" target="_blank" aria-hidden="true">亮点四. DataSource</a></h3>
+
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;RedKale提供DataSource类对数据层进行操作，其功能类似JPA+Memcached。最大程度的简化数据层的操作，免去SQL/JPQL语句的编写。同时提供过滤查询与JavaBean的结合、读写分离、数据库热切换、本地/远程部署、进程间缓存自动同步等功能。</p>
 
             <footer class="site-footer">
                 <span class="site-footer-owner"><a href="https://github.com/wentch/redkale">RedKale</a> © <a href="https://github.com/wentch">wentch</a> &nbsp;&nbsp;&nbsp;&nbsp;欢迎加入RedKale技术交流QQ群: 527523235</span>

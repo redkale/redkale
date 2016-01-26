@@ -24,11 +24,11 @@
         </section>
 
         <section class="main-content">
-            <h3><a id="source_intro" class="anchor" href="#" aria-hidden="true"><span class="octicon octicon-link"></span></a>Source 组件介绍</h3>
+            <h3><a id="source_intro" class="anchor" href="#" aria-hidden="true"></a>Source 组件介绍</h3>
 
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Source 主要为数据源提供简易的操作接口，使底层的具体数据源(传统数据库、文件系统、内存数据库、Memcached/Redis缓存)对上层是透明的。其提供两种类型的数据源：DataSource 和 CacheSource。DataSource 为数据库或内存数据库，提供类似JPA、Hibernate的接口与功能。CacheSource 为缓存数据提供类似Memcached、Redis的接口和功能。两者也提供了异步接口(基于<a href="service.html#service_remote" target="_blank">远程模式Service</a>)。<br/></p>
 
-            <h3><a id="source_datasource" class="anchor" href="#" aria-hidden="true"><span class="octicon octicon-link"></span></a>DataSource 入门</h3>
+            <h3><a id="source_datasource" class="anchor" href="#" aria-hidden="true"></a>DataSource 入门</h3>
             <p>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;JPA虽然已经提供了简洁成熟的数据库操作接口，但当数据、业务量很庞大的时候就显得捉襟见肘，与JPA相比，DataSource有以下几个特点：<br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1、简易的过滤查询接口，但仅支持简单的表关联查询。 <br/>
@@ -146,7 +146,7 @@
                 </pre></div>
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如上@FilterGroup 的value 必须是[OR]或者[AND]开头，没有标记@FilterGroup的字段等价于标记了@FilterGroup(value = "[AND]")。[AND]、[OR]后面的字符串为GROUP_NAME，默认的GROUP_NAME为空字符串。如上"[OR]a"可以直接使用"[OR]"，有多个[OR]或者[AND]则需要加上不同的NAME。</p>
 
-            <h3><a id="source_cachesource" class="anchor" href="#" aria-hidden="true"><span class="octicon octicon-link"></span></a>CacheSource 入门</h3>
+            <h3><a id="source_cachesource" class="anchor" href="#" aria-hidden="true"></a>CacheSource 入门</h3>
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CacheSource同Memcached类似，像一个带有过期功能地Map容器，存放key-value数据。常见的使用场景就是存放HTTP的Session信息。RedKale把用户会话信息数据当做业务数据处理，而不是接入层的数据。WebSocket的连接态数据也是用CacheSource存储。key为WebSocket的groupid，value为WebSocket服务端节点的IP地址列表。</p>
             <div class="highlight"><pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">UserService</span> <span class="kd">implements</span> <span class="n">Service</span> <span class="o">{</span>
 
@@ -179,7 +179,7 @@
 <span class="o">}</span></pre></div>
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;以上是个简单的范例，用于用户模块存放sessionid。</p>
 
-            <h3><a id="source_confxml" href="#" aria-hidden="true"><span class="octicon octicon-link"></span></a>persistence.xml 配置说明</h3>
+            <h3><a id="source_confxml" href="#" aria-hidden="true"></a>persistence.xml 配置说明</h3>
             <div class="highlight"><pre><span class="c">&lt;!-- 其配置算是标准的JPA配置文件的缩略版 --&gt;</span>
 <span class="nt">&lt;persistence&gt;</span>	
     <span class="c">&lt;!-- 系统基本库 --&gt;</span>

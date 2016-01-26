@@ -24,11 +24,11 @@
         </section>
 
         <section class="main-content">
-            <h3><a id="convert_intro" class="anchor" href="#" aria-hidden="true"><span class="octicon octicon-link"></span></a>Convert 组件介绍</h3>
+            <h3><a id="convert_intro" class="anchor" href="#" aria-hidden="true"></a>Convert 组件介绍</h3>
 
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Convert 是一个比较独立的组件，仅依赖于util包。提供Java对象的序列化与反序列化功能。支持JSON(JavaScript Object Notation)、BSON(Binary Stream Object Notation)两种格式化。 两种格式使用方式完全一样，其性能都大幅度超过其他JSON框架。同时JSON内置于HTTP服务中，BSON也是SNCP协议数据序列化的基础。<br/></p>
 
-            <h3><a id="convert_study" class="anchor" href="#" aria-hidden="true"><span class="octicon octicon-link"></span></a>Convert 快速上手</h3>
+            <h3><a id="convert_study" class="anchor" href="#" aria-hidden="true"></a>Convert 快速上手</h3>
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;本介绍仅以JSON为例(BSON与JSON使用方式雷同)。其操作类主要是JsonConvert，配置类主要是JsonFactory、ConvertColumn。JsonFactory采用同ClassLoader类似的双亲委托方式设计。</br></p>
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;JsonConvert 序列化encode方法：</p>
 
@@ -394,7 +394,7 @@
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;由上可以看出，Convert的自定义配置完全符合面向对象思想，提倡在JavaBean内部去自定义非常规的构造函数或Decode、Encode方法，通过Factory显式配置的方式通常用于非自己定义的数据类(如 java.io.File)。</p>
             <br/>
 
-            <h3><a id="convert_bson_struct" class="anchor" href="#" aria-hidden="true"><span class="octicon octicon-link"></span></a>BSON的协议格式</h3>
+            <h3><a id="convert_bson_struct" class="anchor" href="#" aria-hidden="true"></a>BSON的协议格式</h3>
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;BSON类似Java自带的Serializable， 其格式如下: <br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1). 基本数据类型: 直接转换成byte[] <br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2). SmallString(无特殊字符且长度小于256的字符串): length(1 byte) + byte[](utf8); 通常用于类名、字段名、枚举。 <br/>

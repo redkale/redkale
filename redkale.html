@@ -24,7 +24,7 @@
         </section>
 
         <section class="main-content">
-            <h3><a id="redkale_start" class="anchor" href="#" aria-hidden="true"><span class="octicon octicon-link"></span></a>RedKale 功能</h3>
+            <h3><a id="redkale_start" class="anchor" href="#" aria-hidden="true"></a>RedKale 功能</h3>
 
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;RedKale虽然只有1.xM大小，但是麻雀虽小五脏俱全。既可作为服务器使用，也可当工具包使用。作为独立的工具包提供以下功能：<br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1、convert包提供JSON的序列化和反序列化功能，类似Gson、Jackson。 <br/>
@@ -35,7 +35,7 @@
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;6、ResourceFactory提供轻量级的依赖注入功能， 类似Google Guice。 <br/>
             </p>
 
-            <h3><a id="redkale_server" class="anchor" href="#" aria-hidden="true"><span class="octicon octicon-link"></span></a>RedKale 服务器</h3>
+            <h3><a id="redkale_server" class="anchor" href="#" aria-hidden="true"></a>RedKale 服务器</h3>
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;RedKale作为服务器的目录如下: <br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>bin</b>&nbsp;&nbsp;&nbsp;： 存放启动关闭脚本(start.sh、shutdown.sh、start.bat、shutdown.bat) <br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>conf</b>&nbsp;： 存放服务器所需配置文件:<br/>
@@ -63,7 +63,7 @@
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;6、启动进程本身的监听服务。 <br/>
             </p>
 
-            <h3><a id="redkale_dev" class="anchor" href="#" aria-hidden="true"><span class="octicon octicon-link"></span></a>基于RedKale的开发与调试</h3>
+            <h3><a id="redkale_dev" class="anchor" href="#" aria-hidden="true"></a>基于RedKale的开发与调试</h3>
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;基于RedKale创建一个Java应用程序工程(即使是Web项目也不要创建Java-Web工程)，引用redkale.jar 并创建RedKale所需的几个目录和文件。一个普通的Web项目只需要编写业务层的Service和接入层的HttpServlet的代码。数据库DataSource通过配置文件进行设置。<br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;编写完代码可以通过启动脚本进行调试， 也可以在IDE设置项目的主类为 org.redkale.boot.Application 或者工程内定义主类进行启动调试: 
             </p>
@@ -83,7 +83,7 @@
     <span class="o">}</span></pre></div>
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Application.singleton 运行流程与通过bin脚本启动的流程基本一致，区别在于singleton运行时不会启动Server和Application自身的服务监听。RedKale提倡接入层(Servlet)与业务层(Service)分开，Service在代码上不能依赖于Servlet，因此调试Service自身逻辑时不需要启动接入层服务(类似WebSocket依赖Servlet的功能除外)。 </p>
 
-            <h3><a id="redkale_deploy" class="anchor" href="#" aria-hidden="true"><span class="octicon octicon-link"></span></a>RedKale 架构部署</h3>
+            <h3><a id="redkale_deploy" class="anchor" href="#" aria-hidden="true"></a>RedKale 架构部署</h3>
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;通常一个系统会分为三层：接入层、业务层、数据层。对应到RedKale的组件是： Servlet、Service、Source。大部分系统提供的是HTTP服务，为了方便演示RedKale从集中式到分布式的变化，以一个简单的HTTP服务作为范例。<br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;开发一个极简单的小论坛系统。包含三个模块： <br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;用户模块 &nbsp;&nbsp;&nbsp;UserSerivice: &nbsp;&nbsp;&nbsp;&nbsp;提供用户注册、登录、更新资料等功能， UserServlet作为接入层。<br/>
@@ -428,7 +428,7 @@
             </p>
             <br/>
 
-            <h3><a id="redkale_confxml" href="#" aria-hidden="true"><span class="octicon octicon-link"></span></a>appplication.xml 配置说明</h3>
+            <h3><a id="redkale_confxml" href="#" aria-hidden="true"></a>appplication.xml 配置说明</h3>
             <div class="highlight"><pre><span class="cp">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;</span>
 <span class="c">&lt;!-- </span>
 <span class="c">    文件说明:</span>

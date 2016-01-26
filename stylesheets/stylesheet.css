@@ -16,6 +16,10 @@ a {
     text-decoration: none;
 }
 
+.anchor {
+    color: #90139E;
+}
+
 a:hover {
     text-decoration: none;
 }

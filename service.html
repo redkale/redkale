@@ -24,7 +24,7 @@
         </section>
 
         <section class="main-content">
-            <h3><a id="service_intro" class="anchor" href="#" aria-hidden="true"><span class="octicon octicon-link"></span></a>Service 组件介绍</h3>
+            <h3><a id="service_intro" class="anchor" href="#" aria-hidden="true"></a>Service 组件介绍</h3>
 
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Service 是RedKale最核心的组件，依赖于Convert、SNCP协议、Resource依赖注入。Service主要处理业务逻辑和操作数据层，是微服务架构中的单一原子服务。每一个Service实例分两种模式: <b>本地模式</b>和<b>远程模式</b>。其模式由 conf/application.xml 文件来配置。使用者在调用过程中通常不需要区分当前Service实例是哪种模式。<br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 为了能确保本地模式与远程模式自由切换，对Service的实现类有一定的约束: <br/>
@@ -33,7 +33,7 @@
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; RedKale进程启动时扫描可加载的Service实现类，根据配置文件配置的模式采用JDK 8内置的ASM技术动态生成相应的Service临时类进行实例化，并注册到ResourceFactory同其他Service、Servlet依赖注入。
             </p>
 
-            <h3><a id="service_local" class="anchor" href="#" aria-hidden="true"><span class="octicon octicon-link"></span></a>Service 本地模式</h3>
+            <h3><a id="service_local" class="anchor" href="#" aria-hidden="true"></a>Service 本地模式</h3>
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;以一个简单的UserService类范例来说明动态生成的两种模式临时类。UserService提供查询用户、注册、登陆、修改用户名功能:</br></p>
 
             <div class="highlight"><pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">UserService</span> <span class="kd">implements</span> <span class="n">Service</span> <span class="o">{</span>
@@ -171,7 +171,7 @@
                 </pre></div>
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如上配置，若当前进程所在IP是192.168.10.111，则UserService采用本地模式加载。执行register方法时， 先本地执行超类的register，然后远程执行同组的进程(192.168.10.112、192.168.10.113)，最后远程执行异组的进程(192.168.20.121、192.168.20.122、192.168.30.131、192.168.30.132)。若当前进程所在IP是192.168.10.100，则UserService采用远程模式加载。需要注意的一点是，每个IP所在的服务必须开通SNCP协议服务以便能接收远程的调用请求。</p>
 
-            <h3><a id="service_remote" class="anchor" href="#" aria-hidden="true"><span class="octicon octicon-link"></span></a>Service 远程模式</h3>
+            <h3><a id="service_remote" class="anchor" href="#" aria-hidden="true"></a>Service 远程模式</h3>
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;动态生成的远程模式UserService：</p>
             <div class="highlight"><pre><span class="nd">@Resource</span><span class="o">(</span><span class="n">name</span> <span class="o">=</span> <span class="s">&quot;&quot;</span><span class="o">)</span>
 <span class="nd">@SncpDyn</span><span class="o">(</span><span class="n">remote</span> <span class="o">=</span> <span class="kc">true</span><span class="o">)</span>
@@ -284,7 +284,7 @@
                 </pre></div>
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;生成远程模式Service时发现参数带有@DynCall注解的方法，在远程调用返回结果时会进行回调处理。</p>
 
-            <h3><a id="service_async" class="anchor" href="#" aria-hidden="true"><span class="octicon octicon-link"></span></a>Service 异步调用</h3>
+            <h3><a id="service_async" class="anchor" href="#" aria-hidden="true"></a>Service 异步调用</h3>
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;远程模式不仅对@DynCall注解进行处理，而且对方法含有 <b>java.nio.channels.CompletionHandler</b> 的参数也进行异步特殊处理。异步调用对远程模式非常有意义，可以减少同步方式对当前线程的占用时间。也给Source组件的异步调用提供了基础。</p>
             <div class="highlight"><pre>    <span class="nd">@Override</span>
     <span class="kd">public</span> <span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="kt">void</span> <span class="nf">update</span><span class="o">(</span><span class="kd">final</span> <span class="n">CompletionHandler</span><span class="o">&lt;</span><span class="n">Void</span><span class="o">,</span> <span class="n">T</span><span class="o">[]&gt;</span> <span class="n">handler</span><span class="o">,</span> <span class="nd">@DynAttachment</span> <span class="kd">final</span> <span class="n">T</span><span class="o">...</span> <span class="n">values</span><span class="o">)</span> <span class="o">{</span>
