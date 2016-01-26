@@ -273,7 +273,8 @@
     <span class="o">}</span>
 <span class="o">}</span>
                 </pre></div>
-            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;通常JavaBean类默认有个public空参数的构造函数，因此大部分情况下不要自定义Creator，其实只要不是private的空参数构造函数Convert都能自动支持(其他的框架都仅支持public的构造函数)，只有仅含private的构造函数才需要自定义Creator。带参数的构造函数就需要标记@java.beans.ConstructorProperties，当然若使用Java 8的新特性，带上 -parameters 编译项进行编译的类连@ConstructorProperties都可以省掉，Convert会自动匹配参数名动态生成Creator。</p>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;通常JavaBean类默认有个public空参数的构造函数，因此大部分情况下不要自定义Creator，其实只要不是private的空参数构造函数Convert都能自动支持(其他的框架都仅支持public的构造函数)，只有仅含private的构造函数才需要自定义Creator。带参数的构造函数就需要标记@java.beans.ConstructorProperties，常见于Immutable Object。<br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>[小技巧]</b>: 若使用Java 8编译项的新特性，带上 -parameters 编译项进行编译的类，带参数的构造函数可以省去@ConstructorProperties注解，Convert会自动匹配参数名动态生成Creator。</p>
             <br/>
 
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Convert 支持自定义Decode、Encode。</p>
