@@ -108,16 +108,16 @@ public interface Range<E extends Comparable> extends java.io.Serializable, Predi
         }
     }
 
-    public static final class IntegerRange implements Range<Integer> {
+    public static final class IntRange implements Range<Integer> {
 
         private Integer min = Integer.MIN_VALUE;
 
         private Integer max = Integer.MAX_VALUE;
 
-        public IntegerRange() {
+        public IntRange() {
         }
 
-        public IntegerRange(Integer min, Integer max) {
+        public IntRange(Integer min, Integer max) {
             if (min != null) this.min = min;
             if (max != null) this.max = max;
         }
