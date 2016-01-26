@@ -34,7 +34,7 @@ public class CacheTestBean {
         Attribute idattr = Attribute.create(CacheTestBean.class, "pkgid");
         Attribute nameattr = Attribute.create(CacheTestBean.class, "name");
         Attribute priceattr = Attribute.create(CacheTestBean.class, "price");
-        EntityCache<CacheTestBean> cache = new EntityCache(EntityInfo.load(CacheTestBean.class, 0, true, null));
+        EntityCache<CacheTestBean> cache = new EntityCache(EntityInfo.load(CacheTestBean.class, 0, true,new Properties(), null));
         cache.fullLoad(list);
 
         System.out.println(cache.queryColumnMap("pkgid", FilterFunc.COUNT, "name", null));
