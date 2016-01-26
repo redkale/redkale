@@ -20,7 +20,9 @@ import javax.sql.*;
 
 /**
  *
- * <p> 详情见: http://www.redkale.org
+ * <p>
+ * 详情见: http://www.redkale.org
+ *
  * @author zhangjx
  */
 public class JDBCPoolSource {
@@ -88,6 +90,14 @@ public class JDBCPoolSource {
         return source != null && source.getClass().getName().contains(".mysql.");
     }
 
+    public boolean isOracle() {
+        return source != null && source.getClass().getName().contains("oracle.");
+    }
+
+    public boolean isSqlserver() {
+        return source != null && source.getClass().getName().contains(".sqlserver.");
+    }
+    
     private void watch() throws IOException {
         if (dataSource.conf == null || dataSource.name == null) return;
         final String file = dataSource.conf.getFile();

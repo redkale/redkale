@@ -7,7 +7,9 @@ package org.redkale.source;
 
 /**
  *
- * <p> 详情见: http://www.redkale.org
+ * <p>
+ * 详情见: http://www.redkale.org
+ *
  * @author zhangjx
  */
 public enum FilterExpress {
@@ -18,10 +20,17 @@ public enum FilterExpress {
     LESSTHAN("<"),
     GREATERTHANOREQUALTO(">="),
     LESSTHANOREQUALTO("<="),
+    
     LIKE("LIKE"),
     NOTLIKE("NOT LIKE"),
-    IGNORECASELIKE("LIKE"),  //不区分大小写的 LIKE
+    IGNORECASELIKE("LIKE"), //不区分大小写的 LIKE
     IGNORECASENOTLIKE("NOT LIKE"), //不区分大小写的 NOT LIKE
+
+    CONTAIN("CONTAIN"), //包含， 相当于反向LIKE 
+    NOTCONTAIN("NOT CONTAIN"), //不包含， 相当于反向LIKE 
+    IGNORECASECONTAIN("CONTAIN"), //不区分大小写的 CONTAIN
+    IGNORECASENOTCONTAIN("NOT CONTAIN"), //不区分大小写的 NOT CONTAIN
+
     BETWEEN("BETWEEN"),
     NOTBETWEEN("NOT BETWEEN"),
     IN("IN"),

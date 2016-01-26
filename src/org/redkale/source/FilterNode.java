@@ -217,9 +217,14 @@ public class FilterNode {
         if (express == ISNULL || express == ISNOTNULL) {
             return new StringBuilder().append(info.getSQLColumn(talis, column)).append(' ').append(express.value());
         }
-        final CharSequence val = formatToString(express, getValue());
+        CharSequence val = formatToString(express, getValue());
         if (val == null) return null;
         StringBuilder sb = new StringBuilder(32);
+        if (express == CONTAIN) return info.containSQL.replace("${column}", info.getSQLColumn(talis, column)).replace("${keystr}", val);
+        if (express == IGNORECASECONTAIN) return info.containSQL.replace("${column}", "LOWER(" + info.getSQLColumn(talis, column) + ")").replace("${keystr}", val);
+        if (express == NOTCONTAIN) return info.notcontainSQL.replace("${column}", info.getSQLColumn(talis, column)).replace("${keystr}", val);
+        if (express == IGNORECASENOTCONTAIN) return info.notcontainSQL.replace("${column}", "LOWER(" + info.getSQLColumn(talis, column) + ")").replace("${keystr}", val);
+
         if (express == IGNORECASELIKE || express == IGNORECASENOTLIKE) {
             sb.append("LOWER(").append(info.getSQLColumn(talis, column)).append(')');
         } else {
@@ -594,6 +599,64 @@ public class FilterNode {
                         return "LOWER(" + field + ") " + express.value() + ' ' + formatToString(valstr2);
                     }
                 };
+            case CONTAIN:
+                return new Predicate<T>() {
+
+                    @Override
+                    public boolean test(T t) {
+                        Object rs = attr.get(t);
+                        return rs != null && val.toString().contains(rs.toString());
+                    }
+
+                    @Override
+                    public String toString() {
+                        return "" + formatToString(val) + ' ' + express.value() + ' ' + field;
+                    }
+                };
+            case IGNORECASECONTAIN:
+                final String valstr3 = val.toString().toLowerCase();
+                return new Predicate<T>() {
+
+                    @Override
+                    public boolean test(T t) {
+                        Object rs = attr.get(t);
+                        return rs != null && valstr3.contains(rs.toString().toLowerCase());
+                    }
+
+                    @Override
+                    public String toString() {
+                        return "" + formatToString(valstr3) + express.value() + ' ' + "LOWER(" + field + ") ";
+                    }
+                };
+            case NOTCONTAIN:
+                return new Predicate<T>() {
+
+                    @Override
+                    public boolean test(T t) {
+                        Object rs = attr.get(t);
+                        return rs == null || !val.toString().contains(rs.toString());
+                    }
+
+                    @Override
+                    public String toString() {
+                        return "" + formatToString(val) + ' ' + express.value() + ' ' + field;
+                    }
+                };
+            case IGNORECASENOTCONTAIN:
+                final String valstr4 = val.toString().toLowerCase();
+                return new Predicate<T>() {
+
+                    @Override
+                    public boolean test(T t) {
+                        Object rs = attr.get(t);
+                        return rs == null || !valstr4.contains(rs.toString().toLowerCase());
+                    }
+
+                    @Override
+                    public String toString() {
+                        return "" + formatToString(valstr4) + express.value() + ' ' + "LOWER(" + field + ") ";
+                    }
+                };
             case BETWEEN:
             case NOTBETWEEN:
                 Range range = (Range) val;
@@ -844,7 +907,8 @@ public class FilterNode {
             if (express == ISNULL || express == ISNOTNULL) {
                 sb.append(col).append(' ').append(express.value());
             } else if (ev != null) {
-                sb.append((express == IGNORECASELIKE || express == IGNORECASENOTLIKE) ? ("LOWER(" + col + ')') : col).append(' ').append(express.value()).append(' ').append(formatToString(express, ev));
+                boolean lower = (express == IGNORECASELIKE || express == IGNORECASENOTLIKE || express == IGNORECASECONTAIN || express == IGNORECASENOTCONTAIN);
+                sb.append(lower ? ("LOWER(" + col + ')') : col).append(' ').append(express.value()).append(' ').append(formatToString(express, ev));
             }
         }
         return sb;
@@ -863,6 +927,8 @@ public class FilterNode {
                 value = "%" + value + '%';
             } else if (express == IGNORECASELIKE || express == IGNORECASENOTLIKE) {
                 value = "%" + value.toString().toLowerCase() + '%';
+            } else if (express == IGNORECASECONTAIN || express == IGNORECASENOTCONTAIN) {
+                value = value.toString().toLowerCase();
             }
             return new StringBuilder().append('\'').append(value.toString().replace("'", "\\'")).append('\'');
         } else if (value instanceof Range) {

@@ -71,6 +71,8 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
     @Resource(name = "$")
     private DataCacheListener cacheListener;
 
+    private final Properties props = new Properties();
+
     private final Function<Class, List> fullloader = (t) -> querySheet(false, false, t, null, null, (FilterNode) null).list(true);
 
     public DataDefaultSource() throws IOException {
@@ -119,6 +121,14 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
         this.readPool = new JDBCPoolSource(this, "read", readprop);
         this.writePool = new JDBCPoolSource(this, "write", writeprop);
         this.mysql = this.writePool.isMysql();
+        if (this.readPool.isOracle()) {
+            this.props.setProperty("contain-sql-template", "INSTR(${keystr}, ${column}) > 0");
+            this.props.setProperty("notcontain-sql-template", "INSTR(${keystr}, ${column}) = 0");
+        } else if (this.readPool.isSqlserver()) {
+            this.props.setProperty("contain-sql-template", "CHARINDEX(${column}, ${keystr}) > 0");
+            this.props.setProperty("notcontain-sql-template", "CHARINDEX(${column}, ${keystr}) = 0");
+        }
+        this.props.putAll(readprop);
         this.cacheForbidden = "NONE".equalsIgnoreCase(readprop.getProperty("shared-cache-mode"));
     }
 
@@ -128,6 +138,14 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
         this.readPool = new JDBCPoolSource(this, "read", readprop);
         this.writePool = new JDBCPoolSource(this, "write", writeprop);
         this.mysql = this.writePool.isMysql();
+        if (this.readPool.isOracle()) {
+            this.props.setProperty("contain-sql-template", "INSTR(${keystr}, ${column}) > 0");
+            this.props.setProperty("notcontain-sql-template", "INSTR(${keystr}, ${column}) = 0");
+        } else if (this.readPool.isSqlserver()) {
+            this.props.setProperty("contain-sql-template", "CHARINDEX(${column}, ${keystr}) > 0");
+            this.props.setProperty("notcontain-sql-template", "CHARINDEX(${column}, ${keystr}) = 0");
+        }
+        this.props.putAll(readprop);
         this.cacheForbidden = "NONE".equalsIgnoreCase(readprop.getProperty("shared-cache-mode"));
     }
 
@@ -288,7 +306,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
     }
 
     private <T> EntityInfo<T> loadEntityInfo(Class<T> clazz) {
-        return EntityInfo.load(clazz, this.nodeid, this.cacheForbidden, fullloader);
+        return EntityInfo.load(clazz, this.nodeid, this.cacheForbidden, this.props, fullloader);
     }
 
     /**

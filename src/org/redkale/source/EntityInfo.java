@@ -57,6 +57,10 @@ public final class EntityInfo<T> {
 
     private final Map<String, Attribute<T, Serializable>> updateAttributeMap = new HashMap<>();
 
+    final String containSQL; //用于反向LIKE使用
+
+    final String notcontainSQL; //用于反向LIKE使用
+
     final String querySQL;
 
     private final Attribute<T, Serializable>[] queryAttributes; //数据库中所有字段
@@ -91,7 +95,7 @@ public final class EntityInfo<T> {
     final int allocationSize;
     //------------------------------------------------------------
 
-    public static <T> EntityInfo<T> load(Class<T> clazz, final int nodeid, final boolean cacheForbidden,
+    public static <T> EntityInfo<T> load(Class<T> clazz, final int nodeid, final boolean cacheForbidden, final Properties conf,
             Function<Class, List> fullloader) {
         EntityInfo rs = entityInfos.get(clazz);
         if (rs != null) return rs;
@@ -99,7 +103,7 @@ public final class EntityInfo<T> {
             rs = entityInfos.get(clazz);
             if (rs == null) {
                 if (nodeid < 0) throw new IllegalArgumentException("nodeid(" + nodeid + ") is illegal");
-                rs = new EntityInfo(clazz, nodeid, cacheForbidden);
+                rs = new EntityInfo(clazz, nodeid, cacheForbidden, conf);
                 entityInfos.put(clazz, rs);
                 AutoLoad auto = clazz.getAnnotation(AutoLoad.class);
                 if (rs.cache != null && auto != null && auto.value()) {
@@ -115,7 +119,7 @@ public final class EntityInfo<T> {
         return entityInfos.get(clazz);
     }
 
-    private EntityInfo(Class<T> type, int nodeid, final boolean cacheForbidden) {
+    private EntityInfo(Class<T> type, int nodeid, final boolean cacheForbidden, Properties conf) {
         this.type = type;
         //---------------------------------------------
         this.nodeid = nodeid >= 0 ? nodeid : 0;
@@ -239,6 +243,9 @@ public final class EntityInfo<T> {
         } else {
             this.cache = null;
         }
+        if (conf == null) conf = new Properties();
+        this.containSQL = conf.getProperty("contain-sql-template", "LOCATE(${keystr}, ${column}) > 0");
+        this.notcontainSQL = conf.getProperty("notcontain-sql-template", "LOCATE(${keystr}, ${column}) = 0");
     }
 
     public void createPrimaryValue(T src) {
