@@ -146,10 +146,38 @@
                 </pre></div>
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如上@FilterGroup 的value 必须是[OR]或者[AND]开头，没有标记@FilterGroup的字段等价于标记了@FilterGroup(value = "[AND]")。[AND]、[OR]后面的字符串为GROUP_NAME，默认的GROUP_NAME为空字符串。如上"[OR]a"可以直接使用"[OR]"，有多个[OR]或者[AND]则需要加上不同的NAME。</p>
 
-            <p>未完待续…… <br/>
-            </p>
-
             <h3><a id="source_cachesource" class="anchor" href="#" aria-hidden="true"><span class="octicon octicon-link"></span></a>CacheSource 入门</h3>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CacheSource同Memcached类似，像一个带有过期功能地Map容器，存放key-value数据。常见的使用场景就是存放HTTP的Session信息。RedKale把用户会话信息数据当做业务数据处理，而不是接入层的数据。WebSocket的连接态数据也是用CacheSource存储。key为WebSocket的groupid，value为WebSocket服务端节点的IP地址列表。</p>
+            <div class="highlight"><pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">UserService</span> <span class="kd">implements</span> <span class="n">Service</span> <span class="o">{</span>
+
+    <span class="c1">//用户简单信息缓存</span>
+    <span class="kd">private</span> <span class="kd">final</span> <span class="n">Map</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">,</span> <span class="n">UserInfo</span><span class="o">&gt;</span> <span class="n">users</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ConcurrentHashMap</span><span class="o">&lt;&gt;();</span>
+
+    <span class="c1">//使用CacheSource必须要指明泛型</span>
+    <span class="nd">@Resource</span><span class="o">(</span><span class="n">name</span> <span class="o">=</span> <span class="s">&quot;usersessions&quot;</span><span class="o">)</span>
+    <span class="kd">protected</span> <span class="n">CacheSource</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">Integer</span><span class="o">&gt;</span> <span class="n">sessions</span><span class="o">;</span>
+
+    <span class="c1">//登录</span>
+    <span class="kd">public</span> <span class="n">RetResult</span><span class="o">&lt;</span><span class="n">UserInfo</span><span class="o">&gt;</span> <span class="nf">login</span><span class="o">(</span><span class="n">LoginBean</span> <span class="n">bean</span><span class="o">)</span> <span class="o">{</span> <span class="c1">//bean.sessionid 在接入层进行赋值</span>
+        <span class="n">UserInfo</span> <span class="n">user</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
+        <span class="c1">// 登陆逻辑 user = ...</span>
+        <span class="n">users</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="n">user</span><span class="o">.</span><span class="na">getUserid</span><span class="o">(),</span> <span class="n">user</span><span class="o">);</span>
+        <span class="n">sessions</span><span class="o">.</span><span class="na">set</span><span class="o">(</span><span class="mi">600</span><span class="o">,</span> <span class="n">bean</span><span class="o">.</span><span class="na">getSessionid</span><span class="o">(),</span> <span class="n">user</span><span class="o">.</span><span class="na">getUserid</span><span class="o">());</span> <span class="c1">//session过期时间设置为10分钟</span>
+        <span class="k">return</span> <span class="k">new</span> <span class="n">RetResult</span><span class="o">&lt;&gt;(</span><span class="n">user</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="c1">//获取当前用户信息</span>
+    <span class="kd">public</span> <span class="n">UserInfo</span> <span class="nf">current</span><span class="o">(</span><span class="n">String</span> <span class="n">sessionid</span><span class="o">)</span> <span class="o">{</span> <span class="c1">//给HTTP的BaseServlet用</span>
+        <span class="n">Integer</span> <span class="n">userid</span> <span class="o">=</span> <span class="n">sessions</span><span class="o">.</span><span class="na">getAndRefresh</span><span class="o">(</span><span class="n">sessionid</span><span class="o">);</span>
+        <span class="k">return</span> <span class="n">userid</span> <span class="o">==</span> <span class="kc">null</span> <span class="o">?</span> <span class="kc">null</span> <span class="o">:</span> <span class="n">users</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="n">userid</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="c1">//注销</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">logout</span><span class="o">(</span><span class="n">String</span> <span class="n">sessionid</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">sessions</span><span class="o">.</span><span class="na">remove</span><span class="o">(</span><span class="n">sessionid</span><span class="o">);</span>
+    <span class="o">}</span>
+<span class="o">}</span></pre></div>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;以上是个简单的范例，用于用户模块存放sessionid。</p>
 
             <h3><a id="source_confxml" href="#" aria-hidden="true"><span class="octicon octicon-link"></span></a>persistence.xml 配置说明</h3>
             <div class="highlight"><pre><span class="c">&lt;!-- 其配置算是标准的JPA配置文件的缩略版 --&gt;</span>
