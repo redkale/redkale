@@ -55,14 +55,17 @@ public class JDBCPoolSource {
 
     private String password;
 
+    final Properties props;
+
     public JDBCPoolSource(DataDefaultSource source, String stype, Properties prop) {
         this.dataSource = source;
         this.stype = stype;
+        this.props = prop;
         this.source = createDataSource(prop);
         this.url = prop.getProperty(JDBC_URL);
         this.user = prop.getProperty(JDBC_USER);
         this.password = prop.getProperty(JDBC_PWD);
-        this.max = Integer.decode(prop.getProperty(JDBC_CONNECTIONMAX, "" + Runtime.getRuntime().availableProcessors() * 16));
+        this.max = Integer.decode(prop.getProperty(JDBC_CONNECTIONSMAX, "" + Runtime.getRuntime().availableProcessors() * 16));
         this.queue = new ArrayBlockingQueue<>(this.max);
         this.listener = new ConnectionEventListener() {
 
@@ -79,6 +82,14 @@ public class JDBCPoolSource {
                 dataSource.logger.log(Level.WARNING, "connectionErronOccurred  [" + event.getSQLException().getSQLState() + "]", event.getSQLException());
             }
         };
+        if (this.isOracle()) {
+            this.props.setProperty(JDBC_CONTAIN_SQLTEMPLATE, "INSTR(${keystr}, ${column}) > 0");
+            this.props.setProperty(JDBC_NOTCONTAIN_SQLTEMPLATE, "INSTR(${keystr}, ${column}) = 0");
+        } else if (this.isSqlserver()) {
+            this.props.setProperty(JDBC_CONTAIN_SQLTEMPLATE, "CHARINDEX(${column}, ${keystr}) > 0");
+            this.props.setProperty(JDBC_NOTCONTAIN_SQLTEMPLATE, "CHARINDEX(${column}, ${keystr}) = 0");
+        }
+
         try {
             this.watch();
         } catch (Exception e) {
@@ -86,18 +97,18 @@ public class JDBCPoolSource {
         }
     }
 
-    public boolean isMysql() {
+    final boolean isMysql() {
         return source != null && source.getClass().getName().contains(".mysql.");
     }
 
-    public boolean isOracle() {
+    final boolean isOracle() {
         return source != null && source.getClass().getName().contains("oracle.");
     }
 
-    public boolean isSqlserver() {
+    final boolean isSqlserver() {
         return source != null && source.getClass().getName().contains(".sqlserver.");
     }
-    
+
     private void watch() throws IOException {
         if (dataSource.conf == null || dataSource.name == null) return;
         final String file = dataSource.conf.getFile();

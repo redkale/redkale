@@ -32,7 +32,11 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
 
     public static final String DATASOURCE_CONFPATH = "DATASOURCE_CONFPATH";
 
-    static final String JDBC_CONNECTIONMAX = "javax.persistence.connection.limit";
+    static final String JDBC_CONNECTIONSMAX = "javax.persistence.connections.limit";
+
+    static final String JDBC_CONTAIN_SQLTEMPLATE = "javax.persistence.contain.sqltemplate";
+
+    static final String JDBC_NOTCONTAIN_SQLTEMPLATE = "javax.persistence.notcontain.sqltemplate";
 
     static final String JDBC_URL = "javax.persistence.jdbc.url";
 
@@ -56,8 +60,6 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
 
     final boolean cacheForbidden;
 
-    private final boolean mysql;
-
     private final JDBCPoolSource readPool;
 
     private final JDBCPoolSource writePool;
@@ -70,8 +72,6 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
 
     @Resource(name = "$")
     private DataCacheListener cacheListener;
-
-    private final Properties props = new Properties();
 
     private final Function<Class, List> fullloader = (t) -> querySheet(false, false, t, null, null, (FilterNode) null).list(true);
 
@@ -120,15 +120,6 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
         this.conf = url;
         this.readPool = new JDBCPoolSource(this, "read", readprop);
         this.writePool = new JDBCPoolSource(this, "write", writeprop);
-        this.mysql = this.writePool.isMysql();
-        if (this.readPool.isOracle()) {
-            this.props.setProperty("contain-sql-template", "INSTR(${keystr}, ${column}) > 0");
-            this.props.setProperty("notcontain-sql-template", "INSTR(${keystr}, ${column}) = 0");
-        } else if (this.readPool.isSqlserver()) {
-            this.props.setProperty("contain-sql-template", "CHARINDEX(${column}, ${keystr}) > 0");
-            this.props.setProperty("notcontain-sql-template", "CHARINDEX(${column}, ${keystr}) = 0");
-        }
-        this.props.putAll(readprop);
         this.cacheForbidden = "NONE".equalsIgnoreCase(readprop.getProperty("shared-cache-mode"));
     }
 
@@ -137,15 +128,6 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
         this.conf = null;
         this.readPool = new JDBCPoolSource(this, "read", readprop);
         this.writePool = new JDBCPoolSource(this, "write", writeprop);
-        this.mysql = this.writePool.isMysql();
-        if (this.readPool.isOracle()) {
-            this.props.setProperty("contain-sql-template", "INSTR(${keystr}, ${column}) > 0");
-            this.props.setProperty("notcontain-sql-template", "INSTR(${keystr}, ${column}) = 0");
-        } else if (this.readPool.isSqlserver()) {
-            this.props.setProperty("contain-sql-template", "CHARINDEX(${column}, ${keystr}) > 0");
-            this.props.setProperty("notcontain-sql-template", "CHARINDEX(${column}, ${keystr}) = 0");
-        }
-        this.props.putAll(readprop);
         this.cacheForbidden = "NONE".equalsIgnoreCase(readprop.getProperty("shared-cache-mode"));
     }
 
@@ -306,7 +288,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
     }
 
     private <T> EntityInfo<T> loadEntityInfo(Class<T> clazz) {
-        return EntityInfo.load(clazz, this.nodeid, this.cacheForbidden, this.props, fullloader);
+        return EntityInfo.load(clazz, this.nodeid, this.cacheForbidden, this.readPool.props, fullloader);
     }
 
     /**
@@ -610,7 +592,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
                 Map<Class, String> joinTabalis = node.getJoinTabalis();
                 CharSequence join = node.createSQLJoin(this, joinTabalis, info);
                 CharSequence where = node.createSQLExpress(info, joinTabalis);
-                String sql = "DELETE " + (mysql ? "a" : "") + " FROM " + info.getTable() + " a" + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
+                String sql = "DELETE " + (this.readPool.isMysql() ? "a" : "") + " FROM " + info.getTable() + " a" + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
                 if (debug.get()) logger.finest(info.getType().getSimpleName() + " delete sql=" + sql);
                 final Statement stmt = conn.createStatement();
                 stmt.execute(sql);
