@@ -43,11 +43,14 @@ public final class Utility {
         long fd1 = 0L;
         long fd2 = 0L;
         try {
-            Field safeField = sun.misc.Unsafe.class.getDeclaredField("theUnsafe");
-            safeField.setAccessible(true);
-            usafe = (sun.misc.Unsafe) safeField.get(null);
-            fd1 = usafe.objectFieldOffset(String.class.getDeclaredField("value"));
-            fd2 = usafe.objectFieldOffset(StringBuilder.class.getSuperclass().getDeclaredField("value"));
+            Field f = String.class.getDeclaredField("value");
+            if (f.getType() == char[].class) { //JDK9及以上不再是char[]
+                Field safeField = sun.misc.Unsafe.class.getDeclaredField("theUnsafe");
+                safeField.setAccessible(true);
+                usafe = (sun.misc.Unsafe) safeField.get(null);
+                fd1 = usafe.objectFieldOffset(f);
+                fd2 = usafe.objectFieldOffset(StringBuilder.class.getSuperclass().getDeclaredField("value"));
+            }
         } catch (Exception e) {
             throw new RuntimeException(e); //不可能会发生
         }
@@ -313,6 +316,7 @@ public final class Utility {
 
     public static byte[] encodeUTF8(final String value) {
         if (value == null) return new byte[0];
+        if (UNSAFE == null) return encodeUTF8(value.toCharArray());
         return encodeUTF8((char[]) UNSAFE.getObject(value, strvaloffset));
     }
 
@@ -354,11 +358,15 @@ public final class Utility {
     }
 
     public static char[] charArray(String value) {
-        return value == null ? null : (char[]) UNSAFE.getObject(value, strvaloffset);
+        if (value == null) return null;
+        if (UNSAFE == null) return value.toCharArray();
+        return (char[]) UNSAFE.getObject(value, strvaloffset);
     }
 
     public static char[] charArray(StringBuilder value) {
-        return value == null ? null : (char[]) UNSAFE.getObject(value, sbvaloffset);
+        if (value == null) return null;
+        if (UNSAFE == null) return value.toString().toCharArray();
+        return (char[]) UNSAFE.getObject(value, sbvaloffset);
     }
 
     public static ByteBuffer encodeUTF8(final ByteBuffer buffer, final char[] array) {
@@ -371,6 +379,7 @@ public final class Utility {
 
     public static int encodeUTF8Length(String value) {
         if (value == null) return -1;
+        if (UNSAFE == null) return encodeUTF8Length(value.toCharArray());
         return encodeUTF8Length((char[]) UNSAFE.getObject(value, strvaloffset));
     }
 
