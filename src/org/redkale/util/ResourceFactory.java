@@ -438,6 +438,7 @@ public final class ResourceFactory {
         }
     }
 
+    @FunctionalInterface
     public static interface ResourceLoader {
 
         public void load(ResourceFactory factory, Object src, String resourceName, Field field, Object attachment);
