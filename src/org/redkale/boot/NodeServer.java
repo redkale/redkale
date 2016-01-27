@@ -161,14 +161,14 @@ public abstract class NodeServer {
     private void initResource() {
         final NodeServer self = this;
         //---------------------------------------------------------------------------------------------
-        final ResourceFactory regFactory = application.getResourceFactory();
+        final ResourceFactory appResFactory = application.getResourceFactory();
         factory.add(DataSource.class, (ResourceFactory rf, final Object src, String resourceName, Field field, final Object attachment) -> {
             try {
                 if (field.getAnnotation(Resource.class) == null) return;
                 if ((src instanceof Service) && Sncp.isRemote((Service) src)) return; //远程模式不得注入 DataSource
                 DataSource source = new DataDefaultSource(resourceName);
                 application.dataSources.add(source);
-                regFactory.register(resourceName, DataSource.class, source);
+                appResFactory.register(resourceName, DataSource.class, source);
 
                 SncpClient client = null;
                 Transport sameGroupTransport = null;
@@ -190,8 +190,8 @@ public abstract class NodeServer {
                 }
                 final InetSocketAddress sncpAddr = client == null ? null : client.getClientAddress();
                 if ((src instanceof DataSource) && sncpAddr != null && factory.find(resourceName, DataCacheListener.class) == null) { //只有DataSourceService 才能赋值 DataCacheListener
-                    Service cacheListenerService = Sncp.createLocalService(resourceName, getExecutor(), DataCacheListenerService.class, sncpAddr, sameGroupTransport, diffGroupTransports);
-                    regFactory.register(resourceName, DataCacheListener.class, cacheListenerService);
+                    Service cacheListenerService = Sncp.createLocalService(resourceName, getExecutor(), appResFactory, DataCacheListenerService.class, sncpAddr, sameGroupTransport, diffGroupTransports);
+                    appResFactory.register(resourceName, DataCacheListener.class, cacheListenerService);
                     final NodeSncpServer sncpServer = application.findNodeSncpServer(sncpAddr);
                     Set<String> gs = application.findSncpGroups(sameGroupTransport, diffGroupTransports);
                     ServiceWrapper wrapper = new ServiceWrapper(DataCacheListenerService.class, cacheListenerService, resourceName, sncpServer.getSncpGroup(), gs, null);
@@ -231,14 +231,14 @@ public abstract class NodeServer {
                     throw new RuntimeException(src.getClass().getName() + " not found _sameGroupTransport or _diffGroupTransports at " + field, e);
                 }
                 final InetSocketAddress sncpAddr = client == null ? null : client.getClientAddress();
-                final CacheSourceService source = Sncp.createLocalService(resourceName, getExecutor(), CacheSourceService.class, sncpAddr, sameGroupTransport, diffGroupTransports);
+                final CacheSourceService source = Sncp.createLocalService(resourceName, getExecutor(), appResFactory, CacheSourceService.class, sncpAddr, sameGroupTransport, diffGroupTransports);
                 Type genericType = field.getGenericType();
                 ParameterizedType pt = (genericType instanceof ParameterizedType) ? (ParameterizedType) genericType : null;
                 Type valType = pt == null ? null : pt.getActualTypeArguments()[1];
                 source.setStoreType(pt == null ? Serializable.class : (Class) pt.getActualTypeArguments()[0], valType instanceof Class ? (Class) valType : Object.class);
                 if (field.getAnnotation(Transient.class) != null) source.setNeedStore(false); //必须在setStoreType之后
                 application.cacheSources.add(source);
-                regFactory.register(resourceName, CacheSource.class, source);
+                appResFactory.register(resourceName, CacheSource.class, source);
                 field.set(src, source);
                 rf.inject(source, self); //
                 ((Service) source).init(null);
@@ -280,7 +280,7 @@ public abstract class NodeServer {
 
             Service service;
             if (localed) { //本地模式
-                service = Sncp.createLocalService(entry.getName(), getExecutor(), type, this.sncpAddress, loadTransport(this.sncpGroup), loadTransports(groups));
+                service = Sncp.createLocalService(entry.getName(), getExecutor(), application.getResourceFactory(), type, this.sncpAddress, loadTransport(this.sncpGroup), loadTransports(groups));
             } else {
                 service = Sncp.createRemoteService(entry.getName(), getExecutor(), type, this.sncpAddress, loadTransport(groups));
             }
@@ -355,7 +355,7 @@ public abstract class NodeServer {
             flag = true;
         }
         final String groupid = sb.toString();
-        Transport transport = application.transports.get(groupid);
+        Transport transport = application.resourceFactory.find(groupid, Transport.class);
         if (transport != null) return transport;
         final List<Transport> transports = new ArrayList<>();
         for (String group : groups) {
@@ -370,11 +370,11 @@ public abstract class NodeServer {
         Transport first = transports.get(0);
         Transport newTransport = new Transport(groupid, application.findGroupProtocol(first.getName()), application.getWatchFactory(),
                 application.transportBufferPool, application.transportChannelGroup, this.sncpAddress, addrs);
-        synchronized (application.transports) {
-            transport = application.transports.get(groupid);
+        synchronized (application.resourceFactory) {
+            transport = application.resourceFactory.find(groupid, Transport.class);
             if (transport == null) {
                 transport = newTransport;
-                application.transports.put(groupid, transport);
+                application.resourceFactory.register(groupid, transport);
             }
         }
         return transport;
@@ -383,8 +383,8 @@ public abstract class NodeServer {
     protected Transport loadTransport(final String group) {
         if (group == null) return null;
         Transport transport;
-        synchronized (application.transports) {
-            transport = application.transports.get(group);
+        synchronized (application.resourceFactory) {
+            transport = application.resourceFactory.find(group, Transport.class);
             if (transport != null) {
                 if (this.sncpAddress != null && !this.sncpAddress.equals(transport.getClientAddress())) {
                     throw new RuntimeException(transport + "repeat create on newClientAddress = " + this.sncpAddress + ", oldClientAddress = " + transport.getClientAddress());
@@ -395,7 +395,7 @@ public abstract class NodeServer {
             if (addrs == null) throw new RuntimeException("Not found <group> = " + group + " on <resources> ");
             transport = new Transport(group, application.findGroupProtocol(group), application.getWatchFactory(),
                     application.transportBufferPool, application.transportChannelGroup, this.sncpAddress, addrs);
-            application.transports.put(group, transport);
+            application.resourceFactory.register(group, transport);
         }
         return transport;
     }

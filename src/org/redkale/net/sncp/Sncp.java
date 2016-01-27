@@ -673,12 +673,12 @@ public abstract class Sncp {
      * @param executor            线程池
      * @param serviceClass        Service类
      * @param clientAddress       本地IP地址
-     * @param sameGroupTransport 同组的通信组件
+     * @param sameGroupTransport  同组的通信组件
      * @param diffGroupTransports 异组的通信组件列表
      * @return Service的本地模式实例
      */
     @SuppressWarnings("unchecked")
-    public static <T extends Service> T createLocalService(final String name, final Consumer<Runnable> executor,
+    public static <T extends Service> T createLocalService(final String name, final Consumer<Runnable> executor, final ResourceFactory resourceFactory,
             final Class<T> serviceClass, final InetSocketAddress clientAddress, final Transport sameGroupTransport, final Collection<Transport> diffGroupTransports) {
         try {
             final Class newClazz = createLocalServiceClass(name, serviceClass);
@@ -699,7 +699,18 @@ public abstract class Sncp {
                             List<Transport> list = new ArrayList<>();
                             if (sameGroupTransport != null) list.add(sameGroupTransport);
                             if (diffGroupTransports != null) list.addAll(diffGroupTransports);
-                            if (!list.isEmpty()) remoteTransport = new Transport(list);
+                            if (!list.isEmpty()) {
+                                Transport tmp = new Transport(list);
+                                synchronized (resourceFactory) {
+                                    Transport old = resourceFactory.find(tmp.getName(), Transport.class);
+                                    if (old != null) {
+                                        remoteTransport = old;
+                                    } else {
+                                        remoteTransport = tmp;
+                                        resourceFactory.register(tmp.getName(), tmp);
+                                    }
+                                }
+                            }
                         }
                         if (remoteService == null && remoteTransport != null) {
                             remoteService = createRemoteService(name, executor, serviceClass, clientAddress, remoteTransport);
@@ -825,7 +836,7 @@ public abstract class Sncp {
      * @param serviceClass  Service类
      * @param clientAddress 本地IP地址
      * @param transport     通信组件
-     * 
+     *
      * @return Service的远程模式实例
      */
     @SuppressWarnings("unchecked")

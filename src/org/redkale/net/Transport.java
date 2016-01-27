@@ -83,7 +83,7 @@ public final class Transport {
             if (first == null) first = t;
             tmpgroup.add(t.name);
         }
-        Collections.sort(tmpgroup);  //按字母排列顺序
+        Collections.sort(tmpgroup);  //必须按字母排列顺序确保，相同内容的transport列表组合的name相同，而不会因为list的顺序不同产生不同的name
         boolean flag = false;
         StringBuilder sb = new StringBuilder();
         for (String g : tmpgroup) {

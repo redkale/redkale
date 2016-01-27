@@ -73,8 +73,6 @@ public final class Application {
 
     final Map<String, String> globalGroupProtocols = new HashMap<>();
 
-    final Map<String, Transport> transports = new HashMap<>();
-
     final InetAddress localAddress;
 
     final List<CacheSource> cacheSources = new CopyOnWriteArrayList<>();

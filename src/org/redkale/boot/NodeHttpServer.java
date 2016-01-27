@@ -75,7 +75,7 @@ public final class NodeHttpServer extends NodeServer {
                 synchronized (regFactory) {
                     Service nodeService = (Service) rf.find(resourceName, WebSocketNode.class);
                     if (nodeService == null) {
-                        nodeService = Sncp.createLocalService(resourceName, getExecutor(), WebSocketNodeService.class, (InetSocketAddress) null, (Transport) null, (Collection<Transport>) null);
+                        nodeService = Sncp.createLocalService(resourceName, getExecutor(), application.getResourceFactory(), WebSocketNodeService.class, (InetSocketAddress) null, (Transport) null, (Collection<Transport>) null);
                         regFactory.register(resourceName, WebSocketNode.class, nodeService);
                         factory.inject(nodeService, self);
                         logger.fine("[" + Thread.currentThread().getName() + "] Load Service " + nodeService);
