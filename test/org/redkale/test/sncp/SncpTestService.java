@@ -70,7 +70,7 @@ public class SncpTestService implements SncpTestIService {
     }
 
     public static void main(String[] args) throws Exception {
-        Service service = Sncp.createLocalService("", null, SncpTestService.class, new InetSocketAddress("127.0.0.1", 7070), null, null);
+        Service service = Sncp.createLocalService("", null, ResourceFactory.root(), SncpTestService.class, new InetSocketAddress("127.0.0.1", 7070), null, null);
         for (Method method : service.getClass().getDeclaredMethods()) {
             System.out.println(method);
         }
