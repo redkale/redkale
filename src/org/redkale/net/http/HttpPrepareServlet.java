@@ -136,7 +136,11 @@ public final class HttpPrepareServlet extends PrepareServlet<HttpContext, HttpRe
         this.resourceHttpServlet.destroy(context, config);
         this.servlets.stream().forEach(s -> {
             s.destroy(context, s._conf);
-            if (s instanceof WebSocketServlet) ((WebSocketServlet) s).postDestroy(context, s._conf);
+            if (s instanceof WebSocketServlet) {
+                ((WebSocketServlet) s).postDestroy(context, s._conf);
+            } else if (s instanceof BasedHttpServlet) {
+                ((BasedHttpServlet) s).postDestroy(context, s._conf);
+            }
         });
     }
 

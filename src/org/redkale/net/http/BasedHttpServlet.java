@@ -130,6 +130,9 @@ public abstract class BasedHttpServlet extends HttpServlet {
         }
     }
 
+    public final void postDestroy(HttpContext context, AnyValue config) {
+    }
+
     public abstract boolean authenticate(int module, int actionid, HttpRequest request, HttpResponse response) throws IOException;
 
     private HashMap<String, Entry> load() {
