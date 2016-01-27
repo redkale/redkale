@@ -118,8 +118,7 @@ public abstract class BasedHttpServlet extends HttpServlet {
         throw new IOException(this.getClass().getName() + " not found method for URI(" + request.getRequestURI() + ")");
     }
 
-    @Override
-    public void init(HttpContext context, AnyValue config) {
+    public final void preInit(HttpContext context, AnyValue config) {
         String path = _prefix == null ? "" : _prefix;
         WebServlet ws = this.getClass().getAnnotation(WebServlet.class);
         if (ws != null && !ws.repair()) path = "";
