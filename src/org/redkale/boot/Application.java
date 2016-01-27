@@ -91,12 +91,12 @@ public final class Application {
 
     final AsynchronousChannelGroup transportChannelGroup;
 
+    final ResourceFactory resourceFactory = ResourceFactory.root();
+
     //--------------------------------------------------------------------------------------------    
     private final boolean singletonrun;
 
-    private final ResourceFactory factory = ResourceFactory.root();
-
-    private final WatchFactory watch = WatchFactory.root();
+    private final WatchFactory watchFactory = WatchFactory.root();
 
     private final File home;
 
@@ -117,19 +117,19 @@ public final class Application {
         this.config = config;
 
         final File root = new File(System.getProperty(RESNAME_APP_HOME));
-        this.factory.register(RESNAME_APP_TIME, long.class, this.startTime);
-        this.factory.register(RESNAME_APP_HOME, Path.class, root.toPath());
-        this.factory.register(RESNAME_APP_HOME, File.class, root);
+        this.resourceFactory.register(RESNAME_APP_TIME, long.class, this.startTime);
+        this.resourceFactory.register(RESNAME_APP_HOME, Path.class, root.toPath());
+        this.resourceFactory.register(RESNAME_APP_HOME, File.class, root);
         try {
-            this.factory.register(RESNAME_APP_HOME, root.getCanonicalPath());
+            this.resourceFactory.register(RESNAME_APP_HOME, root.getCanonicalPath());
             this.home = root.getCanonicalFile();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
         String localaddr = config.getValue("address", "").trim();
         this.localAddress = localaddr.isEmpty() ? Utility.localInetAddress() : new InetSocketAddress(localaddr, config.getIntValue("port")).getAddress();
-        this.factory.register(RESNAME_APP_ADDR, this.localAddress.getHostAddress());
-        this.factory.register(RESNAME_APP_ADDR, InetAddress.class, this.localAddress);
+        this.resourceFactory.register(RESNAME_APP_ADDR, this.localAddress.getHostAddress());
+        this.resourceFactory.register(RESNAME_APP_ADDR, InetAddress.class, this.localAddress);
         {
             String node = config.getValue("node", "").trim();
             if (node.isEmpty()) {
@@ -143,7 +143,7 @@ public final class Application {
                 sb.append(Integer.toHexString(v2));
                 node = sb.toString();
             }
-            this.factory.register(RESNAME_APP_NODE, node);
+            this.resourceFactory.register(RESNAME_APP_NODE, node);
             System.setProperty(RESNAME_APP_NODE, node);
         }
         //以下是初始化日志配置
@@ -207,8 +207,8 @@ public final class Application {
             if (groupsize > 0 && transportConf == null) transportConf = new DefaultAnyValue();
             if (transportConf != null) {
                 //--------------transportBufferPool-----------
-                AtomicLong createBufferCounter = watch == null ? new AtomicLong() : watch.createWatchNumber(Transport.class.getSimpleName() + ".Buffer.creatCounter");
-                AtomicLong cycleBufferCounter = watch == null ? new AtomicLong() : watch.createWatchNumber(Transport.class.getSimpleName() + ".Buffer.cycleCounter");
+                AtomicLong createBufferCounter = watchFactory == null ? new AtomicLong() : watchFactory.createWatchNumber(Transport.class.getSimpleName() + ".Buffer.creatCounter");
+                AtomicLong cycleBufferCounter = watchFactory == null ? new AtomicLong() : watchFactory.createWatchNumber(Transport.class.getSimpleName() + ".Buffer.cycleCounter");
                 final int bufferCapacity = transportConf.getIntValue("bufferCapacity", 8 * 1024);
                 final int bufferPoolSize = transportConf.getIntValue("bufferPoolSize", groupsize * Runtime.getRuntime().availableProcessors() * 8);
                 final int threads = transportConf.getIntValue("threads", groupsize * Runtime.getRuntime().availableProcessors() * 8);
@@ -240,11 +240,11 @@ public final class Application {
     }
 
     public ResourceFactory getResourceFactory() {
-        return factory;
+        return resourceFactory;
     }
 
     public WatchFactory getWatchFactory() {
-        return watch;
+        return watchFactory;
     }
 
     public File getHome() {
@@ -279,7 +279,7 @@ public final class Application {
         //------------------------------------------------------------------------
         final AnyValue resources = config.getAnyValue("resources");
         if (resources != null) {
-            factory.register(RESNAME_APP_GRES, AnyValue.class, resources);
+            resourceFactory.register(RESNAME_APP_GRES, AnyValue.class, resources);
             final AnyValue properties = resources.getAnyValue("properties");
             if (properties != null) {
                 String dfloads = properties.getValue("load");
@@ -293,7 +293,7 @@ public final class Application {
                             InputStream in = new FileInputStream(df);
                             ps.load(in);
                             in.close();
-                            ps.forEach((x, y) -> factory.register("property." + x, y));
+                            ps.forEach((x, y) -> resourceFactory.register("property." + x, y));
                         }
                     }
                 }
@@ -306,20 +306,20 @@ public final class Application {
                     } else if (name.startsWith("mimetype.property.")) {
                         MimeType.add(name.substring("mimetype.property.".length()), value);
                     } else {
-                        factory.register("property." + name, value);
+                        resourceFactory.register("property." + name, value);
                     }
                 }
             }
         }
-        if (this.localAddress != null && this.factory.find("property.datasource.nodeid", String.class) == null) {
+        if (this.localAddress != null && this.resourceFactory.find("property.datasource.nodeid", String.class) == null) {
             byte[] bs = this.localAddress.getAddress();
             int v = (0xff & bs[bs.length - 2]) % 10 * 100 + (0xff & bs[bs.length - 1]);
-            this.factory.register("property.datasource.nodeid", "" + v);
+            this.resourceFactory.register("property.datasource.nodeid", "" + v);
         }
-        this.factory.register(BsonFactory.root());
-        this.factory.register(JsonFactory.root());
-        this.factory.register(BsonFactory.root().getConvert());
-        this.factory.register(JsonFactory.root().getConvert());
+        this.resourceFactory.register(BsonFactory.root());
+        this.resourceFactory.register(JsonFactory.root());
+        this.resourceFactory.register(BsonFactory.root().getConvert());
+        this.resourceFactory.register(JsonFactory.root().getConvert());
         initResources();
     }
 
@@ -523,7 +523,7 @@ public final class Application {
         final Application application = Application.create(true);
         application.init();
         application.start();
-        return application.factory.find(name, serviceClass);
+        return application.resourceFactory.find(name, serviceClass);
     }
 
     private static Application create(final boolean singleton) throws IOException {
