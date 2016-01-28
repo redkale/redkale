@@ -20,5 +20,5 @@ done
 export CLASSPATH=$CLASSPATH:$lib
 
 echo "$APP_HOME"
-nohup  java -DAPP_HOME="$APP_HOME" com.wentch.redkale.boot.Application > "$APP_HOME"/log.out &
+nohup  java -DAPP_HOME="$APP_HOME" org.redkale.boot.Application > "$APP_HOME"/log.out &
 
