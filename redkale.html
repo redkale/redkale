@@ -83,6 +83,88 @@
     <span class="o">}</span></pre></div>
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Application.singleton 运行流程与通过bin脚本启动的流程基本一致，区别在于singleton运行时不会启动Server和Application自身的服务监听。RedKale提倡接入层(Servlet)与业务层(Service)分开，Service在代码上不能依赖于Servlet，因此调试Service自身逻辑时不需要启动接入层服务(类似WebSocket依赖Servlet的功能除外)。 </p>
 
+            <h3><a id="redkale_inject" class="anchor" href="#" aria-hidden="true"></a>RedKale的依赖注入</h3>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;RedKale内置的依赖注入实现很简单，只有三个类: javax.annotation.Resource、org.redkale.util.ResourceType、org.redkale.util.ResourceFactory，采用反射技术，由于依赖注入通常不会在频繁的操作中进行，因此性能要求不会很高。其中前两个是注解，ResourceFactory是主要操作类，主要提供注册和注入两个接口。ResourceFactory的依赖注入不仅提供其他依赖注入框架的常规功能，还能动态的自动更新通过inject注入的资源。</p>
+            <div class="highlight"><pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">AService</span> <span class="o">{</span>
+
+    <span class="nd">@Resource</span><span class="o">(</span><span class="n">name</span> <span class="o">=</span> <span class="s">&quot;property.id&quot;</span><span class="o">)</span>
+    <span class="kd">private</span> <span class="n">String</span> <span class="n">id</span><span class="o">;</span>
+
+    <span class="nd">@Resource</span><span class="o">(</span><span class="n">name</span> <span class="o">=</span> <span class="s">&quot;property.id&quot;</span><span class="o">)</span> <span class="c1">//property.开头的资源名允许String自动转换成primitive数值类型</span>
+    <span class="kd">private</span> <span class="kt">int</span> <span class="n">intid</span><span class="o">;</span>
+
+    <span class="nd">@Resource</span><span class="o">(</span><span class="n">name</span> <span class="o">=</span> <span class="s">&quot;bigint&quot;</span><span class="o">)</span>
+    <span class="kd">private</span> <span class="n">BigInteger</span> <span class="n">bigint</span><span class="o">;</span>
+
+    <span class="nd">@Resource</span><span class="o">(</span><span class="n">name</span> <span class="o">=</span> <span class="s">&quot;seqid&quot;</span><span class="o">)</span>
+    <span class="kd">private</span> <span class="kt">int</span> <span class="n">seqid</span><span class="o">;</span>
+
+    <span class="nd">@Resource</span>
+    <span class="kd">private</span> <span class="n">ResourceTest</span><span class="o">.</span><span class="na">BService</span> <span class="n">bservice</span><span class="o">;</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="n">String</span> <span class="nf">toString</span><span class="o">()</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="s">&quot;{id:\&quot;&quot;</span> <span class="o">+</span> <span class="n">id</span> <span class="o">+</span> <span class="s">&quot;\&quot;, intid: &quot;</span> <span class="o">+</span> <span class="n">intid</span> <span class="o">+</span> <span class="s">&quot;, bigint:&quot;</span> <span class="o">+</span> <span class="n">bigint</span> <span class="o">+</span> <span class="s">&quot;}&quot;</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="cm">/** 以下省略getter setter方法 */</span>
+<span class="o">}</span>
+
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">BService</span> <span class="o">{</span>
+
+    <span class="nd">@Resource</span><span class="o">(</span><span class="n">name</span> <span class="o">=</span> <span class="s">&quot;property.id&quot;</span><span class="o">)</span>
+    <span class="kd">private</span> <span class="n">String</span> <span class="n">id</span><span class="o">;</span>
+
+    <span class="nd">@Resource</span>
+    <span class="kd">private</span> <span class="n">AService</span> <span class="n">aservice</span><span class="o">;</span>
+
+    <span class="kd">private</span> <span class="n">String</span> <span class="n">name</span> <span class="o">=</span> <span class="s">&quot;&quot;</span><span class="o">;</span>
+
+    <span class="nd">@java.beans.ConstructorProperties</span><span class="o">({</span><span class="s">&quot;name&quot;</span><span class="o">})</span>
+    <span class="kd">public</span> <span class="nf">BService</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">name</span> <span class="o">=</span> <span class="n">name</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="n">String</span> <span class="nf">toString</span><span class="o">()</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="s">&quot;{name:\&quot;&quot;</span> <span class="o">+</span> <span class="n">name</span> <span class="o">+</span> <span class="s">&quot;\&quot;, id: &quot;</span> <span class="o">+</span> <span class="n">id</span> <span class="o">+</span> <span class="s">&quot;, aserivce:&quot;</span> <span class="o">+</span> <span class="n">aservice</span> <span class="o">+</span> <span class="s">&quot;}&quot;</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="cm">/** 以下省略getter setter方法 */</span>
+<span class="o">}</span>
+
+
+<span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">Exception</span> <span class="o">{</span>
+    <span class="n">ResourceFactory</span> <span class="n">factory</span> <span class="o">=</span> <span class="n">ResourceFactory</span><span class="o">.</span><span class="na">root</span><span class="o">();</span>
+    <span class="n">factory</span><span class="o">.</span><span class="na">register</span><span class="o">(</span><span class="s">&quot;property.id&quot;</span><span class="o">,</span> <span class="s">&quot;2345&quot;</span><span class="o">);</span> <span class="c1">//注入String类型的property.id</span>
+    <span class="n">AService</span> <span class="n">aservice</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">AService</span><span class="o">();</span>
+    <span class="n">BService</span> <span class="n">bservice</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">BService</span><span class="o">(</span><span class="s">&quot;eeeee&quot;</span><span class="o">);</span>
+
+    <span class="n">factory</span><span class="o">.</span><span class="na">register</span><span class="o">(</span><span class="n">aservice</span><span class="o">);</span>  <span class="c1">//放进Resource池内，默认的资源名name为&quot;&quot;</span>
+    <span class="n">factory</span><span class="o">.</span><span class="na">register</span><span class="o">(</span><span class="n">bservice</span><span class="o">);</span>  <span class="c1">//放进Resource池内，默认的资源名name为&quot;&quot;</span>
+
+    <span class="n">factory</span><span class="o">.</span><span class="na">inject</span><span class="o">(</span><span class="n">aservice</span><span class="o">);</span>  <span class="c1">//给aservice注入id、bservice，bigint没有资源，所以为null</span>
+    <span class="n">factory</span><span class="o">.</span><span class="na">inject</span><span class="o">(</span><span class="n">bservice</span><span class="o">);</span>  <span class="c1">//给bservice注入id、aservice</span>
+    <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">aservice</span><span class="o">);</span> <span class="c1">//输出结果为：{id:&quot;2345&quot;, intid: 2345, bigint:null, bservice:{name:eeeee}}</span>
+    <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">bservice</span><span class="o">);</span> <span class="c1">//输出结果为：{name:&quot;eeeee&quot;, id: 2345, aserivce:{id:&quot;2345&quot;, intid: 2345, bigint:null, bservice:{name:eeeee}}}</span>
+
+    <span class="n">factory</span><span class="o">.</span><span class="na">register</span><span class="o">(</span><span class="s">&quot;seqid&quot;</span><span class="o">,</span> <span class="mi">200</span><span class="o">);</span> <span class="c1">//放进Resource池内, 同时ResourceFactory会自动更新aservice的seqid值</span>
+    <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">factory</span><span class="o">.</span><span class="na">find</span><span class="o">(</span><span class="s">&quot;seqid&quot;</span><span class="o">,</span> <span class="kt">int</span><span class="o">.</span><span class="na">class</span><span class="o">));</span>   <span class="c1">//输出结果为：200</span>
+    <span class="n">factory</span><span class="o">.</span><span class="na">register</span><span class="o">(</span><span class="s">&quot;bigint&quot;</span><span class="o">,</span> <span class="k">new</span> <span class="nf">BigInteger</span><span class="o">(</span><span class="s">&quot;666666666666666&quot;</span><span class="o">));</span> <span class="c1">//放进Resource池内, 同时ResourceFactory会自动更新aservice对象的bigint值   </span>
+    <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">aservice</span><span class="o">);</span> <span class="c1">//输出结果为：{id:&quot;2345&quot;, intid: 2345, bigint:666666666666666, bservice:{name:eeeee}}  可以看出seqid与bigint值都已自动更新</span>
+
+    <span class="n">factory</span><span class="o">.</span><span class="na">register</span><span class="o">(</span><span class="s">&quot;property.id&quot;</span><span class="o">,</span> <span class="s">&quot;6789&quot;</span><span class="o">);</span> <span class="c1">//更新Resource池内的id资源值, 同时ResourceFactory会自动更新aservice、bservice的id值</span>
+    <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">aservice</span><span class="o">);</span> <span class="c1">//输出结果为：{id:&quot;6789&quot;, intid: 6789, bigint:666666666666666, bservice:{name:eeeee}}</span>
+    <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">bservice</span><span class="o">);</span> <span class="c1">//输出结果为：{name:&quot;eeeee&quot;, id: 6789, aserivce:{id:&quot;6789&quot;, intid: 6789, bigint:666666666666666, bservice:{name:eeeee}}}</span>
+
+    <span class="n">bservice</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">BService</span><span class="o">(</span><span class="s">&quot;ffff&quot;</span><span class="o">);</span>
+    <span class="n">factory</span><span class="o">.</span><span class="na">register</span><span class="o">(</span><span class="n">bservice</span><span class="o">);</span>   <span class="c1">//更新Resource池内name=&quot;&quot;的BService资源, 同时ResourceFactory会自动更新aservice的bservice对象</span>
+    <span class="n">factory</span><span class="o">.</span><span class="na">inject</span><span class="o">(</span><span class="n">bservice</span><span class="o">);</span>
+    <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">aservice</span><span class="o">);</span> <span class="c1">//输出结果为：{id:&quot;6789&quot;, intid: 6789, bigint:666666666666666, bservice:{name:ffff}}</span>
+
+<span class="o">}</span></pre></div>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如上例，通过ResourceFactory.inject注入的对象都会自动更新资源的变化，若不想自动更新可以使用public Object register(String name, Type clazz, Object rs) 方法注册新资源。</p>
+
             <h3><a id="redkale_deploy" class="anchor" href="#" aria-hidden="true"></a>RedKale 架构部署</h3>
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;通常一个系统会分为三层：接入层、业务层、数据层。对应到RedKale的组件是： Servlet、Service、Source。大部分系统提供的是HTTP服务，为了方便演示RedKale从集中式到分布式的变化，以一个简单的HTTP服务作为范例。<br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;开发一个极简单的小论坛系统。包含三个模块： <br/>
