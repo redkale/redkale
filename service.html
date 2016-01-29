@@ -301,7 +301,7 @@
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如上描述，一个请求处理耗时 180ms，同时占用一个线程的时间也是 180ms。若换成NIO使IO耗时减少，为了方便计算假设IO耗时为0(当然实际情况是不可能的), 那么步骤1、4的耗时忽略不计，线程的占用时间由180ms变成160ms。 假设数据查询接口IO操作本身耗时也是10ms，那么有140ms是用于等待。若采用DataSource异步接口， 则140ms的等待时间可以释放当前线程资源。虽然整个请求的处理时间还是180ms，但是线程的占用时间却只有20ms。可以看出减少耗时多的步骤的等待时间才能事半功倍，大幅度地提高性能。异步接口的主要作用是远程请求在等待过程中释放当前线程资源。大大减少线程数，也减少大量线程之间的切换消耗。
             </p>
             <footer class="site-footer">
-                <span class="site-footer-owner"><a href="https://github.com/wentch/redkale">RedKale</a> © &nbsp;&nbsp;&nbsp;&nbsp;欢迎加入RedKale技术交流QQ群: 527523235</span>
+                <span class="site-footer-owner"><a href="https://github.com/redkale/redkale">RedKale</a> © &nbsp;&nbsp;&nbsp;&nbsp;欢迎加入RedKale技术交流QQ群: 527523235</span>
             </footer>
 
         </section>
