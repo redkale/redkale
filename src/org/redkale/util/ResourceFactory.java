@@ -138,8 +138,8 @@ public final class ResourceFactory {
     }
 
     public <A> A register(final boolean autoSync, final String name, final A rs) {
-        final Class claz = rs.getClass();
-        ResourceType rtype = (ResourceType) claz.getAnnotation(ResourceType.class);
+        final Class<?> claz = rs.getClass();
+        ResourceType rtype = claz.getAnnotation(ResourceType.class);
         if (rtype == null) {
             return (A) register(autoSync, name, claz, rs);
         } else {
