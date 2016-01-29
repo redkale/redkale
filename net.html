@@ -2,9 +2,9 @@
 <html lang="en-us">
     <head>
         <meta charset="UTF-8">
-        <title>RedKale - 全新的Java微服务框架</title>
-        <meta name="keywords" content="RedKale,redkale,java,微服务,架构"/>
-        <meta name="description" content="RedKale是一个全新的基于Java 8的微服务框架"/>
+        <title>Redkale - 全新的Java微服务框架</title>
+        <meta name="keywords" content="Redkale,redkale,java,微服务,架构"/>
+        <meta name="description" content="Redkale是一个全新的基于Java 8的微服务框架"/>
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
         <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
@@ -13,9 +13,9 @@
     </head>
     <body>
         <section class="page-header">
-            <a href="index.html" class="project-name">RedKale</a>
+            <a href="index.html" class="project-name">Redkale</a>
             <h2 class="project-tagline"></h2>
-            <a href="redkale.html" class="btn">RedKale 入门</a> 
+            <a href="redkale.html" class="btn">Redkale 入门</a> 
             <a href="convert.html" class="btn">Convert 组件</a> 
             <a href="service.html" class="btn">Service 组件</a> 
             <a href="source.html" class="btn">Source 组件</a> 
@@ -27,10 +27,10 @@
 
         <section class="main-content">
             <h3><a id="net_intro" class="anchor" href="#" aria-hidden="true"></a>Net 组件介绍</h3>
-            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Net 组件是基于AIO(NIO.2)的一套TCP/UDP的网络框架，且只提供异步接口。org.redkale.net 是所有网络协议服务的基础包。RedKale内置HTTP和远程模式Service依赖的SNCP(Service Node Communicate Protocol)协议的实现包。RedKale启动的<b>&lt;server&gt;</b>节点服务都是基于Net组件实现的协议。下面详细介绍 <a href="#net_http">HTTP服务</a> 和 <a href="#net_sncp">SNCP协议</a>。</p>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Net 组件是基于AIO(NIO.2)的一套TCP/UDP的网络框架，且只提供异步接口。org.redkale.net 是所有网络协议服务的基础包。Redkale内置HTTP和远程模式Service依赖的SNCP(Service Node Communicate Protocol)协议的实现包。Redkale启动的<b>&lt;server&gt;</b>节点服务都是基于Net组件实现的协议。下面详细介绍 <a href="#net_http">HTTP服务</a> 和 <a href="#net_sncp">SNCP协议</a>。</p>
 
             <h3><a id="net_http" class="anchor" href="#" aria-hidden="true"></a>HTTP 服务</h3>
-            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;RedKale自实现的HTTP服务接口并不遵循Java EE规范JSR 340(Servlet 3.1)，RedKale提倡的是HTTP+JSON的服务接口方式因此没有实现JSP规范，HTTP+JSON服务接口几乎适合所有类型的客户端(PC应用程序、PC Web、微信H5、移动APP、移动Web)开发。其与JSR 340(Servlet 3.1)的主要区别如下：<br/>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Redkale自实现的HTTP服务接口并不遵循Java EE规范JSR 340(Servlet 3.1)，Redkale提倡的是HTTP+JSON的服务接口方式因此没有实现JSP规范，HTTP+JSON服务接口几乎适合所有类型的客户端(PC应用程序、PC Web、微信H5、移动APP、移动Web)开发。其与JSR 340(Servlet 3.1)的主要区别如下：<br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1、内置参数的JSON反序列化和响应结果的序列化接口。<br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2、对数值型的参数和header值提供简易接口。<br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3、不支持JSP，提倡的是HTTP+JSON接口方式。<br/>
@@ -40,7 +40,7 @@
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;7、内置WebSocket的集群与组功能，且提供伪WebSocket连接功能。<br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;8、HttpResponse只能异步输出。<br/>
             </p> 
-            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;编写RedKale的HttpServlet与 JSR 340中的javax.servlet.http.HttpServlet 基本相同，只需继承 org.redkale.net.http.HttpServlet, Redkale也提供了更友好的基类 org.redkale.net.http.BasedHttpServlet, 比较好的习惯是一个项目先定义一个项目级的BaseServlet类，这样方便以后加入类似javax.servlet.Filter的功能。 <br/> <br/>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;编写Redkale的HttpServlet与 JSR 340中的javax.servlet.http.HttpServlet 基本相同，只需继承 org.redkale.net.http.HttpServlet, Redkale也提供了更友好的基类 org.redkale.net.http.BasedHttpServlet, 比较好的习惯是一个项目先定义一个项目级的BaseServlet类，这样方便以后加入类似javax.servlet.Filter的功能。 <br/> <br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;一个典型的BaseSerlvet实现: 
             </p> 
             <div class="highlight"><pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">BaseSerlvet</span> <span class="kd">extends</span> <span class="n">org</span><span class="o">.</span><span class="na">redkale</span><span class="o">.</span><span class="na">net</span><span class="o">.</span><span class="na">http</span><span class="o">.</span><span class="na">BasedHttpServlet</span> <span class="o">{</span>
@@ -49,20 +49,20 @@
 
     <span class="kd">protected</span> <span class="kd">final</span> <span class="kt">boolean</span> <span class="n">fine</span> <span class="o">=</span> <span class="n">logger</span><span class="o">.</span><span class="na">isLoggable</span><span class="o">(</span><span class="n">Level</span><span class="o">.</span><span class="na">FINE</span><span class="o">);</span>
 
-    <span class="nd">@Resource</span> <span class="c1">//[RedKale内置资源]  进程的启动时间</span>
+    <span class="nd">@Resource</span> <span class="c1">//[Redkale内置资源]  进程的启动时间</span>
     <span class="kd">protected</span> <span class="kt">long</span> <span class="n">serverCreateTime</span><span class="o">;</span>
 
-    <span class="nd">@Resource</span> <span class="c1">//[RedKale内置资源]</span>
+    <span class="nd">@Resource</span> <span class="c1">//[Redkale内置资源]</span>
     <span class="kd">protected</span> <span class="n">JsonConvert</span> <span class="n">jsonConvert</span><span class="o">;</span>
 
-    <span class="nd">@Resource</span> <span class="c1">//[RedKale内置资源]</span>
+    <span class="nd">@Resource</span> <span class="c1">//[Redkale内置资源]</span>
     <span class="kd">protected</span> <span class="n">JsonFactory</span> <span class="n">jsonFactory</span><span class="o">;</span>
 
-    <span class="c1">//[RedKale内置资源], 当前进程的根目录，字段类型可以是 String、java.io.File、java.nio.file.Path</span>
+    <span class="c1">//[Redkale内置资源], 当前进程的根目录，字段类型可以是 String、java.io.File、java.nio.file.Path</span>
     <span class="nd">@Resource</span><span class="o">(</span><span class="n">name</span> <span class="o">=</span> <span class="s">&quot;APP_HOME&quot;</span><span class="o">)</span>
     <span class="kd">protected</span> <span class="n">File</span> <span class="n">home</span><span class="o">;</span>
 
-    <span class="c1">//[RedKale内置资源], 当前Http Server的web页面的根目录，字段类型可以是 String、java.io.File、java.nio.file.Path</span>
+    <span class="c1">//[Redkale内置资源], 当前Http Server的web页面的根目录，字段类型可以是 String、java.io.File、java.nio.file.Path</span>
     <span class="nd">@Resource</span><span class="o">(</span><span class="n">name</span> <span class="o">=</span> <span class="s">&quot;SERVER_ROOT&quot;</span><span class="o">)</span>
     <span class="kd">protected</span> <span class="n">File</span> <span class="n">webroot</span><span class="o">;</span>
 
@@ -73,10 +73,10 @@
     <span class="c1">//该方法可以用于判断请求源是否合法或加入一些全局的拦截操作</span>
     <span class="nd">@Override</span>
     <span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">preExecute</span><span class="o">(</span><span class="kd">final</span> <span class="n">HttpRequest</span> <span class="n">request</span><span class="o">,</span> <span class="kd">final</span> <span class="n">HttpResponse</span> <span class="n">response</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
-        <span class="k">if</span> <span class="o">(!</span><span class="n">request</span><span class="o">.</span><span class="na">getHeader</span><span class="o">(</span><span class="s">&quot;User-Agent&quot;</span><span class="o">,</span> <span class="s">&quot;&quot;</span><span class="o">).</span><span class="na">contains</span><span class="o">(</span><span class="s">&quot;RedKale-Agent&quot;</span><span class="o">))</span> <span class="o">{</span>  <span class="c1">//只用移动APP的接口可以判断User-Agent是否正确</span>
+        <span class="k">if</span> <span class="o">(!</span><span class="n">request</span><span class="o">.</span><span class="na">getHeader</span><span class="o">(</span><span class="s">&quot;User-Agent&quot;</span><span class="o">,</span> <span class="s">&quot;&quot;</span><span class="o">).</span><span class="na">contains</span><span class="o">(</span><span class="s">&quot;Redkale-Agent&quot;</span><span class="o">))</span> <span class="o">{</span>  <span class="c1">//只用移动APP的接口可以判断User-Agent是否正确</span>
             <span class="n">response</span><span class="o">.</span><span class="na">addHeader</span><span class="o">(</span><span class="s">&quot;retcode&quot;</span><span class="o">,</span> <span class="s">&quot;10001&quot;</span><span class="o">);</span>
             <span class="n">response</span><span class="o">.</span><span class="na">addHeader</span><span class="o">(</span><span class="s">&quot;retmessage&quot;</span><span class="o">,</span> <span class="s">&quot;User-Agent error&quot;</span><span class="o">);</span>
-            <span class="n">response</span><span class="o">.</span><span class="na">finish</span><span class="o">(</span><span class="mi">201</span><span class="o">,</span> <span class="s">&quot;{&#39;success&#39;:false, &#39;message&#39;:&#39;User-Agent error, must be RedKale-Agent&#39;}&quot;</span><span class="o">);</span>
+            <span class="n">response</span><span class="o">.</span><span class="na">finish</span><span class="o">(</span><span class="mi">201</span><span class="o">,</span> <span class="s">&quot;{&#39;success&#39;:false, &#39;message&#39;:&#39;User-Agent error, must be Redkale-Agent&#39;}&quot;</span><span class="o">);</span>
             <span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
         <span class="o">}</span>
         <span class="c1">//可以加上一些统计操作</span>
@@ -188,7 +188,7 @@
             <div class="highlight"><pre><span class="nd">@WebServlet</span><span class="o">(</span><span class="s">&quot;/ws/chat&quot;</span><span class="o">)</span>
 <span class="kd">public</span> <span class="kd">class</span> <span class="nc">ChatWebSocketServlet</span> <span class="kd">extends</span> <span class="n">WebSocketServlet</span> <span class="o">{</span>
 
-    <span class="nd">@Resource</span> <span class="c1">//[RedKale内置资源]</span>
+    <span class="nd">@Resource</span> <span class="c1">//[Redkale内置资源]</span>
     <span class="kd">protected</span> <span class="n">JsonConvert</span> <span class="n">jsonConvert</span><span class="o">;</span>
 
     <span class="nd">@Resource</span>
@@ -217,7 +217,7 @@
                 <span class="kd">final</span> <span class="n">ChatMessage</span> <span class="n">message</span> <span class="o">=</span> <span class="n">jsonConvert</span><span class="o">.</span><span class="na">convertFrom</span><span class="o">(</span><span class="n">ChatMessage</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="n">text</span><span class="o">);</span> <span class="c1">//获取给对方的消息体信息</span>
                 <span class="n">message</span><span class="o">.</span><span class="na">sendid</span> <span class="o">=</span> <span class="n">user</span><span class="o">.</span><span class="na">getUserid</span><span class="o">();</span> <span class="c1">//将当前用户设为消息的发送方</span>
                 <span class="n">message</span><span class="o">.</span><span class="na">sendtime</span> <span class="o">=</span> <span class="n">System</span><span class="o">.</span><span class="na">currentTimeMillis</span><span class="o">();</span> <span class="c1">//设置消息发送时间</span>
-                <span class="c1">//给接收方发送消息, 即使接收方在其他WebSocket进程节点上有链接，RedKale也会自动发送到其他链接进程节点上。</span>
+                <span class="c1">//给接收方发送消息, 即使接收方在其他WebSocket进程节点上有链接，Redkale也会自动发送到其他链接进程节点上。</span>
                 <span class="kd">super</span><span class="o">.</span><span class="na">sendEachMessage</span><span class="o">(</span><span class="n">message</span><span class="o">.</span><span class="na">receiveid</span><span class="o">,</span> <span class="n">jsonConvert</span><span class="o">.</span><span class="na">convertTo</span><span class="o">(</span><span class="n">message</span><span class="o">));</span>
             <span class="o">}</span>
 
@@ -643,7 +643,7 @@
 
             <h3><a id="net_sncp" class="anchor" href="#" aria-hidden="true"></a>SNCP 协议</h3>
             <p>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;SNCP(Service Node Communicate Protocol)协议是RedKale独有的一种传输协议，用于进程之间的通信，即请求方的<a href="service.html#service_remote" target="_blank">远程模式Service</a>与响应方的Service之间的通信。可以看成是RMI(远程接口调用)的同款，主要区别在于RedKale里SNCP几乎是透明的，写一个普通的Service通过配置即可实现远程调用，而不需要专门针对远程写接口。SNCP服务的配置与HTTP差不多，只是SNCP不需要Servlet，SncpServlet是通过Service动态生成的。<br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;SNCP(Service Node Communicate Protocol)协议是Redkale独有的一种传输协议，用于进程之间的通信，即请求方的<a href="service.html#service_remote" target="_blank">远程模式Service</a>与响应方的Service之间的通信。可以看成是RMI(远程接口调用)的同款，主要区别在于Redkale里SNCP几乎是透明的，写一个普通的Service通过配置即可实现远程调用，而不需要专门针对远程写接口。SNCP服务的配置与HTTP差不多，只是SNCP不需要Servlet，SncpServlet是通过Service动态生成的。<br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;SNCP的数据包分包头和包体。包头描述请求的Service信息，请求包的包体描述参数的<a href="convert.html#convert_bson_struct" target="_blank">BSON值</a>，响应包的包体描述回调的参数对象和结果对象的<a href="convert.html#convert_bson_struct" target="_blank">BSON值</a>。<br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;包头固定长度为72字节，其结构如下: 
             </p>
@@ -669,11 +669,11 @@
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Response : 服务响应对象 <br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Servlet &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: 服务逻辑处理对象 <br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Server &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: 服务监听对象 <br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;通常自定义协议需要继承上面五种对象类，同时为了让RedKale能识别和加载自定义协议服务需要继承 <b>org.redkale.boot.NodeServer</b> 并指明 <b>@NodeProtocol</b>，实现可以参考 <a href="https://github.com/redkale/redkale-plugins/tree/master/src/org/redkale/net/socks" target="_blank" >基于SOCKS5协议的反向代理服务器</a>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;通常自定义协议需要继承上面五种对象类，同时为了让Redkale能识别和加载自定义协议服务需要继承 <b>org.redkale.boot.NodeServer</b> 并指明 <b>@NodeProtocol</b>，实现可以参考 <a href="https://github.com/redkale/redkale-plugins/tree/master/src/org/redkale/net/socks" target="_blank" >基于SOCKS5协议的反向代理服务器</a>
             </p>
 
             <footer class="site-footer">
-                <span class="site-footer-owner"><a href="https://github.com/redkale/redkale">RedKale</a> © &nbsp;&nbsp;&nbsp;&nbsp;欢迎加入RedKale技术交流QQ群: 527523235</span>
+                <span class="site-footer-owner"><a href="https://github.com/redkale/redkale">Redkale</a> © &nbsp;&nbsp;&nbsp;&nbsp;欢迎加入Redkale技术交流QQ群: 527523235</span>
             </footer>
 
         </section>

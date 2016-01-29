@@ -2,9 +2,9 @@
 <html lang="en-us">
     <head>
         <meta charset="UTF-8">
-        <title>RedKale - 全新的Java微服务框架</title>
-        <meta name="keywords" content="RedKale,redkale,java,微服务,架构"/>
-        <meta name="description" content="RedKale是一个全新的基于Java 8的微服务框架"/>
+        <title>Redkale - 全新的Java微服务框架</title>
+        <meta name="keywords" content="Redkale,redkale,java,微服务,架构"/>
+        <meta name="description" content="Redkale是一个全新的基于Java 8的微服务框架"/>
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
         <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
@@ -13,9 +13,9 @@
     </head>
     <body>
         <section class="page-header">
-            <a href="index.html" class="project-name">RedKale</a>
+            <a href="index.html" class="project-name">Redkale</a>
             <h2 class="project-tagline"></h2>
-            <a href="redkale.html" class="btn">RedKale 入门</a> 
+            <a href="redkale.html" class="btn">Redkale 入门</a> 
             <a href="convert.html" class="btn">Convert 组件</a> 
             <a href="service.html" class="btn">Service 组件</a> 
             <a href="source.html" class="btn">Source 组件</a> 
@@ -72,7 +72,7 @@
         <span class="n">resp</span><span class="o">.</span><span class="na">getOutputStream</span><span class="o">().</span><span class="na">write</span><span class="o">(</span><span class="n">json</span><span class="o">.</span><span class="na">getBytes</span><span class="o">(</span><span class="s">&quot;UTF-8&quot;</span><span class="o">));</span>
     <span class="o">}</span></pre></div>
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;几乎所有的JSON框架提供的接口以String作为返回结果为主，其内在都是以char[]作为JsonWriter的载体。以Gson为例，Gson拼接JSON默认使用的是StringWriter，StringWriter的扩容策略是翻倍。为了方便计算，假设一个对象转换成JSON字符串大小为了10K。Gson在转换过程中产生的临时的char[]的大小: 16 + 32 + 64 + 128 + 256 + 512 + 1K + 2K + 4K + 8K + 16K = 32K, char[]转换成最终的String结果又会产生10K的char[], 最后在response输出时又会产生10K的byte[]（方便计算不考虑双字节）,也就是说整个对象输出过程中会产生52K的临时数据。而且常见的HTTP服务器(如实现java-servlet规范的服务器)不会把底层的ByteBuffer对象池暴露给上层。所以以String为输出结果的JSON方法都会产生5倍于数据体积大小(其他低于1倍扩容策略的框架会产生更多)的垃圾数据。<br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;RedKale框架的HTTP服务内置了Convert的JSON接口，避免了大量的垃圾数据产生。RedKale的HTTP是基于AIO(NIO.2)实现且存在ByteBuffer对象池，response的finishJson系列方法将HTTP服务的ByteBuffer对象池传给Convert， 使Convert在序列化过程中直接以UTF-8编码方式输出到ByteBuffer里，输出结束后将ByteBuffer交给对象池回收，从而减少大量构建bye[]、char[]所产生的临时数据。</p>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Redkale框架的HTTP服务内置了Convert的JSON接口，避免了大量的垃圾数据产生。Redkale的HTTP是基于AIO(NIO.2)实现且存在ByteBuffer对象池，response的finishJson系列方法将HTTP服务的ByteBuffer对象池传给Convert， 使Convert在序列化过程中直接以UTF-8编码方式输出到ByteBuffer里，输出结束后将ByteBuffer交给对象池回收，从而减少大量构建bye[]、char[]所产生的临时数据。</p>
             <div class="highlight"><pre>    <span class="kd">protected</span> <span class="kt">void</span> <span class="nf">execute</span><span class="o">(</span><span class="n">HttpRequest</span> <span class="n">req</span><span class="o">,</span> <span class="n">HttpResponse</span> <span class="n">resp</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
         <span class="n">resp</span><span class="o">.</span><span class="na">finishJson</span><span class="o">(</span><span class="n">record</span><span class="o">);</span>
     <span class="o">}</span></pre></div>
@@ -122,7 +122,7 @@
         <span class="n">user2</span> <span class="o">=</span> <span class="n">childConvert</span><span class="o">.</span><span class="na">convertFrom</span><span class="o">(</span><span class="n">UserRecord</span><span class="o">.</span><span class="k">class</span><span class="o">,</span> <span class="n">json</span><span class="o">);</span>
         <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">childConvert</span><span class="o">.</span><span class="na">convertTo</span><span class="o">(</span><span class="n">user2</span><span class="o">));</span> <span class="c1">//应该也是 {&quot;userid&quot;:100,&quot;username&quot;:&quot;redkalename&quot;}</span>
     <span class="o">}</span></pre></div>
-            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在RedKale里存在默认的JsonConvert、BsonConvert对象。 只需在所有Service、Servlet中增加依赖注入资源。</p>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在Redkale里存在默认的JsonConvert、BsonConvert对象。 只需在所有Service、Servlet中增加依赖注入资源。</p>
             <div class="highlight"><pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">XXXService</span> <span class="kd">implements</span> <span class="n">Service</span> <span class="o">{</span>
 
     <span class="nd">@Resource</span>
@@ -415,7 +415,7 @@
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;6. SIGN_OBJECTE 标记位，值固定为0xEE (short)<br/>
             </p>
             <footer class="site-footer">
-                <span class="site-footer-owner"><a href="https://github.com/redkale/redkale">RedKale</a> © &nbsp;&nbsp;&nbsp;&nbsp;欢迎加入RedKale技术交流QQ群: 527523235</span>
+                <span class="site-footer-owner"><a href="https://github.com/redkale/redkale">Redkale</a> © &nbsp;&nbsp;&nbsp;&nbsp;欢迎加入Redkale技术交流QQ群: 527523235</span>
             </footer>
 
         </section>

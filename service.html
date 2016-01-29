@@ -2,9 +2,9 @@
 <html lang="en-us">
     <head>
         <meta charset="UTF-8">
-        <title>RedKale - 全新的Java微服务框架</title>
-        <meta name="keywords" content="RedKale,redkale,java,微服务,架构"/>
-        <meta name="description" content="RedKale是一个全新的基于Java 8的微服务框架"/>
+        <title>Redkale - 全新的Java微服务框架</title>
+        <meta name="keywords" content="Redkale,redkale,java,微服务,架构"/>
+        <meta name="description" content="Redkale是一个全新的基于Java 8的微服务框架"/>
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
         <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
@@ -13,9 +13,9 @@
     </head>
     <body>
         <section class="page-header">
-            <a href="index.html" class="project-name">RedKale</a>
+            <a href="index.html" class="project-name">Redkale</a>
             <h2 class="project-tagline"></h2>
-            <a href="redkale.html" class="btn">RedKale 入门</a> 
+            <a href="redkale.html" class="btn">Redkale 入门</a> 
             <a href="convert.html" class="btn">Convert 组件</a> 
             <a href="service.html" class="btn">Service 组件</a> 
             <a href="source.html" class="btn">Source 组件</a> 
@@ -28,11 +28,11 @@
         <section class="main-content">
             <h3><a id="service_intro" class="anchor" href="#" aria-hidden="true"></a>Service 组件介绍</h3>
 
-            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Service 是RedKale最核心的组件，依赖于Convert、SNCP协议、Resource依赖注入。Service主要处理业务逻辑和操作数据层，是微服务架构中的单一原子服务。每一个Service实例分两种模式: <b>本地模式</b>和<b>远程模式</b>。其模式由 conf/application.xml 文件来配置。使用者在调用过程中通常不需要区分当前Service实例是哪种模式。<br/>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Service 是Redkale最核心的组件，依赖于Convert、SNCP协议、Resource依赖注入。Service主要处理业务逻辑和操作数据层，是微服务架构中的单一原子服务。每一个Service实例分两种模式: <b>本地模式</b>和<b>远程模式</b>。其模式由 conf/application.xml 文件来配置。使用者在调用过程中通常不需要区分当前Service实例是哪种模式。<br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 为了能确保本地模式与远程模式自由切换，对Service的实现类有一定的约束: <br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1、Service实现类会被继承，不能修饰为 <b>final</b>  <br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2、带@MultiRun注解的方法会被重载，不能修饰为 <b>final</b>  <br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; RedKale进程启动时扫描可加载的Service实现类，根据配置文件配置的模式采用JDK 8内置的ASM技术动态生成相应的Service临时类进行实例化，并注册到ResourceFactory同其他Service、Servlet依赖注入。
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Redkale进程启动时扫描可加载的Service实现类，根据配置文件配置的模式采用JDK 8内置的ASM技术动态生成相应的Service临时类进行实例化，并注册到ResourceFactory同其他Service、Servlet依赖注入。
             </p>
 
             <h3><a id="service_local" class="anchor" href="#" aria-hidden="true"></a>Service 本地模式</h3>
@@ -303,7 +303,7 @@
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如上描述，一个请求处理耗时 180ms，同时占用一个线程的时间也是 180ms。若换成NIO使IO耗时减少，为了方便计算假设IO耗时为0(当然实际情况是不可能的), 那么步骤1、4的耗时忽略不计，线程的占用时间由180ms变成160ms。 假设数据查询接口IO操作本身耗时也是10ms，那么有140ms是用于等待。若采用DataSource异步接口， 则140ms的等待时间可以释放当前线程资源。虽然整个请求的处理时间还是180ms，但是线程的占用时间却只有20ms。可以看出减少耗时多的步骤的等待时间才能事半功倍，大幅度地提高性能。异步接口的主要作用是远程请求在等待过程中释放当前线程资源。大大减少线程数，也减少大量线程之间的切换消耗。
             </p>
             <footer class="site-footer">
-                <span class="site-footer-owner"><a href="https://github.com/redkale/redkale">RedKale</a> © &nbsp;&nbsp;&nbsp;&nbsp;欢迎加入RedKale技术交流QQ群: 527523235</span>
+                <span class="site-footer-owner"><a href="https://github.com/redkale/redkale">Redkale</a> © &nbsp;&nbsp;&nbsp;&nbsp;欢迎加入Redkale技术交流QQ群: 527523235</span>
             </footer>
 
         </section>

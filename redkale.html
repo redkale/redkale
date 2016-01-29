@@ -2,9 +2,9 @@
 <html lang="en-us">
     <head>
         <meta charset="UTF-8">
-        <title>RedKale - 全新的Java微服务框架</title>
-        <meta name="keywords" content="RedKale,redkale,java,微服务,架构"/>
-        <meta name="description" content="RedKale是一个全新的基于Java 8的微服务框架"/>
+        <title>Redkale - 全新的Java微服务框架</title>
+        <meta name="keywords" content="Redkale,redkale,java,微服务,架构"/>
+        <meta name="description" content="Redkale是一个全新的基于Java 8的微服务框架"/>
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
         <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
@@ -13,9 +13,9 @@
     </head>
     <body>
         <section class="page-header">
-            <a href="index.html" class="project-name">RedKale</a>
+            <a href="index.html" class="project-name">Redkale</a>
             <h2 class="project-tagline"></h2>
-            <a href="redkale.html" class="btn">RedKale 入门</a> 
+            <a href="redkale.html" class="btn">Redkale 入门</a> 
             <a href="convert.html" class="btn">Convert 组件</a> 
             <a href="service.html" class="btn">Service 组件</a> 
             <a href="source.html" class="btn">Source 组件</a> 
@@ -26,9 +26,9 @@
         </section>
 
         <section class="main-content">
-            <h3><a id="redkale_start" class="anchor" href="#" aria-hidden="true"></a>RedKale 功能</h3>
+            <h3><a id="redkale_start" class="anchor" href="#" aria-hidden="true"></a>Redkale 功能</h3>
 
-            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;RedKale虽然只有1.xM大小，但是麻雀虽小五脏俱全。既可作为服务器使用，也可当工具包使用。作为独立的工具包提供以下功能：<br/>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Redkale虽然只有1.xM大小，但是麻雀虽小五脏俱全。既可作为服务器使用，也可当工具包使用。作为独立的工具包提供以下功能：<br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1、convert包提供JSON的序列化和反序列化功能，类似Gson、Jackson。 <br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2、convert包提供Java对象二进制的序列化和反序列化功能，类似Protobuf。 <br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3、source包提供很简便的数据库操作功能，类似JPA、Hibernate。 <br/>
@@ -37,8 +37,8 @@
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;6、ResourceFactory提供轻量级的依赖注入功能， 类似Google Guice。 <br/>
             </p>
 
-            <h3><a id="redkale_server" class="anchor" href="#" aria-hidden="true"></a>RedKale 服务器</h3>
-            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;RedKale作为服务器的目录如下: <br/>
+            <h3><a id="redkale_server" class="anchor" href="#" aria-hidden="true"></a>Redkale 服务器</h3>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Redkale作为服务器的目录如下: <br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>bin</b>&nbsp;&nbsp;&nbsp;： 存放启动关闭脚本(start.sh、shutdown.sh、start.bat、shutdown.bat) <br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>conf</b>&nbsp;： 存放服务器所需配置文件:<br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#redkale_confxml">application.xml</a>： 服务配置文件 (必需)；<br/>
@@ -49,7 +49,7 @@
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>root</b>&nbsp;： application.xml 配置中HTTP服务所需页面的默认根目录。 <br/>
             </p>
 
-            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;RedKale启动的流程如下：<br/>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Redkale启动的流程如下：<br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1、加载 <a href="#redkale_confxml">application.xml</a> 并解析。 <br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2、初始化 <b>&lt;resources&gt;</b> 节点中的资源。 <br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3、解析所有的 <b>&lt;server&gt;</b> 节点。 <br/>
@@ -65,8 +65,8 @@
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;6、启动进程本身的监听服务。 <br/>
             </p>
 
-            <h3><a id="redkale_dev" class="anchor" href="#" aria-hidden="true"></a>基于RedKale的开发与调试</h3>
-            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;基于RedKale创建一个Java应用程序工程(即使是Web项目也不要创建Java-Web工程)，引用redkale.jar 并创建RedKale所需的几个目录和文件。一个普通的Web项目只需要编写业务层的Service和接入层的HttpServlet的代码。数据库DataSource通过配置文件进行设置。<br/>
+            <h3><a id="redkale_dev" class="anchor" href="#" aria-hidden="true"></a>基于Redkale的开发与调试</h3>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;基于Redkale创建一个Java应用程序工程(即使是Web项目也不要创建Java-Web工程)，引用redkale.jar 并创建Redkale所需的几个目录和文件。一个普通的Web项目只需要编写业务层的Service和接入层的HttpServlet的代码。数据库DataSource通过配置文件进行设置。<br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;编写完代码可以通过启动脚本进行调试， 也可以在IDE设置项目的主类为 org.redkale.boot.Application 或者工程内定义主类进行启动调试: 
             </p>
             <div class="highlight"><pre><span class="kd">public</span> <span class="kd">final</span> <span class="kd">class</span> <span class="nc">Bootstrap</span> <span class="o">{</span>
@@ -83,10 +83,10 @@
         <span class="n">bean</span><span class="o">.</span><span class="na">setPassword</span><span class="o">(</span><span class="s">&quot;123456&quot;</span><span class="o">);</span>
         <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">service</span><span class="o">.</span><span class="na">login</span><span class="o">(</span><span class="n">bean</span><span class="o">));</span>
     <span class="o">}</span></pre></div>
-            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Application.singleton 运行流程与通过bin脚本启动的流程基本一致，区别在于singleton运行时不会启动Server和Application自身的服务监听。RedKale提倡接入层(Servlet)与业务层(Service)分开，Service在代码上不能依赖于Servlet，因此调试Service自身逻辑时不需要启动接入层服务(类似WebSocket依赖Servlet的功能除外)。 </p>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Application.singleton 运行流程与通过bin脚本启动的流程基本一致，区别在于singleton运行时不会启动Server和Application自身的服务监听。Redkale提倡接入层(Servlet)与业务层(Service)分开，Service在代码上不能依赖于Servlet，因此调试Service自身逻辑时不需要启动接入层服务(类似WebSocket依赖Servlet的功能除外)。 </p>
 
-            <h3><a id="redkale_inject" class="anchor" href="#" aria-hidden="true"></a>RedKale的依赖注入</h3>
-            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;RedKale内置的依赖注入实现很简单，只有三个类: javax.annotation.Resource、org.redkale.util.ResourceType、org.redkale.util.ResourceFactory，采用反射技术，由于依赖注入通常不会在频繁的操作中进行，因此性能要求不会很高。其中前两个是注解，ResourceFactory是主要操作类，主要提供注册和注入两个接口。ResourceFactory的依赖注入不仅提供其他依赖注入框架的常规功能，还能动态的自动更新通过inject注入的资源。</p>
+            <h3><a id="redkale_inject" class="anchor" href="#" aria-hidden="true"></a>Redkale的依赖注入</h3>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Redkale内置的依赖注入实现很简单，只有三个类: javax.annotation.Resource、org.redkale.util.ResourceType、org.redkale.util.ResourceFactory，采用反射技术，由于依赖注入通常不会在频繁的操作中进行，因此性能要求不会很高。其中前两个是注解，ResourceFactory是主要操作类，主要提供注册和注入两个接口。ResourceFactory的依赖注入不仅提供其他依赖注入框架的常规功能，还能动态的自动更新通过inject注入的资源。</p>
             <div class="highlight"><pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">AService</span> <span class="o">{</span>
 
     <span class="nd">@Resource</span><span class="o">(</span><span class="n">name</span> <span class="o">=</span> <span class="s">&quot;property.id&quot;</span><span class="o">)</span>
@@ -167,8 +167,8 @@
 <span class="o">}</span></pre></div>
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如上例，通过ResourceFactory.inject注入的对象都会自动更新资源的变化，若不想自动更新可以使用public Object register(String name, Type clazz, Object rs) 方法注册新资源。</p>
 
-            <h3><a id="redkale_deploy" class="anchor" href="#" aria-hidden="true"></a>RedKale 架构部署</h3>
-            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;通常一个系统会分为三层：接入层、业务层、数据层。对应到RedKale的组件是： Servlet、Service、Source。大部分系统提供的是HTTP服务，为了方便演示RedKale从集中式到分布式的变化，以一个简单的HTTP服务作为范例。<br/>
+            <h3><a id="redkale_deploy" class="anchor" href="#" aria-hidden="true"></a>Redkale 架构部署</h3>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;通常一个系统会分为三层：接入层、业务层、数据层。对应到Redkale的组件是： Servlet、Service、Source。大部分系统提供的是HTTP服务，为了方便演示Redkale从集中式到分布式的变化，以一个简单的HTTP服务作为范例。<br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;开发一个极简单的小论坛系统。包含三个模块： <br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;用户模块 &nbsp;&nbsp;&nbsp;UserSerivice: &nbsp;&nbsp;&nbsp;&nbsp;提供用户注册、登录、更新资料等功能， UserServlet作为接入层。<br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;帖子模块 ForumSerivice: &nbsp;&nbsp;&nbsp;&nbsp;提供看帖、发帖、删帖等功能， ForumServlet作为接入层。<br/>
@@ -215,7 +215,7 @@
     <span class="c">&lt;!-- SNCP 监听 Server --&gt;</span>
     <span class="nt">&lt;server</span> <span class="na">protocol=</span><span class="s">&quot;SNCP&quot;</span> <span class="na">port=</span><span class="s">&quot;7070&quot;</span><span class="nt">&gt;</span> 
         <span class="nt">&lt;services</span> <span class="na">autoload=</span><span class="s">&quot;true&quot;</span>  <span class="na">groups=</span><span class="s">&quot;ALL&quot;</span><span class="nt">&gt;</span>
-            <span class="c">&lt;!-- 有WebSocketServlet的服务必须配置WebSocketNodeService，且RedKale同时会自动创建一个同名(ws_notify)的 CacheSource --&gt;</span>
+            <span class="c">&lt;!-- 有WebSocketServlet的服务必须配置WebSocketNodeService，且Redkale同时会自动创建一个同名(ws_notify)的 CacheSource --&gt;</span>
             <span class="nt">&lt;service</span> <span class="na">name=</span><span class="s">&quot;ws_notify&quot;</span> <span class="na">value=</span><span class="s">&quot;<b>org.redkale.service.WebSocketNodeService</b>&quot;</span><span class="nt">/&gt;</span>
             <span class="c">&lt;!-- 存在DataSource必须配置DataSourceService --&gt;</span>
             <span class="nt">&lt;service</span> <span class="na">name=</span><span class="s">&quot;demodb&quot;</span> <span class="na">value=</span><span class="s">&quot;<b>org.redkale.service.DataSourceService</b>&quot;</span><span class="nt">/&gt;</span>
@@ -249,7 +249,7 @@
             <span class="nt">&lt;remoteaddr</span> <span class="na">value=</span><span class="s">&quot;request.headers.X-RemoteAddress&quot;</span><span class="nt">/&gt;</span>
         <span class="nt">&lt;/request&gt;</span>
         <span class="nt">&lt;services</span> <span class="na">autoload=</span><span class="s">&quot;true&quot;</span> <span class="na">groups=</span><span class="s">&quot;ALL&quot;</span><span class="nt">&gt;</span>
-            <span class="c">&lt;!-- 有WebSocketServlet的服务必须配置WebSocketNodeService，且RedKale同时会自动创建一个同名(ws_notify)的 CacheSource --&gt;</span>
+            <span class="c">&lt;!-- 有WebSocketServlet的服务必须配置WebSocketNodeService，且Redkale同时会自动创建一个同名(ws_notify)的 CacheSource --&gt;</span>
             <span class="nt">&lt;service</span> <span class="na">name=</span><span class="s">&quot;ws_notify&quot;</span> <span class="na">value=</span><span class="s">&quot;<b>org.redkale.service.WebSocketNodeService</b>&quot;</span><span class="nt">/&gt;</span>
         <span class="nt">&lt;/services&gt;</span>
         <span class="nt">&lt;servlets</span> <span class="na">autoload=</span><span class="s">&quot;true&quot;</span> <span class="nt">/&gt;</span>
@@ -267,7 +267,7 @@
     <span class="c">&lt;!-- SNCP 监听 Server --&gt;</span>
     <span class="nt">&lt;server</span> <span class="na">protocol=</span><span class="s">&quot;SNCP&quot;</span> <span class="na">port=</span><span class="s">&quot;7070&quot;</span><span class="nt">&gt;</span> 
         <span class="nt">&lt;services</span> <span class="na">autoload=</span><span class="s">&quot;true&quot;</span> <span class="na">groups=</span><span class="s">&quot;ALL&quot;</span><span class="nt">&gt;</span>
-            <span class="c">&lt;!-- 有WebSocketServlet的服务必须配置WebSocketNodeService，且RedKale同时会自动创建一个同名(ws_notify)的 CacheSource --&gt;</span>
+            <span class="c">&lt;!-- 有WebSocketServlet的服务必须配置WebSocketNodeService，且Redkale同时会自动创建一个同名(ws_notify)的 CacheSource --&gt;</span>
             <span class="nt">&lt;service</span> <span class="na">name=</span><span class="s">&quot;ws_notify&quot;</span> <span class="na">value=</span><span class="s">&quot;<b>org.redkale.service.WebSocketNodeService</b>&quot;</span><span class="nt">/&gt;</span>
             <span class="c">&lt;!-- 存在DataSource必须配置DataSourceService --&gt;</span>
             <span class="nt">&lt;service</span> <span class="na">name=</span><span class="s">&quot;demodb&quot;</span> <span class="na">value=</span><span class="s">&quot;<b>org.redkale.service.DataSourceService</b>&quot;</span><span class="nt">/&gt;</span>
@@ -312,7 +312,7 @@
             <span class="nt">&lt;service</span> <span class="na">value=</span><span class="s">&quot;org.redkale.demo.UserService&quot;</span> <span class="na">groups=</span><span class="s">&quot;USER_SERVICE&quot;</span><span class="nt">/&gt;</span>
             <span class="nt">&lt;service</span> <span class="na">value=</span><span class="s">&quot;org.redkale.demo.NotifyService&quot;</span> <span class="na">groups=</span><span class="s">&quot;NOTIFY_SERVICE&quot;</span><span class="nt">/&gt;</span>
             <span class="nt">&lt;service</span> <span class="na">value=</span><span class="s">&quot;org.redkale.demo.ForumService&quot;</span> <span class="na">groups=</span><span class="s">&quot;FORUM_SERVICE&quot;</span><span class="nt">/&gt;</span>
-            <span class="c">&lt;!-- 有WebSocketServlet的服务必须配置WebSocketNodeService，且RedKale同时会自动创建一个同名(ws_notify)的 CacheSource --&gt;</span>
+            <span class="c">&lt;!-- 有WebSocketServlet的服务必须配置WebSocketNodeService，且Redkale同时会自动创建一个同名(ws_notify)的 CacheSource --&gt;</span>
             <span class="nt">&lt;service</span> <span class="na">name=</span><span class="s">&quot;ws_notify&quot;</span> <span class="na">value=</span><span class="s">&quot;<b>org.redkale.service.WebSocketNodeService</b>&quot;</span> <span class="na">groups=</span><span class="s">&quot;NOTIFY_SERVICE&quot;</span><span class="nt">/&gt;</span>
         <span class="nt">&lt;/services&gt;</span>
         <span class="nt">&lt;servlets</span> <span class="na">autoload=</span><span class="s">&quot;true&quot;</span> <span class="nt">/&gt;</span>
@@ -372,7 +372,7 @@
         <span class="nt">&lt;services</span> <span class="na">autoload=</span><span class="s">&quot;true&quot;</span><span class="nt">&gt;</span>	
             <span class="nt">&lt;service</span> <span class="na">value=</span><span class="s">&quot;org.redkale.demo.UserService&quot;</span> <span class="na">groups=</span><span class="s">&quot;USER_SERVICE&quot;</span><span class="nt">/&gt;</span>
             <span class="nt">&lt;service</span> <span class="na">value=</span><span class="s">&quot;org.redkale.demo.ForumService&quot;</span> <span class="na">groups=</span><span class="s">&quot;FORUM_SERVICE&quot;</span><span class="nt">/&gt;</span>
-            <span class="c">&lt;!-- 有WebSocketServlet的服务必须配置WebSocketNodeService，且RedKale同时会自动创建一个同名(ws_notify)的 CacheSource --&gt;</span>
+            <span class="c">&lt;!-- 有WebSocketServlet的服务必须配置WebSocketNodeService，且Redkale同时会自动创建一个同名(ws_notify)的 CacheSource --&gt;</span>
             <span class="nt">&lt;service</span> <span class="na">name=</span><span class="s">&quot;ws_notify&quot;</span> <span class="na">value=</span><span class="s">&quot;<b>org.redkale.service.WebSocketNodeService</b>&quot;</span> <span class="na">groups=</span><span class="s">&quot;NOTIFY_SERVICE&quot;</span><span class="nt">/&gt;</span>
             <span class="c">&lt;!-- 存在DataSource必须配置DataSourceService --&gt;</span>
             <span class="nt">&lt;service</span> <span class="na">name=</span><span class="s">&quot;demodb&quot;</span> <span class="na">value=</span><span class="s">&quot;<b>org.redkale.service.DataSourceService</b>&quot;</span> <span class="na">groups=</span><span class="s">&quot;NOTIFY_SERVICE&quot;</span><span class="nt">/&gt;</span>
@@ -507,7 +507,7 @@
     <span class="nt">&lt;/server&gt;</span> 
 <span class="nt">&lt;/application&gt;</span></pre></div>
             <br/>
-            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;由以上几种部署方式的范例可以看出，RedKale提供了非常强大的架构，集中式到微服务架构不需要增加修改一行代码即可随意切换，即使网关式部署也只是新增很少的代码就可切换，且不影响其他服务。真正可以做到敏捷开发，复杂的系统都可如小系统般快速地开发出来。<br/>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;由以上几种部署方式的范例可以看出，Redkale提供了非常强大的架构，集中式到微服务架构不需要增加修改一行代码即可随意切换，即使网关式部署也只是新增很少的代码就可切换，且不影响其他服务。真正可以做到敏捷开发，复杂的系统都可如小系统般快速地开发出来。<br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;为了降低接入层与业务层代码的耦合， 可以将Service分接口与实现两个类，接入层只加载接口包、业务层使用实现包。
             </p>
             <br/>
@@ -690,7 +690,7 @@
                 </pre></div>
 
             <footer class="site-footer">
-                <span class="site-footer-owner"><a href="https://github.com/redkale/redkale">RedKale</a> © &nbsp;&nbsp;&nbsp;&nbsp;欢迎加入RedKale技术交流QQ群: 527523235</span>
+                <span class="site-footer-owner"><a href="https://github.com/redkale/redkale">Redkale</a> © &nbsp;&nbsp;&nbsp;&nbsp;欢迎加入Redkale技术交流QQ群: 527523235</span>
             </footer>
 
         </section>
