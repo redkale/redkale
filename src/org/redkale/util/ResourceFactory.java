@@ -52,6 +52,7 @@ public final class ResourceFactory {
 
     public void release() {
         this.store.clear();
+        this.gencstore.clear();
     }
 
     public <A> A register(final Class<? extends A> clazz, final A rs) {
