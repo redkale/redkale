@@ -165,7 +165,7 @@
     <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">aservice</span><span class="o">);</span> <span class="c1">//输出结果为：{id:&quot;6789&quot;, intid: 6789, bigint:666666666666666, bservice:{name:ffff}}</span>
 
 <span class="o">}</span></pre></div>
-            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如上例，通过ResourceFactory.inject注入的对象都会自动更新资源的变化，若不想自动更新可以使用public Object register(String name, Type clazz, Object rs) 方法注册新资源。</p>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如上例，通过ResourceFactory.inject注入的对象都会自动更新资源的变化，若不想自动更新可以使用带boolean autoSync参数的register系列方法(autoSync传false)注册新资源。</p>
 
             <h3><a id="redkale_deploy" class="anchor" href="#" aria-hidden="true"></a>Redkale 架构部署</h3>
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;通常一个系统会分为三层：接入层、业务层、数据层。对应到Redkale的组件是： Servlet、Service、Source。大部分系统提供的是HTTP服务，为了方便演示Redkale从集中式到分布式的变化，以一个简单的HTTP服务作为范例。<br/>
