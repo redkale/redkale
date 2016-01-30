@@ -112,13 +112,11 @@ a:hover {
 .project-name {
     display: inline-block;
     margin-top: 0;
-    margin-left:0.6rem;
-    margin-right: 1rem;
     padding-left: 2.4rem;
     text-decoration: none;
     text-decoration-color: #FFFFFF;
     background: url(/logo_96.png) no-repeat left  center ;
-    background-size: 1.98em;
+    background-size: 2em;
     letter-spacing: 0;
     text-shadow: 0px 1px 0px #999, 0px 1px 0px #888, 0px 2px 0px #777, 0px 2px 0px #666, 0px 3px 0px #555, 0px 3px 0px #444, 0px 4px 0px #333, 0px 4px 7px #001135;
     font-style: italic;
@@ -155,14 +153,12 @@ a:hover {
 @media screen and (min-width: 42em) and (max-width: 64em) {
     .project-name {
         font-size: 2.25rem;
-        background-size: 1.6em;
     }
 }
 
 @media screen and (max-width: 42em) {
     .project-name {
         font-size: 1.75rem;
-        background-size: 1.2em;
     }
 }
 
@@ -194,6 +190,7 @@ a:hover {
 @media screen and (max-width: 42em) {
     .project-tagline {
         font-size: 1rem;
+        
     }
 }
 
