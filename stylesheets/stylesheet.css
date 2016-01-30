@@ -73,13 +73,16 @@ a:hover {
 @media screen and (max-width: 42em) {
     .btn {
         width: 43%;
+        margin-top: 0.4rem;
+        margin-bottom: 0.4rem;
         margin-left: 1em;
         padding: 0.5rem;
         font-size: 0.9rem;
     }
 
     .btn + .btn {
-        margin-top: 0.1rem;
+        margin-top: 0.4rem;
+        margin-bottom: 0.4rem;
         margin-left: 1em;
     }
 }
@@ -190,7 +193,7 @@ a:hover {
 @media screen and (max-width: 42em) {
     .project-tagline {
         font-size: 1rem;
-        
+
     }
 }
 
