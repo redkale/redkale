@@ -643,7 +643,7 @@
 
             <h3><a id="net_sncp" class="anchor" href="#" aria-hidden="true"></a>SNCP 协议</h3>
             <p>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;SNCP(Service Node Communicate Protocol)协议是Redkale独有的一种传输协议，用于进程之间的通信，即请求方的<a href="service.html#service_remote" target="_blank">远程模式Service</a>与响应方的Service之间的通信。可以看成是RMI(远程接口调用)的同款，主要区别在于Redkale里SNCP几乎是透明的，写一个普通的Service通过配置即可实现远程调用，而不需要专门针对远程写接口。SNCP服务的配置与HTTP差不多，只是SNCP不需要Servlet，SncpServlet是通过Service动态生成的。<br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;SNCP(Service Node Communicate Protocol)协议是Redkale独有的一种传输协议，用于进程之间的通信，即请求方的<a href="service.html#service_remote" target="_blank">远程模式Service</a>与响应方的Service之间的通信。是RPC(远程过程调用协议)的同类型协议，主要区别在于Redkale里SNCP几乎是透明的，写一个普通的Service通过配置即可实现远程调用，而不需要专门针对远程写接口。SNCP服务的配置与HTTP差不多，只是SNCP不需要Servlet，SncpServlet是通过Service动态生成的。<br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;SNCP的数据包分包头和包体。包头描述请求的Service信息，请求包的包体描述参数的<a href="convert.html#convert_bson_struct" target="_blank">BSON值</a>，响应包的包体描述回调的参数对象和结果对象的<a href="convert.html#convert_bson_struct" target="_blank">BSON值</a>。<br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;包头固定长度为72字节，其结构如下: 
             </p>
