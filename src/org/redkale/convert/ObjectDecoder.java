@@ -34,7 +34,7 @@ public final class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T
 
     protected DeMember<R, T, ?>[] members;
 
-    protected Factory factory;
+    protected ConvertFactory factory;
 
     private boolean inited = false;
 
@@ -51,7 +51,7 @@ public final class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T
         this.members = new DeMember[0];
     }
 
-    public void init(final Factory factory) {
+    public void init(final ConvertFactory factory) {
         this.factory = factory;
         try {
             if (type == Object.class) return;
@@ -87,7 +87,7 @@ public final class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T
                     if (!method.getName().startsWith("set")) continue;
                     if (method.getParameterTypes().length != 1) continue;
                     if (method.getReturnType() != void.class) continue;
-                    if (reversible && (cps == null || !ObjectEncoder.contains(cps, Factory.readGetSetFieldName(method)))) {
+                    if (reversible && (cps == null || !ObjectEncoder.contains(cps, ConvertFactory.readGetSetFieldName(method)))) {
                         boolean is = method.getParameterTypes()[0] == boolean.class || method.getParameterTypes()[0] == Boolean.class;
                         try {
                             clazz.getMethod(method.getName().replaceFirst("set", is ? "is" : "get"));

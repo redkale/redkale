@@ -16,9 +16,9 @@ import java.lang.reflect.Type;
  */
 public final class AnyEncoder<T> implements Encodeable<Writer, T> {
 
-    final Factory factory;
+    final ConvertFactory factory;
 
-    AnyEncoder(Factory factory) {
+    AnyEncoder(ConvertFactory factory) {
         this.factory = factory;
     }
 

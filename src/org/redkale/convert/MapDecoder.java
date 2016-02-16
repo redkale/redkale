@@ -32,7 +32,7 @@ public final class MapDecoder<K, V> implements Decodeable<Reader, Map<K, V>> {
 
     private final Decodeable<Reader, V> valueDecoder;
 
-    public MapDecoder(final Factory factory, final Type type) {
+    public MapDecoder(final ConvertFactory factory, final Type type) {
         this.type = type;
         if (type instanceof ParameterizedType) {
             final ParameterizedType pt = (ParameterizedType) type;

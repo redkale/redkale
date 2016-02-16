@@ -30,7 +30,7 @@ public final class ArrayDecoder<T> implements Decodeable<Reader, T[]> {
 
     private final Decodeable<Reader, T> decoder;
 
-    public ArrayDecoder(final Factory factory, final Type type) {
+    public ArrayDecoder(final ConvertFactory factory, final Type type) {
         this.type = type;
         if (type instanceof GenericArrayType) {
             Type t = ((GenericArrayType) type).getGenericComponentType();

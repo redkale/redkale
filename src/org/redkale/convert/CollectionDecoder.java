@@ -32,7 +32,7 @@ public final class CollectionDecoder<T> implements Decodeable<Reader, Collection
 
     private final Decodeable<Reader, T> decoder;
 
-    public CollectionDecoder(final Factory factory, final Type type) {
+    public CollectionDecoder(final ConvertFactory factory, final Type type) {
         this.type = type;
         if (type instanceof ParameterizedType) {
             final ParameterizedType pt = (ParameterizedType) type;

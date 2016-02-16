@@ -17,13 +17,13 @@ package org.redkale.convert;
  */
 public abstract class Convert<R extends Reader, W extends Writer> {
 
-    protected final Factory<R, W> factory;
+    protected final ConvertFactory<R, W> factory;
 
-    protected Convert(Factory<R, W> factory) {
+    protected Convert(ConvertFactory<R, W> factory) {
         this.factory = factory;
     }
 
-    public Factory<R, W> getFactory() {
+    public ConvertFactory<R, W> getFactory() {
         return this.factory;
     }
 }

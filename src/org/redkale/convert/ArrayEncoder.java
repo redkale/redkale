@@ -29,7 +29,7 @@ public final class ArrayEncoder<T> implements Encodeable<Writer, T[]> {
 
     private final Encodeable<Writer, Object> encoder;
 
-    public ArrayEncoder(final Factory factory, final Type type) {
+    public ArrayEncoder(final ConvertFactory factory, final Type type) {
         this.type = type;
         if (type instanceof GenericArrayType) {
             Type t = ((GenericArrayType) type).getGenericComponentType();

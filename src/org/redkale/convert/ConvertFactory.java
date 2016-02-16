@@ -29,9 +29,9 @@ import org.redkale.util.*;
  * @param <W> Writer输出的子类
  */
 @SuppressWarnings("unchecked")
-public abstract class Factory<R extends Reader, W extends Writer> {
+public abstract class ConvertFactory<R extends Reader, W extends Writer> {
 
-    private final Factory parent;
+    private final ConvertFactory parent;
 
     protected Convert<R, W> convert;
 
@@ -54,7 +54,7 @@ public abstract class Factory<R extends Reader, W extends Writer> {
 
     private boolean skipAllIgnore = false;
 
-    protected Factory(Factory<R, W> parent, boolean tiny) {
+    protected ConvertFactory(ConvertFactory<R, W> parent, boolean tiny) {
         this.tiny = tiny;
         this.parent = parent;
         if (parent == null) {
@@ -108,7 +108,7 @@ public abstract class Factory<R extends Reader, W extends Writer> {
         }
     }
 
-    public Factory parent() {
+    public ConvertFactory parent() {
         return this.parent;
     }
 
@@ -116,15 +116,15 @@ public abstract class Factory<R extends Reader, W extends Writer> {
 
     public abstract boolean isReversible();
 
-    public abstract Factory createChild();
+    public abstract ConvertFactory createChild();
 
-    public abstract Factory createChild(boolean tiny);
+    public abstract ConvertFactory createChild(boolean tiny);
 
     public Convert getConvert() {
         return convert;
     }
 
-    public Factory tiny(boolean tiny) {
+    public ConvertFactory tiny(boolean tiny) {
         this.tiny = tiny;
         return this;
     }
@@ -378,7 +378,7 @@ public abstract class Factory<R extends Reader, W extends Writer> {
                 if (!Modifier.isStatic(method.getModifiers())) continue;
                 Class[] paramTypes = method.getParameterTypes();
                 if (paramTypes.length != 1) continue;
-                if (paramTypes[0] != Factory.class && paramTypes[0] != this.getClass()) continue;
+                if (paramTypes[0] != ConvertFactory.class && paramTypes[0] != this.getClass()) continue;
                 if (!Decodeable.class.isAssignableFrom(method.getReturnType())) continue;
                 try {
                     method.setAccessible(true);
@@ -458,7 +458,7 @@ public abstract class Factory<R extends Reader, W extends Writer> {
                 if (!Modifier.isStatic(method.getModifiers())) continue;
                 Class[] paramTypes = method.getParameterTypes();
                 if (paramTypes.length != 1) continue;
-                if (paramTypes[0] != Factory.class && paramTypes[0] != this.getClass()) continue;
+                if (paramTypes[0] != ConvertFactory.class && paramTypes[0] != this.getClass()) continue;
                 if (!Encodeable.class.isAssignableFrom(method.getReturnType())) continue;
                 try {
                     method.setAccessible(true);

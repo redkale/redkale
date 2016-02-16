@@ -27,7 +27,7 @@ public final class MapEncoder<K, V> implements Encodeable<Writer, Map<K, V>> {
 
     private final Encodeable<Writer, V> valencoder;
 
-    public MapEncoder(final Factory factory, final Type type) {
+    public MapEncoder(final ConvertFactory factory, final Type type) {
         this.type = type;
         if (type instanceof ParameterizedType) {
             final Type[] pt = ((ParameterizedType) type).getActualTypeArguments();

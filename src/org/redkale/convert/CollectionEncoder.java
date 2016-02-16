@@ -24,7 +24,7 @@ public final class CollectionEncoder<T> implements Encodeable<Writer, Collection
 
     private final Encodeable<Writer, Object> encoder;
 
-    public CollectionEncoder(final Factory factory, final Type type) {
+    public CollectionEncoder(final ConvertFactory factory, final Type type) {
         this.type = type;
         if (type instanceof ParameterizedType) {
             Type t = ((ParameterizedType) type).getActualTypeArguments()[0];

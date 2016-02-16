@@ -6,7 +6,7 @@
 package org.redkale.convert.json;
 
 import org.redkale.convert.ConvertType;
-import org.redkale.convert.Factory;
+import org.redkale.convert.ConvertFactory;
 import java.io.Serializable;
 import java.math.*;
 import java.net.*;
@@ -20,7 +20,7 @@ import org.redkale.util.*;
  *
  * @author zhangjx
  */
-public final class JsonFactory extends Factory<JsonReader, JsonWriter> {
+public final class JsonFactory extends ConvertFactory<JsonReader, JsonWriter> {
 
     private static final JsonFactory instance = new JsonFactory(null, Boolean.getBoolean("convert.json.tiny"));
 

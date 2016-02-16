@@ -45,7 +45,7 @@ public final class BsonConvert extends Convert<BsonReader, BsonWriter> {
 
     private final boolean tiny;
 
-    protected BsonConvert(Factory<BsonReader, BsonWriter> factory, boolean tiny) {
+    protected BsonConvert(ConvertFactory<BsonReader, BsonWriter> factory, boolean tiny) {
         super(factory);
         this.tiny = tiny;
     }

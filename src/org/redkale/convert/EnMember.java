@@ -39,7 +39,7 @@ public final class EnMember<W extends Writer, T, F> implements Comparable<EnMemb
         //this.isnumber = Number.class.isAssignableFrom(t) || (!this.isbool && t.isPrimitive());
     }
 
-    public static <W extends Writer, T, F> EnMember<W, T, F> create(final Factory factory, final Class<T> clazz, final String fieldname) {
+    public static <W extends Writer, T, F> EnMember<W, T, F> create(final ConvertFactory factory, final Class<T> clazz, final String fieldname) {
         try {
             Field field = clazz.getDeclaredField(fieldname);
             return new EnMember<>(Attribute.create(field), factory.loadEncoder(field.getGenericType()));
