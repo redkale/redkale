@@ -33,7 +33,7 @@ public class InnerCoderEntity {
      * 该方法提供给Convert组件自动加载。
      * 1) 方法名可以随意。
  2) 方法必须是static
- 3）方法的参数有且只能有一个， 且必须是org.redkale.convert.Factory或子类。
+ 3）方法的参数有且只能有一个， 且必须是org.redkale.convert.ConvertFactory或子类。
  —3.1) 参数类型为org.redkale.convert.ConvertFactory 表示适合JSON和BSON。
  —3.2) 参数类型为org.redkale.convert.json.JsonFactory 表示仅适合JSON。
  —3.3) 参数类型为org.redkale.convert.bson.BsonFactory 表示仅适合BSON。
