@@ -386,6 +386,30 @@ a:hover {
         font-size: 1rem;
     }
 }
+.art-date {
+    float: right;
+    font-size: 0.8rem;
+    margin-right: 30px;
+}
+
+.art-desc {
+    font-size: 0.8rem;
+    padding-left: 30px;
+}
+
+.art-title {
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    /* color: #159957; */
+    color: #90139E;
+}
+
+.art-list {
+    padding-top: 1rem;
+    margin-top: 1rem;
+    padding-left: 20px;
+    border-top: dashed 1px #eff0f1;
+}
 
 .site-footer {
     padding-top: 2rem;
@@ -407,16 +431,25 @@ a:hover {
     .site-footer {
         font-size: 1rem;
     }
+    .art-list {
+        font-size: 1rem;
+    }
 }
 
 @media screen and (min-width: 42em) and (max-width: 64em) {
     .site-footer {
         font-size: 1rem;
     }
+    .art-list {
+        font-size: 1rem;
+    }
 }
 
 @media screen and (max-width: 42em) {
     .site-footer {
+        font-size: 0.9rem;
+    }
+    .art-list {
         font-size: 0.9rem;
     }
 }
