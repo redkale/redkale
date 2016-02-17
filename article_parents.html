@@ -40,7 +40,7 @@
 
             <p>Redkale 双亲委托</p>
             <p>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ConvertFactory、ResourceFactory、WatchFactory三者的双亲委托模型设计完全一样。本篇只以ConvertFactory为例说明，ConvertFactory的搜索顺序与ClassLoader相反，ClassLoader为了避免类的重复而先加载父加载器后加载子加载器，ConvertFactory为了优先加载自定义的Encoder和Decoder先搜索自身的ConvertFactory，找不到再从父ConvertFactory中搜索。
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ConvertFactory、ResourceFactory、WatchFactory三者的双亲委托模型设计完全一样。下面以ConvertFactory为例说明，ConvertFactory的搜索顺序与ClassLoader相反，ClassLoader为了避免类的重复而先加载父加载器后加载子加载器，ConvertFactory为了优先加载自定义的Encoder和Decoder先搜索自身的ConvertFactory，找不到再从父ConvertFactory中搜索。
             </p>
             <div class="highlight"><pre><span class="kd">public</span> <span class="kd">final</span> <span class="o">&lt;</span><span class="n">E</span><span class="o">&gt;</span> <span class="n">Encodeable</span><span class="o">&lt;</span><span class="n">W</span><span class="o">,</span> <span class="n">E</span><span class="o">&gt;</span> <span class="nf">findEncoder</span><span class="o">(</span><span class="kd">final</span> <span class="n">Type</span> <span class="n">type</span><span class="o">)</span> <span class="o">{</span>
     <span class="n">Encodeable</span><span class="o">&lt;</span><span class="n">W</span><span class="o">,</span> <span class="n">E</span><span class="o">&gt;</span> <span class="n">rs</span> <span class="o">=</span> <span class="o">(</span><span class="n">Encodeable</span><span class="o">&lt;</span><span class="n">W</span><span class="o">,</span> <span class="n">E</span><span class="o">&gt;)</span> <span class="n">encoders</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="n">type</span><span class="o">);</span>
@@ -75,7 +75,26 @@
     <span class="k">if</span> <span class="o">(</span><span class="n">encoder</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="k">return</span> <span class="n">encoder</span><span class="o">;</span>
     <span class="k">return</span> <span class="nf">createEncoder</span><span class="o">(</span><span class="n">type</span><span class="o">,</span> <span class="n">clazz</span><span class="o">);</span>
 <span class="o">}</span></pre></div>
-
+            <p>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;大部分情况下Convert的处理对象会根据JavaBean类自定生成，而有些场景需要覆盖处理类，这样需要子ConvertFactory，如 <a href="convert.html#convert_base" target="_blank">Convert基本用法</a> 例子中使用JsonFactory.root().createChild()重定义。且与JsonFactory.root()中的定义可以并存，也不会产出冲突。
+            </p>
+            <p>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Redkale可以启动多个协议Server服务(配置文件中含多个server节点)，为避免冲突，每个非SNCP的Server的ResourceFactory也是独立的。
+            </p>
+            <div class="highlight"><pre><span class="kd">public</span> <span class="nf">NodeServer</span><span class="o">(</span><span class="n">Application</span> <span class="n">application</span><span class="o">,</span> <span class="n">Server</span> <span class="n">server</span><span class="o">)</span> <span class="o">{</span>
+    <span class="k">this</span><span class="o">.</span><span class="na">application</span> <span class="o">=</span> <span class="n">application</span><span class="o">;</span>
+    <b><span class="k">this</span><span class="o">.</span><span class="na">resourceFactory</span> <span class="o">=</span> <span class="n">application</span><span class="o">.</span><span class="na">getResourceFactory</span><span class="o">().</span><span class="na">createChild</span><span class="o">();</span></b>
+    <span class="k">this</span><span class="o">.</span><span class="na">server</span> <span class="o">=</span> <span class="n">server</span><span class="o">;</span>
+    <span class="k">this</span><span class="o">.</span><span class="na">logger</span> <span class="o">=</span> <span class="n">Logger</span><span class="o">.</span><span class="na">getLogger</span><span class="o">(</span><span class="k">this</span><span class="o">.</span><span class="na">getClass</span><span class="o">().</span><span class="na">getSimpleName</span><span class="o">());</span>
+<span class="o">}</span></pre></div>
+            <p>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;双亲委托模型既可让同级子Factory保持独立，也可重用父Factory内的配置，因此在Redkale这种支持多Server、多种配置的场景下很是适合。
+            </p>
+            <br/>
+            <p>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;转载请注明出处：<a href="http://redkale.org/article_parents.html" target="_blank">http://redkale.org/article_parents.html</a>
+            </p>
+            
             <footer class="site-footer">
                 <span class="site-footer-owner">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;欢迎加入Redkale QQ群: 527523235</span>
             </footer>
