@@ -55,7 +55,7 @@ public abstract class NodeServer {
     protected final Application application;
 
     //依赖注入工厂类
-    protected final ResourceFactory factory;
+    protected final ResourceFactory resourceFactory;
 
     //当前Server对象
     protected final Server server;
@@ -74,7 +74,7 @@ public abstract class NodeServer {
 
     public NodeServer(Application application, Server server) {
         this.application = application;
-        this.factory = application.getResourceFactory().createChild();
+        this.resourceFactory = application.getResourceFactory().createChild();
         this.server = server;
         this.logger = Logger.getLogger(this.getClass().getSimpleName());
         this.fine = logger.isLoggable(Level.FINE);
@@ -121,8 +121,8 @@ public abstract class NodeServer {
             if (this.sncpGroup == null) throw new RuntimeException("Server (" + String.valueOf(config).replaceAll("\\s+", " ") + ") not found <group> info");
         }
 
-        if (this.sncpAddress != null) this.factory.register(RESNAME_SERVER_ADDR, this.sncpAddress); //单点服务不会有 sncpAddress、sncpGroup
-        if (this.sncpGroup != null) this.factory.register(RESNAME_SERVER_GROUP, this.sncpGroup);
+        if (this.sncpAddress != null) this.resourceFactory.register(RESNAME_SERVER_ADDR, this.sncpAddress); //单点服务不会有 sncpAddress、sncpGroup
+        if (this.sncpGroup != null) this.resourceFactory.register(RESNAME_SERVER_GROUP, this.sncpGroup);
         {
             //设置root文件夹
             String webroot = config.getValue("root", "root");
@@ -131,9 +131,9 @@ public abstract class NodeServer {
                 myroot = new File(System.getProperty(Application.RESNAME_APP_HOME), webroot);
             }
 
-            factory.register(Server.RESNAME_SERVER_ROOT, String.class, myroot.getCanonicalPath());
-            factory.register(Server.RESNAME_SERVER_ROOT, File.class, myroot.getCanonicalFile());
-            factory.register(Server.RESNAME_SERVER_ROOT, Path.class, myroot.toPath());
+            resourceFactory.register(Server.RESNAME_SERVER_ROOT, String.class, myroot.getCanonicalPath());
+            resourceFactory.register(Server.RESNAME_SERVER_ROOT, File.class, myroot.getCanonicalFile());
+            resourceFactory.register(Server.RESNAME_SERVER_ROOT, Path.class, myroot.toPath());
 
             final String homepath = myroot.getCanonicalPath();
             Server.loadLib(logger, config.getValue("lib", "") + ";" + homepath + "/lib/*;" + homepath + "/classes");
@@ -162,7 +162,7 @@ public abstract class NodeServer {
         final NodeServer self = this;
         //---------------------------------------------------------------------------------------------
         final ResourceFactory appResFactory = application.getResourceFactory();
-        factory.add(DataSource.class, (ResourceFactory rf, final Object src, String resourceName, Field field, final Object attachment) -> {
+        resourceFactory.add(DataSource.class, (ResourceFactory rf, final Object src, String resourceName, Field field, final Object attachment) -> {
             try {
                 if (field.getAnnotation(Resource.class) == null) return;
                 if ((src instanceof Service) && Sncp.isRemote((Service) src)) return; //远程模式不得注入 DataSource
@@ -189,7 +189,7 @@ public abstract class NodeServer {
                     throw new RuntimeException(src.getClass().getName() + " not found _sameGroupTransport or _diffGroupTransports at " + field, e);
                 }
                 final InetSocketAddress sncpAddr = client == null ? null : client.getClientAddress();
-                if ((src instanceof DataSource) && sncpAddr != null && factory.find(resourceName, DataCacheListener.class) == null) { //只有DataSourceService 才能赋值 DataCacheListener
+                if ((src instanceof DataSource) && sncpAddr != null && resourceFactory.find(resourceName, DataCacheListener.class) == null) { //只有DataSourceService 才能赋值 DataCacheListener
                     Service cacheListenerService = Sncp.createLocalService(resourceName, getExecutor(), appResFactory, DataCacheListenerService.class, sncpAddr, sameGroupTransport, diffGroupTransports);
                     appResFactory.register(resourceName, DataCacheListener.class, cacheListenerService);
                     final NodeSncpServer sncpServer = application.findNodeSncpServer(sncpAddr);
@@ -206,7 +206,7 @@ public abstract class NodeServer {
                 logger.log(Level.SEVERE, "DataSource inject error", e);
             }
         });
-        factory.add(CacheSource.class, (ResourceFactory rf, final Object src, final String resourceName, Field field, final Object attachment) -> {
+        resourceFactory.add(CacheSource.class, (ResourceFactory rf, final Object src, final String resourceName, Field field, final Object attachment) -> {
             try {
                 if (field.getAnnotation(Resource.class) == null) return;
                 if ((src instanceof Service) && Sncp.isRemote((Service) src)) return; //远程模式不得注入 CacheSource   
@@ -262,14 +262,14 @@ public abstract class NodeServer {
         if (serviceFilter == null) return;
         final String threadName = "[" + Thread.currentThread().getName() + "] ";
         final Set<FilterEntry<Service>> entrys = serviceFilter.getFilterEntrys();
-        ResourceFactory regFactory = isSNCP() ? application.getResourceFactory() : factory;
+        ResourceFactory regFactory = isSNCP() ? application.getResourceFactory() : resourceFactory;
 
         for (FilterEntry<Service> entry : entrys) { //service实现类
             final Class<? extends Service> type = entry.getType();
             if (Modifier.isFinal(type.getModifiers())) continue; //修饰final的类跳过
             if (!Modifier.isPublic(type.getModifiers())) continue;
             if (entry.getName().contains("$")) throw new RuntimeException("<name> value cannot contains '$' in " + entry.getProperty());
-            if (factory.find(entry.getName(), type) != null) continue; //Server加载Service时需要判断是否已经加载过了。
+            if (resourceFactory.find(entry.getName(), type) != null) continue; //Server加载Service时需要判断是否已经加载过了。
             final HashSet<String> groups = entry.getGroups(); //groups.isEmpty()表示<services>没有配置groups属性。
             if (groups.isEmpty() && isSNCP()) groups.add(this.sncpGroup);
 
@@ -285,7 +285,7 @@ public abstract class NodeServer {
                 service = Sncp.createRemoteService(entry.getName(), getExecutor(), type, this.sncpAddress, loadTransport(groups));
             }
             final ServiceWrapper wrapper = new ServiceWrapper(type, service, entry.getName(), localed ? this.sncpGroup : null, groups, entry.getProperty());
-            if (factory.find(wrapper.getName(), wrapper.getType()) == null) {
+            if (resourceFactory.find(wrapper.getName(), wrapper.getType()) == null) {
                 regFactory.register(wrapper.getName(), wrapper.getService());
                 if (wrapper.isRemote()) {
                     remoteServiceWrappers.add(wrapper);
@@ -303,10 +303,10 @@ public abstract class NodeServer {
         final StringBuilder sb = logger.isLoggable(Level.INFO) ? new StringBuilder() : null;
         //---------------- inject ----------------
         new ArrayList<>(localServiceWrappers).forEach(y -> {
-            factory.inject(y.getService(), NodeServer.this);
+            resourceFactory.inject(y.getService(), NodeServer.this);
         });
         remoteServiceWrappers.forEach(y -> {
-            factory.inject(y.getService(), NodeServer.this);
+            resourceFactory.inject(y.getService(), NodeServer.this);
             if (sb != null) {
                 sb.append(threadName).append(y.toSimpleString()).append(" loaded and injected").append(LINE_SEPARATOR);
             }

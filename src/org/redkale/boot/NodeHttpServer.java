@@ -68,7 +68,7 @@ public final class NodeHttpServer extends NodeServer {
     private void initWebSocketService() {
         final NodeServer self = this;
         final ResourceFactory regFactory = application.getResourceFactory();
-        factory.add(WebSocketNode.class, (ResourceFactory rf, final Object src, final String resourceName, Field field, Object attachment) -> { //主要用于单点的服务
+        resourceFactory.add(WebSocketNode.class, (ResourceFactory rf, final Object src, final String resourceName, Field field, Object attachment) -> { //主要用于单点的服务
             try {
                 if (field.getAnnotation(Resource.class) == null) return;
                 if (!(src instanceof WebSocketServlet)) return;
@@ -77,7 +77,7 @@ public final class NodeHttpServer extends NodeServer {
                     if (nodeService == null) {
                         nodeService = Sncp.createLocalService(resourceName, getExecutor(), application.getResourceFactory(), WebSocketNodeService.class, (InetSocketAddress) null, (Transport) null, (Collection<Transport>) null);
                         regFactory.register(resourceName, WebSocketNode.class, nodeService);
-                        factory.inject(nodeService, self);
+                        resourceFactory.inject(nodeService, self);
                         logger.fine("[" + Thread.currentThread().getName() + "] Load Service " + nodeService);
                     }
                     field.set(src, nodeService);
@@ -106,7 +106,7 @@ public final class NodeHttpServer extends NodeServer {
             WebServlet ws = clazz.getAnnotation(WebServlet.class);
             if (ws == null || ws.value().length == 0) continue;
             final HttpServlet servlet = clazz.newInstance();
-            factory.inject(servlet, this);
+            resourceFactory.inject(servlet, this);
             final String[] mappings = ws.value();
             String pref = ws.repair() ? prefix : "";
             DefaultAnyValue servletConf = (DefaultAnyValue) en.getProperty();
