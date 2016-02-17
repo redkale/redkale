@@ -94,6 +94,8 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
             this.register(InetSocketAddress.class, InetSocketAddressSimpledCoder.instance);
             this.register(Pattern.class, PatternSimpledCoder.instance);
             this.register(CompletionHandler.class, CompletionHandlerSimpledCoder.instance);
+            this.register(URL.class, URLSimpledCoder.instance);
+            this.register(URI.class, URISimpledCoder.instance);
             //---------------------------------------------------------
             this.register(boolean[].class, BoolArraySimpledCoder.instance);
             this.register(byte[].class, ByteArraySimpledCoder.instance);
