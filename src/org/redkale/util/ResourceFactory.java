@@ -312,7 +312,7 @@ public final class ResourceFactory {
                         }
                     }
                     final String rcname = tname;
-                    ResourceEntry re = genctype == classtype ? null : findEntry(rcname, genctype);
+                    ResourceEntry re = findEntry(rcname, genctype);
                     if (re == null) {
 //                        if (Map.class.isAssignableFrom(classtype)) {
 //                            Map map = find(Pattern.compile(rcname.isEmpty() ? ".*" : rcname), (Class) ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[1], src);
@@ -328,12 +328,12 @@ public final class ResourceFactory {
                         ResourceLoader it = findLoader(field.getGenericType(), field);
                         if (it != null) {
                             it.load(this, src, rcname, field, attachment);
-                            re = genctype == classtype ? findEntry(rcname, classtype) : findEntry(rcname, genctype);
+                            re = findEntry(rcname, genctype);
                         }
                     }
                     if (re == null) {
                         register(rcname, genctype, null); //自动注入null的值
-                        re = genctype == classtype ? findEntry(rcname, classtype) : findEntry(rcname, genctype);
+                        re = findEntry(rcname, genctype);
                     }
                     if (re == null) continue;
                     re.elements.add(new ResourceElement<>(src, field));
