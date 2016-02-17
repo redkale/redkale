@@ -34,9 +34,7 @@ public final class ResourceFactory {
 
     private final ConcurrentHashMap<Type, ResourceLoader> loadermap = new ConcurrentHashMap();
 
-    private final ConcurrentHashMap<Class<?>, ConcurrentHashMap<String, ResourceEntry>> store = new ConcurrentHashMap();
-
-    private final ConcurrentHashMap<Type, ConcurrentHashMap<String, ResourceEntry>> gencstore = new ConcurrentHashMap();
+    private final ConcurrentHashMap<Type, ConcurrentHashMap<String, ResourceEntry>> store = new ConcurrentHashMap();
 
     private ResourceFactory(ResourceFactory parent) {
         this.parent = parent;
@@ -52,7 +50,6 @@ public final class ResourceFactory {
 
     public void release() {
         this.store.clear();
-        this.gencstore.clear();
     }
 
     public <A> A register(final Class<? extends A> clazz, final A rs) {
@@ -156,35 +153,16 @@ public final class ResourceFactory {
         return register(true, name, clazz, rs);
     }
 
-    public <A> A register(final boolean autoSync, final String name, final Class<? extends A> clazz, final A rs) {
-        ConcurrentHashMap<String, ResourceEntry> map = this.store.get(clazz);
-        if (map == null) {
-            ConcurrentHashMap<String, ResourceEntry> sub = new ConcurrentHashMap();
-            sub.put(name, new ResourceEntry(rs));
-            store.put(clazz, sub);
-            return null;
-        } else {
-            ResourceEntry re = map.get(name);
-            if (re == null) {
-                map.put(name, new ResourceEntry(rs));
-            } else {
-                map.put(name, new ResourceEntry(rs, re.elements, autoSync));
-            }
-            return re == null ? null : (A) re.value;
-        }
-    }
-
     public <A> A register(final String name, final Type clazz, final A rs) {
         return register(true, name, clazz, rs);
     }
 
     public <A> A register(final boolean autoSync, final String name, final Type clazz, final A rs) {
-        if (clazz instanceof Class) return register(autoSync, name, (Class<A>) clazz, rs);
-        ConcurrentHashMap<String, ResourceEntry> map = this.gencstore.get(clazz);
+        ConcurrentHashMap<String, ResourceEntry> map = this.store.get(clazz);
         if (map == null) {
             ConcurrentHashMap<String, ResourceEntry> sub = new ConcurrentHashMap();
             sub.put(name, new ResourceEntry(rs));
-            gencstore.put(clazz, sub);
+            store.put(clazz, sub);
             return null;
         } else {
             ResourceEntry re = map.get(name);
@@ -207,7 +185,7 @@ public final class ResourceFactory {
     }
 
     private ResourceEntry findEntry(String name, Type clazz) {
-        Map<String, ResourceEntry> map = this.gencstore.get(clazz);
+        Map<String, ResourceEntry> map = this.store.get(clazz);
         if (map != null) {
             ResourceEntry re = map.get(name);
             if (re != null) return re;
@@ -220,24 +198,12 @@ public final class ResourceFactory {
         return query(new ArrayList<A>(), clazz);
     }
 
-    private <A> List<A> query(final List<A> list, Class<? extends A> clazz) {
-        Map<String, ResourceEntry> map = this.store.get(clazz);
-        if (map != null) {
-            for (ResourceEntry re : map.values()) {
-                if (re.value != null) list.add((A) re.value);
-            }
-        }
-        if (parent != null) query(list, clazz);
-        return list;
-    }
-
     public <A> List<A> query(Type clazz) {
         return query(new ArrayList<A>(), clazz);
     }
 
     private <A> List<A> query(final List<A> list, Type clazz) {
-        if (clazz instanceof Class) return query(list, (Class) clazz);
-        Map<String, ResourceEntry> map = this.gencstore.get(clazz);
+        Map<String, ResourceEntry> map = this.store.get(clazz);
         if (map != null) {
             for (ResourceEntry re : map.values()) {
                 if (re.value != null) list.add((A) re.value);
@@ -265,8 +231,9 @@ public final class ResourceFactory {
     public <A> A findChild(final String name, final Class<? extends A> clazz) {
         A rs = find(name, clazz);
         if (rs != null) return rs;
-        for (Map.Entry<Class<?>, ConcurrentHashMap<String, ResourceEntry>> en : this.store.entrySet()) {  //不用forEach为兼容JDK 6
-            if (!clazz.isAssignableFrom(en.getKey())) continue;
+        for (Map.Entry<Type, ConcurrentHashMap<String, ResourceEntry>> en : this.store.entrySet()) {  //不用forEach为兼容JDK 6
+            if (!(en.getKey() instanceof Class)) continue;
+            if (!clazz.isAssignableFrom((Class) en.getKey())) continue;
             ResourceEntry v = en.getValue().get(name);
             if (v != null) return (A) v.value;
         }
