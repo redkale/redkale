@@ -51,19 +51,19 @@ public final class HttpPrepareServlet extends PrepareServlet<HttpContext, HttpRe
         }
         if (config != null) {
             AnyValue ssConfig = config.getAnyValue("servlets");
+            AnyValue resConfig = null;
             if (ssConfig != null) {
-                AnyValue resConfig = ssConfig.getAnyValue("resource-servlet");
-                if (resConfig instanceof DefaultAnyValue) {
-                    if (resConfig.getValue("webroot") == null)
-                        ((DefaultAnyValue) resConfig).addValue("webroot", config.getValue("root"));
+                resConfig = ssConfig.getAnyValue("resource-servlet");
+                if ((resConfig instanceof DefaultAnyValue) && resConfig.getValue("webroot") == null) {
+                    ((DefaultAnyValue) resConfig).addValue("webroot", config.getValue("root"));
                 }
-                if (resConfig == null) {
-                    DefaultAnyValue dresConfig = new DefaultAnyValue();
-                    dresConfig.addValue("webroot", config.getValue("root"));
-                    resConfig = dresConfig;
-                }
-                this.resourceHttpServlet.init(context, resConfig);
             }
+            if (resConfig == null) {
+                DefaultAnyValue dresConfig = new DefaultAnyValue();
+                dresConfig.addValue("webroot", config.getValue("root"));
+                resConfig = dresConfig;
+            }
+            this.resourceHttpServlet.init(context, resConfig);
         }
     }
 
