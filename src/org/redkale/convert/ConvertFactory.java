@@ -272,7 +272,7 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
         Creator result = findCreator(type);
         if (result == null) {
             result = Creator.create(type);
-            creators.put(type, result);
+            if (result != null) creators.put(type, result);
         }
         return result;
     }
