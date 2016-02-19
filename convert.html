@@ -72,8 +72,8 @@
 
     <span class="kd">public</span> <span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">T</span> <span class="nf">convertFrom</span><span class="o">(</span><span class="kd">final</span> <span class="n">Type</span> <span class="n">type</span><span class="o">,</span> <span class="kd">final</span> <span class="n">JsonReader</span> <span class="n">reader</span><span class="o">);</span></pre></div>
 
-            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Convert 与 ByteBuffer 的结合 </p>      
-            <p id="json_net_bytebuffer">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;从以上的方法可以看出，与其他JSON框架相比Convert多了与ByteBuffer结合的方法。特别是convertTo方法加了Supplier&lt;ByteBuffer&gt;方法，这么做是为了提高数据传输的性能。在大部分情况下JSON序列化得到的数据流是为了传输出去，常见的场景就是HTTP+JSON接口。Convert提供ByteBuffer接口会大量减少中间临时数据的产生。大部分输出JSON数据的方法如下:
+            <p id="json_net_bytebuffer">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Convert 与 ByteBuffer 的结合 </p>      
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;从以上的方法可以看出，与其他JSON框架相比Convert多了与ByteBuffer结合的方法。特别是convertTo方法加了Supplier&lt;ByteBuffer&gt;方法，这么做是为了提高数据传输的性能。在大部分情况下JSON序列化得到的数据流是为了传输出去，常见的场景就是HTTP+JSON接口。Convert提供ByteBuffer接口会大量减少中间临时数据的产生。大部分输出JSON数据的方法如下:
             </p>
             <div class="highlight"><pre>    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">doPost</span><span class="o">(</span><span class="n">HttpServletRequest</span> <span class="n">req</span><span class="o">,</span> <span class="n">HttpServletResponse</span> <span class="n">resp</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">ServletException</span><span class="o">,</span> <span class="n">IOException</span> <span class="o">{</span>
         <span class="n">String</span> <span class="n">json</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Gson()</span><span class="o">.</span><span class="na">toJson</span><span class="o">(record);</span>
