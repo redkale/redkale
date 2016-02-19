@@ -23,6 +23,10 @@ public class BsonByteBufferWriter extends BsonWriter {
 
     private int index;
 
+    public BsonByteBufferWriter(Supplier<ByteBuffer> supplier) {
+        this(false, supplier);
+    }
+
     protected BsonByteBufferWriter(boolean tiny, Supplier<ByteBuffer> supplier) {
         super((byte[]) null);
         this.tiny = tiny;
