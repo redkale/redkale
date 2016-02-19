@@ -20,6 +20,8 @@ import java.io.IOException;
  */
 public abstract class Servlet<C extends Context, R extends Request<C>, P extends Response<C, R>> {
 
+    AnyValue _conf; //当前Servlet的配置
+
     public void init(C context, AnyValue config) {
     }
 

@@ -6,7 +6,6 @@
 package org.redkale.net.http;
 
 import org.redkale.net.Servlet;
-import org.redkale.util.*;
 
 /**
  *
@@ -16,8 +15,6 @@ import org.redkale.util.*;
  * @author zhangjx
  */
 public abstract class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse> {
-
-    AnyValue _conf; //当前HttpServlet的配置
 
     String _prefix = ""; //当前HttpServlet的path前缀
 

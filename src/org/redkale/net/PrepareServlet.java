@@ -8,8 +8,10 @@ package org.redkale.net;
 import java.io.*;
 import java.nio.*;
 import java.nio.channels.*;
+import java.util.*;
 import java.util.concurrent.atomic.*;
 import java.util.logging.*;
+import org.redkale.util.*;
 
 /**
  *
@@ -21,11 +23,17 @@ import java.util.logging.*;
  * @param <R> Request的子类型
  * @param <P> Response的子类型
  */
-public abstract class PrepareServlet<C extends Context, R extends Request<C>, P extends Response<C, R>> extends Servlet<C, R, P> {
+public abstract class PrepareServlet<K extends Serializable, C extends Context, R extends Request<C>, P extends Response<C, R>> extends Servlet<C, R, P> {
 
     protected final AtomicLong executeCounter = new AtomicLong(); //执行请求次数
 
     protected final AtomicLong illRequestCounter = new AtomicLong(); //错误请求次数
+
+    protected final List<Servlet<C, R, P>> servlets = new ArrayList<>();
+
+    protected final Map<K, Servlet<C, R, P>> mappings = new HashMap<>();
+
+    public abstract <S extends Servlet<C, R, P>> void addServlet(S servlet, Object attachment, AnyValue conf, K... mappings);
 
     public final void prepare(final ByteBuffer buffer, final R request, final P response) throws IOException {
         executeCounter.incrementAndGet();
@@ -74,4 +82,11 @@ public abstract class PrepareServlet<C extends Context, R extends Request<C>, P 
         }
     }
 
+    protected AnyValue getServletConf(Servlet servlet) {
+        return servlet._conf;
+    }
+
+    protected void setServletConf(Servlet servlet, AnyValue conf) {
+        servlet._conf = conf;
+    }
 }

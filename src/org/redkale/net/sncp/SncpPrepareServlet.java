@@ -10,6 +10,7 @@ import org.redkale.util.AnyValue;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.*;
+import org.redkale.net.*;
 import org.redkale.util.*;
 
 /**
@@ -19,7 +20,7 @@ import org.redkale.util.*;
  *
  * @author zhangjx
  */
-public class SncpPrepareServlet extends PrepareServlet<SncpContext, SncpRequest, SncpResponse> {
+public class SncpPrepareServlet extends PrepareServlet<DLong, SncpContext, SncpRequest, SncpResponse> {
 
     private static final ByteBuffer pongBuffer = ByteBuffer.wrap("PONG".getBytes()).asReadOnlyBuffer();
 
@@ -27,7 +28,13 @@ public class SncpPrepareServlet extends PrepareServlet<SncpContext, SncpRequest,
 
     private final Map<DLong, SncpServlet> singlemaps = new HashMap<>();
 
-    public void addSncpServlet(SncpServlet servlet) {
+    @Override
+    public <S extends Servlet<SncpContext, SncpRequest, SncpResponse>> void addServlet(S servlet, Object attachment, AnyValue conf, DLong... mappings) {
+        addServlet((SncpServlet) servlet, conf);
+    }
+
+    public void addServlet(SncpServlet servlet, AnyValue conf) {
+        setServletConf(servlet, conf);
         if (servlet.getNameid() == DLong.ZERO) {
             synchronized (singlemaps) {
                 singlemaps.put(servlet.getServiceid(), servlet);
@@ -54,7 +61,7 @@ public class SncpPrepareServlet extends PrepareServlet<SncpContext, SncpRequest,
     public void init(SncpContext context, AnyValue config) {
         Collection<Map<DLong, SncpServlet>> values = this.maps.values();
         values.stream().forEach((en) -> {
-            en.values().stream().forEach(s -> s.init(context, s.conf));
+            en.values().stream().forEach(s -> s.init(context, getServletConf(s)));
         });
     }
 
@@ -62,7 +69,7 @@ public class SncpPrepareServlet extends PrepareServlet<SncpContext, SncpRequest,
     public void destroy(SncpContext context, AnyValue config) {
         Collection<Map<DLong, SncpServlet>> values = this.maps.values();
         values.stream().forEach((en) -> {
-            en.values().stream().forEach(s -> s.destroy(context, s.conf));
+            en.values().stream().forEach(s -> s.destroy(context, getServletConf(s)));
         });
     }
 

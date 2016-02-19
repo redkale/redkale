@@ -17,8 +17,6 @@ import org.redkale.util.*;
  */
 public abstract class SncpServlet extends Servlet<SncpContext, SncpRequest, SncpResponse> implements Comparable<SncpServlet> {
 
-    AnyValue conf;
-
     public abstract DLong getNameid();
 
     public abstract DLong getServiceid();

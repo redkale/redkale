@@ -24,7 +24,7 @@ import org.redkale.watch.*;
  *
  * @author zhangjx
  */
-public abstract class Server {
+public abstract class Server<K extends Serializable, C extends Context, R extends Request<C>, P extends Response<C, R>> {
 
     public static final String RESNAME_SERVER_ROOT = "SERVER_ROOT";
 
@@ -37,15 +37,15 @@ public abstract class Server {
 
     protected final String protocol;
 
-    protected final PrepareServlet prepare;
+    protected final PrepareServlet<K, C, R, P> prepare;
+
+    protected C context;
 
     protected AnyValue config;
 
     protected Charset charset;
 
     protected InetSocketAddress address;
-
-    protected Context context;
 
     protected int backlog;
 
@@ -69,7 +69,7 @@ public abstract class Server {
 
     private ScheduledThreadPoolExecutor scheduler;
 
-    protected Server(long serverStartTime, String protocol, PrepareServlet servlet, final WatchFactory watch) {
+    protected Server(long serverStartTime, String protocol, PrepareServlet<K, C, R, P> servlet, final WatchFactory watch) {
         this.serverStartTime = serverStartTime;
         this.protocol = protocol;
         this.prepare = servlet;
@@ -116,6 +116,10 @@ public abstract class Server {
         return this.logger;
     }
 
+    public <S extends Servlet<C, R, P>> void addServlet(S servlet, final Object attachment, AnyValue conf, K... mappings) {
+        this.prepare.addServlet(servlet, attachment, conf, mappings);
+    }
+
     public void start() throws IOException {
         this.context = this.createContext();
         this.prepare.init(this.context, config);
@@ -133,7 +137,7 @@ public abstract class Server {
                 + ", started in " + (System.currentTimeMillis() - context.getServerStartTime()) + " ms");
     }
 
-    protected abstract Context createContext();
+    protected abstract C createContext();
 
     public void shutdown() throws IOException {
         long s = System.currentTimeMillis();

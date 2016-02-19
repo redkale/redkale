@@ -23,11 +23,7 @@ import org.redkale.watch.*;
  *
  * @author zhangjx
  */
-public final class HttpPrepareServlet extends PrepareServlet<HttpContext, HttpRequest, HttpResponse> {
-
-    private final List<HttpServlet> servlets = new ArrayList<>();
-
-    private final Map<String, HttpServlet> strmaps = new HashMap<>();
+public final class HttpPrepareServlet extends PrepareServlet<String, HttpContext, HttpRequest, HttpResponse> {
 
     private SimpleEntry<Predicate<String>, HttpServlet>[] regArray = new SimpleEntry[0];
 
@@ -37,11 +33,11 @@ public final class HttpPrepareServlet extends PrepareServlet<HttpContext, HttpRe
     public void init(HttpContext context, AnyValue config) {
         this.servlets.stream().forEach(s -> {
             if (s instanceof WebSocketServlet) {
-                ((WebSocketServlet) s).preInit(context, s._conf);
+                ((WebSocketServlet) s).preInit(context, getServletConf(s));
             } else if (s instanceof BasedHttpServlet) {
-                ((BasedHttpServlet) s).preInit(context, s._conf);
+                ((BasedHttpServlet) s).preInit(context, getServletConf(s));
             }
-            s.init(context, s._conf);
+            s.init(context, getServletConf(s));
         });
         final WatchFactory watch = context.getWatchFactory();
         if (watch != null) {
@@ -71,7 +67,7 @@ public final class HttpPrepareServlet extends PrepareServlet<HttpContext, HttpRe
     public void execute(HttpRequest request, HttpResponse response) throws IOException {
         try {
             final String uri = request.getRequestURI();
-            HttpServlet servlet = this.strmaps.isEmpty() ? null : this.strmaps.get(uri);
+            Servlet<HttpContext, HttpRequest, HttpResponse> servlet = this.mappings.isEmpty() ? null : this.mappings.get(uri);
             if (servlet == null && this.regArray != null) {
                 for (SimpleEntry<Predicate<String>, HttpServlet> en : regArray) {
                     if (en.getKey().test(uri)) {
@@ -88,10 +84,12 @@ public final class HttpPrepareServlet extends PrepareServlet<HttpContext, HttpRe
         }
     }
 
-    public void addHttpServlet(HttpServlet servlet, String prefix, AnyValue conf, String... mappings) {
+    @Override
+    public <S extends Servlet<HttpContext, HttpRequest, HttpResponse>> void addServlet(S servlet0, Object prefix, AnyValue conf, String... mappings) {
         if (prefix == null) prefix = "";
+        HttpServlet servlet = (HttpServlet) servlet0;
         for (String mapping : mappings) {
-            if (!prefix.isEmpty()) mapping = prefix + mapping;
+            if (!prefix.toString().isEmpty()) mapping = prefix + mapping;
             if (contains(mapping, '.', '*', '{', '[', '(', '|', '^', '$', '+', '?', '\\')) { //是否是正则表达式))
                 if (mapping.charAt(0) != '^') mapping = '^' + mapping;
                 if (mapping.endsWith("/*")) {
@@ -107,11 +105,11 @@ public final class HttpPrepareServlet extends PrepareServlet<HttpContext, HttpRe
                     regArray[regArray.length - 1] = new SimpleEntry<>(Pattern.compile(mapping).asPredicate(), servlet);
                 }
             } else if (mapping != null && !mapping.isEmpty()) {
-                strmaps.put(mapping, servlet);
+                this.mappings.put(mapping, servlet);
             }
         }
-        servlet._conf = conf;
-        servlet._prefix = prefix == null ? "" : prefix;
+        setServletConf(servlet, conf);
+        servlet._prefix = prefix == null ? "" : prefix.toString();
         this.servlets.add(servlet);
     }
 
@@ -135,11 +133,11 @@ public final class HttpPrepareServlet extends PrepareServlet<HttpContext, HttpRe
     public void destroy(HttpContext context, AnyValue config) {
         this.resourceHttpServlet.destroy(context, config);
         this.servlets.stream().forEach(s -> {
-            s.destroy(context, s._conf);
+            s.destroy(context, getServletConf(s));
             if (s instanceof WebSocketServlet) {
-                ((WebSocketServlet) s).postDestroy(context, s._conf);
+                ((WebSocketServlet) s).postDestroy(context, getServletConf(s));
             } else if (s instanceof BasedHttpServlet) {
-                ((BasedHttpServlet) s).postDestroy(context, s._conf);
+                ((BasedHttpServlet) s).postDestroy(context, getServletConf(s));
             }
         });
     }

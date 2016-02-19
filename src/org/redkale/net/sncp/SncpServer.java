@@ -21,7 +21,7 @@ import org.redkale.watch.*;
  *
  * @author zhangjx
  */
-public final class SncpServer extends Server {
+public final class SncpServer extends Server<DLong, SncpContext, SncpRequest, SncpResponse> {
 
     public SncpServer() {
         this(System.currentTimeMillis(), null);
@@ -37,8 +37,8 @@ public final class SncpServer extends Server {
     }
 
     public SncpDynServlet addService(ServiceWrapper entry) {
-        SncpDynServlet sds = new SncpDynServlet(BsonFactory.root().getConvert(), entry.getName(), entry.getType(), entry.getService(), entry.getConf());
-        ((SncpPrepareServlet) this.prepare).addSncpServlet(sds);
+        SncpDynServlet sds = new SncpDynServlet(BsonFactory.root().getConvert(), entry.getName(), entry.getType(), entry.getService());
+        this.prepare.addServlet(sds, null, entry.getConf());
         return sds;
     }
 
@@ -48,7 +48,7 @@ public final class SncpServer extends Server {
 
     @Override
     @SuppressWarnings("unchecked")
-    protected Context createContext() {
+    protected SncpContext createContext() {
         final int port = this.address.getPort();
         AtomicLong createBufferCounter = watch == null ? new AtomicLong() : watch.createWatchNumber("SNCP_" + port + ".Buffer.creatCounter");
         AtomicLong cycleBufferCounter = watch == null ? new AtomicLong() : watch.createWatchNumber("SNCP_" + port + ".Buffer.cycleCounter");

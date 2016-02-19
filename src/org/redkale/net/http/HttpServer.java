@@ -20,7 +20,7 @@ import org.redkale.watch.*;
  *
  * @author zhangjx
  */
-public final class HttpServer extends Server {
+public final class HttpServer extends Server<String, HttpContext, HttpRequest, HttpResponse> {
 
     public HttpServer() {
         this(System.currentTimeMillis(), null);
@@ -37,12 +37,12 @@ public final class HttpServer extends Server {
     }
 
     public void addHttpServlet(HttpServlet servlet, final String prefix, AnyValue conf, String... mappings) {
-        ((HttpPrepareServlet) this.prepare).addHttpServlet(servlet, prefix, conf, mappings);
+        this.prepare.addServlet(servlet, prefix, conf, mappings);
     }
 
     @Override
     @SuppressWarnings("unchecked")
-    protected Context createContext() {
+    protected HttpContext createContext() {
         final int port = this.address.getPort();
         AtomicLong createBufferCounter = watch == null ? new AtomicLong() : watch.createWatchNumber("HTTP_" + port + ".Buffer.creatCounter");
         AtomicLong cycleBufferCounter = watch == null ? new AtomicLong() : watch.createWatchNumber("HTTP_" + port + ".Buffer.cycleCounter");
