@@ -11,6 +11,7 @@ import java.nio.channels.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.*;
+import java.util.stream.*;
 import org.redkale.util.*;
 import org.redkale.watch.*;
 
@@ -84,14 +85,7 @@ public final class Transport {
             tmpgroup.add(t.name);
         }
         Collections.sort(tmpgroup);  //必须按字母排列顺序确保，相同内容的transport列表组合的name相同，而不会因为list的顺序不同产生不同的name
-        boolean flag = false;
-        StringBuilder sb = new StringBuilder();
-        for (String g : tmpgroup) {
-            if (flag) sb.append(';');
-            sb.append(g);
-            flag = true;
-        }
-        this.name = sb.toString();
+        this.name = tmpgroup.stream().collect(Collectors.joining(";"));
         this.watch = first.watch;
         this.protocol = first.protocol;
         this.tcp = "TCP".equalsIgnoreCase(first.protocol);
@@ -99,11 +93,7 @@ public final class Transport {
         this.bufferPool = first.bufferPool;
         this.clientAddress = first.clientAddress;
         Set<InetSocketAddress> addrs = new HashSet();
-        for (Transport t : transports) {
-            for (InetSocketAddress addr : t.getRemoteAddresses()) {
-                addrs.add(addr);
-            }
-        }
+        transports.forEach(t -> addrs.addAll(Arrays.asList(t.getRemoteAddresses())));
         updateRemoteAddresses(addrs);
     }
 

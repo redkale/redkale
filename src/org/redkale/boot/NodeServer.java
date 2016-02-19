@@ -22,6 +22,7 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.Consumer;
 import java.util.logging.*;
+import java.util.stream.*;
 import javax.annotation.*;
 import javax.persistence.*;
 import org.redkale.net.*;
@@ -347,14 +348,7 @@ public abstract class NodeServer {
         if (groups == null || groups.isEmpty()) return null;
         List<String> tmpgroup = new ArrayList<>(groups);
         Collections.sort(tmpgroup);  //按字母排列顺序
-        boolean flag = false;
-        StringBuilder sb = new StringBuilder();
-        for (String g : tmpgroup) {
-            if (flag) sb.append(';');
-            sb.append(g);
-            flag = true;
-        }
-        final String groupid = sb.toString();
+        final String groupid = tmpgroup.stream().collect(Collectors.joining(";"));
         Transport transport = application.resourceFactory.find(groupid, Transport.class);
         if (transport != null) return transport;
         final List<Transport> transports = new ArrayList<>();
@@ -362,11 +356,7 @@ public abstract class NodeServer {
             transports.add(loadTransport(group));
         }
         Set<InetSocketAddress> addrs = new HashSet();
-        for (Transport t : transports) {
-            for (InetSocketAddress addr : t.getRemoteAddresses()) {
-                addrs.add(addr);
-            }
-        }
+        transports.forEach(t -> addrs.addAll(Arrays.asList(t.getRemoteAddresses())));
         Transport first = transports.get(0);
         Transport newTransport = new Transport(groupid, application.findGroupProtocol(first.getName()), application.getWatchFactory(),
                 application.transportBufferPool, application.transportChannelGroup, this.sncpAddress, addrs);
