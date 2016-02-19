@@ -671,6 +671,7 @@ public abstract class Sncp {
      * @param <T>                 Service泛型
      * @param name                资源名
      * @param executor            线程池
+     * @param resourceFactory     资源容器
      * @param serviceClass        Service类
      * @param clientAddress       本地IP地址
      * @param sameGroupTransport  同组的通信组件
