@@ -41,14 +41,14 @@
 
             <h3><a id="source_datasource" class="anchor" href="#" aria-hidden="true"></a>DataSource 入门</h3>
             <p>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;JPA虽然已经提供了简洁成熟的数据库操作接口，但当数据、业务量很庞大的时候就显得捉襟见肘，与JPA相比，DataSource有以下几个特点：<br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;JPA虽已提供了简洁成熟的数据库操作接口，但当数据、业务量很庞大的时候就显得捉襟见肘，与JPA相比，DataSource有以下几个特点：<br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1、简易的过滤查询接口，但仅支持简单的表关联查询。 <br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2、分布式的主键的分布式自增策略。 <br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 3、动态更新变更后的数据库连接参数。 <br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 4、读写分离的简易配置。 <br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 5、进程间的缓存自动同步。 <br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;数据库操作方面常见的是过滤查询操作，JPA规范中的JPQL虽然简化了SQL，但是对于动态产生的过滤条件,使用者还是无法免去组装过滤条件的过程(无论JPQL还是CriteriaQuery), DataSource定义了FilterBean接口可以省略组装条件的过程，FilterNode提供了类似CriteriaQuery的功能，且这两种对象都可以序列化，给<a href="service.html#service_remote" target="_blank">远程模式Service</a>提供了基础，微服务架构提倡服务之间尽量降低耦合，因此DataSource仅支持简单的关联查询，复杂的表关联查询或统计应放在数据分析系统中。一个服务通常部署多个进程，若用JPA的缓存则进程之间的缓存无法同步，而DataSource采用SNCP协议即可方便地达到自动同步缓存功能。JPA无法在主数据库异常时动态切换到备份数据库，DataSource会监听<a href="#source_confxml">persistence.xml</a>文件，当文件配置发生变化时自动切换新的数据库配置。<br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;为了降低学习成本，DataSource重用了JPA里的部分注解与配置文件，使用方法基本相同，与JPA用法唯一区别是注解只能标记于字段，不能标记在方法上。
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;为了降低学习成本，DataSource重用了JPA里的部分注解与配置文件，使用方法基本相同，与JPA用法的区别是注解只能标记于字段，不能标记在方法上。
             </p>
             <table style="margin: auto;">
                 <tr><th>注解类名</th><th>功能描述</th></tr>
