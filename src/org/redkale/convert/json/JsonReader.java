@@ -5,7 +5,6 @@
  */
 package org.redkale.convert.json;
 
-import java.util.function.*;
 import org.redkale.convert.*;
 import static org.redkale.convert.Reader.*;
 import org.redkale.util.*;
@@ -26,19 +25,7 @@ public class JsonReader extends Reader {
     private int limit;
 
     public static ObjectPool<JsonReader> createPool(int max) {
-        return new ObjectPool<JsonReader>(max, new Creator<JsonReader>() {  //为了兼容 JDK 6
-
-            @Override
-            public JsonReader create(Object... params) {
-                return new JsonReader();
-            }
-        }, null, new Predicate<JsonReader>() {
-
-            @Override
-            public boolean test(JsonReader t) {
-                return t.recycle();
-            }
-        });
+        return new ObjectPool<>(max, (Object... params) -> new JsonReader(), null, JsonReader::recycle);
     }
 
     public JsonReader() {
@@ -107,29 +94,34 @@ public class JsonReader extends Reader {
     @Override
     public final void skipValue() {
         final char ch = nextGoodChar();
-        if (ch == '"' || ch == '\'') {
-            backChar(ch);
-            readString();
-        } else if (ch == '{') {
-            while (hasNext()) {
-                this.readSmallString(); //读掉field
-                this.readBlank();
-                this.skipValue();
-            }
-        } else if (ch == '[') {
-            while (hasNext()) {
-                this.skipValue();
-            }
-        } else {
-            char c;
-            for (;;) {
-                c = nextChar();
-                if (c <= ' ') return;
-                if (c == '}' || c == ']' || c == ',' || c == ':') {
-                    backChar(c);
-                    return;
+        switch (ch) {
+            case '"':
+            case '\'':
+                backChar(ch);
+                readString();
+                break;
+            case '{':
+                while (hasNext()) {
+                    this.readSmallString(); //读掉field
+                    this.readBlank();
+                    this.skipValue();
                 }
-            }
+                break;
+            case '[':
+                while (hasNext()) {
+                    this.skipValue();
+                }
+                break;
+            default:
+                char c;
+                for (;;) {
+                    c = nextChar();
+                    if (c <= ' ') return;
+                    if (c == '}' || c == ']' || c == ',' || c == ':') {
+                        backChar(c);
+                        return;
+                    }
+                }
         }
     }
 
