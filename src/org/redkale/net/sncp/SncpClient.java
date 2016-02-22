@@ -139,8 +139,8 @@ public final class SncpClient {
 
     protected final Consumer<Runnable> executor;
 
-    public <T extends Service> SncpClient(final String serviceName, final Class<T> serviceType, final Consumer<Runnable> executor, boolean remote,
-            final Class serviceClass, final InetSocketAddress clientAddress) {
+    public <T extends Service> SncpClient(final String serviceName, final Class<T> serviceType, final Consumer<Runnable> executor,
+            final boolean remote, final Class serviceClass, final InetSocketAddress clientAddress) {
         this.remote = remote;
         this.executor = executor;
         this.serviceClass = serviceClass;
@@ -150,8 +150,7 @@ public final class SncpClient {
         final List<SncpAction> methodens = new ArrayList<>();
         //------------------------------------------------------------------------------
         for (java.lang.reflect.Method method : parseMethod(serviceClass)) {
-            SncpAction en = new SncpAction(method, Sncp.hash(method));
-            methodens.add(en);
+            methodens.add(new SncpAction(method, Sncp.hash(method)));
         }
         this.actions = methodens.toArray(new SncpAction[methodens.size()]);
         this.addrBytes = clientAddress == null ? new byte[4] : clientAddress.getAddress().getAddress();

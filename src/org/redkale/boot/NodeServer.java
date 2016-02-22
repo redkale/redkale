@@ -119,7 +119,8 @@ public abstract class NodeServer {
             String host = this.serverConf.getValue("host", "0.0.0.0").replace("0.0.0.0", "");
             this.sncpAddress = new InetSocketAddress(host.isEmpty() ? application.localAddress.getHostAddress() : host, this.serverConf.getIntValue("port"));
             this.sncpGroup = application.globalNodes.get(this.sncpAddress);
-            if (this.sncpGroup == null) throw new RuntimeException("Server (" + String.valueOf(config).replaceAll("\\s+", " ") + ") not found <group> info");
+            //单向SNCP服务不需要对等group
+            //if (this.sncpGroup == null) throw new RuntimeException("Server (" + String.valueOf(config).replaceAll("\\s+", " ") + ") not found <group> info");
         }
 
         if (this.sncpAddress != null) this.resourceFactory.register(RESNAME_SERVER_ADDR, this.sncpAddress); //单点服务不会有 sncpAddress、sncpGroup
@@ -137,7 +138,7 @@ public abstract class NodeServer {
             resourceFactory.register(Server.RESNAME_SERVER_ROOT, Path.class, myroot.toPath());
 
             final String homepath = myroot.getCanonicalPath();
-            Server.loadLib(logger, config.getValue("lib", "") + ";" + homepath + "/lib/*;" + homepath + "/classes");
+            Server.loadLib(logger, config.getValue("lib", "").replace("${APP_HOME}", homepath) + ";" + homepath + "/lib/*;" + homepath + "/classes");
             if (server != null) server.init(config);
         }
 
@@ -272,7 +273,7 @@ public abstract class NodeServer {
             if (entry.getName().contains("$")) throw new RuntimeException("<name> value cannot contains '$' in " + entry.getProperty());
             if (resourceFactory.find(entry.getName(), type) != null) continue; //Server加载Service时需要判断是否已经加载过了。
             final HashSet<String> groups = entry.getGroups(); //groups.isEmpty()表示<services>没有配置groups属性。
-            if (groups.isEmpty() && isSNCP()) groups.add(this.sncpGroup);
+            if (groups.isEmpty() && isSNCP() && this.sncpGroup != null) groups.add(this.sncpGroup);
 
             final boolean localed = (this.sncpAddress == null && !type.isInterface() && !Modifier.isAbstract(type.getModifiers())) //非SNCP的Server，通常是单点服务
                     || groups.contains(this.sncpGroup) //本地IP含在内的
@@ -286,16 +287,18 @@ public abstract class NodeServer {
                 service = Sncp.createRemoteService(entry.getName(), getExecutor(), type, this.sncpAddress, loadTransport(groups));
             }
             final ServiceWrapper wrapper = new ServiceWrapper(type, service, entry.getName(), localed ? this.sncpGroup : null, groups, entry.getProperty());
-            if (resourceFactory.find(wrapper.getName(), wrapper.getType()) == null) {
-                regFactory.register(wrapper.getName(), wrapper.getService());
-                if (wrapper.isRemote()) {
-                    remoteServiceWrappers.add(wrapper);
-                } else {
-                    localServiceWrappers.add(wrapper);
-                    if (consumer != null) consumer.accept(wrapper);
+            for (final Class restype : wrapper.getTypes()) {
+                if (resourceFactory.find(wrapper.getName(), restype) == null) {
+                    regFactory.register(wrapper.getName(), restype, wrapper.getService());
+                } else if (isSNCP() && !entry.isAutoload()) {
+                    throw new RuntimeException(ServiceWrapper.class.getSimpleName() + "(class:" + type.getName() + ", name:" + entry.getName() + ", group:" + groups + ") is repeat.");
                 }
-            } else if (isSNCP() && !entry.isAutoload()) {
-                throw new RuntimeException(ServiceWrapper.class.getSimpleName() + "(class:" + type.getName() + ", name:" + entry.getName() + ", group:" + groups + ") is repeat.");
+            }
+            if (wrapper.isRemote()) {
+                remoteServiceWrappers.add(wrapper);
+            } else {
+                localServiceWrappers.add(wrapper);
+                if (consumer != null) consumer.accept(wrapper);
             }
         }
         application.servicecdl.countDown();

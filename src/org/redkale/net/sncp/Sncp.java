@@ -57,19 +57,20 @@ public abstract class Sncp {
         return ((0L + ip.getPort()) << 32) | ((0xffffffff & bytes[0]) << 24) | ((0xffffff & bytes[1]) << 16) | ((0xffff & bytes[2]) << 8) | (0xff & bytes[3]);
     }
 
-    public static DLong hash(final Class clazz) {
-        if (clazz == null) return DLong.ZERO;
-        return hash(clazz.getName());
-    }
-
-    public static DLong hashClass(final String clazzName) {
-        if (clazzName == null || clazzName.isEmpty()) return DLong.ZERO;
-        return hash(clazzName);
-    }
-
     public static DLong hash(final java.lang.reflect.Method method) {
         if (method == null) return DLong.ZERO;
-        return hash(method.toString());
+        StringBuilder sb = new StringBuilder(); //不能使用method.toString() 因为包含declaringClass信息导致接口与实现类的方法hash不一致
+        sb.append(method.getReturnType().getName()).append(' ');
+        sb.append(method.getName());
+        sb.append('(');
+        boolean first = true;
+        for (Class pt : method.getParameterTypes()) {
+            if (!first) sb.append(',');
+            sb.append(pt.getName());
+            first = false;
+        }
+        sb.append(')');
+        return hash(sb.toString());
     }
 
     /**

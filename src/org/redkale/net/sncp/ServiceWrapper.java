@@ -8,6 +8,7 @@ package org.redkale.net.sncp;
 import org.redkale.service.Service;
 import org.redkale.util.AnyValue;
 import java.util.*;
+import java.util.stream.*;
 import org.redkale.util.*;
 
 /**
@@ -25,8 +26,6 @@ public final class ServiceWrapper<T extends Service> implements Comparable<Servi
 
     private static volatile int maxNameLength = 0;
 
-    private final Class<T> type;
-
     private final T service;
 
     private final AnyValue conf;
@@ -39,10 +38,9 @@ public final class ServiceWrapper<T extends Service> implements Comparable<Servi
 
     private final boolean remote;
 
-    private final Class[] resTypes;
+    private final Class[] types;
 
     public ServiceWrapper(Class<T> type, T service, String name, String sncpGroup, Set<String> groups, AnyValue conf) {
-        this.type = type == null ? (Class<T>) service.getClass() : type;
         this.service = service;
         this.conf = conf;
         this.sncpGroup = sncpGroup;
@@ -50,16 +48,36 @@ public final class ServiceWrapper<T extends Service> implements Comparable<Servi
         this.name = name;
         this.remote = Sncp.isRemote(service);
         ResourceType rty = service.getClass().getAnnotation(ResourceType.class);
-        this.resTypes = rty == null ? new Class[]{this.type} : rty.value();
+        this.types = rty == null ? new Class[]{type == null ? (Class<T>) service.getClass() : type} : rty.value();
 
         maxNameLength = Math.max(maxNameLength, name.length());
-        maxClassNameLength = Math.max(maxClassNameLength, type.getName().length() + 1);
+        StringBuilder s = new StringBuilder();
+        if (this.types.length == 1) {
+            s.append(types[0].getName());
+        } else {
+            s.append('[');
+            s.append(Arrays.asList(this.types).stream().map((Class t) -> t.getName()).collect(Collectors.joining(",")));
+            s.append(']');
+        }
+        maxClassNameLength = Math.max(maxClassNameLength, s.length() + 1);
     }
 
     public String toSimpleString() {
         StringBuilder sb = new StringBuilder();
-        sb.append(remote ? "RemoteService" : "LocalService ").append("(type=").append(type.getName());
-        int len = maxClassNameLength - type.getName().length();
+        sb.append(remote ? "RemoteService" : "LocalService ");
+        int len;
+        if (types.length == 1) {
+            sb.append("(type= ").append(types[0].getName());
+            len = maxClassNameLength - types[0].getName().length();
+        } else {
+            StringBuilder s = new StringBuilder();
+            s.append('[');
+            s.append(Arrays.asList(this.types).stream().map((Class t) -> t.getName()).collect(Collectors.joining(",")));
+            s.append(']');
+            sb.append("(types=").append(s);
+            len = maxClassNameLength - s.length();
+        }
+
         for (int i = 0; i < len; i++) {
             sb.append(' ');
         }
@@ -77,13 +95,13 @@ public final class ServiceWrapper<T extends Service> implements Comparable<Servi
         if (obj == null) return false;
         if (!(obj instanceof ServiceWrapper)) return false;
         ServiceWrapper other = (ServiceWrapper) obj;
-        return (this.type.equals(other.type) && this.remote == other.remote && this.name.equals(other.name) && Objects.equals(this.sncpGroup, other.sncpGroup));
+        return (this.types[0].equals(other.types[0]) && this.remote == other.remote && this.name.equals(other.name) && Objects.equals(this.sncpGroup, other.sncpGroup));
     }
 
     @Override
     public int hashCode() {
         int hash = 3;
-        hash = 67 * hash + Objects.hashCode(this.type);
+        hash = 67 * hash + Objects.hashCode(this.types[0]);
         hash = 67 * hash + Objects.hashCode(this.sncpGroup);
         hash = 67 * hash + Objects.hashCode(this.name);
         hash = 67 * hash + (this.remote ? 1 : 0);
@@ -92,17 +110,13 @@ public final class ServiceWrapper<T extends Service> implements Comparable<Servi
 
     @Override
     public int compareTo(ServiceWrapper o) {
-        int rs = this.type.getName().compareTo(o.type.getName());
+        int rs = this.types[0].getName().compareTo(o.types[0].getName());
         if (rs == 0) rs = this.name.compareTo(o.name);
         return rs;
     }
 
-    public Class<? extends Service> getType() {
-        return type;
-    }
-
-    public Class[] getResTypes() {
-        return resTypes;
+    public Class[] getTypes() {
+        return types;
     }
 
     public Service getService() {

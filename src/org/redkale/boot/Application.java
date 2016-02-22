@@ -434,7 +434,8 @@ public final class Application {
                 others.add(entry);
             }
         }
-        if (!sncps.isEmpty() && globalNodes.isEmpty()) throw new RuntimeException("found SNCP Server node but not found <group> node info.");
+        //单向SNCP服务不需要对等group
+        //if (!sncps.isEmpty() && globalNodes.isEmpty()) throw new RuntimeException("found SNCP Server node but not found <group> node info.");
 
         runServers(timecd, sncps);  //必须确保sncp都启动后再启动其他协议
         runServers(timecd, others);
