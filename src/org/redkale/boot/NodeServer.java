@@ -274,7 +274,7 @@ public abstract class NodeServer {
             final HashSet<String> groups = entry.getGroups(); //groups.isEmpty()表示<services>没有配置groups属性。
             if (groups.isEmpty() && isSNCP()) groups.add(this.sncpGroup);
 
-            final boolean localed = this.sncpAddress == null //非SNCP的Server，通常是单点服务
+            final boolean localed = (this.sncpAddress == null && !type.isInterface() && !Modifier.isAbstract(type.getModifiers())) //非SNCP的Server，通常是单点服务
                     || groups.contains(this.sncpGroup) //本地IP含在内的
                     || type.getAnnotation(LocalService.class) != null;//本地模式
             if (localed && (type.isInterface() || Modifier.isAbstract(type.getModifiers()))) continue; //本地模式不能实例化接口和抽象类的Service类
