@@ -10,7 +10,6 @@ import org.redkale.util.AnyValue;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.*;
-import org.redkale.net.*;
 import org.redkale.util.*;
 
 /**
@@ -20,57 +19,37 @@ import org.redkale.util.*;
  *
  * @author zhangjx
  */
-public class SncpPrepareServlet extends PrepareServlet<DLong, SncpContext, SncpRequest, SncpResponse> {
+public class SncpPrepareServlet extends PrepareServlet<DLong, SncpContext, SncpRequest, SncpResponse, SncpServlet> {
 
     private static final ByteBuffer pongBuffer = ByteBuffer.wrap("PONG".getBytes()).asReadOnlyBuffer();
 
-    private final Map<DLong, Map<DLong, SncpServlet>> maps = new HashMap<>();
-
-    private final Map<DLong, SncpServlet> singlemaps = new HashMap<>();
-
     @Override
-    public <S extends Servlet<SncpContext, SncpRequest, SncpResponse>> void addServlet(S servlet, Object attachment, AnyValue conf, DLong... mappings) {
+    public void addServlet(SncpServlet servlet, Object attachment, AnyValue conf, DLong... mappings) {
         addServlet((SncpServlet) servlet, conf);
     }
 
     public void addServlet(SncpServlet servlet, AnyValue conf) {
         setServletConf(servlet, conf);
-        if (servlet.getNameid() == DLong.ZERO) {
-            synchronized (singlemaps) {
-                singlemaps.put(servlet.getServiceid(), servlet);
-            }
-        } else {
-            synchronized (maps) {
-                Map<DLong, SncpServlet> m = maps.get(servlet.getServiceid());
-                if (m == null) {
-                    m = new HashMap<>();
-                    maps.put(servlet.getServiceid(), m);
-                }
-                m.put(servlet.getNameid(), servlet);
-            }
+        synchronized (mappings) {
+            mappings.put(servlet.getServiceid(), servlet);
+            servlets.add(servlet);
         }
     }
 
     public List<SncpServlet> getSncpServlets() {
-        ArrayList<SncpServlet> list = new ArrayList<>(singlemaps.values());
-        maps.values().forEach(x -> list.addAll(x.values()));
+        ArrayList<SncpServlet> list = new ArrayList<>(servlets.size());
+        servlets.forEach(x -> list.add((SncpServlet) x));
         return list;
     }
 
     @Override
     public void init(SncpContext context, AnyValue config) {
-        Collection<Map<DLong, SncpServlet>> values = this.maps.values();
-        values.stream().forEach((en) -> {
-            en.values().stream().forEach(s -> s.init(context, getServletConf(s)));
-        });
+        servlets.forEach(s -> s.init(context, getServletConf(s)));
     }
 
     @Override
     public void destroy(SncpContext context, AnyValue config) {
-        Collection<Map<DLong, SncpServlet>> values = this.maps.values();
-        values.stream().forEach((en) -> {
-            en.values().stream().forEach(s -> s.destroy(context, getServletConf(s)));
-        });
+        servlets.forEach(s -> s.destroy(context, getServletConf(s)));
     }
 
     @Override
@@ -79,23 +58,9 @@ public class SncpPrepareServlet extends PrepareServlet<DLong, SncpContext, SncpR
             response.finish(pongBuffer.duplicate());
             return;
         }
-        SncpServlet servlet;
-        if (request.getNameid() == DLong.ZERO) {
-            servlet = singlemaps.get(request.getServiceid());
-            if (servlet == null) {
-                response.finish(SncpResponse.RETCODE_ILLSERVICEID, null);  //无效serviceid
-                return;
-            }
-        } else {
-            Map<DLong, SncpServlet> m = maps.get(request.getServiceid());
-            if (m == null) {
-                response.finish(SncpResponse.RETCODE_ILLSERVICEID, null);  //无效serviceid
-                return;
-            }
-            servlet = m.get(request.getNameid());
-        }
+        SncpServlet servlet = (SncpServlet) mappings.get(request.getServiceid());
         if (servlet == null) {
-            response.finish(SncpResponse.RETCODE_ILLNAMEID, null);  //无效nameid
+            response.finish(SncpResponse.RETCODE_ILLSERVICEID, null);  //无效serviceid
         } else {
             servlet.execute(request, response);
         }

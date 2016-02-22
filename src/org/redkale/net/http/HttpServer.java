@@ -20,7 +20,7 @@ import org.redkale.watch.*;
  *
  * @author zhangjx
  */
-public final class HttpServer extends Server<String, HttpContext, HttpRequest, HttpResponse> {
+public final class HttpServer extends Server<String, HttpContext, HttpRequest, HttpResponse, HttpServlet> {
 
     public HttpServer() {
         this(System.currentTimeMillis(), null);

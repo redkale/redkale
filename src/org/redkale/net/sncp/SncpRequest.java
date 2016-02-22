@@ -13,12 +13,14 @@ import org.redkale.util.*;
 
 /**
  *
- * <p> 详情见: http://www.redkale.org
+ * <p>
+ * 详情见: http://www.redkale.org
+ *
  * @author zhangjx
  */
 public final class SncpRequest extends Request<SncpContext> {
 
-    public static final int HEADER_SIZE = 72;
+    public static final int HEADER_SIZE = 56;
 
     public static final byte[] DEFAULT_HEADER = new byte[HEADER_SIZE];
 
@@ -27,8 +29,6 @@ public final class SncpRequest extends Request<SncpContext> {
     private long seqid;
 
     private DLong serviceid;
-
-    private DLong nameid;
 
     private DLong actionid;
 
@@ -60,7 +60,6 @@ public final class SncpRequest extends Request<SncpContext> {
             return -1;
         }
         this.serviceid = DLong.read(buffer);
-        this.nameid = DLong.read(buffer);
         this.actionid = DLong.read(buffer);
         buffer.get(bufferbytes);
         this.bodylength = buffer.getInt();
@@ -102,7 +101,6 @@ public final class SncpRequest extends Request<SncpContext> {
     protected void recycle() {
         this.seqid = 0;
         this.serviceid = null;
-        this.nameid = null;
         this.actionid = null;
         this.bodylength = 0;
         this.bodyoffset = 0;
@@ -126,10 +124,6 @@ public final class SncpRequest extends Request<SncpContext> {
 
     public DLong getServiceid() {
         return serviceid;
-    }
-
-    public DLong getNameid() {
-        return nameid;
     }
 
     public DLong getActionid() {

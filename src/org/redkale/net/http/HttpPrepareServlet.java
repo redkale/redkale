@@ -23,7 +23,7 @@ import org.redkale.watch.*;
  *
  * @author zhangjx
  */
-public final class HttpPrepareServlet extends PrepareServlet<String, HttpContext, HttpRequest, HttpResponse> {
+public final class HttpPrepareServlet extends PrepareServlet<String, HttpContext, HttpRequest, HttpResponse, HttpServlet> {
 
     private SimpleEntry<Predicate<String>, HttpServlet>[] regArray = new SimpleEntry[0];
 
@@ -31,7 +31,7 @@ public final class HttpPrepareServlet extends PrepareServlet<String, HttpContext
 
     @Override
     public void init(HttpContext context, AnyValue config) {
-        this.servlets.stream().forEach(s -> {
+        this.servlets.forEach(s -> {
             if (s instanceof WebSocketServlet) {
                 ((WebSocketServlet) s).preInit(context, getServletConf(s));
             } else if (s instanceof BasedHttpServlet) {
@@ -41,7 +41,7 @@ public final class HttpPrepareServlet extends PrepareServlet<String, HttpContext
         });
         final WatchFactory watch = context.getWatchFactory();
         if (watch != null) {
-            this.servlets.stream().forEach(s -> {
+            this.servlets.forEach(s -> {
                 watch.inject(s);
             });
         }
@@ -85,9 +85,8 @@ public final class HttpPrepareServlet extends PrepareServlet<String, HttpContext
     }
 
     @Override
-    public <S extends Servlet<HttpContext, HttpRequest, HttpResponse>> void addServlet(S servlet0, Object prefix, AnyValue conf, String... mappings) {
+    public void addServlet(HttpServlet servlet, Object prefix, AnyValue conf, String... mappings) {
         if (prefix == null) prefix = "";
-        HttpServlet servlet = (HttpServlet) servlet0;
         for (String mapping : mappings) {
             if (!prefix.toString().isEmpty()) mapping = prefix + mapping;
             if (contains(mapping, '.', '*', '{', '[', '(', '|', '^', '$', '+', '?', '\\')) { //是否是正则表达式))
@@ -132,7 +131,7 @@ public final class HttpPrepareServlet extends PrepareServlet<String, HttpContext
     @Override
     public void destroy(HttpContext context, AnyValue config) {
         this.resourceHttpServlet.destroy(context, config);
-        this.servlets.stream().forEach(s -> {
+        this.servlets.forEach(s -> {
             s.destroy(context, getServletConf(s));
             if (s instanceof WebSocketServlet) {
                 ((WebSocketServlet) s).postDestroy(context, getServletConf(s));

@@ -135,21 +135,18 @@ public final class SncpClient {
 
     protected final DLong serviceid;
 
-    protected final DLong nameid;
-
     protected final SncpAction[] actions;
 
     protected final Consumer<Runnable> executor;
 
-    public SncpClient(final String serviceName, final Consumer<Runnable> executor, final DLong serviceid, boolean remote,
+    public <T extends Service> SncpClient(final String serviceName, final Class<T> serviceType, final Consumer<Runnable> executor, boolean remote,
             final Class serviceClass, final InetSocketAddress clientAddress) {
         this.remote = remote;
         this.executor = executor;
         this.serviceClass = serviceClass;
         this.clientAddress = clientAddress;
         this.name = serviceName;
-        this.nameid = Sncp.hash(serviceName);
-        this.serviceid = serviceid;
+        this.serviceid = Sncp.hash(serviceType.getName() + ':' + serviceName);
         final List<SncpAction> methodens = new ArrayList<>();
         //------------------------------------------------------------------------------
         for (java.lang.reflect.Method method : parseMethod(serviceClass)) {
@@ -165,10 +162,6 @@ public final class SncpClient {
         return clientAddress;
     }
 
-    public DLong getNameid() {
-        return nameid;
-    }
-
     public DLong getServiceid() {
         return serviceid;
     }
@@ -181,8 +174,8 @@ public final class SncpClient {
     public String toString() {
         String service = serviceClass.getName();
         if (remote) service = service.replace(Sncp.LOCALPREFIX, Sncp.REMOTEPREFIX);
-        return this.getClass().getSimpleName() + "(service = " + service + ", serviceid = " + serviceid + ", nameid = " + nameid
-                + ", name = '" + name + "', address = " + (clientAddress == null ? "" : (clientAddress.getHostString() + ":" + clientAddress.getPort()))
+        return this.getClass().getSimpleName() + "(service = " + service + ", serviceid = " + serviceid + ", name = '" + name
+                + "', address = " + (clientAddress == null ? "" : (clientAddress.getHostString() + ":" + clientAddress.getPort()))
                 + ", actions.size = " + actions.length + ")";
     }
 
@@ -449,8 +442,6 @@ public final class SncpClient {
         if (buffer.getChar() != HEADER_SIZE) throw new RuntimeException("sncp(" + action.method + ") buffer receive header.length not " + HEADER_SIZE);
         DLong rserviceid = DLong.read(buffer);
         if (!rserviceid.equals(serviceid)) throw new RuntimeException("sncp(" + action.method + ") response.serviceid = " + serviceid + ", but request.serviceid =" + rserviceid);
-        DLong rnameid = DLong.read(buffer);
-        if (!rnameid.equals(nameid)) throw new RuntimeException("sncp(" + action.method + ") response.nameid = " + nameid + ", but receive nameid =" + rnameid);
         DLong raction = DLong.read(buffer);
         if (!action.actionid.equals(raction)) throw new RuntimeException("sncp(" + action.method + ") response.actionid = " + action.actionid + ", but request.actionid =(" + raction + ")");
         buffer.getInt();  //地址
@@ -464,7 +455,6 @@ public final class SncpClient {
         buffer.putLong(seqid); //序列号
         buffer.putChar((char) HEADER_SIZE); //header长度
         DLong.write(buffer, this.serviceid);
-        DLong.write(buffer, this.nameid);
         DLong.write(buffer, actionid);
         buffer.put(addrBytes);
         buffer.putChar((char) this.addrPort);

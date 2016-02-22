@@ -23,9 +23,7 @@ public final class SncpResponse extends Response<SncpContext, SncpRequest> {
 
     public static final int RETCODE_ILLSERVICEID = (1 << 10); //无效serviceid
 
-    public static final int RETCODE_ILLNAMEID = (1 << 11); //无效nameid
-
-    public static final int RETCODE_ILLACTIONID = (1 << 12); //无效actionid
+    public static final int RETCODE_ILLACTIONID = (1 << 11); //无效actionid
 
     public static final int RETCODE_THROWEXCEPTION = (1 << 30); //内部异常
 
@@ -39,7 +37,6 @@ public final class SncpResponse extends Response<SncpContext, SncpRequest> {
 
     public static String getRetCodeInfo(int retcode) {
         if (retcode == RETCODE_ILLSERVICEID) return "serviceid is invalid";
-        if (retcode == RETCODE_ILLNAMEID) return "nameid is invalid";
         if (retcode == RETCODE_ILLACTIONID) return "actionid is invalid";
         if (retcode == RETCODE_THROWEXCEPTION) return "Inner exception";
         return null;
@@ -71,7 +68,6 @@ public final class SncpResponse extends Response<SncpContext, SncpRequest> {
         buffer.putLong(request.getSeqid());
         buffer.putChar((char) SncpRequest.HEADER_SIZE);
         DLong.write(buffer, request.getServiceid());
-        DLong.write(buffer, request.getNameid());
         DLong.write(buffer, request.getActionid());
         buffer.put(addrBytes);
         buffer.putChar((char) this.addrPort);

@@ -21,7 +21,7 @@ import org.redkale.watch.*;
  *
  * @author zhangjx
  */
-public final class SncpServer extends Server<DLong, SncpContext, SncpRequest, SncpResponse> {
+public final class SncpServer extends Server<DLong, SncpContext, SncpRequest, SncpResponse, SncpServlet> {
 
     public SncpServer() {
         this(System.currentTimeMillis(), null);

@@ -45,8 +45,6 @@ public final class SncpDynServlet extends SncpServlet {
 
     private final DLong serviceid;
 
-    private final DLong nameid;
-
     private final HashMap<DLong, SncpServletAction> actions = new HashMap<>();
 
     private Supplier<ByteBuffer> bufferSupplier;
@@ -54,8 +52,7 @@ public final class SncpDynServlet extends SncpServlet {
     public SncpDynServlet(final BsonConvert convert, final String serviceName, final Class<? extends Service> type, final Service service) {
         this.serviceName = serviceName;
         this.type = type;
-        this.nameid = Sncp.hash(serviceName);
-        this.serviceid = Sncp.hash(type);
+        this.serviceid = Sncp.hash(type.getName() + ':' + serviceName);
         Set<DLong> actionids = new HashSet<>();
         for (java.lang.reflect.Method method : service.getClass().getMethods()) {
             if (method.isSynthetic()) continue;
@@ -90,14 +87,10 @@ public final class SncpDynServlet extends SncpServlet {
         for (int i = 0; i < maxNameLength - serviceName.length(); i++) {
             sb.append(' ');
         }
-        sb.append(", nameid=").append(nameid).append(", actions.size=").append(actions.size() > 9 ? "" : " ").append(actions.size()).append(")");
+        sb.append(", actions.size=").append(actions.size() > 9 ? "" : " ").append(actions.size()).append(")");
         return sb.toString();
     }
 
-    @Override
-    public DLong getNameid() {
-        return nameid;
-    }
 
     @Override
     public DLong getServiceid() {

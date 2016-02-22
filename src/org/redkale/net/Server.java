@@ -24,7 +24,7 @@ import org.redkale.watch.*;
  *
  * @author zhangjx
  */
-public abstract class Server<K extends Serializable, C extends Context, R extends Request<C>, P extends Response<C, R>> {
+public abstract class Server<K extends Serializable, C extends Context, R extends Request<C>, P extends Response<C, R>, S extends Servlet<C, R, P>> {
 
     public static final String RESNAME_SERVER_ROOT = "SERVER_ROOT";
 
@@ -37,7 +37,7 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
 
     protected final String protocol;
 
-    protected final PrepareServlet<K, C, R, P> prepare;
+    protected final PrepareServlet<K, C, R, P, S> prepare;
 
     protected C context;
 
@@ -69,7 +69,7 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
 
     private ScheduledThreadPoolExecutor scheduler;
 
-    protected Server(long serverStartTime, String protocol, PrepareServlet<K, C, R, P> servlet, final WatchFactory watch) {
+    protected Server(long serverStartTime, String protocol, PrepareServlet<K, C, R, P, S> servlet, final WatchFactory watch) {
         this.serverStartTime = serverStartTime;
         this.protocol = protocol;
         this.prepare = servlet;
@@ -116,7 +116,7 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         return this.logger;
     }
 
-    public <S extends Servlet<C, R, P>> void addServlet(S servlet, final Object attachment, AnyValue conf, K... mappings) {
+    public void addServlet(S servlet, final Object attachment, AnyValue conf, K... mappings) {
         this.prepare.addServlet(servlet, attachment, conf, mappings);
     }
 

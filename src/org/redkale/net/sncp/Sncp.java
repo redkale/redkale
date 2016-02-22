@@ -33,12 +33,6 @@ import org.redkale.service.DynRemote;
  */
 public abstract class Sncp {
 
-    private static final java.lang.reflect.Type GROUPS_TYPE1 = new TypeToken<Set<String>>() {
-    }.getType();
-
-    private static final java.lang.reflect.Type GROUPS_TYPE2 = new TypeToken<String[]>() {
-    }.getType();
-
     static final String LOCALPREFIX = "_DynLocal";
 
     static final String REMOTEPREFIX = "_DynRemote";
@@ -725,7 +719,7 @@ public abstract class Sncp {
                 try {
                     Field e = newClazz.getDeclaredField("_client");
                     e.setAccessible(true);
-                    client = new SncpClient(name, executor, hash(serviceClass), false, newClazz, clientAddress);
+                    client = new SncpClient(name, serviceClass, executor, false, newClazz, clientAddress);
                     e.set(rs, client);
                 } catch (NoSuchFieldException ne) {
                 }
@@ -734,7 +728,7 @@ public abstract class Sncp {
                 StringBuilder sb = new StringBuilder();
                 sb.append(newClazz.getName()).append("{name = '").append(name).append("'");
                 if (client != null) {
-                    sb.append(", nameid = ").append(client.getNameid()).append(", serviceid = ").append(client.getServiceid());
+                    sb.append(", serviceid = ").append(client.getServiceid());
                     sb.append(", action.size = ").append(client.getActionCount());
                     List<String> groups = new ArrayList<>();
                     if (sameGroupTransport != null) groups.add(sameGroupTransport.getName());
@@ -857,7 +851,7 @@ public abstract class Sncp {
         final String anyValueDesc = Type.getDescriptor(AnyValue.class);
         ClassLoader loader = Sncp.class.getClassLoader();
         String newDynName = supDynName.substring(0, supDynName.lastIndexOf('/') + 1) + REMOTEPREFIX + serviceClass.getSimpleName();
-        final SncpClient client = new SncpClient(name, executor, hash(serviceClass), true, realed ? createLocalServiceClass(name, serviceClass) : serviceClass, clientAddress);
+        final SncpClient client = new SncpClient(name, serviceClass, executor, true, realed ? createLocalServiceClass(name, serviceClass) : serviceClass, clientAddress);
         try {
             Class newClazz = Class.forName(newDynName.replace('/', '.'));
             T rs = (T) newClazz.newInstance();
@@ -870,7 +864,7 @@ public abstract class Sncp {
             {
                 StringBuilder sb = new StringBuilder();
                 sb.append(newClazz.getName()).append("{name = '").append(name);
-                sb.append("', nameid = ").append(client.getNameid()).append(", serviceid = ").append(client.getServiceid());
+                sb.append("', serviceid = ").append(client.getServiceid());
                 sb.append(", action.size = ").append(client.getActionCount());
                 sb.append(", address = ").append(clientAddress).append(", groups = ").append(transport == null ? null : transport.getName());
                 sb.append(", remoteaddrs = ").append(transport == null ? null : Arrays.asList(transport.getRemoteAddresses()));
@@ -1089,7 +1083,7 @@ public abstract class Sncp {
             {
                 StringBuilder sb = new StringBuilder();
                 sb.append(newClazz.getName()).append("{name = '").append(name);
-                sb.append("', nameid = ").append(client.getNameid()).append(", serviceid = ").append(client.getServiceid());
+                sb.append("', serviceid = ").append(client.getServiceid());
                 sb.append(", action.size = ").append(client.getActionCount());
                 sb.append(", address = ").append(clientAddress).append(", groups = ").append(transport == null ? null : transport.getName());
                 sb.append(", remotes = ").append(transport == null ? null : Arrays.asList(transport.getRemoteAddresses()));
