@@ -522,7 +522,11 @@ public final class Application {
         final Application application = Application.create(true);
         application.init();
         application.start();
-        return application.resourceFactory.find(name, serviceClass);
+        for (NodeServer server : application.servers) {
+            T service = server.resourceFactory.find(name, serviceClass);
+            if (service != null) return service;
+        }
+        return null;
     }
 
     private static Application create(final boolean singleton) throws IOException {
