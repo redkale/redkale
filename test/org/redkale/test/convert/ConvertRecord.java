@@ -45,7 +45,68 @@ public class ConvertRecord {
         v.setMap(map);
         return v;
     }
+    /**
+    public static void main(String[] args) throws Exception {
+        final ConvertRecord entry = ConvertRecord.createDefault();
+        final JsonConvert convert = JsonFactory.root().getConvert();
+        final String entryString = convert.convertTo(entry);
+        convert.convertFrom(ConvertRecord.class, entryString);
+        System.out.println("redkale-convert: " + convert.convertTo(entry));
+        com.alibaba.fastjson.JSON.parseObject(entryString, ConvertRecord.class);
+        System.out.println("fastjson  1.2.7: " + com.alibaba.fastjson.JSON.toJSONString(entry));
+        final com.google.gson.Gson gson = new com.google.gson.Gson();
+        gson.fromJson(entryString, ConvertRecord.class);
+        System.out.println("google-gson 2.4: " + gson.toJson(entry));
+        System.out.println("------------------------------------------------");
+        System.out.println("组件              序列化耗时(ms)              反解析耗时(ms)");
+        final int count = 10_0000;
+        long s = System.currentTimeMillis();
+        for (int i = 0; i < count; i++) {
+            convert.convertTo(entry);
+        }
+        long e = System.currentTimeMillis() - s;
+        System.out.print("redkale-convert             " + e);
 
+        s = System.currentTimeMillis();
+        for (int i = 0; i < count; i++) {
+            convert.convertFrom(ConvertRecord.class, entryString);
+        }
+        e = System.currentTimeMillis() - s;
+        System.out.println("\t                " + e);
+
+        //----------------------------------------------------------------------------
+        s = System.currentTimeMillis();
+        for (int i = 0; i < count; i++) {
+            com.alibaba.fastjson.JSON.toJSONString(entry);
+        }
+        e = System.currentTimeMillis() - s;
+        System.out.print("fastjson  1.2.7             " + e);
+
+        s = System.currentTimeMillis();
+        for (int i = 0; i < count; i++) {
+            com.alibaba.fastjson.JSON.parseObject(entryString, ConvertRecord.class);
+        }
+        e = System.currentTimeMillis() - s;
+        System.out.println("\t                " + e);
+        //----------------------------------------------------------------------------
+        s = System.currentTimeMillis();
+        for (int i = 0; i < count; i++) {
+            gson.toJson(entry);
+        }
+        e = System.currentTimeMillis() - s;
+        System.out.print("google-gson 2.4            " + e);
+
+        s = System.currentTimeMillis();
+        for (int i = 0; i < count; i++) {
+            gson.fromJson(entryString, ConvertRecord.class);
+        }
+        e = System.currentTimeMillis() - s;
+        System.out.println("\t                " + e);
+        //----------------------------------------------------------------------------
+
+    }
+    */
+    
     public String getAname() {
         return aname;
     }
