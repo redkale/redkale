@@ -13,10 +13,11 @@ import java.util.*;
  *
  * @param <K> key的类型
  * @param <V> value的类型
- * <p> 详情见: http://www.redkale.org
+ * <p>
+ * 详情见: http://www.redkale.org
  * @author zhangjx
  */
-public interface CacheSource<K extends Serializable, V extends Object> { 
+public interface CacheSource<K extends Serializable, V extends Object> {
 
     default boolean isOpen() {
         return true;
@@ -26,9 +27,9 @@ public interface CacheSource<K extends Serializable, V extends Object> {
 
     public V get(final K key);
 
-    public V getAndRefresh(final K key);
+    public V getAndRefresh(final K key, final int expireSeconds);
 
-    public void refresh(final K key);
+    public void refresh(final K key, final int expireSeconds);
 
     public void set(final K key, final V value);
 
@@ -40,7 +41,7 @@ public interface CacheSource<K extends Serializable, V extends Object> {
 
     public Collection<V> getCollection(final K key);
 
-    public Collection<V> getCollectionAndRefresh(final K key);
+    public Collection<V> getCollectionAndRefresh(final K key, final int expireSeconds);
 
     public void appendListItem(final K key, final V value);
 
@@ -55,9 +56,9 @@ public interface CacheSource<K extends Serializable, V extends Object> {
 
     public void get(final CompletionHandler<V, K> handler, final K key);
 
-    public void getAndRefresh(final CompletionHandler<V, K> handler, final K key);
+    public void getAndRefresh(final CompletionHandler<V, K> handler, final K key, final int expireSeconds);
 
-    public void refresh(final CompletionHandler<Void, K> handler, final K key);
+    public void refresh(final CompletionHandler<Void, K> handler, final K key, final int expireSeconds);
 
     public void set(final CompletionHandler<Void, K> handler, final K key, final V value);
 
@@ -69,7 +70,7 @@ public interface CacheSource<K extends Serializable, V extends Object> {
 
     public void getCollection(final CompletionHandler<Collection<V>, K> handler, final K key);
 
-    public void getCollectionAndRefresh(final CompletionHandler<Collection<V>, K> handler, final K key);
+    public void getCollectionAndRefresh(final CompletionHandler<Collection<V>, K> handler, final K key, final int expireSeconds);
 
     public void appendListItem(final CompletionHandler<Void, K> handler, final K key, final V value);
 

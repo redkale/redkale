@@ -213,34 +213,36 @@ public class CacheSourceService<K extends Serializable, V extends Object> implem
 
     @Override
     @MultiRun
-    public V getAndRefresh(K key) {
+    public V getAndRefresh(K key, final int expireSeconds) {
         if (key == null) return null;
         CacheEntry entry = container.get(key);
         if (entry == null || entry.isExpired() || entry.value == null) return null;
         entry.lastAccessed = (int) (System.currentTimeMillis() / 1000);
+        entry.expireSeconds = expireSeconds;
         if (entry.isListCacheType()) return (V) new ArrayList((Collection) entry.value);
         if (entry.isSetCacheType()) return (V) new HashSet((Collection) entry.value);
         return (V) entry.getValue();
     }
 
     @Override
-    public void getAndRefresh(final CompletionHandler<V, K> handler, @DynAttachment final K key) {
-        V rs = getAndRefresh(key);
+    public void getAndRefresh(final CompletionHandler<V, K> handler, @DynAttachment final K key, final int expireSeconds) {
+        V rs = getAndRefresh(key, expireSeconds);
         if (handler != null) handler.completed(rs, key);
     }
 
     @Override
     @MultiRun
-    public void refresh(K key) {
+    public void refresh(K key, final int expireSeconds) {
         if (key == null) return;
         CacheEntry entry = container.get(key);
         if (entry == null) return;
         entry.lastAccessed = (int) (System.currentTimeMillis() / 1000);
+        entry.expireSeconds = expireSeconds;
     }
 
     @Override
-    public void refresh(final CompletionHandler<Void, K> handler, final K key) {
-        refresh(key);
+    public void refresh(final CompletionHandler<Void, K> handler, final K key, final int expireSeconds) {
+        refresh(key, expireSeconds);
         if (handler != null) handler.completed(null, key);
     }
 
@@ -325,13 +327,13 @@ public class CacheSourceService<K extends Serializable, V extends Object> implem
     }
 
     @Override
-    public Collection<V> getCollectionAndRefresh(final K key) {
-        return (Collection<V>) getAndRefresh(key);
+    public Collection<V> getCollectionAndRefresh(final K key, final int expireSeconds) {
+        return (Collection<V>) getAndRefresh(key, expireSeconds);
     }
 
     @Override
-    public void getCollectionAndRefresh(final CompletionHandler<Collection<V>, K> handler, @DynAttachment final K key) {
-        if (handler != null) handler.completed(getCollectionAndRefresh(key), key);
+    public void getCollectionAndRefresh(final CompletionHandler<Collection<V>, K> handler, @DynAttachment final K key, final int expireSeconds) {
+        if (handler != null) handler.completed(getCollectionAndRefresh(key, expireSeconds), key);
     }
 
     @Override
