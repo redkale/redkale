@@ -349,14 +349,10 @@ public class JsonReader extends Reader {
         for (;;) {
             if (currpos == eof) break;
             char ch = text0[++currpos];
-            if (ch >= '0' && ch <= '9') {
-                value = (value << 3) + (value << 1) + (ch - '0');
-            } else if (ch == '"' || ch == '\'') {
-            } else if (ch == ',' || ch == '}' || ch == ']' || ch <= ' ' || ch == ':') {
-                break;
-            } else {
-                throw new ConvertException("illegal escape(" + ch + ") (position = " + currpos + ") in (" + new String(this.text) + ")");
-            }
+            int val = digits[ch];
+            if (val == -3) break;
+            if (val == -1) throw new ConvertException("illegal escape(" + ch + ") (position = " + currpos + ") but '" + ch + "' in (" + new String(this.text) + ")");
+            if (val != -2) value = value * 10 + val;
         }
         this.position = currpos - 1;
         return negative ? -value : value;
@@ -395,14 +391,10 @@ public class JsonReader extends Reader {
         for (;;) {
             if (currpos == eof) break;
             char ch = text0[++currpos];
-            if (ch >= '0' && ch <= '9') {
-                value = (value << 3) + (value << 1) + (ch - '0');
-            } else if (ch == '"' || ch == '\'') {
-            } else if (ch == ',' || ch == '}' || ch == ']' || ch <= ' ' || ch == ':') {
-                break;
-            } else {
-                throw new ConvertException("illegal escape(" + ch + ") (position = " + currpos + ") but '" + ch + "' in (" + new String(this.text) + ")");
-            }
+            int val = digits[ch];
+            if (val == -3) break;
+            if (val == -1) throw new ConvertException("illegal escape(" + ch + ") (position = " + currpos + ") but '" + ch + "' in (" + new String(this.text) + ")");
+            if (val != -2) value = value * 10 + val;
         }
         this.position = currpos - 1;
         return negative ? -value : value;
@@ -568,4 +560,23 @@ public class JsonReader extends Reader {
         }
     }
 
+    final static int[] digits = new int[255];
+
+    static {
+        for (int i = 0; i < digits.length; i++) {
+            digits[i] = -1; //-1 错误
+        }
+        for (int i = '0'; i <= '9'; i++) {
+            digits[i] = i - '0';
+        }
+        for (int i = 'a'; i <= 'f'; i++) {
+            digits[i] = i - 'a' + 10;
+        }
+        for (int i = 'A'; i <= 'F'; i++) {
+            digits[i] = i - 'A' + 10;
+        }
+        digits['"'] = digits['\''] = -2; //-2 跳过 
+        digits[','] = digits['}'] = digits[']'] = digits[' '] = digits[':'] = -3; //-3退出
+
+    }
 }
