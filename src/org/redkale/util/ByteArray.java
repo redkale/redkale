@@ -138,6 +138,12 @@ public final class ByteArray {
         return toString(0, count, charset);
     }
 
+    public String toStringAndReset(final Charset charset) {
+        String str = toString(0, count, charset);
+        reset();
+        return str;
+    }
+
     public String toString(final int offset, int len, final Charset charset) {
         if (charset == null) return new String(Utility.decodeUTF8(content, offset, len));
         return new String(content, offset, len, charset);
