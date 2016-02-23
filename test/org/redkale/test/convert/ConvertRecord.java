@@ -48,14 +48,18 @@ public class ConvertRecord {
     /**
     public static void main(String[] args) throws Exception {
         final ConvertRecord entry = ConvertRecord.createDefault();
-        final JsonConvert convert = JsonFactory.root().getConvert();
+        run(ConvertRecord.class, entry);
+    }
+
+    public static <T> void run(final Class<T> type, final T entry) throws Exception {
+        final org.redkale.convert.json.JsonConvert convert = org.redkale.convert.json.JsonFactory.root().getConvert();
         final String entryString = convert.convertTo(entry);
-        convert.convertFrom(ConvertRecord.class, entryString);
+        convert.convertFrom(type, entryString);
         System.out.println("redkale-convert: " + convert.convertTo(entry));
-        com.alibaba.fastjson.JSON.parseObject(entryString, ConvertRecord.class);
+        com.alibaba.fastjson.JSON.parseObject(entryString, type);
         System.out.println("fastjson  1.2.7: " + com.alibaba.fastjson.JSON.toJSONString(entry));
         final com.google.gson.Gson gson = new com.google.gson.Gson();
-        gson.fromJson(entryString, ConvertRecord.class);
+        gson.fromJson(entryString, type);
         System.out.println("google-gson 2.4: " + gson.toJson(entry));
         System.out.println("------------------------------------------------");
         System.out.println("组件              序列化耗时(ms)              反解析耗时(ms)");
@@ -69,7 +73,7 @@ public class ConvertRecord {
 
         s = System.currentTimeMillis();
         for (int i = 0; i < count; i++) {
-            convert.convertFrom(ConvertRecord.class, entryString);
+            convert.convertFrom(type, entryString);
         }
         e = System.currentTimeMillis() - s;
         System.out.println("\t                " + e);
@@ -84,7 +88,7 @@ public class ConvertRecord {
 
         s = System.currentTimeMillis();
         for (int i = 0; i < count; i++) {
-            com.alibaba.fastjson.JSON.parseObject(entryString, ConvertRecord.class);
+            com.alibaba.fastjson.JSON.parseObject(entryString, type);
         }
         e = System.currentTimeMillis() - s;
         System.out.println("\t                " + e);
@@ -98,7 +102,7 @@ public class ConvertRecord {
 
         s = System.currentTimeMillis();
         for (int i = 0; i < count; i++) {
-            gson.fromJson(entryString, ConvertRecord.class);
+            gson.fromJson(entryString, type);
         }
         e = System.currentTimeMillis() - s;
         System.out.println("\t                " + e);
