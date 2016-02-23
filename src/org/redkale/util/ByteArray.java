@@ -11,7 +11,9 @@ import java.nio.charset.*;
 /**
  * 简单的byte[]操作类。
  *
- * <p> 详情见: http://www.redkale.org
+ * <p>
+ * 详情见: http://www.redkale.org
+ *
  * @author zhangjx
  */
 public final class ByteArray {
@@ -50,6 +52,10 @@ public final class ByteArray {
 
     public int count() {
         return count;
+    }
+
+    public byte get(int index) {
+        return content[index];
     }
 
     public void write(byte[] buf) {
