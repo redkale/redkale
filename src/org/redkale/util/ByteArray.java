@@ -143,7 +143,7 @@ public final class ByteArray {
         return toString(0, count, charset);
     }
 
-    public String toStringAndReset(final Charset charset) {
+    public String toStringAndClear(final Charset charset) {
         String str = toString(0, count, charset);
         clear();
         return str;
