@@ -7,6 +7,7 @@ package org.redkale.util;
 
 import java.nio.*;
 import java.nio.charset.*;
+import java.util.*;
 
 /**
  * 简单的byte[]操作类。
@@ -68,6 +69,10 @@ public final class ByteArray {
 
     public byte[] directBytes() {
         return content;
+    }
+
+    public byte[] getBytes() {
+        return Arrays.copyOf(content, count);
     }
 
     public int find(int offset, char value) {
