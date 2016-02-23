@@ -30,7 +30,7 @@ public final class ByteArray {
         content = new byte[Math.max(128, size)];
     }
 
-    public void reset() {
+    public void clear() {
         this.count = 0;
     }
 
@@ -140,7 +140,7 @@ public final class ByteArray {
 
     public String toStringAndReset(final Charset charset) {
         String str = toString(0, count, charset);
-        reset();
+        clear();
         return str;
     }
 

@@ -143,7 +143,7 @@ public class HttpRequest extends Request<HttpContext> {
                     header.addValue(name, value);
             }
         }
-        array.reset();
+        array.clear();
         if (buffer.hasRemaining()) array.write(buffer, buffer.remaining());
         if (this.contentType != null && this.contentType.contains("boundary=")) {
             this.boundary = true;
@@ -321,7 +321,7 @@ public class HttpRequest extends Request<HttpContext> {
 
         this.header.clear();
         this.params.clear();
-        this.array.reset();
+        this.array.clear();
         super.recycle();
     }
 

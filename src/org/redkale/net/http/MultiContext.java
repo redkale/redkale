@@ -214,7 +214,7 @@ public final class MultiContext {
 
     private String readLine(boolean bd) throws IOException { // bd : 是否是读取boundary
         byte lasted = '\r';
-        buf.reset();
+        buf.clear();
         final int bc = this.endboundarray.length;
         int c = 0;
         for (;;) {
