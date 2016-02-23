@@ -21,7 +21,7 @@
         </response>
         -->
         <services autoload="true"/>
-        <servlets prefix="/pipes" autoload="true" >
+        <servlets path="/pipes" autoload="true" >
             <!--
             <resource-servlet>
                 <caches  limit="0"/>
