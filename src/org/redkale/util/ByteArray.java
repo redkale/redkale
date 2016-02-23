@@ -75,6 +75,12 @@ public final class ByteArray {
         return Arrays.copyOf(content, count);
     }
 
+    public byte[] getBytesAndClear() {
+        byte[] bs = Arrays.copyOf(content, count);
+        clear();
+        return bs;
+    }
+
     public int find(int offset, char value) {
         return find(offset, (byte) value);
     }
