@@ -30,7 +30,7 @@ public final class ByteArray {
         content = new byte[Math.max(128, size)];
     }
 
-    public void clear() {
+    public void reset() {
         this.count = 0;
     }
 
@@ -50,7 +50,7 @@ public final class ByteArray {
         return count == 0;
     }
 
-    public int count() {
+    public int size() {
         return count;
     }
 
@@ -58,7 +58,11 @@ public final class ByteArray {
         return content[index];
     }
 
-    public void write(byte[] buf) {
+    public byte getLastByte() {
+        return content[count - 1];
+    }
+
+    public void copyTo(byte[] buf) {
         System.arraycopy(this.content, 0, buf, 0, count);
     }
 
@@ -91,11 +95,11 @@ public final class ByteArray {
         if (count > 0) count--;
     }
 
-    public void addInt(int value) {
-        add((byte) (value >> 24 & 0xFF), (byte) (value >> 16 & 0xFF), (byte) (value >> 8 & 0xFF), (byte) (value & 0xFF));
+    public void writeInt(int value) {
+        write((byte) (value >> 24 & 0xFF), (byte) (value >> 16 & 0xFF), (byte) (value >> 8 & 0xFF), (byte) (value & 0xFF));
     }
 
-    public void add(byte value) {
+    public void write(byte value) {
         if (count >= content.length - 1) {
             byte[] ns = new byte[content.length + 8];
             System.arraycopy(content, 0, ns, 0, count);
@@ -104,7 +108,7 @@ public final class ByteArray {
         content[count++] = value;
     }
 
-    public void add(byte... values) {
+    public void write(byte... values) {
         if (count >= content.length - values.length) {
             byte[] ns = new byte[content.length + values.length];
             System.arraycopy(content, 0, ns, 0, count);
@@ -114,7 +118,7 @@ public final class ByteArray {
         count += values.length;
     }
 
-    public void add(ByteBuffer buffer, int len) {
+    public void write(ByteBuffer buffer, int len) {
         if (len < 1) return;
         if (count >= content.length - len) {
             byte[] ns = new byte[content.length + len];

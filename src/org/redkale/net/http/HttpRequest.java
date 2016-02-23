@@ -109,15 +109,15 @@ public class HttpRequest extends Request<HttpContext> {
         }
         if (this.requestURI.contains("../")) return -1;
         index = ++offset;
-        this.protocol = array.toString(index, array.count() - index, charset).trim();
+        this.protocol = array.toString(index, array.size() - index, charset).trim();
         while (readLine(buffer, array)) {
-            if (array.count() < 2) break;
+            if (array.size() < 2) break;
             index = 0;
             offset = array.find(index, ':');
             if (offset <= 0) return -1;
             String name = array.toString(index, offset, charset).trim();
             index = offset + 1;
-            String value = array.toString(index, array.count() - index, charset).trim();
+            String value = array.toString(index, array.size() - index, charset).trim();
             switch (name) {
                 case "Content-Type":
                     this.contentType = value;
@@ -143,15 +143,15 @@ public class HttpRequest extends Request<HttpContext> {
                     header.addValue(name, value);
             }
         }
-        array.clear();
-        if (buffer.hasRemaining()) array.add(buffer, buffer.remaining());
+        array.reset();
+        if (buffer.hasRemaining()) array.write(buffer, buffer.remaining());
         if (this.contentType != null && this.contentType.contains("boundary=")) {
             this.boundary = true;
         }
-        if(this.boundary) this.keepAlive = false; //文件上传必须设置keepAlive为false，因为文件过大时用户不一定会skip掉多余的数据
+        if (this.boundary) this.keepAlive = false; //文件上传必须设置keepAlive为false，因为文件过大时用户不一定会skip掉多余的数据
         if (this.contentLength > 0 && (this.contentType == null || !this.boundary)) {
             if (this.contentLength > context.getMaxbody()) return -1;
-            int lr = (int) this.contentLength - array.count();
+            int lr = (int) this.contentLength - array.size();
             return lr > 0 ? lr : 0;
         }
         return 0;
@@ -160,7 +160,7 @@ public class HttpRequest extends Request<HttpContext> {
     @Override
     protected int readBody(ByteBuffer buffer) {
         int len = buffer.remaining();
-        array.add(buffer, len);
+        array.write(buffer, len);
         return len;
     }
 
@@ -170,7 +170,7 @@ public class HttpRequest extends Request<HttpContext> {
 
     private void parseBody() {
         if (this.boundary || bodyparsed) return;
-        addParameter(array, 0, array.count());
+        addParameter(array, 0, array.size());
         bodyparsed = true;
     }
 
@@ -195,15 +195,15 @@ public class HttpRequest extends Request<HttpContext> {
 
     private boolean readLine(ByteBuffer buffer, ByteArray bytes) {
         byte lasted = '\r';
-        bytes.clear();
+        bytes.size();
         for (;;) {
             if (!buffer.hasRemaining()) {
-                if (lasted != '\r') bytes.add(lasted);
+                if (lasted != '\r') bytes.write(lasted);
                 return false;
             }
             byte b = buffer.get();
             if (b == -1 || (lasted == '\r' && b == '\n')) break;
-            if (lasted != '\r') bytes.add(lasted);
+            if (lasted != '\r') bytes.write(lasted);
             lasted = b;
         }
         return true;
@@ -286,10 +286,10 @@ public class HttpRequest extends Request<HttpContext> {
      */
     public final MultiContext getMultiContext() {
         return new MultiContext(context.getCharset(), this.getContentType(), this.params,
-                new BufferedInputStream(Channels.newInputStream(this.channel), Math.max(array.count(), 8192)) {
+                new BufferedInputStream(Channels.newInputStream(this.channel), Math.max(array.size(), 8192)) {
             {
-                array.write(this.buf);
-                this.count = array.count();
+                array.copyTo(this.buf);
+                this.count = array.size();
             }
         }, null);
     }
@@ -321,7 +321,7 @@ public class HttpRequest extends Request<HttpContext> {
 
         this.header.clear();
         this.params.clear();
-        this.array.clear();
+        this.array.reset();
         super.recycle();
     }
 

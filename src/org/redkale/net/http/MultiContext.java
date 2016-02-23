@@ -214,22 +214,22 @@ public final class MultiContext {
 
     private String readLine(boolean bd) throws IOException { // bd : 是否是读取boundary
         byte lasted = '\r';
-        buf.clear();
+        buf.reset();
         final int bc = this.endboundarray.length;
         int c = 0;
         for (;;) {
             int b = in.read();
             c++;
             if (b == -1 || (lasted == '\r' && b == '\n')) break;
-            if (lasted != '\r') buf.add(lasted);
+            if (lasted != '\r') buf.write(lasted);
             lasted = (byte) b;
             if (bd && bc == c) {
-                buf.add(lasted);
+                buf.write(lasted);
                 if (buf.equal(this.endboundarray)) break;
                 buf.removeLastByte();
             }
         }
-        if (buf.count() == 0) return "";
+        if (buf.size() == 0) return "";
         return buf.toString(this.charset).trim();
     }
 
