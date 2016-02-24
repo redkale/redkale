@@ -122,7 +122,7 @@
 
     <scm>
         <url>https://github.com/redkale/redkale.git</url>
-        <connection>https://github.com/redkale/redkale.git</connection>
+        <connection>scm:git:https://github.com/redkale/redkale.git</connection>
     </scm>
     
     <developers>
