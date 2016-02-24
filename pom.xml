@@ -7,7 +7,7 @@
     <packaging>jar</packaging>
     <url>http://redkale.org</url>
     <!--  -SNAPSHOT -->
-    <version>1.0.0-beta-SNAPSHOT</version>
+    <version>1.0.0-beta</version>
     
     <description>Redkale is a Microservices Framework written in Java</description>
     <properties>
@@ -121,8 +121,8 @@
     </profiles>
 
     <scm>
-        <url>https://github.com/redkale/redkale/trunk</url>
-        <connection>scm:svn:https://github.com/redkale/redkale/trunk</connection>
+        <url>https://github.com/redkale/redkale/tags/redkale-1.0.0-beta</url>
+        <connection>scm:svn:https://github.com/redkale/redkale/tags/redkale-1.0.0-beta</connection>
         <tag>redkale-1.0.0-beta</tag>
     </scm>
     
