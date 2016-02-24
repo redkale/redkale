@@ -121,8 +121,9 @@
     </profiles>
 
     <scm>
-        <url>https://github.com/redkale/redkale.git</url>
-        <connection>scm:git:https://github.com/redkale/redkale.git</connection>
+        <url>https://github.com/redkale/redkale/trunk</url>
+        <connection>scm:svn:https://github.com/redkale/redkale/trunk</connection>
+        <tag>redkale-1.0.0-beta</tag>
     </scm>
     
     <developers>
