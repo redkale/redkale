@@ -21,4 +21,11 @@
 
 &nbsp;&nbsp;&nbsp;由于RedKale使用了JDK 8 内置的ASM包，所以需要在源码工程中的编译器选项中加入： <b>-XDignore.symbol.file=true</b>
 
+<b>
+&lt;dependency&gt;    <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;groupId>org.redkale&lt;/groupId&gt;    <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;artifactId>redkale&lt;/artifactId&gt;    <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;version>1.0.0-beta&lt;/version&gt;    <br/>
+&lt;/dependency&gt;    <br/>
+</b>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<h5>详情请访问:&nbsp;&nbsp;&nbsp;&nbsp;<a href='http://www.redkale.org' target='_blank'>http://www.redkale.org</a></h5>
