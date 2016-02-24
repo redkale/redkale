@@ -7,7 +7,7 @@
     <packaging>jar</packaging>
     <url>http://redkale.org</url>
     
-    <version>1.0.0-beta</version>
+    <version>1.0.0-beta-SNAPSHOT</version>
     
     <description>Redkale 是基于Java 8全新的微服务开源框架</description>
     <properties>
@@ -127,8 +127,8 @@
     </parent>
     
     <scm>
-        <url>https://github.com/redkale/redkale.git</url>
-        <connection>scm:git:https://github.com/redkale/redkale.git</connection>
+        <url>https://redkale@github.com/redkale/redkale.git</url>
+        <connection>https://redkale@github.com/redkale/redkale.git</connection>
     </scm>
     
     <developers>
@@ -147,4 +147,15 @@
             <comments>A business-friendly OSS license</comments>
         </license>
     </licenses>
+    
+    <distributionManagement>
+        <snapshotRepository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
+        <repository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+        </repository>
+    </distributionManagement>
 </project>
