@@ -9,7 +9,7 @@
     <!--  -SNAPSHOT -->
     <version>1.0.0-beta-SNAPSHOT</version>
     
-    <description>Redkale是基于Java 8全新的微服务开源框架</description>
+    <description>Redkale is a Microservices Framework written in Java</description>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>1.8</maven.compiler.source>
