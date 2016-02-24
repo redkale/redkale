@@ -6,8 +6,8 @@
     <name>Redkale</name>
     <packaging>jar</packaging>
     <url>http://redkale.org</url>
-    
-    <version>1.0.0-beta</version>
+    <!--  -SNAPSHOT -->
+    <version>1.0.0-beta-SNAPSHOT</version>
     
     <description>Redkale 是基于Java 8全新的微服务开源框架</description>
     <properties>
@@ -119,13 +119,7 @@
             </build>
         </profile>
     </profiles>
-    
-    <parent>
-        <groupId>org.sonatype.oss</groupId>
-        <artifactId>oss-parent</artifactId>
-        <version>9</version>
-    </parent>
-    
+
     <scm>
         <url>https://github.com/redkale/redkale.git</url>
         <connection>https://github.com/redkale/redkale.git</connection>
