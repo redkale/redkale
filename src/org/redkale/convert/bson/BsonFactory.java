@@ -15,6 +15,7 @@ import org.redkale.convert.*;
  *
  * @author zhangjx
  */
+@SuppressWarnings("unchecked")
 public final class BsonFactory extends ConvertFactory<BsonReader, BsonWriter> {
 
     private static final BsonFactory instance = new BsonFactory(null, Boolean.getBoolean("convert.bson.tiny"));

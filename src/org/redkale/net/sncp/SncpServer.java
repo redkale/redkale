@@ -21,6 +21,7 @@ import org.redkale.watch.*;
  *
  * @author zhangjx
  */
+@SuppressWarnings("unchecked")
 public final class SncpServer extends Server<DLong, SncpContext, SncpRequest, SncpResponse, SncpServlet> {
 
     public SncpServer() {

@@ -287,6 +287,7 @@ public class FilterNode {
         return createElementPredicate(cache, join, cache.getAttribute(column));
     }
 
+    @SuppressWarnings("unchecked")
     protected final <T> Predicate<T> createElementPredicate(final EntityCache<T> cache, final boolean join, final Attribute<T, Serializable> attr) {
         if (attr == null) return null;
         final String field = join ? (cache.getType().getSimpleName() + "." + attr.field()) : attr.field();

@@ -38,6 +38,7 @@ import org.redkale.util.*;
  *
  * @author zhangjx
  */
+@SuppressWarnings("unchecked")
 public abstract class NodeServer {
 
     //INFO日志的换行符

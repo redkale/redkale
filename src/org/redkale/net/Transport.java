@@ -92,7 +92,7 @@ public final class Transport {
         this.group = first.group;
         this.bufferPool = first.bufferPool;
         this.clientAddress = first.clientAddress;
-        Set<InetSocketAddress> addrs = new HashSet();
+        Set<InetSocketAddress> addrs = new HashSet<>();
         transports.forEach(t -> addrs.addAll(Arrays.asList(t.getRemoteAddresses())));
         updateRemoteAddresses(addrs);
     }

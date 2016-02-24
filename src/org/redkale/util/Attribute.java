@@ -119,6 +119,7 @@ public interface Attribute<T, F> {
      * @param field 字段，如果该字段不存在则抛异常
      * @return Attribute对象
      */
+    @SuppressWarnings("unchecked")
     public static <T, F> Attribute<T, F> create(final java.lang.reflect.Field field) {
         return create((Class<T>) field.getDeclaringClass(), field.getName(), field, null, null);
     }
@@ -132,6 +133,7 @@ public interface Attribute<T, F> {
      * @param field      字段，如果该字段不存在则抛异常
      * @return Attribute对象
      */
+    @SuppressWarnings("unchecked")
     public static <T, F> Attribute<T, F> create(String fieldalias, final java.lang.reflect.Field field) {
         return create((Class<T>) field.getDeclaringClass(), fieldalias, field, null, null);
     }
@@ -190,6 +192,7 @@ public interface Attribute<T, F> {
      * @param setter setter方法
      * @return Attribute对象
      */
+    @SuppressWarnings("unchecked")
     public static <T, F> Attribute<T, F> create(final java.lang.reflect.Method getter, final java.lang.reflect.Method setter) {
         return create((Class) (getter == null ? setter.getDeclaringClass() : getter.getDeclaringClass()), null, null, getter, setter);
     }

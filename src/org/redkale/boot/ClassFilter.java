@@ -27,6 +27,7 @@ import java.util.regex.*;
  * @author zhangjx
  * @param <T> 泛型
  */
+@SuppressWarnings("unchecked")
 public final class ClassFilter<T> {
 
     private final Set<FilterEntry<T>> entrys = new HashSet<>();

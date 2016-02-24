@@ -24,6 +24,7 @@ import org.redkale.util.*;
  * @author zhangjx
  * @param <T> Entity类的泛型
  */
+@SuppressWarnings("unchecked")
 public final class EntityCache<T> {
 
     private static final Logger logger = Logger.getLogger(EntityCache.class.getName());

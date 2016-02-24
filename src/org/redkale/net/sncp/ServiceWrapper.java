@@ -40,6 +40,7 @@ public final class ServiceWrapper<T extends Service> implements Comparable<Servi
 
     private final Class[] types;
 
+    @SuppressWarnings("unchecked")
     public ServiceWrapper(Class<T> type, T service, String name, String sncpGroup, Set<String> groups, AnyValue conf) {
         this.service = service;
         this.conf = conf;

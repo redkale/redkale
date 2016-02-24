@@ -116,6 +116,7 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         return this.logger;
     }
 
+    @SuppressWarnings("unchecked")
     public void addServlet(S servlet, final Object attachment, AnyValue conf, K... mappings) {
         this.prepare.addServlet(servlet, attachment, conf, mappings);
     }
