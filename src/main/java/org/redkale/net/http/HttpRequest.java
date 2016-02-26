@@ -195,7 +195,7 @@ public class HttpRequest extends Request<HttpContext> {
 
     private boolean readLine(ByteBuffer buffer, ByteArray bytes) {
         byte lasted = '\r';
-        bytes.size();
+        bytes.clear();
         for (;;) {
             if (!buffer.hasRemaining()) {
                 if (lasted != '\r') bytes.write(lasted);
