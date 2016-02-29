@@ -7,7 +7,7 @@
     <packaging>jar</packaging>
     <url>http://redkale.org</url>
     <!--  -SNAPSHOT -->
-    <version>1.0.1-beta-SNAPSHOT</version>
+    <version>1.0.0-rc1-SNAPSHOT</version>
     
     <description>Redkale is a Microservices Framework written in Java</description>
     <properties>
