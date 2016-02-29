@@ -366,7 +366,7 @@ public final class ClassFilter<T> {
                             String entryname = it.nextElement().getName().replace('/', '.');
                             if (entryname.endsWith(".class") && entryname.indexOf('$') < 0) {
                                 String classname = entryname.substring(0, entryname.length() - 6);
-                                if (classname.startsWith("javax.") || classname.startsWith("com.sun.") || classname.startsWith("com.mysql.")) continue;
+                                if (classname.startsWith("javax.") || classname.startsWith("com.sun.")) continue;
                                 classes.add(classname);
                                 if (debug) debugstr.append(classname).append("\r\n");
                                 for (final ClassFilter filter : filters) {
@@ -394,7 +394,7 @@ public final class ClassFilter<T> {
                     loadClassFiles(exclude, root, files);
                     for (File f : files) {
                         String classname = f.getPath().substring(rootpath.length() + 1, f.getPath().length() - 6).replace(File.separatorChar, '.');
-                        if (classname.startsWith("javax.") || classname.startsWith("org.") || classname.startsWith("com.mysql.")) continue;
+                        if (classname.startsWith("javax.") || classname.startsWith("com.sun.")) continue;
                         classes.add(classname);
                         if (debug) debugstr.append(classname).append("\r\n");
                         for (final ClassFilter filter : filters) {
