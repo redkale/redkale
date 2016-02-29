@@ -10,7 +10,7 @@
         mvn clean deploy -P release -Dgpg.passphrase=password
         mvn release:clean release:prepare release:perform 
     -->
-    <version>1.0.0-rc1-SNAPSHOT</version>
+    <version>1.0.0-rc1</version>
     
     <description>Redkale is a Microservices Framework written in Java</description>
     <properties>
