@@ -3,7 +3,7 @@
         <server>
             <id>ossrh</id>
             <username>redkale</username>
-            <password>xxxxxxxxxxxxxxxxxxxxxxxx</password>
+            <password>xxxxxxxxxxxxxxxxxxxxxxxxx</password>
         </server>
     </servers>
     
@@ -15,7 +15,7 @@
             </activation>
             <properties>
                 <gpg.executable>gpg2</gpg.executable>
-                <gpg.passphrase>xxxxxxxxxxxxxxxxxxxxxxxx</gpg.passphrase>
+                <gpg.passphrase>xxxxxxxxxxxxxxxxxxxxxxxxx</gpg.passphrase>
             </properties>
         </profile>
         
