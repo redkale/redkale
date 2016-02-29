@@ -6,7 +6,7 @@
     <name>Redkale</name>
     <packaging>jar</packaging>
     <url>http://redkale.org</url>
-    <!--  -SNAPSHOT -->
+    <!--  mvn clean deploy -P release -Dgpg.passphrase=password -SNAPSHOT -->
     <version>1.0.0-rc1-SNAPSHOT</version>
     
     <description>Redkale is a Microservices Framework written in Java</description>
