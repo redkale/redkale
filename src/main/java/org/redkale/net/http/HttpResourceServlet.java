@@ -114,7 +114,7 @@ public final class HttpResourceServlet extends HttpServlet {
             }
             AnyValue cacheconf = config.getAnyValue("caches");
             if (cacheconf != null) {
-                this.cachelimit = parseLenth(cacheconf.getValue("limit"), 128 * 1024 * 1024L);
+                this.cachelimit = parseLenth(cacheconf.getValue("limit"), 0 * 1024 * 1024L);
                 this.cachelengthmax = parseLenth(cacheconf.getValue("lengthmax"), 1 * 1024 * 1024L);
             }
             List<SimpleEntry<Pattern, String>> locations = new ArrayList<>();
