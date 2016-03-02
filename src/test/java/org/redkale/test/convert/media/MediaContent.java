@@ -7,6 +7,7 @@ package org.redkale.test.convert.media;
 
 import java.util.*;
 import org.redkale.convert.json.*;
+import org.redkale.test.convert.*;
 
 /**
  *
@@ -27,9 +28,8 @@ public class MediaContent implements java.io.Serializable {
     }
 
     public static void main(String[] args) throws Exception {
-        JsonConvert convert = JsonFactory.root().getConvert();
-        MediaContent content = MediaContent.createDefault();
-        System.out.println(content);
+        final MediaContent entry = MediaContent.createDefault();
+        ConvertRecord.run(MediaContent.class, entry);
     }
 
     public static MediaContent createDefault() {
@@ -37,12 +37,12 @@ public class MediaContent implements java.io.Serializable {
                 + "	media : {"
                 + "		uri : \"http://javaone.com/keynote.mpg\" ,"
                 + "		title :  \"Javaone Keynote\" ,"
-                + "		width : 640 ,"
-                + "		height : 480 ,"
+                + "		width : -640 ,"
+                + "		height : -480 ,"
                 + "		format : \"video/mpg4\","
-                + "		duration : 18000000 ,"
-                + "		size : 58982400 ,"
-                + "		bitrate : 262144 ,"
+                + "		duration : -18000000 ,"
+                + "		size : -58982400 ,"
+                + "		bitrate : -262144 ,"
                 + "		persons : [\"Bill Gates\", \"Steve Jobs\"] ,"
                 + "		player : JAVA , "
                 + "		copyright : None"
@@ -50,14 +50,14 @@ public class MediaContent implements java.io.Serializable {
                 + "		{"
                 + "			uri : \"http://javaone.com/keynote_large.jpg\","
                 + "			title : \"Javaone Keynote\","
-                + "			width : 1024,"
-                + "			height : 768,"
+                + "			width : -1024,"
+                + "			height : -768,"
                 + "			size : LARGE"
                 + "		}, {"
                 + "			uri : \"http://javaone.com/keynote_small.jpg\", "
                 + "			title : \"Javaone Keynote\" , "
-                + "			width : 320 , "
-                + "			height : 240 , "
+                + "			width : -320 , "
+                + "			height : -240 , "
                 + "			size : SMALL"
                 + "		}"
                 + "	]"
