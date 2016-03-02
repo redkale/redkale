@@ -250,6 +250,16 @@ public class JsonByteBufferWriter extends JsonWriter {
     }
 
     @Override
+    public void writeInt(int value) {
+        writeTo(false, String.valueOf(value));
+    }
+
+    @Override
+    public void writeLong(long value) {
+        writeTo(false, String.valueOf(value));
+    }
+
+    @Override
     public void writeString(String value) {
         if (value == null) {
             writeNull();
