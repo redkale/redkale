@@ -5,9 +5,6 @@
  */
 package org.redkale.boot;
 
-import org.redkale.util.AutoLoad;
-import org.redkale.util.AnyValue;
-import org.redkale.util.AnyValue.DefaultAnyValue;
 import java.io.*;
 import java.lang.annotation.*;
 import java.lang.reflect.*;
@@ -17,6 +14,9 @@ import java.util.concurrent.*;
 import java.util.jar.*;
 import java.util.logging.*;
 import java.util.regex.*;
+import org.redkale.util.AnyValue;
+import org.redkale.util.AnyValue.DefaultAnyValue;
+import org.redkale.util.AutoLoad;
 
 /**
  * class过滤器， 符合条件的class会保留下来存入FilterEntry。
@@ -82,7 +82,7 @@ public final class ClassFilter<T> {
     /**
      * 自动扫描地过滤指定的class
      *
-     * @param property  AnyValue
+     * @param property AnyValue
      * @param clazzname String
      */
     @SuppressWarnings("unchecked")
@@ -93,9 +93,9 @@ public final class ClassFilter<T> {
     /**
      * 过滤指定的class
      *
-     * @param property  application.xml中对应class节点下的property属性项
+     * @param property application.xml中对应class节点下的property属性项
      * @param clazzname class名称
-     * @param autoscan  为true表示自动扫描的， false表示显著调用filter， AutoLoad的注解将被忽略
+     * @param autoscan 为true表示自动扫描的， false表示显著调用filter， AutoLoad的注解将被忽略
      */
     public final void filter(AnyValue property, String clazzname, boolean autoscan) {
         boolean r = accept0(property, clazzname);
@@ -152,7 +152,7 @@ public final class ClassFilter<T> {
     /**
      * 判断class是否有效
      *
-     * @param property  AnyValue
+     * @param property AnyValue
      * @param classname String
      * @return boolean
      */
@@ -191,7 +191,7 @@ public final class ClassFilter<T> {
      * 判断class是否有效
      *
      * @param property AnyValue
-     * @param clazz    Class
+     * @param clazz Class
      * @param autoscan boolean
      * @return boolean
      */
@@ -283,7 +283,7 @@ public final class ClassFilter<T> {
         @Override
         public String toString() {
             return this.getClass().getSimpleName() + "[thread=" + Thread.currentThread().getName()
-                    + ", type=" + this.type.getSimpleName() + ", name=" + name + ", groups=" + groups + "]";
+                + ", type=" + this.type.getSimpleName() + ", name=" + name + ", groups=" + groups + "]";
         }
 
         @Override
@@ -308,6 +308,10 @@ public final class ClassFilter<T> {
 
         public AnyValue getProperty() {
             return property;
+        }
+
+        public boolean isEmptyGroups() {
+            return groups == null || groups.isEmpty();
         }
 
         public HashSet<String> getGroups() {

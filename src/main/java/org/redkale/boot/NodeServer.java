@@ -5,14 +5,6 @@
  */
 package org.redkale.boot;
 
-import static org.redkale.boot.Application.*;
-import org.redkale.boot.ClassFilter.FilterEntry;
-import org.redkale.net.sncp.ServiceWrapper;
-import org.redkale.net.Server;
-import org.redkale.net.sncp.Sncp;
-import org.redkale.service.Service;
-import org.redkale.util.AnyValue;
-import org.redkale.util.AnyValue.DefaultAnyValue;
 import java.io.*;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
@@ -25,11 +17,14 @@ import java.util.logging.*;
 import java.util.stream.*;
 import javax.annotation.*;
 import javax.persistence.*;
+import static org.redkale.boot.Application.*;
+import org.redkale.boot.ClassFilter.FilterEntry;
 import org.redkale.net.*;
 import org.redkale.net.sncp.*;
 import org.redkale.service.*;
 import org.redkale.source.*;
 import org.redkale.util.*;
+import org.redkale.util.AnyValue.DefaultAnyValue;
 
 /**
  *
@@ -276,7 +271,7 @@ public abstract class NodeServer {
             final HashSet<String> groups = entry.getGroups(); //groups.isEmpty()表示<services>没有配置groups属性。
             if (groups.isEmpty() && isSNCP() && this.sncpGroup != null) groups.add(this.sncpGroup);
 
-            final boolean localed = (this.sncpAddress == null && !type.isInterface() && !Modifier.isAbstract(type.getModifiers())) //非SNCP的Server，通常是单点服务
+            final boolean localed = (this.sncpAddress == null && entry.isEmptyGroups() && !type.isInterface() && !Modifier.isAbstract(type.getModifiers())) //非SNCP的Server，通常是单点服务
                     || groups.contains(this.sncpGroup) //本地IP含在内的
                     || type.getAnnotation(LocalService.class) != null;//本地模式
             if (localed && (type.isInterface() || Modifier.isAbstract(type.getModifiers()))) continue; //本地模式不能实例化接口和抽象类的Service类
