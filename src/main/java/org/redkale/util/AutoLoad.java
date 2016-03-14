@@ -18,7 +18,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * <p> 详情见: http://www.redkale.org
  * @author zhangjx
  */
-@Inherited
 @Documented
 @Target({TYPE})
 @Retention(RUNTIME)
