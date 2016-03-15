@@ -5,12 +5,12 @@
  */
 package org.redkale.source;
 
-import static org.redkale.source.FilterExpress.*;
 import java.io.*;
 import java.lang.reflect.*;
 import java.util.*;
 import java.util.concurrent.*;
 import javax.persistence.*;
+import static org.redkale.source.FilterExpress.*;
 import org.redkale.util.*;
 
 /**
@@ -47,16 +47,16 @@ public final class FilterNodeBean<T> implements Comparable<FilterNodeBean<T>> {
     private boolean number;
 
     public FilterNodeBean(FilterNodeBean bean) {
-        this.beanAttr = bean.beanAttr;
-        this.column = bean.column;
-        this.express = bean.express;
-        this.joinClass = bean.joinClass;
-        this.joinColumns = bean.joinColumns;
-        this.least = bean.least;
-        this.string = bean.string;
-        this.number = bean.number;
-        this.or = bean.or;
-        this.nodeBeans = bean.nodeBeans;
+        this.beanAttr = bean == null ? null : bean.beanAttr;
+        this.column = bean == null ? null : bean.column;
+        this.express = bean == null ? null : bean.express;
+        this.joinClass = bean == null ? null : bean.joinClass;
+        this.joinColumns = bean == null ? null : bean.joinColumns;
+        this.least = bean == null ? 1 : bean.least;
+        this.string = bean == null ? false : bean.string;
+        this.number = bean == null ? false : bean.number;
+        this.or = bean == null ? false : bean.or;
+        this.nodeBeans = bean == null ? null : bean.nodeBeans;
     }
 
     private FilterNodeBean(final FilterJoinColumn joinCol, final FilterColumn filterCol, final Attribute<T, Serializable> attr) {
@@ -128,7 +128,7 @@ public final class FilterNodeBean<T> implements Comparable<FilterNodeBean<T>> {
     }
 
     private FilterNode create(final T bean) {
-        if (bean == null) return null;
+        if (bean == null || beanAttr == null) return null;
         FilterNode node = null;
         final Serializable val = beanAttr.get(bean);
         if (column != null && val != null) {
@@ -221,8 +221,8 @@ public final class FilterNodeBean<T> implements Comparable<FilterNodeBean<T>> {
             if (f == null) continue;
             rs = rs == null ? f : rs.and(f);
         }
-        if (rs.nodeBeans != null) Arrays.sort(rs.nodeBeans);
-        return rs;
+        if (rs !=null && rs.nodeBeans != null) Arrays.sort(rs.nodeBeans);
+        return rs == null ? new FilterNodeBean(null) : rs;
     }
 
     @Override
