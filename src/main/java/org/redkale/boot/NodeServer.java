@@ -282,6 +282,7 @@ public abstract class NodeServer {
             } else {
                 service = Sncp.createRemoteService(entry.getName(), getExecutor(), type, this.sncpAddress, loadTransport(groups));
             }
+            if(SncpClient.parseMethod(type).isEmpty()) continue; //class没有可用的方法， 通常为BaseService
             final ServiceWrapper wrapper = new ServiceWrapper(type, service, entry.getName(), localed ? this.sncpGroup : null, groups, entry.getProperty());
             for (final Class restype : wrapper.getTypes()) {
                 if (resourceFactory.find(wrapper.getName(), restype) == null) {
