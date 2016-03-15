@@ -535,7 +535,7 @@ public class FilterNode {
 
                     @Override
                     public String toString() {
-                        return field + " & " + val + " > 0";
+                        return field + " % " + val + " > 0";
                     }
                 };
             case OPOR:
@@ -574,7 +574,7 @@ public class FilterNode {
 
                     @Override
                     public String toString() {
-                        return field + " & " + val + " = 0";
+                        return field + " % " + val + " = 0";
                     }
                 };
             case LIKE:
