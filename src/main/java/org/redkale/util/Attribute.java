@@ -5,8 +5,10 @@
  */
 package org.redkale.util;
 
-import static jdk.internal.org.objectweb.asm.Opcodes.*;
+import java.util.ArrayList;
+import java.util.List;
 import jdk.internal.org.objectweb.asm.*;
+import static jdk.internal.org.objectweb.asm.Opcodes.*;
 
 /**
  * 该类实现动态映射一个JavaBean类中成员对应的getter、setter方法； 代替低效的反射实现方式。
@@ -211,7 +213,87 @@ public interface Attribute<T, F> {
     public static <T, F> Attribute<T, F> create(Class<T> clazz, final java.lang.reflect.Method getter, final java.lang.reflect.Method setter) {
         return create(clazz, null, null, getter, setter);
     }
-
+        
+    /**
+     * 根据Class生成getter、setter方法都存在的字段对应的 Attribute 对象数组。
+     * 
+     * @param <T>    依附类的类型
+     * @param clazz  指定依附的类
+     * @return  Attribute对象数组
+     */
+    public static <T> Attribute<T, ?>[] create(Class<T> clazz) {
+        List<Attribute<T, ?>> list = new ArrayList<>();
+        for(java.lang.reflect.Field field : clazz.getFields()){
+            if(java.lang.reflect.Modifier.isStatic(field.getModifiers())) continue;
+            if(java.lang.reflect.Modifier.isFinal(field.getModifiers())) continue;
+            list.add(create(clazz, field));
+        }
+        for(java.lang.reflect.Method setter : clazz.getDeclaredMethods()){
+            if(java.lang.reflect.Modifier.isStatic(setter.getModifiers())) continue;
+            if(!setter.getName().startsWith("set")) continue;
+            if(setter.getReturnType() != void.class) continue;
+            if(setter.getParameterCount() != 1) continue;
+            Class t = setter.getParameterTypes()[0];
+            String prefix = t == boolean.class || t == Boolean.class ? "is" : "get";
+            java.lang.reflect.Method getter = null;
+            try {
+                clazz.getMethod(setter.getName().replaceFirst("set", prefix));
+            } catch (Exception e){
+                continue;
+            }
+            list.add(create(clazz, getter, setter));
+        }
+        return list.toArray(new Attribute[list.size()]);
+    }
+    
+    /**
+     * 根据Class生成getter方法对应的 Attribute 对象数组。
+     * 
+     * @param <T>    依附类的类型
+     * @param clazz  指定依附的类
+     * @return  Attribute对象数组
+     */
+    public static <T> Attribute<T, ?>[] createGetters(Class<T> clazz) {
+        List<Attribute<T, ?>> list = new ArrayList<>();
+        for(java.lang.reflect.Field field : clazz.getFields()){
+            if(java.lang.reflect.Modifier.isStatic(field.getModifiers())) continue;
+            if(java.lang.reflect.Modifier.isFinal(field.getModifiers())) continue;
+            list.add(create(clazz, field));
+        }
+        for(java.lang.reflect.Method method : clazz.getDeclaredMethods()){
+            if(java.lang.reflect.Modifier.isStatic(method.getModifiers())) continue;
+            if(!method.getName().startsWith("get") && !method.getName().startsWith("is")) continue;
+            if(method.getReturnType() == void.class) continue;
+            if(method.getParameterCount() != 0) continue;
+            list.add(create(clazz, method, null));
+        }
+        return list.toArray(new Attribute[list.size()]);
+    }
+    
+    /**
+     * 根据Class生成setter方法对应的 Attribute 对象数组。
+     * 
+     * @param <T>    依附类的类型
+     * @param clazz  指定依附的类
+     * @return  Attribute对象数组
+     */
+    public static <T> Attribute<T, ?>[] createSetters(Class<T> clazz) {
+        List<Attribute<T, ?>> list = new ArrayList<>();
+        for(java.lang.reflect.Field field : clazz.getFields()){
+            if(java.lang.reflect.Modifier.isStatic(field.getModifiers())) continue;
+            if(java.lang.reflect.Modifier.isFinal(field.getModifiers())) continue;
+            list.add(create(clazz, field));
+        }
+        for(java.lang.reflect.Method method : clazz.getDeclaredMethods()){
+            if(java.lang.reflect.Modifier.isStatic(method.getModifiers())) continue;
+            if(!method.getName().startsWith("set")) continue;
+            if(method.getReturnType() != void.class) continue;
+            if(method.getParameterCount() != 1) continue;
+            list.add(create(clazz, null, method));
+        }
+        return list.toArray(new Attribute[list.size()]);
+    }
+    
     /**
      * 根据Class、字段别名、getter和setter方法生成 Attribute 对象。
      * tgetter、setter不能同时为null
