@@ -20,7 +20,6 @@ public enum FilterExpress {
     LESSTHAN("<"),
     GREATERTHANOREQUALTO(">="),
     LESSTHANOREQUALTO("<="),
-    
     LIKE("LIKE"),
     NOTLIKE("NOT LIKE"),
     IGNORECASELIKE("LIKE"), //不区分大小写的 LIKE
@@ -40,6 +39,8 @@ public enum FilterExpress {
     OPAND("&"), //与运算 > 0
     OPOR("|"), //或运算 > 0
     OPANDNO("&"), //与运算 == 0
+    MOD("%"), //取模运算 > 0
+    MODNO("%"), //取模运算 == 0
     AND("AND"),
     OR("OR");
 

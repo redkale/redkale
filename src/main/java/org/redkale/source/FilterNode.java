@@ -5,17 +5,15 @@
  */
 package org.redkale.source;
 
-import static org.redkale.source.FilterExpress.*;
 import java.io.*;
 import java.lang.reflect.*;
 import java.util.*;
 import java.util.function.*;
+import static org.redkale.source.FilterExpress.*;
 import org.redkale.util.*;
 
 /**
- * 注意：
- * 在调用 createSQLExpress 之前必须先调用 createSQLJoin
- * 在调用 createPredicate 之前必须先调用 isCacheUseable
+ * 注意： 在调用 createSQLExpress 之前必须先调用 createSQLJoin 在调用 createPredicate 之前必须先调用 isCacheUseable
  *
  * <p>
  * 详情见: http://www.redkale.org
@@ -114,10 +112,10 @@ public class FilterNode {
     /**
      * 该方法需要重载
      *
-     * @param <T>         Entity类的泛型
-     * @param func        EntityInfo的加载器
+     * @param <T> Entity类的泛型
+     * @param func EntityInfo的加载器
      * @param joinTabalis 关联表集合
-     * @param info        Entity类的EntityInfo
+     * @param info Entity类的EntityInfo
      * @return SQL的join语句 不存在返回null
      */
     protected <T> CharSequence createSQLJoin(final Function<Class, EntityInfo> func, final Map<Class, String> joinTabalis, final EntityInfo<T> info) {
@@ -176,9 +174,9 @@ public class FilterNode {
     /**
      * 该方法需要重载
      *
-     * @param <T>         Entity类的泛型
+     * @param <T> Entity类的泛型
      * @param joinTabalis 关联表的集合
-     * @param info        EntityInfo
+     * @param info EntityInfo
      * @return JOIN的SQL语句
      */
     protected <T> CharSequence createSQLExpress(final EntityInfo<T> info, final Map<Class, String> joinTabalis) {
@@ -234,8 +232,10 @@ public class FilterNode {
         switch (express) {
             case OPAND:
             case OPOR:
+            case MOD:
                 sb.append(express.value()).append(' ').append(val).append(" > 0");
                 break;
+            case MODNO:
             case OPANDNO:
                 sb.append(express.value()).append(' ').append(val).append(" = 0");
                 break;
@@ -433,7 +433,8 @@ public class FilterNode {
         }
         final Serializable val = val0;
         switch (express) {
-            case EQUAL: return new Predicate<T>() {
+            case EQUAL:
+                return new Predicate<T>() {
 
                     @Override
                     public boolean test(T t) {
@@ -445,7 +446,8 @@ public class FilterNode {
                         return field + ' ' + express.value() + ' ' + formatToString(val);
                     }
                 };
-            case NOTEQUAL: return new Predicate<T>() {
+            case NOTEQUAL:
+                return new Predicate<T>() {
 
                     @Override
                     public boolean test(T t) {
@@ -457,7 +459,8 @@ public class FilterNode {
                         return field + ' ' + express.value() + ' ' + formatToString(val);
                     }
                 };
-            case GREATERTHAN: return new Predicate<T>() {
+            case GREATERTHAN:
+                return new Predicate<T>() {
 
                     @Override
                     public boolean test(T t) {
@@ -469,7 +472,8 @@ public class FilterNode {
                         return field + ' ' + express.value() + ' ' + val;
                     }
                 };
-            case LESSTHAN: return new Predicate<T>() {
+            case LESSTHAN:
+                return new Predicate<T>() {
 
                     @Override
                     public boolean test(T t) {
@@ -481,7 +485,8 @@ public class FilterNode {
                         return field + ' ' + express.value() + ' ' + val;
                     }
                 };
-            case GREATERTHANOREQUALTO: return new Predicate<T>() {
+            case GREATERTHANOREQUALTO:
+                return new Predicate<T>() {
 
                     @Override
                     public boolean test(T t) {
@@ -493,7 +498,8 @@ public class FilterNode {
                         return field + ' ' + express.value() + ' ' + val;
                     }
                 };
-            case LESSTHANOREQUALTO: return new Predicate<T>() {
+            case LESSTHANOREQUALTO:
+                return new Predicate<T>() {
 
                     @Override
                     public boolean test(T t) {
@@ -506,7 +512,8 @@ public class FilterNode {
                     }
                 };
 
-            case OPAND: return new Predicate<T>() {
+            case OPAND:
+                return new Predicate<T>() {
 
                     @Override
                     public boolean test(T t) {
@@ -518,7 +525,21 @@ public class FilterNode {
                         return field + " & " + val + " > 0";
                     }
                 };
-            case OPOR: return new Predicate<T>() {
+            case MOD:
+                return new Predicate<T>() {
+
+                    @Override
+                    public boolean test(T t) {
+                        return (((Number) attr.get(t)).longValue() % ((Number) val).longValue()) > 0;
+                    }
+
+                    @Override
+                    public String toString() {
+                        return field + " & " + val + " > 0";
+                    }
+                };
+            case OPOR:
+                return new Predicate<T>() {
 
                     @Override
                     public boolean test(T t) {
@@ -530,11 +551,25 @@ public class FilterNode {
                         return field + " | " + val + " > 0";
                     }
                 };
-            case OPANDNO: return new Predicate<T>() {
+            case OPANDNO:
+                return new Predicate<T>() {
 
                     @Override
                     public boolean test(T t) {
                         return (((Number) attr.get(t)).longValue() & ((Number) val).longValue()) == 0;
+                    }
+
+                    @Override
+                    public String toString() {
+                        return field + " & " + val + " = 0";
+                    }
+                };
+            case MODNO:
+                return new Predicate<T>() {
+
+                    @Override
+                    public boolean test(T t) {
+                        return (((Number) attr.get(t)).longValue() % ((Number) val).longValue()) == 0;
                     }
 
                     @Override
