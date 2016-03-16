@@ -59,4 +59,8 @@ public class FilterValue implements java.io.Serializable {
         this.destvalue = destvalue;
     }
 
+    @Override
+    public String toString() {
+        return FilterValue.class.getSimpleName() + "[optvalue=" + getOptvalue() + ", express=" + getExpress() + ", destvalue=" + getDestvalue() + "]";
+    }
 }
