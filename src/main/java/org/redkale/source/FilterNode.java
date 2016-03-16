@@ -215,7 +215,14 @@ public class FilterNode {
         if (express == ISNULL || express == ISNOTNULL) {
             return new StringBuilder().append(info.getSQLColumn(talis, column)).append(' ').append(express.value());
         }
-        CharSequence val = formatToString(express, getValue());
+        Object val0 = getValue();
+        if(val0 == null) return null;
+        if (express == FV_MOD || express == FV_DIV) {
+            FilterValue fv = (FilterValue)val0;
+            return new StringBuilder().append(info.getSQLColumn(talis, column)).append(' ').append(express.value()).append(' ').append(fv.getOptvalue())
+                .append(' ').append(fv.getExpress().value()).append(' ').append(fv.getDestvalue());
+        }
+        CharSequence val = formatToString(express, val0);
         if (val == null) return null;
         StringBuilder sb = new StringBuilder(32);
         if (express == CONTAIN) return info.containSQL.replace("${column}", info.getSQLColumn(talis, column)).replace("${keystr}", val);
@@ -232,10 +239,8 @@ public class FilterNode {
         switch (express) {
             case OPAND:
             case OPOR:
-            case MOD:
                 sb.append(express.value()).append(' ').append(val).append(" > 0");
                 break;
-            case MODNO:
             case OPANDNO:
                 sb.append(express.value()).append(' ').append(val).append(" = 0");
                 break;
@@ -525,19 +530,174 @@ public class FilterNode {
                         return field + " & " + val + " > 0";
                     }
                 };
-            case MOD:
-                return new Predicate<T>() {
+            case FV_MOD:
+                FilterValue fv0 = (FilterValue)val;
+                switch(fv0.getExpress()) {
+                    case EQUAL :
+                        return new Predicate<T>() {
 
-                    @Override
-                    public boolean test(T t) {
-                        return (((Number) attr.get(t)).longValue() % ((Number) val).longValue()) > 0;
-                    }
+                            @Override
+                            public boolean test(T t) {
+                                return (((Number) attr.get(t)).longValue() % fv0.getOptvalue().longValue()) == fv0.getDestvalue().longValue();
+                            }
 
-                    @Override
-                    public String toString() {
-                        return field + " % " + val + " > 0";
-                    }
-                };
+                            @Override
+                            public String toString() {
+                                return field + " " + express.value() + " " + fv0.getOptvalue() + " " + fv0.getExpress().value() + " " + fv0.getDestvalue();
+                            }
+                        };
+                    case NOTEQUAL :
+                        return new Predicate<T>() {
+
+                            @Override
+                            public boolean test(T t) {
+                                return (((Number) attr.get(t)).longValue() % fv0.getOptvalue().longValue()) != fv0.getDestvalue().longValue();
+                            }
+
+                            @Override
+                            public String toString() {
+                                return field + " " + express.value() + " " + fv0.getOptvalue() + " " + fv0.getExpress().value() + " " + fv0.getDestvalue();
+                            }
+                        };
+                    case GREATERTHAN :
+                        return new Predicate<T>() {
+
+                            @Override
+                            public boolean test(T t) {
+                                return (((Number) attr.get(t)).longValue() % fv0.getOptvalue().longValue()) > fv0.getDestvalue().longValue();
+                            }
+
+                            @Override
+                            public String toString() {
+                                return field + " " + express.value() + " " + fv0.getOptvalue() + " " + fv0.getExpress().value() + " " + fv0.getDestvalue();
+                            }
+                        };
+                    case LESSTHAN :
+                        return new Predicate<T>() {
+
+                            @Override
+                            public boolean test(T t) {
+                                return (((Number) attr.get(t)).longValue() % fv0.getOptvalue().longValue()) < fv0.getDestvalue().longValue();
+                            }
+
+                            @Override
+                            public String toString() {
+                                return field + " " + express.value() + " " + fv0.getOptvalue() + " " + fv0.getExpress().value() + " " + fv0.getDestvalue();
+                            }
+                        };
+                    case GREATERTHANOREQUALTO :
+                        return new Predicate<T>() {
+
+                            @Override
+                            public boolean test(T t) {
+                                return (((Number) attr.get(t)).longValue() % fv0.getOptvalue().longValue()) >= fv0.getDestvalue().longValue();
+                            }
+
+                            @Override
+                            public String toString() {
+                                return field + " " + express.value() + " " + fv0.getOptvalue() + " " + fv0.getExpress().value() + " " + fv0.getDestvalue();
+                            }
+                        };
+                    case LESSTHANOREQUALTO :
+                        return new Predicate<T>() {
+
+                            @Override
+                            public boolean test(T t) {
+                                return (((Number) attr.get(t)).longValue() % fv0.getOptvalue().longValue()) <= fv0.getDestvalue().longValue();
+                            }
+
+                            @Override
+                            public String toString() {
+                                return field + " " + express.value() + " " + fv0.getOptvalue() + " " + fv0.getExpress().value() + " " + fv0.getDestvalue();
+                            }
+                        };
+                    default :
+                        throw  new RuntimeException("(" + fv0 + ")'s express illegal, must be =, !=, <, >, <=, >=");
+                }                
+            case FV_DIV:
+                FilterValue fv1 = (FilterValue)val;
+                switch(fv1.getExpress()) {
+                    case EQUAL :
+                        return new Predicate<T>() {
+
+                            @Override
+                            public boolean test(T t) {
+                                return (((Number) attr.get(t)).longValue() / fv1.getOptvalue().longValue()) == fv1.getDestvalue().longValue();
+                            }
+
+                            @Override
+                            public String toString() {
+                                return field + " " + express.value() + " " + fv1.getOptvalue() + " " + fv1.getExpress().value() + " " + fv1.getDestvalue();
+                            }
+                        };
+                    case NOTEQUAL :
+                        return new Predicate<T>() {
+
+                            @Override
+                            public boolean test(T t) {
+                                return (((Number) attr.get(t)).longValue() / fv1.getOptvalue().longValue()) != fv1.getDestvalue().longValue();
+                            }
+
+                            @Override
+                            public String toString() {
+                                return field + " " + express.value() + " " + fv1.getOptvalue() + " " + fv1.getExpress().value() + " " + fv1.getDestvalue();
+                            }
+                        };
+                    case GREATERTHAN :
+                        return new Predicate<T>() {
+
+                            @Override
+                            public boolean test(T t) {
+                                return (((Number) attr.get(t)).longValue() / fv1.getOptvalue().longValue()) > fv1.getDestvalue().longValue();
+                            }
+
+                            @Override
+                            public String toString() {
+                                return field + " " + express.value() + " " + fv1.getOptvalue() + " " + fv1.getExpress().value() + " " + fv1.getDestvalue();
+                            }
+                        };
+                    case LESSTHAN :
+                        return new Predicate<T>() {
+
+                            @Override
+                            public boolean test(T t) {
+                                return (((Number) attr.get(t)).longValue() / fv1.getOptvalue().longValue()) < fv1.getDestvalue().longValue();
+                            }
+
+                            @Override
+                            public String toString() {
+                                return field + " " + express.value() + " " + fv1.getOptvalue() + " " + fv1.getExpress().value() + " " + fv1.getDestvalue();
+                            }
+                        };
+                    case GREATERTHANOREQUALTO :
+                        return new Predicate<T>() {
+
+                            @Override
+                            public boolean test(T t) {
+                                return (((Number) attr.get(t)).longValue() / fv1.getOptvalue().longValue()) >= fv1.getDestvalue().longValue();
+                            }
+
+                            @Override
+                            public String toString() {
+                                return field + " " + express.value() + " " + fv1.getOptvalue() + " " + fv1.getExpress().value() + " " + fv1.getDestvalue();
+                            }
+                        };
+                    case LESSTHANOREQUALTO :
+                        return new Predicate<T>() {
+
+                            @Override
+                            public boolean test(T t) {
+                                return (((Number) attr.get(t)).longValue() / fv1.getOptvalue().longValue()) <= fv1.getDestvalue().longValue();
+                            }
+
+                            @Override
+                            public String toString() {
+                                return field + " " + express.value() + " " + fv1.getOptvalue() + " " + fv1.getExpress().value() + " " + fv1.getDestvalue();
+                            }
+                        };
+                    default :
+                        throw  new RuntimeException("(" + fv1 + ")'s express illegal, must be =, !=, <, >, <=, >=");
+                }
             case OPOR:
                 return new Predicate<T>() {
 
@@ -562,19 +722,6 @@ public class FilterNode {
                     @Override
                     public String toString() {
                         return field + " & " + val + " = 0";
-                    }
-                };
-            case MODNO:
-                return new Predicate<T>() {
-
-                    @Override
-                    public boolean test(T t) {
-                        return (((Number) attr.get(t)).longValue() % ((Number) val).longValue()) == 0;
-                    }
-
-                    @Override
-                    public String toString() {
-                        return field + " % " + val + " = 0";
                     }
                 };
             case LIKE:

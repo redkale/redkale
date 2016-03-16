@@ -39,8 +39,8 @@ public enum FilterExpress {
     OPAND("&"), //与运算 > 0
     OPOR("|"), //或运算 > 0
     OPANDNO("&"), //与运算 == 0
-    MOD("%"), //取模运算 > 0
-    MODNO("%"), //取模运算 == 0
+    FV_MOD("%"), //取模运算，需要与FilterValue配合使用
+    FV_DIV("DIV"), //整除运算，需要与FilterValue配合使用
     AND("AND"),
     OR("OR");
 
