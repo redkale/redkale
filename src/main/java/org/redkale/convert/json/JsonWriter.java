@@ -189,7 +189,7 @@ public class JsonWriter extends Writer {
 
     @Override
     public void writeInt(int value) {
-        final char sign = value > 0 ? 0 : '-';
+        final char sign = value >= 0 ? 0 : '-';
         if (value < 0) value = -value;
         int size;
         for (int i = 0;; i++) {
@@ -229,7 +229,7 @@ public class JsonWriter extends Writer {
 
     @Override
     public void writeLong(long value) {
-        final char sign = value > 0 ? 0 : '-';
+        final char sign = value >= 0 ? 0 : '-';
         if (value < 0) value = -value;
         int size = 19;
         long p = 10;
