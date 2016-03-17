@@ -5,13 +5,13 @@
  */
 package org.redkale.net.http;
 
-import java.net.*;
-import java.nio.*;
+import java.net.HttpCookie;
+import java.nio.ByteBuffer;
 import java.util.*;
-import java.util.concurrent.atomic.*;
+import java.util.concurrent.atomic.AtomicLong;
 import org.redkale.net.*;
 import org.redkale.util.*;
-import org.redkale.watch.*;
+import org.redkale.watch.WatchFactory;
 
 /**
  *
@@ -78,7 +78,9 @@ public final class HttpServer extends Server<String, HttpContext, HttpRequest, H
                     for (int i = 0; i < addHeaders.length; i++) {
                         String val = addHeaders[i].getValue("value");
                         if (val == null) continue;
-                        if (val.startsWith("request.headers.")) {
+                        if (val.startsWith("request.parameters.")) {
+                            defaultAddHeaders.add(new String[]{addHeaders[i].getValue("name"), val, val.substring("request.parameters.".length()), null});
+                        } else if (val.startsWith("request.headers.")) {
                             defaultAddHeaders.add(new String[]{addHeaders[i].getValue("name"), val, val.substring("request.headers.".length())});
                         } else if (val.startsWith("system.property.")) {
                             String v = System.getProperty(val.substring("system.property.".length()));
@@ -92,7 +94,9 @@ public final class HttpServer extends Server<String, HttpContext, HttpRequest, H
                 if (setHeaders.length > 0) {
                     for (int i = 0; i < setHeaders.length; i++) {
                         String val = setHeaders[i].getValue("value");
-                        if (val != null && val.startsWith("request.headers.")) {
+                        if (val != null && val.startsWith("request.parameters.")) {
+                            defaultSetHeaders.add(new String[]{setHeaders[i].getValue("name"), val, val.substring("request.parameters.".length()), null});
+                        } else if (val != null && val.startsWith("request.headers.")) {
                             defaultSetHeaders.add(new String[]{setHeaders[i].getValue("name"), val, val.substring("request.headers.".length())});
                         } else {
                             defaultSetHeaders.add(new String[]{setHeaders[i].getValue("name"), val});

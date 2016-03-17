@@ -131,6 +131,7 @@
         <!--
            当Server为HTTP协议时, response节点才有效。
            defcookie 节点: 当response里输出的cookie没有指定domain 和path时，使用该节点的默认值。
+           如果addheader、setheader 的value值以request.parameters.开头则表示从request.parameters中获取对应的parameter值
            如果addheader、setheader 的value值以request.headers.开头则表示从request.headers中获取对应的header值
            例如下面例子是在Response输出header时添加两个header（一个addHeader， 一个setHeader）。
         -->

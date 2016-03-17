@@ -5,19 +5,19 @@
  */
 package org.redkale.net.http;
 
-import org.redkale.util.AnyValue.DefaultAnyValue;
-import org.redkale.util.AnyValue.Entry;
 import java.io.*;
-import java.lang.reflect.*;
-import java.net.*;
-import java.nio.*;
+import java.lang.reflect.Type;
+import java.net.HttpCookie;
+import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.nio.file.*;
 import java.text.*;
 import java.util.*;
-import java.util.concurrent.atomic.*;
-import org.redkale.convert.json.*;
+import java.util.concurrent.atomic.AtomicLong;
+import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.*;
+import org.redkale.util.AnyValue.DefaultAnyValue;
+import org.redkale.util.AnyValue.Entry;
 import org.redkale.util.*;
 
 /**
@@ -494,7 +494,10 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         }
         if (this.defaultAddHeaders != null) {
             for (String[] headers : this.defaultAddHeaders) {
-                if (headers.length > 2) {
+                if (headers.length > 3) {
+                    String v = request.getParameter(headers[2]);
+                    if (v != null) this.header.addValue(headers[0], v);
+                } else if (headers.length > 2) {
                     String v = request.getHeader(headers[2]);
                     if (v != null) this.header.addValue(headers[0], v);
                 } else {
@@ -504,8 +507,12 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         }
         if (this.defaultSetHeaders != null) {
             for (String[] headers : this.defaultSetHeaders) {
-                if (headers.length > 2) {
-                    this.header.setValue(headers[0], request.getHeader(headers[2]));
+                if (headers.length > 3) {
+                    String v = request.getParameter(headers[2]);
+                    if (v != null) this.header.setValue(headers[0], v);
+                } else if (headers.length > 2) {
+                    String v = request.getHeader(headers[2]);
+                    if (v != null) this.header.setValue(headers[0], v);
                 } else {
                     this.header.setValue(headers[0], headers[1]);
                 }
