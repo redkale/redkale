@@ -5,10 +5,10 @@
  */
 package org.redkale.net;
 
-import java.nio.*;
+import java.nio.ByteBuffer;
 import java.util.*;
-import org.redkale.convert.bson.*;
-import org.redkale.convert.json.*;
+import org.redkale.convert.bson.BsonConvert;
+import org.redkale.convert.json.JsonConvert;
 
 /**
  *
@@ -70,8 +70,9 @@ public abstract class Request<C extends Context> {
         channel = null; //   close it by  response
     }
 
-    protected void setProperty(String name, Object value) {
+    protected <T> T setProperty(String name, T value) {
         properties.put(name, value);
+        return value;
     }
 
     @SuppressWarnings("unchecked")
@@ -79,16 +80,17 @@ public abstract class Request<C extends Context> {
         return (T) properties.get(name);
     }
 
-    protected void removeProperty(String name) {
-        properties.remove(name);
+    protected <T> T removeProperty(String name) {
+        return (T)properties.remove(name);
     }
 
     protected Map<String, Object> getProperties() {
         return properties;
     }
 
-    public void setAttribute(String name, Object value) {
+    public <T> T setAttribute(String name, T value) {
         attributes.put(name, value);
+        return value;
     }
 
     @SuppressWarnings("unchecked")
@@ -96,8 +98,8 @@ public abstract class Request<C extends Context> {
         return (T) attributes.get(name);
     }
 
-    public void removeAttribute(String name) {
-        attributes.remove(name);
+    public <T> T removeAttribute(String name) {
+        return (T)attributes.remove(name);
     }
 
     public Map<String, Object> getAttributes() {
