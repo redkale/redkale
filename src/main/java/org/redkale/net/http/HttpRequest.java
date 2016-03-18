@@ -5,15 +5,15 @@
  */
 package org.redkale.net.http;
 
-import org.redkale.util.ByteArray;
-import org.redkale.util.AnyValue.DefaultAnyValue;
 import java.io.*;
 import java.net.*;
-import java.nio.*;
-import java.nio.channels.*;
-import java.nio.charset.*;
-import org.redkale.convert.json.*;
+import java.nio.ByteBuffer;
+import java.nio.channels.Channels;
+import java.nio.charset.Charset;
+import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.*;
+import org.redkale.util.AnyValue.DefaultAnyValue;
+import org.redkale.util.ByteArray;
 
 /**
  * Http请求包 与javax.servlet.http.HttpServletRequest 基本类似。
@@ -210,8 +210,8 @@ public class HttpRequest extends Request<HttpContext> {
     }
 
     @Override
-    protected void setProperty(String name, Object value) {
-        super.setProperty(name, value);
+    protected <T> T setProperty(String name, T value) {
+        return super.setProperty(name, value);
     }
 
     @Override
@@ -221,8 +221,8 @@ public class HttpRequest extends Request<HttpContext> {
     }
 
     @Override
-    protected void removeProperty(String name) {
-        super.removeProperty(name);
+    protected <T> T removeProperty(String name) {
+        return super.removeProperty(name);
     }
 
     /**
