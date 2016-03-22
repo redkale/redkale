@@ -20,6 +20,12 @@ public enum FilterExpress {
     LESSTHAN("<"),
     GREATERTHANOREQUALTO(">="),
     LESSTHANOREQUALTO("<="),
+    
+    STARTSWITH("LIKE"),
+    NOTSTARTSWITH("NOT LIKE"),
+    ENDSWITH("LIKE"),
+    NOTENDSWITH("NOT LIKE"),
+    
     LIKE("LIKE"),
     NOTLIKE("NOT LIKE"),
     IGNORECASELIKE("LIKE"), //不区分大小写的 LIKE

@@ -5,16 +5,16 @@
  */
 package org.redkale.source;
 
-import java.io.*;
-import java.lang.reflect.*;
+import java.io.Serializable;
+import java.lang.reflect.Array;
 import java.util.*;
 import java.util.function.*;
 import static org.redkale.source.FilterExpress.*;
-import org.redkale.util.*;
+import org.redkale.util.Attribute;
 
 /**
  * 注意： 在调用 createSQLExpress 之前必须先调用 createSQLJoin 在调用 createPredicate 之前必须先调用 isCacheUseable
- *
+ * <p>
  * <p>
  * 详情见: http://www.redkale.org
  *
@@ -112,10 +112,10 @@ public class FilterNode {
     /**
      * 该方法需要重载
      *
-     * @param <T> Entity类的泛型
-     * @param func EntityInfo的加载器
+     * @param <T>         Entity类的泛型
+     * @param func        EntityInfo的加载器
      * @param joinTabalis 关联表集合
-     * @param info Entity类的EntityInfo
+     * @param info        Entity类的EntityInfo
      * @return SQL的join语句 不存在返回null
      */
     protected <T> CharSequence createSQLJoin(final Function<Class, EntityInfo> func, final Map<Class, String> joinTabalis, final EntityInfo<T> info) {
@@ -174,9 +174,9 @@ public class FilterNode {
     /**
      * 该方法需要重载
      *
-     * @param <T> Entity类的泛型
+     * @param <T>         Entity类的泛型
      * @param joinTabalis 关联表的集合
-     * @param info EntityInfo
+     * @param info        EntityInfo
      * @return JOIN的SQL语句
      */
     protected <T> CharSequence createSQLExpress(final EntityInfo<T> info, final Map<Class, String> joinTabalis) {
@@ -216,9 +216,9 @@ public class FilterNode {
             return new StringBuilder().append(info.getSQLColumn(talis, column)).append(' ').append(express.value());
         }
         Object val0 = getValue();
-        if(val0 == null) return null;
+        if (val0 == null) return null;
         if (express == FV_MOD || express == FV_DIV) {
-            FilterValue fv = (FilterValue)val0;
+            FilterValue fv = (FilterValue) val0;
             return new StringBuilder().append(info.getSQLColumn(talis, column)).append(' ').append(express.value()).append(' ').append(fv.getOptvalue())
                 .append(' ').append(fv.getExpress().value()).append(' ').append(fv.getDestvalue());
         }
@@ -531,9 +531,9 @@ public class FilterNode {
                     }
                 };
             case FV_MOD:
-                FilterValue fv0 = (FilterValue)val;
-                switch(fv0.getExpress()) {
-                    case EQUAL :
+                FilterValue fv0 = (FilterValue) val;
+                switch (fv0.getExpress()) {
+                    case EQUAL:
                         return new Predicate<T>() {
 
                             @Override
@@ -546,7 +546,7 @@ public class FilterNode {
                                 return field + " " + express.value() + " " + fv0.getOptvalue() + " " + fv0.getExpress().value() + " " + fv0.getDestvalue();
                             }
                         };
-                    case NOTEQUAL :
+                    case NOTEQUAL:
                         return new Predicate<T>() {
 
                             @Override
@@ -559,7 +559,7 @@ public class FilterNode {
                                 return field + " " + express.value() + " " + fv0.getOptvalue() + " " + fv0.getExpress().value() + " " + fv0.getDestvalue();
                             }
                         };
-                    case GREATERTHAN :
+                    case GREATERTHAN:
                         return new Predicate<T>() {
 
                             @Override
@@ -572,7 +572,7 @@ public class FilterNode {
                                 return field + " " + express.value() + " " + fv0.getOptvalue() + " " + fv0.getExpress().value() + " " + fv0.getDestvalue();
                             }
                         };
-                    case LESSTHAN :
+                    case LESSTHAN:
                         return new Predicate<T>() {
 
                             @Override
@@ -585,7 +585,7 @@ public class FilterNode {
                                 return field + " " + express.value() + " " + fv0.getOptvalue() + " " + fv0.getExpress().value() + " " + fv0.getDestvalue();
                             }
                         };
-                    case GREATERTHANOREQUALTO :
+                    case GREATERTHANOREQUALTO:
                         return new Predicate<T>() {
 
                             @Override
@@ -598,7 +598,7 @@ public class FilterNode {
                                 return field + " " + express.value() + " " + fv0.getOptvalue() + " " + fv0.getExpress().value() + " " + fv0.getDestvalue();
                             }
                         };
-                    case LESSTHANOREQUALTO :
+                    case LESSTHANOREQUALTO:
                         return new Predicate<T>() {
 
                             @Override
@@ -611,13 +611,13 @@ public class FilterNode {
                                 return field + " " + express.value() + " " + fv0.getOptvalue() + " " + fv0.getExpress().value() + " " + fv0.getDestvalue();
                             }
                         };
-                    default :
-                        throw  new RuntimeException("(" + fv0 + ")'s express illegal, must be =, !=, <, >, <=, >=");
-                }                
+                    default:
+                        throw new RuntimeException("(" + fv0 + ")'s express illegal, must be =, !=, <, >, <=, >=");
+                }
             case FV_DIV:
-                FilterValue fv1 = (FilterValue)val;
-                switch(fv1.getExpress()) {
-                    case EQUAL :
+                FilterValue fv1 = (FilterValue) val;
+                switch (fv1.getExpress()) {
+                    case EQUAL:
                         return new Predicate<T>() {
 
                             @Override
@@ -630,7 +630,7 @@ public class FilterNode {
                                 return field + " " + express.value() + " " + fv1.getOptvalue() + " " + fv1.getExpress().value() + " " + fv1.getDestvalue();
                             }
                         };
-                    case NOTEQUAL :
+                    case NOTEQUAL:
                         return new Predicate<T>() {
 
                             @Override
@@ -643,7 +643,7 @@ public class FilterNode {
                                 return field + " " + express.value() + " " + fv1.getOptvalue() + " " + fv1.getExpress().value() + " " + fv1.getDestvalue();
                             }
                         };
-                    case GREATERTHAN :
+                    case GREATERTHAN:
                         return new Predicate<T>() {
 
                             @Override
@@ -656,7 +656,7 @@ public class FilterNode {
                                 return field + " " + express.value() + " " + fv1.getOptvalue() + " " + fv1.getExpress().value() + " " + fv1.getDestvalue();
                             }
                         };
-                    case LESSTHAN :
+                    case LESSTHAN:
                         return new Predicate<T>() {
 
                             @Override
@@ -669,7 +669,7 @@ public class FilterNode {
                                 return field + " " + express.value() + " " + fv1.getOptvalue() + " " + fv1.getExpress().value() + " " + fv1.getDestvalue();
                             }
                         };
-                    case GREATERTHANOREQUALTO :
+                    case GREATERTHANOREQUALTO:
                         return new Predicate<T>() {
 
                             @Override
@@ -682,7 +682,7 @@ public class FilterNode {
                                 return field + " " + express.value() + " " + fv1.getOptvalue() + " " + fv1.getExpress().value() + " " + fv1.getDestvalue();
                             }
                         };
-                    case LESSTHANOREQUALTO :
+                    case LESSTHANOREQUALTO:
                         return new Predicate<T>() {
 
                             @Override
@@ -695,8 +695,8 @@ public class FilterNode {
                                 return field + " " + express.value() + " " + fv1.getOptvalue() + " " + fv1.getExpress().value() + " " + fv1.getDestvalue();
                             }
                         };
-                    default :
-                        throw  new RuntimeException("(" + fv1 + ")'s express illegal, must be =, !=, <, >, <=, >=");
+                    default:
+                        throw new RuntimeException("(" + fv1 + ")'s express illegal, must be =, !=, <, >, <=, >=");
                 }
             case OPOR:
                 return new Predicate<T>() {
@@ -738,6 +738,34 @@ public class FilterNode {
                         return field + ' ' + express.value() + ' ' + formatToString(val);
                     }
                 };
+            case STARTSWITH:
+                return new Predicate<T>() {
+
+                    @Override
+                    public boolean test(T t) {
+                        Object rs = attr.get(t);
+                        return rs != null && rs.toString().startsWith(val.toString());
+                    }
+
+                    @Override
+                    public String toString() {
+                        return field + " STARTSWITH " + formatToString(val);
+                    }
+                };
+            case ENDSWITH:
+                return new Predicate<T>() {
+
+                    @Override
+                    public boolean test(T t) {
+                        Object rs = attr.get(t);
+                        return rs != null && rs.toString().endsWith(val.toString());
+                    }
+
+                    @Override
+                    public String toString() {
+                        return field + " ENDSWITH " + formatToString(val);
+                    }
+                };
             case IGNORECASELIKE:
                 final String valstr = val.toString().toLowerCase();
                 return new Predicate<T>() {
@@ -753,18 +781,32 @@ public class FilterNode {
                         return "LOWER(" + field + ") " + express.value() + ' ' + formatToString(valstr);
                     }
                 };
-            case NOTLIKE:
+            case NOTSTARTSWITH:
                 return new Predicate<T>() {
 
                     @Override
                     public boolean test(T t) {
                         Object rs = attr.get(t);
-                        return rs == null || !rs.toString().contains(val.toString());
+                        return rs == null || !rs.toString().startsWith(val.toString());
                     }
 
                     @Override
                     public String toString() {
-                        return field + ' ' + express.value() + ' ' + formatToString(val);
+                        return field + " NOT STARTSWITH " + formatToString(val);
+                    }
+                };
+            case NOTENDSWITH:
+                return new Predicate<T>() {
+
+                    @Override
+                    public boolean test(T t) {
+                        Object rs = attr.get(t);
+                        return rs == null || !rs.toString().endsWith(val.toString());
+                    }
+
+                    @Override
+                    public String toString() {
+                        return field + " NOT ENDSWITH " + formatToString(val);
                     }
                 };
             case IGNORECASENOTLIKE:
@@ -1108,6 +1150,10 @@ public class FilterNode {
         if (value instanceof CharSequence) {
             if (express == LIKE || express == NOTLIKE) {
                 value = "%" + value + '%';
+            } else if (express == STARTSWITH || express == NOTSTARTSWITH) {
+                value = value + "%";
+            } else if (express == ENDSWITH || express == NOTENDSWITH) {
+                value = "%" + value;
             } else if (express == IGNORECASELIKE || express == IGNORECASENOTLIKE) {
                 value = "%" + value.toString().toLowerCase() + '%';
             } else if (express == IGNORECASECONTAIN || express == IGNORECASENOTCONTAIN) {
