@@ -65,6 +65,12 @@ public final class Flipper implements Serializable {
         return this;
     }
 
+    @Override
+    @SuppressWarnings("CloneDoesntCallSuperClone")
+    public Flipper clone() {
+        return new Flipper(this.size, this.page, this.sort);
+    }
+
     public int index() {
         return (getPage() - 1) * getSize();
     }
