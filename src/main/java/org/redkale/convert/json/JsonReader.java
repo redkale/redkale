@@ -576,7 +576,7 @@ public class JsonReader extends Reader {
             digits[i] = i - 'A' + 10;
         }
         digits['"'] = digits['\''] = -2; //-2 跳过 
-        digits[','] = digits['}'] = digits[']'] = digits[' '] = digits[':'] = -3; //-3退出
+        digits[','] = digits['}'] = digits[']'] = digits[' '] = digits['\t'] = digits['\r'] = digits['\n'] = digits[':'] = -3; //-3退出
 
     }
 }
