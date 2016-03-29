@@ -529,7 +529,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
                 domain = "Domain=" + domain + "; ";
             }
             String path = defcookie == null ? null : defcookie.getPath();
-            if (path == null) path = "/";
+            if (path == null || path.isEmpty()) path = "/";
             if (request.newsessionid.isEmpty()) {
                 buffer.put(("Set-Cookie: " + HttpRequest.SESSIONID_NAME + "=; " + domain + "Path=" + path + "; Max-Age=0; HttpOnly\r\n").getBytes());
             } else {
