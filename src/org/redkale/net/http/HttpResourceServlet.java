@@ -188,7 +188,7 @@ public final class HttpResourceServlet extends HttpServlet {
             entry = files.computeIfAbsent(uri, x -> createFileEntry(x));
         }
         if (entry == null) {
-            if (finest) logger.log(Level.FINEST, "Not found url resource. request = " + request);
+            if (finest) logger.log(Level.FINEST, "Not found resource (404), request = " + request);
             response.finish404();
         } else {
             response.finishFile(entry.file, entry.content);
