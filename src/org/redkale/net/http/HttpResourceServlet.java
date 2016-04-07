@@ -6,17 +6,18 @@
 package org.redkale.net.http;
 
 import java.io.*;
-import java.nio.*;
+import java.nio.ByteBuffer;
+import static java.nio.file.StandardWatchEventKinds.*;
 import java.nio.file.*;
 import static java.nio.file.StandardWatchEventKinds.*;
-import java.util.*;
 import java.util.AbstractMap.SimpleEntry;
-import java.util.concurrent.*;
-import java.util.concurrent.atomic.*;
-import java.util.function.*;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.LongAdder;
+import java.util.function.Predicate;
 import java.util.logging.*;
 import java.util.regex.*;
-import org.redkale.util.*;
+import org.redkale.util.AnyValue;
 
 /**
  *
@@ -77,6 +78,8 @@ public final class HttpResourceServlet extends HttpServlet {
             }
         }
     }
+
+    protected final boolean finest = logger.isLoggable(Level.FINEST);
 
     //缓存总大小, 默认128M
     protected long cachelimit = 128 * 1024 * 1024L;
@@ -185,6 +188,7 @@ public final class HttpResourceServlet extends HttpServlet {
             entry = files.computeIfAbsent(uri, x -> createFileEntry(x));
         }
         if (entry == null) {
+            if (finest) logger.log(Level.FINEST, "Not found url resource. request = " + request);
             response.finish404();
         } else {
             response.finishFile(entry.file, entry.content);
