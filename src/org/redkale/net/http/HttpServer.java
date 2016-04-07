@@ -75,34 +75,35 @@ public final class HttpServer extends Server<String, HttpContext, HttpRequest, H
             if (resps != null) {
                 AnyValue[] addHeaders = resps.getAnyValues("addheader");
                 if (addHeaders.length > 0) {
-                    for (int i = 0; i < addHeaders.length; i++) {
-                        String val = addHeaders[i].getValue("value");
+                    for (AnyValue addHeader : addHeaders) {
+                        String val = addHeader.getValue("value");
                         if (val == null) continue;
                         if (val.startsWith("request.parameters.")) {
-                            defaultAddHeaders.add(new String[]{addHeaders[i].getValue("name"), val, val.substring("request.parameters.".length()), null});
+                            defaultAddHeaders.add(new String[]{addHeader.getValue("name"), val, val.substring("request.parameters.".length()), null});
                         } else if (val.startsWith("request.headers.")) {
-                            defaultAddHeaders.add(new String[]{addHeaders[i].getValue("name"), val, val.substring("request.headers.".length())});
+                            defaultAddHeaders.add(new String[]{addHeader.getValue("name"), val, val.substring("request.headers.".length())});
                         } else if (val.startsWith("system.property.")) {
                             String v = System.getProperty(val.substring("system.property.".length()));
-                            if (v != null) defaultAddHeaders.add(new String[]{addHeaders[i].getValue("name"), v});
+                            if (v != null) defaultAddHeaders.add(new String[]{addHeader.getValue("name"), v});
                         } else {
-                            defaultAddHeaders.add(new String[]{addHeaders[i].getValue("name"), val});
+                            defaultAddHeaders.add(new String[]{addHeader.getValue("name"), val});
                         }
                     }
                 }
                 AnyValue[] setHeaders = resps.getAnyValues("setheader");
                 if (setHeaders.length > 0) {
-                    for (int i = 0; i < setHeaders.length; i++) {
-                        String val = setHeaders[i].getValue("value");
-                        if (val != null && val.startsWith("request.parameters.")) {
-                            defaultSetHeaders.add(new String[]{setHeaders[i].getValue("name"), val, val.substring("request.parameters.".length()), null});
-                        } else if (val != null && val.startsWith("request.headers.")) {
-                            defaultSetHeaders.add(new String[]{setHeaders[i].getValue("name"), val, val.substring("request.headers.".length())});
+                    for (AnyValue setHeader : setHeaders) {
+                        String val = setHeader.getValue("value");
+                        if (val == null) continue;
+                        if (val.startsWith("request.parameters.")) {
+                            defaultSetHeaders.add(new String[]{setHeader.getValue("name"), val, val.substring("request.parameters.".length()), null});
+                        } else if (val.startsWith("request.headers.")) {
+                            defaultSetHeaders.add(new String[]{setHeader.getValue("name"), val, val.substring("request.headers.".length())});
                         } else if (val.startsWith("system.property.")) {
                             String v = System.getProperty(val.substring("system.property.".length()));
-                            if (v != null) defaultSetHeaders.add(new String[]{setHeaders[i].getValue("name"), v});
+                            if (v != null) defaultSetHeaders.add(new String[]{setHeader.getValue("name"), v});
                         } else {
-                            defaultSetHeaders.add(new String[]{setHeaders[i].getValue("name"), val});
+                            defaultSetHeaders.add(new String[]{setHeader.getValue("name"), val});
                         }
                     }
                 }
