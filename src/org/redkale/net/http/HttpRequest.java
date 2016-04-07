@@ -22,7 +22,7 @@ import org.redkale.util.ByteArray;
  * 例如简单的翻页查询 /pipes/record/query/page:2/size:20
  * 获取页号: int page = request.getRequstURIPath("page:", 1);
  * 获取行数: int size = request.getRequstURIPath("size:", 10);
- *
+ * <p>
  * <p>
  * 详情见: http://www.redkale.org
  *
@@ -274,9 +274,9 @@ public class HttpRequest extends Request<HttpContext> {
     public String toString() {
         parseBody();
         return this.getClass().getSimpleName() + "{method:" + this.method + ", requestURI:" + this.requestURI
-                + ", contentType:" + this.contentType + ", connection:" + this.connection + ", protocol:" + this.protocol
-                + ", contentLength:" + this.contentLength + ", cookies:" + this.cookiestr
-                + ", host:" + this.host + ", params:" + this.params + ", header:" + this.header + "}";
+            + ", remoteAddr:" + this.getRemoteAddr() + ", cookies:" + this.cookiestr + ", contentType:" + this.contentType
+            + ", connection:" + this.connection + ", protocol:" + this.protocol + ", contentLength:" + this.contentLength
+            + ", host:" + this.host + ", params:" + this.params + ", header:" + this.header + "}";
     }
 
     /**
@@ -286,7 +286,7 @@ public class HttpRequest extends Request<HttpContext> {
      */
     public final MultiContext getMultiContext() {
         return new MultiContext(context.getCharset(), this.getContentType(), this.params,
-                new BufferedInputStream(Channels.newInputStream(this.channel), Math.max(array.size(), 8192)) {
+            new BufferedInputStream(Channels.newInputStream(this.channel), Math.max(array.size(), 8192)) {
             {
                 array.copyTo(this.buf);
                 this.count = array.size();
