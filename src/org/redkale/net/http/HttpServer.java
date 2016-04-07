@@ -48,11 +48,11 @@ public final class HttpServer extends Server<String, HttpContext, HttpRequest, H
         AtomicLong cycleBufferCounter = watch == null ? new AtomicLong() : watch.createWatchNumber("HTTP_" + port + ".Buffer.cycleCounter");
         final int rcapacity = Math.max(this.bufferCapacity, 16 * 1024 + 8); //兼容 HTTP 2.0
         ObjectPool<ByteBuffer> bufferPool = new ObjectPool<>(createBufferCounter, cycleBufferCounter, this.bufferPoolSize,
-                (Object... params) -> ByteBuffer.allocateDirect(rcapacity), null, (e) -> {
-                    if (e == null || e.isReadOnly() || e.capacity() != rcapacity) return false;
-                    e.clear();
-                    return true;
-                });
+            (Object... params) -> ByteBuffer.allocateDirect(rcapacity), null, (e) -> {
+                if (e == null || e.isReadOnly() || e.capacity() != rcapacity) return false;
+                e.clear();
+                return true;
+            });
         final List<String[]> defaultAddHeaders = new ArrayList<>();
         final List<String[]> defaultSetHeaders = new ArrayList<>();
         HttpCookie defaultCookie = null;
@@ -98,6 +98,9 @@ public final class HttpServer extends Server<String, HttpContext, HttpRequest, H
                             defaultSetHeaders.add(new String[]{setHeaders[i].getValue("name"), val, val.substring("request.parameters.".length()), null});
                         } else if (val != null && val.startsWith("request.headers.")) {
                             defaultSetHeaders.add(new String[]{setHeaders[i].getValue("name"), val, val.substring("request.headers.".length())});
+                        } else if (val.startsWith("system.property.")) {
+                            String v = System.getProperty(val.substring("system.property.".length()));
+                            if (v != null) defaultSetHeaders.add(new String[]{setHeaders[i].getValue("name"), v});
                         } else {
                             defaultSetHeaders.add(new String[]{setHeaders[i].getValue("name"), val});
                         }
@@ -123,7 +126,7 @@ public final class HttpServer extends Server<String, HttpContext, HttpRequest, H
         AtomicLong cycleResponseCounter = watch == null ? new AtomicLong() : watch.createWatchNumber("HTTP_" + port + ".Response.cycleCounter");
         ObjectPool<Response> responsePool = HttpResponse.createPool(createResponseCounter, cycleResponseCounter, this.responsePoolSize, null);
         HttpContext httpcontext = new HttpContext(this.serverStartTime, this.logger, executor, rcapacity, bufferPool, responsePool,
-                this.maxbody, this.charset, this.address, this.prepare, this.watch, this.readTimeoutSecond, this.writeTimeoutSecond);
+            this.maxbody, this.charset, this.address, this.prepare, this.watch, this.readTimeoutSecond, this.writeTimeoutSecond);
         responsePool.setCreator((Object... params) -> new HttpResponse(httpcontext, new HttpRequest(httpcontext, addrHeader), addHeaders, setHeaders, defCookie));
         return httpcontext;
     }
