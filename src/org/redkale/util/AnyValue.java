@@ -372,7 +372,7 @@ public abstract class AnyValue {
 
     public boolean getBoolValue(String name, boolean defaultValue) {
         String value = getValue(name);
-        return value == null ? defaultValue : Boolean.parseBoolean(value);
+        return value == null || value.length() == 0 ? defaultValue : Boolean.parseBoolean(value);
     }
 
     public byte getByteValue(String name) {
@@ -381,7 +381,7 @@ public abstract class AnyValue {
 
     public byte getByteValue(String name, byte defaultValue) {
         String value = getValue(name);
-        return value == null ? defaultValue : Byte.decode(value);
+        return value == null || value.length() == 0 ? defaultValue : Byte.decode(value);
     }
 
     public char getCharValue(String name) {
@@ -399,7 +399,7 @@ public abstract class AnyValue {
 
     public short getShortValue(String name, short defaultValue) {
         String value = getValue(name);
-        return value == null ? defaultValue : Short.decode(value);
+        return value == null || value.length() == 0 ? defaultValue : Short.decode(value);
     }
 
     public int getIntValue(String name) {
@@ -408,7 +408,7 @@ public abstract class AnyValue {
 
     public int getIntValue(String name, int defaultValue) {
         String value = getValue(name);
-        return value == null ? defaultValue : Integer.decode(value);
+        return value == null || value.length() == 0 ? defaultValue : Integer.decode(value);
     }
 
     public long getLongValue(String name) {
@@ -417,7 +417,7 @@ public abstract class AnyValue {
 
     public long getLongValue(String name, long defaultValue) {
         String value = getValue(name);
-        return value == null ? defaultValue : Long.decode(value);
+        return value == null || value.length() == 0 ? defaultValue : Long.decode(value);
     }
 
     public float getFloatValue(String name) {
@@ -426,7 +426,7 @@ public abstract class AnyValue {
 
     public float getFloatValue(String name, float defaultValue) {
         String value = getValue(name);
-        return value == null ? defaultValue : Float.parseFloat(value);
+        return value == null || value.length() == 0 ? defaultValue : Float.parseFloat(value);
     }
 
     public double getDoubleValue(String name) {
@@ -435,7 +435,7 @@ public abstract class AnyValue {
 
     public double getDoubleValue(String name, double defaultValue) {
         String value = getValue(name);
-        return value == null ? defaultValue : Double.parseDouble(value);
+        return value == null || value.length() == 0 ? defaultValue : Double.parseDouble(value);
     }
 
     public String getValue(String name, String defaultValue) {
