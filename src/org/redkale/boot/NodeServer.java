@@ -160,7 +160,7 @@ public abstract class NodeServer {
         final NodeServer self = this;
         //---------------------------------------------------------------------------------------------
         final ResourceFactory appResFactory = application.getResourceFactory();
-        resourceFactory.add(DataSource.class, (ResourceFactory rf, final Object src, String resourceName, Field field, final Object attachment) -> {
+        resourceFactory.register((ResourceFactory rf, final Object src, String resourceName, Field field, final Object attachment) -> {
             try {
                 if (field.getAnnotation(Resource.class) == null) return;
                 if ((src instanceof Service) && Sncp.isRemote((Service) src)) return; //远程模式不得注入 DataSource
@@ -203,8 +203,8 @@ public abstract class NodeServer {
             } catch (Exception e) {
                 logger.log(Level.SEVERE, "DataSource inject error", e);
             }
-        });
-        resourceFactory.add(CacheSource.class, (ResourceFactory rf, final Object src, final String resourceName, Field field, final Object attachment) -> {
+        },DataSource.class);
+        resourceFactory.register((ResourceFactory rf, final Object src, final String resourceName, Field field, final Object attachment) -> {
             try {
                 if (field.getAnnotation(Resource.class) == null) return;
                 if ((src instanceof Service) && Sncp.isRemote((Service) src)) return; //远程模式不得注入 CacheSource   
@@ -252,7 +252,7 @@ public abstract class NodeServer {
             } catch (Exception e) {
                 logger.log(Level.SEVERE, "DataSource inject error", e);
             }
-        });
+        },CacheSource.class);
     }
 
     @SuppressWarnings("unchecked")

@@ -5,21 +5,17 @@
  */
 package org.redkale.boot;
 
-import org.redkale.net.http.WebServlet;
-import org.redkale.net.http.HttpServer;
-import org.redkale.net.http.HttpServlet;
-import org.redkale.util.AnyValue;
-import org.redkale.boot.ClassFilter.FilterEntry;
-import org.redkale.util.AnyValue.DefaultAnyValue;
 import java.lang.reflect.*;
 import java.net.InetSocketAddress;
 import java.util.*;
-import java.util.logging.*;
-import javax.annotation.*;
+import java.util.logging.Level;
+import javax.annotation.Resource;
+import org.redkale.boot.ClassFilter.FilterEntry;
 import org.redkale.net.*;
 import org.redkale.net.http.*;
-import org.redkale.net.sncp.*;
+import org.redkale.net.sncp.Sncp;
 import org.redkale.service.*;
+import org.redkale.util.AnyValue.DefaultAnyValue;
 import org.redkale.util.*;
 
 /**
@@ -68,7 +64,7 @@ public final class NodeHttpServer extends NodeServer {
     private void initWebSocketService() {
         final NodeServer self = this;
         final ResourceFactory regFactory = application.getResourceFactory();
-        resourceFactory.add(WebSocketNode.class, (ResourceFactory rf, final Object src, final String resourceName, Field field, Object attachment) -> { //主要用于单点的服务
+        resourceFactory.register((ResourceFactory rf, final Object src, final String resourceName, Field field, Object attachment) -> { //主要用于单点的服务
             try {
                 if (field.getAnnotation(Resource.class) == null) return;
                 if (!(src instanceof WebSocketServlet)) return;
@@ -85,7 +81,7 @@ public final class NodeHttpServer extends NodeServer {
             } catch (Exception e) {
                 logger.log(Level.SEVERE, "WebSocketNode inject error", e);
             }
-        });
+        }, WebSocketNode.class);
     }
 
     protected void loadHttpServlet(final AnyValue conf, final ClassFilter<? extends Servlet> filter) throws Exception {

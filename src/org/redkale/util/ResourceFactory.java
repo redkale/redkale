@@ -69,9 +69,16 @@ public final class ResourceFactory {
         return (A) register(autoSync, "", rs);
     }
 
-    public void add(final Type clazz, final ResourceLoader rs) {
+    public void register(final Type clazz, final ResourceLoader rs) {
         if (clazz == null || rs == null) return;
         loadermap.put(clazz, rs);
+    }
+
+    public void register(final ResourceLoader rs, final Type... clazzs) {
+        if (clazzs == null || rs == null) return;
+        for (Type clazz : clazzs) {
+            loadermap.put(clazz, rs);
+        }
     }
 
     public void register(final String name, final boolean value) {
