@@ -634,6 +634,17 @@ public class HttpRequest extends Request<HttpContext> {
     }
 
     /**
+     * 获取指定的header的short值, 没有返回默认short值
+     *
+     * @param name         header名
+     * @param defaultValue 默认short值
+     * @return header值
+     */
+    public short getShortHeader(String name, int defaultValue) {
+        return header.getShortValue(name, (short)defaultValue);
+    }
+    
+    /**
      * 获取指定的header的int值, 没有返回默认int值
      *
      * @param name         header名
@@ -762,6 +773,18 @@ public class HttpRequest extends Request<HttpContext> {
         return params.getShortValue(name, defaultValue);
     }
 
+    /**
+     * 获取指定的参数short值, 没有返回默认short值
+     *
+     * @param name         参数名
+     * @param defaultValue 默认short值
+     * @return 参数值
+     */
+    public short getShortParameter(String name, int defaultValue) {
+        parseBody();
+        return params.getShortValue(name, (short)defaultValue);
+    }
+    
     /**
      * 获取指定的参数int值, 没有返回默认int值
      *
