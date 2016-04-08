@@ -5,17 +5,17 @@
  */
 package org.redkale.util;
 
-import java.lang.ref.*;
+import java.lang.ref.WeakReference;
 import java.lang.reflect.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.logging.*;
-import java.util.regex.*;
-import javax.annotation.*;
+import java.util.regex.Pattern;
+import javax.annotation.Resource;
 
 /**
  * 如果Resource(name = "$") 表示资源name采用所属对象的name
- *
+ * <p>
  * <p>
  * 详情见: http://www.redkale.org
  *
@@ -66,7 +66,7 @@ public final class ResourceFactory {
 
     public <A> A register(final boolean autoSync, final A rs) {
         if (rs == null) return null;
-        return (A) register(autoSync, "", rs.getClass(), rs);
+        return (A) register(autoSync, "", rs);
     }
 
     public void add(final Type clazz, final ResourceLoader rs) {
