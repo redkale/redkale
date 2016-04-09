@@ -28,6 +28,8 @@ public class FilterNode {
 
     protected Serializable value;
 
+    protected boolean itemand;
+
     //----------------------------------------------
     protected boolean or;
 
@@ -36,21 +38,40 @@ public class FilterNode {
     public FilterNode() {
     }
 
-    protected FilterNode(String col, FilterExpress exp, Serializable val) {
+    protected FilterNode(String col, FilterExpress exp, boolean itemand, Serializable val) {
         Objects.requireNonNull(col);
         if (exp == null) {
             if (val instanceof Range) {
                 exp = FilterExpress.BETWEEN;
             } else if (val instanceof Collection) {
-                exp = FilterExpress.IN;
+                if (!((Collection) val).isEmpty()) {
+                    Object subval = null;
+                    for (Object obj : (Collection) val) {  //取第一个值
+                        subval = obj;
+                        break;
+                    }
+                    if (subval instanceof Range) {
+                        exp = FilterExpress.BETWEEN;
+                    } else if (subval instanceof Collection) {
+                        exp = FilterExpress.IN;
+                    } else if (subval != null && val.getClass().isArray()) {
+                        exp = FilterExpress.IN;
+                    }
+                } else { //空集合
+                    exp = FilterExpress.IN;
+                }
             } else if (val != null && val.getClass().isArray()) {
-                exp = FilterExpress.IN;
-            } else {
-                exp = FilterExpress.EQUAL;
+                Class comp = val.getClass().getComponentType();
+                if (Range.class.isAssignableFrom(comp)) {
+                    exp = FilterExpress.BETWEEN;
+                } else if (comp.isArray() || Collection.class.isAssignableFrom(comp)) {
+                    exp = FilterExpress.IN;
+                }
             }
         }
         this.column = col;
-        this.express = exp;
+        this.express = exp == null ? EQUAL : exp;
+        this.itemand = itemand;
         this.value = val;
     }
 
@@ -63,7 +84,11 @@ public class FilterNode {
     }
 
     public final FilterNode and(String column, FilterExpress express, Serializable value) {
-        return and(new FilterNode(column, express, value));
+        return and(column, express, true, value);
+    }
+
+    public final FilterNode and(String column, FilterExpress express, boolean itemand, Serializable value) {
+        return and(new FilterNode(column, express, itemand, value));
     }
 
     public final FilterNode or(FilterNode node) {
@@ -75,7 +100,11 @@ public class FilterNode {
     }
 
     public final FilterNode or(String column, FilterExpress express, Serializable value) {
-        return or(new FilterNode(column, express, value));
+        return or(column, express, true, value);
+    }
+
+    public final FilterNode or(String column, FilterExpress express, boolean itemand, Serializable value) {
+        return or(new FilterNode(column, express, itemand, value));
     }
 
     protected FilterNode any(FilterNode node, boolean signor) {
@@ -83,6 +112,7 @@ public class FilterNode {
         if (this.column == null) {
             this.column = node.column;
             this.express = node.express;
+            this.itemand = node.itemand;
             this.value = node.value;
             return this;
         }
@@ -98,12 +128,13 @@ public class FilterNode {
             this.nodes = newsiblings;
             return this;
         }
-        FilterNode newnode = new FilterNode(this.column, this.express, this.value);
+        FilterNode newnode = new FilterNode(this.column, this.express, this.itemand, this.value);
         newnode.or = this.or;
         newnode.nodes = this.nodes;
         this.nodes = new FilterNode[]{newnode, node};
         this.column = null;
         this.express = null;
+        this.itemand = true;
         this.or = signor;
         this.value = null;
         return this;
@@ -206,16 +237,81 @@ public class FilterNode {
     }
 
     public static FilterNode create(String column, FilterExpress express, Serializable value) {
-        return new FilterNode(column, express, value);
+        return create(column, express, true, value);
+    }
+
+    public static FilterNode create(String column, FilterExpress express, boolean itemand, Serializable value) {
+        return new FilterNode(column, express, itemand, value);
+    }
+
+    private boolean needSplit(final Object val0) {
+        return needSplit(express, val0);
+    }
+
+    private static boolean needSplit(final FilterExpress express, final Object val0) {
+        boolean items = express != IN && express != NOTIN;  //是否数组集合的表达式
+        if (!items) {
+            if (val0.getClass().isArray()) {
+                Class comp = val0.getClass().getComponentType();
+                if (!(comp.isPrimitive() || CharSequence.class.isAssignableFrom(comp) || Number.class.isAssignableFrom(comp))) {
+                    items = true;
+                }
+            } else if (val0 instanceof Collection) {
+                for (Object fv : (Collection) val0) {
+                    if (fv == null) continue;
+                    Class comp = fv.getClass();
+                    if (!(comp.isPrimitive() || CharSequence.class.isAssignableFrom(comp) || Number.class.isAssignableFrom(comp))) {
+                        items = true;
+                    }
+                    break;  //只需检测第一个值
+                }
+            }
+        }
+        return items;
     }
 
     protected final <T> CharSequence createElementSQLExpress(final EntityInfo<T> info, String talis) {
+        final Object val0 = getValue();
+        if (needSplit(val0)) {
+            if (val0 instanceof Collection) {
+                StringBuilder sb = new StringBuilder();
+                boolean more = ((Collection) val0).size() > 1;
+                if (more) sb.append('(');
+                for (Object fv : (Collection) val0) {
+                    if (fv == null) continue;
+                    CharSequence cs = createElementSQLExpress(info, talis, fv);
+                    if (cs == null) continue;
+                    if (sb.length() > 2) sb.append(itemand ? " AND " : " OR ");
+                    sb.append(cs);
+                }
+                if (more) sb.append(')');
+                return sb.length() > 3 ? sb : null;  //若sb的值只是()，则不过滤
+            } else if (val0.getClass().isArray()) {
+                StringBuilder sb = new StringBuilder();
+                Object[] fvs = (Object[]) val0;
+                boolean more = fvs.length > 1;
+                if (more) sb.append('(');
+                for (Object fv : fvs) {
+                    if (fv == null) continue;
+                    CharSequence cs = createElementSQLExpress(info, talis, fv);
+                    if (cs == null) continue;
+                    if (sb.length() > 2) sb.append(itemand ? " AND " : " OR ");
+                    sb.append(cs);
+                }
+                if (more) sb.append(')');
+                return sb.length() > 3 ? sb : null;  //若sb的值只是()，则不过滤
+            }
+        }
+        return createElementSQLExpress(info, talis, val0);
+
+    }
+
+    private <T> CharSequence createElementSQLExpress(final EntityInfo<T> info, String talis, Object val0) {
         if (column == null) return null;
         if (talis == null) talis = "a";
         if (express == ISNULL || express == ISNOTNULL) {
             return new StringBuilder().append(info.getSQLColumn(talis, column)).append(' ').append(express.value());
         }
-        Object val0 = getValue();
         if (val0 == null) return null;
         if (express == FV_MOD || express == FV_DIV) {
             FilterValue fv = (FilterValue) val0;
@@ -294,6 +390,81 @@ public class FilterNode {
 
     @SuppressWarnings("unchecked")
     protected final <T> Predicate<T> createElementPredicate(final EntityCache<T> cache, final boolean join, final Attribute<T, Serializable> attr) {
+        final Object val0 = getValue();
+        if (needSplit(val0)) {
+            if (val0 instanceof Collection) {
+                Predicate<T> filter = null;
+                for (Object fv : (Collection) val0) {
+                    if (fv == null) continue;
+                    Predicate<T> f = createElementPredicate(cache, join, attr, fv);
+                    if (f == null) continue;
+                    final Predicate<T> one = filter;
+                    final Predicate<T> two = f;
+                    filter = (filter == null) ? f : (!itemand ? new Predicate<T>() {
+
+                        @Override
+                        public boolean test(T t) {
+                            return one.test(t) || two.test(t);
+                        }
+
+                        @Override
+                        public String toString() {
+                            return "(" + one + " OR " + two + ")";
+                        }
+                    } : new Predicate<T>() {
+
+                        @Override
+                        public boolean test(T t) {
+                            return one.test(t) && two.test(t);
+                        }
+
+                        @Override
+                        public String toString() {
+                            return "(" + one + " AND " + two + ")";
+                        }
+                    });
+                }
+                return filter;
+            } else if (val0.getClass().isArray()) {
+                Predicate<T> filter = null;
+                for (Object fv : (Object[]) val0) {
+                    if (fv == null) continue;
+                    Predicate<T> f = createElementPredicate(cache, join, attr, fv);
+                    if (f == null) continue;
+                    final Predicate<T> one = filter;
+                    final Predicate<T> two = f;
+                    filter = (filter == null) ? f : (!itemand ? new Predicate<T>() {
+
+                        @Override
+                        public boolean test(T t) {
+                            return one.test(t) || two.test(t);
+                        }
+
+                        @Override
+                        public String toString() {
+                            return "(" + one + " OR " + two + ")";
+                        }
+                    } : new Predicate<T>() {
+
+                        @Override
+                        public boolean test(T t) {
+                            return one.test(t) && two.test(t);
+                        }
+
+                        @Override
+                        public String toString() {
+                            return "(" + one + " AND " + two + ")";
+                        }
+                    });
+                }
+                return filter;
+            }
+        }
+        return createElementPredicate(cache, join, attr, val0);
+    }
+
+    @SuppressWarnings("unchecked")
+    protected final <T> Predicate<T> createElementPredicate(final EntityCache<T> cache, final boolean join, final Attribute<T, Serializable> attr, Object val0) {
         if (attr == null) return null;
         final String field = join ? (cache.getType().getSimpleName() + "." + attr.field()) : attr.field();
         if (express == ISNULL) return new Predicate<T>() {
@@ -321,7 +492,6 @@ public class FilterNode {
                 }
             };
         if (attr == null) return null;
-        Serializable val0 = getValue();
         if (val0 == null) return null;
 
         final Class atype = attr.type();
@@ -436,7 +606,7 @@ public class FilterNode {
                 }
             }
         }
-        final Serializable val = val0;
+        final Serializable val = (Serializable) val0;
         switch (express) {
             case EQUAL:
                 return new Predicate<T>() {
@@ -1125,10 +1295,44 @@ public class FilterNode {
     }
 
     protected final StringBuilder toElementString(final String prefix) {
+        Serializable val0 = getValue();
+        if (needSplit(val0)) {
+            if (val0 instanceof Collection) {
+                StringBuilder sb = new StringBuilder();
+                boolean more = ((Collection) val0).size() > 1;
+                if (more) sb.append('(');
+                for (Object fv : (Collection) val0) {
+                    if (fv == null) continue;
+                    CharSequence cs = toElementString(prefix, fv);
+                    if (cs == null) continue;
+                    if (sb.length() > 2) sb.append(itemand ? " AND " : " OR ");
+                    sb.append(cs);
+                }
+                if (more) sb.append(')');
+                return sb.length() > 3 ? sb : null;  //若sb的值只是()，则不过滤
+            } else if (val0.getClass().isArray()) {
+                StringBuilder sb = new StringBuilder();
+                Object[] fvs = (Object[]) val0;
+                boolean more = fvs.length > 1;
+                if (more) sb.append('(');
+                for (Object fv : fvs) {
+                    if (fv == null) continue;
+                    CharSequence cs = toElementString(prefix, fv);
+                    if (cs == null) continue;
+                    if (sb.length() > 2) sb.append(itemand ? " AND " : " OR ");
+                    sb.append(cs);
+                }
+                if (more) sb.append(')');
+                return sb.length() > 3 ? sb : null;  //若sb的值只是()，则不过滤
+            }
+        }
+        return toElementString(prefix, val0);
+    }
+
+    protected final StringBuilder toElementString(final String prefix, Object ev) {
         StringBuilder sb = new StringBuilder();
         if (column != null) {
             String col = prefix == null ? column : (prefix + "." + column);
-            Serializable ev = getValue();
             if (express == ISNULL || express == ISNOTNULL) {
                 sb.append(col).append(' ').append(express.value());
             } else if (ev != null) {
@@ -1243,6 +1447,14 @@ public class FilterNode {
 
     public final void setExpress(FilterExpress express) {
         this.express = express;
+    }
+
+    public final boolean isItemand() {
+        return itemand;
+    }
+
+    public final void setItemand(boolean itemand) {
+        this.itemand = itemand;
     }
 
     public final FilterNode[] getNodes() {

@@ -5,15 +5,18 @@
  */
 package org.redkale.source;
 
-import java.io.*;
+import java.io.Serializable;
 import java.util.*;
-import java.util.concurrent.atomic.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.*;
-import org.redkale.util.*;
+import static org.redkale.source.FilterExpress.EQUAL;
+import org.redkale.util.Attribute;
 
 /**
  *
- * <p> 详情见: http://www.redkale.org
+ * <p>
+ * 详情见: http://www.redkale.org
+ *
  * @author zhangjx
  */
 public class FilterJoinNode extends FilterNode {
@@ -27,41 +30,55 @@ public class FilterJoinNode extends FilterNode {
     public FilterJoinNode() {
     }
 
-    protected FilterJoinNode(Class joinClass, String[] joinColumns, String column, Serializable value) {
-        this(joinClass, joinColumns, column, null, value);
-    }
-
-    protected FilterJoinNode(Class joinClass, String[] joinColumns, String column, FilterExpress express, Serializable value) {
+    protected FilterJoinNode(Class joinClass, String[] joinColumns, String column, FilterExpress express, boolean itemand, Serializable value) {
         Objects.requireNonNull(joinClass);
         Objects.requireNonNull(joinColumns);
+        if (express == null && value != null) {
+            if (value instanceof Range) {
+                express = FilterExpress.BETWEEN;
+            } else if (value instanceof Collection) {
+                express = FilterExpress.IN;
+            } else if (value.getClass().isArray()) {
+                express = FilterExpress.IN;
+            }
+        }
         this.joinClass = joinClass;
         this.joinColumns = joinColumns;
         this.column = column;
-        this.express = express;
+        this.express = express == null ? EQUAL : express;
+        this.itemand = itemand;
         this.value = value;
     }
 
     protected FilterJoinNode(FilterJoinNode node) {
-        this(node.joinClass, node.joinColumns, node.column, node.express, node.value);
+        this(node.joinClass, node.joinColumns, node.column, node.express, node.itemand, node.value);
         this.joinEntity = node.joinEntity;
         this.or = node.or;
         this.nodes = node.nodes;
     }
 
     public static FilterJoinNode create(Class joinClass, String joinColumn, String column, Serializable value) {
-        return new FilterJoinNode(joinClass, new String[]{joinColumn}, column, value);
+        return create(joinClass, new String[]{joinColumn}, column, value);
     }
 
     public static FilterJoinNode create(Class joinClass, String joinColumn, String column, FilterExpress express, Serializable value) {
-        return new FilterJoinNode(joinClass, new String[]{joinColumn}, column, express, value);
+        return create(joinClass, new String[]{joinColumn}, column, express, value);
+    }
+
+    public static FilterJoinNode create(Class joinClass, String joinColumn, String column, FilterExpress express, boolean itemand, Serializable value) {
+        return create(joinClass, new String[]{joinColumn}, column, express, itemand, value);
     }
 
     public static FilterJoinNode create(Class joinClass, String[] joinColumns, String column, Serializable value) {
-        return new FilterJoinNode(joinClass, joinColumns, column, value);
+        return create(joinClass, joinColumns, column, null, value);
     }
 
     public static FilterJoinNode create(Class joinClass, String[] joinColumns, String column, FilterExpress express, Serializable value) {
-        return new FilterJoinNode(joinClass, joinColumns, column, express, value);
+        return create(joinClass, joinColumns, column, express, true, value);
+    }
+
+    public static FilterJoinNode create(Class joinClass, String[] joinColumns, String column, FilterExpress express, boolean itemand, Serializable value) {
+        return new FilterJoinNode(joinClass, joinColumns, column, express, itemand, value);
     }
 
     @Override
@@ -87,6 +104,7 @@ public class FilterJoinNode extends FilterNode {
         this.nodes = new FilterNode[]{new FilterJoinNode(node), node};
         this.column = null;
         this.express = null;
+        this.itemand = true;
         this.value = null;
         this.joinClass = null;
         this.joinEntity = null;
@@ -260,7 +278,7 @@ public class FilterJoinNode extends FilterNode {
         StringBuilder sb = new StringBuilder();
         String[] joinColumns = node.joinColumns;
         sb.append(" INNER JOIN ").append(node.joinEntity.getTable()).append(" ").append(joinTabalis.get(node.joinClass))
-                .append(" ON ").append(info.getSQLColumn("a", joinColumns[0])).append(" = ").append(node.joinEntity.getSQLColumn(joinTabalis.get(node.joinClass), joinColumns[0]));
+            .append(" ON ").append(info.getSQLColumn("a", joinColumns[0])).append(" = ").append(node.joinEntity.getSQLColumn(joinTabalis.get(node.joinClass), joinColumns[0]));
         for (int i = 1; i < joinColumns.length; i++) {
             sb.append(" AND ").append(info.getSQLColumn("a", joinColumns[i])).append(" = ").append(node.joinEntity.getSQLColumn(joinTabalis.get(node.joinClass), joinColumns[i]));
         }

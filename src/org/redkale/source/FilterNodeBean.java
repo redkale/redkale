@@ -5,13 +5,13 @@
  */
 package org.redkale.source;
 
-import java.io.*;
+import java.io.Serializable;
 import java.lang.reflect.*;
 import java.util.*;
-import java.util.concurrent.*;
-import javax.persistence.*;
+import java.util.concurrent.ConcurrentHashMap;
+import javax.persistence.Transient;
 import static org.redkale.source.FilterExpress.*;
-import org.redkale.util.*;
+import org.redkale.util.Attribute;
 
 /**
  *
@@ -19,8 +19,9 @@ import org.redkale.util.*;
  * 详情见: http://www.redkale.org
  *
  * @author zhangjx
+ * @param <T> FilterBean泛型
  */
-public final class FilterNodeBean<T> implements Comparable<FilterNodeBean<T>> {
+public final class FilterNodeBean<T extends FilterBean> implements Comparable<FilterNodeBean<T>> {
 
     private static final ConcurrentHashMap<Class, FilterNodeBean> beanodes = new ConcurrentHashMap<>();
 
@@ -29,6 +30,8 @@ public final class FilterNodeBean<T> implements Comparable<FilterNodeBean<T>> {
     private String column;
 
     private FilterExpress express;
+
+    private boolean itemand;
 
     private boolean or;
 
@@ -50,6 +53,7 @@ public final class FilterNodeBean<T> implements Comparable<FilterNodeBean<T>> {
         this.beanAttr = bean == null ? null : bean.beanAttr;
         this.column = bean == null ? null : bean.column;
         this.express = bean == null ? null : bean.express;
+        this.itemand = bean == null ? true : bean.itemand;
         this.joinClass = bean == null ? null : bean.joinClass;
         this.joinColumns = bean == null ? null : bean.joinColumns;
         this.least = bean == null ? 1 : bean.least;
@@ -68,10 +72,12 @@ public final class FilterNodeBean<T> implements Comparable<FilterNodeBean<T>> {
         this.column = (filterCol != null && !filterCol.name().isEmpty()) ? filterCol.name() : attr.field();
 
         FilterExpress exp = filterCol == null ? null : filterCol.express();
-        if (type.isArray() || Collection.class.isAssignableFrom(type)) {
+        if ((exp == null || exp == EQUAL) && (type.isArray() || Collection.class.isAssignableFrom(type))) {
             if (Range.class.isAssignableFrom(type.getComponentType())) {
                 if (AND != exp) exp = OR;
-            } else if (NOTIN != exp) exp = IN;
+            } else if (NOTIN != exp) {
+                exp = IN;
+            }
         } else if (Range.class.isAssignableFrom(type)) {
             if (NOTBETWEEN != exp) exp = BETWEEN;
         }
@@ -97,6 +103,7 @@ public final class FilterNodeBean<T> implements Comparable<FilterNodeBean<T>> {
             this.beanAttr = node.beanAttr;
             this.column = node.column;
             this.express = node.express;
+            this.itemand = node.itemand;
             this.joinClass = node.joinClass;
             this.joinColumns = node.joinColumns;
             this.least = node.least;
@@ -133,16 +140,16 @@ public final class FilterNodeBean<T> implements Comparable<FilterNodeBean<T>> {
         final Serializable val = beanAttr.get(bean);
         if (column != null && val != null) {
             boolean skip = false;
-            if (string && ((CharSequence) val).length() == 0) {
+            if (string && ((CharSequence) val).length() == 0) { //空字符串不需要进行过滤
                 skip = true;
-            } else if (number && ((Number) val).longValue() < least) {
+            } else if (number && ((Number) val).longValue() < least) { //数值小于过滤下值限则不需要过滤
                 skip = true;
             }
             if (!skip) {
                 if (this.joinClass == null) {
-                    node = FilterNode.create(column, express, val);
+                    node = FilterNode.create(column, express, itemand, val);
                 } else {
-                    node = FilterJoinNode.create(joinClass, joinColumns, column, express, val);
+                    node = FilterJoinNode.create(joinClass, joinColumns, column, express, itemand, val);
                 }
             }
         }
@@ -221,7 +228,7 @@ public final class FilterNodeBean<T> implements Comparable<FilterNodeBean<T>> {
             if (f == null) continue;
             rs = rs == null ? f : rs.and(f);
         }
-        if (rs !=null && rs.nodeBeans != null) Arrays.sort(rs.nodeBeans);
+        if (rs != null && rs.nodeBeans != null) Arrays.sort(rs.nodeBeans);
         return rs == null ? new FilterNodeBean(null) : rs;
     }
 
