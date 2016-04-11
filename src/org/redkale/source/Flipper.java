@@ -14,7 +14,7 @@ import java.io.Serializable;
  *
  * @author zhangjx
  */
-public final class Flipper implements Serializable {
+public final class Flipper implements Serializable, Cloneable {
 
     public static int DEFAULT_PAGESIZE = 20;
 
