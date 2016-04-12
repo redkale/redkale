@@ -29,7 +29,7 @@ public class FilterKey implements java.io.Serializable {
 
     @Override
     public String toString() {
-        return "$." + getColumn();
+        return "a." + getColumn();
     }
 
 }

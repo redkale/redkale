@@ -5,11 +5,11 @@
  */
 package org.redkale.source;
 
-import java.io.*;
-import java.nio.channels.*;
-import java.sql.*;
+import java.io.Serializable;
+import java.nio.channels.CompletionHandler;
+import java.sql.ResultSet;
 import java.util.*;
-import java.util.function.*;
+import java.util.function.Consumer;
 import org.redkale.util.*;
 
 /**
@@ -94,6 +94,9 @@ public interface DataSource {
 
     public <T> void updateColumns(final CompletionHandler<Void, T> handler, final T value, final String... columns);
 
+    
+    
+    //############################################# 查询接口 #############################################
     //-----------------------getXXXXResult-----------------------------
     public Number getNumberResult(final Class entityClass, final FilterFunc func, final String column);
 
