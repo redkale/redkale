@@ -318,7 +318,8 @@ public class FilterNode {
             return new StringBuilder().append(info.getSQLColumn(talis, column)).append(' ').append(express.value()).append(' ').append(fv.getOptvalue())
                 .append(' ').append(fv.getExpress().value()).append(' ').append(fv.getDestvalue());
         }
-        CharSequence val = formatToString(express, val0);
+        final boolean fk = (val0 instanceof FilterKey);
+        CharSequence val = fk ? info.getSQLColumn(talis, ((FilterKey) val0).getColumn()) : formatToString(express, val0);
         if (val == null) return null;
         StringBuilder sb = new StringBuilder(32);
         if (express == CONTAIN) return info.containSQL.replace("${column}", info.getSQLColumn(talis, column)).replace("${keystr}", val);
@@ -328,6 +329,7 @@ public class FilterNode {
 
         if (express == IGNORECASELIKE || express == IGNORECASENOTLIKE) {
             sb.append("LOWER(").append(info.getSQLColumn(talis, column)).append(')');
+            if (fk) val = "LOWER(" + info.getSQLColumn(talis, ((FilterKey) val0).getColumn()) + ')';
         } else {
             sb.append(info.getSQLColumn(talis, column));
         }
@@ -607,9 +609,23 @@ public class FilterNode {
             }
         }
         final Serializable val = (Serializable) val0;
+        final boolean fk = (val instanceof FilterKey);
+        final Attribute<T, Serializable> fkattr = fk ? cache.getAttribute(((FilterKey) val).getColumn()) : null;
+        if (fk && fkattr == null) throw new RuntimeException(cache.getType() + " not found column(" + ((FilterKey) val).getColumn() + ")");
         switch (express) {
             case EQUAL:
-                return new Predicate<T>() {
+                return fk ? new Predicate<T>() {
+
+                    @Override
+                    public boolean test(T t) {
+                        return Objects.equals(fkattr.get(t), attr.get(t));
+                    }
+
+                    @Override
+                    public String toString() {
+                        return field + ' ' + express.value() + ' ' + fkattr.field();
+                    }
+                } : new Predicate<T>() {
 
                     @Override
                     public boolean test(T t) {
@@ -622,7 +638,18 @@ public class FilterNode {
                     }
                 };
             case NOTEQUAL:
-                return new Predicate<T>() {
+                return fk ? new Predicate<T>() {
+
+                    @Override
+                    public boolean test(T t) {
+                        return !Objects.equals(fkattr.get(t), attr.get(t));
+                    }
+
+                    @Override
+                    public String toString() {
+                        return field + ' ' + express.value() + ' ' + fkattr.field();
+                    }
+                } : new Predicate<T>() {
 
                     @Override
                     public boolean test(T t) {
@@ -635,7 +662,18 @@ public class FilterNode {
                     }
                 };
             case GREATERTHAN:
-                return new Predicate<T>() {
+                return fk ? new Predicate<T>() {
+
+                    @Override
+                    public boolean test(T t) {
+                        return ((Number) attr.get(t)).longValue() > ((Number) fkattr.get(t)).longValue();
+                    }
+
+                    @Override
+                    public String toString() {
+                        return field + ' ' + express.value() + ' ' + fkattr.field();
+                    }
+                } : new Predicate<T>() {
 
                     @Override
                     public boolean test(T t) {
@@ -648,7 +686,18 @@ public class FilterNode {
                     }
                 };
             case LESSTHAN:
-                return new Predicate<T>() {
+                return fk ? new Predicate<T>() {
+
+                    @Override
+                    public boolean test(T t) {
+                        return ((Number) attr.get(t)).longValue() < ((Number) fkattr.get(t)).longValue();
+                    }
+
+                    @Override
+                    public String toString() {
+                        return field + ' ' + express.value() + ' ' + fkattr.field();
+                    }
+                } : new Predicate<T>() {
 
                     @Override
                     public boolean test(T t) {
@@ -661,7 +710,18 @@ public class FilterNode {
                     }
                 };
             case GREATERTHANOREQUALTO:
-                return new Predicate<T>() {
+                return fk ? new Predicate<T>() {
+
+                    @Override
+                    public boolean test(T t) {
+                        return ((Number) attr.get(t)).longValue() >= ((Number) fkattr.get(t)).longValue();
+                    }
+
+                    @Override
+                    public String toString() {
+                        return field + ' ' + express.value() + ' ' + fkattr.field();
+                    }
+                } : new Predicate<T>() {
 
                     @Override
                     public boolean test(T t) {
@@ -674,7 +734,18 @@ public class FilterNode {
                     }
                 };
             case LESSTHANOREQUALTO:
-                return new Predicate<T>() {
+                return fk ? new Predicate<T>() {
+
+                    @Override
+                    public boolean test(T t) {
+                        return ((Number) attr.get(t)).longValue() <= ((Number) fkattr.get(t)).longValue();
+                    }
+
+                    @Override
+                    public String toString() {
+                        return field + ' ' + express.value() + ' ' + fkattr.field();
+                    }
+                } : new Predicate<T>() {
 
                     @Override
                     public boolean test(T t) {
@@ -687,19 +758,6 @@ public class FilterNode {
                     }
                 };
 
-            case OPAND:
-                return new Predicate<T>() {
-
-                    @Override
-                    public boolean test(T t) {
-                        return (((Number) attr.get(t)).longValue() & ((Number) val).longValue()) > 0;
-                    }
-
-                    @Override
-                    public String toString() {
-                        return field + " & " + val + " > 0";
-                    }
-                };
             case FV_MOD:
                 FilterValue fv0 = (FilterValue) val;
                 switch (fv0.getExpress()) {
@@ -868,8 +926,43 @@ public class FilterNode {
                     default:
                         throw new RuntimeException("(" + fv1 + ")'s express illegal, must be =, !=, <, >, <=, >=");
                 }
+            case OPAND:
+                return fk ? new Predicate<T>() {
+
+                    @Override
+                    public boolean test(T t) {
+                        return (((Number) attr.get(t)).longValue() & ((Number) fkattr.get(t)).longValue()) > 0;
+                    }
+
+                    @Override
+                    public String toString() {
+                        return field + " & " + fkattr.field() + " > 0";
+                    }
+                } : new Predicate<T>() {
+
+                    @Override
+                    public boolean test(T t) {
+                        return (((Number) attr.get(t)).longValue() & ((Number) val).longValue()) > 0;
+                    }
+
+                    @Override
+                    public String toString() {
+                        return field + " & " + val + " > 0";
+                    }
+                };
             case OPOR:
-                return new Predicate<T>() {
+                return fk ? new Predicate<T>() {
+
+                    @Override
+                    public boolean test(T t) {
+                        return (((Number) attr.get(t)).longValue() | ((Number) fkattr.get(t)).longValue()) > 0;
+                    }
+
+                    @Override
+                    public String toString() {
+                        return field + " | " + fkattr.field() + " > 0";
+                    }
+                } : new Predicate<T>() {
 
                     @Override
                     public boolean test(T t) {
@@ -882,7 +975,18 @@ public class FilterNode {
                     }
                 };
             case OPANDNO:
-                return new Predicate<T>() {
+                return fk ? new Predicate<T>() {
+
+                    @Override
+                    public boolean test(T t) {
+                        return (((Number) attr.get(t)).longValue() & ((Number) fkattr.get(t)).longValue()) == 0;
+                    }
+
+                    @Override
+                    public String toString() {
+                        return field + " & " + fkattr.field() + " = 0";
+                    }
+                } : new Predicate<T>() {
 
                     @Override
                     public boolean test(T t) {
@@ -895,7 +999,20 @@ public class FilterNode {
                     }
                 };
             case LIKE:
-                return new Predicate<T>() {
+                return fk ? new Predicate<T>() {
+
+                    @Override
+                    public boolean test(T t) {
+                        Object rs = attr.get(t);
+                        Object rs2 = fkattr.get(t);
+                        return rs != null && rs2 != null && rs.toString().contains(rs2.toString());
+                    }
+
+                    @Override
+                    public String toString() {
+                        return field + ' ' + express.value() + ' ' + fkattr.field();
+                    }
+                } : new Predicate<T>() {
 
                     @Override
                     public boolean test(T t) {
@@ -909,7 +1026,20 @@ public class FilterNode {
                     }
                 };
             case STARTSWITH:
-                return new Predicate<T>() {
+                return fk ? new Predicate<T>() {
+
+                    @Override
+                    public boolean test(T t) {
+                        Object rs = attr.get(t);
+                        Object rs2 = fkattr.get(t);
+                        return rs != null && rs2 != null && rs.toString().startsWith(rs2.toString());
+                    }
+
+                    @Override
+                    public String toString() {
+                        return field + " STARTSWITH " + fkattr.field();
+                    }
+                } : new Predicate<T>() {
 
                     @Override
                     public boolean test(T t) {
@@ -923,7 +1053,20 @@ public class FilterNode {
                     }
                 };
             case ENDSWITH:
-                return new Predicate<T>() {
+                return fk ? new Predicate<T>() {
+
+                    @Override
+                    public boolean test(T t) {
+                        Object rs = attr.get(t);
+                        Object rs2 = fkattr.get(t);
+                        return rs != null && rs2 != null && rs.toString().endsWith(rs2.toString());
+                    }
+
+                    @Override
+                    public String toString() {
+                        return field + " ENDSWITH " + fkattr.field();
+                    }
+                } : new Predicate<T>() {
 
                     @Override
                     public boolean test(T t) {
@@ -937,6 +1080,20 @@ public class FilterNode {
                     }
                 };
             case IGNORECASELIKE:
+                if (fk) return new Predicate<T>() {
+
+                        @Override
+                        public boolean test(T t) {
+                            Object rs = attr.get(t);
+                            Object rs2 = fkattr.get(t);
+                            return rs != null && rs2 != null && rs.toString().toLowerCase().contains(rs2.toString().toLowerCase());
+                        }
+
+                        @Override
+                        public String toString() {
+                            return "LOWER(" + field + ") " + express.value() + " LOWER(" + fkattr.field() + ')';
+                        }
+                    };
                 final String valstr = val.toString().toLowerCase();
                 return new Predicate<T>() {
 
@@ -952,7 +1109,20 @@ public class FilterNode {
                     }
                 };
             case NOTSTARTSWITH:
-                return new Predicate<T>() {
+                return fk ? new Predicate<T>() {
+
+                    @Override
+                    public boolean test(T t) {
+                        Object rs = attr.get(t);
+                        Object rs2 = fkattr.get(t);
+                        return rs == null || rs2 == null || !rs.toString().startsWith(rs2.toString());
+                    }
+
+                    @Override
+                    public String toString() {
+                        return field + " NOT STARTSWITH " + fkattr.field();
+                    }
+                } : new Predicate<T>() {
 
                     @Override
                     public boolean test(T t) {
@@ -966,7 +1136,20 @@ public class FilterNode {
                     }
                 };
             case NOTENDSWITH:
-                return new Predicate<T>() {
+                return fk ? new Predicate<T>() {
+
+                    @Override
+                    public boolean test(T t) {
+                        Object rs = attr.get(t);
+                        Object rs2 = fkattr.get(t);
+                        return rs == null || rs2 == null || !rs.toString().endsWith(rs2.toString());
+                    }
+
+                    @Override
+                    public String toString() {
+                        return field + " NOT ENDSWITH " + fkattr.field();
+                    }
+                } : new Predicate<T>() {
 
                     @Override
                     public boolean test(T t) {
@@ -980,6 +1163,20 @@ public class FilterNode {
                     }
                 };
             case IGNORECASENOTLIKE:
+                if (fk) return new Predicate<T>() {
+
+                        @Override
+                        public boolean test(T t) {
+                            Object rs = attr.get(t);
+                            Object rs2 = fkattr.get(t);
+                            return rs == null || rs2 == null || !rs.toString().toLowerCase().contains(rs2.toString().toLowerCase());
+                        }
+
+                        @Override
+                        public String toString() {
+                            return "LOWER(" + field + ") " + express.value() + " LOWER(" + fkattr.field() + ')';
+                        }
+                    };
                 final String valstr2 = val.toString().toLowerCase();
                 return new Predicate<T>() {
 
@@ -995,7 +1192,20 @@ public class FilterNode {
                     }
                 };
             case CONTAIN:
-                return new Predicate<T>() {
+                return fk ? new Predicate<T>() {
+
+                    @Override
+                    public boolean test(T t) {
+                        Object rs = attr.get(t);
+                        Object rs2 = fkattr.get(t);
+                        return rs != null && rs2 != null && rs2.toString().contains(rs.toString());
+                    }
+
+                    @Override
+                    public String toString() {
+                        return fkattr.field() + ' ' + express.value() + ' ' + field;
+                    }
+                } : new Predicate<T>() {
 
                     @Override
                     public boolean test(T t) {
@@ -1009,6 +1219,20 @@ public class FilterNode {
                     }
                 };
             case IGNORECASECONTAIN:
+                if (fk) return new Predicate<T>() {
+
+                        @Override
+                        public boolean test(T t) {
+                            Object rs = attr.get(t);
+                            Object rs2 = fkattr.get(t);
+                            return rs != null && rs2 != null && rs2.toString().toLowerCase().contains(rs.toString().toLowerCase());
+                        }
+
+                        @Override
+                        public String toString() {
+                            return " LOWER(" + fkattr.field() + ") " + express.value() + ' ' + "LOWER(" + field + ") ";
+                        }
+                    };
                 final String valstr3 = val.toString().toLowerCase();
                 return new Predicate<T>() {
 
@@ -1024,7 +1248,20 @@ public class FilterNode {
                     }
                 };
             case NOTCONTAIN:
-                return new Predicate<T>() {
+                return fk ? new Predicate<T>() {
+
+                    @Override
+                    public boolean test(T t) {
+                        Object rs = attr.get(t);
+                        Object rs2 = fkattr.get(t);
+                        return rs == null || rs2 == null || !rs2.toString().contains(rs.toString());
+                    }
+
+                    @Override
+                    public String toString() {
+                        return fkattr.field() + ' ' + express.value() + ' ' + field;
+                    }
+                } : new Predicate<T>() {
 
                     @Override
                     public boolean test(T t) {
@@ -1038,6 +1275,20 @@ public class FilterNode {
                     }
                 };
             case IGNORECASENOTCONTAIN:
+                if (fk) return new Predicate<T>() {
+
+                        @Override
+                        public boolean test(T t) {
+                            Object rs = attr.get(t);
+                            Object rs2 = fkattr.get(t);
+                            return rs == null || rs2 == null || !rs2.toString().toLowerCase().contains(rs.toString().toLowerCase());
+                        }
+
+                        @Override
+                        public String toString() {
+                            return " LOWER(" + fkattr.field() + ") " + express.value() + ' ' + "LOWER(" + field + ") ";
+                        }
+                    };
                 final String valstr4 = val.toString().toLowerCase();
                 return new Predicate<T>() {
 
