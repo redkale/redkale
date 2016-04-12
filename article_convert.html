@@ -41,7 +41,7 @@
             </p>
             <p style="text-align: center;"><img src="images/convertimg_2.png" alt=""/></p>
             <p>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;由上图第一份报告看出，以MediaContent对象进行比较，fastjson的反序列化性能是最好的，gson性能最差。redkale、fastjson、jackson在序列化方面差距不大。第二份报告的测试对象是将第一份的MediaContent对象中所有的数值改成负数进行测试的，可以看出fastjson对于负数的处理性能很差，只是比gson稍强。第三份报告的测试对象是<a href="https://github.com/redkale/redkale/blob/master/src/test/java/org/redkale/test/convert/ConvertRecord.java" target="_blank">ConvertRecord</a>对象，该对象的特点是包含int[]、long[]、List、Map数据。从结果可以看出fastjson的反序列化性能最差。redkale与jackson一直保持高性能。<br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;由上图第一份报告看出，以MediaContent对象进行比较，fastjson的反序列化性能是最好的，gson性能最差。redkale、fastjson、jackson在序列化方面差距不大。第二份报告的测试对象是将第一份的MediaContent对象中所有的数值改成负数进行测试的，可以看出fastjson对于负数的处理性能很差，只是比gson稍强。第三份报告的测试对象是<a href="https://github.com/redkale/redkale/blob/master/test/org/redkale/test/convert/ConvertRecord.java" target="_blank">ConvertRecord</a>对象，该对象的特点是包含int[]、long[]、List、Map数据。从结果可以看出fastjson的反序列化性能最差。redkale与jackson一直保持高性能。<br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;综合起来看，Redkale的Convert性能是最好的。数据相差50毫秒以下的差距基本可以忽略，因为每次测试的结果会上下波动几十毫秒。
             </p>                      
             <br/>
