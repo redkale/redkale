@@ -10,11 +10,12 @@ import java.io.Serializable;
 import java.lang.reflect.*;
 import java.sql.*;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.*;
-import java.util.logging.*;
+import java.util.logging.Level;
 import javax.persistence.*;
+import static org.redkale.source.DataDefaultSource.*;
 import org.redkale.util.*;
 
 /**
@@ -244,8 +245,8 @@ public final class EntityInfo<T> {
             this.cache = null;
         }
         if (conf == null) conf = new Properties();
-        this.containSQL = conf.getProperty("contain-sql-template", "LOCATE(${keystr}, ${column}) > 0");
-        this.notcontainSQL = conf.getProperty("notcontain-sql-template", "LOCATE(${keystr}, ${column}) = 0");
+        this.containSQL = conf.getProperty(JDBC_CONTAIN_SQLTEMPLATE, "LOCATE(${keystr}, ${column}) > 0");
+        this.notcontainSQL = conf.getProperty(JDBC_NOTCONTAIN_SQLTEMPLATE, "LOCATE(${keystr}, ${column}) = 0");
     }
 
     public void createPrimaryValue(T src) {
