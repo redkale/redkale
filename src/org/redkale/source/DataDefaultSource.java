@@ -1164,7 +1164,10 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
     public <T> T find(Class<T> clazz, final SelectColumn selects, Serializable pk) {
         final EntityInfo<T> info = loadEntityInfo(clazz);
         final EntityCache<T> cache = info.getCache();
-        if (cache != null && cache.isFullLoaded()) return cache.find(selects, pk);
+        if (cache != null) {
+            T rs = cache.find(selects, pk);
+            if (cache.isFullLoaded() || rs != null) return rs;
+        }
 
         final Connection conn = createReadSQLConnection();
         try {
@@ -1273,7 +1276,10 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
     public <T> boolean exists(Class<T> clazz, Serializable pk) {
         final EntityInfo<T> info = loadEntityInfo(clazz);
         final EntityCache<T> cache = info.getCache();
-        if (cache != null && cache.isFullLoaded()) return cache.exists(pk);
+        if (cache != null) {
+            boolean rs = cache.exists(pk);
+            if (rs || cache.isFullLoaded()) return rs;
+        }
 
         final Connection conn = createReadSQLConnection();
         try {
@@ -1675,11 +1681,11 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
     private <T> Sheet<T> querySheet(final boolean readcache, final boolean needtotal, final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterNode node) {
         final EntityInfo<T> info = loadEntityInfo(clazz);
         final EntityCache<T> cache = info.getCache();
-        if (readcache && cache != null) {
+        if (readcache && cache != null && cache.isFullLoaded()) {
             if (node == null || node.isCacheUseable(this)) {
                 if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(clazz.getSimpleName() + " cache query predicate = " + (node == null ? null : node.createPredicate(cache)));
                 Sheet<T> sheet = cache.querySheet(needtotal, selects, flipper, node);
-                if (!sheet.isEmpty() || info.isVirtualEntity() || cache.isFullLoaded()) return sheet;
+                if (!sheet.isEmpty() || info.isVirtualEntity()) return sheet;
             }
         }
         final Connection conn = createReadSQLConnection();
