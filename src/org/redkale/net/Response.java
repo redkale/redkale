@@ -5,9 +5,9 @@
  */
 package org.redkale.net;
 
-import java.nio.*;
-import java.nio.channels.*;
-import java.util.function.*;
+import java.nio.ByteBuffer;
+import java.nio.channels.CompletionHandler;
+import java.util.function.BiConsumer;
 
 /**
  *
@@ -15,6 +15,7 @@ import java.util.function.*;
  * 详情见: http://www.redkale.org
  *
  * @author zhangjx
+ * @param <C> Context的子类型
  * @param <R> Request的子类型
  */
 @SuppressWarnings("unchecked")
