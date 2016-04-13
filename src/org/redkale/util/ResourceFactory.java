@@ -17,7 +17,7 @@ import javax.annotation.Resource;
  * 如果Resource(name = "$") 表示资源name采用所属对象的name
  * <p>
  * <p>
- * 详情见: http://www.redkale.org
+ * 详情见: http://redkale.org
  *
  * @author zhangjx
  */

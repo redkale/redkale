@@ -15,7 +15,7 @@ import static jdk.internal.org.objectweb.asm.Opcodes.*;
  * 获取泛型的Type类
  *
  * <p>
- * 详情见: http://www.redkale.org
+ * 详情见: http://redkale.org
  *
  * @author zhangjx
  * @param <T> 泛型

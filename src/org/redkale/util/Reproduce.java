@@ -8,7 +8,7 @@ import jdk.internal.org.objectweb.asm.*;
 /**
  *
  * <p>
- * 详情见: http://www.redkale.org
+ * 详情见: http://redkale.org
  *
  * @author zhangjx
  * @param <D> 目标对象的数据类型

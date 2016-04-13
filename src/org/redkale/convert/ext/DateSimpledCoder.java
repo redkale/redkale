@@ -13,7 +13,7 @@ import java.util.Date;
 /**
  * Date 的SimpledCoder实现
  *
- * <p> 详情见: http://www.redkale.org
+ * <p> 详情见: http://redkale.org
  * @author zhangjx
  * @param <R> Reader输入的子类型
  * @param <W> Writer输出的子类型

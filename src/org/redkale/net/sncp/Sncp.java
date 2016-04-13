@@ -27,7 +27,7 @@ import org.redkale.service.DynRemote;
  * 生成Service的本地模式或远程模式Service-Class的工具类
  *
  * <p>
- * 详情见: http://www.redkale.org
+ * 详情见: http://redkale.org
  *
  * @author zhangjx
  */

@@ -10,7 +10,7 @@ import java.lang.reflect.Type;
 /**
  * 对不明类型的对象进行序列化； BSON序列化时将对象的类名写入Writer，JSON则不写入。
  *
- * <p> 详情见: http://www.redkale.org
+ * <p> 详情见: http://redkale.org
  * @author zhangjx
  * @param <T> 序列化的泛型类型
  */

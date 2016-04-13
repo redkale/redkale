@@ -14,7 +14,7 @@ import java.util.concurrent.*;
 
 /**
  *
- * <p> 详情见: http://www.redkale.org
+ * <p> 详情见: http://redkale.org
  * @author zhangjx
  */
 public abstract class ProtocolServer {

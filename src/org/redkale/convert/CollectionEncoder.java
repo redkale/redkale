@@ -13,7 +13,7 @@ import java.util.Collection;
  * 集合大小不能超过 32767。  在BSON中集合大小设定的是short，对于大于32767长度的集合传输会影响性能，所以没有采用int存储。
  * 支持一定程度的泛型。
  *
- * <p> 详情见: http://www.redkale.org
+ * <p> 详情见: http://redkale.org
  * @author zhangjx
  * @param <T> 序列化的集合元素类型
  */

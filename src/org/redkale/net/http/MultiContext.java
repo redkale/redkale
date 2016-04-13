@@ -17,7 +17,7 @@ import org.redkale.util.AnyValue.DefaultAnyValue;
 /**
  *
  * <p>
- * 详情见: http://www.redkale.org
+ * 详情见: http://redkale.org
  *
  * @author zhangjx
  */

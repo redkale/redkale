@@ -11,7 +11,7 @@ import java.lang.annotation.*;
  * 根据application.xml中的server节点中的protocol值来适配Server的加载逻辑
  *
  * <p>
- * 详情见: http://www.redkale.org
+ * 详情见: http://redkale.org
  *
  * @author zhangjx
  */

@@ -15,7 +15,7 @@ import org.redkale.util.*;
  * Service对象的封装类
  *
  * <p>
- * 详情见: http://www.redkale.org
+ * 详情见: http://redkale.org
  *
  * @author zhangjx
  * @param <T> Service的子类

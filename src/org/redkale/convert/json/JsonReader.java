@@ -12,7 +12,7 @@ import org.redkale.util.*;
 /**
  *
  * <p>
- * 详情见: http://www.redkale.org
+ * 详情见: http://redkale.org
  *
  * @author zhangjx
  */

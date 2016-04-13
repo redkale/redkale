@@ -19,7 +19,7 @@ import org.redkale.watch.*;
  * 传输客户端
  *
  * <p>
- * 详情见: http://www.redkale.org
+ * 详情见: http://redkale.org
  *
  * @author zhangjx
  */

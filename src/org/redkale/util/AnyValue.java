@@ -12,7 +12,7 @@ import java.util.function.BiPredicate;
 /**
  * 该类提供类似JSONObject的数据结构，主要用于读取xml配置文件和http-header存储
  *
- * <p> 详情见: http://www.redkale.org
+ * <p> 详情见: http://redkale.org
  * @author zhangjx
  */
 @SuppressWarnings("unchecked")
@@ -21,7 +21,7 @@ public abstract class AnyValue {
     /**
      * 可读写的AnyValue默认实现类
      *
-     * <p> 详情见: http://www.redkale.org
+     * <p> 详情见: http://redkale.org
      * @author zhangjx
      */
     @SuppressWarnings("unchecked")

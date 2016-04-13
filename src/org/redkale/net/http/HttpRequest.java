@@ -24,7 +24,7 @@ import org.redkale.util.ByteArray;
  * 获取行数: int size = request.getRequstURIPath("size:", 10);
  * <p>
  * <p>
- * 详情见: http://www.redkale.org
+ * 详情见: http://redkale.org
  *
  * @author zhangjx
  */

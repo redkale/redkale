@@ -7,6 +7,9 @@ package org.redkale.boot;
 
 /**
  *
+ * <p>
+ * 详情见: http://redkale.org
+ *
  * @author zhangjx
  */
 public class NodeInterceptor {

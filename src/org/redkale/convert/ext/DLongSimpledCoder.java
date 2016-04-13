@@ -14,7 +14,7 @@ import org.redkale.util.*;
  * Dlong 的SimpledCoder实现
  *
  * <p>
- * 详情见: http://www.redkale.org
+ * 详情见: http://redkale.org
  *
  * @author zhangjx
  * @param <R> Reader输入的子类型

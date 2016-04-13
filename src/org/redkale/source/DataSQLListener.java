@@ -8,7 +8,7 @@ package org.redkale.source;
 /**
  * &#64;Resource(name = "property.datasource.nodeid")
  *
- * <p> 详情见: http://www.redkale.org
+ * <p> 详情见: http://redkale.org
  * @author zhangjx
  */
 public interface DataSQLListener {

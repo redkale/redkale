@@ -11,7 +11,7 @@ import org.redkale.convert.json.*;
  * 通用的结果对象，在常见的HTTP+JSON接口中返回的结果需要含结果码，错误信息，和实体对象。
  *
  * <p>
- * 详情见: http://www.redkale.org
+ * 详情见: http://redkale.org
  *
  * @author zhangjx
  * @param <T> 结果对象的泛型

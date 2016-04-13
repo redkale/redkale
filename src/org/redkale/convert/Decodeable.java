@@ -10,7 +10,7 @@ import java.lang.reflect.Type;
 /**
  *
  * <p>
- * 详情见: http://www.redkale.org
+ * 详情见: http://redkale.org
  *
  * @author zhangjx
  * @param <R> Reader输入的子类

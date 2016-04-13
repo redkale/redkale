@@ -22,7 +22,7 @@ import org.redkale.util.AutoLoad;
  * class过滤器， 符合条件的class会保留下来存入FilterEntry。
  *
  * <p>
- * 详情见: http://www.redkale.org
+ * 详情见: http://redkale.org
  *
  * @author zhangjx
  * @param <T> 泛型

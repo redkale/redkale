@@ -26,7 +26,7 @@ import org.redkale.util.*;
  * RedKale提倡http+json的接口风格， 所以主要输出的数据格式为json， 同时提供异步接口。
  *
  * <p>
- * 详情见: http://www.redkale.org
+ * 详情见: http://redkale.org
  *
  * @author zhangjx
  */

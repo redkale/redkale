@@ -19,7 +19,7 @@ import java.util.logging.*;
 
 /**
  *
- * <p> 详情见: http://www.redkale.org
+ * <p> 详情见: http://redkale.org
  * @author zhangjx
  */
 public class WebSocketRunner implements Runnable {

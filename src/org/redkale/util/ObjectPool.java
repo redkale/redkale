@@ -13,7 +13,7 @@ import java.util.logging.*;
 /**
  *
  * <p>
- * 详情见: http://www.redkale.org
+ * 详情见: http://redkale.org
  *
  * @author zhangjx
  * @param <T> 对象池元素的数据类型

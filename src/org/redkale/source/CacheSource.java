@@ -14,7 +14,7 @@ import java.util.*;
  * @param <K> key的类型
  * @param <V> value的类型
  * <p>
- * 详情见: http://www.redkale.org
+ * 详情见: http://redkale.org
  * @author zhangjx
  */
 public interface CacheSource<K extends Serializable, V extends Object> {

@@ -10,7 +10,7 @@ import java.lang.annotation.*;
 /**
  * 功能同JSR 315 (java-servlet 3.0) 规范中的 @WebInitParam
  *
- * <p> 详情见: http://www.redkale.org
+ * <p> 详情见: http://redkale.org
  * @author zhangjx
  */
 @Target({ElementType.TYPE})

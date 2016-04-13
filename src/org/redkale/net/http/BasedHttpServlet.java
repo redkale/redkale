@@ -22,7 +22,7 @@ import static jdk.internal.org.objectweb.asm.Opcodes.*;
 /**
  *
  * <p>
- * 详情见: http://www.redkale.org
+ * 详情见: http://redkale.org
  *
  * @author zhangjx
  */
@@ -33,7 +33,7 @@ public abstract class BasedHttpServlet extends HttpServlet {
      * 当标记为 &#64;AuthIgnore 的方法不会再调用之前调用authenticate 方法。
      *
      * <p>
-     * 详情见: http://www.redkale.org
+     * 详情见: http://redkale.org
      *
      * @author zhangjx
      */
@@ -50,7 +50,7 @@ public abstract class BasedHttpServlet extends HttpServlet {
      * 用于对&#64;WebServlet对应的url进行细分。 其 url
      *
      * <p>
-     * 详情见: http://www.redkale.org
+     * 详情见: http://redkale.org
      *
      * @author zhangjx
      */
@@ -70,7 +70,7 @@ public abstract class BasedHttpServlet extends HttpServlet {
      * 通常情况下 &#64;HttpCacheable 需要与 &#64;AuthIgnore 一起使用，因为没有标记&#64;AuthIgnore的方法一般输出的结果与当前用户信息有关。
      *
      * <p>
-     * 详情见: http://www.redkale.org
+     * 详情见: http://redkale.org
      *
      * @author zhangjx
      */
