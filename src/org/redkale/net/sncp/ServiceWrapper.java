@@ -5,15 +5,14 @@
  */
 package org.redkale.net.sncp;
 
-import org.redkale.service.Service;
-import org.redkale.util.AnyValue;
 import java.util.*;
-import java.util.stream.*;
+import java.util.stream.Collectors;
+import org.redkale.service.Service;
 import org.redkale.util.*;
 
 /**
  * Service对象的封装类
- *
+ * <p>
  * <p>
  * 详情见: http://redkale.org
  *
@@ -39,6 +38,10 @@ public final class ServiceWrapper<T extends Service> implements Comparable<Servi
     private final boolean remote;
 
     private final Class[] types;
+
+    public ServiceWrapper(T service, String name, String sncpGroup, Set<String> groups, AnyValue conf) {
+        this(null, service, name, sncpGroup, groups, conf);
+    }
 
     @SuppressWarnings("unchecked")
     public ServiceWrapper(Class<T> type, T service, String name, String sncpGroup, Set<String> groups, AnyValue conf) {
