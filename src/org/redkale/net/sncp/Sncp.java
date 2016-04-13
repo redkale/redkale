@@ -5,27 +5,27 @@
  */
 package org.redkale.net.sncp;
 
-import org.redkale.net.sncp.SncpClient.SncpAction;
-import java.lang.annotation.*;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
-import java.net.*;
+import java.net.InetSocketAddress;
 import java.security.*;
 import java.util.*;
-import java.util.function.*;
-import jdk.internal.org.objectweb.asm.*;
+import java.util.function.Consumer;
+import javax.annotation.Resource;
 import static jdk.internal.org.objectweb.asm.ClassWriter.COMPUTE_FRAMES;
+import jdk.internal.org.objectweb.asm.*;
 import static jdk.internal.org.objectweb.asm.Opcodes.*;
 import jdk.internal.org.objectweb.asm.Type;
-import org.redkale.convert.bson.*;
-import org.redkale.net.*;
+import org.redkale.convert.bson.BsonConvert;
+import org.redkale.net.Transport;
+import org.redkale.net.sncp.SncpClient.SncpAction;
 import org.redkale.service.*;
 import org.redkale.util.*;
-import org.redkale.service.DynRemote;
 
 /**
  * Service Node Communicate Protocol
  * 生成Service的本地模式或远程模式Service-Class的工具类
- *
+ * <p>
  * <p>
  * 详情见: http://redkale.org
  *
@@ -96,50 +96,50 @@ public abstract class Sncp {
     /**
      * <blockquote><pre>
      * public class TestService implements Service{
-     *
+     * <p>
      *      public String findSomeThing(){
      *          return "hello";
      *      }
-     *
+     * <p>
      *      &#64;MultiRun(selfrun = false)
      *      public void createSomeThing(TestBean bean){
      *          //do something
      *      }
-     *
+     * <p>
      *      &#64;MultiRun
      *      public String updateSomeThing(String id){
      *          return "hello" + id;
      *      }
      * }
      * </pre></blockquote>
-     *
+     * <p>
      * <blockquote><pre>
      * &#64;Resource(name = "")
      * &#64;SncpDyn(remote = false)
      * &#64;ResourceType({TestService.class})
      * public final class _DynLocalTestService extends TestService{
-     *
+     * <p>
      *      &#64;Resource
      *      private BsonConvert _convert;
-     *
+     * <p>
      *      private Transport _sameGroupTransport;
-     *
+     * <p>
      *      private Transport[] _diffGroupTransports;
-     *
+     * <p>
      *      private SncpClient _client;
-     *
+     * <p>
      *      private String _selfstring;
-     *
+     * <p>
      *      &#64;Override
      *      public String toString() {
      *          return _selfstring == null ? super.toString() : _selfstring;
      *      }
-     *
+     * <p>
      *      &#64;Override
      *      public void createSomeThing(TestBean bean){
      *          this._createSomeThing(false, true, true, bean);
      *      }
-     *
+     * <p>
      *      &#64;SncpDyn(remote = false, index = 0)
      *      public void _createSomeThing(boolean selfrunnable, boolean samerunnable, boolean diffrunnable, TestBean bean){
      *          if(selfrunnable) super.createSomeThing(bean);
@@ -147,12 +147,12 @@ public abstract class Sncp {
      *          if (samerunnable) _client.remoteSameGroup(_convert, _sameGroupTransport, 0, true, false, false, bean);
      *          if (diffrunnable) _client.remoteDiffGroup(_convert, _diffGroupTransports, 0, true, true, false, bean);
      *      }
-     *
+     * <p>
      *      &#64;Override
      *      public String updateSomeThing(String id){
      *          return this._updateSomeThing(true, true, true, id);
      *      }
-     *
+     * <p>
      *      &#64;SncpDyn(remote = false, index = 1)
      *      public String _updateSomeThing(boolean selfrunnable, boolean samerunnable, boolean diffrunnable, String id){
      *          String rs = super.updateSomeThing(id);
@@ -163,7 +163,7 @@ public abstract class Sncp {
      *      }
      * }
      * </pre></blockquote>
-     *
+     * <p>
      * 创建Service的本地模式Class
      *
      * @param <T>          Service子类
@@ -215,6 +215,12 @@ public abstract class Sncp {
             av0 = cw.visitAnnotation(sncpDynDesc, true);
             av0.visit("remote", Boolean.FALSE);
             av0.visitEnd();
+        }
+        { //给新类加上 原有的Annotation
+            for (Annotation ann : serviceClass.getAnnotations()) {
+                if (ann instanceof Resource || ann instanceof SncpDyn || ann instanceof ResourceType) continue;
+                visitAnnotation(cw.visitAnnotation(Type.getDescriptor(ann.annotationType()), true), ann);
+            }
         }
         {
             av0 = cw.visitAnnotation(Type.getDescriptor(ResourceType.class), true);
@@ -675,7 +681,7 @@ public abstract class Sncp {
      */
     @SuppressWarnings("unchecked")
     public static <T extends Service> T createLocalService(final String name, final Consumer<Runnable> executor, final ResourceFactory resourceFactory,
-            final Class<T> serviceClass, final InetSocketAddress clientAddress, final Transport sameGroupTransport, final Collection<Transport> diffGroupTransports) {
+                                                           final Class<T> serviceClass, final InetSocketAddress clientAddress, final Transport sameGroupTransport, final Collection<Transport> diffGroupTransports) {
         try {
             final Class newClazz = createLocalServiceClass(name, serviceClass);
             T rs = (T) newClazz.newInstance();
@@ -782,48 +788,48 @@ public abstract class Sncp {
      * &#64;SncpDyn(remote = true)
      * &#64;ResourceType({TestService.class})
      * public final class _DynRemoteTestService extends TestService{
-     *
+     * <p>
      *      &#64;Resource
      *      private BsonConvert _convert;
-     *
+     * <p>
      *      private Transport _transport;
-     *
+     * <p>
      *      private SncpClient _client;
-     *
+     * <p>
      *      private String _selfstring;
-     *
+     * <p>
      *      &#64;Override
      *      public String toString() {
      *          return _selfstring == null ? super.toString() : _selfstring;
      *      }
-     *
+     * <p>
      *      &#64;SncpDyn(remote = false, index = 0)
      *      public void _createSomeThing(boolean selfrunnable, boolean samerunnable, boolean diffrunnable, TestBean bean){
      *          _client.remote(_convert, _transport, 0, selfrunnable, samerunnable, diffrunnable, bean);
      *      }
-     *
+     * <p>
      *      &#64;SncpDyn(remote = false, index = 1)
      *      public String _updateSomeThing(boolean selfrunnable, boolean samerunnable, boolean diffrunnable, String id){
      *          return _client.remote(_convert, _transport, 1, selfrunnable, samerunnable, diffrunnable, id);
      *      }
-     *
+     * <p>
      *      &#64;Override
      *      public void createSomeThing(TestBean bean){
      *          _client.remote(_convert, _transport, 2, bean);
      *      }
-     *
+     * <p>
      *      &#64;Override
      *      public String findSomeThing(){
      *          return _client.remote(_convert, _transport, 3);
      *      }
-     *
+     * <p>
      *      &#64;Override
      *      public String updateSomeThing(String id){
      *          return  _client.remote(_convert, _transport, 4, id);
      *      }
      * }
      * </pre></blockquote>
-     *
+     * <p>
      * 创建远程模式的Service实例
      *
      * @param <T>           Service泛型
@@ -837,7 +843,7 @@ public abstract class Sncp {
      */
     @SuppressWarnings("unchecked")
     public static <T extends Service> T createRemoteService(final String name, final Consumer<Runnable> executor, final Class<T> serviceClass,
-            final InetSocketAddress clientAddress, final Transport transport) {
+                                                            final InetSocketAddress clientAddress, final Transport transport) {
         if (serviceClass == null) return null;
         if (!Service.class.isAssignableFrom(serviceClass)) return null;
         int mod = serviceClass.getModifiers();
@@ -909,6 +915,12 @@ public abstract class Sncp {
             av0 = cw.visitAnnotation(sncpDynDesc, true);
             av0.visit("remote", Boolean.TRUE);
             av0.visitEnd();
+        }
+        { //给新类加上 原有的Annotation
+            for (Annotation ann : serviceClass.getAnnotations()) {
+                if (ann instanceof Resource || ann instanceof SncpDyn || ann instanceof ResourceType) continue;
+                visitAnnotation(cw.visitAnnotation(Type.getDescriptor(ann.annotationType()), true), ann);
+            }
         }
         {
             fv = cw.visitField(ACC_PRIVATE, "_convert", convertDesc, null, null);
