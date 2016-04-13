@@ -5,26 +5,20 @@
  */
 package org.redkale.test.sncp;
 
-import org.redkale.net.sncp.Sncp;
-import org.redkale.convert.bson.BsonFactory;
-import org.redkale.net.Transport;
-import org.redkale.service.Service;
-import org.redkale.net.sncp.SncpServer;
-import org.redkale.convert.bson.BsonConvert;
-import org.redkale.util.Utility;
-import org.redkale.net.sncp.ServiceWrapper;
-import org.redkale.util.AnyValue;
-import org.redkale.watch.WatchFactory;
-import org.redkale.util.ResourceFactory;
 import java.io.*;
-import java.net.*;
-import java.nio.*;
-import java.nio.channels.*;
+import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
+import java.nio.channels.AsynchronousChannelGroup;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
-import java.util.logging.*;
+import java.util.logging.LogManager;
+import org.redkale.convert.bson.*;
+import org.redkale.net.Transport;
+import org.redkale.net.sncp.*;
+import org.redkale.service.Service;
 import org.redkale.util.*;
+import org.redkale.watch.WatchFactory;
 
 /**
  *
@@ -160,7 +154,7 @@ public class SncpTest {
                     final Transport transport = new Transport("", WatchFactory.root(), newBufferPool(), newChannelGroup(), null, set);
                     SncpTestService service = Sncp.createLocalService("", null, ResourceFactory.root(), SncpTestService.class, addr, transport, null);
                     ResourceFactory.root().inject(service);
-                    server.addService(new ServiceWrapper(SncpTestService.class, service, "", "", new HashSet<>(), null));
+                    server.addService(new ServiceWrapper(service, "", "", new HashSet<>(), null));
                     System.out.println(service);
                     AnyValue.DefaultAnyValue conf = new AnyValue.DefaultAnyValue();
                     conf.addValue("host", "0.0.0.0");
@@ -193,7 +187,7 @@ public class SncpTest {
                     //String name, WatchFactory, ObjectPool<ByteBuffer>, AsynchronousChannelGroup, InetSocketAddress clientAddress, Collection<InetSocketAddress>
                     final Transport transport = new Transport("", WatchFactory.root(), newBufferPool(), newChannelGroup(), null, set);
                     Service service = Sncp.createLocalService("", null, ResourceFactory.root(), SncpTestService.class, addr, transport, null);
-                    server.addService(new ServiceWrapper(SncpTestService.class, service, "", "", new HashSet<>(), null));
+                    server.addService(new ServiceWrapper(service, "", "", new HashSet<>(), null));
                     AnyValue.DefaultAnyValue conf = new AnyValue.DefaultAnyValue();
                     conf.addValue("host", "0.0.0.0");
                     conf.addValue("port", "" + port2);

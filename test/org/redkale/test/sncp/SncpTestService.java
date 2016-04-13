@@ -5,11 +5,10 @@
  */
 package org.redkale.test.sncp;
 
-import java.lang.reflect.*;
-import java.net.*;
+import java.lang.reflect.Method;
+import java.net.InetSocketAddress;
 import org.redkale.net.sncp.*;
 import org.redkale.service.*;
-import org.redkale.util.Attribute;
 import org.redkale.source.DataCallArrayAttribute;
 import org.redkale.util.*;
 
@@ -17,7 +16,7 @@ import org.redkale.util.*;
  *
  * @author zhangjx
  */
-@ResourceType({SncpTestIService.class})
+@ResourceType({SncpTestIService.class, SncpTestService.class})
 public class SncpTestService implements SncpTestIService {
 
     public static class CallAttribute implements Attribute<SncpTestBean, Long> {

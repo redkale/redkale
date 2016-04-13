@@ -6,13 +6,15 @@
 package org.redkale.test.sncp;
 
 import org.redkale.service.*;
-import org.redkale.source.*;
+import org.redkale.source.DataCallArrayAttribute;
 
 /**
  *
  * @author zhangjx
  */
 public interface SncpTestIService extends Service {
+
+    public String queryResult(SncpTestBean bean);
 
     public void insert(@DynCall(DataCallArrayAttribute.class) SncpTestBean... beans);
 
