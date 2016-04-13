@@ -5,27 +5,27 @@
  */
 package org.redkale.boot;
 
-import org.redkale.boot.ClassFilter.FilterEntry;
-import org.redkale.util.AnyValue.DefaultAnyValue;
 import java.io.*;
 import java.net.*;
-import java.nio.*;
+import java.nio.ByteBuffer;
 import java.nio.channels.*;
-import java.nio.file.*;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 import java.util.logging.*;
 import javax.xml.parsers.*;
-import org.redkale.convert.bson.*;
-import org.redkale.convert.json.*;
+import org.redkale.boot.ClassFilter.FilterEntry;
+import org.redkale.convert.bson.BsonFactory;
+import org.redkale.convert.json.JsonFactory;
 import org.redkale.net.*;
-import org.redkale.net.http.*;
-import org.redkale.net.sncp.*;
-import org.redkale.service.*;
+import org.redkale.net.http.MimeType;
+import org.redkale.net.sncp.SncpClient;
+import org.redkale.service.Service;
 import org.redkale.source.*;
+import org.redkale.util.AnyValue.DefaultAnyValue;
 import org.redkale.util.*;
-import org.redkale.watch.*;
+import org.redkale.watch.WatchFactory;
 import org.w3c.dom.*;
 
 /**
@@ -529,7 +529,7 @@ public final class Application {
         return null;
     }
 
-    private static Application create(final boolean singleton) throws IOException {
+    public static Application create(final boolean singleton) throws IOException {
         final String home = new File(System.getProperty(RESNAME_APP_HOME, "")).getCanonicalPath();
         System.setProperty(RESNAME_APP_HOME, home);
         File appfile = new File(home, "conf/application.xml");
