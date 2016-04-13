@@ -16,6 +16,7 @@ import org.redkale.convert.json.JsonConvert;
  * 详情见: http://www.redkale.org
  *
  * @author zhangjx
+ * @param <C> Context子类型
  */
 public abstract class Request<C extends Context> {
 

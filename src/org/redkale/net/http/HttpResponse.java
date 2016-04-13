@@ -181,8 +181,9 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * 增加Cookie值
      *
      * @param cookies cookie
+     * @return  HttpResponse
      */
-    public void addCookie(HttpCookie... cookies) {
+    public HttpResponse addCookie(HttpCookie... cookies) {
         if (this.cookies == null) {
             this.cookies = cookies;
         } else {
@@ -191,6 +192,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
             System.arraycopy(cookies, 0, news, this.cookies.length, cookies.length);
             this.cookies = news;
         }
+        return this;
     }
 
     /**
@@ -571,9 +573,11 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * 跳过header的输出
      * 通常应用场景是，调用者的输出内容里已经包含了HTTP的响应头信息，因此需要调用此方法避免重复输出HTTP响应头信息。
      *
+     * @return HttpResponse
      */
-    public void skipHeader() {
+    public HttpResponse skipHeader() {
         this.headsended = true;
+        return this;
     }
 
     protected DefaultAnyValue duplicateHeader() {
@@ -585,9 +589,11 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      *
      * @param name  header名
      * @param value header值
+     * @return HttpResponse
      */
-    public void setHeader(String name, Object value) {
+    public HttpResponse setHeader(String name, Object value) {
         this.header.setValue(name, String.valueOf(value));
+        return this;
     }
 
     /**
@@ -595,18 +601,22 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      *
      * @param name  header名
      * @param value header值
+     * @return HttpResponse
      */
-    public void addHeader(String name, Object value) {
+    public HttpResponse addHeader(String name, Object value) {
         this.header.addValue(name, String.valueOf(value));
+        return this;
     }
 
     /**
      * 设置状态码
      *
      * @param status 状态码
+     * @return HttpResponse
      */
-    public void setStatus(int status) {
+    public HttpResponse setStatus(int status) {
         this.status = status;
+        return this;
     }
 
     /**
@@ -631,9 +641,11 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * 设置 ContentType
      *
      * @param contentType ContentType
+     * @return HttpResponse
      */
-    public void setContentType(String contentType) {
+    public HttpResponse setContentType(String contentType) {
         this.contentType = contentType;
+        return this;
     }
 
     /**
@@ -649,9 +661,11 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * 设置内容长度
      *
      * @param contentLength 内容长度
+     * @return 
      */
-    public void setContentLength(long contentLength) {
+    public HttpResponse setContentLength(long contentLength) {
         this.contentLength = contentLength;
+        return this;
     }
 
     /**
