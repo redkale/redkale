@@ -86,7 +86,8 @@
         bufferPoolSize： ByteBuffer池的大小，默认: CPU核数*512
         responsePoolSize： Response池的大小，默认: CPU核数*256
         readTimeoutSecond: 读操作超时秒数， 默认0， 表示永久不超时
-        writeTimeoutSecond:  写操作超时秒数， 默认0， 表示永久不超时        
+        writeTimeoutSecond:  写操作超时秒数， 默认0， 表示永久不超时
+        nodeInterceptor: 启动/关闭NodeServer时被调用的拦截器实现类，必须是org.redkale.boot.NodeInterceptor的子类，默认为null
     -->
     <server protocol="HTTP" host="127.0.0.1" port="6060" root="root" lib=""> 
         
