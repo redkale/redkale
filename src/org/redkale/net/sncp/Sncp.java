@@ -95,6 +95,39 @@ public abstract class Sncp {
         return dyn != null && dyn.remote();
     }
 
+    public static SncpClient getSncpClient(Service service) {
+        if (service == null) return null;
+        try {
+            Field ts = service.getClass().getDeclaredField(FIELDPREFIX + "_client");
+            ts.setAccessible(true);
+            return (SncpClient) ts.get(service);
+        } catch (Exception e) {
+            throw new RuntimeException(service + " not found " + FIELDPREFIX + "_client");
+        }
+    }
+
+    public static Transport getSameGroupTransport(Service service) {
+        if (service == null) return null;
+        try {
+            Field ts = service.getClass().getDeclaredField(FIELDPREFIX + "_sameGroupTransport");
+            ts.setAccessible(true);
+            return (Transport) ts.get(service);
+        } catch (Exception e) {
+            throw new RuntimeException(service + " not found " + FIELDPREFIX + "_sameGroupTransport");
+        }
+    }
+
+    public static Transport[] getDiffGroupTransports(Service service) {
+        if (service == null) return null;
+        try {
+            Field ts = service.getClass().getDeclaredField(FIELDPREFIX + "_diffGroupTransports");
+            ts.setAccessible(true);
+            return (Transport[]) ts.get(service);
+        } catch (Exception e) {
+            throw new RuntimeException(service + " not found " + FIELDPREFIX + "_diffGroupTransports");
+        }
+    }
+
     /**
      * <blockquote><pre>
      * public class TestService implements Service{

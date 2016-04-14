@@ -175,24 +175,9 @@ public abstract class NodeServer {
                 application.dataSources.add(source);
                 appResFactory.register(resourceName, DataSource.class, source);
 
-                SncpClient client = null;
-                Transport sameGroupTransport = null;
-                List<Transport> diffGroupTransports = null;
-                try {
-                    Field ts = src.getClass().getDeclaredField("_sameGroupTransport");
-                    ts.setAccessible(true);
-                    sameGroupTransport = (Transport) ts.get(src);
-
-                    ts = src.getClass().getDeclaredField("_diffGroupTransports");
-                    ts.setAccessible(true);
-                    diffGroupTransports = Arrays.asList((Transport[]) ts.get(src));
-
-                    ts = src.getClass().getDeclaredField("_client");
-                    ts.setAccessible(true);
-                    client = (SncpClient) ts.get(src);
-                } catch (Exception e) {
-                    throw new RuntimeException(src.getClass().getName() + " not found _sameGroupTransport or _diffGroupTransports at " + field, e);
-                }
+                SncpClient client = Sncp.getSncpClient((Service) src);
+                Transport sameGroupTransport = Sncp.getSameGroupTransport((Service) src);
+                List<Transport> diffGroupTransports = Arrays.asList(Sncp.getDiffGroupTransports((Service) src));
                 final InetSocketAddress sncpAddr = client == null ? null : client.getClientAddress();
                 if ((src instanceof DataSource) && sncpAddr != null && resourceFactory.find(resourceName, DataCacheListener.class) == null) { //只有DataSourceService 才能赋值 DataCacheListener
                     Service cacheListenerService = Sncp.createLocalService(resourceName, getExecutor(), appResFactory, DataCacheListenerService.class, sncpAddr, sameGroupTransport, diffGroupTransports);
@@ -216,25 +201,9 @@ public abstract class NodeServer {
                 if (field.getAnnotation(Resource.class) == null) return;
                 if ((src instanceof Service) && Sncp.isRemote((Service) src)) return; //远程模式不得注入 CacheSource   
 
-                SncpClient client = null;
-                Transport sameGroupTransport = null;
-                List<Transport> diffGroupTransports = null;
-                try {
-                    Field ts = src.getClass().getDeclaredField("_sameGroupTransport");
-                    ts.setAccessible(true);
-                    sameGroupTransport = (Transport) ts.get(src);
-
-                    ts = src.getClass().getDeclaredField("_diffGroupTransports");
-                    ts.setAccessible(true);
-                    Transport[] dts = (Transport[]) ts.get(src);
-                    if (dts != null) diffGroupTransports = Arrays.asList(dts);
-
-                    ts = src.getClass().getDeclaredField("_client");
-                    ts.setAccessible(true);
-                    client = (SncpClient) ts.get(src);
-                } catch (Exception e) {
-                    throw new RuntimeException(src.getClass().getName() + " not found _sameGroupTransport or _diffGroupTransports at " + field, e);
-                }
+                SncpClient client = Sncp.getSncpClient((Service) src);
+                Transport sameGroupTransport = Sncp.getSameGroupTransport((Service) src);
+                List<Transport> diffGroupTransports = Arrays.asList(Sncp.getDiffGroupTransports((Service) src));
                 final InetSocketAddress sncpAddr = client == null ? null : client.getClientAddress();
                 final CacheSourceService source = Sncp.createLocalService(resourceName, getExecutor(), appResFactory, CacheSourceService.class, sncpAddr, sameGroupTransport, diffGroupTransports);
                 Type genericType = field.getGenericType();
