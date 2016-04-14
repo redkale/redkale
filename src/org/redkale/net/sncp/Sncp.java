@@ -33,6 +33,8 @@ import org.redkale.util.*;
  */
 public abstract class Sncp {
 
+    static final String FIELDPREFIX = "_redkale";
+
     static final String LOCALPREFIX = "_DynLocal";
 
     static final String REMOTEPREFIX = "_DynRemote";
@@ -120,45 +122,45 @@ public abstract class Sncp {
      * public final class _DynLocalTestService extends TestService{
      * <p>
      *      &#64;Resource
-     *      private BsonConvert _convert;
+     *      private BsonConvert _redkale_convert;
      * <p>
-     *      private Transport _sameGroupTransport;
+     *      private Transport _redkale_sameGroupTransport;
      * <p>
-     *      private Transport[] _diffGroupTransports;
+     *      private Transport[] _redkale_diffGroupTransports;
      * <p>
-     *      private SncpClient _client;
+     *      private SncpClient _redkale_client;
      * <p>
-     *      private String _selfstring;
+     *      private String _redkale_selfstring;
      * <p>
      *      &#64;Override
      *      public String toString() {
-     *          return _selfstring == null ? super.toString() : _selfstring;
+     *          return _redkale_selfstring == null ? super.toString() : _redkale_selfstring;
      *      }
      * <p>
      *      &#64;Override
      *      public void createSomeThing(TestBean bean){
-     *          this._createSomeThing(false, true, true, bean);
+     *          this._redkale_createSomeThing(false, true, true, bean);
      *      }
      * <p>
      *      &#64;SncpDyn(remote = false, index = 0)
-     *      public void _createSomeThing(boolean selfrunnable, boolean samerunnable, boolean diffrunnable, TestBean bean){
+     *      public void _redkale_createSomeThing(boolean selfrunnable, boolean samerunnable, boolean diffrunnable, TestBean bean){
      *          if(selfrunnable) super.createSomeThing(bean);
-     *          if (_client== null) return;
-     *          if (samerunnable) _client.remoteSameGroup(_convert, _sameGroupTransport, 0, true, false, false, bean);
-     *          if (diffrunnable) _client.remoteDiffGroup(_convert, _diffGroupTransports, 0, true, true, false, bean);
+     *          if (_redkale_client== null) return;
+     *          if (samerunnable) _redkale_client.remoteSameGroup(_redkale_convert, _sameGroupTransport, 0, true, false, false, bean);
+     *          if (diffrunnable) _redkale_client.remoteDiffGroup(_redkale_convert, _diffGroupTransports, 0, true, true, false, bean);
      *      }
      * <p>
      *      &#64;Override
      *      public String updateSomeThing(String id){
-     *          return this._updateSomeThing(true, true, true, id);
+     *          return this._redkale_updateSomeThing(true, true, true, id);
      *      }
      * <p>
      *      &#64;SncpDyn(remote = false, index = 1)
-     *      public String _updateSomeThing(boolean selfrunnable, boolean samerunnable, boolean diffrunnable, String id){
+     *      public String _redkale_updateSomeThing(boolean selfrunnable, boolean samerunnable, boolean diffrunnable, String id){
      *          String rs = super.updateSomeThing(id);
-     *          if (_client== null) return;
-     *          if (samerunnable) _client.remoteSameGroup(_convert, _sameGroupTransport, 1, true, false, false, id);
-     *          if (diffrunnable) _client.remoteDiffGroup(_convert, _diffGroupTransports, 1, true, true, false, id);
+     *          if (_redkale_client== null) return;
+     *          if (samerunnable) _redkale_client.remoteSameGroup(_redkale_convert, _sameGroupTransport, 1, true, false, false, id);
+     *          if (diffrunnable) _redkale_client.remoteDiffGroup(_redkale_convert, _diffGroupTransports, 1, true, true, false, id);
      *          return rs;
      *      }
      * }
@@ -240,26 +242,26 @@ public abstract class Sncp {
         }
 
         {
-            fv = cw.visitField(ACC_PRIVATE, "_convert", convertDesc, null, null);
+            fv = cw.visitField(ACC_PRIVATE, FIELDPREFIX + "_convert", convertDesc, null, null);
             av0 = fv.visitAnnotation("Ljavax/annotation/Resource;", true);
             av0.visitEnd();
             fv.visitEnd();
         }
         {
-            fv = cw.visitField(ACC_PRIVATE, "_sameGroupTransport", transportDesc, null, null);
+            fv = cw.visitField(ACC_PRIVATE, FIELDPREFIX + "_sameGroupTransport", transportDesc, null, null);
             fv.visitEnd();
         }
         {
-            fv = cw.visitField(ACC_PRIVATE, "_diffGroupTransports", transportsDesc, null, null);
+            fv = cw.visitField(ACC_PRIVATE, FIELDPREFIX + "_diffGroupTransports", transportsDesc, null, null);
             fv.visitEnd();
         }
         {
-            fv = cw.visitField(ACC_PRIVATE, "_client", clientDesc, null, null);
+            fv = cw.visitField(ACC_PRIVATE, FIELDPREFIX + "_client", clientDesc, null, null);
             fv.visitEnd();
         }
 
         {
-            fv = cw.visitField(ACC_PRIVATE, "_selfstring", "Ljava/lang/String;", null, null);
+            fv = cw.visitField(ACC_PRIVATE, FIELDPREFIX + "_selfstring", "Ljava/lang/String;", null, null);
             fv.visitEnd();
         }
         { //构造函数
@@ -274,7 +276,7 @@ public abstract class Sncp {
         { // toString()
             mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC, "toString", "()Ljava/lang/String;", null, null));
             mv.visitVarInsn(ALOAD, 0);
-            mv.visitFieldInsn(GETFIELD, newDynName, "_selfstring", "Ljava/lang/String;");
+            mv.visitFieldInsn(GETFIELD, newDynName, FIELDPREFIX + "_selfstring", "Ljava/lang/String;");
             Label l1 = new Label();
             mv.visitJumpInsn(IFNONNULL, l1);
             mv.visitVarInsn(ALOAD, 0);
@@ -283,7 +285,7 @@ public abstract class Sncp {
             mv.visitJumpInsn(GOTO, l2);
             mv.visitLabel(l1);
             mv.visitVarInsn(ALOAD, 0);
-            mv.visitFieldInsn(GETFIELD, newDynName, "_selfstring", "Ljava/lang/String;");
+            mv.visitFieldInsn(GETFIELD, newDynName, FIELDPREFIX + "_selfstring", "Ljava/lang/String;");
             mv.visitLabel(l2);
             mv.visitInsn(ARETURN);
             mv.visitMaxs(1, 1);
@@ -331,7 +333,7 @@ public abstract class Sncp {
                         mv.visitVarInsn(ALOAD, ++varindex);
                     }
                 }
-                mv.visitMethodInsn(INVOKEVIRTUAL, newDynName, "_" + method.getName(), "(ZZZ" + methodDesc.substring(1), false);
+                mv.visitMethodInsn(INVOKEVIRTUAL, newDynName, FIELDPREFIX + "_" + method.getName(), "(ZZZ" + methodDesc.substring(1), false);
                 if (returnType == void.class) {
                     mv.visitInsn(RETURN);
                 } else if (returnType.isPrimitive()) {
@@ -351,7 +353,7 @@ public abstract class Sncp {
                 mv.visitEnd();
             }
             {  // _方法   _方法比无_方法多了三个参数
-                mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC + (method.isVarArgs() ? ACC_VARARGS : 0), "_" + method.getName(), "(ZZZ" + methodDesc.substring(1), null, null));
+                mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC + (method.isVarArgs() ? ACC_VARARGS : 0), FIELDPREFIX + "_" + method.getName(), "(ZZZ" + methodDesc.substring(1), null, null));
                 //mv.setDebug(true);  
                 { //给参数加上 Annotation
                     final Annotation[][] anns = method.getParameterAnnotations();
@@ -413,9 +415,9 @@ public abstract class Sncp {
                 }
                 final int rsindex = varindex;  //
 
-                //---------------------------if (_client== null)  return ----------------------------------
+                //---------------------------if (_redkale_client== null)  return ----------------------------------
                 mv.visitVarInsn(ALOAD, 0);
-                mv.visitFieldInsn(GETFIELD, newDynName, "_client", clientDesc);
+                mv.visitFieldInsn(GETFIELD, newDynName, FIELDPREFIX + "_client", clientDesc);
                 Label clientLabel = new Label();
                 mv.visitJumpInsn(IFNONNULL, clientLabel);
                 if (returnType == void.class) {
@@ -445,11 +447,11 @@ public abstract class Sncp {
                 mv.visitJumpInsn(IFEQ, sameLabel);  //判断 samerunnable
 
                 mv.visitVarInsn(ALOAD, 0);//调用 _client
-                mv.visitFieldInsn(GETFIELD, newDynName, "_client", clientDesc);
+                mv.visitFieldInsn(GETFIELD, newDynName, FIELDPREFIX + "_client", clientDesc);
                 mv.visitVarInsn(ALOAD, 0);  //传递 _convert
-                mv.visitFieldInsn(GETFIELD, newDynName, "_convert", convertDesc);
+                mv.visitFieldInsn(GETFIELD, newDynName, FIELDPREFIX + "_convert", convertDesc);
                 mv.visitVarInsn(ALOAD, 0);  //传递 _sameGroupTransport
-                mv.visitFieldInsn(GETFIELD, newDynName, "_sameGroupTransport", transportDesc);
+                mv.visitFieldInsn(GETFIELD, newDynName, FIELDPREFIX + "_sameGroupTransport", transportDesc);
 
                 if (index <= 5) {  //第几个 SncpAction 
                     mv.visitInsn(ICONST_0 + index);
@@ -517,11 +519,11 @@ public abstract class Sncp {
                 mv.visitJumpInsn(IFEQ, diffLabel);  //判断 diffrunnable
 
                 mv.visitVarInsn(ALOAD, 0);
-                mv.visitFieldInsn(GETFIELD, newDynName, "_client", clientDesc);
+                mv.visitFieldInsn(GETFIELD, newDynName, FIELDPREFIX + "_client", clientDesc);
                 mv.visitVarInsn(ALOAD, 0);
-                mv.visitFieldInsn(GETFIELD, newDynName, "_convert", convertDesc);
+                mv.visitFieldInsn(GETFIELD, newDynName, FIELDPREFIX + "_convert", convertDesc);
                 mv.visitVarInsn(ALOAD, 0);
-                mv.visitFieldInsn(GETFIELD, newDynName, "_diffGroupTransports", transportsDesc);
+                mv.visitFieldInsn(GETFIELD, newDynName, FIELDPREFIX + "_diffGroupTransports", transportsDesc);
 
                 if (index <= 5) {  //第几个 SncpAction 
                     mv.visitInsn(ICONST_0 + index);
@@ -724,7 +726,7 @@ public abstract class Sncp {
             SncpClient client = null;
             {
                 try {
-                    Field e = newClazz.getDeclaredField("_client");
+                    Field e = newClazz.getDeclaredField(FIELDPREFIX + "_client");
                     e.setAccessible(true);
                     client = new SncpClient(name, serviceClass, executor, false, newClazz, clientAddress);
                     e.set(rs, client);
@@ -758,18 +760,18 @@ public abstract class Sncp {
                     sb.append(", ").append(MultiRun.class.getSimpleName().toLowerCase()).append(" = false");
                 }
                 sb.append("}");
-                Field s = newClazz.getDeclaredField("_selfstring");
+                Field s = newClazz.getDeclaredField(FIELDPREFIX + "_selfstring");
                 s.setAccessible(true);
                 s.set(rs, sb.toString());
             }
             if (client == null) return rs;
             {
-                Field c = newClazz.getDeclaredField("_sameGroupTransport");
+                Field c = newClazz.getDeclaredField(FIELDPREFIX + "_sameGroupTransport");
                 c.setAccessible(true);
                 c.set(rs, sameGroupTransport);
             }
             if (diffGroupTransports != null) {
-                Field t = newClazz.getDeclaredField("_diffGroupTransports");
+                Field t = newClazz.getDeclaredField(FIELDPREFIX + "_diffGroupTransports");
                 t.setAccessible(true);
                 t.set(rs, diffGroupTransports.toArray(new Transport[diffGroupTransports.size()]));
             }
@@ -790,42 +792,42 @@ public abstract class Sncp {
      * public final class _DynRemoteTestService extends TestService{
      * <p>
      *      &#64;Resource
-     *      private BsonConvert _convert;
+     *      private BsonConvert _redkale_convert;
      * <p>
-     *      private Transport _transport;
+     *      private Transport _redkale_transport;
      * <p>
-     *      private SncpClient _client;
+     *      private SncpClient _redkale_client;
      * <p>
-     *      private String _selfstring;
+     *      private String _redkale_selfstring;
      * <p>
      *      &#64;Override
      *      public String toString() {
-     *          return _selfstring == null ? super.toString() : _selfstring;
+     *          return _redkale_selfstring == null ? super.toString() : _redkale_selfstring;
      *      }
      * <p>
      *      &#64;SncpDyn(remote = false, index = 0)
-     *      public void _createSomeThing(boolean selfrunnable, boolean samerunnable, boolean diffrunnable, TestBean bean){
-     *          _client.remote(_convert, _transport, 0, selfrunnable, samerunnable, diffrunnable, bean);
+     *      public void _redkale_createSomeThing(boolean selfrunnable, boolean samerunnable, boolean diffrunnable, TestBean bean){
+     *          _redkale_client.remote(_redkale_convert, _redkale_transport, 0, selfrunnable, samerunnable, diffrunnable, bean);
      *      }
      * <p>
      *      &#64;SncpDyn(remote = false, index = 1)
-     *      public String _updateSomeThing(boolean selfrunnable, boolean samerunnable, boolean diffrunnable, String id){
-     *          return _client.remote(_convert, _transport, 1, selfrunnable, samerunnable, diffrunnable, id);
+     *      public String _redkale_updateSomeThing(boolean selfrunnable, boolean samerunnable, boolean diffrunnable, String id){
+     *          return _redkale_client.remote(_redkale_convert, _redkale_transport, 1, selfrunnable, samerunnable, diffrunnable, id);
      *      }
      * <p>
      *      &#64;Override
      *      public void createSomeThing(TestBean bean){
-     *          _client.remote(_convert, _transport, 2, bean);
+     *          _redkale_client.remote(_redkale_convert, _redkale_transport, 2, bean);
      *      }
      * <p>
      *      &#64;Override
      *      public String findSomeThing(){
-     *          return _client.remote(_convert, _transport, 3);
+     *          return _redkale_client.remote(_redkale_convert, _redkale_transport, 3);
      *      }
      * <p>
      *      &#64;Override
      *      public String updateSomeThing(String id){
-     *          return  _client.remote(_convert, _transport, 4, id);
+     *          return  _redkale_client.remote(_redkale_convert, _redkale_transport, 4, id);
      *      }
      * }
      * </pre></blockquote>
@@ -862,10 +864,10 @@ public abstract class Sncp {
         try {
             Class newClazz = Class.forName(newDynName.replace('/', '.'));
             T rs = (T) newClazz.newInstance();
-            Field c = newClazz.getDeclaredField("_client");
+            Field c = newClazz.getDeclaredField(FIELDPREFIX + "_client");
             c.setAccessible(true);
             c.set(rs, client);
-            Field t = newClazz.getDeclaredField("_transport");
+            Field t = newClazz.getDeclaredField(FIELDPREFIX + "_transport");
             t.setAccessible(true);
             t.set(rs, transport);
             {
@@ -876,7 +878,7 @@ public abstract class Sncp {
                 sb.append(", address = ").append(clientAddress).append(", groups = ").append(transport == null ? null : transport.getName());
                 sb.append(", remoteaddrs = ").append(transport == null ? null : Arrays.asList(transport.getRemoteAddresses()));
                 sb.append("}");
-                Field s = newClazz.getDeclaredField("_selfstring");
+                Field s = newClazz.getDeclaredField(FIELDPREFIX + "_selfstring");
                 s.setAccessible(true);
                 s.set(rs, sb.toString());
             }
@@ -923,21 +925,21 @@ public abstract class Sncp {
             }
         }
         {
-            fv = cw.visitField(ACC_PRIVATE, "_convert", convertDesc, null, null);
+            fv = cw.visitField(ACC_PRIVATE, FIELDPREFIX + "_convert", convertDesc, null, null);
             av0 = fv.visitAnnotation("Ljavax/annotation/Resource;", true);
             av0.visitEnd();
             fv.visitEnd();
         }
         {
-            fv = cw.visitField(ACC_PRIVATE, "_transport", transportDesc, null, null);
+            fv = cw.visitField(ACC_PRIVATE, FIELDPREFIX + "_transport", transportDesc, null, null);
             fv.visitEnd();
         }
         {
-            fv = cw.visitField(ACC_PRIVATE, "_client", clientDesc, null, null);
+            fv = cw.visitField(ACC_PRIVATE, FIELDPREFIX + "_client", clientDesc, null, null);
             fv.visitEnd();
         }
         {
-            fv = cw.visitField(ACC_PRIVATE, "_selfstring", "Ljava/lang/String;", null, null);
+            fv = cw.visitField(ACC_PRIVATE, FIELDPREFIX + "_selfstring", "Ljava/lang/String;", null, null);
             fv.visitEnd();
         }
         { //构造函数
@@ -964,7 +966,7 @@ public abstract class Sncp {
         { // toString()
             mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC, "toString", "()Ljava/lang/String;", null, null));
             mv.visitVarInsn(ALOAD, 0);
-            mv.visitFieldInsn(GETFIELD, newDynName, "_selfstring", "Ljava/lang/String;");
+            mv.visitFieldInsn(GETFIELD, newDynName, FIELDPREFIX + "_selfstring", "Ljava/lang/String;");
             Label l1 = new Label();
             mv.visitJumpInsn(IFNONNULL, l1);
             mv.visitVarInsn(ALOAD, 0);
@@ -973,7 +975,7 @@ public abstract class Sncp {
             mv.visitJumpInsn(GOTO, l2);
             mv.visitLabel(l1);
             mv.visitVarInsn(ALOAD, 0);
-            mv.visitFieldInsn(GETFIELD, newDynName, "_selfstring", "Ljava/lang/String;");
+            mv.visitFieldInsn(GETFIELD, newDynName, FIELDPREFIX + "_selfstring", "Ljava/lang/String;");
             mv.visitLabel(l2);
             mv.visitInsn(ARETURN);
             mv.visitMaxs(1, 1);
@@ -995,11 +997,11 @@ public abstract class Sncp {
                     }
                 }
                 mv.visitVarInsn(ALOAD, 0);
-                mv.visitFieldInsn(GETFIELD, newDynName, "_client", clientDesc);
+                mv.visitFieldInsn(GETFIELD, newDynName, FIELDPREFIX + "_client", clientDesc);
                 mv.visitVarInsn(ALOAD, 0);
-                mv.visitFieldInsn(GETFIELD, newDynName, "_convert", convertDesc);
+                mv.visitFieldInsn(GETFIELD, newDynName, FIELDPREFIX + "_convert", convertDesc);
                 mv.visitVarInsn(ALOAD, 0);
-                mv.visitFieldInsn(GETFIELD, newDynName, "_transport", transportDesc);
+                mv.visitFieldInsn(GETFIELD, newDynName, FIELDPREFIX + "_transport", transportDesc);
                 if (index <= 5) {
                     mv.visitInsn(ICONST_0 + index);
                 } else {
@@ -1087,10 +1089,10 @@ public abstract class Sncp {
         }.loadClass(newDynName.replace('/', '.'), bytes);
         try {
             T rs = (T) newClazz.newInstance();
-            Field c = newClazz.getDeclaredField("_client");
+            Field c = newClazz.getDeclaredField(FIELDPREFIX + "_client");
             c.setAccessible(true);
             c.set(rs, client);
-            Field t = newClazz.getDeclaredField("_transport");
+            Field t = newClazz.getDeclaredField(FIELDPREFIX + "_transport");
             t.setAccessible(true);
             t.set(rs, transport);
             {
@@ -1101,7 +1103,7 @@ public abstract class Sncp {
                 sb.append(", address = ").append(clientAddress).append(", groups = ").append(transport == null ? null : transport.getName());
                 sb.append(", remotes = ").append(transport == null ? null : Arrays.asList(transport.getRemoteAddresses()));
                 sb.append("}");
-                Field s = newClazz.getDeclaredField("_selfstring");
+                Field s = newClazz.getDeclaredField(FIELDPREFIX + "_selfstring");
                 s.setAccessible(true);
                 s.set(rs, sb.toString());
             }
