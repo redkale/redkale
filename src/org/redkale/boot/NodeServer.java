@@ -354,9 +354,7 @@ public abstract class NodeServer {
 
     protected Transport loadTransport(final HashSet<String> groups) {
         if (groups == null || groups.isEmpty()) return null;
-        List<String> tmpgroup = new ArrayList<>(groups);
-        Collections.sort(tmpgroup);  //按字母排列顺序
-        final String groupid = tmpgroup.stream().collect(Collectors.joining(";"));
+        final String groupid = new ArrayList<>(groups).stream().sorted().collect(Collectors.joining(";")); //按字母排列顺序
         Transport transport = application.resourceFactory.find(groupid, Transport.class);
         if (transport != null) return transport;
         final List<Transport> transports = new ArrayList<>();

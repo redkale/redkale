@@ -6,14 +6,14 @@
 package org.redkale.net;
 
 import java.net.*;
-import java.nio.*;
+import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.function.*;
-import java.util.stream.*;
-import org.redkale.util.*;
-import org.redkale.watch.*;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
+import org.redkale.util.ObjectPool;
+import org.redkale.watch.WatchFactory;
 
 /**
  * 传输客户端
@@ -84,8 +84,8 @@ public final class Transport {
             if (first == null) first = t;
             tmpgroup.add(t.name);
         }
-        Collections.sort(tmpgroup);  //必须按字母排列顺序确保，相同内容的transport列表组合的name相同，而不会因为list的顺序不同产生不同的name
-        this.name = tmpgroup.stream().collect(Collectors.joining(";"));
+        //必须按字母排列顺序确保，相同内容的transport列表组合的name相同，而不会因为list的顺序不同产生不同的name
+        this.name = tmpgroup.stream().sorted().collect(Collectors.joining(";"));
         this.watch = first.watch;
         this.protocol = first.protocol;
         this.tcp = "TCP".equalsIgnoreCase(first.protocol);
