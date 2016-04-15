@@ -301,7 +301,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
         EntityInfo<T> info = loadEntityInfo(clazz);
         EntityCache<T> cache = info.getCache();
         if (cache == null) return;
-        cache.fullLoad(queryList(clazz, (FilterNode) null));
+        cache.fullLoad();
     }
 
     //----------------------insertCache-----------------------------

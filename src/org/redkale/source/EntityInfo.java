@@ -94,6 +94,8 @@ public final class EntityInfo<T> {
     final AtomicLong primaryValue = new AtomicLong(0);
 
     final int allocationSize;
+
+    final Function<Class, List> fullloader;
     //------------------------------------------------------------
 
     public static <T> EntityInfo<T> load(Class<T> clazz, final int nodeid, final boolean cacheForbidden, final Properties conf,
@@ -104,11 +106,11 @@ public final class EntityInfo<T> {
             rs = entityInfos.get(clazz);
             if (rs == null) {
                 if (nodeid < 0) throw new IllegalArgumentException("nodeid(" + nodeid + ") is illegal");
-                rs = new EntityInfo(clazz, nodeid, cacheForbidden, conf);
+                rs = new EntityInfo(clazz, nodeid, cacheForbidden, conf, fullloader);
                 entityInfos.put(clazz, rs);
                 if (rs.cache != null) {
                     if (fullloader == null) throw new IllegalArgumentException(clazz.getName() + " auto loader  is illegal");
-                    rs.cache.fullLoad(fullloader.apply(clazz));
+                    rs.cache.fullLoad();
                 }
             }
             return rs;
@@ -119,8 +121,9 @@ public final class EntityInfo<T> {
         return entityInfos.get(clazz);
     }
 
-    private EntityInfo(Class<T> type, int nodeid, final boolean cacheForbidden, Properties conf) {
+    private EntityInfo(Class<T> type, int nodeid, final boolean cacheForbidden, Properties conf, Function<Class, List> fullloader) {
         this.type = type;
+        this.fullloader = fullloader;
         //---------------------------------------------
         this.nodeid = nodeid >= 0 ? nodeid : 0;
         DistributeTables dt = type.getAnnotation(DistributeTables.class);

@@ -5,15 +5,14 @@
  */
 package org.redkale.source;
 
-import java.io.*;
+import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.*;
 import java.util.logging.*;
-import java.util.stream.Stream;
+import java.util.stream.*;
 import javax.persistence.Transient;
 import static org.redkale.source.FilterFunc.*;
-import java.util.stream.*;
 import org.redkale.util.*;
 
 /**
@@ -64,9 +63,10 @@ public final class EntityCache<T> {
         });
     }
 
-    public void fullLoad(List<T> all) {
-        if (all == null) return;
+    public void fullLoad() {
+        if (info.fullloader == null) return;
         clear();
+        List<T> all = info.fullloader.apply(type);
         all.stream().filter(x -> x != null).forEach(x -> {
             this.map.put(this.primary.get(x), x);
         });
@@ -169,7 +169,8 @@ public final class EntityCache<T> {
                     collector = (Collector<T, Map, ?>) Collectors.averagingLong((T t) -> ((Number) funcAttr.get(t)).longValue());
                 }
                 break;
-            case COUNT: collector = (Collector<T, Map, ?>) Collectors.counting();
+            case COUNT:
+                collector = (Collector<T, Map, ?>) Collectors.counting();
                 break;
             case DISTINCTCOUNT:
                 collector = (Collector<T, Map, ?>) Collectors.mapping((t) -> funcAttr.get(t), Collectors.toSet());
@@ -221,8 +222,10 @@ public final class EntityCache<T> {
                     return stream.mapToDouble(x -> (Double) attr.get(x)).average().orElse(0);
                 }
                 throw new RuntimeException("getNumberResult error(type:" + type + ", attr.declaringClass: " + attr.declaringClass() + ", attr.field: " + attr.field() + ", attr.type: " + attr.type());
-            case COUNT: return stream.count();
-            case DISTINCTCOUNT: return stream.map(x -> attr.get(x)).distinct().count();
+            case COUNT:
+                return stream.count();
+            case DISTINCTCOUNT:
+                return stream.map(x -> attr.get(x)).distinct().count();
 
             case MAX:
                 if (attr.type() == int.class || attr.type() == Integer.class) {
