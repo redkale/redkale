@@ -5,12 +5,11 @@
  */
 package org.redkale.test.source;
 
-import org.redkale.source.EntityInfo;
-import org.redkale.source.EntityCache;
-import org.redkale.util.Attribute;
 import java.util.*;
-import javax.persistence.*;
+import java.util.function.Function;
+import javax.persistence.Id;
 import org.redkale.source.*;
+import org.redkale.util.Attribute;
 
 /**
  *
@@ -34,8 +33,9 @@ public class CacheTestBean {
         Attribute idattr = Attribute.create(CacheTestBean.class, "pkgid");
         Attribute nameattr = Attribute.create(CacheTestBean.class, "name");
         Attribute priceattr = Attribute.create(CacheTestBean.class, "price");
-        EntityCache<CacheTestBean> cache = new EntityCache(EntityInfo.load(CacheTestBean.class, 0, true,new Properties(), null));
-        cache.fullLoad(list);
+        Function<Class, List> fullloader = (z) -> list;
+        EntityCache<CacheTestBean> cache = new EntityCache(EntityInfo.load(CacheTestBean.class, 0, true,new Properties(), fullloader));
+        cache.fullLoad();
 
         System.out.println(cache.queryColumnMap("pkgid", FilterFunc.COUNT, "name", null));
         System.out.println(cache.queryColumnMap("pkgid", FilterFunc.DISTINCTCOUNT, "name", null));
