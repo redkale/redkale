@@ -6,16 +6,16 @@
 package org.redkale.net;
 
 import java.io.*;
-import java.lang.reflect.*;
+import java.lang.reflect.Method;
 import java.net.*;
-import java.nio.charset.*;
+import java.nio.charset.Charset;
 import java.text.*;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.*;
-import java.util.logging.*;
-import org.redkale.util.*;
-import org.redkale.watch.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Logger;
+import org.redkale.util.AnyValue;
+import org.redkale.watch.WatchFactory;
 
 /**
  *
@@ -23,6 +23,11 @@ import org.redkale.watch.*;
  * 详情见: http://redkale.org
  *
  * @author zhangjx
+ * @param <K> 请求ID的数据类型， 例如HTTP协议请求标识为url，请求ID的数据类型就是String
+ * @param <C> Context
+ * @param <R> Request
+ * @param <P> Response
+ * @param <S> Servlet
  */
 public abstract class Server<K extends Serializable, C extends Context, R extends Request<C>, P extends Response<C, R>, S extends Servlet<C, R, P>> {
 
@@ -31,43 +36,62 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
     protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
 
     //-------------------------------------------------------------
+    //服务的启动时间
     protected final long serverStartTime;
 
+    //监控对象
     protected final WatchFactory watch;
 
+    //服务的名称
+    protected String name;
+
+    //应用层协议名
     protected final String protocol;
 
+    //服务的根Servlet
     protected final PrepareServlet<K, C, R, P, S> prepare;
 
+    //服务的上下文对象
     protected C context;
 
+    //服务的配置信息
     protected AnyValue config;
 
+    //服务数据的编解码，null视为UTF-8
     protected Charset charset;
 
+    //服务的监听端口
     protected InetSocketAddress address;
 
+    //连接队列大小
     protected int backlog;
 
+    //传输层协议的服务
     protected ProtocolServer serverChannel;
 
+    //ByteBuffer的容量大小
     protected int bufferCapacity;
 
+    //线程数
     protected int threads;
 
+    //线程池
     protected ExecutorService executor;
 
+    //ByteBuffer池大小
     protected int bufferPoolSize;
 
+    //Response池大小
     protected int responsePoolSize;
 
+    //请求包大小的上限，单位:字节
     protected int maxbody;
 
+    //IO读取的超时秒数，小于1视为不设置
     protected int readTimeoutSecond;
 
+    //IO写入 的超时秒数，小于1视为不设置
     protected int writeTimeoutSecond;
-
-    private ScheduledThreadPoolExecutor scheduler;
 
     protected Server(long serverStartTime, String protocol, PrepareServlet<K, C, R, P, S> servlet, final WatchFactory watch) {
         this.serverStartTime = serverStartTime;
@@ -89,23 +113,28 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         this.threads = config.getIntValue("threads", Runtime.getRuntime().availableProcessors() * 16);
         this.bufferPoolSize = config.getIntValue("bufferPoolSize", Runtime.getRuntime().availableProcessors() * 512);
         this.responsePoolSize = config.getIntValue("responsePoolSize", Runtime.getRuntime().availableProcessors() * 256);
-        final int port = this.address.getPort();
+        this.name = config.getValue("name", "Server-" + protocol + "-" + this.address.getPort());
+        if (!this.name.matches("^[a-zA-Z][\\w_-]{1,64}$")) throw new RuntimeException("server.name (" + this.name + ") is illegal");
         final AtomicInteger counter = new AtomicInteger();
         final Format f = createFormat();
+        final String n = name;
         this.executor = Executors.newFixedThreadPool(threads, (Runnable r) -> {
             Thread t = new WorkThread(executor, r);
-            t.setName("Servlet-" + protocol + "-" + port + "-Thread-" + f.format(counter.incrementAndGet()));
+            t.setName(n + "-ServletThread-" + f.format(counter.incrementAndGet()));
             return t;
         });
     }
 
     public void destroy(final AnyValue config) throws Exception {
         this.prepare.destroy(context, config);
-        if (scheduler != null) scheduler.shutdownNow();
     }
 
     public InetSocketAddress getSocketAddress() {
         return address;
+    }
+
+    public String getName() {
+        return name;
     }
 
     public String getProtocol() {
@@ -134,8 +163,8 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         serverChannel.accept();
         final String threadName = "[" + Thread.currentThread().getName() + "] ";
         logger.info(threadName + this.getClass().getSimpleName() + ("TCP".equalsIgnoreCase(protocol) ? "" : ("." + protocol)) + " listen: " + address
-                + ", threads: " + threads + ", bufferCapacity: " + bufferCapacity + ", bufferPoolSize: " + bufferPoolSize + ", responsePoolSize: " + responsePoolSize
-                + ", started in " + (System.currentTimeMillis() - context.getServerStartTime()) + " ms");
+            + ", threads: " + threads + ", bufferCapacity: " + bufferCapacity + ", bufferPoolSize: " + bufferPoolSize + ", responsePoolSize: " + responsePoolSize
+            + ", started in " + (System.currentTimeMillis() - context.getServerStartTime()) + " ms");
     }
 
     protected abstract C createContext();

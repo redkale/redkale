@@ -28,6 +28,7 @@ import org.redkale.util.AnyValue.DefaultAnyValue;
 import org.redkale.util.*;
 
 /**
+ * Server节点的初始化配置类
  *
  * <p>
  * 详情见: http://redkale.org
@@ -58,18 +59,25 @@ public abstract class NodeServer {
     //当前Server对象
     protected final Server server;
 
-    private String sncpGroup = null;  //当前Server的SNCP协议的组
-
-    private InetSocketAddress sncpAddress; //SNCP服务的地址， 非SNCP为null
-
+    //当前Server的SNCP协议的组
+    private String sncpGroup = null;
+    
+    //SNCP服务的地址， 非SNCP为null
+    private InetSocketAddress sncpAddress;
+    
+    //加载Service时的处理函数
     protected Consumer<ServiceWrapper> consumer;
-
+    
+    //server节点的配置
     protected AnyValue serverConf;
-
+    
+    //加载server节点后的拦截器
     protected NodeInterceptor interceptor;
 
+    //本地模式的Service对象集合
     protected final Set<ServiceWrapper> localServiceWrappers = new LinkedHashSet<>();
-
+    
+    //远程模式的Service对象集合
     protected final Set<ServiceWrapper> remoteServiceWrappers = new LinkedHashSet<>();
 
     public NodeServer(Application application, Server server) {
@@ -121,8 +129,8 @@ public abstract class NodeServer {
             //单向SNCP服务不需要对等group
             //if (this.sncpGroup == null) throw new RuntimeException("Server (" + String.valueOf(config).replaceAll("\\s+", " ") + ") not found <group> info");
         }
-
-        if (this.sncpAddress != null) this.resourceFactory.register(RESNAME_SERVER_ADDR, this.sncpAddress); //单点服务不会有 sncpAddress、sncpGroup
+        //单点服务不会有 sncpAddress、sncpGroup
+        if (this.sncpAddress != null) this.resourceFactory.register(RESNAME_SERVER_ADDR, this.sncpAddress);
         if (this.sncpGroup != null) this.resourceFactory.register(RESNAME_SERVER_GROUP, this.sncpGroup);
         {
             //设置root文件夹
@@ -137,9 +145,11 @@ public abstract class NodeServer {
             resourceFactory.register(Server.RESNAME_SERVER_ROOT, Path.class, myroot.toPath());
 
             final String homepath = myroot.getCanonicalPath();
+            //加入指定的classpath
             Server.loadLib(logger, config.getValue("lib", "").replace("${APP_HOME}", homepath) + ";" + homepath + "/lib/*;" + homepath + "/classes");
-            if (server != null) server.init(config);
         }
+        //必须要进行初始化， 构建Service时需要使用Context中的ExecutorService
+        server.init(config);
 
         initResource(); //给 DataSource、CacheSource 注册依赖注入时的监听回调事件。
         String interceptorClass = config.getValue("nodeInterceptor", "");
@@ -147,6 +157,7 @@ public abstract class NodeServer {
             Class clazz = forName(interceptorClass);
             this.interceptor = (NodeInterceptor) clazz.newInstance();
         }
+        
         ClassFilter<Servlet> servletFilter = createServletClassFilter();
         ClassFilter<Service> serviceFilter = createServiceClassFilter();
         long s = System.currentTimeMillis();
