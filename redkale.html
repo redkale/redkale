@@ -572,7 +572,8 @@
         <span class="nt">&lt;/properties&gt;</span>
     <span class="nt">&lt;/resources&gt;</span> 
     <span class="c">&lt;!--</span>
-<span class="c">        protocol: required  server所启动的协议，有HTTP、SNCP， 目前只支持HTTP、SNCP。SNCP使用TCP实现; </span>
+<span class="c">        protocol: required  server所启动的协议，Redkale内置的有HTTP、SNCP，SNCP使用TCP实现; </span>
+<span class="c">        name: 服务的名称，用于监控识别，一个配置文件中的server.name不能重复,命名规则: 字母、数字、下划线、减号</span>
 <span class="c">        host:  服务所占address ， 默认: 0.0.0.0</span>
 <span class="c">        port:  required 服务所占端口 </span>
 <span class="c">        root:  如果是web类型服务，则包含页面  默认:{APP_HOME}/root</span>
