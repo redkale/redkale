@@ -5,15 +5,14 @@
  */
 package org.redkale.util;
 
-import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import java.lang.annotation.*;
 
 /**
  * 自动加载。 使用场景：
  * 1、被标记为@AutoLoad(false)的Service类不会被自动加载
  * 2、被标记为@AutoLoad(false)的Servlet类不会被自动加载
- * 3、被标记为@AutoLoad且同时被标记为@javax.persistence.Cacheable的Entity类在被DataSource初始化时需要将Entity类对应的表数据全量加载进缓存中。
  *
  * <p> 详情见: http://redkale.org
  * @author zhangjx

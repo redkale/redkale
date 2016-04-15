@@ -97,7 +97,7 @@ public final class EntityInfo<T> {
     //------------------------------------------------------------
 
     public static <T> EntityInfo<T> load(Class<T> clazz, final int nodeid, final boolean cacheForbidden, final Properties conf,
-            Function<Class, List> fullloader) {
+                                         Function<Class, List> fullloader) {
         EntityInfo rs = entityInfos.get(clazz);
         if (rs != null) return rs;
         synchronized (entityInfos) {
@@ -106,8 +106,7 @@ public final class EntityInfo<T> {
                 if (nodeid < 0) throw new IllegalArgumentException("nodeid(" + nodeid + ") is illegal");
                 rs = new EntityInfo(clazz, nodeid, cacheForbidden, conf);
                 entityInfos.put(clazz, rs);
-                AutoLoad auto = clazz.getAnnotation(AutoLoad.class);
-                if (rs.cache != null && auto != null && auto.value()) {
+                if (rs.cache != null) {
                     if (fullloader == null) throw new IllegalArgumentException(clazz.getName() + " auto loader  is illegal");
                     rs.cache.fullLoad(fullloader.apply(clazz));
                 }
@@ -178,7 +177,8 @@ public final class EntityInfo<T> {
 //                    }
                     DistributeGenerator dg = field.getAnnotation(DistributeGenerator.class);
                     if (dg != null) {
-                        if (!field.getType().isPrimitive()) throw new RuntimeException(cltmp.getName() + "'s @" + DistributeGenerator.class.getSimpleName() + " primary must be primitive class type field");
+                        if (!field.getType().isPrimitive())
+                            throw new RuntimeException(cltmp.getName() + "'s @" + DistributeGenerator.class.getSimpleName() + " primary must be primitive class type field");
                         sqldistribute = true;
                         auto = false;
                         allocationSize0 = dg.allocationSize();
@@ -339,7 +339,7 @@ public final class EntityInfo<T> {
     //根据field字段名获取数据库对应的字段名
     public String getSQLColumn(String tabalis, String fieldname) {
         return this.aliasmap == null ? (tabalis == null ? fieldname : (tabalis + '.' + fieldname))
-                : (tabalis == null ? aliasmap.getOrDefault(fieldname, fieldname) : (tabalis + '.' + aliasmap.getOrDefault(fieldname, fieldname)));
+            : (tabalis == null ? aliasmap.getOrDefault(fieldname, fieldname) : (tabalis + '.' + aliasmap.getOrDefault(fieldname, fieldname)));
     }
 
     public String getPrimarySQLColumn() {
