@@ -1684,8 +1684,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
         if (readcache && cache != null && cache.isFullLoaded()) {
             if (node == null || node.isCacheUseable(this)) {
                 if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(clazz.getSimpleName() + " cache query predicate = " + (node == null ? null : node.createPredicate(cache)));
-                Sheet<T> sheet = cache.querySheet(needtotal, selects, flipper, node);
-                if (!sheet.isEmpty() || info.isVirtualEntity()) return sheet;
+                return cache.querySheet(needtotal, selects, flipper, node);
             }
         }
         final Connection conn = createReadSQLConnection();
