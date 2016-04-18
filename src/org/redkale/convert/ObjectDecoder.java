@@ -167,7 +167,7 @@ public final class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T
     public final T convertFrom(final R in) {
         final String clazz = in.readObjectB(typeClass);
         if (clazz == null) return null;
-        if (!clazz.isEmpty()) return (T) factory.loadDecoder(factory.getEntity(clazz)).convertFrom(in);
+        if (!clazz.isEmpty()) return (T) factory.loadDecoder(factory.getEntityAlias(clazz)).convertFrom(in);
         if (!this.inited) {
             synchronized (lock) {
                 try {

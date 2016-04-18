@@ -5,17 +5,14 @@
  */
 package org.redkale.convert;
 
-import java.lang.reflect.Type;
-import java.util.Collection;
-import java.util.Map;
 import java.lang.reflect.*;
 import java.math.BigInteger;
 import java.net.*;
-import java.nio.channels.*;
-import static org.redkale.convert.ext.InetAddressSimpledCoder.*;
+import java.nio.channels.CompletionHandler;
 import java.util.*;
-import java.util.concurrent.*;
-import java.util.regex.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Pattern;
+import org.redkale.convert.ext.InetAddressSimpledCoder.InetSocketAddressSimpledCoder;
 import org.redkale.convert.ext.*;
 import org.redkale.util.*;
 
@@ -175,24 +172,24 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
         return fname;
     }
 
-    final String getEntity(Class clazz) {
+    final String getEntityAlias(Class clazz) {
         ConvertEntity ce = (ConvertEntity) clazz.getAnnotation(ConvertEntity.class);
-        if (ce != null && findEntity(ce.value()) == null) entitys.put(ce.value(), clazz);
+        if (ce != null && findEntityAlias(ce.value()) == null) entitys.put(ce.value(), clazz);
         return ce == null ? clazz.getName() : ce.value();
     }
 
-    private Class findEntity(String name) {
-        Class clazz = entitys.get(name);
-        return parent == null ? clazz : parent.findEntity(name);
-    }
-
-    final Class getEntity(String name) {
-        Class clazz = findEntity(name);
+    final Class getEntityAlias(String name) {
+        Class clazz = findEntityAlias(name);
         try {
             return clazz == null ? Class.forName(name) : clazz;
         } catch (Exception ex) {
             throw new ConvertException("convert entity is " + name, ex);
         }
+    }
+
+    private Class findEntityAlias(String name) {
+        Class clazz = entitys.get(name);
+        return parent == null ? clazz : parent.findEntityAlias(name);
     }
 
     /**

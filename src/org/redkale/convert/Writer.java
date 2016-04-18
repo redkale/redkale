@@ -32,11 +32,18 @@ public abstract class Writer {
     public abstract void writeNull();
 
     /**
+     * 是否需要写入类名, BSON需要， JSON不需要
+     *
+     * @return boolean
+     */
+    public abstract boolean needWriteClassName();
+    
+    /**
      * 写入类名
      *
      * @param clazz 类名
      */
-    public abstract void wirteClassName(String clazz);
+    public abstract void writeClassName(String clazz);
 
     /**
      * 输出一个对象前的操作
@@ -54,7 +61,7 @@ public abstract class Writer {
      * @param clazz 对象的类名
      */
     public final void writeObjectNull(final Class clazz) {
-        wirteClassName(null);
+        writeClassName(null);
         writeNull();
     }
 

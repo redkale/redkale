@@ -5,7 +5,6 @@
  */
 package org.redkale.convert;
 
-import org.redkale.util.Attribute;
 import java.lang.reflect.*;
 import java.util.*;
 import org.redkale.util.*;
@@ -124,7 +123,7 @@ public final class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T
         }
         if (value != null && value.getClass() != this.typeClass) {
             final Class clz = value.getClass();
-            out.wirteClassName(factory.getEntity(clz));
+            if (out.needWriteClassName()) out.writeClassName(factory.getEntityAlias(clz));
             factory.loadEncoder(clz).convertTo(out, value);
             return;
         }

@@ -5,8 +5,8 @@
  */
 package org.redkale.convert.bson;
 
-import java.nio.*;
-import java.util.function.*;
+import java.nio.ByteBuffer;
+import java.util.function.Predicate;
 import org.redkale.convert.*;
 import org.redkale.util.*;
 
@@ -154,7 +154,7 @@ public class BsonWriter extends Writer {
     @Override
     public final void writeLong(long value) {
         writeTo((byte) (value >> 56), (byte) (value >> 48), (byte) (value >> 40), (byte) (value >> 32),
-                (byte) (value >> 24), (byte) (value >> 16), (byte) (value >> 8), (byte) value);
+            (byte) (value >> 24), (byte) (value >> 16), (byte) (value >> 8), (byte) value);
     }
 
     @Override
@@ -168,7 +168,12 @@ public class BsonWriter extends Writer {
     }
 
     @Override
-    public final void wirteClassName(String clazz) {
+    public final boolean needWriteClassName() {
+        return true;
+    }
+
+    @Override
+    public final void writeClassName(String clazz) {
         writeSmallString(clazz == null ? "" : clazz);
     }
 
@@ -186,7 +191,7 @@ public class BsonWriter extends Writer {
     }
 
     @Override
-    public final void writeFieldName( Attribute attribute) {
+    public final void writeFieldName(Attribute attribute) {
         writeByte(BsonReader.SIGN_HASNEXT);
         writeSmallString(attribute.field());
         byte typeval = 127;  //字段的类型值

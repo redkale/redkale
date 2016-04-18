@@ -5,14 +5,14 @@
  */
 package org.redkale.convert.json;
 
-import java.nio.*;
-import org.redkale.convert.*;
+import java.nio.ByteBuffer;
+import org.redkale.convert.Writer;
 import org.redkale.util.*;
 
 /**
  *
  * writeTo系列的方法输出的字符不能含特殊字符
- *
+ * <p>
  * <p>
  * 详情见: http://redkale.org
  *
@@ -123,22 +123,28 @@ public class JsonWriter extends Writer {
         content[count++] = '"';
         for (char ch : Utility.charArray(value)) {
             switch (ch) {
-                case '\n': content[count++] = '\\';
+                case '\n':
+                    content[count++] = '\\';
                     content[count++] = 'n';
                     break;
-                case '\r': content[count++] = '\\';
+                case '\r':
+                    content[count++] = '\\';
                     content[count++] = 'r';
                     break;
-                case '\t': content[count++] = '\\';
+                case '\t':
+                    content[count++] = '\\';
                     content[count++] = 't';
                     break;
-                case '\\': content[count++] = '\\';
+                case '\\':
+                    content[count++] = '\\';
                     content[count++] = ch;
                     break;
-                case '"': content[count++] = '\\';
+                case '"':
+                    content[count++] = '\\';
                     content[count++] = ch;
                     break;
-                default: content[count++] = ch;
+                default:
+                    content[count++] = ch;
                     break;
             }
         }
@@ -293,7 +299,12 @@ public class JsonWriter extends Writer {
     }
 
     @Override
-    public final void wirteClassName(String clazz) {
+    public final boolean needWriteClassName() {
+        return false;
+    }
+
+    @Override
+    public final void writeClassName(String clazz) {
     }
 
     @Override

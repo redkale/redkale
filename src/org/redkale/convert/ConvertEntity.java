@@ -5,14 +5,14 @@
  */
 package org.redkale.convert;
 
-import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import java.lang.annotation.*;
 
 /**
  * 用于类名的别名， 类似javax.persistence.Table
  * 该值必须是全局唯一
- * 使用场景: 当BSON序列化为了不指定class可以使用@ConvertEntity来取个别名。关联方法:  Reader.readClassName() 和  Writer.wirteClassName(String value) 。
+ * 使用场景: 当BSON序列化为了不指定class可以使用@ConvertEntity来取个别名。关联方法:  Reader.readClassName() 和  Writer.writeClassName(String value) 。
  *
  * <p> 详情见: http://redkale.org
  * @author zhangjx
