@@ -5,13 +5,12 @@
  */
 package org.redkale.convert.json;
 
-import org.redkale.convert.ConvertType;
-import org.redkale.convert.ConvertFactory;
 import java.io.Serializable;
-import java.math.*;
+import java.math.BigInteger;
 import java.net.*;
+import org.redkale.convert.*;
 import org.redkale.convert.ext.*;
-import org.redkale.util.*;
+import org.redkale.util.DLong;
 
 /**
  *
@@ -44,6 +43,10 @@ public final class JsonFactory extends ConvertFactory<JsonReader, JsonWriter> {
 
     public static JsonFactory root() {
         return instance;
+    }
+
+    public static JsonFactory create() {
+        return new JsonFactory(null, Boolean.getBoolean("convert.json.tiny"));
     }
 
     @Override

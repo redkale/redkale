@@ -43,6 +43,10 @@ public final class BsonFactory extends ConvertFactory<BsonReader, BsonWriter> {
         return instance;
     }
 
+    public static BsonFactory create() {
+        return new BsonFactory(null, Boolean.getBoolean("convert.bson.tiny"));
+    }
+
     @Override
     public final BsonConvert getConvert() {
         if (convert == null) convert = new BsonConvert(this, tiny);
