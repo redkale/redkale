@@ -7,7 +7,7 @@ package org.redkale.net.http;
 
 import java.io.*;
 import java.lang.reflect.Type;
-import java.net.HttpCookie;
+import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.nio.file.*;
@@ -24,7 +24,7 @@ import org.redkale.util.*;
  * Http响应包 与javax.servlet.http.HttpServletResponse 基本类似。
  * 同时提供发送json的系列接口: public void finishJson(Type type, Object obj)
  * RedKale提倡http+json的接口风格， 所以主要输出的数据格式为json， 同时提供异步接口。
- *
+ * <p>
  * <p>
  * 详情见: http://redkale.org
  *
@@ -35,7 +35,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
     /**
      * HttpResponse.finish 方法内调用
      * 主要给@HttpCacheable使用
-     *
+     * <p>
      */
     protected static interface BufferHandler {
 
@@ -181,7 +181,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * 增加Cookie值
      *
      * @param cookies cookie
-     * @return  HttpResponse
+     * @return HttpResponse
      */
     public HttpResponse addCookie(HttpCookie... cookies) {
         if (this.cookies == null) {
@@ -302,7 +302,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
 
     /**
      * 以304状态码输出
-     *
+     * <p>
      */
     public void finish304() {
         super.finish(buffer304.duplicate());
@@ -310,7 +310,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
 
     /**
      * 以404状态码输出
-     *
+     * <p>
      */
     public void finish404() {
         super.finish(buffer404.duplicate());
@@ -422,7 +422,18 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * @throws IOException IO异常
      */
     public void finish(File file) throws IOException {
-        finishFile(file, null);
+        finishFile(null, file, null);
+    }
+
+    /**
+     * 将文件按指定文件名输出
+     *
+     * @param filename 输出文件名
+     * @param file     输出文件
+     * @throws IOException IO异常
+     */
+    public void finish(final String filename, File file) throws IOException {
+        finishFile(filename, file, null);
     }
 
     /**
@@ -433,6 +444,18 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * @throws IOException IO异常
      */
     protected void finishFile(final File file, ByteBuffer fileBody) throws IOException {
+        finishFile(null, file, fileBody);
+    }
+
+    /**
+     * 将指定文件句柄或文件内容按指定文件名输出，若fileBody不为null则只输出fileBody内容
+     *
+     * @param filename 输出文件名
+     * @param file     输出文件
+     * @param fileBody 文件内容， 没有则输出file
+     * @throws IOException IO异常
+     */
+    protected void finishFile(final String filename, final File file, ByteBuffer fileBody) throws IOException {
         if (file == null || !file.isFile() || !file.canRead()) {
             finish404();
             return;
@@ -445,7 +468,10 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
             return;
         }
         this.contentLength = fileBody == null ? file.length() : fileBody.remaining();
-        this.contentType = MimeType.getByFilename(file.getName());
+        if (filename != null && !filename.isEmpty()) {
+            addHeader("Content-Disposition", "attachment;filename=" + URLEncoder.encode(filename, "UTF-8"));
+        }
+        this.contentType = MimeType.getByFilename(filename == null || filename.isEmpty() ? file.getName() : filename);
         if (this.contentType == null) this.contentType = "application/octet-stream";
         String range = request.getHeader("Range");
         if (range != null && (!range.startsWith("bytes=") || range.indexOf(',') >= 0)) range = null;
@@ -661,7 +687,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * 设置内容长度
      *
      * @param contentLength 内容长度
-     * @return 
+     * @return
      */
     public HttpResponse setContentLength(long contentLength) {
         this.contentLength = contentLength;
