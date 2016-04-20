@@ -5,9 +5,9 @@
  */
 package org.redkale.net;
 
-import java.io.*;
+import java.io.IOException;
 import java.net.*;
-import java.nio.*;
+import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.*;
 import java.util.concurrent.*;
@@ -21,7 +21,9 @@ import java.util.concurrent.*;
  */
 public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCloseable {
 
-    protected Map<String, Object> attributes;
+    protected Map<String, Object> attributes; //用于存储绑定在Connection上的对象集合
+
+    protected Object subobject; //用于存储绑定在Connection上的对象， 同attributes， 只绑定单个对象时尽量使用subobject而非attributes
 
     public abstract boolean isTCP();
 
@@ -61,26 +63,35 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
         }
     }
 
+    @SuppressWarnings("unchecked")
+    public final <T> T getSubobject() {
+        return (T) this.subobject;
+    }
+
+    public void setSubobject(Object value) {
+        this.subobject = value;
+    }
+
     public void setAttribute(String name, Object value) {
-        if (attributes == null) attributes = new HashMap<>();
-        attributes.put(name, value);
+        if (this.attributes == null) this.attributes = new HashMap<>();
+        this.attributes.put(name, value);
     }
 
     @SuppressWarnings("unchecked")
     public final <T> T getAttribute(String name) {
-        return (T) (attributes == null ? null : attributes.get(name));
+        return (T) (this.attributes == null ? null : this.attributes.get(name));
     }
 
     public final void removeAttribute(String name) {
-        if (attributes != null) attributes.remove(name);
+        if (this.attributes != null) this.attributes.remove(name);
     }
 
     public final Map<String, Object> getAttributes() {
-        return attributes;
+        return this.attributes;
     }
 
     public final void clearAttribute() {
-        if (attributes != null) attributes.clear();
+        if (this.attributes != null) this.attributes.clear();
     }
 
     //------------------------------------------------------------------------------------------------------------------------------
@@ -100,7 +111,7 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
      * @throws java.io.IOException 异常
      */
     public static AsyncConnection create(final String protocol, final AsynchronousChannelGroup group, final SocketAddress address,
-            final int readTimeoutSecond0, final int writeTimeoutSecond0) throws IOException {
+                                         final int readTimeoutSecond0, final int writeTimeoutSecond0) throws IOException {
         if ("TCP".equalsIgnoreCase(protocol)) {
             AsynchronousSocketChannel channel = AsynchronousSocketChannel.open(group);
             try {
@@ -132,7 +143,7 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
         private final boolean client;
 
         public BIOUDPAsyncConnection(final DatagramChannel ch, SocketAddress addr,
-                final boolean client0, final int readTimeoutSecond0, final int writeTimeoutSecond0) {
+                                     final boolean client0, final int readTimeoutSecond0, final int writeTimeoutSecond0) {
             this.channel = ch;
             this.client = client0;
             this.readTimeoutSecond = readTimeoutSecond0;
@@ -231,9 +242,7 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
         @Override
         public final void close() throws IOException {
             super.close();
-            if (client) {
-                channel.close();
-            }
+            if (client) channel.close();
         }
 
         @Override
@@ -248,7 +257,7 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
     }
 
     public static AsyncConnection create(final DatagramChannel ch, SocketAddress addr,
-            final boolean client0, final int readTimeoutSecond0, final int writeTimeoutSecond0) {
+                                         final boolean client0, final int readTimeoutSecond0, final int writeTimeoutSecond0) {
         return new BIOUDPAsyncConnection(ch, addr, client0, readTimeoutSecond0, writeTimeoutSecond0);
     }
 
@@ -487,7 +496,7 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
         @Override
         public <A> void write(ByteBuffer[] srcs, int offset, int length, A attachment, final CompletionHandler<Integer, ? super A> handler) {
             channel.write(srcs, offset, length, writeTimeoutSecond > 0 ? writeTimeoutSecond : 60, TimeUnit.SECONDS,
-                    attachment, new CompletionHandler<Long, A>() {
+                attachment, new CompletionHandler<Long, A>() {
 
                 @Override
                 public void completed(Long result, A attachment) {
