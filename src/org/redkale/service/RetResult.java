@@ -5,11 +5,11 @@
  */
 package org.redkale.service;
 
-import org.redkale.convert.json.*;
+import org.redkale.convert.json.JsonFactory;
 
 /**
  * 通用的结果对象，在常见的HTTP+JSON接口中返回的结果需要含结果码，错误信息，和实体对象。
- *
+ * <p>
  * <p>
  * 详情见: http://redkale.org
  *
@@ -107,6 +107,17 @@ public class RetResult<T> {
 
     public void setResult(T result) {
         this.result = result;
+    }
+
+    /**
+     * 同 setResult
+     *
+     * @param result
+     * @return
+     */
+    public RetResult result(T result) {
+        this.result = result;
+        return this;
     }
 
     @Override
