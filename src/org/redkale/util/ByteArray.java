@@ -125,7 +125,7 @@ public final class ByteArray {
             System.arraycopy(content, 0, ns, 0, count);
             this.content = ns;
         }
-        System.arraycopy(content, count, values, 0, values.length);
+        System.arraycopy(values, 0, content, count, values.length);
         count += values.length;
     }
 
