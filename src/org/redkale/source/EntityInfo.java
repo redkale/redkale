@@ -312,7 +312,7 @@ public final class EntityInfo<T> {
     }
 
     protected String createSQLOrderby(Flipper flipper) {
-        if (flipper == null || flipper.getSort() == null || flipper.getSort().isEmpty()) return "";
+        if (flipper == null || flipper.getSort() == null || flipper.getSort().isEmpty() || flipper.getSort().indexOf(';') >= 0  || flipper.getSort().indexOf('\n') >= 0 ) return "";
         final String sort = flipper.getSort();
         String sql = this.sortOrderbySqls.get(sort);
         if (sql != null) return sql;

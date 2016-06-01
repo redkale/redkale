@@ -424,7 +424,7 @@ public final class EntityCache<T> {
 
     //-------------------------------------------------------------------------------------------------------------------------------
     protected Comparator<T> createComparator(Flipper flipper) {
-        if (flipper == null || flipper.getSort() == null || flipper.getSort().isEmpty()) return null;
+        if (flipper == null || flipper.getSort() == null || flipper.getSort().isEmpty() || flipper.getSort().indexOf(';') >= 0  || flipper.getSort().indexOf('\n') >= 0) return null;
         final String sort = flipper.getSort();
         Comparator<T> comparator = this.sortComparators.get(sort);
         if (comparator != null) return comparator;
