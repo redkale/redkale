@@ -82,7 +82,7 @@ public final class DLong extends Number implements Comparable<DLong> {
 
     @Override
     public int intValue() {
-        return ((value[12] & 0xff) << 24) | ((value[113] & 0xff) << 16) | ((value[14] & 0xff) << 8) | (value[15] & 0xff);
+        return ((value[12] & 0xff) << 24) | ((value[13] & 0xff) << 16) | ((value[14] & 0xff) << 8) | (value[15] & 0xff);
     }
 
     @Override
