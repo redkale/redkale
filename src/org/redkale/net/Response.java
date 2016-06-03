@@ -93,6 +93,7 @@ public abstract class Response<C extends Context, R extends Request<C>> {
     protected AsyncConnection removeChannel() {
         AsyncConnection ch = this.channel;
         this.channel = null;
+        this.request.channel = null;
         return ch;
     }
 
