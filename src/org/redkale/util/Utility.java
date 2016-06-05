@@ -86,6 +86,15 @@ public final class Utility {
         return String.format(format, System.currentTimeMillis());
     }
 
+    public static String toString(String string, ByteBuffer buffer) {
+        if (buffer == null || !buffer.hasRemaining()) return string;
+        byte[] bytes = new byte[buffer.remaining()];
+        buffer.get(bytes);
+        buffer.flip();
+        if (string == null) return new String(bytes, UTF_8);
+        return string + new String(bytes, UTF_8);
+    }
+
     public static void println(String string, ByteBuffer buffer) {
         if (buffer == null || !buffer.hasRemaining()) return;
         byte[] bytes = new byte[buffer.remaining()];
@@ -403,7 +412,7 @@ public final class Utility {
      * 将两个数字组装成一个long
      *
      * @param high 高位值
-     * @param low  低位值
+     * @param low 低位值
      * @return long值
      */
     public static long merge(int high, int low) {
