@@ -268,6 +268,15 @@ public class HttpRequest extends Request<HttpContext> {
         return array.toString(UTF8);
     }
 
+    /**
+     * 直接获取body对象
+     *
+     * @return body对象
+     */
+    protected ByteArray getDirectBody() {
+        return array;
+    }
+
     @Override
     public String toString() {
         parseBody();
