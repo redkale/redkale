@@ -214,7 +214,8 @@ public abstract class NodeServer {
 
                 SncpClient client = Sncp.getSncpClient((Service) src);
                 Transport sameGroupTransport = Sncp.getSameGroupTransport((Service) src);
-                List<Transport> diffGroupTransports = Arrays.asList(Sncp.getDiffGroupTransports((Service) src));
+                Transport[] dts = Sncp.getDiffGroupTransports((Service) src);
+                List<Transport> diffGroupTransports = dts == null ? new ArrayList<>() : Arrays.asList(dts);
                 final InetSocketAddress sncpAddr = client == null ? null : client.getClientAddress();
                 final CacheSourceService source = Sncp.createLocalService(resourceName, getExecutor(), appResFactory, CacheSourceService.class, sncpAddr, sameGroupTransport, diffGroupTransports);
                 Type genericType = field.getGenericType();
