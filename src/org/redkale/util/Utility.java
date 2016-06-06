@@ -88,18 +88,24 @@ public final class Utility {
 
     public static String toString(String string, ByteBuffer buffer) {
         if (buffer == null || !buffer.hasRemaining()) return string;
+        int pos = buffer.position();
+        int limit = buffer.limit();
         byte[] bytes = new byte[buffer.remaining()];
         buffer.get(bytes);
-        buffer.flip();
+        buffer.position(pos);
+        buffer.limit(limit);
         if (string == null) return new String(bytes, UTF_8);
         return string + new String(bytes, UTF_8);
     }
 
     public static void println(String string, ByteBuffer buffer) {
         if (buffer == null || !buffer.hasRemaining()) return;
+        int pos = buffer.position();
+        int limit = buffer.limit();
         byte[] bytes = new byte[buffer.remaining()];
-        buffer.get(bytes);
-        buffer.flip();
+        buffer.get(bytes);        
+        buffer.position(pos);
+        buffer.limit(limit);
         println(string, bytes);
     }
 
