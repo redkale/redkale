@@ -283,7 +283,7 @@ public class HttpRequest extends Request<HttpContext> {
         return this.getClass().getSimpleName() + "{method:" + this.method + ", requestURI:" + this.requestURI
             + ", remoteAddr:" + this.getRemoteAddr() + ", cookies:" + this.cookiestr + ", contentType:" + this.contentType
             + ", connection:" + this.connection + ", protocol:" + this.protocol + ", contentLength:" + this.contentLength
-            + ", host:" + this.host + ", params:" + this.params + ", header:" + this.header + "}";
+            + ", host:" + this.host + ", bodylength:" + this.array.size() + ", params:" + this.params + ", header:" + this.header + "}";
     }
 
     /**
