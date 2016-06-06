@@ -67,6 +67,20 @@ public final class ByteArray {
         System.arraycopy(this.content, 0, buf, 0, count);
     }
 
+    public void directFrom(ByteArray array) {
+        if (array != null) {
+            this.content = array.content;
+            this.count = array.count;
+        }
+    }
+
+    public void directTo(ByteArray array) {
+        if (array != null) {
+            array.content = this.content;
+            array.count = this.count;
+        }
+    }
+
     public byte[] directBytes() {
         return content;
     }

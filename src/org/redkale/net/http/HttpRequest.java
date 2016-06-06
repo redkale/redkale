@@ -16,12 +16,7 @@ import org.redkale.util.AnyValue.DefaultAnyValue;
 import org.redkale.util.ByteArray;
 
 /**
- * Http请求包 与javax.servlet.http.HttpServletRequest 基本类似。
- * 同时提供json的解析接口: public Object getJsonParameter(Class clazz, String name)
- * RedKale提倡带简单的参数的GET请求采用类似REST风格, 因此提供了 getRequstURIPath 系列接口。
- * 例如简单的翻页查询 /pipes/record/query/page:2/size:20
- * 获取页号: int page = request.getRequstURIPath("page:", 1);
- * 获取行数: int size = request.getRequstURIPath("size:", 10);
+ * Http请求包 与javax.servlet.http.HttpServletRequest 基本类似。 同时提供json的解析接口: public Object getJsonParameter(Class clazz, String name) RedKale提倡带简单的参数的GET请求采用类似REST风格, 因此提供了 getRequstURIPath 系列接口。 例如简单的翻页查询 /pipes/record/query/page:2/size:20 获取页号: int page = request.getRequstURIPath("page:", 1); 获取行数: int size = request.getRequstURIPath("size:", 10);
  * <p>
  * <p>
  * 详情见: http://redkale.org
@@ -168,6 +163,10 @@ public class HttpRequest extends Request<HttpContext> {
     protected void prepare() {
     }
 
+    protected void skipBodyParse() {
+        this.bodyparsed = true;
+    }
+
     private void parseBody() {
         if (this.boundary || bodyparsed) return;
         addParameter(array, 0, array.size());
@@ -235,8 +234,7 @@ public class HttpRequest extends Request<HttpContext> {
     }
 
     /**
-     * 获取客户端地址IP, 与getRemoteAddres() 的区别在于：本方法优先取header中指定为RemoteAddress名的值，没有则返回getRemoteAddres()的getHostAddress()。
-     * 本方法适用于服务前端有如nginx的代理服务器进行中转，通过getRemoteAddres()是获取不到客户端的真实IP。
+     * 获取客户端地址IP, 与getRemoteAddres() 的区别在于：本方法优先取header中指定为RemoteAddress名的值，没有则返回getRemoteAddres()的getHostAddress()。 本方法适用于服务前端有如nginx的代理服务器进行中转，通过getRemoteAddres()是获取不到客户端的真实IP。
      *
      * @return 地址
      */
@@ -380,7 +378,7 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取Cookie值， 没有返回默认值
      *
-     * @param name    cookie名
+     * @param name cookie名
      * @param dfvalue 默认cookie值
      * @return cookie值
      */
@@ -493,11 +491,9 @@ public class HttpRequest extends Request<HttpContext> {
     }
 
     /**
-     * 获取请求URL分段中含prefix段的值
-     * 例如请求URL /pipes/record/query/name:hello
-     * 获取name参数: String name = request.getRequstURIPath("name:", "none");
+     * 获取请求URL分段中含prefix段的值 例如请求URL /pipes/record/query/name:hello 获取name参数: String name = request.getRequstURIPath("name:", "none");
      *
-     * @param prefix   prefix段前缀
+     * @param prefix prefix段前缀
      * @param defvalue 默认值
      * @return prefix截断后的值
      */
@@ -511,11 +507,9 @@ public class HttpRequest extends Request<HttpContext> {
     }
 
     /**
-     * 获取请求URL分段中含prefix段的short值
-     * 例如请求URL /pipes/record/query/type:10
-     * 获取type参数: short type = request.getRequstURIPath("type:", (short)0);
+     * 获取请求URL分段中含prefix段的short值 例如请求URL /pipes/record/query/type:10 获取type参数: short type = request.getRequstURIPath("type:", (short)0);
      *
-     * @param prefix   prefix段前缀
+     * @param prefix prefix段前缀
      * @param defvalue 默认short值
      * @return short值
      */
@@ -525,12 +519,9 @@ public class HttpRequest extends Request<HttpContext> {
     }
 
     /**
-     * 获取请求URL分段中含prefix段的int值
-     * 例如请求URL /pipes/record/query/page:2/size:50
-     * 获取page参数: int page = request.getRequstURIPath("page:", 1);
-     * 获取size参数: int size = request.getRequstURIPath("size:", 20);
+     * 获取请求URL分段中含prefix段的int值 例如请求URL /pipes/record/query/page:2/size:50 获取page参数: int page = request.getRequstURIPath("page:", 1); 获取size参数: int size = request.getRequstURIPath("size:", 20);
      *
-     * @param prefix   prefix段前缀
+     * @param prefix prefix段前缀
      * @param defvalue 默认int值
      * @return int值
      */
@@ -540,11 +531,9 @@ public class HttpRequest extends Request<HttpContext> {
     }
 
     /**
-     * 获取请求URL分段中含prefix段的long值
-     * 例如请求URL /pipes/record/query/time:1453104341363/id:40
-     * 获取time参数: long time = request.getRequstURIPath("time:", 0L);
+     * 获取请求URL分段中含prefix段的long值 例如请求URL /pipes/record/query/time:1453104341363/id:40 获取time参数: long time = request.getRequstURIPath("time:", 0L);
      *
-     * @param prefix   prefix段前缀
+     * @param prefix prefix段前缀
      * @param defvalue 默认long值
      * @return long值
      */
@@ -576,7 +565,7 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取指定的header值, 没有返回默认值
      *
-     * @param name         header名
+     * @param name header名
      * @param defaultValue 默认值
      * @return header值
      */
@@ -587,9 +576,9 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取指定的header的json值
      *
-     * @param <T>   泛型
+     * @param <T> 泛型
      * @param clazz 反序列化的类名
-     * @param name  header名
+     * @param name header名
      * @return header值
      */
     public <T> T getJsonHeader(Class<T> clazz, String name) {
@@ -600,10 +589,10 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取指定的header的json值
      *
-     * @param <T>     泛型
+     * @param <T> 泛型
      * @param convert JsonConvert对象
-     * @param clazz   反序列化的类名
-     * @param name    header名
+     * @param clazz 反序列化的类名
+     * @param name header名
      * @return header值
      */
     public <T> T getJsonHeader(JsonConvert convert, Class<T> clazz, String name) {
@@ -614,7 +603,7 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取指定的header的boolean值, 没有返回默认boolean值
      *
-     * @param name         header名
+     * @param name header名
      * @param defaultValue 默认boolean值
      * @return header值
      */
@@ -625,7 +614,7 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取指定的header的short值, 没有返回默认short值
      *
-     * @param name         header名
+     * @param name header名
      * @param defaultValue 默认short值
      * @return header值
      */
@@ -636,18 +625,18 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取指定的header的short值, 没有返回默认short值
      *
-     * @param name         header名
+     * @param name header名
      * @param defaultValue 默认short值
      * @return header值
      */
     public short getShortHeader(String name, int defaultValue) {
-        return header.getShortValue(name, (short)defaultValue);
+        return header.getShortValue(name, (short) defaultValue);
     }
-    
+
     /**
      * 获取指定的header的int值, 没有返回默认int值
      *
-     * @param name         header名
+     * @param name header名
      * @param defaultValue 默认int值
      * @return header值
      */
@@ -658,7 +647,7 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取指定的header的long值, 没有返回默认long值
      *
-     * @param name         header名
+     * @param name header名
      * @param defaultValue 默认long值
      * @return header值
      */
@@ -669,7 +658,7 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取指定的header的float值, 没有返回默认float值
      *
-     * @param name         header名
+     * @param name header名
      * @param defaultValue 默认float值
      * @return header值
      */
@@ -680,7 +669,7 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取指定的header的double值, 没有返回默认double值
      *
-     * @param name         header名
+     * @param name header名
      * @param defaultValue 默认double值
      * @return header值
      */
@@ -713,7 +702,7 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取指定的参数值, 没有返回默认值
      *
-     * @param name         参数名
+     * @param name 参数名
      * @param defaultValue 默认值
      * @return 参数值
      */
@@ -725,9 +714,9 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取指定的参数json值
      *
-     * @param <T>   泛型
+     * @param <T> 泛型
      * @param clazz 反序列化的类名
-     * @param name  参数名
+     * @param name 参数名
      * @return 参数值
      */
     public <T> T getJsonParameter(Class<T> clazz, String name) {
@@ -738,10 +727,10 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取指定的参数json值
      *
-     * @param <T>     泛型
+     * @param <T> 泛型
      * @param convert JsonConvert对象
-     * @param clazz   反序列化的类名
-     * @param name    参数名
+     * @param clazz 反序列化的类名
+     * @param name 参数名
      * @return 参数值
      */
     public <T> T getJsonParameter(JsonConvert convert, Class<T> clazz, String name) {
@@ -752,7 +741,7 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取指定的参数boolean值, 没有返回默认boolean值
      *
-     * @param name         参数名
+     * @param name 参数名
      * @param defaultValue 默认boolean值
      * @return 参数值
      */
@@ -764,7 +753,7 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取指定的参数short值, 没有返回默认short值
      *
-     * @param name         参数名
+     * @param name 参数名
      * @param defaultValue 默认short值
      * @return 参数值
      */
@@ -776,19 +765,19 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取指定的参数short值, 没有返回默认short值
      *
-     * @param name         参数名
+     * @param name 参数名
      * @param defaultValue 默认short值
      * @return 参数值
      */
     public short getShortParameter(String name, int defaultValue) {
         parseBody();
-        return params.getShortValue(name, (short)defaultValue);
+        return params.getShortValue(name, (short) defaultValue);
     }
-    
+
     /**
      * 获取指定的参数int值, 没有返回默认int值
      *
-     * @param name         参数名
+     * @param name 参数名
      * @param defaultValue 默认int值
      * @return 参数值
      */
@@ -800,7 +789,7 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取指定的参数long值, 没有返回默认long值
      *
-     * @param name         参数名
+     * @param name 参数名
      * @param defaultValue 默认long值
      * @return 参数值
      */
@@ -812,7 +801,7 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取指定的参数float值, 没有返回默认float值
      *
-     * @param name         参数名
+     * @param name 参数名
      * @param defaultValue 默认float值
      * @return 参数值
      */
@@ -824,7 +813,7 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取指定的参数double值, 没有返回默认double值
      *
-     * @param name         参数名
+     * @param name 参数名
      * @param defaultValue 默认double值
      * @return 参数值
      */
