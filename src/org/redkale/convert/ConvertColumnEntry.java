@@ -29,6 +29,10 @@ public final class ConvertColumnEntry {
         this.convertType = column.type();
     }
 
+    public ConvertColumnEntry(String name) {
+        this(name, false);
+    }
+    
     public ConvertColumnEntry(String name, boolean ignore) {
         this.name = name;
         this.ignore = ignore;
