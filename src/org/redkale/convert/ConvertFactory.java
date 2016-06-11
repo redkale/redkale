@@ -215,7 +215,11 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
             register(type, column, new ConvertColumnEntry(column, ignore));
         }
     }
-
+    
+    public final boolean register(final Class type, String column, String alias) {
+        return register(type, column, new ConvertColumnEntry(alias));
+    }
+    
     public final boolean register(final Class type, String column, ConvertColumnEntry entry) {
         if (type == null || column == null || entry == null) return false;
         try {
