@@ -108,7 +108,7 @@ public interface Attribute<T, F> {
     /**
      * 给指定对象的该字段赋值
      *
-     * @param obj   指定对象
+     * @param obj 指定对象
      * @param value 字段新值
      */
     public void set(T obj, F value);
@@ -116,8 +116,8 @@ public interface Attribute<T, F> {
     /**
      * 根据一个Field生成 Attribute 对象。
      *
-     * @param <T>   依附类的类型
-     * @param <F>   字段类型
+     * @param <T> 依附类的类型
+     * @param <F> 字段类型
      * @param field 字段，如果该字段不存在则抛异常
      * @return Attribute对象
      */
@@ -129,10 +129,10 @@ public interface Attribute<T, F> {
     /**
      * 根据一个Field和field的别名生成 Attribute 对象。
      *
-     * @param <T>        依附类的类型
-     * @param <F>        字段类型
+     * @param <T> 依附类的类型
+     * @param <F> 字段类型
      * @param fieldalias 别名
-     * @param field      字段，如果该字段不存在则抛异常
+     * @param field 字段，如果该字段不存在则抛异常
      * @return Attribute对象
      */
     @SuppressWarnings("unchecked")
@@ -143,9 +143,9 @@ public interface Attribute<T, F> {
     /**
      * 根据一个Class和field真实名称生成 Attribute 对象。
      *
-     * @param <T>       依附类的类型
-     * @param <F>       字段类型
-     * @param clazz     指定依附的类
+     * @param <T> 依附类的类型
+     * @param <F> 字段类型
+     * @param clazz 指定依附的类
      * @param fieldname 字段名，如果该字段不存在则抛异常
      * @return Attribute对象
      */
@@ -160,8 +160,8 @@ public interface Attribute<T, F> {
     /**
      * 根据一个Class和Field生成 Attribute 对象。
      *
-     * @param <T>   依附类的类型
-     * @param <F>   字段类型
+     * @param <T> 依附类的类型
+     * @param <F> 字段类型
      * @param clazz 指定依附的类
      * @param field 字段，如果该字段不存在则抛异常
      * @return Attribute对象
@@ -173,11 +173,11 @@ public interface Attribute<T, F> {
     /**
      * 根据一个Class、field别名和Field生成 Attribute 对象。
      *
-     * @param <T>        依附类的类型
-     * @param <F>        字段类型
-     * @param clazz      指定依附的类
+     * @param <T> 依附类的类型
+     * @param <F> 字段类型
+     * @param clazz 指定依附的类
      * @param fieldalias 字段别名
-     * @param field      字段，如果该字段不存在则抛异常
+     * @param field 字段，如果该字段不存在则抛异常
      * @return Attribute对象
      */
     public static <T, F> Attribute<T, F> create(Class<T> clazz, final String fieldalias, final java.lang.reflect.Field field) {
@@ -185,11 +185,10 @@ public interface Attribute<T, F> {
     }
 
     /**
-     * 根据一个getter和setter方法生成 Attribute 对象。
-     * tgetter、setter不能同时为null
+     * 根据一个getter和setter方法生成 Attribute 对象。 tgetter、setter不能同时为null
      *
-     * @param <T>    依附类的类型
-     * @param <F>    字段类型
+     * @param <T> 依附类的类型
+     * @param <F> 字段类型
      * @param getter getter方法
      * @param setter setter方法
      * @return Attribute对象
@@ -200,12 +199,11 @@ public interface Attribute<T, F> {
     }
 
     /**
-     * 根据Class、getter和setter方法生成 Attribute 对象。
-     * tgetter、setter不能同时为null
+     * 根据Class、getter和setter方法生成 Attribute 对象。 tgetter、setter不能同时为null
      *
-     * @param <T>    依附类的类型
-     * @param <F>    字段类型
-     * @param clazz  指定依附的类
+     * @param <T> 依附类的类型
+     * @param <F> 字段类型
+     * @param clazz 指定依附的类
      * @param getter getter方法
      * @param setter setter方法
      * @return Attribute对象
@@ -213,97 +211,96 @@ public interface Attribute<T, F> {
     public static <T, F> Attribute<T, F> create(Class<T> clazz, final java.lang.reflect.Method getter, final java.lang.reflect.Method setter) {
         return create(clazz, null, null, getter, setter);
     }
-        
+
     /**
      * 根据Class生成getter、setter方法都存在的字段对应的 Attribute 对象数组。
-     * 
-     * @param <T>    依附类的类型
-     * @param clazz  指定依附的类
-     * @return  Attribute对象数组
+     *
+     * @param <T> 依附类的类型
+     * @param clazz 指定依附的类
+     * @return Attribute对象数组
      */
     public static <T> Attribute<T, ?>[] create(Class<T> clazz) {
         List<Attribute<T, ?>> list = new ArrayList<>();
-        for(java.lang.reflect.Field field : clazz.getFields()){
-            if(java.lang.reflect.Modifier.isStatic(field.getModifiers())) continue;
-            if(java.lang.reflect.Modifier.isFinal(field.getModifiers())) continue;
+        for (java.lang.reflect.Field field : clazz.getFields()) {
+            if (java.lang.reflect.Modifier.isStatic(field.getModifiers())) continue;
+            if (java.lang.reflect.Modifier.isFinal(field.getModifiers())) continue;
             list.add(create(clazz, field));
         }
-        for(java.lang.reflect.Method setter : clazz.getDeclaredMethods()){
-            if(java.lang.reflect.Modifier.isStatic(setter.getModifiers())) continue;
-            if(!setter.getName().startsWith("set")) continue;
-            if(setter.getReturnType() != void.class) continue;
-            if(setter.getParameterCount() != 1) continue;
+        for (java.lang.reflect.Method setter : clazz.getDeclaredMethods()) {
+            if (java.lang.reflect.Modifier.isStatic(setter.getModifiers())) continue;
+            if (!setter.getName().startsWith("set")) continue;
+            if (setter.getReturnType() != void.class) continue;
+            if (setter.getParameterCount() != 1) continue;
             Class t = setter.getParameterTypes()[0];
             String prefix = t == boolean.class || t == Boolean.class ? "is" : "get";
             java.lang.reflect.Method getter = null;
             try {
-                clazz.getMethod(setter.getName().replaceFirst("set", prefix));
-            } catch (Exception e){
+                getter = clazz.getMethod(setter.getName().replaceFirst("set", prefix));
+            } catch (Exception e) {
                 continue;
             }
             list.add(create(clazz, getter, setter));
         }
         return list.toArray(new Attribute[list.size()]);
     }
-    
+
     /**
      * 根据Class生成getter方法对应的 Attribute 对象数组。
-     * 
-     * @param <T>    依附类的类型
-     * @param clazz  指定依附的类
-     * @return  Attribute对象数组
+     *
+     * @param <T> 依附类的类型
+     * @param clazz 指定依附的类
+     * @return Attribute对象数组
      */
     public static <T> Attribute<T, ?>[] createGetters(Class<T> clazz) {
         List<Attribute<T, ?>> list = new ArrayList<>();
-        for(java.lang.reflect.Field field : clazz.getFields()){
-            if(java.lang.reflect.Modifier.isStatic(field.getModifiers())) continue;
-            if(java.lang.reflect.Modifier.isFinal(field.getModifiers())) continue;
+        for (java.lang.reflect.Field field : clazz.getFields()) {
+            if (java.lang.reflect.Modifier.isStatic(field.getModifiers())) continue;
+            if (java.lang.reflect.Modifier.isFinal(field.getModifiers())) continue;
             list.add(create(clazz, field));
         }
-        for(java.lang.reflect.Method method : clazz.getDeclaredMethods()){
-            if(java.lang.reflect.Modifier.isStatic(method.getModifiers())) continue;
-            if(!method.getName().startsWith("get") && !method.getName().startsWith("is")) continue;
-            if(method.getReturnType() == void.class) continue;
-            if(method.getParameterCount() != 0) continue;
+        for (java.lang.reflect.Method method : clazz.getDeclaredMethods()) {
+            if (java.lang.reflect.Modifier.isStatic(method.getModifiers())) continue;
+            if (!method.getName().startsWith("get") && !method.getName().startsWith("is")) continue;
+            if (method.getReturnType() == void.class) continue;
+            if (method.getParameterCount() != 0) continue;
             list.add(create(clazz, method, null));
         }
         return list.toArray(new Attribute[list.size()]);
     }
-    
+
     /**
      * 根据Class生成setter方法对应的 Attribute 对象数组。
-     * 
-     * @param <T>    依附类的类型
-     * @param clazz  指定依附的类
-     * @return  Attribute对象数组
+     *
+     * @param <T> 依附类的类型
+     * @param clazz 指定依附的类
+     * @return Attribute对象数组
      */
     public static <T> Attribute<T, ?>[] createSetters(Class<T> clazz) {
         List<Attribute<T, ?>> list = new ArrayList<>();
-        for(java.lang.reflect.Field field : clazz.getFields()){
-            if(java.lang.reflect.Modifier.isStatic(field.getModifiers())) continue;
-            if(java.lang.reflect.Modifier.isFinal(field.getModifiers())) continue;
+        for (java.lang.reflect.Field field : clazz.getFields()) {
+            if (java.lang.reflect.Modifier.isStatic(field.getModifiers())) continue;
+            if (java.lang.reflect.Modifier.isFinal(field.getModifiers())) continue;
             list.add(create(clazz, field));
         }
-        for(java.lang.reflect.Method method : clazz.getDeclaredMethods()){
-            if(java.lang.reflect.Modifier.isStatic(method.getModifiers())) continue;
-            if(!method.getName().startsWith("set")) continue;
-            if(method.getReturnType() != void.class) continue;
-            if(method.getParameterCount() != 1) continue;
+        for (java.lang.reflect.Method method : clazz.getDeclaredMethods()) {
+            if (java.lang.reflect.Modifier.isStatic(method.getModifiers())) continue;
+            if (!method.getName().startsWith("set")) continue;
+            if (method.getReturnType() != void.class) continue;
+            if (method.getParameterCount() != 1) continue;
             list.add(create(clazz, null, method));
         }
         return list.toArray(new Attribute[list.size()]);
     }
-    
+
     /**
-     * 根据Class、字段别名、getter和setter方法生成 Attribute 对象。
-     * tgetter、setter不能同时为null
+     * 根据Class、字段别名、getter和setter方法生成 Attribute 对象。 tgetter、setter不能同时为null
      *
-     * @param <T>        依附类的类型
-     * @param <F>        字段类型
-     * @param clazz      指定依附的类
+     * @param <T> 依附类的类型
+     * @param <F> 字段类型
+     * @param clazz 指定依附的类
      * @param fieldalias 字段别名
-     * @param getter     getter方法
-     * @param setter     setter方法
+     * @param getter getter方法
+     * @param setter setter方法
      * @return Attribute对象
      */
     public static <T, F> Attribute<T, F> create(Class<T> clazz, final String fieldalias, final java.lang.reflect.Method getter, final java.lang.reflect.Method setter) {
@@ -311,16 +308,15 @@ public interface Attribute<T, F> {
     }
 
     /**
-     * 根据Class、字段别名、Field、getter和setter方法生成 Attribute 对象。
-     * Field、tgetter、setter不能同时为null
+     * 根据Class、字段别名、Field、getter和setter方法生成 Attribute 对象。 Field、tgetter、setter不能同时为null
      *
-     * @param <T>        依附类的类型
-     * @param <F>        字段类型
-     * @param clazz      指定依附的类
+     * @param <T> 依附类的类型
+     * @param <F> 字段类型
+     * @param clazz 指定依附的类
      * @param fieldalias 字段别名
-     * @param field      字段
-     * @param getter     getter方法
-     * @param setter     setter方法
+     * @param field 字段
+     * @param getter getter方法
+     * @param setter setter方法
      * @return Attribute对象
      */
     @SuppressWarnings("unchecked")
@@ -388,11 +384,11 @@ public interface Attribute<T, F> {
 
         ClassLoader loader = Attribute.class.getClassLoader();
         String newDynName = supDynName + "_Dyn_" + clazz.getSimpleName() + "_"
-                + fieldname.substring(fieldname.indexOf('.') + 1) + "_" + pcolumn.getSimpleName().replace("[]", "Array");
+            + fieldname.substring(fieldname.indexOf('.') + 1) + "_" + pcolumn.getSimpleName().replace("[]", "Array");
         if (String.class.getClassLoader() != clazz.getClassLoader()) {
             loader = clazz.getClassLoader();
             newDynName = interName + "_Dyn" + Attribute.class.getSimpleName() + "_"
-                    + fieldname.substring(fieldname.indexOf('.') + 1) + "_" + pcolumn.getSimpleName().replace("[]", "Array");
+                + fieldname.substring(fieldname.indexOf('.') + 1) + "_" + pcolumn.getSimpleName().replace("[]", "Array");
         }
         try {
             return (Attribute) Class.forName(newDynName.replace('/', '.')).newInstance();
