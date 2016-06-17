@@ -143,10 +143,10 @@ public class FilterNode {
     /**
      * 该方法需要重载
      *
-     * @param <T>         Entity类的泛型
-     * @param func        EntityInfo的加载器
+     * @param <T> Entity类的泛型
+     * @param func EntityInfo的加载器
      * @param joinTabalis 关联表集合
-     * @param info        Entity类的EntityInfo
+     * @param info Entity类的EntityInfo
      * @return SQL的join语句 不存在返回null
      */
     protected <T> CharSequence createSQLJoin(final Function<Class, EntityInfo> func, final Map<Class, String> joinTabalis, final EntityInfo<T> info) {
@@ -205,9 +205,9 @@ public class FilterNode {
     /**
      * 该方法需要重载
      *
-     * @param <T>         Entity类的泛型
+     * @param <T> Entity类的泛型
      * @param joinTabalis 关联表的集合
-     * @param info        EntityInfo
+     * @param info EntityInfo
      * @return JOIN的SQL语句
      */
     protected <T> CharSequence createSQLExpress(final EntityInfo<T> info, final Map<Class, String> joinTabalis) {
@@ -428,8 +428,68 @@ public class FilterNode {
                 }
                 return filter;
             } else if (val0.getClass().isArray()) {
+                final Class primtype = val0.getClass();
+                Object val2 = val0;
+                int ix = -1;
+                if (primtype == boolean[].class) {
+                    boolean[] bs = (boolean[]) val0;
+                    Boolean[] ns = new Boolean[bs.length];
+                    for (boolean v : bs) {
+                        ns[++ix] = v;
+                    }
+                    val2 = ns;
+                } else if (primtype == byte[].class) {
+                    byte[] bs = (byte[]) val0;
+                    Byte[] ns = new Byte[bs.length];
+                    for (byte v : bs) {
+                        ns[++ix] = v;
+                    }
+                    val2 = ns;
+                } else if (primtype == short[].class) {
+                    short[] bs = (short[]) val0;
+                    Short[] ns = new Short[bs.length];
+                    for (short v : bs) {
+                        ns[++ix] = v;
+                    }
+                    val2 = ns;
+                } else if (primtype == char[].class) {
+                    char[] bs = (char[]) val0;
+                    Character[] ns = new Character[bs.length];
+                    for (char v : bs) {
+                        ns[++ix] = v;
+                    }
+                    val2 = ns;
+                } else if (primtype == int[].class) {
+                    int[] bs = (int[]) val0;
+                    Integer[] ns = new Integer[bs.length];
+                    for (int v : bs) {
+                        ns[++ix] = v;
+                    }
+                    val2 = ns;
+                } else if (primtype == float[].class) {
+                    float[] bs = (float[]) val0;
+                    Float[] ns = new Float[bs.length];
+                    for (float v : bs) {
+                        ns[++ix] = v;
+                    }
+                    val2 = ns;
+                } else if (primtype == long[].class) {
+                    long[] bs = (long[]) val0;
+                    Long[] ns = new Long[bs.length];
+                    for (long v : bs) {
+                        ns[++ix] = v;
+                    }
+                    val2 = ns;
+                } else if (primtype == double[].class) {
+                    double[] bs = (double[]) val0;
+                    Double[] ns = new Double[bs.length];
+                    for (double v : bs) {
+                        ns[++ix] = v;
+                    }
+                    val2 = ns;
+                }
                 Predicate<T> filter = null;
-                for (Object fv : (Object[]) val0) {
+                for (Object fv : (Object[]) val2) {
                     if (fv == null) continue;
                     Predicate<T> f = createElementPredicate(cache, join, attr, fv);
                     if (f == null) continue;
