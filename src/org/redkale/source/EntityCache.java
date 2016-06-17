@@ -11,7 +11,7 @@ import java.util.concurrent.*;
 import java.util.function.*;
 import java.util.logging.*;
 import java.util.stream.*;
-import javax.persistence.Transient;
+import javax.persistence.*;
 import static org.redkale.source.FilterFunc.*;
 import org.redkale.util.*;
 
@@ -42,7 +42,9 @@ public final class EntityCache<T> {
 
     private final Attribute<T, Serializable> primary;
 
-    private final Reproduce<T, T> reproduce;
+    private final Reproduce<T, T> newReproduce;
+    
+    private final Reproduce<T, T> chgReproduce;
 
     private volatile boolean fullloaded;
 
@@ -54,9 +56,20 @@ public final class EntityCache<T> {
         this.creator = info.getCreator();
         this.primary = info.primary;
         this.needcopy = true;
-        this.reproduce = Reproduce.create(type, type, (m) -> {
+        this.newReproduce = Reproduce.create(type, type, (m) -> {
             try {
                 return type.getDeclaredField(m).getAnnotation(Transient.class) == null;
+            } catch (Exception e) {
+                return true;
+            }
+        });
+        this.chgReproduce = Reproduce.create(type, type, (m) -> {
+            try {
+                java.lang.reflect.Field field = type.getDeclaredField(m);
+                if(field.getAnnotation(Transient.class) != null) return false;
+                Column column = field.getAnnotation(Column.class);
+                if(column != null && !column.updatable()) return false;
+                return true;
             } catch (Exception e) {
                 return true;
             }
@@ -91,14 +104,14 @@ public final class EntityCache<T> {
     public T find(Serializable id) {
         if (id == null) return null;
         T rs = map.get(id);
-        return rs == null ? null : (needcopy ? reproduce.copy(this.creator.create(), rs) : rs);
+        return rs == null ? null : (needcopy ? newReproduce.copy(this.creator.create(), rs) : rs);
     }
 
     public T find(final SelectColumn selects, final Serializable id) {
         if (id == null) return null;
         T rs = map.get(id);
         if (rs == null) return null;
-        if (selects == null) return (needcopy ? reproduce.copy(this.creator.create(), rs) : rs);
+        if (selects == null) return (needcopy ? newReproduce.copy(this.creator.create(), rs) : rs);
         T t = this.creator.create();
         for (Attribute attr : this.info.attributes) {
             if (selects.test(attr.field())) attr.set(t, attr.get(rs));
@@ -112,7 +125,7 @@ public final class EntityCache<T> {
         if (filter != null) stream = stream.filter(filter);
         Optional<T> opt = stream.findFirst();
         if (!opt.isPresent()) return null;
-        if (selects == null) return (needcopy ? reproduce.copy(this.creator.create(), opt.get()) : opt.get());
+        if (selects == null) return (needcopy ? newReproduce.copy(this.creator.create(), opt.get()) : opt.get());
         T rs = opt.get();
         T t = this.creator.create();
         for (Attribute attr : this.info.attributes) {
@@ -292,7 +305,7 @@ public final class EntityCache<T> {
         if (flipper != null) stream = stream.skip(flipper.index()).limit(flipper.getSize());
         final List<T> rs = new ArrayList<>();
         if (selects == null) {
-            Consumer<? super T> action = x -> rs.add(needcopy ? reproduce.copy(creator.create(), x) : x);
+            Consumer<? super T> action = x -> rs.add(needcopy ? newReproduce.copy(creator.create(), x) : x);
             if (comparator != null) {
                 stream.forEachOrdered(action);
             } else {
@@ -322,7 +335,7 @@ public final class EntityCache<T> {
 
     public void insert(T value) {
         if (value == null) return;
-        final T rs = reproduce.copy(this.creator.create(), value);  //确保同一主键值的map与list中的对象必须共用。
+        final T rs = newReproduce.copy(this.creator.create(), value);  //确保同一主键值的map与list中的对象必须共用。
         T old = this.map.put(this.primary.get(rs), rs);
         if (old == null) {
             this.list.add(rs);
@@ -355,7 +368,7 @@ public final class EntityCache<T> {
         if (value == null) return;
         T rs = this.map.get(this.primary.get(value));
         if (rs == null) return;
-        this.reproduce.copy(rs, value);
+        this.chgReproduce.copy(rs, value);
     }
 
     public T update(final T value, Collection<Attribute<T, Serializable>> attrs) {
