@@ -29,7 +29,7 @@ import org.redkale.util.*;
 
 /**
  * Server节点的初始化配置类
- *
+ * <p>
  * <p>
  * 详情见: http://redkale.org
  *
@@ -61,22 +61,22 @@ public abstract class NodeServer {
 
     //当前Server的SNCP协议的组
     private String sncpGroup = null;
-    
+
     //SNCP服务的地址， 非SNCP为null
     private InetSocketAddress sncpAddress;
-    
+
     //加载Service时的处理函数
     protected Consumer<ServiceWrapper> consumer;
-    
+
     //server节点的配置
     protected AnyValue serverConf;
-    
+
     //加载server节点后的拦截器
     protected NodeInterceptor interceptor;
 
     //本地模式的Service对象集合
     protected final Set<ServiceWrapper> localServiceWrappers = new LinkedHashSet<>();
-    
+
     //远程模式的Service对象集合
     protected final Set<ServiceWrapper> remoteServiceWrappers = new LinkedHashSet<>();
 
@@ -157,7 +157,7 @@ public abstract class NodeServer {
             Class clazz = forName(interceptorClass);
             this.interceptor = (NodeInterceptor) clazz.newInstance();
         }
-        
+
         ClassFilter<Servlet> servletFilter = createServletClassFilter();
         ClassFilter<Service> serviceFilter = createServiceClassFilter();
         long s = System.currentTimeMillis();
@@ -170,6 +170,8 @@ public abstract class NodeServer {
         logger.info(this.getClass().getSimpleName() + " load filter class in " + e + " ms");
         loadService(serviceFilter); //必须在servlet之前
         loadServlet(servletFilter);
+
+        if (this.interceptor != null) this.resourceFactory.inject(this.interceptor);
     }
 
     protected abstract void loadServlet(ClassFilter<? extends Servlet> servletFilter) throws Exception;
@@ -384,7 +386,7 @@ public abstract class NodeServer {
     }
 
     protected ClassFilter createClassFilter(final String localGroup, Class<? extends Annotation> ref,
-                                            Class inter, Class<? extends Annotation> ref2, String properties, String property) {
+        Class inter, Class<? extends Annotation> ref2, String properties, String property) {
         ClassFilter cf = new ClassFilter(ref, inter, null);
         if (properties == null && properties == null) return cf;
         if (this.serverConf == null) return cf;
@@ -452,6 +454,10 @@ public abstract class NodeServer {
 
     public InetSocketAddress getSncpAddress() {
         return sncpAddress;
+    }
+
+    public AnyValue getServerConf() {
+        return serverConf;
     }
 
     public String getSncpGroup() {

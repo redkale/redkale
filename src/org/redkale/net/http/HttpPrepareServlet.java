@@ -29,6 +29,8 @@ public final class HttpPrepareServlet extends PrepareServlet<String, HttpContext
 
     private HttpServlet resourceHttpServlet = new HttpResourceServlet();
 
+    private final Map<String, Class> mapStrings = new HashMap<>();
+
     @Override
     public void init(HttpContext context, AnyValue config) {
         this.servlets.forEach(s -> {
@@ -89,6 +91,10 @@ public final class HttpPrepareServlet extends PrepareServlet<String, HttpContext
         if (prefix == null) prefix = "";
         for (String mapping : mappings) {
             if (!prefix.toString().isEmpty()) mapping = prefix + mapping;
+            if (this.mapStrings.containsKey(mapping)) {
+                Class old = this.mapStrings.get(mapping);
+                throw new RuntimeException("mapping [" + mapping + "] repeat on " + old.getName() + " and " + servlet.getClass().getName());
+            }
             if (contains(mapping, '.', '*', '{', '[', '(', '|', '^', '$', '+', '?', '\\')) { //是否是正则表达式))
                 if (mapping.charAt(0) != '^') mapping = '^' + mapping;
                 if (mapping.endsWith("/*")) {
@@ -104,11 +110,12 @@ public final class HttpPrepareServlet extends PrepareServlet<String, HttpContext
                     regArray[regArray.length - 1] = new SimpleEntry<>(Pattern.compile(mapping).asPredicate(), servlet);
                 }
             } else if (mapping != null && !mapping.isEmpty()) {
-                this.mappings.put(mapping, servlet);
+                super.mappings.put(mapping, servlet);
             }
+            this.mapStrings.put(mapping, servlet.getClass());
         }
         setServletConf(servlet, conf);
-        servlet._prefix = prefix == null ? "" : prefix.toString();
+        servlet._prefix = prefix.toString();
         this.servlets.add(servlet);
     }
 
@@ -139,6 +146,7 @@ public final class HttpPrepareServlet extends PrepareServlet<String, HttpContext
                 ((BasedHttpServlet) s).postDestroy(context, getServletConf(s));
             }
         });
+        this.mapStrings.clear();
     }
 
 }
