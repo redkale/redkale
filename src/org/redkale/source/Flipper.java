@@ -36,13 +36,13 @@ public final class Flipper implements Serializable, Cloneable {
     }
 
     public Flipper(int pageSize, int pageNo) {
-        this.size = pageSize;
-        this.page = pageNo;
+        this.size = pageSize > 0 ? pageSize : DEFAULT_PAGESIZE;
+        this.page = pageNo > 0 ? pageNo : 1;
     }
 
     public Flipper(int pageSize, int pageNo, String sortColumn) {
-        this.size = pageSize;
-        this.page = pageNo;
+        this.size = pageSize > 0 ? pageSize : DEFAULT_PAGESIZE;
+        this.page = pageNo > 0 ? pageNo : 1;
         this.sort = sortColumn;
     }
 
