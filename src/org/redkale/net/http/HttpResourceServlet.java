@@ -9,7 +9,6 @@ import java.io.*;
 import java.nio.ByteBuffer;
 import static java.nio.file.StandardWatchEventKinds.*;
 import java.nio.file.*;
-import static java.nio.file.StandardWatchEventKinds.*;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -81,8 +80,8 @@ public final class HttpResourceServlet extends HttpServlet {
 
     protected final boolean finest = logger.isLoggable(Level.FINEST);
 
-    //缓存总大小, 默认128M
-    protected long cachelimit = 128 * 1024 * 1024L;
+    //缓存总大小, 默认0
+    protected long cachelimit = 0 * 1024 * 1024L;
 
     protected final LongAdder cachedLength = new LongAdder();
 
