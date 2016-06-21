@@ -31,9 +31,7 @@ import org.w3c.dom.*;
 /**
  * 编译时需要加入: -XDignore.symbol.file=true
  * <p>
- * 进程启动类，程序启动后读取application.xml,进行classpath扫描动态加载Service与Servlet
- * 优先加载所有SNCP协议的服务， 再加载其他协议服务，
- * 最后进行Service、Servlet与其他资源之间的依赖注入。
+ * 进程启动类，程序启动后读取application.xml,进行classpath扫描动态加载Service与Servlet 优先加载所有SNCP协议的服务， 再加载其他协议服务， 最后进行Service、Servlet与其他资源之间的依赖注入。
  *
  *
  * <p>
@@ -211,11 +209,11 @@ public final class Application {
                 final int bufferPoolSize = transportConf.getIntValue("bufferPoolSize", groupsize * Runtime.getRuntime().availableProcessors() * 8);
                 final int threads = transportConf.getIntValue("threads", groupsize * Runtime.getRuntime().availableProcessors() * 8);
                 transportPool = new ObjectPool<>(createBufferCounter, cycleBufferCounter, bufferPoolSize,
-                        (Object... params) -> ByteBuffer.allocateDirect(bufferCapacity), null, (e) -> {
-                            if (e == null || e.isReadOnly() || e.capacity() != bufferCapacity) return false;
-                            e.clear();
-                            return true;
-                        });
+                    (Object... params) -> ByteBuffer.allocateDirect(bufferCapacity), null, (e) -> {
+                        if (e == null || e.isReadOnly() || e.capacity() != bufferCapacity) return false;
+                        e.clear();
+                        return true;
+                    });
                 //-----------transportChannelGroup--------------
                 try {
                     final AtomicInteger counter = new AtomicInteger();
@@ -472,8 +470,7 @@ public final class Application {
                         } else {
                             if (!inited.get()) {
                                 synchronized (nodeClasses) {
-                                    if (!inited.get()) {
-                                        inited.set(true);
+                                    if (!inited.getAndSet(true)) { //加载自定义的协议，如：SOCKS
                                         ClassFilter profilter = new ClassFilter(NodeProtocol.class, NodeServer.class);
                                         ClassFilter.Loader.load(home, profilter);
                                         final Set<FilterEntry<NodeServer>> entrys = profilter.getFilterEntrys();
