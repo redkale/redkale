@@ -18,7 +18,9 @@ import java.util.function.Consumer;
  * @param <T> 集合元素的数据类型
  */
 @SuppressWarnings("unchecked")
-public class Sheet<T> implements java.io.Serializable {
+public class Sheet<T> implements java.io.Serializable, Iterable<T> {
+
+    private static final List EMPTYLIST = new ArrayList();
 
     private long total = -1;
 
@@ -91,9 +93,16 @@ public class Sheet<T> implements java.io.Serializable {
         this.rows = (Collection<T>) data;
     }
 
-    public void forEach(final Consumer<T> consumer) {
+    @Override
+    public Iterator<T> iterator() {
+        return (this.rows == null) ? EMPTYLIST.iterator() : this.rows.iterator();
+    }
+
+    @Override
+    public void forEach(final Consumer<? super T> consumer) {
         if (consumer != null && this.rows != null && !this.rows.isEmpty()) {
             this.rows.forEach(consumer);
         }
     }
+
 }
