@@ -6,10 +6,11 @@
 package org.redkale.util;
 
 import java.util.*;
+import java.util.function.Consumer;
 
 /**
  * 页集合。 结构由一个total总数和一个List列表组合而成。
- *
+ * <p>
  * <p>
  * 详情见: http://redkale.org
  *
@@ -88,5 +89,11 @@ public class Sheet<T> implements java.io.Serializable {
 
     public void setRows(Collection<? extends T> data) {
         this.rows = (Collection<T>) data;
+    }
+
+    public void forEach(final Consumer<T> consumer) {
+        if (consumer != null && this.rows != null && !this.rows.isEmpty()) {
+            this.rows.forEach(consumer);
+        }
     }
 }
