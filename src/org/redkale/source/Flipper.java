@@ -104,7 +104,15 @@ public final class Flipper implements Serializable, Cloneable {
         return sort;
     }
 
+    @Deprecated
     public Flipper putSortIfEmpty(String sort) {
+        if (this.sort == null || this.sort.isEmpty()) {
+            this.sort = sort;
+        }
+        return this;
+    }
+
+    public Flipper sortIfEmpty(String sort) {
         if (this.sort == null || this.sort.isEmpty()) {
             this.sort = sort;
         }
