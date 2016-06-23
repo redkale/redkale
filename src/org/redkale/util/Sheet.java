@@ -7,6 +7,7 @@ package org.redkale.util;
 
 import java.util.*;
 import java.util.function.Consumer;
+import java.util.stream.*;
 
 /**
  * 页集合。 结构由一个total总数和一个List列表组合而成。
@@ -19,8 +20,6 @@ import java.util.function.Consumer;
  */
 @SuppressWarnings("unchecked")
 public class Sheet<T> implements java.io.Serializable, Iterable<T> {
-
-    private static final List EMPTYLIST = new ArrayList();
 
     private long total = -1;
 
@@ -95,7 +94,7 @@ public class Sheet<T> implements java.io.Serializable, Iterable<T> {
 
     @Override
     public Iterator<T> iterator() {
-        return (this.rows == null) ? EMPTYLIST.iterator() : this.rows.iterator();
+        return (this.rows == null) ? new ArrayList<T>().iterator() : this.rows.iterator();
     }
 
     @Override
@@ -105,4 +104,24 @@ public class Sheet<T> implements java.io.Serializable, Iterable<T> {
         }
     }
 
+    @Override
+    public Spliterator<T> spliterator() {
+        return (this.rows == null) ? new ArrayList<T>().spliterator() : this.rows.spliterator();
+    }
+
+    public Stream<T> stream() {
+        return (this.rows == null) ? new ArrayList<T>().stream() : this.rows.stream();
+    }
+
+    public Stream<T> parallelStream() {
+        return (this.rows == null) ? new ArrayList<T>().parallelStream() : this.rows.parallelStream();
+    }
+
+    public Object[] toArray() {
+        return (this.rows == null) ? new ArrayList<T>().toArray() : this.rows.toArray();
+    }
+
+    public T[] toArray(T[] a) {
+        return (this.rows == null) ? new ArrayList<T>().toArray(a) : this.rows.toArray(a);
+    }
 }
