@@ -48,6 +48,14 @@ public final class EnMember<W extends Writer, T, F> implements Comparable<EnMemb
         }
     }
 
+    public static <W extends Writer, T, F> EnMember<W, T, F> create(final ConvertFactory factory, final Class<T> clazz, final String fieldname, final Class<F> fieldtype) {
+        return new EnMember<>(Attribute.create(clazz, fieldname, fieldtype), factory.loadEncoder(fieldtype));
+    }
+
+    public static <W extends Writer, T, F> EnMember<W, T, F> create(final Attribute<T, F> attribute, final ConvertFactory factory, final Class<F> fieldtype) {
+        return new EnMember<>(attribute, factory.loadEncoder(fieldtype));
+    }
+
     public final boolean match(String name) {
         return attribute.field().equals(name);
     }
