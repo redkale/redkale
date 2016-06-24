@@ -32,8 +32,8 @@ import org.w3c.dom.*;
  * 编译时需要加入: -XDignore.symbol.file=true
  * <p>
  * 进程启动类，程序启动后读取application.xml,进行classpath扫描动态加载Service与Servlet 优先加载所有SNCP协议的服务， 再加载其他协议服务， 最后进行Service、Servlet与其他资源之间的依赖注入。
- *
- *
+ * <p>
+ * <p>
  * <p>
  * 详情见: http://redkale.org
  *
@@ -301,6 +301,8 @@ public final class Application {
                         System.setProperty(name.substring("system.property.".length()), value);
                     } else if (name.startsWith("mimetype.property.")) {
                         MimeType.add(name.substring("mimetype.property.".length()), value);
+                    } else if (name.startsWith("property.")) {
+                        resourceFactory.register(name, value);
                     } else {
                         resourceFactory.register("property." + name, value);
                     }
