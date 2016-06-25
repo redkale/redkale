@@ -5,8 +5,8 @@
  */
 package org.redkale.util;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.util.function.*;
 import jdk.internal.org.objectweb.asm.*;
 import static jdk.internal.org.objectweb.asm.Opcodes.*;
 
@@ -595,5 +595,50 @@ public interface Attribute<T, F> {
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
+    }
+
+    /**
+     * 根据Class、字段名、字段类型、getter和setter方法生成 Attribute 对象。 clazz、fieldname、fieldtype都不能为null
+     *
+     * @param <T>       依附类的类型
+     * @param <F>       字段类型
+     * @param clazz     指定依附的类
+     * @param fieldname 字段名
+     * @param fieldtype 字段类型
+     * @param getter    getter方法
+     * @param setter    setter方法
+     *
+     * @return Attribute对象
+     */
+    public static <T, F> Attribute<T, F> create(final Class<T> clazz, final String fieldname, final Class<F> fieldtype, final Function<T, F> getter, final BiConsumer<T, F> setter) {
+        Objects.requireNonNull(clazz);
+        Objects.requireNonNull(fieldname);
+        Objects.requireNonNull(fieldtype);
+        return new Attribute<T, F>() {
+            @Override
+            public Class<F> type() {
+                return fieldtype;
+            }
+
+            @Override
+            public Class<T> declaringClass() {
+                return clazz;
+            }
+
+            @Override
+            public String field() {
+                return fieldname;
+            }
+
+            @Override
+            public F get(T obj) {
+                return getter == null ? null : getter.apply(obj);
+            }
+
+            @Override
+            public void set(T obj, F value) {
+                if (setter != null) setter.accept(obj, value);
+            }
+        };
     }
 }
