@@ -42,7 +42,7 @@ public class RetResult<T> {
 
     protected String retinfo;
 
-    private T result;
+    protected T result;
 
     public RetResult() {
     }
@@ -88,12 +88,36 @@ public class RetResult<T> {
         this.retcode = retcode;
     }
 
+    /**
+     * 同 setRetcode
+     *
+     * @param retcode
+     *
+     * @return
+     */
+    public RetResult<T> retcode(int retcode) {
+        this.retcode = retcode;
+        return this;
+    }
+
     public String getRetinfo() {
         return retinfo;
     }
 
     public void setRetinfo(String retinfo) {
         this.retinfo = retinfo;
+    }
+
+    /**
+     * 同 setRetinfo
+     *
+     * @param retinfo
+     *
+     * @return
+     */
+    public RetResult<T> retinfo(String retinfo) {
+        this.retinfo = retinfo;
+        return this;
     }
 
     /**
@@ -113,9 +137,10 @@ public class RetResult<T> {
      * 同 setResult
      *
      * @param result
+     *
      * @return
      */
-    public RetResult result(T result) {
+    public RetResult<T> result(T result) {
         this.result = result;
         return this;
     }
