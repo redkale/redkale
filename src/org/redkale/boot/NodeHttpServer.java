@@ -85,7 +85,7 @@ public final class NodeHttpServer extends NodeServer {
     }
 
     protected void loadHttpServlet(final AnyValue conf, final ClassFilter<? extends Servlet> filter) throws Exception {
-        final StringBuilder sb = logger.isLoggable(Level.FINE) ? new StringBuilder() : null;
+        final StringBuilder sb = logger.isLoggable(Level.INFO) ? new StringBuilder() : null;
         final String prefix = conf == null ? "" : conf.getValue("path", "");
         final String threadName = "[" + Thread.currentThread().getName() + "] ";
         List<FilterEntry<? extends Servlet>> list = new ArrayList(filter.getFilterEntrys());
@@ -135,7 +135,7 @@ public final class NodeHttpServer extends NodeServer {
                 sb.append("  mapping to  ").append(Arrays.toString(as.getValue())).append(LINE_SEPARATOR);
             }
         }
-        if (sb != null && sb.length() > 0) logger.log(Level.FINE, sb.toString());
+        if (sb != null && sb.length() > 0) logger.log(Level.INFO, sb.toString());
     }
 
 }

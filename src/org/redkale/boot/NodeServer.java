@@ -201,7 +201,7 @@ public abstract class NodeServer {
                     localServiceWrappers.add(wrapper);
                     sncpServer.consumerAccept(wrapper);
                     rf.inject(cacheListenerService, self);
-                    if (fine) logger.fine("[" + Thread.currentThread().getName() + "] Load Service " + wrapper.getService());
+                    logger.info("[" + Thread.currentThread().getName() + "] Load Service " + wrapper.getService());
                 }
                 field.set(src, source);
                 rf.inject(source, self); // 给 "datasource.nodeid" 赋值;
@@ -236,9 +236,9 @@ public abstract class NodeServer {
                     Set<String> gs = application.findSncpGroups(sameGroupTransport, diffGroupTransports);
                     ServiceWrapper wrapper = new ServiceWrapper(CacheSourceService.class, (Service) source, resourceName, sncpServer.getSncpGroup(), gs, null);
                     sncpServer.getSncpServer().addService(wrapper);
-                    if (finer) logger.finer("[" + Thread.currentThread().getName() + "] Load Service " + wrapper.getService());
+                    logger.info("[" + Thread.currentThread().getName() + "] Load Service " + wrapper.getService());
                 }
-                logger.finer("[" + Thread.currentThread().getName() + "] Load Source " + source);
+                logger.info("[" + Thread.currentThread().getName() + "] Load Source " + source);
             } catch (Exception e) {
                 logger.log(Level.SEVERE, "DataSource inject error", e);
             }
@@ -458,6 +458,10 @@ public abstract class NodeServer {
 
     public AnyValue getServerConf() {
         return serverConf;
+    }
+
+    public Logger getLogger() {
+        return logger;
     }
 
     public String getSncpGroup() {

@@ -157,7 +157,7 @@ public class JDBCPoolSource {
             watchThread.setName("DataSource-Watch-" + maps.size() + "-Thread");
             watchThread.setDaemon(true);
             watchThread.start();
-            dataSource.logger.log(Level.FINER, watchThread.getName() + " start watching " + file);
+            dataSource.logger.log(Level.INFO, watchThread.getName() + " start watching " + file);
             //-----------------------------------------------------------            
             list.add(new WeakReference<>(this));
             maps.put(file, new AbstractMap.SimpleEntry<>(watcher, list));
