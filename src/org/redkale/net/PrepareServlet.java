@@ -19,9 +19,11 @@ import org.redkale.util.*;
  * 详情见: http://redkale.org
  *
  * @author zhangjx
+ * @param <K> SessionID的类型
  * @param <C> Context的子类型
  * @param <R> Request的子类型
  * @param <P> Response的子类型
+ * @param <S> Servlet的子类型
  */
 public abstract class PrepareServlet<K extends Serializable, C extends Context, R extends Request<C>, P extends Response<C, R>, S extends Servlet<C, R, P>> extends Servlet<C, R, P> {
 

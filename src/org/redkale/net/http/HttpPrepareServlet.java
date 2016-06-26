@@ -89,6 +89,10 @@ public final class HttpPrepareServlet extends PrepareServlet<String, HttpContext
     @Override
     public void addServlet(HttpServlet servlet, Object prefix, AnyValue conf, String... mappings) {
         if (prefix == null) prefix = "";
+        if (mappings.length < 1) {
+            WebServlet ws = servlet.getClass().getAnnotation(WebServlet.class);
+            if (ws != null) mappings = ws.value();
+        }
         for (String mapping : mappings) {
             if (!prefix.toString().isEmpty()) mapping = prefix + mapping;
             if (this.mapStrings.containsKey(mapping)) {
