@@ -21,6 +21,7 @@ import javax.persistence.Transient;
 import static org.redkale.boot.Application.*;
 import org.redkale.boot.ClassFilter.FilterEntry;
 import org.redkale.net.*;
+import org.redkale.net.http.WebSocketNode;
 import org.redkale.net.sncp.*;
 import org.redkale.service.*;
 import org.redkale.source.*;
@@ -249,13 +250,21 @@ public abstract class NodeServer {
     protected void loadService(ClassFilter serviceFilter) throws Exception {
         if (serviceFilter == null) return;
         final String threadName = "[" + Thread.currentThread().getName() + "] ";
-        final Set<FilterEntry<Service>> entrys = serviceFilter.getFilterEntrys();
+        final Set<FilterEntry<Service>> entrys = serviceFilter.getAllFilterEntrys();
         ResourceFactory regFactory = isSNCP() ? application.getResourceFactory() : resourceFactory;
 
         for (FilterEntry<Service> entry : entrys) { //service实现类
             final Class<? extends Service> type = entry.getType();
             if (Modifier.isFinal(type.getModifiers())) continue; //修饰final的类跳过
             if (!Modifier.isPublic(type.getModifiers())) continue;
+            if (entry.isExpect()) {
+                if (Modifier.isAbstract(type.getModifiers())) continue; //修饰abstract的类跳过
+                if (DataSource.class.isAssignableFrom(type)) continue;
+                if (CacheSource.class.isAssignableFrom(type)) continue;
+                if (DataSQLListener.class.isAssignableFrom(type)) continue;
+                if (DataCacheListener.class.isAssignableFrom(type)) continue;
+                if (WebSocketNode.class.isAssignableFrom(type)) continue;
+            }
             if (entry.getName().contains("$")) throw new RuntimeException("<name> value cannot contains '$' in " + entry.getProperty());
             if (resourceFactory.find(entry.getName(), type) != null) continue; //Server加载Service时需要判断是否已经加载过了。
             final HashSet<String> groups = entry.getGroups(); //groups.isEmpty()表示<services>没有配置groups属性。
@@ -266,29 +275,52 @@ public abstract class NodeServer {
                 || (this.sncpGroup == null && entry.isEmptyGroups()) //空的SNCP配置
                 || type.getAnnotation(LocalService.class) != null;//本地模式
             if (localed && (type.isInterface() || Modifier.isAbstract(type.getModifiers()))) continue; //本地模式不能实例化接口和抽象类的Service类
-
-            Service service;
-            if (localed) { //本地模式
-                service = Sncp.createLocalService(entry.getName(), getExecutor(), application.getResourceFactory(), type, this.sncpAddress, loadTransport(this.sncpGroup), loadTransports(groups));
-            } else {
-                service = Sncp.createRemoteService(entry.getName(), getExecutor(), type, this.sncpAddress, loadTransport(groups));
-            }
-            if (SncpClient.parseMethod(type).isEmpty()) continue; //class没有可用的方法， 通常为BaseService
-            final ServiceWrapper wrapper = new ServiceWrapper(type, service, entry.getName(), localed ? this.sncpGroup : null, groups, entry.getProperty());
-            for (final Class restype : wrapper.getTypes()) {
-                if (resourceFactory.find(wrapper.getName(), restype) == null) {
-                    regFactory.register(wrapper.getName(), restype, wrapper.getService());
-                } else if (isSNCP() && !entry.isAutoload()) {
-                    throw new RuntimeException(ServiceWrapper.class.getSimpleName() + "(class:" + type.getName() + ", name:" + entry.getName() + ", group:" + groups + ") is repeat.");
+            final Runnable runner = new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        Service service;
+                        if (localed) { //本地模式
+                            service = Sncp.createLocalService(entry.getName(), getExecutor(), application.getResourceFactory(), type,
+                                NodeServer.this.sncpAddress, loadTransport(NodeServer.this.sncpGroup), loadTransports(groups));
+                        } else {
+                            service = Sncp.createRemoteService(entry.getName(), getExecutor(), type, NodeServer.this.sncpAddress, loadTransport(groups));
+                        }
+                        if (SncpClient.parseMethod(type).isEmpty()) return; //class没有可用的方法， 通常为BaseService
+                        final ServiceWrapper wrapper = new ServiceWrapper(type, service, entry.getName(), localed ? NodeServer.this.sncpGroup : null, groups, entry.getProperty());
+                        for (final Class restype : wrapper.getTypes()) {
+                            if (resourceFactory.find(wrapper.getName(), restype) == null) {
+                                regFactory.register(wrapper.getName(), restype, wrapper.getService());
+                            } else if (isSNCP() && !entry.isAutoload()) {
+                                throw new RuntimeException(ServiceWrapper.class.getSimpleName() + "(class:" + type.getName() + ", name:" + entry.getName() + ", group:" + groups + ") is repeat.");
+                            }
+                        }
+                        if (wrapper.isRemote()) {
+                            remoteServiceWrappers.add(wrapper);
+                        } else {
+                            localServiceWrappers.add(wrapper);
+                            if (consumer != null) consumer.accept(wrapper);
+                        }
+                    } catch (RuntimeException ex) {
+                        throw ex;
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
                 }
-            }
-            if (wrapper.isRemote()) {
-                remoteServiceWrappers.add(wrapper);
+            };
+            if (entry.isExpect()) {
+                ResourceFactory.ResourceLoader resourceLoader = (ResourceFactory rf, final Object src, final String resourceName, Field field, final Object attachment) -> {
+                    runner.run();
+                };
+                for (final Class restype : ServiceWrapper.parseTypes(entry.getType())) {
+                    resourceFactory.register(resourceLoader, restype);
+                }
             } else {
-                localServiceWrappers.add(wrapper);
-                if (consumer != null) consumer.accept(wrapper);
+                runner.run();
             }
+
         }
+
         application.servicecdl.countDown();
         application.servicecdl.await();
 
@@ -297,12 +329,14 @@ public abstract class NodeServer {
         new ArrayList<>(localServiceWrappers).forEach(y -> {
             resourceFactory.inject(y.getService(), NodeServer.this);
         });
-        remoteServiceWrappers.forEach(y -> {
+        new ArrayList<>(remoteServiceWrappers).forEach(y -> {
             resourceFactory.inject(y.getService(), NodeServer.this);
-            if (sb != null) {
-                sb.append(threadName).append(y.toSimpleString()).append(" loaded and injected").append(LINE_SEPARATOR);
-            }
         });
+        if (sb != null) {
+            remoteServiceWrappers.forEach(y -> {
+                sb.append(threadName).append(y.toSimpleString()).append(" loaded and injected").append(LINE_SEPARATOR);
+            });
+        }
         //----------------- init -----------------
         List<ServiceWrapper> swlist = new ArrayList<>(localServiceWrappers);
         Collections.sort(swlist);

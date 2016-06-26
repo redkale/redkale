@@ -373,16 +373,26 @@ public final class ResourceFactory {
         }
     }
 
-    private ResourceLoader findLoader(Type ft, Field field) {
+    private ResourceLoader findMatchLoader(Type ft, Field field) {
         ResourceLoader it = this.loadermap.get(ft);
+        if (it == null) it = this.loadermap.get(field.getType());
         if (it != null) return it;
+        return parent == null ? null : parent.findMatchLoader(ft, field);
+    }
+
+    private ResourceLoader findRegxLoader(Type ft, Field field) {
         Class c = field.getType();
         for (Map.Entry<Type, ResourceLoader> en : this.loadermap.entrySet()) {
             Type t = en.getKey();
             if (t == ft) return en.getValue();
             if (t instanceof Class && (((Class) t)).isAssignableFrom(c)) return en.getValue();
         }
-        return parent == null ? null : parent.findLoader(ft, field);
+        return parent == null ? null : parent.findRegxLoader(ft, field);
+    }
+
+    private ResourceLoader findLoader(Type ft, Field field) {
+        ResourceLoader it = this.findMatchLoader(ft, field);
+        return it == null ? findRegxLoader(ft, field) : it;
     }
 
     private static class ResourceEntry<T> {

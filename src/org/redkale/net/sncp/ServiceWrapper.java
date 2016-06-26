@@ -66,6 +66,11 @@ public final class ServiceWrapper<T extends Service> implements Comparable<Servi
         maxClassNameLength = Math.max(maxClassNameLength, s.length() + 1);
     }
 
+    public static Class[] parseTypes(final Class<? extends Service> servicetype) {
+        ResourceType rty = servicetype.getAnnotation(ResourceType.class);
+        return rty == null ? new Class[]{servicetype} : rty.value();
+    }
+
     public String toSimpleString() {
         StringBuilder sb = new StringBuilder();
         sb.append(remote ? "RemoteService" : "LocalService ");

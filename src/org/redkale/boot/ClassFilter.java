@@ -14,13 +14,12 @@ import java.util.concurrent.*;
 import java.util.jar.*;
 import java.util.logging.*;
 import java.util.regex.*;
-import org.redkale.util.AnyValue;
+import org.redkale.util.*;
 import org.redkale.util.AnyValue.DefaultAnyValue;
-import org.redkale.util.AutoLoad;
 
 /**
  * class过滤器， 符合条件的class会保留下来存入FilterEntry。
- *
+ * <p>
  * <p>
  * 详情见: http://redkale.org
  *
@@ -30,7 +29,13 @@ import org.redkale.util.AutoLoad;
 @SuppressWarnings("unchecked")
 public final class ClassFilter<T> {
 
+    private static final Logger logger = Logger.getLogger(ClassFilter.class.getName());
+
+    private static final boolean finer = logger.isLoggable(Level.FINER);
+
     private final Set<FilterEntry<T>> entrys = new HashSet<>();
+
+    private final Set<FilterEntry<T>> expectEntrys = new HashSet<>();
 
     private boolean refused;
 
@@ -80,9 +85,30 @@ public final class ClassFilter<T> {
     }
 
     /**
+     * 获取预留的class集合
+     *
+     * @return Set&lt;FilterEntry&lt;T&gt;&gt;
+     */
+    public final Set<FilterEntry<T>> getFilterExpectEntrys() {
+        return expectEntrys;
+    }
+
+    /**
+     * 获取所有的class集合
+     *
+     * @return Set&lt;FilterEntry&lt;T&gt;&gt;
+     */
+    public final Set<FilterEntry<T>> getAllFilterEntrys() {
+        HashSet<FilterEntry<T>> rs = new HashSet<>();
+        rs.addAll(entrys);
+        rs.addAll(expectEntrys);
+        return rs;
+    }
+
+    /**
      * 自动扫描地过滤指定的class
      *
-     * @param property AnyValue
+     * @param property  AnyValue
      * @param clazzname String
      */
     @SuppressWarnings("unchecked")
@@ -93,9 +119,9 @@ public final class ClassFilter<T> {
     /**
      * 过滤指定的class
      *
-     * @param property application.xml中对应class节点下的property属性项
+     * @param property  application.xml中对应class节点下的property属性项
      * @param clazzname class名称
-     * @param autoscan 为true表示自动扫描的， false表示显著调用filter， AutoLoad的注解将被忽略
+     * @param autoscan  为true表示自动扫描的， false表示显著调用filter， AutoLoad的注解将被忽略
      */
     public final void filter(AnyValue property, String clazzname, boolean autoscan) {
         boolean r = accept0(property, clazzname);
@@ -129,8 +155,15 @@ public final class ClassFilter<T> {
                     property = dav;
                 }
             }
-            entrys.add(new FilterEntry(clazz, autoscan, property));
+
+            AutoLoad auto = (AutoLoad) clazz.getAnnotation(AutoLoad.class);
+            if (autoscan && auto != null && !auto.value()) { //自动扫描且被标记为@AutoLoad(false)的
+                expectEntrys.add(new FilterEntry(clazz, autoscan, true, property));
+            } else {
+                entrys.add(new FilterEntry(clazz, autoscan, false, property));
+            }
         } catch (Throwable cfe) {
+            if (finer) logger.log(Level.FINER, ClassFilter.class.getSimpleName() + " filter error", cfe);
         }
     }
 
@@ -152,8 +185,9 @@ public final class ClassFilter<T> {
     /**
      * 判断class是否有效
      *
-     * @param property AnyValue
+     * @param property  AnyValue
      * @param classname String
+     *
      * @return boolean
      */
     public boolean accept(AnyValue property, String classname) {
@@ -191,17 +225,14 @@ public final class ClassFilter<T> {
      * 判断class是否有效
      *
      * @param property AnyValue
-     * @param clazz Class
+     * @param clazz    Class
      * @param autoscan boolean
+     *
      * @return boolean
      */
     @SuppressWarnings("unchecked")
     public boolean accept(AnyValue property, Class clazz, boolean autoscan) {
         if (this.refused || !Modifier.isPublic(clazz.getModifiers())) return false;
-        if (autoscan) {
-            AutoLoad auto = (AutoLoad) clazz.getAnnotation(AutoLoad.class);
-            if (auto != null && !auto.value()) return false;
-        }
         if (annotationClass != null && clazz.getAnnotation(annotationClass) == null) return false;
         return superClass == null || (clazz != superClass && superClass.isAssignableFrom(clazz));
     }
@@ -263,11 +294,13 @@ public final class ClassFilter<T> {
 
         private final boolean autoload;
 
+        private final boolean expect;
+
         public FilterEntry(Class<T> type, AnyValue property) {
-            this(type, false, property);
+            this(type, false, false, property);
         }
 
-        public FilterEntry(Class<T> type, final boolean autoload, AnyValue property) {
+        public FilterEntry(Class<T> type, final boolean autoload, boolean expect, AnyValue property) {
             this.type = type;
             String str = property == null ? null : property.getValue("groups");
             if (str != null) {
@@ -277,6 +310,7 @@ public final class ClassFilter<T> {
             if (str != null) groups.addAll(Arrays.asList(str.split(";")));
             this.property = property;
             this.autoload = autoload;
+            this.expect = expect;
             this.name = property == null ? "" : property.getValue("name", "");
         }
 
@@ -322,6 +356,9 @@ public final class ClassFilter<T> {
             return autoload;
         }
 
+        public boolean isExpect() {
+            return expect;
+        }
     }
 
     /**
@@ -342,6 +379,7 @@ public final class ClassFilter<T> {
          *
          * @param exclude 不需要扫描的文件夹， 可以为null
          * @param filters 过滤器
+         *
          * @throws IOException 异常
          */
         public static void load(final File exclude, final ClassFilter... filters) throws IOException {
