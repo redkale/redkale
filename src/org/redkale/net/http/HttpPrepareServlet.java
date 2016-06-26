@@ -91,7 +91,10 @@ public final class HttpPrepareServlet extends PrepareServlet<String, HttpContext
         if (prefix == null) prefix = "";
         if (mappings.length < 1) {
             WebServlet ws = servlet.getClass().getAnnotation(WebServlet.class);
-            if (ws != null) mappings = ws.value();
+            if (ws != null) {
+                mappings = ws.value();
+                if (!ws.repair()) prefix = "";//被设置为自动追加前缀则清空prefix
+            }
         }
         for (String mapping : mappings) {
             if (!prefix.toString().isEmpty()) mapping = prefix + mapping;
