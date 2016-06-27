@@ -163,7 +163,10 @@ public final class ClassFilter<T> {
                 entrys.add(new FilterEntry(clazz, autoscan, false, property));
             }
         } catch (Throwable cfe) {
-            if (finer) logger.log(Level.FINER, ClassFilter.class.getSimpleName() + " filter error", cfe);
+            if (finer && !clazzname.startsWith("sun.") && !clazzname.startsWith("javax.")
+                && !clazzname.startsWith("com.sun.") && !clazzname.startsWith("jdk.")) {
+                logger.log(Level.FINER, ClassFilter.class.getSimpleName() + " filter error", cfe);
+            }
         }
     }
 
