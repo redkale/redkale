@@ -139,7 +139,7 @@ public final class ClassFilter<T> {
                 }
             }
         }
-        if (cf == null) return;
+        if (cf == null || clazzname.startsWith("sun.")) return;
         try {
             Class clazz = Class.forName(clazzname);
             if (!cf.accept(property, clazz, autoscan)) return;
