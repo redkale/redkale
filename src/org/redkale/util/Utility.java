@@ -103,7 +103,7 @@ public final class Utility {
         int pos = buffer.position();
         int limit = buffer.limit();
         byte[] bytes = new byte[buffer.remaining()];
-        buffer.get(bytes);        
+        buffer.get(bytes);
         buffer.position(pos);
         buffer.limit(limit);
         println(string, bytes);
@@ -164,6 +164,7 @@ public final class Utility {
      * 获取指定时间当天凌晨零点的格林时间
      *
      * @param time 指定时间
+     *
      * @return 毫秒数
      */
     public static long midnight(long time) {
@@ -184,6 +185,7 @@ public final class Utility {
      * 获取时间点所在星期的周一
      *
      * @param time 指定时间
+     *
      * @return 毫秒数
      */
     public static long monday(long time) {
@@ -198,6 +200,7 @@ public final class Utility {
      * 获取时间点所在星期的周日
      *
      * @param time 指定时间
+     *
      * @return 毫秒数
      */
     public static long sunday(long time) {
@@ -212,6 +215,7 @@ public final class Utility {
      * 获取时间点所在月份的1号
      *
      * @param time 指定时间
+     *
      * @return 毫秒数
      */
     public static long monthFirstDay(long time) {
@@ -418,7 +422,8 @@ public final class Utility {
      * 将两个数字组装成一个long
      *
      * @param high 高位值
-     * @param low 低位值
+     * @param low  低位值
+     *
      * @return long值
      */
     public static long merge(int high, int low) {
@@ -495,6 +500,30 @@ public final class Utility {
         return remoteHttpContent(ctx, "POST", url, headers, body).toString("UTF-8");
     }
 
+    public static String postHttpContent(String url, Charset charset) throws IOException {
+        return remoteHttpContent(null, "POST", url, null, null).toString(charset.name());
+    }
+
+    public static String postHttpContent(String url, Charset charset, String body) throws IOException {
+        return remoteHttpContent(null, "POST", url, null, body).toString(charset.name());
+    }
+
+    public static String postHttpContent(String url, Charset charset, Map<String, String> headers, String body) throws IOException {
+        return remoteHttpContent(null, "POST", url, headers, body).toString(charset.name());
+    }
+
+    public static String postHttpContent(SSLContext ctx, String url, Charset charset) throws IOException {
+        return remoteHttpContent(ctx, "POST", url, null, null).toString(charset.name());
+    }
+
+    public static String postHttpContent(SSLContext ctx, String url, Charset charset, String body) throws IOException {
+        return remoteHttpContent(ctx, "POST", url, null, body).toString(charset.name());
+    }
+
+    public static String postHttpContent(SSLContext ctx, String url, Charset charset, Map<String, String> headers, String body) throws IOException {
+        return remoteHttpContent(ctx, "POST", url, headers, body).toString(charset.name());
+    }
+
     public static byte[] postHttpBytesContent(String url) throws IOException {
         return remoteHttpContent(null, "POST", url, null, null).toByteArray();
     }
@@ -525,6 +554,22 @@ public final class Utility {
 
     public static String getHttpContent(String url, Map<String, String> headers, String body) throws IOException {
         return remoteHttpContent(null, "GET", url, headers, body).toString("UTF-8");
+    }
+
+    public static String getHttpContent(String url, Charset charset) throws IOException {
+        return remoteHttpContent(null, "GET", url, null, null).toString(charset.name());
+    }
+
+    public static String getHttpContent(SSLContext ctx, String url, Charset charset) throws IOException {
+        return remoteHttpContent(ctx, "GET", url, null, null).toString(charset.name());
+    }
+
+    public static String getHttpContent(SSLContext ctx, String url, Charset charset, Map<String, String> headers, String body) throws IOException {
+        return remoteHttpContent(ctx, "GET", url, headers, body).toString(charset.name());
+    }
+
+    public static String getHttpContent(String url, Charset charset, Map<String, String> headers, String body) throws IOException {
+        return remoteHttpContent(null, "GET", url, headers, body).toString(charset.name());
     }
 
     public static byte[] getHttpBytesContent(String url) throws IOException {
