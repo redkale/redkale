@@ -20,7 +20,7 @@ public final class Flipper implements Serializable, Cloneable {
 
     private int size = DEFAULT_PAGESIZE;
 
-    private int page = 1;
+    private int start = 0;
 
     private String sort = "";
 
@@ -35,49 +35,49 @@ public final class Flipper implements Serializable, Cloneable {
         this.sort = sortColumn;
     }
 
-    public Flipper(int pageSize, int pageNo) {
+    public Flipper(int pageSize, int startIndex) {
         this.size = pageSize > 0 ? pageSize : DEFAULT_PAGESIZE;
-        this.page = pageNo > 0 ? pageNo : 1;
+        this.start = startIndex < 0 ? 0 : startIndex;
     }
 
-    public Flipper(int pageSize, int pageNo, String sortColumn) {
+    public Flipper(int pageSize, int startIndex, String sortColumn) {
         this.size = pageSize > 0 ? pageSize : DEFAULT_PAGESIZE;
-        this.page = pageNo > 0 ? pageNo : 1;
+        this.start = startIndex < 0 ? 0 : startIndex;
         this.sort = sortColumn;
     }
 
     public void copyTo(Flipper copy) {
         if (copy == null) return;
-        copy.page = this.page;
+        copy.start = this.start;
         copy.size = this.size;
         copy.sort = this.sort;
     }
 
     public void copyFrom(Flipper copy) {
         if (copy == null) return;
-        this.page = copy.page;
+        this.start = copy.start;
         this.size = copy.size;
         this.sort = copy.sort;
     }
 
     public Flipper next() {
-        this.page++;
+        this.start = getStart() + this.size;
         return this;
     }
 
     @Override
     @SuppressWarnings("CloneDoesntCallSuperClone")
     public Flipper clone() {
-        return new Flipper(this.size, this.page, this.sort);
+        return new Flipper(this.size, this.start, this.sort);
     }
 
-    public int index() {
-        return (getPage() - 1) * getSize();
+    public int getStart() {
+        return start;
     }
 
     @Override
     public String toString() {
-        return this.getClass().getSimpleName() + "{page:" + this.page + ", size=" + this.size + ", sort=" + this.sort + "}";
+        return this.getClass().getSimpleName() + "{start:" + this.start + ", size=" + this.size + ", sort=" + this.sort + "}";
     }
 
     public int getSize() {
@@ -90,14 +90,8 @@ public final class Flipper implements Serializable, Cloneable {
         }
     }
 
-    public int getPage() {
-        return page;
-    }
-
-    public void setPage(int page) {
-        if (page >= 0) {
-            this.page = page;
-        }
+    public void setStart(int start) {
+        this.start = start < 0 ? 0 : start;
     }
 
     public String getSort() {

@@ -19,6 +19,7 @@ import javax.sql.ConnectionPoolDataSource;
 import javax.xml.stream.*;
 import static org.redkale.source.FilterNode.formatToString;
 import org.redkale.util.*;
+import static org.redkale.source.FilterNode.formatToString;
 
 /**
  *
@@ -1697,10 +1698,10 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
             final String sql = "SELECT a.* FROM " + info.getTable() + " a" + (join == null ? "" : join)
                 + ((where == null || where.length() == 0) ? "" : (" WHERE " + where)) + info.createSQLOrderby(flipper);
             if (debug.get() && info.isLoggable(Level.FINEST))
-                logger.finest(clazz.getSimpleName() + " query sql=" + sql + (flipper == null ? "" : (" LIMIT " + flipper.index() + "," + flipper.getSize())));
+                logger.finest(clazz.getSimpleName() + " query sql=" + sql + (flipper == null ? "" : (" LIMIT " + flipper.getStart() + "," + flipper.getSize())));
             final PreparedStatement ps = conn.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
             final ResultSet set = ps.executeQuery();
-            if (flipper != null && flipper.index() > 0) set.absolute(flipper.index());
+            if (flipper != null && flipper.getStart() > 0) set.absolute(flipper.getStart());
             final int limit = flipper == null ? Integer.MAX_VALUE : flipper.getSize();
             int i = 0;
             while (set.next()) {

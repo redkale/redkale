@@ -302,7 +302,7 @@ public final class EntityCache<T> {
         Stream<T> stream = this.list.stream();
         if (filter != null) stream = stream.filter(filter);
         if (comparator != null) stream = stream.sorted(comparator);
-        if (flipper != null) stream = stream.skip(flipper.index()).limit(flipper.getSize());
+        if (flipper != null) stream = stream.skip(flipper.getStart()).limit(flipper.getSize());
         final List<T> rs = new ArrayList<>();
         if (selects == null) {
             Consumer<? super T> action = x -> rs.add(needcopy ? newReproduce.copy(creator.create(), x) : x);
