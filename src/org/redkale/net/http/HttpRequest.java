@@ -16,7 +16,12 @@ import org.redkale.util.AnyValue.DefaultAnyValue;
 import org.redkale.util.ByteArray;
 
 /**
- * Http请求包 与javax.servlet.http.HttpServletRequest 基本类似。 同时提供json的解析接口: public Object getJsonParameter(Class clazz, String name) RedKale提倡带简单的参数的GET请求采用类似REST风格, 因此提供了 getRequstURIPath 系列接口。 例如简单的翻页查询 /pipes/record/query/page:2/size:20 获取页号: int page = request.getRequstURIPath("page:", 1); 获取行数: int size = request.getRequstURIPath("size:", 10);
+ * Http请求包 与javax.servlet.http.HttpServletRequest 基本类似。  <br>
+ * 同时提供json的解析接口: public Object getJsonParameter(Class clazz, String name)  <br>
+ * RedKale提倡带简单的参数的GET请求采用类似REST风格, 因此提供了 getRequstURIPath 系列接口。  <br>
+ * 例如简单的翻页查询   <br>
+ * /pipes/record/query/start:0/size:20 获取页号: int start = request.getRequstURIPath("start:", 0);   <br>
+ * 获取行数: int size = request.getRequstURIPath("size:", 10);
  * <p>
  * <p>
  * 详情见: http://redkale.org
@@ -528,7 +533,7 @@ public class HttpRequest extends Request<HttpContext> {
     }
 
     /**
-     * 获取请求URL分段中含prefix段的int值 例如请求URL /pipes/record/query/page:2/size:50 获取page参数: int page = request.getRequstURIPath("page:", 1); 获取size参数: int size = request.getRequstURIPath("size:", 20);
+     * 获取请求URL分段中含prefix段的int值 例如请求URL /pipes/record/query/start:0/size:50 获取page参数: int start = request.getRequstURIPath("start:", 0); 获取size参数: int size = request.getRequstURIPath("size:", 20);
      *
      * @param prefix prefix段前缀
      * @param defvalue 默认int值
