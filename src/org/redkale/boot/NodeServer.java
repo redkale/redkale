@@ -75,6 +75,9 @@ public abstract class NodeServer {
     //加载server节点后的拦截器
     protected NodeInterceptor interceptor;
 
+    //供interceptor使用的Service对象集合
+    protected final Set<NodeInterceptor.InterceptorServiceWrapper> interceptorServiceWrappers = new LinkedHashSet<>();
+
     //本地模式的Service对象集合
     protected final Set<ServiceWrapper> localServiceWrappers = new LinkedHashSet<>();
 
@@ -266,7 +269,11 @@ public abstract class NodeServer {
                 if (WebSocketNode.class.isAssignableFrom(type)) continue;
             }
             if (entry.getName().contains("$")) throw new RuntimeException("<name> value cannot contains '$' in " + entry.getProperty());
-            if (resourceFactory.find(entry.getName(), type) != null) continue; //Server加载Service时需要判断是否已经加载过了。
+            if (resourceFactory.find(entry.getName(), type) != null) { //Server加载Service时需要判断是否已经加载过了。
+                Service oldother = resourceFactory.find(entry.getName(), type);
+                interceptorServiceWrappers.add(new NodeInterceptor.InterceptorServiceWrapper(entry.getName(), type, oldother));
+                continue;
+            }
             final HashSet<String> groups = entry.getGroups(); //groups.isEmpty()表示<services>没有配置groups属性。
             if (groups.isEmpty() && isSNCP() && this.sncpGroup != null) groups.add(this.sncpGroup);
 
@@ -299,6 +306,7 @@ public abstract class NodeServer {
                             remoteServiceWrappers.add(wrapper);
                         } else {
                             localServiceWrappers.add(wrapper);
+                            interceptorServiceWrappers.add(new NodeInterceptor.InterceptorServiceWrapper(entry.getName(), type, service));
                             if (consumer != null) consumer.accept(wrapper);
                         }
                     } catch (RuntimeException ex) {
@@ -524,6 +532,10 @@ public abstract class NodeServer {
 
     public <T extends Server> T getServer() {
         return (T) server;
+    }
+
+    public Set<NodeInterceptor.InterceptorServiceWrapper> getInterceptorServiceWrappers() {
+        return new LinkedHashSet<>(interceptorServiceWrappers);
     }
 
     public Set<ServiceWrapper> getLocalServiceWrappers() {
