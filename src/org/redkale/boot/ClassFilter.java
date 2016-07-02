@@ -170,7 +170,7 @@ public final class ClassFilter<T> {
         }
     }
 
-    private static Pattern[] toPattern(String[] regs) {
+    public static Pattern[] toPattern(String[] regs) {
         if (regs == null) return null;
         int i = 0;
         Pattern[] rs = new Pattern[regs.length];
