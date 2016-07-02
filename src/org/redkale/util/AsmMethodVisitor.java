@@ -10,8 +10,10 @@ import jdk.internal.org.objectweb.asm.*;
 
 /**
  * MethodVisitor 的调试类
+ * <p>
+ * <p>
+ * 详情见: http://redkale.org
  *
- * <p> 详情见: http://redkale.org
  * @author zhangjx
  */
 public class AsmMethodVisitor {
@@ -23,6 +25,13 @@ public class AsmMethodVisitor {
     public AsmMethodVisitor setDebug(boolean d) {
         debug = d;
         return this;
+    }
+
+    public void debugLine() {
+        if (!debug) return;
+        System.out.println();
+        System.out.println();
+        System.out.println();
     }
 
     private final Map<Label, Integer> labels = new LinkedHashMap();
@@ -137,7 +146,15 @@ public class AsmMethodVisitor {
 
     public void visitLdcInsn(Object o) {
         visitor.visitLdcInsn(o);
-        if (debug) System.out.println("mv.visitLdcInsn(" + o + ");");
+        if (debug) {
+            if (o instanceof CharSequence) {
+                System.out.println("mv.visitLdcInsn(\"" + o + "\");");
+            } else if (o instanceof jdk.internal.org.objectweb.asm.Type) {
+                System.out.println("mv.visitLdcInsn(Type.getType(\"" + o + "\"));");
+            } else {
+                System.out.println("mv.visitLdcInsn(" + o + ");");
+            }
+        }
     }
 
     public void visitMaxs(int maxStack, int maxLocals) {
