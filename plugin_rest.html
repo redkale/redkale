@@ -24,8 +24,201 @@
 
         <section class="main-content">
             <h3><a class="anchor" aria-hidden="true"></a>REST插件介绍</h3>
+            <p>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="https://github.com/redkale/redkale-plugins/tree/master/src/org/redkalex/rest" target="_blank">org.redkalex.rest</a> 是基于HTTP服务的REST插件，提供了很简单的REST服务接口方便开发。REST根据加载的Service组件自动生成对应的HttpServlet。其接口比Spring Boot之类的REST服务框架要简化得多，不需要进行注解配置也可以按REST服务加载。
+            </p>
 
-            <p>敬请期待…… <br/>
+            <h3><a class="anchor" aria-hidden="true"></a>快速上手</h3>
+            <p>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;为了让REST生效，必须配置 <a href="redkale.html#redkale_confxml" target="_blank">application.xml</a> 中 HTTP 的 &lt;server&gt; 节点的nodeInterceptor属性值为 <b>org.redkalex.rest.RestNodeInterceptor</b> 。<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;同时必须在&lt;server&gt; 节点 里增加 &lt;rest&gt; 子节点。配置介绍如下：<br>
+            </p>
+            <div class="highlight"><pre><span class="nt">&lt;application</span> <span class="na">port=</span><span class="s">&quot;5001&quot;</span><span class="nt">&gt;</span>   
+    
+    <span class="nt">&lt;resources&gt;</span>  
+        <span class="c">&lt;!-- ... --&gt;</span>
+    <span class="nt">&lt;/resources&gt;</span> 
+    <span class="c">&lt;!-- </span>
+<span class="c">           nodeInterceptor: 值必须要是 <b>org.redkalex.rest.RestNodeInterceptor</b>，且只能配置在protocol="HTTP"的server节点上，REST服务才会生效。</span>
+<span class="c">    --&gt;</span>
+    <span class="nt">&lt;server</span> <span class="na">protocol=</span><span class="s">&quot;HTTP&quot;</span> <span class="na">port=</span><span class="s">&quot;6060&quot;</span> <span class="na">nodeInterceptor=</span><span class="s">&quot;org.redkalex.rest.RestNodeInterceptor&quot;</span><span class="nt">&gt;</span> 
+        <span class="c">&lt;!-- </span>
+<span class="c">           REST的核心配置项</span>
+<span class="c">           base:     REST服务的BaseServlet，必须是 <b>org.redkalex.rest.RestHttpServlet</b> 的子类，该属性值没有默认值，必须指定。</span>
+<span class="c">           autoload：默认值&quot;true&quot;  默认值. 加载当前server所能使用的Servce对象;    </span>
+<span class="c">           mustsign：默认值&quot;true&quot; 是否只加载标记为RestController的Service类，默认值为true</span>
+<span class="c">           includes：当autoload=&quot;true&quot;， 拉取类名与includes中的正则表达式匹配的类, 多个正则表达式用分号;隔开</span>
+<span class="c">           excludes：当autoload=&quot;true&quot;， 排除类名与excludes中的正则表达式匹配的类, 多个正则表达式用分号;隔开</span>
+<span class="c">        --&gt;</span>
+        <span class="nt">&lt;rest</span> <span class="na">base=</span><span class="s">&quot;org.redkalex.test.rest.SimpleRestServlet&quot;</span> <span class="na">mustsign=</span><span class="s">&quot;true&quot;</span> <span class="na">autoload=</span><span class="s">&quot;true&quot;</span> <span class="na">includes=</span><span class="s">&quot;&quot;</span> <span class="na">excludes=</span><span class="s">&quot;&quot;</span><span class="nt">&gt;</span>
+            <span class="c">&lt;!-- </span>
+<span class="c">               value:  Service类名，列出的表示必须被加载的Service对象， 且对象的Resource资源名称只能是&quot;&quot;。</span>
+<span class="c">            --&gt;</span>
+            <span class="nt">&lt;service</span> <span class="na">value=</span><span class="s">&quot;com.xxx.XXXXService&quot;</span><span class="nt">/&gt;</span>
+        <span class="nt">&lt;/rest&gt;</span>
+        <span class="c">&lt;!-- 其他配置... --&gt;</span>
+    <span class="nt">&lt;/server&gt;</span>
+<span class="nt">&lt;/application&gt;</span>
+                </pre></div>
+            <p>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;通常配置都需要编写一个 <b>org.redkalex.rest.RestHttpServlet</b> 子类，主要用于获取当前用户信息和鉴权，且必须指定具体的User对象类。开发者的实现类可以参考 <a href="https://github.com/redkale/redkale-demo/tree/master/src/org/redkale/demo/base" target="_blank">redkale-demo</a> 中的BaseServlet类，以下是一个简单的范例: <br>
+            </p>
+            <div class="highlight"><pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">SimpleRestServlet</span> <span class="kd">extends</span> <span class="n">RestHttpServlet</span><span class="o">&lt;</span><span class="n">UserInfo</span><span class="o">&gt;</span> <span class="o">{</span>
+
+    <span class="nd">@Resource</span>
+    <span class="kd">private</span> <span class="n">UserService</span> <span class="n">userService</span><span class="o">;</span>
+
+    <span class="c1">//获取当前用户信息</span>
+    <span class="nd">@Override</span>
+    <span class="kd">protected</span> <span class="n">UserInfo</span> <span class="nf">currentUser</span><span class="o">(</span><span class="n">HttpRequest</span> <span class="n">req</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
+        <span class="n">String</span> <span class="n">sessionid</span> <span class="o">=</span> <span class="n">req</span><span class="o">.</span><span class="na">getSessionid</span><span class="o">(</span><span class="kc">false</span><span class="o">);</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">sessionid</span> <span class="o">==</span> <span class="kc">null</span> <span class="o">||</span> <span class="n">sessionid</span><span class="o">.</span><span class="na">isEmpty</span><span class="o">())</span> <span class="k">return</span> <span class="kc">null</span><span class="o">;</span>
+        <span class="k">return</span> <span class="n">userService</span><span class="o">.</span><span class="na">current</span><span class="o">(</span><span class="n">sessionid</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="c1">//普通鉴权</span>
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">authenticate</span><span class="o">(</span><span class="kt">int</span> <span class="n">module</span><span class="o">,</span> <span class="kt">int</span> <span class="n">actionid</span><span class="o">,</span> <span class="n">HttpRequest</span> <span class="n">request</span><span class="o">,</span> <span class="n">HttpResponse</span> <span class="n">response</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
+        <span class="n">UserInfo</span> <span class="n">info</span> <span class="o">=</span> <span class="n">currentUser</span><span class="o">(</span><span class="n">request</span><span class="o">);</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">info</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+            <span class="n">response</span><span class="o">.</span><span class="na">addHeader</span><span class="o">(</span><span class="s">&quot;retcode&quot;</span><span class="o">,</span> <span class="n">RetCodes</span><span class="o">.</span><span class="na">RET_USER_UNLOGIN</span><span class="o">);</span>
+            <span class="n">response</span><span class="o">.</span><span class="na">addHeader</span><span class="o">(</span><span class="s">&quot;retmessage&quot;</span><span class="o">,</span> <span class="s">&quot;Not Login&quot;</span><span class="o">);</span>
+            <span class="n">response</span><span class="o">.</span><span class="na">setStatus</span><span class="o">(</span><span class="mi">203</span><span class="o">);</span>
+            <span class="n">response</span><span class="o">.</span><span class="na">finish</span><span class="o">(</span><span class="s">&quot;{&#39;success&#39;:false, &#39;message&#39;:&#39;Not Login&#39;}&quot;</span><span class="o">);</span>
+            <span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
+        <span class="o">}</span> <span class="k">else</span> <span class="nf">if</span> <span class="o">(!</span><span class="n">info</span><span class="o">.</span><span class="na">checkAuth</span><span class="o">(</span><span class="n">module</span><span class="o">,</span> <span class="n">actionid</span><span class="o">))</span> <span class="o">{</span> <span class="c1">// 根据module、actionid进行鉴权</span>
+            <span class="n">response</span><span class="o">.</span><span class="na">addHeader</span><span class="o">(</span><span class="s">&quot;retcode&quot;</span><span class="o">,</span> <span class="n">RetCodes</span><span class="o">.</span><span class="na">RET_USER_AUTH_ILLEGAL</span><span class="o">);</span>
+            <span class="n">response</span><span class="o">.</span><span class="na">addHeader</span><span class="o">(</span><span class="s">&quot;retmessage&quot;</span><span class="o">,</span> <span class="s">&quot;No Authority&quot;</span><span class="o">);</span>
+            <span class="n">response</span><span class="o">.</span><span class="na">setStatus</span><span class="o">(</span><span class="mi">203</span><span class="o">);</span>
+            <span class="n">response</span><span class="o">.</span><span class="na">finish</span><span class="o">(</span><span class="s">&quot;{&#39;success&#39;:false, &#39;message&#39;:&#39;No Authority&#39;}&quot;</span><span class="o">);</span>
+            <span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
+        <span class="o">}</span>
+        <span class="k">return</span> <span class="kc">true</span><span class="o">;</span>
+    <span class="o">}</span>
+
+<span class="o">}</span>
+                </pre></div>
+
+
+            <p>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;编写完 org.redkalex.rest.RestHttpServlet 子类后就需要对Service进行设置，设置需要三大注解：@RestController、@RestMapping、@RestParam。 <br>
+                <br>@RestController ： <br>
+            </p>
+            <div class="highlight"><pre><span class="cm">/**</span>
+<span class="cm"> * 只能依附在Service类上，value默认为Service的类名去掉Service字样的字符串 (如HelloService，的默认路径为 hello)。</span>
+<span class="cm"> */</span>
+<span class="nd">@Target</span><span class="o">({</span><span class="n">TYPE</span><span class="o">})</span>
+<span class="kd">public</span> <span class="nd">@interface</span> <span class="n">RestController</span> <span class="o">{</span>
+
+    <span class="kt">boolean</span> <span class="nf">ignore</span><span class="o">()</span> <span class="k">default</span> <span class="kc">false</span><span class="o">;</span> <span class="c1">//是否屏蔽该类的转换</span>
+
+    <span class="n">String</span> <span class="nf">value</span><span class="o">()</span> <span class="k">default</span> <span class="s">&quot;&quot;</span><span class="o">;</span> <span class="c1">//模块名, 只能是模板名,不能含特殊字符</span>
+
+    <span class="kt">boolean</span> <span class="nf">repair</span><span class="o">()</span> <span class="k">default</span> <span class="kc">true</span><span class="o">;</span> <span class="c1">//同@WebServlet的repair属性</span>
+
+    <span class="kt">int</span> <span class="nf">module</span><span class="o">()</span> <span class="k">default</span> <span class="mi">0</span><span class="o">;</span> <span class="c1">//模块ID值，鉴权时用到</span>
+
+<span class="o">}</span>
+                </pre></div>
+            <p>
+                <br>@RestMapping ： <br>
+            </p>
+            <div class="highlight"><pre><span class="cm">/**</span>
+<span class="cm"> * 只能依附在Service实现类的public方法上</span>
+<span class="cm"> * value默认为&quot;/&quot; + Service的类名去掉Service字样的小写字符串 (如HelloService，的默认路径为/hello)。</span>
+<span class="cm"> */</span>
+<span class="nd">@Target</span><span class="o">({</span><span class="n">METHOD</span><span class="o">})</span>
+<span class="kd">public</span> <span class="nd">@interface</span> <span class="n">RestMapping</span> <span class="o">{</span>
+
+    <span class="kt">boolean</span> <span class="nf">ignore</span><span class="o">()</span> <span class="k">default</span> <span class="kc">false</span><span class="o">;</span> <span class="c1">//是否屏蔽该方法的转换</span>
+
+    <span class="c1">//请求的方法名, 不能含特殊字符</span>
+    <span class="c1">//默认为方法名的小写(若方法名以createXXX、updateXXX、deleteXXX、queryXXX、findXXX且XXXService为Service的类名将只截取XXX之前)</span>
+    <span class="n">String</span> <span class="nf">name</span><span class="o">()</span> <span class="k">default</span> <span class="s">&quot;&quot;</span><span class="o">;</span>
+
+    <span class="kt">boolean</span> <span class="nf">authignore</span><span class="o">()</span> <span class="k">default</span> <span class="kc">true</span><span class="o">;</span> <span class="c1">//是否跳过鉴权，默认跳过 </span>
+
+    <span class="kt">int</span> <span class="nf">actionid</span><span class="o">()</span> <span class="k">default</span> <span class="mi">0</span><span class="o">;</span> <span class="c1">//操作ID值，鉴权时用到</span>
+
+    <span class="n">String</span> <span class="nf">contentType</span><span class="o">()</span> <span class="k">default</span> <span class="s">&quot;&quot;</span><span class="o">;</span>  <span class="c1">//设置Response的ContentType 默认值为 text/plain; charset=utf-8</span>
+
+    <span class="n">String</span> <span class="nf">jsvar</span><span class="o">()</span> <span class="k">default</span> <span class="s">&quot;&quot;</span><span class="o">;</span> <span class="c1">//以application/javascript输出对象是指明js的对象名，该值存在时则忽略contentType()的值</span>
+<span class="o">}</span>
+                </pre></div>
+
+            <p>
+                <br>@RestParam ： <br>
+            </p>
+            <div class="highlight"><pre><span class="cm">/**</span>
+<span class="cm"> * 只能依附在Service类的方法的参数上, http请求的参数名</span>
+<span class="cm"> */</span>
+<span class="nd">@Target</span><span class="o">({</span><span class="n">PARAMETER</span><span class="o">})</span>
+<span class="kd">public</span> <span class="nd">@interface</span> <span class="n">RestParam</span> <span class="o">{</span>
+
+    <span class="n">String</span> <span class="nf">value</span><span class="o">();</span> <span class="c1">//参数名</span>
+
+<span class="o">}</span>
+                </pre></div>
+
+
+            <p>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;REST的设置方式有两大种: 一种是采用默认REST注解，一种是显式的设置。 <br>
+                第一种方式需要开发者对Service中的方法命名需要遵循一定规则, 如下范例，模块为Hello，Service类命名为HelloService，增删改查的方法采用createHello、deleteHello、updateHello、queryHello或其他xxxHello命名。REST插件加载任何没有标记@RestController、@RestMapping、@RestParam 的Service将按照一定规则生成默认值：<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1、@RestController.value() 默认值为Service类名的小写化并去掉service字样, 视为模块名 <br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2、@RestMapping.name() 默认值为Service的方法名小写化并去掉模块名字样 <br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2、@RestParam.value() 如果方法名以find、delete开头且方法的参数只有一个且参数类型是基本数据类型或String，则默认值为"#"；若使用Java 8中带上 -parameters 编译项的新特性，默认值为参数名, 若没使用新特性则采用bean、bean2、bean3...的命名规则。<br>
+            </p>
+            <div class="highlight"><pre><span class="cm">/**</span>
+<span class="cm"> * 类说明:</span>
+<span class="cm"> * Flipper : Source组件中的翻页对象， 只要Service方法中的参数类与该类相同，则不需要设定 @RestParam</span>
+<span class="cm"> * UserInfo ：当前用户类， 只要Service方法中的参数类与该类相同，则不需要设定 @RestParam</span>
+<span class="cm"> * HelloEntity: Hello模块的实体类</span>
+<span class="cm"> * HelloBean: Hellow模块实现FilterBean的过滤Bean类</span>
+<span class="cm"> *</span>
+<span class="cm"> */</span>
+<span class="nd">@RestController</span><span class="o">(</span><span class="n">value</span> <span class="o">=</span> <span class="s">&quot;hello&quot;</span><span class="o">,</span> <span class="n">module</span> <span class="o">=</span> <span class="mi">0</span><span class="o">,</span> <span class="n">repair</span> <span class="o">=</span> <span class="kc">true</span><span class="o">,</span> <span class="n">ignore</span> <span class="o">=</span> <span class="kc">false</span><span class="o">)</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">HelloService</span> <span class="kd">implements</span> <span class="n">Service</span> <span class="o">{</span>
+
+    <span class="nd">@Resource</span>
+    <span class="kd">private</span> <span class="n">DataSource</span> <span class="n">source</span><span class="o">;</span>
+
+    <span class="c1">//增加记录</span>
+    <span class="nd">@RestMapping</span><span class="o">(</span><span class="n">name</span> <span class="o">=</span> <span class="s">&quot;create&quot;</span><span class="o">,</span> <span class="n">authignore</span> <span class="o">=</span> <span class="kc">true</span><span class="o">)</span>
+    <span class="kd">public</span> <span class="n">RetResult</span><span class="o">&lt;</span><span class="n">HelloEntity</span><span class="o">&gt;</span> <span class="nf">createHello</span><span class="o">(</span><span class="n">UserInfo</span> <span class="n">info</span><span class="o">,</span> <span class="nd">@RestParam</span><span class="o">(</span><span class="s">&quot;bean&quot;</span><span class="o">)</span> <span class="n">HelloEntity</span> <span class="n">entity</span><span class="o">)</span> <span class="o">{</span> <span class="c1">//通过 /hello/create?bean={...} 增加对象</span>
+        <span class="n">entity</span><span class="o">.</span><span class="na">setCreator</span><span class="o">(</span><span class="n">info</span> <span class="o">==</span> <span class="kc">null</span> <span class="o">?</span> <span class="mi">0</span> <span class="o">:</span> <span class="n">info</span><span class="o">.</span><span class="na">getUserid</span><span class="o">());</span> <span class="c1">//设置当前用户ID</span>
+        <span class="n">entity</span><span class="o">.</span><span class="na">setCreatetime</span><span class="o">(</span><span class="n">System</span><span class="o">.</span><span class="na">currentTimeMillis</span><span class="o">());</span>
+        <span class="n">source</span><span class="o">.</span><span class="na">insert</span><span class="o">(</span><span class="n">entity</span><span class="o">);</span>
+        <span class="k">return</span> <span class="k">new</span> <span class="n">RetResult</span><span class="o">&lt;&gt;(</span><span class="n">entity</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="c1">//删除记录</span>
+    <span class="nd">@RestMapping</span><span class="o">(</span><span class="n">name</span> <span class="o">=</span> <span class="s">&quot;delete&quot;</span><span class="o">,</span> <span class="n">authignore</span> <span class="o">=</span> <span class="kc">true</span><span class="o">)</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">deleteHello</span><span class="o">(</span><span class="nd">@RestParam</span><span class="o">(</span><span class="s">&quot;#&quot;</span><span class="o">)</span> <span class="kt">int</span> <span class="n">id</span><span class="o">)</span> <span class="o">{</span> <span class="c1">//通过 /hello/delete/1234 删除对象</span>
+        <span class="n">source</span><span class="o">.</span><span class="na">delete</span><span class="o">(</span><span class="n">HelloEntity</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="n">id</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="c1">//修改记录</span>
+    <span class="nd">@RestMapping</span><span class="o">(</span><span class="n">name</span> <span class="o">=</span> <span class="s">&quot;update&quot;</span><span class="o">,</span> <span class="n">authignore</span> <span class="o">=</span> <span class="kc">true</span><span class="o">)</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">updateHello</span><span class="o">(</span><span class="nd">@RestParam</span><span class="o">(</span><span class="s">&quot;bean&quot;</span><span class="o">)</span> <span class="n">HelloEntity</span> <span class="n">entity</span><span class="o">)</span> <span class="o">{</span> <span class="c1">//通过 /hello/update?bean={...} 修改对象</span>
+        <span class="n">entity</span><span class="o">.</span><span class="na">setUpdatetime</span><span class="o">(</span><span class="n">System</span><span class="o">.</span><span class="na">currentTimeMillis</span><span class="o">());</span>
+        <span class="n">source</span><span class="o">.</span><span class="na">update</span><span class="o">(</span><span class="n">entity</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="c1">//查询列表</span>
+    <span class="nd">@RestMapping</span><span class="o">(</span><span class="n">name</span> <span class="o">=</span> <span class="s">&quot;query&quot;</span><span class="o">,</span> <span class="n">authignore</span> <span class="o">=</span> <span class="kc">true</span><span class="o">)</span>
+    <span class="kd">public</span> <span class="n">Sheet</span><span class="o">&lt;</span><span class="n">HelloEntity</span><span class="o">&gt;</span> <span class="nf">queryHello</span><span class="o">(</span><span class="nd">@RestParam</span><span class="o">(</span><span class="s">&quot;bean&quot;</span><span class="o">)</span> <span class="n">HelloBean</span> <span class="n">bean</span><span class="o">,</span> <span class="n">Flipper</span> <span class="n">flipper</span><span class="o">)</span> <span class="o">{</span> <span class="c1">//通过 /hello/query/start:0/size:20?bean={...} 查询列表</span>
+        <span class="k">return</span> <span class="n">source</span><span class="o">.</span><span class="na">querySheet</span><span class="o">(</span><span class="n">HelloEntity</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="n">flipper</span><span class="o">,</span> <span class="n">bean</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="c1">//查询单个</span>
+    <span class="nd">@RestMapping</span><span class="o">(</span><span class="n">name</span> <span class="o">=</span> <span class="s">&quot;find&quot;</span><span class="o">,</span> <span class="n">authignore</span> <span class="o">=</span> <span class="kc">true</span><span class="o">)</span>
+    <span class="kd">public</span> <span class="n">HelloEntity</span> <span class="nf">findHello</span><span class="o">(</span><span class="nd">@RestParam</span><span class="o">(</span><span class="s">&quot;#&quot;</span><span class="o">)</span> <span class="kt">int</span> <span class="n">id</span><span class="o">)</span> <span class="o">{</span>  <span class="c1">//通过 /hello/find/1234 查询对象</span>
+        <span class="k">return</span> <span class="n">source</span><span class="o">.</span><span class="na">find</span><span class="o">(</span><span class="n">HelloEntity</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="n">id</span><span class="o">);</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+                </pre></div>
+            <p>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;根据默认命名规则可以看出，以上范例生成的RestServlet与去掉所有@RestController、@RestMapping、@RestParam后的Service生成的是完全相同的。 <br>
             </p>
 
             <footer class="site-footer">
