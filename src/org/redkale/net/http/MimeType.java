@@ -57,6 +57,7 @@ public class MimeType {
         contentTypes.put("htm", "text/html");
         contentTypes.put("html", "text/html");
         contentTypes.put("hqx", "application/mac-binhex40");
+        contentTypes.put("ico", "image/x-icon");
         contentTypes.put("ief", "image/ief");
         contentTypes.put("jad", "text/vnd.sun.j2me.app-descriptor");
         contentTypes.put("jar", "application/java-archive");
