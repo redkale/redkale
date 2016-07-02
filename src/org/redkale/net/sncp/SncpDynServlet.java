@@ -91,7 +91,6 @@ public final class SncpDynServlet extends SncpServlet {
         return sb.toString();
     }
 
-
     @Override
     public DLong getServiceid() {
         return serviceid;
@@ -162,14 +161,14 @@ public final class SncpDynServlet extends SncpServlet {
          * <blockquote><pre>
          *  public class TestService implements Service {
          *      public boolean change(TestBean bean, String name, int id) {
-         *
+         * <p>
          *      }
          *  }
-         *
+         * <p>
          *  public class DynActionTestService_change extends SncpServletAction {
-         *
+         * <p>
          *      public TestService service;
-         *
+         * <p>
          *      &#64;Override
          *      public void action(final BsonReader in, final BsonWriter out) throws Throwable {
          *          TestBean arg1 = convert.convertFrom(paramTypes[1], in);
@@ -185,6 +184,7 @@ public final class SncpDynServlet extends SncpServlet {
          * @param service  Service
          * @param actionid 操作ID
          * @param method   方法
+         *
          * @return SncpServletAction
          */
         @SuppressWarnings("unchecked")
@@ -197,7 +197,7 @@ public final class SncpDynServlet extends SncpServlet {
             final String convertWriterDesc = Type.getDescriptor(BsonWriter.class);
             final String serviceDesc = Type.getDescriptor(serviceClass);
             String newDynName = serviceName.substring(0, serviceName.lastIndexOf('/') + 1)
-                    + "DynAction" + serviceClass.getSimpleName() + "_" + method.getName() + "_" + actionid;
+                + "DynAction" + serviceClass.getSimpleName() + "_" + method.getName() + "_" + actionid;
             while (true) {
                 try {
                     Class.forName(newDynName.replace('/', '.'));
@@ -373,7 +373,7 @@ public final class SncpDynServlet extends SncpServlet {
                     store++;
                     if (maxStack < 10) maxStack = 10;
                 }
-                mv.visitMaxs(maxStack, store);
+                mv.visitMaxs(maxStack + 10, store + 10);
                 mv.visitEnd();
             }
             cw.visitEnd();
