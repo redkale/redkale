@@ -25,7 +25,6 @@ import org.redkale.util.*;
  * 同时提供发送json的系列接口: public void finishJson(Type type, Object obj)
  * RedKale提倡http+json的接口风格， 所以主要输出的数据格式为json， 同时提供异步接口。
  * <p>
- * <p>
  * 详情见: http://redkale.org
  *
  * @author zhangjx
@@ -35,7 +34,6 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
     /**
      * HttpResponse.finish 方法内调用
      * 主要给@HttpCacheable使用
-     * <p>
      */
     protected static interface BufferHandler {
 
@@ -302,7 +300,6 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
 
     /**
      * 以304状态码输出
-     * <p>
      */
     public void finish304() {
         super.finish(buffer304.duplicate());
@@ -310,7 +307,6 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
 
     /**
      * 以404状态码输出
-     * <p>
      */
     public void finish404() {
         super.finish(buffer404.duplicate());
@@ -687,7 +683,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * 设置内容长度
      *
      * @param contentLength 内容长度
-     * @return
+     * @return HttpResponse
      */
     public HttpResponse setContentLength(long contentLength) {
         this.contentLength = contentLength;

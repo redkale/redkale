@@ -24,7 +24,7 @@ import org.redkale.service.DynCall;
 
 /**
  *
- * <p>
+ * 
  * 详情见: http://redkale.org
  *
  * @author zhangjx
@@ -161,14 +161,14 @@ public final class SncpDynServlet extends SncpServlet {
          * <blockquote><pre>
          *  public class TestService implements Service {
          *      public boolean change(TestBean bean, String name, int id) {
-         * <p>
+         * 
          *      }
          *  }
-         * <p>
+         * 
          *  public class DynActionTestService_change extends SncpServletAction {
-         * <p>
+         * 
          *      public TestService service;
-         * <p>
+         * 
          *      &#64;Override
          *      public void action(final BsonReader in, final BsonWriter out) throws Throwable {
          *          TestBean arg1 = convert.convertFrom(paramTypes[1], in);

@@ -12,7 +12,6 @@ import java.util.stream.*;
 /**
  * 页集合。 结构由一个total总数和一个List列表组合而成。
  * <p>
- * <p>
  * 详情见: http://redkale.org
  *
  * @author zhangjx

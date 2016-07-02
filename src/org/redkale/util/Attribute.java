@@ -14,13 +14,13 @@ import static jdk.internal.org.objectweb.asm.Opcodes.*;
  * 该类实现动态映射一个JavaBean类中成员对应的getter、setter方法； 代替低效的反射实现方式。
  * <blockquote><pre>
  *  public class Record {
- * <p>
+ *
  *      private String name;
- * <p>
+ *
  *      public String getName() {
  *          return name;
  *      }
- * <p>
+ *
  *      public void setName(String name) {
  *          this.name = name;
  *      }
@@ -33,27 +33,27 @@ import static jdk.internal.org.objectweb.asm.Opcodes.*;
  * 等价于:
  * <blockquote><pre>
  *  Attribute&lt;Record, String&gt; nameAction = new Attribute&lt;Record, String&gt;() {
- * <p>
+ *
  *      &#64;Override
  *      public String field() {
  *          return "name";
  *      }
- * <p>
+ *
  *      &#64;Override
  *      public String get(Record obj) {
  *          return obj.getName();
  *      }
- * <p>
+ * 
  *      &#64;Override
  *      public void set(Record obj, String value) {
  *          obj.setName(value);
  *      }
- * <p>
+ * 
  *      &#64;Override
  *      public Class type() {
  *          return String.class;
  *      }
- * <p>
+ * 
  *      &#64;Override
  *      public Class declaringClass() {
  *          return Record.class;
@@ -66,7 +66,6 @@ import static jdk.internal.org.objectweb.asm.Opcodes.*;
  * 2、至少存在对应的getter、setter方法中的一个 <br>
  * 当不存在getter方法时，get操作固定返回null <br>
  * 当不存在setter方法时，set操作为空方法  <br>
- * <p>
  * <p>
  * 详情见: http://redkale.org
  *
@@ -339,20 +338,20 @@ public interface Attribute<T, F> {
     /**
      * 根据Class、字段别名、字段类型生成虚构的 Attribute 对象,get、set方法为空方法。
      *
-     * @param <T>
-     * @param <F>
-     * @param clazz
-     * @param fieldalias
-     * @param fieldtype
+     * @param <T>        依附类的类型
+     * @param <F>        字段类型
+     * @param clazz      指定依附的类
+     * @param fieldalias 字段别名
+     * @param fieldtype  字段的类
      *
-     * @return
+     * @return Attribute对象
      */
     public static <T, F> Attribute<T, F> create(final Class<T> clazz, String fieldalias, final Class<F> fieldtype) {
         return create(clazz, fieldalias, fieldtype, null, null, null);
     }
 
     /**
-     * 根据Class、字段别名、字段类型、Field、getter和setter方法生成 Attribute 对象。 fieldalias&fieldtype、Field、tgetter、setter不能同时为null
+     * 根据Class、字段别名、字段类型、Field、getter和setter方法生成 Attribute 对象。 fieldalias/fieldtype、Field、tgetter、setter不能同时为null.
      *
      * @param <T>        依附类的类型
      * @param <F>        字段类型

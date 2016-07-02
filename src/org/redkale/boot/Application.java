@@ -33,8 +33,6 @@ import org.w3c.dom.*;
  * <p>
  * 进程启动类，程序启动后读取application.xml,进行classpath扫描动态加载Service与Servlet 优先加载所有SNCP协议的服务， 再加载其他协议服务， 最后进行Service、Servlet与其他资源之间的依赖注入。
  * <p>
- * <p>
- * <p>
  * 详情见: http://redkale.org
  *
  * @author zhangjx

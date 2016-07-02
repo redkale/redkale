@@ -12,8 +12,8 @@ import org.redkale.util.*;
 
 /**
  * Service对象的封装类
- * <p>
- * <p>
+ *
+ *
  * 详情见: http://redkale.org
  *
  * @author zhangjx

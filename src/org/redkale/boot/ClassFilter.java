@@ -20,7 +20,6 @@ import org.redkale.util.AnyValue.DefaultAnyValue;
 /**
  * class过滤器， 符合条件的class会保留下来存入FilterEntry。
  * <p>
- * <p>
  * 详情见: http://redkale.org
  *
  * @author zhangjx

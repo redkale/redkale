@@ -23,7 +23,6 @@ import org.redkale.util.ByteArray;
  * /pipes/record/query/start:0/size:20 获取页号: int start = request.getRequstURIPath("start:", 0);   <br>
  * 获取行数: int size = request.getRequstURIPath("size:", 10);
  * <p>
- * <p>
  * 详情见: http://redkale.org
  *
  * @author zhangjx

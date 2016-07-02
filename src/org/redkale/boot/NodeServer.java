@@ -30,8 +30,8 @@ import org.redkale.util.*;
 
 /**
  * Server节点的初始化配置类
- * <p>
- * <p>
+ * 
+ * 
  * 详情见: http://redkale.org
  *
  * @author zhangjx

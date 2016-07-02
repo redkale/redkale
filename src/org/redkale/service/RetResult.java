@@ -9,8 +9,8 @@ import org.redkale.convert.json.JsonFactory;
 
 /**
  * 通用的结果对象，在常见的HTTP+JSON接口中返回的结果需要含结果码，错误信息，和实体对象。
- * <p>
- * <p>
+ * 
+ * 
  * 详情见: http://redkale.org
  *
  * @author zhangjx
@@ -91,9 +91,9 @@ public class RetResult<T> {
     /**
      * 同 setRetcode
      *
-     * @param retcode
+     * @param retcode retcode
      *
-     * @return
+     * @return RetResult
      */
     public RetResult<T> retcode(int retcode) {
         this.retcode = retcode;
@@ -111,9 +111,9 @@ public class RetResult<T> {
     /**
      * 同 setRetinfo
      *
-     * @param retinfo
+     * @param retinfo retinfo
      *
-     * @return
+     * @return RetResult
      */
     public RetResult<T> retinfo(String retinfo) {
         this.retinfo = retinfo;
@@ -136,9 +136,9 @@ public class RetResult<T> {
     /**
      * 同 setResult
      *
-     * @param result
+     * @param result result
      *
-     * @return
+     * @return RetResult
      */
     public RetResult<T> result(T result) {
         this.result = result;

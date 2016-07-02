@@ -25,8 +25,8 @@ import org.redkale.util.*;
 /**
  * Service Node Communicate Protocol
  * 生成Service的本地模式或远程模式Service-Class的工具类
- * <p>
- * <p>
+ * 
+ * 
  * 详情见: http://redkale.org
  *
  * @author zhangjx
@@ -131,50 +131,50 @@ public abstract class Sncp {
     /**
      * <blockquote><pre>
      * public class TestService implements Service{
-     * <p>
+     * 
      *      public String findSomeThing(){
      *          return "hello";
      *      }
-     * <p>
+     * 
      *      &#64;MultiRun(selfrun = false)
      *      public void createSomeThing(TestBean bean){
      *          //do something
      *      }
-     * <p>
+     * 
      *      &#64;MultiRun
      *      public String updateSomeThing(String id){
      *          return "hello" + id;
      *      }
      * }
      * </pre></blockquote>
-     * <p>
+     * 
      * <blockquote><pre>
      * &#64;Resource(name = "")
      * &#64;SncpDyn(remote = false)
      * &#64;ResourceType({TestService.class})
      * public final class _DynLocalTestService extends TestService{
-     * <p>
+     * 
      *      &#64;Resource
      *      private BsonConvert _redkale_convert;
-     * <p>
+     * 
      *      private Transport _redkale_sameGroupTransport;
-     * <p>
+     * 
      *      private Transport[] _redkale_diffGroupTransports;
-     * <p>
+     * 
      *      private SncpClient _redkale_client;
-     * <p>
+     * 
      *      private String _redkale_selfstring;
-     * <p>
+     * 
      *      &#64;Override
      *      public String toString() {
      *          return _redkale_selfstring == null ? super.toString() : _redkale_selfstring;
      *      }
-     * <p>
+     * 
      *      &#64;Override
      *      public void createSomeThing(TestBean bean){
      *          this._redkale_createSomeThing(false, true, true, bean);
      *      }
-     * <p>
+     * 
      *      &#64;SncpDyn(remote = false, index = 0)
      *      public void _redkale_createSomeThing(boolean selfrunnable, boolean samerunnable, boolean diffrunnable, TestBean bean){
      *          if(selfrunnable) super.createSomeThing(bean);
@@ -182,12 +182,12 @@ public abstract class Sncp {
      *          if (samerunnable) _redkale_client.remoteSameGroup(_redkale_convert, _sameGroupTransport, 0, true, false, false, bean);
      *          if (diffrunnable) _redkale_client.remoteDiffGroup(_redkale_convert, _diffGroupTransports, 0, true, true, false, bean);
      *      }
-     * <p>
+     * 
      *      &#64;Override
      *      public String updateSomeThing(String id){
      *          return this._redkale_updateSomeThing(true, true, true, id);
      *      }
-     * <p>
+     * 
      *      &#64;SncpDyn(remote = false, index = 1)
      *      public String _redkale_updateSomeThing(boolean selfrunnable, boolean samerunnable, boolean diffrunnable, String id){
      *          String rs = super.updateSomeThing(id);
@@ -198,7 +198,7 @@ public abstract class Sncp {
      *      }
      * }
      * </pre></blockquote>
-     * <p>
+     * 
      * 创建Service的本地模式Class
      *
      * @param <T>          Service子类
@@ -823,48 +823,48 @@ public abstract class Sncp {
      * &#64;SncpDyn(remote = true)
      * &#64;ResourceType({TestService.class})
      * public final class _DynRemoteTestService extends TestService{
-     * <p>
+     * 
      *      &#64;Resource
      *      private BsonConvert _redkale_convert;
-     * <p>
+     * 
      *      private Transport _redkale_transport;
-     * <p>
+     * 
      *      private SncpClient _redkale_client;
-     * <p>
+     * 
      *      private String _redkale_selfstring;
-     * <p>
+     * 
      *      &#64;Override
      *      public String toString() {
      *          return _redkale_selfstring == null ? super.toString() : _redkale_selfstring;
      *      }
-     * <p>
+     * 
      *      &#64;SncpDyn(remote = false, index = 0)
      *      public void _redkale_createSomeThing(boolean selfrunnable, boolean samerunnable, boolean diffrunnable, TestBean bean){
      *          _redkale_client.remote(_redkale_convert, _redkale_transport, 0, selfrunnable, samerunnable, diffrunnable, bean);
      *      }
-     * <p>
+     * 
      *      &#64;SncpDyn(remote = false, index = 1)
      *      public String _redkale_updateSomeThing(boolean selfrunnable, boolean samerunnable, boolean diffrunnable, String id){
      *          return _redkale_client.remote(_redkale_convert, _redkale_transport, 1, selfrunnable, samerunnable, diffrunnable, id);
      *      }
-     * <p>
+     * 
      *      &#64;Override
      *      public void createSomeThing(TestBean bean){
      *          _redkale_client.remote(_redkale_convert, _redkale_transport, 2, bean);
      *      }
-     * <p>
+     * 
      *      &#64;Override
      *      public String findSomeThing(){
      *          return _redkale_client.remote(_redkale_convert, _redkale_transport, 3);
      *      }
-     * <p>
+     * 
      *      &#64;Override
      *      public String updateSomeThing(String id){
      *          return  _redkale_client.remote(_redkale_convert, _redkale_transport, 4, id);
      *      }
      * }
      * </pre></blockquote>
-     * <p>
+     * 
      * 创建远程模式的Service实例
      *
      * @param <T>           Service泛型
