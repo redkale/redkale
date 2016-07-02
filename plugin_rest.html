@@ -125,7 +125,7 @@
             </p>
             <div class="highlight"><pre><span class="cm">/**</span>
 <span class="cm"> * 只能依附在Service实现类的public方法上</span>
-<span class="cm"> * value默认为&quot;/&quot; + Service的类名去掉Service字样的小写字符串 (如HelloService，的默认路径为/hello)。</span>
+<span class="cm"> * value默认为&quot;/&quot; + Service的类名去掉Service及后面字样的小写字符串 (如HelloService，的默认路径为/hello)。</span>
 <span class="cm"> */</span>
 <span class="nd">@Target</span><span class="o">({</span><span class="n">METHOD</span><span class="o">})</span>
 <span class="kd">public</span> <span class="nd">@interface</span> <span class="n">RestMapping</span> <span class="o">{</span>
@@ -160,11 +160,10 @@
 <span class="o">}</span>
                 </pre></div>
 
-
             <p>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;REST的设置方式有两大种: 一种是采用默认REST注解，一种是显式的设置。 <br>
                 第一种方式需要开发者对Service中的方法命名需要遵循一定规则, 如下范例，模块为Hello，Service类命名为HelloService，增删改查的方法采用createHello、deleteHello、updateHello、queryHello或其他xxxHello命名。REST插件加载任何没有标记@RestController、@RestMapping、@RestParam 的Service将按照一定规则生成默认值：<br>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1、@RestController.value() 默认值为Service类名的小写化并去掉service字样, 视为模块名 <br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1、@RestController.value() 默认值为Service类名的小写化并去掉service及后面字样, 视为模块名 <br>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2、@RestMapping.name() 默认值为Service的方法名小写化并去掉模块名字样 <br>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2、@RestParam.value() 如果方法名以find、delete开头且方法的参数只有一个且参数类型是基本数据类型或String，则默认值为"#"；若使用Java 8中带上 -parameters 编译项的新特性，默认值为参数名, 若没使用新特性则采用bean、bean2、bean3...的命名规则。<br>
             </p>
@@ -218,7 +217,201 @@
 <span class="o">}</span>
                 </pre></div>
             <p>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;根据默认命名规则可以看出，以上范例生成的RestServlet与去掉所有@RestController、@RestMapping、@RestParam后的Service生成的是完全相同的。 <br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;根据默认命名规则可以看出，以上范例生成的RestServlet与去掉所有@RestController、@RestMapping、@RestParam后的Service生成的是完全相同的。 REST插件根据Service会动态生成HttpServlet，以上范例生成的HttpServlet如下：<br>
+            </p>
+
+            <div class="highlight"><pre><span class="nd">@WebServlet</span><span class="o">(</span><span class="n">value</span> <span class="o">=</span> <span class="o">{</span><span class="s">&quot;/hello/*&quot;</span><span class="o">},</span> <span class="n">repair</span> <span class="o">=</span> <span class="kc">true</span><span class="o">)</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">_DynHelloRestServlet</span> <span class="kd">extends</span> <span class="n">SimpleRestServlet</span> <span class="o">{</span>
+
+    <span class="nd">@Resource</span>
+    <span class="kd">private</span> <span class="n">HelloService</span> <span class="n">_service</span><span class="o">;</span>
+
+    <span class="nd">@AuthIgnore</span>
+    <span class="nd">@WebAction</span><span class="o">(</span><span class="n">url</span> <span class="o">=</span> <span class="s">&quot;/hello/create&quot;</span><span class="o">)</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">create</span><span class="o">(</span><span class="n">HttpRequest</span> <span class="n">req</span><span class="o">,</span> <span class="n">HttpResponse</span> <span class="n">resp</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
+        <span class="n">HelloEntity</span> <span class="n">bean</span> <span class="o">=</span> <span class="n">req</span><span class="o">.</span><span class="na">getJsonParameter</span><span class="o">(</span><span class="n">HelloEntity</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="s">&quot;bean&quot;</span><span class="o">);</span>
+        <span class="n">UserInfo</span> <span class="n">user</span> <span class="o">=</span> <span class="n">currentUser</span><span class="o">(</span><span class="n">req</span><span class="o">);</span>
+        <span class="n">RetResult</span><span class="o">&lt;</span><span class="n">HelloEntity</span><span class="o">&gt;</span> <span class="n">result</span> <span class="o">=</span> <span class="n">_service</span><span class="o">.</span><span class="na">createHello</span><span class="o">(</span><span class="n">user</span><span class="o">,</span> <span class="n">bean</span><span class="o">);</span>
+        <span class="n">sendRetResult</span><span class="o">(</span><span class="n">resp</span><span class="o">,</span> <span class="n">result</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="nd">@AuthIgnore</span>
+    <span class="nd">@WebAction</span><span class="o">(</span><span class="n">url</span> <span class="o">=</span> <span class="s">&quot;/hello/delete/&quot;</span><span class="o">)</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">delete</span><span class="o">(</span><span class="n">HttpRequest</span> <span class="n">req</span><span class="o">,</span> <span class="n">HttpResponse</span> <span class="n">resp</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
+        <span class="kt">int</span> <span class="n">id</span> <span class="o">=</span> <span class="n">Integer</span><span class="o">.</span><span class="na">parseInt</span><span class="o">(</span><span class="n">req</span><span class="o">.</span><span class="na">getRequstURILastPath</span><span class="o">());</span>
+        <span class="n">_service</span><span class="o">.</span><span class="na">deleteHello</span><span class="o">(</span><span class="n">id</span><span class="o">);</span>
+        <span class="n">sendRetResult</span><span class="o">(</span><span class="n">resp</span><span class="o">,</span> <span class="n">RetResult</span><span class="o">.</span><span class="na">SUCCESS</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="nd">@AuthIgnore</span>
+    <span class="nd">@WebAction</span><span class="o">(</span><span class="n">url</span> <span class="o">=</span> <span class="s">&quot;/hello/update&quot;</span><span class="o">)</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">update</span><span class="o">(</span><span class="n">HttpRequest</span> <span class="n">req</span><span class="o">,</span> <span class="n">HttpResponse</span> <span class="n">resp</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
+        <span class="n">HelloEntity</span> <span class="n">bean</span> <span class="o">=</span> <span class="n">req</span><span class="o">.</span><span class="na">getJsonParameter</span><span class="o">(</span><span class="n">HelloEntity</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="s">&quot;bean&quot;</span><span class="o">);</span>
+        <span class="n">_service</span><span class="o">.</span><span class="na">updateHello</span><span class="o">(</span><span class="n">bean</span><span class="o">);</span>
+        <span class="n">sendRetResult</span><span class="o">(</span><span class="n">resp</span><span class="o">,</span> <span class="n">RetResult</span><span class="o">.</span><span class="na">SUCCESS</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="nd">@AuthIgnore</span>
+    <span class="nd">@WebAction</span><span class="o">(</span><span class="n">url</span> <span class="o">=</span> <span class="s">&quot;/hello/query&quot;</span><span class="o">)</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">query</span><span class="o">(</span><span class="n">HttpRequest</span> <span class="n">req</span><span class="o">,</span> <span class="n">HttpResponse</span> <span class="n">resp</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
+        <span class="n">HelloBean</span> <span class="n">bean</span> <span class="o">=</span> <span class="n">req</span><span class="o">.</span><span class="na">getJsonParameter</span><span class="o">(</span><span class="n">HelloBean</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="s">&quot;bean&quot;</span><span class="o">);</span>
+        <span class="n">Flipper</span> <span class="n">flipper</span> <span class="o">=</span> <span class="n">findFlipper</span><span class="o">(</span><span class="n">req</span><span class="o">);</span>
+        <span class="n">Sheet</span><span class="o">&lt;</span><span class="n">HelloEntity</span><span class="o">&gt;</span> <span class="n">result</span> <span class="o">=</span> <span class="n">_service</span><span class="o">.</span><span class="na">queryHello</span><span class="o">(</span><span class="n">bean</span><span class="o">,</span> <span class="n">flipper</span><span class="o">);</span>
+        <span class="n">resp</span><span class="o">.</span><span class="na">finishJson</span><span class="o">(</span><span class="n">result</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="nd">@AuthIgnore</span>
+    <span class="nd">@WebAction</span><span class="o">(</span><span class="n">url</span> <span class="o">=</span> <span class="s">&quot;/hello/find/&quot;</span><span class="o">)</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">find</span><span class="o">(</span><span class="n">HttpRequest</span> <span class="n">req</span><span class="o">,</span> <span class="n">HttpResponse</span> <span class="n">resp</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
+        <span class="kt">int</span> <span class="n">id</span> <span class="o">=</span> <span class="n">Integer</span><span class="o">.</span><span class="na">parseInt</span><span class="o">(</span><span class="n">req</span><span class="o">.</span><span class="na">getRequstURILastPath</span><span class="o">());</span>
+        <span class="n">HelloEntity</span> <span class="n">bean</span> <span class="o">=</span> <span class="n">_service</span><span class="o">.</span><span class="na">findHello</span><span class="o">(</span><span class="n">id</span><span class="o">);</span>
+        <span class="n">resp</span><span class="o">.</span><span class="na">finishJson</span><span class="o">(</span><span class="n">bean</span><span class="o">);</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+                </pre></div>
+
+            <p>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;REST的第二种设置方式是显式的设置, 看如下范例：<br>
+            </p>
+            <div class="highlight"><pre><span class="cm">/**</span>
+<span class="cm"> * 类说明:</span>
+<span class="cm"> * Flipper : Source组件中的翻页对象</span>
+<span class="cm"> * UserInfo ：当前用户类</span>
+<span class="cm"> * HelloEntity: Hello模块的实体类</span>
+<span class="cm"> * HelloBean: Hellow模块实现FilterBean的过滤Bean类</span>
+<span class="cm"> *</span>
+<span class="cm"> */</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">HelloService</span> <span class="kd">implements</span> <span class="n">Service</span> <span class="o">{</span>
+
+    <span class="nd">@Resource</span>
+    <span class="kd">private</span> <span class="n">DataSource</span> <span class="n">source</span><span class="o">;</span>
+
+    <span class="c1">//增加记录</span>
+    <span class="kd">public</span> <span class="n">RetResult</span><span class="o">&lt;</span><span class="n">HelloEntity</span><span class="o">&gt;</span> <span class="nf">createHello</span><span class="o">(</span><span class="n">UserInfo</span> <span class="n">info</span><span class="o">,</span> <span class="n">HelloEntity</span> <span class="n">entity</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">entity</span><span class="o">.</span><span class="na">setCreator</span><span class="o">(</span><span class="n">info</span> <span class="o">==</span> <span class="kc">null</span> <span class="o">?</span> <span class="mi">0</span> <span class="o">:</span> <span class="n">info</span><span class="o">.</span><span class="na">getUserid</span><span class="o">());</span> <span class="c1">//设置当前用户ID</span>
+        <span class="n">entity</span><span class="o">.</span><span class="na">setCreatetime</span><span class="o">(</span><span class="n">System</span><span class="o">.</span><span class="na">currentTimeMillis</span><span class="o">());</span>
+        <span class="n">source</span><span class="o">.</span><span class="na">insert</span><span class="o">(</span><span class="n">entity</span><span class="o">);</span>
+        <span class="k">return</span> <span class="k">new</span> <span class="n">RetResult</span><span class="o">&lt;&gt;(</span><span class="n">entity</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="c1">//删除记录</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">deleteHello</span><span class="o">(</span><span class="kt">int</span> <span class="n">id</span><span class="o">)</span> <span class="o">{</span> <span class="c1">//通过 /hello/delete/1234 删除对象</span>
+        <span class="n">source</span><span class="o">.</span><span class="na">delete</span><span class="o">(</span><span class="n">HelloEntity</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="n">id</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="c1">//修改记录</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">updateHello</span><span class="o">(</span><span class="n">HelloEntity</span> <span class="n">entity</span><span class="o">)</span> <span class="o">{</span> <span class="c1">//通过 /hello/update?bean={...} 修改对象</span>
+        <span class="n">entity</span><span class="o">.</span><span class="na">setUpdatetime</span><span class="o">(</span><span class="n">System</span><span class="o">.</span><span class="na">currentTimeMillis</span><span class="o">());</span>
+        <span class="n">source</span><span class="o">.</span><span class="na">update</span><span class="o">(</span><span class="n">entity</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="c1">//修改记录</span>
+    <span class="nd">@RestMapping</span><span class="o">(</span><span class="n">name</span> <span class="o">=</span> <span class="s">&quot;partupdate&quot;</span><span class="o">)</span>  <span class="c1">//不能使用updatepart，因为存在update，是updatepart的开头部分，不符合BasedHttpServlet的WebAction规则</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">updateHello</span><span class="o">(</span><span class="n">HelloEntity</span> <span class="n">entity</span><span class="o">,</span> <span class="nd">@RestParam</span><span class="o">(</span><span class="s">&quot;cols&quot;</span><span class="o">)</span> <span class="n">String</span><span class="o">[]</span> <span class="n">columns</span><span class="o">)</span> <span class="o">{</span> <span class="c1">//通过 /hello/update?bean={...} 修改对象</span>
+        <span class="n">entity</span><span class="o">.</span><span class="na">setUpdatetime</span><span class="o">(</span><span class="n">System</span><span class="o">.</span><span class="na">currentTimeMillis</span><span class="o">());</span>
+        <span class="n">source</span><span class="o">.</span><span class="na">updateColumns</span><span class="o">(</span><span class="n">entity</span><span class="o">,</span> <span class="n">columns</span><span class="o">);</span>
+    <span class="o">}</span>
+    
+    <span class="c1">//查询Sheet列表</span>
+    <span class="kd">public</span> <span class="n">Sheet</span><span class="o">&lt;</span><span class="n">HelloEntity</span><span class="o">&gt;</span> <span class="nf">queryHello</span><span class="o">(</span><span class="n">HelloBean</span> <span class="n">bean</span><span class="o">,</span> <span class="n">Flipper</span> <span class="n">flipper</span><span class="o">)</span> <span class="o">{</span> <span class="c1">//通过 /hello/query/start:0/size:20?bean={...} 查询Sheet列表</span>
+        <span class="k">return</span> <span class="n">source</span><span class="o">.</span><span class="na">querySheet</span><span class="o">(</span><span class="n">HelloEntity</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="n">flipper</span><span class="o">,</span> <span class="n">bean</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="c1">//查询List列表</span>
+    <span class="nd">@RestMapping</span><span class="o">(</span><span class="n">name</span> <span class="o">=</span> <span class="s">&quot;list&quot;</span><span class="o">)</span>
+    <span class="kd">public</span> <span class="n">List</span><span class="o">&lt;</span><span class="n">HelloEntity</span><span class="o">&gt;</span> <span class="nf">queryHello</span><span class="o">(</span><span class="n">HelloBean</span> <span class="n">bean</span><span class="o">)</span> <span class="o">{</span> <span class="c1">//通过 /hello/list?bean={...} 查询List列表</span>
+        <span class="k">return</span> <span class="n">source</span><span class="o">.</span><span class="na">queryList</span><span class="o">(</span><span class="n">HelloEntity</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="n">bean</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="c1">//查询单个</span>
+    <span class="nd">@RestMapping</span><span class="o">(</span><span class="n">name</span> <span class="o">=</span> <span class="s">&quot;find&quot;</span><span class="o">)</span>
+    <span class="nd">@RestMapping</span><span class="o">(</span><span class="n">name</span> <span class="o">=</span> <span class="s">&quot;jsfind&quot;</span><span class="o">,</span> <span class="n">jsvar</span> <span class="o">=</span> <span class="s">&quot;varhello&quot;</span><span class="o">)</span>
+    <span class="kd">public</span> <span class="n">HelloEntity</span> <span class="nf">findHello</span><span class="o">(</span><span class="nd">@RestParam</span><span class="o">(</span><span class="s">&quot;#&quot;</span><span class="o">)</span> <span class="kt">int</span> <span class="n">id</span><span class="o">)</span> <span class="o">{</span>  <span class="c1">//通过 /hello/find/1234 查询对象</span>
+        <span class="k">return</span> <span class="n">source</span><span class="o">.</span><span class="na">find</span><span class="o">(</span><span class="n">HelloEntity</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="n">id</span><span class="o">);</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+                </pre></div>
+
+            <p>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;转换为RestHttpServlet如下：<br>
+            </p>
+            <div class="highlight"><pre><span class="nd">@WebServlet</span><span class="o">(</span><span class="n">value</span> <span class="o">=</span> <span class="o">{</span><span class="s">&quot;/hello/*&quot;</span><span class="o">},</span> <span class="n">repair</span> <span class="o">=</span> <span class="kc">true</span><span class="o">)</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">_DynHelloRestServlet</span> <span class="kd">extends</span> <span class="n">SimpleRestServlet</span> <span class="o">{</span>
+
+    <span class="nd">@Resource</span>
+    <span class="kd">private</span> <span class="n">HelloService</span> <span class="n">_service</span><span class="o">;</span>
+
+    <span class="nd">@AuthIgnore</span>
+    <span class="nd">@WebAction</span><span class="o">(</span><span class="n">url</span> <span class="o">=</span> <span class="s">&quot;/hello/create&quot;</span><span class="o">)</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">create</span><span class="o">(</span><span class="n">HttpRequest</span> <span class="n">req</span><span class="o">,</span> <span class="n">HttpResponse</span> <span class="n">resp</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
+        <span class="n">HelloEntity</span> <span class="n">bean</span> <span class="o">=</span> <span class="n">req</span><span class="o">.</span><span class="na">getJsonParameter</span><span class="o">(</span><span class="n">HelloEntity</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="s">&quot;bean&quot;</span><span class="o">);</span>
+        <span class="n">UserInfo</span> <span class="n">user</span> <span class="o">=</span> <span class="n">currentUser</span><span class="o">(</span><span class="n">req</span><span class="o">);</span>
+        <span class="n">RetResult</span><span class="o">&lt;</span><span class="n">HelloEntity</span><span class="o">&gt;</span> <span class="n">result</span> <span class="o">=</span> <span class="n">_service</span><span class="o">.</span><span class="na">createHello</span><span class="o">(</span><span class="n">user</span><span class="o">,</span> <span class="n">bean</span><span class="o">);</span>
+        <span class="n">sendRetResult</span><span class="o">(</span><span class="n">resp</span><span class="o">,</span> <span class="n">result</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="nd">@AuthIgnore</span>
+    <span class="nd">@WebAction</span><span class="o">(</span><span class="n">url</span> <span class="o">=</span> <span class="s">&quot;/hello/delete/&quot;</span><span class="o">)</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">delete</span><span class="o">(</span><span class="n">HttpRequest</span> <span class="n">req</span><span class="o">,</span> <span class="n">HttpResponse</span> <span class="n">resp</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
+        <span class="kt">int</span> <span class="n">id</span> <span class="o">=</span> <span class="n">Integer</span><span class="o">.</span><span class="na">parseInt</span><span class="o">(</span><span class="n">req</span><span class="o">.</span><span class="na">getRequstURILastPath</span><span class="o">());</span>
+        <span class="n">_service</span><span class="o">.</span><span class="na">deleteHello</span><span class="o">(</span><span class="n">id</span><span class="o">);</span>
+        <span class="n">sendRetResult</span><span class="o">(</span><span class="n">resp</span><span class="o">,</span> <span class="n">RetResult</span><span class="o">.</span><span class="na">SUCCESS</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="nd">@AuthIgnore</span>
+    <span class="nd">@WebAction</span><span class="o">(</span><span class="n">url</span> <span class="o">=</span> <span class="s">&quot;/hello/update&quot;</span><span class="o">)</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">update</span><span class="o">(</span><span class="n">HttpRequest</span> <span class="n">req</span><span class="o">,</span> <span class="n">HttpResponse</span> <span class="n">resp</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
+        <span class="n">HelloEntity</span> <span class="n">bean</span> <span class="o">=</span> <span class="n">req</span><span class="o">.</span><span class="na">getJsonParameter</span><span class="o">(</span><span class="n">HelloEntity</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="s">&quot;bean&quot;</span><span class="o">);</span>
+        <span class="n">_service</span><span class="o">.</span><span class="na">updateHello</span><span class="o">(</span><span class="n">bean</span><span class="o">);</span>
+        <span class="n">sendRetResult</span><span class="o">(</span><span class="n">resp</span><span class="o">,</span> <span class="n">RetResult</span><span class="o">.</span><span class="na">SUCCESS</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="nd">@AuthIgnore</span>
+    <span class="nd">@WebAction</span><span class="o">(</span><span class="n">url</span> <span class="o">=</span> <span class="s">&quot;/hello/partupdate&quot;</span><span class="o">)</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">partupdate</span><span class="o">(</span><span class="n">HttpRequest</span> <span class="n">req</span><span class="o">,</span> <span class="n">HttpResponse</span> <span class="n">resp</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
+        <span class="n">HelloEntity</span> <span class="n">bean</span> <span class="o">=</span> <span class="n">req</span><span class="o">.</span><span class="na">getJsonParameter</span><span class="o">(</span><span class="n">HelloEntity</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="s">&quot;bean&quot;</span><span class="o">);</span>
+        <span class="n">String</span><span class="o">[]</span> <span class="n">cols</span> <span class="o">=</span> <span class="n">req</span><span class="o">.</span><span class="na">getJsonParameter</span><span class="o">(</span><span class="n">String</span><span class="o">[].</span><span class="na">class</span><span class="o">,</span> <span class="s">&quot;cols&quot;</span><span class="o">);</span>
+        <span class="n">_service</span><span class="o">.</span><span class="na">updateHello</span><span class="o">(</span><span class="n">bean</span><span class="o">,</span> <span class="n">cols</span><span class="o">);</span>
+        <span class="n">sendRetResult</span><span class="o">(</span><span class="n">resp</span><span class="o">,</span> <span class="n">RetResult</span><span class="o">.</span><span class="na">SUCCESS</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="nd">@AuthIgnore</span>
+    <span class="nd">@WebAction</span><span class="o">(</span><span class="n">url</span> <span class="o">=</span> <span class="s">&quot;/hello/query&quot;</span><span class="o">)</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">query</span><span class="o">(</span><span class="n">HttpRequest</span> <span class="n">req</span><span class="o">,</span> <span class="n">HttpResponse</span> <span class="n">resp</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
+        <span class="n">HelloBean</span> <span class="n">bean</span> <span class="o">=</span> <span class="n">req</span><span class="o">.</span><span class="na">getJsonParameter</span><span class="o">(</span><span class="n">HelloBean</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="s">&quot;bean&quot;</span><span class="o">);</span>
+        <span class="n">Flipper</span> <span class="n">flipper</span> <span class="o">=</span> <span class="n">findFlipper</span><span class="o">(</span><span class="n">req</span><span class="o">);</span>
+        <span class="n">Sheet</span><span class="o">&lt;</span><span class="n">HelloEntity</span><span class="o">&gt;</span> <span class="n">result</span> <span class="o">=</span> <span class="n">_service</span><span class="o">.</span><span class="na">queryHello</span><span class="o">(</span><span class="n">bean</span><span class="o">,</span> <span class="n">flipper</span><span class="o">);</span>
+        <span class="n">resp</span><span class="o">.</span><span class="na">finishJson</span><span class="o">(</span><span class="n">result</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="nd">@AuthIgnore</span>
+    <span class="nd">@WebAction</span><span class="o">(</span><span class="n">url</span> <span class="o">=</span> <span class="s">&quot;/hello/list&quot;</span><span class="o">)</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">list</span><span class="o">(</span><span class="n">HttpRequest</span> <span class="n">req</span><span class="o">,</span> <span class="n">HttpResponse</span> <span class="n">resp</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
+        <span class="n">HelloBean</span> <span class="n">bean</span> <span class="o">=</span> <span class="n">req</span><span class="o">.</span><span class="na">getJsonParameter</span><span class="o">(</span><span class="n">HelloBean</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="s">&quot;bean&quot;</span><span class="o">);</span>
+        <span class="n">List</span><span class="o">&lt;</span><span class="n">HelloEntity</span><span class="o">&gt;</span> <span class="n">result</span> <span class="o">=</span> <span class="n">_service</span><span class="o">.</span><span class="na">queryHello</span><span class="o">(</span><span class="n">bean</span><span class="o">);</span>
+        <span class="n">resp</span><span class="o">.</span><span class="na">finishJson</span><span class="o">(</span><span class="n">result</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="nd">@AuthIgnore</span>
+    <span class="nd">@WebAction</span><span class="o">(</span><span class="n">url</span> <span class="o">=</span> <span class="s">&quot;/hello/find/&quot;</span><span class="o">)</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">find</span><span class="o">(</span><span class="n">HttpRequest</span> <span class="n">req</span><span class="o">,</span> <span class="n">HttpResponse</span> <span class="n">resp</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
+        <span class="kt">int</span> <span class="n">id</span> <span class="o">=</span> <span class="n">Integer</span><span class="o">.</span><span class="na">parseInt</span><span class="o">(</span><span class="n">req</span><span class="o">.</span><span class="na">getRequstURILastPath</span><span class="o">());</span>
+        <span class="n">HelloEntity</span> <span class="n">bean</span> <span class="o">=</span> <span class="n">_service</span><span class="o">.</span><span class="na">findHello</span><span class="o">(</span><span class="n">id</span><span class="o">);</span>
+        <span class="n">resp</span><span class="o">.</span><span class="na">finishJson</span><span class="o">(</span><span class="n">bean</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="nd">@AuthIgnore</span>
+    <span class="nd">@WebAction</span><span class="o">(</span><span class="n">url</span> <span class="o">=</span> <span class="s">&quot;/hello/jsfind/&quot;</span><span class="o">)</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">jsfind</span><span class="o">(</span><span class="n">HttpRequest</span> <span class="n">req</span><span class="o">,</span> <span class="n">HttpResponse</span> <span class="n">resp</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
+        <span class="kt">int</span> <span class="n">id</span> <span class="o">=</span> <span class="n">Integer</span><span class="o">.</span><span class="na">parseInt</span><span class="o">(</span><span class="n">req</span><span class="o">.</span><span class="na">getRequstURILastPath</span><span class="o">());</span>
+        <span class="n">HelloEntity</span> <span class="n">bean</span> <span class="o">=</span> <span class="n">_service</span><span class="o">.</span><span class="na">findHello</span><span class="o">(</span><span class="n">id</span><span class="o">);</span>
+        <span class="n">sendJsResult</span><span class="o">(</span><span class="n">resp</span><span class="o">,</span> <span class="s">&quot;varhello&quot;</span><span class="o">,</span> <span class="n">bean</span><span class="o">);</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+                </pre></div>
+
+            <p>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;REST插件让开发者省去了编写HttpServlet过程，让开发更加敏捷。<br>
             </p>
 
             <footer class="site-footer">
