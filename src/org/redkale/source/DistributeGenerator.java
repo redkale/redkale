@@ -16,7 +16,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *     int  1000万-6000万   (36进制 5位)  5yc1t - zq0an
  *     int    2亿-10亿      (36进制 6位)  3b2ozl - gjdgxr
  *    long   30亿-770亿     (36进制 7位)  1dm4etd - zdft88v
- *    long  1000亿-9999亿   (36进制 8位)  19xtf1tt - cre66i9r
+ *    long  1000亿-2万亿    (36进制 8位)  19xtf1tt - piscd0jj
  *    随机文件名:   (32进制 26位)
  * </pre>
  *
