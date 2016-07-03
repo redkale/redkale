@@ -46,11 +46,11 @@
 <span class="c">           REST的核心配置项</span>
 <span class="c">           base:     REST服务的BaseServlet，必须是 <b>org.redkalex.rest.RestHttpServlet</b> 的子类，该属性值没有默认值，必须指定。</span>
 <span class="c">           autoload：默认值&quot;true&quot;  默认值. 加载当前server所能使用的Servce对象;    </span>
-<span class="c">           mustsign：默认值&quot;true&quot; 是否只加载标记为RestController的Service类，默认值为true</span>
+<span class="c">           mustsign：默认值&quot;false&quot; 是否只加载标记为RestController的Service类，默认加载所有可用Service</span>
 <span class="c">           includes：当autoload=&quot;true&quot;， 拉取类名与includes中的正则表达式匹配的类, 多个正则表达式用分号;隔开</span>
 <span class="c">           excludes：当autoload=&quot;true&quot;， 排除类名与excludes中的正则表达式匹配的类, 多个正则表达式用分号;隔开</span>
 <span class="c">        --&gt;</span>
-        <span class="nt">&lt;rest</span> <span class="na">base=</span><span class="s">&quot;org.redkalex.test.rest.SimpleRestServlet&quot;</span> <span class="na">mustsign=</span><span class="s">&quot;true&quot;</span> <span class="na">autoload=</span><span class="s">&quot;true&quot;</span> <span class="na">includes=</span><span class="s">&quot;&quot;</span> <span class="na">excludes=</span><span class="s">&quot;&quot;</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;rest</span> <span class="na">base=</span><span class="s">&quot;org.redkalex.test.rest.SimpleRestServlet&quot;</span> <span class="na">mustsign=</span><span class="s">&quot;false&quot;</span> <span class="na">autoload=</span><span class="s">&quot;true&quot;</span> <span class="na">includes=</span><span class="s">&quot;&quot;</span> <span class="na">excludes=</span><span class="s">&quot;&quot;</span><span class="nt">&gt;</span>
             <span class="c">&lt;!-- </span>
 <span class="c">               value:  Service类名，列出的表示必须被加载的Service对象， 且对象的Resource资源名称只能是&quot;&quot;。</span>
 <span class="c">            --&gt;</span>
