@@ -9,8 +9,12 @@ import org.redkale.convert.json.JsonFactory;
 
 /**
  * 通用的结果对象，在常见的HTTP+JSON接口中返回的结果需要含结果码，错误信息，和实体对象。
- * 
- * 
+ * 通常前四位为模块，后四位为操作。
+ * 结果码定义范围:
+ *    // 10000001 - 19999999 预留给Redkale的核心包使用
+ *    // 20000001 - 29999999 预留给Redkale的扩展包使用
+ *    // 30000001 - 99999999 预留给Dev开发系统自身使用
+ *
  * 详情见: http://redkale.org
  *
  * @author zhangjx
