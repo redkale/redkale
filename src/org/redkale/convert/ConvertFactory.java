@@ -202,6 +202,17 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
     }
 
     /**
+     * 使所有类的所有被声明为ConvertColumn.ignore = true 的字段或方法变为ConvertColumn.ignore = false
+     *
+     * @param skipIgnore
+     * @return 自身
+     */
+    public ConvertFactory<R, W> skipAllIgnore(final boolean skipIgnore) {
+        this.skipAllIgnore = skipIgnore;
+        return this;
+    }
+
+    /**
      * 使该类所有被声明为ConvertColumn.ignore = true 的字段或方法变为ConvertColumn.ignore = false
      *
      * @param type 指定的类
@@ -215,11 +226,11 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
             register(type, column, new ConvertColumnEntry(column, ignore));
         }
     }
-    
+
     public final boolean register(final Class type, String column, String alias) {
         return register(type, column, new ConvertColumnEntry(alias));
     }
-    
+
     public final boolean register(final Class type, String column, ConvertColumnEntry entry) {
         if (type == null || column == null || entry == null) return false;
         try {

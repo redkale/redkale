@@ -41,6 +41,12 @@ public final class JsonFactory extends ConvertFactory<JsonReader, JsonWriter> {
         return this;
     }
 
+    @Override
+    public JsonFactory skipAllIgnore(final boolean skipIgnore) {
+        this.registerSkipAllIgnore(skipIgnore);
+        return this;
+    }
+
     public static JsonFactory root() {
         return instance;
     }

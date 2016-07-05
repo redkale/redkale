@@ -39,6 +39,12 @@ public final class BsonFactory extends ConvertFactory<BsonReader, BsonWriter> {
         return this;
     }
 
+    @Override
+    public BsonFactory skipAllIgnore(final boolean skipIgnore) {
+        this.registerSkipAllIgnore(skipIgnore);
+        return this;
+    }
+
     public static BsonFactory root() {
         return instance;
     }
