@@ -38,6 +38,8 @@ public final class Utility {
 
     private static final javax.net.ssl.SSLContext DEFAULTSSL_CONTEXT;
 
+    private static final javax.net.ssl.HostnameVerifier defaultVerifier = (s, ss) -> true;
+
     static {
         sun.misc.Unsafe usafe = null;
         long fd1 = 0L;
@@ -422,7 +424,7 @@ public final class Utility {
      * 将两个数字组装成一个long
      *
      * @param high 高位值
-     * @param low  低位值
+     * @param low 低位值
      *
      * @return long值
      */
@@ -592,7 +594,11 @@ public final class Utility {
         HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();
         conn.setConnectTimeout(3000);
         conn.setReadTimeout(3000);
-        if (conn instanceof HttpsURLConnection) ((HttpsURLConnection) conn).setSSLSocketFactory((ctx == null ? DEFAULTSSL_CONTEXT : ctx).getSocketFactory());
+        if (conn instanceof HttpsURLConnection) {
+            HttpsURLConnection httpsconn = ((HttpsURLConnection) conn);
+            httpsconn.setSSLSocketFactory((ctx == null ? DEFAULTSSL_CONTEXT : ctx).getSocketFactory());
+            httpsconn.setHostnameVerifier(defaultVerifier);
+        }
         conn.setRequestMethod(method);
         if (headers != null) {
             for (Map.Entry<String, String> en : headers.entrySet()) { //不用forEach是为了兼容JDK 6
