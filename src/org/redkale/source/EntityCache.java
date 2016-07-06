@@ -383,7 +383,7 @@ public final class EntityCache<T> {
     }
 
     public T[] update(final T value, final Collection<Attribute<T, Serializable>> attrs, final FilterNode node) {
-        if (value == null || node == null) return null;
+        if (value == null || node == null) return (T[]) Array.newInstance(type, 0);
         T[] rms = this.list.stream().filter(node.createPredicate(this)).toArray(len -> (T[]) Array.newInstance(type, len));
         for (T rs : rms) {
             for (Attribute attr : attrs) {
