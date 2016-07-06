@@ -6,6 +6,7 @@
 package org.redkale.source;
 
 import java.io.Serializable;
+import java.lang.reflect.Array;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.*;
@@ -43,7 +44,7 @@ public final class EntityCache<T> {
     private final Attribute<T, Serializable> primary;
 
     private final Reproduce<T, T> newReproduce;
-    
+
     private final Reproduce<T, T> chgReproduce;
 
     private volatile boolean fullloaded;
@@ -66,9 +67,9 @@ public final class EntityCache<T> {
         this.chgReproduce = Reproduce.create(type, type, (m) -> {
             try {
                 java.lang.reflect.Field field = type.getDeclaredField(m);
-                if(field.getAnnotation(Transient.class) != null) return false;
+                if (field.getAnnotation(Transient.class) != null) return false;
                 Column column = field.getAnnotation(Column.class);
-                if(column != null && !column.updatable()) return false;
+                if (column != null && !column.updatable()) return false;
                 return true;
             } catch (Exception e) {
                 return true;
@@ -381,6 +382,17 @@ public final class EntityCache<T> {
         return rs;
     }
 
+    public T[] update(final T value, final Collection<Attribute<T, Serializable>> attrs, final FilterNode node) {
+        if (value == null || node == null) return null;
+        T[] rms = this.list.stream().filter(node.createPredicate(this)).toArray(len -> (T[]) Array.newInstance(type, len));
+        for (T rs : rms) {
+            for (Attribute attr : attrs) {
+                attr.set(rs, attr.get(value));
+            }
+        }
+        return rms;
+    }
+
     public <V> T update(final Serializable id, Attribute<T, V> attr, final V fieldValue) {
         if (id == null) return null;
         T rs = this.map.get(id);
@@ -437,7 +449,7 @@ public final class EntityCache<T> {
 
     //-------------------------------------------------------------------------------------------------------------------------------
     protected Comparator<T> createComparator(Flipper flipper) {
-        if (flipper == null || flipper.getSort() == null || flipper.getSort().isEmpty() || flipper.getSort().indexOf(';') >= 0  || flipper.getSort().indexOf('\n') >= 0) return null;
+        if (flipper == null || flipper.getSort() == null || flipper.getSort().isEmpty() || flipper.getSort().indexOf(';') >= 0 || flipper.getSort().indexOf('\n') >= 0) return null;
         final String sort = flipper.getSort();
         Comparator<T> comparator = this.sortComparators.get(sort);
         if (comparator != null) return comparator;
