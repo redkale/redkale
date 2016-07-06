@@ -73,6 +73,8 @@ public interface DataSource {
 
     public <T> void updateColumn(final Class<T> clazz, final Serializable id, final String column, final Serializable value);
 
+    public <T> void updateColumn(final Class<T> clazz, final String column, final Serializable value, final FilterNode node);
+
     public <T> void updateColumnIncrement(final Class<T> clazz, final Serializable id, final String column, long incvalue);
 
     public <T> void updateColumnAnd(final Class<T> clazz, final Serializable id, final String column, long incvalue);
@@ -81,10 +83,14 @@ public interface DataSource {
 
     public <T> void updateColumns(final T value, final String... columns);
 
+    public <T> void updateColumns(final T value, final FilterNode node, final String... columns);
+
     //----------------------异步版---------------------------------
     public <T> void update(final CompletionHandler<Void, T[]> handler, final T... values);
 
     public <T> void updateColumn(final CompletionHandler<Void, Serializable> handler, final Class<T> clazz, final Serializable id, final String column, final Serializable value);
+
+    public <T> void updateColumn(final CompletionHandler<Void, FilterNode> handler, final Class<T> clazz, final String column, final Serializable value, final FilterNode node);
 
     public <T> void updateColumnIncrement(final CompletionHandler<Void, Serializable> handler, final Class<T> clazz, final Serializable id, final String column, long incvalue);
 
@@ -94,8 +100,8 @@ public interface DataSource {
 
     public <T> void updateColumns(final CompletionHandler<Void, T> handler, final T value, final String... columns);
 
-    
-    
+    public <T> void updateColumns(final CompletionHandler<Void, FilterNode> handler, final T value, final FilterNode node, final String... columns);
+
     //############################################# 查询接口 #############################################
     //-----------------------getXXXXResult-----------------------------
     public Number getNumberResult(final Class entityClass, final FilterFunc func, final String column);
@@ -130,6 +136,7 @@ public interface DataSource {
      * @param <T>   泛型
      * @param clazz Entity类
      * @param pk    主键值
+     *
      * @return Entity对象
      */
     public <T> T find(final Class<T> clazz, final Serializable pk);
@@ -183,6 +190,7 @@ public interface DataSource {
      * @param clazz          Entity类
      * @param column         过滤字段名
      * @param key            过滤字段值
+     *
      * @return 字段值的集合
      */
     public <T, V extends Serializable> HashSet<V> queryColumnSet(final String selectedColumn, final Class<T> clazz, final String column, final Serializable key);
@@ -219,6 +227,7 @@ public interface DataSource {
      * @param clazz          Entity类
      * @param flipper        翻页对象
      * @param bean           过滤Bean
+     *
      * @return 结果集合
      */
     public <T, V extends Serializable> Sheet<V> queryColumnSheet(final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterBean bean);
@@ -237,6 +246,7 @@ public interface DataSource {
      * @param clazz  Entity类
      * @param column 过滤字段名
      * @param key    过滤字段值
+     *
      * @return Entity的List
      */
     public <T> List<T> queryList(final Class<T> clazz, final String column, final Serializable key);
@@ -288,6 +298,7 @@ public interface DataSource {
      * @param clazz   Entity类
      * @param flipper 翻页对象
      * @param bean    过滤Bean
+     *
      * @return Entity的Sheet
      */
     public <T> Sheet<T> querySheet(final Class<T> clazz, final Flipper flipper, final FilterBean bean);
@@ -322,6 +333,7 @@ public interface DataSource {
      * 通常用于复杂的更新操作
      *
      * @param sqls SQL语句
+     *
      * @return 结果数组
      */
     public int[] directExecute(String... sqls);

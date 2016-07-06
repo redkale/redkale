@@ -400,6 +400,15 @@ public final class EntityCache<T> {
         return rs;
     }
 
+    public <V> T[] update(Attribute<T, V> attr, final V fieldValue, final FilterNode node) {
+        if (attr == null || node == null) return (T[]) Array.newInstance(type, 0);
+        T[] rms = this.list.stream().filter(node.createPredicate(this)).toArray(len -> (T[]) Array.newInstance(type, len));
+        for (T rs : rms) {
+            attr.set(rs, fieldValue);
+        }
+        return rms;
+    }
+
     public <V> T updateColumnOr(final Serializable id, Attribute<T, V> attr, final long orvalue) {
         if (id == null) return null;
         T rs = this.map.get(id);

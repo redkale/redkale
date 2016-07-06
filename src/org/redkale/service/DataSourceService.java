@@ -96,6 +96,17 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
+    public <T> void updateColumn(final Class<T> clazz, final String column, final Serializable value, final FilterNode node) {
+        source.updateColumn(clazz, column, value, node);
+    }
+
+    @Override
+    public <T> void updateColumn(final CompletionHandler<Void, FilterNode> handler, final Class<T> clazz, final String column, final Serializable value, @DynAttachment final FilterNode node) {
+        source.updateColumn(clazz, column, value, node);
+        if (handler != null) handler.completed(null, node);
+    }
+
+    @Override
     public <T> void updateColumnIncrement(final Class<T> clazz, final Serializable id, final String column, long incvalue) {
         source.updateColumnIncrement(clazz, id, column, incvalue);
     }
@@ -137,6 +148,17 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     public <T> void updateColumns(final CompletionHandler<Void, T> handler, @DynAttachment final T value, final String... columns) {
         source.updateColumns(value, columns);
         if (handler != null) handler.completed(null, value);
+    }
+
+    @Override
+    public <T> void updateColumns(T value, final FilterNode node, final String... columns) {
+        source.updateColumns(value, node, columns);
+    }
+
+    @Override
+    public <T> void updateColumns(final CompletionHandler<Void, FilterNode> handler, final T value, @DynAttachment final FilterNode node, final String... columns) {
+        source.updateColumns(value, node, columns);
+        if (handler != null) handler.completed(null, node);
     }
 
     @Override

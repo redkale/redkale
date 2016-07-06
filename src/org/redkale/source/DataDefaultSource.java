@@ -17,7 +17,6 @@ import java.util.logging.*;
 import javax.annotation.Resource;
 import javax.sql.ConnectionPoolDataSource;
 import javax.xml.stream.*;
-import static org.redkale.source.FilterNode.formatToString;
 import org.redkale.util.*;
 import static org.redkale.source.FilterNode.formatToString;
 
@@ -764,6 +763,63 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
     }
 
     /**
+     * 根据主键值更新对象的column对应的值， 必须是Entity Class
+     *
+     * @param <T>    Entity类的泛型
+     * @param clazz  Entity类
+     * @param column 过滤字段名
+     * @param value  过滤字段值
+     * @param node   过滤node 不能为null
+     */
+    @Override
+    public <T> void updateColumn(Class<T> clazz, String column, Serializable value, FilterNode node) {
+        final EntityInfo<T> info = loadEntityInfo(clazz);
+        if (info.isVirtualEntity()) {
+            updateColumn(null, info, column, value, node);
+            return;
+        }
+        Connection conn = createWriteSQLConnection();
+        try {
+            updateColumn(conn, info, column, value, node);
+        } finally {
+            closeSQLConnection(conn);
+        }
+    }
+
+    @Override
+    public <T> void updateColumn(final CompletionHandler<Void, FilterNode> handler, final Class<T> clazz, final String column, final Serializable value, FilterNode node) {
+        updateColumn(clazz, column, value, node);
+        if (handler != null) handler.completed(null, node);
+    }
+
+    private <T> void updateColumn(Connection conn, final EntityInfo<T> info, String column, Serializable value, FilterNode node) {
+        try {
+            if (!info.isVirtualEntity()) {
+                Map<Class, String> joinTabalis = node.getJoinTabalis();
+                CharSequence join = node.createSQLJoin(this, joinTabalis, info);
+                CharSequence where = node.createSQLExpress(info, joinTabalis);
+
+                String sql = "UPDATE " + info.getTable() + " a SET " + info.getSQLColumn("a", column) + " = "
+                    + formatToString(value) + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
+                if (debug.get()) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
+                final Statement stmt = conn.createStatement();
+                stmt.execute(sql);
+                stmt.close();
+                if (writeListener != null) writeListener.update(sql);
+            }
+            //---------------------------------------------------
+            final EntityCache<T> cache = info.getCache();
+            if (cache == null) return;
+            T[] rs = cache.update(info.getAttribute(column), value, node);
+            if (cacheListener != null) cacheListener.updateCache(info.getType(), rs);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        } finally {
+            if (conn != null) closeSQLConnection(conn);
+        }
+    }
+
+    /**
      * 根据主键值给对象的column对应的值+incvalue， 必须是Entity Class
      * 等价SQL: UPDATE {clazz} SET {column} = {column} + {incvalue} WHERE {primary} = {id}
      *
@@ -994,6 +1050,75 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
         }
     }
 
+    /**
+     * 更新对象指定的一些字段， 必须是Entity对象
+     *
+     * @param <T>     Entity类的泛型
+     * @param value   Entity对象
+     * @param node    过滤node 不能为null
+     * @param columns 需要更新的字段
+     */
+    @Override
+    public <T> void updateColumns(final T value, final FilterNode node, final String... columns) {
+        final EntityInfo<T> info = loadEntityInfo((Class<T>) value.getClass());
+        if (info.isVirtualEntity()) {
+            updateColumns(null, info, value, node, columns);
+            return;
+        }
+        Connection conn = createWriteSQLConnection();
+        try {
+            updateColumns(conn, info, value, node, columns);
+        } finally {
+            closeSQLConnection(conn);
+        }
+    }
+
+    @Override
+    public <T> void updateColumns(final CompletionHandler<Void, FilterNode> handler, final T value, final FilterNode node, final String... columns) {
+        updateColumns(value, node, columns);
+        if (handler != null) handler.completed(null, node);
+    }
+
+    private <T> void updateColumns(final Connection conn, final EntityInfo<T> info, final T value, final FilterNode node, final String... columns) {
+        if (value == null || node == null || columns.length < 1) return;
+        try {
+            final Class<T> clazz = (Class<T>) value.getClass();
+            StringBuilder setsql = new StringBuilder();
+            final Serializable id = info.getPrimary().get(value);
+            final List<Attribute<T, Serializable>> attrs = new ArrayList<>();
+            final boolean virtual = info.isVirtualEntity();
+            for (String col : columns) {
+                Attribute<T, Serializable> attr = info.getUpdateAttribute(col);
+                if (attr == null) continue;
+                attrs.add(attr);
+                if (!virtual) {
+                    if (setsql.length() > 0) setsql.append(", ");
+                    setsql.append(info.getSQLColumn("a", col)).append(" = ").append(formatToString(attr.get(value)));
+                }
+            }
+            if (!virtual) {
+                Map<Class, String> joinTabalis = node.getJoinTabalis();
+                CharSequence join = node.createSQLJoin(this, joinTabalis, info);
+                CharSequence where = node.createSQLExpress(info, joinTabalis);
+
+                String sql = "UPDATE " + info.getTable() + " a SET " + setsql
+                    + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
+                if (debug.get()) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
+                final Statement stmt = conn.createStatement();
+                stmt.execute(sql);
+                stmt.close();
+                if (writeListener != null) writeListener.update(sql);
+            }
+            //---------------------------------------------------
+            final EntityCache<T> cache = info.getCache();
+            if (cache == null) return;
+            T[] rs = cache.update(value, attrs, node);
+            if (cacheListener != null) cacheListener.updateCache(clazz, rs);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public <T> void updateCache(Class<T> clazz, T... values) {
         if (values.length == 0) return;
         final EntityInfo<T> info = loadEntityInfo(clazz);
@@ -1148,6 +1273,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
      * @param <T>   Entity类的泛型
      * @param clazz Entity类
      * @param pk    主键值
+     *
      * @return Entity对象
      */
     @Override
@@ -1427,6 +1553,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
      * @param clazz          Entity类
      * @param flipper        翻页对象
      * @param bean           过滤Bean
+     *
      * @return 字段集合
      */
     @Override
@@ -1480,6 +1607,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
      * @param clazz  Entity类
      * @param column 过滤字段名
      * @param key    过滤字段值
+     *
      * @return Entity对象的集合
      */
     @Override
@@ -1499,6 +1627,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
      * @param <T>   Entity类的泛型
      * @param clazz Entity类
      * @param bean  过滤Bean
+     *
      * @return Entity对象集合
      */
     @Override
@@ -1531,6 +1660,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
      * @param clazz   Entity类
      * @param selects 收集的字段
      * @param bean    过滤Bean
+     *
      * @return Entity对象的集合
      */
     @Override
@@ -1621,6 +1751,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
      * @param clazz   Entity类
      * @param flipper 翻页对象
      * @param bean    过滤Bean
+     *
      * @return Entity对象的集合
      */
     @Override
@@ -1654,6 +1785,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
      * @param selects 收集的字段集合
      * @param flipper 翻页对象
      * @param bean    过滤Bean
+     *
      * @return Entity对象的集合
      */
     @Override
