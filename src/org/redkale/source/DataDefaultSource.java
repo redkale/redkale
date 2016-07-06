@@ -19,6 +19,69 @@ import javax.sql.ConnectionPoolDataSource;
 import javax.xml.stream.*;
 import org.redkale.util.*;
 import static org.redkale.source.FilterNode.formatToString;
+import static org.redkale.source.FilterNode.formatToString;
+import static org.redkale.source.FilterNode.formatToString;
+import static org.redkale.source.FilterNode.formatToString;
+import static org.redkale.source.FilterNode.formatToString;
+import static org.redkale.source.FilterNode.formatToString;
+import static org.redkale.source.FilterNode.formatToString;
+import static org.redkale.source.FilterNode.formatToString;
+import static org.redkale.source.FilterNode.formatToString;
+import static org.redkale.source.FilterNode.formatToString;
+import static org.redkale.source.FilterNode.formatToString;
+import static org.redkale.source.FilterNode.formatToString;
+import static org.redkale.source.FilterNode.formatToString;
+import static org.redkale.source.FilterNode.formatToString;
+import static org.redkale.source.FilterNode.formatToString;
+import static org.redkale.source.FilterNode.formatToString;
+import static org.redkale.source.FilterNode.formatToString;
+import static org.redkale.source.FilterNode.formatToString;
+import static org.redkale.source.FilterNode.formatToString;
+import static org.redkale.source.FilterNode.formatToString;
+import static org.redkale.source.FilterNode.formatToString;
+import static org.redkale.source.FilterNode.formatToString;
+import static org.redkale.source.FilterNode.formatToString;
+import static org.redkale.source.FilterNode.formatToString;
+import static org.redkale.source.FilterNode.formatToString;
+import static org.redkale.source.FilterNode.formatToString;
+import static org.redkale.source.FilterNode.formatToString;
+import static org.redkale.source.FilterNode.formatToString;
+import static org.redkale.source.FilterNode.formatToString;
+import static org.redkale.source.FilterNode.formatToString;
+import static org.redkale.source.FilterNode.formatToString;
+import static org.redkale.source.FilterNode.formatToString;
+import static org.redkale.source.FilterNode.formatToString;
+import static org.redkale.source.FilterNode.formatToString;
+import static org.redkale.source.FilterNode.formatToString;
+import static org.redkale.source.FilterNode.formatToString;
+import static org.redkale.source.FilterNode.formatToString;
+import static org.redkale.source.FilterNode.formatToString;
+import static org.redkale.source.FilterNode.formatToString;
+import static org.redkale.source.FilterNode.formatToString;
+import static org.redkale.source.FilterNode.formatToString;
+import static org.redkale.source.FilterNode.formatToString;
+import static org.redkale.source.FilterNode.formatToString;
+import static org.redkale.source.FilterNode.formatToString;
+import static org.redkale.source.FilterNode.formatToString;
+import static org.redkale.source.FilterNode.formatToString;
+import static org.redkale.source.FilterNode.formatToString;
+import static org.redkale.source.FilterNode.formatToString;
+import static org.redkale.source.FilterNode.formatToString;
+import static org.redkale.source.FilterNode.formatToString;
+import static org.redkale.source.FilterNode.formatToString;
+import static org.redkale.source.FilterNode.formatToString;
+import static org.redkale.source.FilterNode.formatToString;
+import static org.redkale.source.FilterNode.formatToString;
+import static org.redkale.source.FilterNode.formatToString;
+import static org.redkale.source.FilterNode.formatToString;
+import static org.redkale.source.FilterNode.formatToString;
+import static org.redkale.source.FilterNode.formatToString;
+import static org.redkale.source.FilterNode.formatToString;
+import static org.redkale.source.FilterNode.formatToString;
+import static org.redkale.source.FilterNode.formatToString;
+import static org.redkale.source.FilterNode.formatToString;
+import static org.redkale.source.FilterNode.formatToString;
+import static org.redkale.source.FilterNode.formatToString;
 
 /**
  *
@@ -991,36 +1054,36 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
      * 更新对象指定的一些字段， 必须是Entity对象
      *
      * @param <T>     Entity类的泛型
-     * @param value   Entity对象
+     * @param bean   Entity对象
      * @param columns 需要更新的字段
      */
     @Override
-    public <T> void updateColumns(final T value, final String... columns) {
-        final EntityInfo<T> info = loadEntityInfo((Class<T>) value.getClass());
+    public <T> void updateColumns(final T bean, final String... columns) {
+        final EntityInfo<T> info = loadEntityInfo((Class<T>) bean.getClass());
         if (info.isVirtualEntity()) {
-            updateColumns(null, info, value, columns);
+            updateColumns(null, info, bean, columns);
             return;
         }
         Connection conn = createWriteSQLConnection();
         try {
-            updateColumns(conn, info, value, columns);
+            updateColumns(conn, info, bean, columns);
         } finally {
             closeSQLConnection(conn);
         }
     }
 
     @Override
-    public <T> void updateColumns(final CompletionHandler<Void, T> handler, final T value, final String... columns) {
-        updateColumns(value, columns);
-        if (handler != null) handler.completed(null, value);
+    public <T> void updateColumns(final CompletionHandler<Void, T> handler, final T bean, final String... columns) {
+        updateColumns(bean, columns);
+        if (handler != null) handler.completed(null, bean);
     }
 
-    private <T> void updateColumns(final Connection conn, final EntityInfo<T> info, final T value, final String... columns) {
-        if (value == null || columns.length < 1) return;
+    private <T> void updateColumns(final Connection conn, final EntityInfo<T> info, final T bean, final String... columns) {
+        if (bean == null || columns.length < 1) return;
         try {
-            final Class<T> clazz = (Class<T>) value.getClass();
+            final Class<T> clazz = (Class<T>) bean.getClass();
             StringBuilder setsql = new StringBuilder();
-            final Serializable id = info.getPrimary().get(value);
+            final Serializable id = info.getPrimary().get(bean);
             final List<Attribute<T, Serializable>> attrs = new ArrayList<>();
             final boolean virtual = info.isVirtualEntity();
             for (String col : columns) {
@@ -1029,12 +1092,12 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
                 attrs.add(attr);
                 if (!virtual) {
                     if (setsql.length() > 0) setsql.append(", ");
-                    setsql.append(info.getSQLColumn(null, col)).append(" = ").append(formatToString(attr.get(value)));
+                    setsql.append(info.getSQLColumn(null, col)).append(" = ").append(formatToString(attr.get(bean)));
                 }
             }
             if (!virtual) {
                 String sql = "UPDATE " + info.getTable() + " SET " + setsql + " WHERE " + info.getPrimarySQLColumn() + " = " + formatToString(id);
-                if (debug.get()) logger.finest(value.getClass().getSimpleName() + ": " + sql);
+                if (debug.get()) logger.finest(bean.getClass().getSimpleName() + ": " + sql);
                 final Statement stmt = conn.createStatement();
                 stmt.execute(sql);
                 stmt.close();
@@ -1043,7 +1106,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
             //---------------------------------------------------
             final EntityCache<T> cache = info.getCache();
             if (cache == null) return;
-            T rs = cache.update(value, attrs);
+            T rs = cache.update(bean, attrs);
             if (cacheListener != null) cacheListener.updateCache(clazz, rs);
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -1054,37 +1117,37 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
      * 更新对象指定的一些字段， 必须是Entity对象
      *
      * @param <T>     Entity类的泛型
-     * @param value   Entity对象
+     * @param bean   Entity对象
      * @param node    过滤node 不能为null
      * @param columns 需要更新的字段
      */
     @Override
-    public <T> void updateColumns(final T value, final FilterNode node, final String... columns) {
-        final EntityInfo<T> info = loadEntityInfo((Class<T>) value.getClass());
+    public <T> void updateColumns(final T bean, final FilterNode node, final String... columns) {
+        final EntityInfo<T> info = loadEntityInfo((Class<T>) bean.getClass());
         if (info.isVirtualEntity()) {
-            updateColumns(null, info, value, node, columns);
+            updateColumns(null, info, bean, node, columns);
             return;
         }
         Connection conn = createWriteSQLConnection();
         try {
-            updateColumns(conn, info, value, node, columns);
+            updateColumns(conn, info, bean, node, columns);
         } finally {
             closeSQLConnection(conn);
         }
     }
 
     @Override
-    public <T> void updateColumns(final CompletionHandler<Void, FilterNode> handler, final T value, final FilterNode node, final String... columns) {
-        updateColumns(value, node, columns);
+    public <T> void updateColumns(final CompletionHandler<Void, FilterNode> handler, final T bean, final FilterNode node, final String... columns) {
+        updateColumns(bean, node, columns);
         if (handler != null) handler.completed(null, node);
     }
 
-    private <T> void updateColumns(final Connection conn, final EntityInfo<T> info, final T value, final FilterNode node, final String... columns) {
-        if (value == null || node == null || columns.length < 1) return;
+    private <T> void updateColumns(final Connection conn, final EntityInfo<T> info, final T bean, final FilterNode node, final String... columns) {
+        if (bean == null || node == null || columns.length < 1) return;
         try {
-            final Class<T> clazz = (Class<T>) value.getClass();
+            final Class<T> clazz = (Class<T>) bean.getClass();
             StringBuilder setsql = new StringBuilder();
-            final Serializable id = info.getPrimary().get(value);
+            final Serializable id = info.getPrimary().get(bean);
             final List<Attribute<T, Serializable>> attrs = new ArrayList<>();
             final boolean virtual = info.isVirtualEntity();
             for (String col : columns) {
@@ -1093,7 +1156,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
                 attrs.add(attr);
                 if (!virtual) {
                     if (setsql.length() > 0) setsql.append(", ");
-                    setsql.append(info.getSQLColumn("a", col)).append(" = ").append(formatToString(attr.get(value)));
+                    setsql.append(info.getSQLColumn("a", col)).append(" = ").append(formatToString(attr.get(bean)));
                 }
             }
             if (!virtual) {
@@ -1112,7 +1175,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
             //---------------------------------------------------
             final EntityCache<T> cache = info.getCache();
             if (cache == null) return;
-            T[] rs = cache.update(value, attrs, node);
+            T[] rs = cache.update(bean, attrs, node);
             if (cacheListener != null) cacheListener.updateCache(clazz, rs);
         } catch (SQLException e) {
             throw new RuntimeException(e);

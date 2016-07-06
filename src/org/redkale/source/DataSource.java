@@ -81,9 +81,9 @@ public interface DataSource {
 
     public <T> void updateColumnOr(final Class<T> clazz, final Serializable id, final String column, long incvalue);
 
-    public <T> void updateColumns(final T value, final String... columns);
+    public <T> void updateColumns(final T bean, final String... columns);
 
-    public <T> void updateColumns(final T value, final FilterNode node, final String... columns);
+    public <T> void updateColumns(final T bean, final FilterNode node, final String... columns);
 
     //----------------------异步版---------------------------------
     public <T> void update(final CompletionHandler<Void, T[]> handler, final T... values);
@@ -98,9 +98,9 @@ public interface DataSource {
 
     public <T> void updateColumnOr(final CompletionHandler<Void, Serializable> handler, final Class<T> clazz, final Serializable id, final String column, long incvalue);
 
-    public <T> void updateColumns(final CompletionHandler<Void, T> handler, final T value, final String... columns);
+    public <T> void updateColumns(final CompletionHandler<Void, T> handler, final T bean, final String... columns);
 
-    public <T> void updateColumns(final CompletionHandler<Void, FilterNode> handler, final T value, final FilterNode node, final String... columns);
+    public <T> void updateColumns(final CompletionHandler<Void, FilterNode> handler, final T bean, final FilterNode node, final String... columns);
 
     //############################################# 查询接口 #############################################
     //-----------------------getXXXXResult-----------------------------

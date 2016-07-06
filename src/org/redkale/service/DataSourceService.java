@@ -140,24 +140,24 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
-    public <T> void updateColumns(T value, final String... columns) {
-        source.updateColumns(value, columns);
+    public <T> void updateColumns(T bean, final String... columns) {
+        source.updateColumns(bean, columns);
     }
 
     @Override
-    public <T> void updateColumns(final CompletionHandler<Void, T> handler, @DynAttachment final T value, final String... columns) {
-        source.updateColumns(value, columns);
-        if (handler != null) handler.completed(null, value);
+    public <T> void updateColumns(final CompletionHandler<Void, T> handler, @DynAttachment final T bean, final String... columns) {
+        source.updateColumns(bean, columns);
+        if (handler != null) handler.completed(null, bean);
     }
 
     @Override
-    public <T> void updateColumns(T value, final FilterNode node, final String... columns) {
-        source.updateColumns(value, node, columns);
+    public <T> void updateColumns(T bean, final FilterNode node, final String... columns) {
+        source.updateColumns(bean, node, columns);
     }
 
     @Override
-    public <T> void updateColumns(final CompletionHandler<Void, FilterNode> handler, final T value, @DynAttachment final FilterNode node, final String... columns) {
-        source.updateColumns(value, node, columns);
+    public <T> void updateColumns(final CompletionHandler<Void, FilterNode> handler, final T bean, @DynAttachment final FilterNode node, final String... columns) {
+        source.updateColumns(bean, node, columns);
         if (handler != null) handler.completed(null, node);
     }
 
