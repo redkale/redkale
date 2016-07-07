@@ -17,6 +17,7 @@ import java.nio.*;
 import java.util.*;
 import java.util.concurrent.*;
 import jdk.internal.org.objectweb.asm.*;
+import static jdk.internal.org.objectweb.asm.ClassWriter.COMPUTE_FRAMES;
 import static jdk.internal.org.objectweb.asm.Opcodes.*;
 
 /**
@@ -191,7 +192,7 @@ public abstract class BasedHttpServlet extends HttpServlet {
             }
         }
         //------------------------------------------------------------------------------
-        ClassWriter cw = new ClassWriter(0);
+        ClassWriter cw = new ClassWriter(COMPUTE_FRAMES);
         FieldVisitor fv;
         MethodVisitor mv;
         AnnotationVisitor av0;

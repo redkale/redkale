@@ -15,6 +15,7 @@ import java.util.function.*;
 import java.util.logging.*;
 import javax.annotation.*;
 import jdk.internal.org.objectweb.asm.*;
+import static jdk.internal.org.objectweb.asm.ClassWriter.COMPUTE_FRAMES;
 import static jdk.internal.org.objectweb.asm.Opcodes.*;
 import jdk.internal.org.objectweb.asm.Type;
 import org.redkale.convert.bson.*;
@@ -24,7 +25,7 @@ import org.redkale.service.DynCall;
 
 /**
  *
- * 
+ *
  * 详情见: http://redkale.org
  *
  * @author zhangjx
@@ -161,14 +162,14 @@ public final class SncpDynServlet extends SncpServlet {
          * <blockquote><pre>
          *  public class TestService implements Service {
          *      public boolean change(TestBean bean, String name, int id) {
-         * 
+         *
          *      }
          *  }
-         * 
+         *
          *  public class DynActionTestService_change extends SncpServletAction {
-         * 
+         *
          *      public TestService service;
-         * 
+         *
          *      &#64;Override
          *      public void action(final BsonReader in, final BsonWriter out) throws Throwable {
          *          TestBean arg1 = convert.convertFrom(paramTypes[1], in);
@@ -181,9 +182,9 @@ public final class SncpDynServlet extends SncpServlet {
          *  }
          * </pre></blockquote>
          *
-         * @param service  Service
+         * @param service Service
          * @param actionid 操作ID
-         * @param method   方法
+         * @param method 方法
          *
          * @return SncpServletAction
          */
@@ -207,7 +208,7 @@ public final class SncpDynServlet extends SncpServlet {
                 }
             }
             //-------------------------------------------------------------
-            ClassWriter cw = new ClassWriter(0);
+            ClassWriter cw = new ClassWriter(COMPUTE_FRAMES);
             FieldVisitor fv;
             AsmMethodVisitor mv;
 
@@ -371,9 +372,8 @@ public final class SncpDynServlet extends SncpServlet {
                     mv.visitMethodInsn(INVOKEVIRTUAL, convertName, "convertTo", "(" + convertWriterDesc + "Ljava/lang/reflect/Type;Ljava/lang/Object;)V", false);
                     mv.visitInsn(RETURN);
                     store++;
-                    if (maxStack < 10) maxStack = 10;
                 }
-                mv.visitMaxs(maxStack + 10, store + 10);
+                mv.visitMaxs(maxStack, store);
                 mv.visitEnd();
             }
             cw.visitEnd();

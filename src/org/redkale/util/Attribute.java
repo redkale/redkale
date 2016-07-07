@@ -8,6 +8,7 @@ package org.redkale.util;
 import java.util.*;
 import java.util.function.*;
 import jdk.internal.org.objectweb.asm.*;
+import static jdk.internal.org.objectweb.asm.ClassWriter.COMPUTE_FRAMES;
 import static jdk.internal.org.objectweb.asm.Opcodes.*;
 
 /**
@@ -442,7 +443,7 @@ public interface Attribute<T, F> {
         } catch (Throwable ex) {
         }
         //---------------------------------------------------
-        final ClassWriter cw = new ClassWriter(0);
+        final ClassWriter cw = new ClassWriter(COMPUTE_FRAMES);
         MethodVisitor mv;
 
         cw.visit(V1_8, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynName, "Ljava/lang/Object;L" + supDynName + "<" + interDesc + columnDesc + ">;", "java/lang/Object", new String[]{supDynName});

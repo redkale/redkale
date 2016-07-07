@@ -4,6 +4,7 @@ import java.lang.reflect.Modifier;
 import java.util.function.Predicate;
 import static jdk.internal.org.objectweb.asm.Opcodes.*;
 import jdk.internal.org.objectweb.asm.*;
+import static jdk.internal.org.objectweb.asm.ClassWriter.COMPUTE_FRAMES;
 
 /**
  *
@@ -41,7 +42,7 @@ public interface Reproduce<D, S> {
         } catch (Exception ex) {
         }
         // ------------------------------------------------------------------------------
-        ClassWriter cw = new ClassWriter(0);
+        ClassWriter cw = new ClassWriter(COMPUTE_FRAMES);
         FieldVisitor fv;
         MethodVisitor mv;
         AnnotationVisitor av0;

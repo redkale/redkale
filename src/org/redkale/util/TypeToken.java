@@ -8,6 +8,7 @@ import java.lang.reflect.Type;
 import java.lang.reflect.*;
 import java.util.*;
 import jdk.internal.org.objectweb.asm.*;
+import static jdk.internal.org.objectweb.asm.ClassWriter.COMPUTE_FRAMES;
 import static jdk.internal.org.objectweb.asm.Opcodes.*;
 
 /**
@@ -139,7 +140,7 @@ public abstract class TypeToken<T> {
                 break;
             }
         }
-        ClassWriter cw = new ClassWriter(0);
+        ClassWriter cw = new ClassWriter(COMPUTE_FRAMES);
         FieldVisitor fv;
         MethodVisitor mv;
         cw.visit(V1_8, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynName, null, "java/lang/Object", null);
