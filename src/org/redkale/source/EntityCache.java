@@ -474,121 +474,19 @@ public final class EntityCache<T> {
                 final Attribute<T, Serializable> pattr = getAttribute(sub[0].substring(pos + 1, pos2));
                 final String func = sub[0].substring(0, pos);
                 if ("ABS".equalsIgnoreCase(func)) {
+                    Function getter = null;
                     if (pattr.type() == int.class || pattr.type() == Integer.class) {
-                        attr = new Attribute<T, Serializable>() {
-
-                            @Override
-                            public Class type() {
-                                return pattr.type();
-                            }
-
-                            @Override
-                            public Class declaringClass() {
-                                return pattr.declaringClass();
-                            }
-
-                            @Override
-                            public String field() {
-                                return pattr.field();
-                            }
-
-                            @Override
-                            public Serializable get(T obj) {
-                                return Math.abs(((Number) pattr.get(obj)).intValue());
-                            }
-
-                            @Override
-                            public void set(T obj, Serializable value) {
-                                pattr.set(obj, value);
-                            }
-                        };
+                        getter = x -> Math.abs(((Number) pattr.get((T) x)).intValue());
                     } else if (pattr.type() == long.class || pattr.type() == Long.class) {
-                        attr = new Attribute<T, Serializable>() {
-
-                            @Override
-                            public Class type() {
-                                return pattr.type();
-                            }
-
-                            @Override
-                            public Class declaringClass() {
-                                return pattr.declaringClass();
-                            }
-
-                            @Override
-                            public String field() {
-                                return pattr.field();
-                            }
-
-                            @Override
-                            public Serializable get(T obj) {
-                                return Math.abs(((Number) pattr.get(obj)).longValue());
-                            }
-
-                            @Override
-                            public void set(T obj, Serializable value) {
-                                pattr.set(obj, value);
-                            }
-                        };
+                        getter = x -> Math.abs(((Number) pattr.get((T) x)).longValue());
                     } else if (pattr.type() == float.class || pattr.type() == Float.class) {
-                        attr = new Attribute<T, Serializable>() {
-
-                            @Override
-                            public Class type() {
-                                return pattr.type();
-                            }
-
-                            @Override
-                            public Class declaringClass() {
-                                return pattr.declaringClass();
-                            }
-
-                            @Override
-                            public String field() {
-                                return pattr.field();
-                            }
-
-                            @Override
-                            public Serializable get(T obj) {
-                                return Math.abs(((Number) pattr.get(obj)).floatValue());
-                            }
-
-                            @Override
-                            public void set(T obj, Serializable value) {
-                                pattr.set(obj, value);
-                            }
-                        };
+                        getter = x -> Math.abs(((Number) pattr.get((T) x)).floatValue());
                     } else if (pattr.type() == double.class || pattr.type() == Double.class) {
-                        attr = new Attribute<T, Serializable>() {
-
-                            @Override
-                            public Class type() {
-                                return pattr.type();
-                            }
-
-                            @Override
-                            public Class declaringClass() {
-                                return pattr.declaringClass();
-                            }
-
-                            @Override
-                            public String field() {
-                                return pattr.field();
-                            }
-
-                            @Override
-                            public Serializable get(T obj) {
-                                return Math.abs(((Number) pattr.get(obj)).doubleValue());
-                            }
-
-                            @Override
-                            public void set(T obj, Serializable value) {
-                                pattr.set(obj, value);
-                            }
-                        };
+                        getter = x -> Math.abs(((Number) pattr.get((T) x)).doubleValue());
                     } else {
                         throw new RuntimeException("Flipper not supported sort illegal type by ABS (" + flipper.getSort() + ")");
                     }
+                    attr = (Attribute<T, Serializable>) Attribute.create(pattr.declaringClass(), pattr.field(), pattr.type(), getter, (o, v) -> pattr.set(o, v));
                 } else if (func.isEmpty()) {
                     attr = pattr;
                 } else {

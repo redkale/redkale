@@ -99,7 +99,7 @@ public final class EntityInfo<T> {
     //------------------------------------------------------------
 
     public static <T> EntityInfo<T> load(Class<T> clazz, final int nodeid, final boolean cacheForbidden, final Properties conf,
-                                         Function<Class, List> fullloader) {
+        Function<Class, List> fullloader) {
         EntityInfo rs = entityInfos.get(clazz);
         if (rs != null) return rs;
         synchronized (entityInfos) {
@@ -312,7 +312,7 @@ public final class EntityInfo<T> {
     }
 
     protected String createSQLOrderby(Flipper flipper) {
-        if (flipper == null || flipper.getSort() == null || flipper.getSort().isEmpty() || flipper.getSort().indexOf(';') >= 0  || flipper.getSort().indexOf('\n') >= 0 ) return "";
+        if (flipper == null || flipper.getSort() == null || flipper.getSort().isEmpty() || flipper.getSort().indexOf(';') >= 0 || flipper.getSort().indexOf('\n') >= 0) return "";
         final String sort = flipper.getSort();
         String sql = this.sortOrderbySqls.get(sort);
         if (sql != null) return sql;
@@ -369,12 +369,18 @@ public final class EntityInfo<T> {
                 Serializable o = (Serializable) set.getObject(this.getSQLColumn(null, attr.field()));
                 if (o != null) {
                     Class t = attr.type();
-                    if (t == short.class) {
+                    if (t == int.class) {
+                        o = ((Number) o).intValue();
+                    } else if (t == short.class) {
                         o = ((Number) o).shortValue();
                     } else if (t == long.class) {
                         o = ((Number) o).longValue();
-                    } else if (t == int.class) {
-                        o = ((Number) o).intValue();
+                    } else if (t == float.class) {
+                        o = ((Number) o).floatValue();
+                    } else if (t == double.class) {
+                        o = ((Number) o).doubleValue();
+                    } else if (t == byte.class) {
+                        o = ((Number) o).byteValue();
                     }
                 }
                 attr.set(obj, o);
