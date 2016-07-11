@@ -80,19 +80,6 @@ public class RetResult<T> {
     }
 
     /**
-     * 结果码 0表示成功、 非0表示错误
-     *
-     * @return 结果码
-     */
-    public int getRetcode() {
-        return retcode;
-    }
-
-    public void setRetcode(int retcode) {
-        this.retcode = retcode;
-    }
-
-    /**
      * 同 setRetcode
      *
      * @param retcode retcode
@@ -102,14 +89,6 @@ public class RetResult<T> {
     public RetResult<T> retcode(int retcode) {
         this.retcode = retcode;
         return this;
-    }
-
-    public String getRetinfo() {
-        return retinfo;
-    }
-
-    public void setRetinfo(String retinfo) {
-        this.retinfo = retinfo;
     }
 
     /**
@@ -125,6 +104,39 @@ public class RetResult<T> {
     }
 
     /**
+     * 同 setResult
+     *
+     * @param result result
+     *
+     * @return RetResult
+     */
+    public RetResult<T> result(T result) {
+        this.result = result;
+        return this;
+    }
+
+    /**
+     * 结果码 0表示成功、 非0表示错误
+     *
+     * @return 结果码
+     */
+    public int getRetcode() {
+        return retcode;
+    }
+
+    public void setRetcode(int retcode) {
+        this.retcode = retcode;
+    }
+
+    public String getRetinfo() {
+        return retinfo;
+    }
+
+    public void setRetinfo(String retinfo) {
+        this.retinfo = retinfo;
+    }
+
+    /**
      * 结果对象， 通常只有在retcode = 0时值才有效
      *
      * @return 结果对象
@@ -135,18 +147,6 @@ public class RetResult<T> {
 
     public void setResult(T result) {
         this.result = result;
-    }
-
-    /**
-     * 同 setResult
-     *
-     * @param result result
-     *
-     * @return RetResult
-     */
-    public RetResult<T> result(T result) {
-        this.result = result;
-        return this;
     }
 
     @Override
