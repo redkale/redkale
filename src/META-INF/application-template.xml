@@ -156,8 +156,9 @@
             <!-- 
                当Server为HTTP协议时，ResourceServlet才有效. 默认存在一个有默认属性的resource-servlet节点
                webroot: web资源的根目录, 默认取server节点中的root值
+               index : 启始页，默认值：index.html
             -->
-            <resource-servlet webroot="root">
+            <resource-servlet webroot="root" index="index.html">
                 <!--
                     资源缓存的配置, 默认存在一个含默认属性的caches节点
                     limit:  资源缓存最大容量， 默认: 0, 为0表示不缓存， 单位可以是B、K、M、G，不区分大小写

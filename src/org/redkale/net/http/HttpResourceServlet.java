@@ -90,6 +90,8 @@ public final class HttpResourceServlet extends HttpServlet {
 
     protected File root = new File("./root/");
 
+    protected String indexHtml = "index.html";
+
     protected final ConcurrentHashMap<String, FileEntry> files = new ConcurrentHashMap<>();
 
     protected final ConcurrentHashMap<WatchKey, Path> keymaps = new ConcurrentHashMap<>();
@@ -104,6 +106,7 @@ public final class HttpResourceServlet extends HttpServlet {
     public void init(HttpContext context, AnyValue config) {
         if (config != null) {
             String rootstr = config.getValue("webroot", "root");
+            this.indexHtml = config.getValue("index", "index.html");
             if (rootstr.indexOf(':') < 0 && rootstr.indexOf('/') != 0 && System.getProperty("APP_HOME") != null) {
                 rootstr = new File(System.getProperty("APP_HOME"), rootstr).getPath();
             }
@@ -178,7 +181,9 @@ public final class HttpResourceServlet extends HttpServlet {
                 }
             }
         }
-        if (uri.length() == 0 || uri.equals("/")) uri = "/index.html";
+        if (uri.length() == 0 || uri.equals("/")) {
+            uri = this.indexHtml.indexOf('/') == 0 ? this.indexHtml : ("/" + this.indexHtml);
+        }
         //System.out.println(request);
         FileEntry entry;
         if (watchThread == null) {
@@ -195,8 +200,10 @@ public final class HttpResourceServlet extends HttpServlet {
     }
 
     private FileEntry createFileEntry(String uri) {
-        File file = new File(root, uri);
-        if (file.isDirectory()) file = new File(file, "index.html");
+        File rfile = new File(root, uri);
+        File file = rfile;
+        if (file.isDirectory()) file = new File(rfile, this.indexHtml);
+        if (file.isDirectory()) file = new File(rfile, "index.html");
         if (!file.isFile() || !file.canRead()) return null;
         FileEntry en = new FileEntry(this, file);
         if (watchThread == null) return en;

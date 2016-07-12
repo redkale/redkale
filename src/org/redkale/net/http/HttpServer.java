@@ -33,7 +33,6 @@ public final class HttpServer extends Server<String, HttpContext, HttpRequest, H
     @Override
     public void init(AnyValue config) throws Exception {
         super.init(config);
-        AnyValue conf = config == null ? null : config.getAnyValue("servlets");
     }
 
     public void addHttpServlet(HttpServlet servlet, final String prefix, AnyValue conf, String... mappings) {
