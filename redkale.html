@@ -658,8 +658,9 @@
             <span class="c">&lt;!-- </span>
 <span class="c">               当Server为HTTP协议时，ResourceServlet才有效. 默认存在一个有默认属性的resource-servlet节点</span>
 <span class="c">               webroot: web资源的根目录, 默认取server节点中的root值</span>
+<span class="c">               index : 启始页，默认值：index.html</span>
 <span class="c">            --&gt;</span>
-            <span class="nt">&lt;resource-servlet</span> <span class="na">webroot=</span><span class="s">&quot;root&quot;</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;resource-servlet</span> <span class="na">webroot=</span><span class="s">&quot;root&quot;</span> <span class="na">index=</span><span class="s">&quot;index.html&quot;</span><span class="nt">&gt;</span>
                 <span class="c">&lt;!--</span>
 <span class="c">                    资源缓存的配置, 默认存在一个含默认属性的caches节点</span>
 <span class="c">                    limit:  资源缓存最大容量， 默认: 0, 为0表示不缓存， 单位可以是B、K、M、G，不区分大小写</span>
