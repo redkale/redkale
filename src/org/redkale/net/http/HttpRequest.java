@@ -532,7 +532,7 @@ public class HttpRequest extends Request<HttpContext> {
     }
 
     /**
-     * 获取请求URL分段中含prefix段的int值 例如请求URL /pipes/record/query/start:0/size:50 获取page参数: int start = request.getRequstURIPath("start:", 0); 获取size参数: int size = request.getRequstURIPath("size:", 20);
+     * 获取请求URL分段中含prefix段的int值 例如请求URL /pipes/record/query/offset:0/limit:50 获取limit参数: int offset = request.getRequstURIPath("offset:", 0); 获取size参数: int limit = request.getRequstURIPath("limit:", 20);
      *
      * @param prefix prefix段前缀
      * @param defvalue 默认int值

@@ -16,89 +16,89 @@ import java.io.Serializable;
  */
 public final class Flipper implements Serializable, Cloneable {
 
-    public static int DEFAULT_PAGESIZE = 20;
+    public static int DEFAULT_LIMIT = 20;
 
-    private int size = DEFAULT_PAGESIZE;
+    private int limit = DEFAULT_LIMIT;
 
-    private int start = 0;
+    private int offset = 0;
 
     private String sort = "";
 
     public Flipper() {
     }
 
-    public Flipper(int pageSize) {
-        this.size = pageSize;
+    public Flipper(int limit) {
+        this.limit = limit;
     }
 
     public Flipper(String sortColumn) {
         this.sort = sortColumn;
     }
 
-    public Flipper(int pageSize, int startIndex) {
-        this.size = pageSize > 0 ? pageSize : DEFAULT_PAGESIZE;
-        this.start = startIndex < 0 ? 0 : startIndex;
+    public Flipper(int limit, int offset) {
+        this.limit = limit > 0 ? limit : DEFAULT_LIMIT;
+        this.offset = offset < 0 ? 0 : offset;
     }
 
-    public Flipper(int pageSize, int startIndex, String sortColumn) {
-        this.size = pageSize > 0 ? pageSize : DEFAULT_PAGESIZE;
-        this.start = startIndex < 0 ? 0 : startIndex;
+    public Flipper(int limit, int offset, String sortColumn) {
+        this.limit = limit > 0 ? limit : DEFAULT_LIMIT;
+        this.offset = offset < 0 ? 0 : offset;
         this.sort = sortColumn;
     }
 
     public void copyTo(Flipper copy) {
         if (copy == null) return;
-        copy.start = this.start;
-        copy.size = this.size;
+        copy.offset = this.offset;
+        copy.limit = this.limit;
         copy.sort = this.sort;
     }
 
     public void copyFrom(Flipper copy) {
         if (copy == null) return;
-        this.start = copy.start;
-        this.size = copy.size;
+        this.offset = copy.offset;
+        this.limit = copy.limit;
         this.sort = copy.sort;
     }
 
     public Flipper next() {
-        this.start = getStart() + this.size;
+        this.offset = getOffset() + this.limit;
         return this;
     }
 
     @Override
     @SuppressWarnings("CloneDoesntCallSuperClone")
     public Flipper clone() {
-        return new Flipper(this.size, this.start, this.sort);
+        return new Flipper(this.limit, this.offset, this.sort);
     }
 
-    public int getStart() {
-        return start;
+    public int getOffset() {
+        return offset;
     }
 
     @Override
     public String toString() {
-        return this.getClass().getSimpleName() + "{start:" + this.start + ", size=" + this.size + ", sort=" + this.sort + "}";
+        return this.getClass().getSimpleName() + "{offset:" + this.offset + ", limit:" + this.limit + ", sort:" + this.sort + "}";
     }
 
-    public int getSize() {
-        return size;
+    public int getLimit() {
+        return limit;
     }
 
-    public void setSize(int size) {
-        if (size > 0) {
-            this.size = size;
+    public void setLimit(int limit) {
+        if (limit > 0) {
+            this.limit = limit;
         }
     }
 
-    public void setStart(int start) {
-        this.start = start < 0 ? 0 : start;
+    public void setOffset(int offset) {
+        this.offset = offset < 0 ? 0 : offset;
     }
 
     public String getSort() {
         return sort;
     }
 
-    public Flipper sortIfEmpty(String sort) {
+    public Flipper sortIfAbsent(String sort) {
         if (this.sort == null || this.sort.isEmpty()) {
             this.sort = sort;
         }
