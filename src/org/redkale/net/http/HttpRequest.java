@@ -20,8 +20,8 @@ import org.redkale.util.ByteArray;
  * 同时提供json的解析接口: public Object getJsonParameter(Class clazz, String name)  <br>
  * RedKale提倡带简单的参数的GET请求采用类似REST风格, 因此提供了 getRequstURIPath 系列接口。  <br>
  * 例如简单的翻页查询   <br>
- * /pipes/record/query/start:0/size:20 获取页号: int start = request.getRequstURIPath("start:", 0);   <br>
- * 获取行数: int size = request.getRequstURIPath("size:", 10);
+ * /pipes/record/query/offset:0/limit:20 获取页号: int offset = request.getRequstURIPath("offset:", 0);   <br>
+ * 获取行数: int limit = request.getRequstURIPath("limit:", 10);
  * <p>
  * 详情见: http://redkale.org
  *
