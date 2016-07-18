@@ -506,14 +506,16 @@ public class HttpRequest extends Request<HttpContext> {
     }
 
     /**
-     * 获取请求URL分段中含prefix段的值 例如请求URL /pipes/record/query/name:hello 获取name参数: String name = request.getRequstURIPath("name:", "none");
+     * 获取请求URL分段中含prefix段的值   <br>
+     * 例如请求URL /pipes/record/query/name:hello   <br>
+     * 获取name参数: String name = request.getRequstURIPath("name:", "none");
      *
      * @param prefix prefix段前缀
      * @param defvalue 默认值
      * @return prefix截断后的值
      */
     public String getRequstURIPath(String prefix, String defvalue) {
-        if (requestURI == null || prefix == null) return defvalue;
+        if (requestURI == null || prefix == null || prefix.isEmpty()) return defvalue;
         int pos = requestURI.indexOf(prefix);
         if (pos < 0) return defvalue;
         String sub = requestURI.substring(pos + prefix.length());
@@ -522,7 +524,9 @@ public class HttpRequest extends Request<HttpContext> {
     }
 
     /**
-     * 获取请求URL分段中含prefix段的short值 例如请求URL /pipes/record/query/type:10 获取type参数: short type = request.getRequstURIPath("type:", (short)0);
+     * 获取请求URL分段中含prefix段的short值   <br>
+     * 例如请求URL /pipes/record/query/type:10   <br>
+     * 获取type参数: short type = request.getRequstURIPath("type:", (short)0);
      *
      * @param prefix prefix段前缀
      * @param defvalue 默认short值
@@ -534,7 +538,10 @@ public class HttpRequest extends Request<HttpContext> {
     }
 
     /**
-     * 获取请求URL分段中含prefix段的int值 例如请求URL /pipes/record/query/offset:0/limit:50 获取limit参数: int offset = request.getRequstURIPath("offset:", 0); 获取size参数: int limit = request.getRequstURIPath("limit:", 20);
+     * 获取请求URL分段中含prefix段的int值  <br>
+     * 例如请求URL /pipes/record/query/offset:0/limit:50   <br>
+     * 获取起址参数: int offset = request.getRequstURIPath("offset:", 0);   <br>
+     * 获取行数参数: int limit = request.getRequstURIPath("limit:", 20);  <br>
      *
      * @param prefix prefix段前缀
      * @param defvalue 默认int值
@@ -546,7 +553,9 @@ public class HttpRequest extends Request<HttpContext> {
     }
 
     /**
-     * 获取请求URL分段中含prefix段的long值 例如请求URL /pipes/record/query/time:1453104341363/id:40 获取time参数: long time = request.getRequstURIPath("time:", 0L);
+     * 获取请求URL分段中含prefix段的long值   <br>
+     * 例如请求URL /pipes/record/query/time:1453104341363/id:40   <br>
+     * 获取time参数: long time = request.getRequstURIPath("time:", 0L);
      *
      * @param prefix prefix段前缀
      * @param defvalue 默认long值
