@@ -98,6 +98,11 @@ public final class Flipper implements Serializable, Cloneable {
         return sort;
     }
 
+    public static Flipper sortIfAbsent(Flipper flipper, String sort) {
+        if (flipper != null) return flipper.sortIfAbsent(sort);
+        return flipper;
+    }
+
     public Flipper sortIfAbsent(String sort) {
         if (this.sort == null || this.sort.isEmpty()) {
             this.sort = sort;
