@@ -576,7 +576,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
 
     private CharSequence genString(HttpCookie cookie) {
         StringBuilder sb = new StringBuilder();
-        sb.append(cookie.getName()).append("=\"").append(cookie.getValue()).append('"').append("; Version=1");
+        sb.append(cookie.getName()).append("=").append(cookie.getValue()).append("; Version=1");
         if (cookie.getDomain() != null) sb.append("; Domain=").append(cookie.getDomain());
         if (cookie.getPath() != null) sb.append("; Path=").append(cookie.getPath());
         if (cookie.getPortlist() != null) sb.append("; Port=").append(cookie.getPortlist());
