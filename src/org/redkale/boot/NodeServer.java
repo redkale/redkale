@@ -30,8 +30,8 @@ import org.redkale.util.*;
 
 /**
  * Server节点的初始化配置类
- * 
- * 
+ *
+ *
  * 详情见: http://redkale.org
  *
  * @author zhangjx
@@ -138,7 +138,7 @@ public abstract class NodeServer {
         if (this.sncpGroup != null) this.resourceFactory.register(RESNAME_SERVER_GROUP, this.sncpGroup);
         {
             //设置root文件夹
-            String webroot = config.getValue("root", "root");
+            String webroot = this.serverConf.getValue("root", "root");
             File myroot = new File(webroot);
             if (!webroot.contains(":") && !webroot.startsWith("/")) {
                 myroot = new File(System.getProperty(Application.RESNAME_APP_HOME), webroot);
@@ -150,13 +150,13 @@ public abstract class NodeServer {
 
             final String homepath = myroot.getCanonicalPath();
             //加入指定的classpath
-            Server.loadLib(logger, config.getValue("lib", "").replace("${APP_HOME}", homepath) + ";" + homepath + "/lib/*;" + homepath + "/classes");
+            Server.loadLib(logger, this.serverConf.getValue("lib", "").replace("${APP_HOME}", homepath) + ";" + homepath + "/lib/*;" + homepath + "/classes");
         }
         //必须要进行初始化， 构建Service时需要使用Context中的ExecutorService
-        server.init(config);
+        server.init(this.serverConf);
 
         initResource(); //给 DataSource、CacheSource 注册依赖注入时的监听回调事件。
-        String interceptorClass = config.getValue("nodeInterceptor", "");
+        String interceptorClass = this.serverConf.getValue("nodeInterceptor", "");
         if (!interceptorClass.isEmpty()) {
             Class clazz = forName(interceptorClass);
             this.interceptor = (NodeInterceptor) clazz.newInstance();
@@ -282,38 +282,35 @@ public abstract class NodeServer {
                 || (this.sncpGroup == null && entry.isEmptyGroups()) //空的SNCP配置
                 || type.getAnnotation(LocalService.class) != null;//本地模式
             if (localed && (type.isInterface() || Modifier.isAbstract(type.getModifiers()))) continue; //本地模式不能实例化接口和抽象类的Service类
-            final Runnable runner = new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        Service service;
-                        if (localed) { //本地模式
-                            service = Sncp.createLocalService(entry.getName(), getExecutor(), application.getResourceFactory(), type,
-                                NodeServer.this.sncpAddress, loadTransport(NodeServer.this.sncpGroup), loadTransports(groups));
-                        } else {
-                            service = Sncp.createRemoteService(entry.getName(), getExecutor(), type, NodeServer.this.sncpAddress, loadTransport(groups));
-                        }
-                        if (SncpClient.parseMethod(type).isEmpty()) return; //class没有可用的方法， 通常为BaseService
-                        final ServiceWrapper wrapper = new ServiceWrapper(type, service, entry.getName(), localed ? NodeServer.this.sncpGroup : null, groups, entry.getProperty());
-                        for (final Class restype : wrapper.getTypes()) {
-                            if (resourceFactory.find(wrapper.getName(), restype) == null) {
-                                regFactory.register(wrapper.getName(), restype, wrapper.getService());
-                            } else if (isSNCP() && !entry.isAutoload()) {
-                                throw new RuntimeException(ServiceWrapper.class.getSimpleName() + "(class:" + type.getName() + ", name:" + entry.getName() + ", group:" + groups + ") is repeat.");
-                            }
-                        }
-                        if (wrapper.isRemote()) {
-                            remoteServiceWrappers.add(wrapper);
-                        } else {
-                            localServiceWrappers.add(wrapper);
-                            interceptorServiceWrappers.add(new NodeInterceptor.InterceptorServiceWrapper(entry.getName(), type, service));
-                            if (consumer != null) consumer.accept(wrapper);
-                        }
-                    } catch (RuntimeException ex) {
-                        throw ex;
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
+            final Runnable runner = () -> {
+                try {
+                    Service service;
+                    if (localed) { //本地模式
+                        service = Sncp.createLocalService(entry.getName(), getExecutor(), application.getResourceFactory(), type,
+                            NodeServer.this.sncpAddress, loadTransport(NodeServer.this.sncpGroup), loadTransports(groups));
+                    } else {
+                        service = Sncp.createRemoteService(entry.getName(), getExecutor(), type, NodeServer.this.sncpAddress, loadTransport(groups));
                     }
+                    if (SncpClient.parseMethod(type).isEmpty()) return; //class没有可用的方法， 通常为BaseService
+                    final ServiceWrapper wrapper = new ServiceWrapper(type, service, entry.getName(), localed ? NodeServer.this.sncpGroup : null, groups, entry.getProperty());
+                    for (final Class restype : wrapper.getTypes()) {
+                        if (resourceFactory.find(wrapper.getName(), restype) == null) {
+                            regFactory.register(wrapper.getName(), restype, wrapper.getService());
+                        } else if (isSNCP() && !entry.isAutoload()) {
+                            throw new RuntimeException(ServiceWrapper.class.getSimpleName() + "(class:" + type.getName() + ", name:" + entry.getName() + ", group:" + groups + ") is repeat.");
+                        }
+                    }
+                    if (wrapper.isRemote()) {
+                        remoteServiceWrappers.add(wrapper);
+                    } else {
+                        localServiceWrappers.add(wrapper);
+                        interceptorServiceWrappers.add(new NodeInterceptor.InterceptorServiceWrapper(entry.getName(), type, service));
+                        if (consumer != null) consumer.accept(wrapper);
+                    }
+                } catch (RuntimeException ex) {
+                    throw ex;
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
                 }
             };
             if (entry.isExpect()) {
