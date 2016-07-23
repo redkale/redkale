@@ -18,24 +18,6 @@ import javax.annotation.Resource;
 import javax.sql.ConnectionPoolDataSource;
 import javax.xml.stream.*;
 import org.redkale.util.*;
-import static org.redkale.source.FilterNode.formatToString;
-import static org.redkale.source.FilterNode.formatToString;
-import static org.redkale.source.FilterNode.formatToString;
-import static org.redkale.source.FilterNode.formatToString;
-import static org.redkale.source.FilterNode.formatToString;
-import static org.redkale.source.FilterNode.formatToString;
-import static org.redkale.source.FilterNode.formatToString;
-import static org.redkale.source.FilterNode.formatToString;
-import static org.redkale.source.FilterNode.formatToString;
-import static org.redkale.source.FilterNode.formatToString;
-import static org.redkale.source.FilterNode.formatToString;
-import static org.redkale.source.FilterNode.formatToString;
-import static org.redkale.source.FilterNode.formatToString;
-import static org.redkale.source.FilterNode.formatToString;
-import static org.redkale.source.FilterNode.formatToString;
-import static org.redkale.source.FilterNode.formatToString;
-import static org.redkale.source.FilterNode.formatToString;
-import static org.redkale.source.FilterNode.formatToString;
 
 /**
  *
@@ -419,7 +401,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
                         if (distributed) info.createPrimaryValue(value);
                         for (Attribute<T, Serializable> attr : attrs) {
                             Object a = attr.get(value);
-                            ps[i] = formatToString(a);
+                            ps[i] = FilterNode.formatToString(a);
                             prestmt.setObject(++i, a);
                         }
                         prestmt.addBatch();
@@ -466,7 +448,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
                                 if (obj != null && obj.getClass().isArray()) {
                                     sb.append("'[length=").append(java.lang.reflect.Array.getLength(obj)).append("]'");
                                 } else {
-                                    sb.append(formatToString(obj));
+                                    sb.append(FilterNode.formatToString(obj));
                                 }
                             } else {
                                 sb.append(ch);
@@ -563,7 +545,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
         if (keys.length == 0) return;
         try {
             if (!info.isVirtualEntity()) {
-                String sql = "DELETE FROM " + info.getTable() + " WHERE " + info.getPrimarySQLColumn() + " IN " + formatToString(keys);
+                String sql = "DELETE FROM " + info.getTable() + " WHERE " + info.getPrimarySQLColumn() + " IN " + FilterNode.formatToString(keys);
                 if (debug.get()) logger.finest(info.getType().getSimpleName() + " delete sql=" + sql);
                 final Statement stmt = conn.createStatement();
                 stmt.execute(sql);
@@ -692,7 +674,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
                         int i = 0;
                         for (Attribute<T, Serializable> attr : attrs) {
                             Object a = attr.get(value);
-                            ps[i] = formatToString(a);
+                            ps[i] = FilterNode.formatToString(a);
                             prestmt.setObject(++i, a);
                         }
                         prestmt.setObject(++i, primary.get(value));
@@ -760,7 +742,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
         try {
             if (!info.isVirtualEntity()) {
                 String sql = "UPDATE " + info.getTable() + " SET " + info.getSQLColumn(null, column) + " = "
-                    + formatToString(value) + " WHERE " + info.getPrimarySQLColumn() + " = " + formatToString(id);
+                    + FilterNode.formatToString(value) + " WHERE " + info.getPrimarySQLColumn() + " = " + FilterNode.formatToString(id);
                 if (debug.get()) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
                 final Statement stmt = conn.createStatement();
                 stmt.execute(sql);
@@ -817,7 +799,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
                 CharSequence where = node.createSQLExpress(info, joinTabalis);
 
                 String sql = "UPDATE " + info.getTable() + " a SET " + info.getSQLColumn("a", column) + " = "
-                    + formatToString(value) + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
+                    + FilterNode.formatToString(value) + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
                 if (debug.get()) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
                 final Statement stmt = conn.createStatement();
                 stmt.execute(sql);
@@ -872,7 +854,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
             if (!info.isVirtualEntity()) {
                 String col = info.getSQLColumn(null, column);
                 String sql = "UPDATE " + info.getTable() + " SET " + col + " = " + col + " + (" + incvalue
-                    + ") WHERE " + info.getPrimarySQLColumn() + " = " + formatToString(id);
+                    + ") WHERE " + info.getPrimarySQLColumn() + " = " + FilterNode.formatToString(id);
                 if (debug.get()) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
                 final Statement stmt = conn.createStatement();
                 stmt.execute(sql);
@@ -928,7 +910,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
             if (!info.isVirtualEntity()) {
                 String col = info.getSQLColumn(null, column);
                 String sql = "UPDATE " + info.getTable() + " SET " + col + " = " + col + " & (" + andvalue
-                    + ") WHERE " + info.getPrimarySQLColumn() + " = " + formatToString(id);
+                    + ") WHERE " + info.getPrimarySQLColumn() + " = " + FilterNode.formatToString(id);
                 if (debug.get()) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
                 final Statement stmt = conn.createStatement();
                 stmt.execute(sql);
@@ -984,7 +966,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
             if (!info.isVirtualEntity()) {
                 String col = info.getSQLColumn(null, column);
                 String sql = "UPDATE " + info.getTable() + " SET " + col + " = " + col + " | (" + orvalue
-                    + ") WHERE " + info.getPrimarySQLColumn() + " = " + formatToString(id);
+                    + ") WHERE " + info.getPrimarySQLColumn() + " = " + FilterNode.formatToString(id);
                 if (debug.get()) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
                 final Statement stmt = conn.createStatement();
                 stmt.execute(sql);
@@ -1046,11 +1028,11 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
                 attrs.add(attr);
                 if (!virtual) {
                     if (setsql.length() > 0) setsql.append(", ");
-                    setsql.append(info.getSQLColumn(null, col)).append(" = ").append(formatToString(attr.get(bean)));
+                    setsql.append(info.getSQLColumn(null, col)).append(" = ").append(FilterNode.formatToString(attr.get(bean)));
                 }
             }
             if (!virtual) {
-                String sql = "UPDATE " + info.getTable() + " SET " + setsql + " WHERE " + info.getPrimarySQLColumn() + " = " + formatToString(id);
+                String sql = "UPDATE " + info.getTable() + " SET " + setsql + " WHERE " + info.getPrimarySQLColumn() + " = " + FilterNode.formatToString(id);
                 if (debug.get()) logger.finest(bean.getClass().getSimpleName() + ": " + sql);
                 final Statement stmt = conn.createStatement();
                 stmt.execute(sql);
@@ -1110,7 +1092,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
                 attrs.add(attr);
                 if (!virtual) {
                     if (setsql.length() > 0) setsql.append(", ");
-                    setsql.append(info.getSQLColumn("a", col)).append(" = ").append(formatToString(attr.get(bean)));
+                    setsql.append(info.getSQLColumn("a", col)).append(" = ").append(FilterNode.formatToString(attr.get(bean)));
                 }
             }
             if (!virtual) {
@@ -1316,7 +1298,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
         final Connection conn = createReadSQLConnection();
         try {
             final SelectColumn sels = selects;
-            final String sql = "SELECT * FROM " + info.getTable() + " WHERE " + info.getPrimarySQLColumn() + " = " + formatToString(pk);
+            final String sql = "SELECT * FROM " + info.getTable() + " WHERE " + info.getPrimarySQLColumn() + " = " + FilterNode.formatToString(pk);
             if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(clazz.getSimpleName() + " find sql=" + sql);
             final PreparedStatement ps = conn.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
             final ResultSet set = ps.executeQuery();
@@ -1427,7 +1409,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
 
         final Connection conn = createReadSQLConnection();
         try {
-            final String sql = "SELECT COUNT(*) FROM " + info.getTable() + " WHERE " + info.getPrimarySQLColumn() + " = " + formatToString(pk);
+            final String sql = "SELECT COUNT(*) FROM " + info.getTable() + " WHERE " + info.getPrimarySQLColumn() + " = " + FilterNode.formatToString(pk);
             if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(clazz.getSimpleName() + " exists sql=" + sql);
             final PreparedStatement ps = conn.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
             final ResultSet set = ps.executeQuery();
