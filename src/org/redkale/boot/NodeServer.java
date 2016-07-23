@@ -13,7 +13,7 @@ import java.net.InetSocketAddress;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.function.Consumer;
+import java.util.function.*;
 import java.util.logging.*;
 import java.util.stream.Collectors;
 import javax.annotation.Resource;
@@ -282,7 +282,7 @@ public abstract class NodeServer {
                 || (this.sncpGroup == null && entry.isEmptyGroups()) //空的SNCP配置
                 || type.getAnnotation(LocalService.class) != null;//本地模式
             if (localed && (type.isInterface() || Modifier.isAbstract(type.getModifiers()))) continue; //本地模式不能实例化接口和抽象类的Service类
-            final Runnable runner = () -> {
+            final Consumer<ResourceFactory> runner = (ResourceFactory rf) -> {
                 try {
                     Service service;
                     if (localed) { //本地模式
@@ -296,6 +296,7 @@ public abstract class NodeServer {
                     for (final Class restype : wrapper.getTypes()) {
                         if (resourceFactory.find(wrapper.getName(), restype) == null) {
                             regFactory.register(wrapper.getName(), restype, wrapper.getService());
+                            rf.inject(wrapper.getService()); //动态加载的Service也存在按需加载的注入资源
                         } else if (isSNCP() && !entry.isAutoload()) {
                             throw new RuntimeException(ServiceWrapper.class.getSimpleName() + "(class:" + type.getName() + ", name:" + entry.getName() + ", group:" + groups + ") is repeat.");
                         }
@@ -315,13 +316,13 @@ public abstract class NodeServer {
             };
             if (entry.isExpect()) {
                 ResourceFactory.ResourceLoader resourceLoader = (ResourceFactory rf, final Object src, final String resourceName, Field field, final Object attachment) -> {
-                    runner.run();
+                    runner.accept(rf);
                 };
                 for (final Class restype : ServiceWrapper.parseTypes(entry.getType())) {
                     resourceFactory.register(resourceLoader, restype);
                 }
             } else {
-                runner.run();
+                runner.accept(resourceFactory);
             }
 
         }
