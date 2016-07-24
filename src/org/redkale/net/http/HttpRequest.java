@@ -286,10 +286,10 @@ public class HttpRequest extends Request<HttpContext> {
     @Override
     public String toString() {
         parseBody();
-        return this.getClass().getSimpleName() + "{method:" + this.method + ", requestURI:" + this.requestURI
-            + ", remoteAddr:" + this.getRemoteAddr() + ", cookies:" + this.cookiestr + ", contentType:" + this.contentType
-            + ", connection:" + this.connection + ", protocol:" + this.protocol + ", contentLength:" + this.contentLength
-            + ", host:" + this.host + ", bodylength:" + this.array.size() + ", params:" + this.params + ", header:" + this.header + "}";
+        return this.getClass().getSimpleName() + "{\r\n    method: " + this.method + ", \r\n    requestURI: " + this.requestURI
+            + ", \r\n    remoteAddr: " + this.getRemoteAddr() + ", \r\n    cookies: " + this.cookiestr + ", \r\n    contentType: " + this.contentType
+            + ", \r\n    connection: " + this.connection + ", \r\n    protocol: " + this.protocol + ", \r\n    contentLength: " + this.contentLength
+            + ", \r\n    host: " + this.host + ", \r\n    bodylength: " + this.array.size() + ", \r\n    params: " + this.params.toString(4) + ", \r\n    header: " + this.header.toString(4) + "\r\n}";
     }
 
     /**

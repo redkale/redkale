@@ -12,7 +12,9 @@ import java.util.function.BiPredicate;
 /**
  * 该类提供类似JSONObject的数据结构，主要用于读取xml配置文件和http-header存储
  *
- * <p> 详情见: http://redkale.org
+ * <p>
+ * 详情见: http://redkale.org
+ *
  * @author zhangjx
  */
 @SuppressWarnings("unchecked")
@@ -21,25 +23,17 @@ public abstract class AnyValue {
     /**
      * 可读写的AnyValue默认实现类
      *
-     * <p> 详情见: http://redkale.org
+     * <p>
+     * 详情见: http://redkale.org
+     *
      * @author zhangjx
      */
     @SuppressWarnings("unchecked")
     public static final class DefaultAnyValue extends AnyValue {
 
-        public static final BiPredicate<String, String> EQUALS = new BiPredicate<String, String>() { //为了兼容Android
-            @Override
-            public boolean test(String name1, String name2) {
-                return name1.equals(name2);
-            }
-        };
+        public static final BiPredicate<String, String> EQUALS = (name1, name2) -> name1.equals(name2);
 
-        public static final BiPredicate<String, String> EQUALSIGNORE = new BiPredicate<String, String>() { //为了兼容Android
-            @Override
-            public boolean test(String name1, String name2) {
-                return name1.equalsIgnoreCase(name2);
-            }
-        };
+        public static final BiPredicate<String, String> EQUALSIGNORE = (name1, name2) -> name1.equalsIgnoreCase(name2);
 
         private final BiPredicate<String, String> predicate;
 
@@ -331,7 +325,7 @@ public abstract class AnyValue {
         return new DefaultAnyValue();
     }
 
-    protected String toString(int len) {
+    public String toString(int len) {
         if (len < 0) len = 0;
         char[] chars = new char[len];
         Arrays.fill(chars, ' ');
