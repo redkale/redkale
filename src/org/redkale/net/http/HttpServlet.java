@@ -20,12 +20,12 @@ public abstract class HttpServlet extends Servlet<HttpContext, HttpRequest, Http
 
     @Override
     public final boolean equals(Object obj) {
-        return obj != null && obj.getClass() == this.getClass();
+        return this == obj;
     }
 
     @Override
     public final int hashCode() {
-        return this.getClass().hashCode();
+        return super.hashCode();
     }
 
 }
