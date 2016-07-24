@@ -5,6 +5,7 @@
  */
 package org.redkale.net.sncp;
 
+import java.util.Objects;
 import org.redkale.net.*;
 import org.redkale.util.*;
 
@@ -21,12 +22,13 @@ public abstract class SncpServlet extends Servlet<SncpContext, SncpRequest, Sncp
 
     @Override
     public final boolean equals(Object obj) {
-        return obj != null && obj.getClass() == this.getClass();
+        if (!(obj instanceof SncpServlet)) return false;
+        return Objects.equals(getServiceid(), ((SncpServlet) obj).getServiceid());
     }
 
     @Override
     public final int hashCode() {
-        return this.getClass().hashCode();
+        return Objects.hashCode(getServiceid());
     }
 
     @Override
