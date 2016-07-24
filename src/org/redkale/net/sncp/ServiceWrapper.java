@@ -71,6 +71,11 @@ public final class ServiceWrapper<T extends Service> implements Comparable<Servi
         return rty == null ? new Class[]{servicetype} : rty.value();
     }
 
+    @Override
+    public String toString() {
+        return toSimpleString();
+    }
+
     public String toSimpleString() {
         StringBuilder sb = new StringBuilder();
         sb.append(remote ? "RemoteService" : "LocalService ");
