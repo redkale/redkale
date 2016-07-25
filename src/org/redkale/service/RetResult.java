@@ -45,8 +45,7 @@ public class RetResult<T> {
      * 
      * @deprecated
      */
-    @Deprecated  
-    public static final RetResult SUCCESS = new RetSuccessResult();
+    private static final RetResult SUCCESS = new RetSuccessResult();
 
     protected int retcode;
 
