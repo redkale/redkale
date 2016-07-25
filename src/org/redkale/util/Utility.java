@@ -424,7 +424,7 @@ public final class Utility {
      * 将两个数字组装成一个long
      *
      * @param high 高位值
-     * @param low 低位值
+     * @param low  低位值
      *
      * @return long值
      */
@@ -617,7 +617,7 @@ public final class Utility {
             conn.disconnect();
             return remoteHttpContent(ctx, method, newurl, headers, body);
         }
-        InputStream in = conn.getInputStream();
+        InputStream in = rs < 400 ? conn.getInputStream() : conn.getErrorStream();
         ByteArrayOutputStream out = new ByteArrayOutputStream(1024);
         byte[] bytes = new byte[1024];
         int pos;
