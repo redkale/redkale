@@ -10,7 +10,12 @@ import org.redkale.convert.*;
 
 /**
  *
+ * <p>
+ * 详情见: http://redkale.org
+ *
  * @author zhangjx
+ * @param <R> Reader输入的子类型
+ * @param <W> Writer输出的子类型
  */
 public class URLSimpledCoder<R extends Reader, W extends Writer> extends SimpledCoder<R, W, URL> {
 
