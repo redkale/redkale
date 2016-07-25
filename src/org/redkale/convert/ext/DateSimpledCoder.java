@@ -13,7 +13,9 @@ import java.util.Date;
 /**
  * Date 的SimpledCoder实现
  *
- * <p> 详情见: http://redkale.org
+ * <p>
+ * 详情见: http://redkale.org
+ *
  * @author zhangjx
  * @param <R> Reader输入的子类型
  * @param <W> Writer输出的子类型
@@ -24,12 +26,13 @@ public final class DateSimpledCoder<R extends Reader, W extends Writer> extends 
 
     @Override
     public void convertTo(W out, Date value) {
-        out.writeLong(value.getTime());
+        out.writeLong(value == null ? 0L : value.getTime());
     }
 
     @Override
     public Date convertFrom(R in) {
-        return new Date(in.readLong());
+        long t = in.readLong();
+        return t == 0 ? null : new Date();
     }
 
 }
