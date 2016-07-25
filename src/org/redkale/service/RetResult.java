@@ -39,7 +39,13 @@ public class RetResult<T> {
         public void setResult(T result) {
         }
     }
-
+    
+    /**
+     * 使用 RetResult.success() 方法代替
+     * 
+     * @deprecated
+     */
+    @Deprecated  
     public static final RetResult SUCCESS = new RetSuccessResult();
 
     protected int retcode;
@@ -68,6 +74,10 @@ public class RetResult<T> {
         this.retcode = retcode;
         this.retinfo = retinfo;
         this.result = result;
+    }
+
+    public static RetResult success() {
+        return SUCCESS;
     }
 
     /**
