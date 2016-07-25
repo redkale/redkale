@@ -10,6 +10,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.lang.annotation.*;
 
 /**
+ * 过滤字段标记
  *
  * <p>
  * 详情见: http://redkale.org

@@ -13,6 +13,8 @@ import java.util.function.Consumer;
 import org.redkale.util.*;
 
 /**
+ * 
+ * DataSource 为数据库或内存数据库的数据源，提供类似JPA、Hibernate的接口与功能。
  *
  * <p>
  * 详情见: http://redkale.org

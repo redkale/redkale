@@ -13,9 +13,11 @@ import static org.redkale.source.FilterExpress.*;
 import org.redkale.util.Attribute;
 
 /**
- * 注意： 在调用 createSQLExpress 之前必须先调用 createSQLJoin 在调用 createPredicate 之前必须先调用 isCacheUseable
- * 
- * 
+ * 注意： <br>
+ * 在调用 createSQLExpress 之前必须先调用 createSQLJoin <br>
+ * 在调用 createPredicate 之前必须先调用 isCacheUseable
+ *
+ *
  * 详情见: http://redkale.org
  *
  * @author zhangjx
@@ -143,10 +145,11 @@ public class FilterNode {
     /**
      * 该方法需要重载
      *
-     * @param <T> Entity类的泛型
-     * @param func EntityInfo的加载器
+     * @param <T>         Entity类的泛型
+     * @param func        EntityInfo的加载器
      * @param joinTabalis 关联表集合
-     * @param info Entity类的EntityInfo
+     * @param info        Entity类的EntityInfo
+     *
      * @return SQL的join语句 不存在返回null
      */
     protected <T> CharSequence createSQLJoin(final Function<Class, EntityInfo> func, final Map<Class, String> joinTabalis, final EntityInfo<T> info) {
@@ -192,6 +195,7 @@ public class FilterNode {
      * 该方法需要重载
      *
      * @param entityApplyer EntityInfo的加载器
+     *
      * @return 是否可以使用缓存
      */
     protected boolean isCacheUseable(final Function<Class, EntityInfo> entityApplyer) {
@@ -205,9 +209,10 @@ public class FilterNode {
     /**
      * 该方法需要重载
      *
-     * @param <T> Entity类的泛型
+     * @param <T>         Entity类的泛型
      * @param joinTabalis 关联表的集合
-     * @param info EntityInfo
+     * @param info        EntityInfo
+     *
      * @return JOIN的SQL语句
      */
     protected <T> CharSequence createSQLExpress(final EntityInfo<T> info, final Map<Class, String> joinTabalis) {

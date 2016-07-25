@@ -51,7 +51,7 @@ import java.lang.annotation.*;
  * </pre></blockquote>
  * 转换的SQL语句为: WHERE id = ? AND ((desc LIKE ? AND name LIKE ?) OR (age = ? OR birthday = ?))
  * 因为默认是AND关系， &#64;FilterGroup("") 等价于 &#64;FilterGroup("[AND]")
- * 所以示例二的&#64;FilterGroup("[OR]g1.[AND]subg1") 可以简化为 &#64;FilterGroup("[OR]g1")
+ * 所以示例二的&#64;FilterGroup("[OR]g1.[AND]subg1") 可以简化为 &#64;FilterGroup("[OR]g1.subg1")
  */
 /**
  * <p>

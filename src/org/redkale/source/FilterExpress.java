@@ -6,6 +6,7 @@
 package org.redkale.source;
 
 /**
+ * 函数表达式， 均与SQL定义中的表达式相同
  *
  * <p>
  * 详情见: http://redkale.org
