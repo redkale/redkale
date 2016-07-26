@@ -31,7 +31,8 @@ public final class EntityCache<T> {
 
     private final ConcurrentHashMap<Serializable, T> map = new ConcurrentHashMap();
 
-    private final Collection<T> list = new ConcurrentLinkedQueue(); // CopyOnWriteArrayList 插入慢、查询快; 10w数据插入需要3.2秒; ConcurrentLinkedQueue 插入快、查询慢；10w数据查询需要 0.062秒，  查询慢40%;
+    // CopyOnWriteArrayList 插入慢、查询快; 10w数据插入需要3.2秒; ConcurrentLinkedQueue 插入快、查询慢；10w数据查询需要 0.062秒，  查询慢40%;
+    private final Collection<T> list = new ConcurrentLinkedQueue();
 
     private final Map<String, Comparator<T>> sortComparators = new ConcurrentHashMap<>();
 
@@ -56,7 +57,8 @@ public final class EntityCache<T> {
         this.type = info.getType();
         this.creator = info.getCreator();
         this.primary = info.primary;
-        this.needcopy = true;
+        VirtualEntity ve = info.getType().getAnnotation(VirtualEntity.class);
+        this.needcopy = ve == null || !ve.direct();
         this.newReproduce = Reproduce.create(type, type, (m) -> {
             try {
                 return type.getDeclaredField(m).getAnnotation(Transient.class) == null;
@@ -81,10 +83,12 @@ public final class EntityCache<T> {
         if (info.fullloader == null) return;
         clear();
         List<T> all = info.fullloader.apply(type);
-        all.stream().filter(x -> x != null).forEach(x -> {
-            this.map.put(this.primary.get(x), x);
-        });
-        this.list.addAll(all);
+        if (all != null) {
+            all.stream().filter(x -> x != null).forEach(x -> {
+                this.map.put(this.primary.get(x), x);
+            });
+            this.list.addAll(all);
+        }
         this.fullloaded = true;
     }
 

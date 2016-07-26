@@ -123,7 +123,6 @@ public final class EntityInfo<T> {
 
     private EntityInfo(Class<T> type, int nodeid, final boolean cacheForbidden, Properties conf, Function<Class, List> fullloader) {
         this.type = type;
-        this.fullloader = fullloader;
         //---------------------------------------------
         this.nodeid = nodeid >= 0 ? nodeid : 0;
         DistributeTables dt = type.getAnnotation(DistributeTables.class);
@@ -135,7 +134,15 @@ public final class EntityInfo<T> {
         Table t = type.getAnnotation(Table.class);
         if (type.getAnnotation(VirtualEntity.class) != null) {
             this.table = null;
+            Function<Class, List> loader = null;
+            try {
+                loader = type.getAnnotation(VirtualEntity.class).loader().newInstance();
+            } catch (Exception e) {
+                logger.severe(type + " init @VirtualEntity.loader error", e);
+            }
+            this.fullloader = loader;
         } else {
+            this.fullloader = fullloader;
             this.table = (t == null) ? type.getSimpleName().toLowerCase() : (t.catalog().isEmpty()) ? t.name() : (t.catalog() + '.' + t.name());
         }
         this.creator = Creator.create(type);
@@ -180,8 +187,10 @@ public final class EntityInfo<T> {
 //                    }
                     DistributeGenerator dg = field.getAnnotation(DistributeGenerator.class);
                     if (dg != null) {
-                        if (!field.getType().isPrimitive())
-                            throw new RuntimeException(cltmp.getName() + "'s @" + DistributeGenerator.class.getSimpleName() + " primary must be primitive class type field");
+                        if (!field.getType().isPrimitive()) {
+                            throw new RuntimeException(cltmp.getName() + "'s @"
+                                + DistributeGenerator.class.getSimpleName() + " primary must be primitive class type field");
+                        }
                         sqldistribute = true;
                         auto = false;
                         allocationSize0 = dg.allocationSize();

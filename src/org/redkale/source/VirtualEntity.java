@@ -8,6 +8,8 @@ package org.redkale.source;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.lang.annotation.*;
+import java.util.*;
+import java.util.function.*;
 
 /**
  * VirtualEntity表示虚拟的数据实体类， 通常Entity都会映射到数据库中的某个表，而标记为VirtualEntity的Entity类只存在DataCache中
@@ -22,4 +24,17 @@ import java.lang.annotation.*;
 @Retention(RUNTIME)
 public @interface VirtualEntity {
 
+    //DataSource是否直接返回对象的真实引用， 而不是copy一份
+    boolean direct() default false;
+
+    //初始化时数据的加载器
+    Class<? extends Function< Class, List>> loader() default DefaultFunctionLoader.class;
+
+    public static class DefaultFunctionLoader implements Function< Class, List> {
+
+        @Override
+        public List apply(Class u) {
+            return null;
+        }
+    }
 }
