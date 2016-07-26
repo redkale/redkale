@@ -82,7 +82,7 @@ public final class EntityCache<T> {
     public void fullLoad() {
         if (info.fullloader == null) return;
         clear();
-        List<T> all = info.fullloader.apply(type);
+        List<T> all = info.fullloader.apply(info.source, type);
         if (all != null) {
             all.stream().filter(x -> x != null).forEach(x -> {
                 this.map.put(this.primary.get(x), x);

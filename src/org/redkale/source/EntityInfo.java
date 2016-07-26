@@ -95,18 +95,20 @@ public final class EntityInfo<T> {
 
     final int allocationSize;
 
-    final Function<Class, List> fullloader;
+    final DataSource source;
+
+    final BiFunction<DataSource, Class, List> fullloader;
     //------------------------------------------------------------
 
     public static <T> EntityInfo<T> load(Class<T> clazz, final int nodeid, final boolean cacheForbidden, final Properties conf,
-        Function<Class, List> fullloader) {
+        DataSource source, BiFunction<DataSource, Class, List> fullloader) {
         EntityInfo rs = entityInfos.get(clazz);
         if (rs != null) return rs;
         synchronized (entityInfos) {
             rs = entityInfos.get(clazz);
             if (rs == null) {
                 if (nodeid < 0) throw new IllegalArgumentException("nodeid(" + nodeid + ") is illegal");
-                rs = new EntityInfo(clazz, nodeid, cacheForbidden, conf, fullloader);
+                rs = new EntityInfo(clazz, nodeid, cacheForbidden, conf, source, fullloader);
                 entityInfos.put(clazz, rs);
                 if (rs.cache != null) {
                     if (fullloader == null) throw new IllegalArgumentException(clazz.getName() + " auto loader  is illegal");
@@ -121,8 +123,10 @@ public final class EntityInfo<T> {
         return entityInfos.get(clazz);
     }
 
-    private EntityInfo(Class<T> type, int nodeid, final boolean cacheForbidden, Properties conf, Function<Class, List> fullloader) {
+    private EntityInfo(Class<T> type, int nodeid, final boolean cacheForbidden,
+        Properties conf, DataSource source, BiFunction<DataSource, Class, List> fullloader) {
         this.type = type;
+        this.source = source;
         //---------------------------------------------
         this.nodeid = nodeid >= 0 ? nodeid : 0;
         DistributeTables dt = type.getAnnotation(DistributeTables.class);
@@ -134,7 +138,7 @@ public final class EntityInfo<T> {
         Table t = type.getAnnotation(Table.class);
         if (type.getAnnotation(VirtualEntity.class) != null) {
             this.table = null;
-            Function<Class, List> loader = null;
+            BiFunction<DataSource, Class, List> loader = null;
             try {
                 loader = type.getAnnotation(VirtualEntity.class).loader().newInstance();
             } catch (Exception e) {

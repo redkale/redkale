@@ -72,7 +72,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
     @Resource(name = "$")
     private DataCacheListener cacheListener;
 
-    private final Function<Class, List> fullloader = (t) -> querySheet(false, false, t, null, null, (FilterNode) null).list(true);
+    private final BiFunction<DataSource, Class, List> fullloader = (s, t) -> querySheet(false, false, t, null, null, (FilterNode) null).list(true);
 
     public DataDefaultSource() throws IOException {
         this("");
@@ -287,7 +287,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
     }
 
     private <T> EntityInfo<T> loadEntityInfo(Class<T> clazz) {
-        return EntityInfo.load(clazz, this.nodeid, this.cacheForbidden, this.readPool.props, fullloader);
+        return EntityInfo.load(clazz, this.nodeid, this.cacheForbidden, this.readPool.props, this, fullloader);
     }
 
     /**
@@ -990,7 +990,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
      * 更新对象指定的一些字段， 必须是Entity对象
      *
      * @param <T>     Entity类的泛型
-     * @param bean   Entity对象
+     * @param bean    Entity对象
      * @param columns 需要更新的字段
      */
     @Override
@@ -1053,7 +1053,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
      * 更新对象指定的一些字段， 必须是Entity对象
      *
      * @param <T>     Entity类的泛型
-     * @param bean   Entity对象
+     * @param bean    Entity对象
      * @param node    过滤node 不能为null
      * @param columns 需要更新的字段
      */

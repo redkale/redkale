@@ -28,12 +28,12 @@ public @interface VirtualEntity {
     boolean direct() default false;
 
     //初始化时数据的加载器
-    Class<? extends Function< Class, List>> loader() default DefaultFunctionLoader.class;
+    Class<? extends BiFunction<DataSource, Class, List>> loader() default DefaultFunctionLoader.class;
 
-    public static class DefaultFunctionLoader implements Function< Class, List> {
+    public static class DefaultFunctionLoader implements BiFunction<DataSource, Class, List> {
 
         @Override
-        public List apply(Class u) {
+        public List apply(DataSource source, Class type) {
             return null;
         }
     }

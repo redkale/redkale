@@ -40,7 +40,7 @@ public class TestSourceCache {
     }
 
     public static void main(String[] args) throws Exception {
-        final EntityInfo<TestEntity> info = EntityInfo.load(TestEntity.class, 0, false,new Properties(), null);
+        final EntityInfo<TestEntity> info = EntityInfo.load(TestEntity.class, 0, false, new Properties(), null, null);
         TestEntity[] entitys = new TestEntity[10_0000];
         for (int i = 0; i < entitys.length; i++) {
             entitys[i] = new TestEntity(i + 1, "用户_" + (i + 1));
