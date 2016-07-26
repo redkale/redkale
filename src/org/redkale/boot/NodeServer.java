@@ -110,7 +110,11 @@ public abstract class NodeServer {
                         logger.log(Level.SEVERE, "Server (" + server.getSocketAddress() + ") cannot find Context", e);
                     }
                 }
-                context.submit(t);
+                if (context == null) {
+                    t.run();
+                } else {
+                    context.submit(t);
+                }
             }
 
         };
