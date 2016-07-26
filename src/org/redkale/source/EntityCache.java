@@ -345,7 +345,7 @@ public final class EntityCache<T> {
         if (old == null) {
             this.list.add(rs);
         } else {
-            logger.log(Level.WARNING, "cache repeat insert data: " + value);
+            logger.log(Level.WARNING, this.type + " cache repeat insert data: " + value);
         }
     }
 
