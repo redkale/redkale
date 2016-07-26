@@ -8,6 +8,7 @@ package org.redkale.test.source;
 import java.util.*;
 import java.util.function.BiFunction;
 import javax.persistence.Id;
+import org.redkale.convert.json.JsonConvert;
 import org.redkale.source.*;
 import org.redkale.util.Attribute;
 
@@ -43,6 +44,10 @@ public class CacheTestBean {
         System.out.println(cache.queryColumnMap("pkgid", FilterFunc.SUM, "price", null));
         System.out.println(cache.queryColumnMap("pkgid", FilterFunc.MAX, "price", null));
         System.out.println(cache.queryColumnMap("pkgid", FilterFunc.MIN, "price", null));
+        
+        System.out.println(cache.find(null, FilterNode.create("name", FilterExpress.EQUAL, "BB"))); 
+        System.out.println(cache.find(null, FilterNode.create("name", FilterExpress.IGNORECASEEQUAL, "BB"))); 
+        System.out.println(cache.querySheet(null, null, FilterNode.create("name", FilterExpress.IGNORECASENOTLIKE, "B")));
     }
 
     public CacheTestBean() {
@@ -76,6 +81,11 @@ public class CacheTestBean {
 
     public void setPrice(long price) {
         this.price = price;
+    }
+
+    @Override
+    public String toString() {
+        return JsonConvert.root().convertTo(this); 
     }
 
 }
