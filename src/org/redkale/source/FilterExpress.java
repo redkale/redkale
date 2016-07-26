@@ -16,17 +16,17 @@ package org.redkale.source;
 public enum FilterExpress {
 
     EQUAL("="),
+    IGNORECASEEQUAL("="),//不区分大小写的 =
     NOTEQUAL("<>"),
+    IGNORECASENOTEQUAL("="),//不区分大小写的 <>
     GREATERTHAN(">"),
     LESSTHAN("<"),
     GREATERTHANOREQUALTO(">="),
     LESSTHANOREQUALTO("<="),
-    
     STARTSWITH("LIKE"),
     NOTSTARTSWITH("NOT LIKE"),
     ENDSWITH("LIKE"),
     NOTENDSWITH("NOT LIKE"),
-    
     LIKE("LIKE"),
     NOTLIKE("NOT LIKE"),
     IGNORECASELIKE("LIKE"), //不区分大小写的 LIKE

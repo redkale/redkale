@@ -354,7 +354,8 @@ public final class FilterNodeBean<T extends FilterBean> implements Comparable<Fi
             if (express == ISNULL || express == ISNOTNULL) {
                 sb.append(col).append(' ').append(express.value());
             } else {
-                boolean lower = (express == IGNORECASELIKE || express == IGNORECASENOTLIKE || express == IGNORECASECONTAIN || express == IGNORECASENOTCONTAIN);
+                boolean lower = (express == IGNORECASEEQUAL || express == IGNORECASENOTEQUAL || express == IGNORECASELIKE
+                    || express == IGNORECASENOTLIKE || express == IGNORECASECONTAIN || express == IGNORECASENOTCONTAIN);
                 sb.append(lower ? ("LOWER(" + col + ')') : col).append(' ').append(express.value()).append(" ?");
             }
         }

@@ -332,7 +332,7 @@ public class FilterNode {
         if (express == NOTCONTAIN) return info.notcontainSQL.replace("${column}", info.getSQLColumn(talis, column)).replace("${keystr}", val);
         if (express == IGNORECASENOTCONTAIN) return info.notcontainSQL.replace("${column}", "LOWER(" + info.getSQLColumn(talis, column) + ")").replace("${keystr}", val);
 
-        if (express == IGNORECASELIKE || express == IGNORECASENOTLIKE) {
+        if (express == IGNORECASEEQUAL || express == IGNORECASENOTEQUAL || express == IGNORECASELIKE || express == IGNORECASENOTLIKE) {
             sb.append("LOWER(").append(info.getSQLColumn(talis, column)).append(')');
             if (fk) val = "LOWER(" + info.getSQLColumn(talis, ((FilterKey) val0).getColumn()) + ')';
         } else {
@@ -558,7 +558,6 @@ public class FilterNode {
                     return field + " != null";
                 }
             };
-        if (attr == null) return null;
         if (val0 == null) return null;
 
         final Class atype = attr.type();
@@ -702,6 +701,36 @@ public class FilterNode {
                         return field + ' ' + express.value() + ' ' + formatToString(val);
                     }
                 };
+            case IGNORECASEEQUAL:
+                return fk ? new Predicate<T>() {
+
+                    @Override
+                    public boolean test(T t) {
+                        Object rs = attr.get(t);
+                        Object rs2 = fkattr.get(t);
+                        if (rs == null && rs2 == null) return true;
+                        if (rs == null || rs2 == null) return false;
+                        return Objects.equals(rs.toString().toLowerCase(), rs2.toString().toLowerCase());
+                    }
+
+                    @Override
+                    public String toString() {
+                        return "LOWER(" + field + ") " + express.value() + " LOWER(" + fkattr.field() + ')';
+                    }
+                } : new Predicate<T>() {
+
+                    @Override
+                    public boolean test(T t) {
+                        Object rs = attr.get(t);
+                        if (rs == null) return false;
+                        return val.toString().equalsIgnoreCase(rs.toString());
+                    }
+
+                    @Override
+                    public String toString() {
+                        return "LOWER(" + field + ") " + express.value() + ' ' + formatToString(val);
+                    }
+                };
             case NOTEQUAL:
                 return fk ? new Predicate<T>() {
 
@@ -724,6 +753,36 @@ public class FilterNode {
                     @Override
                     public String toString() {
                         return field + ' ' + express.value() + ' ' + formatToString(val);
+                    }
+                };
+            case IGNORECASENOTEQUAL:
+                return fk ? new Predicate<T>() {
+
+                    @Override
+                    public boolean test(T t) {
+                        Object rs = attr.get(t);
+                        Object rs2 = fkattr.get(t);
+                        if (rs == null && rs2 == null) return false;
+                        if (rs == null || rs2 == null) return true;
+                        return !Objects.equals(rs.toString().toLowerCase(), rs2.toString().toLowerCase());
+                    }
+
+                    @Override
+                    public String toString() {
+                        return "LOWER(" + field + ") " + express.value() + " LOWER(" + fkattr.field() + ')';
+                    }
+                } : new Predicate<T>() {
+
+                    @Override
+                    public boolean test(T t) {
+                        Object rs = attr.get(t);
+                        if (rs == null) return true;
+                        return !val.toString().equalsIgnoreCase(rs.toString());
+                    }
+
+                    @Override
+                    public String toString() {
+                        return "LOWER(" + field + ") " + express.value() + ' ' + formatToString(val);
                     }
                 };
             case GREATERTHAN:
@@ -1676,7 +1735,8 @@ public class FilterNode {
                 value = "%" + value;
             } else if (express == IGNORECASELIKE || express == IGNORECASENOTLIKE) {
                 value = "%" + value.toString().toLowerCase() + '%';
-            } else if (express == IGNORECASECONTAIN || express == IGNORECASENOTCONTAIN) {
+            } else if (express == IGNORECASECONTAIN || express == IGNORECASENOTCONTAIN
+                || express == IGNORECASEEQUAL || express == IGNORECASENOTEQUAL) {
                 value = value.toString().toLowerCase();
             }
             return new StringBuilder().append('\'').append(value.toString().replace("'", "\\'")).append('\'');
