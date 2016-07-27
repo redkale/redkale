@@ -28,7 +28,7 @@ public final class Flipper implements Serializable, Cloneable {
     }
 
     public Flipper(int limit) {
-        this.limit = limit;
+        this.limit = limit > 0 ? limit : DEFAULT_LIMIT;
     }
 
     public Flipper(String sortColumn) {
@@ -46,18 +46,20 @@ public final class Flipper implements Serializable, Cloneable {
         this.sort = sortColumn;
     }
 
-    public void copyTo(Flipper copy) {
-        if (copy == null) return;
+    public Flipper copyTo(Flipper copy) {
+        if (copy == null) return copy;
         copy.offset = this.offset;
         copy.limit = this.limit;
         copy.sort = this.sort;
+        return copy;
     }
 
-    public void copyFrom(Flipper copy) {
-        if (copy == null) return;
+    public Flipper copyFrom(Flipper copy) {
+        if (copy == null) return this;
         this.offset = copy.offset;
         this.limit = copy.limit;
         this.sort = copy.sort;
+        return this;
     }
 
     public Flipper next() {
@@ -68,11 +70,7 @@ public final class Flipper implements Serializable, Cloneable {
     @Override
     @SuppressWarnings("CloneDoesntCallSuperClone")
     public Flipper clone() {
-        return new Flipper(this.limit, this.offset, this.sort);
-    }
-
-    public int getOffset() {
-        return offset;
+        return this.copyTo(new Flipper());
     }
 
     @Override
@@ -90,12 +88,37 @@ public final class Flipper implements Serializable, Cloneable {
         }
     }
 
+    public Flipper limit(int limit) {
+        setLimit(limit);
+        return this;
+    }
+
+    public int getOffset() {
+        return offset;
+    }
+
     public void setOffset(int offset) {
         this.offset = offset < 0 ? 0 : offset;
     }
 
+    public Flipper offset(int offset) {
+        setOffset(offset);
+        return this;
+    }
+
     public String getSort() {
         return sort;
+    }
+
+    public void setSort(String sort) {
+        if (sort != null) {
+            this.sort = sort.trim();
+        }
+    }
+
+    public Flipper sort(String sort) {
+        setSort(sort);
+        return this;
     }
 
     public static Flipper sortIfAbsent(Flipper flipper, String sort) {
@@ -108,12 +131,6 @@ public final class Flipper implements Serializable, Cloneable {
             this.sort = sort;
         }
         return this;
-    }
-
-    public void setSort(String sort) {
-        if (sort != null) {
-            this.sort = sort.trim();
-        }
     }
 
 }
