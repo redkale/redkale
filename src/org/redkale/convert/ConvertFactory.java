@@ -205,6 +205,7 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
      * 使所有类的所有被声明为ConvertColumn.ignore = true 的字段或方法变为ConvertColumn.ignore = false
      *
      * @param skipIgnore
+     *
      * @return 自身
      */
     public ConvertFactory<R, W> skipAllIgnore(final boolean skipIgnore) {
@@ -386,7 +387,7 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
         } else if (clazz == Object.class) {
             od = new ObjectDecoder(type);
             decoder = od;
-        } else if (!clazz.getName().startsWith("java.")) {
+        } else if (!clazz.getName().startsWith("java.") || clazz.getName().startsWith("java.awt.geom.Point2D")) {
             Decodeable simpleCoder = null;
             for (final Method method : clazz.getDeclaredMethods()) {
                 if (!Modifier.isStatic(method.getModifiers())) continue;
