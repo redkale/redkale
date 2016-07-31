@@ -98,10 +98,6 @@ public final class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T
                     ref = factory.findRef(method);
                     if (ref != null && ref.ignore()) continue;
                     Type t = ObjectEncoder.createClassType(method.getGenericParameterTypes()[0], this.type);
-                    if (t instanceof Class) {
-                        Class ct = (Class) t;
-                        if (ct.isInterface() || Modifier.isAbstract(ct.getModifiers())) continue;
-                    }
                     list.add(new DeMember(ObjectEncoder.createAttribute(factory, clazz, null, null, method), factory.loadDecoder(t)));
                 }
                 if (cps != null) { //可能存在某些构造函数中的字段名不存在setter方法
