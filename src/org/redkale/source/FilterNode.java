@@ -66,7 +66,7 @@ public class FilterNode {
                 Class comp = val.getClass().getComponentType();
                 if (Range.class.isAssignableFrom(comp)) {
                     exp = FilterExpress.BETWEEN;
-                } else if (comp.isArray() || Collection.class.isAssignableFrom(comp)) {
+                } else {
                     exp = FilterExpress.IN;
                 }
             }
