@@ -41,6 +41,10 @@ public class Sheet<T> implements java.io.Serializable, Iterable<T> {
         return data == null ? new Sheet() : new Sheet(data.size(), data);
     }
 
+    public static <E> Sheet<E> empty() {
+        return new Sheet<>();
+    }
+
     public Sheet<T> copyTo(Sheet<T> copy) {
         if (copy == null) return copy;
         copy.total = this.total;
