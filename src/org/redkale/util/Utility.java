@@ -590,7 +590,11 @@ public final class Utility {
         return remoteHttpContent(ctx, "GET", url, headers, body).toByteArray();
     }
 
-    protected static ByteArrayOutputStream remoteHttpContent(SSLContext ctx, String method, String url, Map<String, String> headers, String body) throws IOException {
+    public static ByteArrayOutputStream remoteHttpContent(String method, String url, Map<String, String> headers, String body) throws IOException {
+        return remoteHttpContent(null, method, url, headers, body);
+    }
+
+    public static ByteArrayOutputStream remoteHttpContent(SSLContext ctx, String method, String url, Map<String, String> headers, String body) throws IOException {
         HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();
         conn.setConnectTimeout(3000);
         conn.setReadTimeout(3000);
