@@ -662,11 +662,12 @@
 <span class="c">            --&gt;</span>
             <span class="nt">&lt;resource-servlet</span> <span class="na">webroot=</span><span class="s">&quot;root&quot;</span> <span class="na">index=</span><span class="s">&quot;index.html&quot;</span><span class="nt">&gt;</span>
                 <span class="c">&lt;!--</span>
-<span class="c">                    资源缓存的配置, 默认存在一个含默认属性的caches节点</span>
+<span class="c">                    资源缓存的配置, 默认存在一个含默认属性的cache节点</span>
 <span class="c">                    limit:  资源缓存最大容量， 默认: 0, 为0表示不缓存， 单位可以是B、K、M、G，不区分大小写</span>
 <span class="c">                    lengthmax: 可缓存的文件大小上限， 默认: 1M（超过1M的文件不会被缓存）</span>
+<span class="c">                    watch: 是否监控缓存文件的变化， 默认不监控</span>
 <span class="c">                --&gt;</span>
-                <span class="nt">&lt;caches</span>  <span class="na">limit=</span><span class="s">&quot;0M&quot;</span> <span class="na">lengthmax=</span><span class="s">&quot;1M&quot;</span> <span class="nt">/&gt;</span>
+                <span class="nt">&lt;cache</span>  <span class="na">limit=</span><span class="s">&quot;0M&quot;</span> <span class="na">lengthmax=</span><span class="s">&quot;1M&quot;</span> <span class="nt">/&gt;</span>
                 <span class="c">&lt;!--</span>
 <span class="c">                   支持类似nginx中的rewrite， 目前只支持静态资源对静态资源的跳转。</span>
 <span class="c">                   type: 匹配的类型, 目前只支持location(匹配requestURI), 默认: location</span>
