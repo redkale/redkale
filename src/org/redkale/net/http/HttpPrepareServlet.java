@@ -60,7 +60,14 @@ public final class HttpPrepareServlet extends PrepareServlet<String, HttpContext
             if (resConfig == null) {
                 DefaultAnyValue dresConfig = new DefaultAnyValue();
                 dresConfig.addValue("webroot", config.getValue("root"));
+                dresConfig.addValue("ranges", config.getValue("ranges"));
                 dresConfig.addValue("cache", config.getAnyValue("cache"));
+                AnyValue[] rewrites = config.getAnyValues("rewrite");
+                if (rewrites != null) {
+                    for (AnyValue rewrite : rewrites) {
+                        dresConfig.addValue("rewrite", rewrite);
+                    }
+                }
                 resConfig = dresConfig;
             }
             this.resourceHttpServlet.init(context, resConfig);
