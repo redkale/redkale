@@ -56,9 +56,11 @@ public final class HttpPrepareServlet extends PrepareServlet<String, HttpContext
                     ((DefaultAnyValue) resConfig).addValue("webroot", config.getValue("root"));
                 }
             }
+            if (resConfig == null) resConfig = config.getAnyValue("resource-servlet"); //兼容
             if (resConfig == null) {
                 DefaultAnyValue dresConfig = new DefaultAnyValue();
                 dresConfig.addValue("webroot", config.getValue("root"));
+                dresConfig.addValue("cache", config.getAnyValue("cache"));
                 resConfig = dresConfig;
             }
             this.resourceHttpServlet.init(context, resConfig);
@@ -140,6 +142,10 @@ public final class HttpPrepareServlet extends PrepareServlet<String, HttpContext
         if (servlet != null) {
             this.resourceHttpServlet = servlet;
         }
+    }
+
+    public HttpServlet getResourceServlet() {
+        return this.resourceHttpServlet;
     }
 
     @Override

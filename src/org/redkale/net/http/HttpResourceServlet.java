@@ -80,14 +80,17 @@ public final class HttpResourceServlet extends HttpServlet {
 
     protected final boolean finest = logger.isLoggable(Level.FINEST);
 
+    protected final LongAdder cachedLength = new LongAdder();
+    
     //缓存总大小, 默认0
     protected long cachelimit = 0 * 1024 * 1024L;
 
-    protected final LongAdder cachedLength = new LongAdder();
-
     //最大可缓存的文件大小，  大于该值的文件将不被缓存
     protected long cachelengthmax = 1 * 1024 * 1024;
-
+    
+    //是否监控缓存文件的变化， 默认不监控
+    protected boolean watch = false;
+    
     protected File root = new File("./root/");
 
     protected String indexHtml = "index.html";
@@ -117,10 +120,12 @@ public final class HttpResourceServlet extends HttpServlet {
             } catch (IOException ioe) {
                 this.root = new File(rootstr);
             }
-            AnyValue cacheconf = config.getAnyValue("caches");
+            AnyValue cacheconf = config.getAnyValue("cache");
+            if (cacheconf == null) cacheconf = config.getAnyValue("caches"); //兼容旧参数
             if (cacheconf != null) {
                 this.cachelimit = parseLenth(cacheconf.getValue("limit"), 0 * 1024 * 1024L);
                 this.cachelengthmax = parseLenth(cacheconf.getValue("lengthmax"), 1 * 1024 * 1024L);
+                this.watch = cacheconf.getBoolValue("watch", false);
             }
             List<SimpleEntry<Pattern, String>> locations = new ArrayList<>();
             for (AnyValue av : config.getAnyValues("rewrite")) {
@@ -135,7 +140,7 @@ public final class HttpResourceServlet extends HttpServlet {
             this.locationRewrites = locations.isEmpty() ? null : locations.toArray(new SimpleEntry[locations.size()]);
         }
         if (this.cachelimit < 1) return;  //不缓存不需要开启WatchThread监听
-        if (this.root != null) {
+        if (this.root != null && this.watch) {
             try {
                 this.watchThread = new WatchThread(this.root);
                 this.watchThread.start();
