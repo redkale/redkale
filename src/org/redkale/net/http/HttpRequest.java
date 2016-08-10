@@ -259,6 +259,7 @@ public class HttpRequest extends Request<HttpContext> {
      * 获取请求内容指定的编码字符串
      *
      * @param charset 编码
+     *
      * @return 内容
      */
     public String getBody(final Charset charset) {
@@ -342,6 +343,7 @@ public class HttpRequest extends Request<HttpContext> {
      * 获取sessionid
      *
      * @param create 无sessionid是否自动创建
+     *
      * @return sessionid
      */
     public String getSessionid(boolean create) {
@@ -384,6 +386,7 @@ public class HttpRequest extends Request<HttpContext> {
      * 获取Cookie值
      *
      * @param name cookie名
+     *
      * @return cookie值
      */
     public String getCookie(String name) {
@@ -393,8 +396,9 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取Cookie值， 没有返回默认值
      *
-     * @param name cookie名
+     * @param name    cookie名
      * @param dfvalue 默认cookie值
+     *
      * @return cookie值
      */
     public String getCookie(String name, String dfvalue) {
@@ -498,6 +502,7 @@ public class HttpRequest extends Request<HttpContext> {
      * 从prefix之后截取getRequestURI再对"/"进行分隔
      * <p>
      * @param prefix 前缀
+     *
      * @return String[]
      */
     public String[] getRequstURIPaths(String prefix) {
@@ -510,8 +515,9 @@ public class HttpRequest extends Request<HttpContext> {
      * 例如请求URL /pipes/record/query/name:hello   <br>
      * 获取name参数: String name = request.getRequstURIPath("name:", "none");
      *
-     * @param prefix prefix段前缀
+     * @param prefix   prefix段前缀
      * @param defvalue 默认值
+     *
      * @return prefix截断后的值
      */
     public String getRequstURIPath(String prefix, String defvalue) {
@@ -528,8 +534,9 @@ public class HttpRequest extends Request<HttpContext> {
      * 例如请求URL /pipes/record/query/type:10   <br>
      * 获取type参数: short type = request.getRequstURIPath("type:", (short)0);
      *
-     * @param prefix prefix段前缀
+     * @param prefix   prefix段前缀
      * @param defvalue 默认short值
+     *
      * @return short值
      */
     public short getRequstURIPath(String prefix, short defvalue) {
@@ -543,8 +550,9 @@ public class HttpRequest extends Request<HttpContext> {
      * 获取起址参数: int offset = request.getRequstURIPath("offset:", 0);   <br>
      * 获取行数参数: int limit = request.getRequstURIPath("limit:", 20);  <br>
      *
-     * @param prefix prefix段前缀
+     * @param prefix   prefix段前缀
      * @param defvalue 默认int值
+     *
      * @return int值
      */
     public int getRequstURIPath(String prefix, int defvalue) {
@@ -553,17 +561,48 @@ public class HttpRequest extends Request<HttpContext> {
     }
 
     /**
+     * 获取请求URL分段中含prefix段的float值   <br>
+     * 例如请求URL /pipes/record/query/point:40.0   <br>
+     * 获取time参数: float point = request.getRequstURIPath("point:", 0.0f);
+     *
+     * @param prefix   prefix段前缀
+     * @param defvalue 默认float值
+     *
+     * @return float值
+     */
+    public float getRequstURIPath(String prefix, float defvalue) {
+        String val = getRequstURIPath(prefix, null);
+        return val == null ? defvalue : Float.parseFloat(val);
+    }
+
+    /**
      * 获取请求URL分段中含prefix段的long值   <br>
      * 例如请求URL /pipes/record/query/time:1453104341363/id:40   <br>
      * 获取time参数: long time = request.getRequstURIPath("time:", 0L);
      *
-     * @param prefix prefix段前缀
+     * @param prefix   prefix段前缀
      * @param defvalue 默认long值
+     *
      * @return long值
      */
     public long getRequstURIPath(String prefix, long defvalue) {
         String val = getRequstURIPath(prefix, null);
         return val == null ? defvalue : Long.parseLong(val);
+    }
+
+    /**
+     * 获取请求URL分段中含prefix段的double值   <br>
+     * 例如请求URL /pipes/record/query/point:40.0   <br>
+     * 获取time参数: double point = request.getRequstURIPath("point:", 0.0);
+     *
+     * @param prefix   prefix段前缀
+     * @param defvalue 默认double值
+     *
+     * @return double值
+     */
+    public double getRequstURIPath(String prefix, double defvalue) {
+        String val = getRequstURIPath(prefix, null);
+        return val == null ? defvalue : Double.parseDouble(val);
     }
 
     //------------------------------------------------------------------------------
@@ -580,6 +619,7 @@ public class HttpRequest extends Request<HttpContext> {
      * 获取指定的header值
      *
      * @param name header名
+     *
      * @return header值
      */
     public String getHeader(String name) {
@@ -589,8 +629,9 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取指定的header值, 没有返回默认值
      *
-     * @param name header名
+     * @param name         header名
      * @param defaultValue 默认值
+     *
      * @return header值
      */
     public String getHeader(String name, String defaultValue) {
@@ -600,9 +641,10 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取指定的header的json值
      *
-     * @param <T> 泛型
+     * @param <T>   泛型
      * @param clazz 反序列化的类名
-     * @param name header名
+     * @param name  header名
+     *
      * @return header值
      */
     public <T> T getJsonHeader(Class<T> clazz, String name) {
@@ -613,10 +655,11 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取指定的header的json值
      *
-     * @param <T> 泛型
+     * @param <T>     泛型
      * @param convert JsonConvert对象
-     * @param clazz 反序列化的类名
-     * @param name header名
+     * @param clazz   反序列化的类名
+     * @param name    header名
+     *
      * @return header值
      */
     public <T> T getJsonHeader(JsonConvert convert, Class<T> clazz, String name) {
@@ -627,8 +670,9 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取指定的header的boolean值, 没有返回默认boolean值
      *
-     * @param name header名
+     * @param name         header名
      * @param defaultValue 默认boolean值
+     *
      * @return header值
      */
     public boolean getBooleanHeader(String name, boolean defaultValue) {
@@ -638,8 +682,9 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取指定的header的short值, 没有返回默认short值
      *
-     * @param name header名
+     * @param name         header名
      * @param defaultValue 默认short值
+     *
      * @return header值
      */
     public short getShortHeader(String name, short defaultValue) {
@@ -649,8 +694,9 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取指定的header的short值, 没有返回默认short值
      *
-     * @param name header名
+     * @param name         header名
      * @param defaultValue 默认short值
+     *
      * @return header值
      */
     public short getShortHeader(String name, int defaultValue) {
@@ -660,8 +706,9 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取指定的header的int值, 没有返回默认int值
      *
-     * @param name header名
+     * @param name         header名
      * @param defaultValue 默认int值
+     *
      * @return header值
      */
     public int getIntHeader(String name, int defaultValue) {
@@ -671,8 +718,9 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取指定的header的long值, 没有返回默认long值
      *
-     * @param name header名
+     * @param name         header名
      * @param defaultValue 默认long值
+     *
      * @return header值
      */
     public long getLongHeader(String name, long defaultValue) {
@@ -682,8 +730,9 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取指定的header的float值, 没有返回默认float值
      *
-     * @param name header名
+     * @param name         header名
      * @param defaultValue 默认float值
+     *
      * @return header值
      */
     public float getFloatHeader(String name, float defaultValue) {
@@ -693,8 +742,9 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取指定的header的double值, 没有返回默认double值
      *
-     * @param name header名
+     * @param name         header名
      * @param defaultValue 默认double值
+     *
      * @return header值
      */
     public double getDoubleHeader(String name, double defaultValue) {
@@ -716,6 +766,7 @@ public class HttpRequest extends Request<HttpContext> {
      * 获取指定的参数值
      *
      * @param name 参数名
+     *
      * @return 参数值
      */
     public String getParameter(String name) {
@@ -726,8 +777,9 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取指定的参数值, 没有返回默认值
      *
-     * @param name 参数名
+     * @param name         参数名
      * @param defaultValue 默认值
+     *
      * @return 参数值
      */
     public String getParameter(String name, String defaultValue) {
@@ -738,9 +790,10 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取指定的参数json值
      *
-     * @param <T> 泛型
+     * @param <T>   泛型
      * @param clazz 反序列化的类名
-     * @param name 参数名
+     * @param name  参数名
+     *
      * @return 参数值
      */
     public <T> T getJsonParameter(Class<T> clazz, String name) {
@@ -751,10 +804,11 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取指定的参数json值
      *
-     * @param <T> 泛型
+     * @param <T>     泛型
      * @param convert JsonConvert对象
-     * @param clazz 反序列化的类名
-     * @param name 参数名
+     * @param clazz   反序列化的类名
+     * @param name    参数名
+     *
      * @return 参数值
      */
     public <T> T getJsonParameter(JsonConvert convert, Class<T> clazz, String name) {
@@ -765,8 +819,9 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取指定的参数boolean值, 没有返回默认boolean值
      *
-     * @param name 参数名
+     * @param name         参数名
      * @param defaultValue 默认boolean值
+     *
      * @return 参数值
      */
     public boolean getBooleanParameter(String name, boolean defaultValue) {
@@ -777,8 +832,9 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取指定的参数short值, 没有返回默认short值
      *
-     * @param name 参数名
+     * @param name         参数名
      * @param defaultValue 默认short值
+     *
      * @return 参数值
      */
     public short getShortParameter(String name, short defaultValue) {
@@ -789,8 +845,9 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取指定的参数short值, 没有返回默认short值
      *
-     * @param name 参数名
+     * @param name         参数名
      * @param defaultValue 默认short值
+     *
      * @return 参数值
      */
     public short getShortParameter(String name, int defaultValue) {
@@ -801,8 +858,9 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取指定的参数int值, 没有返回默认int值
      *
-     * @param name 参数名
+     * @param name         参数名
      * @param defaultValue 默认int值
+     *
      * @return 参数值
      */
     public int getIntParameter(String name, int defaultValue) {
@@ -813,8 +871,9 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取指定的参数long值, 没有返回默认long值
      *
-     * @param name 参数名
+     * @param name         参数名
      * @param defaultValue 默认long值
+     *
      * @return 参数值
      */
     public long getLongParameter(String name, long defaultValue) {
@@ -825,8 +884,9 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取指定的参数float值, 没有返回默认float值
      *
-     * @param name 参数名
+     * @param name         参数名
      * @param defaultValue 默认float值
+     *
      * @return 参数值
      */
     public float getFloatParameter(String name, float defaultValue) {
@@ -837,8 +897,9 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取指定的参数double值, 没有返回默认double值
      *
-     * @param name 参数名
+     * @param name         参数名
      * @param defaultValue 默认double值
+     *
      * @return 参数值
      */
     public double getDoubleParameter(String name, double defaultValue) {
