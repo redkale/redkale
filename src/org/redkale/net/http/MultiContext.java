@@ -113,10 +113,14 @@ public final class MultiContext {
                     final String disposition = readLine();
                     //if (debug) System.out.println("disposition=" + disposition);
                     if (disposition.contains("; filename=\"")) { //是上传文件
-                        String contentType = readLine();
+                        String contentType = "";
+                        //读掉HTTP Header和空白行 通常情况下Content-Type后面就是内容，但是有些特殊情况下后面会跟其他如Content-Length: xxx等HTTP header，所以需要循环读取
+                        String rl;
+                        while (!(rl = readLine()).isEmpty()) {
+                            if (rl.startsWith("Content-Type:")) contentType = rl.substring(rl.indexOf(':') + 1).trim();
+                        }
                         //if (debug) System.out.println("file.contentType=" + contentType);
-                        contentType = contentType.substring(contentType.indexOf(':') + 1).trim();
-                        readLine(); //读掉空白行
+
                         String name = parseValue(disposition, "name");
                         String filename = parseValue(disposition, "filename");
                         if (filename == null || filename.isEmpty()) { //没有上传
