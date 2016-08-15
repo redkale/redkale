@@ -105,34 +105,37 @@ public final class HttpPrepareServlet extends PrepareServlet<String, HttpContext
                 if (!ws.repair()) prefix = "";//被设置为自动追加前缀则清空prefix
             }
         }
-        for (String mapping : mappings) {
-            if (!prefix.toString().isEmpty()) mapping = prefix + mapping;
-            if (this.mapStrings.containsKey(mapping)) {
-                Class old = this.mapStrings.get(mapping);
-                throw new RuntimeException("mapping [" + mapping + "] repeat on " + old.getName() + " and " + servlet.getClass().getName());
-            }
-            if (contains(mapping, '.', '*', '{', '[', '(', '|', '^', '$', '+', '?', '\\')) { //是否是正则表达式))
-                if (mapping.charAt(0) != '^') mapping = '^' + mapping;
-                if (mapping.endsWith("/*")) {
-                    mapping = mapping.substring(0, mapping.length() - 1) + ".*";
-                } else {
-                    mapping = mapping + "$";
+        synchronized (mapStrings) {
+            for (String mapping : mappings) {
+                if(mapping == null) continue;
+                if (!prefix.toString().isEmpty()) mapping = prefix + mapping;
+                if (this.mapStrings.containsKey(mapping)) {
+                    Class old = this.mapStrings.get(mapping);
+                    throw new RuntimeException("mapping [" + mapping + "] repeat on " + old.getName() + " and " + servlet.getClass().getName());
                 }
-                if (regArray == null) {
-                    regArray = new SimpleEntry[1];
-                    regArray[0] = new SimpleEntry<>(Pattern.compile(mapping).asPredicate(), servlet);
-                } else {
-                    regArray = Arrays.copyOf(regArray, regArray.length + 1);
-                    regArray[regArray.length - 1] = new SimpleEntry<>(Pattern.compile(mapping).asPredicate(), servlet);
+                if (contains(mapping, '.', '*', '{', '[', '(', '|', '^', '$', '+', '?', '\\')) { //是否是正则表达式))
+                    if (mapping.charAt(0) != '^') mapping = '^' + mapping;
+                    if (mapping.endsWith("/*")) {
+                        mapping = mapping.substring(0, mapping.length() - 1) + ".*";
+                    } else {
+                        mapping = mapping + "$";
+                    }
+                    if (regArray == null) {
+                        regArray = new SimpleEntry[1];
+                        regArray[0] = new SimpleEntry<>(Pattern.compile(mapping).asPredicate(), servlet);
+                    } else {
+                        regArray = Arrays.copyOf(regArray, regArray.length + 1);
+                        regArray[regArray.length - 1] = new SimpleEntry<>(Pattern.compile(mapping).asPredicate(), servlet);
+                    }
+                } else if (mapping != null && !mapping.isEmpty()) {
+                    super.mappings.put(mapping, servlet);
                 }
-            } else if (mapping != null && !mapping.isEmpty()) {
-                super.mappings.put(mapping, servlet);
+                this.mapStrings.put(mapping, servlet.getClass());
             }
-            this.mapStrings.put(mapping, servlet.getClass());
+            setServletConf(servlet, conf);
+            servlet._prefix = prefix.toString();
+            this.servlets.add(servlet);
         }
-        setServletConf(servlet, conf);
-        servlet._prefix = prefix.toString();
-        this.servlets.add(servlet);
     }
 
     private static boolean contains(String string, char... values) {
