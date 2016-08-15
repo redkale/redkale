@@ -31,7 +31,7 @@ public abstract class BasedHttpServlet extends HttpServlet {
 
     /**
      * 配合 BasedHttpServlet 使用。
-     * 当标记为 &#64;AuthIgnore 的方法不会再调用之前调用authenticate 方法。
+     * 当标记为 &#64;AuthIgnore 的方法在执行execute之前不会调用authenticate 方法。
      *
      * <p>
      * 详情见: http://redkale.org
@@ -48,7 +48,7 @@ public abstract class BasedHttpServlet extends HttpServlet {
 
     /**
      * 配合 BasedHttpServlet 使用。
-     * 用于对&#64;WebServlet对应的url进行细分。 其 url
+     * 用于对&#64;WebServlet对应的url进行细分。 其url必须是包含WebServlet中定义的前缀， 且不能是正则表达式
      *
      * <p>
      * 详情见: http://redkale.org
@@ -129,6 +129,8 @@ public abstract class BasedHttpServlet extends HttpServlet {
         for (Map.Entry<String, Entry> en : map.entrySet()) {
             actions[++i] = new AbstractMap.SimpleEntry<>(path + en.getKey(), en.getValue());
         }
+        //必须要倒排序, /query /query1 /query12  确保含子集的优先匹配 /query12  /query1  /query
+        Arrays.sort(actions, (o1, o2) -> o2.getKey().compareTo(o1.getKey()));
     }
 
     public final void postDestroy(HttpContext context, AnyValue config) {
@@ -149,7 +151,7 @@ public abstract class BasedHttpServlet extends HttpServlet {
             //-----------------------------------------------
             Class[] paramTypes = method.getParameterTypes();
             if (paramTypes.length != 2 || paramTypes[0] != HttpRequest.class
-                    || paramTypes[1] != HttpResponse.class) continue;
+                || paramTypes[1] != HttpResponse.class) continue;
             //-----------------------------------------------
             Class[] exps = method.getExceptionTypes();
             if (exps.length > 0 && (exps.length != 1 || exps[0] != IOException.class)) continue;
@@ -161,11 +163,12 @@ public abstract class BasedHttpServlet extends HttpServlet {
             final String name = action.url().trim();
 
             if (nameset.contains(name)) throw new RuntimeException(this.getClass().getSimpleName() + " has two same " + WebAction.class.getSimpleName() + "(" + name + ")");
-            for (String n : nameset) {
-                if (n.contains(name) || name.contains(n)) {
-                    throw new RuntimeException(this.getClass().getSimpleName() + " has two sub-contains " + WebAction.class.getSimpleName() + "(" + name + ", " + n + ")");
-                }
-            }
+            //屏蔽以下代码，允许相互包含
+//            for (String n : nameset) {
+//                if (n.contains(name) || name.contains(n)) {
+//                    throw new RuntimeException(this.getClass().getSimpleName() + " has two sub-contains " + WebAction.class.getSimpleName() + "(" + name + ", " + n + ")");
+//                }
+//            }
             nameset.add(name);
             map.put(name, new Entry(typeIgnore, serviceid, actionid, name, method, createHttpServlet(method)));
         }
