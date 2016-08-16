@@ -65,6 +65,10 @@
             </p>
             <div class="highlight"><pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">SimpleRestServlet</span> <span class="kd">extends</span> <span class="n">RestHttpServlet</span><span class="o">&lt;</span><span class="n">UserInfo</span><span class="o">&gt;</span> <span class="o">{</span>
 
+    <span class="kd">protected</span> <span class="kd">static</span> <span class="kd">final</span> <span class="n">RetResult</span> <span class="n">RET_UNLOGIN</span> <span class="o">=</span> <span class="n">RetCodes</span><span class="o">.</span><span class="na">retResult</span><span class="o">(</span><span class="n">RetCodes</span><span class="o">.</span><span class="na">RET_USER_UNLOGIN</span><span class="o">);</span>
+
+    <span class="kd">protected</span> <span class="kd">static</span> <span class="kd">final</span> <span class="n">RetResult</span> <span class="n">RET_AUTHILLEGAL</span> <span class="o">=</span> <span class="n">RetCodes</span><span class="o">.</span><span class="na">retResult</span><span class="o">(</span><span class="n">RetCodes</span><span class="o">.</span><span class="na">RET_USER_AUTH_ILLEGAL</span><span class="o">);</span>
+
     <span class="nd">@Resource</span>
     <span class="kd">private</span> <span class="n">UserService</span> <span class="n">userService</span><span class="o">;</span>
 
@@ -81,23 +85,17 @@
     <span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">authenticate</span><span class="o">(</span><span class="kt">int</span> <span class="n">module</span><span class="o">,</span> <span class="kt">int</span> <span class="n">actionid</span><span class="o">,</span> <span class="n">HttpRequest</span> <span class="n">request</span><span class="o">,</span> <span class="n">HttpResponse</span> <span class="n">response</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
         <span class="n">UserInfo</span> <span class="n">info</span> <span class="o">=</span> <span class="n">currentUser</span><span class="o">(</span><span class="n">request</span><span class="o">);</span>
         <span class="k">if</span> <span class="o">(</span><span class="n">info</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
-            <span class="n">response</span><span class="o">.</span><span class="na">addHeader</span><span class="o">(</span><span class="s">&quot;retcode&quot;</span><span class="o">,</span> <span class="n">RetCodes</span><span class="o">.</span><span class="na">RET_USER_UNLOGIN</span><span class="o">);</span>
-            <span class="n">response</span><span class="o">.</span><span class="na">addHeader</span><span class="o">(</span><span class="s">&quot;retmessage&quot;</span><span class="o">,</span> <span class="s">&quot;Not Login&quot;</span><span class="o">);</span>
-            <span class="n">response</span><span class="o">.</span><span class="na">setStatus</span><span class="o">(</span><span class="mi">203</span><span class="o">);</span>
-            <span class="n">response</span><span class="o">.</span><span class="na">finish</span><span class="o">(</span><span class="s">&quot;{&#39;success&#39;:false, &#39;message&#39;:&#39;Not Login&#39;}&quot;</span><span class="o">);</span>
+            <span class="n">response</span><span class="o">.</span><span class="na">finishJson</span><span class="o">(</span><span class="n">RET_UNLOGIN</span><span class="o">);</span>
             <span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
-        <span class="o">}</span> <span class="k">else</span> <span class="nf">if</span> <span class="o">(!</span><span class="n">info</span><span class="o">.</span><span class="na">checkAuth</span><span class="o">(</span><span class="n">module</span><span class="o">,</span> <span class="n">actionid</span><span class="o">))</span> <span class="o">{</span> <span class="c1">// 根据module、actionid进行鉴权</span>
-            <span class="n">response</span><span class="o">.</span><span class="na">addHeader</span><span class="o">(</span><span class="s">&quot;retcode&quot;</span><span class="o">,</span> <span class="n">RetCodes</span><span class="o">.</span><span class="na">RET_USER_AUTH_ILLEGAL</span><span class="o">);</span>
-            <span class="n">response</span><span class="o">.</span><span class="na">addHeader</span><span class="o">(</span><span class="s">&quot;retmessage&quot;</span><span class="o">,</span> <span class="s">&quot;No Authority&quot;</span><span class="o">);</span>
-            <span class="n">response</span><span class="o">.</span><span class="na">setStatus</span><span class="o">(</span><span class="mi">203</span><span class="o">);</span>
-            <span class="n">response</span><span class="o">.</span><span class="na">finish</span><span class="o">(</span><span class="s">&quot;{&#39;success&#39;:false, &#39;message&#39;:&#39;No Authority&#39;}&quot;</span><span class="o">);</span>
+        <span class="o">}</span> <span class="k">else</span> <span class="nf">if</span> <span class="o">(!</span><span class="n">info</span><span class="o">.</span><span class="na">checkAuth</span><span class="o">(</span><span class="n">module</span><span class="o">,</span> <span class="n">actionid</span><span class="o">))</span> <span class="o">{</span>
+            <span class="n">response</span><span class="o">.</span><span class="na">finishJson</span><span class="o">(</span><span class="n">RET_AUTHILLEGAL</span><span class="o">);</span>
             <span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
         <span class="o">}</span>
         <span class="k">return</span> <span class="kc">true</span><span class="o">;</span>
     <span class="o">}</span>
 
 <span class="o">}</span>
-                </pre></div>
+</pre></div>
 
 
             <p>
@@ -205,7 +203,7 @@
 
     <span class="c1">//查询列表</span>
     <span class="nd">@RestMapping</span><span class="o">(</span><span class="n">name</span> <span class="o">=</span> <span class="s">&quot;query&quot;</span><span class="o">,</span> <span class="n">authignore</span> <span class="o">=</span> <span class="kc">true</span><span class="o">)</span>
-    <span class="kd">public</span> <span class="n">Sheet</span><span class="o">&lt;</span><span class="n">HelloEntity</span><span class="o">&gt;</span> <span class="nf">queryHello</span><span class="o">(</span><span class="nd">@RestParam</span><span class="o">(</span><span class="s">&quot;bean&quot;</span><span class="o">)</span> <span class="n">HelloBean</span> <span class="n">bean</span><span class="o">,</span> <span class="n">Flipper</span> <span class="n">flipper</span><span class="o">)</span> <span class="o">{</span> <span class="c1">//通过 /hello/query/start:0/size:20?bean={...} 查询列表</span>
+    <span class="kd">public</span> <span class="n">Sheet</span><span class="o">&lt;</span><span class="n">HelloEntity</span><span class="o">&gt;</span> <span class="nf">queryHello</span><span class="o">(</span><span class="nd">@RestParam</span><span class="o">(</span><span class="s">&quot;bean&quot;</span><span class="o">)</span> <span class="n">HelloBean</span> <span class="n">bean</span><span class="o">,</span> <span class="n">Flipper</span> <span class="n">flipper</span><span class="o">)</span> <span class="o">{</span> <span class="c1">//通过 /hello/query/offset:0/limit:20?bean={...} 查询列表</span>
         <span class="k">return</span> <span class="n">source</span><span class="o">.</span><span class="na">querySheet</span><span class="o">(</span><span class="n">HelloEntity</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="n">flipper</span><span class="o">,</span> <span class="n">bean</span><span class="o">);</span>
     <span class="o">}</span>
 
@@ -232,7 +230,7 @@
         <span class="n">HelloEntity</span> <span class="n">bean</span> <span class="o">=</span> <span class="n">req</span><span class="o">.</span><span class="na">getJsonParameter</span><span class="o">(</span><span class="n">HelloEntity</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="s">&quot;bean&quot;</span><span class="o">);</span>
         <span class="n">UserInfo</span> <span class="n">user</span> <span class="o">=</span> <span class="n">currentUser</span><span class="o">(</span><span class="n">req</span><span class="o">);</span>
         <span class="n">RetResult</span><span class="o">&lt;</span><span class="n">HelloEntity</span><span class="o">&gt;</span> <span class="n">result</span> <span class="o">=</span> <span class="n">_service</span><span class="o">.</span><span class="na">createHello</span><span class="o">(</span><span class="n">user</span><span class="o">,</span> <span class="n">bean</span><span class="o">);</span>
-        <span class="n">sendRetResult</span><span class="o">(</span><span class="n">resp</span><span class="o">,</span> <span class="n">result</span><span class="o">);</span>
+        <span class="n">resp</span><span class="o">.</span><span class="na">finishJson</span><span class="o">(</span><span class="n">result</span><span class="o">);</span>
     <span class="o">}</span>
 
     <span class="nd">@AuthIgnore</span>
@@ -240,7 +238,7 @@
     <span class="kd">public</span> <span class="kt">void</span> <span class="nf">delete</span><span class="o">(</span><span class="n">HttpRequest</span> <span class="n">req</span><span class="o">,</span> <span class="n">HttpResponse</span> <span class="n">resp</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
         <span class="kt">int</span> <span class="n">id</span> <span class="o">=</span> <span class="n">Integer</span><span class="o">.</span><span class="na">parseInt</span><span class="o">(</span><span class="n">req</span><span class="o">.</span><span class="na">getRequstURILastPath</span><span class="o">());</span>
         <span class="n">_service</span><span class="o">.</span><span class="na">deleteHello</span><span class="o">(</span><span class="n">id</span><span class="o">);</span>
-        <span class="n">sendRetResult</span><span class="o">(</span><span class="n">resp</span><span class="o">,</span> <span class="n">RetResult</span><span class="o">.</span><span class="na">SUCCESS</span><span class="o">);</span>
+        <span class="n">resp</span><span class="o">.</span><span class="na">finishJson</span><span class="o">(</span><span class="n">RetResult</span><span class="o">.</span><span class="na">success</span><span class="o">());</span>
     <span class="o">}</span>
 
     <span class="nd">@AuthIgnore</span>
@@ -248,14 +246,14 @@
     <span class="kd">public</span> <span class="kt">void</span> <span class="nf">update</span><span class="o">(</span><span class="n">HttpRequest</span> <span class="n">req</span><span class="o">,</span> <span class="n">HttpResponse</span> <span class="n">resp</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
         <span class="n">HelloEntity</span> <span class="n">bean</span> <span class="o">=</span> <span class="n">req</span><span class="o">.</span><span class="na">getJsonParameter</span><span class="o">(</span><span class="n">HelloEntity</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="s">&quot;bean&quot;</span><span class="o">);</span>
         <span class="n">_service</span><span class="o">.</span><span class="na">updateHello</span><span class="o">(</span><span class="n">bean</span><span class="o">);</span>
-        <span class="n">sendRetResult</span><span class="o">(</span><span class="n">resp</span><span class="o">,</span> <span class="n">RetResult</span><span class="o">.</span><span class="na">SUCCESS</span><span class="o">);</span>
+        <span class="n">resp</span><span class="o">.</span><span class="na">finishJson</span><span class="o">(</span><span class="n">RetResult</span><span class="o">.</span><span class="na">success</span><span class="o">());</span>
     <span class="o">}</span>
 
     <span class="nd">@AuthIgnore</span>
     <span class="nd">@WebAction</span><span class="o">(</span><span class="n">url</span> <span class="o">=</span> <span class="s">&quot;/hello/query&quot;</span><span class="o">)</span>
     <span class="kd">public</span> <span class="kt">void</span> <span class="nf">query</span><span class="o">(</span><span class="n">HttpRequest</span> <span class="n">req</span><span class="o">,</span> <span class="n">HttpResponse</span> <span class="n">resp</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
         <span class="n">HelloBean</span> <span class="n">bean</span> <span class="o">=</span> <span class="n">req</span><span class="o">.</span><span class="na">getJsonParameter</span><span class="o">(</span><span class="n">HelloBean</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="s">&quot;bean&quot;</span><span class="o">);</span>
-        <span class="n">Flipper</span> <span class="n">flipper</span> <span class="o">=</span> <span class="n">findFlipper</span><span class="o">(</span><span class="n">req</span><span class="o">);</span>
+        <span class="n">Flipper</span> <span class="n">flipper</span> <span class="o">=</span> <span class="n">req</span><span class="o">.</span><span class="na">getFlipper</span><span class="o">();</span>
         <span class="n">Sheet</span><span class="o">&lt;</span><span class="n">HelloEntity</span><span class="o">&gt;</span> <span class="n">result</span> <span class="o">=</span> <span class="n">_service</span><span class="o">.</span><span class="na">queryHello</span><span class="o">(</span><span class="n">bean</span><span class="o">,</span> <span class="n">flipper</span><span class="o">);</span>
         <span class="n">resp</span><span class="o">.</span><span class="na">finishJson</span><span class="o">(</span><span class="n">result</span><span class="o">);</span>
     <span class="o">}</span>
@@ -268,7 +266,7 @@
         <span class="n">resp</span><span class="o">.</span><span class="na">finishJson</span><span class="o">(</span><span class="n">bean</span><span class="o">);</span>
     <span class="o">}</span>
 <span class="o">}</span>
-                </pre></div>
+</pre></div>
 
             <p>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;REST的第二种设置方式是显式的设置, 看如下范例：<br>
@@ -313,7 +311,7 @@
     <span class="o">}</span>
     
     <span class="c1">//查询Sheet列表</span>
-    <span class="kd">public</span> <span class="n">Sheet</span><span class="o">&lt;</span><span class="n">HelloEntity</span><span class="o">&gt;</span> <span class="nf">queryHello</span><span class="o">(</span><span class="n">HelloBean</span> <span class="n">bean</span><span class="o">,</span> <span class="n">Flipper</span> <span class="n">flipper</span><span class="o">)</span> <span class="o">{</span> <span class="c1">//通过 /hello/query/start:0/size:20?bean={...} 查询Sheet列表</span>
+    <span class="kd">public</span> <span class="n">Sheet</span><span class="o">&lt;</span><span class="n">HelloEntity</span><span class="o">&gt;</span> <span class="nf">queryHello</span><span class="o">(</span><span class="n">HelloBean</span> <span class="n">bean</span><span class="o">,</span> <span class="n">Flipper</span> <span class="n">flipper</span><span class="o">)</span> <span class="o">{</span> <span class="c1">//通过 /hello/query/offset:0/limit:20?bean={...} 查询Sheet列表</span>
         <span class="k">return</span> <span class="n">source</span><span class="o">.</span><span class="na">querySheet</span><span class="o">(</span><span class="n">HelloEntity</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="n">flipper</span><span class="o">,</span> <span class="n">bean</span><span class="o">);</span>
     <span class="o">}</span>
 
@@ -347,7 +345,7 @@
         <span class="n">HelloEntity</span> <span class="n">bean</span> <span class="o">=</span> <span class="n">req</span><span class="o">.</span><span class="na">getJsonParameter</span><span class="o">(</span><span class="n">HelloEntity</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="s">&quot;bean&quot;</span><span class="o">);</span>
         <span class="n">UserInfo</span> <span class="n">user</span> <span class="o">=</span> <span class="n">currentUser</span><span class="o">(</span><span class="n">req</span><span class="o">);</span>
         <span class="n">RetResult</span><span class="o">&lt;</span><span class="n">HelloEntity</span><span class="o">&gt;</span> <span class="n">result</span> <span class="o">=</span> <span class="n">_service</span><span class="o">.</span><span class="na">createHello</span><span class="o">(</span><span class="n">user</span><span class="o">,</span> <span class="n">bean</span><span class="o">);</span>
-        <span class="n">sendRetResult</span><span class="o">(</span><span class="n">resp</span><span class="o">,</span> <span class="n">result</span><span class="o">);</span>
+        <span class="n">resp</span><span class="o">.</span><span class="na">finishJson</span><span class="o">(</span><span class="n">result</span><span class="o">);</span>
     <span class="o">}</span>
 
     <span class="nd">@AuthIgnore</span>
@@ -355,7 +353,7 @@
     <span class="kd">public</span> <span class="kt">void</span> <span class="nf">delete</span><span class="o">(</span><span class="n">HttpRequest</span> <span class="n">req</span><span class="o">,</span> <span class="n">HttpResponse</span> <span class="n">resp</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
         <span class="kt">int</span> <span class="n">id</span> <span class="o">=</span> <span class="n">Integer</span><span class="o">.</span><span class="na">parseInt</span><span class="o">(</span><span class="n">req</span><span class="o">.</span><span class="na">getRequstURILastPath</span><span class="o">());</span>
         <span class="n">_service</span><span class="o">.</span><span class="na">deleteHello</span><span class="o">(</span><span class="n">id</span><span class="o">);</span>
-        <span class="n">sendRetResult</span><span class="o">(</span><span class="n">resp</span><span class="o">,</span> <span class="n">RetResult</span><span class="o">.</span><span class="na">SUCCESS</span><span class="o">);</span>
+        <span class="n">resp</span><span class="o">.</span><span class="na">finishJson</span><span class="o">(</span><span class="n">RetResult</span><span class="o">.</span><span class="na">success</span><span class="o">());</span>
     <span class="o">}</span>
 
     <span class="nd">@AuthIgnore</span>
@@ -363,7 +361,7 @@
     <span class="kd">public</span> <span class="kt">void</span> <span class="nf">update</span><span class="o">(</span><span class="n">HttpRequest</span> <span class="n">req</span><span class="o">,</span> <span class="n">HttpResponse</span> <span class="n">resp</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
         <span class="n">HelloEntity</span> <span class="n">bean</span> <span class="o">=</span> <span class="n">req</span><span class="o">.</span><span class="na">getJsonParameter</span><span class="o">(</span><span class="n">HelloEntity</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="s">&quot;bean&quot;</span><span class="o">);</span>
         <span class="n">_service</span><span class="o">.</span><span class="na">updateHello</span><span class="o">(</span><span class="n">bean</span><span class="o">);</span>
-        <span class="n">sendRetResult</span><span class="o">(</span><span class="n">resp</span><span class="o">,</span> <span class="n">RetResult</span><span class="o">.</span><span class="na">SUCCESS</span><span class="o">);</span>
+        <span class="n">resp</span><span class="o">.</span><span class="na">finishJson</span><span class="o">(</span><span class="n">RetResult</span><span class="o">.</span><span class="na">success</span><span class="o">());</span>
     <span class="o">}</span>
 
     <span class="nd">@AuthIgnore</span>
@@ -372,14 +370,14 @@
         <span class="n">HelloEntity</span> <span class="n">bean</span> <span class="o">=</span> <span class="n">req</span><span class="o">.</span><span class="na">getJsonParameter</span><span class="o">(</span><span class="n">HelloEntity</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="s">&quot;bean&quot;</span><span class="o">);</span>
         <span class="n">String</span><span class="o">[]</span> <span class="n">cols</span> <span class="o">=</span> <span class="n">req</span><span class="o">.</span><span class="na">getJsonParameter</span><span class="o">(</span><span class="n">String</span><span class="o">[].</span><span class="na">class</span><span class="o">,</span> <span class="s">&quot;cols&quot;</span><span class="o">);</span>
         <span class="n">_service</span><span class="o">.</span><span class="na">updateHello</span><span class="o">(</span><span class="n">bean</span><span class="o">,</span> <span class="n">cols</span><span class="o">);</span>
-        <span class="n">sendRetResult</span><span class="o">(</span><span class="n">resp</span><span class="o">,</span> <span class="n">RetResult</span><span class="o">.</span><span class="na">SUCCESS</span><span class="o">);</span>
+        <span class="n">resp</span><span class="o">.</span><span class="na">finishJson</span><span class="o">(</span><span class="n">RetResult</span><span class="o">.</span><span class="na">success</span><span class="o">());</span>
     <span class="o">}</span>
 
     <span class="nd">@AuthIgnore</span>
     <span class="nd">@WebAction</span><span class="o">(</span><span class="n">url</span> <span class="o">=</span> <span class="s">&quot;/hello/query&quot;</span><span class="o">)</span>
     <span class="kd">public</span> <span class="kt">void</span> <span class="nf">query</span><span class="o">(</span><span class="n">HttpRequest</span> <span class="n">req</span><span class="o">,</span> <span class="n">HttpResponse</span> <span class="n">resp</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
         <span class="n">HelloBean</span> <span class="n">bean</span> <span class="o">=</span> <span class="n">req</span><span class="o">.</span><span class="na">getJsonParameter</span><span class="o">(</span><span class="n">HelloBean</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="s">&quot;bean&quot;</span><span class="o">);</span>
-        <span class="n">Flipper</span> <span class="n">flipper</span> <span class="o">=</span> <span class="n">findFlipper</span><span class="o">(</span><span class="n">req</span><span class="o">);</span>
+        <span class="n">Flipper</span> <span class="n">flipper</span> <span class="o">=</span> <span class="n">req</span><span class="o">.</span><span class="na">getFlipper</span><span class="o">();</span>
         <span class="n">Sheet</span><span class="o">&lt;</span><span class="n">HelloEntity</span><span class="o">&gt;</span> <span class="n">result</span> <span class="o">=</span> <span class="n">_service</span><span class="o">.</span><span class="na">queryHello</span><span class="o">(</span><span class="n">bean</span><span class="o">,</span> <span class="n">flipper</span><span class="o">);</span>
         <span class="n">resp</span><span class="o">.</span><span class="na">finishJson</span><span class="o">(</span><span class="n">result</span><span class="o">);</span>
     <span class="o">}</span>
@@ -405,10 +403,10 @@
     <span class="kd">public</span> <span class="kt">void</span> <span class="nf">jsfind</span><span class="o">(</span><span class="n">HttpRequest</span> <span class="n">req</span><span class="o">,</span> <span class="n">HttpResponse</span> <span class="n">resp</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
         <span class="kt">int</span> <span class="n">id</span> <span class="o">=</span> <span class="n">Integer</span><span class="o">.</span><span class="na">parseInt</span><span class="o">(</span><span class="n">req</span><span class="o">.</span><span class="na">getRequstURILastPath</span><span class="o">());</span>
         <span class="n">HelloEntity</span> <span class="n">bean</span> <span class="o">=</span> <span class="n">_service</span><span class="o">.</span><span class="na">findHello</span><span class="o">(</span><span class="n">id</span><span class="o">);</span>
-        <span class="n">sendJsResult</span><span class="o">(</span><span class="n">resp</span><span class="o">,</span> <span class="s">&quot;varhello&quot;</span><span class="o">,</span> <span class="n">bean</span><span class="o">);</span>
+        <span class="n">resp</span><span class="o">.</span><span class="na">finishJsResult</span><span class="o">(</span><span class="s">&quot;varhello&quot;</span><span class="o">,</span> <span class="n">bean</span><span class="o">);</span>
     <span class="o">}</span>
 <span class="o">}</span>
-                </pre></div>
+</pre></div>
 
             <p>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;REST插件让开发者省去了编写HttpServlet过程，让开发更加敏捷。<br>
