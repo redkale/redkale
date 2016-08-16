@@ -257,8 +257,8 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
     public void finishJson(final org.redkale.service.RetResult ret) {
         this.contentType = "text/plain; charset=utf-8";
         if (ret != null && !ret.isSuccess()) {
-            addHeader("retcode", ret.getRetcode());
-            addHeader("retinfo", ret.getRetinfo());
+            this.header.addValue("retcode", String.valueOf(ret.getRetcode()));
+            this.header.addValue("retcode", ret.getRetinfo());
         }
         finish(request.getJsonConvert().convertTo(context.getBufferSupplier(), ret));
     }
@@ -272,10 +272,33 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
     public void finishJson(final JsonConvert convert, final org.redkale.service.RetResult ret) {
         this.contentType = "text/plain; charset=utf-8";
         if (ret != null && !ret.isSuccess()) {
-            addHeader("retcode", ret.getRetcode());
-            addHeader("retinfo", ret.getRetinfo());
+            this.header.addValue("retcode", String.valueOf(ret.getRetcode()));
+            this.header.addValue("retcode", ret.getRetinfo());
         }
         finish(convert.convertTo(context.getBufferSupplier(), ret));
+    }
+
+    /**
+     * 将对象以JavaScript格式输出
+     *
+     * @param var    js变量名
+     * @param result 输出对象
+     */
+    public void finishJsObject(String var, Object result) {
+        this.contentType = "application/javascript; charset=utf-8";
+        finish("var " + var + " = " + request.getJsonConvert().convertTo(result) + ";");
+    }
+
+    /**
+     * 将对象以JavaScript格式输出
+     *
+     * @param jsonConvert 指定的JsonConvert
+     * @param var         js变量名
+     * @param result      输出对象
+     */
+    public void finishJsObject(JsonConvert jsonConvert, String var, Object result) {
+        this.contentType = "application/javascript; charset=utf-8";
+        finish("var " + var + " = " + jsonConvert.convertTo(result) + ";");
     }
 
     /**
