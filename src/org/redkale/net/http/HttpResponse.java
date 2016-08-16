@@ -284,7 +284,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * @param var    js变量名
      * @param result 输出对象
      */
-    public void finishJsObject(String var, Object result) {
+    public void finishJsResult(String var, Object result) {
         this.contentType = "application/javascript; charset=utf-8";
         finish("var " + var + " = " + request.getJsonConvert().convertTo(result) + ";");
     }
@@ -296,7 +296,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * @param var         js变量名
      * @param result      输出对象
      */
-    public void finishJsObject(JsonConvert jsonConvert, String var, Object result) {
+    public void finishJsResult(JsonConvert jsonConvert, String var, Object result) {
         this.contentType = "application/javascript; charset=utf-8";
         finish("var " + var + " = " + jsonConvert.convertTo(result) + ";");
     }
