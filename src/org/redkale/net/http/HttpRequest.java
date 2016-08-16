@@ -908,46 +908,46 @@ public class HttpRequest extends Request<HttpContext> {
     }
 
     /**
-     * 获取翻页对象 同 findFlipper("flipper", false, 0);
+     * 获取翻页对象 同 getFlipper("flipper", false, 0);
      *
      * @return Flipper翻页对象
      */
-    public org.redkale.source.Flipper findFlipper() {
-        return findFlipper(false, 0);
+    public org.redkale.source.Flipper getFlipper() {
+        return getFlipper(false, 0);
     }
 
     /**
-     * 获取翻页对象 同 findFlipper("flipper", needcreate, 0);
+     * 获取翻页对象 同 getFlipper("flipper", needcreate, 0);
      *
      * @param needcreate 无参数时是否创建新Flipper对象
      *
      * @return Flipper翻页对象
      */
-    public org.redkale.source.Flipper findFlipper(boolean needcreate) {
-        return findFlipper(needcreate, 0);
+    public org.redkale.source.Flipper getFlipper(boolean needcreate) {
+        return getFlipper(needcreate, 0);
     }
 
     /**
-     * 获取翻页对象 同 findFlipper("flipper", false, maxLimit);
+     * 获取翻页对象 同 getFlipper("flipper", false, maxLimit);
      *
      * @param maxLimit 最大行数， 小于1则值为Flipper.DEFAULT_LIMIT
      *
      * @return Flipper翻页对象
      */
-    public org.redkale.source.Flipper findFlipper(int maxLimit) {
-        return findFlipper(false, maxLimit);
+    public org.redkale.source.Flipper getFlipper(int maxLimit) {
+        return getFlipper(false, maxLimit);
     }
 
     /**
-     * 获取翻页对象 同 findFlipper("flipper", needcreate, maxLimit)
+     * 获取翻页对象 同 getFlipper("flipper", needcreate, maxLimit)
      *
      * @param needcreate 无参数时是否创建新Flipper对象
      * @param maxLimit   最大行数， 小于1则值为Flipper.DEFAULT_LIMIT
      *
      * @return Flipper翻页对象
      */
-    public org.redkale.source.Flipper findFlipper(boolean needcreate, int maxLimit) {
-        return findFlipper("flipper", needcreate, maxLimit);
+    public org.redkale.source.Flipper getFlipper(boolean needcreate, int maxLimit) {
+        return getFlipper("flipper", needcreate, maxLimit);
     }
 
     /**
@@ -962,7 +962,7 @@ public class HttpRequest extends Request<HttpContext> {
      *
      * @return Flipper翻页对象
      */
-    public org.redkale.source.Flipper findFlipper(String name, boolean needcreate, int maxLimit) {
+    public org.redkale.source.Flipper getFlipper(String name, boolean needcreate, int maxLimit) {
         if (maxLimit < 1) maxLimit = org.redkale.source.Flipper.DEFAULT_LIMIT;
         org.redkale.source.Flipper flipper = getJsonParameter(org.redkale.source.Flipper.class, name);
         if (flipper == null) {
