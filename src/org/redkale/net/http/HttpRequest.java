@@ -907,4 +907,73 @@ public class HttpRequest extends Request<HttpContext> {
         return params.getDoubleValue(name, defaultValue);
     }
 
+    /**
+     * 获取翻页对象 同 findFlipper("flipper", false, 0);
+     *
+     * @return Flipper翻页对象
+     */
+    public org.redkale.source.Flipper findFlipper() {
+        return findFlipper(false, 0);
+    }
+
+    /**
+     * 获取翻页对象 同 findFlipper("flipper", needcreate, 0);
+     *
+     * @param needcreate 无参数时是否创建新Flipper对象
+     *
+     * @return Flipper翻页对象
+     */
+    public org.redkale.source.Flipper findFlipper(boolean needcreate) {
+        return findFlipper(needcreate, 0);
+    }
+
+    /**
+     * 获取翻页对象 同 findFlipper("flipper", false, maxLimit);
+     *
+     * @param maxLimit 最大行数， 小于1则值为Flipper.DEFAULT_LIMIT
+     *
+     * @return Flipper翻页对象
+     */
+    public org.redkale.source.Flipper findFlipper(int maxLimit) {
+        return findFlipper(false, maxLimit);
+    }
+
+    /**
+     * 获取翻页对象 同 findFlipper("flipper", needcreate, maxLimit)
+     *
+     * @param needcreate 无参数时是否创建新Flipper对象
+     * @param maxLimit   最大行数， 小于1则值为Flipper.DEFAULT_LIMIT
+     *
+     * @return Flipper翻页对象
+     */
+    public org.redkale.source.Flipper findFlipper(boolean needcreate, int maxLimit) {
+        return findFlipper("flipper", needcreate, maxLimit);
+    }
+
+    /**
+     * 获取翻页对象 http://redkale.org/pipes/records/list/offset:0/limit:20/sort:createtime%20ASC  <br>
+     * http://redkale.org/pipes/records/list?flipper={'offset':0,'limit':20, 'sort':'createtime ASC'}  <br>
+     * 以上两种接口都可以获取到翻页对象
+     *
+     *
+     * @param name       Flipper对象的参数名，默认为 "flipper"
+     * @param needcreate 无参数时是否创建新Flipper对象
+     * @param maxLimit   最大行数， 小于1则值为Flipper.DEFAULT_LIMIT
+     *
+     * @return Flipper翻页对象
+     */
+    public org.redkale.source.Flipper findFlipper(String name, boolean needcreate, int maxLimit) {
+        if (maxLimit < 1) maxLimit = org.redkale.source.Flipper.DEFAULT_LIMIT;
+        org.redkale.source.Flipper flipper = getJsonParameter(org.redkale.source.Flipper.class, name);
+        if (flipper == null) {
+            int limit = getRequstURIPath("limit:", maxLimit);
+            int offset = getRequstURIPath("offset:", 0);
+            String sort = getRequstURIPath("sort:", "");
+            if (limit > 0) flipper = new org.redkale.source.Flipper(limit, offset, sort);
+        } else if (flipper.getLimit() < 1 || flipper.getLimit() > maxLimit) {
+            flipper.setLimit(maxLimit);
+        }
+        if (flipper != null || !needcreate) return flipper;
+        return new org.redkale.source.Flipper(maxLimit);
+    }
 }

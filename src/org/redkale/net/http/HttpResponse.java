@@ -160,6 +160,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * 获取状态码对应的状态描述
      *
      * @param status 状态码
+     *
      * @return 状态描述
      */
     protected String getHttpCode(int status) {
@@ -179,6 +180,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * 增加Cookie值
      *
      * @param cookies cookie
+     *
      * @return HttpResponse
      */
     public HttpResponse addCookie(HttpCookie... cookies) {
@@ -245,6 +247,35 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
     public void finishJson(final Object... objs) {
         this.contentType = "text/plain; charset=utf-8";
         finish(request.getJsonConvert().convertTo(context.getBufferSupplier(), objs));
+    }
+
+    /**
+     * 将RetResult对象以JSON格式输出
+     *
+     * @param ret RetResult输出对象
+     */
+    public void finishJson(final org.redkale.service.RetResult ret) {
+        this.contentType = "text/plain; charset=utf-8";
+        if (ret != null && !ret.isSuccess()) {
+            addHeader("retcode", ret.getRetcode());
+            addHeader("retinfo", ret.getRetinfo());
+        }
+        finish(request.getJsonConvert().convertTo(context.getBufferSupplier(), ret));
+    }
+
+    /**
+     * 将RetResult对象以JSON格式输出
+     *
+     * @param convert 指定的JsonConvert
+     * @param ret     RetResult输出对象
+     */
+    public void finishJson(final JsonConvert convert, final org.redkale.service.RetResult ret) {
+        this.contentType = "text/plain; charset=utf-8";
+        if (ret != null && !ret.isSuccess()) {
+            addHeader("retcode", ret.getRetcode());
+            addHeader("retinfo", ret.getRetinfo());
+        }
+        finish(convert.convertTo(context.getBufferSupplier(), ret));
     }
 
     /**
@@ -415,6 +446,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * 将指定文件按响应结果输出
      *
      * @param file 输出文件
+     *
      * @throws IOException IO异常
      */
     public void finish(File file) throws IOException {
@@ -426,6 +458,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      *
      * @param filename 输出文件名
      * @param file     输出文件
+     *
      * @throws IOException IO异常
      */
     public void finish(final String filename, File file) throws IOException {
@@ -437,6 +470,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      *
      * @param file     输出文件
      * @param fileBody 文件内容， 没有则输出file
+     *
      * @throws IOException IO异常
      */
     protected void finishFile(final File file, ByteBuffer fileBody) throws IOException {
@@ -449,6 +483,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * @param filename 输出文件名
      * @param file     输出文件
      * @param fileBody 文件内容， 没有则输出file
+     *
      * @throws IOException IO异常
      */
     protected void finishFile(final String filename, final File file, ByteBuffer fileBody) throws IOException {
@@ -611,6 +646,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      *
      * @param name  header名
      * @param value header值
+     *
      * @return HttpResponse
      */
     public HttpResponse setHeader(String name, Object value) {
@@ -623,6 +659,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      *
      * @param name  header名
      * @param value header值
+     *
      * @return HttpResponse
      */
     public HttpResponse addHeader(String name, Object value) {
@@ -634,6 +671,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * 设置状态码
      *
      * @param status 状态码
+     *
      * @return HttpResponse
      */
     public HttpResponse setStatus(int status) {
@@ -663,6 +701,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * 设置 ContentType
      *
      * @param contentType ContentType
+     *
      * @return HttpResponse
      */
     public HttpResponse setContentType(String contentType) {
@@ -683,6 +722,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * 设置内容长度
      *
      * @param contentLength 内容长度
+     *
      * @return HttpResponse
      */
     public HttpResponse setContentLength(long contentLength) {
