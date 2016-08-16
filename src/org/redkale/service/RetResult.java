@@ -22,30 +22,12 @@ import org.redkale.convert.json.JsonFactory;
  */
 public class RetResult<T> {
 
-    protected static final class RetSuccessResult<T> extends RetResult<T> {
-
-        public RetSuccessResult() {
-        }
-
-        @Override
-        public void setRetcode(int retcode) {
-        }
-
-        @Override
-        public void setRetinfo(String retinfo) {
-        }
-
-        @Override
-        public void setResult(T result) {
-        }
-    }
-    
     /**
      * 使用 RetResult.success() 方法代替
-     * 
+     *
      * @deprecated
      */
-    private static final RetResult SUCCESS = new RetSuccessResult();
+    private static final RetResult SUCCESS = new RetResult();
 
     protected int retcode;
 
@@ -76,7 +58,7 @@ public class RetResult<T> {
     }
 
     public static RetResult success() {
-        return SUCCESS;
+        return new RetResult();
     }
 
     /**
