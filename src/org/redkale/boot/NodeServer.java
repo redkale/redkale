@@ -450,19 +450,19 @@ public abstract class NodeServer {
                 prop.addValue("groups", sc);
             }
             ClassFilter filter = new ClassFilter(ref, inter, prop);
-            for (AnyValue av : list.getAnyValues(property)) {
+            for (AnyValue av : list.getAnyValues(property)) { // <service> 或  <servlet> 节点
                 final AnyValue[] items = av.getAnyValues("property");
-                if (av instanceof DefaultAnyValue && items.length > 0) {
+                if (av instanceof DefaultAnyValue && items.length > 0) { //存在 <property>节点
                     DefaultAnyValue dav = DefaultAnyValue.create();
                     final AnyValue.Entry<String>[] strings = av.getStringEntrys();
-                    if (strings != null) {
+                    if (strings != null) {  //将<service>或<servlet>节点的属性值传给dav
                         for (AnyValue.Entry<String> en : strings) {
                             dav.addValue(en.name, en.getValue());
                         }
                     }
                     final AnyValue.Entry<AnyValue>[] anys = av.getAnyEntrys();
                     if (anys != null) {
-                        for (AnyValue.Entry<AnyValue> en : anys) {
+                        for (AnyValue.Entry<AnyValue> en : anys) { //将<service>或<servlet>节点的非property属性节点传给dav
                             if (!"property".equals(en.name)) dav.addValue(en.name, en.getValue());
                         }
                     }
@@ -470,7 +470,7 @@ public abstract class NodeServer {
                     for (AnyValue item : items) {
                         ps.addValue(item.getValue("name"), item.getValue("value"));
                     }
-                    dav.addValue("property", ps);
+                    dav.addValue("properties", ps);
                     av = dav;
                 }
                 filter.filter(av, av.getValue("value"), false);

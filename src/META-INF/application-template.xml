@@ -114,8 +114,9 @@
             -->
             <service value="com.xxx.XXX2Service" name="" groups="xxx;yyy"/>
             <!--   给Service增加配置属性 -->
-            <service value="com.xxx.XXX1Service">
-                <property name="xxxxxx" value="XXXXXXXX"/>
+            <service value="com.xxx.XXX1Service"> 
+                <!-- property节点值在 public void init(AnyValue conf) 方法中可以通过 AnyValue properties =  conf.getAnyValue("properties");获取 -->
+                <property name="xxxxxx" value="XXXXXXXX"/>  
                 <property name="xxxxxx" value="XXXXXXXX"/>
             </service>
         </services>
