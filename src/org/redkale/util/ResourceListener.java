@@ -11,6 +11,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * &#64;Resource资源被更新时的监听事件。本注解只能标记在方法参数为(String name, T newVal, T oldVal)上。
+ * 方法在资源被更新以后调用。
  *
  * <blockquote><pre>
  * public class Record {
