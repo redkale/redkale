@@ -15,35 +15,35 @@ import org.redkale.util.*;
  */
 public class ResourceTest {
 
-public static void main(String[] args) throws Exception {
-    ResourceFactory factory = ResourceFactory.root();
-    factory.register("property.id", "2345"); //注入String类型的property.id
-    AService aservice = new AService();
-    BService bservice = new BService("eeeee");
+    public static void main(String[] args) throws Exception {
+        ResourceFactory factory = ResourceFactory.root();
+        factory.register("property.id", "2345"); //注入String类型的property.id
+        AService aservice = new AService();
+        BService bservice = new BService("eeeee");
 
-    factory.register(aservice);  //放进Resource池内，默认的资源名name为""
-    factory.register(bservice);  //放进Resource池内，默认的资源名name为""
+        factory.register(aservice);  //放进Resource池内，默认的资源名name为""
+        factory.register(bservice);  //放进Resource池内，默认的资源名name为""
 
-    factory.inject(aservice);  //给aservice注入id、bservice，bigint没有资源，所以为null
-    factory.inject(bservice);  //给bservice注入id、aservice
-    System.out.println(aservice); //输出结果为：{id:"2345", intid: 2345, bigint:null, bservice:{name:eeeee}}
-    System.out.println(bservice); //输出结果为：{name:"eeeee", id: 2345, aserivce:{id:"2345", intid: 2345, bigint:null, bservice:{name:eeeee}}}
+        factory.inject(aservice);  //给aservice注入id、bservice，bigint没有资源，所以为null
+        factory.inject(bservice);  //给bservice注入id、aservice
+        System.out.println(aservice); //输出结果为：{id:"2345", intid: 2345, bigint:null, bservice:{name:eeeee}}
+        System.out.println(bservice); //输出结果为：{name:"eeeee", id: 2345, aserivce:{id:"2345", intid: 2345, bigint:null, bservice:{name:eeeee}}}
 
-    factory.register("seqid", 200); //放进Resource池内, 同时ResourceFactory会自动更新aservice的seqid值
-    System.out.println(factory.find("seqid", int.class));   //输出结果为：200
-    factory.register("bigint", new BigInteger("666666666666666")); //放进Resource池内, 同时ResourceFactory会自动更新aservice对象的bigint值   
-    System.out.println(aservice); //输出结果为：{id:"2345", intid: 2345, bigint:666666666666666, bservice:{name:eeeee}}  可以看出seqid与bigint值都已自动更新
+        factory.register("seqid", 200); //放进Resource池内, 同时ResourceFactory会自动更新aservice的seqid值
+        System.out.println(factory.find("seqid", int.class));   //输出结果为：200
+        factory.register("bigint", new BigInteger("666666666666666")); //放进Resource池内, 同时ResourceFactory会自动更新aservice对象的bigint值   
+        System.out.println(aservice); //输出结果为：{id:"2345", intid: 2345, bigint:666666666666666, bservice:{name:eeeee}}  可以看出seqid与bigint值都已自动更新
 
-    factory.register("property.id", "6789"); //更新Resource池内的id资源值, 同时ResourceFactory会自动更新aservice、bservice的id值
-    System.out.println(aservice); //输出结果为：{id:"6789", intid: 6789, bigint:666666666666666, bservice:{name:eeeee}}
-    System.out.println(bservice); //输出结果为：{name:"eeeee", id: 6789, aserivce:{id:"6789", intid: 6789, bigint:666666666666666, bservice:{name:eeeee}}}
+        factory.register("property.id", "6789"); //更新Resource池内的id资源值, 同时ResourceFactory会自动更新aservice、bservice的id值
+        System.out.println(aservice); //输出结果为：{id:"6789", intid: 6789, bigint:666666666666666, bservice:{name:eeeee}}
+        System.out.println(bservice); //输出结果为：{name:"eeeee", id: 6789, aserivce:{id:"6789", intid: 6789, bigint:666666666666666, bservice:{name:eeeee}}}
 
-    bservice = new BService("ffff");
-    factory.register(bservice);   //更新Resource池内name=""的BService资源, 同时ResourceFactory会自动更新aservice的bservice对象
-    factory.inject(bservice);
-    System.out.println(aservice); //输出结果为：{id:"6789", intid: 6789, bigint:666666666666666, bservice:{name:ffff}}
+        bservice = new BService("ffff");
+        factory.register(bservice);   //更新Resource池内name=""的BService资源, 同时ResourceFactory会自动更新aservice的bservice对象
+        factory.inject(bservice);
+        System.out.println(aservice); //输出结果为：{id:"6789", intid: 6789, bigint:666666666666666, bservice:{name:ffff}}
 
-}
+    }
 
 }
 
@@ -56,6 +56,11 @@ class BService {
     private AService aservice;
 
     private String name = "";
+
+    @ResourceListener
+    private void changeResource(String name, Object newVal, Object oldVal) {
+        System.out.println("@Resource = " + name + " 资源变更:  newVal = " + newVal + ", oldVal = " + oldVal);
+    }
 
     @java.beans.ConstructorProperties({"name"})
     public BService(String name) {

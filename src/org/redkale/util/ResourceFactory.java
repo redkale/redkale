@@ -175,7 +175,7 @@ public final class ResourceFactory {
             if (re == null) {
                 map.put(name, new ResourceEntry(rs));
             } else {
-                map.put(name, new ResourceEntry(rs, re.elements, autoSync));
+                map.put(name, new ResourceEntry(rs, name, re.elements, autoSync));
             }
             return re == null ? null : (A) re.value;
         }
@@ -405,7 +405,7 @@ public final class ResourceFactory {
             this.elements = new CopyOnWriteArrayList<>();
         }
 
-        public ResourceEntry(T value, final List<ResourceElement> elements, boolean sync) {
+        public ResourceEntry(T value, final String name, final List<ResourceElement> elements, boolean sync) {
             this.value = value;
             this.elements = elements == null ? new CopyOnWriteArrayList<>() : elements;
             if (sync && elements != null && !elements.isEmpty()) {
@@ -433,10 +433,25 @@ public final class ResourceFactory {
                         }
                     }
                     if (rs == null && classtype.isPrimitive()) rs = Array.get(Array.newInstance(classtype, 1), 0);
+                    Object oldVal = null;
+                    if (element.listener != null) {
+                        try {
+                            oldVal = element.field.get(dest);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
                     try {
                         element.field.set(dest, rs);
                     } catch (Exception e) {
                         e.printStackTrace();
+                    }
+                    if (element.listener != null) {
+                        try {
+                            element.listener.invoke(dest, name, rs, oldVal);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
                     }
                 }
             }
@@ -445,16 +460,41 @@ public final class ResourceFactory {
 
     private static class ResourceElement<T> {
 
+        private static final HashMap<Class, Method> listenerMethods = new HashMap<>(); //不使用ConcurrentHashMap是因为value不能存null
+
         public final WeakReference<T> dest;
 
-        public final Field field;
+        public final Field field; //Resource 字段
 
         public final Class fieldType;
+
+        public final Method listener;
 
         public ResourceElement(T dest, Field field) {
             this.dest = new WeakReference(dest);
             this.field = field;
             this.fieldType = field.getType();
+            Class t = dest.getClass();
+            String tn = t.getName();
+            this.listener = tn.startsWith("java.") || tn.startsWith("javax.") ? null : findListener(t);
+        }
+
+        private static synchronized Method findListener(Class clazz) {
+            Class loop = clazz;
+            Method m = null;
+            do {
+                for (Method method : loop.getDeclaredMethods()) {
+                    if (method.getAnnotation(ResourceListener.class) != null
+                        && method.getParameterCount() == 3
+                        && String.class.isAssignableFrom(method.getParameterTypes()[0])) {
+                        m = method;
+                        m.setAccessible(true);
+                        break;
+                    } 
+                }
+            } while ((loop = loop.getSuperclass()) != Object.class);
+            listenerMethods.put(clazz, m);
+            return m;
         }
     }
 
