@@ -88,9 +88,9 @@ public interface HttpRequestDesc {
     public long getRequstURIPath(String prefix, long defaultValue);
 
     //获取请求URL分段中含prefix段的int值
-    // 例如请求URL /pipes/record/query/page:2/size:50
-    // 获取page参数: int page = request.getRequstURIPath("page:", 1);
-    // 获取size参数: int size = request.getRequstURIPath("size:", 20);
+    // 例如请求URL /pipes/record/query/offset:2/limit:50
+    // 获取page参数: int offset = request.getRequstURIPath("offset:", 1);
+    // 获取size参数: int limit = request.getRequstURIPath("limit:", 20);
     public int getRequstURIPath(String prefix, int defaultValue);
 
     //获取请求URL分段中含prefix段的值
