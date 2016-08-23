@@ -30,7 +30,7 @@
 
             <h3><a class="anchor" aria-hidden="true"></a>快速上手</h3>
             <p>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;为了让REST生效，必须配置 <a href="redkale.html#redkale_confxml" target="_blank">application.xml</a> 中 HTTP 的 &lt;server&gt; 节点的nodeInterceptor属性值为 <b>org.redkalex.rest.RestNodeInterceptor</b> 。<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;为了让REST生效，必须配置 <a href="redkale.html#redkale_confxml" target="_blank">application.xml</a> 中 HTTP 的 &lt;server&gt; 节点的interceptor属性值为 <b>org.redkalex.rest.RestNodeInterceptor</b> 。<br>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;同时必须在&lt;server&gt; 节点 里增加 &lt;rest&gt; 子节点。配置介绍如下：<br>
             </p>
             <div class="highlight"><pre><span class="nt">&lt;application</span> <span class="na">port=</span><span class="s">&quot;5001&quot;</span><span class="nt">&gt;</span>   
@@ -39,9 +39,9 @@
         <span class="c">&lt;!-- ... --&gt;</span>
     <span class="nt">&lt;/resources&gt;</span> 
     <span class="c">&lt;!-- </span>
-<span class="c">           nodeInterceptor: 值必须要是 <b>org.redkalex.rest.RestNodeInterceptor</b>，且只能配置在protocol="HTTP"的server节点上，REST服务才会生效。</span>
+<span class="c">           interceptor: 值必须要是 <b>org.redkalex.rest.RestNodeInterceptor</b>，且只能配置在protocol="HTTP"的server节点上，REST服务才会生效。</span>
 <span class="c">    --&gt;</span>
-    <span class="nt">&lt;server</span> <span class="na">protocol=</span><span class="s">&quot;HTTP&quot;</span> <span class="na">port=</span><span class="s">&quot;6060&quot;</span> <span class="na">nodeInterceptor=</span><span class="s">&quot;org.redkalex.rest.RestNodeInterceptor&quot;</span><span class="nt">&gt;</span> 
+    <span class="nt">&lt;server</span> <span class="na">protocol=</span><span class="s">&quot;HTTP&quot;</span> <span class="na">port=</span><span class="s">&quot;6060&quot;</span> <span class="na">interceptor=</span><span class="s">&quot;org.redkalex.rest.RestNodeInterceptor&quot;</span><span class="nt">&gt;</span> 
         <span class="c">&lt;!-- </span>
 <span class="c">           REST的核心配置项</span>
 <span class="c">           base:     REST服务的BaseServlet，必须是 <b>org.redkalex.rest.RestHttpServlet</b> 的子类，该属性值没有默认值，必须指定。</span>
