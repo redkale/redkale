@@ -148,22 +148,28 @@
                 <br>@RestParam ： <br>
             </p>
             <div class="highlight"><pre><span class="cm">/**</span>
-<span class="cm"> * 只能依附在Service类的方法的参数上, http请求的参数名</span>
+<span class="cm"> * 只能依附在Service类的方法的参数上</span>
 <span class="cm"> */</span>
 <span class="nd">@Target</span><span class="o">({</span><span class="n">PARAMETER</span><span class="o">})</span>
 <span class="kd">public</span> <span class="nd">@interface</span> <span class="n">RestParam</span> <span class="o">{</span>
 
     <span class="n">String</span> <span class="nf">value</span><span class="o">();</span> <span class="c1">//参数名</span>
 
+    <span class="cm">/**</span>
+<span class="cm">     * 参数是否从header取， 默认使用 request.getJsonParameter， 设置为true则使用 request.getJsonHeader 取值</span>
+<span class="cm">     *</span>
+<span class="cm">     * @return 是否从header取</span>
+<span class="cm">     */</span>
+    <span class="kt">boolean</span> <span class="nf">header</span><span class="o">()</span> <span class="k">default</span> <span class="kc">false</span><span class="o">;</span>
 <span class="o">}</span>
-                </pre></div>
+</pre></div>
 
             <p>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;REST的设置方式有两大种: 一种是采用默认REST注解，一种是显式的设置。 <br>
                 第一种方式需要开发者对Service中的方法命名需要遵循一定规则, 如下范例，模块为Hello，Service类命名为HelloService，增删改查的方法采用createHello、deleteHello、updateHello、queryHello或其他xxxHello命名。REST插件加载任何没有标记@RestController、@RestMapping、@RestParam 的Service将按照一定规则生成默认值：<br>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1、@RestController.value() 默认值为Service类名的小写化并去掉service及后面字样, 视为模块名 <br>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2、@RestMapping.name() 默认值为Service的方法名小写化并去掉模块名字样 <br>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2、@RestParam.value() 如果方法名以find、delete开头且方法的参数只有一个且参数类型是基本数据类型或String，则默认值为"#"；若使用Java 8中带上 -parameters 编译项的新特性，默认值为参数名, 若没使用新特性则采用bean、bean2、bean3...的命名规则。<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3、@RestParam.value() 如果方法名以find、delete开头且方法的参数只有一个且参数类型是基本数据类型或String，则默认值为"#"；若使用Java 8中带上 -parameters 编译项的新特性，默认值为参数名, 若没使用新特性则采用bean、bean2、bean3...的命名规则。<br>
             </p>
             <div class="highlight"><pre><span class="cm">/**</span>
 <span class="cm"> * 类说明:</span>
@@ -304,7 +310,7 @@
     <span class="o">}</span>
 
     <span class="c1">//修改记录</span>
-    <span class="nd">@RestMapping</span><span class="o">(</span><span class="n">name</span> <span class="o">=</span> <span class="s">&quot;partupdate&quot;</span><span class="o">)</span>  <span class="c1">//不能使用updatepart，因为存在update，是updatepart的开头部分，不符合BasedHttpServlet的WebAction规则</span>
+    <span class="nd">@RestMapping</span><span class="o">(</span><span class="n">name</span> <span class="o">=</span> <span class="s">&quot;partupdate&quot;</span><span class="o">)</span>  
     <span class="kd">public</span> <span class="kt">void</span> <span class="nf">updateHello</span><span class="o">(</span><span class="n">HelloEntity</span> <span class="n">entity</span><span class="o">,</span> <span class="nd">@RestParam</span><span class="o">(</span><span class="s">&quot;cols&quot;</span><span class="o">)</span> <span class="n">String</span><span class="o">[]</span> <span class="n">columns</span><span class="o">)</span> <span class="o">{</span> <span class="c1">//通过 /hello/update?bean={...} 修改对象</span>
         <span class="n">entity</span><span class="o">.</span><span class="na">setUpdatetime</span><span class="o">(</span><span class="n">System</span><span class="o">.</span><span class="na">currentTimeMillis</span><span class="o">());</span>
         <span class="n">source</span><span class="o">.</span><span class="na">updateColumns</span><span class="o">(</span><span class="n">entity</span><span class="o">,</span> <span class="n">columns</span><span class="o">);</span>
