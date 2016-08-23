@@ -160,7 +160,7 @@ public abstract class NodeServer {
         server.init(this.serverConf);
 
         initResource(); //给 DataSource、CacheSource 注册依赖注入时的监听回调事件。
-        String interceptorClass = this.serverConf.getValue("nodeInterceptor", "");
+        String interceptorClass = this.serverConf.getValue("interceptor", "");
         if (!interceptorClass.isEmpty()) {
             Class clazz = forName(interceptorClass);
             this.interceptor = (NodeInterceptor) clazz.newInstance();
