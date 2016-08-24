@@ -77,6 +77,17 @@ public class FilterNode {
         this.value = val;
     }
 
+    public Serializable findValue(final String col) {
+        if (this.column.equals(col)) return this.value;
+        if (this.nodes == null) return null;
+        for (FilterNode n : this.nodes) {
+            if (n == null) continue;
+            Serializable val = n.findValue(col);
+            if (val != null) return val;
+        }
+        return null;
+    }
+
     public final FilterNode and(FilterNode node) {
         return any(node, false);
     }

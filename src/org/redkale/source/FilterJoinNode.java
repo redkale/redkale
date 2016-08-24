@@ -277,7 +277,7 @@ public class FilterJoinNode extends FilterNode {
         if (node.joinClass == null) return null;
         StringBuilder sb = new StringBuilder();
         String[] joinColumns = node.joinColumns;
-        sb.append(" INNER JOIN ").append(node.joinEntity.getTable()).append(" ").append(joinTabalis.get(node.joinClass))
+        sb.append(" INNER JOIN ").append(node.joinEntity.getTable(node)).append(" ").append(joinTabalis.get(node.joinClass))
             .append(" ON ").append(info.getSQLColumn("a", joinColumns[0])).append(" = ").append(node.joinEntity.getSQLColumn(joinTabalis.get(node.joinClass), joinColumns[0]));
         for (int i = 1; i < joinColumns.length; i++) {
             sb.append(" AND ").append(info.getSQLColumn("a", joinColumns[i])).append(" = ").append(node.joinEntity.getSQLColumn(joinTabalis.get(node.joinClass), joinColumns[i]));

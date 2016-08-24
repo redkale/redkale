@@ -295,7 +295,15 @@ public final class EntityInfo<T> {
         return table == null;
     }
 
-    public String getTable() {
+    public String getTable(Serializable primary) {
+        return table;
+    }
+
+    public String getTable(FilterNode node) {
+        return table;
+    }
+
+    public String getTable(T bean) {
         return table;
     }
 
