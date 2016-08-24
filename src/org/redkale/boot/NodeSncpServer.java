@@ -24,10 +24,17 @@ public final class NodeSncpServer extends NodeServer {
 
     private final SncpServer sncpServer;
 
-    public NodeSncpServer(Application application, AnyValue serconf) {
+    private NodeSncpServer(Application application, AnyValue serconf) {
         super(application, createServer(application, serconf));
         this.sncpServer = (SncpServer) this.server;
         this.consumer = sncpServer == null ? null : x -> sncpServer.addService(x);
+    }
+
+    public static NodeServer createNodeServer(Application application, AnyValue serconf) {
+        if (serconf != null && serconf.getAnyValue("rest") != null) {
+            return new NodeHttpServer(application, serconf);
+        }
+        return new NodeSncpServer(application, serconf);
     }
 
     private static Server createServer(Application application, AnyValue serconf) {

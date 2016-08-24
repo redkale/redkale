@@ -464,8 +464,8 @@ public final class Application {
                         final String protocol = serconf.getValue("protocol", "").replaceFirst("\\..+", "").toUpperCase();
                         NodeServer server = null;
                         if ("SNCP".equals(protocol)) {
-                            server = new NodeSncpServer(Application.this, serconf);
-                        } else if ("HTTP".equals(protocol)) {
+                            server = NodeSncpServer.createNodeServer(Application.this, serconf);
+                        } else if ("HTTP".equalsIgnoreCase(protocol)) {
                             server = new NodeHttpServer(Application.this, serconf);
                         } else {
                             if (!inited.get()) {
