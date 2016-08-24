@@ -81,16 +81,18 @@ public abstract class WebSocketNode {
      * 获取在线用户的节点地址列表
      *
      * @param groupid groupid
+     *
      * @return 地址列表
      */
     public Collection<InetSocketAddress> getOnlineNodes(final Serializable groupid) {
-        return source.getCollection(groupid);
+        return source == null ? null : source.getCollection(groupid);
     }
 
     /**
      * 获取在线用户的详细连接信息
      *
      * @param groupid groupid
+     *
      * @return 地址集合
      */
     public Map<InetSocketAddress, List<String>> getOnlineRemoteAddress(final Serializable groupid) {
@@ -150,7 +152,7 @@ public abstract class WebSocketNode {
                 }
             }
         }
-        if ((recent && rscode == 0) || remoteNode == null) {
+        if ((recent && rscode == 0) || remoteNode == null || source == null) {
             if (finest) {
                 if ((recent && rscode == 0)) {
                     logger.finest("websocket want send recent message success");
