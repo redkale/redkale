@@ -366,8 +366,9 @@ public abstract class NodeServer {
         });
         clds.await();
         if (slist != null && sb != null) {
-            Collections.sort(slist);
-            for (String s : slist) {
+            List<String> wlist = new ArrayList<>(slist); //直接使用CopyOnWriteArrayList偶尔会出现莫名的异常(CopyOnWriteArrayList源码1185行)
+            Collections.sort(wlist);
+            for (String s : wlist) {
                 sb.append(s);
             }
         }
