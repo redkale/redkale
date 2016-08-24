@@ -29,7 +29,7 @@ public final class HttpPrepareServlet extends PrepareServlet<String, HttpContext
 
     private HttpServlet resourceHttpServlet = new HttpResourceServlet();
 
-    private final Map<String, Class> mapStrings = new HashMap<>();
+    private final Map<String, Class> allMapStrings = new HashMap<>();
 
     @Override
     public void init(HttpContext context, AnyValue config) {
@@ -105,12 +105,12 @@ public final class HttpPrepareServlet extends PrepareServlet<String, HttpContext
                 if (!ws.repair()) prefix = "";//被设置为自动追加前缀则清空prefix
             }
         }
-        synchronized (mapStrings) {
+        synchronized (allMapStrings) {
             for (String mapping : mappings) {
                 if(mapping == null) continue;
                 if (!prefix.toString().isEmpty()) mapping = prefix + mapping;
-                if (this.mapStrings.containsKey(mapping)) {
-                    Class old = this.mapStrings.get(mapping);
+                if (this.allMapStrings.containsKey(mapping)) {
+                    Class old = this.allMapStrings.get(mapping);
                     throw new RuntimeException("mapping [" + mapping + "] repeat on " + old.getName() + " and " + servlet.getClass().getName());
                 }
                 if (contains(mapping, '.', '*', '{', '[', '(', '|', '^', '$', '+', '?', '\\')) { //是否是正则表达式))
@@ -130,7 +130,7 @@ public final class HttpPrepareServlet extends PrepareServlet<String, HttpContext
                 } else if (mapping != null && !mapping.isEmpty()) {
                     super.mappings.put(mapping, servlet);
                 }
-                this.mapStrings.put(mapping, servlet.getClass());
+                this.allMapStrings.put(mapping, servlet.getClass());
             }
             setServletConf(servlet, conf);
             servlet._prefix = prefix.toString();
@@ -169,7 +169,7 @@ public final class HttpPrepareServlet extends PrepareServlet<String, HttpContext
                 ((BasedHttpServlet) s).postDestroy(context, getServletConf(s));
             }
         });
-        this.mapStrings.clear();
+        this.allMapStrings.clear();
     }
 
 }
