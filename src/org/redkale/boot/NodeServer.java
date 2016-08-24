@@ -12,7 +12,7 @@ import java.lang.reflect.*;
 import java.net.InetSocketAddress;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.*;
 import java.util.function.*;
 import java.util.logging.*;
 import java.util.stream.Collectors;
@@ -353,12 +353,18 @@ public abstract class NodeServer {
         localServiceWrappers.clear();
         localServiceWrappers.addAll(swlist);
         final List<String> slist = sb == null ? null : new CopyOnWriteArrayList<>();
-        localServiceWrappers.stream().forEach(y -> {
-            long s = System.currentTimeMillis();
-            y.getService().init(y.getConf());
-            long e = System.currentTimeMillis() - s;
-            if (slist != null) slist.add(new StringBuilder().append(threadName).append(y.toSimpleString()).append(" loaded and inited ").append(e).append(" ms").append(LINE_SEPARATOR).toString());
+        CountDownLatch clds = new CountDownLatch(localServiceWrappers.size());
+        localServiceWrappers.parallelStream().forEach(y -> {
+            try {
+                long s = System.currentTimeMillis();
+                y.getService().init(y.getConf());
+                long e = System.currentTimeMillis() - s;
+                if (slist != null) slist.add(new StringBuilder().append(threadName).append(y.toSimpleString()).append(" loaded and inited ").append(e).append(" ms").append(LINE_SEPARATOR).toString());
+            } finally {
+                clds.countDown();
+            }
         });
+        clds.await();
         if (slist != null && sb != null) {
             Collections.sort(slist);
             for (String s : slist) {
