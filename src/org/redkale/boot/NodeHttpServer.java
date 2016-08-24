@@ -9,6 +9,7 @@ import java.lang.reflect.*;
 import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.logging.Level;
+import java.util.regex.Pattern;
 import javax.annotation.Resource;
 import org.redkale.boot.ClassFilter.FilterEntry;
 import org.redkale.net.*;
@@ -84,9 +85,9 @@ public final class NodeHttpServer extends NodeServer {
         }, WebSocketNode.class);
     }
 
-    protected void loadHttpServlet(final AnyValue conf, final ClassFilter<? extends Servlet> filter) throws Exception {
+    protected void loadHttpServlet(final AnyValue servletsConf, final ClassFilter<? extends Servlet> filter) throws Exception {
         final StringBuilder sb = logger.isLoggable(Level.INFO) ? new StringBuilder() : null;
-        final String prefix = conf == null ? "" : conf.getValue("path", "");
+        final String prefix = servletsConf == null ? "" : servletsConf.getValue("path", "");
         final String threadName = "[" + Thread.currentThread().getName() + "] ";
         List<FilterEntry<? extends Servlet>> list = new ArrayList(filter.getFilterEntrys());
         list.sort((FilterEntry<? extends Servlet> o1, FilterEntry<? extends Servlet> o2) -> {  //必须保证WebSocketServlet优先加载， 因为要确保其他的HttpServlet可以注入本地模式的WebSocketNode
@@ -136,6 +137,85 @@ public final class NodeHttpServer extends NodeServer {
             }
         }
         if (sb != null && sb.length() > 0) logger.log(Level.INFO, sb.toString());
+        loadRestServlet(servletsConf);
     }
 
+    protected void loadRestServlet(final AnyValue servletsConf) throws Exception {
+        final String prefix = servletsConf == null ? "" : servletsConf.getValue("path", "");
+        AnyValue restConf = serverConf == null ? null : serverConf.getAnyValue("rest");
+        if (restConf == null) return; //不存在REST服务
+        final StringBuilder sb = logger.isLoggable(Level.INFO) ? new StringBuilder() : null;
+        final String threadName = "[" + Thread.currentThread().getName() + "] ";
+        final List<AbstractMap.SimpleEntry<String, String[]>> ss = sb == null ? null : new ArrayList<>();
+
+        final Class<? extends RestHttpServlet> superClass = (Class<? extends RestHttpServlet>) Class.forName(restConf.getValue("servlet", DefaultRestServlet.class.getName()));
+
+        final boolean autoload = restConf.getBoolValue("autoload", true);
+        final boolean mustsign = restConf.getBoolValue("mustsign", false); //是否只加载标记@RestService的Service类
+        final Pattern[] includes = ClassFilter.toPattern(restConf.getValue("includes", "").split(";"));
+        final Pattern[] excludes = ClassFilter.toPattern(restConf.getValue("excludes", "").split(";"));
+        final Set<String> hasServices = new HashSet<>();
+        for (AnyValue item : restConf.getAnyValues("service")) {
+            hasServices.add(item.getValue("value", ""));
+        }
+
+        super.interceptorServiceWrappers.forEach((wrapper) -> {
+            if (!wrapper.getName().isEmpty()) return;  //只加载resourceName为空的service
+            final Class stype = wrapper.getType();
+            if (mustsign && stype.getAnnotation(RestService.class) == null) return;
+
+            final String stypename = stype.getName();
+            if (stypename.startsWith("org.redkale.")) return;
+            if (!autoload && !hasServices.contains(stypename)) return;
+            if (excludes != null && !hasServices.contains(stypename)) {
+                for (Pattern reg : excludes) {
+                    if (reg.matcher(stypename).matches()) return;
+                }
+            }
+            if (includes != null && !hasServices.contains(stypename)) {
+                boolean match = false;
+                for (Pattern reg : includes) {
+                    if (reg.matcher(stypename).matches()) {
+                        match = true;
+                        break;
+                    }
+                }
+                if (!match) return;
+            }
+
+            RestHttpServlet servlet = RestServletBuilder.createRestServlet(superClass, wrapper.getName(), stype);
+            if (servlet == null) return;
+            try {
+                Field serviceField = servlet.getClass().getDeclaredField("_service");
+                serviceField.setAccessible(true);
+                serviceField.set(servlet, wrapper.getService());
+            } catch (Exception e) {
+                throw new RuntimeException(wrapper.getType() + " generate rest servlet error", e);
+            }
+            httpServer.addHttpServlet(servlet, prefix, (AnyValue) null);
+            if (ss != null) {
+                String[] mappings = servlet.getClass().getAnnotation(WebServlet.class).value();
+                for (int i = 0; i < mappings.length; i++) {
+                    mappings[i] = prefix + mappings[i];
+                }
+                ss.add(new AbstractMap.SimpleEntry<>(servlet.getClass().getName(), mappings));
+            }
+        });
+        //输出信息
+        if (ss != null && sb != null) {
+            Collections.sort(ss, (AbstractMap.SimpleEntry<String, String[]> o1, AbstractMap.SimpleEntry<String, String[]> o2) -> o1.getKey().compareTo(o2.getKey()));
+            int max = 0;
+            for (AbstractMap.SimpleEntry<String, String[]> as : ss) {
+                if (as.getKey().length() > max) max = as.getKey().length();
+            }
+            for (AbstractMap.SimpleEntry<String, String[]> as : ss) {
+                sb.append(threadName).append(" Loaded ").append(as.getKey());
+                for (int i = 0; i < max - as.getKey().length(); i++) {
+                    sb.append(' ');
+                }
+                sb.append("  mapping to  ").append(Arrays.toString(as.getValue())).append(LINE_SEPARATOR);
+            }
+        }
+        if (sb != null && sb.length() > 0) logger.log(Level.INFO, sb.toString());
+    }
 }

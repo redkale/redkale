@@ -16,6 +16,7 @@ import java.lang.reflect.Method;
 import java.nio.*;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.logging.*;
 import jdk.internal.org.objectweb.asm.*;
 import static jdk.internal.org.objectweb.asm.ClassWriter.COMPUTE_FRAMES;
 import static jdk.internal.org.objectweb.asm.Opcodes.*;
@@ -30,7 +31,11 @@ import org.redkale.service.RetResult;
  */
 public abstract class BasedHttpServlet extends HttpServlet {
 
-    public static final int RET_METHOD_ERROR = 1800_0001;
+    protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
+
+    public static final int RET_SERVER_ERROR = 1800_0001;
+
+    public static final int RET_METHOD_ERROR = 1800_0002;
 
     /**
      * 配合 BasedHttpServlet 使用。
@@ -94,6 +99,18 @@ public abstract class BasedHttpServlet extends HttpServlet {
     }
 
     private Map.Entry<String, Entry>[] actions;
+
+    /**
+     * 异常输出
+     *
+     * @param req  HTTP请求对象
+     * @param resp HTTP响应对象
+     * @param exp  异常
+     */
+    protected void sendExceptionResult(HttpRequest req, HttpResponse resp, Throwable exp) {
+        logger.log(Level.SEVERE, "request = " + req, exp);
+        resp.finishJson(new RetResult(RET_SERVER_ERROR, "Server Error"));
+    }
 
     public boolean preExecute(HttpRequest request, HttpResponse response) throws IOException {
         return true;
