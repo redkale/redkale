@@ -353,7 +353,7 @@ public abstract class NodeServer {
         localServiceWrappers.clear();
         localServiceWrappers.addAll(swlist);
         final List<String> slist = sb == null ? null : new CopyOnWriteArrayList<>();
-        localServiceWrappers.parallelStream().forEach(y -> {
+        localServiceWrappers.stream().forEach(y -> {
             long s = System.currentTimeMillis();
             y.getService().init(y.getConf());
             long e = System.currentTimeMillis() - s;
