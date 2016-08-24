@@ -151,7 +151,7 @@ public final class NodeHttpServer extends NodeServer {
         final Class<? extends RestHttpServlet> superClass = (Class<? extends RestHttpServlet>) Class.forName(restConf.getValue("servlet", DefaultRestServlet.class.getName()));
 
         final boolean autoload = restConf.getBoolValue("autoload", true);
-        final boolean mustsign = restConf.getBoolValue("mustsign", false); //是否只加载标记@RestService的Service类
+        final boolean mustsign = restConf.getBoolValue("mustsign", true); //是否只加载标记@RestService的Service类
         final Pattern[] includes = ClassFilter.toPattern(restConf.getValue("includes", "").split(";"));
         final Pattern[] excludes = ClassFilter.toPattern(restConf.getValue("excludes", "").split(";"));
         final Set<String> hasServices = new HashSet<>();
@@ -165,7 +165,6 @@ public final class NodeHttpServer extends NodeServer {
             if (mustsign && stype.getAnnotation(RestService.class) == null) return;
 
             final String stypename = stype.getName();
-            if (stypename.startsWith("org.redkale.")) return;
             if (!autoload && !hasServices.contains(stypename)) return;
             if (excludes != null && !hasServices.contains(stypename)) {
                 for (Pattern reg : excludes) {
