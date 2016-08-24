@@ -360,24 +360,6 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
                             }
                             rs.close();
                             stmt.close();
-                            if (info.distributeTables != null) {  //是否还有其他表
-                                for (final Class t : info.distributeTables) {
-                                    EntityInfo<T> infox = loadEntityInfo(t);
-                                    stmt = conn.createStatement();
-                                    rs = stmt.executeQuery("SELECT MAX(" + info.getPrimarySQLColumn() + ") FROM " + infox.getTable()); // 必须是同一字段名
-                                    if (rs.next()) {
-                                        if (primaryType == int.class) {
-                                            int v = rs.getInt(1) / info.allocationSize;
-                                            if (v > info.primaryValue.get()) info.primaryValue.set(v);
-                                        } else {
-                                            long v = rs.getLong(1) / info.allocationSize;
-                                            if (v > info.primaryValue.get()) info.primaryValue.set(v);
-                                        }
-                                    }
-                                    rs.close();
-                                    stmt.close();
-                                }
-                            }
                             info.initedPrimaryValue = true;
                         }
                     }
