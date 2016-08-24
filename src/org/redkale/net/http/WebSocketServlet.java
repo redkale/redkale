@@ -13,6 +13,7 @@ import java.security.*;
 import java.util.*;
 import java.util.logging.*;
 import javax.annotation.*;
+import org.redkale.service.WebSocketNodeService;
 import org.redkale.util.*;
 
 /**
@@ -67,6 +68,10 @@ public abstract class WebSocketServlet extends HttpServlet {
     public final void preInit(HttpContext context, AnyValue conf) {
         InetSocketAddress addr = context.getServerAddress();
         this.engine = new WebSocketEngine(addr.getHostString() + ":" + addr.getPort() + "-[" + name() + "]", this.node, logger);
+        if (this.node == null) {
+            this.node = new WebSocketNodeService();
+            if (logger.isLoggable(Level.INFO)) logger.info("not found WebSocketNode, create a default value for " + getClass().getName());
+        }
         this.node.putWebSocketEngine(engine);
         this.node.init(conf);
         this.engine.init(conf);
@@ -86,8 +91,8 @@ public abstract class WebSocketServlet extends HttpServlet {
     public final void execute(final HttpRequest request, final HttpResponse response) throws IOException {
         final boolean debug = logger.isLoggable(Level.FINEST);
         if (!"GET".equalsIgnoreCase(request.getMethod())
-                || !request.getConnection().contains("Upgrade")
-                || !"websocket".equalsIgnoreCase(request.getHeader("Upgrade"))) {
+            || !request.getConnection().contains("Upgrade")
+            || !"websocket".equalsIgnoreCase(request.getHeader("Upgrade"))) {
             if (debug) logger.finest("WebSocket connect abort, (Not GET Method) or (Connection != Upgrade) or (Upgrade != websocket). request=" + request);
             response.finish(true);
             return;
