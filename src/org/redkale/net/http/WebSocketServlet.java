@@ -68,9 +68,10 @@ public abstract class WebSocketServlet extends HttpServlet {
     public final void preInit(HttpContext context, AnyValue conf) {
         InetSocketAddress addr = context.getServerAddress();
         this.engine = new WebSocketEngine(addr.getHostString() + ":" + addr.getPort() + "-[" + name() + "]", this.node, logger);
+        if (this.node == null) this.node = createWebSocketNode();
         if (this.node == null) {
             this.node = new WebSocketNodeService();
-            if (logger.isLoggable(Level.INFO)) logger.info("not found WebSocketNode, create a default value for " + getClass().getName());
+            if (logger.isLoggable(Level.WARNING)) logger.warning("Not found WebSocketNode, create a default value for " + getClass().getName());
         }
         this.node.putWebSocketEngine(engine);
         this.node.init(conf);
@@ -147,6 +148,10 @@ public abstract class WebSocketServlet extends HttpServlet {
                 response.finish(true);
             }
         });
+    }
+
+    protected WebSocketNode createWebSocketNode() {
+        return null;
     }
 
     protected abstract WebSocket createWebSocket();
