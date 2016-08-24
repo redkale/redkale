@@ -359,8 +359,8 @@ public abstract class NodeServer {
             long e = System.currentTimeMillis() - s;
             if (slist != null) slist.add(new StringBuilder().append(threadName).append(y.toSimpleString()).append(" loaded and inited ").append(e).append(" ms").append(LINE_SEPARATOR).toString());
         });
-        Collections.sort(slist);
         if (slist != null && sb != null) {
+            Collections.sort(slist);
             for (String s : slist) {
                 sb.append(s);
             }
