@@ -19,6 +19,7 @@ import java.util.concurrent.*;
 import jdk.internal.org.objectweb.asm.*;
 import static jdk.internal.org.objectweb.asm.ClassWriter.COMPUTE_FRAMES;
 import static jdk.internal.org.objectweb.asm.Opcodes.*;
+import org.redkale.service.RetResult;
 
 /**
  *
@@ -28,6 +29,8 @@ import static jdk.internal.org.objectweb.asm.Opcodes.*;
  * @author zhangjx
  */
 public abstract class BasedHttpServlet extends HttpServlet {
+
+    public static final int RET_METHOD_ERROR = 1800_0001;
 
     /**
      * 配合 BasedHttpServlet 使用。
@@ -63,6 +66,8 @@ public abstract class BasedHttpServlet extends HttpServlet {
         int actionid() default 0;
 
         String url();
+
+        String[] methods() default {};//允许方法(不区分大小写),如:GET/POST/PUT,为空表示允许所有方法
     }
 
     /**
@@ -100,6 +105,10 @@ public abstract class BasedHttpServlet extends HttpServlet {
         for (Map.Entry<String, Entry> en : actions) {
             if (request.getRequestURI().startsWith(en.getKey())) {
                 Entry entry = en.getValue();
+                if (!entry.checkMethod(request.getMethod())) {
+                    response.finishJson(new RetResult(RET_METHOD_ERROR, "Method(" + request.getMethod() + ") Error"));
+                    return;
+                }
                 if (entry.ignore || authenticate(entry.moduleid, entry.actionid, request, response)) {
                     if (entry.cachetimeout > 0) {//有缓存设置
                         CacheEntry ce = entry.cache.get(request.getRequestURI());
@@ -170,7 +179,7 @@ public abstract class BasedHttpServlet extends HttpServlet {
 //                }
 //            }
             nameset.add(name);
-            map.put(name, new Entry(typeIgnore, serviceid, actionid, name, method, createHttpServlet(method)));
+            map.put(name, new Entry(typeIgnore, serviceid, actionid, name, action.methods(), method, createHttpServlet(method)));
         }
         return map;
     }
@@ -256,10 +265,11 @@ public abstract class BasedHttpServlet extends HttpServlet {
 
     private static final class Entry {
 
-        public Entry(boolean typeIgnore, int moduleid, int actionid, String name, Method method, HttpServlet servlet) {
+        public Entry(boolean typeIgnore, int moduleid, int actionid, String name, String[] methods, Method method, HttpServlet servlet) {
             this.moduleid = moduleid;
             this.actionid = actionid;
             this.name = name;
+            this.methods = methods;
             this.method = method;
             this.servlet = servlet;
             this.ignore = typeIgnore || method.getAnnotation(AuthIgnore.class) != null;
@@ -279,6 +289,14 @@ public abstract class BasedHttpServlet extends HttpServlet {
             return this.moduleid != 0 || this.actionid != 0;
         }
 
+        public boolean checkMethod(final String reqMethod) {
+            if (methods.length == 0) return true;
+            for (String m : methods) {
+                if (reqMethod.equalsIgnoreCase(m)) return true;
+            }
+            return false;
+        }
+
         public final HttpResponse.BufferHandler cacheHandler;
 
         public final ConcurrentHashMap<String, CacheEntry> cache;
@@ -292,6 +310,8 @@ public abstract class BasedHttpServlet extends HttpServlet {
         public final int actionid;
 
         public final String name;
+
+        public final String[] methods;
 
         public final Method method;
 
