@@ -23,7 +23,7 @@ import org.redkale.util.*;
  *                                    WebSocketServlet
  *                                            |
  *                                            |
- *                                    WebSocketEngine
+ *                          WebSocketEngine & WebSocketNode
  *                                    /             \
  *                                 /                  \
  *                              /                       \
