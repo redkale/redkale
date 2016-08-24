@@ -162,7 +162,10 @@ public final class NodeHttpServer extends NodeServer {
         super.interceptorServiceWrappers.forEach((wrapper) -> {
             if (!wrapper.getName().isEmpty()) return;  //只加载resourceName为空的service
             final Class stype = wrapper.getType();
-            if (mustsign && stype.getAnnotation(RestService.class) == null) return;
+            RestService rs = (RestService) stype.getAnnotation(RestService.class);
+            if (rs != null && rs.ignore()) return;
+            if (mustsign && rs == null) return;
+            if (stype.getAnnotation(LocalService.class) != null && rs == null) return;
 
             final String stypename = stype.getName();
             if (!autoload && !hasServices.contains(stypename)) return;
