@@ -14,7 +14,7 @@ import java.io.IOException;
  * @author zhangjx
  * @param <T>
  */
-public abstract class RestHttpServlet<T> extends BasedHttpServlet {
+public abstract class RestHttpServlet<T> extends HttpBaseServlet {
 
     protected abstract T currentUser(HttpRequest req) throws IOException;
 

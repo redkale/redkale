@@ -49,8 +49,8 @@ public final class RestServletBuilder {
         final String webServletDesc = Type.getDescriptor(WebServlet.class);
         final String httpRequestDesc = Type.getDescriptor(HttpRequest.class);
         final String httpResponseDesc = Type.getDescriptor(HttpResponse.class);
-        final String authDesc = Type.getDescriptor(BasedHttpServlet.AuthIgnore.class);
-        final String actionDesc = Type.getDescriptor(BasedHttpServlet.WebAction.class);
+        final String authDesc = Type.getDescriptor(HttpBaseServlet.AuthIgnore.class);
+        final String actionDesc = Type.getDescriptor(HttpBaseServlet.WebAction.class);
         final String serviceTypeString = serviceType.getName().replace('.', '/');
         final Class userType = getSuperUserType(baseServletClass);
 

@@ -36,8 +36,8 @@ public final class HttpPrepareServlet extends PrepareServlet<String, HttpContext
         this.servlets.forEach(s -> {
             if (s instanceof WebSocketServlet) {
                 ((WebSocketServlet) s).preInit(context, getServletConf(s));
-            } else if (s instanceof BasedHttpServlet) {
-                ((BasedHttpServlet) s).preInit(context, getServletConf(s));
+            } else if (s instanceof HttpBaseServlet) {
+                ((HttpBaseServlet) s).preInit(context, getServletConf(s));
             }
             s.init(context, getServletConf(s));
         });
@@ -165,8 +165,8 @@ public final class HttpPrepareServlet extends PrepareServlet<String, HttpContext
             s.destroy(context, getServletConf(s));
             if (s instanceof WebSocketServlet) {
                 ((WebSocketServlet) s).postDestroy(context, getServletConf(s));
-            } else if (s instanceof BasedHttpServlet) {
-                ((BasedHttpServlet) s).postDestroy(context, getServletConf(s));
+            } else if (s instanceof HttpBaseServlet) {
+                ((HttpBaseServlet) s).postDestroy(context, getServletConf(s));
             }
         });
         this.allMapStrings.clear();
