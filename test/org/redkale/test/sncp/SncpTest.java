@@ -68,11 +68,11 @@ public class SncpTest {
 
     public static ObjectPool<ByteBuffer> newBufferPool() {
         return new ObjectPool<>(new AtomicLong(), new AtomicLong(), 16,
-                (Object... params) -> ByteBuffer.allocateDirect(8192), null, (e) -> {
-                    if (e == null || e.isReadOnly() || e.capacity() != 8192) return false;
-                    e.clear();
-                    return true;
-                });
+            (Object... params) -> ByteBuffer.allocateDirect(8192), null, (e) -> {
+                if (e == null || e.isReadOnly() || e.capacity() != 8192) return false;
+                e.clear();
+                return true;
+            });
     }
 
     private static void runClient() throws Exception {
@@ -81,7 +81,7 @@ public class SncpTest {
         set.add(addr);
         if (port2 > 0) set.add(new InetSocketAddress(myhost, port2));
         //String name, WatchFactory, ObjectPool<ByteBuffer>, AsynchronousChannelGroup, InetSocketAddress clientAddress, Collection<InetSocketAddress>
-        final Transport transport = new Transport("", WatchFactory.root(), newBufferPool(), newChannelGroup(), null, set);
+        final Transport transport = new Transport("", WatchFactory.root(), "", newBufferPool(), newChannelGroup(), null, set);
         final SncpTestService service = Sncp.createRemoteService(serviceName, null, SncpTestService.class, null, transport);
         ResourceFactory.root().inject(service);
 
@@ -151,7 +151,7 @@ public class SncpTest {
                     Set<InetSocketAddress> set = new LinkedHashSet<>();
                     if (port2 > 0) set.add(new InetSocketAddress(myhost, port2));
                     //String name, WatchFactory, ObjectPool<ByteBuffer>, AsynchronousChannelGroup, InetSocketAddress clientAddress, Collection<InetSocketAddress>
-                    final Transport transport = new Transport("", WatchFactory.root(), newBufferPool(), newChannelGroup(), null, set);
+                    final Transport transport = new Transport("", WatchFactory.root(), "", newBufferPool(), newChannelGroup(), null, set);
                     SncpTestService service = Sncp.createLocalService("", null, ResourceFactory.root(), SncpTestService.class, addr, transport, null);
                     ResourceFactory.root().inject(service);
                     server.addService(new ServiceWrapper(service, "", "", new HashSet<>(), null));
@@ -185,7 +185,7 @@ public class SncpTest {
                     Set<InetSocketAddress> set = new LinkedHashSet<>();
                     set.add(new InetSocketAddress(myhost, port));
                     //String name, WatchFactory, ObjectPool<ByteBuffer>, AsynchronousChannelGroup, InetSocketAddress clientAddress, Collection<InetSocketAddress>
-                    final Transport transport = new Transport("", WatchFactory.root(), newBufferPool(), newChannelGroup(), null, set);
+                    final Transport transport = new Transport("", WatchFactory.root(), "", newBufferPool(), newChannelGroup(), null, set);
                     Service service = Sncp.createLocalService("", null, ResourceFactory.root(), SncpTestService.class, addr, transport, null);
                     server.addService(new ServiceWrapper(service, "", "", new HashSet<>(), null));
                     AnyValue.DefaultAnyValue conf = new AnyValue.DefaultAnyValue();
