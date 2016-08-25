@@ -17,6 +17,7 @@ import jdk.internal.org.objectweb.asm.*;
 import static jdk.internal.org.objectweb.asm.Opcodes.*;
 import jdk.internal.org.objectweb.asm.Type;
 import org.redkale.convert.bson.BsonConvert;
+import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.Transport;
 import org.redkale.net.sncp.SncpClient.SncpAction;
 import org.redkale.service.*;
@@ -25,8 +26,8 @@ import org.redkale.util.*;
 /**
  * Service Node Communicate Protocol
  * 生成Service的本地模式或远程模式Service-Class的工具类
- * 
- * 
+ *
+ *
  * 详情见: http://redkale.org
  *
  * @author zhangjx
@@ -79,6 +80,7 @@ public abstract class Sncp {
      * 对类名或者name字符串进行hash。
      *
      * @param name String
+     *
      * @return hash值
      */
     public static DLong hash(final String name) {
@@ -131,79 +133,83 @@ public abstract class Sncp {
     /**
      * <blockquote><pre>
      * public class TestService implements Service{
-     * 
+     *
      *      public String findSomeThing(){
      *          return "hello";
      *      }
-     * 
+     *
      *      &#64;MultiRun(selfrun = false)
      *      public void createSomeThing(TestBean bean){
      *          //do something
      *      }
-     * 
+     *
      *      &#64;MultiRun
      *      public String updateSomeThing(String id){
      *          return "hello" + id;
      *      }
      * }
      * </pre></blockquote>
-     * 
+     *
      * <blockquote><pre>
      * &#64;Resource(name = "")
      * &#64;SncpDyn(remote = false)
      * &#64;ResourceType({TestService.class})
      * public final class _DynLocalTestService extends TestService{
-     * 
+     *
      *      &#64;Resource
-     *      private BsonConvert _redkale_convert;
-     * 
+     *      private BsonConvert _redkale_bsonConvert;
+     *
+     *      &#64;Resource
+     *      private JsonConvert _redkale_jsonConvert;
+     *
      *      private Transport _redkale_sameGroupTransport;
-     * 
+     *
      *      private Transport[] _redkale_diffGroupTransports;
-     * 
+     *
      *      private SncpClient _redkale_client;
-     * 
+     *
      *      private String _redkale_selfstring;
-     * 
+     *
      *      &#64;Override
      *      public String toString() {
      *          return _redkale_selfstring == null ? super.toString() : _redkale_selfstring;
      *      }
-     * 
+     *
      *      &#64;Override
      *      public void createSomeThing(TestBean bean){
      *          this._redkale_createSomeThing(false, true, true, bean);
      *      }
-     * 
+     *
      *      &#64;SncpDyn(remote = false, index = 0)
      *      public void _redkale_createSomeThing(boolean selfrunnable, boolean samerunnable, boolean diffrunnable, TestBean bean){
      *          if(selfrunnable) super.createSomeThing(bean);
      *          if (_redkale_client== null) return;
-     *          if (samerunnable) _redkale_client.remoteSameGroup(_redkale_convert, _sameGroupTransport, 0, true, false, false, bean);
-     *          if (diffrunnable) _redkale_client.remoteDiffGroup(_redkale_convert, _diffGroupTransports, 0, true, true, false, bean);
+     *          if (samerunnable) _redkale_client.remoteSameGroup(_redkale_bsonConvert, _redkale_jsonConvert, _sameGroupTransport, 0, true, false, false, bean);
+     *          if (diffrunnable) _redkale_client.remoteDiffGroup(_redkale_bsonConvert, _redkale_jsonConvert, _diffGroupTransports, 0, true, true, false, bean);
      *      }
-     * 
+     *
      *      &#64;Override
      *      public String updateSomeThing(String id){
      *          return this._redkale_updateSomeThing(true, true, true, id);
      *      }
-     * 
+     *
      *      &#64;SncpDyn(remote = false, index = 1)
      *      public String _redkale_updateSomeThing(boolean selfrunnable, boolean samerunnable, boolean diffrunnable, String id){
      *          String rs = super.updateSomeThing(id);
      *          if (_redkale_client== null) return;
-     *          if (samerunnable) _redkale_client.remoteSameGroup(_redkale_convert, _sameGroupTransport, 1, true, false, false, id);
-     *          if (diffrunnable) _redkale_client.remoteDiffGroup(_redkale_convert, _diffGroupTransports, 1, true, true, false, id);
+     *          if (samerunnable) _redkale_client.remoteSameGroup(_redkale_bsonConvert, _redkale_jsonConvert, _sameGroupTransport, 1, true, false, false, id);
+     *          if (diffrunnable) _redkale_client.remoteDiffGroup(_redkale_bsonConvert, _redkale_jsonConvert, _diffGroupTransports, 1, true, true, false, id);
      *          return rs;
      *      }
      * }
      * </pre></blockquote>
-     * 
+     *
      * 创建Service的本地模式Class
      *
      * @param <T>          Service子类
      * @param name         资源名
      * @param serviceClass Service类
+     *
      * @return Service实例
      */
     @SuppressWarnings("unchecked")
@@ -217,7 +223,8 @@ public abstract class Sncp {
         final String supDynName = serviceClass.getName().replace('.', '/');
         final String clientName = SncpClient.class.getName().replace('.', '/');
         final String clientDesc = Type.getDescriptor(SncpClient.class);
-        final String convertDesc = Type.getDescriptor(BsonConvert.class);
+        final String bsonConvertDesc = Type.getDescriptor(BsonConvert.class);
+        final String jsonConvertDesc = Type.getDescriptor(JsonConvert.class);
         final String sncpDynDesc = Type.getDescriptor(SncpDyn.class);
         final String transportDesc = Type.getDescriptor(Transport.class);
         final String transportsDesc = Type.getDescriptor(Transport[].class);
@@ -275,7 +282,13 @@ public abstract class Sncp {
         }
 
         {
-            fv = cw.visitField(ACC_PRIVATE, FIELDPREFIX + "_convert", convertDesc, null, null);
+            fv = cw.visitField(ACC_PRIVATE, FIELDPREFIX + "_bsonConvert", bsonConvertDesc, null, null);
+            av0 = fv.visitAnnotation("Ljavax/annotation/Resource;", true);
+            av0.visitEnd();
+            fv.visitEnd();
+        }
+        {
+            fv = cw.visitField(ACC_PRIVATE, FIELDPREFIX + "_jsonConvert", jsonConvertDesc, null, null);
             av0 = fv.visitAnnotation("Ljavax/annotation/Resource;", true);
             av0.visitEnd();
             fv.visitEnd();
@@ -481,20 +494,24 @@ public abstract class Sncp {
 
                 mv.visitVarInsn(ALOAD, 0);//调用 _client
                 mv.visitFieldInsn(GETFIELD, newDynName, FIELDPREFIX + "_client", clientDesc);
-                mv.visitVarInsn(ALOAD, 0);  //传递 _convert
-                mv.visitFieldInsn(GETFIELD, newDynName, FIELDPREFIX + "_convert", convertDesc);
+                mv.visitVarInsn(ALOAD, 0);  //传递 _bsonConvert
+                mv.visitFieldInsn(GETFIELD, newDynName, FIELDPREFIX + "_bsonConvert", bsonConvertDesc);
+                mv.visitVarInsn(ALOAD, 0);  //传递 _jsonConvert
+                mv.visitFieldInsn(GETFIELD, newDynName, FIELDPREFIX + "_jsonConvert", jsonConvertDesc);
                 mv.visitVarInsn(ALOAD, 0);  //传递 _sameGroupTransport
                 mv.visitFieldInsn(GETFIELD, newDynName, FIELDPREFIX + "_sameGroupTransport", transportDesc);
+
+                final int preparams = 4; //调用selfrunnable之前的参数个数;  _client/_bsonConvert/_jsonConvert/_sameGroupTransport
 
                 if (index <= 5) {  //第几个 SncpAction 
                     mv.visitInsn(ICONST_0 + index);
                 } else {
                     mv.visitIntInsn(BIPUSH, index);
                 }
-                if (paramtypes.length + 3 <= 5) {  //参数总数量
-                    mv.visitInsn(ICONST_0 + paramtypes.length + 3);
+                if (paramtypes.length + preparams <= 5) {  //参数总数量
+                    mv.visitInsn(ICONST_0 + paramtypes.length + preparams);
                 } else {
-                    mv.visitIntInsn(BIPUSH, paramtypes.length + 3);
+                    mv.visitIntInsn(BIPUSH, paramtypes.length + preparams);
                 }
 
                 mv.visitTypeInsn(ANEWARRAY, "java/lang/Object");
@@ -517,7 +534,7 @@ public abstract class Sncp {
                 mv.visitMethodInsn(INVOKESTATIC, "java/lang/Boolean", "valueOf", "(Z)Ljava/lang/Boolean;", false);
                 mv.visitInsn(AASTORE);
 
-                int insn = 3;
+                int insn = 3; //空3给selfrunnable、samerunnable、diffrunnable
                 for (int j = 0; j < paramtypes.length; j++) {
                     final Class pt = paramtypes[j];
                     mv.visitInsn(DUP);
@@ -544,7 +561,7 @@ public abstract class Sncp {
                     }
                     mv.visitInsn(AASTORE);
                 }
-                mv.visitMethodInsn(INVOKEVIRTUAL, clientName, mrun.async() ? "asyncRemoteSameGroup" : "remoteSameGroup", "(" + convertDesc + transportDesc + "I[Ljava/lang/Object;)V", false);
+                mv.visitMethodInsn(INVOKEVIRTUAL, clientName, mrun.async() ? "asyncRemoteSameGroup" : "remoteSameGroup", "(" + bsonConvertDesc + jsonConvertDesc + transportDesc + "I[Ljava/lang/Object;)V", false);
                 mv.visitLabel(sameLabel);
                 //---------------------------- 调用diffrun ---------------------------------
                 mv.visitVarInsn(ILOAD, 3); //读取 diffrunnable
@@ -554,7 +571,9 @@ public abstract class Sncp {
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitFieldInsn(GETFIELD, newDynName, FIELDPREFIX + "_client", clientDesc);
                 mv.visitVarInsn(ALOAD, 0);
-                mv.visitFieldInsn(GETFIELD, newDynName, FIELDPREFIX + "_convert", convertDesc);
+                mv.visitFieldInsn(GETFIELD, newDynName, FIELDPREFIX + "_bsonConvert", bsonConvertDesc);
+                mv.visitVarInsn(ALOAD, 0);
+                mv.visitFieldInsn(GETFIELD, newDynName, FIELDPREFIX + "_jsonConvert", jsonConvertDesc);
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitFieldInsn(GETFIELD, newDynName, FIELDPREFIX + "_diffGroupTransports", transportsDesc);
 
@@ -563,10 +582,10 @@ public abstract class Sncp {
                 } else {
                     mv.visitIntInsn(BIPUSH, index);
                 }
-                if (paramtypes.length + 3 <= 5) {  //参数总数量
-                    mv.visitInsn(ICONST_0 + paramtypes.length + 3);
+                if (paramtypes.length + preparams <= 5) {  //参数总数量
+                    mv.visitInsn(ICONST_0 + paramtypes.length + preparams);
                 } else {
-                    mv.visitIntInsn(BIPUSH, paramtypes.length + 3);
+                    mv.visitIntInsn(BIPUSH, paramtypes.length + preparams);
                 }
 
                 mv.visitTypeInsn(ANEWARRAY, "java/lang/Object");
@@ -589,7 +608,7 @@ public abstract class Sncp {
                 mv.visitMethodInsn(INVOKESTATIC, "java/lang/Boolean", "valueOf", "(Z)Ljava/lang/Boolean;", false);
                 mv.visitInsn(AASTORE);
 
-                insn = 3;
+                insn = 3;//空3给selfrunnable、samerunnable、diffrunnable
                 for (int j = 0; j < paramtypes.length; j++) {
                     final Class pt = paramtypes[j];
                     mv.visitInsn(DUP);
@@ -616,7 +635,7 @@ public abstract class Sncp {
                     }
                     mv.visitInsn(AASTORE);
                 }
-                mv.visitMethodInsn(INVOKEVIRTUAL, clientName, mrun.async() ? "asyncRemoteDiffGroup" : "remoteDiffGroup", "(" + convertDesc + transportsDesc + "I[Ljava/lang/Object;)V", false);
+                mv.visitMethodInsn(INVOKEVIRTUAL, clientName, mrun.async() ? "asyncRemoteDiffGroup" : "remoteDiffGroup", "(" + bsonConvertDesc + jsonConvertDesc + transportsDesc + "I[Ljava/lang/Object;)V", false);
                 mv.visitLabel(diffLabel);
 
                 if (returnType == void.class) {
@@ -712,11 +731,12 @@ public abstract class Sncp {
      * @param clientAddress       本地IP地址
      * @param sameGroupTransport  同组的通信组件
      * @param diffGroupTransports 异组的通信组件列表
+     *
      * @return Service的本地模式实例
      */
     @SuppressWarnings("unchecked")
     public static <T extends Service> T createLocalService(final String name, final Consumer<Runnable> executor, final ResourceFactory resourceFactory,
-                                                           final Class<T> serviceClass, final InetSocketAddress clientAddress, final Transport sameGroupTransport, final Collection<Transport> diffGroupTransports) {
+        final Class<T> serviceClass, final InetSocketAddress clientAddress, final Transport sameGroupTransport, final Collection<Transport> diffGroupTransports) {
         try {
             final Class newClazz = createLocalServiceClass(name, serviceClass);
             T rs = (T) newClazz.newInstance();
@@ -823,48 +843,51 @@ public abstract class Sncp {
      * &#64;SncpDyn(remote = true)
      * &#64;ResourceType({TestService.class})
      * public final class _DynRemoteTestService extends TestService{
-     * 
+     *
      *      &#64;Resource
-     *      private BsonConvert _redkale_convert;
-     * 
+     *      private BsonConvert _redkale_bsonConvert;
+     *
+     *      &#64;Resource
+     *      private JsonConvert _redkale_jsonConvert;
+     *
      *      private Transport _redkale_transport;
-     * 
+     *
      *      private SncpClient _redkale_client;
-     * 
+     *
      *      private String _redkale_selfstring;
-     * 
+     *
      *      &#64;Override
      *      public String toString() {
      *          return _redkale_selfstring == null ? super.toString() : _redkale_selfstring;
      *      }
-     * 
+     *
      *      &#64;SncpDyn(remote = false, index = 0)
      *      public void _redkale_createSomeThing(boolean selfrunnable, boolean samerunnable, boolean diffrunnable, TestBean bean){
-     *          _redkale_client.remote(_redkale_convert, _redkale_transport, 0, selfrunnable, samerunnable, diffrunnable, bean);
+     *          _redkale_client.remote(_redkale_bsonConvert, _redkale_jsonConvert, _redkale_transport, 0, selfrunnable, samerunnable, diffrunnable, bean);
      *      }
-     * 
+     *
      *      &#64;SncpDyn(remote = false, index = 1)
      *      public String _redkale_updateSomeThing(boolean selfrunnable, boolean samerunnable, boolean diffrunnable, String id){
-     *          return _redkale_client.remote(_redkale_convert, _redkale_transport, 1, selfrunnable, samerunnable, diffrunnable, id);
+     *          return _redkale_client.remote(_redkale_bsonConvert, _redkale_jsonConvert, _redkale_transport, 1, selfrunnable, samerunnable, diffrunnable, id);
      *      }
-     * 
+     *
      *      &#64;Override
      *      public void createSomeThing(TestBean bean){
-     *          _redkale_client.remote(_redkale_convert, _redkale_transport, 2, bean);
+     *          _redkale_client.remote(_redkale_bsonConvert, _redkale_jsonConvert, _redkale_transport, 2, bean);
      *      }
-     * 
+     *
      *      &#64;Override
      *      public String findSomeThing(){
-     *          return _redkale_client.remote(_redkale_convert, _redkale_transport, 3);
+     *          return _redkale_client.remote(_redkale_bsonConvert, _redkale_jsonConvert, _redkale_transport, 3);
      *      }
-     * 
+     *
      *      &#64;Override
      *      public String updateSomeThing(String id){
-     *          return  _redkale_client.remote(_redkale_convert, _redkale_transport, 4, id);
+     *          return  _redkale_client.remote(_redkale_bsonConvert, _redkale_jsonConvert, _redkale_transport, 4, id);
      *      }
      * }
      * </pre></blockquote>
-     * 
+     *
      * 创建远程模式的Service实例
      *
      * @param <T>           Service泛型
@@ -878,7 +901,7 @@ public abstract class Sncp {
      */
     @SuppressWarnings("unchecked")
     public static <T extends Service> T createRemoteService(final String name, final Consumer<Runnable> executor, final Class<T> serviceClass,
-                                                            final InetSocketAddress clientAddress, final Transport transport) {
+        final InetSocketAddress clientAddress, final Transport transport) {
         if (serviceClass == null) return null;
         if (!Service.class.isAssignableFrom(serviceClass)) return null;
         int mod = serviceClass.getModifiers();
@@ -888,7 +911,8 @@ public abstract class Sncp {
         final String clientName = SncpClient.class.getName().replace('.', '/');
         final String clientDesc = Type.getDescriptor(SncpClient.class);
         final String sncpDynDesc = Type.getDescriptor(SncpDyn.class);
-        final String convertDesc = Type.getDescriptor(BsonConvert.class);
+        final String bsonConvertDesc = Type.getDescriptor(BsonConvert.class);
+        final String jsonConvertDesc = Type.getDescriptor(JsonConvert.class);
         final String transportDesc = Type.getDescriptor(Transport.class);
         final String anyValueDesc = Type.getDescriptor(AnyValue.class);
         ClassLoader loader = Sncp.class.getClassLoader();
@@ -958,7 +982,13 @@ public abstract class Sncp {
             }
         }
         {
-            fv = cw.visitField(ACC_PRIVATE, FIELDPREFIX + "_convert", convertDesc, null, null);
+            fv = cw.visitField(ACC_PRIVATE, FIELDPREFIX + "_bsonConvert", bsonConvertDesc, null, null);
+            av0 = fv.visitAnnotation("Ljavax/annotation/Resource;", true);
+            av0.visitEnd();
+            fv.visitEnd();
+        }
+        {
+            fv = cw.visitField(ACC_PRIVATE, FIELDPREFIX + "_jsonConvert", jsonConvertDesc, null, null);
             av0 = fv.visitAnnotation("Ljavax/annotation/Resource;", true);
             av0.visitEnd();
             fv.visitEnd();
@@ -1032,7 +1062,9 @@ public abstract class Sncp {
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitFieldInsn(GETFIELD, newDynName, FIELDPREFIX + "_client", clientDesc);
                 mv.visitVarInsn(ALOAD, 0);
-                mv.visitFieldInsn(GETFIELD, newDynName, FIELDPREFIX + "_convert", convertDesc);
+                mv.visitFieldInsn(GETFIELD, newDynName, FIELDPREFIX + "_bsonConvert", bsonConvertDesc);
+                mv.visitVarInsn(ALOAD, 0);
+                mv.visitFieldInsn(GETFIELD, newDynName, FIELDPREFIX + "_jsonConvert", jsonConvertDesc);
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitFieldInsn(GETFIELD, newDynName, FIELDPREFIX + "_transport", transportDesc);
                 if (index <= 5) {
@@ -1079,7 +1111,7 @@ public abstract class Sncp {
                     }
                 }
 
-                mv.visitMethodInsn(INVOKEVIRTUAL, clientName, "remote", "(" + convertDesc + transportDesc + "I[Ljava/lang/Object;)Ljava/lang/Object;", false);
+                mv.visitMethodInsn(INVOKEVIRTUAL, clientName, "remote", "(" + bsonConvertDesc + jsonConvertDesc + transportDesc + "I[Ljava/lang/Object;)Ljava/lang/Object;", false);
                 //mv.visitMethodInsn(INVOKEVIRTUAL, convertName, "convertFrom", convertFromDesc, false);
                 if (method.getGenericReturnType() == void.class) {
                     mv.visitInsn(POP);

@@ -140,7 +140,7 @@ public final class SncpClient {
     protected final Consumer<Runnable> executor;
 
     public <T extends Service> SncpClient(final String serviceName, final Class<T> serviceType, final Consumer<Runnable> executor,
-            final boolean remote, final Class serviceClass, final InetSocketAddress clientAddress) {
+        final boolean remote, final Class serviceClass, final InetSocketAddress clientAddress) {
         this.remote = remote;
         this.executor = executor;
         this.serviceClass = serviceClass;
@@ -174,8 +174,8 @@ public final class SncpClient {
         String service = serviceClass.getName();
         if (remote) service = service.replace(Sncp.LOCALPREFIX, Sncp.REMOTEPREFIX);
         return this.getClass().getSimpleName() + "(service = " + service + ", serviceid = " + serviceid + ", name = '" + name
-                + "', address = " + (clientAddress == null ? "" : (clientAddress.getHostString() + ":" + clientAddress.getPort()))
-                + ", actions.size = " + actions.length + ")";
+            + "', address = " + (clientAddress == null ? "" : (clientAddress.getHostString() + ":" + clientAddress.getPort()))
+            + ", actions.size = " + actions.length + ")";
     }
 
     public static List<Method> parseMethod(final Class serviceClass) {
@@ -218,83 +218,83 @@ public final class SncpClient {
         return multis;
     }
 
-    public void remoteSameGroup(final BsonConvert convert, Transport transport, final int index, final Object... params) {
+    public void remoteSameGroup(final BsonConvert bsonConvert, final JsonConvert jsonConvert, Transport transport, final int index, final Object... params) {
         final SncpAction action = actions[index];
         if (action.handlerFuncParamIndex >= 0) params[action.handlerFuncParamIndex] = null; //不能让远程调用handler，因为之前本地方法已经调用过了
         for (InetSocketAddress addr : transport.getRemoteAddresses()) {
-            remote0(null, convert, transport, addr, action, params);
+            remote0(null, bsonConvert, jsonConvert, transport, addr, action, params);
         }
     }
 
-    public void asyncRemoteSameGroup(final BsonConvert convert, Transport transport, final int index, final Object... params) {
+    public void asyncRemoteSameGroup(final BsonConvert bsonConvert, final JsonConvert jsonConvert, Transport transport, final int index, final Object... params) {
         if (executor != null) {
             executor.accept(() -> {
-                remoteSameGroup(convert, transport, index, params);
+                remoteSameGroup(bsonConvert, jsonConvert, transport, index, params);
             });
         } else {
-            remoteSameGroup(convert, transport, index, params);
+            remoteSameGroup(bsonConvert, jsonConvert, transport, index, params);
         }
     }
 
-    public void remoteDiffGroup(final BsonConvert convert, Transport[] transports, final int index, final Object... params) {
+    public void remoteDiffGroup(final BsonConvert bsonConvert, final JsonConvert jsonConvert, Transport[] transports, final int index, final Object... params) {
         if (transports == null || transports.length < 1) return;
         final SncpAction action = actions[index];
         if (action.handlerFuncParamIndex >= 0) params[action.handlerFuncParamIndex] = null; //不能让远程调用handler，因为之前本地方法已经调用过了
         for (Transport transport : transports) {
-            remote0(null, convert, transport, null, action, params);
+            remote0(null, bsonConvert, jsonConvert, transport, null, action, params);
         }
     }
 
-    public void asyncRemoteDiffGroup(final BsonConvert convert, Transport[] transports, final int index, final Object... params) {
+    public void asyncRemoteDiffGroup(final BsonConvert bsonConvert, final JsonConvert jsonConvert, Transport[] transports, final int index, final Object... params) {
         if (transports == null || transports.length < 1) return;
         if (executor != null) {
             executor.accept(() -> {
-                remoteDiffGroup(convert, transports, index, params);
+                remoteDiffGroup(bsonConvert, jsonConvert, transports, index, params);
             });
         } else {
-            remoteDiffGroup(convert, transports, index, params);
+            remoteDiffGroup(bsonConvert, jsonConvert, transports, index, params);
         }
     }
 
     //只给远程模式调用的
-    public <T> T remote(final BsonConvert convert, Transport transport, final int index, final Object... params) {
+    public <T> T remote(final BsonConvert bsonConvert, final JsonConvert jsonConvert, Transport transport, final int index, final Object... params) {
         final SncpAction action = actions[index];
         final CompletionHandler handlerFunc = action.handlerFuncParamIndex >= 0 ? (CompletionHandler) params[action.handlerFuncParamIndex] : null;
         if (action.handlerFuncParamIndex >= 0) params[action.handlerFuncParamIndex] = null;
-        Future<byte[]> future = remote0(handlerFunc, convert, transport, null, action, params);
+        Future<byte[]> future = remote0(handlerFunc, bsonConvert, jsonConvert, transport, null, action, params);
         if (handlerFunc != null) return null;
-        final BsonReader reader = convert.pollBsonReader();
+        final BsonReader reader = bsonConvert.pollBsonReader();
         try {
             reader.setBytes(future.get(5, TimeUnit.SECONDS));
             byte i;
             while ((i = reader.readByte()) != 0) {
                 final Attribute attr = action.paramAttrs[i];
-                attr.set(params[i - 1], convert.convertFrom(attr.type(), reader));
+                attr.set(params[i - 1], bsonConvert.convertFrom(attr.type(), reader));
             }
-            return convert.convertFrom(action.resultTypes, reader);
+            return bsonConvert.convertFrom(action.resultTypes, reader);
         } catch (InterruptedException | ExecutionException | TimeoutException e) {
             logger.log(Level.SEVERE, actions[index].method + " sncp (params: " + jsonConvert.convertTo(params) + ") remote error", e);
             throw new RuntimeException(actions[index].method + " sncp remote error", e);
         } finally {
-            convert.offerBsonReader(reader);
+            bsonConvert.offerBsonReader(reader);
         }
     }
 
-    public <T> void remote(final BsonConvert convert, Transport[] transports, final int index, final Object... params) {
+    public <T> void remote(final BsonConvert bsonConvert, final JsonConvert jsonConvert, Transport[] transports, final int index, final Object... params) {
         if (transports == null || transports.length < 1) return;
-        remote(convert, transports[0], index, params);
+        remote(bsonConvert, jsonConvert, transports[0], index, params);
         for (int i = 1; i < transports.length; i++) {
-            remote0(null, convert, transports[i], null, actions[index], params);
+            remote0(null, bsonConvert, jsonConvert, transports[i], null, actions[index], params);
         }
     }
 
-    private Future<byte[]> remote0(final CompletionHandler handler, final BsonConvert convert, final Transport transport, final SocketAddress addr0, final SncpAction action, final Object... params) {
+    private Future<byte[]> remote0(final CompletionHandler handler, final BsonConvert bsonConvert, final JsonConvert jsonConvert, final Transport transport, final SocketAddress addr0, final SncpAction action, final Object... params) {
         Type[] myparamtypes = action.paramTypes;
         if (action.addressSourceParamIndex >= 0) params[action.addressSourceParamIndex] = this.clientAddress;
-        final BsonWriter writer = convert.pollBsonWriter(transport.getBufferSupplier()); // 将head写入
+        final BsonWriter writer = bsonConvert.pollBsonWriter(transport.getBufferSupplier()); // 将head写入
         writer.writeTo(DEFAULT_HEADER);
         for (int i = 0; i < params.length; i++) {
-            convert.convertTo(writer, myparamtypes[i], params[i]);
+            bsonConvert.convertTo(writer, myparamtypes[i], params[i]);
         }
         final int reqBodyLength = writer.count() - HEADER_SIZE; //body总长度
         final long seqid = System.nanoTime();
@@ -393,20 +393,20 @@ public final class SncpClient {
                         transport.offerConnection(false, conn);
                         if (handler != null) {
                             final Object handlerAttach = action.handlerAttachParamIndex >= 0 ? params[action.handlerAttachParamIndex] : null;
-                            final BsonReader reader = convert.pollBsonReader();
+                            final BsonReader reader = bsonConvert.pollBsonReader();
                             try {
                                 reader.setBytes(this.body);
                                 int i;
                                 while ((i = (reader.readByte() & 0xff)) != 0) {
                                     final Attribute attr = action.paramAttrs[i];
-                                    attr.set(params[i - 1], convert.convertFrom(attr.type(), reader));
+                                    attr.set(params[i - 1], bsonConvert.convertFrom(attr.type(), reader));
                                 }
-                                Object rs = convert.convertFrom(action.resultTypes, reader);
+                                Object rs = bsonConvert.convertFrom(action.resultTypes, reader);
                                 handler.completed(rs, handlerAttach);
                             } catch (Exception e) {
                                 handler.failed(e, handlerAttach);
                             } finally {
-                                convert.offerBsonReader(reader);
+                                bsonConvert.offerBsonReader(reader);
                             }
                         }
                     }
