@@ -256,6 +256,7 @@ public final class RestServletBuilder {
                         mv.visitVarInsn(ALOAD, 1);
                         mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", "getRequstURILastPath", "()Ljava/lang/String;", false);
                         mv.visitVarInsn(ASTORE, maxLocals);
+                        varInsns.add(new int[]{ALOAD, maxLocals});
                     } else {
                         throw new RuntimeException(method + " only " + RestParam.class.getSimpleName() + "(#) to Type(primitive class or String)");
                     }
