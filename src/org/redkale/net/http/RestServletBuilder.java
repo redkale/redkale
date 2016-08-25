@@ -76,7 +76,7 @@ public final class RestServletBuilder {
             throw new RuntimeException(e);
         }
         //------------------------------------------------------------------------------
-        final String defmodulename = (controller != null && !controller.value().isEmpty()) ? controller.value() : serviceType.getSimpleName().replaceAll("Service.*$", "");
+        final String defmodulename = (controller != null && !controller.value().isEmpty()) ? controller.value() : serviceType.getSimpleName().replaceAll("Service.*$", "").toLowerCase();
         for (char ch : defmodulename.toCharArray()) {
             if (!((ch >= '0' && ch <= '9') || ch == '$' || ch == '_' || (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z'))) { //不能含特殊字符
                 throw new RuntimeException(serviceType.getName() + " has illeal " + RestService.class.getSimpleName() + ".value, only 0-9 a-z A-Z _ $");
@@ -93,7 +93,7 @@ public final class RestServletBuilder {
             av0 = cw.visitAnnotation(webServletDesc, true);
             {
                 AnnotationVisitor av1 = av0.visitArray("value");
-                av1.visit(null, "/" + defmodulename.toLowerCase() + "/*");
+                av1.visit(null, "/" + defmodulename + "/*");
                 av1.visitEnd();
             }
             av0.visit("moduleid", controller == null ? 0 : controller.module());
@@ -147,7 +147,7 @@ public final class RestServletBuilder {
                 }
             }
         }
-        if (entrys.isEmpty()) return null;
+        if (entrys.isEmpty()) return null; //没有可WebAction的方法
 
         for (final MappingEntry entry : entrys) {
             final Method method = entry.mappingMethod;
@@ -197,8 +197,8 @@ public final class RestServletBuilder {
 
                     av0.visitEnd();
                 }
-                final String pname = n;
-                final boolean hd = annpara == null ? false : annpara.header();
+                final String pname = n; //参数名
+                final boolean hd = annpara == null ? false : annpara.header(); //是否取getHeader 而不是 getParameter
 
                 if ("#".equals(pname)) { //从request.getRequstURI 中去参数
                     if (ptype == boolean.class) {
@@ -340,7 +340,7 @@ public final class RestServletBuilder {
                     mv.visitMethodInsn(INVOKEVIRTUAL, newDynName, "currentUser", Type.getMethodDescriptor(currentUserMethod), false);
                     mv.visitVarInsn(ASTORE, maxLocals);
                     varInsns.add(new int[]{ALOAD, maxLocals});
-                } else {
+                } else { //其他Json对象
                     mv.visitVarInsn(ALOAD, 1);
                     mv.visitLdcInsn(Type.getType(Type.getDescriptor(ptype)));
                     mv.visitLdcInsn(pname);
@@ -358,6 +358,13 @@ public final class RestServletBuilder {
                 av0 = mv.visitAnnotation(actionDesc, true);
                 av0.visit("url", "/" + defmodulename.toLowerCase() + "/" + entry.name);
                 av0.visit("actionid", entry.actionid);
+                
+                    AnnotationVisitor av1 = av0.visitArray("methods");
+                    for (String m : entry.methods) {
+                        av1.visit(null, m);
+                    }
+                    av1.visitEnd();
+                    
                 av0.visitEnd();
             }
 
