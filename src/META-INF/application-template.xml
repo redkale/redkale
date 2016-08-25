@@ -33,12 +33,13 @@
             bufferCapacity: ByteBuffer的初始化大小， 默认: 8K; 
             bufferPoolSize： ByteBuffer池的大小，默认: <group>节点数*CPU核数*8
         -->
-        <transport capacity="8192" bufferPoolSize="32" threads="32"/>
+        <transport bufferCapacity="8K" bufferPoolSize="32" threads="32"/>
         <!--
             一个组包含多个NODE， 同一Service服务可以由多个进程提供，这些进程称为一个GROUP，且同一GROUP内的进程必须在同一机房或局域网内
             一个group节点对应一个 Transport 对象。
             name: 服务组ID，长度不能超过11个字节. 默认为空字符串。 注意: name不能包含$符号。
             protocol：值只能是UDP TCP， 默认TCP
+            kind: 与SNCP服务连接时的数据传输类型；可选值有:rest(不区分大小写);值为空或空字符串表示按SNCP协议传输; 为rest表示按REST传输。默认值为空
             注意: 一个node只能所属一个group。只要存在protocol=SNCP的Server节点信息， 就必须有group节点信息。
         -->
         <group name="" protocol="TCP">
@@ -120,6 +121,21 @@
                 <property name="xxxxxx" value="XXXXXXXX"/>
             </service>
         </services>
+        
+        <!-- 
+           REST的核心配置项, 存在[rest]节点则Server启动时会加载REST服务, 当Server为SNCP协议时,则SncpServer会变成REST的HttpServer
+           base:     REST服务的BaseServlet，必须是 org.redkale.net.http.RestHttpServlet 的子类，该属性值默认值为 org.redkale.net.http.DefaultRestServlet。
+           autoload：默认值"true"  默认值. 加载当前server所能使用的Servce对象;    
+           mustsign：默认值"false" 是否只加载标记为RestService的Service类，默认加载所有可用Service
+           includes：当autoload="true"， 拉取类名与includes中的正则表达式匹配的类, 多个正则表达式用分号;隔开
+           excludes：当autoload="true"， 排除类名与excludes中的正则表达式匹配的类, 多个正则表达式用分号;隔开
+        -->
+        <rest base="org.redkale.net.http.DefaultRestServlet" mustsign="false" autoload="true" includes="" excludes="">
+            <!-- 
+               value:  Service类名，列出的表示必须被加载的Service对象， 且对象的Resource资源名称只能是""。
+            -->
+            <service value="com.xxx.XXXXService"/>
+        </rest>
         
         <!--
            当Server为HTTP协议时, request节点才有效。
