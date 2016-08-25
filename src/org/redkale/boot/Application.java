@@ -67,6 +67,8 @@ public final class Application {
 
     final Map<String, Set<InetSocketAddress>> globalGroups = new HashMap<>();
 
+    final Map<String, String> globalGroupKinds = new HashMap<>();
+
     final Map<String, String> globalGroupProtocols = new HashMap<>();
 
     final InetAddress localAddress;
@@ -335,6 +337,7 @@ public final class Application {
                 if (addrs == null) {
                     addrs = new LinkedHashSet<>();
                     globalGroupProtocols.put(group, protocol);
+                    globalGroupKinds.put(group, conf.getValue("kind", ""));
                     globalGroups.put(group, addrs);
                 }
                 for (AnyValue node : conf.getAnyValues("node")) {
@@ -575,6 +578,11 @@ public final class Application {
     String findGroupProtocol(String group) {
         if (group == null) return null;
         return globalGroupProtocols.get(group);
+    }
+
+    String findGroupKind(String group) {
+        if (group == null) return null;
+        return globalGroupKinds.get(group);
     }
 
     Set<InetSocketAddress> findGlobalGroup(String group) {

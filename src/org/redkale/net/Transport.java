@@ -44,6 +44,8 @@ public final class Transport {
 
     protected final String name; //即<group>的name属性
 
+    protected final String kind; //即<group>的kind属性
+
     protected final boolean tcp;
 
     protected final String protocol;
@@ -54,21 +56,22 @@ public final class Transport {
 
     protected final InetSocketAddress clientAddress;
 
-    protected InetSocketAddress[] remoteAddres = new InetSocketAddress[0]; 
+    protected InetSocketAddress[] remoteAddres = new InetSocketAddress[0];
 
     protected final ObjectPool<ByteBuffer> bufferPool;
 
     protected final ConcurrentHashMap<SocketAddress, BlockingQueue<AsyncConnection>> connPool = new ConcurrentHashMap<>();
 
-    public Transport(String name, WatchFactory watch, final ObjectPool<ByteBuffer> transportBufferPool,
-            final AsynchronousChannelGroup transportChannelGroup, final InetSocketAddress clientAddress, final Collection<InetSocketAddress> addresses) {
-        this(name, DEFAULT_PROTOCOL, watch, transportBufferPool, transportChannelGroup, clientAddress, addresses);
+    public Transport(String name, WatchFactory watch, String kind, final ObjectPool<ByteBuffer> transportBufferPool,
+        final AsynchronousChannelGroup transportChannelGroup, final InetSocketAddress clientAddress, final Collection<InetSocketAddress> addresses) {
+        this(name, DEFAULT_PROTOCOL, watch, kind, transportBufferPool, transportChannelGroup, clientAddress, addresses);
     }
 
-    public Transport(String name, String protocol, WatchFactory watch, final ObjectPool<ByteBuffer> transportBufferPool,
-            final AsynchronousChannelGroup transportChannelGroup, final InetSocketAddress clientAddress, final Collection<InetSocketAddress> addresses) {
+    public Transport(String name, String protocol, WatchFactory watch, String kind, final ObjectPool<ByteBuffer> transportBufferPool,
+        final AsynchronousChannelGroup transportChannelGroup, final InetSocketAddress clientAddress, final Collection<InetSocketAddress> addresses) {
         this.name = name;
         this.watch = watch;
+        this.kind = kind == null ? "" : kind.trim();
         this.protocol = protocol;
         this.tcp = "TCP".equalsIgnoreCase(protocol);
         this.group = transportChannelGroup;
@@ -87,6 +90,7 @@ public final class Transport {
         //必须按字母排列顺序确保，相同内容的transport列表组合的name相同，而不会因为list的顺序不同产生不同的name
         this.name = tmpgroup.stream().sorted().collect(Collectors.joining(";"));
         this.watch = first.watch;
+        this.kind = first.kind;
         this.protocol = first.protocol;
         this.tcp = "TCP".equalsIgnoreCase(first.protocol);
         this.group = first.group;
@@ -112,6 +116,10 @@ public final class Transport {
 
     public String getName() {
         return name;
+    }
+
+    public String getKind() {
+        return kind;
     }
 
     public void close() {

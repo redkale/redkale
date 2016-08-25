@@ -53,7 +53,7 @@ public abstract class NodeServer {
 
     //日志是否为FINEST级别
     protected final boolean finest;
-    
+
     //进程主类
     protected final Application application;
 
@@ -403,7 +403,7 @@ public abstract class NodeServer {
         transports.forEach(t -> addrs.addAll(Arrays.asList(t.getRemoteAddresses())));
         Transport first = transports.get(0);
         Transport newTransport = new Transport(groupid, application.findGroupProtocol(first.getName()), application.getWatchFactory(),
-            application.transportBufferPool, application.transportChannelGroup, this.sncpAddress, addrs);
+            application.findGroupKind(first.getName()), application.transportBufferPool, application.transportChannelGroup, this.sncpAddress, addrs);
         synchronized (application.resourceFactory) {
             transport = application.resourceFactory.find(groupid, Transport.class);
             if (transport == null) {
@@ -428,7 +428,7 @@ public abstract class NodeServer {
             Set<InetSocketAddress> addrs = application.findGlobalGroup(group);
             if (addrs == null) throw new RuntimeException("Not found <group> = " + group + " on <resources> ");
             transport = new Transport(group, application.findGroupProtocol(group), application.getWatchFactory(),
-                application.transportBufferPool, application.transportChannelGroup, this.sncpAddress, addrs);
+                application.findGroupKind(group), application.transportBufferPool, application.transportChannelGroup, this.sncpAddress, addrs);
             application.resourceFactory.register(group, transport);
         }
         return transport;
