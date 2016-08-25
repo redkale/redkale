@@ -211,6 +211,14 @@ public abstract class AnyValue {
             return this;
         }
 
+        public DefaultAnyValue addValue(String name, boolean value) {
+            return addValue(name, String.valueOf(value));
+        }
+
+        public DefaultAnyValue addValue(String name, Number value) {
+            return addValue(name, String.valueOf(value));
+        }
+
         public DefaultAnyValue addValue(String name, String value) {
             if (name == null) return this;
             int len = this.stringValues.length;

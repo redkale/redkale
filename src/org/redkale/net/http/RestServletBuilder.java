@@ -12,6 +12,7 @@ import jdk.internal.org.objectweb.asm.*;
 import static jdk.internal.org.objectweb.asm.ClassWriter.COMPUTE_FRAMES;
 import static jdk.internal.org.objectweb.asm.Opcodes.*;
 import jdk.internal.org.objectweb.asm.Type;
+import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.sncp.*;
 import org.redkale.service.*;
 import org.redkale.util.*;
@@ -87,18 +88,26 @@ public final class RestServletBuilder {
         FieldVisitor fv;
         AsmMethodVisitor mv;
         AnnotationVisitor av0;
-
+        Map<String, Object> classMap = new LinkedHashMap<>();
+        List<Map<String, Object>> actionMaps = new ArrayList<>();
         cw.visit(V1_8, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynName, null, supDynName, null);
         { //注入 @WebServlet 注解
+            String urlpath = "/" + defmodulename + "/*";
+            int moduleid = controller == null ? 0 : controller.module();
+            boolean repair = controller == null ? true : controller.repair();
             av0 = cw.visitAnnotation(webServletDesc, true);
             {
                 AnnotationVisitor av1 = av0.visitArray("value");
-                av1.visit(null, "/" + defmodulename + "/*");
+                av1.visit(null, urlpath);
                 av1.visitEnd();
             }
-            av0.visit("moduleid", controller == null ? 0 : controller.module());
-            av0.visit("repair", controller == null ? true : controller.repair());
+            av0.visit("moduleid", moduleid);
+            av0.visit("repair", repair);
             av0.visitEnd();
+            classMap.put("type", serviceType.getName());
+            classMap.put("url", urlpath);
+            classMap.put("moduleid", moduleid);
+            classMap.put("repair", repair);
         }
 
         {  //注入 @Resource  private XXXService _service;
@@ -118,6 +127,7 @@ public final class RestServletBuilder {
         }
 
         final List<MappingEntry> entrys = new ArrayList<>();
+
         for (final Method method : serviceType.getMethods()) {
             Class[] extypes = method.getExceptionTypes();
             if (extypes.length > 1) continue;
@@ -148,7 +158,7 @@ public final class RestServletBuilder {
             }
         }
         if (entrys.isEmpty()) return null; //没有可WebAction的方法
-
+        Map<String, Object> actionMap = new LinkedHashMap<>();
         for (final MappingEntry entry : entrys) {
             final Method method = entry.mappingMethod;
             final Class returnType = method.getReturnType();
@@ -168,7 +178,9 @@ public final class RestServletBuilder {
             boolean hasVisitWebAction = false;
             final String jsvar = entry.jsvar.isEmpty() ? null : entry.jsvar;
             int argIndex = 0;
+            List<Map<String, Object>> paramMaps = new ArrayList<>();
             for (final Parameter param : params) {
+                Map<String, Object> paramMap = new LinkedHashMap<>();
                 final Class ptype = param.getType();
                 RestParam annpara = param.getAnnotation(RestParam.class);
                 String n = annpara == null || annpara.value().isEmpty() ? null : annpara.value();
@@ -186,7 +198,8 @@ public final class RestServletBuilder {
                     hasVisitWebAction = true;
                     //设置 WebAction
                     av0 = mv.visitAnnotation(actionDesc, true);
-                    av0.visit("url", "/" + defmodulename.toLowerCase() + "/" + entry.name + ("#".equals(n) ? "/" : ""));
+                    String url = "/" + defmodulename.toLowerCase() + "/" + entry.name + ("#".equals(n) ? "/" : "");
+                    av0.visit("url", url);
                     av0.visit("actionid", entry.actionid);
 
                     AnnotationVisitor av1 = av0.visitArray("methods");
@@ -196,10 +209,15 @@ public final class RestServletBuilder {
                     av1.visitEnd();
 
                     av0.visitEnd();
+                    actionMap.put("url", url);
+                    actionMap.put("actionid", entry.actionid);
+                    actionMap.put("methods", entry.methods);
                 }
                 final String pname = n; //参数名
                 final boolean hd = annpara == null ? false : annpara.header(); //是否取getHeader 而不是 getParameter
 
+                paramMap.put("name", pname);
+                paramMap.put("type", ptype.getName());
                 if ("#".equals(pname)) { //从request.getRequstURI 中去参数
                     if (ptype == boolean.class) {
                         mv.visitVarInsn(ALOAD, 1);
@@ -351,22 +369,26 @@ public final class RestServletBuilder {
                     varInsns.add(new int[]{ALOAD, maxLocals});
                 }
                 maxLocals++;
+                paramMaps.add(paramMap);
             } // end params for each
 
             if (!hasVisitWebAction) { //当无参数时则没有设置过 WebAction
                 hasVisitWebAction = true;
                 //设置 WebAction
                 av0 = mv.visitAnnotation(actionDesc, true);
-                av0.visit("url", "/" + defmodulename.toLowerCase() + "/" + entry.name);
+                String url = "/" + defmodulename.toLowerCase() + "/" + entry.name;
+                av0.visit("url", url);
                 av0.visit("actionid", entry.actionid);
-                
-                    AnnotationVisitor av1 = av0.visitArray("methods");
-                    for (String m : entry.methods) {
-                        av1.visit(null, m);
-                    }
-                    av1.visitEnd();
-                    
+                AnnotationVisitor av1 = av0.visitArray("methods");
+                for (String m : entry.methods) {
+                    av1.visit(null, m);
+                }
+                av1.visitEnd();
                 av0.visitEnd();
+
+                actionMap.put("url", url);
+                actionMap.put("actionid", entry.actionid);
+                actionMap.put("methods", entry.methods);
             }
 
             mv.visitVarInsn(ALOAD, 0); //调用this
@@ -607,8 +629,20 @@ public final class RestServletBuilder {
                 maxLocals++;
             }
             mv.visitMaxs(maxStack, maxLocals);
+            actionMap.put("params", paramMaps);
+            actionMaps.add(actionMap);
+        } // end  for each        
+        classMap.put("actions", actionMaps);
 
-        } // end  for each
+        { //toString函数
+            mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC, "toString", "()Ljava/lang/String;", null, null));
+            //mv.setDebug(true);
+            mv.visitLdcInsn(JsonConvert.root().convertTo(classMap));
+            mv.visitInsn(ARETURN);
+            mv.visitMaxs(1, 1);
+            mv.visitEnd();
+        }
+
         cw.visitEnd();
         byte[] bytes = cw.toByteArray();
         Class<?> newClazz = new ClassLoader(loader) {

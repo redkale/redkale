@@ -187,6 +187,7 @@ public final class NodeHttpServer extends NodeServer {
 
             RestHttpServlet servlet = RestServletBuilder.createRestServlet(superClass, wrapper.getName(), stype);
             if (servlet == null) return;
+            if(finest) logger.finest("Create RestServlet = "+servlet);  
             try {
                 Field serviceField = servlet.getClass().getDeclaredField("_service");
                 serviceField.setAccessible(true);

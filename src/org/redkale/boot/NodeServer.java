@@ -48,9 +48,12 @@ public abstract class NodeServer {
     //日志是否为FINE级别
     protected final boolean fine;
 
-    //日志是否为FINE级别
+    //日志是否为FINER级别
     protected final boolean finer;
 
+    //日志是否为FINEST级别
+    protected final boolean finest;
+    
     //进程主类
     protected final Application application;
 
@@ -91,6 +94,7 @@ public abstract class NodeServer {
         this.logger = Logger.getLogger(this.getClass().getSimpleName());
         this.fine = logger.isLoggable(Level.FINE);
         this.finer = logger.isLoggable(Level.FINER);
+        this.finest = logger.isLoggable(Level.FINEST);
     }
 
     protected Consumer<Runnable> getExecutor() throws Exception {
