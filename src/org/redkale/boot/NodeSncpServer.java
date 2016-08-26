@@ -32,6 +32,7 @@ public final class NodeSncpServer extends NodeServer {
 
     public static NodeServer createNodeServer(Application application, AnyValue serconf) {
         if (serconf != null && serconf.getAnyValue("rest") != null) {
+            ((AnyValue.DefaultAnyValue) serconf).addValue("_$sncp", "true");
             return new NodeHttpServer(application, serconf);
         }
         return new NodeSncpServer(application, serconf);

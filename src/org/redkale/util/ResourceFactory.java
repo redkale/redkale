@@ -15,6 +15,9 @@ import javax.annotation.Resource;
 
 /**
  * 如果Resource(name = "$") 表示资源name采用所属对象的name
+ * name规则:
+ * 1: "$"有特殊含义, 不能表示"$"资源本身
+ * 2: 只能是字母、数字、(短横)-、(下划线)_、点(.)的组合
  * <p>
  * 详情见: http://redkale.org
  *
@@ -49,6 +52,12 @@ public final class ResourceFactory {
 
     public void release() {
         this.store.clear();
+    }
+
+    public void checkName(String name) {
+        if (name == null || (!name.isEmpty() && !name.matches("^[a-zA-Z_\\-\\.]+$"))) {
+            throw new IllegalArgumentException("Resource.name(" + name + ") contains illegal character, must be (a-z A-Z 0-9 _ . -)");
+        }
     }
 
     public <A> A register(final Class<? extends A> clazz, final A rs) {
@@ -141,6 +150,7 @@ public final class ResourceFactory {
     }
 
     public <A> A register(final boolean autoSync, final String name, final A rs) {
+        checkName(name);
         final Class<?> claz = rs.getClass();
         ResourceType rtype = claz.getAnnotation(ResourceType.class);
         if (rtype == null) {
@@ -164,6 +174,7 @@ public final class ResourceFactory {
     }
 
     public <A> A register(final boolean autoSync, final String name, final Type clazz, final A rs) {
+        checkName(name);
         ConcurrentHashMap<String, ResourceEntry> map = this.store.get(clazz);
         if (map == null) {
             ConcurrentHashMap<String, ResourceEntry> sub = new ConcurrentHashMap();
@@ -490,7 +501,7 @@ public final class ResourceFactory {
                         m = method;
                         m.setAccessible(true);
                         break;
-                    } 
+                    }
                 }
             } while ((loop = loop.getSuperclass()) != Object.class);
             listenerMethods.put(clazz, m);

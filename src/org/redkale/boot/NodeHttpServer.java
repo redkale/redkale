@@ -158,7 +158,7 @@ public final class NodeHttpServer extends NodeServer {
         for (AnyValue item : restConf.getAnyValues("service")) {
             hasServices.add(item.getValue("value", ""));
         }
-
+        final boolean sncp = this.serverConf.getBoolValue("_$sncp", false); //SNCP服务以REST启动时会赋值_$sncp=true
         super.interceptorServiceWrappers.forEach((wrapper) -> {
             if (!wrapper.getName().isEmpty()) return;  //只加载resourceName为空的service
             final Class stype = wrapper.getType();
@@ -185,9 +185,9 @@ public final class NodeHttpServer extends NodeServer {
                 if (!match) return;
             }
 
-            RestHttpServlet servlet = RestServletBuilder.createRestServlet(superClass, wrapper.getName(), stype);
+            RestHttpServlet servlet = RestServletBuilder.createRestServlet(superClass, wrapper.getName(), stype, sncp);
             if (servlet == null) return;
-            if(finest) logger.finest("Create RestServlet = "+servlet);  
+            if (finest) logger.finest("Create RestServlet = " + servlet);
             try {
                 Field serviceField = servlet.getClass().getDeclaredField("_service");
                 serviceField.setAccessible(true);

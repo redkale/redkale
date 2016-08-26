@@ -40,12 +40,13 @@ public final class RestServletBuilder {
 
     public static String getWebModuleName(Class<? extends Service> serviceType) {
         final RestService controller = serviceType.getAnnotation(RestService.class);
-        if (controller == null) return null;
+        if (controller == null) return serviceType.getSimpleName().replaceAll("Service.*$", "").toLowerCase();
+        if (controller.ignore()) return null;
         return (!controller.value().isEmpty()) ? controller.value() : serviceType.getSimpleName().replaceAll("Service.*$", "").toLowerCase();
     }
 
     //待实现
-    public static <T extends RestHttpServlet> T createRestServlet(final Class<T> baseServletClass, final String serviceName, final Class<? extends Service> serviceType) {
+    public static <T extends RestHttpServlet> T createRestServlet(final Class<T> baseServletClass, final String serviceName, final Class<? extends Service> serviceType, final boolean sncp) {
         if (baseServletClass == null || serviceType == null) return null;
         if (!RestHttpServlet.class.isAssignableFrom(baseServletClass)) return null;
         int mod = baseServletClass.getModifiers();
