@@ -113,6 +113,7 @@ public final class RestServletBuilder {
             av0.visitEnd();
             classMap.put("type", serviceType.getName());
             classMap.put("url", urlpath);
+            if (!serviceName.isEmpty()) classMap.put("resource", serviceName);
             classMap.put("moduleid", moduleid);
             classMap.put("repair", repair);
         }
@@ -120,6 +121,7 @@ public final class RestServletBuilder {
         {  //注入 @Resource  private XXXService _service;
             fv = cw.visitField(ACC_PRIVATE, "_service", serviceDesc, null, null);
             av0 = fv.visitAnnotation("Ljavax/annotation/Resource;", true);
+            av0.visit("name", serviceName);
             av0.visitEnd();
             fv.visitEnd();
         }
