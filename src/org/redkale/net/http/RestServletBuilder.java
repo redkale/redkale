@@ -38,6 +38,12 @@ public final class RestServletBuilder {
     private RestServletBuilder() {
     }
 
+    public static String getWebModuleName(Class<? extends Service> serviceType) {
+        final RestService controller = serviceType.getAnnotation(RestService.class);
+        if (controller == null) return null;
+        return (!controller.value().isEmpty()) ? controller.value() : serviceType.getSimpleName().replaceAll("Service.*$", "").toLowerCase();
+    }
+
     //待实现
     public static <T extends RestHttpServlet> T createRestServlet(final Class<T> baseServletClass, final String serviceName, final Class<? extends Service> serviceType) {
         if (baseServletClass == null || serviceType == null) return null;
@@ -77,7 +83,7 @@ public final class RestServletBuilder {
             throw new RuntimeException(e);
         }
         //------------------------------------------------------------------------------
-        final String defmodulename = (controller != null && !controller.value().isEmpty()) ? controller.value() : serviceType.getSimpleName().replaceAll("Service.*$", "").toLowerCase();
+        final String defmodulename = getWebModuleName(serviceType);
         for (char ch : defmodulename.toCharArray()) {
             if (!((ch >= '0' && ch <= '9') || ch == '$' || ch == '_' || (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z'))) { //不能含特殊字符
                 throw new RuntimeException(serviceType.getName() + " has illeal " + RestService.class.getSimpleName() + ".value, only 0-9 a-z A-Z _ $");

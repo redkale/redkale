@@ -119,7 +119,7 @@ public final class SncpClient {
 
     protected final boolean finest = logger.isLoggable(Level.FINEST);
 
-    protected final JsonConvert jsonConvert = JsonFactory.root().getConvert();
+    protected final JsonConvert convert = JsonFactory.root().getConvert();
 
     protected final String name;
 
@@ -261,7 +261,7 @@ public final class SncpClient {
         final SncpAction action = actions[index];
         final CompletionHandler handlerFunc = action.handlerFuncParamIndex >= 0 ? (CompletionHandler) params[action.handlerFuncParamIndex] : null;
         if (action.handlerFuncParamIndex >= 0) params[action.handlerFuncParamIndex] = null;
-        Future<byte[]> future = remote0(handlerFunc, bsonConvert, jsonConvert, transport, null, action, params);
+        SncpFuture<byte[]> future = remote0(handlerFunc, bsonConvert, jsonConvert, transport, null, action, params);
         if (handlerFunc != null) return null;
         final BsonReader reader = bsonConvert.pollBsonReader();
         try {
@@ -288,7 +288,18 @@ public final class SncpClient {
         }
     }
 
-    private Future<byte[]> remote0(final CompletionHandler handler, final BsonConvert bsonConvert, final JsonConvert jsonConvert, final Transport transport, final SocketAddress addr0, final SncpAction action, final Object... params) {
+    private SncpFuture<byte[]> remote0(final CompletionHandler handler, final BsonConvert bsonConvert, final JsonConvert jsonConvert, final Transport transport, final SocketAddress addr0, final SncpAction action, final Object... params) {
+        if ("rest".equalsIgnoreCase(transport.getKind())) {
+            return remoteRest0(handler, jsonConvert, transport, addr0, action, params);
+        }
+        return remoteSncp0(handler, bsonConvert, transport, addr0, action, params);
+    }
+
+    private SncpFuture<byte[]> remoteRest0(final CompletionHandler handler, final JsonConvert jsonConvert, final Transport transport, final SocketAddress addr0, final SncpAction action, final Object... params) {
+        return null;
+    }
+
+    private SncpFuture<byte[]> remoteSncp0(final CompletionHandler handler, final BsonConvert bsonConvert, final Transport transport, final SocketAddress addr0, final SncpAction action, final Object... params) {
         Type[] myparamtypes = action.paramTypes;
         if (action.addressSourceParamIndex >= 0) params[action.addressSourceParamIndex] = this.clientAddress;
         final BsonWriter writer = bsonConvert.pollBsonWriter(transport.getBufferSupplier()); // 将head写入
@@ -302,14 +313,14 @@ public final class SncpClient {
         final SocketAddress addr = addr0 == null ? (action.addressTargetParamIndex >= 0 ? (SocketAddress) params[action.addressTargetParamIndex] : null) : addr0;
         final AsyncConnection conn = transport.pollConnection(addr);
         if (conn == null || !conn.isOpen()) {
-            logger.log(Level.SEVERE, action.method + " sncp (params: " + jsonConvert.convertTo(params) + ") cannot connect " + (conn == null ? addr : conn.getRemoteAddress()));
+            logger.log(Level.SEVERE, action.method + " sncp (params: " + convert.convertTo(params) + ") cannot connect " + (conn == null ? addr : conn.getRemoteAddress()));
             throw new RuntimeException("sncp " + (conn == null ? addr : conn.getRemoteAddress()) + " cannot connect");
         }
         final ByteBuffer[] sendBuffers = writer.toBuffers();
         fillHeader(sendBuffers[0], seqid, actionid, reqBodyLength);
 
         final ByteBuffer buffer = transport.pollBuffer();
-        final SncpFuture<byte[]> future = new SncpFuture();
+        final SncpFuture<byte[]> future = new SncpFuture(false);
         conn.write(sendBuffers, sendBuffers, new CompletionHandler<Integer, ByteBuffer[]>() {
 
             @Override
@@ -370,7 +381,7 @@ public final class SncpClient {
                         final int respBodyLength = buffer.getInt();
                         final int retcode = buffer.getInt();
                         if (retcode != 0) {
-                            logger.log(Level.SEVERE, action.method + " sncp (params: " + jsonConvert.convertTo(params) + ") deal error (retcode=" + retcode + ", retinfo=" + SncpResponse.getRetCodeInfo(retcode) + ")");
+                            logger.log(Level.SEVERE, action.method + " sncp (params: " + convert.convertTo(params) + ") deal error (retcode=" + retcode + ", retinfo=" + SncpResponse.getRetCodeInfo(retcode) + ")");
                             throw new RuntimeException("remote service(" + action.method + ") deal error (retcode=" + retcode + ", retinfo=" + SncpResponse.getRetCodeInfo(retcode) + ")");
                         }
 
@@ -413,7 +424,7 @@ public final class SncpClient {
 
                     @Override
                     public void failed(Throwable exc, Void attachment2) {
-                        logger.log(Level.SEVERE, action.method + " sncp (params: " + jsonConvert.convertTo(params) + ") remote read exec failed", exc);
+                        logger.log(Level.SEVERE, action.method + " sncp (params: " + convert.convertTo(params) + ") remote read exec failed", exc);
                         future.set(new RuntimeException(action.method + " sncp remote exec failed"));
                         transport.offerBuffer(buffer);
                         transport.offerConnection(true, conn);
@@ -427,7 +438,7 @@ public final class SncpClient {
 
             @Override
             public void failed(Throwable exc, ByteBuffer[] attachment) {
-                logger.log(Level.SEVERE, action.method + " sncp (params: " + jsonConvert.convertTo(params) + ") remote write exec failed", exc);
+                logger.log(Level.SEVERE, action.method + " sncp (params: " + convert.convertTo(params) + ") remote write exec failed", exc);
                 transport.offerBuffer(buffer);
                 transport.offerConnection(true, conn);
             }
@@ -470,12 +481,20 @@ public final class SncpClient {
 
         private RuntimeException ex;
 
-        public SncpFuture() {
+        private final boolean rest;
+
+        public SncpFuture(boolean rest) {
+            this.rest = rest;
         }
 
-        public SncpFuture(T result) {
+        public SncpFuture(boolean rest, T result) {
+            this.rest = rest;
             this.result = result;
             this.done = true;
+        }
+
+        public boolean isRest() {
+            return this.rest;
         }
 
         public void set(T result) {
