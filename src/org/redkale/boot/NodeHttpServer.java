@@ -148,7 +148,7 @@ public final class NodeHttpServer extends NodeServer {
         final String threadName = "[" + Thread.currentThread().getName() + "] ";
         final List<AbstractMap.SimpleEntry<String, String[]>> ss = sb == null ? null : new ArrayList<>();
 
-        final Class<? extends RestHttpServlet> superClass = (Class<? extends RestHttpServlet>) Class.forName(restConf.getValue("servlet", DefaultRestServlet.class.getName()));
+        final Class<? extends RestHttpServlet> baseServletClass = (Class<? extends RestHttpServlet>) Class.forName(restConf.getValue("servlet", DefaultRestServlet.class.getName()));
 
         final boolean autoload = restConf.getBoolValue("autoload", true);
         final boolean mustsign = restConf.getBoolValue("mustsign", true); //是否只加载标记@RestService的Service类
@@ -185,7 +185,7 @@ public final class NodeHttpServer extends NodeServer {
                 if (!match) return;
             }
 
-            RestHttpServlet servlet = RestServletBuilder.createRestServlet(superClass, wrapper.getName(), stype, sncp);
+            RestHttpServlet servlet = RestServletBuilder.createRestServlet(baseServletClass, wrapper.getName(), stype, sncp);
             if (servlet == null) return;
             if (finest) logger.finest("Create RestServlet = " + servlet);
             try {
