@@ -30,7 +30,7 @@ public class DataCallAttribute implements Attribute<Object, Serializable> {
                 Class cltmp = clazz;
                 do {
                     for (Field field : cltmp.getDeclaredFields()) {
-                        if (field.getAnnotation(javax.persistence.Id.class) == null) continue;
+                        if (field.getAnnotation(javax.persistence.GeneratedValue.class) == null) continue;
                         try {
                             rs = Attribute.create(cltmp, field);
                             attributes.put(clazz, rs);
