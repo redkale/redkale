@@ -32,25 +32,29 @@ public final class ClassFilter<T> {
 
     private static final boolean finer = logger.isLoggable(Level.FINER);
 
-    private final Set<FilterEntry<T>> entrys = new HashSet<>();
+    private final Set<FilterEntry<T>> entrys = new HashSet<>(); //符合条件的结果
 
-    private final Set<FilterEntry<T>> expectEntrys = new HashSet<>();
+    private final Set<FilterEntry<T>> expectEntrys = new HashSet<>(); //准备符合条件的结果
 
-    private boolean refused;
+    private boolean refused; //是否拒绝所有数据,设置true，则其他规则失效,都是拒绝.
 
-    private Class superClass;
+    private Class superClass; //符合的父类型。不为空时，扫描结果的class必须是superClass的子类
 
-    private Class<? extends Annotation> annotationClass;
+    private Class<? extends Annotation> annotationClass;//符合的注解。不为空时，扫描结果的class必须包含该注解
 
-    private Pattern[] includePatterns;
+    private Pattern[] includePatterns; //符合的classname正则表达式
 
-    private Pattern[] excludePatterns;
+    private Pattern[] excludePatterns;//拒绝的classname正则表达式
 
-    private List<ClassFilter> ors;
+    private Set<String> privilegeIncludes; //特批符合条件的classname
 
-    private List<ClassFilter> ands;
+    private Set<String> privilegeExcludes;//特批拒绝条件的classname
 
-    private AnyValue conf;
+    private List<ClassFilter> ors; //或关系的其他ClassFilter
+
+    private List<ClassFilter> ands;//与关系的其他ClassFilter
+
+    private AnyValue conf; //基本配置信息, 当符合条件时将conf的属性赋值到FilterEntry中去。
 
     public ClassFilter(Class<? extends Annotation> annotationClass, Class superClass) {
         this(annotationClass, superClass, null);
@@ -60,6 +64,15 @@ public final class ClassFilter<T> {
         this.annotationClass = annotationClass;
         this.superClass = superClass;
         this.conf = conf;
+    }
+
+    public static ClassFilter create(String includeregs, String excluderegs, Set<String> includeValues, Set<String> excludeValues) {
+        ClassFilter filter = new ClassFilter(null, null);
+        filter.setIncludePatterns(includeregs == null ? null : includeregs.split(";"));
+        filter.setExcludePatterns(excluderegs == null ? null : excluderegs.split(";"));
+        filter.setPrivilegeIncludes(includeValues);
+        filter.setPrivilegeExcludes(excludeValues);
+        return filter;
     }
 
     public ClassFilter<T> or(ClassFilter<T> filter) {
@@ -169,19 +182,15 @@ public final class ClassFilter<T> {
         }
     }
 
-    public static Pattern[] toPattern(String[] regs) {
-        if (regs == null) return null;
-        int i = 0;
-        Pattern[] rs = new Pattern[regs.length];
-        for (String reg : regs) {
-            if (reg == null || reg.trim().isEmpty()) continue;
-            rs[i++] = Pattern.compile(reg.trim());
-        }
-        if (i == 0) return null;
-        if (i == rs.length) return rs;
-        Pattern[] ps = new Pattern[i];
-        System.arraycopy(rs, 0, ps, 0, i);
-        return ps;
+    /**
+     * 判断class是否有效
+     *
+     * @param classname String
+     *
+     * @return boolean
+     */
+    public boolean accept(String classname) {
+        return accept(null, classname);
     }
 
     /**
@@ -209,6 +218,8 @@ public final class ClassFilter<T> {
 
     private boolean accept0(AnyValue property, String classname) {
         if (this.refused) return false;
+        if (this.privilegeIncludes != null && this.privilegeIncludes.contains(classname)) return true;
+        if (this.privilegeExcludes != null && this.privilegeExcludes.contains(classname)) return false;
         if (classname.startsWith("java.") || classname.startsWith("javax.")) return false;
         if (excludePatterns != null) {
             for (Pattern reg : excludePatterns) {
@@ -237,6 +248,21 @@ public final class ClassFilter<T> {
         if (this.refused || !Modifier.isPublic(clazz.getModifiers())) return false;
         if (annotationClass != null && clazz.getAnnotation(annotationClass) == null) return false;
         return superClass == null || (clazz != superClass && superClass.isAssignableFrom(clazz));
+    }
+
+    public static Pattern[] toPattern(String[] regs) {
+        if (regs == null || regs.length == 0) return null;
+        int i = 0;
+        Pattern[] rs = new Pattern[regs.length];
+        for (String reg : regs) {
+            if (reg == null || reg.trim().isEmpty()) continue;
+            rs[i++] = Pattern.compile(reg.trim());
+        }
+        if (i == 0) return null;
+        if (i == rs.length) return rs;
+        Pattern[] ps = new Pattern[i];
+        System.arraycopy(rs, 0, ps, 0, i);
+        return ps;
     }
 
     public void setSuperClass(Class superClass) {
@@ -277,6 +303,22 @@ public final class ClassFilter<T> {
 
     public void setRefused(boolean refused) {
         this.refused = refused;
+    }
+
+    public Set<String> getPrivilegeIncludes() {
+        return privilegeIncludes;
+    }
+
+    public void setPrivilegeIncludes(Set<String> privilegeIncludes) {
+        this.privilegeIncludes = privilegeIncludes == null || privilegeIncludes.isEmpty() ? null : privilegeIncludes;
+    }
+
+    public Set<String> getPrivilegeExcludes() {
+        return privilegeExcludes;
+    }
+
+    public void setPrivilegeExcludes(Set<String> privilegeExcludes) {
+        this.privilegeExcludes = privilegeExcludes == null || privilegeExcludes.isEmpty() ? null : privilegeExcludes;
     }
 
     /**

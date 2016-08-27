@@ -20,9 +20,9 @@ import org.redkale.util.*;
  * @author zhangjx
  */
 @NodeProtocol({"SNCP"})
-public final class NodeSncpServer extends NodeServer {
+public class NodeSncpServer extends NodeServer {
 
-    private final SncpServer sncpServer;
+    protected final SncpServer sncpServer;
 
     private NodeSncpServer(Application application, AnyValue serconf) {
         super(application, createServer(application, serconf));

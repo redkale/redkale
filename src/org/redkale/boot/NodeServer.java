@@ -27,6 +27,32 @@ import org.redkale.service.*;
 import org.redkale.source.*;
 import org.redkale.util.AnyValue.DefaultAnyValue;
 import org.redkale.util.*;
+import static java.lang.Class.forName;
+import static java.lang.Class.forName;
+import static java.lang.Class.forName;
+import static java.lang.Class.forName;
+import static java.lang.Class.forName;
+import static java.lang.Class.forName;
+import static java.lang.Class.forName;
+import static java.lang.Class.forName;
+import static java.lang.Class.forName;
+import static java.lang.Class.forName;
+import static java.lang.Class.forName;
+import static java.lang.Class.forName;
+import static java.lang.Class.forName;
+import static java.lang.Class.forName;
+import static java.lang.Class.forName;
+import static java.lang.Class.forName;
+import static java.lang.Class.forName;
+import static java.lang.Class.forName;
+import static java.lang.Class.forName;
+import static java.lang.Class.forName;
+import static java.lang.Class.forName;
+import static java.lang.Class.forName;
+import static java.lang.Class.forName;
+import static java.lang.Class.forName;
+import static java.lang.Class.forName;
+import static java.lang.Class.forName;
 
 /**
  * Server节点的初始化配置类

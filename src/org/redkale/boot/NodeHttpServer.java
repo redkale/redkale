@@ -9,7 +9,6 @@ import java.lang.reflect.*;
 import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.logging.Level;
-import java.util.regex.Pattern;
 import javax.annotation.Resource;
 import org.redkale.boot.ClassFilter.FilterEntry;
 import org.redkale.net.*;
@@ -28,13 +27,19 @@ import org.redkale.util.*;
  * @author zhangjx
  */
 @NodeProtocol({"HTTP"})
-public final class NodeHttpServer extends NodeServer {
+public class NodeHttpServer extends NodeServer {
 
-    private final HttpServer httpServer;
+    protected boolean rest;
+
+    protected boolean sncp;
+
+    protected final HttpServer httpServer;
 
     public NodeHttpServer(Application application, AnyValue serconf) {
         super(application, createServer(application, serconf));
         this.httpServer = (HttpServer) server;
+        this.rest = serconf == null ? false : serconf.getAnyValue("rest") != null;
+        this.sncp = serconf == null ? false : serconf.getBoolValue("_$sncp", false); //SNCP服务以REST启动时会赋值_$sncp=true
     }
 
     private static Server createServer(Application application, AnyValue serconf) {
@@ -137,10 +142,11 @@ public final class NodeHttpServer extends NodeServer {
             }
         }
         if (sb != null && sb.length() > 0) logger.log(Level.INFO, sb.toString());
-        loadRestServlet(servletsConf);
+        if (rest) loadRestServlet(servletsConf);
     }
 
     protected void loadRestServlet(final AnyValue servletsConf) throws Exception {
+        if (!rest) return;
         final String prefix = servletsConf == null ? "" : servletsConf.getValue("path", "");
         AnyValue restConf = serverConf == null ? null : serverConf.getAnyValue("rest");
         if (restConf == null) return; //不存在REST服务
@@ -152,13 +158,19 @@ public final class NodeHttpServer extends NodeServer {
 
         final boolean autoload = restConf.getBoolValue("autoload", true);
         final boolean mustsign = restConf.getBoolValue("mustsign", true); //是否只加载标记@RestService的Service类
-        final Pattern[] includes = ClassFilter.toPattern(restConf.getValue("includes", "").split(";"));
-        final Pattern[] excludes = ClassFilter.toPattern(restConf.getValue("excludes", "").split(";"));
-        final Set<String> hasServices = new HashSet<>();
+
+        final Set<String> includeValues = new HashSet<>();
+        final Set<String> excludeValues = new HashSet<>();
         for (AnyValue item : restConf.getAnyValues("service")) {
-            hasServices.add(item.getValue("value", ""));
+            if (item.getBoolValue("ignore", false)) {
+                excludeValues.add(item.getValue("value", ""));
+            } else {
+                includeValues.add(item.getValue("value", ""));
+            }
         }
-        final boolean sncp = this.serverConf.getBoolValue("_$sncp", false); //SNCP服务以REST启动时会赋值_$sncp=true
+
+        final ClassFilter restFilter = ClassFilter.create(restConf.getValue("includes", ""), restConf.getValue("excludes", ""), includeValues, excludeValues);
+
         super.interceptorServiceWrappers.forEach((wrapper) -> {
             if (!wrapper.getName().isEmpty()) return;  //只加载resourceName为空的service
             final Class stype = wrapper.getType();
@@ -168,22 +180,8 @@ public final class NodeHttpServer extends NodeServer {
             if (stype.getAnnotation(LocalService.class) != null && rs == null) return;
 
             final String stypename = stype.getName();
-            if (!autoload && !hasServices.contains(stypename)) return;
-            if (excludes != null && !hasServices.contains(stypename)) {
-                for (Pattern reg : excludes) {
-                    if (reg.matcher(stypename).matches()) return;
-                }
-            }
-            if (includes != null && !hasServices.contains(stypename)) {
-                boolean match = false;
-                for (Pattern reg : includes) {
-                    if (reg.matcher(stypename).matches()) {
-                        match = true;
-                        break;
-                    }
-                }
-                if (!match) return;
-            }
+            if (!autoload && !includeValues.contains(stypename)) return;
+            if (!restFilter.accept(stypename)) return;
 
             RestHttpServlet servlet = RestServletBuilder.createRestServlet(baseServletClass, wrapper.getName(), stype, sncp);
             if (servlet == null) return;
