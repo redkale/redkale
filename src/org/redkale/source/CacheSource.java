@@ -6,7 +6,6 @@
 package org.redkale.source;
 
 import java.io.*;
-import java.nio.channels.*;
 import java.util.*;
 
 /**
@@ -15,6 +14,7 @@ import java.util.*;
  * @param <V> value的类型
  * <p>
  * 详情见: http://redkale.org
+ *
  * @author zhangjx
  */
 public interface CacheSource<K extends Serializable, V extends Object> {
@@ -51,36 +51,4 @@ public interface CacheSource<K extends Serializable, V extends Object> {
 
     public void removeSetItem(final K key, final V value);
 
-    //----------------------异步版---------------------------------
-    public void exists(final CompletionHandler<Boolean, K> handler, final K key);
-
-    public void get(final CompletionHandler<V, K> handler, final K key);
-
-    public void getAndRefresh(final CompletionHandler<V, K> handler, final K key, final int expireSeconds);
-
-    public void refresh(final CompletionHandler<Void, K> handler, final K key, final int expireSeconds);
-
-    public void set(final CompletionHandler<Void, K> handler, final K key, final V value);
-
-    public void set(final CompletionHandler<Void, K> handler, final int expireSeconds, final K key, final V value);
-
-    public void setExpireSeconds(final CompletionHandler<Void, K> handler, final K key, final int expireSeconds);
-
-    public void remove(final CompletionHandler<Void, K> handler, final K key);
-
-    public void getCollection(final CompletionHandler<Collection<V>, K> handler, final K key);
-
-    public void getCollectionAndRefresh(final CompletionHandler<Collection<V>, K> handler, final K key, final int expireSeconds);
-
-    public void appendListItem(final CompletionHandler<Void, K> handler, final K key, final V value);
-
-    public void removeListItem(final CompletionHandler<Void, K> handler, final K key, final V value);
-
-    public void appendSetItem(final CompletionHandler<Void, K> handler, final K key, final V value);
-
-    public void removeSetItem(final CompletionHandler<Void, K> handler, final K key, final V value);
-
-    default void isOpen(final CompletionHandler<Boolean, Void> handler) {
-        if (handler != null) handler.completed(Boolean.TRUE, null);
-    }
 }

@@ -43,10 +43,6 @@ public final class SncpClient {
 
         protected final Attribute[] paramAttrs; // 为null表示无DynCall处理，index=0固定为null, 其他为参数标记的DynCall回调方法
 
-        protected final int handlerFuncParamIndex;
-
-        protected final int handlerAttachParamIndex;
-
         protected final int addressTargetParamIndex;
 
         protected final int addressSourceParamIndex;
@@ -64,24 +60,16 @@ public final class SncpClient {
             Annotation[][] anns = method.getParameterAnnotations();
             int targetAddrIndex = -1;
             int sourceAddrIndex = -1;
-            int handlerAttachIndex = -1;
-            int handlerFuncIndex = -1;
+
             boolean hasattr = false;
             Attribute[] atts = new Attribute[paramTypes.length + 1];
             if (anns.length > 0) {
                 Class<?>[] params = method.getParameterTypes();
-                for (int i = 0; i < params.length; i++) {
-                    if (CompletionHandler.class.isAssignableFrom(params[i])) {
-                        handlerFuncIndex = i;
-                        break;
-                    }
-                }
+
                 for (int i = 0; i < anns.length; i++) {
                     if (anns[i].length > 0) {
                         for (Annotation ann : anns[i]) {
-                            if (ann.annotationType() == DynAttachment.class) {
-                                handlerAttachIndex = i;
-                            } else if (ann.annotationType() == DynTargetAddress.class && SocketAddress.class.isAssignableFrom(params[i])) {
+                            if (ann.annotationType() == DynTargetAddress.class && SocketAddress.class.isAssignableFrom(params[i])) {
                                 targetAddrIndex = i;
                             } else if (ann.annotationType() == DynSourceAddress.class && SocketAddress.class.isAssignableFrom(params[i])) {
                                 sourceAddrIndex = i;
@@ -103,10 +91,7 @@ public final class SncpClient {
             }
             this.addressTargetParamIndex = targetAddrIndex;
             this.addressSourceParamIndex = sourceAddrIndex;
-            this.handlerFuncParamIndex = handlerFuncIndex;
-            this.handlerAttachParamIndex = handlerAttachIndex;
             this.paramAttrs = hasattr ? atts : null;
-            if (this.handlerFuncParamIndex >= 0 && method.getReturnType() != void.class) throw new RuntimeException(method + " has CompletionHandler type parameter but return type is not void");
         }
 
         @Override
@@ -220,9 +205,8 @@ public final class SncpClient {
 
     public void remoteSameGroup(final BsonConvert bsonConvert, final JsonConvert jsonConvert, Transport transport, final int index, final Object... params) {
         final SncpAction action = actions[index];
-        if (action.handlerFuncParamIndex >= 0) params[action.handlerFuncParamIndex] = null; //不能让远程调用handler，因为之前本地方法已经调用过了
         for (InetSocketAddress addr : transport.getRemoteAddresses()) {
-            remote0(null, bsonConvert, jsonConvert, transport, addr, action, params);
+            remote0(bsonConvert, jsonConvert, transport, addr, action, params);
         }
     }
 
@@ -239,9 +223,8 @@ public final class SncpClient {
     public void remoteDiffGroup(final BsonConvert bsonConvert, final JsonConvert jsonConvert, Transport[] transports, final int index, final Object... params) {
         if (transports == null || transports.length < 1) return;
         final SncpAction action = actions[index];
-        if (action.handlerFuncParamIndex >= 0) params[action.handlerFuncParamIndex] = null; //不能让远程调用handler，因为之前本地方法已经调用过了
         for (Transport transport : transports) {
-            remote0(null, bsonConvert, jsonConvert, transport, null, action, params);
+            remote0(bsonConvert, jsonConvert, transport, null, action, params);
         }
     }
 
@@ -259,10 +242,8 @@ public final class SncpClient {
     //只给远程模式调用的
     public <T> T remote(final BsonConvert bsonConvert, final JsonConvert jsonConvert, Transport transport, final int index, final Object... params) {
         final SncpAction action = actions[index];
-        final CompletionHandler handlerFunc = action.handlerFuncParamIndex >= 0 ? (CompletionHandler) params[action.handlerFuncParamIndex] : null;
-        if (action.handlerFuncParamIndex >= 0) params[action.handlerFuncParamIndex] = null;
-        SncpFuture<byte[]> future = remote0(handlerFunc, bsonConvert, jsonConvert, transport, null, action, params);
-        if (handlerFunc != null) return null;
+        SncpFuture<byte[]> future = remote0(bsonConvert, jsonConvert, transport, null, action, params);
+
         final BsonReader reader = bsonConvert.pollBsonReader();
         try {
             reader.setBytes(future.get(5, TimeUnit.SECONDS));
@@ -284,22 +265,22 @@ public final class SncpClient {
         if (transports == null || transports.length < 1) return;
         remote(bsonConvert, jsonConvert, transports[0], index, params);
         for (int i = 1; i < transports.length; i++) {
-            remote0(null, bsonConvert, jsonConvert, transports[i], null, actions[index], params);
+            remote0(bsonConvert, jsonConvert, transports[i], null, actions[index], params);
         }
     }
 
-    private SncpFuture<byte[]> remote0(final CompletionHandler handler, final BsonConvert bsonConvert, final JsonConvert jsonConvert, final Transport transport, final SocketAddress addr0, final SncpAction action, final Object... params) {
+    private SncpFuture<byte[]> remote0(final BsonConvert bsonConvert, final JsonConvert jsonConvert, final Transport transport, final SocketAddress addr0, final SncpAction action, final Object... params) {
         if ("rest".equalsIgnoreCase(transport.getKind())) {
-            return remoteRest0(handler, jsonConvert, transport, addr0, action, params);
+            return remoteRest0(jsonConvert, transport, addr0, action, params);
         }
-        return remoteSncp0(handler, bsonConvert, transport, addr0, action, params);
+        return remoteSncp0(bsonConvert, transport, addr0, action, params);
     }
 
-    private SncpFuture<byte[]> remoteRest0(final CompletionHandler handler, final JsonConvert jsonConvert, final Transport transport, final SocketAddress addr0, final SncpAction action, final Object... params) {
+    private SncpFuture<byte[]> remoteRest0(final JsonConvert jsonConvert, final Transport transport, final SocketAddress addr0, final SncpAction action, final Object... params) {
         return null;
     }
 
-    private SncpFuture<byte[]> remoteSncp0(final CompletionHandler handler, final BsonConvert bsonConvert, final Transport transport, final SocketAddress addr0, final SncpAction action, final Object... params) {
+    private SncpFuture<byte[]> remoteSncp0(final BsonConvert bsonConvert, final Transport transport, final SocketAddress addr0, final SncpAction action, final Object... params) {
         Type[] myparamtypes = action.paramTypes;
         if (action.addressSourceParamIndex >= 0) params[action.addressSourceParamIndex] = this.clientAddress;
         final BsonWriter writer = bsonConvert.pollBsonWriter(transport.getBufferSupplier()); // 将head写入
@@ -402,24 +383,6 @@ public final class SncpClient {
                         future.set(this.body);
                         transport.offerBuffer(buffer);
                         transport.offerConnection(false, conn);
-                        if (handler != null) {
-                            final Object handlerAttach = action.handlerAttachParamIndex >= 0 ? params[action.handlerAttachParamIndex] : null;
-                            final BsonReader reader = bsonConvert.pollBsonReader();
-                            try {
-                                reader.setBytes(this.body);
-                                int i;
-                                while ((i = (reader.readByte() & 0xff)) != 0) {
-                                    final Attribute attr = action.paramAttrs[i];
-                                    attr.set(params[i - 1], bsonConvert.convertFrom(attr.type(), reader));
-                                }
-                                Object rs = bsonConvert.convertFrom(action.resultTypes, reader);
-                                handler.completed(rs, handlerAttach);
-                            } catch (Exception e) {
-                                handler.failed(e, handlerAttach);
-                            } finally {
-                                bsonConvert.offerBsonReader(reader);
-                            }
-                        }
                     }
 
                     @Override
@@ -428,10 +391,6 @@ public final class SncpClient {
                         future.set(new RuntimeException(action.method + " sncp remote exec failed"));
                         transport.offerBuffer(buffer);
                         transport.offerConnection(true, conn);
-                        if (handler != null) {
-                            final Object handlerAttach = action.handlerAttachParamIndex >= 0 ? params[action.handlerAttachParamIndex] : null;
-                            handler.failed(exc, handlerAttach);
-                        }
                     }
                 });
             }
