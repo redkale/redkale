@@ -146,7 +146,7 @@ public final class SncpDynServlet extends SncpServlet {
 
         public abstract void action(final BsonReader in, final BsonWriter out) throws Throwable;
 
-        public final void callParameter(final BsonWriter out, final Object... params) {
+        public final void _callParameter(final BsonWriter out, final Object... params) {
             if (paramAttrs != null) {
                 for (int i = 1; i < paramAttrs.length; i++) {
                     org.redkale.util.Attribute attr = paramAttrs[i];
@@ -176,7 +176,7 @@ public final class SncpDynServlet extends SncpServlet {
          *          String arg2 = convert.convertFrom(paramTypes[2], in);
          *          int arg3 = convert.convertFrom(paramTypes[3], in);
          *          Object rs = service.change(arg1, arg2, arg3);
-         *          callParameter(out, arg1, arg2, arg3);
+         *          _callParameter(out, arg1, arg2, arg3);
          *          convert.convertTo(out, paramTypes[0], rs);
          *      }
          *  }
@@ -317,7 +317,7 @@ public final class SncpDynServlet extends SncpServlet {
                     }
                     mv.visitVarInsn(ASTORE, store);  //11
                 }
-                //------------------------- callParameter 方法 --------------------------------
+                //------------------------- _callParameter 方法 --------------------------------
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitVarInsn(ALOAD, 2);
                 if (paramClasses.length <= 5) {  //参数总数量
@@ -353,7 +353,7 @@ public final class SncpDynServlet extends SncpServlet {
                     }
                     mv.visitInsn(AASTORE);
                 }
-                mv.visitMethodInsn(INVOKEVIRTUAL, newDynName, "callParameter", "(" + convertWriterDesc + "[Ljava/lang/Object;)V", false);
+                mv.visitMethodInsn(INVOKEVIRTUAL, newDynName, "_callParameter", "(" + convertWriterDesc + "[Ljava/lang/Object;)V", false);
 
                 //-------------------------直接返回  或者  调用convertTo方法 --------------------------------
                 int maxStack = codes.length > 0 ? codes[codes.length - 1][1] : 1;

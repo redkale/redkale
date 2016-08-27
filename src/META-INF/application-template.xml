@@ -133,6 +133,7 @@
         <rest base="org.redkale.net.http.DefaultRestServlet" mustsign="false" autoload="true" includes="" excludes="">
             <!-- 
                value:  Service类名，列出的表示必须被加载的Service对象， 且对象的Resource资源名称只能是""。
+               ignore: 是否忽略，设置为true则不会加载该Service对象，默认值为false
             -->
             <service value="com.xxx.XXXXService"/>
         </rest>

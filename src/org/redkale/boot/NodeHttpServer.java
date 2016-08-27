@@ -29,9 +29,9 @@ import org.redkale.util.*;
 @NodeProtocol({"HTTP"})
 public class NodeHttpServer extends NodeServer {
 
-    protected boolean rest;
+    protected final boolean rest;
 
-    protected boolean sncp;
+    protected final boolean sncp;
 
     protected final HttpServer httpServer;
 
@@ -154,7 +154,7 @@ public class NodeHttpServer extends NodeServer {
         final String threadName = "[" + Thread.currentThread().getName() + "] ";
         final List<AbstractMap.SimpleEntry<String, String[]>> ss = sb == null ? null : new ArrayList<>();
 
-        final Class<? extends RestHttpServlet> baseServletClass = (Class<? extends RestHttpServlet>) Class.forName(restConf.getValue("servlet", DefaultRestServlet.class.getName()));
+        final Class baseServletClass = Class.forName(restConf.getValue("servlet", DefaultRestServlet.class.getName()));
 
         final boolean autoload = restConf.getBoolValue("autoload", true);
         final boolean mustsign = restConf.getBoolValue("mustsign", true); //是否只加载标记@RestService的Service类
@@ -183,7 +183,7 @@ public class NodeHttpServer extends NodeServer {
             if (!autoload && !includeValues.contains(stypename)) return;
             if (!restFilter.accept(stypename)) return;
 
-            RestHttpServlet servlet = RestServletBuilder.createRestServlet(baseServletClass, wrapper.getName(), stype, sncp);
+            RestHttpServlet servlet = Rest.createRestServlet(baseServletClass, wrapper.getName(), stype);
             if (servlet == null) return;
             if (finest) logger.finest("Create RestServlet = " + servlet);
             try {
