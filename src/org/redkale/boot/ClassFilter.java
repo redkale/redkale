@@ -421,18 +421,30 @@ public final class ClassFilter<T> {
         /**
          * 加载当前线程的classpath扫描所有class进行过滤
          *
-         * @param exclude 不需要扫描的文件夹， 可以为null
-         * @param filters 过滤器
+         * @param excludeFile 不需要扫描的文件夹， 可以为null
+         * @param excludeRegs 包含此关键字的文件将被跳过， 可以为null
+         * @param filters     过滤器
          *
          * @throws IOException 异常
          */
-        public static void load(final File exclude, final ClassFilter... filters) throws IOException {
+        public static void load(final File excludeFile, final String[] excludeRegs, final ClassFilter... filters) throws IOException {
             URLClassLoader loader = (URLClassLoader) Thread.currentThread().getContextClassLoader();
             List<URL> urlfiles = new ArrayList<>(2);
             List<URL> urljares = new ArrayList<>(2);
-            final URL exurl = exclude != null ? exclude.toURI().toURL() : null;
+            final URL exurl = excludeFile != null ? excludeFile.toURI().toURL() : null;
+            final Pattern[] excludePatterns = toPattern(excludeRegs);
             for (URL url : loader.getURLs()) {
                 if (exurl != null && exurl.sameFile(url)) continue;
+                if (excludePatterns != null) {
+                    boolean skip = false;
+                    for (Pattern p : excludePatterns) {
+                        if (p.matcher(url.toString()).matches()) {
+                            skip = false;
+                            break;
+                        }
+                    }
+                    if (skip) continue;
+                }
                 if (url.getPath().endsWith(".jar")) {
                     urljares.add(url);
                 } else {
@@ -477,7 +489,7 @@ public final class ClassFilter<T> {
                     files.clear();
                     File root = new File(url.getFile());
                     String rootpath = root.getPath();
-                    loadClassFiles(exclude, root, files);
+                    loadClassFiles(excludeFile, root, files);
                     for (File f : files) {
                         String classname = f.getPath().substring(rootpath.length() + 1, f.getPath().length() - 6).replace(File.separatorChar, '.');
                         if (classname.startsWith("javax.") || classname.startsWith("com.sun.")) continue;

@@ -27,32 +27,6 @@ import org.redkale.service.*;
 import org.redkale.source.*;
 import org.redkale.util.AnyValue.DefaultAnyValue;
 import org.redkale.util.*;
-import static java.lang.Class.forName;
-import static java.lang.Class.forName;
-import static java.lang.Class.forName;
-import static java.lang.Class.forName;
-import static java.lang.Class.forName;
-import static java.lang.Class.forName;
-import static java.lang.Class.forName;
-import static java.lang.Class.forName;
-import static java.lang.Class.forName;
-import static java.lang.Class.forName;
-import static java.lang.Class.forName;
-import static java.lang.Class.forName;
-import static java.lang.Class.forName;
-import static java.lang.Class.forName;
-import static java.lang.Class.forName;
-import static java.lang.Class.forName;
-import static java.lang.Class.forName;
-import static java.lang.Class.forName;
-import static java.lang.Class.forName;
-import static java.lang.Class.forName;
-import static java.lang.Class.forName;
-import static java.lang.Class.forName;
-import static java.lang.Class.forName;
-import static java.lang.Class.forName;
-import static java.lang.Class.forName;
-import static java.lang.Class.forName;
 
 /**
  * Server节点的初始化配置类
@@ -200,9 +174,9 @@ public abstract class NodeServer {
         ClassFilter<Service> serviceFilter = createServiceClassFilter();
         long s = System.currentTimeMillis();
         if (servletFilter == null) {
-            ClassFilter.Loader.load(application.getHome(), serviceFilter);
+            ClassFilter.Loader.load(application.getHome(), serverConf.getValue("excludelibs", "").split(";"), serviceFilter);
         } else {
-            ClassFilter.Loader.load(application.getHome(), serviceFilter, servletFilter);
+            ClassFilter.Loader.load(application.getHome(), serverConf.getValue("excludelibs", "").split(";"), serviceFilter, servletFilter);
         }
         long e = System.currentTimeMillis() - s;
         logger.info(this.getClass().getSimpleName() + " load filter class in " + e + " ms");
