@@ -5,11 +5,13 @@
  */
 package org.redkale.net.http;
 
+import java.lang.reflect.Field;
 import java.net.HttpCookie;
 import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import org.redkale.net.*;
+import org.redkale.service.Service;
 import org.redkale.util.*;
 import org.redkale.watch.WatchFactory;
 
@@ -37,6 +39,48 @@ public final class HttpServer extends Server<String, HttpContext, HttpRequest, H
 
     public void addHttpServlet(HttpServlet servlet, final String prefix, AnyValue conf, String... mappings) {
         this.prepare.addServlet(servlet, prefix, conf, mappings);
+    }
+
+    public <S extends Service, T extends RestHttpServlet> RestHttpServlet addRestServlet(Class<S> serviceType,
+        final String name, final S service, final Class<T> baseServletClass, final String prefix, AnyValue conf) {
+        RestHttpServlet servlet = null;
+        for (final HttpServlet item : ((HttpPrepareServlet) this.prepare).getServlets()) {
+            if (!(item instanceof RestHttpServlet)) continue;
+            try {
+                Field field = item.getClass().getDeclaredField(Rest.REST_SERVICE_FIELD_NAME);
+                if (serviceType.equals(field.getType())) {
+                    servlet = (RestHttpServlet) item;
+                    break;
+                }
+            } catch (NoSuchFieldException | SecurityException e) {
+                continue;
+            }
+        }
+        if (servlet == null) servlet = Rest.createRestServlet(baseServletClass, serviceType, false);
+        try { //若提供动态变更Service服务功能，则改Rest服务无法做出相应更新
+            Field field = servlet.getClass().getDeclaredField(Rest.REST_SERVICE_FIELD_NAME);
+            field.setAccessible(true);
+
+            Field mapfield = servlet.getClass().getDeclaredField(Rest.REST_SERVICEMAP_FIELD_NAME);
+            mapfield.setAccessible(true);
+
+            Service firstService = (Service) field.get(servlet);
+            if (name.isEmpty()) {
+                field.set(servlet, service);
+                firstService = service;
+            }
+            Map map = (Map) mapfield.get(servlet);
+            if (map == null && !name.isEmpty()) map = new HashMap();
+            if (map != null) {
+                map.put(name, service);
+                if (firstService != null) map.put("", firstService);
+            }
+            mapfield.set(servlet, map);
+        } catch (Exception e) {
+            throw new RuntimeException(serviceType + " generate rest servlet error", e);
+        }
+        this.prepare.addServlet(servlet, prefix, conf);
+        return servlet;
     }
 
     @Override

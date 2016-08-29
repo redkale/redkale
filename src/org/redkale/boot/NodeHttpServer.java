@@ -172,7 +172,6 @@ public class NodeHttpServer extends NodeServer {
         final ClassFilter restFilter = ClassFilter.create(restConf.getValue("includes", ""), restConf.getValue("excludes", ""), includeValues, excludeValues);
 
         super.interceptorServiceWrappers.forEach((wrapper) -> {
-            if (!wrapper.getName().isEmpty()) return;  //只加载resourceName为空的service
             final Class stype = wrapper.getType();
             RestService rs = (RestService) stype.getAnnotation(RestService.class);
             if (rs != null && rs.ignore()) return;
@@ -183,17 +182,8 @@ public class NodeHttpServer extends NodeServer {
             if (!autoload && !includeValues.contains(stypename)) return;
             if (!restFilter.accept(stypename)) return;
 
-            RestHttpServlet servlet = Rest.createRestServlet(baseServletClass, wrapper.getName(), stype, sncp);
-            if (servlet == null) return;
+            RestHttpServlet servlet = httpServer.addRestServlet(stype, wrapper.getName(), wrapper.getService(), baseServletClass, prefix, (AnyValue) null);
             if (finest) logger.finest("Create RestServlet = " + servlet);
-            try {
-                Field serviceField = servlet.getClass().getDeclaredField("_service");
-                serviceField.setAccessible(true);
-                serviceField.set(servlet, wrapper.getService());
-            } catch (Exception e) {
-                throw new RuntimeException(wrapper.getType() + " generate rest servlet error", e);
-            }
-            httpServer.addHttpServlet(servlet, prefix, (AnyValue) null);
             if (ss != null) {
                 String[] mappings = servlet.getClass().getAnnotation(WebServlet.class).value();
                 for (int i = 0; i < mappings.length; i++) {

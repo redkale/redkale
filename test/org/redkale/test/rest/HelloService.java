@@ -19,8 +19,17 @@ import org.redkale.util.Sheet;
  */
 public class HelloService implements Service {
 
+    private int nodeid;
+
     @Resource
     private DataSource source;
+
+    public HelloService() {
+    }
+
+    public HelloService(int nodeid) {
+        this.nodeid = nodeid;
+    }
 
     //增加记录
     public RetResult<HelloEntity> createHello(UserInfo info, HelloEntity entity) {
@@ -37,7 +46,7 @@ public class HelloService implements Service {
 
     //修改记录
     public void updateHello(@RestAddress String clientAddr, HelloEntity entity) { //通过 /hello/update?bean={...} 修改对象
-        System.out.println("修改记录: clientAddr = " + clientAddr + ", entity =" + entity);
+        System.out.println("修改记录-" + nodeid + ": clientAddr = " + clientAddr + ", entity =" + entity);
         if (entity != null) entity.setUpdatetime(System.currentTimeMillis());
         if (source != null) source.update(entity);
     }
@@ -66,4 +75,5 @@ public class HelloService implements Service {
     public HelloEntity findHello(@RestParam("#") int id) {  //通过 /hello/find/1234 查询对象
         return source.find(HelloEntity.class, id);
     }
+
 }

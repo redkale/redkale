@@ -1,7 +1,6 @@
 package org.redkale.test.rest;
 
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.util.*;
 import javax.annotation.Resource;
 import org.redkale.net.http.*;
@@ -16,15 +15,16 @@ public class _DynHelloRestServlet1 extends SimpleRestServlet {
     @Resource
     private HelloService _service;
 
+    @Resource
+    private Map<String, HelloService> _servicemap;
+
     public static void main(String[] args) throws Throwable {
         final int port = 8888;
         HelloService service = new HelloService();
         HttpServer server = new HttpServer();
-        RestHttpServlet servlet = Rest.createRestServlet(SimpleRestServlet.class, "", HelloService.class, false);
-        Field field = servlet.getClass().getDeclaredField("_service");
-        field.setAccessible(true);
-        field.set(servlet, service);
-        server.addHttpServlet(servlet, "/pipes", null, "/hello/*");
+
+        server.addRestServlet(HelloService.class, "", service, SimpleRestServlet.class, "/pipes", null);
+        server.addRestServlet(HelloService.class, "my-res", new HelloService(3), SimpleRestServlet.class, "/pipes", null);
 
         DefaultAnyValue conf = DefaultAnyValue.create("port", "" + port);
         server.init(conf);
@@ -35,6 +35,7 @@ public class _DynHelloRestServlet1 extends SimpleRestServlet {
         entity.setHelloname("my name");
         Map<String, String> headers = new HashMap<>();
         headers.put("hello-res", "my res");
+        //headers.put(Rest.REST_HEADER_RESOURCE_NAME, "my-res");
         String url = "http://127.0.0.1:" + port + "/pipes/hello/update?entity={}&bean2={}";
         System.out.println(Utility.postHttpContent(url, headers, null));
 
@@ -43,68 +44,76 @@ public class _DynHelloRestServlet1 extends SimpleRestServlet {
     @AuthIgnore
     @WebAction(url = "/hello/create")
     public void create(HttpRequest req, HttpResponse resp) throws IOException {
+        HelloService service = _servicemap == null ? _service : _servicemap.get(req.getHeader(Rest.REST_HEADER_RESOURCE_NAME, ""));
         HelloEntity bean = req.getJsonParameter(HelloEntity.class, "bean");
         UserInfo user = currentUser(req);
-        RetResult<HelloEntity> result = _service.createHello(user, bean);
+        RetResult<HelloEntity> result = service.createHello(user, bean);
         resp.finishJson(result);
     }
 
     @AuthIgnore
     @WebAction(url = "/hello/delete/")
     public void delete(HttpRequest req, HttpResponse resp) throws IOException {
+        HelloService service = _servicemap == null ? _service : _servicemap.get(req.getHeader(Rest.REST_HEADER_RESOURCE_NAME, ""));
         int id = Integer.parseInt(req.getRequstURILastPath());
-        _service.deleteHello(id);
+        service.deleteHello(id);
         resp.finishJson(RetResult.success());
     }
 
     @AuthIgnore
     @WebAction(url = "/hello/update")
     public void update(HttpRequest req, HttpResponse resp) throws IOException {
+        HelloService service = _servicemap == null ? _service : _servicemap.get(req.getHeader(Rest.REST_HEADER_RESOURCE_NAME, ""));
         String clientaddr = req.getRemoteAddr();
         HelloEntity bean = req.getJsonParameter(HelloEntity.class, "bean");
-        _service.updateHello(clientaddr, bean);
+        service.updateHello(clientaddr, bean);
         resp.finishJson(RetResult.success());
     }
 
     @AuthIgnore
     @WebAction(url = "/hello/partupdate")
     public void partupdate(HttpRequest req, HttpResponse resp) throws IOException {
+        HelloService service = _servicemap == null ? _service : _servicemap.get(req.getHeader(Rest.REST_HEADER_RESOURCE_NAME, ""));
         HelloEntity bean = req.getJsonParameter(HelloEntity.class, "bean");
         String[] cols = req.getJsonParameter(String[].class, "cols");
-        _service.updateHello(bean, cols);
+        service.updateHello(bean, cols);
         resp.finishJson(RetResult.success());
     }
 
     @AuthIgnore
     @WebAction(url = "/hello/query")
     public void query(HttpRequest req, HttpResponse resp) throws IOException {
+        HelloService service = _servicemap == null ? _service : _servicemap.get(req.getHeader(Rest.REST_HEADER_RESOURCE_NAME, ""));
         HelloBean bean = req.getJsonParameter(HelloBean.class, "bean");
         Flipper flipper = req.getFlipper();
-        Sheet<HelloEntity> result = _service.queryHello(bean, flipper);
+        Sheet<HelloEntity> result = service.queryHello(bean, flipper);
         resp.finishJson(result);
     }
 
     @AuthIgnore
     @WebAction(url = "/hello/list")
     public void list(HttpRequest req, HttpResponse resp) throws IOException {
+        HelloService service = _servicemap == null ? _service : _servicemap.get(req.getHeader(Rest.REST_HEADER_RESOURCE_NAME, ""));
         HelloBean bean = req.getJsonParameter(HelloBean.class, "bean");
-        List<HelloEntity> result = _service.queryHello(bean);
+        List<HelloEntity> result = service.queryHello(bean);
         resp.finishJson(result);
     }
 
     @AuthIgnore
     @WebAction(url = "/hello/find/")
     public void find(HttpRequest req, HttpResponse resp) throws IOException {
+        HelloService service = _servicemap == null ? _service : _servicemap.get(req.getHeader(Rest.REST_HEADER_RESOURCE_NAME, ""));
         int id = Integer.parseInt(req.getRequstURILastPath());
-        HelloEntity bean = _service.findHello(id);
+        HelloEntity bean = service.findHello(id);
         resp.finishJson(bean);
     }
 
     @AuthIgnore
     @WebAction(url = "/hello/jsfind/")
     public void jsfind(HttpRequest req, HttpResponse resp) throws IOException {
+        HelloService service = _servicemap == null ? _service : _servicemap.get(req.getHeader(Rest.REST_HEADER_RESOURCE_NAME, ""));
         int id = Integer.parseInt(req.getRequstURILastPath());
-        HelloEntity bean = _service.findHello(id);
+        HelloEntity bean = service.findHello(id);
         resp.finishJsResult("varhello", bean);
     }
 }

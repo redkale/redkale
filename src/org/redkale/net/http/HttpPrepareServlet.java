@@ -107,7 +107,7 @@ public final class HttpPrepareServlet extends PrepareServlet<String, HttpContext
         }
         synchronized (allMapStrings) {
             for (String mapping : mappings) {
-                if(mapping == null) continue;
+                if (mapping == null) continue;
                 if (!prefix.toString().isEmpty()) mapping = prefix + mapping;
                 if (this.allMapStrings.containsKey(mapping)) {
                     Class old = this.allMapStrings.get(mapping);
@@ -156,6 +156,10 @@ public final class HttpPrepareServlet extends PrepareServlet<String, HttpContext
 
     public HttpServlet getResourceServlet() {
         return this.resourceHttpServlet;
+    }
+
+    Set<HttpServlet> getServlets() {
+        return this.servlets;
     }
 
     @Override

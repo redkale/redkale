@@ -27,6 +27,12 @@ import org.redkale.source.Flipper;
  */
 public final class Rest {
 
+    public static final String REST_HEADER_RESOURCE_NAME = "rest-resource-name";
+
+    static final String REST_SERVICE_FIELD_NAME = "_service";
+
+    static final String REST_SERVICEMAP_FIELD_NAME = "_servicemap"; //如果只有name=""的Service资源，则实例中_servicemap必须为null
+
     private static final Set<String> EXCLUDERMETHODS = new HashSet<>();
 
     static {
@@ -38,14 +44,14 @@ public final class Rest {
     private Rest() {
     }
 
-    public static String getWebModuleName(Class<? extends Service> serviceType) {
+    static String getWebModuleName(Class<? extends Service> serviceType) {
         final RestService controller = serviceType.getAnnotation(RestService.class);
         if (controller == null) return serviceType.getSimpleName().replaceAll("Service.*$", "").toLowerCase();
         if (controller.ignore()) return null;
         return (!controller.value().isEmpty()) ? controller.value() : serviceType.getSimpleName().replaceAll("Service.*$", "").toLowerCase();
     }
 
-    public static <T extends RestHttpServlet> T createRestServlet(final Class<T> baseServletClass, final String serviceName, final Class<? extends Service> serviceType, final boolean sncp) {
+    static <T extends RestHttpServlet> T createRestServlet(final Class<T> baseServletClass, final Class<? extends Service> serviceType, final boolean sncp) {
         if (baseServletClass == null || serviceType == null) return null;
         if (!RestHttpServlet.class.isAssignableFrom(baseServletClass)) return null;
         int mod = baseServletClass.getModifiers();
@@ -66,13 +72,6 @@ public final class Rest {
         if (controller != null && controller.ignore()) return null; //标记为ignore=true不创建Servlet
         ClassLoader loader = Sncp.class.getClassLoader();
         String newDynName = serviceTypeString.substring(0, serviceTypeString.lastIndexOf('/') + 1) + "_Dyn" + serviceType.getSimpleName().replaceAll("Service.*$", "") + "RestServlet";
-        if (!serviceName.isEmpty()) {
-            boolean normal = true;
-            for (char ch : serviceName.toCharArray()) {//含特殊字符的使用hash值
-                if (!((ch >= '0' && ch <= '9') || ch == '_' || (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z'))) normal = false;
-            }
-            newDynName += "_" + (normal ? serviceName : Sncp.hash(serviceName));
-        }
         try {
             return ((Class<T>) Class.forName(newDynName.replace('/', '.'))).newInstance();
         } catch (Exception ex) {
@@ -113,16 +112,19 @@ public final class Rest {
             av0.visitEnd();
             classMap.put("type", serviceType.getName());
             classMap.put("url", urlpath);
-            if (!serviceName.isEmpty()) classMap.put("resource", serviceName);
             classMap.put("moduleid", moduleid);
             classMap.put("repair", repair);
         }
 
         {  //注入 @Resource  private XXXService _service;
-            fv = cw.visitField(ACC_PRIVATE, "_service", serviceDesc, null, null);
+            fv = cw.visitField(ACC_PRIVATE, REST_SERVICE_FIELD_NAME, serviceDesc, null, null);
             av0 = fv.visitAnnotation("Ljavax/annotation/Resource;", true);
-            av0.visit("name", serviceName);
+            av0.visit("name", "");
             av0.visitEnd();
+            fv.visitEnd();
+        }
+        { //_servicemap字段 Map<String, XXXService>
+            fv = cw.visitField(ACC_PRIVATE, REST_SERVICEMAP_FIELD_NAME, "Ljava/util/Map;", "Ljava/util/Map<Ljava/lang/String;" + serviceDesc + ">;", null);
             fv.visitEnd();
         }
         { //构造函数
@@ -182,9 +184,34 @@ public final class Rest {
                 av0 = mv.visitAnnotation(authDesc, true);
                 av0.visitEnd();
             }
+
+            mv.visitVarInsn(ALOAD, 0);
+            mv.visitFieldInsn(GETFIELD, newDynName, REST_SERVICEMAP_FIELD_NAME, "Ljava/util/Map;");
+            Label lmapif = new Label();
+            mv.visitJumpInsn(IFNONNULL, lmapif);
+            mv.visitVarInsn(ALOAD, 0);
+            mv.visitFieldInsn(GETFIELD, newDynName, REST_SERVICE_FIELD_NAME, serviceDesc);
+            Label lserif = new Label();
+            mv.visitJumpInsn(GOTO, lserif);
+            mv.visitLabel(lmapif);
+
+            mv.visitFrame(Opcodes.F_SAME, 0, null, 0, null);
+
+            mv.visitVarInsn(ALOAD, 0);
+            mv.visitFieldInsn(GETFIELD, newDynName, REST_SERVICEMAP_FIELD_NAME, "Ljava/util/Map;");
+            mv.visitVarInsn(ALOAD, 1);
+            mv.visitLdcInsn(REST_HEADER_RESOURCE_NAME);
+            mv.visitLdcInsn("");
+            mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", "getHeader", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
+            mv.visitMethodInsn(INVOKEINTERFACE, "java/util/Map", "get", "(Ljava/lang/Object;)Ljava/lang/Object;", true);
+            mv.visitTypeInsn(CHECKCAST, serviceTypeString);
+            mv.visitLabel(lserif);
+            mv.visitFrame(Opcodes.F_SAME1, 0, null, 1, new Object[]{serviceTypeString});
+            mv.visitVarInsn(ASTORE, 3);
+
             final int maxStack = 3 + params.length;
             List<int[]> varInsns = new ArrayList<>();
-            int maxLocals = 3;
+            int maxLocals = 4;
             boolean hasVisitWebAction = false;
             final String jsvar = entry.jsvar.isEmpty() ? null : entry.jsvar;
             int argIndex = 0;
@@ -495,8 +522,9 @@ public final class Rest {
                 actionMap.put("methods", entry.methods);
             }
 
-            mv.visitVarInsn(ALOAD, 0); //调用this
-            mv.visitFieldInsn(GETFIELD, newDynName, "_service", serviceDesc);
+            //mv.visitVarInsn(ALOAD, 0); //调用this
+            //mv.visitFieldInsn(GETFIELD, newDynName, REST_SERVICE_FIELD_NAME, serviceDesc);
+            mv.visitVarInsn(ALOAD, 3);
             for (int[] ins : varInsns) {
                 mv.visitVarInsn(ins[0], ins[1]);
             }
