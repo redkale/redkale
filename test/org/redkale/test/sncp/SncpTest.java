@@ -154,7 +154,7 @@ public class SncpTest {
                     final Transport transport = new Transport("", WatchFactory.root(), "", newBufferPool(), newChannelGroup(), null, set);
                     SncpTestService service = Sncp.createLocalService("", null, ResourceFactory.root(), SncpTestService.class, addr, transport, null);
                     ResourceFactory.root().inject(service);
-                    server.addService(new ServiceWrapper(service, "", "", new HashSet<>(), null));
+                    server.addSncpServlet(new ServiceWrapper(service, "", "", new HashSet<>(), null));
                     System.out.println(service);
                     AnyValue.DefaultAnyValue conf = new AnyValue.DefaultAnyValue();
                     conf.addValue("host", "0.0.0.0");
@@ -187,7 +187,7 @@ public class SncpTest {
                     //String name, WatchFactory, ObjectPool<ByteBuffer>, AsynchronousChannelGroup, InetSocketAddress clientAddress, Collection<InetSocketAddress>
                     final Transport transport = new Transport("", WatchFactory.root(), "", newBufferPool(), newChannelGroup(), null, set);
                     Service service = Sncp.createLocalService("", null, ResourceFactory.root(), SncpTestService.class, addr, transport, null);
-                    server.addService(new ServiceWrapper(service, "", "", new HashSet<>(), null));
+                    server.addSncpServlet(new ServiceWrapper(service, "", "", new HashSet<>(), null));
                     AnyValue.DefaultAnyValue conf = new AnyValue.DefaultAnyValue();
                     conf.addValue("host", "0.0.0.0");
                     conf.addValue("port", "" + port2);

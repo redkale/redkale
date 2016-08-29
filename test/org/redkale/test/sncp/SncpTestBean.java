@@ -18,6 +18,7 @@ import org.redkale.convert.json.*;
 public class SncpTestBean implements FilterBean {
 
     @Id
+    @GeneratedValue
     private long id;
 
     private String content;

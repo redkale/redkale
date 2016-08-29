@@ -10,6 +10,7 @@ import java.util.*;
 import java.util.concurrent.atomic.*;
 import org.redkale.convert.bson.*;
 import org.redkale.net.*;
+import org.redkale.service.Service;
 import org.redkale.util.*;
 import org.redkale.watch.*;
 
@@ -37,11 +38,16 @@ public final class SncpServer extends Server<DLong, SncpContext, SncpRequest, Sn
         super.init(config);
     }
 
-    public void addService(ServiceWrapper entry) {
+    public void addSncpServlet(ServiceWrapper entry) {
         for (Class type : entry.getTypes()) {
             SncpDynServlet sds = new SncpDynServlet(BsonFactory.root().getConvert(), entry.getName(), type, entry.getService());
             this.prepare.addServlet(sds, null, entry.getConf());
         }
+    }
+
+    public <T extends Service> void addSncpServlet(Class<T> serviceType, String name, T service, AnyValue conf) {
+        SncpDynServlet sds = new SncpDynServlet(BsonFactory.root().getConvert(), name, serviceType, service);
+        this.prepare.addServlet(sds, null, conf);
     }
 
     public List<SncpServlet> getSncpServlets() {
@@ -56,16 +62,16 @@ public final class SncpServer extends Server<DLong, SncpContext, SncpRequest, Sn
         AtomicLong cycleBufferCounter = watch == null ? new AtomicLong() : watch.createWatchNumber("SNCP_" + port + ".Buffer.cycleCounter");
         final int rcapacity = Math.max(this.bufferCapacity, 4 * 1024);
         ObjectPool<ByteBuffer> bufferPool = new ObjectPool<>(createBufferCounter, cycleBufferCounter, this.bufferPoolSize,
-                (Object... params) -> ByteBuffer.allocateDirect(rcapacity), null, (e) -> {
-                    if (e == null || e.isReadOnly() || e.capacity() != rcapacity) return false;
-                    e.clear();
-                    return true;
-                });
+            (Object... params) -> ByteBuffer.allocateDirect(rcapacity), null, (e) -> {
+                if (e == null || e.isReadOnly() || e.capacity() != rcapacity) return false;
+                e.clear();
+                return true;
+            });
         AtomicLong createResponseCounter = watch == null ? new AtomicLong() : watch.createWatchNumber("SNCP_" + port + ".Response.creatCounter");
         AtomicLong cycleResponseCounter = watch == null ? new AtomicLong() : watch.createWatchNumber("SNCP_" + port + ".Response.cycleCounter");
         ObjectPool<Response> responsePool = SncpResponse.createPool(createResponseCounter, cycleResponseCounter, this.responsePoolSize, null);
         SncpContext sncpcontext = new SncpContext(this.serverStartTime, this.logger, executor, rcapacity, bufferPool, responsePool,
-                this.maxbody, this.charset, this.address, this.prepare, this.watch, this.readTimeoutSecond, this.writeTimeoutSecond);
+            this.maxbody, this.charset, this.address, this.prepare, this.watch, this.readTimeoutSecond, this.writeTimeoutSecond);
         responsePool.setCreator((Object... params) -> new SncpResponse(sncpcontext, new SncpRequest(sncpcontext)));
         return sncpcontext;
     }

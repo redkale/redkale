@@ -6,7 +6,6 @@
 package org.redkale.boot;
 
 import java.io.*;
-import static java.lang.Class.forName;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
 import java.net.InetSocketAddress;
@@ -166,7 +165,7 @@ public abstract class NodeServer {
         initResource(); //给 DataSource、CacheSource 注册依赖注入时的监听回调事件。
         String interceptorClass = this.serverConf.getValue("interceptor", "");
         if (!interceptorClass.isEmpty()) {
-            Class clazz = forName(interceptorClass);
+            Class clazz = Class.forName(interceptorClass);
             this.interceptor = (NodeInterceptor) clazz.newInstance();
         }
 
@@ -247,7 +246,7 @@ public abstract class NodeServer {
                     NodeSncpServer sncpServer = application.findNodeSncpServer(sncpAddr);
                     Set<String> gs = application.findSncpGroups(sameGroupTransport, diffGroupTransports);
                     ServiceWrapper wrapper = new ServiceWrapper(CacheSourceService.class, (Service) source, resourceName, sncpServer.getSncpGroup(), gs, null);
-                    sncpServer.getSncpServer().addService(wrapper);
+                    sncpServer.getSncpServer().addSncpServlet(wrapper);
                     logger.info("[" + Thread.currentThread().getName() + "] Load Service " + wrapper.getService());
                 }
                 logger.info("[" + Thread.currentThread().getName() + "] Load Source " + source);

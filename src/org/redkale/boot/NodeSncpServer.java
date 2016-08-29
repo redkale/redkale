@@ -27,7 +27,7 @@ public class NodeSncpServer extends NodeServer {
     private NodeSncpServer(Application application, AnyValue serconf) {
         super(application, createServer(application, serconf));
         this.sncpServer = (SncpServer) this.server;
-        this.consumer = sncpServer == null ? null : x -> sncpServer.addService(x);
+        this.consumer = sncpServer == null ? null : x -> sncpServer.addSncpServlet(x);
     }
 
     public static NodeServer createNodeServer(Application application, AnyValue serconf) {

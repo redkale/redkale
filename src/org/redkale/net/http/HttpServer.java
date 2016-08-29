@@ -42,7 +42,12 @@ public final class HttpServer extends Server<String, HttpContext, HttpRequest, H
     }
 
     public <S extends Service, T extends RestHttpServlet> RestHttpServlet addRestServlet(Class<S> serviceType,
-        final String name, final S service, final Class<T> baseServletClass, final String prefix, AnyValue conf) {
+        final String name, final S service, final Class<T> baseServletClass, final String prefix) {
+        return addRestServlet(serviceType, name, service, baseServletClass, prefix, false, null);
+    }
+
+    public <S extends Service, T extends RestHttpServlet> RestHttpServlet addRestServlet(Class<S> serviceType,
+        final String name, final S service, final Class<T> baseServletClass, final String prefix, final boolean sncp, AnyValue conf) {
         RestHttpServlet servlet = null;
         for (final HttpServlet item : ((HttpPrepareServlet) this.prepare).getServlets()) {
             if (!(item instanceof RestHttpServlet)) continue;
@@ -53,10 +58,9 @@ public final class HttpServer extends Server<String, HttpContext, HttpRequest, H
                     break;
                 }
             } catch (NoSuchFieldException | SecurityException e) {
-                continue;
             }
         }
-        if (servlet == null) servlet = Rest.createRestServlet(baseServletClass, serviceType, false);
+        if (servlet == null) servlet = Rest.createRestServlet(baseServletClass, serviceType, sncp);
         try { //若提供动态变更Service服务功能，则改Rest服务无法做出相应更新
             Field field = servlet.getClass().getDeclaredField(Rest.REST_SERVICE_FIELD_NAME);
             field.setAccessible(true);

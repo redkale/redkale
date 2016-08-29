@@ -182,8 +182,8 @@ public class NodeHttpServer extends NodeServer {
             if (!autoload && !includeValues.contains(stypename)) return;
             if (!restFilter.accept(stypename)) return;
 
-            RestHttpServlet servlet = httpServer.addRestServlet(stype, wrapper.getName(), wrapper.getService(), baseServletClass, prefix, (AnyValue) null);
-            if (finest) logger.finest("Create RestServlet = " + servlet);
+            RestHttpServlet servlet = httpServer.addRestServlet(stype, wrapper.getName(), wrapper.getService(), baseServletClass, prefix, sncp, (AnyValue) null);
+            if (finest) logger.finest("Create RestServlet[resource=" + wrapper.getName() + "] = " + servlet);
             if (ss != null) {
                 String[] mappings = servlet.getClass().getAnnotation(WebServlet.class).value();
                 for (int i = 0; i < mappings.length; i++) {
