@@ -25,7 +25,7 @@ public @interface RestService {
 
     boolean ignore() default false; //是否屏蔽该类的转换
 
-    String value() default ""; //模块名, 只能是模板名,不能含特殊字符
+    String value() default ""; //模块名, 只能是模块名,不能含特殊字符
 
     boolean repair() default true; //同&#64;WebServlet的repair属性
 
