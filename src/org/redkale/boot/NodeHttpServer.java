@@ -183,7 +183,7 @@ public class NodeHttpServer extends NodeServer {
             if (!autoload && !includeValues.contains(stypename)) return;
             if (!restFilter.accept(stypename)) return;
 
-            RestHttpServlet servlet = Rest.createRestServlet(baseServletClass, wrapper.getName(), stype);
+            RestHttpServlet servlet = Rest.createRestServlet(baseServletClass, wrapper.getName(), stype, sncp);
             if (servlet == null) return;
             if (finest) logger.finest("Create RestServlet = " + servlet);
             try {

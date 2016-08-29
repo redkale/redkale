@@ -45,7 +45,7 @@ public final class Rest {
         return (!controller.value().isEmpty()) ? controller.value() : serviceType.getSimpleName().replaceAll("Service.*$", "").toLowerCase();
     }
 
-    public static <T extends RestHttpServlet> T createRestServlet(final Class<T> baseServletClass, final String serviceName, final Class<? extends Service> serviceType) {
+    public static <T extends RestHttpServlet> T createRestServlet(final Class<T> baseServletClass, final String serviceName, final Class<? extends Service> serviceType, final boolean sncp) {
         if (baseServletClass == null || serviceType == null) return null;
         if (!RestHttpServlet.class.isAssignableFrom(baseServletClass)) return null;
         int mod = baseServletClass.getModifiers();
@@ -190,8 +190,33 @@ public final class Rest {
             for (final Parameter param : params) {
                 Map<String, Object> paramMap = new LinkedHashMap<>();
                 final Class ptype = param.getType();
+                String n = null;
+                RestHeader annhead = null;
+                RestCookie anncookie = null;
+                RestAddress annaddr = null;
+                if (!sncp) { //SNCP协议中忽略参数中特定的注解，此处获取的只是SNCP请求端信息，并不是真实用户请求端的信息
+                    annhead = param.getAnnotation(RestHeader.class);
+                    if (annhead != null) {
+                        n = annhead.value();
+                        if (n.isEmpty()) throw new RuntimeException("@RestHeader.value is illegal in " + method);
+                    }
+                    anncookie = param.getAnnotation(RestCookie.class);
+                    if (anncookie != null) {
+                        if (annhead != null) throw new RuntimeException("@RestCookie and @RestHeader cannot on the same Parameter in " + method);
+                        if (ptype != String.class) throw new RuntimeException("@RestCookie must on String Parameter in " + method);
+                        n = anncookie.value();
+                        if (n.isEmpty()) throw new RuntimeException("@RestCookie.value is illegal in " + method);
+                    }
+                    annaddr = param.getAnnotation(RestAddress.class);
+                    if (annaddr != null) {
+                        if (annhead != null) throw new RuntimeException("@RestAddress and @RestHeader cannot on the same Parameter in " + method);
+                        if (anncookie != null) throw new RuntimeException("@RestAddress and @RestCookie cannot on the same Parameter in " + method);
+                        if (ptype != String.class) throw new RuntimeException("@RestAddress must on String Parameter in " + method);
+                    }
+                }
                 RestParam annpara = param.getAnnotation(RestParam.class);
-                String n = annpara == null || annpara.value().isEmpty() ? null : annpara.value();
+                if (n == null) n = annpara == null || annpara.value().isEmpty() ? null : annpara.value();
+
                 if (n == null) {
                     if (param.isNamePresent()) {
                         n = param.getName();
@@ -199,7 +224,8 @@ public final class Rest {
                         n = (++argIndex > 1) ? ("bean" + argIndex) : "bean";
                     }
                 }
-                if ((entry.name.startsWith("find") || entry.name.startsWith("delete")) && params.length == 1) {
+                if (annhead == null && anncookie == null && annaddr == null
+                    && (entry.name.startsWith("find") || entry.name.startsWith("delete")) && params.length == 1) {
                     if (ptype.isPrimitive() || ptype == String.class) n = "#";
                 }
                 if (!hasVisitWebAction) {
@@ -222,11 +248,17 @@ public final class Rest {
                     actionMap.put("methods", entry.methods);
                 }
                 final String pname = n; //参数名
-                final boolean hd = annpara == null ? false : annpara.header(); //是否取getHeader 而不是 getParameter
+                final boolean ishead = annhead != null; //是否取getHeader 而不是 getParameter
+                final boolean iscookie = anncookie != null; //是否取getCookie
 
                 paramMap.put("name", pname);
                 paramMap.put("type", ptype.getName());
-                if ("#".equals(pname)) { //从request.getRequstURI 中去参数
+                if (annaddr != null) { //HttpRequest.getRemoteAddr
+                    mv.visitVarInsn(ALOAD, 1);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", "getRemoteAddr", "()Ljava/lang/String;", false);
+                    mv.visitVarInsn(ASTORE, maxLocals);
+                    varInsns.add(new int[]{ALOAD, maxLocals});
+                } else if ("#".equals(pname)) { //从request.getRequstURI 中去参数
                     if (ptype == boolean.class) {
                         mv.visitVarInsn(ALOAD, 1);
                         mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", "getRequstURILastPath", "()Ljava/lang/String;", false);
@@ -290,14 +322,14 @@ public final class Rest {
                     mv.visitVarInsn(ALOAD, 1);
                     mv.visitLdcInsn(pname);
                     mv.visitInsn(ICONST_0);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", hd ? "getBooleanHeader" : "getBooleanParameter", "(Ljava/lang/String;Z)Z", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", ishead ? "getBooleanHeader" : "getBooleanParameter", "(Ljava/lang/String;Z)Z", false);
                     mv.visitVarInsn(ISTORE, maxLocals);
                     varInsns.add(new int[]{ILOAD, maxLocals});
                 } else if (ptype == byte.class) {
                     mv.visitVarInsn(ALOAD, 1);
                     mv.visitLdcInsn(pname);
                     mv.visitLdcInsn("0");
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", hd ? "getHeader" : "getParameter", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", ishead ? "getHeader" : "getParameter", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
                     mv.visitMethodInsn(INVOKESTATIC, "java/lang/Byte", "parseByte", "(Ljava/lang/String;)B", false);
                     mv.visitVarInsn(ISTORE, maxLocals);
                     varInsns.add(new int[]{ILOAD, maxLocals});
@@ -305,14 +337,14 @@ public final class Rest {
                     mv.visitVarInsn(ALOAD, 1);
                     mv.visitLdcInsn(pname);
                     mv.visitInsn(ICONST_0);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", hd ? "getShortHeader" : "getShortParameter", "(Ljava/lang/String;S)S", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", ishead ? "getShortHeader" : "getShortParameter", "(Ljava/lang/String;S)S", false);
                     mv.visitVarInsn(ISTORE, maxLocals);
                     varInsns.add(new int[]{ILOAD, maxLocals});
                 } else if (ptype == char.class) {
                     mv.visitVarInsn(ALOAD, 1);
                     mv.visitLdcInsn(pname);
                     mv.visitLdcInsn("0");
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", hd ? "getHeader" : "getParameter", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", ishead ? "getHeader" : "getParameter", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
                     mv.visitInsn(ICONST_0);
                     mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/String", "charAt", "(I)C", false);
                     mv.visitVarInsn(ISTORE, maxLocals);
@@ -321,21 +353,21 @@ public final class Rest {
                     mv.visitVarInsn(ALOAD, 1);
                     mv.visitLdcInsn(pname);
                     mv.visitInsn(ICONST_0);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", hd ? "getIntHeader" : "getIntParameter", "(Ljava/lang/String;I)I", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", ishead ? "getIntHeader" : "getIntParameter", "(Ljava/lang/String;I)I", false);
                     mv.visitVarInsn(ISTORE, maxLocals);
                     varInsns.add(new int[]{ILOAD, maxLocals});
                 } else if (ptype == float.class) {
                     mv.visitVarInsn(ALOAD, 1);
                     mv.visitLdcInsn(pname);
                     mv.visitInsn(FCONST_0);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", hd ? "getFloatHeader" : "getFloatParameter", "(Ljava/lang/String;F)F", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", ishead ? "getFloatHeader" : "getFloatParameter", "(Ljava/lang/String;F)F", false);
                     mv.visitVarInsn(FSTORE, maxLocals);
                     varInsns.add(new int[]{FLOAD, maxLocals});
                 } else if (ptype == long.class) {
                     mv.visitVarInsn(ALOAD, 1);
                     mv.visitLdcInsn(pname);
                     mv.visitInsn(LCONST_0);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", hd ? "getLongHeader" : "getLongParameter", "(Ljava/lang/String;J)J", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", ishead ? "getLongHeader" : "getLongParameter", "(Ljava/lang/String;J)J", false);
                     mv.visitVarInsn(LSTORE, maxLocals);
                     varInsns.add(new int[]{LLOAD, maxLocals});
                     maxLocals++;
@@ -343,7 +375,7 @@ public final class Rest {
                     mv.visitVarInsn(ALOAD, 1);
                     mv.visitLdcInsn(pname);
                     mv.visitInsn(DCONST_0);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", hd ? "getDoubleHeader" : "getDoubleParameter", "(Ljava/lang/String;D)D", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", ishead ? "getDoubleHeader" : "getDoubleParameter", "(Ljava/lang/String;D)D", false);
                     mv.visitVarInsn(DSTORE, maxLocals);
                     varInsns.add(new int[]{DLOAD, maxLocals});
                     maxLocals++;
@@ -351,7 +383,7 @@ public final class Rest {
                     mv.visitVarInsn(ALOAD, 1);
                     mv.visitLdcInsn(pname);
                     mv.visitLdcInsn("");
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", hd ? "getHeader" : "getParameter", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", iscookie ? "getCookie" : (ishead ? "getHeader" : "getParameter"), "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
                     mv.visitVarInsn(ASTORE, maxLocals);
                     varInsns.add(new int[]{ALOAD, maxLocals});
                 } else if (ptype == Flipper.class) {
@@ -371,7 +403,7 @@ public final class Rest {
                     mv.visitVarInsn(ALOAD, 1);
                     mv.visitLdcInsn(Type.getType(Type.getDescriptor(ptype)));
                     mv.visitLdcInsn(pname);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", hd ? "getJsonHeader" : "getJsonParameter", "(Ljava/lang/Class;Ljava/lang/String;)Ljava/lang/Object;", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", ishead ? "getJsonHeader" : "getJsonParameter", "(Ljava/lang/Class;Ljava/lang/String;)Ljava/lang/Object;", false);
                     mv.visitTypeInsn(CHECKCAST, ptype.getName().replace('.', '/'));
                     mv.visitVarInsn(ASTORE, maxLocals);
                     varInsns.add(new int[]{ALOAD, maxLocals});

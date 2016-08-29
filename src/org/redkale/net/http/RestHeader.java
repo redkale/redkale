@@ -6,11 +6,11 @@
 package org.redkale.net.http;
 
 import java.lang.annotation.*;
-import static java.lang.annotation.ElementType.PARAMETER;
+import static java.lang.annotation.ElementType.*;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * 只能依附在Service类的方法的参数上
+ * 只能注解于Service类的方法的参数或参数内的字段
  * <p>
  * 详情见: http://redkale.org
  *
@@ -18,10 +18,9 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  */
 @Inherited
 @Documented
-@Target({PARAMETER})
+@Target({PARAMETER, FIELD})
 @Retention(RUNTIME)
-public @interface RestParam {
+public @interface RestHeader {
 
     String value(); //参数名
-
 }
