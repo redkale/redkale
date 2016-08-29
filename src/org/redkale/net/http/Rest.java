@@ -56,6 +56,7 @@ public final class Rest {
         final String webServletDesc = Type.getDescriptor(WebServlet.class);
         final String httpRequestDesc = Type.getDescriptor(HttpRequest.class);
         final String httpResponseDesc = Type.getDescriptor(HttpResponse.class);
+        final String attrDesc = Type.getDescriptor(org.redkale.util.Attribute.class);
         final String authDesc = Type.getDescriptor(HttpBaseServlet.AuthIgnore.class);
         final String actionDesc = Type.getDescriptor(HttpBaseServlet.WebAction.class);
         final String serviceTypeString = serviceType.getName().replace('.', '/');
@@ -135,6 +136,7 @@ public final class Rest {
         }
 
         final List<MappingEntry> entrys = new ArrayList<>();
+        final Map<String, org.redkale.util.Attribute> restAttributes = new LinkedHashMap<>();
 
         for (final Method method : serviceType.getMethods()) {
             Class[] extypes = method.getExceptionTypes();
@@ -407,6 +409,68 @@ public final class Rest {
                     mv.visitTypeInsn(CHECKCAST, ptype.getName().replace('.', '/'));
                     mv.visitVarInsn(ASTORE, maxLocals);
                     varInsns.add(new int[]{ALOAD, maxLocals});
+
+                    //构建 RestHeader、RestCookie、RestAddress 等赋值操作
+                    Class loop = ptype;
+                    Set<String> fields = new HashSet<>();
+                    Map<String, String> attrParaNames = new LinkedHashMap<>();
+                    do {
+                        for (Field field : loop.getDeclaredFields()) {
+                            if (Modifier.isStatic(field.getModifiers())) continue;
+                            if (Modifier.isFinal(field.getModifiers())) continue;
+                            if (fields.contains(field.getName())) continue;
+                            RestHeader rh = field.getAnnotation(RestHeader.class);
+                            RestCookie rc = field.getAnnotation(RestCookie.class);
+                            RestAddress ra = field.getAnnotation(RestAddress.class);
+                            if (rh == null && rc == null && ra == null) continue;
+                            if (rh != null && field.getType() != String.class) throw new RuntimeException("@RestHeader must on String Field in " + field);
+                            if (rc != null && field.getType() != String.class) throw new RuntimeException("@RestCookie must on String Field in " + field);
+                            if (ra != null && field.getType() != String.class) throw new RuntimeException("@RestAddress must on String Field in " + field);
+                            org.redkale.util.Attribute attr = org.redkale.util.Attribute.create(loop, field);
+                            String attrFieldName;
+                            String restname = "";
+                            if (rh != null) {
+                                attrFieldName = "_redkale_attr_header_" + restAttributes.size();
+                                restname = rh.value();
+                            } else if (rc != null) {
+                                attrFieldName = "_redkale_attr_cookie_" + restAttributes.size();
+                                restname = rc.value();
+                            } else if (ra != null) {
+                                attrFieldName = "_redkale_attr_address_" + restAttributes.size();
+                            } else {
+                                continue;
+                            }
+                            restAttributes.put(attrFieldName, attr);
+                            attrParaNames.put(attrFieldName, restname);
+                            fields.add(field.getName());
+                        }
+                    } while ((loop = loop.getSuperclass()) != Object.class);
+
+                    if (!attrParaNames.isEmpty()) { //参数存在 RestHeader、RestCookie、RestAddress字段
+                        mv.visitVarInsn(ALOAD, maxLocals);
+                        Label lif = new Label();
+                        mv.visitJumpInsn(IFNULL, lif);  //if(bean != null) {
+                        for (Map.Entry<String, String> en : attrParaNames.entrySet()) {
+                            mv.visitVarInsn(ALOAD, 0);
+                            mv.visitFieldInsn(GETFIELD, newDynName, en.getKey(), attrDesc);
+                            mv.visitVarInsn(ALOAD, maxLocals);
+                            mv.visitVarInsn(ALOAD, 1);
+                            if (en.getKey().contains("_header_")) {
+                                mv.visitLdcInsn(en.getValue());
+                                mv.visitLdcInsn("");
+                                mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", "getHeader", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
+                            } else if (en.getKey().contains("_cookie_")) {
+                                mv.visitLdcInsn(en.getValue());
+                                mv.visitLdcInsn("");
+                                mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", "getCookie", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
+                            } else if (en.getKey().contains("_address_")) {
+                                mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", "getRemoteAddr", "()Ljava/lang/String;", false);
+                            }
+                            mv.visitMethodInsn(INVOKEINTERFACE, "org/redkale/util/Attribute", "set", "(Ljava/lang/Object;Ljava/lang/Object;)V", true);
+                        }
+                        mv.visitLabel(lif); // end if }
+                        mv.visitFrame(Opcodes.F_APPEND, 1, new Object[]{ptype.getName().replace('.', '/')}, 0, null);
+                    }
                 }
                 maxLocals++;
                 paramMaps.add(paramMap);
@@ -671,7 +735,13 @@ public final class Rest {
             mv.visitMaxs(maxStack, maxLocals);
             actionMap.put("params", paramMaps);
             actionMaps.add(actionMap);
-        } // end  for each        
+        } // end  for each 
+
+        for (String attrname : restAttributes.keySet()) {
+            fv = cw.visitField(ACC_PRIVATE, attrname, attrDesc, null, null);
+            fv.visitEnd();
+        }
+
         classMap.put("actions", actionMaps);
 
         { //toString函数
@@ -691,7 +761,13 @@ public final class Rest {
             }
         }.loadClass(newDynName.replace('/', '.'), bytes);
         try {
-            return ((Class<T>) newClazz).newInstance();
+            T obj = ((Class<T>) newClazz).newInstance();
+            for (Map.Entry<String, org.redkale.util.Attribute> en : restAttributes.entrySet()) {
+                Field attrField = newClazz.getDeclaredField(en.getKey());
+                attrField.setAccessible(true);
+                attrField.set(obj, en.getValue());
+            }
+            return obj;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

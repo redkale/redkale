@@ -15,15 +15,12 @@ import org.redkale.service.*;
  */
 public abstract class RetCodes {
 
-    static {
-        load(RetCodes.class);
-    }
+    protected static final Map<Integer, String> rets = new HashMap<>();
+
 
     protected RetCodes() {
     }
     //-----------------------------------------------------------------------------------------------------------
-
-    protected static final Map<Integer, String> rets = new HashMap<>();
 
     protected static void load(Class clazz) {
         for (Field field : clazz.getFields()) {
@@ -158,4 +155,9 @@ public abstract class RetCodes {
 
     @RetLabel("用户设备ID无效")
     public static final int RET_USER_APPTOKEN_ILLEGAL = 30020030;
+    
+    
+    static {
+        load(RetCodes.class);
+    }
 }

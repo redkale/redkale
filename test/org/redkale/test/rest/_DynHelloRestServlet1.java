@@ -1,18 +1,44 @@
 package org.redkale.test.rest;
 
 import java.io.IOException;
-import java.util.List;
+import java.lang.reflect.Field;
+import java.util.*;
 import javax.annotation.Resource;
 import org.redkale.net.http.*;
 import org.redkale.service.RetResult;
 import org.redkale.source.Flipper;
 import org.redkale.util.*;
+import org.redkale.util.AnyValue.DefaultAnyValue;
 
 @WebServlet(value = {"/hello/*"}, repair = true)
-public class _DynHelloRestServlet extends SimpleRestServlet {
+public class _DynHelloRestServlet1 extends SimpleRestServlet {
 
     @Resource
     private HelloService _service;
+
+    public static void main(String[] args) throws Throwable {
+        final int port = 8888;
+        HelloService service = new HelloService();
+        HttpServer server = new HttpServer();
+        RestHttpServlet servlet = Rest.createRestServlet(SimpleRestServlet.class, "", HelloService.class, false);
+        Field field = servlet.getClass().getDeclaredField("_service");
+        field.setAccessible(true);
+        field.set(servlet, service);
+        server.addHttpServlet(servlet, "/pipes", null, "/hello/*");
+
+        DefaultAnyValue conf = DefaultAnyValue.create("port", "" + port);
+        server.init(conf);
+        server.start();
+        Thread.sleep(100);
+
+        HelloEntity entity = new HelloEntity();
+        entity.setHelloname("my name");
+        Map<String, String> headers = new HashMap<>();
+        headers.put("hello-res", "my res");
+        String url = "http://127.0.0.1:" + port + "/pipes/hello/update?entity={}&bean2={}";
+        System.out.println(Utility.postHttpContent(url, headers, null));
+
+    }
 
     @AuthIgnore
     @WebAction(url = "/hello/create")
@@ -34,8 +60,9 @@ public class _DynHelloRestServlet extends SimpleRestServlet {
     @AuthIgnore
     @WebAction(url = "/hello/update")
     public void update(HttpRequest req, HttpResponse resp) throws IOException {
+        String clientaddr = req.getRemoteAddr();
         HelloEntity bean = req.getJsonParameter(HelloEntity.class, "bean");
-        _service.updateHello(bean);
+        _service.updateHello(clientaddr, bean);
         resp.finishJson(RetResult.success());
     }
 

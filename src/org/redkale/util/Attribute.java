@@ -44,17 +44,17 @@ import static jdk.internal.org.objectweb.asm.Opcodes.*;
  *      public String get(Record obj) {
  *          return obj.getName();
  *      }
- * 
+ *
  *      &#64;Override
  *      public void set(Record obj, String value) {
  *          obj.setName(value);
  *      }
- * 
+ *
  *      &#64;Override
  *      public Class type() {
  *          return String.class;
  *      }
- * 
+ *
  *      &#64;Override
  *      public Class declaringClass() {
  *          return Record.class;
@@ -421,6 +421,8 @@ public interface Attribute<T, F> {
             column = tgetter.getReturnType();
         } else if (tsetter != null) {
             column = tsetter.getParameterTypes()[0];
+        } else if (fieldtype == null) {
+            throw new RuntimeException("[" + clazz + "]have no public field or setter or getter");
         }
         final Class pcolumn = column;
         if (column.isPrimitive()) column = java.lang.reflect.Array.get(java.lang.reflect.Array.newInstance(column, 1), 0).getClass();

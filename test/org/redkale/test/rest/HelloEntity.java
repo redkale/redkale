@@ -2,7 +2,10 @@ package org.redkale.test.rest;
 
 import javax.persistence.Id;
 import org.redkale.convert.json.JsonFactory;
+import org.redkale.net.http.*;
+import org.redkale.source.VirtualEntity;
 
+@VirtualEntity
 public class HelloEntity {
 
     @Id
@@ -15,6 +18,12 @@ public class HelloEntity {
     private long updatetime;
 
     private long createtime;
+
+    @RestHeader("hello-res")
+    private String resname;
+    
+    @RestAddress
+    private String clientaddr;
 
     public int getHelloid() {
         return helloid;
@@ -54,6 +63,22 @@ public class HelloEntity {
 
     public void setCreator(int creator) {
         this.creator = creator;
+    }
+
+    public String getClientaddr() {
+        return clientaddr;
+    }
+
+    public void setClientaddr(String clientaddr) {
+        this.clientaddr = clientaddr;
+    }
+
+    public String getResname() {
+        return resname;
+    }
+
+    public void setResname(String resname) {
+        this.resname = resname;
     }
 
     @Override

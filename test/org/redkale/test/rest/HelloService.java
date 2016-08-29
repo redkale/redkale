@@ -9,7 +9,6 @@ import org.redkale.source.DataSource;
 import org.redkale.source.Flipper;
 import org.redkale.util.Sheet;
 
-
 /**
  * 类说明:
  * Flipper : Source组件中的翻页对象
@@ -37,18 +36,19 @@ public class HelloService implements Service {
     }
 
     //修改记录
-    public void updateHello(HelloEntity entity) { //通过 /hello/update?bean={...} 修改对象
-        entity.setUpdatetime(System.currentTimeMillis());
-        source.update(entity);
+    public void updateHello(@RestAddress String clientAddr, HelloEntity entity) { //通过 /hello/update?bean={...} 修改对象
+        System.out.println("修改记录: clientAddr = " + clientAddr + ", entity =" + entity);
+        if (entity != null) entity.setUpdatetime(System.currentTimeMillis());
+        if (source != null) source.update(entity);
     }
 
     //修改记录
-    @RestMapping(name = "partupdate")  
+    @RestMapping(name = "partupdate")
     public void updateHello(HelloEntity entity, @RestParam("cols") String[] columns) { //通过 /hello/partupdate?bean={...} 修改对象
         entity.setUpdatetime(System.currentTimeMillis());
         source.updateColumns(entity, columns);
     }
-    
+
     //查询Sheet列表
     public Sheet<HelloEntity> queryHello(HelloBean bean, Flipper flipper) { //通过 /hello/query/offset:0/limit:20?bean={...} 查询Sheet列表
         return source.querySheet(HelloEntity.class, flipper, bean);

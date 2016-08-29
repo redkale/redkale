@@ -82,6 +82,25 @@ public class AsmMethodVisitor {
         if (debug) System.out.println("mv.visitVarInsn(" + opcodes[opcode] + ", " + var + ");");
     }
 
+    public void visitFrame(int type, int nLocal, Object[] local, int nStack, Object[] stack) {
+        visitor.visitFrame(type, nLocal, local, nStack, stack);
+        if (debug) {
+            String typestr = "" + type;
+            if (type == -1) {
+                typestr = "Opcodes.F_NEW";
+            } else if (type == 1) {
+                typestr = "Opcodes.F_APPEND";
+            } else if (type == 2) {
+                typestr = "Opcodes.F_CHOP";
+            } else if (type == 3) {
+                typestr = "Opcodes.F_SAME";
+            } else if (type == 4) {
+                typestr = "Opcodes.F_SAME1";
+            }
+            System.out.println("mv.visitFrame(" + typestr + ", " + nLocal + ", " + Arrays.toString(local) + ", " + nStack + ", " + Arrays.toString(stack) + ");");
+        }
+    }
+
     public void visitJumpInsn(int opcode, Label var) {   //调用此方法的 ClassWriter 必须由 COMPUTE_FRAMES 构建
         visitor.visitJumpInsn(opcode, var);
         if (debug) {
