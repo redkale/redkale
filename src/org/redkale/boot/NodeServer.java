@@ -402,8 +402,9 @@ public abstract class NodeServer {
         Set<InetSocketAddress> addrs = new HashSet();
         transports.forEach(t -> addrs.addAll(Arrays.asList(t.getRemoteAddresses())));
         Transport first = transports.get(0);
-        Transport newTransport = new Transport(groupid, application.findGroupProtocol(first.getName()), application.getWatchFactory(),
-            application.findGroupKind(first.getName()), application.transportBufferPool, application.transportChannelGroup, this.sncpAddress, addrs);
+        GroupInfo ginfo = application.findGroupInfo(first.getName());
+        Transport newTransport = new Transport(groupid, ginfo.getProtocol(), application.getWatchFactory(),
+            ginfo.getKind(), application.transportBufferPool, application.transportChannelGroup, this.sncpAddress, addrs);
         synchronized (application.resourceFactory) {
             transport = application.resourceFactory.find(groupid, Transport.class);
             if (transport == null) {
@@ -425,10 +426,11 @@ public abstract class NodeServer {
                 }
                 return transport;
             }
-            Set<InetSocketAddress> addrs = application.findGlobalGroup(group);
+            GroupInfo ginfo = application.findGroupInfo(group);
+            Set<InetSocketAddress> addrs = ginfo.copyAddrs();
             if (addrs == null) throw new RuntimeException("Not found <group> = " + group + " on <resources> ");
-            transport = new Transport(group, application.findGroupProtocol(group), application.getWatchFactory(),
-                application.findGroupKind(group), application.transportBufferPool, application.transportChannelGroup, this.sncpAddress, addrs);
+            transport = new Transport(group, ginfo.getProtocol(), application.getWatchFactory(),
+                ginfo.getKind(), application.transportBufferPool, application.transportChannelGroup, this.sncpAddress, addrs);
             application.resourceFactory.register(group, transport);
         }
         return transport;

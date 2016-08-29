@@ -65,11 +65,7 @@ public final class Application {
 
     final Map<InetSocketAddress, String> globalNodes = new HashMap<>();
 
-    final Map<String, Set<InetSocketAddress>> globalGroups = new HashMap<>();
-
-    final Map<String, String> globalGroupKinds = new HashMap<>();
-
-    final Map<String, String> globalGroupProtocols = new HashMap<>();
+    final Map<String, GroupInfo> globalGroups = new HashMap<>();
 
     final InetAddress localAddress;
 
@@ -79,8 +75,6 @@ public final class Application {
 
     final List<NodeServer> servers = new CopyOnWriteArrayList<>();
 
-    CountDownLatch servicecdl;  //会出现两次赋值
-
     final ObjectPool<ByteBuffer> transportBufferPool;
 
     final ExecutorService transportExecutor;
@@ -88,6 +82,8 @@ public final class Application {
     final AsynchronousChannelGroup transportChannelGroup;
 
     final ResourceFactory resourceFactory = ResourceFactory.root();
+
+    CountDownLatch servicecdl;  //会出现两次赋值
 
     //--------------------------------------------------------------------------------------------    
     private final boolean singletonrun;
@@ -333,16 +329,14 @@ public final class Application {
                 if (!"TCP".equalsIgnoreCase(protocol) && !"UDP".equalsIgnoreCase(protocol)) {
                     throw new RuntimeException("Not supported Transport Protocol " + conf.getValue("protocol"));
                 }
-                Set<InetSocketAddress> addrs = globalGroups.get(group);
-                if (addrs == null) {
-                    addrs = new LinkedHashSet<>();
-                    globalGroupProtocols.put(group, protocol);
-                    globalGroupKinds.put(group, conf.getValue("kind", ""));
-                    globalGroups.put(group, addrs);
+                GroupInfo ginfo = globalGroups.get(group);
+                if (ginfo == null) {
+                    ginfo = new GroupInfo(group, protocol, conf.getValue("kind", ""), new LinkedHashSet<>());
+                    globalGroups.put(group, ginfo);
                 }
                 for (AnyValue node : conf.getAnyValues("node")) {
                     final InetSocketAddress addr = new InetSocketAddress(node.getValue("addr"), node.getIntValue("port"));
-                    addrs.add(addr);
+                    ginfo.addrs.add(addr);
                     String oldgroup = globalNodes.get(addr);
                     if (oldgroup != null) throw new RuntimeException(addr + " had one more group " + (globalNodes.get(addr)));
                     globalNodes.put(addr, group);
@@ -575,20 +569,9 @@ public final class Application {
         return null;
     }
 
-    String findGroupProtocol(String group) {
+    GroupInfo findGroupInfo(String group) {
         if (group == null) return null;
-        return globalGroupProtocols.get(group);
-    }
-
-    String findGroupKind(String group) {
-        if (group == null) return null;
-        return globalGroupKinds.get(group);
-    }
-
-    Set<InetSocketAddress> findGlobalGroup(String group) {
-        if (group == null) return null;
-        Set<InetSocketAddress> set = globalGroups.get(group);
-        return set == null ? null : new LinkedHashSet<>(set);
+        return globalGroups.get(group);
     }
 
     private void shutdown() throws Exception {
