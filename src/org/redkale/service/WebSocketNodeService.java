@@ -34,7 +34,7 @@ public class WebSocketNodeService extends WebSocketNode implements Service {
     }
 
     @Override
-    public List<String> getOnlineRemoteAddresses(@DynTargetAddress InetSocketAddress targetAddress, Serializable groupid) {
+    public List<String> getOnlineRemoteAddresses(@RpcTargetAddress InetSocketAddress targetAddress, Serializable groupid) {
         if (localSncpAddress == null || !localSncpAddress.equals(targetAddress)) return remoteOnlineRemoteAddresses(targetAddress, groupid);
         final Set<String> engineids = localNodes.get(groupid);
         if (engineids == null || engineids.isEmpty()) return null;
@@ -49,7 +49,7 @@ public class WebSocketNodeService extends WebSocketNode implements Service {
     }
 
     @Override
-    public int sendMessage(@DynTargetAddress InetSocketAddress addr, Serializable groupid, boolean recent, Serializable message, boolean last) {
+    public int sendMessage(@RpcTargetAddress InetSocketAddress addr, Serializable groupid, boolean recent, Serializable message, boolean last) {
         final Set<String> engineids = localNodes.get(groupid);
         if (engineids == null || engineids.isEmpty()) return RETCODE_GROUP_EMPTY;
         int code = RETCODE_GROUP_EMPTY;

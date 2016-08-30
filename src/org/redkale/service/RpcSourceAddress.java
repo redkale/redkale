@@ -10,7 +10,7 @@ import static java.lang.annotation.ElementType.PARAMETER;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * SNCP协议中标记为目标地址参数, 该注解只能标记在类型为SocketAddress或InetSocketAddress的参数上。
+ * SNCP协议中标记为来源地址参数, 该注解只能标记在类型为SocketAddress或InetSocketAddress的参数上。
  *
  *
  * <p> 详情见: http://redkale.org
@@ -20,6 +20,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Documented
 @Target({PARAMETER})
 @Retention(RUNTIME)
-public @interface DynTargetAddress {
-    
+public @interface RpcSourceAddress {
+
 }

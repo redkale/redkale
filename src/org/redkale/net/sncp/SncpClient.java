@@ -69,9 +69,9 @@ public final class SncpClient {
                 for (int i = 0; i < anns.length; i++) {
                     if (anns[i].length > 0) {
                         for (Annotation ann : anns[i]) {
-                            if (ann.annotationType() == DynTargetAddress.class && SocketAddress.class.isAssignableFrom(params[i])) {
+                            if (ann.annotationType() == RpcTargetAddress.class && SocketAddress.class.isAssignableFrom(params[i])) {
                                 targetAddrIndex = i;
-                            } else if (ann.annotationType() == DynSourceAddress.class && SocketAddress.class.isAssignableFrom(params[i])) {
+                            } else if (ann.annotationType() == RpcSourceAddress.class && SocketAddress.class.isAssignableFrom(params[i])) {
                                 sourceAddrIndex = i;
                             }
                         }

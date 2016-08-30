@@ -33,7 +33,7 @@ public abstract class WebSocketNode {
     @Resource(name = Application.RESNAME_SERVER_ADDR)
     protected InetSocketAddress localSncpAddress;  //为SncpServer的服务address
 
-    @DynRemote
+    @RpcRemote
     protected WebSocketNode remoteNode;
 
     //存放所有用户分布在节点上的队列信息,Set<InetSocketAddress> 为 sncpnode 的集合
@@ -58,16 +58,16 @@ public abstract class WebSocketNode {
         });
     }
 
-    protected abstract List<String> getOnlineRemoteAddresses(@DynTargetAddress InetSocketAddress targetAddress, Serializable groupid);
+    protected abstract List<String> getOnlineRemoteAddresses(@RpcTargetAddress InetSocketAddress targetAddress, Serializable groupid);
 
-    protected abstract int sendMessage(@DynTargetAddress InetSocketAddress targetAddress, Serializable groupid, boolean recent, Serializable message, boolean last);
+    protected abstract int sendMessage(@RpcTargetAddress InetSocketAddress targetAddress, Serializable groupid, boolean recent, Serializable message, boolean last);
 
     protected abstract void connect(Serializable groupid, InetSocketAddress addr);
 
     protected abstract void disconnect(Serializable groupid, InetSocketAddress addr);
 
     //--------------------------------------------------------------------------------
-    protected List<String> remoteOnlineRemoteAddresses(@DynTargetAddress InetSocketAddress targetAddress, Serializable groupid) {
+    protected List<String> remoteOnlineRemoteAddresses(@RpcTargetAddress InetSocketAddress targetAddress, Serializable groupid) {
         if (remoteNode == null) return null;
         try {
             return remoteNode.getOnlineRemoteAddresses(targetAddress, groupid);

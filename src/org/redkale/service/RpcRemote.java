@@ -6,20 +6,19 @@
 package org.redkale.service;
 
 import java.lang.annotation.*;
-import static java.lang.annotation.ElementType.PARAMETER;
+import static java.lang.annotation.ElementType.*;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * SNCP协议中标记为来源地址参数, 该注解只能标记在类型为SocketAddress或InetSocketAddress的参数上。
- *
+ * 用于在 Service 中创建自身远程模式的对象
  *
  * <p> 详情见: http://redkale.org
  * @author zhangjx
  */
 @Inherited
 @Documented
-@Target({PARAMETER})
+@Target({FIELD})
 @Retention(RUNTIME)
-public @interface DynSourceAddress {
+public @interface RpcRemote {
 
 }

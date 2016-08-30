@@ -749,7 +749,7 @@ public abstract class Sncp {
                     for (Field field : loop.getDeclaredFields()) {
                         int mod = field.getModifiers();
                         if (Modifier.isFinal(mod) || Modifier.isStatic(mod)) continue;
-                        if (field.getAnnotation(DynRemote.class) == null) continue;
+                        if (field.getAnnotation(RpcRemote.class) == null) continue;
                         if (!field.getType().isAssignableFrom(newClazz)) continue;
                         field.setAccessible(true);
                         if (remoteTransport == null) {
