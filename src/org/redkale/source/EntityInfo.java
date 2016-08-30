@@ -379,6 +379,50 @@ public final class EntityInfo<T> {
         return l.intValue() >= this.logLevel;
     }
 
+    protected String formatToString(Object value) {
+        if (value == null) return null;
+        if (value instanceof CharSequence) return new StringBuilder().append('\'').append(value.toString().replace("'", "\\'")).append('\'').toString();
+//        final Class t = value.getClass();
+//        if (t == int[].class) {
+//            int[] val = (int[]) value;
+//            if (val.length == 0) return "";
+//            StringBuilder sb = new StringBuilder();
+//            sb.append(val[0]);
+//            for (int i = 1; i < val.length; i++) {
+//                sb.append(';').append(val[i]);
+//            }
+//            return sb.toString();
+//        } else if (t == long[].class) {
+//            long[] val = (long[]) value;
+//            if (val.length == 0) return "";
+//            StringBuilder sb = new StringBuilder();
+//            sb.append(val[0]);
+//            for (int i = 1; i < val.length; i++) {
+//                sb.append(';').append(val[i]);
+//            }
+//            return sb.toString();
+//        } else if (t == String[].class) {
+//            String[] val = (String[]) value;
+//            if (val.length == 0) return "";
+//            StringBuilder sb = new StringBuilder();
+//            sb.append(val[0]);
+//            for (int i = 1; i < val.length; i++) {
+//                sb.append(';').append(val[i]);
+//            }
+//            return sb.toString();
+//        } else if (t == short[].class) {
+//            short[] val = (short[]) value;
+//            if (val.length == 0) return "";
+//            StringBuilder sb = new StringBuilder();
+//            sb.append(val[0]);
+//            for (int i = 1; i < val.length; i++) {
+//                sb.append(';').append(val[i]);
+//            }
+//            return sb.toString();
+//        }
+        return String.valueOf(value);
+    }
+
     protected T getValue(final SelectColumn sels, final ResultSet set) throws SQLException {
         T obj = creator.create();
         for (Attribute<T, Serializable> attr : queryAttributes) {
@@ -398,6 +442,82 @@ public final class EntityInfo<T> {
                         o = ((Number) o).doubleValue();
                     } else if (t == byte.class) {
                         o = ((Number) o).byteValue();
+//                    } else if (t == short[].class) {
+//                        String s = o.toString();
+//                        if (s.isEmpty()) {
+//                            o = new short[0];
+//                        } else {
+//                            String[] strs = o.toString().split(";");
+//                            short[] v = new short[strs.length];
+//                            int k = 0;
+//                            for (int i = 0; i < strs.length; i++) {
+//                                if (strs[i].isEmpty()) continue;
+//                                v[k++] = Short.parseShort(strs[i]);
+//                            }
+//                            if (k == v.length) {
+//                                o = v;
+//                            } else {
+//                                o = new short[k];
+//                                System.arraycopy(v, 0, o, 0, k);
+//                            }
+//                        }
+//                    } else if (t == int[].class) {
+//                        String s = o.toString();
+//                        if (s.isEmpty()) {
+//                            o = new int[0];
+//                        } else {
+//                            String[] strs = o.toString().split(";");
+//                            int[] v = new int[strs.length];
+//                            int k = 0;
+//                            for (int i = 0; i < strs.length; i++) {
+//                                if (strs[i].isEmpty()) continue;
+//                                v[k++] = Integer.parseInt(strs[i]);
+//                            }
+//                            if (k == v.length) {
+//                                o = v;
+//                            } else {
+//                                o = new int[k];
+//                                System.arraycopy(v, 0, o, 0, k);
+//                            }
+//                        }
+//                    } else if (t == long[].class) {
+//                        String s = o.toString();
+//                        if (s.isEmpty()) {
+//                            o = new long[0];
+//                        } else {
+//                            String[] strs = o.toString().split(";");
+//                            long[] v = new long[strs.length];
+//                            int k = 0;
+//                            for (int i = 0; i < strs.length; i++) {
+//                                if (strs[i].isEmpty()) continue;
+//                                v[k++] = Long.parseLong(strs[i]);
+//                            }
+//                            if (k == v.length) {
+//                                o = v;
+//                            } else {
+//                                o = new long[k];
+//                                System.arraycopy(v, 0, o, 0, k);
+//                            }
+//                        }
+//                    } else if (t == String[].class) {
+//                        String s = o.toString();
+//                        if (s.isEmpty()) {
+//                            o = new String[0];
+//                        } else {
+//                            String[] strs = o.toString().split(";");
+//                            String[] v = new String[strs.length];
+//                            int k = 0;
+//                            for (int i = 0; i < strs.length; i++) {
+//                                if (strs[i].isEmpty()) continue;
+//                                v[k++] = strs[i];
+//                            }
+//                            if (k == v.length) {
+//                                o = v;
+//                            } else {
+//                                o = new String[k];
+//                                System.arraycopy(v, 0, o, 0, k);
+//                            }
+//                        }
                     }
                 }
                 attr.set(obj, o);

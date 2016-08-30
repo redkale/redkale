@@ -693,7 +693,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
         try {
             if (!info.isVirtualEntity()) {
                 String sql = "UPDATE " + info.getTable(id) + " SET " + info.getSQLColumn(null, column) + " = "
-                    + FilterNode.formatToString(value) + " WHERE " + info.getPrimarySQLColumn() + " = " + FilterNode.formatToString(id);
+                    + info.formatToString(value) + " WHERE " + info.getPrimarySQLColumn() + " = " + FilterNode.formatToString(id);
                 if (debug.get()) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
                 final Statement stmt = conn.createStatement();
                 stmt.execute(sql);
@@ -744,7 +744,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
                 CharSequence where = node.createSQLExpress(info, joinTabalis);
 
                 String sql = "UPDATE " + info.getTable(node) + " a SET " + info.getSQLColumn("a", column) + " = "
-                    + FilterNode.formatToString(value) + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
+                    + info.formatToString(value) + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
                 if (debug.get()) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
                 final Statement stmt = conn.createStatement();
                 stmt.execute(sql);
@@ -949,7 +949,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
                 attrs.add(attr);
                 if (!virtual) {
                     if (setsql.length() > 0) setsql.append(", ");
-                    setsql.append(info.getSQLColumn(null, col)).append(" = ").append(FilterNode.formatToString(attr.get(bean)));
+                    setsql.append(info.getSQLColumn(null, col)).append(" = ").append(info.formatToString(attr.get(bean)));
                 }
             }
             if (!virtual) {
@@ -1007,7 +1007,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
                 attrs.add(attr);
                 if (!virtual) {
                     if (setsql.length() > 0) setsql.append(", ");
-                    setsql.append(info.getSQLColumn("a", col)).append(" = ").append(FilterNode.formatToString(attr.get(bean)));
+                    setsql.append(info.getSQLColumn("a", col)).append(" = ").append(info.formatToString(attr.get(bean)));
                 }
             }
             if (!virtual) {
