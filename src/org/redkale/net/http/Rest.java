@@ -442,6 +442,7 @@ public final class Rest {
                     Set<String> fields = new HashSet<>();
                     Map<String, String> attrParaNames = new LinkedHashMap<>();
                     do {
+                        if(loop == null || loop.isInterface()) break; //接口时getSuperclass可能会得到null
                         for (Field field : loop.getDeclaredFields()) {
                             if (Modifier.isStatic(field.getModifiers())) continue;
                             if (Modifier.isFinal(field.getModifiers())) continue;
