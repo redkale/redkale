@@ -180,7 +180,7 @@ public final class Rest {
             mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC, entry.name, "(" + httpRequestDesc + httpResponseDesc + ")V", null, new String[]{"java/io/IOException"}));
             //mv.setDebug(true);
             mv.debugLine();
-            if (entry.authignore) { //设置 AuthIgnore
+            if (!entry.auth) { //设置 AuthIgnore
                 av0 = mv.visitAnnotation(authDesc, true);
                 av0.visitEnd();
             }
@@ -442,7 +442,7 @@ public final class Rest {
                     Set<String> fields = new HashSet<>();
                     Map<String, String> attrParaNames = new LinkedHashMap<>();
                     do {
-                        if(loop == null || loop.isInterface()) break; //接口时getSuperclass可能会得到null
+                        if (loop == null || loop.isInterface()) break; //接口时getSuperclass可能会得到null
                         for (Field field : loop.getDeclaredFields()) {
                             if (Modifier.isStatic(field.getModifiers())) continue;
                             if (Modifier.isFinal(field.getModifiers())) continue;
@@ -835,7 +835,7 @@ public final class Rest {
             this.name = n;
             this.mappingMethod = method;
             this.methods = mapping.methods();
-            this.authignore = mapping.authignore();
+            this.auth = mapping.auth();
             this.actionid = mapping.actionid();
             this.contentType = mapping.contentType();
             this.jsvar = mapping.jsvar();
@@ -849,7 +849,7 @@ public final class Rest {
 
         public final String[] methods;
 
-        public final boolean authignore;
+        public final boolean auth;
 
         public final int actionid;
 

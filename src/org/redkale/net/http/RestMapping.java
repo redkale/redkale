@@ -35,7 +35,7 @@ public @interface RestMapping {
      */
     String name() default "";
 
-    boolean authignore() default true; //是否跳过鉴权，默认跳过 
+    boolean auth() default false; //是否鉴权，默认不鉴权
 
     int actionid() default 0; //操作ID值，鉴权时用到, 对应&#64;WebAction.actionid
 
