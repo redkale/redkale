@@ -71,8 +71,7 @@ public final class EntityCache<T> {
                 java.lang.reflect.Field field = type.getDeclaredField(m);
                 if (field.getAnnotation(Transient.class) != null) return false;
                 Column column = field.getAnnotation(Column.class);
-                if (column != null && !column.updatable()) return false;
-                return true;
+                return (column == null || column.updatable());
             } catch (Exception e) {
                 return true;
             }
