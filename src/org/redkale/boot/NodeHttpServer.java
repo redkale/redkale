@@ -127,7 +127,7 @@ public class NodeHttpServer extends NodeServer {
                 ss.add(new AbstractMap.SimpleEntry<>(clazz.getName(), mappings));
             }
         }
-        if (ss != null) {
+        if (ss != null && sb != null) {
             Collections.sort(ss, (AbstractMap.SimpleEntry<String, String[]> o1, AbstractMap.SimpleEntry<String, String[]> o2) -> o1.getKey().compareTo(o2.getKey()));
             int max = 0;
             for (AbstractMap.SimpleEntry<String, String[]> as : ss) {
@@ -142,13 +142,15 @@ public class NodeHttpServer extends NodeServer {
             }
         }
         if (sb != null && sb.length() > 0) logger.log(Level.INFO, sb.toString());
-        if (rest) loadRestServlet(servletsConf);
+        if (rest && serverConf != null) {
+            for (AnyValue restConf : serverConf.getAnyValues("rest")) {
+                loadRestServlet(prefix, restConf);
+            }
+        }
     }
 
-    protected void loadRestServlet(final AnyValue servletsConf) throws Exception {
+    protected void loadRestServlet(final String prefix, final AnyValue restConf) throws Exception {
         if (!rest) return;
-        final String prefix = servletsConf == null ? "" : servletsConf.getValue("path", "");
-        AnyValue restConf = serverConf == null ? null : serverConf.getAnyValue("rest");
         if (restConf == null) return; //不存在REST服务
         final StringBuilder sb = logger.isLoggable(Level.INFO) ? new StringBuilder() : null;
         final String threadName = "[" + Thread.currentThread().getName() + "] ";
