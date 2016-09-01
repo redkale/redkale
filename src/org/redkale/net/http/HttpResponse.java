@@ -258,7 +258,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         this.contentType = "text/plain; charset=utf-8";
         if (ret != null && !ret.isSuccess()) {
             this.header.addValue("retcode", String.valueOf(ret.getRetcode()));
-            this.header.addValue("retcode", ret.getRetinfo());
+            this.header.addValue("retinfo", ret.getRetinfo());
         }
         finish(request.getJsonConvert().convertTo(context.getBufferSupplier(), ret));
     }
@@ -273,7 +273,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         this.contentType = "text/plain; charset=utf-8";
         if (ret != null && !ret.isSuccess()) {
             this.header.addValue("retcode", String.valueOf(ret.getRetcode()));
-            this.header.addValue("retcode", ret.getRetinfo());
+            this.header.addValue("retinfo", ret.getRetinfo());
         }
         finish(convert.convertTo(context.getBufferSupplier(), ret));
     }
