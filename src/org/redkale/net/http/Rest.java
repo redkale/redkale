@@ -101,6 +101,7 @@ public final class Rest {
             String urlpath = "/" + defmodulename + "/*";
             int moduleid = controller == null ? 0 : controller.module();
             boolean repair = controller == null ? true : controller.repair();
+            String comment = controller == null ? "" : controller.comment();
             av0 = cw.visitAnnotation(webServletDesc, true);
             {
                 AnnotationVisitor av1 = av0.visitArray("value");
@@ -109,11 +110,13 @@ public final class Rest {
             }
             av0.visit("moduleid", moduleid);
             av0.visit("repair", repair);
+            av0.visit("comment", comment);
             av0.visitEnd();
             classMap.put("type", serviceType.getName());
             classMap.put("url", urlpath);
             classMap.put("moduleid", moduleid);
             classMap.put("repair", repair);
+            classMap.put("comment", comment);
         }
 
         {  //注入 @Resource  private XXXService _service;
@@ -511,6 +514,7 @@ public final class Rest {
                 String url = "/" + defmodulename.toLowerCase() + "/" + entry.name;
                 av0.visit("url", url);
                 av0.visit("actionid", entry.actionid);
+                av0.visit("comment", entry.comment);
                 AnnotationVisitor av1 = av0.visitArray("methods");
                 for (String m : entry.methods) {
                     av1.visit(null, m);
@@ -521,6 +525,7 @@ public final class Rest {
                 actionMap.put("url", url);
                 actionMap.put("actionid", entry.actionid);
                 actionMap.put("methods", entry.methods);
+                actionMap.put("comment", entry.comment);
             }
 
             //mv.visitVarInsn(ALOAD, 0); //调用this
@@ -838,6 +843,7 @@ public final class Rest {
             this.auth = mapping.auth();
             this.actionid = mapping.actionid();
             this.contentType = mapping.contentType();
+            this.comment = mapping.comment();
             this.jsvar = mapping.jsvar();
         }
 
@@ -846,6 +852,8 @@ public final class Rest {
         public final boolean ignore;
 
         public final String name;
+
+        public final String comment;
 
         public final String[] methods;
 
