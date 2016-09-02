@@ -31,4 +31,5 @@ public @interface RestService {
 
     int module() default 0; //模块ID值，鉴权时用到, 对应&#64;WebServlet.module
 
+    String comment() default ""; //备注描述
 }
