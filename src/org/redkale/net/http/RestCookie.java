@@ -23,4 +23,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 public @interface RestCookie {
 
     String value(); //cookie名
+
+    String comment() default ""; //备注描述
 }

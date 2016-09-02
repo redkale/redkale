@@ -24,4 +24,6 @@ public @interface RestParam {
 
     String value(); //参数名
 
+    String comment() default ""; //备注描述
+
 }
