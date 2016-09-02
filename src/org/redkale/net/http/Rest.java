@@ -244,8 +244,8 @@ public final class Rest {
                     }
                 }
                 RestParam annpara = param.getAnnotation(RestParam.class);
-                if (n == null) n = annpara == null || annpara.value().isEmpty() ? null : annpara.value();
-
+                if (n == null) n = (annpara == null || annpara.value().isEmpty()) ? null : annpara.value();
+                if (n == null && ptype == userType) n = "_current_user";
                 if (n == null) {
                     if (param.isNamePresent()) {
                         n = param.getName();
