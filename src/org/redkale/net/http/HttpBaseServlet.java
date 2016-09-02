@@ -70,6 +70,8 @@ public abstract class HttpBaseServlet extends HttpServlet {
         String url();
 
         String[] methods() default {};//允许方法(不区分大小写),如:GET/POST/PUT,为空表示允许所有方法
+
+        String comment() default ""; //备注描述
     }
 
     /**
