@@ -26,4 +26,5 @@ public @interface RestParam {
 
     String comment() default ""; //备注描述
 
+    int radix() default 10; //转换数字byte/short/int/long时所用的进制数， 默认10进制
 }

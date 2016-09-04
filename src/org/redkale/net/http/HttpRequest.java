@@ -694,6 +694,19 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取指定的header的short值, 没有返回默认short值
      *
+     * @param radix        进制数
+     * @param name         header名
+     * @param defaultValue 默认short值
+     *
+     * @return header值
+     */
+    public short getShortHeader(int radix, String name, short defaultValue) {
+        return header.getShortValue(name, defaultValue);
+    }
+
+    /**
+     * 获取指定的header的short值, 没有返回默认short值
+     *
      * @param name         header名
      * @param defaultValue 默认short值
      *
@@ -701,6 +714,19 @@ public class HttpRequest extends Request<HttpContext> {
      */
     public short getShortHeader(String name, int defaultValue) {
         return header.getShortValue(name, (short) defaultValue);
+    }
+
+    /**
+     * 获取指定的header的short值, 没有返回默认short值
+     *
+     * @param radix        进制数
+     * @param name         header名
+     * @param defaultValue 默认short值
+     *
+     * @return header值
+     */
+    public short getShortHeader(int radix, String name, int defaultValue) {
+        return header.getShortValue(radix, name, (short) defaultValue);
     }
 
     /**
@@ -716,6 +742,19 @@ public class HttpRequest extends Request<HttpContext> {
     }
 
     /**
+     * 获取指定的header的int值, 没有返回默认int值
+     *
+     * @param radix        进制数
+     * @param name         header名
+     * @param defaultValue 默认int值
+     *
+     * @return header值
+     */
+    public int getIntHeader(int radix, String name, int defaultValue) {
+        return header.getIntValue(radix, name, defaultValue);
+    }
+
+    /**
      * 获取指定的header的long值, 没有返回默认long值
      *
      * @param name         header名
@@ -725,6 +764,19 @@ public class HttpRequest extends Request<HttpContext> {
      */
     public long getLongHeader(String name, long defaultValue) {
         return header.getLongValue(name, defaultValue);
+    }
+
+    /**
+     * 获取指定的header的long值, 没有返回默认long值
+     *
+     * @param radix        进制数
+     * @param name         header名
+     * @param defaultValue 默认long值
+     *
+     * @return header值
+     */
+    public long getLongHeader(int radix, String name, long defaultValue) {
+        return header.getLongValue(radix, name, defaultValue);
     }
 
     /**
@@ -845,6 +897,20 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取指定的参数short值, 没有返回默认short值
      *
+     * @param radix        进制数
+     * @param name         参数名
+     * @param defaultValue 默认short值
+     *
+     * @return 参数值
+     */
+    public short getShortParameter(int radix, String name, short defaultValue) {
+        parseBody();
+        return params.getShortValue(radix, name, defaultValue);
+    }
+
+    /**
+     * 获取指定的参数short值, 没有返回默认short值
+     *
      * @param name         参数名
      * @param defaultValue 默认short值
      *
@@ -853,6 +919,20 @@ public class HttpRequest extends Request<HttpContext> {
     public short getShortParameter(String name, int defaultValue) {
         parseBody();
         return params.getShortValue(name, (short) defaultValue);
+    }
+
+    /**
+     * 获取指定的参数int值, 没有返回默认int值
+     *
+     * @param radix        进制数
+     * @param name         参数名
+     * @param defaultValue 默认int值
+     *
+     * @return 参数值
+     */
+    public int getIntParameter(int radix, String name, int defaultValue) {
+        parseBody();
+        return params.getIntValue(radix, name, defaultValue);
     }
 
     /**
@@ -879,6 +959,20 @@ public class HttpRequest extends Request<HttpContext> {
     public long getLongParameter(String name, long defaultValue) {
         parseBody();
         return params.getLongValue(name, defaultValue);
+    }
+
+    /**
+     * 获取指定的参数long值, 没有返回默认long值
+     *
+     * @param radix        进制数
+     * @param name         参数名
+     * @param defaultValue 默认long值
+     *
+     * @return 参数值
+     */
+    public long getLongParameter(int radix, String name, long defaultValue) {
+        parseBody();
+        return params.getLongValue(radix, name, defaultValue);
     }
 
     /**

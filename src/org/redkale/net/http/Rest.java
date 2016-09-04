@@ -223,6 +223,7 @@ public final class Rest {
                 Map<String, Object> paramMap = new LinkedHashMap<>();
                 final Class ptype = param.getType();
                 String n = null;
+                int radix = 10;
                 RestHeader annhead = null;
                 RestCookie anncookie = null;
                 RestAddress annaddr = null;
@@ -230,6 +231,7 @@ public final class Rest {
                     annhead = param.getAnnotation(RestHeader.class);
                     if (annhead != null) {
                         n = annhead.value();
+                        radix = annhead.radix();
                         if (n.isEmpty()) throw new RuntimeException("@RestHeader.value is illegal in " + method);
                     }
                     anncookie = param.getAnnotation(RestCookie.class);
@@ -237,6 +239,7 @@ public final class Rest {
                         if (annhead != null) throw new RuntimeException("@RestCookie and @RestHeader cannot on the same Parameter in " + method);
                         if (ptype != String.class) throw new RuntimeException("@RestCookie must on String Parameter in " + method);
                         n = anncookie.value();
+                        radix = anncookie.radix();
                         if (n.isEmpty()) throw new RuntimeException("@RestCookie.value is illegal in " + method);
                     }
                     annaddr = param.getAnnotation(RestAddress.class);
@@ -247,6 +250,7 @@ public final class Rest {
                     }
                 }
                 RestParam annpara = param.getAnnotation(RestParam.class);
+                if (annpara != null) radix = annpara.radix();
                 if (n == null) n = (annpara == null || annpara.value().isEmpty()) ? null : annpara.value();
                 if (n == null && ptype == userType) n = "_current_user";
                 if (n == null) {
@@ -300,13 +304,15 @@ public final class Rest {
                     } else if (ptype == byte.class) {
                         mv.visitVarInsn(ALOAD, 1);
                         mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", "getRequstURILastPath", "()Ljava/lang/String;", false);
-                        mv.visitMethodInsn(INVOKESTATIC, "java/lang/Byte", "parseByte", "(Ljava/lang/String;)B", false);
+                        mv.visitIntInsn(BIPUSH, radix);
+                        mv.visitMethodInsn(INVOKESTATIC, "java/lang/Byte", "parseByte", "(Ljava/lang/String;I)B", false);
                         mv.visitVarInsn(ISTORE, maxLocals);
                         varInsns.add(new int[]{ILOAD, maxLocals});
                     } else if (ptype == short.class) {
                         mv.visitVarInsn(ALOAD, 1);
                         mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", "getRequstURILastPath", "()Ljava/lang/String;", false);
-                        mv.visitMethodInsn(INVOKESTATIC, "java/lang/Short", "parseShort", "(Ljava/lang/String;)S", false);
+                        mv.visitIntInsn(BIPUSH, radix);
+                        mv.visitMethodInsn(INVOKESTATIC, "java/lang/Short", "parseShort", "(Ljava/lang/String;I)S", false);
                         mv.visitVarInsn(ISTORE, maxLocals);
                         varInsns.add(new int[]{ILOAD, maxLocals});
                     } else if (ptype == char.class) {
@@ -319,7 +325,8 @@ public final class Rest {
                     } else if (ptype == int.class) {
                         mv.visitVarInsn(ALOAD, 1);
                         mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", "getRequstURILastPath", "()Ljava/lang/String;", false);
-                        mv.visitMethodInsn(INVOKESTATIC, "java/lang/Integer", "parseInt", "(Ljava/lang/String;)I", false);
+                        mv.visitIntInsn(BIPUSH, radix);
+                        mv.visitMethodInsn(INVOKESTATIC, "java/lang/Integer", "parseInt", "(Ljava/lang/String;I)I", false);
                         mv.visitVarInsn(ISTORE, maxLocals);
                         varInsns.add(new int[]{ILOAD, maxLocals});
                     } else if (ptype == float.class) {
@@ -331,7 +338,8 @@ public final class Rest {
                     } else if (ptype == long.class) {
                         mv.visitVarInsn(ALOAD, 1);
                         mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", "getRequstURILastPath", "()Ljava/lang/String;", false);
-                        mv.visitMethodInsn(INVOKESTATIC, "java/lang/Long", "parseLong", "(Ljava/lang/String;)J", false);
+                        mv.visitIntInsn(BIPUSH, radix);
+                        mv.visitMethodInsn(INVOKESTATIC, "java/lang/Long", "parseLong", "(Ljava/lang/String;I)J", false);
                         mv.visitVarInsn(LSTORE, maxLocals);
                         varInsns.add(new int[]{LLOAD, maxLocals});
                         maxLocals++;
@@ -362,14 +370,16 @@ public final class Rest {
                     mv.visitLdcInsn(pname);
                     mv.visitLdcInsn("0");
                     mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", ishead ? "getHeader" : "getParameter", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
-                    mv.visitMethodInsn(INVOKESTATIC, "java/lang/Byte", "parseByte", "(Ljava/lang/String;)B", false);
+                    mv.visitIntInsn(BIPUSH, radix);
+                    mv.visitMethodInsn(INVOKESTATIC, "java/lang/Byte", "parseByte", "(Ljava/lang/String;I)B", false);
                     mv.visitVarInsn(ISTORE, maxLocals);
                     varInsns.add(new int[]{ILOAD, maxLocals});
                 } else if (ptype == short.class) {
                     mv.visitVarInsn(ALOAD, 1);
+                    mv.visitIntInsn(BIPUSH, radix);
                     mv.visitLdcInsn(pname);
                     mv.visitInsn(ICONST_0);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", ishead ? "getShortHeader" : "getShortParameter", "(Ljava/lang/String;S)S", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", ishead ? "getShortHeader" : "getShortParameter", "(ILjava/lang/String;S)S", false);
                     mv.visitVarInsn(ISTORE, maxLocals);
                     varInsns.add(new int[]{ILOAD, maxLocals});
                 } else if (ptype == char.class) {
@@ -383,9 +393,10 @@ public final class Rest {
                     varInsns.add(new int[]{ILOAD, maxLocals});
                 } else if (ptype == int.class) {
                     mv.visitVarInsn(ALOAD, 1);
+                    mv.visitIntInsn(BIPUSH, radix);
                     mv.visitLdcInsn(pname);
                     mv.visitInsn(ICONST_0);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", ishead ? "getIntHeader" : "getIntParameter", "(Ljava/lang/String;I)I", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", ishead ? "getIntHeader" : "getIntParameter", "(ILjava/lang/String;I)I", false);
                     mv.visitVarInsn(ISTORE, maxLocals);
                     varInsns.add(new int[]{ILOAD, maxLocals});
                 } else if (ptype == float.class) {
@@ -397,9 +408,10 @@ public final class Rest {
                     varInsns.add(new int[]{FLOAD, maxLocals});
                 } else if (ptype == long.class) {
                     mv.visitVarInsn(ALOAD, 1);
+                    mv.visitIntInsn(BIPUSH, radix);
                     mv.visitLdcInsn(pname);
                     mv.visitInsn(LCONST_0);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", ishead ? "getLongHeader" : "getLongParameter", "(Ljava/lang/String;J)J", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", ishead ? "getLongHeader" : "getLongParameter", "(ILjava/lang/String;J)J", false);
                     mv.visitVarInsn(LSTORE, maxLocals);
                     varInsns.add(new int[]{LLOAD, maxLocals});
                     maxLocals++;
@@ -443,7 +455,7 @@ public final class Rest {
                     //构建 RestHeader、RestCookie、RestAddress 等赋值操作
                     Class loop = ptype;
                     Set<String> fields = new HashSet<>();
-                    Map<String, String> attrParaNames = new LinkedHashMap<>();
+                    Map<String, Object[]> attrParaNames = new LinkedHashMap<>();
                     do {
                         if (loop == null || loop.isInterface()) break; //接口时getSuperclass可能会得到null
                         for (Field field : loop.getDeclaredFields()) {
@@ -468,11 +480,12 @@ public final class Rest {
                                 restname = rc.value();
                             } else if (ra != null) {
                                 attrFieldName = "_redkale_attr_address_" + restAttributes.size();
+                                //restname = "";
                             } else {
                                 continue;
                             }
                             restAttributes.put(attrFieldName, attr);
-                            attrParaNames.put(attrFieldName, restname);
+                            attrParaNames.put(attrFieldName, new Object[]{restname, field.getType()});
                             fields.add(field.getName());
                         }
                     } while ((loop = loop.getSuperclass()) != Object.class);
@@ -481,17 +494,17 @@ public final class Rest {
                         mv.visitVarInsn(ALOAD, maxLocals);
                         Label lif = new Label();
                         mv.visitJumpInsn(IFNULL, lif);  //if(bean != null) {
-                        for (Map.Entry<String, String> en : attrParaNames.entrySet()) {
+                        for (Map.Entry<String, Object[]> en : attrParaNames.entrySet()) {
                             mv.visitVarInsn(ALOAD, 0);
                             mv.visitFieldInsn(GETFIELD, newDynName, en.getKey(), attrDesc);
                             mv.visitVarInsn(ALOAD, maxLocals);
                             mv.visitVarInsn(ALOAD, 1);
                             if (en.getKey().contains("_header_")) {
-                                mv.visitLdcInsn(en.getValue());
+                                mv.visitLdcInsn(en.getValue()[0].toString());
                                 mv.visitLdcInsn("");
                                 mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", "getHeader", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
                             } else if (en.getKey().contains("_cookie_")) {
-                                mv.visitLdcInsn(en.getValue());
+                                mv.visitLdcInsn(en.getValue()[0].toString());
                                 mv.visitLdcInsn("");
                                 mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", "getCookie", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
                             } else if (en.getKey().contains("_address_")) {

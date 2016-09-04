@@ -386,6 +386,11 @@ public abstract class AnyValue {
         return value == null || value.length() == 0 ? defaultValue : Byte.decode(value);
     }
 
+    public byte getByteValue(int radix, String name, byte defaultValue) {
+        String value = getValue(name);
+        return value == null || value.length() == 0 ? defaultValue : (radix == 10 ? Byte.decode(value) : Byte.parseByte(value, radix));
+    }
+
     public char getCharValue(String name) {
         return getValue(name).charAt(0);
     }
@@ -404,6 +409,11 @@ public abstract class AnyValue {
         return value == null || value.length() == 0 ? defaultValue : Short.decode(value);
     }
 
+    public short getShortValue(int radix, String name, short defaultValue) {
+        String value = getValue(name);
+        return value == null || value.length() == 0 ? defaultValue : (radix == 10 ? Short.decode(value) : Short.parseShort(value, radix));
+    }
+
     public int getIntValue(String name) {
         return Integer.decode(getValue(name));
     }
@@ -413,6 +423,11 @@ public abstract class AnyValue {
         return value == null || value.length() == 0 ? defaultValue : Integer.decode(value);
     }
 
+    public int getIntValue(int radix, String name, int defaultValue) {
+        String value = getValue(name);
+        return value == null || value.length() == 0 ? defaultValue : (radix == 10 ? Integer.decode(value) : Integer.parseInt(value, radix));
+    }
+
     public long getLongValue(String name) {
         return Long.decode(getValue(name));
     }
@@ -420,6 +435,11 @@ public abstract class AnyValue {
     public long getLongValue(String name, long defaultValue) {
         String value = getValue(name);
         return value == null || value.length() == 0 ? defaultValue : Long.decode(value);
+    }
+
+    public long getLongValue(int radix, String name, long defaultValue) {
+        String value = getValue(name);
+        return value == null || value.length() == 0 ? defaultValue : (radix == 10 ? Long.decode(value) : Long.parseLong(value, radix));
     }
 
     public float getFloatValue(String name) {
