@@ -388,6 +388,19 @@ public final class Application {
                                 buffer.flip();
                                 channel.send(buffer, address);
                             }
+                        } else if ("RESTDOC".equalsIgnoreCase(new String(bytes))) {
+                            try {
+                                new RestDocs(application).run();
+                                buffer.clear();
+                                buffer.put("RESTDOC OK".getBytes());
+                                buffer.flip();
+                                channel.send(buffer, address);
+                            } catch (Exception ex) {
+                                buffer.clear();
+                                buffer.put("RESTDOC FAIL".getBytes());
+                                buffer.flip();
+                                channel.send(buffer, address);
+                            }
                         }
                     }
                 } catch (Exception e) {
@@ -398,12 +411,12 @@ public final class Application {
         }.start();
     }
 
-    private void sendShutDown() throws Exception {
+    private void sendCommand(String command) throws Exception {
         final DatagramChannel channel = DatagramChannel.open();
         channel.configureBlocking(true);
         channel.connect(new InetSocketAddress(config.getValue("host", "127.0.0.1"), config.getIntValue("port")));
         ByteBuffer buffer = ByteBuffer.allocate(128);
-        buffer.put("SHUTDOWN".getBytes());
+        buffer.put(command.getBytes());
         buffer.flip();
         channel.write(buffer);
         buffer.clear();
@@ -534,8 +547,11 @@ public final class Application {
         Utility.midnight(); //先初始化一下Utility
         //运行主程序
         final Application application = Application.create(false);
-        if (System.getProperty("SHUTDOWN") != null) {
-            application.sendShutDown();
+        if (System.getProperty("CMD") != null) {
+            application.sendCommand(System.getProperty("CMD"));
+            return;
+        } else if (System.getProperty("SHUTDOWN") != null) { //兼容旧接口
+            application.sendCommand("SHUTDOWN");
             return;
         }
         application.init();
