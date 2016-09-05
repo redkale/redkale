@@ -15,4 +15,4 @@ do
 done
 export CLASSPATH=$CLASSPATH:$lib
 echo "$APP_HOME"
-java -DCMD=SHUTDOWN  -DAPP_HOME="$APP_HOME"  org.redkale.boot.Application
+java -DCMD=RESTDOC  -DAPP_HOME="$APP_HOME"  org.redkale.boot.Application
