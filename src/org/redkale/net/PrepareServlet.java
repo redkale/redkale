@@ -91,4 +91,8 @@ public abstract class PrepareServlet<K extends Serializable, C extends Context, 
     protected void setServletConf(Servlet servlet, AnyValue conf) {
         servlet._conf = conf;
     }
+
+    public Set<S> getServlets() {
+        return new LinkedHashSet<>(servlets);
+    }
 }

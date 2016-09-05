@@ -158,10 +158,6 @@ public final class HttpPrepareServlet extends PrepareServlet<String, HttpContext
         return this.resourceHttpServlet;
     }
 
-    Set<HttpServlet> getServlets() {
-        return this.servlets;
-    }
-
     @Override
     public void destroy(HttpContext context, AnyValue config) {
         this.resourceHttpServlet.destroy(context, config);
