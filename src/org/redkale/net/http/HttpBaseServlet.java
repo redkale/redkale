@@ -12,7 +12,7 @@ import java.io.IOException;
 import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.*;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
-import java.lang.reflect.Method;
+import java.lang.reflect.*;
 import java.nio.*;
 import java.util.*;
 import java.util.concurrent.*;
@@ -52,6 +52,45 @@ public abstract class HttpBaseServlet extends HttpServlet {
     }
 
     /**
+     * 配合 &#64;WebParam 使用。
+     * 用于对&#64;WebParam中参数的来源类型
+     *
+     * <p>
+     * 详情见: http://redkale.org
+     *
+     * @author zhangjx
+     */
+    protected enum ParamSourceType {
+
+        PARAMETER, HEADER, COOKIE;
+    }
+
+    /**
+     * 配合 &#64;WebAction 使用。
+     * 用于对&#64;WebAction方法中参数描述
+     *
+     * <p>
+     * 详情见: http://redkale.org
+     *
+     * @author zhangjx
+     */
+    @Target({ElementType.ANNOTATION_TYPE, ElementType.PARAMETER})
+    @Retention(RetentionPolicy.RUNTIME)
+    @Documented
+    protected @interface WebParam {
+
+        String value(); //参数名
+
+        Class type(); //参数的数据类型
+
+        String comment() default ""; //备注描述
+
+        ParamSourceType src() default ParamSourceType.PARAMETER; //参数来源类型
+
+        int radix() default 10; //转换数字byte/short/int/long时所用的进制数， 默认10进制
+    }
+
+    /**
      * 配合 HttpBaseServlet 使用。
      * 用于对&#64;WebServlet对应的url进行细分。 其url必须是包含WebServlet中定义的前缀， 且不能是正则表达式
      *
@@ -72,6 +111,8 @@ public abstract class HttpBaseServlet extends HttpServlet {
         String[] methods() default {};//允许方法(不区分大小写),如:GET/POST/PUT,为空表示允许所有方法
 
         String comment() default ""; //备注描述
+
+        WebParam[] params() default {};
     }
 
     /**

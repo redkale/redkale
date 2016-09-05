@@ -65,6 +65,8 @@ public final class Rest {
         final String attrDesc = Type.getDescriptor(org.redkale.util.Attribute.class);
         final String authDesc = Type.getDescriptor(HttpBaseServlet.AuthIgnore.class);
         final String actionDesc = Type.getDescriptor(HttpBaseServlet.WebAction.class);
+        final String webparamDesc = Type.getDescriptor(HttpBaseServlet.WebParam.class);
+        final String sourcetypeDesc = Type.getDescriptor(HttpBaseServlet.ParamSourceType.class);
         final String serviceTypeString = serviceType.getName().replace('.', '/');
         final Class userType = getSuperUserType(baseServletClass);
 
@@ -215,14 +217,14 @@ public final class Rest {
             final int maxStack = 3 + params.length;
             List<int[]> varInsns = new ArrayList<>();
             int maxLocals = 4;
-            boolean hasVisitWebAction = false;
             final String jsvar = entry.jsvar.isEmpty() ? null : entry.jsvar;
             int argIndex = 0;
-            List<Map<String, Object>> paramMaps = new ArrayList<>();
+
+            List<Object[]> paramlist = new ArrayList<>();
             for (final Parameter param : params) {
-                Map<String, Object> paramMap = new LinkedHashMap<>();
                 final Class ptype = param.getType();
                 String n = null;
+                String comment = "";
                 int radix = 10;
                 RestHeader annhead = null;
                 RestCookie anncookie = null;
@@ -232,6 +234,7 @@ public final class Rest {
                     if (annhead != null) {
                         n = annhead.value();
                         radix = annhead.radix();
+                        comment = annhead.comment();
                         if (n.isEmpty()) throw new RuntimeException("@RestHeader.value is illegal in " + method);
                     }
                     anncookie = param.getAnnotation(RestCookie.class);
@@ -240,6 +243,7 @@ public final class Rest {
                         if (ptype != String.class) throw new RuntimeException("@RestCookie must on String Parameter in " + method);
                         n = anncookie.value();
                         radix = anncookie.radix();
+                        comment = anncookie.comment();
                         if (n.isEmpty()) throw new RuntimeException("@RestCookie.value is illegal in " + method);
                     }
                     annaddr = param.getAnnotation(RestAddress.class);
@@ -251,8 +255,9 @@ public final class Rest {
                 }
                 RestParam annpara = param.getAnnotation(RestParam.class);
                 if (annpara != null) radix = annpara.radix();
+                if (annpara != null) comment = annpara.comment();
                 if (n == null) n = (annpara == null || annpara.value().isEmpty()) ? null : annpara.value();
-                if (n == null && ptype == userType) n = "_current_user";
+                if (n == null && ptype == userType) n = "&"; //用户类型特殊处理
                 if (n == null) {
                     if (param.isNamePresent()) {
                         n = param.getName();
@@ -264,26 +269,64 @@ public final class Rest {
                     && (entry.name.startsWith("find") || entry.name.startsWith("delete")) && params.length == 1) {
                     if (ptype.isPrimitive() || ptype == String.class) n = "#";
                 }
-                if (!hasVisitWebAction) {
-                    hasVisitWebAction = true;
-                    //设置 WebAction
-                    av0 = mv.visitAnnotation(actionDesc, true);
-                    String url = "/" + defmodulename.toLowerCase() + "/" + entry.name + ("#".equals(n) ? "/" : "");
-                    av0.visit("url", url);
-                    av0.visit("actionid", entry.actionid);
 
-                    AnnotationVisitor av1 = av0.visitArray("methods");
-                    for (String m : entry.methods) {
-                        av1.visit(null, m);
+                paramlist.add(new Object[]{param, n, ptype, radix, comment, annpara, annaddr, annhead, anncookie});
+            }
+            {
+                //设置 WebAction
+                boolean reqpath = false;
+                for (Object[] ps : paramlist) {
+                    if ("#".equals((String) ps[1])) {
+                        reqpath = true;
+                        break;
                     }
-                    av1.visitEnd();
-
-                    av0.visitEnd();
-                    actionMap.put("url", url);
-                    actionMap.put("actionid", entry.actionid);
-                    actionMap.put("methods", entry.methods);
                 }
-                final String pname = n; //参数名
+                av0 = mv.visitAnnotation(actionDesc, true);
+                String url = "/" + defmodulename.toLowerCase() + "/" + entry.name + (reqpath ? "/" : "");
+                av0.visit("url", url);
+                av0.visit("actionid", entry.actionid);
+
+                AnnotationVisitor av1 = av0.visitArray("methods");
+                for (String m : entry.methods) {
+                    av1.visit(null, m);
+                }
+                av1.visitEnd();
+
+                {
+                    AnnotationVisitor av3 = av0.visitArray("params");
+                    for (Object[] ps : paramlist) { //{param, n, ptype, radix, comment, annpara, annaddr, annhead, anncookie}   
+                        final boolean ishead = ((RestHeader) ps[7]) != null; //是否取getHeader 而不是 getParameter
+                        final boolean iscookie = ((RestCookie) ps[8]) != null; //是否取getCookie
+
+                        AnnotationVisitor av2 = av3.visitAnnotation(null, webparamDesc);
+                        av2.visit("value", (String) ps[1]);
+                        av2.visit("type", Type.getType(Type.getDescriptor((Class) ps[2])));
+                        av2.visit("radix", (Integer) ps[3]);
+                        av2.visitEnum("src", sourcetypeDesc, ishead ? HttpBaseServlet.ParamSourceType.HEADER.name()
+                            : (iscookie ? HttpBaseServlet.ParamSourceType.COOKIE.name() : HttpBaseServlet.ParamSourceType.PARAMETER.name()));
+                        av2.visit("comment", (String) ps[4]);
+                        av2.visitEnd();
+                    }
+                    av3.visitEnd();
+                }
+                av0.visitEnd();
+                actionMap.put("url", url);
+                actionMap.put("actionid", entry.actionid);
+                actionMap.put("methods", entry.methods);
+            }
+
+            List<Map<String, Object>> paramMaps = new ArrayList<>();
+            for (Object[] ps : paramlist) {
+                Map<String, Object> paramMap = new LinkedHashMap<>();
+                String pname = (String) ps[1]; //参数名
+                Class ptype = (Class) ps[2];
+                int radix = (Integer) ps[3];
+                String comment = (String) ps[4];
+                RestParam annpara = (RestParam) ps[5];
+                RestAddress annaddr = (RestAddress) ps[6];
+                RestHeader annhead = (RestHeader) ps[7];
+                RestCookie anncookie = (RestCookie) ps[8];
+
                 final boolean ishead = annhead != null; //是否取getHeader 而不是 getParameter
                 final boolean iscookie = anncookie != null; //是否取getCookie
 
@@ -358,6 +401,12 @@ public final class Rest {
                     } else {
                         throw new RuntimeException(method + " only " + RestParam.class.getSimpleName() + "(#) to Type(primitive class or String)");
                     }
+                } else if ("&".equals(pname) && ptype == userType) { //当前用户对象的类名
+                    mv.visitVarInsn(ALOAD, 0);
+                    mv.visitVarInsn(ALOAD, 1);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, newDynName, "currentUser", Type.getMethodDescriptor(currentUserMethod), false);
+                    mv.visitVarInsn(ASTORE, maxLocals);
+                    varInsns.add(new int[]{ALOAD, maxLocals});
                 } else if (ptype == boolean.class) {
                     mv.visitVarInsn(ALOAD, 1);
                     mv.visitLdcInsn(pname);
@@ -437,12 +486,6 @@ public final class Rest {
                     //mv.visitMethodInsn(INVOKEVIRTUAL, newDynName, "findFlipper", "(Lorg/redkale/net/http/HttpRequest;)Lorg/redkale/source/Flipper;", false);
                     mv.visitVarInsn(ASTORE, maxLocals);
                     varInsns.add(new int[]{ALOAD, maxLocals});
-                } else if (ptype == userType) { //当前用户对象的类名
-                    mv.visitVarInsn(ALOAD, 0);
-                    mv.visitVarInsn(ALOAD, 1);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, newDynName, "currentUser", Type.getMethodDescriptor(currentUserMethod), false);
-                    mv.visitVarInsn(ASTORE, maxLocals);
-                    varInsns.add(new int[]{ALOAD, maxLocals});
                 } else { //其他Json对象
                     mv.visitVarInsn(ALOAD, 1);
                     mv.visitLdcInsn(Type.getType(Type.getDescriptor(ptype)));
@@ -519,27 +562,6 @@ public final class Rest {
                 maxLocals++;
                 paramMaps.add(paramMap);
             } // end params for each
-
-            if (!hasVisitWebAction) { //当无参数时则没有设置过 WebAction
-                hasVisitWebAction = true;
-                //设置 WebAction
-                av0 = mv.visitAnnotation(actionDesc, true);
-                String url = "/" + defmodulename.toLowerCase() + "/" + entry.name;
-                av0.visit("url", url);
-                av0.visit("actionid", entry.actionid);
-                av0.visit("comment", entry.comment);
-                AnnotationVisitor av1 = av0.visitArray("methods");
-                for (String m : entry.methods) {
-                    av1.visit(null, m);
-                }
-                av1.visitEnd();
-                av0.visitEnd();
-
-                actionMap.put("url", url);
-                actionMap.put("actionid", entry.actionid);
-                actionMap.put("methods", entry.methods);
-                actionMap.put("comment", entry.comment);
-            }
 
             //mv.visitVarInsn(ALOAD, 0); //调用this
             //mv.visitFieldInsn(GETFIELD, newDynName, REST_SERVICE_FIELD_NAME, serviceDesc);
