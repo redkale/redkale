@@ -102,7 +102,7 @@ public final class HttpPrepareServlet extends PrepareServlet<String, HttpContext
             WebServlet ws = servlet.getClass().getAnnotation(WebServlet.class);
             if (ws != null) {
                 mappings = ws.value();
-                if (!ws.repair()) prefix = "";//被设置为自动追加前缀则清空prefix
+                if (!ws.repair()) prefix = "";//被设置为不自动追加前缀则清空prefix
             }
         }
         synchronized (allMapStrings) {
