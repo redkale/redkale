@@ -35,7 +35,7 @@ public class RestDocs extends HttpBaseServlet {
             serverList.add(map);
             HttpServer server = node.getServer();
             map.put("address", server.getSocketAddress());
-            List<Map> servletsList = new ArrayList<>();
+            List<Map<String, Object>> servletsList = new ArrayList<>();
             map.put("servlets", servletsList);
             for (HttpServlet servlet : server.getPrepareServlet().getServlets()) {
                 if (!(servlet instanceof HttpServlet)) continue;
@@ -109,8 +109,14 @@ public class RestDocs extends HttpBaseServlet {
                     }
                     actionsList.add(actionmap);
                 }
+                actionsList.sort((o1, o2) -> ((String) o1.get("url")).compareTo((String) o2.get("url")));
                 servletsList.add(servletmap);
             }
+            servletsList.sort((o1, o2) -> {
+                String[] mappings1 = (String[]) o1.get("mappings");
+                String[] mappings2 = (String[]) o2.get("mappings");
+                return mappings1.length > 0 ? (mappings2.length > 0 ? mappings1[0].compareTo(mappings2[0]) : 1) : -1;
+            });
         }
         Map<String, Object> resultmap = new LinkedHashMap<>();
         resultmap.put("servers", serverList);

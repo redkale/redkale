@@ -303,6 +303,7 @@ public final class Rest {
                 String url = "/" + defmodulename.toLowerCase() + "/" + entry.name + (reqpath ? "/" : "");
                 av0.visit("url", url);
                 av0.visit("actionid", entry.actionid);
+                av0.visit("comment", entry.comment);
 
                 AnnotationVisitor av1 = av0.visitArray("methods");
                 for (String m : entry.methods) {
@@ -330,6 +331,7 @@ public final class Rest {
                 av0.visitEnd();
                 actionMap.put("url", url);
                 actionMap.put("actionid", entry.actionid);
+                actionMap.put("comment", entry.comment);
                 actionMap.put("methods", entry.methods);
             }
 
