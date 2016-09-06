@@ -156,7 +156,7 @@ public class NodeHttpServer extends NodeServer {
         final String threadName = "[" + Thread.currentThread().getName() + "] ";
         final List<AbstractMap.SimpleEntry<String, String[]>> ss = sb == null ? null : new ArrayList<>();
 
-        final Class baseServletClass = Class.forName(restConf.getValue("servlet", DefaultRestServlet.class.getName()));
+        final Class baseServletClass = Class.forName(restConf.getValue("base", DefaultRestServlet.class.getName()));
 
         final boolean autoload = restConf.getBoolValue("autoload", true);
         final boolean mustsign = restConf.getBoolValue("mustsign", true); //是否只加载标记@RestService的Service类
