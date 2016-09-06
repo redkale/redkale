@@ -146,6 +146,7 @@ public final class Rest {
         final Map<String, org.redkale.util.Attribute> restAttributes = new LinkedHashMap<>();
 
         for (final Method method : serviceType.getMethods()) {
+            if(Modifier.isStatic(method.getModifiers())) continue;
             Class[] extypes = method.getExceptionTypes();
             if (extypes.length > 1) continue;
             if (extypes.length == 1 && extypes[0] != IOException.class) continue;
