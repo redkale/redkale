@@ -6,6 +6,9 @@
 package org.redkale.net.http;
 
 import java.io.*;
+import java.lang.annotation.*;
+import static java.lang.annotation.ElementType.*;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.lang.reflect.*;
 import java.util.*;
 import jdk.internal.org.objectweb.asm.*;
@@ -39,6 +42,14 @@ public final class Rest {
         for (Method m : Object.class.getMethods()) {
             EXCLUDERMETHODS.add(m.getName());
         }
+    }
+
+    @Inherited
+    @Documented
+    @Target({TYPE})
+    @Retention(RUNTIME)
+    public static @interface RestDynamic {
+
     }
 
     private Rest() {
@@ -99,6 +110,12 @@ public final class Rest {
         Map<String, Object> classMap = new LinkedHashMap<>();
         List<Map<String, Object>> actionMaps = new ArrayList<>();
         cw.visit(V1_8, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynName, null, supDynName, null);
+
+        { //RestDynamic
+            av0 = cw.visitAnnotation(Type.getDescriptor(RestDynamic.class), true);
+            av0.visitEnd();
+        }
+
         { //注入 @WebServlet 注解
             String urlpath = "/" + defmodulename + "/*";
             int moduleid = controller == null ? 0 : controller.module();
@@ -146,7 +163,7 @@ public final class Rest {
         final Map<String, org.redkale.util.Attribute> restAttributes = new LinkedHashMap<>();
 
         for (final Method method : serviceType.getMethods()) {
-            if(Modifier.isStatic(method.getModifiers())) continue;
+            if (Modifier.isStatic(method.getModifiers())) continue;
             Class[] extypes = method.getExceptionTypes();
             if (extypes.length > 1) continue;
             if (extypes.length == 1 && extypes[0] != IOException.class) continue;

@@ -6,10 +6,11 @@
 package org.redkale.boot;
 
 import java.io.*;
-import java.lang.reflect.Method;
+import java.lang.reflect.*;
 import java.util.*;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.http.*;
+import org.redkale.util.Comment;
 
 /**
  * 继承 HttpBaseServlet 是为了获取 WebAction 信息
@@ -26,6 +27,8 @@ public class RestDocs extends HttpBaseServlet {
 
     public void run() throws Exception {
         List<Map> serverList = new ArrayList<>();
+
+        Map<String, Map<String, Map<String, String>>> typesmap = new LinkedHashMap<>();
         for (NodeServer node : app.servers) {
             if (!(node instanceof NodeHttpServer)) continue;
             final Map<String, Object> map = new LinkedHashMap<>();
@@ -35,7 +38,7 @@ public class RestDocs extends HttpBaseServlet {
             List<Map> servletsList = new ArrayList<>();
             map.put("servlets", servletsList);
             for (HttpServlet servlet : server.getPrepareServlet().getServlets()) {
-                if (!(servlet instanceof RestHttpServlet)) continue;
+                if (!(servlet instanceof HttpServlet)) continue;
                 WebServlet ws = servlet.getClass().getAnnotation(WebServlet.class);
                 if (ws == null) {
                     System.err.println(servlet + " not found @WebServlet");
@@ -69,19 +72,51 @@ public class RestDocs extends HttpBaseServlet {
                     actionmap.put("params", paramsList);
                     for (WebParam param : action.params()) {
                         final Map<String, Object> parammap = new LinkedHashMap<>();
+                        final boolean isarray = param.type().isArray();
+                        final Class ptype = isarray ? param.type().getComponentType() : param.type();
                         parammap.put("name", param.value());
                         parammap.put("radix", param.radix());
-                        parammap.put("type", param.type().getName());
+                        parammap.put("type", ptype.getName() + (isarray ? "[]" : ""));
                         parammap.put("src", param.src());
+                        parammap.put("comment", param.comment());
                         paramsList.add(parammap);
+                        if (ptype.isPrimitive() || ptype == String.class) continue;
+                        if (typesmap.containsKey(ptype.getName())) continue;
+
+                        final Map<String, Map<String, String>> typemap = new LinkedHashMap<>();
+                        Class loop = ptype;
+                        do {
+                            if (loop == null || loop.isInterface()) break;
+                            for (Field field : loop.getDeclaredFields()) {
+                                if (Modifier.isFinal(field.getModifiers())) continue;
+                                if (Modifier.isStatic(field.getModifiers())) continue;
+
+                                Map<String, String> fieldmap = new LinkedHashMap<>();
+                                fieldmap.put("type", field.getType().getName());
+
+                                Comment comment = field.getAnnotation(Comment.class);
+                                if (comment != null) fieldmap.put("comment", comment.value());
+
+                                if (servlet.getClass().getAnnotation(Rest.RestDynamic.class) != null) {
+                                    if (field.getAnnotation(RestAddress.class) != null) continue;
+                                }
+
+                                typemap.put(field.getName(), fieldmap);
+                            }
+                        } while ((loop = loop.getSuperclass()) != Object.class);
+
+                        typesmap.put(ptype.getName(), typemap);
                     }
                     actionsList.add(actionmap);
                 }
                 servletsList.add(servletmap);
             }
         }
+        Map<String, Object> resultmap = new LinkedHashMap<>();
+        resultmap.put("servers", serverList);
+        resultmap.put("types", typesmap);
         final FileOutputStream out = new FileOutputStream(new File(app.getHome(), "restdoc.json"));
-        out.write(JsonConvert.root().convertTo(serverList).getBytes("UTF-8"));
+        out.write(JsonConvert.root().convertTo(resultmap).getBytes("UTF-8"));
         out.close();
     }
 
