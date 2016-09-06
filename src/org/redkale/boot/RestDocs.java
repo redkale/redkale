@@ -10,7 +10,7 @@ import java.lang.reflect.*;
 import java.util.*;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.http.*;
-import org.redkale.util.Comment;
+import org.redkale.util.*;
 
 /**
  * 继承 HttpBaseServlet 是为了获取 WebAction 信息
@@ -115,9 +115,19 @@ public class RestDocs extends HttpBaseServlet {
         Map<String, Object> resultmap = new LinkedHashMap<>();
         resultmap.put("servers", serverList);
         resultmap.put("types", typesmap);
+        final String json = JsonConvert.root().convertTo(resultmap);
         final FileOutputStream out = new FileOutputStream(new File(app.getHome(), "restdoc.json"));
-        out.write(JsonConvert.root().convertTo(resultmap).getBytes("UTF-8"));
+        out.write(json.getBytes("UTF-8"));
         out.close();
+        File doctemplate = new File(app.getHome(), "conf/restdoc-template.html");
+        if (doctemplate.isFile() && doctemplate.canRead()) {
+            FileInputStream in = new FileInputStream(doctemplate);
+            String content = Utility.read(in).replace("${content}", json);
+            in.close();
+            FileOutputStream outhtml = new FileOutputStream(new File(app.getHome(), "restdoc.html"));
+            outhtml.write(content.getBytes("UTF-8"));
+            outhtml.close();
+        }
     }
 
     @Override
