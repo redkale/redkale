@@ -42,7 +42,14 @@ public class RestDocs extends HttpBaseServlet {
                     continue;
                 }
                 final Map<String, Object> servletmap = new LinkedHashMap<>();
-                servletmap.put("mappings", ws.value());
+                String prefix = _prefix(servlet);
+                String[] mappings = ws.value();
+                if (prefix != null && !prefix.isEmpty()) {
+                    for (int i = 0; i < mappings.length; i++) {
+                        mappings[i] = prefix + mappings[i];
+                    }
+                }
+                servletmap.put("mappings", mappings);
                 servletmap.put("moduleid", ws.moduleid());
                 servletmap.put("name", ws.name());
                 servletmap.put("comment", ws.comment());

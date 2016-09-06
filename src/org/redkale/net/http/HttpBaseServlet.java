@@ -192,6 +192,10 @@ public abstract class HttpBaseServlet extends HttpServlet {
 
     public abstract boolean authenticate(int module, int actionid, HttpRequest request, HttpResponse response) throws IOException;
 
+    protected String _prefix(HttpServlet servlet) {
+        return servlet._prefix;
+    }
+
     private HashMap<String, Entry> load() {
         final boolean typeIgnore = this.getClass().getAnnotation(AuthIgnore.class) != null;
         WebServlet module = this.getClass().getAnnotation(WebServlet.class);
