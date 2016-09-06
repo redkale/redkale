@@ -126,14 +126,16 @@ public class RestDocs extends HttpBaseServlet {
         out.write(json.getBytes("UTF-8"));
         out.close();
         File doctemplate = new File(app.getHome(), "conf/restdoc-template.html");
+        InputStream in = null;
         if (doctemplate.isFile() && doctemplate.canRead()) {
-            FileInputStream in = new FileInputStream(doctemplate);
-            String content = Utility.read(in).replace("${content}", json);
-            in.close();
-            FileOutputStream outhtml = new FileOutputStream(new File(app.getHome(), "restdoc.html"));
-            outhtml.write(content.getBytes("UTF-8"));
-            outhtml.close();
+            in = new FileInputStream(doctemplate);
         }
+        if(in == null) in = RestDocs.class.getResourceAsStream("restdoc-template.html");
+        String content = Utility.read(in).replace("${content}", json);
+        in.close();
+        FileOutputStream outhtml = new FileOutputStream(new File(app.getHome(), "restdoc.html"));
+        outhtml.write(content.getBytes("UTF-8"));
+        outhtml.close();
     }
 
     @Override

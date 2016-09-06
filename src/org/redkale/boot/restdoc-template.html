@@ -1,0 +1,84 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="UTF-8"><title>Document</title>
+        <style type="text/css">
+            body {text-align: center;margin:auto;}
+            a{text-decoration: none;}
+            .table {margin: auto;border-collapse: collapse;border-spacing: 0;display: block;width: 100%;overflow: auto;word-break: normal;word-break: keep-all;}
+            .table td,.table th{padding: 0.4rem 1.2rem 0.4rem 1.2rem;border: 1px solid #aaa;}
+            .table td {text-align: left;}
+            .s {font-size: 0.8rem; vertical-align: middle;}
+            .subtable {border-spacing: 0;border: 0;margin:0;}
+            .subtable td{border: 0;padding: 0 0 0 10px;}
+            .typetable {border-spacing: 0;border: 0;margin:0;}
+            .typetable td{border: 0;padding: 2px 20px 2px 10px;}
+            .typetable .l{border-bottom: 1px solid red;}
+        </style>
+    </head>
+    <body>
+
+        <script>
+            var createhtml = function (jsoncontent) {
+                var classmap = jsoncontent.types;
+                var html = [];
+                html.push('<div style="width:' + Math.floor(window.screen.width * 0.8) + 'px;margin:0 auto;text-align: center;">');
+                html.push('<br/><br/><table class="table" align="center">');
+                for (var i = 0; i < jsoncontent.servers.length; i++) {
+                    for (var j = 0; j < jsoncontent.servers[i].servlets.length; j++) {
+                        var servlet = jsoncontent.servers[i].servlets[j];
+                        if (html.length > 2) html.push(' <tr><th colspan="4" style="border-bottom:0;">&nbsp;</th></tr>');
+                        html.push(' <tr><th colspan="4" style="border-top:' + ((html.length > 2) ? 0 : 1) + ';">' + (servlet.comment || '未知模块') + '</th></tr>');
+                        html.push(' <tr><th>请求URL</th><th>描 述</th><th>鉴 权</th><th>参 数 <span style="font-size:12px;">(红色: Header; 蓝色: Cookie)</span></th></tr>');
+                        for (var k = 0; k < servlet.actions.length; k++) {
+                            var action = servlet.actions[k];
+                            html.push(' <tr>');
+                            html.push('<td style="color:#ff00ff;">' + action.url + '</td>');
+                            html.push('<td>' + action.comment + '</td>');
+                            html.push('<td class="s">模块ID: ' + servlet.moduleid + '<br/>操作ID: ' + action.actionid + '<br/>需鉴权: ' + (action.auth ? '<font style="font-weight:bold;color:green;">true</font>' : '<font color=red>false</font>') + '</td>');
+                            var paramshtml = [];
+                            paramshtml.push('<table class="subtable">');
+                            for (var p = 0; p < action.params.length; p++) {
+                                var param = action.params[p];
+                                var t = param.type.substring(param.type.lastIndexOf('.') + 1);
+                                if (classmap[param.type.replace('[]', '')]) {
+                                    t = '<a href="#' + param.type.replace('[]', '') + '">' + t + '</a>';
+                                }
+                                if (param.name == '&') {
+                                    paramshtml.push('<tr><td>user </td><td> ' + t + '</td><td> 当前用户</td></tr>');
+                                } else {
+                                    var c = ' style="font-weight:bold;"';
+                                    if (param.src == "HEADER") c = ' style="color:red;font-weight:bold;"';
+                                    if (param.src == "COOKIE") c = ' style="color:blue;font-weight:bold;"';
+                                    paramshtml.push('<tr><td ' + c + '>' + param.name + ' </td><td> ' + t + '</td><td> ' + param.comment + '</td></tr>');
+                                }
+                            }
+                            paramshtml.push('</table>');
+                            html.push('<td class="s" style="padding:0 5px;">' + paramshtml.join('') + '</td>');
+                            html.push('</tr>');
+                        }
+                    }
+                }
+                for (var type in classmap) {
+                    html.push(' <tr><th colspan="4" style="border-bottom:0;">&nbsp;</th></tr>');
+                    html.push(' <tr id="' + type + '"><th colspan="4" style="border-top:0;">' + type + '</th></tr>');
+                    html.push(' <tr><td colspan="4"><table class="typetable">');
+                    for (var fieldname in classmap[type]) {
+                        var field = classmap[type][fieldname];
+                        var t = field.type.substring(field.type.lastIndexOf('.') + 1);
+                        html.push(' <tr class="l"><td>' + fieldname + '</td><td>' + t + '</td><td colspan="2">' + (field.comment || '') + '</td></tr>');
+                    }
+                    html.push(' </table></td></tr>');
+                }
+                html.push('</table><br/><br/><br/>');
+                html.push('</div>');
+                return html.join('');
+            };
+        </script>
+
+        <script>
+            var jsoncontent = ${content};
+            document.write(createhtml(jsoncontent));
+        </script>
+    </body>
+</html>
