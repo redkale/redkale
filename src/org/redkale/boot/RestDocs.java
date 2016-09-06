@@ -64,7 +64,7 @@ public class RestDocs extends HttpBaseServlet {
                     WebAction action = method.getAnnotation(WebAction.class);
                     if (action == null) continue;
                     final Map<String, Object> actionmap = new LinkedHashMap<>();
-                    actionmap.put("url", action.url());
+                    actionmap.put("url", prefix + action.url());
                     actionmap.put("auth", method.getAnnotation(AuthIgnore.class) == null);
                     actionmap.put("actionid", action.actionid());
                     actionmap.put("comment", action.comment());
