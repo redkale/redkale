@@ -74,15 +74,15 @@ public final class EntityInfo<T> {
 
     private final Attribute<T, Serializable>[] queryAttributes; //数据库中所有字段
 
-    private String insertSQL;
+    private final String insertSQL;
 
     final Attribute<T, Serializable>[] insertAttributes; //数据库中所有可新增字段
 
-    final String updateSQL;
+    private final String updateSQL;
 
     final Attribute<T, Serializable>[] updateAttributes; //数据库中所有可更新字段
 
-    final String deleteSQL;
+    private final String deleteSQL;
 
     private final int logLevel;
 
@@ -254,8 +254,8 @@ public final class EntityInfo<T> {
                 if (updatesb.length() > 0) updatesb.append(", ");
                 updatesb.append(col).append(" = ?");
             }
-            this.updateSQL = "UPDATE " + table + " SET " + updatesb + " WHERE " + getPrimarySQLColumn(null) + " = ?";
-            this.deleteSQL = "DELETE FROM " + table + " WHERE " + getPrimarySQLColumn(null) + " = ?";
+            this.updateSQL = "UPDATE " + (this.tableStrategy == null ? table : "${newtable}") + " SET " + updatesb + " WHERE " + getPrimarySQLColumn(null) + " = ?";
+            this.deleteSQL = "DELETE FROM " + (this.tableStrategy == null ? table : "${newtable}") + " WHERE " + getPrimarySQLColumn(null) + " = ?";
             this.querySQL = "SELECT * FROM " + table + " WHERE " + getPrimarySQLColumn(null) + " = ?";
         } else {
             this.insertSQL = null;
@@ -318,6 +318,16 @@ public final class EntityInfo<T> {
     public String getInsertSQL(T bean) {
         if (this.tableStrategy == null) return insertSQL;
         return insertSQL.replace("${newtable}", getTable(bean));
+    }
+
+    public String getUpdateSQL(T bean) {
+        if (this.tableStrategy == null) return updateSQL;
+        return updateSQL.replace("${newtable}", getTable(bean));
+    }
+
+    public String getDeleteSQL(T bean) {
+        if (this.tableStrategy == null) return deleteSQL;
+        return deleteSQL.replace("${newtable}", getTable(bean));
     }
 
     public String getTable(Serializable primary) {
