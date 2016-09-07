@@ -245,6 +245,7 @@ public final class Rest {
                 String comment = "";
                 int radix = 10;
                 RestHeader annhead = null;
+                RestSessionid annsid = null;
                 RestCookie anncookie = null;
                 RestAddress annaddr = null;
                 if (!sncp) { //SNCP协议中忽略参数中特定的注解，此处获取的只是SNCP请求端信息，并不是真实用户请求端的信息
@@ -264,10 +265,17 @@ public final class Rest {
                         comment = anncookie.comment();
                         if (n.isEmpty()) throw new RuntimeException("@RestCookie.value is illegal in " + method);
                     }
+                    annsid = param.getAnnotation(RestSessionid.class);
+                    if (annsid != null) {
+                        if (annhead != null) throw new RuntimeException("@RestSessionid and @RestHeader cannot on the same Parameter in " + method);
+                        if (anncookie != null) throw new RuntimeException("@RestSessionid and @RestCookie cannot on the same Parameter in " + method);
+                        if (ptype != String.class) throw new RuntimeException("@RestSessionid must on String Parameter in " + method);
+                    }
                     annaddr = param.getAnnotation(RestAddress.class);
                     if (annaddr != null) {
                         if (annhead != null) throw new RuntimeException("@RestAddress and @RestHeader cannot on the same Parameter in " + method);
                         if (anncookie != null) throw new RuntimeException("@RestAddress and @RestCookie cannot on the same Parameter in " + method);
+                        if (annsid != null) throw new RuntimeException("@RestAddress and @RestSessionid cannot on the same Parameter in " + method);
                         if (ptype != String.class) throw new RuntimeException("@RestAddress must on String Parameter in " + method);
                     }
                 }
@@ -287,9 +295,9 @@ public final class Rest {
                     && (entry.name.startsWith("find") || entry.name.startsWith("delete")) && params.length == 1) {
                     if (ptype.isPrimitive() || ptype == String.class) n = "#";
                 }
-
-                paramlist.add(new Object[]{param, n, ptype, radix, comment, annpara, annaddr, annhead, anncookie});
+                paramlist.add(new Object[]{param, n, ptype, radix, comment, annpara, annsid, annaddr, annhead, anncookie});
             }
+
             {
                 //设置 WebAction
                 boolean reqpath = false;
@@ -313,9 +321,9 @@ public final class Rest {
 
                 {
                     AnnotationVisitor av3 = av0.visitArray("params");
-                    for (Object[] ps : paramlist) { //{param, n, ptype, radix, comment, annpara, annaddr, annhead, anncookie}   
-                        final boolean ishead = ((RestHeader) ps[7]) != null; //是否取getHeader 而不是 getParameter
-                        final boolean iscookie = ((RestCookie) ps[8]) != null; //是否取getCookie
+                    for (Object[] ps : paramlist) { //{param, n, ptype, radix, comment, annpara, annsid, annaddr, annhead, anncookie}   
+                        final boolean ishead = ((RestHeader) ps[8]) != null; //是否取getHeader 而不是 getParameter
+                        final boolean iscookie = ((RestCookie) ps[9]) != null; //是否取getCookie
 
                         AnnotationVisitor av2 = av3.visitAnnotation(null, webparamDesc);
                         av2.visit("value", (String) ps[1]);
@@ -343,16 +351,23 @@ public final class Rest {
                 int radix = (Integer) ps[3];
                 String comment = (String) ps[4];
                 RestParam annpara = (RestParam) ps[5];
-                RestAddress annaddr = (RestAddress) ps[6];
-                RestHeader annhead = (RestHeader) ps[7];
-                RestCookie anncookie = (RestCookie) ps[8];
+                RestSessionid annsid = (RestSessionid) ps[6];
+                RestAddress annaddr = (RestAddress) ps[7];
+                RestHeader annhead = (RestHeader) ps[8];
+                RestCookie anncookie = (RestCookie) ps[9];
 
                 final boolean ishead = annhead != null; //是否取getHeader 而不是 getParameter
                 final boolean iscookie = anncookie != null; //是否取getCookie
 
                 paramMap.put("name", pname);
                 paramMap.put("type", ptype.getName());
-                if (annaddr != null) { //HttpRequest.getRemoteAddr
+                if (annsid != null) { //HttpRequest.getSessionid(true|false)
+                    mv.visitVarInsn(ALOAD, 1);
+                    mv.visitInsn(annsid.create() ? ICONST_1 : ICONST_0);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", "getSessionid", "(Z)Ljava/lang/String;", false);
+                    mv.visitVarInsn(ASTORE, maxLocals);
+                    varInsns.add(new int[]{ALOAD, maxLocals});
+                } else if (annaddr != null) { //HttpRequest.getRemoteAddr
                     mv.visitVarInsn(ALOAD, 1);
                     mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", "getRemoteAddr", "()Ljava/lang/String;", false);
                     mv.visitVarInsn(ASTORE, maxLocals);
@@ -527,10 +542,12 @@ public final class Rest {
                             if (fields.contains(field.getName())) continue;
                             RestHeader rh = field.getAnnotation(RestHeader.class);
                             RestCookie rc = field.getAnnotation(RestCookie.class);
+                            RestSessionid rs = field.getAnnotation(RestSessionid.class);
                             RestAddress ra = field.getAnnotation(RestAddress.class);
                             if (rh == null && rc == null && ra == null) continue;
                             if (rh != null && field.getType() != String.class) throw new RuntimeException("@RestHeader must on String Field in " + field);
                             if (rc != null && field.getType() != String.class) throw new RuntimeException("@RestCookie must on String Field in " + field);
+                            if (rs != null && field.getType() != String.class) throw new RuntimeException("@RestSessionid must on String Field in " + field);
                             if (ra != null && field.getType() != String.class) throw new RuntimeException("@RestAddress must on String Field in " + field);
                             org.redkale.util.Attribute attr = org.redkale.util.Attribute.create(loop, field);
                             String attrFieldName;
@@ -541,6 +558,9 @@ public final class Rest {
                             } else if (rc != null) {
                                 attrFieldName = "_redkale_attr_cookie_" + restAttributes.size();
                                 restname = rc.value();
+                            } else if (rs != null) {
+                                attrFieldName = "_redkale_attr_sessionid_" + restAttributes.size();
+                                restname = rs.create() ? "1" : ""; //用于下面区分create值
                             } else if (ra != null) {
                                 attrFieldName = "_redkale_attr_address_" + restAttributes.size();
                                 //restname = "";
@@ -553,7 +573,7 @@ public final class Rest {
                         }
                     } while ((loop = loop.getSuperclass()) != Object.class);
 
-                    if (!attrParaNames.isEmpty()) { //参数存在 RestHeader、RestCookie、RestAddress字段
+                    if (!attrParaNames.isEmpty()) { //参数存在 RestHeader、RestCookie、RestSessionid、RestAddress字段
                         mv.visitVarInsn(ALOAD, maxLocals);
                         Label lif = new Label();
                         mv.visitJumpInsn(IFNULL, lif);  //if(bean != null) {
@@ -570,6 +590,9 @@ public final class Rest {
                                 mv.visitLdcInsn(en.getValue()[0].toString());
                                 mv.visitLdcInsn("");
                                 mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", "getCookie", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
+                            } else if (en.getKey().contains("_sessionid_")) {
+                                mv.visitInsn(en.getValue()[0].toString().isEmpty() ? ICONST_0 : ICONST_1);
+                                mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", "getSessionid", "(Z)Ljava/lang/String;", false);
                             } else if (en.getKey().contains("_address_")) {
                                 mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", "getRemoteAddr", "()Ljava/lang/String;", false);
                             }
