@@ -109,10 +109,7 @@ public final class HttpPrepareServlet extends PrepareServlet<String, HttpContext
             for (String mapping : mappings) {
                 if (mapping == null) continue;
                 if (!prefix.toString().isEmpty()) mapping = prefix + mapping;
-                if (this.allMapStrings.containsKey(mapping)) {
-                    Class old = this.allMapStrings.get(mapping);
-                    throw new RuntimeException("mapping [" + mapping + "] repeat on " + old.getName() + " and " + servlet.getClass().getName());
-                }
+
                 if (contains(mapping, '.', '*', '{', '[', '(', '|', '^', '$', '+', '?', '\\')) { //是否是正则表达式))
                     if (mapping.charAt(0) != '^') mapping = '^' + mapping;
                     if (mapping.endsWith("/*")) {
@@ -129,6 +126,10 @@ public final class HttpPrepareServlet extends PrepareServlet<String, HttpContext
                     }
                 } else if (mapping != null && !mapping.isEmpty()) {
                     super.mappings.put(mapping, servlet);
+                }
+                if (this.allMapStrings.containsKey(mapping)) {
+                    Class old = this.allMapStrings.get(mapping);
+                    throw new RuntimeException("mapping [" + mapping + "] repeat on " + old.getName() + " and " + servlet.getClass().getName());
                 }
                 this.allMapStrings.put(mapping, servlet.getClass());
             }
