@@ -37,7 +37,7 @@ public final class EntityInfo<T> {
     private final Class<T> type;
 
     //类对应的数据表名, 如果是VirtualEntity 类， 则该字段为null
-    private final String table;
+    final String table;
 
     private final Creator<T> creator;
 
@@ -62,11 +62,19 @@ public final class EntityInfo<T> {
 
     final String notcontainSQL; //用于反向LIKE使用
 
+    final String tablenotexistSqlstate; //用于判断表不存在的使用
+
+    final String tablecopySQL; //用于复制表结构使用
+
+    final Set<String> tables = new HashSet<>(); //用于存在table_20160202类似这种分布式表
+
+    final DistributeTableStrategy<T> tableStrategy;
+
     final String querySQL;
 
     private final Attribute<T, Serializable>[] queryAttributes; //数据库中所有字段
 
-    final String insertSQL;
+    private String insertSQL;
 
     final Attribute<T, Serializable>[] insertAttributes; //数据库中所有可新增字段
 
@@ -145,6 +153,15 @@ public final class EntityInfo<T> {
             this.fullloader = fullloader;
             this.table = (t == null) ? type.getSimpleName().toLowerCase() : (t.catalog().isEmpty()) ? t.name() : (t.catalog() + '.' + t.name());
         }
+        DistributeTable dt = type.getAnnotation(DistributeTable.class);
+        DistributeTableStrategy dts = null;
+        try {
+            dts = (dt == null) ? null : dt.strategy().newInstance();
+        } catch (Exception e) {
+            logger.severe(type + " init DistributeTableStrategy error", e);
+        }
+        this.tableStrategy = dts;
+
         this.creator = Creator.create(type);
         Attribute idAttr0 = null;
         Map<String, String> aliasmap0 = null;
@@ -231,7 +248,7 @@ public final class EntityInfo<T> {
                 if (insertsb2.length() > 0) insertsb2.append(',');
                 insertsb2.append('?');
             }
-            this.insertSQL = "INSERT INTO " + table + "(" + insertsb + ") VALUES(" + insertsb2 + ")";
+            this.insertSQL = "INSERT INTO " + (this.tableStrategy == null ? table : "${newtable}") + "(" + insertsb + ") VALUES(" + insertsb2 + ")";
             StringBuilder updatesb = new StringBuilder();
             for (String col : updatecols) {
                 if (updatesb.length() > 0) updatesb.append(", ");
@@ -259,6 +276,9 @@ public final class EntityInfo<T> {
         if (conf == null) conf = new Properties();
         this.containSQL = conf.getProperty(JDBC_CONTAIN_SQLTEMPLATE, "LOCATE(${keystr}, ${column}) > 0");
         this.notcontainSQL = conf.getProperty(JDBC_NOTCONTAIN_SQLTEMPLATE, "LOCATE(${keystr}, ${column}) = 0");
+
+        this.tablenotexistSqlstate = conf.getProperty(JDBC_TABLENOTEXIST_SQLSTATE, "42S02");
+        this.tablecopySQL = conf.getProperty(JDBC_TABLECOPY_SQLTEMPLATE, "CREATE TABLE ${newtable}  LIKE ${oldtable}");
     }
 
     public void createPrimaryValue(T src) {
@@ -295,16 +315,27 @@ public final class EntityInfo<T> {
         return table == null;
     }
 
+    public String getInsertSQL(T bean) {
+        if (this.tableStrategy == null) return insertSQL;
+        return insertSQL.replace("${newtable}", getTable(bean));
+    }
+
     public String getTable(Serializable primary) {
-        return table;
+        if (tableStrategy == null) return table;
+        String t = tableStrategy.getTable(table, primary);
+        return t == null || t.isEmpty() ? table : t;
     }
 
     public String getTable(FilterNode node) {
-        return table;
+        if (tableStrategy == null) return table;
+        String t = tableStrategy.getTable(table, node);
+        return t == null || t.isEmpty() ? table : t;
     }
 
     public String getTable(T bean) {
-        return table;
+        if (tableStrategy == null) return table;
+        String t = tableStrategy.getTable(table, bean);
+        return t == null || t.isEmpty() ? table : t;
     }
 
     public Attribute<T, Serializable> getPrimary() {
