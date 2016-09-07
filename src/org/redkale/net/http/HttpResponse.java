@@ -196,6 +196,29 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
     }
 
     /**
+     * 增加Cookie值
+     *
+     * @param cookies cookie
+     *
+     * @return HttpResponse
+     */
+    public HttpResponse addCookie(Collection<HttpCookie> cookies) {
+        if (cookies == null || cookies.isEmpty()) return this;
+        if (this.cookies == null) {
+            this.cookies = cookies.toArray(new HttpCookie[cookies.size()]);
+        } else {
+            HttpCookie[] news = new HttpCookie[this.cookies.length + cookies.size()];
+            System.arraycopy(this.cookies, 0, news, 0, this.cookies.length);
+            int i = this.cookies.length;
+            for (HttpCookie cookie : cookies) {
+                news[i++] = cookie;
+            }
+            this.cookies = news;
+        }
+        return this;
+    }
+
+    /**
      * 将对象以JSON格式输出
      *
      * @param obj 输出对象
@@ -687,6 +710,21 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      */
     public HttpResponse addHeader(String name, Object value) {
         this.header.addValue(name, String.valueOf(value));
+        return this;
+    }
+
+    /**
+     * 添加Header值
+     *
+     * @param map header值
+     *
+     * @return HttpResponse
+     */
+    public HttpResponse addHeader(Map<String, ?> map) {
+        if (map == null || map.isEmpty()) return this;
+        for (Map.Entry<String, ?> en : map.entrySet()) {
+            this.header.addValue(en.getKey(), String.valueOf(en.getValue()));
+        }
         return this;
     }
 

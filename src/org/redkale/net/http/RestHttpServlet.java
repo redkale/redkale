@@ -19,6 +19,22 @@ public abstract class RestHttpServlet<T> extends HttpBaseServlet {
 
     protected abstract T currentUser(HttpRequest req) throws IOException;
 
+    protected void finishJson(final HttpResponse response, RestOutput output) throws IOException {
+        if (output != null) {
+            response.addHeader(output.getHeaders());
+            response.addCookie(output.getCookies());
+        }
+        response.finishJson(output == null ? null : output.getResult());
+    }
+
+    protected void finishJsResult(final HttpResponse response, final String var, RestOutput output) throws IOException {
+        if (output != null) {
+            response.addHeader(output.getHeaders());
+            response.addCookie(output.getCookies());
+        }
+        response.finishJsResult(var, output == null ? null : output.getResult());
+    }
+
     Attribute[] _paramAttrs; // 为null表示无DynCall处理，index=0固定为null, 其他为参数标记的DynCall回调方法
 
     protected void _callParameter(final HttpResponse response, final Object... params) {

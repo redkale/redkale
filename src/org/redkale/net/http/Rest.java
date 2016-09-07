@@ -73,6 +73,7 @@ public final class Rest {
         final String webServletDesc = Type.getDescriptor(WebServlet.class);
         final String httpRequestDesc = Type.getDescriptor(HttpRequest.class);
         final String httpResponseDesc = Type.getDescriptor(HttpResponse.class);
+        final String restoutputDesc = Type.getDescriptor(RestOutput.class);
         final String attrDesc = Type.getDescriptor(org.redkale.util.Attribute.class);
         final String authDesc = Type.getDescriptor(HttpBaseServlet.AuthIgnore.class);
         final String actionDesc = Type.getDescriptor(HttpBaseServlet.WebAction.class);
@@ -807,6 +808,22 @@ public final class Rest {
                     mv.visitVarInsn(ALOAD, maxLocals);
                     mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpResponse", "finishJsResult", "(Ljava/lang/String;Ljava/lang/Object;)V", false);
                     //mv.visitMethodInsn(INVOKEVIRTUAL, newDynName, "sendJsResult", "(Lorg/redkale/net/http/HttpResponse;Ljava/lang/String;Ljava/lang/Object;)V", false);
+                }
+                mv.visitInsn(RETURN);
+                maxLocals++;
+            } else if (!sncp && RestOutput.class.isAssignableFrom(returnType)) {
+                mv.visitVarInsn(ASTORE, maxLocals);
+                if (jsvar == null) {
+                    mv.visitVarInsn(ALOAD, 0);
+                    mv.visitVarInsn(ALOAD, 2);
+                    mv.visitVarInsn(ALOAD, maxLocals);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, newDynName, "finishJson", "(Lorg/redkale/net/http/HttpResponse;" + restoutputDesc + ")V", false);
+                } else {
+                    mv.visitVarInsn(ALOAD, 0);
+                    mv.visitVarInsn(ALOAD, 2);
+                    mv.visitLdcInsn(jsvar);
+                    mv.visitVarInsn(ALOAD, maxLocals);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, newDynName, "finishJsResult", "(Lorg/redkale/net/http/HttpResponse;Ljava/lang/String;" + restoutputDesc + ")V", false);
                 }
                 mv.visitInsn(RETURN);
                 maxLocals++;
