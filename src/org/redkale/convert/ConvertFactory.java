@@ -104,6 +104,14 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
             this.register(double[].class, DoubleArraySimpledCoder.instance);
             this.register(String[].class, StringArraySimpledCoder.instance);
             //---------------------------------------------------------
+            this.register(HttpCookie.class, new Creator<HttpCookie>() {
+                @Override
+                @Creator.ConstructorParameters({"name", "value"})
+                public HttpCookie create(Object... params) {
+                    return new HttpCookie((String) params[0], (String) params[1]);
+                }
+
+            });
         }
     }
 
@@ -387,7 +395,9 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
         } else if (clazz == Object.class) {
             od = new ObjectDecoder(type);
             decoder = od;
-        } else if (!clazz.getName().startsWith("java.") || clazz.getName().startsWith("java.awt.geom.Point2D")) {
+        } else if (!clazz.getName().startsWith("java.")
+            || java.net.HttpCookie.class == clazz
+            || clazz.getName().startsWith("java.awt.geom.Point2D")) {
             Decodeable simpleCoder = null;
             for (final Method method : clazz.getDeclaredMethods()) {
                 if (!Modifier.isStatic(method.getModifiers())) continue;
@@ -467,7 +477,7 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
             encoder = new MapEncoder(this, type);
         } else if (clazz == Object.class) {
             return (Encodeable<W, E>) this.anyEncoder;
-        } else if (!clazz.getName().startsWith("java.")) {
+        } else if (!clazz.getName().startsWith("java.") || java.net.HttpCookie.class == clazz) {
             Encodeable simpleCoder = null;
             for (final Method method : clazz.getDeclaredMethods()) {
                 if (!Modifier.isStatic(method.getModifiers())) continue;
