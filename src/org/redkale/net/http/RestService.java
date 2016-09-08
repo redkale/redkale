@@ -23,13 +23,13 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface RestService {
 
+    String name() default ""; //模块名, 只能是模块名,不能含特殊字符
+
+    int moduleid() default 0; //模块ID值，鉴权时用到, 对应&#64;WebServlet.moduleid
+
     boolean ignore() default false; //是否屏蔽该类的转换
 
-    String value() default ""; //模块名, 只能是模块名,不能含特殊字符
-
     boolean repair() default true; //同&#64;WebServlet的repair属性
-
-    int module() default 0; //模块ID值，鉴权时用到, 对应&#64;WebServlet.module
 
     String comment() default ""; //备注描述
 }

@@ -59,7 +59,7 @@ public final class Rest {
         final RestService controller = serviceType.getAnnotation(RestService.class);
         if (controller == null) return serviceType.getSimpleName().replaceAll("Service.*$", "").toLowerCase();
         if (controller.ignore()) return null;
-        return (!controller.value().isEmpty()) ? controller.value() : serviceType.getSimpleName().replaceAll("Service.*$", "").toLowerCase();
+        return (!controller.name().isEmpty()) ? controller.name() : serviceType.getSimpleName().replaceAll("Service.*$", "").toLowerCase();
     }
 
     static <T extends RestHttpServlet> T createRestServlet(final Class<T> baseServletClass, final Class<? extends Service> serviceType, final boolean sncp) {
@@ -119,7 +119,7 @@ public final class Rest {
 
         { //注入 @WebServlet 注解
             String urlpath = "/" + defmodulename + "/*";
-            int moduleid = controller == null ? 0 : controller.module();
+            int moduleid = controller == null ? 0 : controller.moduleid();
             boolean repair = controller == null ? true : controller.repair();
             String comment = controller == null ? "" : controller.comment();
             av0 = cw.visitAnnotation(webServletDesc, true);
@@ -252,7 +252,7 @@ public final class Rest {
                 if (!sncp) { //SNCP协议中忽略参数中特定的注解，此处获取的只是SNCP请求端信息，并不是真实用户请求端的信息
                     annhead = param.getAnnotation(RestHeader.class);
                     if (annhead != null) {
-                        n = annhead.value();
+                        n = annhead.name();
                         radix = annhead.radix();
                         comment = annhead.comment();
                         if (n.isEmpty()) throw new RuntimeException("@RestHeader.value is illegal in " + method);
@@ -261,7 +261,7 @@ public final class Rest {
                     if (anncookie != null) {
                         if (annhead != null) throw new RuntimeException("@RestCookie and @RestHeader cannot on the same Parameter in " + method);
                         if (ptype != String.class) throw new RuntimeException("@RestCookie must on String Parameter in " + method);
-                        n = anncookie.value();
+                        n = anncookie.name();
                         radix = anncookie.radix();
                         comment = anncookie.comment();
                         if (n.isEmpty()) throw new RuntimeException("@RestCookie.value is illegal in " + method);
@@ -283,7 +283,7 @@ public final class Rest {
                 RestParam annpara = param.getAnnotation(RestParam.class);
                 if (annpara != null) radix = annpara.radix();
                 if (annpara != null) comment = annpara.comment();
-                if (n == null) n = (annpara == null || annpara.value().isEmpty()) ? null : annpara.value();
+                if (n == null) n = (annpara == null || annpara.name().isEmpty()) ? null : annpara.name();
                 if (n == null && ptype == userType) n = "&"; //用户类型特殊处理
                 if (n == null) {
                     if (param.isNamePresent()) {
@@ -555,10 +555,10 @@ public final class Rest {
                             String restname = "";
                             if (rh != null) {
                                 attrFieldName = "_redkale_attr_header_" + restAttributes.size();
-                                restname = rh.value();
+                                restname = rh.name();
                             } else if (rc != null) {
                                 attrFieldName = "_redkale_attr_cookie_" + restAttributes.size();
-                                restname = rc.value();
+                                restname = rc.name();
                             } else if (rs != null) {
                                 attrFieldName = "_redkale_attr_sessionid_" + restAttributes.size();
                                 restname = rs.create() ? "1" : ""; //用于下面区分create值

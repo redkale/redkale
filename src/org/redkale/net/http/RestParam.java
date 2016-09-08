@@ -22,9 +22,9 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface RestParam {
 
-    String value(); //参数名
-
-    String comment() default ""; //备注描述
+    String name(); //参数名
 
     int radix() default 10; //转换数字byte/short/int/long时所用的进制数， 默认10进制
+
+    String comment() default ""; //备注描述
 }
