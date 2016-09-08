@@ -19,9 +19,9 @@ public class HelloEntity {
 
     private long createtime;
 
-    @RestHeader("hello-res")
+    @RestHeader(name = "hello-res")
     private String resname;
-    
+
     @RestAddress
     private String clientaddr;
 

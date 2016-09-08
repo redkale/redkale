@@ -8,7 +8,7 @@ public class HelloBean implements FilterBean {
 
     private int helloid;
 
-    @RestHeader("hello-res")
+    @RestHeader(name = "hello-res")
     private String res;
 
     public int getHelloid() {
