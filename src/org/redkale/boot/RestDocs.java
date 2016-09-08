@@ -74,7 +74,7 @@ public class RestDocs extends HttpBaseServlet {
                         final Map<String, Object> parammap = new LinkedHashMap<>();
                         final boolean isarray = param.type().isArray();
                         final Class ptype = isarray ? param.type().getComponentType() : param.type();
-                        parammap.put("name", param.value());
+                        parammap.put("name", param.name());
                         parammap.put("radix", param.radix());
                         parammap.put("type", ptype.getName() + (isarray ? "[]" : ""));
                         parammap.put("src", param.src());

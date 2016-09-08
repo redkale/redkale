@@ -327,7 +327,7 @@ public final class Rest {
                         final boolean iscookie = ((RestCookie) ps[9]) != null; //是否取getCookie
 
                         AnnotationVisitor av2 = av3.visitAnnotation(null, webparamDesc);
-                        av2.visit("value", (String) ps[1]);
+                        av2.visit("name", (String) ps[1]);
                         av2.visit("type", Type.getType(Type.getDescriptor((Class) ps[2])));
                         av2.visit("radix", (Integer) ps[3]);
                         av2.visitEnum("src", sourcetypeDesc, ishead ? HttpBaseServlet.ParamSourceType.HEADER.name()

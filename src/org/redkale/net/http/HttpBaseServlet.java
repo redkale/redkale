@@ -79,7 +79,7 @@ public abstract class HttpBaseServlet extends HttpServlet {
     @Documented
     protected @interface WebParam {
 
-        String value(); //参数名
+        String name(); //参数名
 
         Class type(); //参数的数据类型
 
