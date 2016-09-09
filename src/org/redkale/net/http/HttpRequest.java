@@ -312,6 +312,7 @@ public class HttpRequest extends Request<HttpContext> {
      * 获取文件上传信息列表
      *
      * @return 文件上传对象集合
+     *
      * @throws IOException IO异常
      */
     public final Iterable<MultiPart> multiParts() throws IOException {
@@ -545,6 +546,22 @@ public class HttpRequest extends Request<HttpContext> {
     }
 
     /**
+     * 获取请求URL分段中含prefix段的short值   <br>
+     * 例如请求URL /pipes/record/query/type:10   <br>
+     * 获取type参数: short type = request.getRequstURIPath("type:", (short)0);
+     *
+     * @param radix    进制数
+     * @param prefix   prefix段前缀
+     * @param defvalue 默认short值
+     *
+     * @return short值
+     */
+    public short getRequstURIPath(int radix, String prefix, short defvalue) {
+        String val = getRequstURIPath(prefix, null);
+        return val == null ? defvalue : Short.parseShort(val, radix);
+    }
+
+    /**
      * 获取请求URL分段中含prefix段的int值  <br>
      * 例如请求URL /pipes/record/query/offset:0/limit:50   <br>
      * 获取起址参数: int offset = request.getRequstURIPath("offset:", 0);   <br>
@@ -558,6 +575,23 @@ public class HttpRequest extends Request<HttpContext> {
     public int getRequstURIPath(String prefix, int defvalue) {
         String val = getRequstURIPath(prefix, null);
         return val == null ? defvalue : Integer.parseInt(val);
+    }
+
+    /**
+     * 获取请求URL分段中含prefix段的int值  <br>
+     * 例如请求URL /pipes/record/query/offset:0/limit:50   <br>
+     * 获取起址参数: int offset = request.getRequstURIPath("offset:", 0);   <br>
+     * 获取行数参数: int limit = request.getRequstURIPath("limit:", 20);  <br>
+     *
+     * @param radix    进制数
+     * @param prefix   prefix段前缀
+     * @param defvalue 默认int值
+     *
+     * @return int值
+     */
+    public int getRequstURIPath(int radix, String prefix, int defvalue) {
+        String val = getRequstURIPath(prefix, null);
+        return val == null ? defvalue : Integer.parseInt(val, radix);
     }
 
     /**
@@ -588,6 +622,22 @@ public class HttpRequest extends Request<HttpContext> {
     public long getRequstURIPath(String prefix, long defvalue) {
         String val = getRequstURIPath(prefix, null);
         return val == null ? defvalue : Long.parseLong(val);
+    }
+
+    /**
+     * 获取请求URL分段中含prefix段的long值   <br>
+     * 例如请求URL /pipes/record/query/time:1453104341363/id:40   <br>
+     * 获取time参数: long time = request.getRequstURIPath("time:", 0L);
+     *
+     * @param radix    进制数
+     * @param prefix   prefix段前缀
+     * @param defvalue 默认long值
+     *
+     * @return long值
+     */
+    public long getRequstURIPath(int radix, String prefix, long defvalue) {
+        String val = getRequstURIPath(prefix, null);
+        return val == null ? defvalue : Long.parseLong(val, radix);
     }
 
     /**
