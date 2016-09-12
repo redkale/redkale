@@ -177,19 +177,21 @@ public final class ResourceFactory {
         checkName(name);
         ConcurrentHashMap<String, ResourceEntry> map = this.store.get(clazz);
         if (map == null) {
-            ConcurrentHashMap<String, ResourceEntry> sub = new ConcurrentHashMap();
-            sub.put(name, new ResourceEntry(rs));
-            store.put(clazz, sub);
-            return null;
-        } else {
-            ResourceEntry re = map.get(name);
-            if (re == null) {
-                map.put(name, new ResourceEntry(rs));
-            } else {
-                map.put(name, new ResourceEntry(rs, name, re.elements, autoSync));
+            synchronized (clazz) {
+                map = this.store.get(clazz);
+                if (map == null) {
+                    map = new ConcurrentHashMap();
+                    store.put(clazz, map);
+                }
             }
-            return re == null ? null : (A) re.value;
         }
+        ResourceEntry re = map.get(name);
+        if (re == null) {
+            map.put(name, new ResourceEntry(rs));
+        } else {
+            map.put(name, new ResourceEntry(rs, name, re.elements, autoSync));
+        }
+        return re == null ? null : (A) re.value;
     }
 
     public <A> A find(Class<? extends A> clazz) {
