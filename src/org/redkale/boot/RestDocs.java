@@ -92,7 +92,7 @@ public class RestDocs extends HttpBaseServlet {
                                 if (Modifier.isStatic(field.getModifiers())) continue;
 
                                 Map<String, String> fieldmap = new LinkedHashMap<>();
-                                fieldmap.put("type", field.getType().getName());
+                                fieldmap.put("type", field.getType().isArray() ? (field.getType().getComponentType().getName()+"[]") : field.getType().getName());
 
                                 Comment comment = field.getAnnotation(Comment.class);
                                 if (comment != null) fieldmap.put("comment", comment.value());
@@ -130,7 +130,7 @@ public class RestDocs extends HttpBaseServlet {
         if (doctemplate.isFile() && doctemplate.canRead()) {
             in = new FileInputStream(doctemplate);
         }
-        if(in == null) in = RestDocs.class.getResourceAsStream("restdoc-template.html");
+        if (in == null) in = RestDocs.class.getResourceAsStream("restdoc-template.html");
         String content = Utility.read(in).replace("${content}", json);
         in.close();
         FileOutputStream outhtml = new FileOutputStream(new File(app.getHome(), "restdoc.html"));
