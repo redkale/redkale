@@ -92,7 +92,7 @@ public class RestDocs extends HttpBaseServlet {
                                 if (Modifier.isStatic(field.getModifiers())) continue;
 
                                 Map<String, String> fieldmap = new LinkedHashMap<>();
-                                fieldmap.put("type", field.getType().isArray() ? (field.getType().getComponentType().getName()+"[]") : field.getType().getName());
+                                fieldmap.put("type", field.getType().isArray() ? (field.getType().getComponentType().getName() + "[]") : field.getType().getName());
 
                                 Comment comment = field.getAnnotation(Comment.class);
                                 if (comment != null) fieldmap.put("comment", comment.value());
@@ -107,6 +107,8 @@ public class RestDocs extends HttpBaseServlet {
 
                         typesmap.put(ptype.getName(), typemap);
                     }
+                    actionmap.put("result", action.result().getName());
+                    actionmap.put("ret", action.ret());
                     actionsList.add(actionmap);
                 }
                 actionsList.sort((o1, o2) -> ((String) o1.get("url")).compareTo((String) o2.get("url")));

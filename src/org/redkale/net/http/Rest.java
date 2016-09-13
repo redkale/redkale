@@ -194,7 +194,6 @@ public final class Rest {
             }
         }
         if (entrys.isEmpty()) return null; //没有可WebAction的方法
-        Map<String, Object> actionMap = new LinkedHashMap<>();
         for (final MappingEntry entry : entrys) {
             final Method method = entry.mappingMethod;
             final Class returnType = method.getReturnType();
@@ -301,6 +300,7 @@ public final class Rest {
                 paramlist.add(new Object[]{param, n, ptype, radix, comment, annpara, annsid, annaddr, annhead, anncookie});
             }
 
+            Map<String, Object> actionMap = new LinkedHashMap<>();
             {
                 //设置 WebAction
                 boolean reqpath = false;
@@ -339,11 +339,22 @@ public final class Rest {
                     }
                     av3.visitEnd();
                 }
+                boolean ret = returnType == RetResult.class;
+                java.lang.reflect.Type rt = method.getGenericReturnType();
+                boolean subrt = (ret && rt instanceof ParameterizedType);
+                java.lang.reflect.Type[] subts = subrt ? ((ParameterizedType) rt).getActualTypeArguments() : null;
+                Class cz = subts == null ? returnType
+                    : (subts[0] instanceof Class ? (Class) subts[0] : (subts[0] instanceof ParameterizedType ? (Class) ((ParameterizedType) subts[0]).getRawType() : Object.class));
+                av0.visit("result", Type.getType(Type.getDescriptor(subrt ? cz : returnType)));
+                av0.visit("ret", ret);
+
                 av0.visitEnd();
                 actionMap.put("url", url);
                 actionMap.put("actionid", entry.actionid);
                 actionMap.put("comment", entry.comment);
                 actionMap.put("methods", entry.methods);
+                actionMap.put("result", subrt ? cz.getName() : returnType.getName());
+                actionMap.put("ret", ret);
             }
 
             List<Map<String, Object>> paramMaps = new ArrayList<>();

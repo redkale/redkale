@@ -113,6 +113,10 @@ public abstract class HttpBaseServlet extends HttpServlet {
         String comment() default ""; //备注描述
 
         WebParam[] params() default {};
+
+        Class result() default Object.class; //输出结果的数据类型
+
+        boolean ret() default true;  //是否为RetResult包装
     }
 
     /**

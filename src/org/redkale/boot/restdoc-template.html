@@ -27,9 +27,9 @@
                 for (var i = 0; i < jsoncontent.servers.length; i++) {
                     for (var j = 0; j < jsoncontent.servers[i].servlets.length; j++) {
                         var servlet = jsoncontent.servers[i].servlets[j];
-                        if (html.length > 2) html.push(' <tr><th colspan="4" style="border-bottom:0;">&nbsp;</th></tr>');
-                        html.push(' <tr><th colspan="4" style="border-top:' + ((html.length > 2) ? 0 : 1) + ';">' + (servlet.comment || '未知模块') + '</th></tr>');
-                        html.push(' <tr><th>请求URL</th><th>描 述</th><th>鉴 权</th><th>参 数 <span style="font-size:12px;">(红色: Header; 蓝色: Cookie)</span></th></tr>');
+                        if (html.length > 2) html.push(' <tr><th colspan="5" style="border-bottom:0;">&nbsp;</th></tr>');
+                        html.push(' <tr><th colspan="5" style="border-top:' + ((html.length > 2) ? 0 : 1) + ';">' + (servlet.comment || '未知模块') + '</th></tr>');
+                        html.push(' <tr><th>请求URL</th><th>描 述</th><th>鉴 权</th><th>参 数 <span style="font-size:12px;">(红色: Header; 蓝色: Cookie)</span></th><th>输 出</th></tr>');
                         for (var k = 0; k < servlet.actions.length; k++) {
                             var action = servlet.actions[k];
                             html.push(' <tr>');
@@ -55,14 +55,16 @@
                             }
                             paramshtml.push('</table>');
                             html.push('<td class="s" style="padding:0 5px;">' + paramshtml.join('') + '</td>');
+                            var rt = action.result.substring(action.result.lastIndexOf('.') + 1);
+                            html.push('<td>' + (action.ret ? ("RetResult&lt;" + rt + "&gt;") : rt) + '</td>');
                             html.push('</tr>');
                         }
                     }
                 }
                 for (var type in classmap) {
-                    html.push(' <tr><th colspan="4" style="border-bottom:0;">&nbsp;</th></tr>');
-                    html.push(' <tr id="' + type + '"><th colspan="4" style="border-top:0;">' + type + '</th></tr>');
-                    html.push(' <tr><td colspan="4"><table class="typetable">');
+                    html.push(' <tr><th colspan="5" style="border-bottom:0;">&nbsp;</th></tr>');
+                    html.push(' <tr id="' + type + '"><th colspan="5" style="border-top:0;">' + type + '</th></tr>');
+                    html.push(' <tr><td colspan="5"><table class="typetable">');
                     for (var fieldname in classmap[type]) {
                         var field = classmap[type][fieldname];
                         var t = field.type.substring(field.type.lastIndexOf('.') + 1);
