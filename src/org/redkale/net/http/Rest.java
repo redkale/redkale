@@ -288,6 +288,8 @@ public final class Rest {
                 if (n == null) {
                     if (param.isNamePresent()) {
                         n = param.getName();
+                    } else if (ptype == Flipper.class) {
+                        n = "flipper";
                     } else {
                         n = (++argIndex > 1) ? ("bean" + argIndex) : "bean";
                     }
