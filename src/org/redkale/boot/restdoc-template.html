@@ -55,8 +55,7 @@
                             }
                             paramshtml.push('</table>');
                             html.push('<td class="s" style="padding:0 5px;">' + paramshtml.join('') + '</td>');
-                            var rt = action.result.substring(action.result.lastIndexOf('.') + 1);
-                            html.push('<td>' + (action.ret ? ("RetResult&lt;" + rt + "&gt;") : rt) + '</td>');
+                            html.push('<td>' + action.result.replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/([a-zA-Z0-9_\$]+\.)+/g, "") + '</td>');
                             html.push('</tr>');
                         }
                     }

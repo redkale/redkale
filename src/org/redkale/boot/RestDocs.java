@@ -107,8 +107,7 @@ public class RestDocs extends HttpBaseServlet {
 
                         typesmap.put(ptype.getName(), typemap);
                     }
-                    actionmap.put("result", action.result().getName());
-                    actionmap.put("ret", action.ret());
+                    actionmap.put("result", action.result());
                     actionsList.add(actionmap);
                 }
                 actionsList.sort((o1, o2) -> ((String) o1.get("url")).compareTo((String) o2.get("url")));
