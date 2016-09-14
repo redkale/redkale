@@ -15,7 +15,7 @@ import java.util.*;
  * 详情见: http://redkale.org
  *
  * @author zhangjx
- * @param <T>
+ * @param <T> 结果对象的类型
  */
 public class RestOutput<T> {
 

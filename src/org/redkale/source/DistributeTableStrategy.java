@@ -13,7 +13,7 @@ import java.io.Serializable;
  * 详情见: http://redkale.org
  *
  * @author zhangjx
- * @param <T>
+ * @param <T> Entity类型
  */
 public interface DistributeTableStrategy<T> {
 

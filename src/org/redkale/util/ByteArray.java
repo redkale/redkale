@@ -94,7 +94,7 @@ public final class ByteArray {
     /**
      * 将buf内容覆盖到本对象内容中
      *
-     * @param buf
+     * @param buf 目标容器
      */
     public void copyTo(byte[] buf) {
         System.arraycopy(this.content, 0, buf, 0, count);
@@ -103,7 +103,7 @@ public final class ByteArray {
     /**
      * 将array的内容引用复制给本对象
      *
-     * @param array
+     * @param array ByteArray
      */
     public void directFrom(ByteArray array) {
         if (array != null) {
@@ -115,7 +115,7 @@ public final class ByteArray {
     /**
      * 将本对象的内容引用复制给array
      *
-     * @param array
+     * @param array ByteArray
      */
     public void directTo(ByteArray array) {
         if (array != null) {
@@ -270,8 +270,8 @@ public final class ByteArray {
     /**
      * 写入ByteBuffer指定长度的数据
      *
-     * @param buffer
-     * @param len
+     * @param buffer 数据
+     * @param len    指定长度
      */
     public void write(ByteBuffer buffer, int len) {
         if (len < 1) return;
@@ -294,7 +294,7 @@ public final class ByteArray {
      *
      * @param charset 字符集
      *
-     * @return
+     * @return 字符串
      */
     public String toString(final Charset charset) {
         return toString(0, count, charset);
@@ -305,7 +305,7 @@ public final class ByteArray {
      *
      * @param charset 字符集
      *
-     * @return
+     * @return 字符串
      */
     public String toStringAndClear(final Charset charset) {
         String str = toString(0, count, charset);
@@ -320,7 +320,7 @@ public final class ByteArray {
      * @param len     长度
      * @param charset 字符集
      *
-     * @return
+     * @return 字符串
      */
     public String toString(final int offset, int len, final Charset charset) {
         if (charset == null) return new String(Utility.decodeUTF8(content, offset, len));
@@ -334,7 +334,7 @@ public final class ByteArray {
      * @param len     长度
      * @param charset 字符集
      *
-     * @return
+     * @return 字符串
      */
     public String toDecodeString(final int offset, int len, final Charset charset) {
         int index = offset;

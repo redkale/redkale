@@ -10,7 +10,7 @@ import static java.lang.annotation.ElementType.PARAMETER;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * 只能依附在Service类的方法的参数上, name值不能是'&'
+ * 只能依附在Service类的方法的参数上, name值不能是'&#38;'
  * name='#'表示截取uri最后一段
  * name='#xxx:'表示从uri中/pipes/xxx:v/截取xxx:的值
  * <p>

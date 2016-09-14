@@ -212,7 +212,7 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
     /**
      * 使所有类的所有被声明为ConvertColumn.ignore = true 的字段或方法变为ConvertColumn.ignore = false
      *
-     * @param skipIgnore
+     * @param skipIgnore 忽略ignore
      *
      * @return 自身
      */

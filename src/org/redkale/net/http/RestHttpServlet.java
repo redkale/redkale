@@ -13,7 +13,7 @@ import org.redkale.util.Attribute;
  * 详情见: http://redkale.org
  *
  * @author zhangjx
- * @param <T>
+ * @param <T> 当前用户对象类型
  */
 public abstract class RestHttpServlet<T> extends HttpBaseServlet {
 
