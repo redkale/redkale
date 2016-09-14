@@ -237,6 +237,7 @@ public abstract class NodeServer {
                 source.setStoreType(pt == null ? Serializable.class : (Class) pt.getActualTypeArguments()[0], valType instanceof Class ? (Class) valType : Object.class);
                 if (field.getAnnotation(Transient.class) != null) source.setNeedStore(false); //必须在setStoreType之后
                 application.cacheSources.add(source);
+                appResFactory.register(resourceName, genericType, source);
                 appResFactory.register(resourceName, CacheSource.class, source);
                 field.set(src, source);
                 rf.inject(source, self); //
