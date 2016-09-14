@@ -68,11 +68,11 @@ public final class Rest {
         int mod = baseServletClass.getModifiers();
         if (!java.lang.reflect.Modifier.isPublic(mod)) return null;
         if (java.lang.reflect.Modifier.isAbstract(mod)) return null;
-        final String supDynName = baseServletClass.getName().replace('.', '/');
+        
         final String serviceDesc = Type.getDescriptor(serviceType);
         final String webServletDesc = Type.getDescriptor(WebServlet.class);
-        final String httpRequestDesc = Type.getDescriptor(HttpRequest.class);
-        final String httpResponseDesc = Type.getDescriptor(HttpResponse.class);
+        final String reqDesc = Type.getDescriptor(HttpRequest.class);
+        final String respDesc = Type.getDescriptor(HttpResponse.class);
         final String retDesc = Type.getDescriptor(RetResult.class);
         final String flipperDesc = Type.getDescriptor(Flipper.class);
         final String restoutputDesc = Type.getDescriptor(RestOutput.class);
@@ -90,7 +90,7 @@ public final class Rest {
         final String serviceTypeInternalName = Type.getInternalName(serviceType);
 
         final Class userType = getSuperUserType(baseServletClass);
-
+        final String supDynName = baseServletClass.getName().replace('.', '/');
         final RestService controller = serviceType.getAnnotation(RestService.class);
         if (controller != null && controller.ignore()) return null; //标记为ignore=true不创建Servlet
         ClassLoader loader = Sncp.class.getClassLoader();
@@ -209,7 +209,7 @@ public final class Rest {
             final String methodDesc = Type.getMethodDescriptor(method);
             final Parameter[] params = method.getParameters();
 
-            mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC, entry.name, "(" + httpRequestDesc + httpResponseDesc + ")V", null, new String[]{"java/io/IOException"}));
+            mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC, entry.name, "(" + reqDesc + respDesc + ")V", null, new String[]{"java/io/IOException"}));
             //mv.setDebug(true);
             mv.debugLine();
             if (!entry.auth) { //设置 AuthIgnore
@@ -894,13 +894,13 @@ public final class Rest {
                     mv.visitVarInsn(ALOAD, 0);
                     mv.visitVarInsn(ALOAD, 2);
                     mv.visitVarInsn(ALOAD, maxLocals);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, newDynName, "finishJson", "(" + httpResponseDesc + restoutputDesc + ")V", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, newDynName, "finishJson", "(" + respDesc + restoutputDesc + ")V", false);
                 } else {
                     mv.visitVarInsn(ALOAD, 0);
                     mv.visitVarInsn(ALOAD, 2);
                     mv.visitLdcInsn(jsvar);
                     mv.visitVarInsn(ALOAD, maxLocals);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, newDynName, "finishJsResult", "(" + httpResponseDesc + "Ljava/lang/String;" + restoutputDesc + ")V", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, newDynName, "finishJsResult", "(" + respDesc + "Ljava/lang/String;" + restoutputDesc + ")V", false);
                 }
                 mv.visitInsn(RETURN);
                 maxLocals++;
