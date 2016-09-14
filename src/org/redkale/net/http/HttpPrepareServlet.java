@@ -23,13 +23,15 @@ import org.redkale.watch.*;
  *
  * @author zhangjx
  */
-public final class HttpPrepareServlet extends PrepareServlet<String, HttpContext, HttpRequest, HttpResponse, HttpServlet> {
+public class HttpPrepareServlet extends PrepareServlet<String, HttpContext, HttpRequest, HttpResponse, HttpServlet> {
 
-    private SimpleEntry<Predicate<String>, HttpServlet>[] regArray = new SimpleEntry[0];
+    protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
 
-    private HttpServlet resourceHttpServlet = new HttpResourceServlet();
+    protected SimpleEntry<Predicate<String>, HttpServlet>[] regArray = new SimpleEntry[0];
 
-    private final Map<String, Class> allMapStrings = new HashMap<>();
+    protected HttpServlet resourceHttpServlet = new HttpResourceServlet();
+
+    protected final Map<String, Class> allMapStrings = new HashMap<>();
 
     @Override
     public void init(HttpContext context, AnyValue config) {
@@ -47,10 +49,16 @@ public final class HttpPrepareServlet extends PrepareServlet<String, HttpContext
                 watch.inject(s);
             });
         }
+        AnyValue resConfig = null;
         if (config != null) {
             AnyValue ssConfig = config.getAnyValue("servlets");
-            AnyValue resConfig = null;
             if (ssConfig != null) {
+                String resServlet = config.getValue("servlet", HttpResourceServlet.class.getName());
+                try {
+                    this.resourceHttpServlet = (HttpServlet) Class.forName(resServlet).newInstance();
+                } catch (Exception e) {
+                    logger.log(Level.WARNING, "init HttpResourceSerlvet(" + resServlet + ") error", e);
+                }
                 resConfig = ssConfig.getAnyValue("resource-servlet");
                 if ((resConfig instanceof DefaultAnyValue) && resConfig.getValue("webroot") == null) {
                     ((DefaultAnyValue) resConfig).addValue("webroot", config.getValue("root"));
@@ -70,8 +78,9 @@ public final class HttpPrepareServlet extends PrepareServlet<String, HttpContext
                 }
                 resConfig = dresConfig;
             }
-            this.resourceHttpServlet.init(context, resConfig);
         }
+        if (this.resourceHttpServlet == null) this.resourceHttpServlet = new HttpResourceServlet();
+        this.resourceHttpServlet.init(context, resConfig);
     }
 
     @Override

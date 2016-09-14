@@ -129,7 +129,12 @@ public class JDBCPoolSource {
                     try {
                         while (!this.isInterrupted()) {
                             final WatchKey key = watcher.take();
-                            Thread.sleep(3000); //防止文件正在更新过程中去读取
+                            long d;   //防止文件正在更新过程中去读取
+                            for (;;) {
+                                d = f.lastModified();
+                                Thread.sleep(2000L);
+                                if (d == f.lastModified()) break;
+                            }
                             final Map<String, Properties> m = loadProperties(new FileInputStream(file));
                             key.pollEvents().stream().forEach((event) -> {
                                 if (event.kind() != ENTRY_MODIFY) return;
