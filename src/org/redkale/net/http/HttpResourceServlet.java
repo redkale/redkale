@@ -260,7 +260,6 @@ public class HttpResourceServlet extends HttpServlet {
             while ((pos = in.read(bytes)) != -1) {
                 out.write(bytes, 0, pos);
             }
-            in.close();
             byte[] bs = out.toByteArray();
             ByteBuffer buf = ByteBuffer.allocateDirect(bs.length);
             buf.put(bs);
