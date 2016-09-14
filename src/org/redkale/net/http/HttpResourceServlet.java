@@ -249,7 +249,28 @@ public class HttpResourceServlet extends HttpServlet {
             this.servlet = servlet;
             this.file = null;
             this.filename = filename;
-            this.content = content;
+            this.content = content.asReadOnlyBuffer();
+            this.servlet.cachedLength.add(this.content.remaining());
+        }
+
+        public FileEntry(final HttpResourceServlet servlet, String filename, InputStream in) throws IOException {
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            byte[] bytes = new byte[10240];
+            int pos;
+            while ((pos = in.read(bytes)) != -1) {
+                out.write(bytes, 0, pos);
+            }
+            in.close();
+            byte[] bs = out.toByteArray();
+            ByteBuffer buf = ByteBuffer.allocateDirect(bs.length);
+            buf.put(bs);
+            buf.flip();
+
+            this.servlet = servlet;
+            this.file = null;
+            this.filename = filename;
+            this.content = buf.asReadOnlyBuffer();
+            this.servlet.cachedLength.add(this.content.remaining());
         }
 
         public void update() {
