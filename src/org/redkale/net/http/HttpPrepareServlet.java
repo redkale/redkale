@@ -49,37 +49,30 @@ public class HttpPrepareServlet extends PrepareServlet<String, HttpContext, Http
                 watch.inject(s);
             });
         }
-        AnyValue resConfig = null;
-        if (config != null) {
-            AnyValue ssConfig = config.getAnyValue("servlets");
-            if (ssConfig != null) {
-                String resServlet = config.getValue("servlet", HttpResourceServlet.class.getName());
-                try {
-                    this.resourceHttpServlet = (HttpServlet) Class.forName(resServlet).newInstance();
-                } catch (Exception e) {
-                    logger.log(Level.WARNING, "init HttpResourceSerlvet(" + resServlet + ") error", e);
-                }
-                resConfig = ssConfig.getAnyValue("resource-servlet");
-                if ((resConfig instanceof DefaultAnyValue) && resConfig.getValue("webroot") == null) {
-                    ((DefaultAnyValue) resConfig).addValue("webroot", config.getValue("root"));
-                }
-            }
-            if (resConfig == null) resConfig = config.getAnyValue("resource-servlet"); //兼容
-            if (resConfig == null) {
-                DefaultAnyValue dresConfig = new DefaultAnyValue();
-                dresConfig.addValue("webroot", config.getValue("root"));
-                dresConfig.addValue("ranges", config.getValue("ranges"));
-                dresConfig.addValue("cache", config.getAnyValue("cache"));
-                AnyValue[] rewrites = config.getAnyValues("rewrite");
-                if (rewrites != null) {
-                    for (AnyValue rewrite : rewrites) {
-                        dresConfig.addValue("rewrite", rewrite);
-                    }
-                }
-                resConfig = dresConfig;
-            }
+        AnyValue resConfig = config.getAnyValue("resource-servlet");
+        if ((resConfig instanceof DefaultAnyValue) && resConfig.getValue("webroot", "").isEmpty()) {
+            ((DefaultAnyValue) resConfig).addValue("webroot", config.getValue("root"));
         }
-        if (this.resourceHttpServlet == null) this.resourceHttpServlet = new HttpResourceServlet();
+        if (resConfig == null) { //主要用于嵌入式的HttpServer初始化
+            DefaultAnyValue dresConfig = new DefaultAnyValue();
+            dresConfig.addValue("webroot", config.getValue("root"));
+            dresConfig.addValue("ranges", config.getValue("ranges"));
+            dresConfig.addValue("cache", config.getAnyValue("cache"));
+            AnyValue[] rewrites = config.getAnyValues("rewrite");
+            if (rewrites != null) {
+                for (AnyValue rewrite : rewrites) {
+                    dresConfig.addValue("rewrite", rewrite);
+                }
+            }
+            resConfig = dresConfig;
+        }
+        String resServlet = resConfig.getValue("servlet", HttpResourceServlet.class.getName());
+        try {
+            this.resourceHttpServlet = (HttpServlet) Class.forName(resServlet).newInstance();
+        } catch (Exception e) {
+            this.resourceHttpServlet = new HttpResourceServlet();
+            logger.log(Level.WARNING, "init HttpResourceSerlvet(" + resServlet + ") error", e);
+        }
         this.resourceHttpServlet.init(context, resConfig);
     }
 
