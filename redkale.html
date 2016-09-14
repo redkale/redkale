@@ -517,6 +517,7 @@
 <span class="c">&lt;!-- </span>
 <span class="c">    文件说明:</span>
 <span class="c">        ${APP_HOME} 指当前程序的根目录APP_HOME</span>
+<span class="c">        没注明唯一的节点可多个存在</span>
 <span class="c">        required： 被声明required的属性值不能为空</span>
 <span class="c">--&gt;</span>
 <span class="c">&lt;!--     </span>
@@ -527,20 +528,25 @@
 <span class="c">--&gt;</span>
 <span class="nt">&lt;application</span> <span class="na">port=</span><span class="s">&quot;6560&quot;</span> <span class="na">lib=</span><span class="s">&quot;&quot;</span><span class="nt">&gt;</span>   
     
-    <span class="c">&lt;!-- 所有服务所需的资源 --&gt;</span>      
+    <span class="c">&lt;!-- </span>
+<span class="c">        【节点全局唯一】</span>
+<span class="c">        所有服务所需的资源 </span>
+<span class="c">    --&gt;</span>      
     <span class="nt">&lt;resources&gt;</span>  
         <span class="c">&lt;!--</span>
+<span class="c">            【节点全局唯一】</span>
 <span class="c">            transport节点只能有一个，用于配置所有Transport的池参数，没配置该节点将自动创建一个。</span>
 <span class="c">            threads： 线程总数， 默认: &lt;group&gt;节点数*CPU核数*8</span>
 <span class="c">            bufferCapacity: ByteBuffer的初始化大小， 默认: 8K; </span>
 <span class="c">            bufferPoolSize： ByteBuffer池的大小，默认: &lt;group&gt;节点数*CPU核数*8</span>
 <span class="c">        --&gt;</span>
-        <span class="nt">&lt;transport</span> <span class="na">capacity=</span><span class="s">&quot;8192&quot;</span> <span class="na">bufferPoolSize=</span><span class="s">&quot;32&quot;</span> <span class="na">threads=</span><span class="s">&quot;32&quot;</span><span class="nt">/&gt;</span>
+        <span class="nt">&lt;transport</span> <span class="na">bufferCapacity=</span><span class="s">&quot;8K&quot;</span> <span class="na">bufferPoolSize=</span><span class="s">&quot;32&quot;</span> <span class="na">threads=</span><span class="s">&quot;32&quot;</span><span class="nt">/&gt;</span>
         <span class="c">&lt;!--</span>
 <span class="c">            一个组包含多个NODE， 同一Service服务可以由多个进程提供，这些进程称为一个GROUP，且同一GROUP内的进程必须在同一机房或局域网内</span>
 <span class="c">            一个group节点对应一个 Transport 对象。</span>
 <span class="c">            name: 服务组ID，长度不能超过11个字节. 默认为空字符串。 注意: name不能包含$符号。</span>
 <span class="c">            protocol：值只能是UDP TCP， 默认TCP</span>
+<span class="c">            kind: 与SNCP服务连接时的数据传输类型；可选值有:rest(不区分大小写);值为空或空字符串表示按SNCP协议传输; 为rest表示按REST传输。默认值为空</span>
 <span class="c">            注意: 一个node只能所属一个group。只要存在protocol=SNCP的Server节点信息， 就必须有group节点信息。</span>
 <span class="c">        --&gt;</span>
         <span class="nt">&lt;group</span> <span class="na">name=</span><span class="s">&quot;&quot;</span> <span class="na">protocol=</span><span class="s">&quot;TCP&quot;</span><span class="nt">&gt;</span>
@@ -555,6 +561,7 @@
             <span class="nt">&lt;node</span> <span class="na">addr=</span><span class="s">&quot;127.0.0.1&quot;</span> <span class="na">port=</span><span class="s">&quot;7070&quot;</span><span class="nt">/&gt;</span>
         <span class="nt">&lt;/group&gt;</span>
         <span class="c">&lt;!-- </span>
+<span class="c">            【节点全局唯一】</span>
 <span class="c">            全局的参数配置, 可以通过@Resource(name=&quot;property.xxxxxx&quot;) 进行注入, 被注解的字段类型只能是String、primitive class</span>
 <span class="c">            如果name是system.property.开头的值将会在进程启动时进行System.setProperty(&quot;yyyy&quot;, &quot;YYYYYY&quot;)操作。</span>
 <span class="c">            如果name是mimetype.property.开头的值将会在进程启动时进行MimeType.add(&quot;yyyy&quot;, &quot;YYYYYY&quot;)操作。</span>
@@ -580,7 +587,8 @@
 <span class="c">        host:  服务所占address ， 默认: 0.0.0.0</span>
 <span class="c">        port:  required 服务所占端口 </span>
 <span class="c">        root:  如果是web类型服务，则包含页面  默认:{APP_HOME}/root</span>
-<span class="c">        lib: server额外的class目录， 默认为空        </span>
+<span class="c">        lib: server额外的class目录， 默认为空 </span>
+<span class="c">        excludelibs: 排除lib.path与excludes中的正则表达式匹配的路径, 多个正则表达式用分号;隔开</span>
 <span class="c">        charset: 文本编码， 默认: UTF-8</span>
 <span class="c">        backlog:  默认10K</span>
 <span class="c">        threads： 线程总数， 默认: CPU核数*16</span>
@@ -589,8 +597,8 @@
 <span class="c">        bufferPoolSize： ByteBuffer池的大小，默认: CPU核数*512</span>
 <span class="c">        responsePoolSize： Response池的大小，默认: CPU核数*256</span>
 <span class="c">        readTimeoutSecond: 读操作超时秒数， 默认0， 表示永久不超时</span>
-<span class="c">        writeTimeoutSecond:  写操作超时秒数， 默认0， 表示永久不超时 </span>
-<span class="c">        interceptor: 启动/关闭NodeServer时被调用的拦截器实现类，必须是org.redkale.boot.NodeInterceptor的子类，默认为null </span>
+<span class="c">        writeTimeoutSecond:  写操作超时秒数， 默认0， 表示永久不超时</span>
+<span class="c">        interceptor: 启动/关闭NodeServer时被调用的拦截器实现类，必须是org.redkale.boot.NodeInterceptor的子类，默认为null</span>
 <span class="c">    --&gt;</span>
     <span class="nt">&lt;server</span> <span class="na">protocol=</span><span class="s">&quot;HTTP&quot;</span> <span class="na">host=</span><span class="s">&quot;127.0.0.1&quot;</span> <span class="na">port=</span><span class="s">&quot;6060&quot;</span> <span class="na">root=</span><span class="s">&quot;root&quot;</span> <span class="na">lib=</span><span class="s">&quot;&quot;</span><span class="nt">&gt;</span> 
         
@@ -616,13 +624,31 @@
 <span class="c">            --&gt;</span>
             <span class="nt">&lt;service</span> <span class="na">value=</span><span class="s">&quot;com.xxx.XXX2Service&quot;</span> <span class="na">name=</span><span class="s">&quot;&quot;</span> <span class="na">groups=</span><span class="s">&quot;xxx;yyy&quot;</span><span class="nt">/&gt;</span>
             <span class="c">&lt;!--   给Service增加配置属性 --&gt;</span>
-            <span class="nt">&lt;service</span> <span class="na">value=</span><span class="s">&quot;com.xxx.XXX1Service&quot;</span><span class="nt">&gt;</span>
-                <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">&quot;xxxxxx&quot;</span> <span class="na">value=</span><span class="s">&quot;XXXXXXXX&quot;</span><span class="nt">/&gt;</span>
+            <span class="nt">&lt;service</span> <span class="na">value=</span><span class="s">&quot;com.xxx.XXX1Service&quot;</span><span class="nt">&gt;</span> 
+                <span class="c">&lt;!-- property节点值在 public void init(AnyValue conf) 方法中可以通过 AnyValue properties =  conf.getAnyValue(&quot;properties&quot;);获取 --&gt;</span>
+                <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">&quot;xxxxxx&quot;</span> <span class="na">value=</span><span class="s">&quot;XXXXXXXX&quot;</span><span class="nt">/&gt;</span>  
                 <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">&quot;xxxxxx&quot;</span> <span class="na">value=</span><span class="s">&quot;XXXXXXXX&quot;</span><span class="nt">/&gt;</span>
             <span class="nt">&lt;/service&gt;</span>
         <span class="nt">&lt;/services&gt;</span>
         
+        <span class="c">&lt;!-- </span>
+<span class="c">           REST的核心配置项, 存在[rest]节点则Server启动时会加载REST服务, 当Server为SNCP协议时,则SncpServer会变成REST的HttpServer, 节点可以多个</span>
+<span class="c">           base:     REST服务的BaseServlet，必须是 org.redkale.net.http.RestHttpServlet 的子类，该属性值默认值为 org.redkale.net.http.DefaultRestServlet。</span>
+<span class="c">           autoload：默认值&quot;true&quot;  默认值. 加载当前server所能使用的Servce对象;    </span>
+<span class="c">           mustsign：默认值&quot;true&quot; 是否只加载标记为RestService的Service类，默认只加载标记RestService且ignore=false的Service</span>
+<span class="c">           includes：当autoload=&quot;true&quot;， 拉取类名与includes中的正则表达式匹配的类, 多个正则表达式用分号;隔开</span>
+<span class="c">           excludes：当autoload=&quot;true&quot;， 排除类名与excludes中的正则表达式匹配的类, 多个正则表达式用分号;隔开</span>
+<span class="c">        --&gt;</span>
+        <span class="nt">&lt;rest</span> <span class="na">base=</span><span class="s">&quot;org.redkale.net.http.DefaultRestServlet&quot;</span> <span class="na">mustsign=</span><span class="s">&quot;false&quot;</span> <span class="na">autoload=</span><span class="s">&quot;true&quot;</span> <span class="na">includes=</span><span class="s">&quot;&quot;</span> <span class="na">excludes=</span><span class="s">&quot;&quot;</span><span class="nt">&gt;</span>
+            <span class="c">&lt;!-- </span>
+<span class="c">               value:  Service类名，列出的表示必须被加载的Service对象</span>
+<span class="c">               ignore: 是否忽略，设置为true则不会加载该Service对象，默认值为false</span>
+<span class="c">            --&gt;</span>
+            <span class="nt">&lt;service</span> <span class="na">value=</span><span class="s">&quot;com.xxx.XXXXService&quot;</span><span class="nt">/&gt;</span>
+        <span class="nt">&lt;/rest&gt;</span>
+        
         <span class="c">&lt;!--</span>
+<span class="c">           【节点在&lt;server&gt;中唯一】</span>
 <span class="c">           当Server为HTTP协议时, request节点才有效。</span>
 <span class="c">           remoteaddr 节点: 替换请求方节点的IP地址， 通常请求方是由nginx等web静态服务器转发过的则需要配置该节点。</span>
 <span class="c">           且value值只能是以request.headers.开头，表示从request.headers中获取对应的header值。</span>
@@ -633,6 +659,7 @@
         <span class="nt">&lt;/request&gt;</span>
         
         <span class="c">&lt;!--</span>
+<span class="c">           【节点在&lt;server&gt;中唯一】</span>
 <span class="c">           当Server为HTTP协议时, response节点才有效。</span>
 <span class="c">           defcookie 节点: 当response里输出的cookie没有指定domain 和path时，使用该节点的默认值。</span>
 <span class="c">           如果addheader、setheader 的value值以request.parameters.开头则表示从request.parameters中获取对应的parameter值</span>
@@ -646,6 +673,30 @@
         <span class="nt">&lt;/response&gt;</span>
             
         <span class="c">&lt;!-- </span>
+<span class="c">           【节点在&lt;server&gt;中唯一】</span>
+<span class="c">           当Server为HTTP协议时，ResourceServlet才有效. 默认存在一个有默认属性的resource-servlet节点</span>
+<span class="c">           webroot: web资源的根目录, 默认取server节点中的root值</span>
+<span class="c">           servlet: 静态资源HttpServlet的实现，默认使用HttpResourceServlet</span>
+<span class="c">           index : 启始页，默认值：index.html</span>
+<span class="c">        --&gt;</span>
+        <span class="nt">&lt;resource-servlet</span> <span class="na">webroot=</span><span class="s">&quot;root&quot;</span> <span class="na">index=</span><span class="s">&quot;index.html&quot;</span><span class="nt">&gt;</span>
+            <span class="c">&lt;!--</span>
+<span class="c">                资源缓存的配置, 默认存在一个含默认属性的caches节点</span>
+<span class="c">                limit:  资源缓存最大容量， 默认: 0, 为0表示不缓存， 单位可以是B、K、M、G，不区分大小写</span>
+<span class="c">                lengthmax: 可缓存的文件大小上限， 默认: 1M（超过1M的文件不会被缓存）</span>
+<span class="c">                watch: 是否监控缓存文件的变化， 默认不监控</span>
+<span class="c">            --&gt;</span>
+            <span class="nt">&lt;cache</span>  <span class="na">limit=</span><span class="s">&quot;0M&quot;</span> <span class="na">lengthmax=</span><span class="s">&quot;1M&quot;</span> <span class="na">watch=</span><span class="s">&quot;false&quot;</span><span class="nt">/&gt;</span>
+            <span class="c">&lt;!--</span>
+<span class="c">               支持类似nginx中的rewrite， 目前只支持静态资源对静态资源的跳转。</span>
+<span class="c">               type: 匹配的类型, 目前只支持location(匹配requestURI), 默认: location</span>
+<span class="c">               match: 匹配的正则表达式</span>
+<span class="c">               forward: 需跳转后的资源链接</span>
+<span class="c">               例如下面例子是将/xxx-yyy.html的页面全部跳转到/xxx.html</span>
+<span class="c">            --&gt;</span>
+            <span class="nt">&lt;rewrite</span> <span class="na">type=</span><span class="s">&quot;location&quot;</span> <span class="na">match=</span><span class="s">&quot;^/([^-]+)-[^-\.]+\.html(.*)&quot;</span> <span class="na">forward=</span><span class="s">&quot;/$1.html&quot;</span><span class="nt">/&gt;</span>
+        <span class="nt">&lt;/resource-servlet&gt;</span>
+        <span class="c">&lt;!-- </span>
 <span class="c">           加载所有的Servlet服务;</span>
 <span class="c">           path:  servlet的ContextPath前缀 默认为空</span>
 <span class="c">           autoload=&quot;true&quot;  默认值. 自动加载以下目录（如果存在的话）下所有的Servlet类:</span>
@@ -655,28 +706,6 @@
 <span class="c">           excludes： 当autoload=&quot;true&quot;， 排除类名与excludes中的正则表达式匹配的类, 多个正则表达式用分号;隔开</span>
 <span class="c">        --&gt;</span>
         <span class="nt">&lt;servlets</span> <span class="na">path=</span><span class="s">&quot;/pipes&quot;</span> <span class="na">autoload=</span><span class="s">&quot;true&quot;</span> <span class="na">includes=</span><span class="s">&quot;&quot;</span> <span class="na">excludes=</span><span class="s">&quot;&quot;</span><span class="nt">&gt;</span>
-            <span class="c">&lt;!-- </span>
-<span class="c">               当Server为HTTP协议时，ResourceServlet才有效. 默认存在一个有默认属性的resource-servlet节点</span>
-<span class="c">               webroot: web资源的根目录, 默认取server节点中的root值</span>
-<span class="c">               index : 启始页，默认值：index.html</span>
-<span class="c">            --&gt;</span>
-            <span class="nt">&lt;resource-servlet</span> <span class="na">webroot=</span><span class="s">&quot;root&quot;</span> <span class="na">index=</span><span class="s">&quot;index.html&quot;</span><span class="nt">&gt;</span>
-                <span class="c">&lt;!--</span>
-<span class="c">                    资源缓存的配置, 默认存在一个含默认属性的cache节点</span>
-<span class="c">                    limit:  资源缓存最大容量， 默认: 0, 为0表示不缓存， 单位可以是B、K、M、G，不区分大小写</span>
-<span class="c">                    lengthmax: 可缓存的文件大小上限， 默认: 1M（超过1M的文件不会被缓存）</span>
-<span class="c">                    watch: 是否监控缓存文件的变化， 默认不监控</span>
-<span class="c">                --&gt;</span>
-                <span class="nt">&lt;cache</span>  <span class="na">limit=</span><span class="s">&quot;0M&quot;</span> <span class="na">lengthmax=</span><span class="s">&quot;1M&quot;</span> <span class="nt">/&gt;</span>
-                <span class="c">&lt;!--</span>
-<span class="c">                   支持类似nginx中的rewrite， 目前只支持静态资源对静态资源的跳转。</span>
-<span class="c">                   type: 匹配的类型, 目前只支持location(匹配requestURI), 默认: location</span>
-<span class="c">                   match: 匹配的正则表达式</span>
-<span class="c">                   forward: 需跳转后的资源链接</span>
-<span class="c">                   例如下面例子是将/xxx-yyy.html的页面全部跳转到/xxx.html</span>
-<span class="c">                --&gt;</span>
-                <span class="nt">&lt;rewrite</span> <span class="na">type=</span><span class="s">&quot;location&quot;</span> <span class="na">match=</span><span class="s">&quot;^/([^-]+)-[^-\.]+\.html(.*)&quot;</span> <span class="na">forward=</span><span class="s">&quot;/$1.html&quot;</span><span class="nt">/&gt;</span>
-            <span class="nt">&lt;/resource-servlet&gt;</span>
             <span class="c">&lt;!-- 显著加载指定的Servlet --&gt;</span>
             <span class="nt">&lt;servlet</span> <span class="na">value=</span><span class="s">&quot;com.xxx.XXX1Servlet&quot;</span> <span class="nt">/&gt;</span>
             <span class="nt">&lt;servlet</span> <span class="na">value=</span><span class="s">&quot;com.xxx.XXX2Servlet&quot;</span> <span class="nt">/&gt;</span>
@@ -692,7 +721,8 @@
         <span class="nt">&lt;services</span> <span class="na">autoload=</span><span class="s">&quot;true&quot;</span> <span class="na">includes=</span><span class="s">&quot;&quot;</span> <span class="na">excludes=</span><span class="s">&quot;&quot;</span> <span class="nt">/&gt;</span>
     <span class="nt">&lt;/server&gt;</span>
 <span class="nt">&lt;/application&gt;</span>
-                </pre></div>
+</pre></div>
+
 
             <footer class="site-footer">
                 <span class="site-footer-owner">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;欢迎加入Redkale QQ群: 527523235</span>
