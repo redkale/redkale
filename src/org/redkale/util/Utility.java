@@ -645,4 +645,18 @@ public final class Utility {
         }
         return charsetName == null ? out.toString() : out.toString(charsetName);
     }
+
+    public static ByteArrayOutputStream readStream(InputStream in) throws IOException {
+        ByteArrayOutputStream out = new ByteArrayOutputStream(1024);
+        byte[] bytes = new byte[1024];
+        int pos;
+        while ((pos = in.read(bytes)) != -1) {
+            out.write(bytes, 0, pos);
+        }
+        return out;
+    }
+
+    public static byte[] readBytes(InputStream in) throws IOException {
+        return readStream(in).toByteArray();
+    }
 }
