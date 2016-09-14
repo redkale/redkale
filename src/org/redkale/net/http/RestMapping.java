@@ -33,15 +33,15 @@ public @interface RestMapping {
      *
      * @return name
      */
-    String name() default "";
+    String name() default ""; 
 
-    String comment() default ""; //备注描述
+    String comment() default ""; //备注描述, 对应&#64;WebAction.comment
 
-    boolean auth() default false; //是否鉴权，默认不鉴权
+    boolean auth() default false; //是否鉴权，默认不鉴权, 对应&#64;AuthIgnore
 
     int actionid() default 0; //操作ID值，鉴权时用到, 对应&#64;WebAction.actionid
 
-    int cachetimeout() default 0; // 结果缓存的秒数, 为0表示不缓存
+    int cachetimeout() default 0; // 结果缓存的秒数, 为0表示不缓存, 对应&#64;HttpCacheable.timeout
 
     String[] methods() default {};//允许方法(不区分大小写),如:GET/POST/PUT,为空表示允许所有方法, 对应&#64;WebAction.methods
 
