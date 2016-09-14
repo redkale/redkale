@@ -27,7 +27,7 @@ import org.redkale.util.AnyValue;
  */
 public class HttpResourceServlet extends HttpServlet {
 
-    protected static final Logger logger = Logger.getLogger(HttpResourceServlet.class.getSimpleName());
+    protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
 
     protected class WatchThread extends Thread {
 
@@ -196,7 +196,7 @@ public class HttpResourceServlet extends HttpServlet {
         }
         //System.out.println(request);
         FileEntry entry;
-        if (watchThread == null) {
+        if (watchThread == null && files.isEmpty()) {
             entry = createFileEntry(uri);
         } else {  //有缓存
             entry = files.computeIfAbsent(uri, x -> createFileEntry(x));
@@ -297,7 +297,7 @@ public class HttpResourceServlet extends HttpServlet {
                 this.content = buf.asReadOnlyBuffer();
                 this.servlet.cachedLength.add(this.content.remaining());
             } catch (Exception e) {
-                logger.log(Level.INFO, HttpResourceServlet.class.getSimpleName() + " update FileEntry(" + file + ") erroneous", e);
+                this.servlet.logger.log(Level.INFO, HttpResourceServlet.class.getSimpleName() + " update FileEntry(" + file + ") erroneous", e);
             }
         }
 
