@@ -25,7 +25,7 @@ import org.redkale.util.AnyValue;
  *
  * @author zhangjx
  */
-public final class HttpResourceServlet extends HttpServlet {
+public class HttpResourceServlet extends HttpServlet {
 
     protected static final Logger logger = Logger.getLogger(HttpResourceServlet.class.getSimpleName());
 
