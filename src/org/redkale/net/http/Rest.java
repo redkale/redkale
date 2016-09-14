@@ -76,6 +76,7 @@ public final class Rest {
         final String restoutputDesc = Type.getDescriptor(RestOutput.class);
         final String attrDesc = Type.getDescriptor(org.redkale.util.Attribute.class);
         final String authDesc = Type.getDescriptor(HttpBaseServlet.AuthIgnore.class);
+        final String cacheDesc = Type.getDescriptor(HttpBaseServlet.HttpCacheable.class);
         final String actionDesc = Type.getDescriptor(HttpBaseServlet.WebAction.class);
         final String webparamDesc = Type.getDescriptor(HttpBaseServlet.WebParam.class);
         final String sourcetypeDesc = Type.getDescriptor(HttpBaseServlet.ParamSourceType.class);
@@ -205,6 +206,11 @@ public final class Rest {
             mv.debugLine();
             if (!entry.auth) { //设置 AuthIgnore
                 av0 = mv.visitAnnotation(authDesc, true);
+                av0.visitEnd();
+            }
+            if (entry.cachetimeout > 0) { //设置 HttpCacheable
+                av0 = mv.visitAnnotation(cacheDesc, true);
+                av0.visit("timeout", entry.cachetimeout);
                 av0.visitEnd();
             }
 
@@ -340,14 +346,16 @@ public final class Rest {
                     av3.visitEnd();
                 }
                 java.lang.reflect.Type grt = method.getGenericReturnType();
-                av0.visit("result", grt == returnType ? returnType.getName(): String.valueOf(grt));
+                av0.visit("result", grt == returnType ? returnType.getName() : String.valueOf(grt));
 
                 av0.visitEnd();
                 actionMap.put("url", url);
+                actionMap.put("auth", entry.auth);
+                actionMap.put("cachetimeout", entry.cachetimeout);
                 actionMap.put("actionid", entry.actionid);
                 actionMap.put("comment", entry.comment);
                 actionMap.put("methods", entry.methods);
-                actionMap.put("result", grt == returnType ? returnType.getName(): String.valueOf(grt));
+                actionMap.put("result", grt == returnType ? returnType.getName() : String.valueOf(grt));
             }
 
             List<Map<String, Object>> paramMaps = new ArrayList<>();
@@ -1025,7 +1033,8 @@ public final class Rest {
             this.methods = mapping.methods();
             this.auth = mapping.auth();
             this.actionid = mapping.actionid();
-            this.contentType = mapping.contentType();
+            this.cachetimeout = mapping.cachetimeout();
+            //this.contentType = mapping.contentType();
             this.comment = mapping.comment();
             this.jsvar = mapping.jsvar();
         }
@@ -1044,8 +1053,9 @@ public final class Rest {
 
         public final int actionid;
 
-        public final String contentType;
+        public final int cachetimeout;
 
+        //public final String contentType;
         public final String jsvar;
 
         @RestMapping()

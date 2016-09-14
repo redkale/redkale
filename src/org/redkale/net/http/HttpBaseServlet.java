@@ -120,8 +120,8 @@ public abstract class HttpBaseServlet extends HttpServlet {
 
     /**
      * 配合 HttpBaseServlet 使用。
-     * 当标记为 &#64;HttpCacheable 的方法使用response.finish的参数将被缓存一定时间(默认值timeout=15秒)。
-     * 通常情况下 &#64;HttpCacheable 需要与 &#64;AuthIgnore 一起使用，因为没有标记&#64;AuthIgnore的方法一般输出的结果与当前用户信息有关。
+     * 当标记为 &#64;HttpCacheable 的方法使用response.finish的参数将被缓存一段时间(默认值timeout=15秒)。
+     * 通常情况下 &#64;HttpCacheable 需要与 &#64;AuthIgnore 一起使用，没有标记&#64;AuthIgnore的方法一般输出的结果与当前用户信息有关。
      *
      * <p>
      * 详情见: http://redkale.org

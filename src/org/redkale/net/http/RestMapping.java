@@ -41,9 +41,11 @@ public @interface RestMapping {
 
     int actionid() default 0; //操作ID值，鉴权时用到, 对应&#64;WebAction.actionid
 
+    int cachetimeout() default 0; // 结果缓存的秒数, 为0表示不缓存
+
     String[] methods() default {};//允许方法(不区分大小写),如:GET/POST/PUT,为空表示允许所有方法, 对应&#64;WebAction.methods
 
-    String contentType() default "";  //设置Response的ContentType 默认值为 text/plain; charset=utf-8
+    //String contentType() default "";  //设置Response的ContentType 默认值为 text/plain; charset=utf-8
 
     String jsvar() default ""; //以application/javascript输出对象是指明js的对象名，该值存在时则忽略contentType()的值
 }
