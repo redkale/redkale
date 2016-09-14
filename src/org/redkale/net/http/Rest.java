@@ -73,6 +73,8 @@ public final class Rest {
         final String webServletDesc = Type.getDescriptor(WebServlet.class);
         final String httpRequestDesc = Type.getDescriptor(HttpRequest.class);
         final String httpResponseDesc = Type.getDescriptor(HttpResponse.class);
+        final String retDesc = Type.getDescriptor(RetResult.class);
+        final String flipperDesc = Type.getDescriptor(Flipper.class);
         final String restoutputDesc = Type.getDescriptor(RestOutput.class);
         final String attrDesc = Type.getDescriptor(org.redkale.util.Attribute.class);
         final String authDesc = Type.getDescriptor(HttpBaseServlet.AuthIgnore.class);
@@ -80,13 +82,19 @@ public final class Rest {
         final String actionDesc = Type.getDescriptor(HttpBaseServlet.WebAction.class);
         final String webparamDesc = Type.getDescriptor(HttpBaseServlet.WebParam.class);
         final String sourcetypeDesc = Type.getDescriptor(HttpBaseServlet.ParamSourceType.class);
-        final String serviceTypeString = serviceType.getName().replace('.', '/');
+
+        final String reqInternalName = Type.getInternalName(HttpRequest.class);
+        final String respInternalName = Type.getInternalName(HttpResponse.class);
+        final String attrInternalName = Type.getDescriptor(org.redkale.util.Attribute.class);
+        final String retInternalName = Type.getInternalName(RetResult.class);
+        final String serviceTypeInternalName = Type.getInternalName(serviceType);
+
         final Class userType = getSuperUserType(baseServletClass);
 
         final RestService controller = serviceType.getAnnotation(RestService.class);
         if (controller != null && controller.ignore()) return null; //标记为ignore=true不创建Servlet
         ClassLoader loader = Sncp.class.getClassLoader();
-        String newDynName = serviceTypeString.substring(0, serviceTypeString.lastIndexOf('/') + 1) + "_Dyn" + serviceType.getSimpleName().replaceAll("Service.*$", "") + "RestServlet";
+        String newDynName = serviceTypeInternalName.substring(0, serviceTypeInternalName.lastIndexOf('/') + 1) + "_Dyn" + serviceType.getSimpleName().replaceAll("Service.*$", "") + "RestServlet";
         try {
             return ((Class<T>) Class.forName(newDynName.replace('/', '.'))).newInstance();
         } catch (Exception ex) {
@@ -231,11 +239,11 @@ public final class Rest {
             mv.visitVarInsn(ALOAD, 1);
             mv.visitLdcInsn(REST_HEADER_RESOURCE_NAME);
             mv.visitLdcInsn("");
-            mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", "getHeader", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
+            mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getHeader", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
             mv.visitMethodInsn(INVOKEINTERFACE, "java/util/Map", "get", "(Ljava/lang/Object;)Ljava/lang/Object;", true);
-            mv.visitTypeInsn(CHECKCAST, serviceTypeString);
+            mv.visitTypeInsn(CHECKCAST, serviceTypeInternalName);
             mv.visitLabel(lserif);
-            mv.visitFrame(Opcodes.F_SAME1, 0, null, 1, new Object[]{serviceTypeString});
+            mv.visitFrame(Opcodes.F_SAME1, 0, null, 1, new Object[]{serviceTypeInternalName});
             mv.visitVarInsn(ASTORE, 3);
 
             final int maxStack = 3 + params.length;
@@ -379,58 +387,58 @@ public final class Rest {
                 if (annsid != null) { //HttpRequest.getSessionid(true|false)
                     mv.visitVarInsn(ALOAD, 1);
                     mv.visitInsn(annsid.create() ? ICONST_1 : ICONST_0);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", "getSessionid", "(Z)Ljava/lang/String;", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getSessionid", "(Z)Ljava/lang/String;", false);
                     mv.visitVarInsn(ASTORE, maxLocals);
                     varInsns.add(new int[]{ALOAD, maxLocals});
                 } else if (annaddr != null) { //HttpRequest.getRemoteAddr
                     mv.visitVarInsn(ALOAD, 1);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", "getRemoteAddr", "()Ljava/lang/String;", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getRemoteAddr", "()Ljava/lang/String;", false);
                     mv.visitVarInsn(ASTORE, maxLocals);
                     varInsns.add(new int[]{ALOAD, maxLocals});
                 } else if ("#".equals(pname)) { //从request.getRequstURI 中取参数
                     if (ptype == boolean.class) {
                         mv.visitVarInsn(ALOAD, 1);
-                        mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", "getRequstURILastPath", "()Ljava/lang/String;", false);
+                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getRequstURILastPath", "()Ljava/lang/String;", false);
                         mv.visitMethodInsn(INVOKESTATIC, "java/lang/Boolean", "parseBoolean", "(Ljava/lang/String;)Z", false);
                         mv.visitVarInsn(ISTORE, maxLocals);
                         varInsns.add(new int[]{ILOAD, maxLocals});
                     } else if (ptype == byte.class) {
                         mv.visitVarInsn(ALOAD, 1);
-                        mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", "getRequstURILastPath", "()Ljava/lang/String;", false);
+                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getRequstURILastPath", "()Ljava/lang/String;", false);
                         mv.visitIntInsn(BIPUSH, radix);
                         mv.visitMethodInsn(INVOKESTATIC, "java/lang/Byte", "parseByte", "(Ljava/lang/String;I)B", false);
                         mv.visitVarInsn(ISTORE, maxLocals);
                         varInsns.add(new int[]{ILOAD, maxLocals});
                     } else if (ptype == short.class) {
                         mv.visitVarInsn(ALOAD, 1);
-                        mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", "getRequstURILastPath", "()Ljava/lang/String;", false);
+                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getRequstURILastPath", "()Ljava/lang/String;", false);
                         mv.visitIntInsn(BIPUSH, radix);
                         mv.visitMethodInsn(INVOKESTATIC, "java/lang/Short", "parseShort", "(Ljava/lang/String;I)S", false);
                         mv.visitVarInsn(ISTORE, maxLocals);
                         varInsns.add(new int[]{ILOAD, maxLocals});
                     } else if (ptype == char.class) {
                         mv.visitVarInsn(ALOAD, 1);
-                        mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", "getRequstURILastPath", "()Ljava/lang/String;", false);
+                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getRequstURILastPath", "()Ljava/lang/String;", false);
                         mv.visitInsn(ICONST_0);
                         mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/String", "charAt", "(I)C", false);
                         mv.visitVarInsn(ISTORE, maxLocals);
                         varInsns.add(new int[]{ILOAD, maxLocals});
                     } else if (ptype == int.class) {
                         mv.visitVarInsn(ALOAD, 1);
-                        mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", "getRequstURILastPath", "()Ljava/lang/String;", false);
+                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getRequstURILastPath", "()Ljava/lang/String;", false);
                         mv.visitIntInsn(BIPUSH, radix);
                         mv.visitMethodInsn(INVOKESTATIC, "java/lang/Integer", "parseInt", "(Ljava/lang/String;I)I", false);
                         mv.visitVarInsn(ISTORE, maxLocals);
                         varInsns.add(new int[]{ILOAD, maxLocals});
                     } else if (ptype == float.class) {
                         mv.visitVarInsn(ALOAD, 1);
-                        mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", "getRequstURILastPath", "()Ljava/lang/String;", false);
+                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getRequstURILastPath", "()Ljava/lang/String;", false);
                         mv.visitMethodInsn(INVOKESTATIC, "java/lang/Float", "parseFloat", "(Ljava/lang/String;)F", false);
                         mv.visitVarInsn(FSTORE, maxLocals);
                         varInsns.add(new int[]{FLOAD, maxLocals});
                     } else if (ptype == long.class) {
                         mv.visitVarInsn(ALOAD, 1);
-                        mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", "getRequstURILastPath", "()Ljava/lang/String;", false);
+                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getRequstURILastPath", "()Ljava/lang/String;", false);
                         mv.visitIntInsn(BIPUSH, radix);
                         mv.visitMethodInsn(INVOKESTATIC, "java/lang/Long", "parseLong", "(Ljava/lang/String;I)J", false);
                         mv.visitVarInsn(LSTORE, maxLocals);
@@ -438,14 +446,14 @@ public final class Rest {
                         maxLocals++;
                     } else if (ptype == double.class) {
                         mv.visitVarInsn(ALOAD, 1);
-                        mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", "getRequstURILastPath", "()Ljava/lang/String;", false);
+                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getRequstURILastPath", "()Ljava/lang/String;", false);
                         mv.visitMethodInsn(INVOKESTATIC, "java/lang/Double", "parseDouble", "(Ljava/lang/String;)D", false);
                         mv.visitVarInsn(DSTORE, maxLocals);
                         varInsns.add(new int[]{DLOAD, maxLocals});
                         maxLocals++;
                     } else if (ptype == String.class) {
                         mv.visitVarInsn(ALOAD, 1);
-                        mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", "getRequstURILastPath", "()Ljava/lang/String;", false);
+                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getRequstURILastPath", "()Ljava/lang/String;", false);
                         mv.visitVarInsn(ASTORE, maxLocals);
                         varInsns.add(new int[]{ALOAD, maxLocals});
                     } else {
@@ -456,7 +464,7 @@ public final class Rest {
                         mv.visitVarInsn(ALOAD, 1);
                         mv.visitLdcInsn(pname.substring(1));
                         mv.visitLdcInsn("false");
-                        mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", "getRequstURIPath", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
+                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getRequstURIPath", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
                         mv.visitMethodInsn(INVOKESTATIC, "java/lang/Boolean", "parseBoolean", "(Ljava/lang/String;)Z", false);
                         mv.visitVarInsn(ISTORE, maxLocals);
                         varInsns.add(new int[]{ILOAD, maxLocals});
@@ -464,7 +472,7 @@ public final class Rest {
                         mv.visitVarInsn(ALOAD, 1);
                         mv.visitLdcInsn(pname.substring(1));
                         mv.visitLdcInsn("0");
-                        mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", "getRequstURIPath", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
+                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getRequstURIPath", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
                         mv.visitIntInsn(BIPUSH, radix);
                         mv.visitMethodInsn(INVOKESTATIC, "java/lang/Byte", "parseByte", "(Ljava/lang/String;I)B", false);
                         mv.visitVarInsn(ISTORE, maxLocals);
@@ -473,7 +481,7 @@ public final class Rest {
                         mv.visitVarInsn(ALOAD, 1);
                         mv.visitLdcInsn(pname.substring(1));
                         mv.visitLdcInsn("0");
-                        mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", "getRequstURIPath", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
+                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getRequstURIPath", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
                         mv.visitIntInsn(BIPUSH, radix);
                         mv.visitMethodInsn(INVOKESTATIC, "java/lang/Short", "parseShort", "(Ljava/lang/String;I)S", false);
                         mv.visitVarInsn(ISTORE, maxLocals);
@@ -482,7 +490,7 @@ public final class Rest {
                         mv.visitVarInsn(ALOAD, 1);
                         mv.visitLdcInsn(pname.substring(1));
                         mv.visitLdcInsn("0");
-                        mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", "getRequstURIPath", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
+                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getRequstURIPath", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
                         mv.visitInsn(ICONST_0);
                         mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/String", "charAt", "(I)C", false);
                         mv.visitVarInsn(ISTORE, maxLocals);
@@ -491,7 +499,7 @@ public final class Rest {
                         mv.visitVarInsn(ALOAD, 1);
                         mv.visitLdcInsn(pname.substring(1));
                         mv.visitLdcInsn("0");
-                        mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", "getRequstURIPath", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
+                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getRequstURIPath", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
                         mv.visitIntInsn(BIPUSH, radix);
                         mv.visitMethodInsn(INVOKESTATIC, "java/lang/Integer", "parseInt", "(Ljava/lang/String;I)I", false);
                         mv.visitVarInsn(ISTORE, maxLocals);
@@ -500,7 +508,7 @@ public final class Rest {
                         mv.visitVarInsn(ALOAD, 1);
                         mv.visitLdcInsn(pname.substring(1));
                         mv.visitLdcInsn("0");
-                        mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", "getRequstURIPath", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
+                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getRequstURIPath", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
                         mv.visitMethodInsn(INVOKESTATIC, "java/lang/Float", "parseFloat", "(Ljava/lang/String;)F", false);
                         mv.visitVarInsn(FSTORE, maxLocals);
                         varInsns.add(new int[]{FLOAD, maxLocals});
@@ -508,7 +516,7 @@ public final class Rest {
                         mv.visitVarInsn(ALOAD, 1);
                         mv.visitLdcInsn(pname.substring(1));
                         mv.visitLdcInsn("0");
-                        mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", "getRequstURIPath", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
+                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getRequstURIPath", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
                         mv.visitIntInsn(BIPUSH, radix);
                         mv.visitMethodInsn(INVOKESTATIC, "java/lang/Long", "parseLong", "(Ljava/lang/String;I)J", false);
                         mv.visitVarInsn(LSTORE, maxLocals);
@@ -518,7 +526,7 @@ public final class Rest {
                         mv.visitVarInsn(ALOAD, 1);
                         mv.visitLdcInsn(pname.substring(1));
                         mv.visitLdcInsn("0");
-                        mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", "getRequstURIPath", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
+                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getRequstURIPath", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
                         mv.visitMethodInsn(INVOKESTATIC, "java/lang/Double", "parseDouble", "(Ljava/lang/String;)D", false);
                         mv.visitVarInsn(DSTORE, maxLocals);
                         varInsns.add(new int[]{DLOAD, maxLocals});
@@ -527,7 +535,7 @@ public final class Rest {
                         mv.visitVarInsn(ALOAD, 1);
                         mv.visitLdcInsn(pname.substring(1));
                         mv.visitLdcInsn("");
-                        mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", "getRequstURIPath", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
+                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getRequstURIPath", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
                         mv.visitVarInsn(ASTORE, maxLocals);
                         varInsns.add(new int[]{ALOAD, maxLocals});
                     } else {
@@ -543,14 +551,14 @@ public final class Rest {
                     mv.visitVarInsn(ALOAD, 1);
                     mv.visitLdcInsn(pname);
                     mv.visitInsn(ICONST_0);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", ishead ? "getBooleanHeader" : "getBooleanParameter", "(Ljava/lang/String;Z)Z", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, ishead ? "getBooleanHeader" : "getBooleanParameter", "(Ljava/lang/String;Z)Z", false);
                     mv.visitVarInsn(ISTORE, maxLocals);
                     varInsns.add(new int[]{ILOAD, maxLocals});
                 } else if (ptype == byte.class) {
                     mv.visitVarInsn(ALOAD, 1);
                     mv.visitLdcInsn(pname);
                     mv.visitLdcInsn("0");
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", ishead ? "getHeader" : "getParameter", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, ishead ? "getHeader" : "getParameter", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
                     mv.visitIntInsn(BIPUSH, radix);
                     mv.visitMethodInsn(INVOKESTATIC, "java/lang/Byte", "parseByte", "(Ljava/lang/String;I)B", false);
                     mv.visitVarInsn(ISTORE, maxLocals);
@@ -560,14 +568,14 @@ public final class Rest {
                     mv.visitIntInsn(BIPUSH, radix);
                     mv.visitLdcInsn(pname);
                     mv.visitInsn(ICONST_0);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", ishead ? "getShortHeader" : "getShortParameter", "(ILjava/lang/String;S)S", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, ishead ? "getShortHeader" : "getShortParameter", "(ILjava/lang/String;S)S", false);
                     mv.visitVarInsn(ISTORE, maxLocals);
                     varInsns.add(new int[]{ILOAD, maxLocals});
                 } else if (ptype == char.class) {
                     mv.visitVarInsn(ALOAD, 1);
                     mv.visitLdcInsn(pname);
                     mv.visitLdcInsn("0");
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", ishead ? "getHeader" : "getParameter", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, ishead ? "getHeader" : "getParameter", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
                     mv.visitInsn(ICONST_0);
                     mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/String", "charAt", "(I)C", false);
                     mv.visitVarInsn(ISTORE, maxLocals);
@@ -577,14 +585,14 @@ public final class Rest {
                     mv.visitIntInsn(BIPUSH, radix);
                     mv.visitLdcInsn(pname);
                     mv.visitInsn(ICONST_0);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", ishead ? "getIntHeader" : "getIntParameter", "(ILjava/lang/String;I)I", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, ishead ? "getIntHeader" : "getIntParameter", "(ILjava/lang/String;I)I", false);
                     mv.visitVarInsn(ISTORE, maxLocals);
                     varInsns.add(new int[]{ILOAD, maxLocals});
                 } else if (ptype == float.class) {
                     mv.visitVarInsn(ALOAD, 1);
                     mv.visitLdcInsn(pname);
                     mv.visitInsn(FCONST_0);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", ishead ? "getFloatHeader" : "getFloatParameter", "(Ljava/lang/String;F)F", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, ishead ? "getFloatHeader" : "getFloatParameter", "(Ljava/lang/String;F)F", false);
                     mv.visitVarInsn(FSTORE, maxLocals);
                     varInsns.add(new int[]{FLOAD, maxLocals});
                 } else if (ptype == long.class) {
@@ -592,7 +600,7 @@ public final class Rest {
                     mv.visitIntInsn(BIPUSH, radix);
                     mv.visitLdcInsn(pname);
                     mv.visitInsn(LCONST_0);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", ishead ? "getLongHeader" : "getLongParameter", "(ILjava/lang/String;J)J", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, ishead ? "getLongHeader" : "getLongParameter", "(ILjava/lang/String;J)J", false);
                     mv.visitVarInsn(LSTORE, maxLocals);
                     varInsns.add(new int[]{LLOAD, maxLocals});
                     maxLocals++;
@@ -600,7 +608,7 @@ public final class Rest {
                     mv.visitVarInsn(ALOAD, 1);
                     mv.visitLdcInsn(pname);
                     mv.visitInsn(DCONST_0);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", ishead ? "getDoubleHeader" : "getDoubleParameter", "(Ljava/lang/String;D)D", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, ishead ? "getDoubleHeader" : "getDoubleParameter", "(Ljava/lang/String;D)D", false);
                     mv.visitVarInsn(DSTORE, maxLocals);
                     varInsns.add(new int[]{DLOAD, maxLocals});
                     maxLocals++;
@@ -608,21 +616,19 @@ public final class Rest {
                     mv.visitVarInsn(ALOAD, 1);
                     mv.visitLdcInsn(pname);
                     mv.visitLdcInsn("");
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", iscookie ? "getCookie" : (ishead ? "getHeader" : "getParameter"), "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, iscookie ? "getCookie" : (ishead ? "getHeader" : "getParameter"), "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
                     mv.visitVarInsn(ASTORE, maxLocals);
                     varInsns.add(new int[]{ALOAD, maxLocals});
                 } else if (ptype == Flipper.class) {
-                    //mv.visitVarInsn(ALOAD, 0);
                     mv.visitVarInsn(ALOAD, 1);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", "getFlipper", "()Lorg/redkale/source/Flipper;", false);
-                    //mv.visitMethodInsn(INVOKEVIRTUAL, newDynName, "findFlipper", "(Lorg/redkale/net/http/HttpRequest;)Lorg/redkale/source/Flipper;", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getFlipper", "()" + flipperDesc, false);
                     mv.visitVarInsn(ASTORE, maxLocals);
                     varInsns.add(new int[]{ALOAD, maxLocals});
                 } else { //其他Json对象
                     mv.visitVarInsn(ALOAD, 1);
                     mv.visitLdcInsn(Type.getType(Type.getDescriptor(ptype)));
                     mv.visitLdcInsn(pname);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", ishead ? "getJsonHeader" : "getJsonParameter", "(Ljava/lang/Class;Ljava/lang/String;)Ljava/lang/Object;", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, ishead ? "getJsonHeader" : "getJsonParameter", "(Ljava/lang/Class;Ljava/lang/String;)Ljava/lang/Object;", false);
                     mv.visitTypeInsn(CHECKCAST, ptype.getName().replace('.', '/'));
                     mv.visitVarInsn(ASTORE, maxLocals);
                     varInsns.add(new int[]{ALOAD, maxLocals});
@@ -682,18 +688,18 @@ public final class Rest {
                             if (en.getKey().contains("_header_")) {
                                 mv.visitLdcInsn(en.getValue()[0].toString());
                                 mv.visitLdcInsn("");
-                                mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", "getHeader", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
+                                mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getHeader", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
                             } else if (en.getKey().contains("_cookie_")) {
                                 mv.visitLdcInsn(en.getValue()[0].toString());
                                 mv.visitLdcInsn("");
-                                mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", "getCookie", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
+                                mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getCookie", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
                             } else if (en.getKey().contains("_sessionid_")) {
                                 mv.visitInsn(en.getValue()[0].toString().isEmpty() ? ICONST_0 : ICONST_1);
-                                mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", "getSessionid", "(Z)Ljava/lang/String;", false);
+                                mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getSessionid", "(Z)Ljava/lang/String;", false);
                             } else if (en.getKey().contains("_address_")) {
-                                mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", "getRemoteAddr", "()Ljava/lang/String;", false);
+                                mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getRemoteAddr", "()Ljava/lang/String;", false);
                             }
-                            mv.visitMethodInsn(INVOKEINTERFACE, "org/redkale/util/Attribute", "set", "(Ljava/lang/Object;Ljava/lang/Object;)V", true);
+                            mv.visitMethodInsn(INVOKEINTERFACE, attrInternalName, "set", "(Ljava/lang/Object;Ljava/lang/Object;)V", true);
                         }
                         mv.visitLabel(lif); // end if }
                         mv.visitFrame(Opcodes.F_APPEND, 1, new Object[]{ptype.getName().replace('.', '/')}, 0, null);
@@ -709,14 +715,11 @@ public final class Rest {
             for (int[] ins : varInsns) {
                 mv.visitVarInsn(ins[0], ins[1]);
             }
-            mv.visitMethodInsn(INVOKEVIRTUAL, serviceTypeString, method.getName(), methodDesc, false);
+            mv.visitMethodInsn(INVOKEVIRTUAL, serviceTypeInternalName, method.getName(), methodDesc, false);
             if (returnType == void.class) {
-                //mv.visitVarInsn(ALOAD, 0);
                 mv.visitVarInsn(ALOAD, 2);
-                //mv.visitFieldInsn(GETSTATIC, "org/redkale/service/RetResult", "SUCCESS", "Lorg/redkale/service/RetResult;");
-                mv.visitMethodInsn(INVOKESTATIC, "org/redkale/service/RetResult", "success", "()Lorg/redkale/service/RetResult;", false);
-                mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpResponse", "finishJson", "(Lorg/redkale/service/RetResult;)V", false);
-                //mv.visitMethodInsn(INVOKEVIRTUAL, newDynName, "sendRetResult", "(Lorg/redkale/net/http/HttpResponse;Lorg/redkale/service/RetResult;)V", false);
+                mv.visitMethodInsn(INVOKESTATIC, retInternalName, "success", "()" + retDesc, false);
+                mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishJson", "(" + retDesc + ")V", false);
                 mv.visitInsn(RETURN);
             } else if (returnType == boolean.class) {
                 mv.visitVarInsn(ISTORE, maxLocals);
@@ -724,15 +727,13 @@ public final class Rest {
                     mv.visitVarInsn(ALOAD, 2); //response
                     mv.visitVarInsn(ILOAD, maxLocals);
                     mv.visitMethodInsn(INVOKESTATIC, "java/lang/String", "valueOf", "(Z)Ljava/lang/String;", false);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpResponse", "finish", "(Ljava/lang/String;)V", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finish", "(Ljava/lang/String;)V", false);
                 } else {
-                    //mv.visitVarInsn(ALOAD, 0);
                     mv.visitVarInsn(ALOAD, 2);
                     mv.visitLdcInsn(jsvar);
                     mv.visitVarInsn(ILOAD, maxLocals);
                     mv.visitMethodInsn(INVOKESTATIC, "java/lang/Boolean", "valueOf", "(Z)Ljava/lang/Boolean;", false);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpResponse", "finishJsResult", "(Ljava/lang/String;Ljava/lang/Object;)V", false);
-                    //mv.visitMethodInsn(INVOKEVIRTUAL, newDynName, "sendJsResult", "(Lorg/redkale/net/http/HttpResponse;Ljava/lang/String;Ljava/lang/Object;)V", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishJsResult", "(Ljava/lang/String;Ljava/lang/Object;)V", false);
                 }
                 mv.visitInsn(RETURN);
                 maxLocals++;
@@ -742,15 +743,13 @@ public final class Rest {
                     mv.visitVarInsn(ALOAD, 2); //response
                     mv.visitVarInsn(ILOAD, maxLocals);
                     mv.visitMethodInsn(INVOKESTATIC, "java/lang/String", "valueOf", "(I)Ljava/lang/String;", false);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpResponse", "finish", "(Ljava/lang/String;)V", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finish", "(Ljava/lang/String;)V", false);
                 } else {
-                    //mv.visitVarInsn(ALOAD, 0);
                     mv.visitVarInsn(ALOAD, 2);
                     mv.visitLdcInsn(jsvar);
                     mv.visitVarInsn(ILOAD, maxLocals);
                     mv.visitMethodInsn(INVOKESTATIC, "java/lang/Byte", "valueOf", "(B)Ljava/lang/Byte;", false);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpResponse", "finishJsResult", "(Ljava/lang/String;Ljava/lang/Object;)V", false);
-                    //mv.visitMethodInsn(INVOKEVIRTUAL, newDynName, "sendJsResult", "(Lorg/redkale/net/http/HttpResponse;Ljava/lang/String;Ljava/lang/Object;)V", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishJsResult", "(Ljava/lang/String;Ljava/lang/Object;)V", false);
                 }
                 mv.visitInsn(RETURN);
                 maxLocals++;
@@ -760,15 +759,13 @@ public final class Rest {
                     mv.visitVarInsn(ALOAD, 2); //response
                     mv.visitVarInsn(ILOAD, maxLocals);
                     mv.visitMethodInsn(INVOKESTATIC, "java/lang/String", "valueOf", "(I)Ljava/lang/String;", false);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpResponse", "finish", "(Ljava/lang/String;)V", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finish", "(Ljava/lang/String;)V", false);
                 } else {
-                    //mv.visitVarInsn(ALOAD, 0);
                     mv.visitVarInsn(ALOAD, 2);
                     mv.visitLdcInsn(jsvar);
                     mv.visitVarInsn(ILOAD, maxLocals);
                     mv.visitMethodInsn(INVOKESTATIC, "java/lang/Short", "valueOf", "(S)Ljava/lang/Short;", false);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpResponse", "finishJsResult", "(Ljava/lang/String;Ljava/lang/Object;)V", false);
-                    //mv.visitMethodInsn(INVOKEVIRTUAL, newDynName, "sendJsResult", "(Lorg/redkale/net/http/HttpResponse;Ljava/lang/String;Ljava/lang/Object;)V", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishJsResult", "(Ljava/lang/String;Ljava/lang/Object;)V", false);
                 }
                 mv.visitInsn(RETURN);
                 maxLocals++;
@@ -778,15 +775,13 @@ public final class Rest {
                     mv.visitVarInsn(ALOAD, 2); //response
                     mv.visitVarInsn(ILOAD, maxLocals);
                     mv.visitMethodInsn(INVOKESTATIC, "java/lang/String", "valueOf", "(C)Ljava/lang/String;", false);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpResponse", "finish", "(Ljava/lang/String;)V", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finish", "(Ljava/lang/String;)V", false);
                 } else {
-                    //mv.visitVarInsn(ALOAD, 0);
                     mv.visitVarInsn(ALOAD, 2);
                     mv.visitLdcInsn(jsvar);
                     mv.visitVarInsn(ILOAD, maxLocals);
                     mv.visitMethodInsn(INVOKESTATIC, "java/lang/Character", "valueOf", "(C)Ljava/lang/Character;", false);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpResponse", "finishJsResult", "(Ljava/lang/String;Ljava/lang/Object;)V", false);
-                    //mv.visitMethodInsn(INVOKEVIRTUAL, newDynName, "sendJsResult", "(Lorg/redkale/net/http/HttpResponse;Ljava/lang/String;Ljava/lang/Object;)V", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishJsResult", "(Ljava/lang/String;Ljava/lang/Object;)V", false);
                 }
                 mv.visitInsn(RETURN);
                 maxLocals++;
@@ -796,15 +791,13 @@ public final class Rest {
                     mv.visitVarInsn(ALOAD, 2); //response
                     mv.visitVarInsn(ILOAD, maxLocals);
                     mv.visitMethodInsn(INVOKESTATIC, "java/lang/String", "valueOf", "(I)Ljava/lang/String;", false);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpResponse", "finish", "(Ljava/lang/String;)V", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finish", "(Ljava/lang/String;)V", false);
                 } else {
-                    //mv.visitVarInsn(ALOAD, 0);
                     mv.visitVarInsn(ALOAD, 2);
                     mv.visitLdcInsn(jsvar);
                     mv.visitVarInsn(ILOAD, maxLocals);
                     mv.visitMethodInsn(INVOKESTATIC, "java/lang/Integer", "valueOf", "(I)Ljava/lang/Integer;", false);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpResponse", "finishJsResult", "(Ljava/lang/String;Ljava/lang/Object;)V", false);
-                    //mv.visitMethodInsn(INVOKEVIRTUAL, newDynName, "sendJsResult", "(Lorg/redkale/net/http/HttpResponse;Ljava/lang/String;Ljava/lang/Object;)V", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishJsResult", "(Ljava/lang/String;Ljava/lang/Object;)V", false);
                 }
                 mv.visitInsn(RETURN);
                 maxLocals++;
@@ -814,15 +807,13 @@ public final class Rest {
                     mv.visitVarInsn(ALOAD, 2); //response
                     mv.visitVarInsn(FLOAD, maxLocals);
                     mv.visitMethodInsn(INVOKESTATIC, "java/lang/String", "valueOf", "(F)Ljava/lang/String;", false);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpResponse", "finish", "(Ljava/lang/String;)V", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finish", "(Ljava/lang/String;)V", false);
                 } else {
-                    //mv.visitVarInsn(ALOAD, 0);
                     mv.visitVarInsn(ALOAD, 2);
                     mv.visitLdcInsn(jsvar);
                     mv.visitVarInsn(FLOAD, maxLocals);
                     mv.visitMethodInsn(INVOKESTATIC, "java/lang/Float", "valueOf", "(F)Ljava/lang/Float;", false);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpResponse", "finishJsResult", "(Ljava/lang/String;Ljava/lang/Object;)V", false);
-                    //mv.visitMethodInsn(INVOKEVIRTUAL, newDynName, "sendJsResult", "(Lorg/redkale/net/http/HttpResponse;Ljava/lang/String;Ljava/lang/Object;)V", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishJsResult", "(Ljava/lang/String;Ljava/lang/Object;)V", false);
                 }
                 mv.visitInsn(RETURN);
                 maxLocals++;
@@ -832,15 +823,13 @@ public final class Rest {
                     mv.visitVarInsn(ALOAD, 2); //response
                     mv.visitVarInsn(LLOAD, maxLocals);
                     mv.visitMethodInsn(INVOKESTATIC, "java/lang/String", "valueOf", "(J)Ljava/lang/String;", false);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpResponse", "finish", "(Ljava/lang/String;)V", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finish", "(Ljava/lang/String;)V", false);
                 } else {
-                    //mv.visitVarInsn(ALOAD, 0);
                     mv.visitVarInsn(ALOAD, 2);
                     mv.visitLdcInsn(jsvar);
                     mv.visitVarInsn(LLOAD, maxLocals);
                     mv.visitMethodInsn(INVOKESTATIC, "java/lang/Long", "valueOf", "(J)Ljava/lang/Long;", false);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpResponse", "finishJsResult", "(Ljava/lang/String;Ljava/lang/Object;)V", false);
-                    //mv.visitMethodInsn(INVOKEVIRTUAL, newDynName, "sendJsResult", "(Lorg/redkale/net/http/HttpResponse;Ljava/lang/String;Ljava/lang/Object;)V", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishJsResult", "(Ljava/lang/String;Ljava/lang/Object;)V", false);
                 }
                 mv.visitInsn(RETURN);
                 maxLocals += 2;
@@ -850,15 +839,13 @@ public final class Rest {
                     mv.visitVarInsn(ALOAD, 2); //response
                     mv.visitVarInsn(DLOAD, maxLocals);
                     mv.visitMethodInsn(INVOKESTATIC, "java/lang/String", "valueOf", "(D)Ljava/lang/String;", false);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpResponse", "finish", "(Ljava/lang/String;)V", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finish", "(Ljava/lang/String;)V", false);
                 } else {
-                    //mv.visitVarInsn(ALOAD, 0);
                     mv.visitVarInsn(ALOAD, 2);
                     mv.visitLdcInsn(jsvar);
                     mv.visitVarInsn(DLOAD, maxLocals);
                     mv.visitMethodInsn(INVOKESTATIC, "java/lang/Double", "valueOf", "(D)Ljava/lang/Double;", false);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpResponse", "finishJsResult", "(Ljava/lang/String;Ljava/lang/Object;)V", false);
-                    //mv.visitMethodInsn(INVOKEVIRTUAL, newDynName, "sendJsResult", "(Lorg/redkale/net/http/HttpResponse;Ljava/lang/String;Ljava/lang/Object;)V", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishJsResult", "(Ljava/lang/String;Ljava/lang/Object;)V", false);
                 }
                 mv.visitInsn(RETURN);
                 maxLocals += 2;
@@ -867,14 +854,12 @@ public final class Rest {
                 if (jsvar == null) {
                     mv.visitVarInsn(ALOAD, 2); //response
                     mv.visitVarInsn(ALOAD, maxLocals);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpResponse", "finish", "(Ljava/lang/String;)V", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finish", "(Ljava/lang/String;)V", false);
                 } else {
-                    //mv.visitVarInsn(ALOAD, 0);
                     mv.visitVarInsn(ALOAD, 2);
                     mv.visitLdcInsn(jsvar);
                     mv.visitVarInsn(ALOAD, maxLocals);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpResponse", "finishJsResult", "(Ljava/lang/String;Ljava/lang/Object;)V", false);
-                    //mv.visitMethodInsn(INVOKEVIRTUAL, newDynName, "sendJsResult", "(Lorg/redkale/net/http/HttpResponse;Ljava/lang/String;Ljava/lang/Object;)V", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishJsResult", "(Ljava/lang/String;Ljava/lang/Object;)V", false);
                 }
                 mv.visitInsn(RETURN);
                 maxLocals++;
@@ -883,7 +868,7 @@ public final class Rest {
                 if (jsvar == null) {
                     mv.visitVarInsn(ALOAD, 2); //response
                     mv.visitVarInsn(ALOAD, maxLocals);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpResponse", "finish", "(Ljava/io/File;)V", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finish", "(Ljava/io/File;)V", false);
                 } else {
                     throw new RuntimeException(method + " cannot set return Type (java.io.File) to jsvar");
                 }
@@ -892,18 +877,14 @@ public final class Rest {
             } else if (RetResult.class.isAssignableFrom(returnType)) {
                 mv.visitVarInsn(ASTORE, maxLocals);
                 if (jsvar == null) {
-                    //mv.visitVarInsn(ALOAD, 0);
                     mv.visitVarInsn(ALOAD, 2); //response
                     mv.visitVarInsn(ALOAD, maxLocals);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpResponse", "finishJson", "(Lorg/redkale/service/RetResult;)V", false);
-                    //mv.visitMethodInsn(INVOKEVIRTUAL, newDynName, "sendRetResult", "(Lorg/redkale/net/http/HttpResponse;Lorg/redkale/service/RetResult;)V", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishJson", "(" + retDesc + ")V", false);
                 } else {
-                    //mv.visitVarInsn(ALOAD, 0);
                     mv.visitVarInsn(ALOAD, 2);
                     mv.visitLdcInsn(jsvar);
                     mv.visitVarInsn(ALOAD, maxLocals);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpResponse", "finishJsResult", "(Ljava/lang/String;Ljava/lang/Object;)V", false);
-                    //mv.visitMethodInsn(INVOKEVIRTUAL, newDynName, "sendJsResult", "(Lorg/redkale/net/http/HttpResponse;Ljava/lang/String;Ljava/lang/Object;)V", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishJsResult", "(Ljava/lang/String;Ljava/lang/Object;)V", false);
                 }
                 mv.visitInsn(RETURN);
                 maxLocals++;
@@ -913,13 +894,13 @@ public final class Rest {
                     mv.visitVarInsn(ALOAD, 0);
                     mv.visitVarInsn(ALOAD, 2);
                     mv.visitVarInsn(ALOAD, maxLocals);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, newDynName, "finishJson", "(Lorg/redkale/net/http/HttpResponse;" + restoutputDesc + ")V", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, newDynName, "finishJson", "(" + httpResponseDesc + restoutputDesc + ")V", false);
                 } else {
                     mv.visitVarInsn(ALOAD, 0);
                     mv.visitVarInsn(ALOAD, 2);
                     mv.visitLdcInsn(jsvar);
                     mv.visitVarInsn(ALOAD, maxLocals);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, newDynName, "finishJsResult", "(Lorg/redkale/net/http/HttpResponse;Ljava/lang/String;" + restoutputDesc + ")V", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, newDynName, "finishJsResult", "(" + httpResponseDesc + "Ljava/lang/String;" + restoutputDesc + ")V", false);
                 }
                 mv.visitInsn(RETURN);
                 maxLocals++;
@@ -929,14 +910,12 @@ public final class Rest {
                     mv.visitVarInsn(ALOAD, 2); //response
                     mv.visitVarInsn(ALOAD, maxLocals);
                     mv.visitMethodInsn(INVOKESTATIC, "java/lang/String", "valueOf", "(Ljava/lang/Object;)Ljava/lang/String;", false);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpResponse", "finish", "(Ljava/lang/String;)V", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finish", "(Ljava/lang/String;)V", false);
                 } else {
-                    //mv.visitVarInsn(ALOAD, 0);
                     mv.visitVarInsn(ALOAD, 2);
                     mv.visitLdcInsn(jsvar);
                     mv.visitVarInsn(ALOAD, maxLocals);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpResponse", "finishJsResult", "(Ljava/lang/String;Ljava/lang/Object;)V", false);
-                    //mv.visitMethodInsn(INVOKEVIRTUAL, newDynName, "sendJsResult", "(Lorg/redkale/net/http/HttpResponse;Ljava/lang/String;Ljava/lang/Object;)V", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishJsResult", "(Ljava/lang/String;Ljava/lang/Object;)V", false);
                 }
                 mv.visitInsn(RETURN);
                 maxLocals++;
@@ -945,14 +924,12 @@ public final class Rest {
                 if (jsvar == null) {
                     mv.visitVarInsn(ALOAD, 2); //response
                     mv.visitVarInsn(ALOAD, maxLocals);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpResponse", "finishJson", "(Ljava/lang/Object;)V", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishJson", "(Ljava/lang/Object;)V", false);
                 } else {
-                    //mv.visitVarInsn(ALOAD, 0);
                     mv.visitVarInsn(ALOAD, 2);
                     mv.visitLdcInsn(jsvar);
                     mv.visitVarInsn(ALOAD, maxLocals);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpResponse", "finishJsResult", "(Ljava/lang/String;Ljava/lang/Object;)V", false);
-                    //mv.visitMethodInsn(INVOKEVIRTUAL, newDynName, "sendJsResult", "(Lorg/redkale/net/http/HttpResponse;Ljava/lang/String;Ljava/lang/Object;)V", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishJsResult", "(Ljava/lang/String;Ljava/lang/Object;)V", false);
                 }
                 mv.visitInsn(RETURN);
                 maxLocals++;
