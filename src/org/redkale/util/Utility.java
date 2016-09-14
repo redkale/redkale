@@ -659,4 +659,19 @@ public final class Utility {
     public static byte[] readBytes(InputStream in) throws IOException {
         return readStream(in).toByteArray();
     }
+
+    public static ByteArrayOutputStream readStreamThenClose(InputStream in) throws IOException {
+        ByteArrayOutputStream out = new ByteArrayOutputStream(1024);
+        byte[] bytes = new byte[1024];
+        int pos;
+        while ((pos = in.read(bytes)) != -1) {
+            out.write(bytes, 0, pos);
+        }
+        in.close();
+        return out;
+    }
+
+    public static byte[] readBytesThenClose(InputStream in) throws IOException {
+        return readStreamThenClose(in).toByteArray();
+    }
 }
