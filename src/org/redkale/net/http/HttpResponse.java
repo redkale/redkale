@@ -525,6 +525,8 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
 
     /**
      * 将指定文件句柄或文件内容按指定文件名输出，若fileBody不为null则只输出fileBody内容
+     * file 与 fileBody 不能同时为空
+     * file 与 filename 也不能同时为空
      *
      * @param filename 输出文件名
      * @param file     输出文件
@@ -533,19 +535,20 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * @throws IOException IO异常
      */
     protected void finishFile(final String filename, final File file, ByteBuffer fileBody) throws IOException {
-        if (file == null || !file.isFile() || !file.canRead()) {
+        if ((file == null || !file.isFile() || !file.canRead()) && fileBody == null) {
             finish404();
             return;
         }
         if (fileBody != null) fileBody = fileBody.duplicate().asReadOnlyBuffer();
-        final long length = file.length();
+        final long length = file == null ? fileBody.remaining() : file.length();
         final String match = request.getHeader("If-None-Match");
-        if (match != null && (file.lastModified() + "-" + length).equals(match)) {
+        final String etag = (file == null ? 0L : file.lastModified()) + "-" + length;
+        if (match != null && etag.equals(match)) {
             finish304();
             return;
         }
-        this.contentLength = fileBody == null ? file.length() : fileBody.remaining();
-        if (filename != null && !filename.isEmpty()) {
+        this.contentLength = length;
+        if (filename != null && !filename.isEmpty() && file != null) {
             addHeader("Content-Disposition", "attachment;filename=" + URLEncoder.encode(filename, "UTF-8"));
         }
         this.contentType = MimeType.getByFilename(filename == null || filename.isEmpty() ? file.getName() : filename);
@@ -559,14 +562,14 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
             int pos = range.indexOf('-');
             start = pos == 0 ? 0 : Integer.parseInt(range.substring(0, pos));
             long end = (pos == range.length() - 1) ? -1 : Long.parseLong(range.substring(pos + 1));
-            long clen = end > 0 ? (end - start + 1) : (file.length() - start);
+            long clen = end > 0 ? (end - start + 1) : (length - start);
             this.status = 206;
             addHeader("Accept-Ranges", "bytes");
             addHeader("Content-Range", "bytes " + start + "-" + (end > 0 ? end : length - 1) + "/" + length);
             this.contentLength = clen;
             len = end > 0 ? clen : end;
         }
-        this.addHeader("ETag", file.lastModified() + "-" + length);
+        this.addHeader("ETag", etag);
         ByteBuffer hbuffer = createHeader();
         hbuffer.flip();
         if (fileBody == null) {

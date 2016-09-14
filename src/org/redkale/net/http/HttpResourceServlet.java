@@ -62,7 +62,7 @@ public final class HttpResourceServlet extends HttpServlet {
                                 files.remove(uri);
                             } else if (event.kind() == ENTRY_MODIFY) {
                                 FileEntry en = files.get(uri);
-                                if (en != null) {
+                                if (en != null && en.file != null) {
                                     long d;  //等待update file完毕
                                     for (;;) {
                                         d = en.file.lastModified();
@@ -205,7 +205,9 @@ public final class HttpResourceServlet extends HttpServlet {
             if (finest) logger.log(Level.FINEST, "Not found resource (404), request = " + request);
             response.finish404();
         } else {
-            response.finishFile(entry.file, entry.content);
+            //file = null 表示资源内容在内存而不是在File中
+            //file = null 时必须传 filename
+            response.finishFile(entry.file == null ? entry.filename : null, entry.file, entry.content);
         }
     }
 
@@ -228,19 +230,30 @@ public final class HttpResourceServlet extends HttpServlet {
 
     protected static class FileEntry {
 
-        protected final File file;
+        protected final String filename;
 
-        private final HttpResourceServlet servlet;
+        protected final File file; //如果所有资源文件打包成zip文件则file=null
 
-        ByteBuffer content;
+        protected final HttpResourceServlet servlet;
+
+        protected ByteBuffer content;
 
         public FileEntry(final HttpResourceServlet servlet, File file) {
             this.servlet = servlet;
             this.file = file;
+            this.filename = file.getName();
             update();
         }
 
+        public FileEntry(final HttpResourceServlet servlet, String filename, ByteBuffer content) {
+            this.servlet = servlet;
+            this.file = null;
+            this.filename = filename;
+            this.content = content;
+        }
+
         public void update() {
+            if (this.file == null) return;
             if (this.content != null) {
                 this.servlet.cachedLength.add(0L - this.content.remaining());
                 this.content = null;
