@@ -84,6 +84,10 @@ public final class Utility {
     private Utility() {
     }
 
+    public static String uuid() {
+        return UUID.randomUUID().toString().replace("-", "");
+    }
+
     public static String now() {
         return String.format(format, System.currentTimeMillis());
     }
