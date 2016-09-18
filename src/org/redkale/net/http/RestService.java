@@ -10,7 +10,7 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * 只能依附在Service类上，value默认为Service的类名去掉Service字样的字符串小写 (如HelloService，的默认路径为 hello)。
+ * 只能依附在Service类上，name默认为Service的类名小写并去掉Service字样及后面的字符串 (如HelloService/HelloServiceImpl，的默认路径为 hello)。
  * <p>
  * 详情见: http://redkale.org
  *
@@ -22,13 +22,38 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface RestService {
 
-    String name() default ""; //模块名, 只能是模块名,不能含特殊字符
+    /**
+     * 模块名, 只能是模块名,不能含特殊字符， 只能小写字母+数字，且不能以数字开头
+     *
+     * @return 模块名
+     */
+    String name() default "";
 
-    int moduleid() default 0; //模块ID值，鉴权时用到, 对应&#64;WebServlet.moduleid
+    /**
+     * 模块ID值，鉴权时用到, 对应&#64;WebServlet.moduleid
+     *
+     * @return 模块ID值
+     */
+    int moduleid() default 0;
 
-    boolean ignore() default false; //是否屏蔽该类的转换
+    /**
+     * 是否屏蔽该类的转换
+     *
+     * @return 默认false
+     */
+    boolean ignore() default false;
 
-    boolean repair() default true; //同&#64;WebServlet的repair属性
+    /**
+     * 同&#64;WebServlet的repair属性
+     *
+     * @return 默认true
+     */
+    boolean repair() default true;
 
-    String comment() default ""; //备注描述
+    /**
+     * 备注描述
+     *
+     * @return 备注描述
+     */
+    String comment() default "";
 }
