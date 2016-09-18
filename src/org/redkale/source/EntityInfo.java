@@ -62,7 +62,7 @@ public final class EntityInfo<T> {
 
     final String notcontainSQL; //用于反向LIKE使用
 
-    final String tablenotexistSqlstate; //用于判断表不存在的使用
+    final String tablenotexistSqlstates; //用于判断表不存在的使用, 多个SQLState用;隔开
 
     final String tablecopySQL; //用于复制表结构使用
 
@@ -277,7 +277,7 @@ public final class EntityInfo<T> {
         this.containSQL = conf.getProperty(JDBC_CONTAIN_SQLTEMPLATE, "LOCATE(${keystr}, ${column}) > 0");
         this.notcontainSQL = conf.getProperty(JDBC_NOTCONTAIN_SQLTEMPLATE, "LOCATE(${keystr}, ${column}) = 0");
 
-        this.tablenotexistSqlstate = conf.getProperty(JDBC_TABLENOTEXIST_SQLSTATE, "42S02");
+        this.tablenotexistSqlstates = ";" + conf.getProperty(JDBC_TABLENOTEXIST_SQLSTATES, "42000;42S02") + ";";
         this.tablecopySQL = conf.getProperty(JDBC_TABLECOPY_SQLTEMPLATE, "CREATE TABLE ${newtable}  LIKE ${oldtable}");
     }
 

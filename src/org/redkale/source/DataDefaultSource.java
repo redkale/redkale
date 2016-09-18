@@ -36,7 +36,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
 
     static final String JDBC_NOTCONTAIN_SQLTEMPLATE = "javax.persistence.notcontain.sqltemplate";
 
-    static final String JDBC_TABLENOTEXIST_SQLSTATE = "javax.persistence.tablenotexist.sqlstate";
+    static final String JDBC_TABLENOTEXIST_SQLSTATES = "javax.persistence.tablenotexist.sqlstates";
 
     static final String JDBC_TABLECOPY_SQLTEMPLATE = "javax.persistence.tablecopy.sqltemplate";
 
@@ -367,7 +367,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
                 try {
                     prestmt.executeBatch();
                 } catch (SQLException se) {
-                    if (info.tableStrategy == null || !info.tablenotexistSqlstate.equals(se.getSQLState())) throw se;
+                    if (info.tableStrategy == null || !info.tablenotexistSqlstates.contains(';' + se.getSQLState() + ';')) throw se;
                     synchronized (info.tables) {
                         final String oldTable = info.table;
                         final String newTable = info.getTable(values[0]);
@@ -378,7 +378,21 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
                                 st.close();
                                 info.tables.add(newTable);
                             } catch (SQLException sqle) { //多进程并发时可能会出现重复建表
-                                logger.log(Level.SEVERE, "create table(" + info.tablecopySQL.replace("${newtable}", newTable).replace("${oldtable}", oldTable) + ") error", sqle);
+                                if (newTable.indexOf('.') > 0 && info.tablenotexistSqlstates.contains(';' + se.getSQLState() + ';')) {
+                                    Statement st = conn.createStatement();
+                                    st.execute("CREATE DATABASE " + newTable.substring(0, newTable.indexOf('.')));
+                                    st.close();
+                                    try {
+                                        st = conn.createStatement();
+                                        st.execute(info.tablecopySQL.replace("${newtable}", newTable).replace("${oldtable}", oldTable));
+                                        st.close();
+                                        info.tables.add(newTable);
+                                    } catch (SQLException sqle2) {
+                                        logger.log(Level.SEVERE, "create table(" + info.tablecopySQL.replace("${newtable}", newTable).replace("${oldtable}", oldTable) + ") error", sqle2);
+                                    }
+                                } else {
+                                    logger.log(Level.SEVERE, "create table(" + info.tablecopySQL.replace("${newtable}", newTable).replace("${oldtable}", oldTable) + ") error", sqle);
+                                }
                             }
                         }
                     }

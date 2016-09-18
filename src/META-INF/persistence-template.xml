@@ -28,7 +28,7 @@
             <property name="javax.persistence.notcontain.sqltemplate" value="LOCATE(${keystr}, ${column}) = 0"/>
             
             <!--  复制表结构的SQL模板，Redkale内置了MySQL的语句 -->
-            <property name="javax.persistence.tablenotexist.sqlstate" value="42S02"/>
+            <property name="javax.persistence.tablenotexist.sqlstates" value="42000;42S02"/>
             <property name="javax.persistence.tablecopy.sqltemplate" value="CREATE TABLE ${newtable}  LIKE ${oldtable}"/>
            
         </properties>
