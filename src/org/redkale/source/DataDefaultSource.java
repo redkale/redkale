@@ -388,7 +388,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
                                         st.close();
                                         info.tables.add(newTable);
                                     } catch (SQLException sqle2) {
-                                        logger.log(Level.SEVERE, "create table(" + info.tablecopySQL.replace("${newtable}", newTable).replace("${oldtable}", oldTable) + ") error", sqle2);
+                                        logger.log(Level.SEVERE, "create table2(" + info.tablecopySQL.replace("${newtable}", newTable).replace("${oldtable}", oldTable) + ") error", sqle2);
                                     }
                                 } else {
                                     logger.log(Level.SEVERE, "create table(" + info.tablecopySQL.replace("${newtable}", newTable).replace("${oldtable}", oldTable) + ") error", sqle);
