@@ -372,10 +372,14 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
                         final String oldTable = info.table;
                         final String newTable = info.getTable(values[0]);
                         if (!info.tables.contains(newTable)) {
-                            Statement st = conn.createStatement();
-                            st.execute(info.tablecopySQL.replace("${newtable}", newTable).replace("${oldtable}", oldTable));
-                            st.close();
-                            info.tables.add(newTable);
+                            try {
+                                Statement st = conn.createStatement();
+                                st.execute(info.tablecopySQL.replace("${newtable}", newTable).replace("${oldtable}", oldTable));
+                                st.close();
+                                info.tables.add(newTable);
+                            } catch (SQLException sqle) { //多进程并发时可能会出现重复建表
+                                logger.log(Level.SEVERE, "create table(" + info.tablecopySQL.replace("${newtable}", newTable).replace("${oldtable}", oldTable) + ") error", sqle);
+                            }
                         }
                     }
                     prestmt.close();
