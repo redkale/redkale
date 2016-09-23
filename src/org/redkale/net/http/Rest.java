@@ -68,7 +68,7 @@ public final class Rest {
         int mod = baseServletClass.getModifiers();
         if (!java.lang.reflect.Modifier.isPublic(mod)) return null;
         if (java.lang.reflect.Modifier.isAbstract(mod)) return null;
-        
+
         final String serviceDesc = Type.getDescriptor(serviceType);
         final String webServletDesc = Type.getDescriptor(WebServlet.class);
         final String reqDesc = Type.getDescriptor(HttpRequest.class);
@@ -180,6 +180,7 @@ public final class Rest {
             if (EXCLUDERMETHODS.contains(method.getName())) continue;
             if ("init".equals(method.getName())) continue;
             if ("destroy".equals(method.getName())) continue;
+            if ("version".equals(method.getName())) continue;
 
             RestMapping[] mappings = method.getAnnotationsByType(RestMapping.class);
             boolean ignore = false;

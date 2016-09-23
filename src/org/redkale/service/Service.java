@@ -10,7 +10,7 @@ import org.redkale.util.*;
 /**
  * 所有Service的实现类不得声明为final， 允许远程模式的public方法都不能声明为final。
  * 注意: "$"是一个很特殊的Service.name值 。 被标记为@Resource(name = "$") 的Service的资源名与所属父Service的资源名一致。
- * 
+ *
  * <blockquote><pre>
  * Service的资源类型
  * 业务逻辑的Service通常有两种编写方式：
@@ -18,7 +18,7 @@ import org.redkale.util.*;
  *    2、先定义业务的Service接口或抽象类，再编写具体实现类。
  * 第二种方式需要在具体实现类上使用&#64;ResourceType指明资源注入的类型。
  * </pre></blockquote>
- * 
+ *
  * <p>
  * 详情见: http://redkale.org
  *
@@ -42,6 +42,16 @@ public interface Service {
      */
     default void destroy(AnyValue config) {
 
+    }
+
+    /**
+     * Service的接口版本号
+     * <b>注: public方法的参数或返回类型或参数类型内部变更后改值必须进行改变</b>
+     *
+     * @return 接口版本号
+     */
+    default int version() {
+        return 0;
     }
 
 }
