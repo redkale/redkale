@@ -120,15 +120,18 @@ public final class SncpClient {
 
     protected final DLong serviceid;
 
+    protected final int serviceversion;
+
     protected final SncpAction[] actions;
 
     protected final Consumer<Runnable> executor;
 
-    public <T extends Service> SncpClient(final String serviceName, final Class<T> serviceType, final Consumer<Runnable> executor,
+    public <T extends Service> SncpClient(final String serviceName, final Class<T> serviceType, final T service, final Consumer<Runnable> executor,
         final boolean remote, final Class serviceClass, final InetSocketAddress clientAddress) {
         this.remote = remote;
         this.executor = executor;
         this.serviceClass = serviceClass;
+        this.serviceversion = service.version();
         this.clientAddress = clientAddress;
         this.name = serviceName;
         this.serviceid = Sncp.hash(serviceType.getName() + ':' + serviceName);
@@ -142,12 +145,25 @@ public final class SncpClient {
         this.addrPort = clientAddress == null ? 0 : clientAddress.getPort();
     }
 
+    static List<SncpAction> getSncpActions(final Class serviceClass) {
+        final List<SncpAction> actions = new ArrayList<>();
+        //------------------------------------------------------------------------------
+        for (java.lang.reflect.Method method : parseMethod(serviceClass)) {
+            actions.add(new SncpAction(method, Sncp.hash(method)));
+        }
+        return actions;
+    }
+
     public InetSocketAddress getClientAddress() {
         return clientAddress;
     }
 
     public DLong getServiceid() {
         return serviceid;
+    }
+
+    public int getServiceversion() {
+        return serviceversion;
     }
 
     public int getActionCount() {
@@ -158,7 +174,7 @@ public final class SncpClient {
     public String toString() {
         String service = serviceClass.getName();
         if (remote) service = service.replace(Sncp.LOCALPREFIX, Sncp.REMOTEPREFIX);
-        return this.getClass().getSimpleName() + "(service = " + service + ", serviceid = " + serviceid + ", name = '" + name
+        return this.getClass().getSimpleName() + "(service = " + service + ", serviceid = " + serviceid + ", serviceversion = " + serviceversion + ", name = '" + name
             + "', address = " + (clientAddress == null ? "" : (clientAddress.getHostString() + ":" + clientAddress.getPort()))
             + ", actions.size = " + actions.length + ")";
     }
@@ -411,7 +427,9 @@ public final class SncpClient {
         if (rseqid != seqid) throw new RuntimeException("sncp(" + action.method + ") response.seqid = " + seqid + ", but request.seqid =" + rseqid);
         if (buffer.getChar() != HEADER_SIZE) throw new RuntimeException("sncp(" + action.method + ") buffer receive header.length not " + HEADER_SIZE);
         DLong rserviceid = DLong.read(buffer);
-        if (!rserviceid.equals(serviceid)) throw new RuntimeException("sncp(" + action.method + ") response.serviceid = " + serviceid + ", but request.serviceid =" + rserviceid);
+        if (!rserviceid.equals(this.serviceid)) throw new RuntimeException("sncp(" + action.method + ") response.serviceid = " + serviceid + ", but request.serviceid =" + rserviceid);
+        int version = buffer.getInt();
+        if (version != this.serviceversion) throw new RuntimeException("sncp(" + action.method + ") response.serviceversion = " + serviceversion + ", but request.serviceversion =" + version);
         DLong raction = DLong.read(buffer);
         if (!action.actionid.equals(raction)) throw new RuntimeException("sncp(" + action.method + ") response.actionid = " + action.actionid + ", but request.actionid =(" + raction + ")");
         buffer.getInt();  //地址
@@ -425,6 +443,7 @@ public final class SncpClient {
         buffer.putLong(seqid); //序列号
         buffer.putChar((char) HEADER_SIZE); //header长度
         DLong.write(buffer, this.serviceid);
+        buffer.putInt(this.serviceversion);
         DLong.write(buffer, actionid);
         buffer.put(addrBytes);
         buffer.putChar((char) this.addrPort);

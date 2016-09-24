@@ -781,7 +781,7 @@ public abstract class Sncp {
                 try {
                     Field e = newClazz.getDeclaredField(FIELDPREFIX + "_client");
                     e.setAccessible(true);
-                    client = new SncpClient(name, serviceClass, executor, false, newClazz, clientAddress);
+                    client = new SncpClient(name, serviceClass, rs, executor, false, newClazz, clientAddress);
                     e.set(rs, client);
                 } catch (NoSuchFieldException ne) {
                 }
@@ -791,6 +791,7 @@ public abstract class Sncp {
                 sb.append(newClazz.getName()).append("{name = '").append(name).append("'");
                 if (client != null) {
                     sb.append(", serviceid = ").append(client.getServiceid());
+                    sb.append(", serviceversion = ").append(client.getServiceversion());
                     sb.append(", action.size = ").append(client.getActionCount());
                     List<String> groups = new ArrayList<>();
                     if (sameGroupTransport != null) groups.add(sameGroupTransport.getName());
@@ -917,10 +918,10 @@ public abstract class Sncp {
         final String anyValueDesc = Type.getDescriptor(AnyValue.class);
         ClassLoader loader = Sncp.class.getClassLoader();
         String newDynName = supDynName.substring(0, supDynName.lastIndexOf('/') + 1) + REMOTEPREFIX + serviceClass.getSimpleName();
-        final SncpClient client = new SncpClient(name, serviceClass, executor, true, realed ? createLocalServiceClass(name, serviceClass) : serviceClass, clientAddress);
         try {
             Class newClazz = Class.forName(newDynName.replace('/', '.'));
             T rs = (T) newClazz.newInstance();
+            SncpClient client = new SncpClient(name, serviceClass, rs, executor, true, realed ? createLocalServiceClass(name, serviceClass) : serviceClass, clientAddress);
             Field c = newClazz.getDeclaredField(FIELDPREFIX + "_client");
             c.setAccessible(true);
             c.set(rs, client);
@@ -930,7 +931,8 @@ public abstract class Sncp {
             {
                 StringBuilder sb = new StringBuilder();
                 sb.append(newClazz.getName()).append("{name = '").append(name);
-                sb.append("', serviceid = ").append(client.getServiceid());
+                sb.append("', serviceid = '").append(client.getServiceid());
+                sb.append("', serviceversion = ").append(client.getServiceversion());
                 sb.append(", action.size = ").append(client.getActionCount());
                 sb.append(", address = ").append(clientAddress).append(", groups = ").append(transport == null ? null : transport.getName());
                 sb.append(", remoteaddrs = ").append(transport == null ? null : Arrays.asList(transport.getRemoteAddresses()));
@@ -1045,7 +1047,7 @@ public abstract class Sncp {
             mv.visitEnd();
         }
         int i = -1;
-        for (final SncpAction entry : client.actions) {
+        for (final SncpAction entry : SncpClient.getSncpActions(realed ? createLocalServiceClass(name, serviceClass) : serviceClass)) {
             final int index = ++i;
             final java.lang.reflect.Method method = entry.method;
             {
@@ -1156,6 +1158,7 @@ public abstract class Sncp {
             T rs = (T) newClazz.newInstance();
             Field c = newClazz.getDeclaredField(FIELDPREFIX + "_client");
             c.setAccessible(true);
+            SncpClient client = new SncpClient(name, serviceClass, rs, executor, true, realed ? createLocalServiceClass(name, serviceClass) : serviceClass, clientAddress);
             c.set(rs, client);
             Field t = newClazz.getDeclaredField(FIELDPREFIX + "_transport");
             t.setAccessible(true);
@@ -1164,6 +1167,7 @@ public abstract class Sncp {
                 StringBuilder sb = new StringBuilder();
                 sb.append(newClazz.getName()).append("{name = '").append(name);
                 sb.append("', serviceid = ").append(client.getServiceid());
+                sb.append(", serviceversion = ").append(client.getServiceversion());
                 sb.append(", action.size = ").append(client.getActionCount());
                 sb.append(", address = ").append(clientAddress).append(", groups = ").append(transport == null ? null : transport.getName());
                 sb.append(", remotes = ").append(transport == null ? null : Arrays.asList(transport.getRemoteAddresses()));
