@@ -41,13 +41,12 @@ public final class HttpServer extends Server<String, HttpContext, HttpRequest, H
         this.prepare.addServlet(servlet, prefix, conf, mappings);
     }
 
-    public <S extends Service, T extends RestHttpServlet> RestHttpServlet addRestServlet(Class<S> serviceType,
-        final String name, final S service, final Class<T> baseServletClass, final String prefix) {
-        return addRestServlet(serviceType, name, service, baseServletClass, prefix, false, null);
+    public <S extends Service, T extends RestHttpServlet> RestHttpServlet addRestServlet(String name, Class<S> serviceType, S service, Class<T> baseServletClass, String prefix) {
+        return addRestServlet(name, serviceType, service, baseServletClass, prefix, null);
     }
 
-    public <S extends Service, T extends RestHttpServlet> RestHttpServlet addRestServlet(Class<S> serviceType,
-        final String name, final S service, final Class<T> baseServletClass, final String prefix, final boolean sncp, AnyValue conf) {
+    public <S extends Service, T extends RestHttpServlet> RestHttpServlet addRestServlet(
+        final String name, Class<S> serviceType, final S service, final Class<T> baseServletClass, final String prefix, AnyValue conf) {
         RestHttpServlet servlet = null;
         for (final HttpServlet item : ((HttpPrepareServlet) this.prepare).getServlets()) {
             if (!(item instanceof RestHttpServlet)) continue;
@@ -58,9 +57,11 @@ public final class HttpServer extends Server<String, HttpContext, HttpRequest, H
                     break;
                 }
             } catch (NoSuchFieldException | SecurityException e) {
+                e.printStackTrace();
             }
         }
-        if (servlet == null) servlet = Rest.createRestServlet(baseServletClass, serviceType, sncp);
+        final boolean first = servlet == null;
+        if (servlet == null) servlet = Rest.createRestServlet(baseServletClass, serviceType);
         try { //若提供动态变更Service服务功能，则改Rest服务无法做出相应更新
             Field field = servlet.getClass().getDeclaredField(Rest.REST_SERVICE_FIELD_NAME);
             field.setAccessible(true);
@@ -83,7 +84,7 @@ public final class HttpServer extends Server<String, HttpContext, HttpRequest, H
         } catch (Exception e) {
             throw new RuntimeException(serviceType + " generate rest servlet error", e);
         }
-        this.prepare.addServlet(servlet, prefix, conf);
+        if (first) this.prepare.addServlet(servlet, prefix, conf);
         return servlet;
     }
 

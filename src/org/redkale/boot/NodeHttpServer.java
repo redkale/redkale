@@ -31,15 +31,12 @@ public class NodeHttpServer extends NodeServer {
 
     protected final boolean rest;
 
-    protected final boolean sncp;
-
     protected final HttpServer httpServer;
 
     public NodeHttpServer(Application application, AnyValue serconf) {
         super(application, createServer(application, serconf));
         this.httpServer = (HttpServer) server;
         this.rest = serconf == null ? false : serconf.getAnyValue("rest") != null;
-        this.sncp = serconf == null ? false : serconf.getBoolValue("_$sncp", false); //SNCP服务以REST启动时会赋值_$sncp=true
     }
 
     private static Server createServer(Application application, AnyValue serconf) {
@@ -184,7 +181,7 @@ public class NodeHttpServer extends NodeServer {
             if (!autoload && !includeValues.contains(stypename)) return;
             if (!restFilter.accept(stypename)) return;
 
-            RestHttpServlet servlet = httpServer.addRestServlet(stype, wrapper.getName(), wrapper.getService(), baseServletClass, prefix, sncp, (AnyValue) null);
+            RestHttpServlet servlet = httpServer.addRestServlet(wrapper.getName(), stype, wrapper.getService(), baseServletClass, prefix, (AnyValue) null);
             resourceFactory.inject(servlet, NodeHttpServer.this);
             if (finest) logger.finest("Create RestServlet[resource=" + wrapper.getName() + "] = " + servlet);
             if (ss != null) {

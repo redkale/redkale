@@ -62,7 +62,7 @@ public final class Rest {
         return (!controller.name().isEmpty()) ? controller.name() : serviceType.getSimpleName().replaceAll("Service.*$", "").toLowerCase();
     }
 
-    static <T extends RestHttpServlet> T createRestServlet(final Class<T> baseServletClass, final Class<? extends Service> serviceType, final boolean sncp) {
+    static <T extends RestHttpServlet> T createRestServlet(final Class<T> baseServletClass, final Class<? extends Service> serviceType) {
         if (baseServletClass == null || serviceType == null) return null;
         if (!RestHttpServlet.class.isAssignableFrom(baseServletClass)) return null;
         int mod = baseServletClass.getModifiers();
@@ -85,7 +85,7 @@ public final class Rest {
 
         final String reqInternalName = Type.getInternalName(HttpRequest.class);
         final String respInternalName = Type.getInternalName(HttpResponse.class);
-        final String attrInternalName = Type.getDescriptor(org.redkale.util.Attribute.class);
+        final String attrInternalName = Type.getInternalName(org.redkale.util.Attribute.class);
         final String retInternalName = Type.getInternalName(RetResult.class);
         final String serviceTypeInternalName = Type.getInternalName(serviceType);
 
@@ -259,41 +259,37 @@ public final class Rest {
                 String n = null;
                 String comment = "";
                 int radix = 10;
-                RestHeader annhead = null;
-                RestSessionid annsid = null;
-                RestCookie anncookie = null;
-                RestAddress annaddr = null;
-                if (!sncp) { //SNCP协议中忽略参数中特定的注解，此处获取的只是SNCP请求端信息，并不是真实用户请求端的信息
-                    annhead = param.getAnnotation(RestHeader.class);
-                    if (annhead != null) {
-                        n = annhead.name();
-                        radix = annhead.radix();
-                        comment = annhead.comment();
-                        if (n.isEmpty()) throw new RuntimeException("@RestHeader.value is illegal in " + method);
-                    }
-                    anncookie = param.getAnnotation(RestCookie.class);
-                    if (anncookie != null) {
-                        if (annhead != null) throw new RuntimeException("@RestCookie and @RestHeader cannot on the same Parameter in " + method);
-                        if (ptype != String.class) throw new RuntimeException("@RestCookie must on String Parameter in " + method);
-                        n = anncookie.name();
-                        radix = anncookie.radix();
-                        comment = anncookie.comment();
-                        if (n.isEmpty()) throw new RuntimeException("@RestCookie.value is illegal in " + method);
-                    }
-                    annsid = param.getAnnotation(RestSessionid.class);
-                    if (annsid != null) {
-                        if (annhead != null) throw new RuntimeException("@RestSessionid and @RestHeader cannot on the same Parameter in " + method);
-                        if (anncookie != null) throw new RuntimeException("@RestSessionid and @RestCookie cannot on the same Parameter in " + method);
-                        if (ptype != String.class) throw new RuntimeException("@RestSessionid must on String Parameter in " + method);
-                    }
-                    annaddr = param.getAnnotation(RestAddress.class);
-                    if (annaddr != null) {
-                        if (annhead != null) throw new RuntimeException("@RestAddress and @RestHeader cannot on the same Parameter in " + method);
-                        if (anncookie != null) throw new RuntimeException("@RestAddress and @RestCookie cannot on the same Parameter in " + method);
-                        if (annsid != null) throw new RuntimeException("@RestAddress and @RestSessionid cannot on the same Parameter in " + method);
-                        if (ptype != String.class) throw new RuntimeException("@RestAddress must on String Parameter in " + method);
-                    }
+
+                RestHeader annhead = param.getAnnotation(RestHeader.class);
+                if (annhead != null) {
+                    n = annhead.name();
+                    radix = annhead.radix();
+                    comment = annhead.comment();
+                    if (n.isEmpty()) throw new RuntimeException("@RestHeader.value is illegal in " + method);
                 }
+                RestCookie anncookie = param.getAnnotation(RestCookie.class);
+                if (anncookie != null) {
+                    if (annhead != null) throw new RuntimeException("@RestCookie and @RestHeader cannot on the same Parameter in " + method);
+                    if (ptype != String.class) throw new RuntimeException("@RestCookie must on String Parameter in " + method);
+                    n = anncookie.name();
+                    radix = anncookie.radix();
+                    comment = anncookie.comment();
+                    if (n.isEmpty()) throw new RuntimeException("@RestCookie.value is illegal in " + method);
+                }
+                RestSessionid annsid = param.getAnnotation(RestSessionid.class);
+                if (annsid != null) {
+                    if (annhead != null) throw new RuntimeException("@RestSessionid and @RestHeader cannot on the same Parameter in " + method);
+                    if (anncookie != null) throw new RuntimeException("@RestSessionid and @RestCookie cannot on the same Parameter in " + method);
+                    if (ptype != String.class) throw new RuntimeException("@RestSessionid must on String Parameter in " + method);
+                }
+                RestAddress annaddr = param.getAnnotation(RestAddress.class);
+                if (annaddr != null) {
+                    if (annhead != null) throw new RuntimeException("@RestAddress and @RestHeader cannot on the same Parameter in " + method);
+                    if (anncookie != null) throw new RuntimeException("@RestAddress and @RestCookie cannot on the same Parameter in " + method);
+                    if (annsid != null) throw new RuntimeException("@RestAddress and @RestSessionid cannot on the same Parameter in " + method);
+                    if (ptype != String.class) throw new RuntimeException("@RestAddress must on String Parameter in " + method);
+                }
+
                 RestParam annpara = param.getAnnotation(RestParam.class);
                 if (annpara != null) radix = annpara.radix();
                 if (annpara != null) comment = annpara.comment();
@@ -889,7 +885,7 @@ public final class Rest {
                 }
                 mv.visitInsn(RETURN);
                 maxLocals++;
-            } else if (!sncp && RestOutput.class.isAssignableFrom(returnType)) {
+            } else if (RestOutput.class.isAssignableFrom(returnType)) {
                 mv.visitVarInsn(ASTORE, maxLocals);
                 if (jsvar == null) {
                     mv.visitVarInsn(ALOAD, 0);

@@ -625,7 +625,7 @@ public final class Utility {
             conn.disconnect();
             return remoteHttpContent(ctx, method, newurl, headers, body);
         }
-        InputStream in = rs < 400 ? conn.getInputStream() : conn.getErrorStream();
+        InputStream in = rs < 400 || rs == 404 ? conn.getInputStream() : conn.getErrorStream();
         ByteArrayOutputStream out = new ByteArrayOutputStream(1024);
         byte[] bytes = new byte[1024];
         int pos;

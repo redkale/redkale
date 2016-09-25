@@ -130,7 +130,8 @@
         </services>
         
         <!-- 
-           REST的核心配置项, 存在[rest]节点则Server启动时会加载REST服务, 当Server为SNCP协议时,则SncpServer会变成REST的HttpServer, 节点可以多个
+           REST的核心配置项
+           当Server为HTTP协议时, rest节点才有效。存在[rest]节点则Server启动时会加载REST服务, 节点可以多个
            base:     REST服务的BaseServlet，必须是 org.redkale.net.http.RestHttpServlet 的子类，该属性值默认值为 org.redkale.net.http.DefaultRestServlet。
            autoload：默认值"true"  默认值. 加载当前server所能使用的Servce对象;    
            mustsign：默认值"true" 是否只加载标记为RestService的Service类，默认只加载标记RestService且ignore=false的Service
