@@ -121,7 +121,7 @@ public final class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T
                 }
             }
         }
-        if (value != null && value.getClass() != this.typeClass) {
+        if (value.getClass() != this.typeClass) {
             final Class clz = value.getClass();
             if (out.needWriteClassName()) out.writeClassName(factory.getEntityAlias(clz));
             factory.loadEncoder(clz).convertTo(out, value);
