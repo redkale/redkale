@@ -50,6 +50,7 @@ public final class HttpServer extends Server<String, HttpContext, HttpRequest, H
         RestHttpServlet servlet = null;
         for (final HttpServlet item : ((HttpPrepareServlet) this.prepare).getServlets()) {
             if (!(item instanceof RestHttpServlet)) continue;
+            if (item.getClass().getAnnotation(Rest.RestDynamic.class) == null) continue;
             try {
                 Field field = item.getClass().getDeclaredField(Rest.REST_SERVICE_FIELD_NAME);
                 if (serviceType.equals(field.getType())) {
@@ -57,6 +58,7 @@ public final class HttpServer extends Server<String, HttpContext, HttpRequest, H
                     break;
                 }
             } catch (NoSuchFieldException | SecurityException e) {
+                System.err.println("serviceType = " + serviceType + ", servletClass = " + item.getClass());
                 e.printStackTrace();
             }
         }

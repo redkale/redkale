@@ -22,7 +22,7 @@
             var createhtml = function (jsoncontent) {
                 var classmap = jsoncontent.types;
                 var html = [];
-                html.push('<div style="width:' + Math.floor(window.screen.width * 0.8) + 'px;margin:0 auto;text-align: center;">');
+                html.push('<div style="width:' + Math.floor(window.screen.width * 0.9) + 'px;margin:0 auto;text-align: center;">');
                 html.push('<br/><br/><table class="table" align="center">');
                 for (var i = 0; i < jsoncontent.servers.length; i++) {
                     for (var j = 0; j < jsoncontent.servers[i].servlets.length; j++) {
@@ -45,12 +45,12 @@
                                     t = '<a href="#' + param.type.replace('[]', '') + '">' + t + '</a>';
                                 }
                                 if (param.name == '&') {
-                                    paramshtml.push('<tr><td>user </td><td> ' + t + '</td><td> 当前用户</td></tr>');
+                                    paramshtml.push('<tr><td style="font-size:12px;">内置 </td><td> ' + t + '</td><td> 当前用户</td></tr>');
                                 } else {
                                     var c = ' style="font-weight:bold;"';
                                     if (param.src == "HEADER") c = ' style="color:red;font-weight:bold;"';
                                     if (param.src == "COOKIE") c = ' style="color:blue;font-weight:bold;"';
-                                    paramshtml.push('<tr><td ' + c + '>' + param.name + ' </td><td> ' + t + '</td><td> ' + param.comment + '</td></tr>');
+                                    paramshtml.push('<tr><td ' + c + '> ' + param.name + ' </td><td> ' + t + '</td><td> ' + param.comment + '</td></tr>');
                                 }
                             }
                             paramshtml.push('</table>');
