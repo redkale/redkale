@@ -1,7 +1,7 @@
 package org.redkale.util;
 
 import java.lang.reflect.Modifier;
-import java.util.function.Predicate;
+import java.util.function.*;
 import static jdk.internal.org.objectweb.asm.Opcodes.*;
 import jdk.internal.org.objectweb.asm.*;
 import static jdk.internal.org.objectweb.asm.ClassWriter.COMPUTE_FRAMES;
@@ -15,9 +15,10 @@ import static jdk.internal.org.objectweb.asm.ClassWriter.COMPUTE_FRAMES;
  * @param <D> 目标对象的数据类型
  * @param <S> 源对象的数据类型
  */
-public interface Reproduce<D, S> {
+public interface Reproduce<D, S> extends BiFunction<D, S, D>{
 
-    public D copy(D dest, S src);
+    @Override
+    public D apply(D dest, S src);
 
     public static <D, S> Reproduce<D, S> create(final Class<D> destClass, final Class<S> srcClass) {
         return create(destClass, srcClass, null);
@@ -59,7 +60,7 @@ public interface Reproduce<D, S> {
             mv.visitEnd();
         }
         {
-            mv = (cw.visitMethod(ACC_PUBLIC, "copy", "(" + destDesc + srcDesc + ")" + destDesc, null, null));
+            mv = (cw.visitMethod(ACC_PUBLIC, "apply", "(" + destDesc + srcDesc + ")" + destDesc, null, null));
             //mv.setDebug(true);
 
             for (java.lang.reflect.Field field : srcClass.getFields()) {
@@ -112,14 +113,14 @@ public interface Reproduce<D, S> {
             mv.visitEnd();
         }
         {
-            mv = (cw.visitMethod(ACC_PUBLIC + ACC_BRIDGE + ACC_SYNTHETIC, "copy", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;", null, null));
+            mv = (cw.visitMethod(ACC_PUBLIC + ACC_BRIDGE + ACC_SYNTHETIC, "apply", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;", null, null));
             //mv.setDebug(true);
             mv.visitVarInsn(ALOAD, 0);
             mv.visitVarInsn(ALOAD, 1);
             mv.visitTypeInsn(CHECKCAST, destName);
             mv.visitVarInsn(ALOAD, 2);
             mv.visitTypeInsn(CHECKCAST, srcName);
-            mv.visitMethodInsn(INVOKEVIRTUAL, newDynName, "copy", "(" + destDesc + srcDesc + ")" + destDesc, false);
+            mv.visitMethodInsn(INVOKEVIRTUAL, newDynName, "apply", "(" + destDesc + srcDesc + ")" + destDesc, false);
             mv.visitInsn(ARETURN);
             mv.visitMaxs(3, 3);
             mv.visitEnd();

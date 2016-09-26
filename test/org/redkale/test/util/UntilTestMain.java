@@ -29,7 +29,7 @@ public class UntilTestMain {
         Reproduce<TestXBean, TestBean> action2 = new Reproduce<TestXBean, TestBean>() {
 
             @Override
-            public TestXBean copy(TestXBean dest, TestBean src) {
+            public TestXBean apply(TestXBean dest, TestBean src) {
                 dest.time = src.time;
                 dest.setId(src.getId());
                 dest.setName(src.getName());
@@ -40,13 +40,13 @@ public class UntilTestMain {
         final int count = 1_000_000;
         long s = System.nanoTime();
         for (int i = 0; i < count; i++) {
-            action2.copy(beanx, bean);
+            action2.apply(beanx, bean);
         }
         long e = System.nanoTime() - s;
         System.out.println("静态Reproduce耗时: " + e);
         s = System.nanoTime();
         for (int i = 0; i < count; i++) {
-            action1.copy(beanx, bean);
+            action1.apply(beanx, bean);
         }
         e = System.nanoTime() - s;
         System.out.println("动态Reproduce耗时: " + e);
