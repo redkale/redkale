@@ -13,7 +13,6 @@ import java.util.AbstractMap.SimpleEntry;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.LongAdder;
-import java.util.function.Predicate;
 import java.util.logging.*;
 import java.util.regex.*;
 import org.redkale.util.AnyValue;
@@ -108,8 +107,6 @@ public class HttpResourceServlet extends HttpServlet {
 
     protected WatchThread watchThread;
 
-    protected Predicate<String> ranges;
-
     @Override
     public void init(HttpContext context, AnyValue config) {
         if (config != null) {
@@ -118,15 +115,12 @@ public class HttpResourceServlet extends HttpServlet {
             if (rootstr.indexOf(':') < 0 && rootstr.indexOf('/') != 0 && System.getProperty("APP_HOME") != null) {
                 rootstr = new File(System.getProperty("APP_HOME"), rootstr).getPath();
             }
-            String rangesValue = config.getValue("ranges");
-            this.ranges = rangesValue != null ? Pattern.compile(rangesValue).asPredicate() : null;
             try {
                 this.root = new File(rootstr).getCanonicalFile();
             } catch (IOException ioe) {
                 this.root = new File(rootstr);
             }
             AnyValue cacheconf = config.getAnyValue("cache");
-            if (cacheconf == null) cacheconf = config.getAnyValue("caches"); //兼容旧参数
             if (cacheconf != null) {
                 this.cachelimit = parseLenth(cacheconf.getValue("limit"), 0 * 1024 * 1024L);
                 this.cachelengthmax = parseLenth(cacheconf.getValue("lengthmax"), 1 * 1024 * 1024L);
@@ -274,7 +268,7 @@ public class HttpResourceServlet extends HttpServlet {
 
         public void update() {
             if (this.file == null) return;
-            if (this.content != null) {
+            if (this.content != null) { 
                 this.servlet.cachedLength.add(0L - this.content.remaining());
                 this.content = null;
             }
