@@ -691,15 +691,15 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取指定的header的json值
      *
-     * @param <T>   泛型
-     * @param clazz 反序列化的类名
-     * @param name  header名
+     * @param <T>  泛型
+     * @param type 反序列化的类名
+     * @param name header名
      *
      * @return header值
      */
-    public <T> T getJsonHeader(Class<T> clazz, String name) {
+    public <T> T getJsonHeader(java.lang.reflect.Type type, String name) {
         String v = getHeader(name);
-        return v == null || v.isEmpty() ? null : jsonConvert.convertFrom(clazz, v);
+        return v == null || v.isEmpty() ? null : jsonConvert.convertFrom(type, v);
     }
 
     /**
@@ -707,14 +707,14 @@ public class HttpRequest extends Request<HttpContext> {
      *
      * @param <T>     泛型
      * @param convert JsonConvert对象
-     * @param clazz   反序列化的类名
+     * @param type    反序列化的类名
      * @param name    header名
      *
      * @return header值
      */
-    public <T> T getJsonHeader(JsonConvert convert, Class<T> clazz, String name) {
+    public <T> T getJsonHeader(JsonConvert convert, java.lang.reflect.Type type, String name) {
         String v = getHeader(name);
-        return v == null || v.isEmpty() ? null : convert.convertFrom(clazz, v);
+        return v == null || v.isEmpty() ? null : convert.convertFrom(type, v);
     }
 
     /**
@@ -892,15 +892,15 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取指定的参数json值
      *
-     * @param <T>   泛型
-     * @param clazz 反序列化的类名
-     * @param name  参数名
+     * @param <T>  泛型
+     * @param type 反序列化的类名
+     * @param name 参数名
      *
      * @return 参数值
      */
-    public <T> T getJsonParameter(Class<T> clazz, String name) {
+    public <T> T getJsonParameter(java.lang.reflect.Type type, String name) {
         String v = getParameter(name);
-        return v == null || v.isEmpty() ? null : jsonConvert.convertFrom(clazz, v);
+        return v == null || v.isEmpty() ? null : jsonConvert.convertFrom(type, v);
     }
 
     /**
@@ -908,14 +908,14 @@ public class HttpRequest extends Request<HttpContext> {
      *
      * @param <T>     泛型
      * @param convert JsonConvert对象
-     * @param clazz   反序列化的类名
+     * @param type    反序列化的类名
      * @param name    参数名
      *
      * @return 参数值
      */
-    public <T> T getJsonParameter(JsonConvert convert, Class<T> clazz, String name) {
+    public <T> T getJsonParameter(JsonConvert convert, java.lang.reflect.Type type, String name) {
         String v = getParameter(name);
-        return v == null || v.isEmpty() ? null : convert.convertFrom(clazz, v);
+        return v == null || v.isEmpty() ? null : convert.convertFrom(type, v);
     }
 
     /**

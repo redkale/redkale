@@ -629,7 +629,7 @@ public final class Rest {
                     mv.visitVarInsn(ALOAD, 1);
                     mv.visitLdcInsn(Type.getType(Type.getDescriptor(ptype)));
                     mv.visitLdcInsn(pname);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, ishead ? "getJsonHeader" : "getJsonParameter", "(Ljava/lang/Class;Ljava/lang/String;)Ljava/lang/Object;", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, ishead ? "getJsonHeader" : "getJsonParameter", "(Ljava/lang/reflect/Type;Ljava/lang/String;)Ljava/lang/Object;", false);
                     mv.visitTypeInsn(CHECKCAST, ptype.getName().replace('.', '/'));
                     mv.visitVarInsn(ASTORE, maxLocals);
                     varInsns.add(new int[]{ALOAD, maxLocals});
