@@ -17,11 +17,11 @@ import org.redkale.util.*;
  *
  * @author zhangjx
  */
-public class RestDocs extends HttpBaseServlet {
+public class ApiDocs extends HttpBaseServlet {
 
     private final Application app;
 
-    public RestDocs(Application app) {
+    public ApiDocs(Application app) {
         this.app = app;
     }
 
@@ -123,18 +123,18 @@ public class RestDocs extends HttpBaseServlet {
         resultmap.put("servers", serverList);
         resultmap.put("types", typesmap);
         final String json = JsonConvert.root().convertTo(resultmap);
-        final FileOutputStream out = new FileOutputStream(new File(app.getHome(), "restdoc.json"));
+        final FileOutputStream out = new FileOutputStream(new File(app.getHome(), "apidoc.json"));
         out.write(json.getBytes("UTF-8"));
         out.close();
-        File doctemplate = new File(app.getHome(), "conf/restdoc-template.html");
+        File doctemplate = new File(app.getHome(), "conf/apidoc-template.html");
         InputStream in = null;
         if (doctemplate.isFile() && doctemplate.canRead()) {
             in = new FileInputStream(doctemplate);
         }
-        if (in == null) in = RestDocs.class.getResourceAsStream("restdoc-template.html");
+        if (in == null) in = ApiDocs.class.getResourceAsStream("apidoc-template.html");
         String content = Utility.read(in).replace("${content}", json);
         in.close();
-        FileOutputStream outhtml = new FileOutputStream(new File(app.getHome(), "restdoc.html"));
+        FileOutputStream outhtml = new FileOutputStream(new File(app.getHome(), "apidoc.html"));
         outhtml.write(content.getBytes("UTF-8"));
         outhtml.close();
     }

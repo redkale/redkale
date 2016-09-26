@@ -388,16 +388,16 @@ public final class Application {
                                 buffer.flip();
                                 channel.send(buffer, address);
                             }
-                        } else if ("RESTDOC".equalsIgnoreCase(new String(bytes))) {
+                        } else if ("APIDOC".equalsIgnoreCase(new String(bytes))) {
                             try {
-                                new RestDocs(application).run();
+                                new ApiDocs(application).run();
                                 buffer.clear();
-                                buffer.put("RESTDOC OK".getBytes());
+                                buffer.put("APIDOC OK".getBytes());
                                 buffer.flip();
                                 channel.send(buffer, address);
                             } catch (Exception ex) {
                                 buffer.clear();
-                                buffer.put("RESTDOC FAIL".getBytes());
+                                buffer.put("APIDOC FAIL".getBytes());
                                 buffer.flip();
                                 channel.send(buffer, address);
                             }
