@@ -43,7 +43,10 @@ public final class Rest {
             EXCLUDERMETHODS.add(m.getName());
         }
     }
-
+    
+    /**
+     * 用于标记由Rest.createRestServlet 方法创建的RestHttpServlet
+     */
     @Inherited
     @Documented
     @Target({TYPE})
