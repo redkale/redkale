@@ -66,7 +66,7 @@
                     html.push(' <tr><td colspan="5"><table class="typetable">');
                     for (var fieldname in classmap[type]) {
                         var field = classmap[type][fieldname];
-                        var t = field.type.substring(field.type.lastIndexOf('.') + 1);
+                        var t = field.type.replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/([a-zA-Z0-9_\$]+\.)+/g, "");
                         html.push(' <tr class="l"><td>' + fieldname + '</td><td>' + t + '</td><td colspan="2">' + (field.comment || '') + '</td></tr>');
                     }
                     html.push(' </table></td></tr>');

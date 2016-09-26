@@ -92,7 +92,7 @@ public class ApiDocs extends HttpBaseServlet {
                                 if (Modifier.isStatic(field.getModifiers())) continue;
 
                                 Map<String, String> fieldmap = new LinkedHashMap<>();
-                                fieldmap.put("type", field.getType().isArray() ? (field.getType().getComponentType().getName() + "[]") : field.getType().getName());
+                                fieldmap.put("type", field.getType().isArray() ? (field.getType().getComponentType().getName() + "[]") : field.getGenericType().getTypeName());
 
                                 Comment comment = field.getAnnotation(Comment.class);
                                 if (comment != null) fieldmap.put("comment", comment.value());
