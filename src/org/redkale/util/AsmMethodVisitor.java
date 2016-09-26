@@ -72,6 +72,12 @@ public class AsmMethodVisitor {
         return av;
     }
 
+    public AnnotationVisitor visitTypeAnnotation(int typeRef, TypePath typePath, String desc, boolean visible) {
+        AnnotationVisitor av = visitor.visitTypeAnnotation(typeRef, typePath, desc, visible);
+        if (debug) System.out.println("mv.visitTypeAnnotation(" + typeRef + ", " + typePath + ", \"" + desc + "\", " + visible + ");");
+        return av;
+    }
+
     public void visitParameter(String name, int access) {
         visitor.visitParameter(name, access);
         if (debug) System.out.println("mv.visitParameter(" + name + ", " + access + ");");

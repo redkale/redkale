@@ -74,9 +74,10 @@ public abstract class HttpBaseServlet extends HttpServlet {
      *
      * @author zhangjx
      */
-    @Target({ElementType.ANNOTATION_TYPE, ElementType.PARAMETER})
-    @Retention(RetentionPolicy.RUNTIME)
     @Documented
+    @Target({METHOD})
+    @Retention(RUNTIME)
+    @Repeatable(WebParams.class)
     protected @interface WebParam {
 
         String name(); //参数名
@@ -90,6 +91,14 @@ public abstract class HttpBaseServlet extends HttpServlet {
         int radix() default 10; //转换数字byte/short/int/long时所用的进制数， 默认10进制
     }
 
+    @Documented
+    @Target({METHOD})
+    @Retention(RUNTIME)
+    protected @interface WebParams {
+
+        WebParam[] value();
+    }
+
     /**
      * 配合 HttpBaseServlet 使用。
      * 用于对&#64;WebServlet对应的url进行细分。 其url必须是包含WebServlet中定义的前缀， 且不能是正则表达式
@@ -99,9 +108,9 @@ public abstract class HttpBaseServlet extends HttpServlet {
      *
      * @author zhangjx
      */
-    @Target({ElementType.METHOD})
-    @Retention(RetentionPolicy.RUNTIME)
     @Documented
+    @Target({METHOD})
+    @Retention(RUNTIME)
     protected @interface WebAction {
 
         int actionid() default 0;
@@ -111,8 +120,6 @@ public abstract class HttpBaseServlet extends HttpServlet {
         String[] methods() default {};//允许方法(不区分大小写),如:GET/POST/PUT,为空表示允许所有方法
 
         String comment() default ""; //备注描述
-
-        WebParam[] params() default {};
 
         String result() default "Object"; //输出结果的数据类型
 
@@ -128,9 +135,9 @@ public abstract class HttpBaseServlet extends HttpServlet {
      *
      * @author zhangjx
      */
-    @Target({ElementType.METHOD})
-    @Retention(RetentionPolicy.RUNTIME)
     @Documented
+    @Target({METHOD})
+    @Retention(RUNTIME)
     protected @interface HttpCacheable {
 
         /**

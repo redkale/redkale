@@ -81,6 +81,7 @@ public final class Rest {
         final String cacheDesc = Type.getDescriptor(HttpBaseServlet.HttpCacheable.class);
         final String actionDesc = Type.getDescriptor(HttpBaseServlet.WebAction.class);
         final String webparamDesc = Type.getDescriptor(HttpBaseServlet.WebParam.class);
+        final String webparamsDesc = Type.getDescriptor(HttpBaseServlet.WebParams.class);
         final String sourcetypeDesc = Type.getDescriptor(HttpBaseServlet.ParamSourceType.class);
 
         final String reqInternalName = Type.getInternalName(HttpRequest.class);
@@ -333,23 +334,6 @@ public final class Rest {
                 }
                 av1.visitEnd();
 
-                {
-                    AnnotationVisitor av3 = av0.visitArray("params");
-                    for (Object[] ps : paramlist) { //{param, n, ptype, radix, comment, annpara, annsid, annaddr, annhead, anncookie}   
-                        final boolean ishead = ((RestHeader) ps[8]) != null; //是否取getHeader 而不是 getParameter
-                        final boolean iscookie = ((RestCookie) ps[9]) != null; //是否取getCookie
-
-                        AnnotationVisitor av2 = av3.visitAnnotation(null, webparamDesc);
-                        av2.visit("name", (String) ps[1]);
-                        av2.visit("type", Type.getType(Type.getDescriptor((Class) ps[2])));
-                        av2.visit("radix", (Integer) ps[3]);
-                        av2.visitEnum("src", sourcetypeDesc, ishead ? HttpBaseServlet.ParamSourceType.HEADER.name()
-                            : (iscookie ? HttpBaseServlet.ParamSourceType.COOKIE.name() : HttpBaseServlet.ParamSourceType.PARAMETER.name()));
-                        av2.visit("comment", (String) ps[4]);
-                        av2.visitEnd();
-                    }
-                    av3.visitEnd();
-                }
                 java.lang.reflect.Type grt = method.getGenericReturnType();
                 av0.visit("result", grt == returnType ? returnType.getName() : String.valueOf(grt));
 
@@ -363,6 +347,26 @@ public final class Rest {
                 actionMap.put("result", grt == returnType ? returnType.getName() : String.valueOf(grt));
             }
 
+            {
+                av0 = mv.visitAnnotation(webparamsDesc, true);
+                AnnotationVisitor av1 = av0.visitArray("value");
+                //设置 WebParam
+                for (Object[] ps : paramlist) { //{param, n, ptype, radix, comment, annpara, annsid, annaddr, annhead, anncookie}   
+                    final boolean ishead = ((RestHeader) ps[8]) != null; //是否取getHeader 而不是 getParameter
+                    final boolean iscookie = ((RestCookie) ps[9]) != null; //是否取getCookie
+
+                    AnnotationVisitor av2 = av1.visitAnnotation(null, webparamDesc);
+                    av2.visit("name", (String) ps[1]);
+                    av2.visit("type", Type.getType(Type.getDescriptor((Class) ps[2])));
+                    av2.visit("radix", (Integer) ps[3]);
+                    av2.visitEnum("src", sourcetypeDesc, ishead ? HttpBaseServlet.ParamSourceType.HEADER.name()
+                        : (iscookie ? HttpBaseServlet.ParamSourceType.COOKIE.name() : HttpBaseServlet.ParamSourceType.PARAMETER.name()));
+                    av2.visit("comment", (String) ps[4]);
+                    av2.visitEnd();
+                }
+                av1.visitEnd();
+                av0.visitEnd();
+            }
             List<Map<String, Object>> paramMaps = new ArrayList<>();
             for (Object[] ps : paramlist) {
                 Map<String, Object> paramMap = new LinkedHashMap<>();

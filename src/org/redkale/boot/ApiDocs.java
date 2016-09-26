@@ -70,7 +70,7 @@ public class ApiDocs extends HttpBaseServlet {
                     actionmap.put("comment", action.comment());
                     List<Map> paramsList = new ArrayList<>();
                     actionmap.put("params", paramsList);
-                    for (WebParam param : action.params()) {
+                    for (WebParam param : method.getAnnotationsByType(WebParam.class)) {
                         final Map<String, Object> parammap = new LinkedHashMap<>();
                         final boolean isarray = param.type().isArray();
                         final Class ptype = isarray ? param.type().getComponentType() : param.type();
