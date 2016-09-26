@@ -459,7 +459,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
         if (writeListener == null) {
             for (final T value : values) {
                 int i = 0;
-                if (info.distributed) info.createPrimaryValue(value);
+                if (info.distributed || info.autouuid) info.createPrimaryValue(value);
                 for (Attribute<T, Serializable> attr : attrs) {
                     prestmt.setObject(++i, attr.get(value));
                 }
@@ -471,7 +471,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
             int index = 0;
             for (final T value : values) {
                 int i = 0;
-                if (info.distributed || info.autoUUID) info.createPrimaryValue(value);
+                if (info.distributed || info.autouuid) info.createPrimaryValue(value);
                 for (Attribute<T, Serializable> attr : attrs) {
                     Object a = attr.get(value);
                     ps[i] = FilterNode.formatToString(a);
