@@ -272,7 +272,6 @@ public abstract class NodeServer {
                 if (Modifier.isAbstract(type.getModifiers())) continue; //修饰abstract的类跳过
                 if (DataSource.class.isAssignableFrom(type)) continue;
                 if (CacheSource.class.isAssignableFrom(type)) continue;
-                if (DataSQLListener.class.isAssignableFrom(type)) continue;
                 if (DataCacheListener.class.isAssignableFrom(type)) continue;
                 if (WebSocketNode.class.isAssignableFrom(type)) continue;
             }
