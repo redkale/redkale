@@ -188,6 +188,19 @@ public final class Utility {
     }
 
     /**
+     * 获取指定时间的20160202格式的int值
+     *
+     * @param time 指定时间
+     *
+     * @return 毫秒数
+     */
+    public static int yyyyMMdd(long time) {
+        Calendar cal = Calendar.getInstance();
+        cal.setTimeInMillis(time);
+        return cal.get(Calendar.YEAR) * 10000 + (cal.get(Calendar.MONTH) + 1) * 100 + cal.get(Calendar.DAY_OF_MONTH);
+    }
+
+    /**
      * 获取时间点所在星期的周一
      *
      * @param time 指定时间
