@@ -1035,23 +1035,38 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
     //-----------------------getNumberResult-----------------------------
     @Override
     public Number getNumberResult(final Class entityClass, final FilterFunc func, final String column) {
-        return getNumberResult(entityClass, func, column, (FilterNode) null);
+        return getNumberResult(entityClass, func, null, column, (FilterNode) null);
     }
 
     @Override
     public Number getNumberResult(final Class entityClass, final FilterFunc func, final String column, FilterBean bean) {
-        return getNumberResult(entityClass, func, column, FilterNodeBean.createFilterNode(bean));
+        return getNumberResult(entityClass, func, null, column, FilterNodeBean.createFilterNode(bean));
     }
 
     @Override
     public Number getNumberResult(final Class entityClass, final FilterFunc func, final String column, final FilterNode node) {
+        return getNumberResult(entityClass, func, null, column, node);
+    }
+
+    @Override
+    public Number getNumberResult(final Class entityClass, final FilterFunc func, final Number defVal, final String column) {
+        return getNumberResult(entityClass, func, defVal, column, (FilterNode) null);
+    }
+
+    @Override
+    public Number getNumberResult(final Class entityClass, final FilterFunc func, final Number defVal, final String column, FilterBean bean) {
+        return getNumberResult(entityClass, func, defVal, column, FilterNodeBean.createFilterNode(bean));
+    }
+
+    @Override
+    public Number getNumberResult(final Class entityClass, final FilterFunc func, final Number defVal, final String column, final FilterNode node) {
         final Connection conn = createReadSQLConnection();
         try {
             final EntityInfo info = loadEntityInfo(entityClass);
             final EntityCache cache = info.getCache();
             if (cache != null && (info.isVirtualEntity() || cache.isFullLoaded())) {
                 if (node == null || node.isCacheUseable(this)) {
-                    return cache.getNumberResult(func, column, node);
+                    return cache.getNumberResult(func, defVal, column, node);
                 }
             }
             final Map<Class, String> joinTabalis = node == null ? null : node.getJoinTabalis();
@@ -1061,7 +1076,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
                 + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
             if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(entityClass.getSimpleName() + " single sql=" + sql);
             final PreparedStatement prestmt = conn.prepareStatement(sql);
-            Number rs = null;
+            Number rs = defVal;
             ResultSet set = prestmt.executeQuery();
             if (set.next()) {
                 rs = (Number) set.getObject(1);

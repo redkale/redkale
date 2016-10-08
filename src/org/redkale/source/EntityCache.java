@@ -220,7 +220,7 @@ public final class EntityCache<T> {
         return rs;
     }
 
-    public <V> Number getNumberResult(final FilterFunc func, final String column, FilterNode node) {
+    public <V> Number getNumberResult(final FilterFunc func, final Number defResult, final String column, final FilterNode node) {
         final Attribute<T, Serializable> attr = column == null ? null : info.getAttribute(column);
         final Predicate<T> filter = node == null ? null : node.createPredicate(this);
         Stream<T> stream = this.list.stream();
@@ -228,15 +228,20 @@ public final class EntityCache<T> {
         switch (func) {
             case AVG:
                 if (attr.type() == int.class || attr.type() == Integer.class) {
-                    return (int) stream.mapToInt(x -> (Integer) attr.get(x)).average().orElse(0);
+                    OptionalDouble rs = stream.mapToInt(x -> (Integer) attr.get(x)).average();
+                    return rs.isPresent() ? (int) rs.getAsDouble() : defResult;
                 } else if (attr.type() == long.class || attr.type() == Long.class) {
-                    return (long) stream.mapToLong(x -> (Long) attr.get(x)).average().orElse(0);
+                    OptionalDouble rs = stream.mapToLong(x -> (Long) attr.get(x)).average();
+                    return rs.isPresent() ? (long) rs.getAsDouble() : defResult;
                 } else if (attr.type() == short.class || attr.type() == Short.class) {
-                    return (short) stream.mapToInt(x -> ((Short) attr.get(x)).intValue()).average().orElse(0);
+                    OptionalDouble rs = stream.mapToInt(x -> ((Short) attr.get(x)).intValue()).average();
+                    return rs.isPresent() ? (short) rs.getAsDouble() : defResult;
                 } else if (attr.type() == float.class || attr.type() == Float.class) {
-                    return (float) stream.mapToDouble(x -> ((Float) attr.get(x)).doubleValue()).average().orElse(0);
+                    OptionalDouble rs = stream.mapToDouble(x -> ((Float) attr.get(x)).doubleValue()).average();
+                    return rs.isPresent() ? (float) rs.getAsDouble() : defResult;
                 } else if (attr.type() == double.class || attr.type() == Double.class) {
-                    return stream.mapToDouble(x -> (Double) attr.get(x)).average().orElse(0);
+                    OptionalDouble rs = stream.mapToDouble(x -> (Double) attr.get(x)).average();
+                    return rs.isPresent() ? rs.getAsDouble() : defResult;
                 }
                 throw new RuntimeException("getNumberResult error(type:" + type + ", attr.declaringClass: " + attr.declaringClass() + ", attr.field: " + attr.field() + ", attr.type: " + attr.type());
             case COUNT:
@@ -246,29 +251,39 @@ public final class EntityCache<T> {
 
             case MAX:
                 if (attr.type() == int.class || attr.type() == Integer.class) {
-                    return stream.mapToInt(x -> (Integer) attr.get(x)).max().orElse(0);
+                    OptionalInt rs = stream.mapToInt(x -> (Integer) attr.get(x)).max();
+                    return rs.isPresent() ? rs.getAsInt() : defResult;
                 } else if (attr.type() == long.class || attr.type() == Long.class) {
-                    return stream.mapToLong(x -> (Long) attr.get(x)).max().orElse(0);
+                    OptionalLong rs = stream.mapToLong(x -> (Long) attr.get(x)).max();
+                    return rs.isPresent() ? rs.getAsLong() : defResult;
                 } else if (attr.type() == short.class || attr.type() == Short.class) {
-                    return (short) stream.mapToInt(x -> ((Short) attr.get(x)).intValue()).max().orElse(0);
+                    OptionalInt rs = stream.mapToInt(x -> ((Short) attr.get(x)).intValue()).max();
+                    return rs.isPresent() ? (short) rs.getAsInt() : defResult;
                 } else if (attr.type() == float.class || attr.type() == Float.class) {
-                    return (float) stream.mapToDouble(x -> ((Float) attr.get(x)).doubleValue()).max().orElse(0);
+                    OptionalDouble rs = stream.mapToDouble(x -> ((Float) attr.get(x)).doubleValue()).max();
+                    return rs.isPresent() ? (float) rs.getAsDouble() : defResult;
                 } else if (attr.type() == double.class || attr.type() == Double.class) {
-                    return stream.mapToDouble(x -> (Double) attr.get(x)).max().orElse(0);
+                    OptionalDouble rs = stream.mapToDouble(x -> (Double) attr.get(x)).max();
+                    return rs.isPresent() ? rs.getAsDouble() : defResult;
                 }
                 throw new RuntimeException("getNumberResult error(type:" + type + ", attr.declaringClass: " + attr.declaringClass() + ", attr.field: " + attr.field() + ", attr.type: " + attr.type());
 
             case MIN:
                 if (attr.type() == int.class || attr.type() == Integer.class) {
-                    return stream.mapToInt(x -> (Integer) attr.get(x)).min().orElse(0);
+                    OptionalInt rs = stream.mapToInt(x -> (Integer) attr.get(x)).min();
+                    return rs.isPresent() ? rs.getAsInt() : defResult;
                 } else if (attr.type() == long.class || attr.type() == Long.class) {
-                    return stream.mapToLong(x -> (Long) attr.get(x)).min().orElse(0);
+                    OptionalLong rs = stream.mapToLong(x -> (Long) attr.get(x)).min();
+                    return rs.isPresent() ? rs.getAsLong() : defResult;
                 } else if (attr.type() == short.class || attr.type() == Short.class) {
-                    return (short) stream.mapToInt(x -> ((Short) attr.get(x)).intValue()).min().orElse(0);
+                    OptionalInt rs = stream.mapToInt(x -> ((Short) attr.get(x)).intValue()).min();
+                    return rs.isPresent() ? (short) rs.getAsInt() : defResult;
                 } else if (attr.type() == float.class || attr.type() == Float.class) {
-                    return (float) stream.mapToDouble(x -> ((Float) attr.get(x)).doubleValue()).min().orElse(0);
+                    OptionalDouble rs = stream.mapToDouble(x -> ((Float) attr.get(x)).doubleValue()).min();
+                    return rs.isPresent() ? (float) rs.getAsDouble() : defResult;
                 } else if (attr.type() == double.class || attr.type() == Double.class) {
-                    return stream.mapToDouble(x -> (Double) attr.get(x)).min().orElse(0);
+                    OptionalDouble rs = stream.mapToDouble(x -> (Double) attr.get(x)).min();
+                    return rs.isPresent() ? rs.getAsDouble() : defResult;
                 }
                 throw new RuntimeException("getNumberResult error(type:" + type + ", attr.declaringClass: " + attr.declaringClass() + ", attr.field: " + attr.field() + ", attr.type: " + attr.type());
 
@@ -286,7 +301,7 @@ public final class EntityCache<T> {
                 }
                 throw new RuntimeException("getNumberResult error(type:" + type + ", attr.declaringClass: " + attr.declaringClass() + ", attr.field: " + attr.field() + ", attr.type: " + attr.type());
         }
-        return -1;
+        return defResult;
     }
 
     public Sheet<T> querySheet(final SelectColumn selects, final Flipper flipper, final FilterNode node) {
