@@ -128,14 +128,23 @@ public class FilterJoinNode extends FilterNode {
         if (filter == null && !more.get()) return rs;
         if (filter != null) {
             final Predicate<E> inner = filter;
+            final String[][] localJoinColumns = new String[joinColumns.length][2];
+            for (int i = 0; i < joinColumns.length; i++) {
+                int pos = joinColumns[i].indexOf('-');
+                if (pos > 0) {
+                    localJoinColumns[i] = new String[]{joinColumns[i].substring(0, pos), joinColumns[i].substring(pos + 1)};
+                } else {
+                    localJoinColumns[i] = new String[]{joinColumns[i], joinColumns[i]};
+                }
+            }
             rs = new Predicate<T>() {
 
                 @Override
                 public boolean test(final T t) {
                     Predicate<E> joinPredicate = null;
-                    for (String joinColumn : joinColumns) {
-                        final Serializable key = cache.getAttribute(joinColumn).get(t);
-                        final Attribute<E, Serializable> joinAttr = joinCache.getAttribute(joinColumn);
+                    for (String[] localJoinColumn : localJoinColumns) {
+                        final Serializable key = cache.getAttribute(localJoinColumn[0]).get(t);
+                        final Attribute<E, Serializable> joinAttr = joinCache.getAttribute(localJoinColumn[1]);
                         Predicate<E> p = (E e) -> key.equals(joinAttr.get(e));
                         joinPredicate = joinPredicate == null ? p : joinPredicate.and(p);
                     }
@@ -145,9 +154,9 @@ public class FilterJoinNode extends FilterNode {
                 @Override
                 public String toString() {
                     StringBuilder sb = new StringBuilder();
-                    sb.append(" #-- ON ").append(joinColumns[0]).append("=").append(joinClass == null ? "null" : joinClass.getSimpleName()).append(".").append(joinColumns[0]);
-                    for (int i = 1; i < joinColumns.length; i++) {
-                        sb.append(" AND ").append(joinColumns[i]).append("=").append(joinClass == null ? "null" : joinClass.getSimpleName()).append(".").append(joinColumns[i]);
+                    sb.append(" #-- ON ").append(localJoinColumns[0][0]).append("=").append(joinClass == null ? "null" : joinClass.getSimpleName()).append(".").append(localJoinColumns[0][1]);
+                    for (int i = 1; i < localJoinColumns.length; i++) {
+                        sb.append(" AND ").append(localJoinColumns[i][0]).append("=").append(joinClass == null ? "null" : joinClass.getSimpleName()).append(".").append(localJoinColumns[i][1]);
                     }
                     sb.append(" --# ").append(inner.toString());
                     return sb.toString();
@@ -277,10 +286,12 @@ public class FilterJoinNode extends FilterNode {
         if (node.joinClass == null) return null;
         StringBuilder sb = new StringBuilder();
         String[] joinColumns = node.joinColumns;
+        int pos = joinColumns[0].indexOf('-');
         sb.append(" INNER JOIN ").append(node.joinEntity.getTable(node)).append(" ").append(joinTabalis.get(node.joinClass))
-            .append(" ON ").append(info.getSQLColumn("a", joinColumns[0])).append(" = ").append(node.joinEntity.getSQLColumn(joinTabalis.get(node.joinClass), joinColumns[0]));
+            .append(" ON ").append(info.getSQLColumn("a", pos > 0 ? joinColumns[0].substring(0, pos) : joinColumns[0])).append(" = ").append(node.joinEntity.getSQLColumn(joinTabalis.get(node.joinClass), pos > 0 ? joinColumns[0].substring(pos + 1) : joinColumns[0]));
         for (int i = 1; i < joinColumns.length; i++) {
-            sb.append(" AND ").append(info.getSQLColumn("a", joinColumns[i])).append(" = ").append(node.joinEntity.getSQLColumn(joinTabalis.get(node.joinClass), joinColumns[i]));
+            pos = joinColumns[i].indexOf('-');
+            sb.append(" AND ").append(info.getSQLColumn("a", pos > 0 ? joinColumns[i].substring(0, pos) : joinColumns[i])).append(" = ").append(node.joinEntity.getSQLColumn(joinTabalis.get(node.joinClass), pos > 0 ? joinColumns[i].substring(pos + 1) : joinColumns[i]));
         }
         return sb;
     }
