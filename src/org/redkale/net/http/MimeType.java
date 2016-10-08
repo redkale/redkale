@@ -9,7 +9,9 @@ import java.util.*;
 
 /**
  *
- * <p> 详情见: http://redkale.org
+ * <p>
+ * 详情见: http://redkale.org
+ *
  * @author zhangjx
  */
 public class MimeType {
@@ -172,20 +174,20 @@ public class MimeType {
     }
 
     public static String get(String extension) {
-        return contentTypes.getOrDefault(extension, "text/plain");
+        return contentTypes.getOrDefault(extension.toLowerCase(), "text/plain");
     }
 
     public static String get(String extension, String defaultCt) {
-        return contentTypes.getOrDefault(extension, defaultCt);
+        return contentTypes.getOrDefault(extension.toLowerCase(), defaultCt);
     }
 
     public static boolean contains(String extension) {
-        return contentTypes.containsKey(extension);
+        return contentTypes.containsKey(extension.toLowerCase());
     }
 
     public static void add(String extension, String contentType) {
         if (extension != null && extension.length() != 0 && contentType != null && contentType.length() != 0) {
-            contentTypes.put(extension, contentType);
+            contentTypes.put(extension.toLowerCase(), contentType);
         }
     }
 
@@ -194,7 +196,7 @@ public class MimeType {
         int newEnd = fileName.lastIndexOf('#');
         if (newEnd == -1) newEnd = length;
         int i = fileName.lastIndexOf('.', newEnd);
-        return (i < 0) ? null : get(fileName.substring(i + 1, newEnd));
+        return (i < 0) ? null : get(fileName.substring(i + 1, newEnd).toLowerCase());
     }
 
 }
