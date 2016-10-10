@@ -21,7 +21,7 @@ import jdk.internal.org.objectweb.asm.Type;
 import org.redkale.convert.bson.*;
 import org.redkale.service.*;
 import org.redkale.util.*;
-import org.redkale.service.DynCall;
+import org.redkale.service.RpcCall;
 
 /**
  *
@@ -141,7 +141,7 @@ public final class SncpDynServlet extends SncpServlet {
         @Resource
         protected BsonConvert convert;
 
-        protected org.redkale.util.Attribute[] paramAttrs; // 为null表示无DynCall处理，index=0固定为null, 其他为参数标记的DynCall回调方法
+        protected org.redkale.util.Attribute[] paramAttrs; // 为null表示无RpcCall处理，index=0固定为null, 其他为参数标记的RpcCall回调方法
 
         protected java.lang.reflect.Type[] paramTypes;  //index=0表示返回参数的type， void的返回参数类型为null
 
@@ -405,12 +405,12 @@ public final class SncpDynServlet extends SncpServlet {
                 for (int i = 0; i < anns.length; i++) {
                     if (anns[i].length > 0) {
                         for (Annotation ann : anns[i]) {
-                            if (ann.annotationType() == DynCall.class) {
+                            if (ann.annotationType() == RpcCall.class) {
                                 try {
-                                    atts[i + 1] = ((DynCall) ann).value().newInstance();
+                                    atts[i + 1] = ((RpcCall) ann).value().newInstance();
                                     hasattr = true;
                                 } catch (Exception e) {
-                                    logger.log(Level.SEVERE, DynCall.class.getSimpleName() + ".attribute cannot a newInstance for" + method, e);
+                                    logger.log(Level.SEVERE, RpcCall.class.getSimpleName() + ".attribute cannot a newInstance for" + method, e);
                                 }
                                 break;
                             }

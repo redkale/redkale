@@ -10,7 +10,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import org.redkale.util.*;
 
 /**
- * 参数回写, 当Service的方法需要更改参数对象内部的数据时，需要使用DynCall
+ * 参数回写, 当Service的方法需要更改参数对象内部的数据时，需要使用RpcCall
  *
  * <p> 详情见: http://redkale.org
  * @author zhangjx
@@ -19,7 +19,7 @@ import org.redkale.util.*;
 @Documented
 @Target({ElementType.PARAMETER})
 @Retention(RUNTIME)
-public @interface DynCall {
+public @interface RpcCall {
 
     Class<? extends Attribute> value();
 }

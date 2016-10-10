@@ -29,7 +29,7 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     private DataSource source;
 
     @Override
-    public <T> void insert(@DynCall(DataCallArrayAttribute.class) T... values) {
+    public <T> void insert(@RpcCall(DataCallArrayAttribute.class) T... values) {
         source.insert(values);
     }
 
