@@ -359,7 +359,7 @@ public final class Application {
                     final DatagramChannel channel = DatagramChannel.open();
                     channel.configureBlocking(true);
                     channel.socket().setSoTimeout(3000);
-                    channel.bind(new InetSocketAddress(config.getValue("host", "127.0.0.1"), config.getIntValue("port")));
+                    channel.bind(new InetSocketAddress("127.0.0.1", config.getIntValue("port")));
                     boolean loop = true;
                     ByteBuffer buffer = ByteBuffer.allocateDirect(1024);
                     while (loop) {
@@ -414,7 +414,7 @@ public final class Application {
     private void sendCommand(String command) throws Exception {
         final DatagramChannel channel = DatagramChannel.open();
         channel.configureBlocking(true);
-        channel.connect(new InetSocketAddress(config.getValue("host", "127.0.0.1"), config.getIntValue("port")));
+        channel.connect(new InetSocketAddress("127.0.0.1", config.getIntValue("port")));
         ByteBuffer buffer = ByteBuffer.allocate(128);
         buffer.put(command.getBytes());
         buffer.flip();
