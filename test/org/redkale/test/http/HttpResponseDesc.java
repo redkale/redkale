@@ -10,13 +10,22 @@ import java.lang.reflect.*;
 import java.net.*;
 import java.nio.*;
 import java.nio.channels.*;
+import java.util.*;
+import java.util.function.BiConsumer;
 import org.redkale.convert.json.*;
+import org.redkale.net.http.*;
 
 /**
  *
  * @author zhangjx
  */
 public interface HttpResponseDesc {
+
+    //增加Cookie值
+    public HttpResponse addCookie(HttpCookie... cookies);
+
+    //增加Cookie值
+    public HttpResponse addCookie(Collection<HttpCookie> cookies);
 
     //设置状态码
     public void setStatus(int status);
@@ -28,26 +37,26 @@ public interface HttpResponseDesc {
     public String getContentType();
 
     //设置 ContentType
-    public void setContentType(String contentType);
+    public HttpResponse setContentType(String contentType);
 
     //获取内容长度
     public long getContentLength();
 
     //设置内容长度
-    public void setContentLength(long contentLength);
+    public HttpResponse setContentLength(long contentLength);
 
     //设置Header值
-    public void setHeader(String name, Object value);
+    public HttpResponse setHeader(String name, Object value);
 
     //添加Header值
-    public void addHeader(String name, Object value);
+    public HttpResponse addHeader(String name, Object value);
+
+    //添加Header值
+    public HttpResponse addHeader(Map<String, ?> map);
 
     //跳过header的输出
     //通常应用场景是，调用者的输出内容里已经包含了HTTP的响应头信息，因此需要调用此方法避免重复输出HTTP响应头信息。
-    public void skipHeader();
-
-    //增加Cookie值
-    public void addCookie(HttpCookie... cookies);
+    public HttpResponse skipHeader();
 
     //异步输出指定内容
     public <A> void sendBody(ByteBuffer buffer, A attachment, CompletionHandler<Integer, A> handler);
@@ -72,6 +81,18 @@ public interface HttpResponseDesc {
 
     //将对象以JSON格式输出
     public void finishJson(final Object... objs);
+
+    //将RetResult对象以JSON格式输出
+    public void finishJson(final org.redkale.service.RetResult ret);
+
+    //将RetResult对象以JSON格式输出
+    public void finishJson(final JsonConvert convert, final org.redkale.service.RetResult ret);
+
+    //将对象以JavaScript格式输出
+    public void finishJsResult(String var, Object result);
+
+    //将对象以JavaScript格式输出
+    public void finishJsResult(JsonConvert jsonConvert, String var, Object result);
 
     //将指定字符串以响应结果输出
     public void finish(String obj);
@@ -101,5 +122,11 @@ public interface HttpResponseDesc {
 
     //将指定文件按响应结果输出
     public void finish(File file) throws IOException;
+
+    //将文件按指定文件名输出
+    public void finish(final String filename, File file) throws IOException;
+
+    //HttpResponse回收时回调的监听方法
+    public void setRecycleListener(BiConsumer<HttpRequest, HttpResponse> recycleListener);
 
 }
