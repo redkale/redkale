@@ -9,12 +9,8 @@ import org.redkale.net.http.WebServlet;
 import org.redkale.net.http.WebSocketServlet;
 import org.redkale.net.http.WebSocket;
 import java.io.*;
-import static java.lang.Thread.sleep;
-import java.text.*;
 import java.util.concurrent.atomic.*;
-import static java.lang.Thread.sleep;
-import static java.lang.Thread.sleep;
-import static java.lang.Thread.sleep;
+import org.redkale.util.Utility;
 
 /**
  *
@@ -33,8 +29,6 @@ public class ChatWebSocketServlet extends WebSocketServlet {
         debug = "true".equalsIgnoreCase(System.getProperty("debug", "false"));
         Thread t = new Thread() {
 
-            private final DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-
             {
                 setName("Debug-ChatWebSocket-ShowCount-Thread");
             }
@@ -47,7 +41,7 @@ public class ChatWebSocketServlet extends WebSocketServlet {
                     } catch (Exception e) {
                         return;
                     }
-                    System.out.println(format.format(new java.util.Date()) + ": 消息总数: " + counter.get() + ",间隔消息数: " + icounter.getAndSet(0));
+                    System.out.println(Utility.now() + ": 消息总数: " + counter.get() + ",间隔消息数: " + icounter.getAndSet(0));
                 }
             }
         };

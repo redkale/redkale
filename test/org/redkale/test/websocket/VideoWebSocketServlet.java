@@ -113,17 +113,13 @@ public class VideoWebSocketServlet extends WebSocketServlet {
 
     public static void main(String[] args) throws Throwable {
         CountDownLatch cdl = new CountDownLatch(1);
-        AnyValue.DefaultAnyValue config = new AnyValue.DefaultAnyValue();
-        config.addValue("threads", System.getProperty("threads"));
-        config.addValue("bufferPoolSize", System.getProperty("bufferPoolSize"));
-        config.addValue("responsePoolSize", System.getProperty("responsePoolSize"));
-        config.addValue("host", System.getProperty("host", "0.0.0.0"));
-        config.addValue("port", System.getProperty("port", "8070"));
-        config.addValue("root", System.getProperty("root", "./root3/"));
-        AnyValue.DefaultAnyValue resConf = new AnyValue.DefaultAnyValue();
-        resConf.setValue("cacheMaxLength", "200M");
-        resConf.setValue("cacheMaxItemLength", "10M");
-        config.setValue("ResourceServlet", resConf);
+        AnyValue.DefaultAnyValue config = AnyValue.create()
+            .addValue("threads", System.getProperty("threads"))
+            .addValue("bufferPoolSize", System.getProperty("bufferPoolSize"))
+            .addValue("responsePoolSize", System.getProperty("responsePoolSize"))
+            .addValue("host", System.getProperty("host", "0.0.0.0"))
+            .addValue("port", System.getProperty("port", "8070"))
+            .addValue("root", System.getProperty("root", "./root3/"));
         HttpServer server = new HttpServer();
         server.addHttpServlet("/pipes", new VideoWebSocketServlet(), "/listen/*");
         server.init(config);
