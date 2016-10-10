@@ -18,14 +18,4 @@ public abstract class HttpServlet extends Servlet<HttpContext, HttpRequest, Http
 
     String _prefix = ""; //当前HttpServlet的path前缀
 
-    @Override
-    public final boolean equals(Object obj) {
-        return this == obj;
-    }
-
-    @Override
-    public final int hashCode() {
-        return super.hashCode();
-    }
-
 }

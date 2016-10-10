@@ -36,7 +36,7 @@ public class HttpResourceServlet extends HttpServlet {
 
         public WatchThread(File root) throws IOException {
             this.root = root;
-            this.setName("Servlet-ResourceWatch-Thread");
+            this.setName("HttpResourceServlet-Watch-Thread");
             this.setDaemon(true);
             this.watcher = this.root.toPath().getFileSystem().newWatchService();
         }
