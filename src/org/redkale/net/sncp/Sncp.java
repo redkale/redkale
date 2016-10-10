@@ -138,17 +138,17 @@ public abstract class Sncp {
      *          return "hello";
      *      }
      *
-     *      &#64;MultiRun(selfrun = false)
-     *      public void createSomeThing(TestBean bean){
-     *          //do something
-     *      }
-     *
-     *      &#64;MultiRun
-     *      public String updateSomeThing(String id){
-     *          return "hello" + id;
-     *      }
-     * }
-     * </pre></blockquote>
+     *      &#64;RpcMultiRun(selfrun = false)
+      public void createSomeThing(TestBean bean){
+          //do something
+      }
+
+      &#64;RpcMultiRun
+      public String updateSomeThing(String id){
+          return "hello" + id;
+      }
+ }
+ </pre></blockquote>
      *
      * <blockquote><pre>
      * &#64;Resource(name = "")
@@ -339,7 +339,7 @@ public abstract class Sncp {
         }
         int i = - 1;
         for (final Method method : methods) {
-            final MultiRun mrun = method.getAnnotation(MultiRun.class);
+            final RpcMultiRun mrun = method.getAnnotation(RpcMultiRun.class);
             if (mrun == null) continue;
             final Class returnType = method.getReturnType();
             final String methodDesc = Type.getMethodDescriptor(method);
@@ -352,7 +352,7 @@ public abstract class Sncp {
                     final Annotation[][] anns = method.getParameterAnnotations();
                     for (int k = 0; k < anns.length; k++) {
                         for (Annotation ann : anns[k]) {
-                            if (ann instanceof SncpDyn || ann instanceof MultiRun) continue; //必须过滤掉 MultiRun、SncpDyn，否则生成远程模式Service时会出错
+                            if (ann instanceof SncpDyn || ann instanceof RpcMultiRun) continue; //必须过滤掉 RpcMultiRun、SncpDyn，否则生成远程模式Service时会出错
                             visitAnnotation(mv.visitParameterAnnotation(k, Type.getDescriptor(ann.annotationType()), true), ann);
                         }
                     }
@@ -405,7 +405,7 @@ public abstract class Sncp {
                     final Annotation[][] anns = method.getParameterAnnotations();
                     for (int k = 0; k < anns.length; k++) {
                         for (Annotation ann : anns[k]) {
-                            if (ann instanceof SncpDyn || ann instanceof MultiRun) continue; //必须过滤掉 MultiRun、SncpDyn，否则生成远程模式Service时会出错
+                            if (ann instanceof SncpDyn || ann instanceof RpcMultiRun) continue; //必须过滤掉 RpcMultiRun、SncpDyn，否则生成远程模式Service时会出错
                             visitAnnotation(mv.visitParameterAnnotation(k, Type.getDescriptor(ann.annotationType()), true), ann);
                         }
                     }
@@ -811,7 +811,7 @@ public abstract class Sncp {
                     }
                     sb.append(", diffaddrs = ").append(addrs);
                 } else {
-                    sb.append(", ").append(MultiRun.class.getSimpleName().toLowerCase()).append(" = false");
+                    sb.append(", ").append(RpcMultiRun.class.getSimpleName().toLowerCase()).append(" = false");
                 }
                 sb.append("}");
                 Field s = newClazz.getDeclaredField(FIELDPREFIX + "_selfstring");

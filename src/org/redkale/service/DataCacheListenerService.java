@@ -25,19 +25,19 @@ public class DataCacheListenerService implements DataCacheListener, Service {
     private DataSource source;
 
     @Override
-    @MultiRun(selfrun = false, async = true)
+    @RpcMultiRun(selfrun = false, async = true)
     public <T> void insertCache(Class<T> clazz, T... entitys) {
         ((DataDefaultSource) source).insertCache(clazz, entitys);
     }
 
     @Override
-    @MultiRun(selfrun = false, async = true)
+    @RpcMultiRun(selfrun = false, async = true)
     public <T> void updateCache(Class<T> clazz, T... entitys) {
         ((DataDefaultSource) source).updateCache(clazz, entitys);
     }
 
     @Override
-    @MultiRun(selfrun = false, async = true)
+    @RpcMultiRun(selfrun = false, async = true)
     public <T> void deleteCache(Class<T> clazz, Serializable... ids) {
         ((DataDefaultSource) source).deleteCache(clazz, ids);
     }

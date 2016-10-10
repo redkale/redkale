@@ -10,7 +10,7 @@ import static java.lang.annotation.ElementType.*;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * MultiRun 只对本地模式Service有效
+ * RpcMultiRun 只对本地模式Service有效
  *
  * <p>
  * 详情见: http://redkale.org
@@ -21,7 +21,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Documented
 @Target({METHOD})
 @Retention(RUNTIME)
-public @interface MultiRun {
+public @interface RpcMultiRun {
 
     boolean selfrun() default true; //当前本地实例是否运行指定操作；只有当指定操作的方法的返回值为void时，该值才能为true，否则忽略。
 

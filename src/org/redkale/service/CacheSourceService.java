@@ -202,7 +202,7 @@ public class CacheSourceService<K extends Serializable, V extends Object> implem
     }
 
     @Override
-    @MultiRun
+    @RpcMultiRun
     public V getAndRefresh(K key, final int expireSeconds) {
         if (key == null) return null;
         CacheEntry entry = container.get(key);
@@ -215,7 +215,7 @@ public class CacheSourceService<K extends Serializable, V extends Object> implem
     }
 
     @Override
-    @MultiRun
+    @RpcMultiRun
     public void refresh(K key, final int expireSeconds) {
         if (key == null) return;
         CacheEntry entry = container.get(key);
@@ -225,7 +225,7 @@ public class CacheSourceService<K extends Serializable, V extends Object> implem
     }
 
     @Override
-    @MultiRun
+    @RpcMultiRun
     public void set(K key, V value) {
         if (key == null) return;
         CacheEntry entry = container.get(key);
@@ -240,7 +240,7 @@ public class CacheSourceService<K extends Serializable, V extends Object> implem
     }
 
     @Override
-    @MultiRun
+    @RpcMultiRun
     public void set(int expireSeconds, K key, V value) {
         if (key == null) return;
         CacheEntry entry = container.get(key);
@@ -255,7 +255,7 @@ public class CacheSourceService<K extends Serializable, V extends Object> implem
     }
 
     @Override
-    @MultiRun
+    @RpcMultiRun
     public void setExpireSeconds(K key, int expireSeconds) {
         if (key == null) return;
         CacheEntry entry = container.get(key);
@@ -264,7 +264,7 @@ public class CacheSourceService<K extends Serializable, V extends Object> implem
     }
 
     @Override
-    @MultiRun
+    @RpcMultiRun
     public void remove(K key) {
         if (key == null) return;
         container.remove(key);
@@ -281,7 +281,7 @@ public class CacheSourceService<K extends Serializable, V extends Object> implem
     }
 
     @Override
-    @MultiRun
+    @RpcMultiRun
     public void appendListItem(K key, V value) {
         if (key == null) return;
         CacheEntry entry = container.get(key);
@@ -297,7 +297,7 @@ public class CacheSourceService<K extends Serializable, V extends Object> implem
     }
 
     @Override
-    @MultiRun
+    @RpcMultiRun
     public void removeListItem(K key, V value) {
         if (key == null) return;
         CacheEntry entry = container.get(key);
@@ -306,7 +306,7 @@ public class CacheSourceService<K extends Serializable, V extends Object> implem
     }
 
     @Override
-    @MultiRun
+    @RpcMultiRun
     public void appendSetItem(K key, V value) {
         if (key == null) return;
         CacheEntry entry = container.get(key);
@@ -322,7 +322,7 @@ public class CacheSourceService<K extends Serializable, V extends Object> implem
     }
 
     @Override
-    @MultiRun
+    @RpcMultiRun
     public void removeSetItem(K key, V value) {
         if (key == null) return;
         CacheEntry entry = container.get(key);
