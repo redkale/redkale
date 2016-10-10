@@ -61,7 +61,7 @@ public class SncpTestService implements SncpTestIService {
         return "result: " + bean;
     }
 
-    @MultiRun
+    @RpcMultiRun
     public String updateBean(@DynCall(CallAttribute.class) SncpTestBean bean) {
         bean.setId(System.currentTimeMillis());
         System.out.println(Thread.currentThread().getName() + " 运行了updateBean方法");
