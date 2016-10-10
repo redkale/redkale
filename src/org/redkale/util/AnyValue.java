@@ -373,7 +373,7 @@ public abstract class AnyValue {
         }
     }
 
-    public static AnyValue create() {
+    public static DefaultAnyValue create() {
         return new DefaultAnyValue();
     }
 
