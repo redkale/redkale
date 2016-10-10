@@ -37,6 +37,16 @@ public final class HttpServer extends Server<String, HttpContext, HttpRequest, H
         super.init(config);
     }
 
+    public HttpServer addHttpServlet(String prefix, HttpServlet servlet, String... mappings) {
+        this.prepare.addServlet(servlet, prefix, null, mappings);
+        return this;
+    }
+
+    public HttpServer addHttpServlet(HttpServlet servlet, String... mappings) {
+        this.prepare.addServlet(servlet, null, null, mappings);
+        return this;
+    }
+
     public void addHttpServlet(HttpServlet servlet, final String prefix, AnyValue conf, String... mappings) {
         this.prepare.addServlet(servlet, prefix, conf, mappings);
     }
