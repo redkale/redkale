@@ -35,9 +35,9 @@ public @interface FilterJoinColumn {
      * 例如: SELECT a.* FROM user a INNER JOIN record b ON a.userid = b.userid AND a.usertype = b.usertype
      * 那么注解为: &#64;FilterJoinColumn(table = Record.class, columns = {"userid", "usertype"})
      * <p>
-     * columns中的字段名如果不一致，可以将两个字段名用短横-连接成一个字段名
+     * columns中的字段名如果不一致，可以将两个字段名用=连接成一个字段名
      * 例如: SELECT a.* FROM user a INNER JOIN record b ON a.userid = b.buyerid AND a.usertype = b.usertype
-     * 那么注解为: &#64;FilterJoinColumn(table = Record.class, columns = {"userid-buyerid", "usertype"})
+     * 那么注解为: &#64;FilterJoinColumn(table = Record.class, columns = {"userid=buyerid", "usertype"})
      *
      * @return 关联字段
      */

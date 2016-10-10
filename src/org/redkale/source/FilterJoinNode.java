@@ -130,7 +130,7 @@ public class FilterJoinNode extends FilterNode {
             final Predicate<E> inner = filter;
             final String[][] localJoinColumns = new String[joinColumns.length][2];
             for (int i = 0; i < joinColumns.length; i++) {
-                int pos = joinColumns[i].indexOf('-');
+                int pos = joinColumns[i].indexOf('=');
                 if (pos > 0) {
                     localJoinColumns[i] = new String[]{joinColumns[i].substring(0, pos), joinColumns[i].substring(pos + 1)};
                 } else {
@@ -286,11 +286,11 @@ public class FilterJoinNode extends FilterNode {
         if (node.joinClass == null) return null;
         StringBuilder sb = new StringBuilder();
         String[] joinColumns = node.joinColumns;
-        int pos = joinColumns[0].indexOf('-');
+        int pos = joinColumns[0].indexOf('=');
         sb.append(" INNER JOIN ").append(node.joinEntity.getTable(node)).append(" ").append(joinTabalis.get(node.joinClass))
             .append(" ON ").append(info.getSQLColumn("a", pos > 0 ? joinColumns[0].substring(0, pos) : joinColumns[0])).append(" = ").append(node.joinEntity.getSQLColumn(joinTabalis.get(node.joinClass), pos > 0 ? joinColumns[0].substring(pos + 1) : joinColumns[0]));
         for (int i = 1; i < joinColumns.length; i++) {
-            pos = joinColumns[i].indexOf('-');
+            pos = joinColumns[i].indexOf('=');
             sb.append(" AND ").append(info.getSQLColumn("a", pos > 0 ? joinColumns[i].substring(0, pos) : joinColumns[i])).append(" = ").append(node.joinEntity.getSQLColumn(joinTabalis.get(node.joinClass), pos > 0 ? joinColumns[i].substring(pos + 1) : joinColumns[i]));
         }
         return sb;
