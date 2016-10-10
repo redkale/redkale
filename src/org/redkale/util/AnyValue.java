@@ -23,16 +23,20 @@ public abstract class AnyValue {
     /**
      * 可读写的AnyValue默认实现类
      *
-     * <p>
-     * 详情见: http://redkale.org
-     *
      * @author zhangjx
      */
     @SuppressWarnings("unchecked")
     public static final class DefaultAnyValue extends AnyValue {
 
+        /**
+         * 区分name大小写的比较策略
+         *
+         */
         public static final BiPredicate<String, String> EQUALS = (name1, name2) -> name1.equals(name2);
 
+        /**
+         * 不区分name大小写的比较策略
+         */
         public static final BiPredicate<String, String> EQUALSIGNORE = (name1, name2) -> name1.equalsIgnoreCase(name2);
 
         private final BiPredicate<String, String> predicate;
@@ -41,34 +45,74 @@ public abstract class AnyValue {
 
         private Entry<AnyValue>[] entityValues = new Entry[0];
 
+        /**
+         * 创建空的DefaultAnyValue对象
+         *
+         * @return DefaultAnyValue对象
+         */
         public static final DefaultAnyValue create() {
             return new DefaultAnyValue();
         }
 
+        /**
+         * 创建含name-value值的DefaultAnyValue对象
+         *
+         * @param name  name
+         * @param value value值
+         *
+         * @return DefaultAnyValue对象
+         */
         public static final DefaultAnyValue create(String name, String value) {
             DefaultAnyValue conf = new DefaultAnyValue();
             conf.addValue(name, value);
             return conf;
         }
 
+        /**
+         * 创建含name-value值的DefaultAnyValue对象
+         *
+         * @param name  name
+         * @param value value值
+         *
+         * @return DefaultAnyValue对象
+         */
         public static final DefaultAnyValue create(String name, AnyValue value) {
             DefaultAnyValue conf = new DefaultAnyValue();
             conf.addValue(name, value);
             return conf;
         }
 
+        /**
+         * 创建一个区分大小写比较策略的DefaultAnyValue对象
+         *
+         */
         public DefaultAnyValue() {
             this(false);
         }
 
+        /**
+         * 创建DefaultAnyValue对象
+         *
+         * @param ignoreCase name是否不区分大小写
+         */
         public DefaultAnyValue(boolean ignoreCase) {
             this.predicate = ignoreCase ? EQUALSIGNORE : EQUALS;
         }
 
+        /**
+         * 创建DefaultAnyValue对象
+         *
+         * @param predicate name比较策略
+         */
         public DefaultAnyValue(BiPredicate<String, String> predicate) {
             this.predicate = predicate;
         }
 
+        /**
+         * 创建共享此内容的DefaultAnyValue对象
+         *
+         * @return DefaultAnyValue对象
+         */
         public DefaultAnyValue duplicate() {
             DefaultAnyValue rs = new DefaultAnyValue(this.predicate);
             rs.stringValues = this.stringValues;
