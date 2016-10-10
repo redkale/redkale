@@ -50,7 +50,7 @@ public class SncpTestService implements SncpTestIService {
 
     }
 
-    public void insert(@DynCall(DataCallArrayAttribute.class) SncpTestBean... beans) {
+    public void insert(@RpcCall(DataCallArrayAttribute.class) SncpTestBean... beans) {
         for (SncpTestBean bean : beans) {
             bean.setId(System.currentTimeMillis());
         }
@@ -62,7 +62,7 @@ public class SncpTestService implements SncpTestIService {
     }
 
     @RpcMultiRun
-    public String updateBean(@DynCall(CallAttribute.class) SncpTestBean bean) {
+    public String updateBean(@RpcCall(CallAttribute.class) SncpTestBean bean) {
         bean.setId(System.currentTimeMillis());
         System.out.println(Thread.currentThread().getName() + " 运行了updateBean方法");
         return "result: " + bean;

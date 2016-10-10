@@ -16,7 +16,7 @@ public interface SncpTestIService extends Service {
 
     public String queryResult(SncpTestBean bean);
 
-    public void insert(@DynCall(DataCallArrayAttribute.class) SncpTestBean... beans);
+    public void insert(@RpcCall(DataCallArrayAttribute.class) SncpTestBean... beans);
 
-    public String updateBean(@DynCall(SncpTestService.CallAttribute.class) SncpTestBean bean);
+    public String updateBean(@RpcCall(SncpTestService.CallAttribute.class) SncpTestBean bean);
 }
