@@ -37,16 +37,16 @@
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;7、内置WebSocket的集群与组功能，且提供伪WebSocket连接功能。<br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;8、HttpResponse只能异步输出。<br/>
             </p> 
-            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;编写Redkale的HttpServlet与 JSR 340中的javax.servlet.http.HttpServlet 基本相同，只需继承 org.redkale.net.http.HttpServlet, Redkale也提供了更友好的基类 org.redkale.net.http.BasedHttpServlet, 比较好的习惯是一个项目先定义一个项目级的BaseServlet类，这样方便以后加入类似javax.servlet.Filter的功能。 <br/> <br/>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;编写Redkale的HttpServlet与 JSR 340中的javax.servlet.http.HttpServlet 基本相同，只需继承 org.redkale.net.http.HttpServlet, Redkale也提供了更友好的基类 org.redkale.net.http.HttpBaseServlet, 比较好的习惯是一个项目先定义一个项目级的BaseServlet类，这样方便以后加入类似javax.servlet.Filter的功能。 <br/> <br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;一个典型的BaseSerlvet实现: 
             </p> 
-            <div class="highlight"><pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">BaseSerlvet</span> <span class="kd">extends</span> <span class="n">org</span><span class="o">.</span><span class="na">redkale</span><span class="o">.</span><span class="na">net</span><span class="o">.</span><span class="na">http</span><span class="o">.</span><span class="na">BasedHttpServlet</span> <span class="o">{</span>
+            <div class="highlight"><pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">BaseSerlvet</span> <span class="kd">extends</span> <span class="n">org</span><span class="o">.</span><span class="na">redkale</span><span class="o">.</span><span class="na">net</span><span class="o">.</span><span class="na">http</span><span class="o">.</span><span class="na">HttpBaseServlet</span> <span class="o">{</span>
 
     <span class="kd">protected</span> <span class="kd">final</span> <span class="n">Logger</span> <span class="n">logger</span> <span class="o">=</span> <span class="n">Logger</span><span class="o">.</span><span class="na">getLogger</span><span class="o">(</span><span class="k">this</span><span class="o">.</span><span class="na">getClass</span><span class="o">().</span><span class="na">getSimpleName</span><span class="o">());</span>
 
     <span class="kd">protected</span> <span class="kd">final</span> <span class="kt">boolean</span> <span class="n">fine</span> <span class="o">=</span> <span class="n">logger</span><span class="o">.</span><span class="na">isLoggable</span><span class="o">(</span><span class="n">Level</span><span class="o">.</span><span class="na">FINE</span><span class="o">);</span>
 
-    <span class="nd">@Resource</span> <span class="c1">//[Redkale内置资源]  进程的启动时间</span>
+    <span class="nd">@Resource</span><span class="o">(</span><span class="n">name</span> <span class="o">=</span> <span class="s">&quot;APP_TIME&quot;</span><span class="o">)</span> <span class="c1">//[Redkale内置资源]  进程的启动时间</span>
     <span class="kd">protected</span> <span class="kt">long</span> <span class="n">serverCreateTime</span><span class="o">;</span>
 
     <span class="nd">@Resource</span> <span class="c1">//[Redkale内置资源]</span>
@@ -99,7 +99,7 @@
     <span class="o">}</span>
 <span class="o">}</span></pre></div>
 
-            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;继承BasedHttpServlet的子类可以使用其自带的鉴权、请求分支、缓存等功能， 一个典型的操作用户HttpServlet: </p> 
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;继承HttpBaseServlet的子类可以使用其自带的鉴权、请求分支、缓存等功能， 一个典型的操作用户HttpServlet: </p> 
             <div class="highlight"><pre><span class="nd">@WebServlet</span><span class="o">({</span><span class="s">&quot;/user/*&quot;</span><span class="o">})</span>  <span class="c1">//拦截所有 /user/ 开头的请求</span>
 <span class="kd">public</span> <span class="kd">class</span> <span class="nc">UserServlet</span> <span class="kd">extends</span> <span class="n">BaseSerlvet</span> <span class="o">{</span>
 
@@ -128,7 +128,7 @@
 
     <span class="c1">//获取指定用户ID的用户信息, 请求如: /user/username/43565443</span>
     <span class="nd">@AuthIgnore</span>
-    <span class="c1">// 默认缓存时间是15秒，BasedHttpServlet会将每个进入该方法的请求的响应结果缓存15秒，缓存命中时不会再进入该方法，过期会清空。</span>
+    <span class="c1">// 默认缓存时间是15秒，HttpBaseServlet会将每个进入该方法的请求的响应结果缓存15秒，缓存命中时不会再进入该方法，过期会清空。</span>
     <span class="c1">// @HttpCacheable 必须配合  @AuthIgnore 使用， 因为跟当前用户有关的请求一般不适合所有用户请求。 </span>
     <span class="c1">// 翻页查询想缓存就需要将翻页信息带进url: /user/query/page:2/size:50 。</span>
     <span class="nd">@HttpCacheable</span><span class="o">(</span><span class="n">timeout</span> <span class="o">=</span> <span class="mi">30</span><span class="o">)</span>  <span class="c1">//有效期30秒</span>
@@ -247,28 +247,10 @@
             <p id="net_httprequest">&nbsp;&nbsp;<b>. HttpRequest 对象</b> </p>
             <div class="highlight"><pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">HttpRequest</span> <span class="o">{</span>
 
-    <span class="c1">//获取请求方法 GET、POST等</span>
-    <span class="kd">public</span> <span class="n">String</span> <span class="nf">getMethod</span><span class="o">();</span>
-
-    <span class="c1">//获取协议名 http、https、ws、wss等</span>
-    <span class="kd">public</span> <span class="n">String</span> <span class="nf">getProtocol</span><span class="o">();</span>
-
-    <span class="c1">//获取Host的Header值</span>
-    <span class="kd">public</span> <span class="n">String</span> <span class="nf">getHost</span><span class="o">();</span>
-
-    <span class="c1">//获取请求内容的长度, 为-1表示内容长度不确定</span>
-    <span class="kd">public</span> <span class="kt">long</span> <span class="nf">getContentLength</span><span class="o">();</span>
-
-    <span class="c1">//获取Content-Type的header值</span>
-    <span class="kd">public</span> <span class="n">String</span> <span class="nf">getContentType</span><span class="o">();</span>
-
-    <span class="c1">//获取Connection的Header值</span>
-    <span class="kd">public</span> <span class="n">String</span> <span class="nf">getConnection</span><span class="o">();</span>
-
     <span class="c1">//获取客户端地址IP</span>
     <span class="kd">public</span> <span class="n">SocketAddress</span> <span class="nf">getRemoteAddress</span><span class="o">();</span>
 
-    <span class="c1">//获取客户端地址IP, 与getRemoteAddres() 的区别在于：本方法优先取header中指定为RemoteAddress名的值，没有则返回getRemoteAddres()。</span>
+    <span class="c1">//获取客户端地址IP, 与getRemoteAddres() 的区别在于：本方法优先取header中指定为RemoteAddress名的值，没有则返回getRemoteAddres()的getHostAddress()。</span>
     <span class="c1">//本方法适用于服务前端有如nginx的代理服务器进行中转，通过getRemoteAddres()是获取不到客户端的真实IP。</span>
     <span class="kd">public</span> <span class="n">String</span> <span class="nf">getRemoteAddr</span><span class="o">();</span>
 
@@ -296,11 +278,29 @@
     <span class="c1">//获取所有Cookie对象</span>
     <span class="kd">public</span> <span class="n">java</span><span class="o">.</span><span class="na">net</span><span class="o">.</span><span class="na">HttpCookie</span><span class="o">[]</span> <span class="nf">getCookies</span><span class="o">();</span>
 
+    <span class="c1">//获取Cookie值</span>
+    <span class="kd">public</span> <span class="n">String</span> <span class="nf">getCookie</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">);</span>
+
     <span class="c1">//获取Cookie值， 没有返回默认值</span>
     <span class="kd">public</span> <span class="n">String</span> <span class="nf">getCookie</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">,</span> <span class="n">String</span> <span class="n">defaultValue</span><span class="o">);</span>
 
-    <span class="c1">//获取Cookie值</span>
-    <span class="kd">public</span> <span class="n">String</span> <span class="nf">getCookie</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">);</span>
+    <span class="c1">//获取协议名 http、https、ws、wss等</span>
+    <span class="kd">public</span> <span class="n">String</span> <span class="nf">getProtocol</span><span class="o">();</span>
+
+    <span class="c1">//获取请求方法 GET、POST等</span>
+    <span class="kd">public</span> <span class="n">String</span> <span class="nf">getMethod</span><span class="o">();</span>
+
+    <span class="c1">//获取Content-Type的header值</span>
+    <span class="kd">public</span> <span class="n">String</span> <span class="nf">getContentType</span><span class="o">();</span>
+
+    <span class="c1">//获取请求内容的长度, 为-1表示内容长度不确定</span>
+    <span class="kd">public</span> <span class="kt">long</span> <span class="nf">getContentLength</span><span class="o">();</span>
+
+    <span class="c1">//获取Connection的Header值</span>
+    <span class="kd">public</span> <span class="n">String</span> <span class="nf">getConnection</span><span class="o">();</span>
+
+    <span class="c1">//获取Host的Header值</span>
+    <span class="kd">public</span> <span class="n">String</span> <span class="nf">getHost</span><span class="o">();</span>
 
     <span class="c1">//获取请求的URL</span>
     <span class="kd">public</span> <span class="n">String</span> <span class="nf">getRequestURI</span><span class="o">();</span>
@@ -311,26 +311,52 @@
     <span class="c1">//从prefix之后截取getRequestURI再对&quot;/&quot;进行分隔</span>
     <span class="kd">public</span> <span class="n">String</span><span class="o">[]</span> <span class="nf">getRequstURIPaths</span><span class="o">(</span><span class="n">String</span> <span class="n">prefix</span><span class="o">);</span>
 
-    <span class="c1">//获取请求URL分段中含prefix段的long值</span>
-    <span class="c1">// 例如请求URL /pipes/record/query/time:1453104341363/id:40</span>
-    <span class="c1">// 获取time参数: long time = request.getRequstURIPath(&quot;time:&quot;, 0L);</span>
-    <span class="kd">public</span> <span class="kt">long</span> <span class="nf">getRequstURIPath</span><span class="o">(</span><span class="n">String</span> <span class="n">prefix</span><span class="o">,</span> <span class="kt">long</span> <span class="n">defaultValue</span><span class="o">);</span>
-
-    <span class="c1">//获取请求URL分段中含prefix段的int值</span>
-    <span class="c1">// 例如请求URL /pipes/record/query/page:2/size:50</span>
-    <span class="c1">// 获取page参数: int page = request.getRequstURIPath(&quot;page:&quot;, 1);</span>
-    <span class="c1">// 获取size参数: int size = request.getRequstURIPath(&quot;size:&quot;, 20);</span>
-    <span class="kd">public</span> <span class="kt">int</span> <span class="nf">getRequstURIPath</span><span class="o">(</span><span class="n">String</span> <span class="n">prefix</span><span class="o">,</span> <span class="kt">int</span> <span class="n">defaultValue</span><span class="o">);</span>
-
-    <span class="c1">//获取请求URL分段中含prefix段的值</span>
-    <span class="c1">//例如请求URL /pipes/record/query/name:hello</span>
-    <span class="c1">//获取name参数: String name = request.getRequstURIPath(&quot;name:&quot;, &quot;none&quot;);</span>
+    <span class="c1">// 获取请求URL分段中含prefix段的值</span>
+    <span class="c1">// 例如请求URL /pipes/record/query/name:hello</span>
+    <span class="c1">// 获取name参数: String name = request.getRequstURIPath(&quot;name:&quot;, &quot;none&quot;);</span>
     <span class="kd">public</span> <span class="n">String</span> <span class="nf">getRequstURIPath</span><span class="o">(</span><span class="n">String</span> <span class="n">prefix</span><span class="o">,</span> <span class="n">String</span> <span class="n">defaultValue</span><span class="o">);</span>
 
     <span class="c1">// 获取请求URL分段中含prefix段的short值</span>
     <span class="c1">// 例如请求URL /pipes/record/query/type:10</span>
     <span class="c1">// 获取type参数: short type = request.getRequstURIPath(&quot;type:&quot;, (short)0);</span>
     <span class="kd">public</span> <span class="kt">short</span> <span class="nf">getRequstURIPath</span><span class="o">(</span><span class="n">String</span> <span class="n">prefix</span><span class="o">,</span> <span class="kt">short</span> <span class="n">defaultValue</span><span class="o">);</span>
+
+    <span class="c1">// 获取请求URL分段中含prefix段的short值</span>
+    <span class="c1">// 例如请求URL /pipes/record/query/type:a</span>
+    <span class="c1">// 获取type参数: short type = request.getRequstURIPath(16, &quot;type:&quot;, (short)0); type = 10</span>
+    <span class="kd">public</span> <span class="kt">short</span> <span class="nf">getRequstURIPath</span><span class="o">(</span><span class="kt">int</span> <span class="n">radix</span><span class="o">,</span> <span class="n">String</span> <span class="n">prefix</span><span class="o">,</span> <span class="kt">short</span> <span class="n">defvalue</span><span class="o">);</span>
+
+    <span class="c1">// 获取请求URL分段中含prefix段的int值</span>
+    <span class="c1">// 例如请求URL /pipes/record/query/offset:2/limit:50</span>
+    <span class="c1">// 获取offset参数: int offset = request.getRequstURIPath(&quot;offset:&quot;, 1);</span>
+    <span class="c1">// 获取limit参数: int limit = request.getRequstURIPath(&quot;limit:&quot;, 20);</span>
+    <span class="kd">public</span> <span class="kt">int</span> <span class="nf">getRequstURIPath</span><span class="o">(</span><span class="n">String</span> <span class="n">prefix</span><span class="o">,</span> <span class="kt">int</span> <span class="n">defaultValue</span><span class="o">);</span>
+
+    <span class="c1">// 获取请求URL分段中含prefix段的int值</span>
+    <span class="c1">// 例如请求URL /pipes/record/query/offset:2/limit:10</span>
+    <span class="c1">// 获取offset参数: int offset = request.getRequstURIPath(&quot;offset:&quot;, 1);</span>
+    <span class="c1">// 获取limit参数: int limit = request.getRequstURIPath(16, &quot;limit:&quot;, 20); // limit = 16</span>
+    <span class="kd">public</span> <span class="kt">int</span> <span class="nf">getRequstURIPath</span><span class="o">(</span><span class="kt">int</span> <span class="n">radix</span><span class="o">,</span> <span class="n">String</span> <span class="n">prefix</span><span class="o">,</span> <span class="kt">int</span> <span class="n">defaultValue</span><span class="o">);</span>
+
+    <span class="c1">// 获取请求URL分段中含prefix段的float值   </span>
+    <span class="c1">// 例如请求URL /pipes/record/query/point:40.0  </span>
+    <span class="c1">// 获取time参数: float point = request.getRequstURIPath(&quot;point:&quot;, 0.0f);</span>
+    <span class="kd">public</span> <span class="kt">float</span> <span class="nf">getRequstURIPath</span><span class="o">(</span><span class="n">String</span> <span class="n">prefix</span><span class="o">,</span> <span class="kt">float</span> <span class="n">defvalue</span><span class="o">);</span>
+
+    <span class="c1">// 获取请求URL分段中含prefix段的long值</span>
+    <span class="c1">// 例如请求URL /pipes/record/query/time:1453104341363/id:40</span>
+    <span class="c1">// 获取time参数: long time = request.getRequstURIPath(&quot;time:&quot;, 0L);</span>
+    <span class="kd">public</span> <span class="kt">long</span> <span class="nf">getRequstURIPath</span><span class="o">(</span><span class="n">String</span> <span class="n">prefix</span><span class="o">,</span> <span class="kt">long</span> <span class="n">defaultValue</span><span class="o">);</span>
+
+    <span class="c1">// 获取请求URL分段中含prefix段的long值</span>
+    <span class="c1">// 例如请求URL /pipes/record/query/time:1453104341363/id:40</span>
+    <span class="c1">// 获取time参数: long time = request.getRequstURIPath(&quot;time:&quot;, 0L);</span>
+    <span class="kd">public</span> <span class="kt">long</span> <span class="nf">getRequstURIPath</span><span class="o">(</span><span class="kt">int</span> <span class="n">radix</span><span class="o">,</span> <span class="n">String</span> <span class="n">prefix</span><span class="o">,</span> <span class="kt">long</span> <span class="n">defvalue</span><span class="o">);</span>
+
+    <span class="c1">// 获取请求URL分段中含prefix段的double值   &lt;br&gt;</span>
+    <span class="c1">// 例如请求URL /pipes/record/query/point:40.0   &lt;br&gt;</span>
+    <span class="c1">// 获取time参数: double point = request.getRequstURIPath(&quot;point:&quot;, 0.0);</span>
+    <span class="kd">public</span> <span class="kt">double</span> <span class="nf">getRequstURIPath</span><span class="o">(</span><span class="n">String</span> <span class="n">prefix</span><span class="o">,</span> <span class="kt">double</span> <span class="n">defvalue</span><span class="o">);</span>
 
     <span class="c1">//获取所有的header名</span>
     <span class="kd">public</span> <span class="n">String</span><span class="o">[]</span> <span class="nf">getHeaderNames</span><span class="o">();</span>
@@ -342,10 +368,10 @@
     <span class="kd">public</span> <span class="n">String</span> <span class="nf">getHeader</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">,</span> <span class="n">String</span> <span class="n">defaultValue</span><span class="o">);</span>
 
     <span class="c1">//获取指定的header的json值</span>
-    <span class="kd">public</span> <span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">T</span> <span class="nf">getJsonHeader</span><span class="o">(</span><span class="n">JsonConvert</span> <span class="n">convert</span><span class="o">,</span> <span class="n">Type</span> <span class="n">type</span><span class="o">,</span> <span class="n">String</span> <span class="n">name</span><span class="o">);</span>
+    <span class="kd">public</span> <span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">T</span> <span class="nf">getJsonHeader</span><span class="o">(</span><span class="n">Type</span> <span class="n">type</span><span class="o">,</span> <span class="n">String</span> <span class="n">name</span><span class="o">);</span>
 
     <span class="c1">//获取指定的header的json值</span>
-    <span class="kd">public</span> <span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">T</span> <span class="nf">getJsonHeader</span><span class="o">(</span><span class="n">Type</span> <span class="n">type</span><span class="o">,</span> <span class="n">String</span> <span class="n">name</span><span class="o">);</span>
+    <span class="kd">public</span> <span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">T</span> <span class="nf">getJsonHeader</span><span class="o">(</span><span class="n">JsonConvert</span> <span class="n">convert</span><span class="o">,</span> <span class="n">Type</span> <span class="n">type</span><span class="o">,</span> <span class="n">String</span> <span class="n">name</span><span class="o">);</span>
 
     <span class="c1">//获取指定的header的boolean值, 没有返回默认boolean值</span>
     <span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">getBooleanHeader</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">,</span> <span class="kt">boolean</span> <span class="n">defaultValue</span><span class="o">);</span>
@@ -353,14 +379,29 @@
     <span class="c1">// 获取指定的header的short值, 没有返回默认short值</span>
     <span class="kd">public</span> <span class="kt">short</span> <span class="nf">getShortHeader</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">,</span> <span class="kt">short</span> <span class="n">defaultValue</span><span class="o">);</span>
 
+    <span class="c1">// 获取指定的header的short值, 没有返回默认short值</span>
+    <span class="kd">public</span> <span class="kt">short</span> <span class="nf">getShortHeader</span><span class="o">(</span><span class="kt">int</span> <span class="n">radix</span><span class="o">,</span> <span class="n">String</span> <span class="n">name</span><span class="o">,</span> <span class="kt">short</span> <span class="n">defaultValue</span><span class="o">);</span>
+
+    <span class="c1">// 获取指定的header的short值, 没有返回默认short值</span>
+    <span class="kd">public</span> <span class="kt">short</span> <span class="nf">getShortHeader</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">,</span> <span class="kt">int</span> <span class="n">defaultValue</span><span class="o">);</span>
+
+    <span class="c1">// 获取指定的header的short值, 没有返回默认short值</span>
+    <span class="kd">public</span> <span class="kt">short</span> <span class="nf">getShortHeader</span><span class="o">(</span><span class="kt">int</span> <span class="n">radix</span><span class="o">,</span> <span class="n">String</span> <span class="n">name</span><span class="o">,</span> <span class="kt">int</span> <span class="n">defaultValue</span><span class="o">);</span>
+
     <span class="c1">//获取指定的header的int值, 没有返回默认int值</span>
     <span class="kd">public</span> <span class="kt">int</span> <span class="nf">getIntHeader</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">,</span> <span class="kt">int</span> <span class="n">defaultValue</span><span class="o">);</span>
 
-    <span class="c1">// 获取指定的header的float值, 没有返回默认float值</span>
-    <span class="kd">public</span> <span class="kt">float</span> <span class="nf">getFloatHeader</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">,</span> <span class="kt">float</span> <span class="n">defaultValue</span><span class="o">);</span>
+    <span class="c1">//获取指定的header的int值, 没有返回默认int值</span>
+    <span class="kd">public</span> <span class="kt">int</span> <span class="nf">getIntHeader</span><span class="o">(</span><span class="kt">int</span> <span class="n">radix</span><span class="o">,</span> <span class="n">String</span> <span class="n">name</span><span class="o">,</span> <span class="kt">int</span> <span class="n">defaultValue</span><span class="o">);</span>
 
     <span class="c1">// 获取指定的header的long值, 没有返回默认long值</span>
     <span class="kd">public</span> <span class="kt">long</span> <span class="nf">getLongHeader</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">,</span> <span class="kt">long</span> <span class="n">defaultValue</span><span class="o">);</span>
+
+    <span class="c1">// 获取指定的header的long值, 没有返回默认long值</span>
+    <span class="kd">public</span> <span class="kt">long</span> <span class="nf">getLongHeader</span><span class="o">(</span><span class="kt">int</span> <span class="n">radix</span><span class="o">,</span> <span class="n">String</span> <span class="n">name</span><span class="o">,</span> <span class="kt">long</span> <span class="n">defaultValue</span><span class="o">);</span>
+
+    <span class="c1">// 获取指定的header的float值, 没有返回默认float值</span>
+    <span class="kd">public</span> <span class="kt">float</span> <span class="nf">getFloatHeader</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">,</span> <span class="kt">float</span> <span class="n">defaultValue</span><span class="o">);</span>
 
     <span class="c1">//获取指定的header的double值, 没有返回默认double值</span>
     <span class="kd">public</span> <span class="kt">double</span> <span class="nf">getDoubleHeader</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">,</span> <span class="kt">double</span> <span class="n">defaultValue</span><span class="o">);</span>
@@ -375,10 +416,10 @@
     <span class="kd">public</span> <span class="n">String</span> <span class="nf">getParameter</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">,</span> <span class="n">String</span> <span class="n">defaultValue</span><span class="o">);</span>
 
     <span class="c1">//获取指定的参数json值</span>
-    <span class="kd">public</span> <span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">T</span> <span class="nf">getJsonParameter</span><span class="o">(</span><span class="n">JsonConvert</span> <span class="n">convert</span><span class="o">,</span> <span class="n">Type</span> <span class="n">type</span><span class="o">,</span> <span class="n">String</span> <span class="n">name</span><span class="o">);</span>
+    <span class="kd">public</span> <span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">T</span> <span class="nf">getJsonParameter</span><span class="o">(</span><span class="n">Type</span> <span class="n">type</span><span class="o">,</span> <span class="n">String</span> <span class="n">name</span><span class="o">);</span>
 
     <span class="c1">//获取指定的参数json值</span>
-    <span class="kd">public</span> <span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">T</span> <span class="nf">getJsonParameter</span><span class="o">(</span><span class="n">Type</span> <span class="n">type</span><span class="o">,</span> <span class="n">String</span> <span class="n">name</span><span class="o">);</span>
+    <span class="kd">public</span> <span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">T</span> <span class="nf">getJsonParameter</span><span class="o">(</span><span class="n">JsonConvert</span> <span class="n">convert</span><span class="o">,</span> <span class="n">Type</span> <span class="n">type</span><span class="o">,</span> <span class="n">String</span> <span class="n">name</span><span class="o">);</span>
 
     <span class="c1">//获取指定的参数boolean值, 没有返回默认boolean值</span>
     <span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">getBooleanParameter</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">,</span> <span class="kt">boolean</span> <span class="n">defaultValue</span><span class="o">);</span>
@@ -386,18 +427,47 @@
     <span class="c1">//获取指定的参数short值, 没有返回默认short值</span>
     <span class="kd">public</span> <span class="kt">short</span> <span class="nf">getShortParameter</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">,</span> <span class="kt">short</span> <span class="n">defaultValue</span><span class="o">);</span>
 
+    <span class="c1">//获取指定的参数short值, 没有返回默认short值</span>
+    <span class="kd">public</span> <span class="kt">short</span> <span class="nf">getShortParameter</span><span class="o">(</span><span class="kt">int</span> <span class="n">radix</span><span class="o">,</span> <span class="n">String</span> <span class="n">name</span><span class="o">,</span> <span class="kt">short</span> <span class="n">defaultValue</span><span class="o">);</span>
+
+    <span class="c1">//获取指定的参数short值, 没有返回默认short值</span>
+    <span class="kd">public</span> <span class="kt">short</span> <span class="nf">getShortParameter</span><span class="o">(</span><span class="kt">int</span> <span class="n">radix</span><span class="o">,</span> <span class="n">String</span> <span class="n">name</span><span class="o">,</span> <span class="kt">int</span> <span class="n">defaultValue</span><span class="o">);</span>
+
     <span class="c1">//获取指定的参数int值, 没有返回默认int值</span>
     <span class="kd">public</span> <span class="kt">int</span> <span class="nf">getIntParameter</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">,</span> <span class="kt">int</span> <span class="n">defaultValue</span><span class="o">);</span>
 
-    <span class="c1">//获取指定的参数float值, 没有返回默认float值</span>
-    <span class="kd">public</span> <span class="kt">float</span> <span class="nf">getFloatParameter</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">,</span> <span class="kt">float</span> <span class="n">defaultValue</span><span class="o">);</span>
+    <span class="c1">//获取指定的参数int值, 没有返回默认int值</span>
+    <span class="kd">public</span> <span class="kt">int</span> <span class="nf">getIntParameter</span><span class="o">(</span><span class="kt">int</span> <span class="n">radix</span><span class="o">,</span> <span class="n">String</span> <span class="n">name</span><span class="o">,</span> <span class="kt">int</span> <span class="n">defaultValue</span><span class="o">);</span>
 
     <span class="c1">//获取指定的参数long值, 没有返回默认long值</span>
     <span class="kd">public</span> <span class="kt">long</span> <span class="nf">getLongParameter</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">,</span> <span class="kt">long</span> <span class="n">defaultValue</span><span class="o">);</span>
 
+    <span class="c1">//获取指定的参数long值, 没有返回默认long值</span>
+    <span class="kd">public</span> <span class="kt">long</span> <span class="nf">getLongParameter</span><span class="o">(</span><span class="kt">int</span> <span class="n">radix</span><span class="o">,</span> <span class="n">String</span> <span class="n">name</span><span class="o">,</span> <span class="kt">long</span> <span class="n">defaultValue</span><span class="o">);</span>
+
+    <span class="c1">//获取指定的参数float值, 没有返回默认float值</span>
+    <span class="kd">public</span> <span class="kt">float</span> <span class="nf">getFloatParameter</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">,</span> <span class="kt">float</span> <span class="n">defaultValue</span><span class="o">);</span>
+
     <span class="c1">//获取指定的参数double值, 没有返回默认double值</span>
     <span class="kd">public</span> <span class="kt">double</span> <span class="nf">getDoubleParameter</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">,</span> <span class="kt">double</span> <span class="n">defaultValue</span><span class="o">);</span>
-
+    
+    <span class="c1">//获取翻页对象 同 getFlipper(&quot;flipper&quot;, false, 0);</span>
+    <span class="kd">public</span> <span class="n">org</span><span class="o">.</span><span class="na">redkale</span><span class="o">.</span><span class="na">source</span><span class="o">.</span><span class="na">Flipper</span> <span class="nf">getFlipper</span><span class="o">();</span>
+    
+    <span class="c1">//获取翻页对象 同 getFlipper(&quot;flipper&quot;, needcreate, 0);</span>
+    <span class="kd">public</span> <span class="n">org</span><span class="o">.</span><span class="na">redkale</span><span class="o">.</span><span class="na">source</span><span class="o">.</span><span class="na">Flipper</span> <span class="nf">getFlipper</span><span class="o">(</span><span class="kt">boolean</span> <span class="n">needcreate</span><span class="o">);</span>
+    
+    <span class="c1">//获取翻页对象 同 getFlipper(&quot;flipper&quot;, false, maxLimit);</span>
+    <span class="kd">public</span> <span class="n">org</span><span class="o">.</span><span class="na">redkale</span><span class="o">.</span><span class="na">source</span><span class="o">.</span><span class="na">Flipper</span> <span class="nf">getFlipper</span><span class="o">(</span><span class="kt">int</span> <span class="n">maxLimit</span><span class="o">);</span>
+    
+    <span class="c1">//获取翻页对象 同 getFlipper(&quot;flipper&quot;, needcreate, maxLimit)</span>
+    <span class="kd">public</span> <span class="n">org</span><span class="o">.</span><span class="na">redkale</span><span class="o">.</span><span class="na">source</span><span class="o">.</span><span class="na">Flipper</span> <span class="nf">getFlipper</span><span class="o">(</span><span class="kt">boolean</span> <span class="n">needcreate</span><span class="o">,</span> <span class="kt">int</span> <span class="n">maxLimit</span><span class="o">);</span>
+    
+    <span class="c1">//获取翻页对象 http://redkale.org/pipes/records/list/offset:0/limit:20/sort:createtime%20ASC</span>
+    <span class="c1">//http://redkale.org/pipes/records/list?flipper={&#39;offset&#39;:0,&#39;limit&#39;:20, &#39;sort&#39;:&#39;createtime ASC&#39;}</span>
+    <span class="c1">//以上两种接口都可以获取到翻页对象</span>
+    <span class="kd">public</span> <span class="n">org</span><span class="o">.</span><span class="na">redkale</span><span class="o">.</span><span class="na">source</span><span class="o">.</span><span class="na">Flipper</span> <span class="nf">getFlipper</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">,</span> <span class="kt">boolean</span> <span class="n">needcreate</span><span class="o">,</span> <span class="kt">int</span> <span class="n">maxLimit</span><span class="o">);</span>
+    
     <span class="c1">//获取HTTP上下文对象</span>
     <span class="kd">public</span> <span class="n">HttpContext</span> <span class="nf">getContext</span><span class="o">();</span>
 
@@ -415,11 +485,18 @@
 
     <span class="c1">//获取request创建时间</span>
     <span class="kd">public</span> <span class="kt">long</span> <span class="nf">getCreatetime</span><span class="o">();</span>
-<span class="o">}</span></pre></div>
+<span class="o">}</span>
+</pre></div>
 
 
             <p id="net_httpresponse">&nbsp;&nbsp;<b>. HttpResponse 对象</b> </p>
             <div class="highlight"><pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">HttpResponse</span> <span class="o">{</span>
+
+    <span class="c1">//增加Cookie值</span>
+    <span class="kd">public</span> <span class="n">HttpResponse</span> <span class="nf">addCookie</span><span class="o">(</span><span class="n">HttpCookie</span><span class="o">...</span> <span class="n">cookies</span><span class="o">);</span>
+
+    <span class="c1">//增加Cookie值</span>
+    <span class="kd">public</span> <span class="n">HttpResponse</span> <span class="nf">addCookie</span><span class="o">(</span><span class="n">Collection</span><span class="o">&lt;</span><span class="n">HttpCookie</span><span class="o">&gt;</span> <span class="n">cookies</span><span class="o">);</span>
 
     <span class="c1">//设置状态码</span>
     <span class="kd">public</span> <span class="kt">void</span> <span class="nf">setStatus</span><span class="o">(</span><span class="kt">int</span> <span class="n">status</span><span class="o">);</span>
@@ -431,26 +508,26 @@
     <span class="kd">public</span> <span class="n">String</span> <span class="nf">getContentType</span><span class="o">();</span>
 
     <span class="c1">//设置 ContentType</span>
-    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">setContentType</span><span class="o">(</span><span class="n">String</span> <span class="n">contentType</span><span class="o">);</span>
+    <span class="kd">public</span> <span class="n">HttpResponse</span> <span class="nf">setContentType</span><span class="o">(</span><span class="n">String</span> <span class="n">contentType</span><span class="o">);</span>
 
     <span class="c1">//获取内容长度</span>
     <span class="kd">public</span> <span class="kt">long</span> <span class="nf">getContentLength</span><span class="o">();</span>
 
     <span class="c1">//设置内容长度</span>
-    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">setContentLength</span><span class="o">(</span><span class="kt">long</span> <span class="n">contentLength</span><span class="o">);</span>
+    <span class="kd">public</span> <span class="n">HttpResponse</span> <span class="nf">setContentLength</span><span class="o">(</span><span class="kt">long</span> <span class="n">contentLength</span><span class="o">);</span>
 
     <span class="c1">//设置Header值</span>
-    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">setHeader</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">,</span> <span class="n">Object</span> <span class="n">value</span><span class="o">);</span>
+    <span class="kd">public</span> <span class="n">HttpResponse</span> <span class="nf">setHeader</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">,</span> <span class="n">Object</span> <span class="n">value</span><span class="o">);</span>
 
     <span class="c1">//添加Header值</span>
-    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">addHeader</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">,</span> <span class="n">Object</span> <span class="n">value</span><span class="o">);</span>
+    <span class="kd">public</span> <span class="n">HttpResponse</span> <span class="nf">addHeader</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">,</span> <span class="n">Object</span> <span class="n">value</span><span class="o">);</span>
+
+    <span class="c1">//添加Header值</span>
+    <span class="kd">public</span> <span class="n">HttpResponse</span> <span class="nf">addHeader</span><span class="o">(</span><span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="o">?&gt;</span> <span class="n">map</span><span class="o">);</span>
 
     <span class="c1">//跳过header的输出</span>
     <span class="c1">//通常应用场景是，调用者的输出内容里已经包含了HTTP的响应头信息，因此需要调用此方法避免重复输出HTTP响应头信息。</span>
-    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">skipHeader</span><span class="o">();</span>
-
-    <span class="c1">//增加Cookie值</span>
-    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">addCookie</span><span class="o">(</span><span class="n">HttpCookie</span><span class="o">...</span> <span class="n">cookies</span><span class="o">);</span>
+    <span class="kd">public</span> <span class="n">HttpResponse</span> <span class="nf">skipHeader</span><span class="o">();</span>
 
     <span class="c1">//异步输出指定内容</span>
     <span class="kd">public</span> <span class="o">&lt;</span><span class="n">A</span><span class="o">&gt;</span> <span class="kt">void</span> <span class="nf">sendBody</span><span class="o">(</span><span class="n">ByteBuffer</span> <span class="n">buffer</span><span class="o">,</span> <span class="n">A</span> <span class="n">attachment</span><span class="o">,</span> <span class="n">CompletionHandler</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">,</span> <span class="n">A</span><span class="o">&gt;</span> <span class="n">handler</span><span class="o">);</span>
@@ -475,6 +552,18 @@
 
     <span class="c1">//将对象以JSON格式输出</span>
     <span class="kd">public</span> <span class="kt">void</span> <span class="nf">finishJson</span><span class="o">(</span><span class="kd">final</span> <span class="n">Object</span><span class="o">...</span> <span class="n">objs</span><span class="o">);</span>
+
+    <span class="c1">//将RetResult对象以JSON格式输出</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">finishJson</span><span class="o">(</span><span class="kd">final</span> <span class="n">org</span><span class="o">.</span><span class="na">redkale</span><span class="o">.</span><span class="na">service</span><span class="o">.</span><span class="na">RetResult</span> <span class="n">ret</span><span class="o">);</span>
+
+    <span class="c1">//将RetResult对象以JSON格式输出</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">finishJson</span><span class="o">(</span><span class="kd">final</span> <span class="n">JsonConvert</span> <span class="n">convert</span><span class="o">,</span> <span class="kd">final</span> <span class="n">org</span><span class="o">.</span><span class="na">redkale</span><span class="o">.</span><span class="na">service</span><span class="o">.</span><span class="na">RetResult</span> <span class="n">ret</span><span class="o">);</span>
+
+    <span class="c1">//将对象以JavaScript格式输出</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">finishJsResult</span><span class="o">(</span><span class="n">String</span> <span class="n">var</span><span class="o">,</span> <span class="n">Object</span> <span class="n">result</span><span class="o">);</span>
+
+    <span class="c1">//将对象以JavaScript格式输出</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">finishJsResult</span><span class="o">(</span><span class="n">JsonConvert</span> <span class="n">jsonConvert</span><span class="o">,</span> <span class="n">String</span> <span class="n">var</span><span class="o">,</span> <span class="n">Object</span> <span class="n">result</span><span class="o">);</span>
 
     <span class="c1">//将指定字符串以响应结果输出</span>
     <span class="kd">public</span> <span class="kt">void</span> <span class="nf">finish</span><span class="o">(</span><span class="n">String</span> <span class="n">obj</span><span class="o">);</span>
@@ -504,7 +593,14 @@
 
     <span class="c1">//将指定文件按响应结果输出</span>
     <span class="kd">public</span> <span class="kt">void</span> <span class="nf">finish</span><span class="o">(</span><span class="n">File</span> <span class="n">file</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span><span class="o">;</span>
-<span class="o">}</span></pre></div>
+
+    <span class="c1">//将文件按指定文件名输出</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">finish</span><span class="o">(</span><span class="kd">final</span> <span class="n">String</span> <span class="n">filename</span><span class="o">,</span> <span class="n">File</span> <span class="n">file</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span><span class="o">;</span>
+
+    <span class="c1">//HttpResponse回收时回调的监听方法</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">setRecycleListener</span><span class="o">(</span><span class="n">BiConsumer</span><span class="o">&lt;</span><span class="n">HttpRequest</span><span class="o">,</span> <span class="n">HttpResponse</span><span class="o">&gt;</span> <span class="n">recycleListener</span><span class="o">);</span>
+<span class="o">}</span>
+</pre></div>
 
 
             <p id="net_websocket">&nbsp;&nbsp;<b>. WebSocket 对象</b> </p>
