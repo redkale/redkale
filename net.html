@@ -656,7 +656,7 @@
                 <tr><td>结果码</td><td style="text-align: center;">4</td><td>请求方的值固定为0，响应方的值视为错误码，为0表示成功，非0为失败。</td></tr>
             </table>
             <p>
-                &nbsp;&nbsp;&nbsp;&nbsp;包体数据结构为 ([参数序号][参数BSON值])* N + [0][结果对象BSON]。 其中参数序号从1开始，只有当Service的方法存在<a href="service.html#service_dyncall" target="_blank">@DynCall回调</a>才会有参数<a href="convert.html#convert_bson_struct" target="_blank">BSON值</a>，序号为0表示为结果对象的<a href="convert.html#convert_bson_struct" target="_blank">BSON值</a>。若方法为<font color="blue">void</font>返回类型，则不存在结果对象<a href="convert.html#convert_bson_struct" target="_blank">BSON值</a>。
+                &nbsp;&nbsp;&nbsp;&nbsp;包体数据结构为 ([参数序号][参数BSON值])* N + [0][结果对象BSON]。 其中参数序号从1开始，只有当Service的方法存在<a href="service.html#service_dyncall" target="_blank">@RpcCall回调</a>才会有参数<a href="convert.html#convert_bson_struct" target="_blank">BSON值</a>，序号为0表示为结果对象的<a href="convert.html#convert_bson_struct" target="_blank">BSON值</a>。若方法为<font color="blue">void</font>返回类型，则不存在结果对象<a href="convert.html#convert_bson_struct" target="_blank">BSON值</a>。
             </p>
 
             <h3><a id="net_diy" class="anchor" href="#" aria-hidden="true"></a>自定义协议</h3>
