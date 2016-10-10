@@ -21,8 +21,8 @@ import org.redkale.util.ByteArray;
  * Redkale提倡带简单的参数的GET请求采用类似REST风格, 因此提供了 getRequstURIPath 系列接口。  <br>
  * 例如简单的翻页查询   <br>
  *      /pipes/record/query/offset:0/limit:20 <br>
- *      获取页号: int offset = request.getRequstURIPath("offset:", 0);   <br>
- *      获取行数: int limit = request.getRequstURIPath("limit:", 10);
+ * 获取页号: int offset = request.getRequstURIPath("offset:", 0);   <br>
+ * 获取行数: int limit = request.getRequstURIPath("limit:", 10);
  * <p>
  * 详情见: http://redkale.org
  *
@@ -547,8 +547,8 @@ public class HttpRequest extends Request<HttpContext> {
 
     /**
      * 获取请求URL分段中含prefix段的short值   <br>
-     * 例如请求URL /pipes/record/query/type:10   <br>
-     * 获取type参数: short type = request.getRequstURIPath("type:", (short)0);
+     * 例如请求URL /pipes/record/query/type:a   <br>
+     * 获取type参数: short type = request.getRequstURIPath(16, "type:", (short)0); //type = 10
      *
      * @param radix    进制数
      * @param prefix   prefix段前缀
@@ -564,8 +564,8 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取请求URL分段中含prefix段的int值  <br>
      * 例如请求URL /pipes/record/query/offset:0/limit:50   <br>
-     * 获取起址参数: int offset = request.getRequstURIPath("offset:", 0);   <br>
-     * 获取行数参数: int limit = request.getRequstURIPath("limit:", 20);  <br>
+     * 获取offset参数: int offset = request.getRequstURIPath("offset:", 0);   <br>
+     * 获取limit参数: int limit = request.getRequstURIPath("limit:", 20);  <br>
      *
      * @param prefix   prefix段前缀
      * @param defvalue 默认int值
@@ -580,8 +580,8 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取请求URL分段中含prefix段的int值  <br>
      * 例如请求URL /pipes/record/query/offset:0/limit:50   <br>
-     * 获取起址参数: int offset = request.getRequstURIPath("offset:", 0);   <br>
-     * 获取行数参数: int limit = request.getRequstURIPath("limit:", 20);  <br>
+     * 获取offset参数: int offset = request.getRequstURIPath("offset:", 0);   <br>
+     * 获取limit参数: int limit = request.getRequstURIPath(16, "limit:", 20); // limit = 16  <br>
      *
      * @param radix    进制数
      * @param prefix   prefix段前缀
@@ -627,7 +627,7 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取请求URL分段中含prefix段的long值   <br>
      * 例如请求URL /pipes/record/query/time:1453104341363/id:40   <br>
-     * 获取time参数: long time = request.getRequstURIPath("time:", 0L);
+     * 获取time参数: long time = request.getRequstURIPath(16, "time:", 0L);
      *
      * @param radix    进制数
      * @param prefix   prefix段前缀
@@ -974,6 +974,19 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取指定的参数int值, 没有返回默认int值
      *
+     * @param name         参数名
+     * @param defaultValue 默认int值
+     *
+     * @return 参数值
+     */
+    public int getIntParameter(String name, int defaultValue) {
+        parseBody();
+        return params.getIntValue(name, defaultValue);
+    }
+
+    /**
+     * 获取指定的参数int值, 没有返回默认int值
+     *
      * @param radix        进制数
      * @param name         参数名
      * @param defaultValue 默认int值
@@ -983,19 +996,6 @@ public class HttpRequest extends Request<HttpContext> {
     public int getIntParameter(int radix, String name, int defaultValue) {
         parseBody();
         return params.getIntValue(radix, name, defaultValue);
-    }
-
-    /**
-     * 获取指定的参数int值, 没有返回默认int值
-     *
-     * @param name         参数名
-     * @param defaultValue 默认int值
-     *
-     * @return 参数值
-     */
-    public int getIntParameter(String name, int defaultValue) {
-        parseBody();
-        return params.getIntValue(name, defaultValue);
     }
 
     /**
