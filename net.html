@@ -342,10 +342,10 @@
     <span class="kd">public</span> <span class="n">String</span> <span class="nf">getHeader</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">,</span> <span class="n">String</span> <span class="n">defaultValue</span><span class="o">);</span>
 
     <span class="c1">//获取指定的header的json值</span>
-    <span class="kd">public</span> <span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">T</span> <span class="nf">getJsonHeader</span><span class="o">(</span><span class="n">JsonConvert</span> <span class="n">convert</span><span class="o">,</span> <span class="n">Class</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">clazz</span><span class="o">,</span> <span class="n">String</span> <span class="n">name</span><span class="o">);</span>
+    <span class="kd">public</span> <span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">T</span> <span class="nf">getJsonHeader</span><span class="o">(</span><span class="n">JsonConvert</span> <span class="n">convert</span><span class="o">,</span> <span class="n">Type</span> <span class="n">type</span><span class="o">,</span> <span class="n">String</span> <span class="n">name</span><span class="o">);</span>
 
     <span class="c1">//获取指定的header的json值</span>
-    <span class="kd">public</span> <span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">T</span> <span class="nf">getJsonHeader</span><span class="o">(</span><span class="n">Class</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">clazz</span><span class="o">,</span> <span class="n">String</span> <span class="n">name</span><span class="o">);</span>
+    <span class="kd">public</span> <span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">T</span> <span class="nf">getJsonHeader</span><span class="o">(</span><span class="n">Type</span> <span class="n">type</span><span class="o">,</span> <span class="n">String</span> <span class="n">name</span><span class="o">);</span>
 
     <span class="c1">//获取指定的header的boolean值, 没有返回默认boolean值</span>
     <span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">getBooleanHeader</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">,</span> <span class="kt">boolean</span> <span class="n">defaultValue</span><span class="o">);</span>
@@ -375,10 +375,10 @@
     <span class="kd">public</span> <span class="n">String</span> <span class="nf">getParameter</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">,</span> <span class="n">String</span> <span class="n">defaultValue</span><span class="o">);</span>
 
     <span class="c1">//获取指定的参数json值</span>
-    <span class="kd">public</span> <span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">T</span> <span class="nf">getJsonParameter</span><span class="o">(</span><span class="n">JsonConvert</span> <span class="n">convert</span><span class="o">,</span> <span class="n">Class</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">clazz</span><span class="o">,</span> <span class="n">String</span> <span class="n">name</span><span class="o">);</span>
+    <span class="kd">public</span> <span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">T</span> <span class="nf">getJsonParameter</span><span class="o">(</span><span class="n">JsonConvert</span> <span class="n">convert</span><span class="o">,</span> <span class="n">Type</span> <span class="n">type</span><span class="o">,</span> <span class="n">String</span> <span class="n">name</span><span class="o">);</span>
 
     <span class="c1">//获取指定的参数json值</span>
-    <span class="kd">public</span> <span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">T</span> <span class="nf">getJsonParameter</span><span class="o">(</span><span class="n">Class</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">clazz</span><span class="o">,</span> <span class="n">String</span> <span class="n">name</span><span class="o">);</span>
+    <span class="kd">public</span> <span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">T</span> <span class="nf">getJsonParameter</span><span class="o">(</span><span class="n">Type</span> <span class="n">type</span><span class="o">,</span> <span class="n">String</span> <span class="n">name</span><span class="o">);</span>
 
     <span class="c1">//获取指定的参数boolean值, 没有返回默认boolean值</span>
     <span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">getBooleanParameter</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">,</span> <span class="kt">boolean</span> <span class="n">defaultValue</span><span class="o">);</span>
@@ -647,7 +647,8 @@
             <table style="margin: auto;">
                 <tr><th>字 段</th><th>占用字节数</th><th>描 述</th></tr>
                 <tr><td>序列号</td><td style="text-align: center;">8</td><td>请求的唯一序列号</td></tr>
-                <tr><td>包头长度</td><td style="text-align: center;">2</td><td>值固定为56</td></tr>
+                <tr><td>包头长度</td><td style="text-align: center;">2</td><td>值固定为60</td></tr>
+                <tr><td>Service版本号</td><td style="text-align: center;">4</td><td>值为Service.version()</td></tr>
                 <tr><td>Service资源hash值</td><td style="text-align: center;">16</td><td>Service资源名class.getName():@Resource.name()的MD5值</td></tr>
                 <tr><td>Service方法hash值</td><td style="text-align: center;">16</td><td>Service方法method.toString()的MD5值</td></tr>
                 <tr><td>发送方地址</td><td style="text-align: center;">6</td><td>前4字节为地址，后2字节为端口号</td></tr>
@@ -665,7 +666,7 @@
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Response : 服务响应对象 <br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Servlet &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: 服务逻辑处理对象 <br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Server &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: 服务监听对象 <br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;通常自定义协议需要继承上面五种对象类，同时为了让Redkale能识别和加载自定义协议服务需要继承 <b>org.redkale.boot.NodeServer</b> 并指明 <b>@NodeProtocol</b>，实现可以参考 <a href="https://github.com/redkale/redkale-plugins/tree/master/src/org/redkale/net/socks" target="_blank" >基于SOCKS5协议的反向代理服务器</a>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;通常自定义协议需要继承上面五种对象类，同时为了让Redkale能识别和加载自定义协议服务需要继承 <b>org.redkale.boot.NodeServer</b> 并指明 <b>@NodeProtocol</b>，实现可以参考 <a href="https://github.com/redkale/redkale-plugins/tree/master/src/org/redkalex/socks" target="_blank" >基于SOCKS5协议的反向代理服务器</a>
             </p>
 
             <footer class="site-footer">
