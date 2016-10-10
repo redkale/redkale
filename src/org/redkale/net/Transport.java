@@ -19,7 +19,7 @@ import org.redkale.watch.WatchFactory;
  * 传输客户端
  *
  * <p>
- * 详情见: http://redkale.org
+ * 详情见: https://redkale.org
  *
  * @author zhangjx
  */

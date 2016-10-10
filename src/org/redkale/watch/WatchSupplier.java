@@ -9,7 +9,7 @@ import java.util.function.LongSupplier;
 
 /**
  *
- * <p> 详情见: http://redkale.org
+ * <p> 详情见: https://redkale.org
  * @author zhangjx
  */
 public final class WatchSupplier implements WatchNode {

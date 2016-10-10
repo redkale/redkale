@@ -14,7 +14,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * name='#'表示截取uri最后一段
  * name='#xxx:'表示从uri中/pipes/xxx:v/截取xxx:的值
  * <p>
- * 详情见: http://redkale.org
+ * 详情见: https://redkale.org
  *
  * @author zhangjx
  */

@@ -13,7 +13,7 @@ import java.util.Objects;
  * 注意：该类型不支持表达式：FV_XXX、BETWEEN、NOTBETWEEN、IN、NOTIN
  *
  * <p>
- * 详情见: http://redkale.org
+ * 详情见: https://redkale.org
  * 
  * @author zhangjx
  */

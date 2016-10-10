@@ -18,7 +18,7 @@ import org.redkale.util.Attribute;
  * 在调用 createPredicate 之前必须先调用 isCacheUseable
  *
  *
- * 详情见: http://redkale.org
+ * 详情见: https://redkale.org
  *
  * @author zhangjx
  */

@@ -22,7 +22,7 @@ import org.redkale.util.*;
  * HTTP Server节点的配置Server
  *
  * <p>
- * 详情见: http://redkale.org
+ * 详情见: https://redkale.org
  *
  * @author zhangjx
  */

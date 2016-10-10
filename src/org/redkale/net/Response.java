@@ -12,7 +12,7 @@ import java.util.function.BiConsumer;
 /**
  *
  * <p>
- * 详情见: http://redkale.org
+ * 详情见: https://redkale.org
  *
  * @author zhangjx
  * @param <C> Context的子类型

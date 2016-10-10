@@ -15,7 +15,7 @@ import java.util.function.*;
  * VirtualEntity表示虚拟的数据实体类， 通常Entity都会映射到数据库中的某个表，而标记为VirtualEntity的Entity类只存在DataCache中
  *
  * <p>
- * 详情见: http://redkale.org
+ * 详情见: https://redkale.org
  *
  * @author zhangjx
  */

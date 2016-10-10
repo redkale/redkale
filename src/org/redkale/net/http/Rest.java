@@ -24,7 +24,7 @@ import org.redkale.source.Flipper;
 /**
  * 以find开头的方法且参数只有一个且参数类型为primitive class或String，则RestParam值默认为#
  * <p>
- * 详情见: http://redkale.org
+ * 详情见: https://redkale.org
  *
  * @author zhangjx
  */

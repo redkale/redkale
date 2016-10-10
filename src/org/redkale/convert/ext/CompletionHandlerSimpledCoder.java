@@ -12,7 +12,7 @@ import org.redkale.convert.*;
  * java.nio.channels.CompletionHandler 的SimpledCoder实现, 只输出null
  *
  * <p>
- * 详情见: http://redkale.org
+ * 详情见: https://redkale.org
  *
  * @author zhangjx
  * @param <R> Reader输入的子类型

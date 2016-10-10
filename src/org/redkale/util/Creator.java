@@ -63,7 +63,7 @@ import static jdk.internal.org.objectweb.asm.Opcodes.*;
  * </pre></blockquote>
  *
  * <p>
- * 详情见: http://redkale.org
+ * 详情见: https://redkale.org
  *
  * @author zhangjx
  * @param <T> 构建对象的数据类型

@@ -13,7 +13,7 @@ import org.redkale.util.*;
  *
  * writeTo系列的方法输出的字符不能含特殊字符
  * <p>
- * 详情见: http://redkale.org
+ * 详情见: https://redkale.org
  *
  * @author zhangjx
  */

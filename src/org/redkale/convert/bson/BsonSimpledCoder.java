@@ -10,7 +10,7 @@ import org.redkale.convert.SimpledCoder;
 /**
  *
  * <p>
- * 详情见: http://redkale.org
+ * 详情见: https://redkale.org
  *
  * @author zhangjx
  * @param <T> 序列化/反解析的数据类型

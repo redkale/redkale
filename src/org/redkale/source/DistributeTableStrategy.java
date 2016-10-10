@@ -10,7 +10,7 @@ import java.io.Serializable;
 /**
  *
  * <p>
- * 详情见: http://redkale.org
+ * 详情见: https://redkale.org
  *
  * @author zhangjx
  * @param <T> Entity类型

@@ -14,7 +14,7 @@ import java.lang.annotation.*;
  * 1、被标记为&#64;AutoLoad(false)的Service类不会被自动加载, 当被依赖时才会被加载
  * 2、被标记为&#64;AutoLoad(false)的Servlet类不会被自动加载
  *
- * <p> 详情见: http://redkale.org
+ * <p> 详情见: https://redkale.org
  * @author zhangjx
  */
 @Documented

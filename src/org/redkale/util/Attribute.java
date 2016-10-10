@@ -68,7 +68,7 @@ import static jdk.internal.org.objectweb.asm.Opcodes.*;
  * 当不存在getter方法时，get操作固定返回null <br>
  * 当不存在setter方法时，set操作为空方法  <br>
  * <p>
- * 详情见: http://redkale.org
+ * 详情见: https://redkale.org
  *
  * @author zhangjx
  * @param <T> 字段依附的类

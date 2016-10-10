@@ -13,7 +13,7 @@ import java.util.function.BiPredicate;
  * 该类提供类似JSONObject的数据结构，主要用于读取xml配置文件和http-header存储
  *
  * <p>
- * 详情见: http://redkale.org
+ * 详情见: https://redkale.org
  *
  * @author zhangjx
  */

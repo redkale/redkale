@@ -28,7 +28,7 @@ import org.redkale.util.*;
  * 生成Service的本地模式或远程模式Service-Class的工具类
  *
  *
- * 详情见: http://redkale.org
+ * 详情见: https://redkale.org
  *
  * @author zhangjx
  */

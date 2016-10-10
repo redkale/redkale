@@ -11,7 +11,10 @@ import org.redkale.convert.*;
 import static org.redkale.convert.Reader.*;
 
 /**
+ * 
  * 只支持UTF-8格式
+ * 
+ * 详情见: https://redkale.org
  *
  * @author zhangjx
  */

@@ -13,7 +13,7 @@ import java.util.*;
  * @param <K> key的类型
  * @param <V> value的类型
  * <p>
- * 详情见: http://redkale.org
+ * 详情见: https://redkale.org
  *
  * @author zhangjx
  */

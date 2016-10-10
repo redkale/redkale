@@ -14,6 +14,8 @@ import org.redkale.util.*;
 
 /**
  * 继承 HttpBaseServlet 是为了获取 WebAction 信息
+ * 
+ * 详情见: https://redkale.org
  *
  * @author zhangjx
  */

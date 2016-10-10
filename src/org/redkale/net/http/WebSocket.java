@@ -33,7 +33,7 @@ import org.redkale.net.*;
  *  此模式下 以上方法都应该被重载。
  * </pre></blockquote>
  * <p>
- * 详情见: http://redkale.org
+ * 详情见: https://redkale.org
  *
  * @author zhangjx
  */

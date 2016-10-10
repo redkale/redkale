@@ -31,7 +31,7 @@ import org.redkale.util.*;
  * Server节点的初始化配置类
  *
  *
- * 详情见: http://redkale.org
+ * 详情见: https://redkale.org
  *
  * @author zhangjx
  */

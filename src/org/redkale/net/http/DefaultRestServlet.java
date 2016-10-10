@@ -10,7 +10,7 @@ import java.io.IOException;
 /**
  * 默认Servlet, 没有配置RestHttpServlet实现类则使用该默认类
  * <p>
- * 详情见: http://redkale.org
+ * 详情见: https://redkale.org
  *
  * @author zhangjx
  */

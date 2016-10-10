@@ -12,7 +12,7 @@ import java.util.Map;
 /**
  *
  * <p>
- * 详情见: http://redkale.org
+ * 详情见: https://redkale.org
  *
  * @author zhangjx
  * @param <K> Map key的数据类型

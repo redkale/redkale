@@ -13,7 +13,7 @@ import java.lang.reflect.*;
  * 支持一定程度的泛型。
  *
  * <p>
- * 详情见: http://redkale.org
+ * 详情见: https://redkale.org
  *
  * @author zhangjx
  * @param <T> 序列化的数组元素类型

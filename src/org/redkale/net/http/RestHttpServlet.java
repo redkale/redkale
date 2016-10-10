@@ -9,7 +9,7 @@ import java.io.*;
 
 /**
  *
- * 详情见: http://redkale.org
+ * 详情见: https://redkale.org
  *
  * @author zhangjx
  * @param <T> 当前用户对象类型

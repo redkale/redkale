@@ -16,7 +16,7 @@ import java.util.Collection;
  * 支持一定程度的泛型。
  *
  * <p>
- * 详情见: http://redkale.org
+ * 详情见: https://redkale.org
  *
  * @author zhangjx
  * @param <T> 反解析的集合元素类型

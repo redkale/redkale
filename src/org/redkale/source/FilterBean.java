@@ -10,7 +10,7 @@ package org.redkale.source;
  * 
  * 不被标记为&#64;javax.persistence.Transient 的字段均视为过滤条件
  *
- * <p> 详情见: http://redkale.org
+ * <p> 详情见: https://redkale.org
  * @author zhangjx
  */
 public interface FilterBean {

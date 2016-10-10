@@ -13,7 +13,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * 该注解只能放在field类型为Collection, Map, 或者java.util.concurrent.atomic.AtomicXXX的Number类);
  *
  * <p>
- * 详情见: http://redkale.org
+ * 详情见: https://redkale.org
  *
  * @author zhangjx
  */

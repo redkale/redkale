@@ -9,7 +9,7 @@ package org.redkale.source;
  * 常见的SQL聚合函数
  *
  * <p>
- * 详情见: http://redkale.org
+ * 详情见: https://redkale.org
  *
  * @author zhangjx
  */

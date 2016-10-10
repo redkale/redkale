@@ -19,7 +19,7 @@ import javax.annotation.Resource;
  * 1: "$"有特殊含义, 不能表示"$"资源本身
  * 2: 只能是字母、数字、(短横)-、(下划线)_、点(.)的组合
  * <p>
- * 详情见: http://redkale.org
+ * 详情见: https://redkale.org
  *
  * @author zhangjx
  */

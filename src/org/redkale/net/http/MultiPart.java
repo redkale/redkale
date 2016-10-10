@@ -10,7 +10,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 /**
  *
- * <p> 详情见: http://redkale.org
+ * <p> 详情见: https://redkale.org
  * @author zhangjx
  */
 public final class MultiPart {

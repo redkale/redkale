@@ -8,7 +8,7 @@ package org.redkale.net.http;
 /**
  *
  * <p>
- * 详情见: http://redkale.org
+ * 详情见: https://redkale.org
  * 
  * @deprecated  使用 org.redkale.net.http.HttpBaseServlet 代替
  * @see org.redkale.net.http.HttpBaseServlet

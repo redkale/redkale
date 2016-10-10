@@ -24,7 +24,7 @@ import org.redkale.service.RetResult;
 /**
  *
  * <p>
- * 详情见: http://redkale.org
+ * 详情见: https://redkale.org
  *
  * @author zhangjx
  */
@@ -39,7 +39,7 @@ public abstract class HttpBaseServlet extends HttpServlet {
      * 当标记为 &#64;AuthIgnore 的方法在执行execute之前不会调用authenticate 方法。
      *
      * <p>
-     * 详情见: http://redkale.org
+     * 详情见: https://redkale.org
      *
      * @author zhangjx
      */
@@ -56,7 +56,7 @@ public abstract class HttpBaseServlet extends HttpServlet {
      * 用于对&#64;WebParam中参数的来源类型
      *
      * <p>
-     * 详情见: http://redkale.org
+     * 详情见: https://redkale.org
      *
      * @author zhangjx
      */
@@ -70,7 +70,7 @@ public abstract class HttpBaseServlet extends HttpServlet {
      * 用于对&#64;WebAction方法中参数描述
      *
      * <p>
-     * 详情见: http://redkale.org
+     * 详情见: https://redkale.org
      *
      * @author zhangjx
      */
@@ -104,7 +104,7 @@ public abstract class HttpBaseServlet extends HttpServlet {
      * 用于对&#64;WebServlet对应的url进行细分。 其url必须是包含WebServlet中定义的前缀， 且不能是正则表达式
      *
      * <p>
-     * 详情见: http://redkale.org
+     * 详情见: https://redkale.org
      *
      * @author zhangjx
      */
@@ -131,7 +131,7 @@ public abstract class HttpBaseServlet extends HttpServlet {
      * 通常情况下 &#64;HttpCacheable 需要与 &#64;AuthIgnore 一起使用，没有标记&#64;AuthIgnore的方法一般输出的结果与当前用户信息有关。
      *
      * <p>
-     * 详情见: http://redkale.org
+     * 详情见: https://redkale.org
      *
      * @author zhangjx
      */

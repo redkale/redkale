@@ -10,7 +10,7 @@ import java.lang.reflect.Type;
 /**
  *
  * <p>
- * 详情见: http://redkale.org
+ * 详情见: https://redkale.org
  *
  * @author zhangjx
  * @param <W> Writer输出的子类

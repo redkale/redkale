@@ -11,7 +11,7 @@ import jdk.internal.org.objectweb.asm.*;
 /**
  * MethodVisitor 的调试类
  * <p>
- * 详情见: http://redkale.org
+ * 详情见: https://redkale.org
  *
  * @author zhangjx
  */

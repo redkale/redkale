@@ -55,7 +55,7 @@ import java.lang.annotation.*;
  */
 /**
  * <p>
- * 详情见: http://redkale.org
+ * 详情见: https://redkale.org
  *
  * @author zhangjx
  */

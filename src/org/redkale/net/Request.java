@@ -13,7 +13,7 @@ import org.redkale.convert.json.JsonConvert;
 /**
  *
  * <p>
- * 详情见: http://redkale.org
+ * 详情见: https://redkale.org
  *
  * @author zhangjx
  * @param <C> Context子类型

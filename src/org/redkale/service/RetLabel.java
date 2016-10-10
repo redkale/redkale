@@ -14,6 +14,7 @@ import java.lang.annotation.*;
  *    // 20000001 - 29999999 预留给Redkale的扩展包使用
  *    // 30000001 - 99999999 预留给Dev开发系统自身使用
  *
+ * 详情见: https://redkale.org
  * @author zhangjx
  */
 @Inherited

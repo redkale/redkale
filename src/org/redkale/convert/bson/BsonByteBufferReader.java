@@ -11,6 +11,8 @@ import static org.redkale.convert.Reader.SIGN_NULL;
 import org.redkale.util.*;
 
 /**
+ * 
+ * 详情见: https://redkale.org
  *
  * @author zhangjx
  */
