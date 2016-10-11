@@ -34,7 +34,7 @@ public final class PrepareRunner implements Runnable {
     public void run() {
         final PrepareServlet prepare = context.prepare;
         final ObjectPool<? extends Response> responsePool = context.responsePool;
-        if (data != null) {
+        if (data != null) { //BIO模式的UDP连接创建AsyncConnection时已经获取到ByteBuffer数据了
             final Response response = responsePool.get();
             response.init(channel);
             try {
