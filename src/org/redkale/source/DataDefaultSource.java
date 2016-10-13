@@ -1246,6 +1246,9 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
             set.close();
             ps.close();
             return rs;
+        } catch (SQLException se) {
+            if (info.tableStrategy != null && info.tablenotexistSqlstates.contains(';' + se.getSQLState() + ';')) return false;
+            throw new RuntimeException(se);
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         } finally {
@@ -1277,6 +1280,9 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
             set.close();
             ps.close();
             return rs;
+        } catch (SQLException se) {
+            if (info.tableStrategy != null && info.tablenotexistSqlstates.contains(';' + se.getSQLState() + ';')) return false;
+            throw new RuntimeException(se);
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         } finally {
