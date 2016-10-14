@@ -231,12 +231,6 @@ public abstract class HttpBaseServlet extends HttpServlet {
             final String name = action.url().trim();
 
             if (nameset.contains(name)) throw new RuntimeException(this.getClass().getSimpleName() + " has two same " + WebAction.class.getSimpleName() + "(" + name + ")");
-            //屏蔽以下代码，允许相互包含
-//            for (String n : nameset) {
-//                if (n.contains(name) || name.contains(n)) {
-//                    throw new RuntimeException(this.getClass().getSimpleName() + " has two sub-contains " + WebAction.class.getSimpleName() + "(" + name + ", " + n + ")");
-//                }
-//            }
             nameset.add(name);
             map.put(name, new Entry(typeIgnore, serviceid, actionid, name, action.methods(), method, createHttpServlet(method)));
         }
