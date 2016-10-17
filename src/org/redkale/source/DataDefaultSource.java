@@ -1079,7 +1079,8 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
             Number rs = defVal;
             ResultSet set = prestmt.executeQuery();
             if (set.next()) {
-                rs = (Number) set.getObject(1);
+                Object o = set.getObject(1);
+                if (o != null) rs = (Number) o;
             }
             set.close();
             prestmt.close();
