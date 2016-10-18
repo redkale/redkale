@@ -144,9 +144,13 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
     public Logger getLogger() {
         return this.logger;
     }
-    
-    public PrepareServlet<K, C, R, P, S> getPrepareServlet(){
+
+    public PrepareServlet<K, C, R, P, S> getPrepareServlet() {
         return this.prepare;
+    }
+
+    public C getContext() {
+        return this.context;
     }
 
     @SuppressWarnings("unchecked")
