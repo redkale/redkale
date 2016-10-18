@@ -286,7 +286,7 @@ public final class EntityInfo<T> {
         this.notcontainSQL = conf.getProperty(JDBC_NOTCONTAIN_SQLTEMPLATE, "LOCATE(${keystr}, ${column}) = 0");
 
         this.tablenotexistSqlstates = ";" + conf.getProperty(JDBC_TABLENOTEXIST_SQLSTATES, "42000;42S02") + ";";
-        this.tablecopySQL = conf.getProperty(JDBC_TABLECOPY_SQLTEMPLATE, "CREATE TABLE ${newtable}  LIKE ${oldtable}");
+        this.tablecopySQL = conf.getProperty(JDBC_TABLECOPY_SQLTEMPLATE, "CREATE TABLE ${newtable} LIKE ${oldtable}");
     }
 
     public void createPrimaryValue(T src) {
