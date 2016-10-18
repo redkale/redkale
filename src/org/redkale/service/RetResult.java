@@ -61,6 +61,22 @@ public class RetResult<T> {
         return new RetResult();
     }
 
+    public static <T> RetResult<T> create(T result) {
+        return new RetResult(result);
+    }
+
+    public static RetResult create(int retcode) {
+        return new RetResult(retcode);
+    }
+
+    public static RetResult create(int retcode, String retinfo) {
+        return new RetResult(retcode, retinfo);
+    }
+
+    public static <T> RetResult<T> create(int retcode, String retinfo, T result) {
+        return new RetResult(retcode, retinfo, result);
+    }
+
     /**
      * 判断结果是否成功返回， retcode = 0 视为成功， 否则视为错误码
      *
