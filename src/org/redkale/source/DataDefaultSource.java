@@ -255,33 +255,6 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
     }
 
     @Override
-    public final int[] directExecute(String... sqls) {
-        Connection conn = createWriteSQLConnection();
-        try {
-            return directExecute(conn, sqls);
-        } finally {
-            closeSQLConnection(conn);
-        }
-    }
-
-    private int[] directExecute(final Connection conn, String... sqls) {
-        if (sqls.length == 0) return new int[0];
-        try {
-            final Statement stmt = conn.createStatement();
-            final int[] rs = new int[sqls.length];
-            int i = -1;
-            for (String sql : sqls) {
-                rs[++i] = stmt.execute(sql) ? 1 : 0;
-
-            }
-            stmt.close();
-            return rs;
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Override
     public EntityInfo apply(Class t) {
         return loadEntityInfo(t);
     }
@@ -1545,6 +1518,32 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
             throw new RuntimeException(ex);
         } finally {
             closeSQLConnection(conn);
+        }
+    }
+
+    @Override
+    public final int[] directExecute(String... sqls) {
+        Connection conn = createWriteSQLConnection();
+        try {
+            return directExecute(conn, sqls);
+        } finally {
+            closeSQLConnection(conn);
+        }
+    }
+
+    private int[] directExecute(final Connection conn, String... sqls) {
+        if (sqls.length == 0) return new int[0];
+        try {
+            final Statement stmt = conn.createStatement();
+            final int[] rs = new int[sqls.length];
+            int i = -1;
+            for (String sql : sqls) {
+                rs[++i] = stmt.execute(sql) ? 1 : 0;
+            }
+            stmt.close();
+            return rs;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
         }
     }
 
