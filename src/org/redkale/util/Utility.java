@@ -24,7 +24,7 @@ public final class Utility {
 
     private static final int zoneRawOffset = TimeZone.getDefault().getRawOffset();
 
-    private static final String format = "%1$tY-%1$tm-%1$td %1$tH:%1$tM:%1$tS.%tL";
+    private static final String format = "%1$tY-%1$tm-%1$td %1$tH:%1$tM:%1$tS";
 
     private static final Charset UTF_8 = Charset.forName("UTF-8");
 
@@ -86,10 +86,6 @@ public final class Utility {
 
     public static String uuid() {
         return UUID.randomUUID().toString().replace("-", "");
-    }
-
-    public static String now() {
-        return String.format(format, System.currentTimeMillis());
     }
 
     public static String toString(String string, ByteBuffer buffer) {
@@ -155,6 +151,14 @@ public final class Utility {
             e.printStackTrace();
         }
         return back;
+    }
+
+    public static String now() {
+        return String.format(format, System.currentTimeMillis());
+    }
+
+    public static String formatTime(long time) {
+        return String.format(format, time);
     }
 
     /**
