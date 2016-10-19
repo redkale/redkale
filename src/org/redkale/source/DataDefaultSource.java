@@ -543,6 +543,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
             }
             if (cacheListener != null) cacheListener.deleteCache(info.getType(), keys);
         } catch (SQLException e) {
+            if (info.tableStrategy != null && info.tablenotexistSqlstates.contains(';' + e.getSQLState() + ';')) return;
             throw new RuntimeException(e);
         }
     }
@@ -580,6 +581,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
             Serializable[] ids = cache.delete(node);
             if (cacheListener != null) cacheListener.deleteCache(info.getType(), ids);
         } catch (SQLException e) {
+            if (info.tableStrategy != null && info.tablenotexistSqlstates.contains(';' + e.getSQLState() + ';')) return;
             throw new RuntimeException(e);
         }
     }
@@ -1060,9 +1062,9 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
 
     @Override
     public Number getNumberResult(final Class entityClass, final FilterFunc func, final Number defVal, final String column, final FilterNode node) {
+        final EntityInfo info = loadEntityInfo(entityClass);
         final Connection conn = createReadSQLConnection();
         try {
-            final EntityInfo info = loadEntityInfo(entityClass);
             final EntityCache cache = info.getCache();
             if (cache != null && (info.isVirtualEntity() || cache.isFullLoaded())) {
                 if (node == null || node.isCacheUseable(this)) {
@@ -1086,6 +1088,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
             prestmt.close();
             return rs;
         } catch (SQLException e) {
+            if (info.tableStrategy != null && info.tablenotexistSqlstates.contains(';' + e.getSQLState() + ';')) return defVal;
             throw new RuntimeException(e);
         } finally {
             if (conn != null) closeSQLConnection(conn);
@@ -1105,9 +1108,9 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
 
     @Override
     public <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMap(final Class<T> entityClass, final String keyColumn, final FilterFunc func, final String funcColumn, FilterNode node) {
+        final EntityInfo info = loadEntityInfo(entityClass);
         final Connection conn = createReadSQLConnection();
         try {
-            final EntityInfo info = loadEntityInfo(entityClass);
             final EntityCache cache = info.getCache();
             if (cache != null && (info.isVirtualEntity() || cache.isFullLoaded())) {
                 if (node == null || node.isCacheUseable(this)) {
@@ -1133,6 +1136,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
             prestmt.close();
             return rs;
         } catch (SQLException e) {
+            if (info.tableStrategy != null && info.tablenotexistSqlstates.contains(';' + e.getSQLState() + ';')) return new LinkedHashMap<>();
             throw new RuntimeException(e);
         } finally {
             if (conn != null) closeSQLConnection(conn);
@@ -1174,6 +1178,9 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
             set.close();
             ps.close();
             return rs;
+        } catch (SQLException sex) {
+            if (info.tableStrategy != null && info.tablenotexistSqlstates.contains(';' + sex.getSQLState() + ';')) return null;
+            throw new RuntimeException(sex);
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         } finally {
@@ -1221,6 +1228,9 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
             set.close();
             ps.close();
             return rs;
+        } catch (SQLException se) {
+            if (info.tableStrategy != null && info.tablenotexistSqlstates.contains(';' + se.getSQLState() + ';')) return null;
+            throw new RuntimeException(se);
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         } finally {
@@ -1314,12 +1324,12 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
 
     @Override
     public <T, V extends Serializable> List<V> queryColumnList(final String selectedColumn, final Class<T> clazz, final FilterBean bean) {
-        return (List<V>) queryColumnSheet(selectedColumn, clazz, null, bean).list(true);
+        return queryColumnList(selectedColumn, clazz, FilterNodeBean.createFilterNode(bean));
     }
 
     @Override
     public <T, V extends Serializable> List<V> queryColumnList(final String selectedColumn, final Class<T> clazz, final FilterNode node) {
-        return (List<V>) queryColumnSheet(selectedColumn, clazz, null, node).list(true);
+        return (List<V>) queryColumnSheet(false, selectedColumn, clazz, null, node).list(true);
     }
 
     /**
@@ -1341,7 +1351,11 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
 
     @Override
     public <T, V extends Serializable> Sheet<V> queryColumnSheet(final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterNode node) {
-        Sheet<T> sheet = querySheet(true, true, clazz, SelectColumn.createIncludes(selectedColumn), flipper, node);
+        return queryColumnSheet(true, selectedColumn, clazz, flipper, node);
+    }
+
+    private <T, V extends Serializable> Sheet<V> queryColumnSheet(final boolean needtotal, final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterNode node) {
+        Sheet<T> sheet = querySheet(true, needtotal, clazz, SelectColumn.createIncludes(selectedColumn), flipper, node);
         final Sheet<V> rs = new Sheet<>();
         if (sheet.isEmpty()) return rs;
         rs.setTotal(sheet.getTotal());
@@ -1524,6 +1538,9 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
             set.close();
             ps.close();
             return new Sheet<>(total, list);
+        } catch (SQLException se) {
+            if (info.tableStrategy != null && info.tablenotexistSqlstates.contains(';' + se.getSQLState() + ';')) return new Sheet<>();
+            throw new RuntimeException(se);
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         } finally {
