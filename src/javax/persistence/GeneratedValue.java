@@ -1,4 +1,4 @@
-/*******************************************************************************
+/** *****************************************************************************
  * Copyright (c) 2008 - 2013 Oracle Corporation. All rights reserved.
  *
  * This program and the accompanying materials are made available under the
@@ -12,7 +12,7 @@
  *     Linda DeMichiel - Java Persistence 2.1
  *     Linda DeMichiel - Java Persistence 2.0
  *
- ******************************************************************************/
+ ***************************************************************************** */
 package javax.persistence;
 
 import java.lang.annotation.Target;
@@ -23,13 +23,14 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Provides for the specification of generation strategies for the
- * values of primary keys. 
+ * values of primary keys.
  *
- * <p> The <code>GeneratedValue</code> annotation
+ * <p>
+ * The <code>GeneratedValue</code> annotation
  * may be applied to a primary key property or field of an entity or
  * mapped superclass in conjunction with the {@link Id} annotation.
  * The use of the <code>GeneratedValue</code> annotation is only
- * required to be supported for simple primary keys.  Use of the
+ * required to be supported for simple primary keys. Use of the
  * <code>GeneratedValue</code> annotation is not supported for derived
  * primary keys.
  *
@@ -58,22 +59,5 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 
 public @interface GeneratedValue {
-    /**
-     * (Optional) The primary key generation strategy
-     * that the persistence provider must use to
-     * generate the annotated entity primary key.
-     * @return GenerationType
-     */
-    @Deprecated
-    GenerationType strategy() default GenerationType.AUTO;
 
-    /**
-     * (Optional) The name of the primary key generator
-     * to use as specified in the SequenceGenerator
-     * or TableGenerator annotation.
-     * <p> Defaults to the id generator supplied by persistence provider.
-     * @return  String
-     */
-    @Deprecated
-    String generator() default "";
 }

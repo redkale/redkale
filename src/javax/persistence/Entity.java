@@ -40,4 +40,11 @@ public @interface Entity {
      * @return String
 	 */
 	String name() default "";
+    
+    /**
+     * (Optional) The comment of the entity.
+     *
+     * @return String
+     */
+    String comment() default "";
 }
