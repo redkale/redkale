@@ -8,13 +8,14 @@ package org.redkale.boot;
 import java.io.*;
 import java.lang.reflect.*;
 import java.util.*;
+import javax.persistence.Column;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.http.*;
 import org.redkale.util.*;
 
 /**
  * 继承 HttpBaseServlet 是为了获取 WebAction 信息
- * 
+ *
  * 详情见: https://redkale.org
  *
  * @author zhangjx
@@ -97,7 +98,12 @@ public class ApiDocs extends HttpBaseServlet {
                                 fieldmap.put("type", field.getType().isArray() ? (field.getType().getComponentType().getName() + "[]") : field.getGenericType().getTypeName());
 
                                 Comment comment = field.getAnnotation(Comment.class);
-                                if (comment != null) fieldmap.put("comment", comment.value());
+                                if (comment != null) {
+                                    fieldmap.put("comment", comment.value());
+                                } else {
+                                    Column col = field.getAnnotation(Column.class);
+                                    if (col != null) fieldmap.put("comment", col.comment());
+                                }
 
                                 if (servlet.getClass().getAnnotation(Rest.RestDynamic.class) != null) {
                                     if (field.getAnnotation(RestAddress.class) != null) continue;
