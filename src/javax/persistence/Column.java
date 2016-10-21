@@ -62,6 +62,13 @@ public @interface Column {
     String name() default "";
 
     /**
+     * (Optional) The comment of the column.
+     *
+     * @return String
+     */
+    String comment() default "";
+
+    /**
      * (Optional) Whether the column is a unique key. This is a
      * shortcut for the <code>UniqueConstraint</code> annotation at the table
      * level and is useful for when the unique key constraint
