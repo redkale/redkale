@@ -109,6 +109,10 @@ public class JDBCPoolSource {
         return source != null && source.getClass().getName().contains(".sqlserver.");
     }
 
+    final boolean isPostgresql () {
+        return source != null && source.getClass().getName().contains(".postgresql.");
+    }
+    
     private void watch() throws IOException {
         if (dataSource.conf == null || dataSource.name == null) return;
         final String file = dataSource.conf.getFile();

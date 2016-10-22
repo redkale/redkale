@@ -204,6 +204,9 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
                 case "oracle.jdbc.driver.OracleDriver":
                     source = "oracle.jdbc.pool.OracleConnectionPoolDataSource";
                     break;
+                case "org.postgresql.Driver":
+                    source = "org.postgresql.ds.PGConnectionPoolDataSource";
+                    break;
                 case "com.microsoft.sqlserver.jdbc.SQLServerDriver":
                     source = "com.microsoft.sqlserver.jdbc.SQLServerConnectionPoolDataSource";
                     break;
@@ -211,13 +214,21 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
         }
         final Class clazz = Class.forName(source);
         Object pdsource = clazz.newInstance();
-        Method seturlm;
-        try {
-            seturlm = clazz.getMethod("setUrl", String.class);
-        } catch (Exception e) {
-            seturlm = clazz.getMethod("setURL", String.class);
+        if (source.contains(".postgresql.")) {
+            Class driver = Class.forName("org.postgresql.Driver");
+            Properties properties = (Properties) driver.getMethod("parseURL", String.class, Properties.class).invoke(null, url, new Properties());
+            clazz.getMethod("setServerName", String.class).invoke(pdsource, properties.getProperty("PGHOST"));
+            clazz.getMethod("setDatabaseName", String.class).invoke(pdsource, properties.getProperty("PGDBNAME"));
+            clazz.getMethod("setPortNumber", int.class).invoke(pdsource, Integer.parseInt(properties.getProperty("PGPORT", "5432")));
+        } else {
+            Method seturlm;
+            try {
+                seturlm = clazz.getMethod("setUrl", String.class);
+            } catch (Exception e) {
+                seturlm = clazz.getMethod("setURL", String.class);
+            }
+            seturlm.invoke(pdsource, url);
         }
-        seturlm.invoke(pdsource, url);
         clazz.getMethod("setUser", String.class).invoke(pdsource, user);
         clazz.getMethod("setPassword", String.class).invoke(pdsource, password);
         return (ConnectionPoolDataSource) pdsource;

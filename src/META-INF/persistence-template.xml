@@ -10,8 +10,9 @@
             <!-- 
                 javax.persistence.jdbc.driver在JPA的值是JDBC驱动，Redkale有所不同，值应该是javax.sql.DataSource的子类。 
                 为了兼容用户习惯，Redkale内置常见JDBC驱动到javax.sql.DataSource的映射关系：
-                                       com.mysql.jdbc.Driver  ——————  com.mysql.jdbc.jdbc2.optional.MysqlConnectionPoolDataSource
                                      org.mariadb.jdbc.Driver  ——————  org.mariadb.jdbc.MySQLDataSource
+                                       org.postgresql.Driver  ——————  org.postgresql.ds.PGConnectionPoolDataSource
+                                       com.mysql.jdbc.Driver  ——————  com.mysql.jdbc.jdbc2.optional.MysqlConnectionPoolDataSource
                              oracle.jdbc.driver.OracleDriver  ——————  oracle.jdbc.pool.OracleConnectionPoolDataSource
                 com.microsoft.sqlserver.jdbc.SQLServerDriver  ——————  com.microsoft.sqlserver.jdbc.SQLServerConnectionPoolDataSource
                 因此 com.mysql.jdbc.Driver 会被自动转换成 com.mysql.jdbc.jdbc2.optional.MysqlConnectionPoolDataSource
