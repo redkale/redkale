@@ -6,6 +6,8 @@
 package org.redkale.service;
 
 import java.lang.annotation.*;
+import java.lang.reflect.*;
+import java.util.*;
 
 /**
  * 用于定义错误码的注解
@@ -15,6 +17,7 @@ import java.lang.annotation.*;
  *    // 30000001 - 99999999 预留给Dev开发系统自身使用
  *
  * 详情见: https://redkale.org
+ *
  * @author zhangjx
  */
 @Inherited
@@ -24,4 +27,26 @@ import java.lang.annotation.*;
 public @interface RetLabel {
 
     String value();
+
+    public static abstract class RetLoader {
+
+        public static Map<Integer, String> load(Class clazz) {
+            final Map<Integer, String> rets = new HashMap<>();
+            for (Field field : clazz.getFields()) {
+                if (!Modifier.isStatic(field.getModifiers())) continue;
+                if (field.getType() != int.class) continue;
+                RetLabel info = field.getAnnotation(RetLabel.class);
+                if (info == null) continue;
+                int value;
+                try {
+                    value = field.getInt(null);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    continue;
+                }
+                rets.put(value, info.value());
+            }
+            return rets;
+        }
+    }
 }
