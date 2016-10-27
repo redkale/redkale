@@ -512,7 +512,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
             if (!info.isVirtualEntity()) {
                 final Statement stmt = conn.createStatement();
                 for (Serializable key : keys) {
-                    String sql = "DELETE FROM " + info.getTable(keys) + " WHERE " + info.getPrimarySQLColumn() + " = " + FilterNode.formatToString(key);
+                    String sql = "DELETE FROM " + info.getTable(key) + " WHERE " + info.getPrimarySQLColumn() + " = " + FilterNode.formatToString(key);
                     if (debug.get()) logger.finest(info.getType().getSimpleName() + " delete sql=" + sql);
                     stmt.addBatch(sql);
                 }
