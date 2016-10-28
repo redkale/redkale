@@ -5,7 +5,7 @@
  */
 package org.redkale.service;
 
-import org.redkale.convert.json.JsonFactory;
+import org.redkale.convert.json.*;
 
 /**
  * 通用的结果对象，在常见的HTTP+JSON接口中返回的结果需要含结果码，错误信息，和实体对象。
@@ -142,6 +142,6 @@ public class RetResult<T> {
 
     @Override
     public String toString() {
-        return JsonFactory.root().getConvert().convertTo(this);
+        return JsonConvert.root().convertTo(this);
     }
 }
