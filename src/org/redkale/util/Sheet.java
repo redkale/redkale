@@ -67,7 +67,7 @@ public class Sheet<T> implements java.io.Serializable, Iterable<T> {
 
     @Override
     public String toString() {
-        return "Sheet[total=" + this.total + ", rows=" + this.rows + "]";
+        return "{\"total\":" + this.total + ", \"rows\":" + this.rows + "}";
     }
 
     public long getTotal() {
@@ -104,6 +104,12 @@ public class Sheet<T> implements java.io.Serializable, Iterable<T> {
     public void forEach(final Consumer<? super T> consumer) {
         if (consumer != null && this.rows != null && !this.rows.isEmpty()) {
             this.rows.forEach(consumer);
+        }
+    }
+
+    public void forEachParallel(final Consumer<? super T> consumer) {
+        if (consumer != null && this.rows != null && !this.rows.isEmpty()) {
+            this.rows.parallelStream().forEach(consumer);
         }
     }
 
