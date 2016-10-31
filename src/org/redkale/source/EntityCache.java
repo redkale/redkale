@@ -387,15 +387,19 @@ public final class EntityCache<T> {
         if (value == null) return;
         T rs = this.map.get(this.primary.get(value));
         if (rs == null) return;
-        this.chgReproduce.apply(rs, value);
+        synchronized (rs) {
+            this.chgReproduce.apply(rs, value);
+        }
     }
 
     public T update(final T value, Collection<Attribute<T, Serializable>> attrs) {
         if (value == null) return value;
         T rs = this.map.get(this.primary.get(value));
         if (rs == null) return rs;
-        for (Attribute attr : attrs) {
-            attr.set(rs, attr.get(value));
+        synchronized (rs) {
+            for (Attribute attr : attrs) {
+                attr.set(rs, attr.get(value));
+            }
         }
         return rs;
     }
@@ -404,8 +408,10 @@ public final class EntityCache<T> {
         if (value == null || node == null) return (T[]) Array.newInstance(type, 0);
         T[] rms = this.list.stream().filter(node.createPredicate(this)).toArray(len -> (T[]) Array.newInstance(type, len));
         for (T rs : rms) {
-            for (Attribute attr : attrs) {
-                attr.set(rs, attr.get(value));
+            synchronized (rs) {
+                for (Attribute attr : attrs) {
+                    attr.set(rs, attr.get(value));
+                }
             }
         }
         return rms;
@@ -427,46 +433,109 @@ public final class EntityCache<T> {
         return rms;
     }
 
+    public <V> T updateColumn(final Serializable id, List<Attribute<T, Serializable>> attrs, final List<ColumnValue> values) {
+        if (id == null || attrs == null || attrs.isEmpty()) return null;
+        T rs = this.map.get(id);
+        if (rs == null) return rs;
+        synchronized (rs) {
+            for (int i = 0; i < attrs.size(); i++) {
+                ColumnValue cv = values.get(i);
+                updateColumn(attrs.get(i), rs, cv.getExpress(), cv.getValue());
+            }
+        }
+        return rs;
+    }
+
+    public <V> T[] updateColumn(final FilterNode node, List<Attribute<T, Serializable>> attrs, final List<ColumnValue> values) {
+        if (attrs == null || attrs.isEmpty() || node == null) return (T[]) Array.newInstance(type, 0);
+        T[] rms = this.list.stream().filter(node.createPredicate(this)).toArray(len -> (T[]) Array.newInstance(type, len));
+        for (T rs : rms) {
+            synchronized (rs) {
+                for (int i = 0; i < attrs.size(); i++) {
+                    ColumnValue cv = values.get(i);
+                    updateColumn(attrs.get(i), rs, cv.getExpress(), cv.getValue());
+                }
+            }
+        }
+        return rms;
+    }
+
     public <V> T updateColumnOr(final Serializable id, Attribute<T, V> attr, final long orvalue) {
         if (id == null) return null;
         T rs = this.map.get(id);
         if (rs == null) return rs;
-        Number numb = (Number) attr.get(rs);
-        return updateColumnIncrAndOr(attr, rs, (numb == null) ? orvalue : (numb.longValue() | orvalue));
+        synchronized (rs) {
+            return updateColumn(attr, rs, ColumnExpress.OR, orvalue);
+        }
     }
 
     public <V> T updateColumnAnd(final Serializable id, Attribute<T, V> attr, final long andvalue) {
         if (id == null) return null;
         T rs = this.map.get(id);
         if (rs == null) return rs;
-        Number numb = (Number) attr.get(rs);
-        return updateColumnIncrAndOr(attr, rs, (numb == null) ? 0 : (numb.longValue() & andvalue));
+        synchronized (rs) {
+            return updateColumn(attr, rs, ColumnExpress.AND, andvalue);
+        }
     }
 
     public <V> T updateColumnIncrement(final Serializable id, Attribute<T, V> attr, final long incvalue) {
         if (id == null) return null;
         T rs = this.map.get(id);
         if (rs == null) return rs;
-        Number numb = (Number) attr.get(rs);
-        return updateColumnIncrAndOr(attr, rs, (numb == null) ? incvalue : (numb.longValue() + incvalue));
+        synchronized (rs) {
+            return updateColumn(attr, rs, ColumnExpress.INCR, incvalue);
+        }
     }
 
-    private <V> T updateColumnIncrAndOr(Attribute<T, V> attr, final T rs, Number numb) {
+    private <V> T updateColumn(Attribute<T, V> attr, final T rs, final ColumnExpress express, Serializable val) {
         final Class ft = attr.type();
-        if (ft == int.class || ft == Integer.class) {
-            numb = numb.intValue();
-        } else if (ft == long.class || ft == Long.class) {
-            numb = numb.longValue();
-        } else if (ft == short.class || ft == Short.class) {
-            numb = numb.shortValue();
-        } else if (ft == float.class || ft == Float.class) {
-            numb = numb.floatValue();
-        } else if (ft == double.class || ft == Double.class) {
-            numb = numb.doubleValue();
-        } else if (ft == byte.class || ft == Byte.class) {
-            numb = numb.byteValue();
+        Number numb = null;
+        Serializable newval = null;
+        switch (express) {
+            case INCR:
+                numb = (Number) attr.get(rs);
+                if (numb == null) {
+                    numb = (Number) val;
+                } else {
+                    numb = numb.longValue() + ((Number) val).longValue();
+                }
+                break;
+            case AND:
+                numb = (Number) attr.get(rs);
+                if (numb == null) {
+                    numb = 0;
+                } else {
+                    numb = numb.longValue() & ((Number) val).longValue();
+                }
+                break;
+            case OR:
+                numb = (Number) attr.get(rs);
+                if (numb == null) {
+                    numb = 0;
+                } else {
+                    numb = numb.longValue() | ((Number) val).longValue();
+                }
+                break;
+            case MOV:
+                newval = val;
+                break;
         }
-        attr.set(rs, (V) numb);
+        if (numb != null) {
+            if (ft == int.class || ft == Integer.class) {
+                newval = numb.intValue();
+            } else if (ft == long.class || ft == Long.class) {
+                newval = numb.longValue();
+            } else if (ft == short.class || ft == Short.class) {
+                newval = numb.shortValue();
+            } else if (ft == float.class || ft == Float.class) {
+                newval = numb.floatValue();
+            } else if (ft == double.class || ft == Double.class) {
+                newval = numb.doubleValue();
+            } else if (ft == byte.class || ft == Byte.class) {
+                newval = numb.byteValue();
+            }
+        }
+        attr.set(rs, (V) newval);
         return rs;
     }
 

@@ -22,7 +22,7 @@ import org.redkale.util.Attribute;
  *
  * @author zhangjx
  */
-public class FilterNode {
+public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则DataSource很多重载接口会出现冲突
 
     protected String column;
 
