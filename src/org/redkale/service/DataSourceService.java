@@ -64,13 +64,13 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
-    public <T> void updateColumns(final Class<T> clazz, final Serializable id, final ColumnValue... values) {
-        source.updateColumns(clazz, id, values);
+    public <T> void updateColumn(final Class<T> clazz, final Serializable id, final ColumnValue... values) {
+        source.updateColumn(clazz, id, values);
     }
 
     @Override
-    public <T> void updateColumns(final Class<T> clazz, final FilterNode node, final ColumnValue... values) {
-        source.updateColumns(clazz, node, values);
+    public <T> void updateColumn(final Class<T> clazz, final FilterNode node, final ColumnValue... values) {
+        source.updateColumn(clazz, node, values);
     }
 
     @Override

@@ -41,23 +41,23 @@ public class ColumnValue {
         return new ColumnValue(column, value);
     }
 
-    public static ColumnValue createMov(String column, Serializable value) {
+    public static ColumnValue mov(String column, Serializable value) {
         return new ColumnValue(column, MOV, value);
     }
 
-    public static ColumnValue createInc(String column, Serializable value) {
+    public static ColumnValue inc(String column, Serializable value) {
         return new ColumnValue(column, INC, value);
     }
 
-    public static ColumnValue createMul(String column, Serializable value) {
+    public static ColumnValue mul(String column, Serializable value) {
         return new ColumnValue(column, MUL, value);
     }
 
-    public static ColumnValue createAnd(String column, Serializable value) {
+    public static ColumnValue and(String column, Serializable value) {
         return new ColumnValue(column, AND, value);
     }
 
-    public static ColumnValue createOrr(String column, Serializable value) {
+    public static ColumnValue orr(String column, Serializable value) {
         return new ColumnValue(column, ORR, value);
     }
 

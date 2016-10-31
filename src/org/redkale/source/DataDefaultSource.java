@@ -740,7 +740,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
      * @param values 字段值
      */
     @Override
-    public <T> void updateColumns(final Class<T> clazz, final Serializable id, final ColumnValue... values) {
+    public <T> void updateColumn(final Class<T> clazz, final Serializable id, final ColumnValue... values) {
         final EntityInfo<T> info = loadEntityInfo(clazz);
         if (info.isVirtualEntity()) {
             updateColumn(null, info, id, values);
@@ -798,7 +798,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
      * @param values 字段值
      */
     @Override
-    public <T> void updateColumns(final Class<T> clazz, final FilterNode node, final ColumnValue... values) {
+    public <T> void updateColumn(final Class<T> clazz, final FilterNode node, final ColumnValue... values) {
         final EntityInfo<T> info = loadEntityInfo(clazz);
         if (info.isVirtualEntity()) {
             updateColumn(null, info, node, values);
