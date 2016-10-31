@@ -78,6 +78,20 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
         this.value = val;
     }
 
+    public long findLongValue(final String col, long defValue) {
+        Serializable val = findValue(col);
+        return val == null ? defValue : (Long) val;
+    }
+
+    public int findIntValue(final String col, int defValue) {
+        Serializable val = findValue(col);
+        return val == null ? defValue : (Integer) val;
+    }
+
+    public String findStringValue(final String col) {
+        return (String) findValue(col);
+    }
+
     public Serializable findValue(final String col) {
         if (this.column.equals(col)) return this.value;
         if (this.nodes == null) return null;
