@@ -14,6 +14,7 @@ import org.redkale.util.Attribute;
 
 /**
  * 注意： <br>
+ * column的值以#开头的视为虚拟字段，不在过滤范围内 <br>
  * 在调用 createSQLExpress 之前必须先调用 createSQLJoin <br>
  * 在调用 createPredicate 之前必须先调用 isCacheUseable
  *
@@ -227,7 +228,8 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
      * @return JOIN的SQL语句
      */
     protected <T> CharSequence createSQLExpress(final EntityInfo<T> info, final Map<Class, String> joinTabalis) {
-        CharSequence sb0 = this.column == null || info == null ? null : createElementSQLExpress(info, joinTabalis == null ? null : joinTabalis.get(info.getType()));
+        CharSequence sb0 = this.column == null || this.column.isEmpty() || this.column.charAt(0) == '#' || info == null
+            ? null : createElementSQLExpress(info, joinTabalis == null ? null : joinTabalis.get(info.getType()));
         if (this.nodes == null) return sb0;
         final StringBuilder rs = new StringBuilder();
         rs.append('(');
@@ -323,7 +325,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
     }
 
     private <T> CharSequence createElementSQLExpress(final EntityInfo<T> info, String talis, Object val0) {
-        if (column == null) return null;
+        if (column == null || this.column.isEmpty() || this.column.charAt(0) == '#') return null;
         if (talis == null) talis = "a";
         if (express == ISNULL || express == ISNOTNULL) {
             return new StringBuilder().append(info.getSQLColumn(talis, column)).append(' ').append(express.value());
@@ -402,7 +404,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
     }
 
     protected final <T> Predicate<T> createElementPredicate(final EntityCache<T> cache, final boolean join) {
-        if (column == null) return null;
+        if (this.column == null || this.column.isEmpty() || this.column.charAt(0) == '#') return null;
         return createElementPredicate(cache, join, cache.getAttribute(column));
     }
 
