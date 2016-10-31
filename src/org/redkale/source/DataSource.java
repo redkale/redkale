@@ -66,15 +66,9 @@ public interface DataSource {
 
     public <T> void updateColumn(final Class<T> clazz, final String column, final Serializable value, final FilterNode node);
 
-    public <T> void updateColumn(final Class<T> clazz, final Serializable id, final ColumnValue... values);
+    public <T> void updateColumns(final Class<T> clazz, final Serializable id, final ColumnValue... values);
 
-    public <T> void updateColumn(final Class<T> clazz, final FilterNode node, final ColumnValue... values);
-
-    public <T> void updateColumnIncrement(final Class<T> clazz, final Serializable id, final String column, long incvalue);
-
-    public <T> void updateColumnAnd(final Class<T> clazz, final Serializable id, final String column, long incvalue);
-
-    public <T> void updateColumnOr(final Class<T> clazz, final Serializable id, final String column, long incvalue);
+    public <T> void updateColumns(final Class<T> clazz, final FilterNode node, final ColumnValue... values);
 
     public <T> void updateColumns(final T bean, final String... columns);
 

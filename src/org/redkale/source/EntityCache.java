@@ -465,7 +465,7 @@ public final class EntityCache<T> {
         T rs = this.map.get(id);
         if (rs == null) return rs;
         synchronized (rs) {
-            return updateColumn(attr, rs, ColumnExpress.OR, orvalue);
+            return updateColumn(attr, rs, ColumnExpress.ORR, orvalue);
         }
     }
 
@@ -483,7 +483,7 @@ public final class EntityCache<T> {
         T rs = this.map.get(id);
         if (rs == null) return rs;
         synchronized (rs) {
-            return updateColumn(attr, rs, ColumnExpress.INCR, incvalue);
+            return updateColumn(attr, rs, ColumnExpress.INC, incvalue);
         }
     }
 
@@ -492,12 +492,20 @@ public final class EntityCache<T> {
         Number numb = null;
         Serializable newval = null;
         switch (express) {
-            case INCR:
+            case INC:
                 numb = (Number) attr.get(rs);
                 if (numb == null) {
                     numb = (Number) val;
                 } else {
                     numb = numb.longValue() + ((Number) val).longValue();
+                }
+                break;
+            case MUL:
+                numb = (Number) attr.get(rs);
+                if (numb == null) {
+                    numb = 0;
+                } else {
+                    numb = numb.longValue() * ((Number) val).floatValue();
                 }
                 break;
             case AND:
@@ -508,7 +516,7 @@ public final class EntityCache<T> {
                     numb = numb.longValue() & ((Number) val).longValue();
                 }
                 break;
-            case OR:
+            case ORR:
                 numb = (Number) attr.get(rs);
                 if (numb == null) {
                     numb = 0;

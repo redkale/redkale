@@ -740,7 +740,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
      * @param values 字段值
      */
     @Override
-    public <T> void updateColumn(final Class<T> clazz, final Serializable id, final ColumnValue... values) {
+    public <T> void updateColumns(final Class<T> clazz, final Serializable id, final ColumnValue... values) {
         final EntityInfo<T> info = loadEntityInfo(clazz);
         if (info.isVirtualEntity()) {
             updateColumn(null, info, id, values);
@@ -768,7 +768,8 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
                 cols.add(col);
                 if (!virtual) {
                     if (setsql.length() > 0) setsql.append(", ");
-                    setsql.append(info.getSQLColumn(null, col.getColumn())).append(" = ").append(info.formatToString(col.getValue()));
+                    String c = info.getSQLColumn(null, col.getColumn());
+                    setsql.append(c).append(" = ").append(info.formatSQLValue(c, col));
                 }
             }
             if (!virtual) {
@@ -797,7 +798,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
      * @param values 字段值
      */
     @Override
-    public <T> void updateColumn(final Class<T> clazz, final FilterNode node, final ColumnValue... values) {
+    public <T> void updateColumns(final Class<T> clazz, final FilterNode node, final ColumnValue... values) {
         final EntityInfo<T> info = loadEntityInfo(clazz);
         if (info.isVirtualEntity()) {
             updateColumn(null, info, node, values);
@@ -825,7 +826,8 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
                 cols.add(col);
                 if (!virtual) {
                     if (setsql.length() > 0) setsql.append(", ");
-                    setsql.append(info.getSQLColumn("a", col.getColumn())).append(" = ").append(info.formatToString(col.getValue()));
+                    String c = info.getSQLColumn("a", col.getColumn());
+                    setsql.append(c).append(" = ").append(info.formatSQLValue(c, col));
                 }
             }
             if (!virtual) {
@@ -846,153 +848,6 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
             if (cacheListener != null) cacheListener.updateCache(info.getType(), rs);
         } catch (SQLException e) {
             throw new RuntimeException(e);
-        }
-    }
-
-    /**
-     * 根据主键值给对象的column对应的值+incvalue， 必须是Entity Class
-     * 等价SQL: UPDATE {clazz} SET {column} = {column} + {incvalue} WHERE {primary} = {id}
-     *
-     * @param <T>      Entity类的泛型
-     * @param clazz    Entity类
-     * @param id       主键值
-     * @param column   字段名
-     * @param incvalue 字段加值
-     */
-    @Override
-    public <T> void updateColumnIncrement(Class<T> clazz, Serializable id, String column, long incvalue) {
-        final EntityInfo<T> info = loadEntityInfo(clazz);
-        if (info.isVirtualEntity()) {
-            updateColumnIncrement(null, info, id, column, incvalue);
-            return;
-        }
-        Connection conn = createWriteSQLConnection();
-        try {
-            updateColumnIncrement(conn, info, id, column, incvalue);
-        } finally {
-            closeSQLConnection(conn);
-        }
-    }
-
-    private <T> void updateColumnIncrement(Connection conn, final EntityInfo<T> info, Serializable id, String column, long incvalue) {
-        try {
-            if (!info.isVirtualEntity()) {
-                String col = info.getSQLColumn(null, column);
-                String sql = "UPDATE " + info.getTable(id) + " SET " + col + " = " + col + " + (" + incvalue
-                    + ") WHERE " + info.getPrimarySQLColumn() + " = " + FilterNode.formatToString(id);
-                if (debug.get()) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
-                final Statement stmt = conn.createStatement();
-                stmt.execute(sql);
-                stmt.close();
-            }
-            //---------------------------------------------------
-            final EntityCache<T> cache = info.getCache();
-            if (cache == null) return;
-            Attribute<T, Serializable> attr = info.getAttribute(column);
-            T value = cache.updateColumnIncrement(id, attr, incvalue);
-            if (value != null && cacheListener != null) cacheListener.updateCache(info.getType(), value);
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        } finally {
-            if (conn != null) closeSQLConnection(conn);
-        }
-    }
-
-    /**
-     * 根据主键值给对象的column对应的值 &#38; andvalue， 必须是Entity Class
-     * 等价SQL: UPDATE {clazz} SET {column} = {column} &#38; {incvalue} WHERE {primary} = {id}
-     *
-     * @param <T>      Entity类的泛型
-     * @param clazz    Entity类
-     * @param id       主键值
-     * @param column   字段名
-     * @param andvalue 字段与值
-     */
-    @Override
-    public <T> void updateColumnAnd(Class<T> clazz, Serializable id, String column, long andvalue) {
-        final EntityInfo<T> info = loadEntityInfo(clazz);
-        if (info.isVirtualEntity()) {
-            updateColumnAnd(null, info, id, column, andvalue);
-            return;
-        }
-        Connection conn = createWriteSQLConnection();
-        try {
-            updateColumnAnd(conn, info, id, column, andvalue);
-        } finally {
-            closeSQLConnection(conn);
-        }
-    }
-
-    private <T> void updateColumnAnd(Connection conn, final EntityInfo<T> info, Serializable id, String column, long andvalue) {
-        try {
-            if (!info.isVirtualEntity()) {
-                String col = info.getSQLColumn(null, column);
-                String sql = "UPDATE " + info.getTable(id) + " SET " + col + " = " + col + " & (" + andvalue
-                    + ") WHERE " + info.getPrimarySQLColumn() + " = " + FilterNode.formatToString(id);
-                if (debug.get()) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
-                final Statement stmt = conn.createStatement();
-                stmt.execute(sql);
-                stmt.close();
-            }
-            //---------------------------------------------------
-            final EntityCache<T> cache = info.getCache();
-            if (cache == null) return;
-            Attribute<T, Serializable> attr = info.getAttribute(column);
-            T value = cache.updateColumnAnd(id, attr, andvalue);
-            if (value != null && cacheListener != null) cacheListener.updateCache(info.getType(), value);
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        } finally {
-            if (conn != null) closeSQLConnection(conn);
-        }
-    }
-
-    /**
-     * 根据主键值给对象的column对应的值 | andvalue， 必须是Entity Class
-     * 等价SQL: UPDATE {clazz} SET {column} = {column} | {incvalue} WHERE {primary} = {id}
-     *
-     * @param <T>     Entity类的泛型
-     * @param clazz   Entity类
-     * @param id      主键值
-     * @param column  字段名
-     * @param orvalue 字段或值
-     */
-    @Override
-    public <T> void updateColumnOr(Class<T> clazz, Serializable id, String column, long orvalue) {
-        final EntityInfo<T> info = loadEntityInfo(clazz);
-        if (info.isVirtualEntity()) {
-            updateColumnOr(null, info, id, column, orvalue);
-            return;
-        }
-        Connection conn = createWriteSQLConnection();
-        try {
-            updateColumnOr(conn, info, id, column, orvalue);
-        } finally {
-            closeSQLConnection(conn);
-        }
-    }
-
-    private <T> void updateColumnOr(Connection conn, final EntityInfo<T> info, Serializable id, String column, long orvalue) {
-        try {
-            if (!info.isVirtualEntity()) {
-                String col = info.getSQLColumn(null, column);
-                String sql = "UPDATE " + info.getTable(id) + " SET " + col + " = " + col + " | (" + orvalue
-                    + ") WHERE " + info.getPrimarySQLColumn() + " = " + FilterNode.formatToString(id);
-                if (debug.get()) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
-                final Statement stmt = conn.createStatement();
-                stmt.execute(sql);
-                stmt.close();
-            }
-            //---------------------------------------------------
-            final EntityCache<T> cache = info.getCache();
-            if (cache == null) return;
-            Attribute<T, Serializable> attr = info.getAttribute(column);
-            T value = cache.updateColumnOr(id, attr, orvalue);
-            if (value != null && cacheListener != null) cacheListener.updateCache(info.getType(), value);
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        } finally {
-            if (conn != null) closeSQLConnection(conn);
         }
     }
 

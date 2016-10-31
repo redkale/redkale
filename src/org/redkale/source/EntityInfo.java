@@ -424,6 +424,23 @@ public final class EntityInfo<T> {
         return getSQLColumn(tabalis, this.primary.field());
     }
 
+    protected CharSequence formatSQLValue(String col, final ColumnValue cv) {
+        if (cv == null) return null;
+        switch (cv.getExpress()) {
+            case INC:
+                return new StringBuilder().append(col).append(" + ").append(cv.getValue());
+            case MUL:
+                return new StringBuilder().append(col).append(" * ").append(cv.getValue());
+            case AND:
+                return new StringBuilder().append(col).append(" & ").append(cv.getValue());
+            case ORR:
+                return new StringBuilder().append(col).append(" | ").append(cv.getValue());
+            case MOV:
+                return formatToString(cv.getValue());
+        }
+        return formatToString(cv.getValue());
+    }
+
     protected Map<String, Attribute<T, Serializable>> getAttributes() {
         return attributeMap;
     }

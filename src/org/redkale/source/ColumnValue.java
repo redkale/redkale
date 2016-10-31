@@ -6,6 +6,7 @@
 package org.redkale.source;
 
 import java.io.Serializable;
+import static org.redkale.source.ColumnExpress.*;
 
 /**
  * ColumnValue主要用于多个字段更新的表达式。
@@ -34,6 +35,30 @@ public class ColumnValue {
         this.column = column;
         this.express = express == null ? ColumnExpress.MOV : express;
         this.value = value;
+    }
+
+    public static ColumnValue create(String column, Serializable value) {
+        return new ColumnValue(column, value);
+    }
+
+    public static ColumnValue createMov(String column, Serializable value) {
+        return new ColumnValue(column, MOV, value);
+    }
+
+    public static ColumnValue createInc(String column, Serializable value) {
+        return new ColumnValue(column, INC, value);
+    }
+
+    public static ColumnValue createMul(String column, Serializable value) {
+        return new ColumnValue(column, MUL, value);
+    }
+
+    public static ColumnValue createAnd(String column, Serializable value) {
+        return new ColumnValue(column, AND, value);
+    }
+
+    public static ColumnValue createOrr(String column, Serializable value) {
+        return new ColumnValue(column, ORR, value);
     }
 
     public String getColumn() {
