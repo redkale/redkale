@@ -5,10 +5,10 @@
  */
 package org.redkale.net.http;
 
+import java.io.*;
 import org.redkale.net.Response;
 import org.redkale.net.Request;
 import org.redkale.util.AnyValue;
-import java.io.IOException;
 import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.*;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
@@ -201,6 +201,14 @@ public abstract class HttpBaseServlet extends HttpServlet {
     }
 
     public abstract boolean authenticate(int module, int actionid, HttpRequest request, HttpResponse response) throws IOException;
+
+    protected void setHeader(HttpRequest request, String name, Serializable value) {
+        request.header.setValue(name, String.valueOf(value));
+    }
+
+    protected void addHeader(HttpRequest request, String name, Serializable value) {
+        request.header.addValue(name, String.valueOf(value));
+    }
 
     protected String _prefix(HttpServlet servlet) {
         return servlet._prefix;
