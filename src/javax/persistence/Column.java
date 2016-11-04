@@ -104,17 +104,6 @@ public @interface Column {
     boolean updatable() default true;
 
     /**
-     * (Optional) The SQL fragment that is used when
-     * generating the DDL for the column.
-     * <p>
-     * Defaults to the generated SQL to create a
-     * column of the inferred type.
-     *
-     * @return String
-     */
-    String columnDefinition() default "";
-
-    /**
      * (Optional) The name of the table that contains the column.
      * If absent the column is assumed to be in the primary table.
      *

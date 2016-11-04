@@ -1,4 +1,4 @@
-/*******************************************************************************
+/** *****************************************************************************
  * Copyright (c) 2008 - 2013 Oracle Corporation. All rights reserved.
  *
  * This program and the accompanying materials are made available under the
@@ -12,7 +12,7 @@
  *     Linda DeMichiel - Java Persistence 2.1
  *     Linda DeMichiel - Java Persistence 2.0
  *
- ******************************************************************************/ 
+ ***************************************************************************** */
 package javax.persistence;
 
 import java.lang.annotation.Target;
@@ -22,9 +22,10 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Specifies the primary table for the annotated entity. Additional
- * tables may be specified using  SecondaryTable or  SecondaryTables annotation.
+ * tables may be specified using SecondaryTable or SecondaryTables annotation.
  *
- * <p> If no <code>Table</code> annotation is specified for an entity 
+ * <p>
+ * If no <code>Table</code> annotation is specified for an entity
  * class, the default values apply.
  *
  * <pre>
@@ -37,27 +38,25 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * @since Java Persistence 1.0
  */
-@Target(TYPE) 
+@Target(TYPE)
 @Retention(RUNTIME)
 public @interface Table {
 
     /**
      * (Optional) The name of the table.
-     * <p> Defaults to the entity name.
+     * <p>
+     * Defaults to the entity name.
+     *
      * @return String
      */
     String name() default "";
 
     /** (Optional) The catalog of the table.
-     * <p> Defaults to the default catalog.
+     * <p>
+     * Defaults to the default catalog.
+     *
      * @return String
      */
     String catalog() default "";
-
-    /** (Optional) The schema of the table.
-     * <p> Defaults to the default schema for user.
-     * @return String
-     */
-    String schema() default "";
 
 }
