@@ -463,51 +463,53 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
      *
      * @param <T>    Entity类泛型
      * @param values Entity对象
+     *
+     * @return 删除的数据条数
      */
     @Override
-    public <T> void delete(T... values) {
-        if (values.length == 0) return;
+    public <T> int delete(T... values) {
+        if (values.length == 0) return 0;
         final EntityInfo<T> info = loadEntityInfo((Class<T>) values[0].getClass());
         if (info.isVirtualEntity()) { //虚拟表只更新缓存Cache
-            delete(null, info, values);
-            return;
+            return delete(null, info, values);
         }
         Connection conn = createWriteSQLConnection();
         try {
-            delete(conn, info, values);
+            return delete(conn, info, values);
         } finally {
             closeSQLConnection(conn);
         }
     }
 
-    private <T> void delete(final Connection conn, final EntityInfo<T> info, T... values) {
-        if (values.length == 0) return;
+    private <T> int delete(final Connection conn, final EntityInfo<T> info, T... values) {
+        if (values.length == 0) return 0;
         final Attribute primary = info.getPrimary();
         Serializable[] ids = new Serializable[values.length];
         int i = 0;
         for (final T value : values) {
             ids[i++] = (Serializable) primary.get(value);
         }
-        delete(conn, info, ids);
+        return delete(conn, info, ids);
     }
 
     @Override
-    public <T> void delete(Class<T> clazz, Serializable... ids) {
+    public <T> int delete(Class<T> clazz, Serializable... ids) {
         final EntityInfo<T> info = loadEntityInfo(clazz);
         if (info.isVirtualEntity()) { //虚拟表只更新缓存Cache
-            delete(null, info, ids);
-            return;
+            return delete(null, info, ids);
         }
         Connection conn = createWriteSQLConnection();
         try {
-            delete(conn, info, ids);
+            return delete(conn, info, ids);
         } finally {
             closeSQLConnection(conn);
         }
     }
 
-    private <T> void delete(final Connection conn, final EntityInfo<T> info, Serializable... keys) {
-        if (keys.length == 0) return;
+    private <T> int delete(final Connection conn, final EntityInfo<T> info, Serializable... keys) {
+        if (keys.length == 0) return -1;
+        int c = -1;
+        int c2 = 0;
         try {
             if (!info.isVirtualEntity()) {
                 final Statement stmt = conn.createStatement();
@@ -516,38 +518,43 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
                     if (debug.get()) logger.finest(info.getType().getSimpleName() + " delete sql=" + sql);
                     stmt.addBatch(sql);
                 }
-                stmt.executeBatch();
+                int[] pc = stmt.executeBatch();
+                c = 0;
+                for (int p : pc) {
+                    c += p;
+                }
                 stmt.close();
             }
             //------------------------------------
             final EntityCache<T> cache = info.getCache();
-            if (cache == null) return;
+            if (cache == null) return c;
             for (Serializable key : keys) {
-                cache.delete(key);
+                c2 += cache.delete(key);
             }
             if (cacheListener != null) cacheListener.deleteCache(info.getType(), keys);
+            return c >= 0 ? c : c2;
         } catch (SQLException e) {
-            if (info.tableStrategy != null && info.tablenotexistSqlstates.contains(';' + e.getSQLState() + ';')) return;
+            if (info.tableStrategy != null && info.tablenotexistSqlstates.contains(';' + e.getSQLState() + ';')) return c >= 0 ? c : c2;
             throw new RuntimeException(e);
         }
     }
 
     @Override
-    public <T> void delete(Class<T> clazz, FilterNode node) {
+    public <T> int delete(Class<T> clazz, FilterNode node) {
         final EntityInfo<T> info = loadEntityInfo(clazz);
         if (info.isVirtualEntity()) {
-            delete(null, info, node);
-            return;
+            return delete(null, info, node);
         }
         Connection conn = createWriteSQLConnection();
         try {
-            delete(conn, info, node);
+            return delete(conn, info, node);
         } finally {
             closeSQLConnection(conn);
         }
     }
 
-    private <T> void delete(final Connection conn, final EntityInfo<T> info, final FilterNode node) {
+    private <T> int delete(final Connection conn, final EntityInfo<T> info, final FilterNode node) {
+        int c = -1;
         try {
             if (!info.isVirtualEntity()) {
                 Map<Class, String> joinTabalis = node.getJoinTabalis();
@@ -556,16 +563,17 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
                 String sql = "DELETE " + (this.readPool.isMysql() ? "a" : "") + " FROM " + info.getTable(node) + " a" + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
                 if (debug.get()) logger.finest(info.getType().getSimpleName() + " delete sql=" + sql);
                 final Statement stmt = conn.createStatement();
-                stmt.execute(sql);
+                c = stmt.executeUpdate(sql);
                 stmt.close();
             }
             //------------------------------------
             final EntityCache<T> cache = info.getCache();
-            if (cache == null) return;
+            if (cache == null) return c;
             Serializable[] ids = cache.delete(node);
             if (cacheListener != null) cacheListener.deleteCache(info.getType(), ids);
+            return c >= 0 ? c : (ids == null ? 0 : ids.length);
         } catch (SQLException e) {
-            if (info.tableStrategy != null && info.tablenotexistSqlstates.contains(';' + e.getSQLState() + ';')) return;
+            if (info.tableStrategy != null && info.tablenotexistSqlstates.contains(';' + e.getSQLState() + ';')) return c;
             throw new RuntimeException(e);
         }
     }
@@ -586,26 +594,28 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
      *
      * @param <T>    Entity类泛型
      * @param values Entity对象
+     *
+     * @return 更新的数据条数
      */
     @Override
-    public <T> void update(T... values) {
-        if (values.length == 0) return;
+    public <T> int update(T... values) {
+        if (values.length == 0) return 0;
         final EntityInfo<T> info = loadEntityInfo((Class<T>) values[0].getClass());
         if (info.isVirtualEntity()) {
-            update(null, info, values);
-            return;
+            return update(null, info, values);
         }
         Connection conn = createWriteSQLConnection();
         try {
-            update(conn, info, values);
+            return update(conn, info, values);
         } finally {
             closeSQLConnection(conn);
         }
     }
 
-    private <T> void update(final Connection conn, final EntityInfo<T> info, T... values) {
+    private <T> int update(final Connection conn, final EntityInfo<T> info, T... values) {
         try {
             Class clazz = info.getType();
+            int c = -1;
             if (!info.isVirtualEntity()) {
                 final String updateSQL = info.getUpdateSQL(values[0]);
                 final Attribute<T, Serializable> primary = info.getPrimary();
@@ -639,16 +649,22 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
                         logger.finest(info.getType().getSimpleName() + " update sql=" + sb.toString().replaceAll("(\r|\n)", "\\n"));
                     } //打印结束
                 }
-                prestmt.executeBatch();
+                int[] pc = prestmt.executeBatch();
+                c = 0;
+                for (int p : pc) {
+                    c += p;
+                }
                 prestmt.close();
             }
             //---------------------------------------------------
             final EntityCache<T> cache = info.getCache();
-            if (cache == null) return;
+            if (cache == null) return c;
+            int c2 = 0;
             for (final T value : values) {
-                cache.update(value);
+                c2 += cache.update(value);
             }
             if (cacheListener != null) cacheListener.updateCache(clazz, values);
+            return c >= 0 ? c : c2;
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }

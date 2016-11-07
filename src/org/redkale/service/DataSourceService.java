@@ -34,23 +34,23 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
-    public <T> void delete(T... values) {
-        source.delete(values);
+    public <T> int delete(T... values) {
+        return source.delete(values);
     }
 
     @Override
-    public <T> void delete(final Class<T> clazz, final Serializable... ids) {
-        source.delete(clazz, ids);
+    public <T> int delete(final Class<T> clazz, final Serializable... ids) {
+        return source.delete(clazz, ids);
     }
 
     @Override
-    public <T> void delete(final Class<T> clazz, FilterNode node) {
-        source.delete(clazz, node);
+    public <T> int delete(final Class<T> clazz, FilterNode node) {
+        return source.delete(clazz, node);
     }
 
     @Override
-    public <T> void update(T... values) {
-        source.update(values);
+    public <T> int update(T... values) {
+        return source.update(values);
     }
 
     @Override

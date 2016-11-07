@@ -38,8 +38,10 @@ public interface DataSource {
      *
      * @param <T>    泛型
      * @param values Entity对象
+     *
+     * @return 删除的数据条数
      */
-    public <T> void delete(final T... values);
+    public <T> int delete(final T... values);
 
     /**
      * 根据主键值删除数据
@@ -48,10 +50,12 @@ public interface DataSource {
      * @param <T>   Entity类的泛型
      * @param clazz Entity类
      * @param ids   主键值
+     *
+     * @return 删除的数据条数
      */
-    public <T> void delete(final Class<T> clazz, final Serializable... ids);
+    public <T> int delete(final Class<T> clazz, final Serializable... ids);
 
-    public <T> void delete(final Class<T> clazz, final FilterNode node);
+    public <T> int delete(final Class<T> clazz, final FilterNode node);
 
     //------------------------update---------------------------
     /**
@@ -59,8 +63,10 @@ public interface DataSource {
      *
      * @param <T>    泛型
      * @param values Entity对象
+     *
+     * @return 更新的数据条数
      */
-    public <T> void update(final T... values);
+    public <T> int update(final T... values);
 
     public <T> int updateColumn(final Class<T> clazz, final Serializable id, final String column, final Serializable value);
 

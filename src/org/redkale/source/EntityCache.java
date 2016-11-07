@@ -363,10 +363,12 @@ public final class EntityCache<T> {
         }
     }
 
-    public void delete(final Serializable id) {
-        if (id == null) return;
+    public int delete(final Serializable id) {
+        if (id == null) return 0;
         final T rs = this.map.remove(id);
-        if (rs != null) this.list.remove(rs);
+        if (rs == null) return 0;
+        this.list.remove(rs);
+        return 1;
     }
 
     public Serializable[] delete(final FilterNode node) {
@@ -383,13 +385,14 @@ public final class EntityCache<T> {
         return ids;
     }
 
-    public void update(final T value) {
-        if (value == null) return;
+    public int update(final T value) {
+        if (value == null) return 0;
         T rs = this.map.get(this.primary.get(value));
-        if (rs == null) return;
+        if (rs == null) return 0;
         synchronized (rs) {
             this.chgReproduce.apply(rs, value);
         }
+        return 1;
     }
 
     public T update(final T value, Collection<Attribute<T, Serializable>> attrs) {
