@@ -344,6 +344,9 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
         if (express == ISNULL || express == ISNOTNULL) {
             return new StringBuilder().append(info.getSQLColumn(talis, column)).append(' ').append(express.value());
         }
+        if (express == ISEMPTY || express == ISNOTEMPTY) {
+            return new StringBuilder().append(info.getSQLColumn(talis, column)).append(' ').append(express.value()).append(" ''");
+        }
         if (val0 == null) return null;
         if (express == FV_MOD || express == FV_DIV) {
             FilterValue fv = (FilterValue) val0;
@@ -583,6 +586,32 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                 @Override
                 public String toString() {
                     return field + " != null";
+                }
+            };
+        if (express == ISEMPTY) return new Predicate<T>() {
+
+                @Override
+                public boolean test(T t) {
+                    Object v = attr.get(t);
+                    return v == null || v.toString().isEmpty();
+                }
+
+                @Override
+                public String toString() {
+                    return field + " = ''";
+                }
+            };
+        if (express == ISNOTEMPTY) return new Predicate<T>() {
+
+                @Override
+                public boolean test(T t) {
+                    Object v = attr.get(t);
+                    return v != null && !v.toString().isEmpty();
+                }
+
+                @Override
+                public String toString() {
+                    return field + " != ''";
                 }
             };
         if (val0 == null) return null;
@@ -1737,6 +1766,8 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
             String col = prefix == null ? column : (prefix + "." + column);
             if (express == ISNULL || express == ISNOTNULL) {
                 sb.append(col).append(' ').append(express.value());
+            } else if (express == ISEMPTY || express == ISNOTEMPTY) {
+                sb.append(col).append(' ').append(express.value()).append(" ''");
             } else if (ev != null) {
                 boolean lower = (express == IGNORECASELIKE || express == IGNORECASENOTLIKE || express == IGNORECASECONTAIN || express == IGNORECASENOTCONTAIN);
                 sb.append(lower ? ("LOWER(" + col + ')') : col).append(' ').append(express.value()).append(' ').append(formatToString(express, ev));

@@ -353,6 +353,8 @@ public final class FilterNodeBean<T extends FilterBean> implements Comparable<Fi
             String col = prefix == null ? column : (prefix + "." + column);
             if (express == ISNULL || express == ISNOTNULL) {
                 sb.append(col).append(' ').append(express.value());
+            } else if (express == ISEMPTY || express == ISNOTEMPTY) {
+                sb.append(col).append(' ').append(express.value()).append(" ''");
             } else {
                 boolean lower = (express == IGNORECASEEQUAL || express == IGNORECASENOTEQUAL || express == IGNORECASELIKE
                     || express == IGNORECASENOTLIKE || express == IGNORECASECONTAIN || express == IGNORECASENOTCONTAIN);

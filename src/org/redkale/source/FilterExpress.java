@@ -43,6 +43,8 @@ public enum FilterExpress {
     NOTIN("NOT IN"),
     ISNULL("IS NULL"),
     ISNOTNULL("IS NOT NULL"),
+    ISEMPTY("="),//值为空
+    ISNOTEMPTY("<>"), //值不为空
     OPAND("&"), //与运算 > 0
     OPOR("|"), //或运算 > 0
     OPANDNO("&"), //与运算 == 0
