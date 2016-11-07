@@ -468,7 +468,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
      */
     @Override
     public <T> int delete(T... values) {
-        if (values.length == 0) return 0;
+        if (values.length == 0) return -1;
         final EntityInfo<T> info = loadEntityInfo((Class<T>) values[0].getClass());
         if (info.isVirtualEntity()) { //虚拟表只更新缓存Cache
             return delete(null, info, values);
@@ -482,7 +482,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
     }
 
     private <T> int delete(final Connection conn, final EntityInfo<T> info, T... values) {
-        if (values.length == 0) return 0;
+        if (values.length == 0) return -1;
         final Attribute primary = info.getPrimary();
         Serializable[] ids = new Serializable[values.length];
         int i = 0;
@@ -521,7 +521,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
                 int[] pc = stmt.executeBatch();
                 c = 0;
                 for (int p : pc) {
-                    c += p;
+                    if (p >= 0) c += p;
                 }
                 stmt.close();
             }
@@ -578,14 +578,16 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
         }
     }
 
-    public <T> void deleteCache(Class<T> clazz, Serializable... ids) {
-        if (ids.length == 0) return;
+    public <T> int deleteCache(Class<T> clazz, Serializable... ids) {
+        if (ids.length == 0) return 0;
         final EntityInfo<T> info = loadEntityInfo(clazz);
         final EntityCache<T> cache = info.getCache();
-        if (cache == null) return;
+        if (cache == null) return -1;
+        int c = 0;
         for (Serializable id : ids) {
-            cache.delete(id);
+            c += cache.delete(id);
         }
+        return c;
     }
 
     //------------------------update---------------------------
@@ -652,7 +654,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
                 int[] pc = prestmt.executeBatch();
                 c = 0;
                 for (int p : pc) {
-                    c += p;
+                    if (p >= 0) c += p;
                 }
                 prestmt.close();
             }
@@ -1022,26 +1024,30 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
         }
     }
 
-    public <T> void updateCache(Class<T> clazz, T... values) {
-        if (values.length == 0) return;
+    public <T> int updateCache(Class<T> clazz, T... values) {
+        if (values.length == 0) return 0;
         final EntityInfo<T> info = loadEntityInfo(clazz);
         final EntityCache<T> cache = info.getCache();
-        if (cache == null) return;
+        if (cache == null) return -1;
+        int c = 0;
         for (T value : values) {
-            cache.update(value);
+            c += cache.update(value);
         }
+        return c;
     }
 
-    public <T> void reloadCache(Class<T> clazz, Serializable... ids) {
+    public <T> int reloadCache(Class<T> clazz, Serializable... ids) {
         final EntityInfo<T> info = loadEntityInfo(clazz);
         final EntityCache<T> cache = info.getCache();
-        if (cache == null) return;
+        if (cache == null) return -1;
         String column = info.getPrimary().field();
+        int c = 0;
         for (Serializable id : ids) {
             Sheet<T> sheet = querySheet(false, true, clazz, null, FLIPPER_ONE, FilterNode.create(column, id));
             T value = sheet.isEmpty() ? null : sheet.list().get(0);
-            if (value != null) cache.update(value);
+            if (value != null) c += cache.update(value);
         }
+        return c;
     }
 
     //-----------------------getNumberResult-----------------------------
