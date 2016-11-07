@@ -54,33 +54,33 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
-    public <T> void updateColumn(final Class<T> clazz, final Serializable id, final String column, final Serializable value) {
-        source.updateColumn(clazz, id, column, value);
+    public <T> int updateColumn(final Class<T> clazz, final Serializable id, final String column, final Serializable value) {
+        return source.updateColumn(clazz, id, column, value);
     }
 
     @Override
-    public <T> void updateColumn(final Class<T> clazz, final String column, final Serializable value, final FilterNode node) {
-        source.updateColumn(clazz, column, value, node);
+    public <T> int updateColumn(final Class<T> clazz, final String column, final Serializable value, final FilterNode node) {
+        return source.updateColumn(clazz, column, value, node);
     }
 
     @Override
-    public <T> void updateColumn(final Class<T> clazz, final Serializable id, final ColumnValue... values) {
-        source.updateColumn(clazz, id, values);
+    public <T> int updateColumn(final Class<T> clazz, final Serializable id, final ColumnValue... values) {
+        return source.updateColumn(clazz, id, values);
     }
 
     @Override
-    public <T> void updateColumn(final Class<T> clazz, final FilterNode node, final ColumnValue... values) {
-        source.updateColumn(clazz, node, values);
+    public <T> int updateColumn(final Class<T> clazz, final FilterNode node, final ColumnValue... values) {
+        return source.updateColumn(clazz, node, values);
     }
 
     @Override
-    public <T> void updateColumns(T bean, final String... columns) {
-        source.updateColumns(bean, columns);
+    public <T> int updateColumns(T bean, final String... columns) {
+        return source.updateColumns(bean, columns);
     }
 
     @Override
-    public <T> void updateColumns(T bean, final FilterNode node, final String... columns) {
-        source.updateColumns(bean, node, columns);
+    public <T> int updateColumns(T bean, final FilterNode node, final String... columns) {
+        return source.updateColumns(bean, node, columns);
     }
 
     @Override

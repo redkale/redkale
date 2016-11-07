@@ -608,17 +608,36 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
             Class clazz = info.getType();
             if (!info.isVirtualEntity()) {
                 final String updateSQL = info.getUpdateSQL(values[0]);
-                if (debug.get()) logger.finest(clazz.getSimpleName() + " update sql=" + updateSQL);
                 final Attribute<T, Serializable> primary = info.getPrimary();
                 final PreparedStatement prestmt = conn.prepareStatement(updateSQL);
                 Attribute<T, Serializable>[] attrs = info.updateAttributes;
+                final boolean debugfinest = debug.get();
+                char[] sqlchars = debugfinest ? updateSQL.toCharArray() : null;
                 for (final T value : values) {
-                    int i = 0;
+                    int k = 0;
                     for (Attribute<T, Serializable> attr : attrs) {
-                        prestmt.setObject(++i, attr.get(value));
+                        prestmt.setObject(++k, attr.get(value));
                     }
-                    prestmt.setObject(++i, primary.get(value));
-                    prestmt.addBatch();
+                    prestmt.setObject(++k, primary.get(value));
+                    prestmt.addBatch();//------------------------------------------------------------
+                    if (debugfinest) {  //打印调试信息
+                        //-----------------------------
+                        int i = 0;
+                        StringBuilder sb = new StringBuilder(128);
+                        for (char ch : sqlchars) {
+                            if (ch == '?') {
+                                Object obj = attrs[i++].get(value);
+                                if (obj != null && obj.getClass().isArray()) {
+                                    sb.append("'[length=").append(java.lang.reflect.Array.getLength(obj)).append("]'");
+                                } else {
+                                    sb.append(FilterNode.formatToString(obj));
+                                }
+                            } else {
+                                sb.append(ch);
+                            }
+                        }
+                        logger.finest(info.getType().getSimpleName() + " update sql=" + sb.toString().replaceAll("(\r|\n)", "\\n"));
+                    } //打印结束
                 }
                 prestmt.executeBatch();
                 prestmt.close();
@@ -643,37 +662,40 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
      * @param id     主键值
      * @param column 过滤字段名
      * @param value  过滤字段值
+     *
+     * @return 更新的数据条数
      */
     @Override
-    public <T> void updateColumn(Class<T> clazz, Serializable id, String column, Serializable value) {
+    public <T> int updateColumn(Class<T> clazz, Serializable id, String column, Serializable value) {
         final EntityInfo<T> info = loadEntityInfo(clazz);
         if (info.isVirtualEntity()) {
-            updateColumn(null, info, id, column, value);
-            return;
+            return updateColumn(null, info, id, column, value);
         }
         Connection conn = createWriteSQLConnection();
         try {
-            updateColumn(conn, info, id, column, value);
+            return updateColumn(conn, info, id, column, value);
         } finally {
             closeSQLConnection(conn);
         }
     }
 
-    private <T> void updateColumn(Connection conn, final EntityInfo<T> info, Serializable id, String column, Serializable value) {
+    private <T> int updateColumn(Connection conn, final EntityInfo<T> info, Serializable id, String column, Serializable value) {
         try {
+            int c = -1;
             if (!info.isVirtualEntity()) {
                 String sql = "UPDATE " + info.getTable(id) + " SET " + info.getSQLColumn(null, column) + " = "
                     + info.formatToString(value) + " WHERE " + info.getPrimarySQLColumn() + " = " + FilterNode.formatToString(id);
                 if (debug.get()) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
                 final Statement stmt = conn.createStatement();
-                stmt.execute(sql);
+                c = stmt.executeUpdate(sql);
                 stmt.close();
             }
             //---------------------------------------------------
             final EntityCache<T> cache = info.getCache();
-            if (cache == null) return;
+            if (cache == null) return c;
             T rs = cache.update(id, info.getAttribute(column), value);
             if (cacheListener != null) cacheListener.updateCache(info.getType(), rs);
+            return c >= 0 ? c : (rs == null ? 0 : 1);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         } finally {
@@ -689,24 +711,26 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
      * @param column 过滤字段名
      * @param value  过滤字段值
      * @param node   过滤node 不能为null
+     *
+     * @return 更新的数据条数
      */
     @Override
-    public <T> void updateColumn(Class<T> clazz, String column, Serializable value, FilterNode node) {
+    public <T> int updateColumn(Class<T> clazz, String column, Serializable value, FilterNode node) {
         final EntityInfo<T> info = loadEntityInfo(clazz);
         if (info.isVirtualEntity()) {
-            updateColumn(null, info, column, value, node);
-            return;
+            return updateColumn(null, info, column, value, node);
         }
         Connection conn = createWriteSQLConnection();
         try {
-            updateColumn(conn, info, column, value, node);
+            return updateColumn(conn, info, column, value, node);
         } finally {
             closeSQLConnection(conn);
         }
     }
 
-    private <T> void updateColumn(Connection conn, final EntityInfo<T> info, String column, Serializable value, FilterNode node) {
+    private <T> int updateColumn(Connection conn, final EntityInfo<T> info, String column, Serializable value, FilterNode node) {
         try {
+            int c = -1;
             if (!info.isVirtualEntity()) {
                 Map<Class, String> joinTabalis = node.getJoinTabalis();
                 CharSequence join = node.createSQLJoin(this, joinTabalis, info);
@@ -716,14 +740,15 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
                     + info.formatToString(value) + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
                 if (debug.get()) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
                 final Statement stmt = conn.createStatement();
-                stmt.execute(sql);
+                c = stmt.executeUpdate(sql);
                 stmt.close();
             }
             //---------------------------------------------------
             final EntityCache<T> cache = info.getCache();
-            if (cache == null) return;
+            if (cache == null) return c;
             T[] rs = cache.update(info.getAttribute(column), value, node);
             if (cacheListener != null) cacheListener.updateCache(info.getType(), rs);
+            return c >= 0 ? c : (rs == null ? 0 : rs.length);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         } finally {
@@ -738,24 +763,25 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
      * @param clazz  Entity类
      * @param id     主键值
      * @param values 字段值
+     *
+     * @return 更新的数据条数
      */
     @Override
-    public <T> void updateColumn(final Class<T> clazz, final Serializable id, final ColumnValue... values) {
+    public <T> int updateColumn(final Class<T> clazz, final Serializable id, final ColumnValue... values) {
         final EntityInfo<T> info = loadEntityInfo(clazz);
         if (info.isVirtualEntity()) {
-            updateColumn(null, info, id, values);
-            return;
+            return updateColumn(null, info, id, values);
         }
         Connection conn = createWriteSQLConnection();
         try {
-            updateColumn(conn, info, id, values);
+            return updateColumn(conn, info, id, values);
         } finally {
             closeSQLConnection(conn);
         }
     }
 
-    private <T> void updateColumn(final Connection conn, final EntityInfo<T> info, final Serializable id, final ColumnValue... values) {
-        if (values == null || values.length < 1) return;
+    private <T> int updateColumn(final Connection conn, final EntityInfo<T> info, final Serializable id, final ColumnValue... values) {
+        if (values == null || values.length < 1) return -1;
         try {
             StringBuilder setsql = new StringBuilder();
             final List<Attribute<T, Serializable>> attrs = new ArrayList<>();
@@ -772,18 +798,20 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
                     setsql.append(c).append(" = ").append(info.formatSQLValue(c, col));
                 }
             }
+            int c = -1;
             if (!virtual) {
                 String sql = "UPDATE " + info.getTable(id) + " SET " + setsql + " WHERE " + info.getPrimarySQLColumn() + " = " + FilterNode.formatToString(id);
                 if (debug.get()) logger.finest(info.getType().getSimpleName() + ": " + sql);
                 final Statement stmt = conn.createStatement();
-                stmt.execute(sql);
+                c = stmt.executeUpdate(sql);
                 stmt.close();
             }
             //---------------------------------------------------
             final EntityCache<T> cache = info.getCache();
-            if (cache == null) return;
+            if (cache == null) return c;
             T rs = cache.updateColumn(id, attrs, cols);
             if (cacheListener != null) cacheListener.updateCache(info.getType(), rs);
+            return c >= 0 ? c : (rs == null ? 0 : 1);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -796,24 +824,25 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
      * @param clazz  Entity类
      * @param node   过滤条件
      * @param values 字段值
+     *
+     * @return 更新的数据条数
      */
     @Override
-    public <T> void updateColumn(final Class<T> clazz, final FilterNode node, final ColumnValue... values) {
+    public <T> int updateColumn(final Class<T> clazz, final FilterNode node, final ColumnValue... values) {
         final EntityInfo<T> info = loadEntityInfo(clazz);
         if (info.isVirtualEntity()) {
-            updateColumn(null, info, node, values);
-            return;
+            return updateColumn(null, info, node, values);
         }
         Connection conn = createWriteSQLConnection();
         try {
-            updateColumn(conn, info, node, values);
+            return updateColumn(conn, info, node, values);
         } finally {
             closeSQLConnection(conn);
         }
     }
 
-    private <T> void updateColumn(final Connection conn, final EntityInfo<T> info, final FilterNode node, final ColumnValue... values) {
-        if (values == null || values.length < 1) return;
+    private <T> int updateColumn(final Connection conn, final EntityInfo<T> info, final FilterNode node, final ColumnValue... values) {
+        if (values == null || values.length < 1) return -1;
         try {
             StringBuilder setsql = new StringBuilder();
             final List<Attribute<T, Serializable>> attrs = new ArrayList<>();
@@ -830,6 +859,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
                     setsql.append(c).append(" = ").append(info.formatSQLValue(c, col));
                 }
             }
+            int c = -1;
             if (!virtual) {
                 Map<Class, String> joinTabalis = node.getJoinTabalis();
                 CharSequence join = node.createSQLJoin(this, joinTabalis, info);
@@ -838,14 +868,15 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
                 String sql = "UPDATE " + info.getTable(node) + " a SET " + setsql + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
                 if (debug.get()) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
                 final Statement stmt = conn.createStatement();
-                stmt.execute(sql);
+                c = stmt.executeUpdate(sql);
                 stmt.close();
             }
             //---------------------------------------------------
             final EntityCache<T> cache = info.getCache();
-            if (cache == null) return;
+            if (cache == null) return c;
             T[] rs = cache.updateColumn(node, attrs, cols);
             if (cacheListener != null) cacheListener.updateCache(info.getType(), rs);
+            return c >= 0 ? c : (rs == null ? 0 : rs.length);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -857,24 +888,25 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
      * @param <T>     Entity类的泛型
      * @param bean    Entity对象
      * @param columns 需要更新的字段
+     *
+     * @return 更新的数据条数
      */
     @Override
-    public <T> void updateColumns(final T bean, final String... columns) {
+    public <T> int updateColumns(final T bean, final String... columns) {
         final EntityInfo<T> info = loadEntityInfo((Class<T>) bean.getClass());
         if (info.isVirtualEntity()) {
-            updateColumns(null, info, bean, columns);
-            return;
+            return updateColumns(null, info, bean, columns);
         }
         Connection conn = createWriteSQLConnection();
         try {
-            updateColumns(conn, info, bean, columns);
+            return updateColumns(conn, info, bean, columns);
         } finally {
             closeSQLConnection(conn);
         }
     }
 
-    private <T> void updateColumns(final Connection conn, final EntityInfo<T> info, final T bean, final String... columns) {
-        if (bean == null || columns.length < 1) return;
+    private <T> int updateColumns(final Connection conn, final EntityInfo<T> info, final T bean, final String... columns) {
+        if (bean == null || columns.length < 1) return -1;
         try {
             final Class<T> clazz = (Class<T>) bean.getClass();
             StringBuilder setsql = new StringBuilder();
@@ -890,18 +922,20 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
                     setsql.append(info.getSQLColumn(null, col)).append(" = ").append(info.formatToString(attr.get(bean)));
                 }
             }
+            int c = -1;
             if (!virtual) {
                 String sql = "UPDATE " + info.getTable(id) + " SET " + setsql + " WHERE " + info.getPrimarySQLColumn() + " = " + FilterNode.formatToString(id);
                 if (debug.get()) logger.finest(bean.getClass().getSimpleName() + ": " + sql);
                 final Statement stmt = conn.createStatement();
-                stmt.execute(sql);
+                c = stmt.executeUpdate(sql);
                 stmt.close();
             }
             //---------------------------------------------------
             final EntityCache<T> cache = info.getCache();
-            if (cache == null) return;
+            if (cache == null) return c;
             T rs = cache.update(bean, attrs);
             if (cacheListener != null) cacheListener.updateCache(clazz, rs);
+            return c >= 0 ? c : (rs == null ? 0 : 1);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -914,24 +948,25 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
      * @param bean    Entity对象
      * @param node    过滤node 不能为null
      * @param columns 需要更新的字段
+     *
+     * @return 更新的数据条数
      */
     @Override
-    public <T> void updateColumns(final T bean, final FilterNode node, final String... columns) {
+    public <T> int updateColumns(final T bean, final FilterNode node, final String... columns) {
         final EntityInfo<T> info = loadEntityInfo((Class<T>) bean.getClass());
         if (info.isVirtualEntity()) {
-            updateColumns(null, info, bean, node, columns);
-            return;
+            return updateColumns(null, info, bean, node, columns);
         }
         Connection conn = createWriteSQLConnection();
         try {
-            updateColumns(conn, info, bean, node, columns);
+            return updateColumns(conn, info, bean, node, columns);
         } finally {
             closeSQLConnection(conn);
         }
     }
 
-    private <T> void updateColumns(final Connection conn, final EntityInfo<T> info, final T bean, final FilterNode node, final String... columns) {
-        if (bean == null || node == null || columns.length < 1) return;
+    private <T> int updateColumns(final Connection conn, final EntityInfo<T> info, final T bean, final FilterNode node, final String... columns) {
+        if (bean == null || node == null || columns.length < 1) return -1;
         try {
             final Class<T> clazz = (Class<T>) bean.getClass();
             StringBuilder setsql = new StringBuilder();
@@ -947,6 +982,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
                     setsql.append(info.getSQLColumn("a", col)).append(" = ").append(info.formatToString(attr.get(bean)));
                 }
             }
+            int c = -1;
             if (!virtual) {
                 Map<Class, String> joinTabalis = node.getJoinTabalis();
                 CharSequence join = node.createSQLJoin(this, joinTabalis, info);
@@ -956,14 +992,15 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
                     + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
                 if (debug.get()) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
                 final Statement stmt = conn.createStatement();
-                stmt.execute(sql);
+                c = stmt.executeUpdate(sql);
                 stmt.close();
             }
             //---------------------------------------------------
             final EntityCache<T> cache = info.getCache();
-            if (cache == null) return;
+            if (cache == null) return c;
             T[] rs = cache.update(bean, attrs, node);
             if (cacheListener != null) cacheListener.updateCache(clazz, rs);
+            return c >= 0 ? c : (rs == null ? 0 : rs.length);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }

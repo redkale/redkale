@@ -62,17 +62,17 @@ public interface DataSource {
      */
     public <T> void update(final T... values);
 
-    public <T> void updateColumn(final Class<T> clazz, final Serializable id, final String column, final Serializable value);
+    public <T> int updateColumn(final Class<T> clazz, final Serializable id, final String column, final Serializable value);
 
-    public <T> void updateColumn(final Class<T> clazz, final String column, final Serializable value, final FilterNode node);
+    public <T> int updateColumn(final Class<T> clazz, final String column, final Serializable value, final FilterNode node);
 
-    public <T> void updateColumn(final Class<T> clazz, final Serializable id, final ColumnValue... values);
+    public <T> int updateColumn(final Class<T> clazz, final Serializable id, final ColumnValue... values);
 
-    public <T> void updateColumn(final Class<T> clazz, final FilterNode node, final ColumnValue... values);
+    public <T> int updateColumn(final Class<T> clazz, final FilterNode node, final ColumnValue... values);
 
-    public <T> void updateColumns(final T bean, final String... columns);
+    public <T> int updateColumns(final T bean, final String... columns);
 
-    public <T> void updateColumns(final T bean, final FilterNode node, final String... columns);
+    public <T> int updateColumns(final T bean, final FilterNode node, final String... columns);
 
     //############################################# 查询接口 #############################################
     //-----------------------getXXXXResult-----------------------------
