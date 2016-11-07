@@ -638,7 +638,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
                         StringBuilder sb = new StringBuilder(128);
                         for (char ch : sqlchars) {
                             if (ch == '?') {
-                                Object obj = attrs[i++].get(value);
+                                Object obj = i == attrs.length ? primary.get(value) : attrs[i++].get(value);
                                 if (obj != null && obj.getClass().isArray()) {
                                     sb.append("'[length=").append(java.lang.reflect.Array.getLength(obj)).append("]'");
                                 } else {
