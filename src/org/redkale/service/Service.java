@@ -28,6 +28,7 @@ public interface Service {
 
     /**
      * 该方法必须是可以重复调用， 当reload时需要重复调用init方法
+     * 远程模式下该方法会重载成空方法
      *
      * @param config 配置参数
      */
@@ -37,6 +38,7 @@ public interface Service {
 
     /**
      * 进程退出时，调用Service销毁
+     * 远程模式下该方法会重载成空方法
      *
      * @param config 配置参数
      */
