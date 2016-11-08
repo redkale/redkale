@@ -359,9 +359,14 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
                                 info.tables.add(newTable);
                             } catch (SQLException sqle) { //多进程并发时可能会出现重复建表
                                 if (newTable.indexOf('.') > 0 && info.tablenotexistSqlstates.contains(';' + se.getSQLState() + ';')) {
-                                    Statement st = conn.createStatement();
-                                    st.execute("CREATE DATABASE " + newTable.substring(0, newTable.indexOf('.')));
-                                    st.close();
+                                    Statement st;
+                                    try {
+                                        st = conn.createStatement();
+                                        st.execute("CREATE DATABASE " + newTable.substring(0, newTable.indexOf('.')));
+                                        st.close();
+                                    } catch (SQLException sqle1) {
+                                        logger.log(Level.SEVERE, "create database(" + newTable.substring(0, newTable.indexOf('.')) + ") error", sqle1);
+                                    }
                                     try {
                                         st = conn.createStatement();
                                         st.execute(info.tablecopySQL.replace("${newtable}", newTable).replace("${oldtable}", oldTable));
