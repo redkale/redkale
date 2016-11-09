@@ -148,7 +148,7 @@ public class ApiDocs extends HttpBaseServlet {
     }
 
     @Override
-    public boolean authenticate(int module, int actionid, HttpRequest request, HttpResponse response) throws IOException {
+    public boolean authenticate(int moduleid, int actionid, HttpRequest request, HttpResponse response) throws IOException {
         return true;
     }
 }

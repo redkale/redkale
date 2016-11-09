@@ -22,7 +22,7 @@ public class DefaultRestServlet extends RestHttpServlet<Object> {
     }
 
     @Override
-    public boolean authenticate(int module, int actionid, HttpRequest request, HttpResponse response) throws IOException {
+    public boolean authenticate(int moduleid, int actionid, HttpRequest request, HttpResponse response) throws IOException {
         return true;
     }
 

@@ -200,7 +200,7 @@ public abstract class HttpBaseServlet extends HttpServlet {
     public final void postDestroy(HttpContext context, AnyValue config) {
     }
 
-    public abstract boolean authenticate(int module, int actionid, HttpRequest request, HttpResponse response) throws IOException;
+    public abstract boolean authenticate(int moduleid, int actionid, HttpRequest request, HttpResponse response) throws IOException;
 
     protected void setHeader(HttpRequest request, String name, Serializable value) {
         request.header.setValue(name, String.valueOf(value));
