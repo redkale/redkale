@@ -290,7 +290,7 @@ public class HttpRequest extends Request<HttpContext> {
         return this.getClass().getSimpleName() + "{\r\n    method: " + this.method + ", \r\n    requestURI: " + this.requestURI
             + ", \r\n    remoteAddr: " + this.getRemoteAddr() + ", \r\n    cookies: " + this.cookiestr + ", \r\n    contentType: " + this.contentType
             + ", \r\n    connection: " + this.connection + ", \r\n    protocol: " + this.protocol + ", \r\n    contentLength: " + this.contentLength
-            + ", \r\n    host: " + this.host + ", \r\n    bodylength: " + this.array.size() + (this.boundary ? "" : (", \r\n    body: " + this.getBodyUTF8()))
+            + ", \r\n    host: " + this.host + ", \r\n    bodylength: " + this.array.size() + (this.boundary || this.array.isEmpty() ? "" : (", \r\n    body: " + this.getBodyUTF8()))
             + ", \r\n    params: " + this.params.toString(4) + ", \r\n    header: " + this.header.toString(4) + "\r\n}";
     }
 
