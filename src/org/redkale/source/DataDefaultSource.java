@@ -401,7 +401,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
                 }
                 prestmt.close();
                 //------------------------------------------------------------
-                if (debug.get()) {  //打印调试信息
+                if (debug.get() && info.isLoggable(Level.FINEST)) {  //打印调试信息
                     char[] sqlchars = sql.toCharArray();
                     for (final T value : values) {
                         //-----------------------------
@@ -519,7 +519,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
                 final Statement stmt = conn.createStatement();
                 for (Serializable key : keys) {
                     String sql = "DELETE FROM " + info.getTable(key) + " WHERE " + info.getPrimarySQLColumn() + " = " + FilterNode.formatToString(key);
-                    if (debug.get()) logger.finest(info.getType().getSimpleName() + " delete sql=" + sql);
+                    if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(info.getType().getSimpleName() + " delete sql=" + sql);
                     stmt.addBatch(sql);
                 }
                 int[] pc = stmt.executeBatch();
@@ -565,7 +565,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
                 CharSequence join = node.createSQLJoin(this, joinTabalis, info);
                 CharSequence where = node.createSQLExpress(info, joinTabalis);
                 String sql = "DELETE " + (this.readPool.isMysql() ? "a" : "") + " FROM " + info.getTable(node) + " a" + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
-                if (debug.get()) logger.finest(info.getType().getSimpleName() + " delete sql=" + sql);
+                if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(info.getType().getSimpleName() + " delete sql=" + sql);
                 final Statement stmt = conn.createStatement();
                 c = stmt.executeUpdate(sql);
                 stmt.close();
@@ -627,7 +627,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
                 final Attribute<T, Serializable> primary = info.getPrimary();
                 final PreparedStatement prestmt = conn.prepareStatement(updateSQL);
                 Attribute<T, Serializable>[] attrs = info.updateAttributes;
-                final boolean debugfinest = debug.get();
+                final boolean debugfinest = debug.get() && info.isLoggable(Level.FINEST);
                 char[] sqlchars = debugfinest ? updateSQL.toCharArray() : null;
                 for (final T value : values) {
                     int k = 0;
@@ -707,7 +707,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
             if (!info.isVirtualEntity()) {
                 String sql = "UPDATE " + info.getTable(id) + " SET " + info.getSQLColumn(null, column) + " = "
                     + info.formatToString(value) + " WHERE " + info.getPrimarySQLColumn() + " = " + FilterNode.formatToString(id);
-                if (debug.get()) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
+                if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
                 final Statement stmt = conn.createStatement();
                 c = stmt.executeUpdate(sql);
                 stmt.close();
@@ -760,7 +760,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
 
                 String sql = "UPDATE " + info.getTable(node) + " a SET " + info.getSQLColumn("a", column) + " = "
                     + info.formatToString(value) + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
-                if (debug.get()) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
+                if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
                 final Statement stmt = conn.createStatement();
                 c = stmt.executeUpdate(sql);
                 stmt.close();
@@ -823,7 +823,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
             int c = -1;
             if (!virtual) {
                 String sql = "UPDATE " + info.getTable(id) + " SET " + setsql + " WHERE " + info.getPrimarySQLColumn() + " = " + FilterNode.formatToString(id);
-                if (debug.get()) logger.finest(info.getType().getSimpleName() + ": " + sql);
+                if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(info.getType().getSimpleName() + ": " + sql);
                 final Statement stmt = conn.createStatement();
                 c = stmt.executeUpdate(sql);
                 stmt.close();
@@ -888,7 +888,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
                 CharSequence where = node.createSQLExpress(info, joinTabalis);
 
                 String sql = "UPDATE " + info.getTable(node) + " a SET " + setsql + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
-                if (debug.get()) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
+                if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
                 final Statement stmt = conn.createStatement();
                 c = stmt.executeUpdate(sql);
                 stmt.close();
@@ -947,7 +947,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
             int c = -1;
             if (!virtual) {
                 String sql = "UPDATE " + info.getTable(id) + " SET " + setsql + " WHERE " + info.getPrimarySQLColumn() + " = " + FilterNode.formatToString(id);
-                if (debug.get()) logger.finest(bean.getClass().getSimpleName() + ": " + sql);
+                if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(bean.getClass().getSimpleName() + ": " + sql);
                 final Statement stmt = conn.createStatement();
                 c = stmt.executeUpdate(sql);
                 stmt.close();
@@ -1012,7 +1012,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
 
                 String sql = "UPDATE " + info.getTable(node) + " a SET " + setsql
                     + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
-                if (debug.get()) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
+                if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
                 final Statement stmt = conn.createStatement();
                 c = stmt.executeUpdate(sql);
                 stmt.close();
