@@ -189,6 +189,7 @@ public class HttpRequest extends Request<HttpContext> {
             return;
         }
         String name = array.toDecodeString(offset, keypos - offset, charset);
+        if (name.charAt(0) == '<') return; //内容可能是xml格式; 如: <?xml version="1.0"
         ++keypos;
         String value = array.toDecodeString(keypos, (valpos < 0) ? (limit - keypos) : (valpos - keypos), charset);
         this.params.addValue(name, value);
