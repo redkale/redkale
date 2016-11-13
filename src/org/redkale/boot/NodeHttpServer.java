@@ -189,7 +189,9 @@ public class NodeHttpServer extends NodeServer {
                 for (int i = 0; i < mappings.length; i++) {
                     mappings[i] = prefix + mappings[i];
                 }
-                ss.add(new AbstractMap.SimpleEntry<>(servlet.getClass().getName(), mappings));
+                if (servlet.getClass().getSimpleName().charAt(0) != '_') {
+                    ss.add(new AbstractMap.SimpleEntry<>(servlet.getClass().getName(), mappings));
+                }
             }
         });
         //输出信息
