@@ -6,6 +6,7 @@
 package org.redkale.boot;
 
 import java.io.*;
+import java.lang.reflect.Modifier;
 import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
@@ -526,6 +527,7 @@ public final class Application {
     }
 
     public static <T extends Service> T singleton(String name, Class<T> serviceClass) throws Exception {
+        if (serviceClass == null) throw new IllegalArgumentException("serviceClass is null");
         final Application application = Application.create(true);
         application.init();
         application.start();
@@ -533,7 +535,9 @@ public final class Application {
             T service = server.resourceFactory.find(name, serviceClass);
             if (service != null) return service;
         }
-        return null;
+        if (Modifier.isAbstract(serviceClass.getModifiers())) throw new IllegalArgumentException("abstract class not allowed");
+        if (serviceClass.isInterface()) throw new IllegalArgumentException("interface class not allowed");
+        throw new IllegalArgumentException(serviceClass.getName() + " maybe have zero not-final public method");
     }
 
     public static Application create(final boolean singleton) throws IOException {
