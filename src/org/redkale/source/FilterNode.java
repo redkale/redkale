@@ -80,12 +80,12 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
 
     public long findLongValue(final String col, long defValue) {
         Serializable val = findValue(col);
-        return val == null ? defValue : (Long) val;
+        return val == null ? defValue : ((Number) val).longValue();
     }
 
     public int findIntValue(final String col, int defValue) {
         Serializable val = findValue(col);
-        return val == null ? defValue : (Integer) val;
+        return val == null ? defValue : ((Number) val).intValue();
     }
 
     public String findStringValue(final String col) {
