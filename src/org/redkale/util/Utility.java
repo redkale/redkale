@@ -161,6 +161,11 @@ public final class Utility {
         return String.format(format, time);
     }
 
+    public static String format36time(long time) {
+        String time36 = Long.toString(time, 36);
+        return time36.length() < 9 ? ("0" + time36) : time36;
+    }
+
     /**
      * 获取当天凌晨零点的格林时间
      *
