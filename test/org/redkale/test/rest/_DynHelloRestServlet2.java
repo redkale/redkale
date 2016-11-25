@@ -27,19 +27,21 @@ public class _DynHelloRestServlet2 extends SimpleRestServlet {
     private Map<String, HelloService2> _servicemap;
 
     @AuthIgnore
-    @WebAction(url = "/hello/create")
+    @WebAction(url = "/hello/create", comment = "创建Hello对象")
+    @WebParam(name = "bean", type = HelloEntity.class, comment = "Hello对象")
     public void create(HttpRequest req, HttpResponse resp) throws IOException {
         HelloService2 service = _servicemap == null ? _service : _servicemap.get(req.getHeader(Rest.REST_HEADER_RESOURCE_NAME, ""));
         HelloEntity bean = req.getJsonParameter(HelloEntity.class, "bean");
-        bean.setClientaddr(req.getRemoteAddr()); 
-        bean.setResname(req.getHeader("hello-res")); 
+        bean.setClientaddr(req.getRemoteAddr());
+        bean.setResname(req.getHeader("hello-res"));
         UserInfo user = currentUser(req);
         RetResult<HelloEntity> result = service.createHello(user, bean);
         resp.finishJson(result);
     }
 
     @AuthIgnore
-    @WebAction(url = "/hello/delete/")
+    @WebAction(url = "/hello/delete/", comment = "根据id删除Hello对象")
+    @WebParam(name = "#", type = int.class, comment = "Hello对象id")
     public void delete(HttpRequest req, HttpResponse resp) throws IOException {
         HelloService2 service = _servicemap == null ? _service : _servicemap.get(req.getHeader(Rest.REST_HEADER_RESOURCE_NAME, ""));
         int id = Integer.parseInt(req.getRequstURILastPath());
@@ -48,32 +50,35 @@ public class _DynHelloRestServlet2 extends SimpleRestServlet {
     }
 
     @AuthIgnore
-    @WebAction(url = "/hello/update")
+    @WebAction(url = "/hello/update", comment = "修改Hello对象")
+    @WebParam(name = "bean", type = HelloEntity.class, comment = "Hello对象")
     public void update(HttpRequest req, HttpResponse resp) throws IOException {
         HelloService2 service = _servicemap == null ? _service : _servicemap.get(req.getHeader(Rest.REST_HEADER_RESOURCE_NAME, ""));
         HelloEntity bean = req.getJsonParameter(HelloEntity.class, "bean");
-        bean.setClientaddr(req.getRemoteAddr()); 
-        bean.setResname(req.getHeader("hello-res")); 
+        bean.setClientaddr(req.getRemoteAddr());
+        bean.setResname(req.getHeader("hello-res"));
         service.updateHello(bean);
         resp.finishJson(RetResult.success());
     }
 
     @AuthIgnore
-    @WebAction(url = "/hello/query")
+    @WebAction(url = "/hello/query", comment = "查询Hello对象列表")
+    @WebParam(name = "bean", type = HelloBean.class, comment = "过滤条件")
     public void query(HttpRequest req, HttpResponse resp) throws IOException {
         HelloService2 service = _servicemap == null ? _service : _servicemap.get(req.getHeader(Rest.REST_HEADER_RESOURCE_NAME, ""));
         HelloBean bean = req.getJsonParameter(HelloBean.class, "bean");
-        bean.setClientaddr(req.getRemoteAddr()); 
-        bean.setUseragent(req.getHeader("User-Agent")); 
-        bean.setRescookie(req.getCookie("hello-cookie")); 
-        bean.setSessionid(req.getSessionid(false)); 
+        bean.setClientaddr(req.getRemoteAddr());
+        bean.setUseragent(req.getHeader("User-Agent"));
+        bean.setRescookie(req.getCookie("hello-cookie"));
+        bean.setSessionid(req.getSessionid(false));
         Flipper flipper = req.getFlipper();
         Sheet<HelloEntity> result = service.queryHello(bean, flipper);
         resp.finishJson(result);
     }
 
     @AuthIgnore
-    @WebAction(url = "/hello/find/")
+    @WebAction(url = "/hello/find/", comment = "根据id删除Hello对象")
+    @WebParam(name = "#", type = int.class, comment = "Hello对象id")
     public void find(HttpRequest req, HttpResponse resp) throws IOException {
         HelloService2 service = _servicemap == null ? _service : _servicemap.get(req.getHeader(Rest.REST_HEADER_RESOURCE_NAME, ""));
         int id = Integer.parseInt(req.getRequstURILastPath());

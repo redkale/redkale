@@ -25,6 +25,7 @@ public class HelloEntity {
     @RestAddress
     private String clientaddr;
 
+    /** 以下省略getter setter方法 */
     public int getHelloid() {
         return helloid;
     }

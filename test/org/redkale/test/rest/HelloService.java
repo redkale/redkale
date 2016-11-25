@@ -14,7 +14,7 @@ import org.redkale.util.Sheet;
  * Flipper : Source组件中的翻页对象
  * UserInfo ：当前用户类
  * HelloEntity: Hello模块的实体类
- * HelloBean: Hellow模块实现FilterBean的过滤Bean类
+ * HelloBean: Hello模块实现FilterBean的过滤Bean类
  *
  */
 @RestService
