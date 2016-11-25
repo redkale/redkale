@@ -25,7 +25,7 @@
         <section class="main-content">
             <h3><a id="service_intro" class="anchor" href="#" aria-hidden="true"></a>Service 组件介绍</h3>
 
-            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Service 是Redkale最核心的组件，依赖于Convert、SNCP协议、Resource依赖注入。Service主要处理业务逻辑和操作数据层，是微服务架构中的单一原子服务。每一个Service实例分两种模式: <b>本地模式</b>和<b>远程模式</b>。其模式由 conf/application.xml 文件来配置。使用者在调用过程中通常不需要区分当前Service实例是哪种模式。<br/>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Service 是Redkale最核心的组件，依赖于Convert、SNCP协议、Resource依赖注入。Service主要处理业务逻辑和操作数据层，是微服务架构中的单一原子服务。每一个Service实例分两种模式: <b>本地模式</b>和<b>远程模式</b>。其模式由 conf/application.xml 文件来配置。开发人员在调用过程中通常不需要区分当前Service实例是哪种模式。<br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 为了能确保本地模式与远程模式自由切换，对Service的实现类有一定的约束: <br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1、Service实现类会被继承，不能修饰为 <b>final</b>  <br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2、带@RpcMultiRun注解的方法会被重载，不能修饰为 <b>final</b>  <br/>
@@ -288,6 +288,11 @@
 <span class="o">}</span>
                 </pre></div>
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;生成远程模式Service时发现参数带有@RpcCall注解的方法，在远程调用返回结果时会进行回调处理。</p>
+
+            <h3><a id="service_rest" class="anchor" href="#" aria-hidden="true"></a>Service REST</h3>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;RestService提供类似Spring Boot的功能。开启REST功能的HTTP Server在实例化标记为@RestService的Service后自动生成对应的HttpServlet，免去开发人员编写HttpServlet的工作量。</p>
+
+            <div class="highlight"></div>
 
             
             <footer class="site-footer">
