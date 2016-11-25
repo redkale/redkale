@@ -17,6 +17,7 @@ import org.redkale.util.Sheet;
  * HelloBean: Hellow模块实现FilterBean的过滤Bean类
  *
  */
+@RestService
 public class HelloService implements Service {
 
     private int nodeid;
@@ -40,12 +41,12 @@ public class HelloService implements Service {
     }
 
     //删除记录
-    public void deleteHello(int id) { //通过 /hello/delete/1234 删除对象
+    public void deleteHello(int id) { //通过 /pipes/hello/delete/1234 删除对象
         source.delete(HelloEntity.class, id);
     }
 
     //修改记录
-    public void updateHello(@RestAddress String clientAddr, HelloEntity entity) { //通过 /hello/update?bean={...} 修改对象
+    public void updateHello(@RestAddress String clientAddr, HelloEntity entity) { //通过 /pipes/hello/update?bean={...} 修改对象
         System.out.println("修改记录-" + nodeid + ": clientAddr = " + clientAddr + ", entity =" + entity);
         if (entity != null) entity.setUpdatetime(System.currentTimeMillis());
         if (source != null) source.update(entity);
@@ -53,26 +54,26 @@ public class HelloService implements Service {
 
     //修改记录
     @RestMapping(name = "partupdate")
-    public void updateHello(HelloEntity entity, @RestParam(name = "cols") String[] columns) { //通过 /hello/partupdate?bean={...} 修改对象
+    public void updateHello(HelloEntity entity, @RestParam(name = "cols") String[] columns) { //通过 /pipes/hello/partupdate?bean={...}&cols=... 修改对象
         entity.setUpdatetime(System.currentTimeMillis());
         source.updateColumns(entity, columns);
     }
 
     //查询Sheet列表
-    public Sheet<HelloEntity> queryHello(HelloBean bean, Flipper flipper) { //通过 /hello/query/offset:0/limit:20?bean={...} 查询Sheet列表
+    public Sheet<HelloEntity> queryHello(HelloBean bean, Flipper flipper) { //通过 /pipes/hello/query/offset:0/limit:20?bean={...} 查询Sheet列表
         return source.querySheet(HelloEntity.class, flipper, bean);
     }
 
     //查询List列表
     @RestMapping(name = "list")
-    public List<HelloEntity> queryHello(HelloBean bean) { //通过 /hello/list?bean={...} 查询List列表
+    public List<HelloEntity> queryHello(HelloBean bean) { //通过 /pipes/hello/list?bean={...} 查询List列表
         return source.queryList(HelloEntity.class, bean);
     }
 
     //查询单个
     @RestMapping(name = "find")
     @RestMapping(name = "jsfind", jsvar = "varhello")
-    public HelloEntity findHello(@RestParam(name = "#") int id) {  //通过 /hello/find/1234 查询对象
+    public HelloEntity findHello(@RestParam(name = "#") int id) {  //通过 /pipes/hello/find/1234、/pipes/hello/jsfind/1234 查询对象
         return source.find(HelloEntity.class, id);
     }
 
