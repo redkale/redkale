@@ -24,7 +24,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface RestParam {
 
-    String name(); //参数名
+    String name(); //参数名 name值不能是'&';  name='#'表示截取uri最后一段;  name='#xxx:'表示从uri中/pipes/xxx:v/截取xxx:的值
 
     int radix() default 10; //转换数字byte/short/int/long时所用的进制数， 默认10进制
 
