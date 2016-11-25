@@ -8,9 +8,19 @@ public class HelloBean implements FilterBean {
 
     private int helloid;
 
-    @RestHeader(name = "hello-res")
-    private String res;
+    @RestHeader(name = "User-Agent")
+    private String useragent; //从Http Header中获取浏览器信息
+    
+    @RestCookie(name = "hello-cookie")
+    private String rescookie;  //从Cookie中获取名为hello-cookie的值
 
+    @RestAddress
+    private String clientaddr;  //客户端请求IP
+
+    @RestSessionid
+    private String sessionid;  //用户Sessionid, 未登录时为null
+
+    /** 以下省略getter setter方法 */
     public int getHelloid() {
         return helloid;
     }
@@ -19,12 +29,36 @@ public class HelloBean implements FilterBean {
         this.helloid = helloid;
     }
 
-    public String getRes() {
-        return res;
+    public String getUseragent() {
+        return useragent;
     }
 
-    public void setRes(String res) {
-        this.res = res;
+    public void setUseragent(String useragent) {
+        this.useragent = useragent;
+    }
+
+    public String getRescookie() {
+        return rescookie;
+    }
+
+    public void setRescookie(String rescookie) {
+        this.rescookie = rescookie;
+    }
+
+    public String getClientaddr() {
+        return clientaddr;
+    }
+
+    public void setClientaddr(String clientaddr) {
+        this.clientaddr = clientaddr;
+    }
+
+    public String getSessionid() {
+        return sessionid;
+    }
+
+    public void setSessionid(String sessionid) {
+        this.sessionid = sessionid;
     }
 
     @Override

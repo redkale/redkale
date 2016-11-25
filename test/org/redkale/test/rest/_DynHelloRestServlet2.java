@@ -31,6 +31,8 @@ public class _DynHelloRestServlet2 extends SimpleRestServlet {
     public void create(HttpRequest req, HttpResponse resp) throws IOException {
         HelloService2 service = _servicemap == null ? _service : _servicemap.get(req.getHeader(Rest.REST_HEADER_RESOURCE_NAME, ""));
         HelloEntity bean = req.getJsonParameter(HelloEntity.class, "bean");
+        bean.setClientaddr(req.getRemoteAddr()); 
+        bean.setResname(req.getHeader("hello-res")); 
         UserInfo user = currentUser(req);
         RetResult<HelloEntity> result = service.createHello(user, bean);
         resp.finishJson(result);
@@ -50,6 +52,8 @@ public class _DynHelloRestServlet2 extends SimpleRestServlet {
     public void update(HttpRequest req, HttpResponse resp) throws IOException {
         HelloService2 service = _servicemap == null ? _service : _servicemap.get(req.getHeader(Rest.REST_HEADER_RESOURCE_NAME, ""));
         HelloEntity bean = req.getJsonParameter(HelloEntity.class, "bean");
+        bean.setClientaddr(req.getRemoteAddr()); 
+        bean.setResname(req.getHeader("hello-res")); 
         service.updateHello(bean);
         resp.finishJson(RetResult.success());
     }
@@ -59,6 +63,10 @@ public class _DynHelloRestServlet2 extends SimpleRestServlet {
     public void query(HttpRequest req, HttpResponse resp) throws IOException {
         HelloService2 service = _servicemap == null ? _service : _servicemap.get(req.getHeader(Rest.REST_HEADER_RESOURCE_NAME, ""));
         HelloBean bean = req.getJsonParameter(HelloBean.class, "bean");
+        bean.setClientaddr(req.getRemoteAddr()); 
+        bean.setUseragent(req.getHeader("User-Agent")); 
+        bean.setRescookie(req.getCookie("hello-cookie")); 
+        bean.setSessionid(req.getSessionid(false)); 
         Flipper flipper = req.getFlipper();
         Sheet<HelloEntity> result = service.queryHello(bean, flipper);
         resp.finishJson(result);
