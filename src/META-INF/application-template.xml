@@ -137,7 +137,7 @@
            includes：当autoload="true"， 拉取类名与includes中的正则表达式匹配的类, 多个正则表达式用分号;隔开
            excludes：当autoload="true"， 排除类名与excludes中的正则表达式匹配的类, 多个正则表达式用分号;隔开
         -->
-        <rest base="org.redkale.net.http.DefaultRestServlet" mustsign="false" autoload="true" includes="" excludes="">
+        <rest base="org.redkale.net.http.DefaultRestServlet" mustsign="true" autoload="true" includes="" excludes="">
             <!-- 
                value:  Service类名，列出的表示必须被加载的Service对象
                ignore: 是否忽略，设置为true则不会加载该Service对象，默认值为false
