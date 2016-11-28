@@ -197,7 +197,7 @@
     <span class="nd">@Id</span>
     <span class="nd">@GeneratedValue</span>
     <span class="nd">@Column</span><span class="o">(</span><span class="n">comment</span> <span class="o">=</span> <span class="s">&quot;UUID&quot;</span><span class="o">)</span>
-    <span class="kd">private</span> <span class="n">String</span> <span class="n">seqid</span> <span class="o">=</span> <span class="s">&quot;&quot;</span><span class="o">;</span> <span class="c1">//UUID</span>
+    <span class="kd">private</span> <span class="n">String</span> <span class="n">loginid</span> <span class="o">=</span> <span class="s">&quot;&quot;</span><span class="o">;</span> <span class="c1">//UUID</span>
 
     <span class="nd">@Column</span><span class="o">(</span><span class="n">updatable</span> <span class="o">=</span> <span class="kc">false</span><span class="o">,</span> <span class="n">comment</span> <span class="o">=</span> <span class="s">&quot;C端用户ID&quot;</span><span class="o">)</span>
     <span class="kd">private</span> <span class="kt">long</span> <span class="n">userid</span><span class="o">;</span> <span class="c1">//C端用户ID</span>
@@ -252,7 +252,135 @@
     <span class="o">}</span>
 <span class="o">}</span>
                 </pre></div>
-            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 以上范例是用户登陆记录的分表分库策略，一年一个库，一个库中365张表，每天一个表。由于分表是根据记录的创建时间作为策略分表，因此策略接口中的public String getTable(String table, Serializable primary) 方法不能实现，因为根据主键id无法确定到数据库表。</p>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 以上范例是用户登陆记录的分表分库策略，一年一个库，一个库中365张表，每天一个表。由于分表是根据记录的创建时间作为策略分表，因此策略接口中的public String getTable(String table, Serializable primary) 方法无法实现，根据主键id无法判断出数据所在的数据库表。若有根据ID获取单条记录的需求，则需要变更loginid的生成规则，可以改成UUID+createtime，如下：</p>
+            <div class="highlight"><pre><span></span><span class="nd">@DistributeTable</span><span class="o">(</span><span class="n">strategy</span> <span class="o">=</span> <span class="n">LoginRecord</span><span class="o">.</span><span class="na">TableStrategy</span><span class="o">.</span><span class="na">class</span><span class="o">)</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">LoginRecord</span> <span class="kd">extends</span> <span class="n">BaseEntity</span> <span class="o">{</span>
+
+    <span class="nd">@Id</span>
+    <span class="nd">@Column</span><span class="o">(</span><span class="n">comment</span> <span class="o">=</span> <span class="s">&quot;主键ID; 值=UUID+create36time&quot;</span><span class="o">)</span>
+    <span class="kd">private</span> <span class="n">String</span> <span class="n">loginid</span> <span class="o">=</span> <span class="s">&quot;&quot;</span><span class="o">;</span> <span class="c1">//主键ID; 值=UUID+create36time</span>
+
+    <span class="nd">@Column</span><span class="o">(</span><span class="n">updatable</span> <span class="o">=</span> <span class="kc">false</span><span class="o">,</span> <span class="n">comment</span> <span class="o">=</span> <span class="s">&quot;C端用户ID&quot;</span><span class="o">)</span>
+    <span class="kd">private</span> <span class="kt">long</span> <span class="n">userid</span><span class="o">;</span> <span class="c1">//C端用户ID</span>
+
+    <span class="nd">@Column</span><span class="o">(</span><span class="n">updatable</span> <span class="o">=</span> <span class="kc">false</span><span class="o">,</span> <span class="n">comment</span> <span class="o">=</span> <span class="s">&quot;登录网络类型; wifi/4g/3g&quot;</span><span class="o">)</span>
+    <span class="kd">private</span> <span class="n">String</span> <span class="n">netmode</span> <span class="o">=</span> <span class="s">&quot;&quot;</span><span class="o">;</span> <span class="c1">//登录网络类型; wifi/4g/3g</span>
+
+    <span class="nd">@Column</span><span class="o">(</span><span class="n">updatable</span> <span class="o">=</span> <span class="kc">false</span><span class="o">,</span> <span class="n">comment</span> <span class="o">=</span> <span class="s">&quot;APP版本信息&quot;</span><span class="o">)</span>
+    <span class="kd">private</span> <span class="n">String</span> <span class="n">appversion</span> <span class="o">=</span> <span class="s">&quot;&quot;</span><span class="o">;</span> <span class="c1">//APP版本信息</span>
+
+    <span class="nd">@Column</span><span class="o">(</span><span class="n">updatable</span> <span class="o">=</span> <span class="kc">false</span><span class="o">,</span> <span class="n">comment</span> <span class="o">=</span> <span class="s">&quot;APP操作系统信息&quot;</span><span class="o">)</span>
+    <span class="kd">private</span> <span class="n">String</span> <span class="n">appos</span> <span class="o">=</span> <span class="s">&quot;&quot;</span><span class="o">;</span> <span class="c1">//APP操作系统信息</span>
+
+    <span class="nd">@Column</span><span class="o">(</span><span class="n">updatable</span> <span class="o">=</span> <span class="kc">false</span><span class="o">,</span> <span class="n">comment</span> <span class="o">=</span> <span class="s">&quot;登录时客户端信息&quot;</span><span class="o">)</span>
+    <span class="kd">private</span> <span class="n">String</span> <span class="n">loginagent</span> <span class="o">=</span> <span class="s">&quot;&quot;</span><span class="o">;</span> <span class="c1">//登录时客户端信息</span>
+
+    <span class="nd">@Column</span><span class="o">(</span><span class="n">updatable</span> <span class="o">=</span> <span class="kc">false</span><span class="o">,</span> <span class="n">comment</span> <span class="o">=</span> <span class="s">&quot;登录时的IP&quot;</span><span class="o">)</span>
+    <span class="kd">private</span> <span class="n">String</span> <span class="n">loginaddr</span> <span class="o">=</span> <span class="s">&quot;&quot;</span><span class="o">;</span> <span class="c1">//登录时的IP</span>
+
+    <span class="nd">@Column</span><span class="o">(</span><span class="n">updatable</span> <span class="o">=</span> <span class="kc">false</span><span class="o">,</span> <span class="n">comment</span> <span class="o">=</span> <span class="s">&quot;创建时间&quot;</span><span class="o">)</span>
+    <span class="kd">private</span> <span class="kt">long</span> <span class="n">createtime</span><span class="o">;</span> <span class="c1">//创建时间</span>
+
+    <span class="cm">/** 以下省略getter setter方法 */</span>
+   
+
+    <span class="c1">//创建对象</span>
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">Throwable</span> <span class="o">{</span>
+        <span class="n">LoginRecord</span> <span class="n">record</span> <span class="o">=</span> <span class="k">new</span> <span class="n">LoginRecord</span><span class="o">();</span>
+        <span class="kt">long</span> <span class="n">now</span> <span class="o">=</span> <span class="n">System</span><span class="o">.</span><span class="na">currentTimeMillis</span><span class="o">();</span>
+        <span class="n">record</span><span class="o">.</span><span class="na">setCreatetime</span><span class="o">(</span><span class="n">now</span><span class="o">);</span> <span class="c1">//设置创建时间</span>
+        <span class="n">String</span> <span class="n">create36time</span> <span class="o">=</span> <span class="n">Long</span><span class="o">.</span><span class="na">toString</span><span class="o">(</span><span class="n">now</span><span class="o">,</span> <span class="mi">36</span><span class="o">);</span> <span class="c1">//时间的36进制</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">create36time</span><span class="o">.</span><span class="na">length</span><span class="o">()</span> <span class="o">&lt;</span> <span class="mi">9</span><span class="o">)</span> <span class="n">create36time</span> <span class="o">=</span> <span class="s">&quot;0&quot;</span> <span class="o">+</span> <span class="n">create36time</span><span class="o">;</span> <span class="c1">//当前时间值的36进制只可能是8位或9位，不足9位填充0</span>
+        <span class="n">record</span><span class="o">.</span><span class="na">setLoginid</span><span class="o">(</span><span class="n">Utility</span><span class="o">.</span><span class="na">uuid</span><span class="o">()</span> <span class="o">+</span> <span class="n">create36time</span><span class="o">);</span>  <span class="c1">//主键的生成规则</span>
+        <span class="c1">//....  填充其他字段</span>
+        <span class="n">source</span><span class="o">.</span><span class="na">insert</span><span class="o">(</span><span class="n">record</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kd">class</span> <span class="nc">TableStrategy</span> <span class="kd">implements</span> <span class="n">DistributeTableStrategy</span><span class="o">&lt;</span><span class="n">LoginRecord</span><span class="o">&gt;</span> <span class="o">{</span>
+
+        <span class="kd">private</span> <span class="kd">static</span> <span class="kd">final</span> <span class="n">String</span> <span class="n">dayformat</span> <span class="o">=</span> <span class="s">&quot;%1$tY%1$tm%1$td&quot;</span><span class="o">;</span>
+
+        <span class="kd">private</span> <span class="kd">static</span> <span class="kd">final</span> <span class="n">String</span> <span class="n">yearformat</span> <span class="o">=</span> <span class="s">&quot;%1$tY&quot;</span><span class="o">;</span>
+
+        <span class="c1">//过滤查询时调用本方法</span>
+        <span class="nd">@Override</span>
+        <span class="kd">public</span> <span class="n">String</span> <span class="nf">getTable</span><span class="o">(</span><span class="n">String</span> <span class="n">table</span><span class="o">,</span> <span class="n">FilterNode</span> <span class="n">node</span><span class="o">)</span> <span class="o">{</span>
+            <span class="n">Serializable</span> <span class="n">day</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="na">findValue</span><span class="o">(</span><span class="s">&quot;#day&quot;</span><span class="o">);</span>
+            <span class="k">if</span> <span class="o">(</span><span class="n">day</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="n">getTable</span><span class="o">(</span><span class="n">table</span><span class="o">,</span> <span class="o">(</span><span class="n">Integer</span><span class="o">)</span> <span class="n">day</span><span class="o">,</span> <span class="mi">0</span><span class="n">L</span><span class="o">);</span> <span class="c1">//存在#day参数则直接使用day值</span>
+            <span class="n">Serializable</span> <span class="n">time</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="na">findValue</span><span class="o">(</span><span class="s">&quot;#createtime&quot;</span><span class="o">);</span>  <span class="c1">//存在createtime则使用最小时间，且createtime的范围必须在一天内，因为本表以天为单位建表</span>
+            <span class="k">return</span> <span class="n">getTable</span><span class="o">(</span><span class="n">table</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="o">(</span><span class="n">time</span> <span class="o">==</span> <span class="kc">null</span> <span class="o">?</span> <span class="mi">0</span><span class="n">L</span> <span class="o">:</span> <span class="o">(</span><span class="n">time</span> <span class="k">instanceof</span> <span class="n">Range</span> <span class="o">?</span> <span class="o">((</span><span class="n">Range</span><span class="o">.</span><span class="na">LongRange</span><span class="o">)</span> <span class="n">time</span><span class="o">).</span><span class="na">getMin</span><span class="o">()</span> <span class="o">:</span> <span class="o">(</span><span class="n">Long</span><span class="o">)</span> <span class="n">time</span><span class="o">)));</span>
+        <span class="o">}</span>
+
+        <span class="c1">//创建或单个查询时调用本方法</span>
+        <span class="nd">@Override</span>
+        <span class="kd">public</span> <span class="n">String</span> <span class="nf">getTable</span><span class="o">(</span><span class="n">String</span> <span class="n">table</span><span class="o">,</span> <span class="n">LoginRecord</span> <span class="n">bean</span><span class="o">)</span> <span class="o">{</span>
+            <span class="k">return</span> <span class="n">getTable</span><span class="o">(</span><span class="n">table</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="n">bean</span><span class="o">.</span><span class="na">getCreatetime</span><span class="o">());</span>
+        <span class="o">}</span>
+
+        <span class="c1">//根据主键ID查询单个记录时调用本方法</span>
+        <span class="nd">@Override</span>
+        <span class="kd">public</span> <span class="n">String</span> <span class="nf">getTable</span><span class="o">(</span><span class="n">String</span> <span class="n">table</span><span class="o">,</span> <span class="n">Serializable</span> <span class="n">primary</span><span class="o">)</span> <span class="o">{</span>
+            <span class="n">String</span> <span class="n">loginid</span> <span class="o">=</span> <span class="o">(</span><span class="n">String</span><span class="o">)</span> <span class="n">primary</span><span class="o">;</span>
+            <span class="n">String</span> <span class="n">create36time</span> <span class="o">=</span> <span class="n">loginid</span><span class="o">.</span><span class="na">substring</span><span class="o">(</span><span class="n">loginid</span><span class="o">.</span><span class="na">length</span><span class="o">()</span> <span class="o">-</span> <span class="mi">9</span><span class="o">);</span> <span class="c1">//固定最后9位为创建时间的36进制值</span>
+            <span class="k">return</span> <span class="n">getTable</span><span class="o">(</span><span class="n">table</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="n">Long</span><span class="o">.</span><span class="na">parseLong</span><span class="o">(</span><span class="n">create36time</span><span class="o">,</span> <span class="mi">36</span><span class="o">));</span>
+        <span class="o">}</span>
+
+        <span class="kd">private</span> <span class="n">String</span> <span class="nf">getTable</span><span class="o">(</span><span class="n">String</span> <span class="n">table</span><span class="o">,</span> <span class="kt">int</span> <span class="n">day</span><span class="o">,</span> <span class="kt">long</span> <span class="n">createtime</span><span class="o">)</span> <span class="o">{</span>
+            <span class="kt">int</span> <span class="n">pos</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="na">indexOf</span><span class="o">(</span><span class="sc">&#39;.&#39;</span><span class="o">);</span>
+            <span class="n">String</span> <span class="n">year</span> <span class="o">=</span> <span class="o">(</span><span class="n">day</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="o">?</span> <span class="s">&quot;&quot;</span> <span class="o">+</span> <span class="n">day</span> <span class="o">/</span> <span class="mi">10000</span> <span class="o">:</span> <span class="n">String</span><span class="o">.</span><span class="na">format</span><span class="o">(</span><span class="n">yearformat</span><span class="o">,</span> <span class="n">createtime</span><span class="o">));</span>
+            <span class="k">return</span> <span class="s">&quot;platf_login_&quot;</span> <span class="o">+</span> <span class="n">year</span> <span class="o">+</span> <span class="s">&quot;.&quot;</span> <span class="o">+</span> <span class="n">table</span><span class="o">.</span><span class="na">substring</span><span class="o">(</span><span class="n">pos</span> <span class="o">+</span> <span class="mi">1</span><span class="o">)</span> <span class="o">+</span> <span class="s">&quot;_&quot;</span> <span class="o">+</span> <span class="o">(</span><span class="n">day</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="o">?</span> <span class="n">day</span> <span class="o">:</span> <span class="n">String</span><span class="o">.</span><span class="na">format</span><span class="o">(</span><span class="n">dayformat</span><span class="o">,</span> <span class="n">createtime</span><span class="o">));</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+                </pre></div>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 如上范例，若需要分表策略的三个接口均得到实现，需要对主键ID的生成规则进行一定的设计。并不是所有的数据表都需要进行全量查询或单个记录查询，开发人员可根据使用场景来设计分表策略和主键生成规则。事实上用户登录记录很少场景需要查询单个记录的， 但是常见的场景是查询单个用户的登录列表。上面的范例无法满足查询单个用户的登录信息需求，而分表策略又只能根据一种规则生成，因此需要按用户维度存在另外一张表中。</p>
+            <div class="highlight"><pre><span></span><span class="nd">@DistributeTable</span><span class="o">(</span><span class="n">strategy</span> <span class="o">=</span> <span class="n">LoginUserRecord</span><span class="o">.</span><span class="na">TableStrategy</span><span class="o">.</span><span class="na">class</span><span class="o">)</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">LoginUserRecord</span> <span class="kd">extends</span> <span class="n">BaseEntity</span> <span class="o">{</span>
+
+    <span class="nd">@Id</span>
+    <span class="nd">@GeneratedValue</span>
+    <span class="nd">@Column</span><span class="o">(</span><span class="n">comment</span> <span class="o">=</span> <span class="s">&quot;UUID&quot;</span><span class="o">)</span>
+    <span class="kd">private</span> <span class="n">String</span> <span class="n">seqid</span> <span class="o">=</span> <span class="s">&quot;&quot;</span><span class="o">;</span> <span class="c1">//UUID</span>
+
+    <span class="nd">@Column</span><span class="o">(</span><span class="n">updatable</span> <span class="o">=</span> <span class="kc">false</span><span class="o">,</span> <span class="n">comment</span> <span class="o">=</span> <span class="s">&quot;C端用户ID&quot;</span><span class="o">)</span>
+    <span class="kd">private</span> <span class="kt">long</span> <span class="n">userid</span><span class="o">;</span> <span class="c1">//C端用户ID</span>
+
+    <span class="nd">@Column</span><span class="o">(</span><span class="n">comment</span> <span class="o">=</span> <span class="s">&quot;LoginRecord主键&quot;</span><span class="o">)</span>
+    <span class="kd">private</span> <span class="n">String</span> <span class="n">loginid</span> <span class="o">=</span> <span class="s">&quot;&quot;</span><span class="o">;</span> <span class="c1">//LoginRecord主键</span>
+
+    <span class="nd">@Column</span><span class="o">(</span><span class="n">updatable</span> <span class="o">=</span> <span class="kc">false</span><span class="o">,</span> <span class="n">comment</span> <span class="o">=</span> <span class="s">&quot;创建时间&quot;</span><span class="o">)</span>
+    <span class="kd">private</span> <span class="kt">long</span> <span class="n">createtime</span><span class="o">;</span> <span class="c1">//创建时间</span>
+
+    <span class="cm">/** 以下省略getter setter方法 */</span>
+
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kd">class</span> <span class="nc">TableStrategy</span> <span class="kd">implements</span> <span class="n">DistributeTableStrategy</span><span class="o">&lt;</span><span class="n">LoginUserRecord</span><span class="o">&gt;</span> <span class="o">{</span>
+
+        <span class="nd">@Override</span>
+        <span class="kd">public</span> <span class="n">String</span> <span class="nf">getTable</span><span class="o">(</span><span class="n">String</span> <span class="n">table</span><span class="o">,</span> <span class="n">LoginUserRecord</span> <span class="n">bean</span><span class="o">)</span> <span class="o">{</span>
+            <span class="k">return</span> <span class="n">getTable</span><span class="o">(</span><span class="n">table</span><span class="o">,</span> <span class="n">bean</span><span class="o">.</span><span class="na">getUserid</span><span class="o">());</span>
+        <span class="o">}</span>
+
+        <span class="nd">@Override</span>
+        <span class="kd">public</span> <span class="n">String</span> <span class="nf">getTable</span><span class="o">(</span><span class="n">String</span> <span class="n">table</span><span class="o">,</span> <span class="n">FilterNode</span> <span class="n">node</span><span class="o">)</span> <span class="o">{</span>
+            <span class="n">Serializable</span> <span class="n">id</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="na">findValue</span><span class="o">(</span><span class="s">&quot;userid&quot;</span><span class="o">);</span>
+            <span class="k">if</span> <span class="o">(</span><span class="n">id</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="k">return</span> <span class="n">getTable</span><span class="o">(</span><span class="n">table</span><span class="o">,</span> <span class="n">id</span><span class="o">);</span>
+            <span class="k">return</span> <span class="n">getHashTable</span><span class="o">(</span><span class="n">table</span><span class="o">,</span> <span class="o">(</span><span class="n">Integer</span><span class="o">)</span> <span class="n">node</span><span class="o">.</span><span class="na">findValue</span><span class="o">(</span><span class="s">&quot;#hash&quot;</span><span class="o">));</span>
+        <span class="o">}</span>
+
+        <span class="nd">@Override</span>
+        <span class="kd">public</span> <span class="n">String</span> <span class="nf">getTable</span><span class="o">(</span><span class="n">String</span> <span class="n">table</span><span class="o">,</span> <span class="n">Serializable</span> <span class="n">userid</span><span class="o">)</span> <span class="o">{</span>
+            <span class="k">return</span> <span class="n">getHashTable</span><span class="o">(</span><span class="n">table</span><span class="o">,</span> <span class="o">(</span><span class="kt">int</span><span class="o">)</span> <span class="o">(((</span><span class="n">Long</span><span class="o">)</span> <span class="n">userid</span><span class="o">)</span> <span class="o">%</span> <span class="mi">100</span><span class="o">));</span>
+        <span class="o">}</span>
+
+        <span class="kd">private</span> <span class="n">String</span> <span class="nf">getHashTable</span><span class="o">(</span><span class="n">String</span> <span class="n">table</span><span class="o">,</span> <span class="kt">int</span> <span class="n">hash</span><span class="o">)</span> <span class="o">{</span>
+            <span class="kt">int</span> <span class="n">pos</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="na">indexOf</span><span class="o">(</span><span class="sc">&#39;.&#39;</span><span class="o">);</span>
+            <span class="k">return</span> <span class="s">&quot;platf_login.&quot;</span> <span class="o">+</span> <span class="n">table</span><span class="o">.</span><span class="na">substring</span><span class="o">(</span><span class="n">pos</span> <span class="o">+</span> <span class="mi">1</span><span class="o">)</span> <span class="o">+</span> <span class="s">&quot;_&quot;</span> <span class="o">+</span> <span class="o">(</span><span class="n">hash</span> <span class="o">&gt;</span> <span class="mi">9</span> <span class="o">?</span> <span class="n">hash</span> <span class="o">:</span> <span class="o">(</span><span class="s">&quot;0&quot;</span> <span class="o">+</span> <span class="n">hash</span><span class="o">));</span>
+        <span class="o">}</span>
+
+    <span class="o">}</span>
+<span class="o">}</span>
+                </pre></div>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 如上，表LoginUserRecord只存储用户ID与登录信息ID的关联关系，以用户ID取模100进行hash存储，获取用户登录列表时，先查询LoginUserRecord一页的数据，再根据loginid查询LoginRecord实体。常见的分表策略是时间和主键hash，例如用户信息表采用主键hash分表：</p>
             <div class="highlight"><pre><span></span><span class="nd">@DistributeTable</span><span class="o">(</span><span class="n">strategy</span> <span class="o">=</span> <span class="n">UserDetail</span><span class="o">.</span><span class="na">TableStrategy</span><span class="o">.</span><span class="na">class</span><span class="o">)</span>
 <span class="kd">public</span> <span class="kd">class</span> <span class="nc">UserDetail</span> <span class="kd">extends</span> <span class="n">BaseEntity</span> <span class="o">{</span>
 
@@ -304,7 +432,7 @@
 
     <span class="o">}</span>
 <span class="o">}</span>
-                </pre></div>
+                </pre></div><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 如上，用户表以userid取模100进行hash分表，若需要提供根据手机号查询单个用户信息，则需要另外存在一个用户ID对应手机号码的关系表，同样可以以手机号后两位数字为hash存储。</p>
 
             <h3><a id="source_cachesource" class="anchor" href="#" aria-hidden="true"></a>CacheSource 入门</h3>
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CacheSource同Memcached类似，像一个带有过期功能地Map容器，存放key-value数据。常见的使用场景就是存放HTTP的Session信息。Redkale把用户会话信息数据当做业务数据处理，而不是接入层的数据。WebSocket的连接态数据也是用CacheSource存储。key为WebSocket的groupid，value为WebSocket服务端节点的IP地址列表。</p>
