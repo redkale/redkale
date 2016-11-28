@@ -36,17 +36,17 @@
 
             <h3><a id="redkale_code" class="anchor" href="#" aria-hidden="true"></a>Java 源码</h3>
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="https://github.com/redkale" target="_blank" >Github 源码 &nbsp;&nbsp; https://github.com/redkale</a></p>
-            
+
             <h3><a id="redkale_server" class="anchor" href="#" aria-hidden="true"></a>Redkale 服务器</h3>
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Redkale作为服务器的目录如下: <br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>bin</b>&nbsp;&nbsp;&nbsp;： 存放启动/关闭/apidoc脚本(start.sh、shutdown.sh、apidoc.sh、start.bat、shutdown.bat、apidoc.bat) <br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>conf</b>&nbsp;： 存放服务器所需配置文件:<br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#redkale_confxml">application.xml</a>： 服务配置文件 (必需)；<br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; logging.properties：日志配置文件 (可选)； <br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; persistence.xml：数据库配置文件 (可选)；<br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="source.html#source_confxml" target="_blank">persistence.xml</a>：数据库配置文件 (可选)；<br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>lib</b>&nbsp;&nbsp;&nbsp;&nbsp;： 存放服务所依赖的第三方包，redkale.jar 放在此处。 <br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>logs</b> ： logging.properties 配置中默认的日志存放目录。<br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>root</b>&nbsp;： application.xml 配置中HTTP服务所需页面的默认根目录。 <br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>root</b>&nbsp;： <a href="#redkale_confxml">application.xml</a> 配置中HTTP服务所需页面的默认根目录。 <br/>
             </p>
 
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Redkale启动的流程如下：<br/>
@@ -83,7 +83,8 @@
         <span class="n">bean</span><span class="o">.</span><span class="na">setPassword</span><span class="o">(</span><span class="s">&quot;123456&quot;</span><span class="o">);</span>
         <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">service</span><span class="o">.</span><span class="na">login</span><span class="o">(</span><span class="n">bean</span><span class="o">));</span>
     <span class="o">}</span></pre></div>
-            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Application.singleton 运行流程与通过bin脚本启动的流程基本一致，区别在于singleton运行时不会启动Server和Application自身的服务监听。Redkale提倡接入层(Servlet)与业务层(Service)分开，Service在代码上不能依赖于Servlet，因此调试Service自身逻辑时不需要启动接入层服务(类似WebSocket依赖Servlet的功能除外)。 </p>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Application.singleton 运行流程与通过bin脚本启动的流程基本一致，区别在于singleton运行时不会启动Server和Application自身的服务监听。Redkale提倡接入层(Servlet)与业务层(Service)分开，Service在代码上不能依赖于Servlet，因此调试Service自身逻辑时不需要启动接入层服务(类似WebSocket依赖Servlet的功能除外)。 <br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>注:</b>  Application.singleton的参数Service类不能是抽象类、接口或不存在非final的public方法。</p>
 
             <h3><a id="redkale_inject" class="anchor" href="#" aria-hidden="true"></a>Redkale的依赖注入</h3>
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Redkale内置的依赖注入实现很简单，只有三个注解和一个类: javax.annotation.Resource、org.redkale.util.ResourceType、org.redkale.util.ResourceListener、org.redkale.util.ResourceFactory，采用反射技术，依赖注入通常不会在频繁的操作中进行，因此性能要求不会很高。其中前两个是注解，ResourceFactory是主要操作类，主要提供注册和注入两个接口。ResourceFactory的依赖注入不仅提供其他依赖注入框架的常规功能，还能动态的自动更新通过inject注入的资源。</p>
@@ -720,7 +721,7 @@
         <span class="nt">&lt;services</span> <span class="na">autoload=</span><span class="s">&quot;true&quot;</span> <span class="na">includes=</span><span class="s">&quot;&quot;</span> <span class="na">excludes=</span><span class="s">&quot;&quot;</span> <span class="nt">/&gt;</span>
     <span class="nt">&lt;/server&gt;</span>
 <span class="nt">&lt;/application&gt;</span>
-</pre></div>
+                </pre></div>
 
 
             <footer class="site-footer">

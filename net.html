@@ -100,7 +100,7 @@
 <span class="o">}</span></pre></div>
 
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;继承HttpBaseServlet的子类可以使用其自带的鉴权、请求分支、缓存等功能， 一个典型的操作用户HttpServlet: </p> 
-            <div class="highlight"><pre><span class="nd">@WebServlet</span><span class="o">({</span><span class="s">&quot;/user/*&quot;</span><span class="o">})</span>  <span class="c1">//拦截所有 /user/ 开头的请求</span>
+            <div class="highlight"><pre><span class="nd">@WebServlet</span><span class="o">(</span><span class="n">value</span> <span class="o">=</span> <span class="o">{</span><span class="s">&quot;/user/*&quot;</span><span class="o">},</span> <span class="n">comment</span> <span class="o">=</span> <span class="s">&quot;用户模块服务&quot;</span><span class="o">)</span>  <span class="c1">//拦截所有 /user/ 开头的请求</span>
 <span class="kd">public</span> <span class="kd">class</span> <span class="nc">UserServlet</span> <span class="kd">extends</span> <span class="n">BaseSerlvet</span> <span class="o">{</span>
 
     <span class="nd">@Resource</span>
@@ -110,7 +110,8 @@
     <span class="nd">@AuthIgnore</span>  <span class="c1">//登录操作不要判断登录态，所以需要标记为@AuthIgnore，不会调用 BaseSerlvet.authenticate 方法</span>
     <span class="c1">//因为WebAction的判断规则用的是String.startsWith，所以WebAction.url不能用正则表达式，只能是getRequestURI的前缀</span>
     <span class="c1">//且同一个HttpServlet类内的所有WebAction不能存在包含关系, 如 /user/myinfo 和 /user/myinforecord 不能存在同一HttpServlet中。</span>
-    <span class="nd">@WebAction</span><span class="o">(</span><span class="n">url</span> <span class="o">=</span> <span class="s">&quot;/user/login&quot;</span><span class="o">)</span>
+    <span class="nd">@WebAction</span><span class="o">(</span><span class="n">url</span> <span class="o">=</span> <span class="s">&quot;/user/login&quot;</span><span class="o">,</span> <span class="n">comment</span> <span class="o">=</span> <span class="s">&quot;用户登录&quot;</span><span class="o">)</span>
+    <span class="nd">@WebParam</span><span class="o">(</span><span class="n">name</span> <span class="o">=</span> <span class="s">&quot;bean&quot;</span><span class="o">,</span> <span class="n">type</span> <span class="o">=</span> <span class="n">LoginBean</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="n">comment</span> <span class="o">=</span> <span class="s">&quot;登录参数对象&quot;</span><span class="o">)</span>
     <span class="kd">public</span> <span class="kt">void</span> <span class="nf">login</span><span class="o">(</span><span class="n">HttpRequest</span> <span class="n">req</span><span class="o">,</span> <span class="n">HttpResponse</span> <span class="n">resp</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
         <span class="n">LoginBean</span> <span class="n">bean</span> <span class="o">=</span> <span class="n">req</span><span class="o">.</span><span class="na">getJsonParameter</span><span class="o">(</span><span class="n">LoginBean</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="s">&quot;bean&quot;</span><span class="o">);</span> <span class="c1">//获取参数</span>
         <span class="n">RetResult</span><span class="o">&lt;</span><span class="n">UserInfo</span><span class="o">&gt;</span> <span class="n">result</span> <span class="o">=</span> <span class="n">service</span><span class="o">.</span><span class="na">login</span><span class="o">(</span><span class="n">bean</span><span class="o">);</span> <span class="c1">//登录操作， service内部判断bean的合法性</span>
@@ -119,7 +120,7 @@
 
     <span class="c1">//获取当前用户信息</span>
     <span class="c1">//未登录的请求会被BaseSerlvet.authenticate方法拦截，因此能进入该方法说明用户态存在</span>
-    <span class="nd">@WebAction</span><span class="o">(</span><span class="n">url</span> <span class="o">=</span> <span class="s">&quot;/user/myinfo&quot;</span><span class="o">)</span>
+    <span class="nd">@WebAction</span><span class="o">(</span><span class="n">url</span> <span class="o">=</span> <span class="s">&quot;/user/myinfo&quot;</span><span class="o">,</span> <span class="n">comment</span> <span class="o">=</span> <span class="s">&quot;获取当前用户信息&quot;</span><span class="o">)</span>
     <span class="kd">public</span> <span class="kt">void</span> <span class="nf">myinfo</span><span class="o">(</span><span class="n">HttpRequest</span> <span class="n">req</span><span class="o">,</span> <span class="n">HttpResponse</span> <span class="n">resp</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
         <span class="n">UserInfo</span> <span class="n">user</span> <span class="o">=</span> <span class="n">service</span><span class="o">.</span><span class="na">current</span><span class="o">(</span><span class="n">req</span><span class="o">.</span><span class="na">getSessionid</span><span class="o">(</span><span class="kc">false</span><span class="o">));</span>
         <span class="c1">//或者使用 user = req.getAttribute(&quot;_current_userinfo&quot;); 因为BaseSerlvet.authenticate方法已经将UserInfo注入到_current_userinfo属性中</span>
@@ -132,14 +133,15 @@
     <span class="c1">// @HttpCacheable 必须配合  @AuthIgnore 使用， 因为跟当前用户有关的请求一般不适合所有用户请求。 </span>
     <span class="c1">// 翻页查询想缓存就需要将翻页信息带进url: /user/query/page:2/size:50 。</span>
     <span class="nd">@HttpCacheable</span><span class="o">(</span><span class="n">timeout</span> <span class="o">=</span> <span class="mi">30</span><span class="o">)</span>  <span class="c1">//有效期30秒</span>
-    <span class="nd">@WebAction</span><span class="o">(</span><span class="n">url</span> <span class="o">=</span> <span class="s">&quot;/user/userinfo/&quot;</span><span class="o">)</span>
+    <span class="nd">@WebAction</span><span class="o">(</span><span class="n">url</span> <span class="o">=</span> <span class="s">&quot;/user/userinfo/&quot;</span><span class="o">,</span> <span class="n">comment</span> <span class="o">=</span> <span class="s">&quot;获取指定用户ID的用户信息&quot;</span><span class="o">)</span>
+    <span class="nd">@WebParam</span><span class="o">(</span><span class="n">name</span> <span class="o">=</span> <span class="s">&quot;#&quot;</span><span class="o">,</span> <span class="n">type</span> <span class="o">=</span> <span class="kd">int</span><span class="o">.</span><span class="kd">class</span><span class="o">,</span> <span class="n">comment</span> <span class="o">=</span> <span class="s">&quot;用户ID&quot;</span><span class="o">)</span>
     <span class="kd">public</span> <span class="kt">void</span> <span class="nf">userinfo</span><span class="o">(</span><span class="n">HttpRequest</span> <span class="n">req</span><span class="o">,</span> <span class="n">HttpResponse</span> <span class="n">resp</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
         <span class="n">UserInfo</span> <span class="n">user</span> <span class="o">=</span> <span class="n">service</span><span class="o">.</span><span class="na">findUserInfo</span><span class="o">(</span><span class="n">Integer</span><span class="o">.</span><span class="na">parseInt</span><span class="o">(</span><span class="n">req</span><span class="o">.</span><span class="na">getRequstURILastPath</span><span class="o">()));</span>
         <span class="n">resp</span><span class="o">.</span><span class="na">finishJson</span><span class="o">(</span><span class="n">user</span><span class="o">);</span>  <span class="c1">//输出用户信息</span>
     <span class="o">}</span>
 
     <span class="c1">//更新个人头像</span>
-    <span class="nd">@WebAction</span><span class="o">(</span><span class="n">url</span> <span class="o">=</span> <span class="s">&quot;/user/updateface&quot;</span><span class="o">)</span>
+    <span class="nd">@WebAction</span><span class="o">(</span><span class="n">url</span> <span class="o">=</span> <span class="s">&quot;/user/updateface&quot;</span><span class="o">,</span> <span class="n">comment</span> <span class="o">=</span> <span class="s">&quot;更新用户头像&quot;</span><span class="o">)</span>
     <span class="kd">public</span> <span class="kt">void</span> <span class="nf">updateface</span><span class="o">(</span><span class="n">HttpRequest</span> <span class="n">req</span><span class="o">,</span> <span class="n">HttpResponse</span> <span class="n">resp</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
         <span class="n">UserInfo</span> <span class="n">user</span> <span class="o">=</span> <span class="n">service</span><span class="o">.</span><span class="na">current</span><span class="o">(</span><span class="n">req</span><span class="o">.</span><span class="na">getSessionid</span><span class="o">(</span><span class="kc">false</span><span class="o">));</span>
         <span class="k">for</span> <span class="o">(</span><span class="n">MultiPart</span> <span class="n">part</span> <span class="o">:</span> <span class="n">req</span><span class="o">.</span><span class="na">multiParts</span><span class="o">())</span> <span class="o">{</span> <span class="c1">//遍历上传文件列表 </span>
