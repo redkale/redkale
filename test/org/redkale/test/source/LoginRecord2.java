@@ -8,18 +8,18 @@ package org.redkale.test.source;
 import java.io.Serializable;
 import javax.persistence.*;
 import org.redkale.source.*;
+import org.redkale.util.Utility;
 
 /**
  *
  * @author zhangjx
  */
-@DistributeTable(strategy = LoginRecord.TableStrategy.class)
-public class LoginRecord extends BaseEntity {
+@DistributeTable(strategy = LoginRecord2.TableStrategy.class)
+public class LoginRecord2 extends BaseEntity {
 
     @Id
-    @GeneratedValue
-    @Column(comment = "UUID")
-    private String loginid = ""; //UUID
+    @Column(comment = "主键ID; 值=UUID+create36time")
+    private String loginid = ""; //主键ID; 值=UUID+create36time
 
     @Column(updatable = false, comment = "C端用户ID")
     private long userid; //C端用户ID
@@ -108,7 +108,19 @@ public class LoginRecord extends BaseEntity {
         return this.createtime;
     }
 
-    public static class TableStrategy implements DistributeTableStrategy<LoginRecord> {
+    //创建对象
+    public static void main(String[] args) throws Throwable {
+        LoginRecord2 record = new LoginRecord2();
+        long now = System.currentTimeMillis();
+        record.setCreatetime(now); //设置创建时间
+        String create36time = Long.toString(now, 36); //时间的36进制
+        if (create36time.length() < 9) create36time = "0" + create36time; //当前时间值的36进制只可能是8位或9位，不足9位填充0
+        record.setLoginid(Utility.uuid() + create36time);  //主键的生成策略
+        //....  填充其他字段
+        //source.insert(record);
+    }
+
+    public static class TableStrategy implements DistributeTableStrategy<LoginRecord2> {
 
         private static final String dayformat = "%1$tY%1$tm%1$td";
 
@@ -125,8 +137,16 @@ public class LoginRecord extends BaseEntity {
 
         //创建或单个查询时调用本方法
         @Override
-        public String getTable(String table, LoginRecord bean) {
+        public String getTable(String table, LoginRecord2 bean) {
             return getTable(table, 0, bean.getCreatetime());
+        }
+
+        //根据主键ID查询单个记录时调用本方法
+        @Override
+        public String getTable(String table, Serializable primary) {
+            String loginid = (String) primary;
+            String create36time = loginid.substring(loginid.length() - 9); //固定最后9位为创建时间的36进制值
+            return getTable(table, 0, Long.parseLong(create36time, 36));
         }
 
         private String getTable(String table, int day, long createtime) {
