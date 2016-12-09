@@ -622,8 +622,8 @@ public final class Utility {
 
     public static ByteArrayOutputStream remoteHttpContent(SSLContext ctx, String method, String url, Map<String, String> headers, String body) throws IOException {
         HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();
-        conn.setConnectTimeout(3000);
-        conn.setReadTimeout(3000);
+        conn.setConnectTimeout(6000);
+        conn.setReadTimeout(6000);
         if (conn instanceof HttpsURLConnection) {
             HttpsURLConnection httpsconn = ((HttpsURLConnection) conn);
             httpsconn.setSSLSocketFactory((ctx == null ? DEFAULTSSL_CONTEXT : ctx).getSocketFactory());
