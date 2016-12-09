@@ -505,125 +505,241 @@ public final class Utility {
     }
 
     public static String postHttpContent(String url) throws IOException {
-        return remoteHttpContent(null, "POST", url, null, null).toString("UTF-8");
+        return remoteHttpContent(null, "POST", url, 0, null, null).toString("UTF-8");
+    }
+
+    public static String postHttpContent(String url, int timeout) throws IOException {
+        return remoteHttpContent(null, "POST", url, timeout, null, null).toString("UTF-8");
     }
 
     public static String postHttpContent(String url, String body) throws IOException {
-        return remoteHttpContent(null, "POST", url, null, body).toString("UTF-8");
+        return remoteHttpContent(null, "POST", url, 0, null, body).toString("UTF-8");
+    }
+
+    public static String postHttpContent(String url, int timeout, String body) throws IOException {
+        return remoteHttpContent(null, "POST", url, timeout, null, body).toString("UTF-8");
     }
 
     public static String postHttpContent(String url, Map<String, String> headers, String body) throws IOException {
-        return remoteHttpContent(null, "POST", url, headers, body).toString("UTF-8");
+        return remoteHttpContent(null, "POST", url, 0, headers, body).toString("UTF-8");
+    }
+
+    public static String postHttpContent(String url, int timeout, Map<String, String> headers, String body) throws IOException {
+        return remoteHttpContent(null, "POST", url, timeout, headers, body).toString("UTF-8");
     }
 
     public static String postHttpContent(SSLContext ctx, String url) throws IOException {
-        return remoteHttpContent(ctx, "POST", url, null, null).toString("UTF-8");
+        return remoteHttpContent(ctx, "POST", url, 0, null, null).toString("UTF-8");
+    }
+
+    public static String postHttpContent(SSLContext ctx, String url, int timeout) throws IOException {
+        return remoteHttpContent(ctx, "POST", url, timeout, null, null).toString("UTF-8");
     }
 
     public static String postHttpContent(SSLContext ctx, String url, String body) throws IOException {
-        return remoteHttpContent(ctx, "POST", url, null, body).toString("UTF-8");
+        return remoteHttpContent(ctx, "POST", url, 0, null, body).toString("UTF-8");
+    }
+
+    public static String postHttpContent(SSLContext ctx, String url, int timeout, String body) throws IOException {
+        return remoteHttpContent(ctx, "POST", url, timeout, null, body).toString("UTF-8");
     }
 
     public static String postHttpContent(SSLContext ctx, String url, Map<String, String> headers, String body) throws IOException {
-        return remoteHttpContent(ctx, "POST", url, headers, body).toString("UTF-8");
+        return remoteHttpContent(ctx, "POST", url, 0, headers, body).toString("UTF-8");
+    }
+
+    public static String postHttpContent(SSLContext ctx, String url, int timeout, Map<String, String> headers, String body) throws IOException {
+        return remoteHttpContent(ctx, "POST", url, timeout, headers, body).toString("UTF-8");
     }
 
     public static String postHttpContent(String url, Charset charset) throws IOException {
-        return remoteHttpContent(null, "POST", url, null, null).toString(charset.name());
+        return remoteHttpContent(null, "POST", url, 0, null, null).toString(charset.name());
+    }
+
+    public static String postHttpContent(String url, int timeout, Charset charset) throws IOException {
+        return remoteHttpContent(null, "POST", url, timeout, null, null).toString(charset.name());
     }
 
     public static String postHttpContent(String url, Charset charset, String body) throws IOException {
-        return remoteHttpContent(null, "POST", url, null, body).toString(charset.name());
+        return remoteHttpContent(null, "POST", url, 0, null, body).toString(charset.name());
+    }
+
+    public static String postHttpContent(String url, int timeout, Charset charset, String body) throws IOException {
+        return remoteHttpContent(null, "POST", url, timeout, null, body).toString(charset.name());
     }
 
     public static String postHttpContent(String url, Charset charset, Map<String, String> headers, String body) throws IOException {
-        return remoteHttpContent(null, "POST", url, headers, body).toString(charset.name());
+        return remoteHttpContent(null, "POST", url, 0, headers, body).toString(charset.name());
+    }
+
+    public static String postHttpContent(String url, int timeout, Charset charset, Map<String, String> headers, String body) throws IOException {
+        return remoteHttpContent(null, "POST", url, timeout, headers, body).toString(charset.name());
     }
 
     public static String postHttpContent(SSLContext ctx, String url, Charset charset) throws IOException {
-        return remoteHttpContent(ctx, "POST", url, null, null).toString(charset.name());
+        return remoteHttpContent(ctx, "POST", url, 0, null, null).toString(charset.name());
+    }
+
+    public static String postHttpContent(SSLContext ctx, String url, int timeout, Charset charset) throws IOException {
+        return remoteHttpContent(ctx, "POST", url, timeout, null, null).toString(charset.name());
     }
 
     public static String postHttpContent(SSLContext ctx, String url, Charset charset, String body) throws IOException {
-        return remoteHttpContent(ctx, "POST", url, null, body).toString(charset.name());
+        return remoteHttpContent(ctx, "POST", url, 0, null, body).toString(charset.name());
+    }
+
+    public static String postHttpContent(SSLContext ctx, String url, int timeout, Charset charset, String body) throws IOException {
+        return remoteHttpContent(ctx, "POST", url, timeout, null, body).toString(charset.name());
     }
 
     public static String postHttpContent(SSLContext ctx, String url, Charset charset, Map<String, String> headers, String body) throws IOException {
-        return remoteHttpContent(ctx, "POST", url, headers, body).toString(charset.name());
+        return remoteHttpContent(ctx, "POST", url, 0, headers, body).toString(charset.name());
+    }
+
+    public static String postHttpContent(SSLContext ctx, String url, int timeout, Charset charset, Map<String, String> headers, String body) throws IOException {
+        return remoteHttpContent(ctx, "POST", url, timeout, headers, body).toString(charset.name());
     }
 
     public static byte[] postHttpBytesContent(String url) throws IOException {
-        return remoteHttpContent(null, "POST", url, null, null).toByteArray();
+        return remoteHttpContent(null, "POST", url, 0, null, null).toByteArray();
+    }
+
+    public static byte[] postHttpBytesContent(String url, int timeout) throws IOException {
+        return remoteHttpContent(null, "POST", url, timeout, null, null).toByteArray();
     }
 
     public static byte[] postHttpBytesContent(SSLContext ctx, String url) throws IOException {
-        return remoteHttpContent(ctx, "POST", url, null, null).toByteArray();
+        return remoteHttpContent(ctx, "POST", url, 0, null, null).toByteArray();
+    }
+
+    public static byte[] postHttpBytesContent(SSLContext ctx, String url, int timeout) throws IOException {
+        return remoteHttpContent(ctx, "POST", url, timeout, null, null).toByteArray();
     }
 
     public static byte[] postHttpBytesContent(String url, Map<String, String> headers, String body) throws IOException {
-        return remoteHttpContent(null, "POST", url, headers, body).toByteArray();
+        return remoteHttpContent(null, "POST", url, 0, headers, body).toByteArray();
+    }
+
+    public static byte[] postHttpBytesContent(String url, int timeout, Map<String, String> headers, String body) throws IOException {
+        return remoteHttpContent(null, "POST", url, timeout, headers, body).toByteArray();
     }
 
     public static byte[] postHttpBytesContent(SSLContext ctx, String url, Map<String, String> headers, String body) throws IOException {
-        return remoteHttpContent(ctx, "POST", url, headers, body).toByteArray();
+        return remoteHttpContent(ctx, "POST", url, 0, headers, body).toByteArray();
+    }
+
+    public static byte[] postHttpBytesContent(SSLContext ctx, String url, int timeout, Map<String, String> headers, String body) throws IOException {
+        return remoteHttpContent(ctx, "POST", url, timeout, headers, body).toByteArray();
     }
 
     public static String getHttpContent(String url) throws IOException {
-        return remoteHttpContent(null, "GET", url, null, null).toString("UTF-8");
+        return remoteHttpContent(null, "GET", url, 0, null, null).toString("UTF-8");
+    }
+
+    public static String getHttpContent(String url, int timeout) throws IOException {
+        return remoteHttpContent(null, "GET", url, timeout, null, null).toString("UTF-8");
     }
 
     public static String getHttpContent(SSLContext ctx, String url) throws IOException {
-        return remoteHttpContent(ctx, "GET", url, null, null).toString("UTF-8");
+        return remoteHttpContent(ctx, "GET", url, 0, null, null).toString("UTF-8");
+    }
+
+    public static String getHttpContent(SSLContext ctx, String url, int timeout) throws IOException {
+        return remoteHttpContent(ctx, "GET", url, timeout, null, null).toString("UTF-8");
     }
 
     public static String getHttpContent(SSLContext ctx, String url, Map<String, String> headers, String body) throws IOException {
-        return remoteHttpContent(ctx, "GET", url, headers, body).toString("UTF-8");
+        return remoteHttpContent(ctx, "GET", url, 0, headers, body).toString("UTF-8");
+    }
+
+    public static String getHttpContent(SSLContext ctx, String url, int timeout, Map<String, String> headers, String body) throws IOException {
+        return remoteHttpContent(ctx, "GET", url, timeout, headers, body).toString("UTF-8");
     }
 
     public static String getHttpContent(String url, Map<String, String> headers, String body) throws IOException {
-        return remoteHttpContent(null, "GET", url, headers, body).toString("UTF-8");
+        return remoteHttpContent(null, "GET", url, 0, headers, body).toString("UTF-8");
+    }
+
+    public static String getHttpContent(String url, int timeout, Map<String, String> headers, String body) throws IOException {
+        return remoteHttpContent(null, "GET", url, timeout, headers, body).toString("UTF-8");
     }
 
     public static String getHttpContent(String url, Charset charset) throws IOException {
-        return remoteHttpContent(null, "GET", url, null, null).toString(charset.name());
+        return remoteHttpContent(null, "GET", url, 0, null, null).toString(charset.name());
+    }
+
+    public static String getHttpContent(String url, int timeout, Charset charset) throws IOException {
+        return remoteHttpContent(null, "GET", url, timeout, null, null).toString(charset.name());
     }
 
     public static String getHttpContent(SSLContext ctx, String url, Charset charset) throws IOException {
-        return remoteHttpContent(ctx, "GET", url, null, null).toString(charset.name());
+        return remoteHttpContent(ctx, "GET", url, 0, null, null).toString(charset.name());
+    }
+
+    public static String getHttpContent(SSLContext ctx, String url, int timeout, Charset charset) throws IOException {
+        return remoteHttpContent(ctx, "GET", url, timeout, null, null).toString(charset.name());
     }
 
     public static String getHttpContent(SSLContext ctx, String url, Charset charset, Map<String, String> headers, String body) throws IOException {
-        return remoteHttpContent(ctx, "GET", url, headers, body).toString(charset.name());
+        return remoteHttpContent(ctx, "GET", url, 0, headers, body).toString(charset.name());
+    }
+
+    public static String getHttpContent(SSLContext ctx, String url, int timeout, Charset charset, Map<String, String> headers, String body) throws IOException {
+        return remoteHttpContent(ctx, "GET", url, timeout, headers, body).toString(charset.name());
     }
 
     public static String getHttpContent(String url, Charset charset, Map<String, String> headers, String body) throws IOException {
-        return remoteHttpContent(null, "GET", url, headers, body).toString(charset.name());
+        return remoteHttpContent(null, "GET", url, 0, headers, body).toString(charset.name());
+    }
+
+    public static String getHttpContent(String url, int timeout, Charset charset, Map<String, String> headers, String body) throws IOException {
+        return remoteHttpContent(null, "GET", url, timeout, headers, body).toString(charset.name());
     }
 
     public static byte[] getHttpBytesContent(String url) throws IOException {
-        return remoteHttpContent(null, "GET", url, null, null).toByteArray();
+        return remoteHttpContent(null, "GET", url, 0, null, null).toByteArray();
+    }
+
+    public static byte[] getHttpBytesContent(String url, int timeout) throws IOException {
+        return remoteHttpContent(null, "GET", url, timeout, null, null).toByteArray();
     }
 
     public static byte[] getHttpBytesContent(SSLContext ctx, String url) throws IOException {
-        return remoteHttpContent(ctx, "GET", url, null, null).toByteArray();
+        return remoteHttpContent(ctx, "GET", url, 0, null, null).toByteArray();
+    }
+
+    public static byte[] getHttpBytesContent(SSLContext ctx, String url, int timeout) throws IOException {
+        return remoteHttpContent(ctx, "GET", url, timeout, null, null).toByteArray();
     }
 
     public static byte[] getHttpBytesContent(String url, Map<String, String> headers, String body) throws IOException {
-        return remoteHttpContent(null, "GET", url, headers, body).toByteArray();
+        return remoteHttpContent(null, "GET", url, 0, headers, body).toByteArray();
+    }
+
+    public static byte[] getHttpBytesContent(String url, int timeout, Map<String, String> headers, String body) throws IOException {
+        return remoteHttpContent(null, "GET", url, timeout, headers, body).toByteArray();
     }
 
     public static byte[] getHttpBytesContent(SSLContext ctx, String url, Map<String, String> headers, String body) throws IOException {
-        return remoteHttpContent(ctx, "GET", url, headers, body).toByteArray();
+        return remoteHttpContent(ctx, "GET", url, 0, headers, body).toByteArray();
+    }
+
+    public static byte[] getHttpBytesContent(SSLContext ctx, String url, int timeout, Map<String, String> headers, String body) throws IOException {
+        return remoteHttpContent(ctx, "GET", url, timeout, headers, body).toByteArray();
     }
 
     public static ByteArrayOutputStream remoteHttpContent(String method, String url, Map<String, String> headers, String body) throws IOException {
-        return remoteHttpContent(null, method, url, headers, body);
+        return remoteHttpContent(null, method, url, 0, headers, body);
     }
 
-    public static ByteArrayOutputStream remoteHttpContent(SSLContext ctx, String method, String url, Map<String, String> headers, String body) throws IOException {
+    public static ByteArrayOutputStream remoteHttpContent(String method, String url, int timeout, Map<String, String> headers, String body) throws IOException {
+        return remoteHttpContent(null, method, url, timeout, headers, body);
+    }
+
+    public static ByteArrayOutputStream remoteHttpContent(SSLContext ctx, String method, String url, int timeout, Map<String, String> headers, String body) throws IOException {
         HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();
-        conn.setConnectTimeout(6000);
-        conn.setReadTimeout(6000);
+        conn.setConnectTimeout(timeout > 0 ? timeout : 3000);
+        conn.setReadTimeout(timeout > 0 ? timeout : 3000);
         if (conn instanceof HttpsURLConnection) {
             HttpsURLConnection httpsconn = ((HttpsURLConnection) conn);
             httpsconn.setSSLSocketFactory((ctx == null ? DEFAULTSSL_CONTEXT : ctx).getSocketFactory());
@@ -645,7 +761,7 @@ public final class Utility {
         if (rs == 301 || rs == 302) {
             String newurl = conn.getHeaderField("Location");
             conn.disconnect();
-            return remoteHttpContent(ctx, method, newurl, headers, body);
+            return remoteHttpContent(ctx, method, newurl, timeout, headers, body);
         }
         InputStream in = (rs < 400 || rs == 404) && rs != 405 ? conn.getInputStream() : conn.getErrorStream();
         ByteArrayOutputStream out = new ByteArrayOutputStream(1024);
