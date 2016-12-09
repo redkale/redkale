@@ -16,8 +16,10 @@ import org.redkale.source.Flipper;
 import org.redkale.source.EntityInfo;
 import org.redkale.source.FilterNode;
 import java.util.concurrent.*;
+import java.util.function.BiFunction;
 import javax.persistence.*;
 import org.redkale.convert.json.*;
+import org.redkale.source.*;
 
 /**
  *
@@ -40,7 +42,9 @@ public class TestSourceCache {
     }
 
     public static void main(String[] args) throws Exception {
-        final EntityInfo<TestEntity> info = EntityInfo.load(TestEntity.class, 0, false, new Properties(), null, null);
+        final BiFunction<DataSource, Class, List> fullloader = (DataSource t, Class u) -> null;
+
+        final EntityInfo<TestEntity> info = EntityInfo.load(TestEntity.class, 0, false, new Properties(), null, fullloader);
         TestEntity[] entitys = new TestEntity[10_0000];
         for (int i = 0; i < entitys.length; i++) {
             entitys[i] = new TestEntity(i + 1, "用户_" + (i + 1));
