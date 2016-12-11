@@ -40,8 +40,8 @@ public class FilterNodeTest {
         System.out.println("bean.string = " + beanNode);
         Map<Class, String> nodeJoinTabalis = node.getJoinTabalis();
         Map<Class, String> beanJoinTabalis = beanNode.getJoinTabalis();
-        CharSequence nodeJoinsql = node.createSQLJoin(func, nodeJoinTabalis, carEntity);
-        CharSequence beanJoinsql = beanNode.createSQLJoin(func, beanJoinTabalis, carEntity);
+        CharSequence nodeJoinsql = node.createSQLJoin(func, nodeJoinTabalis, new HashSet<>(), carEntity);
+        CharSequence beanJoinsql = beanNode.createSQLJoin(func, beanJoinTabalis, new HashSet<>(), carEntity);
         CharSequence nodeWhere = node.createSQLExpress(carEntity, nodeJoinTabalis);
         CharSequence beanWhere = beanNode.createSQLExpress(carEntity, beanJoinTabalis);
         System.out.println("node.sql = SELECT a.* FROM " + CarTestTable.class.getSimpleName().toLowerCase() + " a" + (nodeJoinsql == null ? "" : nodeJoinsql) + " WHERE " + nodeWhere);

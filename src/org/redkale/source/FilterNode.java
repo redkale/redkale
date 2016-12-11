@@ -178,11 +178,11 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
      *
      * @return SQL的join语句 不存在返回null
      */
-    protected <T> CharSequence createSQLJoin(final Function<Class, EntityInfo> func, final Map<Class, String> joinTabalis, final EntityInfo<T> info) {
+    protected <T> CharSequence createSQLJoin(final Function<Class, EntityInfo> func, final Map<Class, String> joinTabalis, final Set<String> haset, final EntityInfo<T> info) {
         if (joinTabalis == null || this.nodes == null) return null;
         StringBuilder sb = null;
         for (FilterNode node : this.nodes) {
-            CharSequence cs = node.createSQLJoin(func, joinTabalis, info);
+            CharSequence cs = node.createSQLJoin(func, joinTabalis, haset, info);
             if (cs == null) continue;
             if (sb == null) sb = new StringBuilder();
             sb.append(cs);
