@@ -449,9 +449,13 @@ public final class EntityCache<T> {
         return rs;
     }
 
-    public <V> T[] updateColumn(final FilterNode node, List<Attribute<T, Serializable>> attrs, final List<ColumnValue> values) {
+    public <V> T[] updateColumn(final FilterNode node, final Flipper flipper, List<Attribute<T, Serializable>> attrs, final List<ColumnValue> values) {
         if (attrs == null || attrs.isEmpty() || node == null) return (T[]) Array.newInstance(type, 0);
-        T[] rms = this.list.stream().filter(node.createPredicate(this)).toArray(len -> (T[]) Array.newInstance(type, len));
+        Stream<T> stream = this.list.stream();
+        final Comparator<T> comparator = createComparator(flipper);
+        if (comparator != null) stream = stream.sorted(comparator);
+        if (flipper != null) stream = stream.limit(flipper.getLimit());
+        T[] rms = stream.filter(node.createPredicate(this)).toArray(len -> (T[]) Array.newInstance(type, len));
         for (T rs : rms) {
             synchronized (rs) {
                 for (int i = 0; i < attrs.size(); i++) {

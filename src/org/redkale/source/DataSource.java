@@ -76,6 +76,8 @@ public interface DataSource {
 
     public <T> int updateColumn(final Class<T> clazz, final FilterNode node, final ColumnValue... values);
 
+    public <T> int updateColumn(final Class<T> clazz, final FilterNode node, final Flipper flipper, final ColumnValue... values);
+
     public <T> int updateColumns(final T bean, final String... columns);
 
     public <T> int updateColumns(final T bean, final FilterNode node, final String... columns);

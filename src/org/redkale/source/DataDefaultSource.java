@@ -853,17 +853,42 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
     public <T> int updateColumn(final Class<T> clazz, final FilterNode node, final ColumnValue... values) {
         final EntityInfo<T> info = loadEntityInfo(clazz);
         if (info.isVirtualEntity()) {
-            return updateColumn(null, info, node, values);
+            return updateColumn(null, info, node, null, values);
         }
         Connection conn = createWriteSQLConnection();
         try {
-            return updateColumn(conn, info, node, values);
+            return updateColumn(conn, info, node, null, values);
         } finally {
             closeSQLConnection(conn);
         }
     }
 
-    private <T> int updateColumn(final Connection conn, final EntityInfo<T> info, final FilterNode node, final ColumnValue... values) {
+    /**
+     * 根据主键值更新对象的多个column对应的值， 必须是Entity Class
+     *
+     * @param <T>     Entity类的泛型
+     * @param clazz   Entity类
+     * @param node    过滤条件
+     * @param flipper 翻页对象
+     * @param values  字段值
+     *
+     * @return 更新的数据条数
+     */
+    @Override
+    public <T> int updateColumn(final Class<T> clazz, final FilterNode node, final Flipper flipper, final ColumnValue... values) {
+        final EntityInfo<T> info = loadEntityInfo(clazz);
+        if (info.isVirtualEntity()) {
+            return updateColumn(null, info, node, flipper, values);
+        }
+        Connection conn = createWriteSQLConnection();
+        try {
+            return updateColumn(conn, info, node, flipper, values);
+        } finally {
+            closeSQLConnection(conn);
+        }
+    }
+
+    private <T> int updateColumn(final Connection conn, final EntityInfo<T> info, final FilterNode node, final Flipper flipper, final ColumnValue... values) {
         if (values == null || values.length < 1) return -1;
         try {
             StringBuilder setsql = new StringBuilder();
@@ -887,7 +912,9 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
                 CharSequence join = node.createSQLJoin(this, joinTabalis, info);
                 CharSequence where = node.createSQLExpress(info, joinTabalis);
 
-                String sql = "UPDATE " + info.getTable(node) + " a SET " + setsql + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
+                String sql = "UPDATE " + info.getTable(node) + " a SET " + setsql + (join == null ? "" : join)
+                    + ((where == null || where.length() == 0) ? "" : (" WHERE " + where)) + info.createSQLOrderby(flipper)
+                    + (flipper == null ? "" : (" LIMIT " + flipper.getLimit())); //注：仅支持MySQL
                 if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
                 final Statement stmt = conn.createStatement();
                 c = stmt.executeUpdate(sql);
@@ -896,7 +923,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
             //---------------------------------------------------
             final EntityCache<T> cache = info.getCache();
             if (cache == null) return c;
-            T[] rs = cache.updateColumn(node, attrs, cols);
+            T[] rs = cache.updateColumn(node, flipper, attrs, cols);
             if (cacheListener != null) cacheListener.updateCache(info.getType(), rs);
             return c >= 0 ? c : (rs == null ? 0 : rs.length);
         } catch (SQLException e) {
