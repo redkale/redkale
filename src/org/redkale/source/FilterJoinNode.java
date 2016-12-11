@@ -284,7 +284,7 @@ public class FilterJoinNode extends FilterNode {
     }
 
     private static CharSequence createElementSQLJoin(final Map<Class, String> joinTabalis, final Set<String> haset, final EntityInfo info, final FilterJoinNode node) {
-        if (node.joinClass == null || haset.contains(joinTabalis.get(node.joinClass))) return null;
+        if (node.joinClass == null || (haset != null && haset.contains(joinTabalis.get(node.joinClass)))) return null;
         StringBuilder sb = new StringBuilder();
         String[] joinColumns = node.joinColumns;
         int pos = joinColumns[0].indexOf('=');
