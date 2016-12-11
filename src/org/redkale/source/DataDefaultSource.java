@@ -562,9 +562,19 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
         try {
             if (!info.isVirtualEntity()) {
                 Map<Class, String> joinTabalis = node.getJoinTabalis();
-                CharSequence join = node.createSQLJoin(this, joinTabalis, new HashSet<>(), info);
+                CharSequence join = node.createSQLJoin(this, true, joinTabalis, new HashSet<>(), info);
                 CharSequence where = node.createSQLExpress(info, joinTabalis);
-                String sql = "DELETE " + (this.readPool.isMysql() ? "a" : "") + " FROM " + info.getTable(node) + " a" + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
+
+                StringBuilder join1 = null;
+                StringBuilder join2 = null;
+                if (join != null) {
+                    String joinstr = join.toString();
+                    join1 = multisplit('[', ']', ",", new StringBuilder(), joinstr, 0);
+                    join2 = multisplit('{', '}', " AND ", new StringBuilder(), joinstr, 0);
+                }
+                String sql = "DELETE " + (this.readPool.isMysql() ? "a" : "") + " FROM " + info.getTable(node) + " a" + (join1 == null ? "" : (", " + join1))
+                    + ((where == null || where.length() == 0) ? (join2 == null ? "" : (" WHERE " + join2))
+                        : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))));
                 if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(info.getType().getSimpleName() + " delete sql=" + sql);
                 final Statement stmt = conn.createStatement();
                 c = stmt.executeUpdate(sql);
@@ -755,11 +765,20 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
             int c = -1;
             if (!info.isVirtualEntity()) {
                 Map<Class, String> joinTabalis = node.getJoinTabalis();
-                CharSequence join = node.createSQLJoin(this, joinTabalis, new HashSet<>(), info);
+                CharSequence join = node.createSQLJoin(this, true, joinTabalis, new HashSet<>(), info);
                 CharSequence where = node.createSQLExpress(info, joinTabalis);
 
-                String sql = "UPDATE " + info.getTable(node) + " a SET " + info.getSQLColumn("a", column) + " = "
-                    + info.formatToString(value) + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
+                StringBuilder join1 = null;
+                StringBuilder join2 = null;
+                if (join != null) {
+                    String joinstr = join.toString();
+                    join1 = multisplit('[', ']', ",", new StringBuilder(), joinstr, 0);
+                    join2 = multisplit('{', '}', " AND ", new StringBuilder(), joinstr, 0);
+                }
+                String sql = "UPDATE " + info.getTable(node) + " a " + (join1 == null ? "" : (", " + join1))
+                    + " SET " + info.getSQLColumn("a", column) + " = " + info.formatToString(value)
+                    + ((where == null || where.length() == 0) ? (join2 == null ? "" : (" WHERE " + join2))
+                        : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))));
                 if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
                 final Statement stmt = conn.createStatement();
                 c = stmt.executeUpdate(sql);
@@ -909,12 +928,20 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
             int c = -1;
             if (!virtual) {
                 Map<Class, String> joinTabalis = node.getJoinTabalis();
-                CharSequence join = node.createSQLJoin(this, joinTabalis, new HashSet<>(), info);
+                CharSequence join = node.createSQLJoin(this, true, joinTabalis, new HashSet<>(), info);
                 CharSequence where = node.createSQLExpress(info, joinTabalis);
-
-                String sql = "UPDATE " + info.getTable(node) + " a SET " + setsql + (join == null ? "" : join)
-                    + ((where == null || where.length() == 0) ? "" : (" WHERE " + where)) + info.createSQLOrderby(flipper)
-                    + (flipper == null ? "" : (" LIMIT " + flipper.getLimit())); //注：仅支持MySQL
+                StringBuilder join1 = null;
+                StringBuilder join2 = null;
+                if (join != null) {
+                    String joinstr = join.toString();
+                    join1 = multisplit('[', ']', ",", new StringBuilder(), joinstr, 0);
+                    join2 = multisplit('{', '}', " AND ", new StringBuilder(), joinstr, 0);
+                }
+                String sql = "UPDATE " + info.getTable(node) + " a " + (join1 == null ? "" : (", " + join1)) + " SET " + setsql
+                    + ((where == null || where.length() == 0) ? (join2 == null ? "" : (" WHERE " + join2))
+                        : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))));
+                //注：LIMIT 仅支持MySQL 且在多表关联式会异常， 该BUG尚未解决
+                sql += info.createSQLOrderby(flipper) + (flipper == null ? "" : (" LIMIT " + flipper.getLimit()));
                 if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
                 final Statement stmt = conn.createStatement();
                 c = stmt.executeUpdate(sql);
@@ -1034,11 +1061,18 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
             int c = -1;
             if (!virtual) {
                 Map<Class, String> joinTabalis = node.getJoinTabalis();
-                CharSequence join = node.createSQLJoin(this, joinTabalis, new HashSet<>(), info);
+                CharSequence join = node.createSQLJoin(this, true, joinTabalis, new HashSet<>(), info);
                 CharSequence where = node.createSQLExpress(info, joinTabalis);
-
-                String sql = "UPDATE " + info.getTable(node) + " a SET " + setsql
-                    + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
+                StringBuilder join1 = null;
+                StringBuilder join2 = null;
+                if (join != null) {
+                    String joinstr = join.toString();
+                    join1 = multisplit('[', ']', ",", new StringBuilder(), joinstr, 0);
+                    join2 = multisplit('{', '}', " AND ", new StringBuilder(), joinstr, 0);
+                }
+                String sql = "UPDATE " + info.getTable(node) + " a " + (join1 == null ? "" : (", " + join1)) + " SET " + setsql
+                    + ((where == null || where.length() == 0) ? (join2 == null ? "" : (" WHERE " + join2))
+                        : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))));
                 if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
                 final Statement stmt = conn.createStatement();
                 c = stmt.executeUpdate(sql);
@@ -1119,7 +1153,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
                 }
             }
             final Map<Class, String> joinTabalis = node == null ? null : node.getJoinTabalis();
-            final CharSequence join = node == null ? null : node.createSQLJoin(this, joinTabalis, new HashSet<>(), info);
+            final CharSequence join = node == null ? null : node.createSQLJoin(this, false, joinTabalis, new HashSet<>(), info);
             final CharSequence where = node == null ? null : node.createSQLExpress(info, joinTabalis);
             final String sql = "SELECT " + func.getColumn((column == null || column.isEmpty() ? "*" : ("a." + column))) + " FROM " + info.getTable(node) + " a"
                 + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
@@ -1166,7 +1200,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
             }
             final String sqlkey = info.getSQLColumn(null, keyColumn);
             final Map<Class, String> joinTabalis = node == null ? null : node.getJoinTabalis();
-            final CharSequence join = node == null ? null : node.createSQLJoin(this, joinTabalis, new HashSet<>(), info);
+            final CharSequence join = node == null ? null : node.createSQLJoin(this, false, joinTabalis, new HashSet<>(), info);
             final CharSequence where = node == null ? null : node.createSQLExpress(info, joinTabalis);
             final String sql = "SELECT a." + sqlkey + ", " + func.getColumn((funcColumn == null || funcColumn.isEmpty() ? "*" : ("a." + funcColumn)))
                 + " FROM " + info.getTable(node) + " a" + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where)) + " GROUP BY a." + sqlkey;
@@ -1265,7 +1299,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
         try {
             final SelectColumn sels = selects;
             final Map<Class, String> joinTabalis = node == null ? null : node.getJoinTabalis();
-            final CharSequence join = node == null ? null : node.createSQLJoin(this, joinTabalis, new HashSet<>(), info);
+            final CharSequence join = node == null ? null : node.createSQLJoin(this, false, joinTabalis, new HashSet<>(), info);
             final CharSequence where = node == null ? null : node.createSQLExpress(info, joinTabalis);
             final String sql = "SELECT a.* FROM " + info.getTable(node) + " a" + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
             if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(clazz.getSimpleName() + " find sql=" + sql);
@@ -1328,7 +1362,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
         final Connection conn = createReadSQLConnection();
         try {
             final Map<Class, String> joinTabalis = node == null ? null : node.getJoinTabalis();
-            final CharSequence join = node == null ? null : node.createSQLJoin(this, joinTabalis, new HashSet<>(), info);
+            final CharSequence join = node == null ? null : node.createSQLJoin(this, false, joinTabalis, new HashSet<>(), info);
             final CharSequence where = node == null ? null : node.createSQLExpress(info, joinTabalis);
             final String sql = "SELECT COUNT(" + info.getPrimarySQLColumn("a") + ") FROM " + info.getTable(node) + " a" + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
             if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(clazz.getSimpleName() + " exists sql=" + sql);
@@ -1561,7 +1595,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
             final SelectColumn sels = selects;
             final List<T> list = new ArrayList();
             final Map<Class, String> joinTabalis = node == null ? null : node.getJoinTabalis();
-            final CharSequence join = node == null ? null : node.createSQLJoin(this, joinTabalis, new HashSet<>(), info);
+            final CharSequence join = node == null ? null : node.createSQLJoin(this, false, joinTabalis, new HashSet<>(), info);
             final CharSequence where = node == null ? null : node.createSQLExpress(info, joinTabalis);
             final String sql = "SELECT a.* FROM " + info.getTable(node) + " a" + (join == null ? "" : join)
                 + ((where == null || where.length() == 0) ? "" : (" WHERE " + where)) + info.createSQLOrderby(flipper);
@@ -1593,6 +1627,17 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
         } finally {
             closeSQLConnection(conn);
         }
+    }
+
+    private static StringBuilder multisplit(char ch1, char ch2, String split, StringBuilder sb, String str, int from) {
+        if (str == null) return sb;
+        int pos1 = str.indexOf(ch1, from);
+        if (pos1 < 0) return sb;
+        int pos2 = str.indexOf(ch2, from);
+        if (pos2 < 0) return sb;
+        if (sb.length() > 0) sb.append(split);
+        sb.append(str.substring(pos1 + 1, pos2));
+        return multisplit(ch1, ch2, split, sb, str, pos2 + 1);
     }
 
     @Override

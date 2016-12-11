@@ -173,16 +173,17 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
      *
      * @param <T>         Entity类的泛型
      * @param func        EntityInfo的加载器
+     * @param update      是否用于更新的JOIN
      * @param joinTabalis 关联表集合
      * @param info        Entity类的EntityInfo
      *
      * @return SQL的join语句 不存在返回null
      */
-    protected <T> CharSequence createSQLJoin(final Function<Class, EntityInfo> func, final Map<Class, String> joinTabalis, final Set<String> haset, final EntityInfo<T> info) {
+    protected <T> CharSequence createSQLJoin(final Function<Class, EntityInfo> func, final boolean update, final Map<Class, String> joinTabalis, final Set<String> haset, final EntityInfo<T> info) {
         if (joinTabalis == null || this.nodes == null) return null;
         StringBuilder sb = null;
         for (FilterNode node : this.nodes) {
-            CharSequence cs = node.createSQLJoin(func, joinTabalis, haset, info);
+            CharSequence cs = node.createSQLJoin(func, update, joinTabalis, haset, info);
             if (cs == null) continue;
             if (sb == null) sb = new StringBuilder();
             sb.append(cs);

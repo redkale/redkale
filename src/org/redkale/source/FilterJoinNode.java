@@ -243,7 +243,7 @@ public class FilterJoinNode extends FilterNode {
     }
 
     @Override
-    protected <T> CharSequence createSQLJoin(final Function<Class, EntityInfo> func, final Map<Class, String> joinTabalis, final Set<String> haset, final EntityInfo<T> info) {
+    protected <T> CharSequence createSQLJoin(final Function<Class, EntityInfo> func, final boolean update, final Map<Class, String> joinTabalis, final Set<String> haset, final EntityInfo<T> info) {
         boolean morejoin = false;
         if (this.joinEntity == null) {
             if (this.joinClass != null) this.joinEntity = func.apply(this.joinClass);
@@ -261,7 +261,7 @@ public class FilterJoinNode extends FilterNode {
         }
         StringBuilder sb = new StringBuilder();
         if (this.joinClass != null) {
-            CharSequence cs = createElementSQLJoin(joinTabalis, haset, info, this);
+            CharSequence cs = createElementSQLJoin(update, joinTabalis, haset, info, this);
             if (cs != null) sb.append(cs);
         }
         if (morejoin) {
@@ -271,7 +271,7 @@ public class FilterJoinNode extends FilterNode {
                 if (node instanceof FilterJoinNode) {
                     FilterJoinNode joinNode = ((FilterJoinNode) node);
                     if (!set.contains(joinNode.joinClass)) {
-                        CharSequence cs = createElementSQLJoin(joinTabalis, haset, info, joinNode);
+                        CharSequence cs = createElementSQLJoin(update, joinTabalis, haset, info, joinNode);
                         if (cs != null) {
                             sb.append(cs);
                             set.add(joinNode.joinClass);
@@ -283,16 +283,26 @@ public class FilterJoinNode extends FilterNode {
         return sb;
     }
 
-    private static CharSequence createElementSQLJoin(final Map<Class, String> joinTabalis, final Set<String> haset, final EntityInfo info, final FilterJoinNode node) {
+    private static CharSequence createElementSQLJoin(final boolean update, final Map<Class, String> joinTabalis, final Set<String> haset, final EntityInfo info, final FilterJoinNode node) {
         if (node.joinClass == null || (haset != null && haset.contains(joinTabalis.get(node.joinClass)))) return null;
         StringBuilder sb = new StringBuilder();
         String[] joinColumns = node.joinColumns;
         int pos = joinColumns[0].indexOf('=');
-        sb.append(" INNER JOIN ").append(node.joinEntity.getTable(node)).append(" ").append(joinTabalis.get(node.joinClass))
-            .append(" ON ").append(info.getSQLColumn("a", pos > 0 ? joinColumns[0].substring(0, pos) : joinColumns[0])).append(" = ").append(node.joinEntity.getSQLColumn(joinTabalis.get(node.joinClass), pos > 0 ? joinColumns[0].substring(pos + 1) : joinColumns[0]));
-        for (int i = 1; i < joinColumns.length; i++) {
-            pos = joinColumns[i].indexOf('=');
-            sb.append(" AND ").append(info.getSQLColumn("a", pos > 0 ? joinColumns[i].substring(0, pos) : joinColumns[i])).append(" = ").append(node.joinEntity.getSQLColumn(joinTabalis.get(node.joinClass), pos > 0 ? joinColumns[i].substring(pos + 1) : joinColumns[i]));
+        if (update) {
+            sb.append("[").append(node.joinEntity.getTable(node)).append(" ").append(joinTabalis.get(node.joinClass)).append(']');
+            sb.append('{').append(info.getSQLColumn("a", pos > 0 ? joinColumns[0].substring(0, pos) : joinColumns[0])).append(" = ").append(node.joinEntity.getSQLColumn(joinTabalis.get(node.joinClass), pos > 0 ? joinColumns[0].substring(pos + 1) : joinColumns[0]));
+            for (int i = 1; i < joinColumns.length; i++) {
+                pos = joinColumns[i].indexOf('=');
+                sb.append(" AND ").append(info.getSQLColumn("a", pos > 0 ? joinColumns[i].substring(0, pos) : joinColumns[i])).append(" = ").append(node.joinEntity.getSQLColumn(joinTabalis.get(node.joinClass), pos > 0 ? joinColumns[i].substring(pos + 1) : joinColumns[i]));
+            }
+            sb.append('}');
+        } else {
+            sb.append(" INNER JOIN ").append(node.joinEntity.getTable(node)).append(" ").append(joinTabalis.get(node.joinClass))
+                .append(" ON ").append(info.getSQLColumn("a", pos > 0 ? joinColumns[0].substring(0, pos) : joinColumns[0])).append(" = ").append(node.joinEntity.getSQLColumn(joinTabalis.get(node.joinClass), pos > 0 ? joinColumns[0].substring(pos + 1) : joinColumns[0]));
+            for (int i = 1; i < joinColumns.length; i++) {
+                pos = joinColumns[i].indexOf('=');
+                sb.append(" AND ").append(info.getSQLColumn("a", pos > 0 ? joinColumns[i].substring(0, pos) : joinColumns[i])).append(" = ").append(node.joinEntity.getSQLColumn(joinTabalis.get(node.joinClass), pos > 0 ? joinColumns[i].substring(pos + 1) : joinColumns[i]));
+            }
         }
         if (haset != null) haset.add(joinTabalis.get(node.joinClass));
         return sb;
