@@ -30,7 +30,7 @@ public final class CollectionDecoder<T> implements Decodeable<Reader, Collection
 
     protected Creator<Collection<T>> creator;
 
-    private final Decodeable<Reader, T> decoder;
+    protected final Decodeable<Reader, T> decoder;
 
     public CollectionDecoder(final ConvertFactory factory, final Type type) {
         this.type = type;

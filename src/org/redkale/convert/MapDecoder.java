@@ -28,9 +28,9 @@ public final class MapDecoder<K, V> implements Decodeable<Reader, Map<K, V>> {
 
     protected Creator<Map<K, V>> creator;
 
-    private final Decodeable<Reader, K> keyDecoder;
+    protected final Decodeable<Reader, K> keyDecoder;
 
-    private final Decodeable<Reader, V> valueDecoder;
+    protected final Decodeable<Reader, V> valueDecoder;
 
     public MapDecoder(final ConvertFactory factory, final Type type) {
         this.type = type;

@@ -28,7 +28,7 @@ public final class ArrayDecoder<T> implements Decodeable<Reader, T[]> {
 
     private final Class componentClass;
 
-    private final Decodeable<Reader, T> decoder;
+    protected final Decodeable<Reader, T> decoder;
 
     public ArrayDecoder(final ConvertFactory factory, final Type type) {
         this.type = type;
