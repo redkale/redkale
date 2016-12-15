@@ -27,15 +27,26 @@ public final class MapEncoder<K, V> implements Encodeable<Writer, Map<K, V>> {
 
     private final Encodeable<Writer, V> valencoder;
 
+    private boolean inited = false;
+
+    private final Object lock = new Object();
+
     public MapEncoder(final ConvertFactory factory, final Type type) {
         this.type = type;
-        if (type instanceof ParameterizedType) {
-            final Type[] pt = ((ParameterizedType) type).getActualTypeArguments();
-            this.keyencoder = factory.loadEncoder(pt[0]);
-            this.valencoder = factory.loadEncoder(pt[1]);
-        } else {
-            this.keyencoder = factory.getAnyEncoder();
-            this.valencoder = factory.getAnyEncoder();
+        try {
+            if (type instanceof ParameterizedType) {
+                final Type[] pt = ((ParameterizedType) type).getActualTypeArguments();
+                this.keyencoder = factory.loadEncoder(pt[0]);
+                this.valencoder = factory.loadEncoder(pt[1]);
+            } else {
+                this.keyencoder = factory.getAnyEncoder();
+                this.valencoder = factory.getAnyEncoder();
+            }
+        } finally {
+            inited = true;
+            synchronized (lock) {
+                lock.notifyAll();
+            }
         }
     }
 
@@ -45,6 +56,18 @@ public final class MapEncoder<K, V> implements Encodeable<Writer, Map<K, V>> {
         if (values == null) {
             out.writeNull();
             return;
+        }
+
+        if (this.keyencoder == null || this.valencoder == null) {
+            if (!this.inited) {
+                synchronized (lock) {
+                    try {
+                        lock.wait();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
         }
         out.writeMapB(values.size());
         boolean first = true;

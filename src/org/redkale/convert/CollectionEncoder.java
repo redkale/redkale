@@ -10,10 +10,12 @@ import java.util.Collection;
 
 /**
  * 对象集合的序列化.
- * 集合大小不能超过 32767。  在BSON中集合大小设定的是short，对于大于32767长度的集合传输会影响性能，所以没有采用int存储。
+ * 集合大小不能超过 32767。 在BSON中集合大小设定的是short，对于大于32767长度的集合传输会影响性能，所以没有采用int存储。
  * 支持一定程度的泛型。
  *
- * <p> 详情见: https://redkale.org
+ * <p>
+ * 详情见: https://redkale.org
+ *
  * @author zhangjx
  * @param <T> 序列化的集合元素类型
  */
@@ -24,17 +26,28 @@ public final class CollectionEncoder<T> implements Encodeable<Writer, Collection
 
     private final Encodeable<Writer, Object> encoder;
 
+    private boolean inited = false;
+
+    private final Object lock = new Object();
+
     public CollectionEncoder(final ConvertFactory factory, final Type type) {
         this.type = type;
-        if (type instanceof ParameterizedType) {
-            Type t = ((ParameterizedType) type).getActualTypeArguments()[0];
-            if (t instanceof TypeVariable) {
-                this.encoder = factory.getAnyEncoder();
+        try {
+            if (type instanceof ParameterizedType) {
+                Type t = ((ParameterizedType) type).getActualTypeArguments()[0];
+                if (t instanceof TypeVariable) {
+                    this.encoder = factory.getAnyEncoder();
+                } else {
+                    this.encoder = factory.loadEncoder(t);
+                }
             } else {
-                this.encoder = factory.loadEncoder(t);
+                this.encoder = factory.getAnyEncoder();
             }
-        } else {
-            this.encoder = factory.getAnyEncoder();
+        } finally {
+            inited = true;
+            synchronized (lock) {
+                lock.notifyAll();
+            }
         }
     }
 
@@ -48,6 +61,17 @@ public final class CollectionEncoder<T> implements Encodeable<Writer, Collection
             out.writeArrayB(0);
             out.writeArrayE();
             return;
+        }
+        if (this.encoder == null) {
+            if (!this.inited) {
+                synchronized (lock) {
+                    try {
+                        lock.wait();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
         }
         out.writeArrayB(value.size());
         boolean first = true;

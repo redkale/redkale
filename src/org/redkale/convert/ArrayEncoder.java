@@ -29,19 +29,30 @@ public final class ArrayEncoder<T> implements Encodeable<Writer, T[]> {
 
     private final Encodeable<Writer, Object> encoder;
 
+    private boolean inited = false;
+
+    private final Object lock = new Object();
+
     public ArrayEncoder(final ConvertFactory factory, final Type type) {
         this.type = type;
-        if (type instanceof GenericArrayType) {
-            Type t = ((GenericArrayType) type).getGenericComponentType();
-            this.componentType = t instanceof TypeVariable ? Object.class : t;
-        } else if ((type instanceof Class) && ((Class) type).isArray()) {
-            this.componentType = ((Class) type).getComponentType();
-        } else {
-            throw new ConvertException("(" + type + ") is not a array type");
+        try {
+            if (type instanceof GenericArrayType) {
+                Type t = ((GenericArrayType) type).getGenericComponentType();
+                this.componentType = t instanceof TypeVariable ? Object.class : t;
+            } else if ((type instanceof Class) && ((Class) type).isArray()) {
+                this.componentType = ((Class) type).getComponentType();
+            } else {
+                throw new ConvertException("(" + type + ") is not a array type");
+            }
+            factory.register(type, this);
+            this.encoder = factory.loadEncoder(this.componentType);
+            this.anyEncoder = factory.getAnyEncoder();
+        } finally {
+            inited = true;
+            synchronized (lock) {
+                lock.notifyAll();
+            }
         }
-        factory.register(type, this);
-        this.encoder = factory.loadEncoder(this.componentType);
-        this.anyEncoder = factory.getAnyEncoder();
     }
 
     @Override
@@ -54,6 +65,17 @@ public final class ArrayEncoder<T> implements Encodeable<Writer, T[]> {
             out.writeArrayB(0);
             out.writeArrayE();
             return;
+        }
+        if (this.encoder == null) {
+            if (!this.inited) {
+                synchronized (lock) {
+                    try {
+                        lock.wait();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
         }
         out.writeArrayB(value.length);
         final Type comp = this.componentType;

@@ -30,29 +30,51 @@ public final class ArrayDecoder<T> implements Decodeable<Reader, T[]> {
 
     protected final Decodeable<Reader, T> decoder;
 
+    private boolean inited = false;
+
+    private final Object lock = new Object();
+
     public ArrayDecoder(final ConvertFactory factory, final Type type) {
         this.type = type;
-        if (type instanceof GenericArrayType) {
-            Type t = ((GenericArrayType) type).getGenericComponentType();
-            this.componentType = t instanceof TypeVariable ? Object.class : t;
-        } else if ((type instanceof Class) && ((Class) type).isArray()) {
-            this.componentType = ((Class) type).getComponentType();
-        } else {
-            throw new ConvertException("(" + type + ") is not a array type");
+        try {
+            if (type instanceof GenericArrayType) {
+                Type t = ((GenericArrayType) type).getGenericComponentType();
+                this.componentType = t instanceof TypeVariable ? Object.class : t;
+            } else if ((type instanceof Class) && ((Class) type).isArray()) {
+                this.componentType = ((Class) type).getComponentType();
+            } else {
+                throw new ConvertException("(" + type + ") is not a array type");
+            }
+            if (this.componentType instanceof ParameterizedType) {
+                this.componentClass = (Class) ((ParameterizedType) this.componentType).getRawType();
+            } else {
+                this.componentClass = (Class) this.componentType;
+            }
+            factory.register(type, this);
+            this.decoder = factory.loadDecoder(this.componentType);
+        } finally {
+            inited = true;
+            synchronized (lock) {
+                lock.notifyAll();
+            }
         }
-        if (this.componentType instanceof ParameterizedType) {
-            this.componentClass = (Class) ((ParameterizedType) this.componentType).getRawType();
-        } else {
-            this.componentClass = (Class) this.componentType;
-        }
-        factory.register(type, this);
-        this.decoder = factory.loadDecoder(this.componentType);
     }
 
     @Override
     public T[] convertFrom(Reader in) {
         final int len = in.readArrayB();
         if (len == Reader.SIGN_NULL) return null;
+        if (this.decoder == null) {
+            if (!this.inited) {
+                synchronized (lock) {
+                    try {
+                        lock.wait();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
         final Decodeable<Reader, T> localdecoder = this.decoder;
         final List<T> result = new ArrayList();
         if (len == Reader.SIGN_NOLENGTH) {

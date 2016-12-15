@@ -32,16 +32,27 @@ public final class CollectionDecoder<T> implements Decodeable<Reader, Collection
 
     protected final Decodeable<Reader, T> decoder;
 
+    private boolean inited = false;
+
+    private final Object lock = new Object();
+
     public CollectionDecoder(final ConvertFactory factory, final Type type) {
         this.type = type;
-        if (type instanceof ParameterizedType) {
-            final ParameterizedType pt = (ParameterizedType) type;
-            this.componentType = pt.getActualTypeArguments()[0];
-            this.creator = factory.loadCreator((Class) pt.getRawType());
-            factory.register(type, this);
-            this.decoder = factory.loadDecoder(this.componentType);
-        } else {
-            throw new ConvertException("collectiondecoder not support the type (" + type + ")");
+        try {
+            if (type instanceof ParameterizedType) {
+                final ParameterizedType pt = (ParameterizedType) type;
+                this.componentType = pt.getActualTypeArguments()[0];
+                this.creator = factory.loadCreator((Class) pt.getRawType());
+                factory.register(type, this);
+                this.decoder = factory.loadDecoder(this.componentType);
+            } else {
+                throw new ConvertException("collectiondecoder not support the type (" + type + ")");
+            }
+        } finally {
+            inited = true;
+            synchronized (lock) {
+                lock.notifyAll();
+            }
         }
     }
 
@@ -49,6 +60,17 @@ public final class CollectionDecoder<T> implements Decodeable<Reader, Collection
     public Collection<T> convertFrom(Reader in) {
         final int len = in.readArrayB();
         if (len == Reader.SIGN_NULL) return null;
+        if (this.decoder == null) {
+            if (!this.inited) {
+                synchronized (lock) {
+                    try {
+                        lock.wait();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
         final Decodeable<Reader, T> localdecoder = this.decoder;
         final Collection<T> result = this.creator.create();
         if (len == Reader.SIGN_NOLENGTH) {

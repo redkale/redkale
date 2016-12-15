@@ -12,7 +12,9 @@ import java.util.Map;
 
 /**
  *
- * <p> 详情见: https://redkale.org
+ * <p>
+ * 详情见: https://redkale.org
+ *
  * @author zhangjx
  * @param <K> Map key的数据类型
  * @param <V> Map value的数据类型
@@ -32,23 +34,45 @@ public final class MapDecoder<K, V> implements Decodeable<Reader, Map<K, V>> {
 
     protected final Decodeable<Reader, V> valueDecoder;
 
+    private boolean inited = false;
+
+    private final Object lock = new Object();
+
     public MapDecoder(final ConvertFactory factory, final Type type) {
         this.type = type;
-        if (type instanceof ParameterizedType) {
-            final ParameterizedType pt = (ParameterizedType) type;
-            this.keyType = pt.getActualTypeArguments()[0];
-            this.valueType = pt.getActualTypeArguments()[1];
-            this.creator = factory.loadCreator((Class) pt.getRawType());
-            factory.register(type, this);
-            this.keyDecoder = factory.loadDecoder(this.keyType);
-            this.valueDecoder = factory.loadDecoder(this.valueType);
-        } else {
-            throw new ConvertException("mapdecoder not support the type (" + type + ")");
+        try {
+            if (type instanceof ParameterizedType) {
+                final ParameterizedType pt = (ParameterizedType) type;
+                this.keyType = pt.getActualTypeArguments()[0];
+                this.valueType = pt.getActualTypeArguments()[1];
+                this.creator = factory.loadCreator((Class) pt.getRawType());
+                factory.register(type, this);
+                this.keyDecoder = factory.loadDecoder(this.keyType);
+                this.valueDecoder = factory.loadDecoder(this.valueType);
+            } else {
+                throw new ConvertException("mapdecoder not support the type (" + type + ")");
+            }
+        } finally {
+            inited = true;
+            synchronized (lock) {
+                lock.notifyAll();
+            }
         }
     }
 
     @Override
     public Map<K, V> convertFrom(Reader in) {
+        if (this.keyDecoder == null || this.valueDecoder == null) {
+            if (!this.inited) {
+                synchronized (lock) {
+                    try {
+                        lock.wait();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
         final int len = in.readMapB();
         if (len == Reader.SIGN_NULL) return null;
         final Map<K, V> result = this.creator.create();
