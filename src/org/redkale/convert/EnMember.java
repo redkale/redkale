@@ -81,6 +81,6 @@ public final class EnMember<W extends Writer, T, F> implements Comparable<EnMemb
 
     @Override
     public String toString() {
-        return "EnMember{" + "attribute=" + attribute.field() + ", encoder=" + encoder + '}';
+        return "EnMember{" + "attribute=" + attribute.field() + ", encoder=" + (encoder == null ? null : encoder.getClass().getName()) + '}';
     }
 }

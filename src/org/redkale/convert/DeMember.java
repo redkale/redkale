@@ -88,6 +88,6 @@ public final class DeMember<R extends Reader, T, F> implements Comparable<DeMemb
 
     @Override
     public String toString() {
-        return "DeMember{" + "attribute=" + attribute.field() + ", decoder=" + decoder + '}';
+        return "DeMember{" + "attribute=" + attribute.field() + ", decoder=" + (decoder == null ? null : decoder.getClass().getName()) + '}';
     }
 }
