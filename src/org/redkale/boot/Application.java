@@ -189,6 +189,7 @@ public final class Application {
         }
         this.logger = Logger.getLogger(this.getClass().getSimpleName());
         this.serversLatch = new CountDownLatch(config.getAnyValues("server").length + 1);
+        logger.log(Level.INFO, "--------------------------- Redkale --------------------------");
         //------------------配置 <transport> 节点 ------------------
         ObjectPool<ByteBuffer> transportPool = null;
         ExecutorService transportExec = null;
@@ -264,8 +265,7 @@ public final class Application {
         File persist = new File(this.home, "conf/persistence.xml");
         final String homepath = this.home.getCanonicalPath();
         if (persist.isFile()) System.setProperty(DataDefaultSource.DATASOURCE_CONFPATH, persist.getCanonicalPath());
-        logger.log(Level.INFO, "--------------------------- Redkale --------------------------"  + "\r\n"
-            + RESNAME_APP_HOME + "= " + homepath + "\r\n" + RESNAME_APP_ADDR + "= " + this.localAddress.getHostAddress());
+        logger.log(Level.INFO, RESNAME_APP_HOME + "= " + homepath + "\r\n" + RESNAME_APP_ADDR + "= " + this.localAddress.getHostAddress());
         String lib = config.getValue("lib", "").trim().replace("${APP_HOME}", homepath);
         lib = lib.isEmpty() ? (homepath + "/conf") : (lib + ";" + homepath + "/conf");
         Server.loadLib(logger, lib);
