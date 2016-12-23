@@ -54,4 +54,11 @@ public @interface FilterColumn {
      */
     boolean itemand() default true;
 
+    /**
+     * 备注描述
+     *
+     * @return 备注描述
+     */
+    String comment() default "";
+
 }
