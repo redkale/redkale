@@ -28,7 +28,7 @@ public @interface RestMapping {
 
     /**
      * 请求的方法名, 不能含特殊字符
-     * 默认为方法名的小写(若方法名以createXXX、updateXXX、deleteXXX、queryXXX、findXXX且XXXService为Service的类名将只截取XXX之前)
+     * 默认为方法名的小写(若方法名以createXXX、updateXXX、deleteXXX、queryXXX、findXXX、existsXXX且XXXService为Service的类名将只截取XXX之前)
      *
      * @return name
      */

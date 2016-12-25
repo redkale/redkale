@@ -43,7 +43,7 @@ public final class Rest {
             EXCLUDERMETHODS.add(m.getName());
         }
     }
-    
+
     /**
      * 用于标记由Rest.createRestServlet 方法创建的RestHttpServlet
      */
@@ -1015,7 +1015,6 @@ public final class Rest {
             this.auth = mapping.auth();
             this.actionid = mapping.actionid();
             this.cachetimeout = mapping.cachetimeout();
-            //this.contentType = mapping.contentType();
             this.comment = mapping.comment();
             this.jsvar = mapping.jsvar();
         }
@@ -1036,7 +1035,6 @@ public final class Rest {
 
         public final int cachetimeout;
 
-        //public final String contentType;
         public final String jsvar;
 
         @RestMapping()
