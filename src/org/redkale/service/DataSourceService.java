@@ -214,6 +214,16 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
+    public final <T, V extends Serializable> List<V> queryColumnList(String selectedColumn, Class<T> clazz, Flipper flipper, FilterBean bean) {
+        return queryColumnList(selectedColumn, clazz, flipper, FilterNodeBean.createFilterNode(bean));
+    }
+
+    @Override
+    public <T, V extends Serializable> List<V> queryColumnList(String selectedColumn, Class<T> clazz, Flipper flipper, FilterNode node) {
+        return source.queryColumnList(selectedColumn, clazz, flipper, node);
+    }
+
+    @Override
     public final <T, V extends Serializable> Sheet<V> queryColumnSheet(String selectedColumn, Class<T> clazz, Flipper flipper, FilterBean bean) {
         return queryColumnSheet(selectedColumn, clazz, flipper, FilterNodeBean.createFilterNode(bean));
     }

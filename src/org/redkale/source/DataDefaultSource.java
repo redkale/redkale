@@ -1413,6 +1413,16 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
         return (List<V>) queryColumnSheet(false, selectedColumn, clazz, null, node).list(true);
     }
 
+    @Override
+    public <T, V extends Serializable> List<V> queryColumnList(final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterBean bean) {
+        return queryColumnList(selectedColumn, clazz, FilterNodeBean.createFilterNode(bean));
+    }
+
+    @Override
+    public <T, V extends Serializable> List<V> queryColumnList(final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterNode node) {
+        return (List<V>) queryColumnSheet(false, selectedColumn, clazz, flipper, node).list(true);
+    }
+
     /**
      * 根据指定参数查询对象某个字段的集合
      * <p>
