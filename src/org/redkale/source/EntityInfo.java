@@ -153,7 +153,7 @@ public final class EntityInfo<T> {
             this.fullloader = loader;
         } else {
             this.fullloader = fullloader;
-            this.table = (t == null) ? type.getSimpleName().toLowerCase() : (t.catalog().isEmpty()) ? t.name() : (t.catalog() + '.' + t.name());
+            this.table = (t == null) ? type.getSimpleName().toLowerCase() : (t.catalog().isEmpty()) ? t.name() : (t.catalog() + '.' + (t.name().isEmpty() ? type.getSimpleName().toLowerCase() : t.name()));
         }
         DistributeTable dt = type.getAnnotation(DistributeTable.class);
         DistributeTableStrategy dts = null;
