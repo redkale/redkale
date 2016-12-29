@@ -463,7 +463,7 @@ public final class ResourceFactory {
                         try {
                             element.listener.invoke(dest, name, rs, oldVal);
                         } catch (Exception e) {
-                            e.printStackTrace();
+                            logger.log(Level.SEVERE, dest + " resource change listener error", e);
                         }
                     }
                 }
