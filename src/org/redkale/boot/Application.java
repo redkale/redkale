@@ -189,7 +189,7 @@ public final class Application {
         }
         this.logger = Logger.getLogger(this.getClass().getSimpleName());
         this.serversLatch = new CountDownLatch(config.getAnyValues("server").length + 1);
-        logger.log(Level.INFO, "--------------------------- Redkale --------------------------");
+        logger.log(Level.INFO, "------------------------------- Redkale ------------------------------");
         //------------------配置 <transport> 节点 ------------------
         ObjectPool<ByteBuffer> transportPool = null;
         ExecutorService transportExec = null;
