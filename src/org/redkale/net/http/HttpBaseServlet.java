@@ -219,29 +219,35 @@ public abstract class HttpBaseServlet extends HttpServlet {
         WebServlet module = this.getClass().getAnnotation(WebServlet.class);
         final int serviceid = module == null ? 0 : module.moduleid();
         final HashMap<String, Entry> map = new HashMap<>();
-        Set<String> nameset = new HashSet<>();
-        for (final Method method : this.getClass().getMethods()) {
-            //-----------------------------------------------
-            String methodname = method.getName();
-            if ("service".equals(methodname) || "preExecute".equals(methodname) || "execute".equals(methodname) || "authenticate".equals(methodname)) continue;
-            //-----------------------------------------------
-            Class[] paramTypes = method.getParameterTypes();
-            if (paramTypes.length != 2 || paramTypes[0] != HttpRequest.class
-                || paramTypes[1] != HttpResponse.class) continue;
-            //-----------------------------------------------
-            Class[] exps = method.getExceptionTypes();
-            if (exps.length > 0 && (exps.length != 1 || exps[0] != IOException.class)) continue;
-            //-----------------------------------------------
+        HashMap<String, Class> nameset = new HashMap<>();
+        Class clz = this.getClass();
+        do {
+            if (Modifier.isAbstract(clz.getModifiers())) break;
+            for (final Method method : clz.getMethods()) {
+                //-----------------------------------------------
+                String methodname = method.getName();
+                if ("service".equals(methodname) || "preExecute".equals(methodname) || "execute".equals(methodname) || "authenticate".equals(methodname)) continue;
+                //-----------------------------------------------
+                Class[] paramTypes = method.getParameterTypes();
+                if (paramTypes.length != 2 || paramTypes[0] != HttpRequest.class
+                    || paramTypes[1] != HttpResponse.class) continue;
+                //-----------------------------------------------
+                Class[] exps = method.getExceptionTypes();
+                if (exps.length > 0 && (exps.length != 1 || exps[0] != IOException.class)) continue;
+                //-----------------------------------------------
 
-            final WebAction action = method.getAnnotation(WebAction.class);
-            if (action == null) continue;
-            final int actionid = action.actionid();
-            final String name = action.url().trim();
-
-            if (nameset.contains(name)) throw new RuntimeException(this.getClass().getSimpleName() + " has two same " + WebAction.class.getSimpleName() + "(" + name + ")");
-            nameset.add(name);
-            map.put(name, new Entry(typeIgnore, serviceid, actionid, name, action.methods(), method, createHttpServlet(method)));
-        }
+                final WebAction action = method.getAnnotation(WebAction.class);
+                if (action == null) continue;
+                final int actionid = action.actionid();
+                final String name = action.url().trim();
+                if (nameset.containsKey(name)) {
+                    if (nameset.get(name) != clz) continue;
+                    throw new RuntimeException(this.getClass().getSimpleName() + " has two same " + WebAction.class.getSimpleName() + "(" + name + ")");
+                }
+                nameset.put(name, clz);
+                map.put(name, new Entry(typeIgnore, serviceid, actionid, name, action.methods(), method, createHttpServlet(method)));
+            }
+        } while ((clz = clz.getSuperclass()) != HttpBaseServlet.class);
         return map;
     }
 
