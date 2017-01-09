@@ -62,62 +62,71 @@ public class ApiDocs extends HttpBaseServlet {
 
                 List<Map> actionsList = new ArrayList<>();
                 servletmap.put("actions", actionsList);
-                for (Method method : servlet.getClass().getMethods()) {
-                    if (method.getParameterCount() != 2) continue;
-                    WebAction action = method.getAnnotation(WebAction.class);
-                    if (action == null) continue;
-                    final Map<String, Object> actionmap = new LinkedHashMap<>();
-                    actionmap.put("url", prefix + action.url());
-                    actionmap.put("auth", method.getAnnotation(AuthIgnore.class) == null);
-                    actionmap.put("actionid", action.actionid());
-                    actionmap.put("comment", action.comment());
-                    List<Map> paramsList = new ArrayList<>();
-                    actionmap.put("params", paramsList);
-                    for (WebParam param : method.getAnnotationsByType(WebParam.class)) {
-                        final Map<String, Object> parammap = new LinkedHashMap<>();
-                        final boolean isarray = param.type().isArray();
-                        final Class ptype = isarray ? param.type().getComponentType() : param.type();
-                        parammap.put("name", param.name());
-                        parammap.put("radix", param.radix());
-                        parammap.put("type", ptype.getName() + (isarray ? "[]" : ""));
-                        parammap.put("src", param.src());
-                        parammap.put("comment", param.comment());
-                        paramsList.add(parammap);
-                        if (ptype.isPrimitive() || ptype == String.class) continue;
-                        if (typesmap.containsKey(ptype.getName())) continue;
+                final Class selfClz = servlet.getClass();
+                Class clz = servlet.getClass();
+                HashSet<String> actionurls = new HashSet<>();
+                do {
+                    if (Modifier.isAbstract(clz.getModifiers())) break;
+                    for (Method method : clz.getMethods()) {
+                        if (method.getParameterCount() != 2) continue;
+                        WebAction action = method.getAnnotation(WebAction.class);
+                        if (action == null) continue;
+                        if (!action.inherited() && selfClz != clz) continue; //忽略不被继承的方法
+                        final Map<String, Object> actionmap = new LinkedHashMap<>();
+                        if (actionurls.contains(action.url())) continue;
+                        actionmap.put("url", prefix + action.url());
+                        actionurls.add(action.url());
+                        actionmap.put("auth", method.getAnnotation(AuthIgnore.class) == null);
+                        actionmap.put("actionid", action.actionid());
+                        actionmap.put("comment", action.comment());
+                        List<Map> paramsList = new ArrayList<>();
+                        actionmap.put("params", paramsList);
+                        for (WebParam param : method.getAnnotationsByType(WebParam.class)) {
+                            final Map<String, Object> parammap = new LinkedHashMap<>();
+                            final boolean isarray = param.type().isArray();
+                            final Class ptype = isarray ? param.type().getComponentType() : param.type();
+                            parammap.put("name", param.name());
+                            parammap.put("radix", param.radix());
+                            parammap.put("type", ptype.getName() + (isarray ? "[]" : ""));
+                            parammap.put("src", param.src());
+                            parammap.put("comment", param.comment());
+                            paramsList.add(parammap);
+                            if (ptype.isPrimitive() || ptype == String.class) continue;
+                            if (typesmap.containsKey(ptype.getName())) continue;
 
-                        final Map<String, Map<String, String>> typemap = new LinkedHashMap<>();
-                        Class loop = ptype;
-                        do {
-                            if (loop == null || loop.isInterface()) break;
-                            for (Field field : loop.getDeclaredFields()) {
-                                if (Modifier.isFinal(field.getModifiers())) continue;
-                                if (Modifier.isStatic(field.getModifiers())) continue;
+                            final Map<String, Map<String, String>> typemap = new LinkedHashMap<>();
+                            Class loop = ptype;
+                            do {
+                                if (loop == null || loop.isInterface()) break;
+                                for (Field field : loop.getDeclaredFields()) {
+                                    if (Modifier.isFinal(field.getModifiers())) continue;
+                                    if (Modifier.isStatic(field.getModifiers())) continue;
 
-                                Map<String, String> fieldmap = new LinkedHashMap<>();
-                                fieldmap.put("type", field.getType().isArray() ? (field.getType().getComponentType().getName() + "[]") : field.getGenericType().getTypeName());
+                                    Map<String, String> fieldmap = new LinkedHashMap<>();
+                                    fieldmap.put("type", field.getType().isArray() ? (field.getType().getComponentType().getName() + "[]") : field.getGenericType().getTypeName());
 
-                                Comment comment = field.getAnnotation(Comment.class);
-                                if (comment != null) {
-                                    fieldmap.put("comment", comment.value());
-                                } else {
-                                    Column col = field.getAnnotation(Column.class);
-                                    if (col != null) fieldmap.put("comment", col.comment());
+                                    Comment comment = field.getAnnotation(Comment.class);
+                                    if (comment != null) {
+                                        fieldmap.put("comment", comment.value());
+                                    } else {
+                                        Column col = field.getAnnotation(Column.class);
+                                        if (col != null) fieldmap.put("comment", col.comment());
+                                    }
+
+                                    if (servlet.getClass().getAnnotation(Rest.RestDynamic.class) != null) {
+                                        if (field.getAnnotation(RestAddress.class) != null) continue;
+                                    }
+
+                                    typemap.put(field.getName(), fieldmap);
                                 }
+                            } while ((loop = loop.getSuperclass()) != Object.class);
 
-                                if (servlet.getClass().getAnnotation(Rest.RestDynamic.class) != null) {
-                                    if (field.getAnnotation(RestAddress.class) != null) continue;
-                                }
-
-                                typemap.put(field.getName(), fieldmap);
-                            }
-                        } while ((loop = loop.getSuperclass()) != Object.class);
-
-                        typesmap.put(ptype.getName(), typemap);
+                            typesmap.put(ptype.getName(), typemap);
+                        }
+                        actionmap.put("result", action.result());
+                        actionsList.add(actionmap);
                     }
-                    actionmap.put("result", action.result());
-                    actionsList.add(actionmap);
-                }
+                } while ((clz = clz.getSuperclass()) != HttpServlet.class);
                 actionsList.sort((o1, o2) -> ((String) o1.get("url")).compareTo((String) o2.get("url")));
                 servletsList.add(servletmap);
             }

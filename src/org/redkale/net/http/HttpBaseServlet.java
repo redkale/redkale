@@ -123,6 +123,7 @@ public abstract class HttpBaseServlet extends HttpServlet {
 
         String result() default "Object"; //输出结果的数据类型
 
+        boolean inherited() default true; //是否能被继承, 当 HttpBaseServlet 被继承后该方法是否能被子类继承
     }
 
     /**
@@ -220,6 +221,7 @@ public abstract class HttpBaseServlet extends HttpServlet {
         final int serviceid = module == null ? 0 : module.moduleid();
         final HashMap<String, Entry> map = new HashMap<>();
         HashMap<String, Class> nameset = new HashMap<>();
+        final Class selfClz = this.getClass();
         Class clz = this.getClass();
         do {
             if (Modifier.isAbstract(clz.getModifiers())) break;
@@ -238,6 +240,7 @@ public abstract class HttpBaseServlet extends HttpServlet {
 
                 final WebAction action = method.getAnnotation(WebAction.class);
                 if (action == null) continue;
+                if (!action.inherited() && selfClz != clz) continue; //忽略不被继承的方法
                 final int actionid = action.actionid();
                 final String name = action.url().trim();
                 if (nameset.containsKey(name)) {
