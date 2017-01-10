@@ -5,6 +5,7 @@
  */
 package org.redkale.test.source;
 
+import java.lang.reflect.Method;
 import java.util.*;
 import org.redkale.source.VirtualEntity;
 import org.redkale.source.FilterNodeBean;
@@ -43,8 +44,10 @@ public class TestSourceCache {
 
     public static void main(String[] args) throws Exception {
         final BiFunction<DataSource, Class, List> fullloader = (DataSource t, Class u) -> null;
-
-        final EntityInfo<TestEntity> info = EntityInfo.load(TestEntity.class, 0, false, new Properties(), null, fullloader);
+        Method method = EntityInfo.class.getDeclaredMethod("load", Class.class, int.class, boolean.class, Properties.class,
+            DataSource.class, BiFunction.class);
+        method.setAccessible(true); 
+        final EntityInfo<TestEntity> info = (EntityInfo<TestEntity>) method.invoke(null, TestEntity.class, 0, false, new Properties(), null, fullloader);
         TestEntity[] entitys = new TestEntity[10_0000];
         for (int i = 0; i < entitys.length; i++) {
             entitys[i] = new TestEntity(i + 1, "用户_" + (i + 1));

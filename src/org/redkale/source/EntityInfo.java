@@ -108,7 +108,7 @@ public final class EntityInfo<T> {
     final BiFunction<DataSource, Class, List> fullloader;
     //------------------------------------------------------------
 
-    public static <T> EntityInfo<T> load(Class<T> clazz, final int nodeid, final boolean cacheForbidden, final Properties conf,
+    static <T> EntityInfo<T> load(Class<T> clazz, final int nodeid, final boolean cacheForbidden, final Properties conf,
         DataSource source, BiFunction<DataSource, Class, List> fullloader) {
         EntityInfo rs = entityInfos.get(clazz);
         if (rs != null) return rs;
@@ -127,7 +127,7 @@ public final class EntityInfo<T> {
         }
     }
 
-    public static <T> EntityInfo<T> get(Class<T> clazz) {
+    static <T> EntityInfo<T> get(Class<T> clazz) {
         return entityInfos.get(clazz);
     }
 
