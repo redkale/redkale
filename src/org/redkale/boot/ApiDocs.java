@@ -81,6 +81,40 @@ public class ApiDocs extends HttpBaseServlet {
                         actionmap.put("comment", action.comment());
                         List<Map> paramsList = new ArrayList<>();
                         actionmap.put("params", paramsList);
+                        List<String> results = new ArrayList<>();
+                        for (final Class rtype : action.results()) {
+                            results.add(rtype.getName());
+                            if (typesmap.containsKey(rtype.getName())) continue;
+
+                            final Map<String, Map<String, String>> typemap = new LinkedHashMap<>();
+                            Class loop = rtype;
+                            do {
+                                if (loop == null || loop.isInterface()) break;
+                                for (Field field : loop.getDeclaredFields()) {
+                                    if (Modifier.isFinal(field.getModifiers())) continue;
+                                    if (Modifier.isStatic(field.getModifiers())) continue;
+
+                                    Map<String, String> fieldmap = new LinkedHashMap<>();
+                                    fieldmap.put("type", field.getType().isArray() ? (field.getType().getComponentType().getName() + "[]") : field.getGenericType().getTypeName());
+
+                                    Comment comment = field.getAnnotation(Comment.class);
+                                    if (comment != null) {
+                                        fieldmap.put("comment", comment.value());
+                                    } else {
+                                        Column col = field.getAnnotation(Column.class);
+                                        if (col != null) fieldmap.put("comment", col.comment());
+                                    }
+
+                                    if (servlet.getClass().getAnnotation(Rest.RestDynamic.class) != null) {
+                                        if (field.getAnnotation(RestAddress.class) != null) continue;
+                                    }
+
+                                    typemap.put(field.getName(), fieldmap);
+                                }
+                            } while ((loop = loop.getSuperclass()) != Object.class);
+                            typesmap.put(rtype.getName(), typemap);
+                        }
+                        actionmap.put("results", results);
                         for (WebParam param : method.getAnnotationsByType(WebParam.class)) {
                             final Map<String, Object> parammap = new LinkedHashMap<>();
                             final boolean isarray = param.type().isArray();

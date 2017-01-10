@@ -121,9 +121,11 @@ public abstract class HttpBaseServlet extends HttpServlet {
 
         String comment() default ""; //备注描述
 
+        boolean inherited() default true; //是否能被继承, 当 HttpBaseServlet 被继承后该方法是否能被子类继承
+
         String result() default "Object"; //输出结果的数据类型
 
-        boolean inherited() default true; //是否能被继承, 当 HttpBaseServlet 被继承后该方法是否能被子类继承
+        Class[] results() default {}; //输出结果的数据类型集合，由于结果类型可能是泛型而注解的参数值不支持泛型，因此加入明细数据类型集合
     }
 
     /**
