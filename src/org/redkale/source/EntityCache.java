@@ -138,6 +138,35 @@ public final class EntityCache<T> {
         return t;
     }
 
+    public Serializable findColumn(final String column, final Serializable defValue, final Serializable id) {
+        if (id == null) return defValue;
+        T rs = map.get(id);
+        if (rs == null) return defValue;
+        for (Attribute attr : this.info.attributes) {
+            if (column.equals(attr.field())) {
+                Serializable val = (Serializable) attr.get(rs);
+                return val == null ? defValue : val;
+            }
+        }
+        return defValue;
+    }
+
+    public Serializable findColumn(final String column, final Serializable defValue, FilterNode node) {
+        final Predicate<T> filter = node == null ? null : node.createPredicate(this);
+        Stream<T> stream = this.list.stream();
+        if (filter != null) stream = stream.filter(filter);
+        Optional<T> opt = stream.findFirst();
+        if (!opt.isPresent()) return defValue;
+        T rs = opt.get();
+        for (Attribute attr : this.info.attributes) {
+            if (column.equals(attr.field())) {
+                Serializable val = (Serializable) attr.get(rs);
+                return val == null ? defValue : val;
+            }
+        }
+        return defValue;
+    }
+
     public boolean exists(Serializable id) {
         if (id == null) return false;
         final Class atype = this.primary.type();

@@ -126,6 +126,18 @@ public interface DataSource {
 
     public <T> T find(final Class<T> clazz, final SelectColumn selects, final FilterNode node);
 
+    public <T> Serializable findColumn(final Class<T> clazz, final String column, final Serializable pk);
+
+    public <T> Serializable findColumn(final Class<T> clazz, final String column, final FilterBean bean);
+
+    public <T> Serializable findColumn(final Class<T> clazz, final String column, final FilterNode node);
+
+    public <T> Serializable findColumn(final Class<T> clazz, final String column, final Serializable defValue, final Serializable pk);
+
+    public <T> Serializable findColumn(final Class<T> clazz, final String column, final Serializable defValue, final FilterBean bean);
+
+    public <T> Serializable findColumn(final Class<T> clazz, final String column, final Serializable defValue, final FilterNode node);
+
     public <T> boolean exists(final Class<T> clazz, final Serializable pk);
 
     public <T> boolean exists(final Class<T> clazz, final FilterBean bean);

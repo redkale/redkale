@@ -169,6 +169,36 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
+    public <T> Serializable findColumn(final Class<T> clazz, final String column, final Serializable pk) {
+        return source.findColumn(clazz, column, pk);
+    }
+
+    @Override
+    public <T> Serializable findColumn(final Class<T> clazz, final String column, final FilterBean bean) {
+        return source.findColumn(clazz, column, bean);
+    }
+
+    @Override
+    public <T> Serializable findColumn(final Class<T> clazz, final String column, final FilterNode node) {
+        return source.findColumn(clazz, column, node);
+    }
+
+    @Override
+    public <T> Serializable findColumn(final Class<T> clazz, final String column, final Serializable defValue, final Serializable pk) {
+        return source.findColumn(clazz, column, defValue, pk);
+    }
+
+    @Override
+    public <T> Serializable findColumn(final Class<T> clazz, final String column, final Serializable defValue, final FilterBean bean) {
+        return source.findColumn(clazz, column, defValue, bean);
+    }
+
+    @Override
+    public <T> Serializable findColumn(final Class<T> clazz, final String column, final Serializable defValue, final FilterNode node) {
+        return source.findColumn(clazz, column, defValue, node);
+    }
+
+    @Override
     public <T> boolean exists(final Class<T> clazz, final Serializable pk) {
         return source.exists(clazz, pk);
     }

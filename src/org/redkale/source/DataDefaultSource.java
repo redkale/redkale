@@ -1320,6 +1320,86 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
     }
 
     @Override
+    public <T> Serializable findColumn(final Class<T> clazz, final String column, final Serializable pk) {
+        return findColumn(clazz, column, null, pk);
+    }
+
+    @Override
+    public <T> Serializable findColumn(final Class<T> clazz, final String column, final FilterBean bean) {
+        return findColumn(clazz, column, null, FilterNodeBean.createFilterNode(bean));
+    }
+
+    @Override
+    public <T> Serializable findColumn(final Class<T> clazz, final String column, final FilterNode node) {
+        return findColumn(clazz, column, null, node);
+    }
+
+    @Override
+    public <T> Serializable findColumn(final Class<T> clazz, final String column, final Serializable defValue, final Serializable pk) {
+        final EntityInfo<T> info = loadEntityInfo(clazz);
+        final EntityCache<T> cache = info.getCache();
+        if (cache != null) {
+            Serializable val = cache.findColumn(column, defValue, pk);
+            if (cache.isFullLoaded() || val != null) return val;
+        }
+
+        final Connection conn = createReadSQLConnection();
+        try {
+            final String sql = "SELECT " + info.getSQLColumn(null, column) + " FROM " + info.getTable(pk) + " WHERE " + info.getPrimarySQLColumn() + " = " + FilterNode.formatToString(pk);
+            if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(clazz.getSimpleName() + " find sql=" + sql);
+            final PreparedStatement ps = conn.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+            final ResultSet set = ps.executeQuery();
+            Serializable val = defValue;
+            if (set.next()) val = (Serializable) set.getObject(1);
+            set.close();
+            ps.close();
+            return val == null ? defValue : val;
+        } catch (SQLException sex) {
+            if (info.tableStrategy != null && info.tablenotexistSqlstates.contains(';' + sex.getSQLState() + ';')) return defValue;
+            throw new RuntimeException(sex);
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        } finally {
+            closeSQLConnection(conn);
+        }
+    }
+
+    @Override
+    public <T> Serializable findColumn(final Class<T> clazz, final String column, final Serializable defValue, final FilterBean bean) {
+        return findColumn(clazz, column, defValue, FilterNodeBean.createFilterNode(bean));
+    }
+
+    @Override
+    public <T> Serializable findColumn(final Class<T> clazz, final String column, final Serializable defValue, final FilterNode node) {
+        final EntityInfo<T> info = loadEntityInfo(clazz);
+        final EntityCache<T> cache = info.getCache();
+        if (cache != null && cache.isFullLoaded() && (node == null || node.isCacheUseable(this))) return cache.findColumn(column, defValue, node);
+
+        final Connection conn = createReadSQLConnection();
+        try {
+            final Map<Class, String> joinTabalis = node == null ? null : node.getJoinTabalis();
+            final CharSequence join = node == null ? null : node.createSQLJoin(this, false, joinTabalis, new HashSet<>(), info);
+            final CharSequence where = node == null ? null : node.createSQLExpress(info, joinTabalis);
+            final String sql = "SELECT " + info.getSQLColumn("a", column) + " FROM " + info.getTable(node) + " a" + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
+            if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(clazz.getSimpleName() + " find sql=" + sql);
+            final PreparedStatement ps = conn.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+            final ResultSet set = ps.executeQuery();
+            Serializable val = defValue;
+            if (set.next()) val = (Serializable) set.getObject(1);
+            set.close();
+            ps.close();
+            return val == null ? defValue : val;
+        } catch (SQLException se) {
+            if (info.tableStrategy != null && info.tablenotexistSqlstates.contains(';' + se.getSQLState() + ';')) return defValue;
+            throw new RuntimeException(se);
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        } finally {
+            closeSQLConnection(conn);
+        }
+    }
+
+    @Override
     public <T> boolean exists(Class<T> clazz, Serializable pk) {
         final EntityInfo<T> info = loadEntityInfo(clazz);
         final EntityCache<T> cache = info.getCache();
