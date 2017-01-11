@@ -262,6 +262,7 @@ public final class Rest {
                 final Class ptype = param.getType();
                 String n = null;
                 String comment = "";
+                boolean required = true;
                 int radix = 10;
 
                 RestHeader annhead = param.getAnnotation(RestHeader.class);
@@ -297,6 +298,7 @@ public final class Rest {
                 RestParam annpara = param.getAnnotation(RestParam.class);
                 if (annpara != null) radix = annpara.radix();
                 if (annpara != null) comment = annpara.comment();
+                if (annpara != null) required = annpara.required();
                 if (n == null) n = (annpara == null || annpara.name().isEmpty()) ? null : annpara.name();
                 if (n == null && ptype == userType) n = "&"; //用户类型特殊处理
                 if (n == null) {
@@ -312,7 +314,7 @@ public final class Rest {
                     && (entry.name.startsWith("find") || entry.name.startsWith("delete")) && params.length == 1) {
                     if (ptype.isPrimitive() || ptype == String.class) n = "#";
                 }
-                paramlist.add(new Object[]{param, n, ptype, radix, comment, annpara, annsid, annaddr, annhead, anncookie});
+                paramlist.add(new Object[]{param, n, ptype, radix, comment, required, annpara, annsid, annaddr, annhead, anncookie});
             }
 
             Map<String, Object> actionMap = new LinkedHashMap<>();
@@ -354,9 +356,9 @@ public final class Rest {
                 av0 = mv.visitAnnotation(webparamsDesc, true);
                 AnnotationVisitor av1 = av0.visitArray("value");
                 //设置 WebParam
-                for (Object[] ps : paramlist) { //{param, n, ptype, radix, comment, annpara, annsid, annaddr, annhead, anncookie}   
-                    final boolean ishead = ((RestHeader) ps[8]) != null; //是否取getHeader 而不是 getParameter
-                    final boolean iscookie = ((RestCookie) ps[9]) != null; //是否取getCookie
+                for (Object[] ps : paramlist) { //{param, n, ptype, radix, comment, required, annpara, annsid, annaddr, annhead, anncookie}   
+                    final boolean ishead = ((RestHeader) ps[9]) != null; //是否取getHeader 而不是 getParameter
+                    final boolean iscookie = ((RestCookie) ps[10]) != null; //是否取getCookie
 
                     AnnotationVisitor av2 = av1.visitAnnotation(null, webparamDesc);
                     av2.visit("name", (String) ps[1]);
@@ -365,6 +367,7 @@ public final class Rest {
                     av2.visitEnum("src", sourcetypeDesc, ishead ? HttpBaseServlet.ParamSourceType.HEADER.name()
                         : (iscookie ? HttpBaseServlet.ParamSourceType.COOKIE.name() : HttpBaseServlet.ParamSourceType.PARAMETER.name()));
                     av2.visit("comment", (String) ps[4]);
+                    av2.visit("required", (Boolean) ps[5]);
                     av2.visitEnd();
                 }
                 av1.visitEnd();
@@ -377,11 +380,12 @@ public final class Rest {
                 Class ptype = (Class) ps[2];
                 int radix = (Integer) ps[3];
                 String comment = (String) ps[4];
-                RestParam annpara = (RestParam) ps[5];
-                RestSessionid annsid = (RestSessionid) ps[6];
-                RestAddress annaddr = (RestAddress) ps[7];
-                RestHeader annhead = (RestHeader) ps[8];
-                RestCookie anncookie = (RestCookie) ps[9];
+                boolean required = (Boolean) ps[5];
+                RestParam annpara = (RestParam) ps[6];
+                RestSessionid annsid = (RestSessionid) ps[7];
+                RestAddress annaddr = (RestAddress) ps[8];
+                RestHeader annhead = (RestHeader) ps[9];
+                RestCookie anncookie = (RestCookie) ps[10];
 
                 final boolean ishead = annhead != null; //是否取getHeader 而不是 getParameter
                 final boolean iscookie = anncookie != null; //是否取getCookie

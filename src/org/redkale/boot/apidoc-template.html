@@ -29,7 +29,7 @@
                         var servlet = jsoncontent.servers[i].servlets[j];
                         if (html.length > 2) html.push(' <tr><th colspan="5" style="border-bottom:0;">&nbsp;</th></tr>');
                         html.push(' <tr><th colspan="5" style="border-top:' + ((html.length > 2) ? 0 : 1) + ';">' + (servlet.comment || '未知模块') + '</th></tr>');
-                        html.push(' <tr><th>请求URL</th><th>描 述</th><th>鉴 权</th><th>参 数 <span style="font-size:12px;">(红色: Header; 蓝色: Cookie)</span></th><th>输 出</th></tr>');
+                        html.push(' <tr><th>请求URL</th><th>描 述</th><th>鉴 权</th><th>参 数 <span style="font-size:12px;">(粗体: 必填项; 红色: Header; 蓝色: Cookie)</span></th><th>输 出</th></tr>');
                         for (var k = 0; k < servlet.actions.length; k++) {
                             var action = servlet.actions[k];
                             html.push(' <tr>');
@@ -47,9 +47,10 @@
                                 if (param.name == '&') {
                                     paramshtml.push('<tr><td style="font-size:12px;">内置 </td><td> ' + t + '</td><td> 当前用户</td></tr>');
                                 } else {
-                                    var c = ' style="font-weight:bold;"';
-                                    if (param.src == "HEADER") c = ' style="color:red;font-weight:bold;"';
-                                    if (param.src == "COOKIE") c = ' style="color:blue;font-weight:bold;"';
+                                    var w = param.required ? "font-weight:bold;" : "";
+                                    var c = ' style="' + w + '"';
+                                    if (param.src == "HEADER") c = ' style="color:red;' + w + '"';
+                                    if (param.src == "COOKIE") c = ' style="color:blue;' + w + '"';
                                     paramshtml.push('<tr><td ' + c + '> ' + param.name + ' </td><td> ' + t + '</td><td> ' + param.comment + '</td></tr>');
                                 }
                             }
@@ -90,7 +91,7 @@
         </script>
 
         <script>
-            var jsoncontent = ${content};
+            var jsoncontent = '${content}'; //这里必须要用单引号引起来
             document.write(createhtml(jsoncontent));
         </script>
     </body>

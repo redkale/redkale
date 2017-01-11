@@ -126,6 +126,7 @@ public class ApiDocs extends HttpBaseServlet {
                             parammap.put("type", ptype.getName() + (isarray ? "[]" : ""));
                             parammap.put("src", param.src());
                             parammap.put("comment", param.comment());
+                            parammap.put("required", param.required());
                             paramsList.add(parammap);
                             if (ptype.isPrimitive() || ptype == String.class) continue;
                             if (typesmap.containsKey(ptype.getName())) continue;
@@ -188,7 +189,7 @@ public class ApiDocs extends HttpBaseServlet {
             in = new FileInputStream(doctemplate);
         }
         if (in == null) in = ApiDocs.class.getResourceAsStream("apidoc-template.html");
-        String content = Utility.read(in).replace("${content}", json);
+        String content = Utility.read(in).replace("'${content}'", json);
         in.close();
         FileOutputStream outhtml = new FileOutputStream(new File(app.getHome(), "apidoc.html"));
         outhtml.write(content.getBytes("UTF-8"));

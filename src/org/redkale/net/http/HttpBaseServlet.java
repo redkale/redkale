@@ -89,6 +89,8 @@ public abstract class HttpBaseServlet extends HttpServlet {
         ParamSourceType src() default ParamSourceType.PARAMETER; //参数来源类型
 
         int radix() default 10; //转换数字byte/short/int/long时所用的进制数， 默认10进制
+
+        boolean required() default true; //参数是否必传
     }
 
     @Documented
