@@ -57,7 +57,7 @@
                             html.push('<td class="s" style="padding:0 5px;">' + paramshtml.join('') + '</td>');
                             var rs = [];
                             rs.push(action.result.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/([a-zA-Z0-9_\$]+\.)+/g, ""));
-                            var results =  action.results || [];
+                            var results = action.results || [];
                             for (var r = 0; r < results.length; r++) {
                                 rs.push('<a href="#' + results[r].replace('[]', '') + '">' + results[r].replace(/([a-zA-Z0-9_\$]+\.)+/g, "") + '</a>');
                             }
@@ -73,7 +73,13 @@
                     for (var fieldname in classmap[type]) {
                         var field = classmap[type][fieldname];
                         var t = field.type.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/([a-zA-Z0-9_\$]+\.)+/g, "");
-                        html.push(' <tr class="l"><td>' + fieldname + '</td><td>' + t + '</td><td colspan="2">' + (field.comment || '') + '</td></tr>');
+                        var c = (field.comment || '');
+                        if (field.primary) {
+                            c = '【主键】 ' + c;
+                        } else if (!field.updatable) {
+                            c = '【只读】 ' + c;
+                        }
+                        html.push(' <tr class="l"><td>' + fieldname + '</td><td>' + t + '</td><td colspan="2">' + c + '</td></tr>');
                     }
                     html.push(' </table></td></tr>');
                 }

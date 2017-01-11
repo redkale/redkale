@@ -8,9 +8,10 @@ package org.redkale.boot;
 import java.io.*;
 import java.lang.reflect.*;
 import java.util.*;
-import javax.persistence.Column;
+import javax.persistence.*;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.http.*;
+import org.redkale.source.FilterBean;
 import org.redkale.util.*;
 
 /**
@@ -31,7 +32,7 @@ public class ApiDocs extends HttpBaseServlet {
     public void run() throws Exception {
         List<Map> serverList = new ArrayList<>();
 
-        Map<String, Map<String, Map<String, String>>> typesmap = new LinkedHashMap<>();
+        Map<String, Map<String, Map<String, Object>>> typesmap = new LinkedHashMap<>();
         for (NodeServer node : app.servers) {
             if (!(node instanceof NodeHttpServer)) continue;
             final Map<String, Object> map = new LinkedHashMap<>();
@@ -85,8 +86,8 @@ public class ApiDocs extends HttpBaseServlet {
                         for (final Class rtype : action.results()) {
                             results.add(rtype.getName());
                             if (typesmap.containsKey(rtype.getName())) continue;
-
-                            final Map<String, Map<String, String>> typemap = new LinkedHashMap<>();
+                            final boolean filter = FilterBean.class.isAssignableFrom(rtype);
+                            final Map<String, Map<String, Object>> typemap = new LinkedHashMap<>();
                             Class loop = rtype;
                             do {
                                 if (loop == null || loop.isInterface()) break;
@@ -94,17 +95,18 @@ public class ApiDocs extends HttpBaseServlet {
                                     if (Modifier.isFinal(field.getModifiers())) continue;
                                     if (Modifier.isStatic(field.getModifiers())) continue;
 
-                                    Map<String, String> fieldmap = new LinkedHashMap<>();
+                                    Map<String, Object> fieldmap = new LinkedHashMap<>();
                                     fieldmap.put("type", field.getType().isArray() ? (field.getType().getComponentType().getName() + "[]") : field.getGenericType().getTypeName());
 
                                     Comment comment = field.getAnnotation(Comment.class);
+                                    Column col = field.getAnnotation(Column.class);
                                     if (comment != null) {
                                         fieldmap.put("comment", comment.value());
-                                    } else {
-                                        Column col = field.getAnnotation(Column.class);
-                                        if (col != null) fieldmap.put("comment", col.comment());
+                                    } else if (col != null) {
+                                        fieldmap.put("comment", col.comment());
                                     }
-
+                                    fieldmap.put("primary", !filter && (field.getAnnotation(Id.class) != null));
+                                    fieldmap.put("updatable", (filter || col == null || col.updatable()));
                                     if (servlet.getClass().getAnnotation(Rest.RestDynamic.class) != null) {
                                         if (field.getAnnotation(RestAddress.class) != null) continue;
                                     }
@@ -128,24 +130,27 @@ public class ApiDocs extends HttpBaseServlet {
                             if (ptype.isPrimitive() || ptype == String.class) continue;
                             if (typesmap.containsKey(ptype.getName())) continue;
 
-                            final Map<String, Map<String, String>> typemap = new LinkedHashMap<>();
+                            final Map<String, Map<String, Object>> typemap = new LinkedHashMap<>();
                             Class loop = ptype;
+                            final boolean filter = FilterBean.class.isAssignableFrom(loop);
                             do {
                                 if (loop == null || loop.isInterface()) break;
                                 for (Field field : loop.getDeclaredFields()) {
                                     if (Modifier.isFinal(field.getModifiers())) continue;
                                     if (Modifier.isStatic(field.getModifiers())) continue;
 
-                                    Map<String, String> fieldmap = new LinkedHashMap<>();
+                                    Map<String, Object> fieldmap = new LinkedHashMap<>();
                                     fieldmap.put("type", field.getType().isArray() ? (field.getType().getComponentType().getName() + "[]") : field.getGenericType().getTypeName());
 
+                                    Column col = field.getAnnotation(Column.class);
                                     Comment comment = field.getAnnotation(Comment.class);
                                     if (comment != null) {
                                         fieldmap.put("comment", comment.value());
-                                    } else {
-                                        Column col = field.getAnnotation(Column.class);
-                                        if (col != null) fieldmap.put("comment", col.comment());
+                                    } else if (col != null) {
+                                        fieldmap.put("comment", col.comment());
                                     }
+                                    fieldmap.put("primary", !filter && (field.getAnnotation(Id.class) != null));
+                                    fieldmap.put("updatable", (filter || col == null || col.updatable()));
 
                                     if (servlet.getClass().getAnnotation(Rest.RestDynamic.class) != null) {
                                         if (field.getAnnotation(RestAddress.class) != null) continue;
