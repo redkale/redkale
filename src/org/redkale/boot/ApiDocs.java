@@ -11,7 +11,7 @@ import java.util.*;
 import javax.persistence.*;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.http.*;
-import org.redkale.source.FilterBean;
+import org.redkale.source.*;
 import org.redkale.util.*;
 
 /**
@@ -100,10 +100,13 @@ public class ApiDocs extends HttpBaseServlet {
 
                                     Comment comment = field.getAnnotation(Comment.class);
                                     Column col = field.getAnnotation(Column.class);
+                                    FilterColumn fc = field.getAnnotation(FilterColumn.class);
                                     if (comment != null) {
                                         fieldmap.put("comment", comment.value());
                                     } else if (col != null) {
                                         fieldmap.put("comment", col.comment());
+                                    } else if (fc != null) {
+                                        fieldmap.put("comment", fc.comment());
                                     }
                                     fieldmap.put("primary", !filter && (field.getAnnotation(Id.class) != null));
                                     fieldmap.put("updatable", (filter || col == null || col.updatable()));
@@ -144,11 +147,14 @@ public class ApiDocs extends HttpBaseServlet {
                                     fieldmap.put("type", field.getType().isArray() ? (field.getType().getComponentType().getName() + "[]") : field.getGenericType().getTypeName());
 
                                     Column col = field.getAnnotation(Column.class);
+                                    FilterColumn fc = field.getAnnotation(FilterColumn.class);
                                     Comment comment = field.getAnnotation(Comment.class);
                                     if (comment != null) {
                                         fieldmap.put("comment", comment.value());
                                     } else if (col != null) {
                                         fieldmap.put("comment", col.comment());
+                                    } else if (fc != null) {
+                                        fieldmap.put("comment", fc.comment());
                                     }
                                     fieldmap.put("primary", !filter && (field.getAnnotation(Id.class) != null));
                                     fieldmap.put("updatable", (filter || col == null || col.updatable()));
