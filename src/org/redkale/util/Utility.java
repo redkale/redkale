@@ -11,6 +11,7 @@ import java.nio.ByteBuffer;
 import java.nio.charset.*;
 import java.time.*;
 import java.util.*;
+import java.util.zip.GZIPInputStream;
 import javax.net.ssl.*;
 
 /**
@@ -764,6 +765,7 @@ public final class Utility {
             return remoteHttpContent(ctx, method, newurl, timeout, headers, body);
         }
         InputStream in = (rs < 400 || rs == 404) && rs != 405 ? conn.getInputStream() : conn.getErrorStream();
+        if ("gzip".equalsIgnoreCase(conn.getContentEncoding())) in = new GZIPInputStream(in);
         ByteArrayOutputStream out = new ByteArrayOutputStream(1024);
         byte[] bytes = new byte[1024];
         int pos;
