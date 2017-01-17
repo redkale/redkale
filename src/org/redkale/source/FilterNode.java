@@ -175,6 +175,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
      * @param func        EntityInfo的加载器
      * @param update      是否用于更新的JOIN
      * @param joinTabalis 关联表集合
+     * @param haset       已拼接过的字段名
      * @param info        Entity类的EntityInfo
      *
      * @return SQL的join语句 不存在返回null

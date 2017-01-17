@@ -67,6 +67,7 @@ public @interface Table {
      * annotations and constraints entailed by primary key mappings.
      * <p>
      * Defaults to no additional constraints.
+     * @return UniqueConstraint[]
      */
     UniqueConstraint[] uniqueConstraints() default {};
 
@@ -76,6 +77,7 @@ public @interface Table {
      * to specify an index for a primary key, as the primary key
      * index will be created automatically.
      *
+     * @return indexes
      * @since Java Persistence 2.1
      */
     Index[] indexes() default {};

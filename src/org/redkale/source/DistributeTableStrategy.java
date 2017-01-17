@@ -24,7 +24,7 @@ public interface DistributeTableStrategy<T> {
      * @param table   模板表的表名
      * @param primary 记录主键
      *
-     * @return
+     * @return 带库名的全表名
      */
     default String getTable(String table, Serializable primary) {
         return null;
@@ -38,7 +38,7 @@ public interface DistributeTableStrategy<T> {
      * @param table 模板表的表名
      * @param node  过滤条件
      *
-     * @return
+     * @return 带库名的全表名
      */
     default String getTable(String table, FilterNode node) {
         return null;
@@ -51,7 +51,7 @@ public interface DistributeTableStrategy<T> {
      * @param table 模板表的表名
      * @param bean  实体对象
      *
-     * @return
+     * @return 带库名的全表名
      */
     public String getTable(String table, T bean);
 }

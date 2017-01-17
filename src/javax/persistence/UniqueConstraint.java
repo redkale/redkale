@@ -1,4 +1,4 @@
-/*******************************************************************************
+/** *****************************************************************************
  * Copyright (c) 2008 - 2013 Oracle Corporation. All rights reserved.
  *
  * This program and the accompanying materials are made available under the
@@ -12,7 +12,7 @@
  *     Linda DeMichiel - Java Persistence 2.1
  *     Linda DeMichiel - Java Persistence 2.0
  *
- ******************************************************************************/ 
+ ***************************************************************************** */
 package javax.persistence;
 
 import java.lang.annotation.Target;
@@ -27,7 +27,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *    Example:
  *    &#064;Entity
  *    &#064;Table(
- *        name="EMPLOYEE", 
+ *        name="EMPLOYEE",
  *        uniqueConstraints=
  *            &#064;UniqueConstraint(columnNames={"EMP_ID", "EMP_NAME"})
  *    )
@@ -36,17 +36,21 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * @since Java Persistence 1.0
  */
-@Target({}) 
+@Target({})
 @Retention(RUNTIME)
 public @interface UniqueConstraint {
 
-    /** (Optional) Constraint name.  A provider-chosen name will be chosen
+    /** (Optional) Constraint name. A provider-chosen name will be chosen
      * if a name is not specified.
      *
+     * @return String
      * @since Java Persistence 2.0
      */
     String name() default "";
 
-    /** (Required) An array of the column names that make up the constraint. */
+    /** (Required) An array of the column names that make up the constraint.
+     *
+     * @return String[]
+     */
     String[] columnNames();
 }
