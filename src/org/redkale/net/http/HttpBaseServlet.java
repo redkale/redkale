@@ -132,7 +132,7 @@ public abstract class HttpBaseServlet extends HttpServlet {
 
     /**
      * 配合 HttpBaseServlet 使用。
-     * 当标记为 &#64;HttpCacheable 的方法使用response.finish的参数将被缓存一段时间(默认值timeout=15秒)。
+     * 当标记为 &#64;HttpCacheable 的方法使用response.finish的参数将被缓存一段时间(默认值 seconds=15秒)。
      * 通常情况下 &#64;HttpCacheable 需要与 &#64;AuthIgnore 一起使用，没有标记&#64;AuthIgnore的方法一般输出的结果与当前用户信息有关。
      *
      * <p>
@@ -150,7 +150,7 @@ public abstract class HttpBaseServlet extends HttpServlet {
          *
          * @return 超时秒数
          */
-        int timeout() default 15;
+        int seconds() default 15;
     }
 
     private Map.Entry<String, Entry>[] actions;
@@ -170,9 +170,9 @@ public abstract class HttpBaseServlet extends HttpServlet {
                     return;
                 }
                 if (entry.ignore || authenticate(entry.moduleid, entry.actionid, request, response)) {
-                    if (entry.cachetimeout > 0) {//有缓存设置
+                    if (entry.cacheseconds > 0) {//有缓存设置
                         CacheEntry ce = entry.cache.get(request.getRequestURI());
-                        if (ce != null && ce.time + entry.cachetimeout > System.currentTimeMillis()) { //缓存有效
+                        if (ce != null && ce.time + entry.cacheseconds > System.currentTimeMillis()) { //缓存有效
                             response.setStatus(ce.status);
                             response.setContentType(ce.contentType);
                             response.finish(ce.getBuffers());
@@ -348,9 +348,9 @@ public abstract class HttpBaseServlet extends HttpServlet {
             this.servlet = servlet;
             this.ignore = typeIgnore || method.getAnnotation(AuthIgnore.class) != null;
             HttpCacheable hc = method.getAnnotation(HttpCacheable.class);
-            this.cachetimeout = hc == null ? 0 : hc.timeout() * 1000;
-            this.cache = cachetimeout > 0 ? new ConcurrentHashMap() : null;
-            this.cacheHandler = cachetimeout > 0 ? (HttpResponse response, ByteBuffer[] buffers) -> {
+            this.cacheseconds = hc == null ? 0 : hc.seconds() * 1000;
+            this.cache = cacheseconds > 0 ? new ConcurrentHashMap() : null;
+            this.cacheHandler = cacheseconds > 0 ? (HttpResponse response, ByteBuffer[] buffers) -> {
                 int status = response.getStatus();
                 if (status != 200) return null;
                 CacheEntry ce = new CacheEntry(response.getStatus(), response.getContentType(), buffers);
@@ -375,7 +375,7 @@ public abstract class HttpBaseServlet extends HttpServlet {
 
         public final ConcurrentHashMap<String, CacheEntry> cache;
 
-        public final int cachetimeout;
+        public final int cacheseconds;
 
         public final boolean ignore;
 

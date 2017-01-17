@@ -40,7 +40,7 @@ public @interface RestMapping {
 
     int actionid() default 0; //操作ID值，鉴权时用到, 对应&#64;WebAction.actionid
 
-    int cachetimeout() default 0; // 结果缓存的秒数, 为0表示不缓存, 对应&#64;HttpCacheable.timeout
+    int cacheseconds() default 0; // 结果缓存的秒数, 为0表示不缓存, 对应&#64;HttpCacheable.seconds
 
     String[] methods() default {};//允许方法(不区分大小写),如:GET/POST/PUT,为空表示允许所有方法, 对应&#64;WebAction.methods
 

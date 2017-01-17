@@ -221,9 +221,9 @@ public final class Rest {
                 av0 = mv.visitAnnotation(authDesc, true);
                 av0.visitEnd();
             }
-            if (entry.cachetimeout > 0) { //设置 HttpCacheable
+            if (entry.cacheseconds > 0) { //设置 HttpCacheable
                 av0 = mv.visitAnnotation(cacheDesc, true);
-                av0.visit("timeout", entry.cachetimeout);
+                av0.visit("seconds", entry.cacheseconds);
                 av0.visitEnd();
             }
 
@@ -345,7 +345,7 @@ public final class Rest {
                 av0.visitEnd();
                 actionMap.put("url", url);
                 actionMap.put("auth", entry.auth);
-                actionMap.put("cachetimeout", entry.cachetimeout);
+                actionMap.put("cachetimeout", entry.cacheseconds);
                 actionMap.put("actionid", entry.actionid);
                 actionMap.put("comment", entry.comment);
                 actionMap.put("methods", entry.methods);
@@ -1018,7 +1018,7 @@ public final class Rest {
             this.methods = mapping.methods();
             this.auth = mapping.auth();
             this.actionid = mapping.actionid();
-            this.cachetimeout = mapping.cachetimeout();
+            this.cacheseconds = mapping.cacheseconds();
             this.comment = mapping.comment();
             this.jsvar = mapping.jsvar();
         }
@@ -1037,7 +1037,7 @@ public final class Rest {
 
         public final int actionid;
 
-        public final int cachetimeout;
+        public final int cacheseconds;
 
         public final String jsvar;
 
