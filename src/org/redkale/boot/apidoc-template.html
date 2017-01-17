@@ -73,7 +73,13 @@
                     html.push(' <tr><td colspan="5"><table class="typetable">');
                     for (var fieldname in classmap[type]) {
                         var field = classmap[type][fieldname];
-                        var t = field.type.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/([a-zA-Z0-9_\$]+\.)+/g, "");
+                        var t = field.type.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\$/g, ".").replace(/([a-zA-Z0-9_\$]+\.)+/g, "");
+                        if (t == 'boolean' || t == 'short' || t == 'int' || t == 'long' || t == 'float' || t == 'double'
+                                || t == 'boolean[]' || t == 'short[]' || t == 'int[]' || t == 'long[]' || t == 'float[]' || t == 'double[]') {
+                            t = '<font color=blue>' + t + '</font>';
+                        } else if (t == 'String' || t == 'String[]' || t == 'LongRange' || t.indexOf()('Map&lt;') === 0) {
+                            t = '<font color=red>' + t + '</font>';
+                        }
                         var c = (field.comment || '');
                         if (field.primary) {
                             c = '【主键】 ' + c;
