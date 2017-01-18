@@ -1409,14 +1409,17 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
         }
 
         final Connection conn = createReadSQLConnection();
+        final boolean log = debug.get() && info.isLoggable(Level.FINEST);
+        String logstr = null;
         try {
             final String sql = "SELECT COUNT(*) FROM " + info.getTable(pk) + " WHERE " + info.getPrimarySQLColumn() + " = " + FilterNode.formatToString(pk);
-            if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(clazz.getSimpleName() + " exists sql=" + sql);
+            if (log) logstr = clazz.getSimpleName() + " exists sql=" + sql;
             final PreparedStatement ps = conn.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
             final ResultSet set = ps.executeQuery();
             boolean rs = set.next() ? (set.getInt(1) > 0) : false;
             set.close();
             ps.close();
+            if (log) logstr = clazz.getSimpleName() + " exists (" + rs + ") sql=" + sql;
             return rs;
         } catch (SQLException se) {
             if (info.tableStrategy != null && info.tablenotexistSqlstates.contains(';' + se.getSQLState() + ';')) return false;
@@ -1424,6 +1427,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         } finally {
+            if (logstr != null) logger.finest(logstr);
             closeSQLConnection(conn);
         }
     }
@@ -1440,17 +1444,20 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
         if (cache != null && cache.isFullLoaded() && (node == null || node.isCacheUseable(this))) return cache.exists(node);
 
         final Connection conn = createReadSQLConnection();
+        final boolean log = debug.get() && info.isLoggable(Level.FINEST);
+        String logstr = null;
         try {
             final Map<Class, String> joinTabalis = node == null ? null : node.getJoinTabalis();
             final CharSequence join = node == null ? null : node.createSQLJoin(this, false, joinTabalis, new HashSet<>(), info);
             final CharSequence where = node == null ? null : node.createSQLExpress(info, joinTabalis);
             final String sql = "SELECT COUNT(" + info.getPrimarySQLColumn("a") + ") FROM " + info.getTable(node) + " a" + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
-            if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(clazz.getSimpleName() + " exists sql=" + sql);
+            if (log) logstr = clazz.getSimpleName() + " exists sql=" + sql;
             final PreparedStatement ps = conn.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
             final ResultSet set = ps.executeQuery();
             boolean rs = set.next() ? (set.getInt(1) > 0) : false;
             set.close();
             ps.close();
+            if (log) logstr = clazz.getSimpleName() + " exists (" + rs + ") sql=" + sql;
             return rs;
         } catch (SQLException se) {
             if (info.tableStrategy != null && info.tablenotexistSqlstates.contains(';' + se.getSQLState() + ';')) return false;
@@ -1458,6 +1465,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         } finally {
+            if (logstr != null) logger.finest(logstr);
             closeSQLConnection(conn);
         }
     }
