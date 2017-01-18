@@ -547,17 +547,31 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
     public <T> int delete(Class<T> clazz, FilterNode node) {
         final EntityInfo<T> info = loadEntityInfo(clazz);
         if (info.isVirtualEntity()) {
-            return delete(null, info, node);
+            return delete(null, info, null, node);
         }
         Connection conn = createWriteSQLConnection();
         try {
-            return delete(conn, info, node);
+            return delete(conn, info, null, node);
         } finally {
             closeSQLConnection(conn);
         }
     }
 
-    private <T> int delete(final Connection conn, final EntityInfo<T> info, final FilterNode node) {
+    @Override
+    public <T> int delete(Class<T> clazz, final Flipper flipper, FilterNode node) {
+        final EntityInfo<T> info = loadEntityInfo(clazz);
+        if (info.isVirtualEntity()) {
+            return delete(null, info, flipper, node);
+        }
+        Connection conn = createWriteSQLConnection();
+        try {
+            return delete(conn, info, flipper, node);
+        } finally {
+            closeSQLConnection(conn);
+        }
+    }
+
+    private <T> int delete(final Connection conn, final EntityInfo<T> info, final Flipper flipper, final FilterNode node) {
         int c = -1;
         try {
             if (!info.isVirtualEntity()) {
@@ -574,7 +588,8 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
                 }
                 String sql = "DELETE " + (this.readPool.isMysql() ? "a" : "") + " FROM " + info.getTable(node) + " a" + (join1 == null ? "" : (", " + join1))
                     + ((where == null || where.length() == 0) ? (join2 == null ? "" : (" WHERE " + join2))
-                        : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))));
+                        : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2)))) + info.createSQLOrderby(flipper)
+                    + ((flipper == null || flipper.getLimit() < 1) ? "" : (" LIMIT " + flipper.getLimit()));
                 if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(info.getType().getSimpleName() + " delete sql=" + sql);
                 final Statement stmt = conn.createStatement();
                 c = stmt.executeUpdate(sql);
@@ -583,7 +598,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
             //------------------------------------
             final EntityCache<T> cache = info.getCache();
             if (cache == null) return c;
-            Serializable[] ids = cache.delete(node);
+            Serializable[] ids = cache.delete(flipper, node);
             if (cacheListener != null) cacheListener.deleteCache(info.getType(), ids);
             return c >= 0 ? c : (ids == null ? 0 : ids.length);
         } catch (SQLException e) {
@@ -941,7 +956,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
                     + ((where == null || where.length() == 0) ? (join2 == null ? "" : (" WHERE " + join2))
                         : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))));
                 //注：LIMIT 仅支持MySQL 且在多表关联式会异常， 该BUG尚未解决
-                sql += info.createSQLOrderby(flipper) + (flipper == null ? "" : (" LIMIT " + flipper.getLimit()));
+                sql += info.createSQLOrderby(flipper) + ((flipper == null || flipper.getLimit() < 1) ? "" : (" LIMIT " + flipper.getLimit()));
                 if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
                 final Statement stmt = conn.createStatement();
                 c = stmt.executeUpdate(sql);
@@ -1697,12 +1712,13 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
             final CharSequence where = node == null ? null : node.createSQLExpress(info, joinTabalis);
             final String sql = "SELECT a.* FROM " + info.getTable(node) + " a" + (join == null ? "" : join)
                 + ((where == null || where.length() == 0) ? "" : (" WHERE " + where)) + info.createSQLOrderby(flipper);
-            if (debug.get() && info.isLoggable(Level.FINEST))
-                logger.finest(clazz.getSimpleName() + " query sql=" + sql + (flipper == null ? "" : (" LIMIT " + flipper.getOffset() + "," + flipper.getLimit())));
+            if (debug.get() && info.isLoggable(Level.FINEST)) {
+                logger.finest(clazz.getSimpleName() + " query sql=" + sql + (flipper == null || flipper.getLimit() < 1 ? "" : (" LIMIT " + flipper.getOffset() + "," + flipper.getLimit())));
+            }
             final PreparedStatement ps = conn.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
             final ResultSet set = ps.executeQuery();
             if (flipper != null && flipper.getOffset() > 0) set.absolute(flipper.getOffset());
-            final int limit = flipper == null ? Integer.MAX_VALUE : flipper.getLimit();
+            final int limit = flipper == null || flipper.getLimit() < 1 ? Integer.MAX_VALUE : flipper.getLimit();
             int i = 0;
             while (set.next()) {
                 i++;

@@ -350,7 +350,8 @@ public final class EntityCache<T> {
         Stream<T> stream = this.list.stream();
         if (filter != null) stream = stream.filter(filter);
         if (comparator != null) stream = stream.sorted(comparator);
-        if (flipper != null) stream = stream.skip(flipper.getOffset()).limit(flipper.getLimit());
+        if (flipper != null && flipper.getOffset() > 0) stream = stream.skip(flipper.getOffset());
+        if (flipper != null && flipper.getLimit() > 0) stream = stream.limit(flipper.getLimit());
         final List<T> rs = new ArrayList<>();
         if (selects == null) {
             Consumer<? super T> action = x -> rs.add(needcopy ? newReproduce.apply(creator.create(), x) : x);
@@ -400,9 +401,14 @@ public final class EntityCache<T> {
         return 1;
     }
 
-    public Serializable[] delete(final FilterNode node) {
+    public Serializable[] delete(final Flipper flipper, final FilterNode node) {
         if (node == null || this.list.isEmpty()) return new Serializable[0];
-        Object[] rms = this.list.stream().filter(node.createPredicate(this)).toArray();
+        final Comparator<T> comparator = createComparator(flipper);
+        Stream<T> stream = this.list.stream().filter(node.createPredicate(this));
+        if (comparator != null) stream = stream.sorted(comparator);
+        if (flipper != null && flipper.getOffset() > 0) stream = stream.skip(flipper.getOffset());
+        if (flipper != null && flipper.getLimit() > 0) stream = stream.limit(flipper.getLimit());
+        Object[] rms = stream.toArray();
         Serializable[] ids = new Serializable[rms.length];
         int i = -1;
         for (Object o : rms) {
@@ -483,7 +489,7 @@ public final class EntityCache<T> {
         Stream<T> stream = this.list.stream();
         final Comparator<T> comparator = createComparator(flipper);
         if (comparator != null) stream = stream.sorted(comparator);
-        if (flipper != null) stream = stream.limit(flipper.getLimit());
+        if (flipper != null && flipper.getLimit() > 0) stream = stream.limit(flipper.getLimit());
         T[] rms = stream.filter(node.createPredicate(this)).toArray(len -> (T[]) Array.newInstance(type, len));
         for (T rs : rms) {
             synchronized (rs) {

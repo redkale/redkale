@@ -56,6 +56,8 @@ public interface DataSource {
     public <T> int delete(final Class<T> clazz, final Serializable... ids);
 
     public <T> int delete(final Class<T> clazz, final FilterNode node);
+    
+    public <T> int delete(final Class<T> clazz, final Flipper flipper, final FilterNode node);
 
     //------------------------update---------------------------
     /**

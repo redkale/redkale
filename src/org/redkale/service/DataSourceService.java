@@ -49,6 +49,11 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
+    public <T> int delete(final Class<T> clazz, final Flipper flipper, FilterNode node) {
+        return source.delete(clazz, flipper, node);
+    }
+
+    @Override
     public <T> int update(T... values) {
         return source.update(values);
     }
