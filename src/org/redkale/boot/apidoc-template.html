@@ -25,8 +25,14 @@
                 html.push('<div style="width:' + Math.floor(window.screen.width * 0.9) + 'px;margin:0 auto;text-align: center;">');
                 html.push('<br/><br/><table class="table" align="center">');
                 for (var i = 0; i < jsoncontent.servers.length; i++) {
-                    for (var j = 0; j < jsoncontent.servers[i].servlets.length; j++) {
-                        var servlet = jsoncontent.servers[i].servlets[j];
+                    var servlets = jsoncontent.servers[i].servlets;
+                    if (servlets.length && (servlets[0].comment || "").indexOf("【") === 0) {
+                        servlets.sort(function (a, b) {
+                            return a.comment > b.comment ? -1 : (a.comment == b.comment ? 0 : 1);
+                        });
+                    }
+                    for (var j = 0; j < servlets.length; j++) {
+                        var servlet = servlets[j];
                         if (html.length > 2) html.push(' <tr><th colspan="5" style="border-bottom:0;">&nbsp;</th></tr>');
                         html.push(' <tr><th colspan="5" style="border-top:' + ((html.length > 2) ? 0 : 1) + ';">' + (servlet.comment || '未知模块') + '</th></tr>');
                         html.push(' <tr><th>请求URL</th><th>描 述</th><th>鉴 权</th><th>参 数 <span style="font-size:12px;">(粗体: 必填项; 红色: Header; 蓝色: Cookie)</span></th><th>输 出</th></tr>');
@@ -77,7 +83,7 @@
                         if (t == 'boolean' || t == 'short' || t == 'int' || t == 'long' || t == 'float' || t == 'double'
                                 || t == 'boolean[]' || t == 'short[]' || t == 'int[]' || t == 'long[]' || t == 'float[]' || t == 'double[]') {
                             t = '<font color=blue>' + t + '</font>';
-                        } else if (t == 'String' || t == 'String[]' || t == 'LongRange' || t.indexOf()('Map&lt;') === 0) {
+                        } else if (t == 'String' || t == 'String[]' || t == 'LongRange' || t.indexOf('Map&lt;') === 0) {
                             t = '<font color=red>' + t + '</font>';
                         }
                         var c = (field.comment || '');
