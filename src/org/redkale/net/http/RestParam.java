@@ -31,4 +31,6 @@ public @interface RestParam {
     boolean required() default true; //参数是否必传
 
     String comment() default ""; //备注描述
+
+    boolean required() default true; //参数是否必传
 }
