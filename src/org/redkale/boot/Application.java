@@ -463,7 +463,7 @@ public final class Application {
         for (final AnyValue serconf : serconfs) {
             Thread thread = new Thread() {
                 {
-                    String host = serconf.getValue("host", "").replace("0.0.0.0", "[0]");
+                    String host = serconf.getValue("host", "0.0.0.0").replace("0.0.0.0", "(0)");
                     setName(serconf.getValue("protocol", "Server").toUpperCase() + "-" + host + ":" + serconf.getIntValue("port") + "-Thread");
                     this.setDaemon(true);
                 }
