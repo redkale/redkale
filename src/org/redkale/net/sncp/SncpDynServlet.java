@@ -80,7 +80,7 @@ public final class SncpDynServlet extends SncpServlet {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append(this.getClass().getSimpleName()).append("(type=").append(type.getName());
+        sb.append(this.getClass().getSimpleName()).append(" (type=").append(type.getName());
         int len = maxClassNameLength - type.getName().length();
         for (int i = 0; i < len; i++) {
             sb.append(' ');
