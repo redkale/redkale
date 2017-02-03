@@ -347,7 +347,7 @@ public abstract class NodeServer {
         });
         if (sb != null) {
             remoteServiceWrappers.forEach(y -> {
-                sb.append(threadName).append(y.toSimpleString()).append(" loaded and injected").append(LINE_SEPARATOR);
+                sb.append(threadName).append(y.toSimpleString()).append(" load and inject").append(LINE_SEPARATOR);
             });
         }
         //----------------- init -----------------
@@ -362,7 +362,7 @@ public abstract class NodeServer {
                 long s = System.currentTimeMillis();
                 y.getService().init(y.getConf());
                 long e = System.currentTimeMillis() - s;
-                if (slist != null) slist.add(new StringBuilder().append(threadName).append(y.toSimpleString()).append(" loaded and inited ").append(e).append(" ms").append(LINE_SEPARATOR).toString());
+                if (slist != null) slist.add(new StringBuilder().append(threadName).append(y.toSimpleString()).append(" load and init in ").append(e).append(" ms").append(LINE_SEPARATOR).toString());
             } finally {
                 clds.countDown();
             }
