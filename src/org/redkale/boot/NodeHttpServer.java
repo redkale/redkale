@@ -131,7 +131,7 @@ public class NodeHttpServer extends NodeServer {
                 if (as.getKey().length() > max) max = as.getKey().length();
             }
             for (AbstractMap.SimpleEntry<String, String[]> as : ss) {
-                sb.append(threadName).append(" Loaded ").append(as.getKey());
+                sb.append(threadName).append(" Load ").append(as.getKey());
                 for (int i = 0; i < max - as.getKey().length(); i++) {
                     sb.append(' ');
                 }
@@ -202,7 +202,7 @@ public class NodeHttpServer extends NodeServer {
                 if (as.getKey().length() > max) max = as.getKey().length();
             }
             for (AbstractMap.SimpleEntry<String, String[]> as : ss) {
-                sb.append(threadName).append(" Loaded ").append(as.getKey());
+                sb.append(threadName).append(" Load ").append(as.getKey());
                 for (int i = 0; i < max - as.getKey().length(); i++) {
                     sb.append(' ');
                 }

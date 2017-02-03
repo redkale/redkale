@@ -61,7 +61,7 @@ public class NodeSncpServer extends NodeServer {
         List<SncpServlet> servlets = sncpServer.getSncpServlets();
         Collections.sort(servlets);
         for (SncpServlet en : servlets) {
-            if (sb != null) sb.append(threadName).append(" Loaded ").append(en).append(LINE_SEPARATOR);
+            if (sb != null) sb.append(threadName).append(" Load ").append(en).append(LINE_SEPARATOR);
         }
         if (sb != null && sb.length() > 0) logger.log(Level.FINE, sb.toString());
     }
