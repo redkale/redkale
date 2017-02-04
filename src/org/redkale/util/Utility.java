@@ -85,6 +85,24 @@ public final class Utility {
     private Utility() {
     }
 
+    public static HashMap<String, String> asMap(String... items) {
+        HashMap<String, String> map = new HashMap<>();
+        int len = items.length / 2;
+        for (int i = 0; i < len; i++) {
+            map.put(items[i * 2], items[i * 2 + 1]);
+        }
+        return map;
+    }
+
+    public static HashMap<String, Object> asMap(Object... items) {
+        HashMap<String, Object> map = new HashMap<>();
+        int len = items.length / 2;
+        for (int i = 0; i < len; i++) {
+            map.put(String.valueOf(items[i * 2]), items[i * 2 + 1]);
+        }
+        return map;
+    }
+
     public static String uuid() {
         return UUID.randomUUID().toString().replace("-", "");
     }
