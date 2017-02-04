@@ -22,13 +22,6 @@ import org.redkale.convert.json.*;
  */
 public class RetResult<T> {
 
-    /**
-     * 使用 RetResult.success() 方法代替
-     *
-     * @deprecated
-     */
-    private static final RetResult SUCCESS = new RetResult();
-
     protected int retcode;
 
     protected String retinfo;
