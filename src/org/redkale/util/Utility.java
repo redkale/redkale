@@ -94,11 +94,11 @@ public final class Utility {
         return map;
     }
 
-    public static HashMap<String, Object> asMap(Object... items) {
-        HashMap<String, Object> map = new HashMap<>();
+    public static HashMap<Object, Object> asMap(Object... items) {
+        HashMap<Object, Object> map = new HashMap<>();
         int len = items.length / 2;
         for (int i = 0; i < len; i++) {
-            map.put(String.valueOf(items[i * 2]), items[i * 2 + 1]);
+            map.put(items[i * 2], items[i * 2 + 1]);
         }
         return map;
     }
