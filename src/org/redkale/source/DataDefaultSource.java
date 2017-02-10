@@ -973,6 +973,11 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
         }
     }
 
+    @Override
+    public <T> int updateColumns(final T bean, final String... columns) {
+        return updateColumn(bean, columns);
+    }
+
     /**
      * 更新对象指定的一些字段， 必须是Entity对象
      *
@@ -983,7 +988,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
      * @return 更新的数据条数
      */
     @Override
-    public <T> int updateColumns(final T bean, final String... columns) {
+    public <T> int updateColumn(final T bean, final String... columns) {
         final EntityInfo<T> info = loadEntityInfo((Class<T>) bean.getClass());
         if (info.isVirtualEntity()) {
             return updateColumns(null, info, bean, columns);
@@ -1032,6 +1037,11 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
         }
     }
 
+    @Override
+    public <T> int updateColumns(final T bean, final FilterNode node, final String... columns) {
+        return updateColumn(bean, node, columns);
+    }
+
     /**
      * 更新对象指定的一些字段， 必须是Entity对象
      *
@@ -1043,7 +1053,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
      * @return 更新的数据条数
      */
     @Override
-    public <T> int updateColumns(final T bean, final FilterNode node, final String... columns) {
+    public <T> int updateColumn(final T bean, final FilterNode node, final String... columns) {
         final EntityInfo<T> info = loadEntityInfo((Class<T>) bean.getClass());
         if (info.isVirtualEntity()) {
             return updateColumns(null, info, bean, node, columns);

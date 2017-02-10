@@ -56,7 +56,7 @@ public interface DataSource {
     public <T> int delete(final Class<T> clazz, final Serializable... ids);
 
     public <T> int delete(final Class<T> clazz, final FilterNode node);
-    
+
     public <T> int delete(final Class<T> clazz, final Flipper flipper, final FilterNode node);
 
     //------------------------update---------------------------
@@ -80,8 +80,35 @@ public interface DataSource {
 
     public <T> int updateColumn(final Class<T> clazz, final FilterNode node, final Flipper flipper, final ColumnValue... values);
 
+    public <T> int updateColumn(final T bean, final String... columns);
+
+    public <T> int updateColumn(final T bean, final FilterNode node, final String... columns);
+
+    /**
+     * 由 public int updateColumn(final T bean, final String... columns); 代替
+     *
+     * @param <T>
+     * @param bean
+     * @param columns
+     *
+     * @return
+     * @deprecated
+     */
+    @Deprecated
     public <T> int updateColumns(final T bean, final String... columns);
 
+    /**
+     * 由 public int updateColumn(final T bean, final FilterNode node, final String... columns); 代替
+     *
+     * @param <T>
+     * @param bean
+     * @param node
+     * @param columns
+     *
+     * @return
+     * @deprecated
+     */
+    @Deprecated
     public <T> int updateColumns(final T bean, final FilterNode node, final String... columns);
 
     //############################################# 查询接口 #############################################

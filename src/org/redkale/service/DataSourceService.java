@@ -84,13 +84,23 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
+    public <T> int updateColumn(T bean, final String... columns) {
+        return source.updateColumn(bean, columns);
+    }
+
+    @Override
+    public <T> int updateColumn(T bean, final FilterNode node, final String... columns) {
+        return source.updateColumn(bean, node, columns);
+    }
+
+    @Override
     public <T> int updateColumns(T bean, final String... columns) {
-        return source.updateColumns(bean, columns);
+        return source.updateColumn(bean, columns);
     }
 
     @Override
     public <T> int updateColumns(T bean, final FilterNode node, final String... columns) {
-        return source.updateColumns(bean, node, columns);
+        return source.updateColumn(bean, node, columns);
     }
 
     @Override
