@@ -156,17 +156,17 @@ public class LogFileHandler extends Handler {
                                 }
                                 logstream = null;
                             }
-                            if (unusual != null && logunusualstream != null) {
-                                logunusualstream.close();
-                                if (limit > 0 && limit <= logunusuallength.get()) {
-                                    for (int i = Math.min(count - 2, logunusualindex.get() - 1); i > 0; i--) {
-                                        File greater = new File(logunusualfile.getPath() + "." + i);
-                                        if (greater.exists()) Files.move(greater.toPath(), new File(logunusualfile.getPath() + "." + (i + 1)).toPath(), REPLACE_EXISTING, ATOMIC_MOVE);
-                                    }
-                                    Files.move(logunusualfile.toPath(), new File(logunusualfile.getPath() + ".1").toPath(), REPLACE_EXISTING, ATOMIC_MOVE);
+                        }
+                        if (unusual != null && changeday && logunusualstream != null) {
+                            logunusualstream.close();
+                            if (limit > 0 && limit <= logunusuallength.get()) {
+                                for (int i = Math.min(count - 2, logunusualindex.get() - 1); i > 0; i--) {
+                                    File greater = new File(logunusualfile.getPath() + "." + i);
+                                    if (greater.exists()) Files.move(greater.toPath(), new File(logunusualfile.getPath() + "." + (i + 1)).toPath(), REPLACE_EXISTING, ATOMIC_MOVE);
                                 }
-                                logunusualstream = null;
+                                Files.move(logunusualfile.toPath(), new File(logunusualfile.getPath() + ".1").toPath(), REPLACE_EXISTING, ATOMIC_MOVE);
                             }
+                            logunusualstream = null;
                         }
                         if (logstream == null) {
                             logindex.incrementAndGet();
