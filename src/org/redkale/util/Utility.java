@@ -473,7 +473,7 @@ public final class Utility {
      * @param offset 偏移量
      * @param len    长度
      *
-     * @return
+     * @return 字节数组
      */
     public static byte[] hexToBin(char[] src, int offset, int len) {
         final int size = (len + 1) / 2;
