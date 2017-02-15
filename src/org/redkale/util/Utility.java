@@ -85,7 +85,8 @@ public final class Utility {
     private Utility() {
     }
 
-    public static HashMap<String, String> asMap(String... items) {
+    // 类似 JDK9中的 Map.of 方法
+    public static Map<String, String> ofMap(String... items) {
         HashMap<String, String> map = new HashMap<>();
         int len = items.length / 2;
         for (int i = 0; i < len; i++) {
@@ -94,7 +95,8 @@ public final class Utility {
         return map;
     }
 
-    public static HashMap<Object, Object> asMap(Object... items) {
+    // 类似 JDK9中的 Map.of 方法
+    public static Map<Object, Object> ofMap(Object... items) {
         HashMap<Object, Object> map = new HashMap<>();
         int len = items.length / 2;
         for (int i = 0; i < len; i++) {
