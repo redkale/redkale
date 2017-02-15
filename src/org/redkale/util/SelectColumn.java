@@ -10,6 +10,7 @@ import java.util.function.*;
 import java.util.regex.*;
 
 /**
+ * 判断字符串数组是否包含或排除指定字符串的操作类
  *
  * <p>
  * 详情见: https://redkale.org
@@ -72,6 +73,7 @@ public class SelectColumn implements Predicate<String> {
      * class中的字段名
      *
      * @param columns 包含的字段名集合
+     *
      * @return SelectColumn
      */
     public static SelectColumn createIncludes(String... columns) {
@@ -82,6 +84,7 @@ public class SelectColumn implements Predicate<String> {
      * class中的字段名
      *
      * @param columns 排除的字段名集合
+     *
      * @return SelectColumn
      */
     public static SelectColumn createExcludes(String... columns) {

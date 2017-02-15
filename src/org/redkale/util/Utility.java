@@ -85,7 +85,14 @@ public final class Utility {
     private Utility() {
     }
 
-    // 类似 JDK9中的 Map.of 方法
+    /**
+     * 将多个key:value的字符串键值对组合成一个Map，items长度必须是偶数, 参数个数若是奇数的话，最后一个会被忽略
+     * 类似 JDK9中的 Map.of 方法
+     *
+     * @param items 键值对
+     *
+     * @return Map
+     */
     public static Map<String, String> ofMap(String... items) {
         HashMap<String, String> map = new HashMap<>();
         int len = items.length / 2;
@@ -95,7 +102,14 @@ public final class Utility {
         return map;
     }
 
-    // 类似 JDK9中的 Map.of 方法
+    /**
+     * 将多个key:value对应值组合成一个Map，items长度必须是偶数, 参数个数若是奇数的话，最后一个会被忽略
+     * 类似 JDK9中的 Map.of 方法
+     *
+     * @param items 键值对
+     *
+     * @return Map
+     */
     public static Map<Object, Object> ofMap(Object... items) {
         HashMap<Object, Object> map = new HashMap<>();
         int len = items.length / 2;
@@ -105,10 +119,23 @@ public final class Utility {
         return map;
     }
 
+    /**
+     * 获取不带"-"的UUID值
+     *
+     * @return 不带"-"UUID值
+     */
     public static String uuid() {
         return UUID.randomUUID().toString().replace("-", "");
     }
 
+    /**
+     * 将buffer的内容转换成字符串, string参数不为空时会追加在buffer内容字符串之前
+     *
+     * @param string 字符串前缀
+     * @param buffer ByteBuffer
+     *
+     * @return 字符串
+     */
     public static String toString(String string, ByteBuffer buffer) {
         if (buffer == null || !buffer.hasRemaining()) return string;
         int pos = buffer.position();
@@ -121,6 +148,13 @@ public final class Utility {
         return string + new String(bytes, UTF_8);
     }
 
+    /**
+     * 将buffer的内容转换成字符串并打印到控制台, string参数不为空时会追加在buffer内容字符串之前
+     *
+     * @param string 字符串前缀
+     * @param buffer ByteBuffer
+     *
+     */
     public static void println(String string, ByteBuffer buffer) {
         if (buffer == null || !buffer.hasRemaining()) return;
         int pos = buffer.position();
@@ -132,6 +166,13 @@ public final class Utility {
         println(string, bytes);
     }
 
+    /**
+     * 将字节数组的内容转换成字符串并打印到控制台, string参数不为空时会追加在字节数组内容字符串之前
+     *
+     * @param string 字符串前缀
+     * @param bytes  字节数组
+     *
+     */
     public static void println(String string, byte... bytes) {
         if (bytes == null) return;
         StringBuilder sb = new StringBuilder();
@@ -174,14 +215,33 @@ public final class Utility {
         return back;
     }
 
+    /**
+     * 获取格式为yyyy-MM-dd HH:mm:ss的当前时间
+     *
+     * @return 格式为yyyy-MM-dd HH:mm:ss的时间值
+     */
     public static String now() {
         return String.format(format, System.currentTimeMillis());
     }
 
+    /**
+     * 将指定时间格式化为 yyyy-MM-dd HH:mm:ss
+     *
+     * @param time 待格式化的时间
+     *
+     * @return 格式为yyyy-MM-dd HH:mm:ss的时间值
+     */
     public static String formatTime(long time) {
         return String.format(format, time);
     }
 
+    /**
+     * 将时间值转换为长度为9的36进制值，8位的前面补充0
+     *
+     * @param time 时间值
+     *
+     * @return 36进制时间值
+     */
     public static String format36time(long time) {
         String time36 = Long.toString(time, 36);
         return time36.length() < 9 ? ("0" + time36) : time36;
@@ -285,18 +345,50 @@ public final class Utility {
         return ld.atStartOfDay(zid).toInstant().toEpochMilli();
     }
 
+    /**
+     * 将字节数组转换为16进制字符串
+     *
+     * @param bytes 字节数组
+     *
+     * @return 16进制字符串
+     */
     public static String binToHexString(byte[] bytes) {
         return new String(binToHex(bytes));
     }
 
+    /**
+     * 将字节数组转换为16进制字符数组
+     *
+     * @param bytes 字节数组
+     *
+     * @return 16进制字符串的字符数组
+     */
     public static char[] binToHex(byte[] bytes) {
         return binToHex(bytes, 0, bytes.length);
     }
 
+    /**
+     * 将字节数组转换为16进制字符串
+     *
+     * @param bytes  字节数组
+     * @param offset 偏移量
+     * @param len    长度
+     *
+     * @return 16进制字符串
+     */
     public static String binToHexString(byte[] bytes, int offset, int len) {
         return new String(binToHex(bytes, offset, len));
     }
 
+    /**
+     * 将字节数组转换为16进制字符数组
+     *
+     * @param bytes  字节数组
+     * @param offset 偏移量
+     * @param len    长度
+     *
+     * @return 16进制字符串的字符数组
+     */
     public static char[] binToHex(byte[] bytes, int offset, int len) {
         final char[] sb = new char[len * 2];
         final int end = offset + len;
@@ -310,10 +402,27 @@ public final class Utility {
         return sb;
     }
 
+    /**
+     * 将16进制字符串转换成字节数组
+     *
+     * @param src 16进制字符串
+     *
+     * @return 字节数组
+     */
     public static byte[] hexToBin(CharSequence src) {
         return hexToBin(src, 0, src.length());
     }
 
+    /**
+     *
+     * 将16进制字符串转换成字节数组
+     *
+     * @param src    16进制字符串
+     * @param offset 偏移量
+     * @param len    长度
+     *
+     * @return 字节数组
+     */
     public static byte[] hexToBin(CharSequence src, int offset, int len) {
         final int size = (len + 1) / 2;
         final byte[] bytes = new byte[size];
@@ -333,14 +442,39 @@ public final class Utility {
         return bytes;
     }
 
+    /**
+     *
+     * 将16进制字符串转换成字节数组
+     *
+     * @param str 16进制字符串
+     *
+     * @return 字节数组
+     */
     public static byte[] hexToBin(String str) {
         return hexToBin(charArray(str));
     }
 
+    /**
+     *
+     * 将16进制字符数组转换成字节数组
+     *
+     * @param src 16进制字符数组
+     *
+     * @return 字节数组
+     */
     public static byte[] hexToBin(char[] src) {
         return hexToBin(src, 0, src.length);
     }
 
+    /**
+     * 将16进制字符数组转换成字节数组
+     *
+     * @param src    16进制字符数组
+     * @param offset 偏移量
+     * @param len    长度
+     *
+     * @return
+     */
     public static byte[] hexToBin(char[] src, int offset, int len) {
         final int size = (len + 1) / 2;
         final byte[] bytes = new byte[size];
