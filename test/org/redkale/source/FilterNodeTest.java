@@ -21,10 +21,10 @@ public class FilterNodeTest {
     public static void main(String[] args) throws Exception {
         final Properties props = new Properties();
         final BiFunction<DataSource, Class, List> fullloader = (s, t) -> new ArrayList();
-        final Function<Class, EntityInfo> func = (Class t) -> EntityInfo.load(t, 0, false, props, null, fullloader);
-        final EntityInfo<CarTestTable> carEntity = EntityInfo.load(CarTestTable.class, 0, false, props, null, (s, t) -> CarTestTable.createList());
-        final EntityInfo<UserTestTable> userEntity = EntityInfo.load(UserTestTable.class, 0, false, props, null, (s, t) -> UserTestTable.createList());
-        final EntityInfo<CarTypeTestTable> typeEntity = EntityInfo.load(CarTypeTestTable.class, 0, false, props, null, (s, t) -> CarTypeTestTable.createList());
+        final Function<Class, EntityInfo> func = (Class t) -> EntityInfo.load(t, false, props, null, fullloader);
+        final EntityInfo<CarTestTable> carEntity = EntityInfo.load(CarTestTable.class, false, props, null, (s, t) -> CarTestTable.createList());
+        final EntityInfo<UserTestTable> userEntity = EntityInfo.load(UserTestTable.class, false, props, null, (s, t) -> UserTestTable.createList());
+        final EntityInfo<CarTypeTestTable> typeEntity = EntityInfo.load(CarTypeTestTable.class, false, props, null, (s, t) -> CarTypeTestTable.createList());
 
         final CarTestBean bean = new CarTestBean();
         bean.carid = 70002;

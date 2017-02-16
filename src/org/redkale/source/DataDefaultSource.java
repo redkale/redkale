@@ -271,7 +271,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
     }
 
     private <T> EntityInfo<T> loadEntityInfo(Class<T> clazz) {
-        return EntityInfo.load(clazz, this.nodeid, this.cacheForbidden, this.readPool.props, this, fullloader);
+        return EntityInfo.load(clazz, this.cacheForbidden, this.readPool.props, this, fullloader);
     }
 
     /**
@@ -317,32 +317,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
                 final String sql = info.getInsertSQL(values[0]);
                 final Class primaryType = info.getPrimary().type();
                 final Attribute primary = info.getPrimary();
-                final boolean distributed = info.distributed;
                 Attribute<T, Serializable>[] attrs = info.insertAttributes;
-                if (distributed && !info.initedPrimaryValue && primaryType.isPrimitive()) { //由DataSource生成主键
-                    synchronized (info) {
-                        if (!info.initedPrimaryValue) { //初始化最大主键值
-                            try {
-                                Statement stmt = conn.createStatement();
-                                ResultSet rs = stmt.executeQuery("SELECT MAX(" + info.getPrimarySQLColumn() + ") FROM " + info.getTable(values[0]));
-                                if (rs.next()) {
-                                    if (primaryType == int.class) {
-                                        int v = rs.getInt(1) / info.allocationSize;
-                                        if (v > info.primaryValue.get()) info.primaryValue.set(v);
-                                    } else {
-                                        long v = rs.getLong(1) / info.allocationSize;
-                                        if (v > info.primaryValue.get()) info.primaryValue.set(v);
-                                    }
-                                }
-                                rs.close();
-                                stmt.close();
-                            } catch (SQLException se) {
-                                if (info.tableStrategy == null) throw se;
-                            }
-                            info.initedPrimaryValue = true;
-                        }
-                    }
-                }
                 PreparedStatement prestmt = createInsertPreparedStatement(conn, sql, info, values);
                 try {
                     prestmt.executeBatch();
@@ -442,7 +417,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
 
         for (final T value : values) {
             int i = 0;
-            if (info.distributed || info.autouuid) info.createPrimaryValue(value);
+            if (info.autouuid) info.createPrimaryValue(value);
             for (Attribute<T, Serializable> attr : attrs) {
                 prestmt.setObject(++i, attr.get(value));
             }
