@@ -11,7 +11,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  *
- * 依附在RestService类的方法的参数上 ,数据结构与Param类似
+ * 依附在RestService类的方法的参数上
  * name='&#38;' 表示当前用户
  * name='#'表示截取uri最后一段
  * name='#xxx:'表示从uri中/pipes/xxx:v/截取xxx:的值
