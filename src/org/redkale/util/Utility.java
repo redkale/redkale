@@ -129,6 +129,44 @@ public final class Utility {
     }
 
     /**
+     * 删除掉字符串数组中包含指定的字符串
+     *
+     * @param columns 待删除数组
+     * @param cols    需排除的字符串
+     *
+     * @return 新字符串数组
+     */
+    public static String[] remove(final String[] columns, final String... cols) {
+        if (columns == null || columns.length == 0 || cols == null || cols.length == 0) return columns;
+        int count = 0;
+        for (String column : columns) {
+            boolean flag = false;
+            for (String col : cols) {
+                if (column != null && column.equals(col)) {
+                    flag = true;
+                    break;
+                }
+            }
+            if (flag) count++;
+        }
+        if (count == 0) return columns;
+        if (count == columns.length) return new String[0];
+        final String[] newcols = new String[columns.length - count];
+        count = 0;
+        for (String column : columns) {
+            boolean flag = false;
+            for (String col : cols) {
+                if (column != null && column.equals(col)) {
+                    flag = true;
+                    break;
+                }
+            }
+            if (!flag) newcols[count++] = column;
+        }
+        return newcols;
+    }
+
+    /**
      * 将buffer的内容转换成字符串, string参数不为空时会追加在buffer内容字符串之前
      *
      * @param string 字符串前缀
