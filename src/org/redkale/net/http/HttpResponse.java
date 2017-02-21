@@ -225,6 +225,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      */
     public void finishJson(final Object obj) {
         this.contentType = "text/plain; charset=utf-8";
+        if (this.recycleListener != null) this.output = obj;
         finish(request.getJsonConvert().convertTo(context.getBufferSupplier(), obj));
     }
 
@@ -236,6 +237,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      */
     public void finishJson(final JsonConvert convert, final Object obj) {
         this.contentType = "text/plain; charset=utf-8";
+        if (this.recycleListener != null) this.output = obj;
         finish(convert.convertTo(context.getBufferSupplier(), obj));
     }
 
@@ -247,6 +249,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      */
     public void finishJson(final Type type, final Object obj) {
         this.contentType = "text/plain; charset=utf-8";
+        this.output = obj;
         finish(request.getJsonConvert().convertTo(context.getBufferSupplier(), type, obj));
     }
 
@@ -259,6 +262,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      */
     public void finishJson(final JsonConvert convert, final Type type, final Object obj) {
         this.contentType = "text/plain; charset=utf-8";
+        if (this.recycleListener != null) this.output = obj;
         finish(convert.convertTo(context.getBufferSupplier(), type, obj));
     }
 
@@ -269,6 +273,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      */
     public void finishJson(final Object... objs) {
         this.contentType = "text/plain; charset=utf-8";
+        if (this.recycleListener != null) this.output = objs;
         finish(request.getJsonConvert().convertTo(context.getBufferSupplier(), objs));
     }
 
@@ -279,6 +284,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      */
     public void finishJson(final org.redkale.service.RetResult ret) {
         this.contentType = "text/plain; charset=utf-8";
+        if (this.recycleListener != null) this.output = ret;
         if (ret != null && !ret.isSuccess()) {
             this.header.addValue("retcode", String.valueOf(ret.getRetcode()));
             this.header.addValue("retinfo", ret.getRetinfo());
@@ -294,6 +300,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      */
     public void finishJson(final JsonConvert convert, final org.redkale.service.RetResult ret) {
         this.contentType = "text/plain; charset=utf-8";
+        if (this.recycleListener != null) this.output = ret;
         if (ret != null && !ret.isSuccess()) {
             this.header.addValue("retcode", String.valueOf(ret.getRetcode()));
             this.header.addValue("retinfo", ret.getRetinfo());
@@ -309,6 +316,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      */
     public void finishJsResult(String var, Object result) {
         this.contentType = "application/javascript; charset=utf-8";
+        if (this.recycleListener != null) this.output = result;
         finish("var " + var + " = " + request.getJsonConvert().convertTo(result) + ";");
     }
 
@@ -321,6 +329,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      */
     public void finishJsResult(JsonConvert jsonConvert, String var, Object result) {
         this.contentType = "application/javascript; charset=utf-8";
+        if (this.recycleListener != null) this.output = result;
         finish("var " + var + " = " + jsonConvert.convertTo(result) + ";");
     }
 
@@ -330,6 +339,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * @param obj 输出内容
      */
     public void finish(String obj) {
+        if (this.recycleListener != null) this.output = obj;
         if (obj == null || obj.isEmpty()) {
             final ByteBuffer headbuf = createHeader();
             headbuf.flip();

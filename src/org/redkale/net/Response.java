@@ -29,7 +29,9 @@ public abstract class Response<C extends Context, R extends Request<C>> {
 
     private boolean inited = true;
 
-    protected BiConsumer<R, Response<C, R>> recycleListener;
+    protected Object output; //输出的结果对象
+
+    protected BiConsumer<R, Response<C, R>> recycleListener; 
 
     private final CompletionHandler finishHandler = new CompletionHandler<Integer, ByteBuffer>() {
 
@@ -113,6 +115,7 @@ public abstract class Response<C extends Context, R extends Request<C>> {
             }
             recycleListener = null;
         }
+        this.output = null;
         request.recycle();
         if (channel != null) {
             if (keepAlive) {
@@ -141,6 +144,10 @@ public abstract class Response<C extends Context, R extends Request<C>> {
 
     public void setRecycleListener(BiConsumer<R, Response<C, R>> recycleListener) {
         this.recycleListener = recycleListener;
+    }
+
+    public Object getOutput() {
+        return output;
     }
 
     public void finish() {
