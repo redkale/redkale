@@ -136,7 +136,7 @@ public final class Utility {
      *
      * @return 新字符串数组
      */
-    public static String[] remove(final String[] columns, final String... cols) {
+    public static String[] exclude(final String[] columns, final String... cols) {
         if (columns == null || columns.length == 0 || cols == null || cols.length == 0) return columns;
         int count = 0;
         for (String column : columns) {
