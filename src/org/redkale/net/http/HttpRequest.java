@@ -236,7 +236,7 @@ public class HttpRequest extends Request<HttpContext> {
      * @return 地址
      */
     public SocketAddress getRemoteAddress() {
-        return this.channel.getRemoteAddress();
+        return this.channel == null || !this.channel.isOpen() ? null : this.channel.getRemoteAddress();
     }
 
     /**
