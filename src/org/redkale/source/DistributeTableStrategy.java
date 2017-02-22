@@ -8,6 +8,7 @@ package org.redkale.source;
 import java.io.Serializable;
 
 /**
+ * 不能与Cacheable同时使用
  *
  * <p>
  * 详情见: https://redkale.org

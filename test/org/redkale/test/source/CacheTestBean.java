@@ -38,9 +38,9 @@ public class CacheTestBean {
         BiFunction<DataSource, Class, List> fullloader = (s, z) -> list;
         Method method = EntityInfo.class.getDeclaredMethod("load", Class.class, int.class, boolean.class, Properties.class,
             DataSource.class, BiFunction.class);
-        method.setAccessible(true); 
+        method.setAccessible(true);
         final EntityInfo<CacheTestBean> info = (EntityInfo<CacheTestBean>) method.invoke(null, CacheTestBean.class, 0, true, new Properties(), null, fullloader);
-        EntityCache<CacheTestBean> cache = new EntityCache(info);
+        EntityCache<CacheTestBean> cache = new EntityCache(info, null);
         cache.fullLoad();
 
         System.out.println(cache.queryColumnMap("pkgid", FilterFunc.COUNT, "name", null));
@@ -49,9 +49,9 @@ public class CacheTestBean {
         System.out.println(cache.queryColumnMap("pkgid", FilterFunc.SUM, "price", null));
         System.out.println(cache.queryColumnMap("pkgid", FilterFunc.MAX, "price", null));
         System.out.println(cache.queryColumnMap("pkgid", FilterFunc.MIN, "price", null));
-        
-        System.out.println(cache.find(null, FilterNode.create("name", FilterExpress.EQUAL, "BB"))); 
-        System.out.println(cache.find(null, FilterNode.create("name", FilterExpress.IGNORECASEEQUAL, "BB"))); 
+
+        System.out.println(cache.find(null, FilterNode.create("name", FilterExpress.EQUAL, "BB")));
+        System.out.println(cache.find(null, FilterNode.create("name", FilterExpress.IGNORECASEEQUAL, "BB")));
         System.out.println(cache.querySheet(null, null, FilterNode.create("name", FilterExpress.IGNORECASENOTLIKE, "B")));
     }
 
@@ -90,7 +90,7 @@ public class CacheTestBean {
 
     @Override
     public String toString() {
-        return JsonConvert.root().convertTo(this); 
+        return JsonConvert.root().convertTo(this);
     }
 
 }

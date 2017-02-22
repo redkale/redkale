@@ -249,7 +249,7 @@ public final class EntityInfo<T> {
         //----------------cache--------------
         Cacheable c = type.getAnnotation(Cacheable.class);
         if (this.table == null || (!cacheForbidden && c != null && c.value())) {
-            this.cache = new EntityCache<>(this);
+            this.cache = new EntityCache<>(this, c);
         } else {
             this.cache = null;
         }

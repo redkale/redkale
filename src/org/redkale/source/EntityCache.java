@@ -29,10 +29,10 @@ public final class EntityCache<T> {
 
     private static final Logger logger = Logger.getLogger(EntityCache.class.getName());
 
-    private final ConcurrentHashMap<Serializable, T> map = new ConcurrentHashMap();
+    private ConcurrentHashMap<Serializable, T> map = new ConcurrentHashMap();
 
     // CopyOnWriteArrayList 插入慢、查询快; 10w数据插入需要3.2秒; ConcurrentLinkedQueue 插入快、查询慢；10w数据查询需要 0.062秒，  查询慢40%;
-    private final Collection<T> list = new ConcurrentLinkedQueue();
+    private Collection<T> list = new ConcurrentLinkedQueue();
 
     private final Map<String, Comparator<T>> sortComparators = new ConcurrentHashMap<>();
 
@@ -52,8 +52,13 @@ public final class EntityCache<T> {
 
     final EntityInfo<T> info;
 
-    public EntityCache(final EntityInfo<T> info) {
+    final int interval;
+
+    private ScheduledThreadPoolExecutor scheduler;
+
+    public EntityCache(final EntityInfo<T> info, final Cacheable c) {
         this.info = info;
+        this.interval = c == null ? 0 : c.interval();
         this.type = info.getType();
         this.creator = info.getCreator();
         this.primary = info.primary;
@@ -80,15 +85,35 @@ public final class EntityCache<T> {
 
     public void fullLoad() {
         if (info.fullloader == null) return;
-        clear();
+        this.fullloaded = false;
+        ConcurrentHashMap newmap = new ConcurrentHashMap();
         List<T> all = info.fullloader.apply(info.source, type);
         if (all != null) {
             all.stream().filter(x -> x != null).forEach(x -> {
-                this.map.put(this.primary.get(x), x);
+                newmap.put(this.primary.get(x), x);
             });
-            this.list.addAll(all);
         }
+        this.list = all == null ? new ConcurrentLinkedQueue() : new ConcurrentLinkedQueue(all);
+        this.map = newmap;
         this.fullloaded = true;
+        if (this.interval > 0) {
+            this.scheduler = new ScheduledThreadPoolExecutor(1, (Runnable r) -> {
+                final Thread t = new Thread(r, "EntityCache-" + type + "-Thread");
+                t.setDaemon(true);
+                return t;
+            });
+            this.scheduler.scheduleAtFixedRate(() -> {
+                ConcurrentHashMap newmap2 = new ConcurrentHashMap();
+                List<T> all2 = info.fullloader.apply(info.source, type);
+                if (all2 != null) {
+                    all2.stream().filter(x -> x != null).forEach(x -> {
+                        newmap2.put(this.primary.get(x), x);
+                    });
+                }
+                this.list = all2 == null ? new ConcurrentLinkedQueue() : new ConcurrentLinkedQueue(all2);
+                this.map = newmap2;
+            }, interval - System.currentTimeMillis() / 1000 % interval, interval, TimeUnit.SECONDS);
+        }
     }
 
     public Class<T> getType() {
@@ -97,8 +122,12 @@ public final class EntityCache<T> {
 
     public void clear() {
         this.fullloaded = false;
-        this.list.clear();
-        this.map.clear();
+        this.list = new ConcurrentLinkedQueue();
+        this.map = new ConcurrentHashMap();
+        if (this.scheduler != null) {
+            this.scheduler.shutdownNow();
+            this.scheduler = null;
+        }
     }
 
     public boolean isFullLoaded() {
