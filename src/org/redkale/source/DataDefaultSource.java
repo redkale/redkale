@@ -191,15 +191,34 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
         }
     }
 
-    static ConnectionPoolDataSource createDataSource(final String source0, String url, String user, String password) throws Exception {
+    static ConnectionPoolDataSource createDataSource(String source0, String url, String user, String password) throws Exception {
         String source = source0;
-        if (source0.contains("Driver")) {  //为了兼容JPA的配置文件
+        if (source0 == null || source0.isEmpty()) {
+            if (url.startsWith("jdbc:mysql:")) {
+                source0 = "com.mysql.jdbc.Driver";
+            } else if (url.startsWith("jdbc:mariadb:")) {
+                source0 = "org.mariadb.jdbc.Driver";
+            } else if (url.startsWith("jdbc:oracle:")) {
+                source0 = "oracle.jdbc.driver.OracleDriver";
+            } else if (url.startsWith("jdbc:postgresql:")) {
+                source0 = "org.postgresql.Driver";
+            } else if (url.startsWith("jdbc:microsoft:sqlserver:")) {
+                source0 = "com.microsoft.sqlserver.jdbc.SQLServerDriver";
+            }
+        }
+        if (source0 != null && source0.contains("Driver")) {  //为了兼容JPA的配置文件
             switch (source0) {
                 case "org.mariadb.jdbc.Driver":
                     source = "org.mariadb.jdbc.MySQLDataSource";
                     break;
+                case "com.mysql.cj.jdbc.Driver":
                 case "com.mysql.jdbc.Driver":
-                    source = "com.mysql.jdbc.jdbc2.optional.MysqlConnectionPoolDataSource";
+                    try {
+                        Class.forName("com.mysql.cj.jdbc.MysqlConnectionPoolDataSource");
+                        source = "com.mysql.cj.jdbc.MysqlConnectionPoolDataSource";
+                    } catch (Exception e) {
+                        source = "com.mysql.jdbc.jdbc2.optional.MysqlConnectionPoolDataSource";
+                    }
                     break;
                 case "oracle.jdbc.driver.OracleDriver":
                     source = "oracle.jdbc.pool.OracleConnectionPoolDataSource";
