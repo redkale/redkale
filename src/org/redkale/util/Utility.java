@@ -5,7 +5,7 @@
 package org.redkale.util;
 
 import java.io.*;
-import java.lang.reflect.Field;
+import java.lang.reflect.*;
 import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.charset.*;
@@ -126,6 +126,53 @@ public final class Utility {
      */
     public static String uuid() {
         return UUID.randomUUID().toString().replace("-", "");
+    }
+
+    /**
+     * 数组上追加数据
+     *
+     * @param <T>   泛型
+     * @param array 原数组
+     * @param objs  待追加数据
+     *
+     * @return 新数组
+     */
+    public static <T> T[] append(final T[] array, final T... objs) {
+        if (array == null || array.length == 0) return objs;
+        final T[] news = (T[]) Array.newInstance(array.getClass().getComponentType(), array.length + objs.length);
+        System.arraycopy(array, 0, news, 0, array.length);
+        System.arraycopy(objs, 0, news, array.length, objs.length);
+        return news;
+    }
+
+    /**
+     * 数组上追加数据
+     *
+     * @param <T>   泛型
+     * @param array 原数组
+     * @param objs  待追加数据
+     *
+     * @return 新数组
+     */
+    public static <T> T[] append(final T[] array, final Collection<T> objs) {
+        if (objs == null || objs.isEmpty()) return array;
+        if (array == null) {
+            T one = null;
+            for (T t : objs) {
+                if (t != null) one = t;
+                break;
+            }
+            if (one == null) return array;
+            T[] news = (T[]) Array.newInstance(one.getClass(), objs.size());
+            return objs.toArray(news);
+        }
+        T[] news = (T[]) Array.newInstance(array.getClass().getComponentType(), array.length + objs.size());
+        System.arraycopy(array, 0, news, 0, array.length);
+        int index = -1;
+        for (T t : objs) {
+            news[array.length + (++index)] = t;
+        }
+        return news;
     }
 
     /**

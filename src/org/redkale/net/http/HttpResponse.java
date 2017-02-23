@@ -184,14 +184,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * @return HttpResponse
      */
     public HttpResponse addCookie(HttpCookie... cookies) {
-        if (this.cookies == null) {
-            this.cookies = cookies;
-        } else {
-            HttpCookie[] news = new HttpCookie[this.cookies.length + cookies.length];
-            System.arraycopy(this.cookies, 0, news, 0, this.cookies.length);
-            System.arraycopy(cookies, 0, news, this.cookies.length, cookies.length);
-            this.cookies = news;
-        }
+        this.cookies = Utility.append(this.cookies, cookies);
         return this;
     }
 
@@ -203,18 +196,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * @return HttpResponse
      */
     public HttpResponse addCookie(Collection<HttpCookie> cookies) {
-        if (cookies == null || cookies.isEmpty()) return this;
-        if (this.cookies == null) {
-            this.cookies = cookies.toArray(new HttpCookie[cookies.size()]);
-        } else {
-            HttpCookie[] news = new HttpCookie[this.cookies.length + cookies.size()];
-            System.arraycopy(this.cookies, 0, news, 0, this.cookies.length);
-            int i = this.cookies.length;
-            for (HttpCookie cookie : cookies) {
-                news[i++] = cookie;
-            }
-            this.cookies = news;
-        }
+        this.cookies = Utility.append(this.cookies, cookies);
         return this;
     }
 
