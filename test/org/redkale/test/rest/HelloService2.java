@@ -20,7 +20,7 @@ import org.redkale.util.Sheet;
  *
  */
 @RestService(name = "hello", moduleid = 0, repair = true, ignore = false, comment = "Hello服务模块")
-public class HelloService2 implements Service {
+public class HelloService2 implements Service { 
 
     @Resource
     private DataSource source;

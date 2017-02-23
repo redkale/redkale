@@ -84,20 +84,14 @@ public class JsonByteBufferWriter extends JsonWriter {
         if (!buffer.hasRemaining()) {
             buffer.flip();
             buffer = supplier.get();
-            ByteBuffer[] bufs = new ByteBuffer[this.buffers.length + 1];
-            System.arraycopy(this.buffers, 0, bufs, 0, this.buffers.length);
-            bufs[this.buffers.length] = buffer;
-            this.buffers = bufs;
+            this.buffers = Utility.append(this.buffers, buffer);
             this.index++;
         }
         int len = buffer.remaining();
         int size = 0;
         while (len < byteLength) {
             buffer = supplier.get();
-            ByteBuffer[] bufs = new ByteBuffer[this.buffers.length + 1];
-            System.arraycopy(this.buffers, 0, bufs, 0, this.buffers.length);
-            bufs[this.buffers.length] = buffer;
-            this.buffers = bufs;
+            this.buffers = Utility.append(this.buffers, buffer);
             len += buffer.remaining();
             size++;
         }

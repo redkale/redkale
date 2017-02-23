@@ -10,7 +10,7 @@ import java.lang.reflect.Array;
 import java.util.*;
 import java.util.function.*;
 import static org.redkale.source.FilterExpress.*;
-import org.redkale.util.Attribute;
+import org.redkale.util.*;
 
 /**
  * 注意： <br>
@@ -150,10 +150,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
             return this;
         }
         if (or == signor) {
-            FilterNode[] newsiblings = new FilterNode[nodes.length + 1];
-            System.arraycopy(nodes, 0, newsiblings, 0, nodes.length);
-            newsiblings[nodes.length] = node;
-            this.nodes = newsiblings;
+            this.nodes = Utility.append(this.nodes, node);
             return this;
         }
         FilterNode newnode = new FilterNode(this.column, this.express, this.itemand, this.value);

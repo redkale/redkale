@@ -7,6 +7,7 @@ package org.redkale.convert.bson;
 
 import java.nio.*;
 import java.util.function.*;
+import org.redkale.util.Utility;
 
 /**
  *
@@ -77,21 +78,14 @@ public class BsonByteBufferWriter extends BsonWriter {
         ByteBuffer buffer = this.buffers[index];
         if (!buffer.hasRemaining()) {
             buffer.flip();
-            buffer = supplier.get();
-            ByteBuffer[] bufs = new ByteBuffer[this.buffers.length + 1];
-            System.arraycopy(this.buffers, 0, bufs, 0, this.buffers.length);
-            bufs[this.buffers.length] = buffer;
-            this.buffers = bufs;
+            buffer = supplier.get();            
+            this.buffers = Utility.append(this.buffers, buffer);
             this.index++;
         }
         int len = buffer.remaining();
         int size = 0;
         while (len < byteLength) {
-            buffer = supplier.get();
-            ByteBuffer[] bufs = new ByteBuffer[this.buffers.length + 1];
-            System.arraycopy(this.buffers, 0, bufs, 0, this.buffers.length);
-            bufs[this.buffers.length] = buffer;
-            this.buffers = bufs;
+            this.buffers = Utility.append(this.buffers, buffer);
             len += buffer.remaining();
             size++;
         }

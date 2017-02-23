@@ -11,7 +11,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.persistence.Transient;
 import static org.redkale.source.FilterExpress.*;
-import org.redkale.util.Attribute;
+import org.redkale.util.*;
 
 /**
  *
@@ -117,10 +117,7 @@ public final class FilterNodeBean<T extends FilterBean> implements Comparable<Fi
             return this;
         }
         if (or == signor) {
-            FilterNodeBean[] newsiblings = new FilterNodeBean[nodeBeans.length + 1];
-            System.arraycopy(nodeBeans, 0, newsiblings, 0, nodeBeans.length);
-            newsiblings[nodeBeans.length] = node;
-            this.nodeBeans = newsiblings;
+            this.nodeBeans = Utility.append(this.nodeBeans, node);
             return this;
         }
         this.nodeBeans = new FilterNodeBean[]{new FilterNodeBean(this), node};

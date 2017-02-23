@@ -10,7 +10,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.*;
 import static org.redkale.source.FilterExpress.EQUAL;
-import org.redkale.util.Attribute;
+import org.redkale.util.*;
 
 /**
  *
@@ -94,10 +94,7 @@ public class FilterJoinNode extends FilterNode {
             return this;
         }
         if (or == signor || this.column == null) {
-            FilterNode[] newsiblings = new FilterNode[nodes.length + 1];
-            System.arraycopy(nodes, 0, newsiblings, 0, nodes.length);
-            newsiblings[nodes.length] = node;
-            this.nodes = newsiblings;
+            this.nodes = Utility.append(this.nodes, node);
             if (this.column == null) this.or = signor;
             return this;
         }

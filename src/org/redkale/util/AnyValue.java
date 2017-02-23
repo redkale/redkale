@@ -264,22 +264,13 @@ public abstract class AnyValue {
         }
 
         public DefaultAnyValue addValue(String name, String value) {
-            if (name == null) return this;
-            int len = this.stringValues.length;
-            Entry[] news = new Entry[len + 1];
-            System.arraycopy(this.stringValues, 0, news, 0, len);
-            news[len] = new Entry(name, value);
-            this.stringValues = news;
+            this.stringValues = Utility.append(this.stringValues, new Entry(name, value));
             return this;
         }
 
         public DefaultAnyValue addValue(String name, AnyValue value) {
             if (name == null || value == null) return this;
-            int len = this.entityValues.length;
-            Entry[] news = new Entry[len + 1];
-            System.arraycopy(this.entityValues, 0, news, 0, len);
-            news[len] = new Entry(name, value);
-            this.entityValues = news;
+            this.entityValues = Utility.append(this.entityValues, new Entry(name, value));
             return this;
         }
 
