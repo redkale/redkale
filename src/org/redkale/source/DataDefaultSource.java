@@ -1142,6 +1142,71 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
     }
 
     @Override
+    public <N extends Number> Map<String, N> getNumberMap(final Class entityClass, final FilterFuncColumn... columns) {
+        return getNumberMap(entityClass, (FilterNode) null, columns);
+    }
+
+    @Override
+    public <N extends Number> Map<String, N> getNumberMap(final Class entityClass, final FilterBean bean, final FilterFuncColumn... columns) {
+        return getNumberMap(entityClass, FilterNodeBean.createFilterNode(bean), columns);
+    }
+
+    @Override
+    public <N extends Number> Map<String, N> getNumberMap(final Class entityClass, final FilterNode node, final FilterFuncColumn... columns) {
+        if (columns == null || columns.length == 0) return new HashMap<>();
+        final EntityInfo info = loadEntityInfo(entityClass);
+        final Connection conn = createReadSQLConnection();
+        final Map map = new HashMap<>();
+        try {
+            final EntityCache cache = info.getCache();
+            if (cache != null && (info.isVirtualEntity() || cache.isFullLoaded())) {
+                if (node == null || node.isCacheUseable(this)) {
+                    for (FilterFuncColumn ffc : columns) {
+                        map.put(ffc.col(), cache.getNumberResult(ffc.func, ffc.defvalue, ffc.column, node));
+                    }
+                    return map;
+                }
+            }
+            final Map<Class, String> joinTabalis = node == null ? null : node.getJoinTabalis();
+            final CharSequence join = node == null ? null : node.createSQLJoin(this, false, joinTabalis, new HashSet<>(), info);
+            final CharSequence where = node == null ? null : node.createSQLExpress(info, joinTabalis);
+            StringBuilder sb = new StringBuilder();
+            for (FilterFuncColumn ffc : columns) {
+                if (sb.length() > 0) sb.append(", ");
+                sb.append(ffc.func.getColumn((ffc.column == null || ffc.column.isEmpty() ? "*" : ("a." + ffc.column))));
+            }
+            final String sql = "SELECT " + sb + " FROM " + info.getTable(node) + " a"
+                + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
+            if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(entityClass.getSimpleName() + " single sql=" + sql);
+            final PreparedStatement prestmt = conn.prepareStatement(sql);
+
+            ResultSet set = prestmt.executeQuery();
+            if (set.next()) {
+                int index = 0;
+                for (FilterFuncColumn ffc : columns) {
+                    Object o = set.getObject(++index);
+                    Number rs = ffc.defvalue;
+                    if (o != null) rs = (Number) o;
+                    map.put(ffc.col(), rs);
+                }
+            }
+            set.close();
+            prestmt.close();
+            return map;
+        } catch (SQLException e) {
+            if (info.tableStrategy != null && info.tablenotexistSqlstates.contains(';' + e.getSQLState() + ';')) {
+                for (FilterFuncColumn ffc : columns) {
+                    map.put(ffc.col(), ffc.defvalue);
+                }
+                return map;
+            }
+            throw new RuntimeException(e);
+        } finally {
+            if (conn != null) closeSQLConnection(conn);
+        }
+    }
+
+    @Override
     public Number getNumberResult(final Class entityClass, final FilterFunc func, final Number defVal, final String column, final FilterNode node) {
         final EntityInfo info = loadEntityInfo(entityClass);
         final Connection conn = createReadSQLConnection();

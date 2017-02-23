@@ -134,6 +134,21 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
+    public <N extends Number> Map<String, N> getNumberMap(final Class entityClass, final FilterFuncColumn... columns) {
+        return source.getNumberMap(entityClass, columns);
+    }
+
+    @Override
+    public <N extends Number> Map<String, N> getNumberMap(final Class entityClass, final FilterBean bean, final FilterFuncColumn... columns) {
+        return source.getNumberMap(entityClass, bean, columns);
+    }
+
+    @Override
+    public <N extends Number> Map<String, N> getNumberMap(final Class entityClass, final FilterNode node, final FilterFuncColumn... columns) {
+        return source.getNumberMap(entityClass, node, columns);
+    }
+
+    @Override
     public <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMap(final Class<T> entityClass, final String keyColumn, FilterFunc func, final String funcColumn) {
         return source.queryColumnMap(entityClass, keyColumn, func, funcColumn);
     }
