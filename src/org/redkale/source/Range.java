@@ -9,7 +9,7 @@ import java.util.function.*;
 
 /**
  *
- *  包含两边的值
+ * 包含两边的值
  * <p>
  * 详情见: https://redkale.org
  *
@@ -21,6 +21,34 @@ public interface Range<E extends Comparable> extends java.io.Serializable, Predi
     public E getMin();
 
     public E getMax();
+
+    public static ByteRange crreate(byte min, byte max) {
+        return new ByteRange(min, max);
+    }
+
+    public static ShortRange crreate(short min, short max) {
+        return new ShortRange(min, max);
+    }
+
+    public static IntRange crreate(int min, int max) {
+        return new IntRange(min, max);
+    }
+
+    public static LongRange crreate(long min, long max) {
+        return new LongRange(min, max);
+    }
+
+    public static FloatRange crreate(float min, float max) {
+        return new FloatRange(min, max);
+    }
+
+    public static DoubleRange crreate(double min, double max) {
+        return new DoubleRange(min, max);
+    }
+
+    public static StringRange crreate(String min, String max) {
+        return new StringRange(min, max);
+    }
 
     public static final class ByteRange implements Range<Byte> {
 

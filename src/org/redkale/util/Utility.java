@@ -431,6 +431,21 @@ public final class Utility {
     }
 
     /**
+     * 获取时间点所在月份的最后一天
+     *
+     * @param time 指定时间
+     *
+     * @return 毫秒数
+     */
+    public static long monthLastDay(long time) {
+        ZoneId zid = ZoneId.systemDefault();
+        Instant instant = Instant.ofEpochMilli(time);
+        LocalDate ld = instant.atZone(zid).toLocalDate();
+        ld = ld.withDayOfMonth(ld.lengthOfMonth());
+        return ld.atStartOfDay(zid).toInstant().toEpochMilli();
+    }
+
+    /**
      * 将字节数组转换为16进制字符串
      *
      * @param bytes 字节数组
