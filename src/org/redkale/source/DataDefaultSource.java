@@ -337,6 +337,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
                 final Class primaryType = info.getPrimary().type();
                 final Attribute primary = info.getPrimary();
                 Attribute<T, Serializable>[] attrs = info.insertAttributes;
+                conn.setReadOnly(false);
                 PreparedStatement prestmt = createInsertPreparedStatement(conn, sql, info, values);
                 try {
                     prestmt.executeBatch();
@@ -510,6 +511,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
         int c2 = 0;
         try {
             if (!info.isVirtualEntity()) {
+                conn.setReadOnly(false);
                 final Statement stmt = conn.createStatement();
                 for (Serializable key : keys) {
                     String sql = "DELETE FROM " + info.getTable(key) + " WHERE " + info.getPrimarySQLColumn() + " = " + FilterNode.formatToString(key);
@@ -585,6 +587,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
                         : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2)))) + info.createSQLOrderby(flipper)
                     + ((flipper == null || flipper.getLimit() < 1) ? "" : (" LIMIT " + flipper.getLimit()));
                 if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(info.getType().getSimpleName() + " delete sql=" + sql);
+                conn.setReadOnly(false);
                 final Statement stmt = conn.createStatement();
                 c = stmt.executeUpdate(sql);
                 stmt.close();
@@ -644,6 +647,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
             if (!info.isVirtualEntity()) {
                 final String updateSQL = info.getUpdateSQL(values[0]);
                 final Attribute<T, Serializable> primary = info.getPrimary();
+                conn.setReadOnly(false);
                 final PreparedStatement prestmt = conn.prepareStatement(updateSQL);
                 Attribute<T, Serializable>[] attrs = info.updateAttributes;
                 final boolean debugfinest = debug.get() && info.isLoggable(Level.FINEST);
@@ -727,6 +731,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
                 String sql = "UPDATE " + info.getTable(id) + " SET " + info.getSQLColumn(null, column) + " = "
                     + info.formatToString(value) + " WHERE " + info.getPrimarySQLColumn() + " = " + FilterNode.formatToString(id);
                 if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
+                conn.setReadOnly(false);
                 final Statement stmt = conn.createStatement();
                 c = stmt.executeUpdate(sql);
                 stmt.close();
@@ -789,6 +794,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
                     + ((where == null || where.length() == 0) ? (join2 == null ? "" : (" WHERE " + join2))
                         : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))));
                 if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
+                conn.setReadOnly(false);
                 final Statement stmt = conn.createStatement();
                 c = stmt.executeUpdate(sql);
                 stmt.close();
@@ -852,6 +858,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
             if (!virtual) {
                 String sql = "UPDATE " + info.getTable(id) + " SET " + setsql + " WHERE " + info.getPrimarySQLColumn() + " = " + FilterNode.formatToString(id);
                 if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(info.getType().getSimpleName() + ": " + sql);
+                conn.setReadOnly(false);
                 final Statement stmt = conn.createStatement();
                 c = stmt.executeUpdate(sql);
                 stmt.close();
@@ -952,6 +959,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
                 //注：LIMIT 仅支持MySQL 且在多表关联式会异常， 该BUG尚未解决
                 sql += info.createSQLOrderby(flipper) + ((flipper == null || flipper.getLimit() < 1) ? "" : (" LIMIT " + flipper.getLimit()));
                 if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
+                conn.setReadOnly(false);
                 final Statement stmt = conn.createStatement();
                 c = stmt.executeUpdate(sql);
                 stmt.close();
@@ -1016,6 +1024,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
             if (!virtual) {
                 String sql = "UPDATE " + info.getTable(id) + " SET " + setsql + " WHERE " + info.getPrimarySQLColumn() + " = " + FilterNode.formatToString(id);
                 if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(bean.getClass().getSimpleName() + ": " + sql);
+                conn.setReadOnly(false);
                 final Statement stmt = conn.createStatement();
                 c = stmt.executeUpdate(sql);
                 stmt.close();
@@ -1093,6 +1102,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
                     + ((where == null || where.length() == 0) ? (join2 == null ? "" : (" WHERE " + join2))
                         : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))));
                 if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
+                conn.setReadOnly(false);
                 final Statement stmt = conn.createStatement();
                 c = stmt.executeUpdate(sql);
                 stmt.close();
@@ -1201,6 +1211,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
             final String sql = "SELECT " + sb + " FROM " + info.getTable(node) + " a"
                 + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
             if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(entityClass.getSimpleName() + " single sql=" + sql);
+            conn.setReadOnly(true);
             final PreparedStatement prestmt = conn.prepareStatement(sql);
 
             ResultSet set = prestmt.executeQuery();
@@ -1250,6 +1261,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
             final String sql = "SELECT " + func.getColumn((column == null || column.isEmpty() ? "*" : ("a." + column))) + " FROM " + info.getTable(node) + " a"
                 + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
             if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(entityClass.getSimpleName() + " single sql=" + sql);
+            conn.setReadOnly(true);
             final PreparedStatement prestmt = conn.prepareStatement(sql);
             Number rs = defVal;
             ResultSet set = prestmt.executeQuery();
@@ -1297,6 +1309,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
             final String sql = "SELECT a." + sqlkey + ", " + func.getColumn((funcColumn == null || funcColumn.isEmpty() ? "*" : ("a." + funcColumn)))
                 + " FROM " + info.getTable(node) + " a" + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where)) + " GROUP BY a." + sqlkey;
             if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(entityClass.getSimpleName() + " single sql=" + sql);
+            conn.setReadOnly(true);
             final PreparedStatement prestmt = conn.prepareStatement(sql);
             Map<K, N> rs = new LinkedHashMap<>();
             ResultSet set = prestmt.executeQuery();
@@ -1345,6 +1358,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
             final SelectColumn sels = selects;
             final String sql = "SELECT * FROM " + info.getTable(pk) + " WHERE " + info.getPrimarySQLColumn() + " = " + FilterNode.formatToString(pk);
             if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(clazz.getSimpleName() + " find sql=" + sql);
+            conn.setReadOnly(true);
             final PreparedStatement ps = conn.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
             final ResultSet set = ps.executeQuery();
             T rs = set.next() ? info.getValue(sels, set) : null;
@@ -1395,6 +1409,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
             final CharSequence where = node == null ? null : node.createSQLExpress(info, joinTabalis);
             final String sql = "SELECT a.* FROM " + info.getTable(node) + " a" + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
             if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(clazz.getSimpleName() + " find sql=" + sql);
+            conn.setReadOnly(true);
             final PreparedStatement ps = conn.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
             final ResultSet set = ps.executeQuery();
             T rs = set.next() ? info.getValue(sels, set) : null;
@@ -1439,6 +1454,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
         try {
             final String sql = "SELECT " + info.getSQLColumn(null, column) + " FROM " + info.getTable(pk) + " WHERE " + info.getPrimarySQLColumn() + " = " + FilterNode.formatToString(pk);
             if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(clazz.getSimpleName() + " find sql=" + sql);
+            conn.setReadOnly(true);
             final PreparedStatement ps = conn.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
             final ResultSet set = ps.executeQuery();
             Serializable val = defValue;
@@ -1474,6 +1490,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
             final CharSequence where = node == null ? null : node.createSQLExpress(info, joinTabalis);
             final String sql = "SELECT " + info.getSQLColumn("a", column) + " FROM " + info.getTable(node) + " a" + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
             if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(clazz.getSimpleName() + " find sql=" + sql);
+            conn.setReadOnly(true);
             final PreparedStatement ps = conn.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
             final ResultSet set = ps.executeQuery();
             Serializable val = defValue;
@@ -1506,6 +1523,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
         try {
             final String sql = "SELECT COUNT(*) FROM " + info.getTable(pk) + " WHERE " + info.getPrimarySQLColumn() + " = " + FilterNode.formatToString(pk);
             if (log) logstr = clazz.getSimpleName() + " exists sql=" + sql;
+            conn.setReadOnly(true);
             final PreparedStatement ps = conn.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
             final ResultSet set = ps.executeQuery();
             boolean rs = set.next() ? (set.getInt(1) > 0) : false;
@@ -1544,6 +1562,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
             final CharSequence where = node == null ? null : node.createSQLExpress(info, joinTabalis);
             final String sql = "SELECT COUNT(" + info.getPrimarySQLColumn("a") + ") FROM " + info.getTable(node) + " a" + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
             if (log) logstr = clazz.getSimpleName() + " exists sql=" + sql;
+            conn.setReadOnly(true);
             final PreparedStatement ps = conn.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
             final ResultSet set = ps.executeQuery();
             boolean rs = set.next() ? (set.getInt(1) > 0) : false;
@@ -1792,6 +1811,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
             if (debug.get() && info.isLoggable(Level.FINEST)) {
                 logger.finest(clazz.getSimpleName() + " query sql=" + sql + (flipper == null || flipper.getLimit() < 1 ? "" : (" LIMIT " + flipper.getOffset() + "," + flipper.getLimit())));
             }
+            conn.setReadOnly(true);
             final PreparedStatement ps = conn.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
             final ResultSet set = ps.executeQuery();
             if (flipper != null && flipper.getOffset() > 0) set.absolute(flipper.getOffset());
@@ -1844,6 +1864,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
     private int[] directExecute(final Connection conn, String... sqls) {
         if (sqls.length == 0) return new int[0];
         try {
+            conn.setReadOnly(false);
             final Statement stmt = conn.createStatement();
             final int[] rs = new int[sqls.length];
             int i = -1;
@@ -1862,6 +1883,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
         final Connection conn = createReadSQLConnection();
         try {
             if (debug.get()) logger.finest("direct query sql=" + sql);
+            conn.setReadOnly(true);
             final PreparedStatement ps = conn.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
             final ResultSet set = ps.executeQuery();
             consumer.accept(set);
