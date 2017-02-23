@@ -1162,7 +1162,9 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
             if (cache != null && (info.isVirtualEntity() || cache.isFullLoaded())) {
                 if (node == null || node.isCacheUseable(this)) {
                     for (FilterFuncColumn ffc : columns) {
-                        map.put(ffc.col(), cache.getNumberResult(ffc.func, ffc.defvalue, ffc.column, node));
+                        for (String col : ffc.cols()) {
+                            map.put(ffc.col(col), cache.getNumberResult(ffc.func, ffc.defvalue, col, node));
+                        }
                     }
                     return map;
                 }
@@ -1172,8 +1174,10 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
             final CharSequence where = node == null ? null : node.createSQLExpress(info, joinTabalis);
             StringBuilder sb = new StringBuilder();
             for (FilterFuncColumn ffc : columns) {
-                if (sb.length() > 0) sb.append(", ");
-                sb.append(ffc.func.getColumn((ffc.column == null || ffc.column.isEmpty() ? "*" : ("a." + ffc.column))));
+                for (String col : ffc.cols()) {
+                    if (sb.length() > 0) sb.append(", ");
+                    sb.append(ffc.func.getColumn((col == null || col.isEmpty() ? "*" : ("a." + col))));
+                }
             }
             final String sql = "SELECT " + sb + " FROM " + info.getTable(node) + " a"
                 + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
@@ -1184,10 +1188,12 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
             if (set.next()) {
                 int index = 0;
                 for (FilterFuncColumn ffc : columns) {
-                    Object o = set.getObject(++index);
-                    Number rs = ffc.defvalue;
-                    if (o != null) rs = (Number) o;
-                    map.put(ffc.col(), rs);
+                    for (String col : ffc.cols()) {
+                        Object o = set.getObject(++index);
+                        Number rs = ffc.defvalue;
+                        if (o != null) rs = (Number) o;
+                        map.put(ffc.col(col), rs);
+                    }
                 }
             }
             set.close();
@@ -1196,7 +1202,9 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
         } catch (SQLException e) {
             if (info.tableStrategy != null && info.tablenotexistSqlstates.contains(';' + e.getSQLState() + ';')) {
                 for (FilterFuncColumn ffc : columns) {
-                    map.put(ffc.col(), ffc.defvalue);
+                    for (String col : ffc.cols()) {
+                        map.put(ffc.col(col), ffc.defvalue);
+                    }
                 }
                 return map;
             }

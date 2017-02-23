@@ -18,7 +18,7 @@ public class FilterFuncColumn implements java.io.Serializable {
 
     FilterFunc func;
 
-    String column; //为null，将使用*代替
+    String[] columns; //为null，将使用*代替
 
     Number defvalue;
 
@@ -29,30 +29,34 @@ public class FilterFuncColumn implements java.io.Serializable {
         return new FilterFuncColumn(func);
     }
 
-    public static FilterFuncColumn create(final FilterFunc func, final String column) {
-        return new FilterFuncColumn(func, column);
+    public static FilterFuncColumn create(final FilterFunc func, final String... columns) {
+        return new FilterFuncColumn(func, columns);
     }
 
-    public static FilterFuncColumn create(final FilterFunc func, final String column, final Number defvalue) {
-        return new FilterFuncColumn(func, column, defvalue);
+    public static FilterFuncColumn create(final FilterFunc func, final Number defvalue, final String... columns) {
+        return new FilterFuncColumn(func, defvalue, columns);
     }
 
-    String col() {
+    String[] cols() {
+        return columns == null || columns.length == 0 ? new String[]{COLUMN_NULL} : columns;
+    }
+
+    String col(String column) {
         return column == null || column.isEmpty() ? COLUMN_NULL : column;
     }
 
     public FilterFuncColumn(final FilterFunc func) {
-        this(func, null, null);
+        this(func, (Number) null);
     }
 
-    public FilterFuncColumn(final FilterFunc func, final String column) {
-        this(func, column, null);
+    public FilterFuncColumn(final FilterFunc func, final String... columns) {
+        this(func, null, columns);
     }
 
-    public FilterFuncColumn(final FilterFunc func, final String column, final Number defvalue) {
+    public FilterFuncColumn(final FilterFunc func, final Number defvalue, final String... columns) {
         this.func = func;
-        this.column = column;
         this.defvalue = defvalue;
+        this.columns = columns;
     }
 
     public FilterFunc getFunc() {
@@ -63,12 +67,12 @@ public class FilterFuncColumn implements java.io.Serializable {
         this.func = func;
     }
 
-    public String getColumn() {
-        return column;
+    public String[] getColumns() {
+        return columns;
     }
 
-    public void setColumn(String column) {
-        this.column = column;
+    public void setColumns(String[] columns) {
+        this.columns = columns;
     }
 
     public Number getDefvalue() {
