@@ -40,6 +40,11 @@ public final class Flipper implements Serializable, Cloneable {
         this.offset = offset < 0 ? 0 : offset;
     }
 
+    public Flipper(int limit, String sortColumn) {
+        this.limit = limit > 0 ? limit : DEFAULT_LIMIT;
+        this.sort = sortColumn;
+    }
+
     public Flipper(int limit, int offset, String sortColumn) {
         this.limit = limit > 0 ? limit : DEFAULT_LIMIT;
         this.offset = offset < 0 ? 0 : offset;
