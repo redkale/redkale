@@ -87,11 +87,11 @@ public interface DataSource {
     /**
      * 由 public int updateColumn(final T bean, final String... columns); 代替
      *
-     * @param <T>
-     * @param bean
-     * @param columns
+     * @param <T> T
+     * @param bean bean
+     * @param columns columns
      *
-     * @return
+     * @return int
      * @deprecated
      */
     @Deprecated
@@ -100,12 +100,12 @@ public interface DataSource {
     /**
      * 由 public int updateColumn(final T bean, final FilterNode node, final String... columns); 代替
      *
-     * @param <T>
-     * @param bean
-     * @param node
-     * @param columns
+     * @param <T> T
+     * @param bean bean
+     * @param node node 
+     * @param columns columns
      *
-     * @return
+     * @return int
      * @deprecated
      */
     @Deprecated

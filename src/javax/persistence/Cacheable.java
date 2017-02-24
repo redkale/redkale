@@ -48,7 +48,7 @@ public @interface Cacheable {
     /**
      * (Optional) 定时自动更新缓存的周期秒数，为0表示不做定时更新， 大于0表示每经过interval秒后会自动从数据库中拉取数据更新Cache
      *
-     * @return
+     * @return int
      */
     int interval() default 0;
 }
