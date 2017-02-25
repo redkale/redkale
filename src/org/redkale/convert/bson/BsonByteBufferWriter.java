@@ -78,13 +78,14 @@ public class BsonByteBufferWriter extends BsonWriter {
         ByteBuffer buffer = this.buffers[index];
         if (!buffer.hasRemaining()) {
             buffer.flip();
-            buffer = supplier.get();            
+            buffer = supplier.get();
             this.buffers = Utility.append(this.buffers, buffer);
             this.index++;
         }
         int len = buffer.remaining();
         int size = 0;
         while (len < byteLength) {
+            buffer = supplier.get();
             this.buffers = Utility.append(this.buffers, buffer);
             len += buffer.remaining();
             size++;
