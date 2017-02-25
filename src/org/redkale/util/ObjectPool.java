@@ -59,7 +59,7 @@ public final class ObjectPool<T> implements Supplier<T> {
         this.prepare = prepare;
         this.recycler = recycler;
         this.queue = new LinkedBlockingQueue<>(Math.max(Runtime.getRuntime().availableProcessors() * 2, max));
-        this.debug = logger.isLoggable(Level.FINER);
+        this.debug = logger.isLoggable(Level.FINEST);
     }
 
     public void setCreator(Creator<T> creator) {
