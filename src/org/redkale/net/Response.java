@@ -31,7 +31,7 @@ public abstract class Response<C extends Context, R extends Request<C>> {
 
     protected Object output; //输出的结果对象
 
-    protected BiConsumer<R, Response<C, R>> recycleListener; 
+    protected BiConsumer<R, Response<C, R>> recycleListener;
 
     private final CompletionHandler finishHandler = new CompletionHandler<Integer, ByteBuffer>() {
 
@@ -56,29 +56,26 @@ public abstract class Response<C extends Context, R extends Request<C>> {
     private final CompletionHandler finishHandler2 = new CompletionHandler<Integer, ByteBuffer[]>() {
 
         @Override
-        public void completed(Integer result, ByteBuffer[] attachments) {
+        public void completed(final Integer result, final ByteBuffer[] attachments) {
             int index = -1;
             for (int i = 0; i < attachments.length; i++) {
                 if (attachments[i].hasRemaining()) {
                     index = i;
                     break;
-                } else {
-                    context.offerBuffer(attachments[i]);
                 }
             }
-            if (index == 0) {
-                channel.write(attachments, attachments, this);
-            } else if (index > 0) {
-                ByteBuffer[] newattachs = new ByteBuffer[attachments.length - index];
-                System.arraycopy(attachments, index, newattachs, 0, newattachs.length);
-                channel.write(newattachs, newattachs, this);
+            if (index >= 0) {
+                channel.write(attachments, index, attachments.length - index, attachments, this);
             } else {
+                for (ByteBuffer attachment : attachments) {
+                    context.offerBuffer(attachment);
+                }
                 finish();
             }
         }
 
         @Override
-        public void failed(Throwable exc, ByteBuffer[] attachments) {
+        public void failed(Throwable exc, final ByteBuffer[] attachments) {
             for (ByteBuffer attachment : attachments) {
                 context.offerBuffer(attachment);
             }
