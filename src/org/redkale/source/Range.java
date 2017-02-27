@@ -23,31 +23,31 @@ public interface Range<E extends Comparable> extends java.io.Serializable, Predi
 
     public E getMax();
 
-    public static ByteRange crreate(byte min, byte max) {
+    public static ByteRange create(byte min, byte max) {
         return new ByteRange(min, max);
     }
 
-    public static ShortRange crreate(short min, short max) {
+    public static ShortRange create(short min, short max) {
         return new ShortRange(min, max);
     }
 
-    public static IntRange crreate(int min, int max) {
+    public static IntRange create(int min, int max) {
         return new IntRange(min, max);
     }
 
-    public static LongRange crreate(long min, long max) {
+    public static LongRange create(long min, long max) {
         return new LongRange(min, max);
     }
 
-    public static FloatRange crreate(float min, float max) {
+    public static FloatRange create(float min, float max) {
         return new FloatRange(min, max);
     }
 
-    public static DoubleRange crreate(double min, double max) {
+    public static DoubleRange create(double min, double max) {
         return new DoubleRange(min, max);
     }
 
-    public static StringRange crreate(String min, String max) {
+    public static StringRange create(String min, String max) {
         return new StringRange(min, max);
     }
 
