@@ -5,11 +5,11 @@
  */
 package org.redkale.source;
 
-import org.redkale.convert.json.JsonConvert;
+import java.util.Arrays;
 
 /**
  * FilterFuncColumn用于getNumberMap获取列表似数据, getNumberResult获取单字段值， getNumberMap获取多字段值
- * 
+ *
  * <p>
  * 详情见: https://redkale.org
  *
@@ -88,6 +88,6 @@ public class FilterFuncColumn implements java.io.Serializable {
 
     @Override
     public String toString() {
-        return JsonConvert.root().convertTo(this);
+        return this.getClass().getSimpleName() + "{func:" + this.func + ", columns:" + Arrays.toString(this.columns) + ", defvalue:" + this.defvalue + "}";
     }
 }
