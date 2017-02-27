@@ -24,25 +24,60 @@ import static java.lang.annotation.RetentionPolicy.*;
 @Repeatable(RestMappings.class)
 public @interface RestMapping {
 
-    boolean ignore() default false; //是否屏蔽该方法的转换
+    /**
+     * 是否屏蔽该方法的转换
+     *
+     * @return boolean
+     */
+    boolean ignore() default false;
 
     /**
      * 请求的方法名, 不能含特殊字符
      * 默认为方法名的小写(若方法名以createXXX、updateXXX、deleteXXX、queryXXX、findXXX、existsXXX且XXXService为Service的类名将只截取XXX之前)
      *
-     * @return name
+     * @return String
      */
     String name() default "";
 
-    String comment() default ""; //备注描述, 对应&#64;WebAction.comment
+    /**
+     * 备注描述, 对应&#64;WebAction.comment
+     *
+     * @return String
+     */
+    String comment() default "";
 
-    boolean auth() default false; //是否鉴权，默认不鉴权, 对应&#64;AuthIgnore
+    /**
+     * 是否鉴权，默认不鉴权, 对应&#64;AuthIgnore
+     *
+     * @return boolean
+     */
+    boolean auth() default false;
 
-    int actionid() default 0; //操作ID值，鉴权时用到, 对应&#64;WebAction.actionid
+    /**
+     * 操作ID值，鉴权时用到, 对应&#64;WebAction.actionid
+     *
+     * @return int
+     */
+    int actionid() default 0;
 
-    int cacheseconds() default 0; // 结果缓存的秒数, 为0表示不缓存, 对应&#64;HttpCacheable.seconds
+    /**
+     * 结果缓存的秒数, 为0表示不缓存, 对应&#64;HttpCacheable.seconds
+     *
+     * @return int
+     */
+    int cacheseconds() default 0;
 
-    String[] methods() default {};//允许方法(不区分大小写),如:GET/POST/PUT,为空表示允许所有方法, 对应&#64;WebAction.methods
+    /**
+     * 允许方法(不区分大小写),如:GET/POST/PUT,为空表示允许所有方法, 对应&#64;WebAction.methods
+     *
+     * @return String[]
+     */
+    String[] methods() default {};
 
-    String jsvar() default ""; //以application/javascript输出对象是指明js的对象名，该值存在时则忽略contentType()的值
+    /**
+     * 以application/javascript输出对象是指明js的对象名，该值存在时则忽略contentType()的值
+     *
+     * @return String
+     */
+    String jsvar() default "";
 }

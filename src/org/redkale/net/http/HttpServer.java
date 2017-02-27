@@ -16,6 +16,7 @@ import org.redkale.util.*;
 import org.redkale.watch.WatchFactory;
 
 /**
+ * Http服务器
  *
  * <p>
  * 详情见: https://redkale.org
@@ -37,24 +38,88 @@ public final class HttpServer extends Server<String, HttpContext, HttpRequest, H
         super.init(config);
     }
 
+    /**
+     * 获取静态资源HttpServlet
+     *
+     * @return HttpServlet
+     */
+    public HttpServlet getResourceServlet() {
+        return ((HttpPrepareServlet) this.prepare).resourceHttpServlet;
+    }
+
+    /**
+     * 添加HttpServlet
+     *
+     * @param prefix   url前缀
+     * @param servlet  HttpServlet
+     * @param mappings 匹配规则
+     *
+     * @return HttpServer
+     */
     public HttpServer addHttpServlet(String prefix, HttpServlet servlet, String... mappings) {
         this.prepare.addServlet(servlet, prefix, null, mappings);
         return this;
     }
 
+    /**
+     * 添加HttpServlet
+     *
+     * @param servlet  HttpServlet
+     * @param mappings 匹配规则
+     *
+     * @return HttpServer
+     */
     public HttpServer addHttpServlet(HttpServlet servlet, String... mappings) {
         this.prepare.addServlet(servlet, null, null, mappings);
         return this;
     }
 
-    public void addHttpServlet(HttpServlet servlet, final String prefix, AnyValue conf, String... mappings) {
+    /**
+     * 添加HttpServlet
+     *
+     * @param prefix   url前缀
+     * @param servlet  HttpServlet
+     * @param conf     配置信息
+     * @param mappings 匹配规则
+     *
+     * @return HttpServer
+     */
+    public HttpServer addHttpServlet(HttpServlet servlet, final String prefix, AnyValue conf, String... mappings) {
         this.prepare.addServlet(servlet, prefix, conf, mappings);
+        return this;
     }
 
+    /**
+     * 添加RestHttpServlet
+     *
+     * @param <S>              Service
+     * @param <T>              RestHttpServlet
+     * @param name             Service的资源名
+     * @param serviceType      Service的类型
+     * @param service          Service对象
+     * @param baseServletClass RestHttpServlet基类
+     * @param prefix           url前缀
+     *
+     * @return RestHttpServlet
+     */
     public <S extends Service, T extends RestHttpServlet> RestHttpServlet addRestServlet(String name, Class<S> serviceType, S service, Class<T> baseServletClass, String prefix) {
         return addRestServlet(name, serviceType, service, baseServletClass, prefix, null);
     }
 
+    /**
+     * 添加RestHttpServlet
+     *
+     * @param <S>              Service
+     * @param <T>              RestHttpServlet
+     * @param name             Service的资源名
+     * @param serviceType      Service的类型
+     * @param service          Service对象
+     * @param baseServletClass RestHttpServlet基类
+     * @param prefix           url前缀
+     * @param conf             配置信息
+     *
+     * @return RestHttpServlet
+     */
     public <S extends Service, T extends RestHttpServlet> RestHttpServlet addRestServlet(
         final String name, Class<S> serviceType, final S service, final Class<T> baseServletClass, final String prefix, AnyValue conf) {
         RestHttpServlet servlet = null;

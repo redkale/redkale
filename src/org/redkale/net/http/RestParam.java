@@ -26,11 +26,34 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface RestParam {
 
-    String name(); //参数名 name='&'表示当前用户;  name='#'表示截取uri最后一段;  name='#xxx:'表示从uri中/pipes/xxx:v/截取xxx:的值
+    /**
+     * 参数名 n
+     * ame='&'表示当前用户;
+     * name='#'表示截取uri最后一段;
+     * name='#xxx:'表示从uri中/pipes/xxx:v/截取xxx:的值
+     *
+     * @return String
+     */
+    String name();
 
-    int radix() default 10; //转换数字byte/short/int/long时所用的进制数， 默认10进制
+    /**
+     * 转换数字byte/short/int/long时所用的进制数， 默认10进制
+     *
+     * @return int
+     */
+    int radix() default 10;
 
-    boolean required() default true; //参数是否必传
+    /**
+     * 参数是否必传
+     *
+     * @return boolean
+     */
+    boolean required() default true;
 
-    String comment() default ""; //备注描述
+    /**
+     * 备注描述
+     *
+     * @return String
+     */
+    String comment() default "";
 }

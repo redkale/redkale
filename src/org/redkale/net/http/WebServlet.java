@@ -21,15 +21,45 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface WebServlet {
 
+    /**
+     * HttpServlet资源名
+     *
+     * @return String
+     */
     String name() default "";
 
+    /**
+     * 是否自动添加url前缀
+     *
+     * @return boolean
+     */
     boolean repair() default true;
 
+    /**
+     * url匹配规则
+     *
+     * @return String[]
+     */
     String[] value() default {};
 
+    /**
+     * 模块ID，一个HttpServlet尽量只有提供一个模块的服务
+     *
+     * @return int
+     */
     int moduleid() default 0;
 
+    /**
+     * 参数
+     *
+     * @return WebInitParam[]
+     */
     WebInitParam[] initParams() default {};
 
-    String comment() default ""; //备注描述
+    /**
+     * 备注描述
+     *
+     * @return String
+     */
+    String comment() default "";
 }

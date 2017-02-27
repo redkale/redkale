@@ -18,6 +18,7 @@ import java.util.regex.*;
 import org.redkale.util.AnyValue;
 
 /**
+ * 静态资源HttpServlet
  *
  * <p>
  * 详情见: https://redkale.org
@@ -268,7 +269,7 @@ public class HttpResourceServlet extends HttpServlet {
 
         public void update() {
             if (this.file == null) return;
-            if (this.content != null) { 
+            if (this.content != null) {
                 this.servlet.cachedLength.add(0L - this.content.remaining());
                 this.content = null;
             }

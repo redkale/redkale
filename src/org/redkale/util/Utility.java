@@ -176,6 +176,24 @@ public final class Utility {
     }
 
     /**
+     * 判断字符串是否包含指定的字符，包含返回true
+     *
+     * @param string 字符串
+     * @param values 字符集合
+     *
+     * @return boolean
+     */
+    public static boolean contains(String string, char... values) {
+        if (string == null) return false;
+        for (char ch : Utility.charArray(string)) {
+            for (char ch2 : values) {
+                if (ch == ch2) return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * 删除掉字符串数组中包含指定的字符串
      *
      * @param columns 待删除数组

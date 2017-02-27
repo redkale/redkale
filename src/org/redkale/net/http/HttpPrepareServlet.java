@@ -17,6 +17,8 @@ import org.redkale.util.*;
 import org.redkale.watch.*;
 
 /**
+ * HTTP Servlet的总入口，请求在HttpPrepareServlet中进行分流。
+ * 一个HttpServer只有一个HttpPrepareServlet， 用于管理所有HttpServlet。
  *
  * <p>
  * 详情见: https://redkale.org
@@ -89,6 +91,7 @@ public class HttpPrepareServlet extends PrepareServlet<String, HttpContext, Http
                     }
                 }
             }
+            //找不到匹配的HttpServlet则使用静态资源HttpResourceServlet
             if (servlet == null) servlet = this.resourceHttpServlet;
             servlet.execute(request, response);
         } catch (Exception e) {
@@ -97,6 +100,14 @@ public class HttpPrepareServlet extends PrepareServlet<String, HttpContext, Http
         }
     }
 
+    /**
+     * 添加HttpServlet
+     *
+     * @param servlet  HttpServlet
+     * @param prefix   url前缀
+     * @param conf     配置信息
+     * @param mappings 匹配规则
+     */
     @Override
     public void addServlet(HttpServlet servlet, Object prefix, AnyValue conf, String... mappings) {
         if (prefix == null) prefix = "";
@@ -107,12 +118,12 @@ public class HttpPrepareServlet extends PrepareServlet<String, HttpContext, Http
                 if (!ws.repair()) prefix = "";//被设置为不自动追加前缀则清空prefix
             }
         }
-        synchronized (allMapStrings) {
+        synchronized (allMapStrings) {  //需要整段锁住
             for (String mapping : mappings) {
                 if (mapping == null) continue;
                 if (!prefix.toString().isEmpty()) mapping = prefix + mapping;
 
-                if (contains(mapping, '.', '*', '{', '[', '(', '|', '^', '$', '+', '?', '\\')) { //是否是正则表达式))
+                if (Utility.contains(mapping, '.', '*', '{', '[', '(', '|', '^', '$', '+', '?', '\\')) { //是否是正则表达式))
                     if (mapping.charAt(0) != '^') mapping = '^' + mapping;
                     if (mapping.endsWith("/*")) {
                         mapping = mapping.substring(0, mapping.length() - 1) + ".*";
@@ -141,22 +152,22 @@ public class HttpPrepareServlet extends PrepareServlet<String, HttpContext, Http
         }
     }
 
-    private static boolean contains(String string, char... values) {
-        if (string == null) return false;
-        for (char ch : Utility.charArray(string)) {
-            for (char ch2 : values) {
-                if (ch == ch2) return true;
-            }
-        }
-        return false;
-    }
-
+    /**
+     * 设置静态资源HttpServlet
+     *
+     * @param servlet
+     */
     public void setResourceServlet(HttpServlet servlet) {
         if (servlet != null) {
             this.resourceHttpServlet = servlet;
         }
     }
 
+    /**
+     * 获取静态资源HttpServlet
+     *
+     * @return HttpServlet
+     */
     public HttpServlet getResourceServlet() {
         return this.resourceHttpServlet;
     }

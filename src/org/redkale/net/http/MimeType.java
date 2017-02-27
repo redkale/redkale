@@ -8,6 +8,7 @@ package org.redkale.net.http;
 import java.util.*;
 
 /**
+ * MimeType
  *
  * <p>
  * 详情见: https://redkale.org
@@ -100,6 +101,7 @@ public class MimeType {
         contentTypes.put("oda", "application/oda");
         contentTypes.put("ogg", "application/ogg");
         contentTypes.put("out", "text/plain");
+        contentTypes.put("pac", "application/x-javascript-config");
         contentTypes.put("pbm", "image/x-portable-bitmap");
         contentTypes.put("pct", "image/pict");
         contentTypes.put("pdf", "application/pdf");

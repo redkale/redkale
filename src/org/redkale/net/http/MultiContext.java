@@ -15,6 +15,7 @@ import java.util.regex.*;
 import org.redkale.util.AnyValue.DefaultAnyValue;
 
 /**
+ * HTTP的文件上传请求的上下文对象
  *
  * <p>
  * 详情见: https://redkale.org
@@ -77,10 +78,21 @@ public final class MultiContext {
         return null;
     }
 
+    /**
+     * 判断请求是否包含上传文件
+     *
+     * @return
+     */
     public boolean isMultipart() {
         return this.boundary != null;
     }
 
+    /**
+     * 获取上传文件信息列表
+     *
+     * @return
+     * @throws IOException
+     */
     public Iterable<MultiPart> parts() throws IOException {
         if (!isMultipart()) return emptyIterable;
         final String boundarystr = "--" + this.boundary;

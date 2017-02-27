@@ -10,7 +10,9 @@ import java.lang.annotation.*;
 /**
  * 功能同JSR 315 (java-servlet 3.0) 规范中的 @WebInitParam
  *
- * <p> 详情见: https://redkale.org
+ * <p>
+ * 详情见: https://redkale.org
+ *
  * @author zhangjx
  */
 @Target({ElementType.TYPE})
@@ -18,9 +20,24 @@ import java.lang.annotation.*;
 @Documented
 public @interface WebInitParam {
 
+    /**
+     * 参数名
+     *
+     * @return String
+     */
     String name();
 
+    /**
+     * 参数值
+     *
+     * @return String
+     */
     String value();
 
+    /**
+     * 参数描述
+     *
+     * @return
+     */
     String description() default "";
 }
