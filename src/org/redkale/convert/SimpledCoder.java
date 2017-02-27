@@ -9,6 +9,8 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
 /**
+ * 简易类的序列化和反序列化操作类
+ * 能序列化为Boolean、Number或者字符串的类视为简易类
  *
  * <p>
  * 详情见: https://redkale.org

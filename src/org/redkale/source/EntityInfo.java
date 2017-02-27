@@ -18,6 +18,7 @@ import static org.redkale.source.DataDefaultSource.*;
 import org.redkale.util.*;
 
 /**
+ * Entity操作类
  *
  * <p>
  * 详情见: https://redkale.org

@@ -6,6 +6,7 @@
 package org.redkale.convert;
 
 /**
+ * 反序列化的数据读取流
  *
  * <p>
  * 详情见: https://redkale.org
@@ -42,6 +43,7 @@ public abstract class Reader {
      * 读取对象的类名， 返回 null 表示对象为null， 返回空字符串表示当前class与返回的class一致，返回非空字符串表示class是当前class的子类。
      *
      * @param clazz 类名
+     *
      * @return 返回字段数
      */
     public String readObjectB(final Class clazz) {
@@ -86,6 +88,7 @@ public abstract class Reader {
      * 根据字段读取字段对应的DeMember
      *
      * @param members DeMember的全量集合
+     *
      * @return 匹配的DeMember
      */
     public abstract DeMember readFieldName(final DeMember[] members);

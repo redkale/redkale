@@ -155,7 +155,7 @@ public class HttpPrepareServlet extends PrepareServlet<String, HttpContext, Http
     /**
      * 设置静态资源HttpServlet
      *
-     * @param servlet
+     * @param servlet HttpServlet
      */
     public void setResourceServlet(HttpServlet servlet) {
         if (servlet != null) {

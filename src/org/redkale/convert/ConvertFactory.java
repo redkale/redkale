@@ -17,6 +17,7 @@ import org.redkale.convert.ext.*;
 import org.redkale.util.*;
 
 /**
+ * 序列化模块的工厂类，用于注册自定义的序列化类型，获取Convert
  *
  * <p>
  * 详情见: https://redkale.org

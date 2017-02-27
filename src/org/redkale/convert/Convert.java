@@ -6,7 +6,7 @@
 package org.redkale.convert;
 
 /**
- * 序列化操作类
+ * 序列化/反序列化操作类
  *
  * <p>
  * 详情见: https://redkale.org

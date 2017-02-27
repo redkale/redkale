@@ -13,6 +13,7 @@ import java.util.Set;
 import org.redkale.util.*;
 
 /**
+ * 自定义对象的反序列化操作类 
  *
  * <p>
  * 详情见: https://redkale.org

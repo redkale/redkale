@@ -17,6 +17,7 @@ import static org.redkale.source.FilterFunc.*;
 import org.redkale.util.*;
 
 /**
+ * Entity数据的缓存类
  *
  * <p>
  * 详情见: https://redkale.org

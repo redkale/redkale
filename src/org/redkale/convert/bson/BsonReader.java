@@ -5,7 +5,6 @@
  */
 package org.redkale.convert.bson;
 
-import java.util.function.*;
 import org.redkale.convert.*;
 import static org.redkale.convert.Reader.SIGN_NULL;
 import org.redkale.convert.ext.*;
@@ -42,19 +41,7 @@ public class BsonReader extends Reader {
     }
 
     public static ObjectPool<BsonReader> createPool(int max) {
-        return new ObjectPool<BsonReader>(max, new Creator<BsonReader>() {
-
-            @Override
-            public BsonReader create(Object... params) {
-                return new BsonReader();
-            }
-        }, null, new Predicate<BsonReader>() {
-
-            @Override
-            public boolean test(BsonReader t) {
-                return t.recycle();
-            }
-        });
+        return new ObjectPool<>(max, (Object... params) -> new BsonReader(), null, (t) -> t.recycle());
     }
 
     public BsonReader(byte[] bytes) {
@@ -164,7 +151,7 @@ public class BsonReader extends Reader {
         if (bt == Reader.SIGN_NULL) return null;
         if (bt != SIGN_OBJECTB) {
             throw new ConvertException("a bson object must begin with " + (SIGN_OBJECTB)
-                    + " (position = " + position + ") but '" + currentByte() + "'");
+                + " (position = " + position + ") but '" + currentByte() + "'");
         }
         return "";
     }
@@ -173,7 +160,7 @@ public class BsonReader extends Reader {
     public final void readObjectE(final Class clazz) {
         if (readShort() != SIGN_OBJECTE) {
             throw new ConvertException("a bson object must end with " + (SIGN_OBJECTE)
-                    + " (position = " + position + ") but '" + currentByte() + "'");
+                + " (position = " + position + ") but '" + currentByte() + "'");
         }
     }
 
@@ -223,7 +210,7 @@ public class BsonReader extends Reader {
         byte b = readByte();
         if (b == SIGN_HASNEXT) return true;
         if (b != SIGN_NONEXT) throw new ConvertException("hasNext option must be (" + (SIGN_HASNEXT)
-                    + " or " + (SIGN_NONEXT) + ") but '" + b + "' at position(" + this.position + ")");
+                + " or " + (SIGN_NONEXT) + ") but '" + b + "' at position(" + this.position + ")");
         return false;
     }
 
@@ -272,19 +259,19 @@ public class BsonReader extends Reader {
     @Override
     public int readInt() {
         return ((content[++this.position] & 0xff) << 24) | ((content[++this.position] & 0xff) << 16)
-                | ((content[++this.position] & 0xff) << 8) | (content[++this.position] & 0xff);
+            | ((content[++this.position] & 0xff) << 8) | (content[++this.position] & 0xff);
     }
 
     @Override
     public long readLong() {
         return ((((long) content[++this.position] & 0xff) << 56)
-                | (((long) content[++this.position] & 0xff) << 48)
-                | (((long) content[++this.position] & 0xff) << 40)
-                | (((long) content[++this.position] & 0xff) << 32)
-                | (((long) content[++this.position] & 0xff) << 24)
-                | (((long) content[++this.position] & 0xff) << 16)
-                | (((long) content[++this.position] & 0xff) << 8)
-                | (((long) content[++this.position] & 0xff)));
+            | (((long) content[++this.position] & 0xff) << 48)
+            | (((long) content[++this.position] & 0xff) << 40)
+            | (((long) content[++this.position] & 0xff) << 32)
+            | (((long) content[++this.position] & 0xff) << 24)
+            | (((long) content[++this.position] & 0xff) << 16)
+            | (((long) content[++this.position] & 0xff) << 8)
+            | (((long) content[++this.position] & 0xff)));
     }
 
     @Override

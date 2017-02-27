@@ -11,6 +11,7 @@ import org.redkale.convert.bson.BsonConvert;
 import org.redkale.convert.json.JsonConvert;
 
 /**
+ * 协议请求对象
  *
  * <p>
  * 详情见: https://redkale.org

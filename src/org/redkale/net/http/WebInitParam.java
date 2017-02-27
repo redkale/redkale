@@ -37,7 +37,7 @@ public @interface WebInitParam {
     /**
      * 参数描述
      *
-     * @return
+     * @return String
      */
     String description() default "";
 }

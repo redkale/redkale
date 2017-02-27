@@ -10,6 +10,7 @@ import java.util.*;
 import org.redkale.util.*;
 
 /**
+ * 自定义对象的序列化操作类
  *
  * <p>
  * 详情见: https://redkale.org

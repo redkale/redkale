@@ -10,6 +10,7 @@ import java.nio.channels.CompletionHandler;
 import java.util.function.BiConsumer;
 
 /**
+ * 协议响应对象
  *
  * <p>
  * 详情见: https://redkale.org

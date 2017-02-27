@@ -6,7 +6,6 @@
 package org.redkale.convert.bson;
 
 import java.nio.ByteBuffer;
-import java.util.function.Predicate;
 import org.redkale.convert.*;
 import org.redkale.util.*;
 
@@ -28,19 +27,7 @@ public class BsonWriter extends Writer {
     protected boolean tiny;
 
     public static ObjectPool<BsonWriter> createPool(int max) {
-        return new ObjectPool<BsonWriter>(max, new Creator<BsonWriter>() {
-
-            @Override
-            public BsonWriter create(Object... params) {
-                return new BsonWriter();
-            }
-        }, null, new Predicate<BsonWriter>() {
-
-            @Override
-            public boolean test(BsonWriter t) {
-                return t.recycle();
-            }
-        });
+        return new ObjectPool<>(max, (Object... params) -> new BsonWriter(), null, (t) -> t.recycle());
     }
 
     public byte[] toArray() {
@@ -82,6 +69,7 @@ public class BsonWriter extends Writer {
      * 扩充指定长度的缓冲区
      *
      * @param len 扩容长度
+     *
      * @return 固定0
      */
     protected int expand(int len) {

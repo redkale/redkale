@@ -26,14 +26,15 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface RestParam {
 
+    //name='&'表示当前用户;
     /**
-     * 参数名 n
-     * ame='&'表示当前用户;
+     * 参数名 
+     * name='&#38;'表示当前用户;
      * name='#'表示截取uri最后一段;
      * name='#xxx:'表示从uri中/pipes/xxx:v/截取xxx:的值
      *
      * @return String
-     */
+     */    
     String name();
 
     /**

@@ -25,7 +25,7 @@ public @interface RestHeader {
     /**
      * Header参数名
      *
-     * @return
+     * @return String
      */
     String name();
 

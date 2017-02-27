@@ -11,8 +11,11 @@ import java.util.logging.*;
 import org.redkale.util.*;
 
 /**
+ * 根Servlet的处理逻辑类
  *
- * <p> 详情见: https://redkale.org
+ * <p>
+ * 详情见: https://redkale.org
+ *
  * @author zhangjx
  */
 @SuppressWarnings("unchecked")

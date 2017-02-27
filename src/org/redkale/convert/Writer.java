@@ -8,6 +8,7 @@ package org.redkale.convert;
 import org.redkale.util.Attribute;
 
 /**
+ * 序列化的数据输出流
  *
  * <p>
  * 详情见: https://redkale.org
@@ -37,7 +38,7 @@ public abstract class Writer {
      * @return boolean
      */
     public abstract boolean needWriteClassName();
-    
+
     /**
      * 写入类名
      *

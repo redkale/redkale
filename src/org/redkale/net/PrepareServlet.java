@@ -14,6 +14,9 @@ import java.util.logging.*;
 import org.redkale.util.*;
 
 /**
+ * 根Servlet， 一个Server只能存在一个根Servlet
+ * 
+ * 用于分发Request请求
  *
  * <p>
  * 详情见: https://redkale.org

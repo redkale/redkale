@@ -9,7 +9,8 @@ import java.lang.reflect.*;
 import java.util.*;
 
 /**
- * 对象数组的序列化，不包含int[]、long[]这样的primitive class数组.
+ * 数组的反序列化操作类
+ * 对象数组的反序列化，不包含int[]、long[]这样的primitive class数组。
  * 数组长度不能超过 32767。 在BSON中数组长度设定的是short，对于大于32767长度的数组传输会影响性能，所以没有采用int存储。
  * 支持一定程度的泛型。
  *

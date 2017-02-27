@@ -9,6 +9,7 @@ import java.lang.reflect.*;
 import org.redkale.util.Attribute;
 
 /**
+ * 字段的序列化操作类
  *
  * <p>
  * 详情见: https://redkale.org

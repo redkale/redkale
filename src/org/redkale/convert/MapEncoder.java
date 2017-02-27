@@ -10,6 +10,7 @@ import java.lang.reflect.Type;
 import java.util.Map;
 
 /**
+ * Map的序列化操作类
  *
  * <p>
  * 详情见: https://redkale.org

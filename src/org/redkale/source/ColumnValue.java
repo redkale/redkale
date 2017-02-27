@@ -10,6 +10,7 @@ import static org.redkale.source.ColumnExpress.*;
 
 /**
  * ColumnValue主要用于多个字段更新的表达式。
+ * 用于 DataSource.updateColumn 方法
  *
  * <p>
  * 详情见: https://redkale.org

@@ -17,47 +17,65 @@ import org.redkale.util.*;
 import org.redkale.watch.*;
 
 /**
+ * 服务器上下文对象
  *
- * <p> 详情见: https://redkale.org
+ * <p>
+ * 详情见: https://redkale.org
+ *
  * @author zhangjx
  */
 public class Context {
 
     private static final Charset UTF8 = Charset.forName("UTF-8");
 
+    //服务启动时间
     protected final long serverStartTime;
 
+    //Server的线程池
     protected final ExecutorService executor;
 
+    //ByteBuffer的容量，默认8K
     protected final int bufferCapacity;
 
+    //ByteBuffer对象池
     protected final ObjectPool<ByteBuffer> bufferPool;
 
+    //Response对象池
     protected final ObjectPool<Response> responsePool;
 
+    //服务的根Servlet
     protected final PrepareServlet prepare;
 
+    //服务的监听地址
     private final InetSocketAddress address;
 
+    //字符集
     protected final Charset charset;
 
+    //请求内容的大小上限, 默认64K
     protected final int maxbody;
 
+    //IO读取的超时时间
     protected final int readTimeoutSecond;
 
+    //IO写入的超时时间
     protected final int writeTimeoutSecond;
 
+    //日志Logger
     protected final Logger logger;
 
+    //BSON操作工厂
     protected final BsonFactory bsonFactory;
 
+    //JSON操作工厂
     protected final JsonFactory jsonFactory;
 
+    //监控对象
     protected final WatchFactory watch;
 
     public Context(long serverStartTime, Logger logger, ExecutorService executor, int bufferCapacity, ObjectPool<ByteBuffer> bufferPool, ObjectPool<Response> responsePool,
-            final int maxbody, Charset charset, InetSocketAddress address, final PrepareServlet prepare, final WatchFactory watch,
-            final int readTimeoutSecond, final int writeTimeoutSecond) {
+        final int maxbody, Charset charset, InetSocketAddress address, final PrepareServlet prepare, final WatchFactory watch,
+        final int readTimeoutSecond, final int writeTimeoutSecond) {
         this.serverStartTime = serverStartTime;
         this.logger = logger;
         this.executor = executor;

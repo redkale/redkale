@@ -81,7 +81,7 @@ public final class MultiContext {
     /**
      * 判断请求是否包含上传文件
      *
-     * @return
+     * @return boolean
      */
     public boolean isMultipart() {
         return this.boundary != null;
@@ -90,8 +90,8 @@ public final class MultiContext {
     /**
      * 获取上传文件信息列表
      *
-     * @return
-     * @throws IOException
+     * @return Iterable 
+     * @throws IOException IOException
      */
     public Iterable<MultiPart> parts() throws IOException {
         if (!isMultipart()) return emptyIterable;

@@ -9,6 +9,7 @@ import org.redkale.util.AnyValue;
 import java.io.IOException;
 
 /**
+ * 协议请求处理类
  *
  * <p>
  * 详情见: https://redkale.org

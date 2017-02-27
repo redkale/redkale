@@ -8,8 +8,11 @@ package org.redkale.net;
 import java.util.concurrent.*;
 
 /**
+ * 协议处理的自定义线程类
  *
- * <p> 详情见: https://redkale.org
+ * <p>
+ * 详情见: https://redkale.org
+ *
  * @author zhangjx
  */
 public class WorkThread extends Thread {
