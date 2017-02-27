@@ -1360,6 +1360,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
             if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(clazz.getSimpleName() + " find sql=" + sql);
             conn.setReadOnly(true);
             final PreparedStatement ps = conn.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+            ps.setFetchSize(1);
             final ResultSet set = ps.executeQuery();
             T rs = set.next() ? info.getValue(sels, set) : null;
             set.close();
@@ -1411,6 +1412,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
             if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(clazz.getSimpleName() + " find sql=" + sql);
             conn.setReadOnly(true);
             final PreparedStatement ps = conn.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+            ps.setFetchSize(1);
             final ResultSet set = ps.executeQuery();
             T rs = set.next() ? info.getValue(sels, set) : null;
             set.close();
@@ -1456,6 +1458,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
             if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(clazz.getSimpleName() + " find sql=" + sql);
             conn.setReadOnly(true);
             final PreparedStatement ps = conn.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+            ps.setFetchSize(1);
             final ResultSet set = ps.executeQuery();
             Serializable val = defValue;
             if (set.next()) val = (Serializable) set.getObject(1);
@@ -1492,6 +1495,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
             if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(clazz.getSimpleName() + " find sql=" + sql);
             conn.setReadOnly(true);
             final PreparedStatement ps = conn.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+            ps.setFetchSize(1);
             final ResultSet set = ps.executeQuery();
             Serializable val = defValue;
             if (set.next()) val = (Serializable) set.getObject(1);
@@ -1813,6 +1817,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
             }
             conn.setReadOnly(true);
             final PreparedStatement ps = conn.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+            if (flipper != null && flipper.getLimit() > 0) ps.setFetchSize(flipper.getLimit());
             final ResultSet set = ps.executeQuery();
             if (flipper != null && flipper.getOffset() > 0) set.absolute(flipper.getOffset());
             final int limit = flipper == null || flipper.getLimit() < 1 ? Integer.MAX_VALUE : flipper.getLimit();

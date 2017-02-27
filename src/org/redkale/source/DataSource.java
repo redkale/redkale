@@ -57,6 +57,17 @@ public interface DataSource {
 
     public <T> int delete(final Class<T> clazz, final FilterNode node);
 
+    /**
+     * 根据过滤条件删除指定行数的数据
+     * Flipper中offset字段将被忽略
+     *
+     * @param <T>     Entity类的泛型
+     * @param clazz   Entity类
+     * @param flipper 翻页对象
+     * @param node    过滤条件
+     *
+     * @return 影响的行数
+     */
     public <T> int delete(final Class<T> clazz, final Flipper flipper, final FilterNode node);
 
     //------------------------update---------------------------
@@ -78,6 +89,18 @@ public interface DataSource {
 
     public <T> int updateColumn(final Class<T> clazz, final FilterNode node, final ColumnValue... values);
 
+    /**
+     * 更新符合条件的记录的指定字段
+     * Flipper中offset字段将被忽略
+     *
+     * @param <T>     Entity类的泛型
+     * @param clazz   Entity类
+     * @param node    过滤条件
+     * @param flipper 翻页对象
+     * @param values  更新字段
+     *
+     * @return 影响的行数
+     */
     public <T> int updateColumn(final Class<T> clazz, final FilterNode node, final Flipper flipper, final ColumnValue... values);
 
     public <T> int updateColumn(final T bean, final String... columns);
@@ -87,8 +110,8 @@ public interface DataSource {
     /**
      * 由 public int updateColumn(final T bean, final String... columns); 代替
      *
-     * @param <T> T
-     * @param bean bean
+     * @param <T>     T
+     * @param bean    bean
      * @param columns columns
      *
      * @return int
@@ -100,9 +123,9 @@ public interface DataSource {
     /**
      * 由 public int updateColumn(final T bean, final FilterNode node, final String... columns); 代替
      *
-     * @param <T> T
-     * @param bean bean
-     * @param node node 
+     * @param <T>     T
+     * @param bean    bean
+     * @param node    node
      * @param columns columns
      *
      * @return int
