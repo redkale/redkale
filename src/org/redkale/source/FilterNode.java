@@ -18,7 +18,7 @@ import org.redkale.util.*;
  * 在调用 createSQLExpress 之前必须先调用 createSQLJoin <br>
  * 在调用 createPredicate 之前必须先调用 isCacheUseable
  *
- *
+ * <p>
  * 详情见: https://redkale.org
  *
  * @author zhangjx

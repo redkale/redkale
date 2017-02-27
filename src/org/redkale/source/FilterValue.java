@@ -7,7 +7,7 @@ package org.redkale.source;
 
 /**
  * FilterValue主要用于复杂的表达式。<br>
- * 例如: col / 10 = 3 、MOD(col, 8) &gt; 0 这些都不是单独一个数值能表达的，因此需要FilterValue 才构建 8 、 &gt; 、0 组合值.
+ * 例如: col / 10 = 3 、MOD(col, 8) &gt; 0 这些都不是单独一个数值能表达的，因此需要FilterValue 才构建 8 、 &gt; 、0 组合值。
  *
  * <p>
  * 详情见: https://redkale.org

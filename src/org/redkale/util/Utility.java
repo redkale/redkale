@@ -15,6 +15,8 @@ import java.util.zip.GZIPInputStream;
 import javax.net.ssl.*;
 
 /**
+ * 
+ * 常见操作的工具类
  *
  * <p>
  * 详情见: https://redkale.org

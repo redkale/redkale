@@ -9,6 +9,9 @@ import org.redkale.convert.json.JsonConvert;
 
 /**
  * FilterFuncColumn用于getNumberMap获取列表似数据, getNumberResult获取单字段值， getNumberMap获取多字段值
+ * 
+ * <p>
+ * 详情见: https://redkale.org
  *
  * @author zhangjx
  */
