@@ -11,6 +11,7 @@ import java.util.function.*;
 import java.util.logging.*;
 
 /**
+ * 对象池
  *
  * <p>
  * 详情见: https://redkale.org

@@ -7,6 +7,8 @@ import jdk.internal.org.objectweb.asm.*;
 import static jdk.internal.org.objectweb.asm.ClassWriter.COMPUTE_FRAMES;
 
 /**
+ * JavaBean类对象的拷贝，相同的字段名会被拷贝 <br>
+ * <b>注意</b>: 拷贝类与被拷贝类的字段可见模式必须一致， 要么都是public field, 要么都是getter、setter模式。 <br>
  *
  * <p>
  * 详情见: https://redkale.org
@@ -15,7 +17,7 @@ import static jdk.internal.org.objectweb.asm.ClassWriter.COMPUTE_FRAMES;
  * @param <D> 目标对象的数据类型
  * @param <S> 源对象的数据类型
  */
-public interface Reproduce<D, S> extends BiFunction<D, S, D>{
+public interface Reproduce<D, S> extends BiFunction<D, S, D> {
 
     @Override
     public D apply(D dest, S src);
