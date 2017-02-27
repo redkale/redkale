@@ -15,7 +15,7 @@ import java.util.zip.GZIPInputStream;
 import javax.net.ssl.*;
 
 /**
- * 
+ *
  * 常见操作的工具类
  *
  * <p>
@@ -546,7 +546,6 @@ public final class Utility {
     public static byte[] hexToBin(CharSequence src, int offset, int len) {
         final int size = (len + 1) / 2;
         final byte[] bytes = new byte[size];
-        final int end = offset + len;
         String digits = "0123456789abcdef";
         for (int i = 0; i < size; i++) {
             int ch1 = src.charAt(offset + i * 2);
@@ -598,7 +597,6 @@ public final class Utility {
     public static byte[] hexToBin(char[] src, int offset, int len) {
         final int size = (len + 1) / 2;
         final byte[] bytes = new byte[size];
-        final int end = offset + len;
         String digits = "0123456789abcdef";
         for (int i = 0; i < size; i++) {
             int ch1 = src[offset + i * 2];
@@ -615,6 +613,13 @@ public final class Utility {
     }
 
     //-----------------------------------------------------------------------------
+    /**
+     * 使用UTF-8编码将byte[]转换成char[]
+     *
+     * @param array byte[]
+     *
+     * @return char[]
+     */
     public static char[] decodeUTF8(final byte[] array) {
         return decodeUTF8(array, 0, array.length);
     }
@@ -780,13 +785,16 @@ public final class Utility {
         return DEFAULTSSL_CONTEXT;
     }
 
+    public static javax.net.ssl.HostnameVerifier getDefaultHostnameVerifier() {
+        return defaultVerifier;
+    }
+
     public static Socket createDefaultSSLSocket(InetSocketAddress address) throws IOException {
         return createDefaultSSLSocket(address.getAddress(), address.getPort());
     }
 
     public static Socket createDefaultSSLSocket(InetAddress host, int port) throws IOException {
         Socket socket = DEFAULTSSL_CONTEXT.getSocketFactory().createSocket(host, port);
-
         return socket;
     }
 
