@@ -38,26 +38,74 @@ public class ColumnValue {
         this.value = value;
     }
 
+    /**
+     * 同 mov 操作
+     *
+     * @param column 字段名
+     * @param value  字段值
+     *
+     * @return ColumnValue
+     */
     public static ColumnValue create(String column, Serializable value) {
         return new ColumnValue(column, value);
     }
 
+    /**
+     * 返回 {column} = {value} 操作
+     *
+     * @param column 字段名
+     * @param value  字段值
+     *
+     * @return ColumnValue
+     */
     public static ColumnValue mov(String column, Serializable value) {
         return new ColumnValue(column, MOV, value);
     }
 
+    /**
+     * 返回 {column} = {column} + {value} 操作
+     *
+     * @param column 字段名
+     * @param value  字段值
+     *
+     * @return ColumnValue
+     */
     public static ColumnValue inc(String column, Serializable value) {
         return new ColumnValue(column, INC, value);
     }
 
+    /**
+     * 返回 {column} = {column} * {value} 操作
+     *
+     * @param column 字段名
+     * @param value  字段值
+     *
+     * @return ColumnValue
+     */
     public static ColumnValue mul(String column, Serializable value) {
         return new ColumnValue(column, MUL, value);
     }
 
+    /**
+     * 返回 {column} = {column} &#38; {value} 操作
+     *
+     * @param column 字段名
+     * @param value  字段值
+     *
+     * @return ColumnValue
+     */
     public static ColumnValue and(String column, Serializable value) {
         return new ColumnValue(column, AND, value);
     }
 
+    /**
+     * 返回 {column} = {column} | {value} 操作
+     *
+     * @param column 字段名
+     * @param value  字段值
+     *
+     * @return ColumnValue
+     */
     public static ColumnValue orr(String column, Serializable value) {
         return new ColumnValue(column, ORR, value);
     }

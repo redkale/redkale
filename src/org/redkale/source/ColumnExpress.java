@@ -14,9 +14,24 @@ package org.redkale.source;
  * @author zhangjx
  */
 public enum ColumnExpress {
-    MOV, //直接赋值  col = val
-    INC, //追加值  col = col + val
-    MUL, //乘值  col = col * val
-    AND, //与值  col = col & val
-    ORR;   //或值  col = col | val
+    /**
+     * 直接赋值 col = val
+     */
+    MOV,
+    /**
+     * 追加值 col = col + val
+     */
+    INC,
+    /**
+     * 乘值 col = col * val
+     */
+    MUL,
+    /**
+     * 与值 col = col &#38; val
+     */
+    AND, //与值 col = col & val
+    /**
+     * 或值 col = col | val
+     */
+    ORR;
 }

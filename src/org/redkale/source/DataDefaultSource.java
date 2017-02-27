@@ -66,9 +66,6 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
 
     private final JDBCPoolSource writePool;
 
-    @Resource(name = "property.datasource.nodeid")
-    private int nodeid;
-
     @Resource(name = "$")
     private DataCacheListener cacheListener;
 
@@ -1661,16 +1658,6 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
         }
         rs.setRows(list);
         return rs;
-    }
-
-    private <K extends Serializable, T> Map<K, T> formatMap(final Class<T> clazz, final Collection<T> list) {
-        Map<K, T> map = new LinkedHashMap<>();
-        if (list == null || list.isEmpty()) return map;
-        final Attribute<T, K> attr = (Attribute<T, K>) loadEntityInfo(clazz).getPrimary();
-        for (T t : list) {
-            map.put(attr.get(t), t);
-        }
-        return map;
     }
 
     /**
