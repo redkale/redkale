@@ -99,6 +99,7 @@ public interface DataSource {
 
     /**
      * 更新单个记录的单个字段  <br>
+     * <b>注意</b>：即使字段标记为&#064;Column(updatable=false)也会被更新   <br>
      * 等价SQL: UPDATE {table} SET {column} = {value} WHERE {primary} = {id}  <br>
      *
      * @param <T>    Entity泛型
@@ -113,6 +114,7 @@ public interface DataSource {
 
     /**
      * 更新符合过滤条件记录的单个字段   <br>
+     * <b>注意</b>：即使字段标记为&#064;Column(updatable=false)也会被更新   <br>
      * 等价SQL: UPDATE {table} SET {column} = {value} WHERE {filter node}   <br>
      *
      * @param <T>    Entity泛型
@@ -173,7 +175,7 @@ public interface DataSource {
     /**
      * 更新单个记录的指定字段   <br>
      * <b>注意</b>：Entity类中标记为&#064;Column(updatable=false)不会被更新   <br>
-     * 等价SQL: UPDATE {table} SET {column1} = {value1}, {column2} += {value2}, {column3} *= {value3}, &#183;&#183;&#183; WHERE {primary} = {bean.id}  <br>
+     * 等价SQL: UPDATE {table} SET {column1} = {value1}, {column2} = {value2}, {column3} = {value3}, &#183;&#183;&#183; WHERE {primary} = {bean.id}  <br>
      *
      * @param <T>     Entity泛型
      * @param bean    待更新的Entity对象
@@ -186,7 +188,7 @@ public interface DataSource {
     /**
      * 更新符合过滤条件记录的指定字段   <br>
      * <b>注意</b>：Entity类中标记为&#064;Column(updatable=false)不会被更新   <br>
-     * 等价SQL: UPDATE {table} SET {column1} = {value1}, {column2} += {value2}, {column3} *= {value3}, &#183;&#183;&#183; WHERE {filter node}  <br>
+     * 等价SQL: UPDATE {table} SET {column1} = {value1}, {column2} = {value2}, {column3} = {value3}, &#183;&#183;&#183; WHERE {filter node}  <br>
      *
      * @param <T>     Entity泛型
      * @param bean    待更新的Entity对象
@@ -196,6 +198,33 @@ public interface DataSource {
      * @return 影响的记录条数
      */
     public <T> int updateColumn(final T bean, final FilterNode node, final String... columns);
+
+    /**
+     * 更新单个记录的指定字段   <br>
+     * <b>注意</b>：Entity类中标记为&#064;Column(updatable=false)不会被更新   <br>
+     * 等价SQL: UPDATE {table} SET {column1} = {value1}, {column2} = {value2}, {column3} = {value3}, &#183;&#183;&#183; WHERE {primary} = {bean.id}  <br>
+     *
+     * @param <T>     Entity泛型
+     * @param bean    待更新的Entity对象
+     * @param selects 指定字段
+     *
+     * @return 影响的记录条数
+     */
+    public <T> int updateColumn(final T bean, final SelectColumn selects);
+
+    /**
+     * 更新符合过滤条件记录的指定字段   <br>
+     * <b>注意</b>：Entity类中标记为&#064;Column(updatable=false)不会被更新   <br>
+     * 等价SQL: UPDATE {table} SET {column1} = {value1}, {column2} = {value2}, {column3} = {value3}, &#183;&#183;&#183; WHERE {filter node}  <br>
+     *
+     * @param <T>     Entity泛型
+     * @param bean    待更新的Entity对象
+     * @param node    过滤条件
+     * @param selects 指定字段
+     *
+     * @return 影响的记录条数
+     */
+    public <T> int updateColumn(final T bean, final FilterNode node, final SelectColumn selects);
 
     /**
      * 由 public int updateColumn(final T bean, final String... columns); 代替

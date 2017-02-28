@@ -425,41 +425,51 @@ public final class EntityInfo<T> {
         T obj = creator.create();
         for (Attribute<T, Serializable> attr : queryAttributes) {
             if (sels == null || sels.test(attr.field())) {
-                Serializable o = (Serializable) set.getObject(this.getSQLColumn(null, attr.field()));
                 final Class t = attr.type();
-                if (t.isPrimitive()) {
-                    if (o != null) {
-                        if (t == int.class) {
-                            o = ((Number) o).intValue();
+                Serializable o;
+                if (t == byte[].class) {
+                    Blob blob = set.getBlob(this.getSQLColumn(null, attr.field()));
+                    if (blob == null) {
+                        o = null;
+                    } else { //不支持超过2G的数据
+                        o = blob.getBytes(1, (int) blob.length());
+                    }
+                } else {
+                    o = (Serializable) set.getObject(this.getSQLColumn(null, attr.field()));
+                    if (t.isPrimitive()) {
+                        if (o != null) {
+                            if (t == int.class) {
+                                o = ((Number) o).intValue();
+                            } else if (t == long.class) {
+                                o = ((Number) o).longValue();
+                            } else if (t == short.class) {
+                                o = ((Number) o).shortValue();
+                            } else if (t == float.class) {
+                                o = ((Number) o).floatValue();
+                            } else if (t == double.class) {
+                                o = ((Number) o).doubleValue();
+                            } else if (t == byte.class) {
+                                o = ((Number) o).byteValue();
+                            } else if (t == char.class) {
+                                o = (char) ((Number) o).intValue();
+                            }
+                        } else if (t == int.class) {
+                            o = 0;
                         } else if (t == long.class) {
-                            o = ((Number) o).longValue();
+                            o = 0L;
                         } else if (t == short.class) {
-                            o = ((Number) o).shortValue();
+                            o = (short) 0;
                         } else if (t == float.class) {
-                            o = ((Number) o).floatValue();
+                            o = 0.0f;
                         } else if (t == double.class) {
-                            o = ((Number) o).doubleValue();
+                            o = 0.0d;
                         } else if (t == byte.class) {
-                            o = ((Number) o).byteValue();
+                            o = (byte) 0;
+                        } else if (t == boolean.class) {
+                            o = false;
                         } else if (t == char.class) {
-                            o = (char) ((Number) o).intValue();
+                            o = (char) 0;
                         }
-                    } else if (t == int.class) {
-                        o = 0;
-                    } else if (t == long.class) {
-                        o = 0L;
-                    } else if (t == short.class) {
-                        o = (short) 0;
-                    } else if (t == float.class) {
-                        o = 0.0f;
-                    } else if (t == double.class) {
-                        o = 0.0d;
-                    } else if (t == byte.class) {
-                        o = (byte) 0;
-                    } else if (t == boolean.class) {
-                        o = false;
-                    } else if (t == char.class) {
-                        o = (char) 0;
                     }
                 }
                 attr.set(obj, o);

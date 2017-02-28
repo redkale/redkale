@@ -448,7 +448,14 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
             int i = 0;
             if (info.autouuid) info.createPrimaryValue(value);
             for (Attribute<T, Serializable> attr : attrs) {
-                prestmt.setObject(++i, attr.get(value));
+                Serializable val = attr.get(value);
+                if (val instanceof byte[]) {
+                    Blob blob = conn.createBlob();
+                    blob.setBytes(1, (byte[]) val);
+                    prestmt.setObject(++i, blob);
+                } else {
+                    prestmt.setObject(++i, val);
+                }
             }
             prestmt.addBatch();
         }
@@ -688,7 +695,14 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
                 for (final T value : values) {
                     int k = 0;
                     for (Attribute<T, Serializable> attr : attrs) {
-                        prestmt.setObject(++k, attr.get(value));
+                        Serializable val = attr.get(value);
+                        if (val instanceof byte[]) {
+                            Blob blob = conn.createBlob();
+                            blob.setBytes(1, (byte[]) val);
+                            prestmt.setObject(++k, blob);
+                        } else {
+                            prestmt.setObject(++k, val);
+                        }
                     }
                     prestmt.setObject(++k, primary.get(value));
                     prestmt.addBatch();//------------------------------------------------------------
@@ -757,17 +771,29 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
         }
     }
 
-    private <T> int updateColumn(Connection conn, final EntityInfo<T> info, Serializable id, String column, Serializable value) {
+    private <T> int updateColumn(Connection conn, final EntityInfo<T> info, Serializable id, String column, final Serializable value) {
         try {
             int c = -1;
             if (!info.isVirtualEntity()) {
-                String sql = "UPDATE " + info.getTable(id) + " SET " + info.getSQLColumn(null, column) + " = "
-                    + info.formatToString(value) + " WHERE " + info.getPrimarySQLColumn() + " = " + FilterNode.formatToString(id);
-                if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
-                conn.setReadOnly(false);
-                final Statement stmt = conn.createStatement();
-                c = stmt.executeUpdate(sql);
-                stmt.close();
+                if (value instanceof byte[]) {
+                    String sql = "UPDATE " + info.getTable(id) + " SET " + info.getSQLColumn(null, column) + " = ? WHERE " + info.getPrimarySQLColumn() + " = " + FilterNode.formatToString(id);
+                    if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
+                    conn.setReadOnly(false);
+                    final PreparedStatement stmt = conn.prepareStatement(sql);
+                    Blob blob = conn.createBlob();
+                    blob.setBytes(1, (byte[]) value);
+                    stmt.setBlob(1, blob);
+                    c = stmt.executeUpdate(sql);
+                    stmt.close();
+                } else {
+                    String sql = "UPDATE " + info.getTable(id) + " SET " + info.getSQLColumn(null, column) + " = "
+                        + info.formatToString(value) + " WHERE " + info.getPrimarySQLColumn() + " = " + FilterNode.formatToString(id);
+                    if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
+                    conn.setReadOnly(false);
+                    final Statement stmt = conn.createStatement();
+                    c = stmt.executeUpdate(sql);
+                    stmt.close();
+                }
             }
             //---------------------------------------------------
             final EntityCache<T> cache = info.getCache();
@@ -807,7 +833,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
         }
     }
 
-    private <T> int updateColumn(Connection conn, final EntityInfo<T> info, String column, Serializable value, FilterNode node) {
+    private <T> int updateColumn(Connection conn, final EntityInfo<T> info, String column, final Serializable value, FilterNode node) {
         try {
             int c = -1;
             if (!info.isVirtualEntity()) {
@@ -822,15 +848,30 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
                     join1 = multisplit('[', ']', ",", new StringBuilder(), joinstr, 0);
                     join2 = multisplit('{', '}', " AND ", new StringBuilder(), joinstr, 0);
                 }
-                String sql = "UPDATE " + info.getTable(node) + " a " + (join1 == null ? "" : (", " + join1))
-                    + " SET " + info.getSQLColumn("a", column) + " = " + info.formatToString(value)
-                    + ((where == null || where.length() == 0) ? (join2 == null ? "" : (" WHERE " + join2))
-                        : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))));
-                if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
-                conn.setReadOnly(false);
-                final Statement stmt = conn.createStatement();
-                c = stmt.executeUpdate(sql);
-                stmt.close();
+                if (value instanceof byte[]) {
+                    String sql = "UPDATE " + info.getTable(node) + " a " + (join1 == null ? "" : (", " + join1))
+                        + " SET " + info.getSQLColumn("a", column) + " = ?"
+                        + ((where == null || where.length() == 0) ? (join2 == null ? "" : (" WHERE " + join2))
+                            : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))));
+                    if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
+                    conn.setReadOnly(false);
+                    Blob blob = conn.createBlob();
+                    blob.setBytes(1, (byte[]) value);
+                    final PreparedStatement stmt = conn.prepareStatement(sql);
+                    stmt.setBlob(1, blob);
+                    c = stmt.executeUpdate(sql);
+                    stmt.close();
+                } else {
+                    String sql = "UPDATE " + info.getTable(node) + " a " + (join1 == null ? "" : (", " + join1))
+                        + " SET " + info.getSQLColumn("a", column) + " = " + info.formatToString(value)
+                        + ((where == null || where.length() == 0) ? (join2 == null ? "" : (" WHERE " + join2))
+                            : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))));
+                    if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
+                    conn.setReadOnly(false);
+                    final Statement stmt = conn.createStatement();
+                    c = stmt.executeUpdate(sql);
+                    stmt.close();
+                }
             }
             //---------------------------------------------------
             final EntityCache<T> cache = info.getCache();
@@ -876,6 +917,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
             final List<Attribute<T, Serializable>> attrs = new ArrayList<>();
             final List<ColumnValue> cols = new ArrayList<>();
             final boolean virtual = info.isVirtualEntity();
+            List<byte[]> blobs = null;
             for (ColumnValue col : values) {
                 Attribute<T, Serializable> attr = info.getUpdateAttribute(col.getColumn());
                 if (attr == null) continue;
@@ -884,7 +926,14 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
                 if (!virtual) {
                     if (setsql.length() > 0) setsql.append(", ");
                     String c = info.getSQLColumn(null, col.getColumn());
-                    setsql.append(c).append(" = ").append(info.formatSQLValue(c, col));
+                    setsql.append(c).append(" = ");
+                    if (col.getValue() instanceof byte[]) {
+                        if (blobs == null) blobs = new ArrayList<>();
+                        blobs.add((byte[]) col.getValue());
+                        setsql.append(c).append(" = ?");
+                    } else {
+                        setsql.append(c).append(" = ").append(info.formatSQLValue(c, col));
+                    }
                 }
             }
             int c = -1;
@@ -892,9 +941,21 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
                 String sql = "UPDATE " + info.getTable(id) + " SET " + setsql + " WHERE " + info.getPrimarySQLColumn() + " = " + FilterNode.formatToString(id);
                 if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(info.getType().getSimpleName() + ": " + sql);
                 conn.setReadOnly(false);
-                final Statement stmt = conn.createStatement();
-                c = stmt.executeUpdate(sql);
-                stmt.close();
+                if (blobs != null) {
+                    final PreparedStatement stmt = conn.prepareStatement(sql);
+                    int idx = 0;
+                    for (byte[] bs : blobs) {
+                        Blob blob = conn.createBlob();
+                        blob.setBytes(1, bs);
+                        stmt.setBlob(++idx, blob);
+                    }
+                    c = stmt.executeUpdate();
+                    stmt.close();
+                } else {
+                    final Statement stmt = conn.createStatement();
+                    c = stmt.executeUpdate(sql);
+                    stmt.close();
+                }
             }
             //---------------------------------------------------
             final EntityCache<T> cache = info.getCache();
@@ -963,6 +1024,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
             final List<Attribute<T, Serializable>> attrs = new ArrayList<>();
             final List<ColumnValue> cols = new ArrayList<>();
             final boolean virtual = info.isVirtualEntity();
+            List<byte[]> blobs = null;
             for (ColumnValue col : values) {
                 Attribute<T, Serializable> attr = info.getUpdateAttribute(col.getColumn());
                 if (attr == null) continue;
@@ -971,7 +1033,13 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
                 if (!virtual) {
                     if (setsql.length() > 0) setsql.append(", ");
                     String c = info.getSQLColumn("a", col.getColumn());
-                    setsql.append(c).append(" = ").append(info.formatSQLValue(c, col));
+                    if (col.getValue() instanceof byte[]) {
+                        if (blobs == null) blobs = new ArrayList<>();
+                        blobs.add((byte[]) col.getValue());
+                        setsql.append(c).append(" = ?");
+                    } else {
+                        setsql.append(c).append(" = ").append(info.formatSQLValue(c, col));
+                    }
                 }
             }
             int c = -1;
@@ -993,9 +1061,21 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
                 sql += info.createSQLOrderby(flipper) + ((flipper == null || flipper.getLimit() < 1) ? "" : (" LIMIT " + flipper.getLimit()));
                 if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
                 conn.setReadOnly(false);
-                final Statement stmt = conn.createStatement();
-                c = stmt.executeUpdate(sql);
-                stmt.close();
+                if (blobs != null) {
+                    final PreparedStatement stmt = conn.prepareStatement(sql);
+                    int idx = 0;
+                    for (byte[] bs : blobs) {
+                        Blob blob = conn.createBlob();
+                        blob.setBytes(1, bs);
+                        stmt.setBlob(++idx, blob);
+                    }
+                    c = stmt.executeUpdate();
+                    stmt.close();
+                } else {
+                    final Statement stmt = conn.createStatement();
+                    c = stmt.executeUpdate(sql);
+                    stmt.close();
+                }
             }
             //---------------------------------------------------
             final EntityCache<T> cache = info.getCache();
@@ -1013,44 +1093,48 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
         return updateColumn(bean, columns);
     }
 
-    /**
-     * 更新对象指定的一些字段， 必须是Entity对象
-     *
-     * @param <T>     Entity类的泛型
-     * @param bean    Entity对象
-     * @param columns 需要更新的字段
-     *
-     * @return 更新的数据条数
-     */
     @Override
     public <T> int updateColumn(final T bean, final String... columns) {
+        return updateColumn(bean, SelectColumn.createIncludes(columns));
+    }
+
+    @Override
+    public <T> int updateColumn(final T bean, final SelectColumn selects) {
         final EntityInfo<T> info = loadEntityInfo((Class<T>) bean.getClass());
         if (info.isVirtualEntity()) {
-            return updateColumns(null, info, bean, columns);
+            return updateColumns(null, info, bean, selects);
         }
         Connection conn = createWriteSQLConnection();
         try {
-            return updateColumns(conn, info, bean, columns);
+            return updateColumns(conn, info, bean, selects);
         } finally {
             closeSQLConnection(conn);
         }
     }
 
-    private <T> int updateColumns(final Connection conn, final EntityInfo<T> info, final T bean, final String... columns) {
-        if (bean == null || columns.length < 1) return -1;
+    private <T> int updateColumns(final Connection conn, final EntityInfo<T> info, final T bean, final SelectColumn selects) {
+        if (bean == null || selects == null) return -1;
         try {
             final Class<T> clazz = (Class<T>) bean.getClass();
             StringBuilder setsql = new StringBuilder();
             final Serializable id = info.getPrimary().get(bean);
             final List<Attribute<T, Serializable>> attrs = new ArrayList<>();
+            List<byte[]> blobs = null;
             final boolean virtual = info.isVirtualEntity();
-            for (String col : columns) {
-                Attribute<T, Serializable> attr = info.getUpdateAttribute(col);
-                if (attr == null) continue;
+            for (Attribute<T, Serializable> attr : info.updateAttributes) {
+                if (!selects.test(attr.field())) continue;
                 attrs.add(attr);
                 if (!virtual) {
                     if (setsql.length() > 0) setsql.append(", ");
-                    setsql.append(info.getSQLColumn(null, col)).append(" = ").append(info.formatToString(attr.get(bean)));
+                    setsql.append(info.getSQLColumn(null, attr.field()));
+                    Serializable val = attr.get(bean);
+                    if (val instanceof byte[]) {
+                        if (blobs == null) blobs = new ArrayList<>();
+                        blobs.add((byte[]) val);
+                        setsql.append(" = ?");
+                    } else {
+                        setsql.append(" = ").append(info.formatToString(val));
+                    }
                 }
             }
             int c = -1;
@@ -1058,9 +1142,21 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
                 String sql = "UPDATE " + info.getTable(id) + " SET " + setsql + " WHERE " + info.getPrimarySQLColumn() + " = " + FilterNode.formatToString(id);
                 if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(bean.getClass().getSimpleName() + ": " + sql);
                 conn.setReadOnly(false);
-                final Statement stmt = conn.createStatement();
-                c = stmt.executeUpdate(sql);
-                stmt.close();
+                if (blobs != null) {
+                    final PreparedStatement stmt = conn.prepareStatement(sql);
+                    int idx = 0;
+                    for (byte[] bs : blobs) {
+                        Blob blob = conn.createBlob();
+                        blob.setBytes(1, bs);
+                        stmt.setBlob(++idx, blob);
+                    }
+                    c = stmt.executeUpdate();
+                    stmt.close();
+                } else {
+                    final Statement stmt = conn.createStatement();
+                    c = stmt.executeUpdate(sql);
+                    stmt.close();
+                }
             }
             //---------------------------------------------------
             final EntityCache<T> cache = info.getCache();
@@ -1078,45 +1174,48 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
         return updateColumn(bean, node, columns);
     }
 
-    /**
-     * 更新对象指定的一些字段， 必须是Entity对象
-     *
-     * @param <T>     Entity类的泛型
-     * @param bean    Entity对象
-     * @param node    过滤node 不能为null
-     * @param columns 需要更新的字段
-     *
-     * @return 更新的数据条数
-     */
     @Override
     public <T> int updateColumn(final T bean, final FilterNode node, final String... columns) {
+        return updateColumn(bean, node, SelectColumn.createIncludes(columns));
+    }
+
+    @Override
+    public <T> int updateColumn(final T bean, final FilterNode node, final SelectColumn selects) {
         final EntityInfo<T> info = loadEntityInfo((Class<T>) bean.getClass());
         if (info.isVirtualEntity()) {
-            return updateColumns(null, info, bean, node, columns);
+            return updateColumns(null, info, bean, node, selects);
         }
         Connection conn = createWriteSQLConnection();
         try {
-            return updateColumns(conn, info, bean, node, columns);
+            return updateColumns(conn, info, bean, node, selects);
         } finally {
             closeSQLConnection(conn);
         }
     }
 
-    private <T> int updateColumns(final Connection conn, final EntityInfo<T> info, final T bean, final FilterNode node, final String... columns) {
-        if (bean == null || node == null || columns.length < 1) return -1;
+    private <T> int updateColumns(final Connection conn, final EntityInfo<T> info, final T bean, final FilterNode node, final SelectColumn selects) {
+        if (bean == null || node == null || selects == null) return -1;
         try {
             final Class<T> clazz = (Class<T>) bean.getClass();
             StringBuilder setsql = new StringBuilder();
             final Serializable id = info.getPrimary().get(bean);
             final List<Attribute<T, Serializable>> attrs = new ArrayList<>();
+            List<byte[]> blobs = null;
             final boolean virtual = info.isVirtualEntity();
-            for (String col : columns) {
-                Attribute<T, Serializable> attr = info.getUpdateAttribute(col);
-                if (attr == null) continue;
+            for (Attribute<T, Serializable> attr : info.updateAttributes) {
+                if (!selects.test(attr.field())) continue;
                 attrs.add(attr);
                 if (!virtual) {
                     if (setsql.length() > 0) setsql.append(", ");
-                    setsql.append(info.getSQLColumn("a", col)).append(" = ").append(info.formatToString(attr.get(bean)));
+                    setsql.append(info.getSQLColumn("a", attr.field()));
+                    Serializable val = attr.get(bean);
+                    if (val instanceof byte[]) {
+                        if (blobs == null) blobs = new ArrayList<>();
+                        blobs.add((byte[]) val);
+                        setsql.append(" = ?");
+                    } else {
+                        setsql.append(" = ").append(info.formatToString(val));
+                    }
                 }
             }
             int c = -1;
@@ -1136,9 +1235,21 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
                         : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))));
                 if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
                 conn.setReadOnly(false);
-                final Statement stmt = conn.createStatement();
-                c = stmt.executeUpdate(sql);
-                stmt.close();
+                if (blobs != null) {
+                    final PreparedStatement stmt = conn.prepareStatement(sql);
+                    int idx = 0;
+                    for (byte[] bs : blobs) {
+                        Blob blob = conn.createBlob();
+                        blob.setBytes(1, bs);
+                        stmt.setBlob(++idx, blob);
+                    }
+                    c = stmt.executeUpdate();
+                    stmt.close();
+                } else {
+                    final Statement stmt = conn.createStatement();
+                    c = stmt.executeUpdate(sql);
+                    stmt.close();
+                }
             }
             //---------------------------------------------------
             final EntityCache<T> cache = info.getCache();
@@ -1487,6 +1598,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
 
         final Connection conn = createReadSQLConnection();
         try {
+            final Attribute<T, Serializable> attr = info.getAttribute(column);
             final String sql = "SELECT " + info.getSQLColumn(null, column) + " FROM " + info.getTable(pk) + " WHERE " + info.getPrimarySQLColumn() + " = " + FilterNode.formatToString(pk);
             if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(clazz.getSimpleName() + " find sql=" + sql);
             conn.setReadOnly(true);
@@ -1494,7 +1606,14 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
             ps.setFetchSize(1);
             final ResultSet set = ps.executeQuery();
             Serializable val = defValue;
-            if (set.next()) val = (Serializable) set.getObject(1);
+            if (set.next()) {
+                if (attr.type() == byte[].class) {
+                    Blob blob = set.getBlob(1);
+                    if (blob != null) val = blob.getBytes(1, (int) blob.length());
+                } else {
+                    val = (Serializable) set.getObject(1);
+                }
+            }
             set.close();
             ps.close();
             return val == null ? defValue : val;
@@ -1521,6 +1640,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
 
         final Connection conn = createReadSQLConnection();
         try {
+            final Attribute<T, Serializable> attr = info.getAttribute(column);
             final Map<Class, String> joinTabalis = node == null ? null : node.getJoinTabalis();
             final CharSequence join = node == null ? null : node.createSQLJoin(this, false, joinTabalis, new HashSet<>(), info);
             final CharSequence where = node == null ? null : node.createSQLExpress(info, joinTabalis);
@@ -1531,7 +1651,14 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
             ps.setFetchSize(1);
             final ResultSet set = ps.executeQuery();
             Serializable val = defValue;
-            if (set.next()) val = (Serializable) set.getObject(1);
+            if (set.next()) {
+                if (attr.type() == byte[].class) {
+                    Blob blob = set.getBlob(1);
+                    if (blob != null) val = blob.getBytes(1, (int) blob.length());
+                } else {
+                    val = (Serializable) set.getObject(1);
+                }
+            }
             set.close();
             ps.close();
             return val == null ? defValue : val;
