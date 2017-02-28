@@ -25,7 +25,7 @@ public interface DataSource {
 
     //----------------------insert-----------------------------
     /**
-     * 新增记录， 必须是Entity对象  <br>
+     * 新增记录， 多对象必须是同一个Entity类  <br>
      *
      * @param <T>    泛型
      * @param values Entity对象
@@ -34,7 +34,7 @@ public interface DataSource {
 
     //-------------------------delete--------------------------
     /**
-     * 删除指定主键值的记录， 必须是Entity对象  <br>
+     * 删除指定主键值的记录， 多对象必须是同一个Entity类  <br>
      * 等价SQL: DELETE FROM {table} WHERE {primary} IN {values.id}  <br>
      *
      * @param <T>    泛型
@@ -84,7 +84,7 @@ public interface DataSource {
 
     //------------------------update---------------------------
     /**
-     * 更新记录， 必须是Entity对象  <br>
+     * 更新记录， 多对象必须是同一个Entity类  <br>
      * 等价SQL:  <br>
      * UPDATE {table} SET column1 = value1, column2 = value2, &#183;&#183;&#183; WHERE {primary} = {id1}  <br>
      * UPDATE {table} SET column1 = value1, column2 = value2, &#183;&#183;&#183; WHERE {primary} = {id2}  <br>

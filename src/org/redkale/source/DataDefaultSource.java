@@ -313,6 +313,18 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
     @Override
     public <T> void insert(T... values) {
         if (values.length == 0) return;
+        if (values.length > 1) { //检查对象是否都是同一个Entity类
+            Class clazz = null;
+            for (T val : values) {
+                if (clazz == null) {
+                    clazz = val.getClass();
+                    continue;
+                }
+                if (clazz != val.getClass()) {
+                    throw new RuntimeException("DataSource.insert must the same Class Entity, but diff is " + clazz + " and " + val.getClass());
+                }
+            }
+        }
         final EntityInfo<T> info = loadEntityInfo((Class<T>) values[0].getClass());
         if (info.isVirtualEntity()) {
             insert(null, info, values);
@@ -465,6 +477,18 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
     @Override
     public <T> int delete(T... values) {
         if (values.length == 0) return -1;
+        if (values.length > 1) { //检查对象是否都是同一个Entity类
+            Class clazz = null;
+            for (T val : values) {
+                if (clazz == null) {
+                    clazz = val.getClass();
+                    continue;
+                }
+                if (clazz != val.getClass()) {
+                    throw new RuntimeException("DataSource.delete must the same Class Entity, but diff is " + clazz + " and " + val.getClass());
+                }
+            }
+        }
         final EntityInfo<T> info = loadEntityInfo((Class<T>) values[0].getClass());
         if (info.isVirtualEntity()) { //虚拟表只更新缓存Cache
             return delete(null, info, values);
@@ -625,6 +649,18 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
     @Override
     public <T> int update(T... values) {
         if (values.length == 0) return 0;
+        if (values.length > 1) { //检查对象是否都是同一个Entity类
+            Class clazz = null;
+            for (T val : values) {
+                if (clazz == null) {
+                    clazz = val.getClass();
+                    continue;
+                }
+                if (clazz != val.getClass()) {
+                    throw new RuntimeException("DataSource.update must the same Class Entity, but diff is " + clazz + " and " + val.getClass());
+                }
+            }
+        }
         final EntityInfo<T> info = loadEntityInfo((Class<T>) values[0].getClass());
         if (info.isVirtualEntity()) {
             return update(null, info, values);
