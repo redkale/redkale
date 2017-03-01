@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en-us">
+    <head>
+        <meta charset="UTF-8">
+        <title>Redkale(红菜苔)--基于Java 8全新的微服务开源框架 - Redkale官网</title>
+        <meta name="keywords" content="Redkale,redkale,java,微服务,架构"/>
+        <meta name="description" content="Redkale(红菜苔)是基于Java 8全新的微服务开源框架"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    </head>
+    <body>
+        <section class="page-header">
+            <a href="index.html" class="project-name">Redkale</a>
+            <h2 class="project-tagline"></h2>
+            <a href="redkale.html" class="btn">Redkale 入门</a> 
+            <a href="convert.html" class="btn">Convert 组件</a> 
+            <a href="service.html" class="btn">Service 组件</a> 
+            <a href="source.html" class="btn">Source 组件</a> 
+            <a href="net.html" class="btn">Net 组件</a> 
+            <a href="watch.html" class="btn">Watch 组件</a> 
+            <a href="plugins.html" class="btn">Redkale 插件</a>
+            <a href="articles.html" class="btn">技术文章</a> 
+        </section>
+
+        <section class="main-content">
+            <h3>Redkale 技术详解 04 -- Java DataSource简易的DB操作</h3>
+
+            <p>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;长期以来，Hibernate和Mybatis一直是大家使用最多的持久层开发框架。针对这两种框架网络上是各种比较，各种讨论优缺点。其实这两个框架都是2002年左右发布的(算上前身ibatis)，如同当年Spring鄙视JavaEE是庞然大物一样，现如今Spring、Hibernate、Mybatis这些老框架经历了15个年头也已笨重不堪，Mybatis的jar包近6M，Hibernate加上依赖包更是大得离谱。一个Tomcat(不算webapps)也不过才7-8M， 而一个DB框架
+            </p>
+            <p>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Creator是一个接口， 只有一个public T create(Object... params)方法，可变参数既适合空参数的Constructor也适合含参数的Constructor。得利于Java 8的新语法特性可以在接口上加上静态方法，Creator对象可以通过Creator.create(Class clazz)方法创建。构建原理是通过Constructor的参数来动态创建的。
+            </p>
+            <div class="highlight"><pre><span class="n">Constructor</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">constructor0</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
+<span class="k">for</span> <span class="o">(</span><span class="n">Constructor</span> <span class="n">c</span> <span class="o">:</span> <span class="n">clazz</span><span class="o">.</span><span class="na">getConstructors</span><span class="o">())</span> <span class="o">{</span>  <span class="c1">//优先找public 的构造函数</span>
+<span class="k">if</span> <span class="o">(</span><span class="n">c</span><span class="o">.</span><span class="na">getParameterCount</span><span class="o">()</span> <span class="o">==</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">constructor0</span> <span class="o">=</span> <span class="n">c</span><span class="o">;</span>
+        <span class="k">break</span><span class="o">;</span>
+<a href="articles.html"></a>
+    <span class="o">}</span>
+<span class="o">}</span>
+<span class="k">if</span> <span class="o">(</span><span class="n">constructor0</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span><span class="c1">//其次找非private带ConstructorProperties的构造函数</span>
+    <span class="k">for</span> <span class="o">(</span><span class="n">Constructor</span> <span class="n">c</span> <span class="o">:</span> <span class="n">clazz</span><span class="o">.</span><span class="na">getDeclaredConstructors</span><span class="o">())</span> <span class="o">{</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">Modifier</span><span class="o">.</span><span class="na">isPrivate</span><span class="o">(</span><span class="n">c</span><span class="o">.</span><span class="na">getModifiers</span><span class="o">()))</span> <span class="k">continue</span><span class="o">;</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">c</span><span class="o">.</span><span class="na">getAnnotation</span><span class="o">(</span><span class="n">ConstructorProperties</span><span class="o">.</span><span class="na">class</span><span class="o">)</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+            <span class="n">constructor0</span> <span class="o">=</span> <span class="n">c</span><span class="o">;</span>
+            <span class="k">break</span><span class="o">;</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+<span class="k">if</span> <span class="o">(</span><span class="n">constructor0</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span><span class="c1">//再次找非private且带-parameters编译项的构造函数 java 8以上才支持</span>
+    <span class="k">for</span> <span class="o">(</span><span class="n">Constructor</span> <span class="n">c</span> <span class="o">:</span> <span class="n">clazz</span><span class="o">.</span><span class="na">getDeclaredConstructors</span><span class="o">())</span> <span class="o">{</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">Modifier</span><span class="o">.</span><span class="na">isPrivate</span><span class="o">(</span><span class="n">c</span><span class="o">.</span><span class="na">getModifiers</span><span class="o">()))</span> <span class="k">continue</span><span class="o">;</span>
+        <span class="n">Parameter</span><span class="o">[]</span> <span class="n">params</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="na">getParameters</span><span class="o">();</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">params</span><span class="o">.</span><span class="na">length</span> <span class="o">==</span> <span class="mi">0</span><span class="o">)</span> <span class="k">continue</span><span class="o">;</span>
+        <span class="kt">boolean</span> <span class="n">flag</span> <span class="o">=</span> <span class="kc">true</span><span class="o">;</span>
+        <span class="k">for</span> <span class="o">(</span><span class="n">Parameter</span> <span class="n">param</span> <span class="o">:</span> <span class="n">params</span><span class="o">)</span> <span class="o">{</span>
+            <span class="k">try</span> <span class="o">{</span>
+                <span class="n">clazz</span><span class="o">.</span><span class="na">getDeclaredField</span><span class="o">(</span><span class="n">param</span><span class="o">.</span><span class="na">getName</span><span class="o">());</span>
+            <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">Exception</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+                <span class="n">flag</span> <span class="o">=</span> <span class="kc">false</span><span class="o">;</span>
+                <span class="k">break</span><span class="o">;</span>
+            <span class="o">}</span>
+        <span class="o">}</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">flag</span><span class="o">)</span> <span class="o">{</span>
+            <span class="n">constructor0</span> <span class="o">=</span> <span class="n">c</span><span class="o">;</span>
+            <span class="k">break</span><span class="o">;</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+<span class="k">if</span> <span class="o">(</span><span class="n">constructor0</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span><span class="c1">//最后找非private的空构造函数</span>
+    <span class="k">for</span> <span class="o">(</span><span class="n">Constructor</span> <span class="n">c</span> <span class="o">:</span> <span class="n">clazz</span><span class="o">.</span><span class="na">getDeclaredConstructors</span><span class="o">())</span> <span class="o">{</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">Modifier</span><span class="o">.</span><span class="na">isPrivate</span><span class="o">(</span><span class="n">c</span><span class="o">.</span><span class="na">getModifiers</span><span class="o">()))</span> <span class="k">continue</span><span class="o">;</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">c</span><span class="o">.</span><span class="na">getParameterCount</span><span class="o">()</span> <span class="o">==</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{</span>
+            <span class="n">constructor0</span> <span class="o">=</span> <span class="n">c</span><span class="o">;</span>
+            <span class="k">break</span><span class="o">;</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+<span class="o">}</span></pre></div>
+            <p>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;从以上代码可以看出，根据优先级选择Constructor，为了减少学习成本，Creator直接重用了java.beans.ConstructorProperties注解，又因ConstructorProperties只能标记在Constructor上，因此定义一个Creator.ConstructorParameters注解，用于标记在Creator的create方法上。
+            </p>
+            <div class="highlight"><pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Record</span> <span class="o">{</span>
+
+    <span class="kd">private</span> <span class="kd">final</span> <span class="kt">int</span> <span class="n">id</span><span class="o">;</span>
+
+    <span class="kd">private</span> <span class="n">String</span> <span class="n">name</span><span class="o">;</span>
+
+    <span class="nd">@ConstructorProperties</span><span class="o">({</span><span class="s">&quot;id&quot;</span><span class="o">,</span> <span class="s">&quot;name&quot;</span><span class="o">})</span>
+    <span class="n">Record</span><span class="o">(</span><span class="kt">int</span> <span class="n">id</span><span class="o">,</span> <span class="n">String</span> <span class="n">name</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">id</span> <span class="o">=</span> <span class="n">id</span><span class="o">;</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">name</span> <span class="o">=</span> <span class="n">name</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="kt">int</span> <span class="nf">getId</span><span class="o">()</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="n">id</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="n">String</span> <span class="nf">getName</span><span class="o">()</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="n">name</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">setName</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">name</span> <span class="o">=</span> <span class="n">name</span><span class="o">;</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+
+
+<span class="na"><b>Record.class通过ASM自动构建与Record同package的Creator类如下:</b></span>
+
+<span class="kd">public</span> <span class="kd">final</span> <span class="kd">class</span> <span class="nc">Record_DynCreator</span> <span class="kd">implements</span> <span class="n">Creator</span><span class="o">&lt;</span><span class="n">Record</span><span class="o">&gt;</span> <span class="o">{</span>
+
+    <span class="nd">@Override</span>
+    <span class="nd">@Creator.ConstructorParameters</span><span class="o">({</span><span class="s">&quot;id&quot;</span><span class="o">,</span> <span class="s">&quot;name&quot;</span><span class="o">})</span>
+    <span class="kd">public</span> <span class="n">Record</span> <span class="nf">create</span><span class="o">(</span><span class="n">Object</span><span class="o">...</span> <span class="n">params</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">params</span><span class="o">[</span><span class="mi">0</span><span class="o">]</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="n">params</span><span class="o">[</span><span class="mi">0</span><span class="o">]</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span>
+        <span class="k">return</span> <span class="k">new</span> <span class="nf">Record</span><span class="o">((</span><span class="n">Integer</span><span class="o">)</span> <span class="n">params</span><span class="o">[</span><span class="mi">0</span><span class="o">],</span> <span class="o">(</span><span class="n">String</span><span class="o">)</span> <span class="n">params</span><span class="o">[</span><span class="mi">1</span><span class="o">]);</span>
+    <span class="o">}</span>
+<span class="o">}</span></pre></div>
+            <p>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如上代码，若构造参数是primitive类，而Creator.create传入的参数可能是null，因此需要给null的primitive对象赋予默认值0。细心的人可能发现了Record的构造函数并不是public的，虽然Record_DynCreator与Record在同一package，但由于两者不是同一个ClassLoader，故不能直接new Record。Redkale曲线救国，通过URLClassLoader的私有方法在Record.class的ClassLoader加载Record_DynCreator。
+            </p>
+            <div class="highlight"><pre><span class="k">if</span> <span class="o">(</span><span class="n">loader</span> <span class="k">instanceof</span> <span class="n">URLClassLoader</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="n">Modifier</span><span class="o">.</span><span class="na">isPublic</span><span class="o">(</span><span class="n">constructor</span><span class="o">.</span><span class="na">getModifiers</span><span class="o">()))</span> <span class="o">{</span>
+    <span class="k">try</span> <span class="o">{</span>
+        <span class="kd">final</span> <span class="n">URLClassLoader</span> <span class="n">urlLoader</span> <span class="o">=</span> <span class="o">(</span><span class="n">URLClassLoader</span><span class="o">)</span> <span class="n">loader</span><span class="o">;</span>
+        <span class="kd">final</span> <span class="n">URL</span> <span class="n">url</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">URL</span><span class="o">(</span><span class="s">&quot;memclass&quot;</span><span class="o">,</span> <span class="s">&quot;localhost&quot;</span><span class="o">,</span> <span class="o">-</span><span class="mi">1</span><span class="o">,</span> <span class="s">&quot;/&quot;</span> <span class="o">+</span> <span class="n">newDynName</span><span class="o">.</span><span class="na">replace</span><span class="o">(</span><span class="sc">&#39;/&#39;</span><span class="o">,</span> <span class="sc">&#39;.&#39;</span><span class="o">)</span> <span class="o">+</span> <span class="s">&quot;/&quot;</span><span class="o">,</span> <span class="k">new</span> <span class="nf">URLStreamHandler</span><span class="o">()</span> <span class="o">{</span>
+            <span class="nd">@Override</span>
+            <span class="kd">protected</span> <span class="n">URLConnection</span> <span class="nf">openConnection</span><span class="o">(</span><span class="n">URL</span> <span class="n">u</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
+                <span class="k">return</span> <span class="k">new</span> <span class="nf">URLConnection</span><span class="o">(</span><span class="n">u</span><span class="o">)</span> <span class="o">{</span>
+                    <span class="nd">@Override</span>
+                    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">connect</span><span class="o">()</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
+                    <span class="o">}</span>
+
+                    <span class="nd">@Override</span>
+                    <span class="kd">public</span> <span class="n">InputStream</span> <span class="nf">getInputStream</span><span class="o">()</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
+                        <span class="k">return</span> <span class="k">new</span> <span class="nf">ByteArrayInputStream</span><span class="o">(</span><span class="n">bytes</span><span class="o">);</span>
+                    <span class="o">}</span>
+                <span class="o">};</span>
+            <span class="o">}</span>
+        <span class="o">});</span>
+        <span class="n">Method</span> <span class="n">addURLMethod</span> <span class="o">=</span> <span class="n">URLClassLoader</span><span class="o">.</span><span class="na">class</span><span class="o">.</span><span class="na">getDeclaredMethod</span><span class="o">(</span><span class="s">&quot;addURL&quot;</span><span class="o">,</span> <span class="n">URL</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+        <span class="n">addURLMethod</span><span class="o">.</span><span class="na">setAccessible</span><span class="o">(</span><span class="kc">true</span><span class="o">);</span>
+        <span class="n">addURLMethod</span><span class="o">.</span><span class="na">invoke</span><span class="o">(</span><span class="n">urlLoader</span><span class="o">,</span> <span class="n">url</span><span class="o">);</span>
+        <span class="n">resultClazz</span> <span class="o">=</span> <span class="n">urlLoader</span><span class="o">.</span><span class="na">loadClass</span><span class="o">(</span><span class="n">newDynName</span><span class="o">.</span><span class="na">replace</span><span class="o">(</span><span class="sc">&#39;/&#39;</span><span class="o">,</span> <span class="sc">&#39;.&#39;</span><span class="o">));</span>
+    <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">Throwable</span> <span class="n">t</span><span class="o">)</span> <span class="o">{</span> <span class="c1">//异常无需理会， 使用下一种loader方式</span>
+        <span class="n">t</span><span class="o">.</span><span class="na">printStackTrace</span><span class="o">();</span>
+    <span class="o">}</span>
+<span class="o">}</span></pre></div>
+            <p>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如上代码，构建一个虚拟协议的URL来实现加载，若Record.class的ClassLoader不是URLClassLoader导致resultClazz为null则会抛出异常。
+            </p>
+            <p>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Creator是一个典型通过ASM构建一个简单功能地动态类，同类型还有 <a href="https://redkale.org/javadoc/org/redkale/util/Attribute.html" target="_blank">org.redkale.util.Attribute</a>、<a href="https://redkale.org/javadoc/org/redkale/util/Reproduce.html" target="_blank">org.redkale.util.Reproduce</a>。
+            </p>            
+            <br/>
+            <p>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;转载请注明出处：<a href="https://redkale.org/article_creator.html" target="_blank">https://redkale.org/article_creator.html</a>
+            </p>
+
+            <footer class="site-footer">
+                <span class="site-footer-owner">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;欢迎加入Redkale QQ群: 527523235</span>
+            </footer>
+
+        </section>
+
+        <script>
+            var _hmt = _hmt || [];
+            (function () {
+                var hm = document.createElement("script");
+                hm.src = "//hm.baidu.com/hm.js?b4e05d7de8b5f3401dd93e3c6b35ffa5";
+                var s = document.getElementsByTagName("script")[0];
+                s.parentNode.insertBefore(hm, s);
+            })();
+        </script>
+    </body>
+</html>
