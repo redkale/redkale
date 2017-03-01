@@ -926,7 +926,6 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
                 if (!virtual) {
                     if (setsql.length() > 0) setsql.append(", ");
                     String c = info.getSQLColumn(null, col.getColumn());
-                    setsql.append(c).append(" = ");
                     if (col.getValue() instanceof byte[]) {
                         if (blobs == null) blobs = new ArrayList<>();
                         blobs.add((byte[]) col.getValue());
