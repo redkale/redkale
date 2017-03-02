@@ -29,9 +29,7 @@ public interface DistributeTableStrategy<T> {
      *
      * @return 带库名的全表名
      */
-    default String getTable(String table, Serializable primary) {
-        return null;
-    }
+    public String getTable(String table, Serializable primary);
 
     /**
      * 获取对象的表名
@@ -43,9 +41,7 @@ public interface DistributeTableStrategy<T> {
      *
      * @return 带库名的全表名
      */
-    default String getTable(String table, FilterNode node) {
-        return null;
-    }
+    public String getTable(String table, FilterNode node);
 
     /**
      * 获取对象的表名

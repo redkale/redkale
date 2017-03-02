@@ -17,9 +17,8 @@ import org.redkale.source.*;
 public class LoginRecord extends BaseEntity {
 
     @Id
-    @GeneratedValue
-    @Column(comment = "UUID")
-    private String loginid = ""; //UUID
+    @Column(comment = "主键ID; 值=create36time(9位)+UUID(32位)")
+    private String loginid = ""; //主键ID; 值=create36time(9位)+UUID(32位)
 
     @Column(updatable = false, comment = "C端用户ID")
     private long userid; //C端用户ID
@@ -129,9 +128,16 @@ public class LoginRecord extends BaseEntity {
             return getTable(table, 0, bean.getCreatetime());
         }
 
+        //根据主键ID查询单个记录时调用本方法
+        @Override
+        public String getTable(String table, Serializable primary) {
+            String id = (String) primary;
+            return getTable(table, 0, Long.parseLong(id.substring(0, 9), 36));
+        }
+
         private String getTable(String table, int day, long createtime) {
             int pos = table.indexOf('.');
-            String year = (day > 0 ? "" + day / 10000 : String.format(yearformat, createtime));
+            String year = (day > 0 ? "" + day / 10000 : String.format(yearformat, createtime)); //没有day取createtime
             return "platf_login_" + year + "." + table.substring(pos + 1) + "_" + (day > 0 ? day : String.format(dayformat, createtime));
         }
     }
