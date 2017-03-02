@@ -28,33 +28,46 @@ import org.redkale.util.*;
 @SuppressWarnings("unchecked")
 public final class EntityCache<T> {
 
+    //日志
     private static final Logger logger = Logger.getLogger(EntityCache.class.getName());
 
+    //主键与对象的键值对
     private ConcurrentHashMap<Serializable, T> map = new ConcurrentHashMap();
 
     // CopyOnWriteArrayList 插入慢、查询快; 10w数据插入需要3.2秒; ConcurrentLinkedQueue 插入快、查询慢；10w数据查询需要 0.062秒，  查询慢40%;
     private Collection<T> list = new ConcurrentLinkedQueue();
 
+    //Flipper.sort转换成Comparator的缓存
     private final Map<String, Comparator<T>> sortComparators = new ConcurrentHashMap<>();
 
+    //Entity类
     private final Class<T> type;
 
+    //接口返回的对象是否需要复制一份
     private final boolean needcopy;
 
+    //Entity构建器
     private final Creator<T> creator;
 
+    //主键字段
     private final Attribute<T, Serializable> primary;
 
+    //新增时的复制器， 排除了标记为&#064;Transient的字段
     private final Reproduce<T, T> newReproduce;
 
+    //修改时的复制器， 排除了标记为&#064;Transient或&#064;Column(updatable=false)的字段
     private final Reproduce<T, T> chgReproduce;
 
+    //是否已经全量加载过
     private volatile boolean fullloaded;
 
+    //Entity信息
     final EntityInfo<T> info;
 
+    //&#064;Cacheable的定时更新秒数，为0表示不定时更新
     final int interval;
 
+    //&#064;Cacheable的定时器
     private ScheduledThreadPoolExecutor scheduler;
 
     public EntityCache(final EntityInfo<T> info, final Cacheable c) {

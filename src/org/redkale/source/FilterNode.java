@@ -16,7 +16,7 @@ import org.redkale.util.*;
  * 注意： <br>
  * column的值以#开头的视为虚拟字段，不在过滤范围内 <br>
  * 在调用 createSQLExpress 之前必须先调用 createSQLJoin <br>
- * 在调用 createPredicate 之前必须先调用 isCacheUseable
+ * 在调用 createPredicate 之前必须先调用 isCacheUseable  <br>
  *
  * <p>
  * 详情见: https://redkale.org

@@ -48,65 +48,99 @@ import org.w3c.dom.*;
  */
 public final class Application {
 
-    //当前进程启动的时间， 类型： long
+    /**
+     * 当前进程启动的时间， 类型： long
+     */
     public static final String RESNAME_APP_TIME = "APP_TIME";
 
-    //当前进程的根目录， 类型：String、File、Path
+    /**
+     * 当前进程的根目录， 类型：String、File、Path
+     */
     public static final String RESNAME_APP_HOME = "APP_HOME";
 
-    //application.xml 文件中resources节点的内容， 类型： AnyValue
+    /**
+     * application.xml 文件中resources节点的内容， 类型： AnyValue
+     */
     public static final String RESNAME_APP_GRES = "APP_GRES";
 
-    //当前进程节点的name， 类型：String
+    /**
+     * 当前进程节点的name， 类型：String
+     */
     public static final String RESNAME_APP_NODE = "APP_NODE";
 
-    //当前进程节点的IP地址， 类型：InetAddress、String
+    /**
+     * 当前进程节点的IP地址， 类型：InetAddress、String
+     */
     public static final String RESNAME_APP_ADDR = "APP_ADDR";
 
-    //当前Service的IP地址+端口 类型: SocketAddress、InetSocketAddress、String
+    /**
+     * 当前Service的IP地址+端口 类型: SocketAddress、InetSocketAddress、String
+     */
     public static final String RESNAME_SERVER_ADDR = "SERVER_ADDR";
 
-    //当前SNCP Server所属的组  类型: String
+    /**
+     * 当前SNCP Server所属的组 类型: String
+     */
     public static final String RESNAME_SERVER_GROUP = "SERVER_GROUP";
 
-    //当前Server的ROOT目录 类型：String、File、Path
+    /**
+     * 当前Server的ROOT目录 类型：String、File、Path
+     */
     public static final String RESNAME_SERVER_ROOT = Server.RESNAME_SERVER_ROOT;
 
+    //每个地址对应的Group名
     final Map<InetSocketAddress, String> globalNodes = new HashMap<>();
 
+    //协议地址的Group集合
     final Map<String, GroupInfo> globalGroups = new HashMap<>();
 
+    //本地IP地址
     final InetAddress localAddress;
 
+    //CacheSource 资源
     final List<CacheSource> cacheSources = new CopyOnWriteArrayList<>();
 
+    //DataSource 资源
     final List<DataSource> dataSources = new CopyOnWriteArrayList<>();
 
+    //NodeServer 资源
     final List<NodeServer> servers = new CopyOnWriteArrayList<>();
 
+    //传输端的ByteBuffer对象池
     final ObjectPool<ByteBuffer> transportBufferPool;
 
+    //传输端的线程池
     final ExecutorService transportExecutor;
 
+    //传输端的ChannelGroup
     final AsynchronousChannelGroup transportChannelGroup;
 
+    //全局根ResourceFactory
     final ResourceFactory resourceFactory = ResourceFactory.root();
 
+    //临时计数器
     CountDownLatch servicecdl;  //会出现两次赋值
 
     //--------------------------------------------------------------------------------------------    
+    //是否用于main方法运行
     private final boolean singletonrun;
 
+    //根WatchFactory
     private final WatchFactory watchFactory = WatchFactory.root();
 
+    //进程根目录
     private final File home;
 
+    //日志
     private final Logger logger;
 
+    //服务配置项
     private final AnyValue config;
 
+    //服务启动时间
     private final long startTime = System.currentTimeMillis();
 
+    //Server启动的计数器，用于确保所有Server都启动完后再进行下一步处理
     private final CountDownLatch serversLatch;
 
     private Application(final AnyValue config) {
