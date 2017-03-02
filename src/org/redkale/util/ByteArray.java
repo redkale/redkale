@@ -328,23 +328,19 @@ public final class ByteArray {
     }
 
     /**
-     * 将指定的起始位置和长度按指定字符集并转义后转成字符串
-     *
-     * @param offset  起始位置
-     * @param len     长度
-     * @param charset 字符集
-     *
-     * @return 字符串
+     * 转义字符串
      */
-    public String toDecodeString(final int offset, int len, final Charset charset) {
-        int index = offset;
-        for (int i = offset; i < (offset + len); i++) {
+    public void urlDecode() {
+        int len = this.count;
+        int index = 0;
+        for (int i = 0; i < len; i++) {
             switch (content[i]) {
                 case '+':
                     content[index] = ' ';
                     break;
                 case '%':
                     content[index] = (byte) ((hexBit(content[++i]) * 16 + hexBit(content[++i])));
+                    this.count -= 2;
                     break;
                 default:
                     content[index] = content[i];
@@ -352,12 +348,6 @@ public final class ByteArray {
             }
             index++;
         }
-        for (int i = index + 1; i < (offset + len); i++) {
-            content[i] = ' ';
-        }
-        len = index - offset;
-        if (charset == null) return new String(Utility.decodeUTF8(content, offset, len));
-        return new String(content, offset, len, charset);
     }
 
     private static int hexBit(byte b) {

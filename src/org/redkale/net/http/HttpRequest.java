@@ -92,6 +92,7 @@ public class HttpRequest extends Request<HttpContext> {
         if (!readLine(buffer, array)) return -1;
         Charset charset = this.context.getCharset();
         int index = 0;
+        array.urlDecode(); 
         int offset = array.find(index, ' ');
         if (offset <= 0) return -1;
         this.method = array.toString(index, offset, charset).trim();
@@ -102,10 +103,10 @@ public class HttpRequest extends Request<HttpContext> {
         if (off > 0) offset = off;
         int qst = array.find(index, offset, (byte) '?');
         if (qst > 0) {
-            this.requestURI = array.toDecodeString(index, qst - index, charset).trim();
+            this.requestURI = array.toString(index, qst - index, charset).trim();
             addParameter(array, qst + 1, offset - qst - 1);
         } else {
-            this.requestURI = array.toDecodeString(index, offset - index, charset).trim();
+            this.requestURI = array.toString(index, offset - index, charset).trim();
         }
         if (this.requestURI.contains("../")) return -1;
         index = ++offset;
@@ -174,6 +175,7 @@ public class HttpRequest extends Request<HttpContext> {
 
     private void parseBody() {
         if (this.boundary || bodyparsed) return;
+        array.urlDecode(); 
         addParameter(array, 0, array.size());
         bodyparsed = true;
     }
@@ -188,10 +190,10 @@ public class HttpRequest extends Request<HttpContext> {
             if (valpos > 0) addParameter(array, valpos + 1, limit - valpos - 1);
             return;
         }
-        String name = array.toDecodeString(offset, keypos - offset, charset);
+        String name = array.toString(offset, keypos - offset, charset);
         if (name.charAt(0) == '<') return; //内容可能是xml格式; 如: <?xml version="1.0"
         ++keypos;
-        String value = array.toDecodeString(keypos, (valpos < 0) ? (limit - keypos) : (valpos - keypos), charset);
+        String value = array.toString(keypos, (valpos < 0) ? (limit - keypos) : (valpos - keypos), charset);
         this.params.addValue(name, value);
         if (valpos >= 0) {
             addParameter(array, valpos + 1, limit - valpos - 1);
