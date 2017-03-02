@@ -17,9 +17,8 @@ import org.redkale.source.*;
 public class LoginUserRecord extends BaseEntity {
 
     @Id
-    @GeneratedValue
-    @Column(comment = "UUID")
-    private String seqid = ""; //UUID
+    @Column(comment = "记录ID; 值=userid+'-'+UUID")
+    private String seqid = ""; //记录ID; 值=userid+'-'+UUID
 
     @Column(updatable = false, comment = "C端用户ID")
     private long userid; //C端用户ID
@@ -79,8 +78,9 @@ public class LoginUserRecord extends BaseEntity {
         }
 
         @Override
-        public String getTable(String table, Serializable userid) {
-            return getHashTable(table, (int) (((Long) userid) % 100));
+        public String getTable(String table, Serializable primary) {
+            String id = (String) primary;
+            return getHashTable(table, (int) (Long.parseLong(id.substring(0, id.indexOf('-'))) % 100));
         }
 
         private String getHashTable(String table, int hash) {

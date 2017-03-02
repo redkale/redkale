@@ -17,6 +17,32 @@ import org.redkale.source.*;
 @DistributeTable(strategy = UserDetail.TableStrategy.class)
 public class UserDetail extends BaseEntity {
 
+    public static class TableStrategy implements DistributeTableStrategy<UserDetail> {
+
+        @Override
+        public String getTable(String table, UserDetail bean) {
+            return getTable(table, bean.getUserid());
+        }
+
+        @Override
+        public String getTable(String table, FilterNode node) {
+            Serializable id = node.findValue("userid");
+            if (id != null) return getTable(table, id);
+            return getHashTable(table, (Integer) node.findValue("#hash"));
+        }
+
+        @Override
+        public String getTable(String table, Serializable userid) {
+            return getHashTable(table, (int) (((Long) userid) % 100));
+        }
+
+        private String getHashTable(String table, int hash) {
+            int pos = table.indexOf('.');
+            return "platf_user." + table.substring(pos + 1) + "_" + (hash > 9 ? hash : ("0" + hash));
+        }
+
+    }
+
     @Id
     private long userid; //用户ID
 
@@ -83,31 +109,5 @@ public class UserDetail extends BaseEntity {
 
     public void setCreatetime(long createtime) {
         this.createtime = createtime;
-    }
-
-    public static class TableStrategy implements DistributeTableStrategy<UserDetail> {
-
-        @Override
-        public String getTable(String table, UserDetail bean) {
-            return getTable(table, bean.getUserid());
-        }
-
-        @Override
-        public String getTable(String table, FilterNode node) {
-            Serializable id = node.findValue("userid");
-            if (id != null) return getTable(table, id);
-            return getHashTable(table, (Integer) node.findValue("#hash"));
-        }
-
-        @Override
-        public String getTable(String table, Serializable userid) {
-            return getHashTable(table, (int) (((Long) userid) % 100));
-        }
-
-        private String getHashTable(String table, int hash) {
-            int pos = table.indexOf('.');
-            return "platf_user." + table.substring(pos + 1) + "_" + (hash > 9 ? hash : ("0" + hash));
-        }
-
     }
 }
