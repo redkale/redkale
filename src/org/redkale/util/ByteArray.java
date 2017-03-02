@@ -328,26 +328,47 @@ public final class ByteArray {
     }
 
     /**
-     * 转义字符串
+     * 将指定的起始位置和长度按指定字符集并转义后转成字符串
+     *
+     * @param offset  起始位置
+     * @param len     长度
+     * @param charset 字符集
+     *
+     * @return 字符串
      */
-    public void urlDecode() {
-        int len = this.count;
-        int index = 0;
-        for (int i = 0; i < len; i++) {
-            switch (content[i]) {
-                case '+':
-                    content[index] = ' ';
-                    break;
-                case '%':
-                    content[index] = (byte) ((hexBit(content[++i]) * 16 + hexBit(content[++i])));
-                    this.count -= 2;
-                    break;
-                default:
-                    content[index] = content[i];
-                    break;
+    public String toDecodeString(final int offset, int len, final Charset charset) {
+        int start = offset;
+        final int end = offset + len;
+        boolean flag = false; //是否需要转义
+        byte[] bs = content;
+        for (int i = offset; i < end; i++) {
+            if (content[i] == '+' || content[i] == '%') {
+                flag = true;
+                break;
             }
-            index++;
         }
+        if (flag) {
+            int index = 0;
+            bs = new byte[len];
+            for (int i = offset; i < end; i++) {
+                switch (content[i]) {
+                    case '+':
+                        bs[index] = ' ';
+                        break;
+                    case '%':
+                        bs[index] = (byte) ((hexBit(content[++i]) * 16 + hexBit(content[++i])));
+                        break;
+                    default:
+                        bs[index] = content[i];
+                        break;
+                }
+                index++;
+            }
+            start = 0;
+            len = index;
+        }
+        if (charset == null) return new String(Utility.decodeUTF8(bs, start, len));
+        return new String(bs, start, len, charset);
     }
 
     private static int hexBit(byte b) {
