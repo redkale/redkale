@@ -28,9 +28,9 @@ import org.redkale.util.AnyValue.DefaultAnyValue;
 @SuppressWarnings("unchecked")
 public final class ClassFilter<T> {
 
-    private static final Logger logger = Logger.getLogger(ClassFilter.class.getName());
+    private static final Logger logger = Logger.getLogger(ClassFilter.class.getName()); //日志对象
 
-    private static final boolean finer = logger.isLoggable(Level.FINER);
+    private static final boolean finer = logger.isLoggable(Level.FINER); //日志级别
 
     private final Set<FilterEntry<T>> entrys = new HashSet<>(); //符合条件的结果
 

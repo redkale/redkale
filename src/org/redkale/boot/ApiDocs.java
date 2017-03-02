@@ -15,15 +15,17 @@ import org.redkale.source.*;
 import org.redkale.util.*;
 
 /**
+ * API接口文档生成类，作用：生成Application实例中所有HttpServer的可用HttpServlet的API接口方法   <br>
  * 继承 HttpBaseServlet 是为了获取 WebAction 信息
  *
+ * <p>
  * 详情见: https://redkale.org
  *
  * @author zhangjx
  */
 public class ApiDocs extends HttpBaseServlet {
 
-    private final Application app;
+    private final Application app; //Application全局对象
 
     public ApiDocs(Application app) {
         this.app = app;

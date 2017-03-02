@@ -165,7 +165,7 @@ public abstract class NodeServer {
         initResource(); //给 DataSource、CacheSource 注册依赖注入时的监听回调事件。
         String interceptorClass = this.serverConf.getValue("interceptor", "");
         if (!interceptorClass.isEmpty()) {
-            Class clazz = Class.forName(interceptorClass); 
+            Class clazz = Class.forName(interceptorClass);
             this.interceptor = (NodeInterceptor) clazz.newInstance();
         }
 
@@ -276,8 +276,8 @@ public abstract class NodeServer {
                 if (WebSocketNode.class.isAssignableFrom(type)) continue;
             }
             if (entry.getName().contains("$")) throw new RuntimeException("<name> value cannot contains '$' in " + entry.getProperty());
-            if (resourceFactory.find(entry.getName(), type) != null) { //Server加载Service时需要判断是否已经加载过了。
-                Service oldother = resourceFactory.find(entry.getName(), type);
+            Service oldother = resourceFactory.find(entry.getName(), type);
+            if (oldother != null) { //Server加载Service时需要判断是否已经加载过了。
                 interceptorServiceWrappers.add(new NodeInterceptor.InterceptorServiceWrapper(entry.getName(), type, oldother));
                 continue;
             }
@@ -403,7 +403,7 @@ public abstract class NodeServer {
         Transport first = transports.get(0);
         GroupInfo ginfo = application.findGroupInfo(first.getName());
         Transport newTransport = new Transport(groupid, ginfo.getProtocol(), application.getWatchFactory(),
-            ginfo.getKind(), application.transportBufferPool, application.transportChannelGroup, this.sncpAddress, addrs);
+            ginfo.getSubprotocol(), application.transportBufferPool, application.transportChannelGroup, this.sncpAddress, addrs);
         synchronized (application.resourceFactory) {
             transport = application.resourceFactory.find(groupid, Transport.class);
             if (transport == null) {
@@ -429,7 +429,7 @@ public abstract class NodeServer {
             Set<InetSocketAddress> addrs = ginfo.copyAddrs();
             if (addrs == null) throw new RuntimeException("Not found <group> = " + group + " on <resources> ");
             transport = new Transport(group, ginfo.getProtocol(), application.getWatchFactory(),
-                ginfo.getKind(), application.transportBufferPool, application.transportChannelGroup, this.sncpAddress, addrs);
+                ginfo.getSubprotocol(), application.transportBufferPool, application.transportChannelGroup, this.sncpAddress, addrs);
             application.resourceFactory.register(group, transport);
         }
         return transport;

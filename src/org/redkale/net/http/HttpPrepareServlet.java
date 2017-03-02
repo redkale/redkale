@@ -17,8 +17,8 @@ import org.redkale.util.*;
 import org.redkale.watch.*;
 
 /**
- * HTTP Servlet的总入口，请求在HttpPrepareServlet中进行分流。
- * 一个HttpServer只有一个HttpPrepareServlet， 用于管理所有HttpServlet。
+ * HTTP Servlet的总入口，请求在HttpPrepareServlet中进行分流。  <br>
+ * 一个HttpServer只有一个HttpPrepareServlet， 用于管理所有HttpServlet。  <br>
  *
  * <p>
  * 详情见: https://redkale.org

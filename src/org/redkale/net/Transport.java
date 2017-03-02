@@ -44,7 +44,7 @@ public final class Transport {
 
     protected final String name; //即<group>的name属性
 
-    protected final String kind; //即<group>的kind属性
+    protected final String subprotocol; //即<group>的subprotocol属性
 
     protected final boolean tcp;
 
@@ -62,16 +62,16 @@ public final class Transport {
 
     protected final ConcurrentHashMap<SocketAddress, BlockingQueue<AsyncConnection>> connPool = new ConcurrentHashMap<>();
 
-    public Transport(String name, WatchFactory watch, String kind, final ObjectPool<ByteBuffer> transportBufferPool,
+    public Transport(String name, WatchFactory watch, String subprotocol, final ObjectPool<ByteBuffer> transportBufferPool,
         final AsynchronousChannelGroup transportChannelGroup, final InetSocketAddress clientAddress, final Collection<InetSocketAddress> addresses) {
-        this(name, DEFAULT_PROTOCOL, watch, kind, transportBufferPool, transportChannelGroup, clientAddress, addresses);
+        this(name, DEFAULT_PROTOCOL, watch, subprotocol, transportBufferPool, transportChannelGroup, clientAddress, addresses);
     }
 
-    public Transport(String name, String protocol, WatchFactory watch, String kind, final ObjectPool<ByteBuffer> transportBufferPool,
+    public Transport(String name, String protocol, WatchFactory watch, String subprotocol, final ObjectPool<ByteBuffer> transportBufferPool,
         final AsynchronousChannelGroup transportChannelGroup, final InetSocketAddress clientAddress, final Collection<InetSocketAddress> addresses) {
         this.name = name;
         this.watch = watch;
-        this.kind = kind == null ? "" : kind.trim();
+        this.subprotocol = subprotocol == null ? "" : subprotocol.trim();
         this.protocol = protocol;
         this.tcp = "TCP".equalsIgnoreCase(protocol);
         this.group = transportChannelGroup;
@@ -83,14 +83,17 @@ public final class Transport {
     public Transport(final Collection<Transport> transports) {
         Transport first = null;
         List<String> tmpgroup = new ArrayList<>();
-        for (Transport t : transports) {
-            if (first == null) first = t;
-            tmpgroup.add(t.name);
+        if (transports != null) {
+            for (Transport t : transports) {
+                if (first == null) first = t;
+                tmpgroup.add(t.name);
+            }
         }
+        if (first == null) throw new NullPointerException("Collection<Transport> is null or empty");
         //必须按字母排列顺序确保，相同内容的transport列表组合的name相同，而不会因为list的顺序不同产生不同的name
         this.name = tmpgroup.stream().sorted().collect(Collectors.joining(";"));
         this.watch = first.watch;
-        this.kind = first.kind;
+        this.subprotocol = first.subprotocol;
         this.protocol = first.protocol;
         this.tcp = "TCP".equalsIgnoreCase(first.protocol);
         this.group = first.group;
@@ -118,8 +121,8 @@ public final class Transport {
         return name;
     }
 
-    public String getKind() {
-        return kind;
+    public String getSubprotocol() {
+        return subprotocol;
     }
 
     public void close() {

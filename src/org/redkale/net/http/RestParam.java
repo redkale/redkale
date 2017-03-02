@@ -11,10 +11,10 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  *
- * 依附在RestService类的方法的参数上
- * name='&#38;' 表示当前用户
- * name='#'表示截取uri最后一段
- * name='#xxx:'表示从uri中/pipes/xxx:v/截取xxx:的值
+ * 依附在RestService类的方法的参数上  <br>
+ * name='&#38;' 表示当前用户  <br>
+ * name='#'表示截取uri最后一段  <br>
+ * name='#xxx:'表示从uri中/pipes/xxx:v/截取xxx:的值  <br>
  * <p>
  * 详情见: https://redkale.org
  *
@@ -28,10 +28,10 @@ public @interface RestParam {
 
     //name='&'表示当前用户;
     /**
-     * 参数名 
-     * name='&#38;'表示当前用户;
-     * name='#'表示截取uri最后一段;
-     * name='#xxx:'表示从uri中/pipes/xxx:v/截取xxx:的值
+     * 参数名   <br>
+     * name='&#38;'表示当前用户;  <br>
+     * name='#'表示截取uri最后一段;  <br>
+     * name='#xxx:'表示从uri中/pipes/xxx:v/截取xxx:的值  <br>
      *
      * @return String
      */    

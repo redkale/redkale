@@ -9,9 +9,9 @@ import java.lang.reflect.*;
 import java.util.Collection;
 
 /**
- * Collection的序列化操作类
- * 集合大小不能超过 32767。 在BSON中集合大小设定的是short，对于大于32767长度的集合传输会影响性能，故没有采用int存储。
- * 支持一定程度的泛型。
+ * Collection的序列化操作类  <br>
+ * 集合大小不能超过 32767。 在BSON中集合大小设定的是short，对于大于32767长度的集合传输会影响性能，故没有采用int存储。  <br>
+ * 支持一定程度的泛型。  <br>
  *
  * <p>
  * 详情见: https://redkale.org

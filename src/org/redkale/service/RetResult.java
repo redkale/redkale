@@ -8,13 +8,13 @@ package org.redkale.service;
 import org.redkale.convert.json.*;
 
 /**
- * 通用的结果对象，在常见的HTTP+JSON接口中返回的结果需要含结果码，错误信息，和实体对象。
- * 通常前四位为模块，后四位为操作。
- * 结果码定义范围:
- *    // 10000001 - 19999999 预留给Redkale的核心包使用
- *    // 20000001 - 29999999 预留给Redkale的扩展包使用
- *    // 30000001 - 99999999 预留给Dev开发系统自身使用
- *
+ * 通用的结果对象，在常见的HTTP+JSON接口中返回的结果需要含结果码，错误信息，和实体对象。  <br>
+ * 结果码定义通常前四位为模块，后四位为操作。<br>
+ * 结果码定义范围:  <br>
+ *    // 10000001 - 19999999 预留给Redkale的核心包使用  <br>
+ *    // 20000001 - 29999999 预留给Redkale的扩展包使用  <br>
+ *    // 30000001 - 99999999 预留给Dev开发系统自身使用  <br>
+ * <p>
  * 详情见: https://redkale.org
  *
  * @author zhangjx
@@ -112,10 +112,20 @@ public class RetResult<T> {
         this.retcode = retcode;
     }
 
+    /**
+     * 结果信息，通常retcode != 0时值为错误信息
+     *
+     * @return 结果信息
+     */
     public String getRetinfo() {
         return retinfo;
     }
 
+    /**
+     * 设置结果信息
+     *
+     * @param retinfo 结果信息
+     */
     public void setRetinfo(String retinfo) {
         this.retinfo = retinfo;
     }
@@ -129,6 +139,11 @@ public class RetResult<T> {
         return result;
     }
 
+    /**
+     * 设置结果对象
+     *
+     * @param result T
+     */
     public void setResult(T result) {
         this.result = result;
     }

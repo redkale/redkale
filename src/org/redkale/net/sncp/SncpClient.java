@@ -287,7 +287,7 @@ public final class SncpClient {
     }
 
     private SncpFuture<byte[]> remote0(final BsonConvert bsonConvert, final JsonConvert jsonConvert, final Transport transport, final SocketAddress addr0, final SncpAction action, final Object... params) {
-        if ("rest".equalsIgnoreCase(transport.getKind())) {
+        if ("rest".equalsIgnoreCase(transport.getSubprotocol())) {
             return remoteRest0(jsonConvert, transport, addr0, action, params);
         }
         return remoteSncp0(bsonConvert, transport, addr0, action, params);

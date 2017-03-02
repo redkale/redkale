@@ -9,6 +9,7 @@ import java.net.InetSocketAddress;
 import java.util.*;
 
 /**
+ * 协议地址组合对象, 对应application.xml 中 resources-&#62;group 节点信息
  *
  * <p>
  * 详情见: https://redkale.org
@@ -17,21 +18,21 @@ import java.util.*;
  */
 public class GroupInfo {
 
-    protected String name;
+    protected String name;  //地址
 
-    protected String protocol;
+    protected String protocol; //协议 取值范围:  TCP、UDP
 
-    protected String kind;
+    protected String subprotocol; //子协议，预留使用
 
-    protected Set<InetSocketAddress> addrs;
+    protected Set<InetSocketAddress> addrs; //地址列表， 对应 resources-&#62;group-&#62;node节点信息
 
     public GroupInfo() {
     }
 
-    public GroupInfo(String name, String protocol, String kind, Set<InetSocketAddress> addrs) {
+    public GroupInfo(String name, String protocol, String subprotocol, Set<InetSocketAddress> addrs) {
         this.name = name;
         this.protocol = protocol;
-        this.kind = kind;
+        this.subprotocol = subprotocol;
         this.addrs = addrs;
     }
 
@@ -51,12 +52,12 @@ public class GroupInfo {
         this.protocol = protocol;
     }
 
-    public String getKind() {
-        return kind;
+    public String getSubprotocol() {
+        return subprotocol;
     }
 
-    public void setKind(String kind) {
-        this.kind = kind;
+    public void setSubprotocol(String subprotocol) {
+        this.subprotocol = subprotocol;
     }
 
     public Set<InetSocketAddress> getAddrs() {

@@ -29,7 +29,7 @@ import org.redkale.util.*;
 @NodeProtocol({"HTTP"})
 public class NodeHttpServer extends NodeServer {
 
-    protected final boolean rest;
+    protected final boolean rest; //是否加载REST服务， 为true加载rest节点信息并将所有可REST化的Service生成RestHttpServlet
 
     protected final HttpServer httpServer;
 

@@ -22,7 +22,7 @@ import org.redkale.util.ByteArray;
  * 例如简单的翻页查询   <br>
  *      /pipes/record/query/offset:0/limit:20 <br>
  * 获取页号: int offset = request.getRequstURIPath("offset:", 0);   <br>
- * 获取行数: int limit = request.getRequstURIPath("limit:", 10);
+ * 获取行数: int limit = request.getRequstURIPath("limit:", 10);  <br>
  * <p>
  * 详情见: https://redkale.org
  *

@@ -42,8 +42,8 @@
             一个组包含多个NODE， 同一Service服务可以由多个进程提供，这些进程称为一个GROUP，且同一GROUP内的进程必须在同一机房或局域网内
             一个group节点对应一个 Transport 对象。
             name: 服务组ID，长度不能超过11个字节. 默认为空字符串。 注意: name不能包含$符号。
-            protocol：值只能是UDP TCP， 默认TCP
-            kind: 与SNCP服务连接时的数据传输类型；可选值有:rest(不区分大小写);值为空或空字符串表示按SNCP协议传输; 为rest表示按REST传输。默认值为空
+            protocol：值范围：UDP TCP， 默认TCP
+            subprotocol: 子协议，预留字段。默认值为空
             注意: 一个node只能所属一个group。只要存在protocol=SNCP的Server节点信息， 就必须有group节点信息。
         -->
         <group name="" protocol="TCP">

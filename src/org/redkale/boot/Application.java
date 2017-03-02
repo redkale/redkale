@@ -30,9 +30,17 @@ import org.redkale.watch.WatchFactory;
 import org.w3c.dom.*;
 
 /**
- * 编译时需要加入: -XDignore.symbol.file=true
+ *
+ * 进程启动类，全局对象。  <br>
+ * <pre>
+ * 程序启动执行步骤:
+ *     1、读取application.xml
+ *     2、进行classpath扫描动态加载Service与Servlet
+ *     3、优先加载所有SNCP协议的服务，再加载其他协议服务
+ *     4、最后进行Service、Servlet与其他资源之间的依赖注入
+ * </pre>
  * <p>
- * 进程启动类，程序启动后读取application.xml,进行classpath扫描动态加载Service与Servlet 优先加载所有SNCP协议的服务， 再加载其他协议服务， 最后进行Service、Servlet与其他资源之间的依赖注入。
+ * 编译时需要加入: -XDignore.symbol.file=true
  * <p>
  * 详情见: https://redkale.org
  *
@@ -333,7 +341,7 @@ public final class Application {
                 }
                 GroupInfo ginfo = globalGroups.get(group);
                 if (ginfo == null) {
-                    ginfo = new GroupInfo(group, protocol, conf.getValue("kind", ""), new LinkedHashSet<>());
+                    ginfo = new GroupInfo(group, protocol, conf.getValue("subprotocol", ""), new LinkedHashSet<>());
                     globalGroups.put(group, ginfo);
                 }
                 for (AnyValue node : conf.getAnyValues("node")) {
