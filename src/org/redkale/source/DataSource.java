@@ -226,33 +226,6 @@ public interface DataSource {
      */
     public <T> int updateColumn(final T bean, final FilterNode node, final SelectColumn selects);
 
-    /**
-     * 由 public int updateColumn(final T bean, final String... columns); 代替
-     *
-     * @param <T>     T
-     * @param bean    bean
-     * @param columns columns
-     *
-     * @return int
-     * @deprecated
-     */
-    @Deprecated
-    public <T> int updateColumns(final T bean, final String... columns);
-
-    /**
-     * 由 public int updateColumn(final T bean, final FilterNode node, final String... columns); 代替
-     *
-     * @param <T>     T
-     * @param bean    bean
-     * @param node    node
-     * @param columns columns
-     *
-     * @return int
-     * @deprecated
-     */
-    @Deprecated
-    public <T> int updateColumns(final T bean, final FilterNode node, final String... columns);
-
     //############################################# 查询接口 #############################################
     //-----------------------getXXXXResult-----------------------------
     /**

@@ -1088,11 +1088,6 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
     }
 
     @Override
-    public <T> int updateColumns(final T bean, final String... columns) {
-        return updateColumn(bean, columns);
-    }
-
-    @Override
     public <T> int updateColumn(final T bean, final String... columns) {
         return updateColumn(bean, SelectColumn.createIncludes(columns));
     }
@@ -1166,11 +1161,6 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    @Override
-    public <T> int updateColumns(final T bean, final FilterNode node, final String... columns) {
-        return updateColumn(bean, node, columns);
     }
 
     @Override
