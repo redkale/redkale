@@ -46,8 +46,8 @@ public class _DynHelloRestServlet1 extends SimpleRestServlet {
     public void create(HttpRequest req, HttpResponse resp) throws IOException {
         HelloService service = _servicemap == null ? _service : _servicemap.get(req.getHeader(Rest.REST_HEADER_RESOURCE_NAME, ""));
         HelloEntity bean = req.getJsonParameter(HelloEntity.class, "bean");
-        bean.setClientaddr(req.getRemoteAddr()); 
-        bean.setResname(req.getHeader("hello-res")); 
+        bean.setClientaddr(req.getRemoteAddr());
+        bean.setResname(req.getHeader("hello-res"));
         UserInfo user = currentUser(req);
         RetResult<HelloEntity> result = service.createHello(user, bean);
         resp.finishJson(result);
@@ -68,8 +68,8 @@ public class _DynHelloRestServlet1 extends SimpleRestServlet {
         HelloService service = _servicemap == null ? _service : _servicemap.get(req.getHeader(Rest.REST_HEADER_RESOURCE_NAME, ""));
         String clientaddr = req.getRemoteAddr();
         HelloEntity bean = req.getJsonParameter(HelloEntity.class, "bean");
-        bean.setClientaddr(req.getRemoteAddr()); 
-        bean.setResname(req.getHeader("hello-res")); 
+        bean.setClientaddr(req.getRemoteAddr());
+        bean.setResname(req.getHeader("hello-res"));
         service.updateHello(clientaddr, bean);
         resp.finishJson(RetResult.success());
     }
@@ -79,8 +79,8 @@ public class _DynHelloRestServlet1 extends SimpleRestServlet {
     public void partupdate(HttpRequest req, HttpResponse resp) throws IOException {
         HelloService service = _servicemap == null ? _service : _servicemap.get(req.getHeader(Rest.REST_HEADER_RESOURCE_NAME, ""));
         HelloEntity bean = req.getJsonParameter(HelloEntity.class, "bean");
-        bean.setClientaddr(req.getRemoteAddr()); 
-        bean.setResname(req.getHeader("hello-res")); 
+        bean.setClientaddr(req.getRemoteAddr());
+        bean.setResname(req.getHeader("hello-res"));
         String[] cols = req.getJsonParameter(String[].class, "cols");
         service.updateHello(bean, cols);
         resp.finishJson(RetResult.success());
@@ -91,10 +91,10 @@ public class _DynHelloRestServlet1 extends SimpleRestServlet {
     public void query(HttpRequest req, HttpResponse resp) throws IOException {
         HelloService service = _servicemap == null ? _service : _servicemap.get(req.getHeader(Rest.REST_HEADER_RESOURCE_NAME, ""));
         HelloBean bean = req.getJsonParameter(HelloBean.class, "bean");
-        bean.setClientaddr(req.getRemoteAddr()); 
-        bean.setUseragent(req.getHeader("User-Agent")); 
-        bean.setRescookie(req.getCookie("hello-cookie")); 
-        bean.setSessionid(req.getSessionid(false)); 
+        bean.setClientaddr(req.getRemoteAddr());
+        bean.setUseragent(req.getHeader("User-Agent"));
+        bean.setRescookie(req.getCookie("hello-cookie"));
+        bean.setSessionid(req.getSessionid(false));
         Flipper flipper = req.getFlipper();
         Sheet<HelloEntity> result = service.queryHello(bean, flipper);
         resp.finishJson(result);
@@ -105,10 +105,10 @@ public class _DynHelloRestServlet1 extends SimpleRestServlet {
     public void list(HttpRequest req, HttpResponse resp) throws IOException {
         HelloService service = _servicemap == null ? _service : _servicemap.get(req.getHeader(Rest.REST_HEADER_RESOURCE_NAME, ""));
         HelloBean bean = req.getJsonParameter(HelloBean.class, "bean");
-        bean.setClientaddr(req.getRemoteAddr()); 
-        bean.setUseragent(req.getHeader("User-Agent")); 
-        bean.setRescookie(req.getCookie("hello-cookie")); 
-        bean.setSessionid(req.getSessionid(false)); 
+        bean.setClientaddr(req.getRemoteAddr());
+        bean.setUseragent(req.getHeader("User-Agent"));
+        bean.setRescookie(req.getCookie("hello-cookie"));
+        bean.setSessionid(req.getSessionid(false));
         List<HelloEntity> result = service.queryHello(bean);
         resp.finishJson(result);
     }
@@ -122,12 +122,4 @@ public class _DynHelloRestServlet1 extends SimpleRestServlet {
         resp.finishJson(bean);
     }
 
-    @AuthIgnore
-    @WebAction(url = "/hello/jsfind/")
-    public void jsfind(HttpRequest req, HttpResponse resp) throws IOException {
-        HelloService service = _servicemap == null ? _service : _servicemap.get(req.getHeader(Rest.REST_HEADER_RESOURCE_NAME, ""));
-        int id = Integer.parseInt(req.getRequstURILastPath());
-        HelloEntity bean = service.findHello(id);
-        resp.finishJsResult("varhello", bean);
-    }
 }

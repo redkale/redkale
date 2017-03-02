@@ -72,7 +72,6 @@ public class HelloService implements Service {
 
     //查询单个
     @RestMapping(name = "find")
-    @RestMapping(name = "jsfind", jsvar = "varhello")
     public HelloEntity findHello(@RestParam(name = "#") int id) {  //通过 /pipes/hello/find/1234、/pipes/hello/jsfind/1234 查询对象
         return source.find(HelloEntity.class, id);
     }

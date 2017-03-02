@@ -23,22 +23,17 @@ public abstract class RestHttpServlet<T> extends HttpBaseServlet {
             response.finishJson(output);
             return;
         }
+        if (output.getContentType() != null) response.setContentType(output.getContentType());
         response.addHeader(output.getHeaders());
         response.addCookie(output.getCookies());
 
         if (output.getResult() instanceof File) {
             response.finish((File) output.getResult());
+        } else if (output.getResult() instanceof String) {
+            response.finish((String) output.getResult());
         } else {
             response.finishJson(output.getResult());
         }
-    }
-
-    protected void finishJsResult(final HttpResponse response, final String var, RestOutput output) throws IOException {
-        if (output != null) {
-            response.addHeader(output.getHeaders());
-            response.addCookie(output.getCookies());
-        }
-        response.finishJsResult(var, output == null ? null : output.getResult());
     }
 
 }

@@ -74,10 +74,4 @@ public @interface RestMapping {
      */
     String[] methods() default {};
 
-    /**
-     * 以application/javascript输出对象是指明js的对象名，该值存在时则忽略contentType()的值
-     *
-     * @return String
-     */
-    String jsvar() default "";
 }

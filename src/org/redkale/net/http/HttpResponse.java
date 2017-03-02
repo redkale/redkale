@@ -291,31 +291,6 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
     }
 
     /**
-     * 将对象以JavaScript格式输出
-     *
-     * @param var    js变量名
-     * @param result 输出对象
-     */
-    public void finishJsResult(String var, Object result) {
-        this.contentType = "application/javascript; charset=utf-8";
-        if (this.recycleListener != null) this.output = result;
-        finish("var " + var + " = " + request.getJsonConvert().convertTo(result) + ";");
-    }
-
-    /**
-     * 将对象以JavaScript格式输出
-     *
-     * @param jsonConvert 指定的JsonConvert
-     * @param var         js变量名
-     * @param result      输出对象
-     */
-    public void finishJsResult(JsonConvert jsonConvert, String var, Object result) {
-        this.contentType = "application/javascript; charset=utf-8";
-        if (this.recycleListener != null) this.output = result;
-        finish("var " + var + " = " + jsonConvert.convertTo(result) + ";");
-    }
-
-    /**
      * 将指定字符串以响应结果输出
      *
      * @param obj 输出内容

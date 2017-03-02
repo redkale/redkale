@@ -23,6 +23,8 @@ public class RestOutput<T> {
 
     private List<HttpCookie> cookies;
 
+    private String contentType;
+
     private T result;
 
     public RestOutput() {
@@ -56,6 +58,14 @@ public class RestOutput<T> {
 
     public void setCookies(List<HttpCookie> cookies) {
         this.cookies = cookies;
+    }
+
+    public String getContentType() {
+        return contentType;
+    }
+
+    public void setContentType(String contentType) {
+        this.contentType = contentType;
     }
 
     public T getResult() {

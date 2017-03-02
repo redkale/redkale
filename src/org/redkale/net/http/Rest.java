@@ -254,7 +254,6 @@ public final class Rest {
             final int maxStack = 3 + params.length;
             List<int[]> varInsns = new ArrayList<>();
             int maxLocals = 4;
-            final String jsvar = entry.jsvar.isEmpty() ? null : entry.jsvar;
             int argIndex = 0;
 
             List<Object[]> paramlist = new ArrayList<>();
@@ -731,214 +730,110 @@ public final class Rest {
                 mv.visitInsn(RETURN);
             } else if (returnType == boolean.class) {
                 mv.visitVarInsn(ISTORE, maxLocals);
-                if (jsvar == null) {
-                    mv.visitVarInsn(ALOAD, 2); //response
-                    mv.visitVarInsn(ILOAD, maxLocals);
-                    mv.visitMethodInsn(INVOKESTATIC, "java/lang/String", "valueOf", "(Z)Ljava/lang/String;", false);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finish", "(Ljava/lang/String;)V", false);
-                } else {
-                    mv.visitVarInsn(ALOAD, 2);
-                    mv.visitLdcInsn(jsvar);
-                    mv.visitVarInsn(ILOAD, maxLocals);
-                    mv.visitMethodInsn(INVOKESTATIC, "java/lang/Boolean", "valueOf", "(Z)Ljava/lang/Boolean;", false);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishJsResult", "(Ljava/lang/String;Ljava/lang/Object;)V", false);
-                }
+                mv.visitVarInsn(ALOAD, 2); //response
+                mv.visitVarInsn(ILOAD, maxLocals);
+                mv.visitMethodInsn(INVOKESTATIC, "java/lang/String", "valueOf", "(Z)Ljava/lang/String;", false);
+                mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finish", "(Ljava/lang/String;)V", false);
                 mv.visitInsn(RETURN);
                 maxLocals++;
             } else if (returnType == byte.class) {
                 mv.visitVarInsn(ISTORE, maxLocals);
-                if (jsvar == null) {
-                    mv.visitVarInsn(ALOAD, 2); //response
-                    mv.visitVarInsn(ILOAD, maxLocals);
-                    mv.visitMethodInsn(INVOKESTATIC, "java/lang/String", "valueOf", "(I)Ljava/lang/String;", false);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finish", "(Ljava/lang/String;)V", false);
-                } else {
-                    mv.visitVarInsn(ALOAD, 2);
-                    mv.visitLdcInsn(jsvar);
-                    mv.visitVarInsn(ILOAD, maxLocals);
-                    mv.visitMethodInsn(INVOKESTATIC, "java/lang/Byte", "valueOf", "(B)Ljava/lang/Byte;", false);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishJsResult", "(Ljava/lang/String;Ljava/lang/Object;)V", false);
-                }
+                mv.visitVarInsn(ALOAD, 2); //response
+                mv.visitVarInsn(ILOAD, maxLocals);
+                mv.visitMethodInsn(INVOKESTATIC, "java/lang/String", "valueOf", "(I)Ljava/lang/String;", false);
+                mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finish", "(Ljava/lang/String;)V", false);
                 mv.visitInsn(RETURN);
                 maxLocals++;
             } else if (returnType == short.class) {
                 mv.visitVarInsn(ISTORE, maxLocals);
-                if (jsvar == null) {
-                    mv.visitVarInsn(ALOAD, 2); //response
-                    mv.visitVarInsn(ILOAD, maxLocals);
-                    mv.visitMethodInsn(INVOKESTATIC, "java/lang/String", "valueOf", "(I)Ljava/lang/String;", false);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finish", "(Ljava/lang/String;)V", false);
-                } else {
-                    mv.visitVarInsn(ALOAD, 2);
-                    mv.visitLdcInsn(jsvar);
-                    mv.visitVarInsn(ILOAD, maxLocals);
-                    mv.visitMethodInsn(INVOKESTATIC, "java/lang/Short", "valueOf", "(S)Ljava/lang/Short;", false);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishJsResult", "(Ljava/lang/String;Ljava/lang/Object;)V", false);
-                }
+                mv.visitVarInsn(ALOAD, 2); //response
+                mv.visitVarInsn(ILOAD, maxLocals);
+                mv.visitMethodInsn(INVOKESTATIC, "java/lang/String", "valueOf", "(I)Ljava/lang/String;", false);
+                mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finish", "(Ljava/lang/String;)V", false);
                 mv.visitInsn(RETURN);
                 maxLocals++;
             } else if (returnType == char.class) {
                 mv.visitVarInsn(ISTORE, maxLocals);
-                if (jsvar == null) {
-                    mv.visitVarInsn(ALOAD, 2); //response
-                    mv.visitVarInsn(ILOAD, maxLocals);
-                    mv.visitMethodInsn(INVOKESTATIC, "java/lang/String", "valueOf", "(C)Ljava/lang/String;", false);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finish", "(Ljava/lang/String;)V", false);
-                } else {
-                    mv.visitVarInsn(ALOAD, 2);
-                    mv.visitLdcInsn(jsvar);
-                    mv.visitVarInsn(ILOAD, maxLocals);
-                    mv.visitMethodInsn(INVOKESTATIC, "java/lang/Character", "valueOf", "(C)Ljava/lang/Character;", false);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishJsResult", "(Ljava/lang/String;Ljava/lang/Object;)V", false);
-                }
+                mv.visitVarInsn(ALOAD, 2); //response
+                mv.visitVarInsn(ILOAD, maxLocals);
+                mv.visitMethodInsn(INVOKESTATIC, "java/lang/String", "valueOf", "(C)Ljava/lang/String;", false);
+                mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finish", "(Ljava/lang/String;)V", false);
                 mv.visitInsn(RETURN);
                 maxLocals++;
             } else if (returnType == int.class) {
                 mv.visitVarInsn(ISTORE, maxLocals);
-                if (jsvar == null) {
-                    mv.visitVarInsn(ALOAD, 2); //response
-                    mv.visitVarInsn(ILOAD, maxLocals);
-                    mv.visitMethodInsn(INVOKESTATIC, "java/lang/String", "valueOf", "(I)Ljava/lang/String;", false);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finish", "(Ljava/lang/String;)V", false);
-                } else {
-                    mv.visitVarInsn(ALOAD, 2);
-                    mv.visitLdcInsn(jsvar);
-                    mv.visitVarInsn(ILOAD, maxLocals);
-                    mv.visitMethodInsn(INVOKESTATIC, "java/lang/Integer", "valueOf", "(I)Ljava/lang/Integer;", false);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishJsResult", "(Ljava/lang/String;Ljava/lang/Object;)V", false);
-                }
+                mv.visitVarInsn(ALOAD, 2); //response
+                mv.visitVarInsn(ILOAD, maxLocals);
+                mv.visitMethodInsn(INVOKESTATIC, "java/lang/String", "valueOf", "(I)Ljava/lang/String;", false);
+                mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finish", "(Ljava/lang/String;)V", false);
                 mv.visitInsn(RETURN);
                 maxLocals++;
             } else if (returnType == float.class) {
                 mv.visitVarInsn(FSTORE, maxLocals);
-                if (jsvar == null) {
-                    mv.visitVarInsn(ALOAD, 2); //response
-                    mv.visitVarInsn(FLOAD, maxLocals);
-                    mv.visitMethodInsn(INVOKESTATIC, "java/lang/String", "valueOf", "(F)Ljava/lang/String;", false);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finish", "(Ljava/lang/String;)V", false);
-                } else {
-                    mv.visitVarInsn(ALOAD, 2);
-                    mv.visitLdcInsn(jsvar);
-                    mv.visitVarInsn(FLOAD, maxLocals);
-                    mv.visitMethodInsn(INVOKESTATIC, "java/lang/Float", "valueOf", "(F)Ljava/lang/Float;", false);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishJsResult", "(Ljava/lang/String;Ljava/lang/Object;)V", false);
-                }
+                mv.visitVarInsn(ALOAD, 2); //response
+                mv.visitVarInsn(FLOAD, maxLocals);
+                mv.visitMethodInsn(INVOKESTATIC, "java/lang/String", "valueOf", "(F)Ljava/lang/String;", false);
+                mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finish", "(Ljava/lang/String;)V", false);
                 mv.visitInsn(RETURN);
                 maxLocals++;
             } else if (returnType == long.class) {
                 mv.visitVarInsn(LSTORE, maxLocals);
-                if (jsvar == null) {
-                    mv.visitVarInsn(ALOAD, 2); //response
-                    mv.visitVarInsn(LLOAD, maxLocals);
-                    mv.visitMethodInsn(INVOKESTATIC, "java/lang/String", "valueOf", "(J)Ljava/lang/String;", false);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finish", "(Ljava/lang/String;)V", false);
-                } else {
-                    mv.visitVarInsn(ALOAD, 2);
-                    mv.visitLdcInsn(jsvar);
-                    mv.visitVarInsn(LLOAD, maxLocals);
-                    mv.visitMethodInsn(INVOKESTATIC, "java/lang/Long", "valueOf", "(J)Ljava/lang/Long;", false);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishJsResult", "(Ljava/lang/String;Ljava/lang/Object;)V", false);
-                }
+                mv.visitVarInsn(ALOAD, 2); //response
+                mv.visitVarInsn(LLOAD, maxLocals);
+                mv.visitMethodInsn(INVOKESTATIC, "java/lang/String", "valueOf", "(J)Ljava/lang/String;", false);
+                mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finish", "(Ljava/lang/String;)V", false);
                 mv.visitInsn(RETURN);
                 maxLocals += 2;
             } else if (returnType == double.class) {
                 mv.visitVarInsn(DSTORE, maxLocals);
-                if (jsvar == null) {
-                    mv.visitVarInsn(ALOAD, 2); //response
-                    mv.visitVarInsn(DLOAD, maxLocals);
-                    mv.visitMethodInsn(INVOKESTATIC, "java/lang/String", "valueOf", "(D)Ljava/lang/String;", false);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finish", "(Ljava/lang/String;)V", false);
-                } else {
-                    mv.visitVarInsn(ALOAD, 2);
-                    mv.visitLdcInsn(jsvar);
-                    mv.visitVarInsn(DLOAD, maxLocals);
-                    mv.visitMethodInsn(INVOKESTATIC, "java/lang/Double", "valueOf", "(D)Ljava/lang/Double;", false);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishJsResult", "(Ljava/lang/String;Ljava/lang/Object;)V", false);
-                }
+                mv.visitVarInsn(ALOAD, 2); //response
+                mv.visitVarInsn(DLOAD, maxLocals);
+                mv.visitMethodInsn(INVOKESTATIC, "java/lang/String", "valueOf", "(D)Ljava/lang/String;", false);
+                mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finish", "(Ljava/lang/String;)V", false);
                 mv.visitInsn(RETURN);
                 maxLocals += 2;
             } else if (returnType == String.class) {
                 mv.visitVarInsn(ASTORE, maxLocals);
-                if (jsvar == null) {
-                    mv.visitVarInsn(ALOAD, 2); //response
-                    mv.visitVarInsn(ALOAD, maxLocals);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finish", "(Ljava/lang/String;)V", false);
-                } else {
-                    mv.visitVarInsn(ALOAD, 2);
-                    mv.visitLdcInsn(jsvar);
-                    mv.visitVarInsn(ALOAD, maxLocals);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishJsResult", "(Ljava/lang/String;Ljava/lang/Object;)V", false);
-                }
+                mv.visitVarInsn(ALOAD, 2); //response
+                mv.visitVarInsn(ALOAD, maxLocals);
+                mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finish", "(Ljava/lang/String;)V", false);
                 mv.visitInsn(RETURN);
                 maxLocals++;
             } else if (returnType == File.class) {
                 mv.visitVarInsn(ASTORE, maxLocals);
-                if (jsvar == null) {
-                    mv.visitVarInsn(ALOAD, 2); //response
-                    mv.visitVarInsn(ALOAD, maxLocals);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finish", "(Ljava/io/File;)V", false);
-                } else {
-                    throw new RuntimeException(method + " cannot set return Type (java.io.File) to jsvar");
-                }
+                mv.visitVarInsn(ALOAD, 2); //response
+                mv.visitVarInsn(ALOAD, maxLocals);
+                mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finish", "(Ljava/io/File;)V", false);
                 mv.visitInsn(RETURN);
                 maxLocals++;
             } else if (RetResult.class.isAssignableFrom(returnType)) {
                 mv.visitVarInsn(ASTORE, maxLocals);
-                if (jsvar == null) {
-                    mv.visitVarInsn(ALOAD, 2); //response
-                    mv.visitVarInsn(ALOAD, maxLocals);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishJson", "(" + retDesc + ")V", false);
-                } else {
-                    mv.visitVarInsn(ALOAD, 2);
-                    mv.visitLdcInsn(jsvar);
-                    mv.visitVarInsn(ALOAD, maxLocals);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishJsResult", "(Ljava/lang/String;Ljava/lang/Object;)V", false);
-                }
+                mv.visitVarInsn(ALOAD, 2); //response
+                mv.visitVarInsn(ALOAD, maxLocals);
+                mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishJson", "(" + retDesc + ")V", false);
                 mv.visitInsn(RETURN);
                 maxLocals++;
             } else if (RestOutput.class.isAssignableFrom(returnType)) {
                 mv.visitVarInsn(ASTORE, maxLocals);
-                if (jsvar == null) {
-                    mv.visitVarInsn(ALOAD, 0);
-                    mv.visitVarInsn(ALOAD, 2);
-                    mv.visitVarInsn(ALOAD, maxLocals);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, newDynName, "finishJson", "(" + respDesc + restoutputDesc + ")V", false);
-                } else {
-                    mv.visitVarInsn(ALOAD, 0);
-                    mv.visitVarInsn(ALOAD, 2);
-                    mv.visitLdcInsn(jsvar);
-                    mv.visitVarInsn(ALOAD, maxLocals);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, newDynName, "finishJsResult", "(" + respDesc + "Ljava/lang/String;" + restoutputDesc + ")V", false);
-                }
+                mv.visitVarInsn(ALOAD, 0);
+                mv.visitVarInsn(ALOAD, 2);
+                mv.visitVarInsn(ALOAD, maxLocals);
+                mv.visitMethodInsn(INVOKEVIRTUAL, newDynName, "finishJson", "(" + respDesc + restoutputDesc + ")V", false);
                 mv.visitInsn(RETURN);
                 maxLocals++;
             } else if (Number.class.isAssignableFrom(returnType) || CharSequence.class.isAssignableFrom(returnType)) {   //returnType == String.class 必须放在前面
                 mv.visitVarInsn(ASTORE, maxLocals);
-                if (jsvar == null) {
-                    mv.visitVarInsn(ALOAD, 2); //response
-                    mv.visitVarInsn(ALOAD, maxLocals);
-                    mv.visitMethodInsn(INVOKESTATIC, "java/lang/String", "valueOf", "(Ljava/lang/Object;)Ljava/lang/String;", false);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finish", "(Ljava/lang/String;)V", false);
-                } else {
-                    mv.visitVarInsn(ALOAD, 2);
-                    mv.visitLdcInsn(jsvar);
-                    mv.visitVarInsn(ALOAD, maxLocals);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishJsResult", "(Ljava/lang/String;Ljava/lang/Object;)V", false);
-                }
+                mv.visitVarInsn(ALOAD, 2); //response
+                mv.visitVarInsn(ALOAD, maxLocals);
+                mv.visitMethodInsn(INVOKESTATIC, "java/lang/String", "valueOf", "(Ljava/lang/Object;)Ljava/lang/String;", false);
+                mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finish", "(Ljava/lang/String;)V", false);
                 mv.visitInsn(RETURN);
                 maxLocals++;
             } else {
                 mv.visitVarInsn(ASTORE, maxLocals);
-                if (jsvar == null) {
-                    mv.visitVarInsn(ALOAD, 2); //response
-                    mv.visitVarInsn(ALOAD, maxLocals);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishJson", "(Ljava/lang/Object;)V", false);
-                } else {
-                    mv.visitVarInsn(ALOAD, 2);
-                    mv.visitLdcInsn(jsvar);
-                    mv.visitVarInsn(ALOAD, maxLocals);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishJsResult", "(Ljava/lang/String;Ljava/lang/Object;)V", false);
-                }
+                mv.visitVarInsn(ALOAD, 2); //response
+                mv.visitVarInsn(ALOAD, maxLocals);
+                mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishJson", "(Ljava/lang/Object;)V", false);
                 mv.visitInsn(RETURN);
                 maxLocals++;
             }
@@ -1020,7 +915,6 @@ public final class Rest {
             this.actionid = mapping.actionid();
             this.cacheseconds = mapping.cacheseconds();
             this.comment = mapping.comment();
-            this.jsvar = mapping.jsvar();
         }
 
         public final Method mappingMethod;
@@ -1038,8 +932,6 @@ public final class Rest {
         public final int actionid;
 
         public final int cacheseconds;
-
-        public final String jsvar;
 
         @RestMapping()
         void mapping() { //用于获取Mapping 默认值
