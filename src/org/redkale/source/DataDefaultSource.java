@@ -6,7 +6,6 @@
 package org.redkale.source;
 
 import java.io.*;
-import java.lang.reflect.Method;
 import java.net.URL;
 import java.sql.*;
 import java.util.*;
@@ -14,11 +13,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.*;
 import java.util.logging.*;
 import javax.annotation.Resource;
-import javax.sql.ConnectionPoolDataSource;
 import javax.xml.stream.*;
 import org.redkale.util.*;
 
 /**
+ * DataSource的JDBC实现类
  *
  * <p>
  * 详情见: https://redkale.org
@@ -29,26 +28,6 @@ import org.redkale.util.*;
 public final class DataDefaultSource implements DataSource, Function<Class, EntityInfo>, AutoCloseable {
 
     public static final String DATASOURCE_CONFPATH = "DATASOURCE_CONFPATH";
-
-    static final String JDBC_CONNECTIONSMAX = "javax.persistence.connections.limit";
-
-    static final String JDBC_CONTAIN_SQLTEMPLATE = "javax.persistence.contain.sqltemplate";
-
-    static final String JDBC_NOTCONTAIN_SQLTEMPLATE = "javax.persistence.notcontain.sqltemplate";
-
-    static final String JDBC_TABLENOTEXIST_SQLSTATES = "javax.persistence.tablenotexist.sqlstates";
-
-    static final String JDBC_TABLECOPY_SQLTEMPLATE = "javax.persistence.tablecopy.sqltemplate";
-
-    static final String JDBC_URL = "javax.persistence.jdbc.url";
-
-    static final String JDBC_USER = "javax.persistence.jdbc.user";
-
-    static final String JDBC_PWD = "javax.persistence.jdbc.password";
-
-    static final String JDBC_DRIVER = "javax.persistence.jdbc.driver";
-
-    static final String JDBC_SOURCE = "javax.persistence.jdbc.source";
 
     private static final Flipper FLIPPER_ONE = new Flipper(1);
 
@@ -177,77 +156,6 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
             throw new RuntimeException(ex);
         }
         return map;
-    }
-
-    static ConnectionPoolDataSource createDataSource(Properties property) {
-        try {
-            return createDataSource(property.getProperty(JDBC_SOURCE, property.getProperty(JDBC_DRIVER)),
-                property.getProperty(JDBC_URL), property.getProperty(JDBC_USER), property.getProperty(JDBC_PWD));
-        } catch (Exception ex) {
-            throw new RuntimeException("(" + property + ") have no jdbc parameters", ex);
-        }
-    }
-
-    static ConnectionPoolDataSource createDataSource(String source0, String url, String user, String password) throws Exception {
-        String source = source0;
-        if (source0 == null || source0.isEmpty()) {
-            if (url.startsWith("jdbc:mysql:")) {
-                source0 = "com.mysql.jdbc.Driver";
-            } else if (url.startsWith("jdbc:mariadb:")) {
-                source0 = "org.mariadb.jdbc.Driver";
-            } else if (url.startsWith("jdbc:oracle:")) {
-                source0 = "oracle.jdbc.driver.OracleDriver";
-            } else if (url.startsWith("jdbc:postgresql:")) {
-                source0 = "org.postgresql.Driver";
-            } else if (url.startsWith("jdbc:microsoft:sqlserver:")) {
-                source0 = "com.microsoft.sqlserver.jdbc.SQLServerDriver";
-            }
-        }
-        if (source0 != null && source0.contains("Driver")) {  //为了兼容JPA的配置文件
-            switch (source0) {
-                case "org.mariadb.jdbc.Driver":
-                    source = "org.mariadb.jdbc.MySQLDataSource";
-                    break;
-                case "com.mysql.cj.jdbc.Driver":
-                case "com.mysql.jdbc.Driver":
-                    try {
-                        Class.forName("com.mysql.cj.jdbc.MysqlConnectionPoolDataSource");
-                        source = "com.mysql.cj.jdbc.MysqlConnectionPoolDataSource";
-                    } catch (Exception e) {
-                        source = "com.mysql.jdbc.jdbc2.optional.MysqlConnectionPoolDataSource";
-                    }
-                    break;
-                case "oracle.jdbc.driver.OracleDriver":
-                    source = "oracle.jdbc.pool.OracleConnectionPoolDataSource";
-                    break;
-                case "org.postgresql.Driver":
-                    source = "org.postgresql.ds.PGConnectionPoolDataSource";
-                    break;
-                case "com.microsoft.sqlserver.jdbc.SQLServerDriver":
-                    source = "com.microsoft.sqlserver.jdbc.SQLServerConnectionPoolDataSource";
-                    break;
-            }
-        }
-        final Class clazz = Class.forName(source);
-        Object pdsource = clazz.newInstance();
-        if (source.contains(".postgresql.")) {
-            Class driver = Class.forName("org.postgresql.Driver");
-            Properties properties = (Properties) driver.getMethod("parseURL", String.class, Properties.class).invoke(null, url, new Properties());
-            clazz.getMethod("setServerName", String.class).invoke(pdsource, properties.getProperty("PGHOST"));
-            clazz.getMethod("setDatabaseName", String.class).invoke(pdsource, properties.getProperty("PGDBNAME"));
-            clazz.getMethod("setPortNumber", int.class).invoke(pdsource, Integer.parseInt(properties.getProperty("PGPORT", "5432")));
-        } else {
-            Method seturlm;
-            try {
-                seturlm = clazz.getMethod("setUrl", String.class);
-            } catch (Exception e) {
-                seturlm = clazz.getMethod("setURL", String.class);
-            }
-            seturlm.invoke(pdsource, url);
-        }
-        clazz.getMethod("setUser", String.class).invoke(pdsource, user);
-        clazz.getMethod("setPassword", String.class).invoke(pdsource, password);
-        return (ConnectionPoolDataSource) pdsource;
     }
 
     public final String name() {

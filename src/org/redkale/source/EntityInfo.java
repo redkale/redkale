@@ -14,7 +14,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.*;
 import java.util.logging.Level;
 import javax.persistence.*;
-import static org.redkale.source.DataDefaultSource.*;
 import org.redkale.util.*;
 
 /**
@@ -278,11 +277,11 @@ public final class EntityInfo<T> {
             this.cache = null;
         }
         if (conf == null) conf = new Properties();
-        this.containSQL = conf.getProperty(JDBC_CONTAIN_SQLTEMPLATE, "LOCATE(${keystr}, ${column}) > 0");
-        this.notcontainSQL = conf.getProperty(JDBC_NOTCONTAIN_SQLTEMPLATE, "LOCATE(${keystr}, ${column}) = 0");
+        this.containSQL = conf.getProperty(JDBCPoolSource.JDBC_CONTAIN_SQLTEMPLATE, "LOCATE(${keystr}, ${column}) > 0");
+        this.notcontainSQL = conf.getProperty(JDBCPoolSource.JDBC_NOTCONTAIN_SQLTEMPLATE, "LOCATE(${keystr}, ${column}) = 0");
 
-        this.tablenotexistSqlstates = ";" + conf.getProperty(JDBC_TABLENOTEXIST_SQLSTATES, "42000;42S02") + ";";
-        this.tablecopySQL = conf.getProperty(JDBC_TABLECOPY_SQLTEMPLATE, "CREATE TABLE ${newtable} LIKE ${oldtable}");
+        this.tablenotexistSqlstates = ";" + conf.getProperty(JDBCPoolSource.JDBC_TABLENOTEXIST_SQLSTATES, "42000;42S02") + ";";
+        this.tablecopySQL = conf.getProperty(JDBCPoolSource.JDBC_TABLECOPY_SQLTEMPLATE, "CREATE TABLE ${newtable} LIKE ${oldtable}");
     }
 
     public void createPrimaryValue(T src) {
