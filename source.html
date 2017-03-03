@@ -418,6 +418,7 @@
 <span class="c">                             oracle.jdbc.driver.OracleDriver  ——————  oracle.jdbc.pool.OracleConnectionPoolDataSource</span>
 <span class="c">                com.microsoft.sqlserver.jdbc.SQLServerDriver  ——————  com.microsoft.sqlserver.jdbc.SQLServerConnectionPoolDataSource</span>
 <span class="c">                因此 com.mysql.jdbc.Driver 会被自动转换成 com.mysql.jdbc.jdbc2.optional.MysqlConnectionPoolDataSource</span>
+<span class="c">                并且如果JDBC驱动是以上几个版本，javax.persistence.jdbc.driver属性都可以省略，Redkale会根据javax.persistence.jdbc.url的值来识别驱动</span>
 <span class="c">            --&gt;</span>
             <span class="p">&lt;</span><span class="nt">property</span> <span class="na">name</span><span class="o">=</span><span class="s">&quot;javax.persistence.jdbc.driver&quot;</span> <span class="na">value</span><span class="o">=</span><span class="s">&quot;com.mysql.jdbc.Driver&quot;</span><span class="p">/&gt;</span>
             <span class="p">&lt;</span><span class="nt">property</span> <span class="na">name</span><span class="o">=</span><span class="s">&quot;javax.persistence.jdbc.user&quot;</span> <span class="na">value</span><span class="o">=</span><span class="s">&quot;root&quot;</span><span class="p">/&gt;</span>
