@@ -9,7 +9,7 @@ import java.util.function.*;
 
 /**
  *
- * 包含两边的值
+ * 取值范围，包含两边的值
  *
  * <p>
  * 详情见: https://redkale.org

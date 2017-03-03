@@ -13,6 +13,7 @@ import static org.redkale.source.FilterExpress.EQUAL;
 import org.redkale.util.*;
 
 /**
+ * &#64;FilterJoinColumn对应的FilterNode对象
  *
  * <p>
  * 详情见: https://redkale.org

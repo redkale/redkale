@@ -10,6 +10,8 @@ import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
+ * 关联表过滤条件 <br>
+ * 关联关系表必须含主表， 不能是主表A关联表B，表B再关联表C，只能是主表A关联表B，主表A关联表C <br>
  *
  * <p>
  * 详情见: https://redkale.org

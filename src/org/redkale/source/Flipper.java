@@ -8,7 +8,7 @@ package org.redkale.source;
 import java.io.Serializable;
 
 /**
- * 翻页对象, offset从0开始
+ * 翻页对象, offset从0开始, limit必须大于0
  *
  * <p>
  * 详情见: https://redkale.org

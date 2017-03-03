@@ -53,6 +53,7 @@ public final class EntityInfo<T> {
     //存放所有与数据库对应的字段， 包括主键
     private final HashMap<String, Attribute<T, Serializable>> attributeMap = new HashMap<>();
 
+    //存放所有与数据库对应的字段， 包括主键
     final Attribute<T, Serializable>[] attributes;
 
     //key是field的name， value是Column的别名，即数据库表的字段名
@@ -120,6 +121,15 @@ public final class EntityInfo<T> {
     final BiFunction<DataSource, Class, List> fullloader;
     //------------------------------------------------------------
 
+    /**
+     * 加载EntityInfo
+     *
+     * @param type           Entity类
+     * @param cacheForbidden 是否禁用EntityCache
+     * @param conf           配置信息, persistence.xml中的property节点值
+     * @param source         DataSource,可为null
+     * @param fullloader     全量加载器,可为null
+     */
     static <T> EntityInfo<T> load(Class<T> clazz, final boolean cacheForbidden, final Properties conf,
         DataSource source, BiFunction<DataSource, Class, List> fullloader) {
         EntityInfo rs = entityInfos.get(clazz);
@@ -138,10 +148,27 @@ public final class EntityInfo<T> {
         }
     }
 
+    /**
+     * 获取Entity类对应的EntityInfo对象
+     *
+     * @param <T>   泛型
+     * @param clazz Entity类
+     *
+     * @return EntityInfo
+     */
     static <T> EntityInfo<T> get(Class<T> clazz) {
         return entityInfos.get(clazz);
     }
 
+    /**
+     * 构造函数
+     *
+     * @param type           Entity类
+     * @param cacheForbidden 是否禁用EntityCache
+     * @param conf           配置信息, persistence.xml中的property节点值
+     * @param source         DataSource,可为null
+     * @param fullloader     全量加载器,可为null
+     */
     private EntityInfo(Class<T> type, final boolean cacheForbidden,
         Properties conf, DataSource source, BiFunction<DataSource, Class, List> fullloader) {
         this.type = type;
@@ -284,92 +311,196 @@ public final class EntityInfo<T> {
         this.tablecopySQL = conf.getProperty(JDBCPoolSource.JDBC_TABLECOPY_SQLTEMPLATE, "CREATE TABLE ${newtable} LIKE ${oldtable}");
     }
 
+    /**
+     * 创建主键值，目前只支持UUID赋值
+     *
+     * @param src Entity对象
+     */
     public void createPrimaryValue(T src) {
         if (autouuid) getPrimary().set(src, Utility.uuid());
     }
 
+    /**
+     * 获取Entity缓存器
+     *
+     * @return EntityCache
+     */
     public EntityCache<T> getCache() {
         return cache;
     }
 
+    /**
+     * 判断缓存器是否已经全量加载过
+     *
+     * @return boolean
+     */
     public boolean isCacheFullLoaded() {
         return cache != null && cache.isFullLoaded();
     }
 
+    /**
+     * 获取Entity构建器
+     *
+     * @return Creator
+     */
     public Creator<T> getCreator() {
         return creator;
     }
 
+    /**
+     * 获取Entity类名
+     *
+     * @return Class
+     */
     public Class<T> getType() {
         return type;
     }
 
     /**
-     * 是否虚拟类
+     * 判断Entity是否为虚拟类
      *
-     * @return 是否虚拟类
+     * @return boolean
      */
     public boolean isVirtualEntity() {
         return table == null;
     }
 
+    /**
+     * 获取Entity的INSERT SQL
+     *
+     * @param bean Entity对象
+     *
+     * @return String
+     */
     public String getInsertSQL(T bean) {
         if (this.tableStrategy == null) return insertSQL;
         return insertSQL.replace("${newtable}", getTable(bean));
     }
 
+    /**
+     * 获取Entity的UPDATE SQL
+     *
+     * @param bean Entity对象
+     *
+     * @return String
+     */
     public String getUpdateSQL(T bean) {
         if (this.tableStrategy == null) return updateSQL;
         return updateSQL.replace("${newtable}", getTable(bean));
     }
 
+    /**
+     * 获取Entity的DELETE SQL
+     *
+     * @param bean Entity对象
+     *
+     * @return String
+     */
     public String getDeleteSQL(T bean) {
         if (this.tableStrategy == null) return deleteSQL;
         return deleteSQL.replace("${newtable}", getTable(bean));
     }
 
+    /**
+     * 根据主键值获取Entity的表名
+     *
+     * @param primary Entity主键值
+     *
+     * @return String
+     */
     public String getTable(Serializable primary) {
         if (tableStrategy == null) return table;
         String t = tableStrategy.getTable(table, primary);
         return t == null || t.isEmpty() ? table : t;
     }
 
+    /**
+     * 根据过滤条件获取Entity的表名
+     *
+     * @param node 过滤条件
+     *
+     * @return String
+     */
     public String getTable(FilterNode node) {
         if (tableStrategy == null) return table;
         String t = tableStrategy.getTable(table, node);
         return t == null || t.isEmpty() ? table : t;
     }
 
+    /**
+     * 根据Entity对象获取Entity的表名
+     *
+     * @param bean Entity对象
+     *
+     * @return String
+     */
     public String getTable(T bean) {
         if (tableStrategy == null) return table;
         String t = tableStrategy.getTable(table, bean);
         return t == null || t.isEmpty() ? table : t;
     }
 
+    /**
+     * 获取主键字段的Attribute
+     *
+     * @return Attribute
+     */
     public Attribute<T, Serializable> getPrimary() {
         return this.primary;
     }
 
+    /**
+     * 遍历数据库表对应的所有字段, 不包含&#64;Transient字段
+     *
+     * @param action BiConsumer
+     */
     public void forEachAttribute(BiConsumer<String, Attribute<T, Serializable>> action) {
         this.attributeMap.forEach(action);
     }
 
+    /**
+     * 根据Entity字段名获取字段的Attribute
+     *
+     * @param fieldname Class字段名
+     *
+     * @return Attribute
+     */
     public Attribute<T, Serializable> getAttribute(String fieldname) {
         if (fieldname == null) return null;
         return this.attributeMap.get(fieldname);
     }
 
+    /**
+     * 根据Entity字段名获取可更新字段的Attribute
+     *
+     * @param fieldname Class字段名
+     *
+     * @return Attribute
+     */
     public Attribute<T, Serializable> getUpdateAttribute(String fieldname) {
         return this.updateAttributeMap.get(fieldname);
     }
 
+    /**
+     * 判断Entity类的字段名与表字段名s是否存在不一致的值
+     *
+     * @return boolean
+     */
     public boolean isNoAlias() {
         return this.aliasmap == null;
     }
 
+    /**
+     * 根据Flipper获取ORDER BY的SQL语句，不存在Flipper或sort字段返回空字符串
+     *
+     * @param flipper 翻页对象
+     *
+     * @return String
+     */
     protected String createSQLOrderby(Flipper flipper) {
-        if (flipper == null || flipper.getSort() == null || flipper.getSort().isEmpty() || flipper.getSort().indexOf(';') >= 0 || flipper.getSort().indexOf('\n') >= 0) return "";
+        if (flipper == null || flipper.getSort() == null) return "";
         final String sort = flipper.getSort();
+        if (sort.isEmpty() || sort.indexOf(';') >= 0 || sort.indexOf('\n') >= 0) return "";
         String sql = this.sortOrderbySqls.get(sort);
         if (sql != null) return sql;
         final StringBuilder sb = new StringBuilder();
@@ -395,21 +526,47 @@ public final class EntityInfo<T> {
         return sql;
     }
 
-    //根据field字段名获取数据库对应的字段名
+    /**
+     * 根据field字段名获取数据库对应的字段名
+     *
+     * @param tabalis   表别名
+     * @param fieldname 字段名
+     *
+     * @return String
+     */
     public String getSQLColumn(String tabalis, String fieldname) {
         return this.aliasmap == null ? (tabalis == null ? fieldname : (tabalis + '.' + fieldname))
             : (tabalis == null ? aliasmap.getOrDefault(fieldname, fieldname) : (tabalis + '.' + aliasmap.getOrDefault(fieldname, fieldname)));
     }
 
+    /**
+     * 获取主键字段的表字段名
+     *
+     * @return String
+     */
     public String getPrimarySQLColumn() {
         return getSQLColumn(null, this.primary.field());
     }
 
-    //数据库字段名
+    /**
+     * 获取主键字段的带有表别名的表字段名
+     *
+     * @param tabalis 表别名
+     *
+     * @return String
+     */
     public String getPrimarySQLColumn(String tabalis) {
         return getSQLColumn(tabalis, this.primary.field());
     }
 
+    /**
+     * 拼接UPDATE给字段赋值的SQL片段
+     *
+     * @param col 表字段名
+     * @param cv  ColumnValue
+     *
+     * @return CharSequence
+     */
     protected CharSequence formatSQLValue(String col, final ColumnValue cv) {
         if (cv == null) return null;
         switch (cv.getExpress()) {
@@ -427,14 +584,33 @@ public final class EntityInfo<T> {
         return formatToString(cv.getValue());
     }
 
+    /**
+     * 获取所有数据表字段的Attribute, 不包含&#64;Transient字段
+     *
+     * @return Map
+     */
     protected Map<String, Attribute<T, Serializable>> getAttributes() {
         return attributeMap;
     }
 
+    /**
+     * 判断日志级别
+     *
+     * @param l Level
+     *
+     * @return boolean
+     */
     public boolean isLoggable(Level l) {
         return l.intValue() >= this.logLevel;
     }
 
+    /**
+     * 将字段值序列化为可SQL的字符串
+     *
+     * @param value 字段值
+     *
+     * @return String
+     */
     protected String formatToString(Object value) {
         if (value == null) return null;
         if (value instanceof CharSequence) {
@@ -443,6 +619,15 @@ public final class EntityInfo<T> {
         return String.valueOf(value);
     }
 
+    /**
+     * 将一行的ResultSet组装成一个Entity对象
+     *
+     * @param sels 指定字段
+     * @param set  ResultSet
+     *
+     * @return Entity对象
+     * @throws SQLException SQLException
+     */
     protected T getValue(final SelectColumn sels, final ResultSet set) throws SQLException {
         T obj = creator.create();
         for (Attribute<T, Serializable> attr : queryAttributes) {
