@@ -1109,17 +1109,17 @@ public class HttpRequest extends Request<HttpContext> {
      * @return Flipper翻页对象
      */
     public org.redkale.source.Flipper getFlipper(String name, boolean needcreate, int maxLimit) {
-        if (maxLimit < 1) maxLimit = org.redkale.source.Flipper.DEFAULT_LIMIT;
         org.redkale.source.Flipper flipper = getJsonParameter(org.redkale.source.Flipper.class, name);
         if (flipper == null) {
             int limit = getRequstURIPath("limit:", maxLimit);
             int offset = getRequstURIPath("offset:", 0);
             String sort = getRequstURIPath("sort:", "");
-            if (limit > 0) flipper = new org.redkale.source.Flipper(limit, offset, sort);
-        } else if (flipper.getLimit() < 1 || flipper.getLimit() > maxLimit) {
+            if (limit > 0) flipper = new org.redkale.source.Flipper(limit < 1 ? org.redkale.source.Flipper.DEFAULT_LIMIT : limit, offset, sort);
+        } else if (flipper.getLimit() < 1 || (maxLimit > 0 && flipper.getLimit() > maxLimit)) {
             flipper.setLimit(maxLimit);
         }
         if (flipper != null || !needcreate) return flipper;
+        if (maxLimit < 1) maxLimit = org.redkale.source.Flipper.DEFAULT_LIMIT;
         return new org.redkale.source.Flipper(maxLimit);
     }
 }
