@@ -465,13 +465,27 @@ public final class Application {
         channel.write(buffer);
         buffer.clear();
         channel.configureBlocking(false);
-        channel.read(buffer);
-        buffer.flip();
-        byte[] bytes = new byte[buffer.remaining()];
-        buffer.get(bytes);
-        channel.close();
-        logger.info(new String(bytes));
-        Thread.sleep(500);
+        try {
+            channel.read(buffer);
+            buffer.flip();
+            byte[] bytes = new byte[buffer.remaining()];
+            buffer.get(bytes);
+            channel.close();
+            logger.info(new String(bytes));
+            Thread.sleep(500);
+        } catch (Exception e) {
+            if (e instanceof PortUnreachableException) {
+                if ("APIDOC".equalsIgnoreCase(command)) {
+                    final Application application = Application.create(true);
+                    application.init();
+                    application.start();
+                    new ApiDocs(application).run();
+                    logger.info("APIDOC OK");
+                    return;
+                }
+            }
+            throw e;
+        }
     }
 
     public void start() throws Exception {
