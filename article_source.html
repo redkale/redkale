@@ -23,12 +23,15 @@
         </section>
 
         <section class="main-content">
-            <h3>Redkale 技术详解 04 -- Java DataSource简易的DB操作</h3>
+            <h3>Redkale 技术详解 04 -- DataSource简易的DB操作</h3>
 
             <p>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;长期以来，Hibernate和Mybatis一直是大家使用最多的持久层开发框架。针对这两种框架网络上是各种比较，各种讨论优缺点。其实这两个框架(算上前身ibatis)都是2002年左右发布, 迄今已有15载已笨重不堪，一个mybatis.jar包大小6M左右，Hibernate更是巨大，毫无轻巧灵活可言，提供简化SQL操作的同时带来了复杂繁琐的配置和高学习门槛。而Redkale的Source组件非常轻量级，通过十多个<span style="color: #2041B4;">interface</span>、<span style="color: #2041B4;">enum</span>和十多个<span style="color: #2041B4;">class</span>完成常见的DB操作功能。<br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Source组件在接口设计上参考了JPA接口，为了降低学习成本，部分注解仍沿用javax.persistence中的类，以多个注解结合一个主操作类 <a href="http://redkale.org/javadoc/org/redkale/source/DataSource.html" target="_blank">DataSource</a> 的方式提供API。在没有IDE自动生成代码的插件支持的情况下Redkale提供了一个Demo代码<a href="https://github.com/redkale/redkale-demo/blob/master/src/org/redkale/demo/base/AutoClassCreator.java" target="_blank"> AutoClassCreator</a> 能很方便的将数据库表生成Entity类。
-                
+            </p>            
+            <p>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;。<br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Source组件在接口设计上参考了JPA接口，为了降低学习成本，部分注解仍沿用javax.persistence中的类，以多个注解结合一个主操作类 <a href="http://redkale.org/javadoc/org/redkale/source/DataSource.html" target="_blank">DataSource</a> 的方式提供API。在没有IDE自动生成代码的插件支持的情况下Redkale提供了一个Demo代码<a href="https://github.com/redkale/redkale-demo/blob/master/src/org/redkale/demo/base/AutoClassCreator.java" target="_blank"> AutoClassCreator</a> 能很方便的将数据库表生成Entity类。
             </p>
             <p>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
