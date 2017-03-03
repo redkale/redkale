@@ -206,7 +206,8 @@ public final class Application {
                     Properties prop = new Properties();
                     final String handlers = properties.getProperty("handlers");
                     if (handlers != null && handlers.contains("java.util.logging.FileHandler")) {
-                        prop.setProperty("handlers", handlers.replace("java.util.logging.FileHandler", fileHandlerClass));
+                        //singletonrun模式下不输出文件日志
+                        prop.setProperty("handlers", handlers.replace("java.util.logging.FileHandler", singletonrun ? "" : fileHandlerClass));
                     }
                     if (!prop.isEmpty()) {
                         String prefix = fileHandlerClass + ".";
@@ -231,7 +232,7 @@ public final class Application {
         }
         this.logger = Logger.getLogger(this.getClass().getSimpleName());
         this.serversLatch = new CountDownLatch(config.getAnyValues("server").length + 1);
-        logger.log(Level.INFO, "------------------------------- Redkale ------------------------------");
+        logger.log(Level.INFO, "------------------------------- Redkale -------------------------------");
         //------------------配置 <transport> 节点 ------------------
         ObjectPool<ByteBuffer> transportPool = null;
         ExecutorService transportExec = null;
