@@ -45,7 +45,7 @@ public abstract class AnyValue {
 
         private Entry<String>[] stringEntrys = new Entry[0];
 
-        private Entry<AnyValue>[] anyEntrys = new Entry[0];
+        private Entry<DefaultAnyValue>[] anyEntrys = new Entry[0];
 
         /**
          * 创建空的DefaultAnyValue对象
@@ -124,7 +124,7 @@ public abstract class AnyValue {
                     }
                 }
                 if (adv.anyEntrys != null) {
-                    for (Entry<AnyValue> en : adv.anyEntrys) {
+                    for (Entry<DefaultAnyValue> en : adv.anyEntrys) {
                         this.addValue(en.name, en.value);
                     }
                 }
@@ -155,7 +155,7 @@ public abstract class AnyValue {
                     }
                 }
                 if (adv.anyEntrys != null) {
-                    for (Entry<AnyValue> en : adv.anyEntrys) {
+                    for (Entry<DefaultAnyValue> en : adv.anyEntrys) {
                         this.setValue(en.name, en.value);
                     }
                 }
@@ -187,10 +187,10 @@ public abstract class AnyValue {
 
         @Override
         public Entry<AnyValue>[] getAnyEntrys() {
-            return anyEntrys;
+            return (Entry<AnyValue>[]) (Entry[]) anyEntrys;
         }
 
-        public void setAnyEntrys(Entry<AnyValue>[] anyEntrys) {
+        public void setAnyEntrys(Entry<DefaultAnyValue>[] anyEntrys) {
             this.anyEntrys = anyEntrys;
         }
 
@@ -225,7 +225,7 @@ public abstract class AnyValue {
 
         @Override
         public AnyValue[] getAnyValues(String... names) {
-            return Entry.getValues(this.predicate, AnyValue.class, this.anyEntrys, names);
+            return Entry.getValues(this.predicate, DefaultAnyValue.class, this.anyEntrys, names);
         }
 
         @Override
@@ -259,9 +259,9 @@ public abstract class AnyValue {
             if (getValue(name) == null) {
                 this.addValue(name, value);
             } else {
-                for (Entry<AnyValue> en : this.anyEntrys) {
+                for (Entry<DefaultAnyValue> en : this.anyEntrys) {
                     if (predicate.test(en.name, name)) {
-                        en.value = value;
+                        en.value = (DefaultAnyValue) value;
                         return this;
                     }
                 }
@@ -290,7 +290,7 @@ public abstract class AnyValue {
 
         @Override
         public AnyValue getAnyValue(String name) {
-            for (Entry<AnyValue> en : this.anyEntrys) {
+            for (Entry<DefaultAnyValue> en : this.anyEntrys) {
                 if (predicate.test(en.name, name)) {
                     return en.value;
                 }
@@ -315,7 +315,7 @@ public abstract class AnyValue {
 
         @Override
         public AnyValue[] getAnyValues(String name) {
-            return Entry.getValues(this.predicate, AnyValue.class, this.anyEntrys, name);
+            return Entry.getValues(this.predicate, DefaultAnyValue.class, this.anyEntrys, name);
         }
 
     }
