@@ -352,7 +352,7 @@ public class HttpRequest extends Request<HttpContext> {
     public String getSessionid(boolean create) {
         String sessionid = getCookie(SESSIONID_NAME, null);
         if (create && (sessionid == null || sessionid.isEmpty())) {
-            sessionid = ((HttpContext) context).createSessionid();
+            sessionid = context.createSessionid();
             this.newsessionid = sessionid;
         }
         return sessionid;
@@ -365,6 +365,18 @@ public class HttpRequest extends Request<HttpContext> {
      */
     public String changeSessionid() {
         this.newsessionid = context.createSessionid();
+        return newsessionid;
+    }
+
+    /**
+     * 指定值更新sessionid
+     *
+     * @param newsessionid 新sessionid值
+     *
+     * @return 新的sessionid值
+     */
+    public String changeSessionid(String newsessionid) {
+        this.newsessionid = newsessionid == null ? context.createSessionid() : newsessionid.trim();
         return newsessionid;
     }
 
