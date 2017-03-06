@@ -7,6 +7,7 @@ package org.redkale.convert.bson;
 
 import java.io.Serializable;
 import org.redkale.convert.*;
+import org.redkale.util.AnyValue;
 
 /**
  *
@@ -27,6 +28,9 @@ public final class BsonFactory extends ConvertFactory<BsonReader, BsonWriter> {
     static {
         instance.register(Serializable.class, objectDecoder);
         instance.register(Serializable.class, objectEncoder);
+
+        instance.register(AnyValue.class, instance.loadDecoder(AnyValue.DefaultAnyValue.class));
+        instance.register(AnyValue.class, instance.loadEncoder(AnyValue.DefaultAnyValue.class));
     }
 
     private BsonFactory(BsonFactory parent, boolean tiny) {

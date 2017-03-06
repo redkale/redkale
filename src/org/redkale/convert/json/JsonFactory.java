@@ -10,7 +10,7 @@ import java.math.BigInteger;
 import java.net.*;
 import org.redkale.convert.*;
 import org.redkale.convert.ext.*;
-import org.redkale.util.DLong;
+import org.redkale.util.*;
 
 /**
  *
@@ -29,6 +29,9 @@ public final class JsonFactory extends ConvertFactory<JsonReader, JsonWriter> {
         instance.register(DLong.class, DLongSimpledCoder.DLongJsonSimpledCoder.instance);
         instance.register(BigInteger.class, BigIntegerSimpledCoder.BigIntegerJsonSimpledCoder.instance);
         instance.register(Serializable.class, instance.loadEncoder(Object.class));
+
+        instance.register(AnyValue.class, instance.loadDecoder(AnyValue.DefaultAnyValue.class));
+        instance.register(AnyValue.class, instance.loadEncoder(AnyValue.DefaultAnyValue.class));
     }
 
     private JsonFactory(JsonFactory parent, boolean tiny) {

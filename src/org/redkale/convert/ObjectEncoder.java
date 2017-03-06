@@ -78,6 +78,7 @@ public final class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T
                     if (method.getName().length() < 3) continue;
                     if (method.getName().equals("getClass")) continue;
                     if (!method.getName().startsWith("is") && !method.getName().startsWith("get")) continue;
+                    if (method.getAnnotation(java.beans.Transient.class) != null) continue;
                     if (method.getParameterTypes().length != 0) continue;
                     if (method.getReturnType() == void.class) continue;
                     if (reversible && (cps == null || !contains(cps, ConvertFactory.readGetSetFieldName(method)))) {

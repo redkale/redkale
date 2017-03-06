@@ -39,11 +39,13 @@ public abstract class AnyValue {
          */
         public static final BiPredicate<String, String> EQUALSIGNORE = (name1, name2) -> name1.equalsIgnoreCase(name2);
 
-        private final BiPredicate<String, String> predicate;
+        private boolean ignoreCase;
 
-        private Entry<String>[] stringValues = new Entry[0];
+        private BiPredicate<String, String> predicate;
 
-        private Entry<AnyValue>[] entityValues = new Entry[0];
+        private Entry<String>[] stringEntrys = new Entry[0];
+
+        private Entry<AnyValue>[] anyEntrys = new Entry[0];
 
         /**
          * 创建空的DefaultAnyValue对象
@@ -96,16 +98,8 @@ public abstract class AnyValue {
          * @param ignoreCase name是否不区分大小写
          */
         public DefaultAnyValue(boolean ignoreCase) {
+            this.ignoreCase = ignoreCase;
             this.predicate = ignoreCase ? EQUALSIGNORE : EQUALS;
-        }
-
-        /**
-         * 创建DefaultAnyValue对象
-         *
-         * @param predicate name比较策略
-         */
-        public DefaultAnyValue(BiPredicate<String, String> predicate) {
-            this.predicate = predicate;
         }
 
         /**
@@ -114,9 +108,9 @@ public abstract class AnyValue {
          * @return DefaultAnyValue对象
          */
         public DefaultAnyValue duplicate() {
-            DefaultAnyValue rs = new DefaultAnyValue(this.predicate);
-            rs.stringValues = this.stringValues;
-            rs.entityValues = this.entityValues;
+            DefaultAnyValue rs = new DefaultAnyValue(this.ignoreCase);
+            rs.stringEntrys = this.stringEntrys;
+            rs.anyEntrys = this.anyEntrys;
             return rs;
         }
 
@@ -124,13 +118,13 @@ public abstract class AnyValue {
             if (av == null) return this;
             if (av instanceof DefaultAnyValue) {
                 final DefaultAnyValue adv = (DefaultAnyValue) av;
-                if (adv.stringValues != null) {
-                    for (Entry<String> en : adv.stringValues) {
+                if (adv.stringEntrys != null) {
+                    for (Entry<String> en : adv.stringEntrys) {
                         this.addValue(en.name, en.value);
                     }
                 }
-                if (adv.entityValues != null) {
-                    for (Entry<AnyValue> en : adv.entityValues) {
+                if (adv.anyEntrys != null) {
+                    for (Entry<AnyValue> en : adv.anyEntrys) {
                         this.addValue(en.name, en.value);
                     }
                 }
@@ -155,13 +149,13 @@ public abstract class AnyValue {
             if (av == null) return this;
             if (av instanceof DefaultAnyValue) {
                 final DefaultAnyValue adv = (DefaultAnyValue) av;
-                if (adv.stringValues != null) {
-                    for (Entry<String> en : adv.stringValues) {
+                if (adv.stringEntrys != null) {
+                    for (Entry<String> en : adv.stringEntrys) {
                         this.setValue(en.name, en.value);
                     }
                 }
-                if (adv.entityValues != null) {
-                    for (Entry<AnyValue> en : adv.entityValues) {
+                if (adv.anyEntrys != null) {
+                    for (Entry<AnyValue> en : adv.anyEntrys) {
                         this.setValue(en.name, en.value);
                     }
                 }
@@ -184,21 +178,41 @@ public abstract class AnyValue {
 
         @Override
         public Entry<String>[] getStringEntrys() {
-            return stringValues;
+            return stringEntrys;
+        }
+
+        public void setStringEntrys(Entry<String>[] stringEntrys) {
+            this.stringEntrys = stringEntrys;
         }
 
         @Override
         public Entry<AnyValue>[] getAnyEntrys() {
-            return entityValues;
+            return anyEntrys;
+        }
+
+        public void setAnyEntrys(Entry<AnyValue>[] anyEntrys) {
+            this.anyEntrys = anyEntrys;
+        }
+
+        public boolean isIgnoreCase() {
+            return ignoreCase;
+        }
+
+        public void setIgnoreCase(boolean ignoreCase) {
+            this.ignoreCase = ignoreCase;
+            if (this.predicate == null) {
+                this.predicate = ignoreCase ? EQUALSIGNORE : EQUALS;
+            }
         }
 
         @Override
+        @java.beans.Transient
         public String[] getNames() {
             Set<String> set = new LinkedHashSet<>();
-            for (Entry en : this.stringValues) {
+            for (Entry en : this.stringEntrys) {
                 set.add(en.name);
             }
-            for (Entry en : this.entityValues) {
+            for (Entry en : this.anyEntrys) {
                 set.add(en.name);
             }
             return set.toArray(new String[set.size()]);
@@ -206,12 +220,12 @@ public abstract class AnyValue {
 
         @Override
         public String[] getValues(String... names) {
-            return Entry.getValues(this.predicate, String.class, this.stringValues, names);
+            return Entry.getValues(this.predicate, String.class, this.stringEntrys, names);
         }
 
         @Override
         public AnyValue[] getAnyValues(String... names) {
-            return Entry.getValues(this.predicate, AnyValue.class, this.entityValues, names);
+            return Entry.getValues(this.predicate, AnyValue.class, this.anyEntrys, names);
         }
 
         @Override
@@ -220,8 +234,8 @@ public abstract class AnyValue {
         }
 
         public DefaultAnyValue clear() {
-            this.stringValues = new Entry[0];
-            this.entityValues = new Entry[0];
+            this.stringEntrys = new Entry[0];
+            this.anyEntrys = new Entry[0];
             return this;
         }
 
@@ -230,7 +244,7 @@ public abstract class AnyValue {
             if (getValue(name) == null) {
                 this.addValue(name, value);
             } else {
-                for (Entry<String> en : this.stringValues) {
+                for (Entry<String> en : this.stringEntrys) {
                     if (predicate.test(en.name, name)) {
                         en.value = value;
                         return this;
@@ -245,7 +259,7 @@ public abstract class AnyValue {
             if (getValue(name) == null) {
                 this.addValue(name, value);
             } else {
-                for (Entry<AnyValue> en : this.entityValues) {
+                for (Entry<AnyValue> en : this.anyEntrys) {
                     if (predicate.test(en.name, name)) {
                         en.value = value;
                         return this;
@@ -264,19 +278,19 @@ public abstract class AnyValue {
         }
 
         public DefaultAnyValue addValue(String name, String value) {
-            this.stringValues = Utility.append(this.stringValues, new Entry(name, value));
+            this.stringEntrys = Utility.append(this.stringEntrys, new Entry(name, value));
             return this;
         }
 
         public DefaultAnyValue addValue(String name, AnyValue value) {
             if (name == null || value == null) return this;
-            this.entityValues = Utility.append(this.entityValues, new Entry(name, value));
+            this.anyEntrys = Utility.append(this.anyEntrys, new Entry(name, value));
             return this;
         }
 
         @Override
         public AnyValue getAnyValue(String name) {
-            for (Entry<AnyValue> en : this.entityValues) {
+            for (Entry<AnyValue> en : this.anyEntrys) {
                 if (predicate.test(en.name, name)) {
                     return en.value;
                 }
@@ -286,7 +300,7 @@ public abstract class AnyValue {
 
         @Override
         public String getValue(String name) {
-            for (Entry<String> en : this.stringValues) {
+            for (Entry<String> en : this.stringEntrys) {
                 if (predicate.test(en.name, name)) {
                     return en.value;
                 }
@@ -296,12 +310,12 @@ public abstract class AnyValue {
 
         @Override
         public String[] getValues(String name) {
-            return Entry.getValues(this.predicate, String.class, this.stringValues, name);
+            return Entry.getValues(this.predicate, String.class, this.stringEntrys, name);
         }
 
         @Override
         public AnyValue[] getAnyValues(String name) {
-            return Entry.getValues(this.predicate, AnyValue.class, this.entityValues, name);
+            return Entry.getValues(this.predicate, AnyValue.class, this.anyEntrys, name);
         }
 
     }
@@ -312,9 +326,14 @@ public abstract class AnyValue {
 
         T value;
 
+        @java.beans.ConstructorProperties({"name", "value"})
         public Entry(String name0, T value0) {
             this.name = name0;
             this.value = value0;
+        }
+
+        public String getName() {
+            return name;
         }
 
         public T getValue() {
