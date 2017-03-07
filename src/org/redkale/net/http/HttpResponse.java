@@ -363,7 +363,14 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      */
     @Override
     public void finish(final byte[] bs) {
-        finish(false, ByteBuffer.wrap(bs));
+        if (this.context.getBufferCapacity() == bs.length) {
+            ByteBuffer buffer = this.context.pollBuffer();
+            buffer.put(bs);
+            buffer.flip();
+            this.finish(false, buffer);
+        } else {
+            this.finish(false, ByteBuffer.wrap(bs));
+        }
     }
 
     /**

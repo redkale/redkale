@@ -168,7 +168,14 @@ public abstract class Response<C extends Context, R extends Request<C>> {
     }
 
     public void finish(final byte[] bs) {
-        finish(ByteBuffer.wrap(bs));
+        if (this.context.bufferCapacity == bs.length) {
+            ByteBuffer buffer = this.context.pollBuffer();
+            buffer.put(bs);
+            buffer.flip();
+            this.finish(buffer);
+        } else {
+            this.finish(ByteBuffer.wrap(bs));
+        }
     }
 
     public void finish(ByteBuffer buffer) {
