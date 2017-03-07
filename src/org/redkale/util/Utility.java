@@ -287,6 +287,7 @@ public final class Utility {
         for (byte b : bytes) {
             if (last) sb.append(',');
             int v = b & 0xff;
+            sb.append("0x");
             if (v < 16) sb.append('0');
             sb.append(Integer.toHexString(v));
             last = true;
