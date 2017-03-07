@@ -23,11 +23,12 @@ import org.redkale.util.*;
  *                                    WebSocketServlet
  *                                            |
  *                                            |
- *                          WebSocketEngine &#38; WebSocketNode
- *                                    /             \
- *                                 /                  \
- *                              /                       \
- *                     WebSocketGroup1            WebSocketGroup2
+ *                                   WebSocketEngine
+ *                                    WebSocketNode
+ *                                   /             \
+ *                                 /                \
+ *                               /                   \
+ *                     WebSocketGroup1          WebSocketGroup2
  *                        /        \                /        \
  *                      /           \             /           \
  *               WebSocket1     WebSocket2   WebSocket3    WebSocket4
@@ -41,8 +42,10 @@ import org.redkale.util.*;
  */
 public abstract class WebSocketServlet extends HttpServlet {
 
+    @Comment("WebScoket服务器给客户端进行ping操作的间隔时间, 单位: 秒")
     public static final String WEBPARAM__LIVEINTERVAL = "liveinterval";
 
+    @Comment("WebScoket服务器给客户端进行ping操作的默认间隔时间, 单位: 秒")
     public static final int DEFAILT_LIVEINTERVAL = 60;
 
     protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
@@ -57,7 +60,7 @@ public abstract class WebSocketServlet extends HttpServlet {
         }
     }
 
-    //是否用于二进制流传输
+    @Comment("是否用于二进制流传输")
     protected final boolean wsbinary = getClass().getAnnotation(WebSocketBinary.class) != null;
 
     @Resource(name = "$")

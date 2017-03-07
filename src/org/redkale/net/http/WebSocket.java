@@ -11,6 +11,7 @@ import java.net.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import org.redkale.net.*;
+import org.redkale.util.Comment;
 
 /**
  * <blockquote><pre>
@@ -22,15 +23,13 @@ import org.redkale.net.*;
  *      1.3 onConnected WebSocket成功连接后在准备接收数据前回调此方法。
  *      1.4 onMessage/onFragment+ WebSocket接收到消息后回调此消息类方法。
  *      1.5 onClose WebSocket被关闭后回调此方法。
- *
- *  此模式下 以上方法都应该被重载。
+ *  普通模式下 以上方法都应该被重载。
  *
  *  2) 原始二进制模式: 此模式有别于HTML5规范，可以视为原始的TCP连接。通常用于音频视频通讯场景。其流程顺序如下:
  *      2.1 onOpen 若返回null，视为WebSocket的连接不合法，强制关闭WebSocket连接；通常用于判断登录态。
  *      2.2 createGroupid 若返回null，视为WebSocket的连接不合法，强制关闭WebSocket连接；通常用于判断用户权限是否符合。
- *      2.3 onRead WebSocket成功连接后回调此方法， 由此方法处理原始的TCP连接， 同时业务代码去控制WebSocket的关闭。
- *
- *  此模式下 以上方法都应该被重载。
+ *      2.3 onRead WebSocket成功连接后回调此方法， 由此方法处理原始的TCP连接， 需要业务代码去控制WebSocket的关闭。
+ *  二进制模式下 以上方法都应该被重载。
  * </pre></blockquote>
  * <p>
  * 详情见: https://redkale.org
@@ -39,24 +38,28 @@ import org.redkale.net.*;
  */
 public abstract class WebSocket {
 
-    //消息不合法
+    @Comment("消息不合法")
     public static final int RETCODE_SEND_ILLPACKET = 1 << 1; //2
 
-    //ws已经关闭
+    @Comment("WebSocket已经关闭")
     public static final int RETCODE_WSOCKET_CLOSED = 1 << 2; //4
 
-    //socket的buffer不合法
+    @Comment("Socket的buffer不合法")
     public static final int RETCODE_ILLEGALBUFFER = 1 << 3; //8
 
-    //ws发送消息异常
+    @Comment("WebSocket发送消息异常")
     public static final int RETCODE_SENDEXCEPTION = 1 << 4; //16
 
+    @Comment("WebSocketEngine实例不存在")
     public static final int RETCODE_ENGINE_NULL = 1 << 5; //32
 
+    @Comment("WebSocketNode实例不存在")
     public static final int RETCODE_NODESERVICE_NULL = 1 << 6; //64
 
+    @Comment("WebSocket组为空, 表示无WebSocket连接")
     public static final int RETCODE_GROUP_EMPTY = 1 << 7; //128
 
+    @Comment("WebSocket已离线")
     public static final int RETCODE_WSOFFLINE = 1 << 8; //256
 
     WebSocketRunner _runner; //不可能为空 
@@ -85,6 +88,7 @@ public abstract class WebSocket {
      * 发送消息体, 包含二进制/文本
      *
      * @param packet WebSocketPacket
+     *
      * @return 0表示成功， 非0表示错误码
      */
     public final int send(WebSocketPacket packet) {
@@ -98,6 +102,7 @@ public abstract class WebSocket {
      * 发送单一的文本消息
      *
      * @param text 不可为空
+     *
      * @return 0表示成功， 非0表示错误码
      */
     public final int send(String text) {
@@ -109,6 +114,7 @@ public abstract class WebSocket {
      *
      * @param text 不可为空
      * @param last 是否最后一条
+     *
      * @return 0表示成功， 非0表示错误码
      */
     public final int send(String text, boolean last) {
@@ -136,6 +142,7 @@ public abstract class WebSocket {
      * 发送单一的二进制消息
      *
      * @param data byte[]
+     *
      * @return 0表示成功， 非0表示错误码
      */
     public final int send(byte[] data) {
@@ -147,6 +154,7 @@ public abstract class WebSocket {
      *
      * @param data 不可为空
      * @param last 是否最后一条
+     *
      * @return 0表示成功， 非0表示错误码
      */
     public final int send(byte[] data, boolean last) {
@@ -158,6 +166,7 @@ public abstract class WebSocket {
      *
      * @param message 不可为空, 只能是String或者byte[]
      * @param last    是否最后一条
+     *
      * @return 0表示成功， 非0表示错误码
      */
     public final int send(Serializable message, boolean last) {
@@ -170,6 +179,7 @@ public abstract class WebSocket {
      *
      * @param groupid groupid
      * @param text    不可为空
+     *
      * @return 为0表示成功， 其他值表示异常
      */
     public final int sendEachMessage(Serializable groupid, String text) {
@@ -181,6 +191,7 @@ public abstract class WebSocket {
      *
      * @param groupid groupid
      * @param data    不可为空
+     *
      * @return 为0表示成功， 其他值表示异常
      */
     public final int sendEachMessage(Serializable groupid, byte[] data) {
@@ -193,6 +204,7 @@ public abstract class WebSocket {
      * @param groupid groupid
      * @param text    不可为空
      * @param last    是否最后一条
+     *
      * @return 为0表示成功， 其他值表示异常
      */
     public final int sendEachMessage(Serializable groupid, String text, boolean last) {
@@ -205,6 +217,7 @@ public abstract class WebSocket {
      * @param groupid groupid
      * @param data    不可为空
      * @param last    是否最后一条
+     *
      * @return 为0表示成功， 其他值表示异常
      */
     public final int sendEachMessage(Serializable groupid, byte[] data, boolean last) {
@@ -216,6 +229,7 @@ public abstract class WebSocket {
      *
      * @param groupid groupid
      * @param text    不可为空
+     *
      * @return 为0表示成功， 其他值表示异常
      */
     public final int sendRecentMessage(Serializable groupid, String text) {
@@ -227,6 +241,7 @@ public abstract class WebSocket {
      *
      * @param groupid groupid
      * @param data    不可为空
+     *
      * @return 为0表示成功， 其他值表示异常
      */
     public final int sendRecentMessage(Serializable groupid, byte[] data) {
@@ -239,6 +254,7 @@ public abstract class WebSocket {
      * @param groupid groupid
      * @param text    不可为空
      * @param last    是否最后一条
+     *
      * @return 为0表示成功， 其他值表示异常
      */
     public final int sendRecentMessage(Serializable groupid, String text, boolean last) {
@@ -251,6 +267,7 @@ public abstract class WebSocket {
      * @param groupid groupid
      * @param data    不可为空
      * @param last    是否最后一条
+     *
      * @return 为0表示成功， 其他值表示异常
      */
     public final int sendRecentMessage(Serializable groupid, byte[] data, boolean last) {
@@ -275,6 +292,7 @@ public abstract class WebSocket {
      * 获取在线用户的节点地址列表
      *
      * @param groupid groupid
+     *
      * @return 地址列表
      */
     protected final Collection<InetSocketAddress> getOnlineNodes(Serializable groupid) {
@@ -285,6 +303,7 @@ public abstract class WebSocket {
      * 获取在线用户的详细连接信息
      *
      * @param groupid groupid
+     *
      * @return 地址集合
      */
     protected final Map<InetSocketAddress, List<String>> getOnlineRemoteAddress(Serializable groupid) {
@@ -296,6 +315,7 @@ public abstract class WebSocket {
      *
      * @param <T>  属性值的类型
      * @param name 属性名
+     *
      * @return 属性值
      */
     @SuppressWarnings("unchecked")
@@ -308,6 +328,7 @@ public abstract class WebSocket {
      *
      * @param <T>  属性值的类型
      * @param name 属性名
+     *
      * @return 属性值
      */
     public final <T> T removeAttribute(String name) {
@@ -374,6 +395,7 @@ public abstract class WebSocket {
      * 获取指定groupid的WebSocketGroup, 没有返回null
      *
      * @param groupid groupid
+     *
      * @return WebSocketGroup
      */
     protected final WebSocketGroup getWebSocketGroup(Serializable groupid) {
@@ -394,6 +416,7 @@ public abstract class WebSocket {
      * 返回sessionid, null表示连接不合法或异常,默认实现是request.getSessionid(false)，通常需要重写该方法
      *
      * @param request HttpRequest
+     *
      * @return sessionid
      */
     public Serializable onOpen(final HttpRequest request) {
