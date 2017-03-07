@@ -29,7 +29,7 @@ public @interface WebServlet {
     String name() default "";
 
     /**
-     * 是否自动添加url前缀
+     * 是否自动添加url前缀, 对应application.xml中servlets节点的path属性
      *
      * @return boolean
      */
