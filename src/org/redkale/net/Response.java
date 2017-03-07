@@ -148,6 +148,15 @@ public abstract class Response<C extends Context, R extends Request<C>> {
         return output;
     }
 
+    /**
+     * 是否已关闭
+     *
+     * @return boolean
+     */
+    public boolean isClosed() {
+        return !this.inited;
+    }
+
     public void finish() {
         this.finish(false);
     }
