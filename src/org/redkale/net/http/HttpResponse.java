@@ -357,6 +357,16 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
     }
 
     /**
+     * 将指定byte[]按响应结果输出
+     *
+     * @param bs 输出内容
+     */
+    @Override
+    public void finish(final byte[] bs) {
+        finish(false, ByteBuffer.wrap(bs));
+    }
+
+    /**
      * 将指定ByteBuffer按响应结果输出
      *
      * @param buffer 输出内容

@@ -158,6 +158,10 @@ public abstract class Response<C extends Context, R extends Request<C>> {
         this.context.responsePool.offer(this);
     }
 
+    public void finish(final byte[] bs) {
+        finish(ByteBuffer.wrap(bs));
+    }
+
     public void finish(ByteBuffer buffer) {
         this.channel.write(buffer, buffer, finishHandler);
     }
