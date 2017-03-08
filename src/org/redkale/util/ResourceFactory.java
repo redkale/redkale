@@ -9,6 +9,7 @@ import java.lang.ref.WeakReference;
 import java.lang.reflect.*;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.function.BiConsumer;
 import java.util.logging.*;
 import java.util.regex.Pattern;
 import javax.annotation.Resource;
@@ -259,14 +260,6 @@ public final class ResourceFactory {
         return null;
     }
 
-    //Map无法保证ResourceEntry的自动同步， 暂时不提供该功能
-    @Deprecated
-    private <A> Map<String, A> find(final Pattern reg, Class<? extends A> clazz, A exclude) {
-        Map<String, A> result = new LinkedHashMap();
-        load(reg, clazz, exclude, result);
-        return result;
-    }
-
     private <A> void load(final Pattern reg, Class<? extends A> clazz, final A exclude, final Map<String, A> result) {
         ConcurrentHashMap<String, ResourceEntry> map = this.store.get(clazz);
         if (map != null) {
@@ -286,10 +279,18 @@ public final class ResourceFactory {
     }
 
     public <T> boolean inject(final Object src, final T attachment) {
-        return inject(src, attachment, new ArrayList());
+        return inject(src, attachment, null);
     }
 
-    private <T> boolean inject(final Object src, final T attachment, final List<Object> list) {
+    public <T> boolean inject(final Object src, final BiConsumer<Object, Field> consumer) {
+        return inject(src, null, consumer);
+    }
+
+    public <T> boolean inject(final Object src, final T attachment, final BiConsumer<Object, Field> consumer) {
+        return inject(src, attachment, consumer, new ArrayList());
+    }
+
+    private <T> boolean inject(final Object src, final T attachment, final BiConsumer<Object, Field> consumer, final List<Object> list) {
         if (src == null) return false;
         try {
             list.add(src);
@@ -301,8 +302,8 @@ public final class ResourceFactory {
                     final Class classtype = field.getType();
                     final Type genctype = field.getGenericType();
                     Resource rc = field.getAnnotation(Resource.class);
-                    if (rc == null) {
-                        boolean flag = true;
+                    if (rc == null) {  //深度注入
+                        boolean flag = true; //是否没有重复
                         Object ns = field.get(src);
                         for (Object o : list) {
                             if (o == ns) {
@@ -312,10 +313,11 @@ public final class ResourceFactory {
                         }
                         if (ns == null) continue;
                         if (ns.getClass().isPrimitive() || ns.getClass().isArray() || ns.getClass().getName().startsWith("java")) continue;
-                        if (flag) this.inject(ns, attachment, list);
+                        if (flag) this.inject(ns, attachment, consumer, list);
                         continue;
                     }
                     if (Modifier.isFinal(field.getModifiers())) continue;
+                    if (consumer != null) consumer.accept(src, field);
                     String tname = rc.name();
                     if (tname.contains(RESOURCE_PARENT_NAME)) {
                         try {
@@ -333,10 +335,6 @@ public final class ResourceFactory {
                     final String rcname = tname;
                     ResourceEntry re = findEntry(rcname, genctype);
                     if (re == null) {
-//                        if (Map.class.isAssignableFrom(classtype)) {
-//                            Map map = find(Pattern.compile(rcname.isEmpty() ? ".*" : rcname), (Class) ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[1], src);
-//                            if (map != null) re = new ResourceEntry(map);
-//                        } else 
                         if (rcname.startsWith("property.")) {
                             re = findEntry(rcname, String.class);
                         } else {
