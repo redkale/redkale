@@ -375,7 +375,7 @@
 <span class="nd">@Target</span><span class="o">({</span><span class="n">PARAMETER</span><span class="o">})</span>
 <span class="kd">public</span> <span class="nd">@interface</span> <span class="n">RestParam</span> <span class="o">{</span>
 
-    <span class="c1">//参数名 name值不能是'&';  name='#'表示截取uri最后一段;  name='#xxx:'表示从uri中/pipes/xxx:v/截取xxx:的值； </span>
+    <span class="c1">//参数名 name='&'表示当前用户;  name='#'表示截取uri最后一段;  name='#xxx:'表示从uri中/pipes/xxx:v/截取xxx:的值； </span>
     <span class="c1">//若方法名以find、delete开头且方法的参数只有一个且参数类型是基本数据类型或String，则默认值为"#"；</span>
     <span class="c1">//若使用Java 8中带上 -parameters 编译项的新特性，默认值为参数名, 若没使用新特性则采用bean、bean2、bean3...的命名规则。</span>
     <span class="n">String</span> <span class="nf">name</span><span class="o">();</span> 
