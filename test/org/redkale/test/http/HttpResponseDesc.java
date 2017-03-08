@@ -88,12 +88,6 @@ public interface HttpResponseDesc {
     //将RetResult对象以JSON格式输出
     public void finishJson(final JsonConvert convert, final org.redkale.service.RetResult ret);
 
-    //将对象以JavaScript格式输出
-    public void finishJsResult(String var, Object result);
-
-    //将对象以JavaScript格式输出
-    public void finishJsResult(JsonConvert jsonConvert, String var, Object result);
-
     //将指定字符串以响应结果输出
     public void finish(String obj);
 
@@ -105,6 +99,9 @@ public interface HttpResponseDesc {
 
     //以404状态码输出
     public void finish404();
+
+    //将指定byte[]按响应结果输出
+    public void finish(final byte[] bs);
 
     //将指定ByteBuffer按响应结果输出
     public void finish(ByteBuffer buffer);

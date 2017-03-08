@@ -43,6 +43,9 @@ public interface HttpRequestDesc {
 
     //更新sessionid
     public String changeSessionid();
+    
+    //指定值更新sessionid
+    public String changeSessionid(String newsessionid);
 
     //使sessionid失效
     public void invalidateSession();
