@@ -535,7 +535,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         if (filename != null && !filename.isEmpty() && file != null) {
             addHeader("Content-Disposition", "attachment;filename=" + URLEncoder.encode(filename, "UTF-8"));
         }
-        this.contentType = MimeType.getByFilename(filename == null || filename.isEmpty() ? file.getName() : filename);
+        if (this.contentType == null) this.contentType = MimeType.getByFilename(filename == null || filename.isEmpty() ? file.getName() : filename);
         if (this.contentType == null) this.contentType = "application/octet-stream";
         String range = request.getHeader("Range");
         if (range != null && (!range.startsWith("bytes=") || range.indexOf(',') >= 0)) range = null;
