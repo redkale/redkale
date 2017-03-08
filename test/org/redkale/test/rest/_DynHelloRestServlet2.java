@@ -27,7 +27,7 @@ public class _DynHelloRestServlet2 extends SimpleRestServlet {
     private Map<String, HelloService2> _servicemap;
 
     @AuthIgnore
-    @WebAction(url = "/hello/create", comment = "创建Hello对象")
+    @WebMapping(url = "/hello/create", comment = "创建Hello对象")
     @WebParam(name = "bean", type = HelloEntity.class, comment = "Hello对象")
     public void create(HttpRequest req, HttpResponse resp) throws IOException {
         HelloService2 service = _servicemap == null ? _service : _servicemap.get(req.getHeader(Rest.REST_HEADER_RESOURCE_NAME, ""));
@@ -40,7 +40,7 @@ public class _DynHelloRestServlet2 extends SimpleRestServlet {
     }
 
     @AuthIgnore
-    @WebAction(url = "/hello/delete/", comment = "根据id删除Hello对象")
+    @WebMapping(url = "/hello/delete/", comment = "根据id删除Hello对象")
     @WebParam(name = "#", type = int.class, comment = "Hello对象id")
     public void delete(HttpRequest req, HttpResponse resp) throws IOException {
         HelloService2 service = _servicemap == null ? _service : _servicemap.get(req.getHeader(Rest.REST_HEADER_RESOURCE_NAME, ""));
@@ -50,7 +50,7 @@ public class _DynHelloRestServlet2 extends SimpleRestServlet {
     }
 
     @AuthIgnore
-    @WebAction(url = "/hello/update", comment = "修改Hello对象")
+    @WebMapping(url = "/hello/update", comment = "修改Hello对象")
     @WebParam(name = "bean", type = HelloEntity.class, comment = "Hello对象")
     public void update(HttpRequest req, HttpResponse resp) throws IOException {
         HelloService2 service = _servicemap == null ? _service : _servicemap.get(req.getHeader(Rest.REST_HEADER_RESOURCE_NAME, ""));
@@ -62,7 +62,7 @@ public class _DynHelloRestServlet2 extends SimpleRestServlet {
     }
 
     @AuthIgnore
-    @WebAction(url = "/hello/query", comment = "查询Hello对象列表")
+    @WebMapping(url = "/hello/query", comment = "查询Hello对象列表")
     @WebParam(name = "bean", type = HelloBean.class, comment = "过滤条件")
     public void query(HttpRequest req, HttpResponse resp) throws IOException {
         HelloService2 service = _servicemap == null ? _service : _servicemap.get(req.getHeader(Rest.REST_HEADER_RESOURCE_NAME, ""));
@@ -77,7 +77,7 @@ public class _DynHelloRestServlet2 extends SimpleRestServlet {
     }
 
     @AuthIgnore
-    @WebAction(url = "/hello/find/", comment = "根据id删除Hello对象")
+    @WebMapping(url = "/hello/find/", comment = "根据id删除Hello对象")
     @WebParam(name = "#", type = int.class, comment = "Hello对象id")
     public void find(HttpRequest req, HttpResponse resp) throws IOException {
         HelloService2 service = _servicemap == null ? _service : _servicemap.get(req.getHeader(Rest.REST_HEADER_RESOURCE_NAME, ""));

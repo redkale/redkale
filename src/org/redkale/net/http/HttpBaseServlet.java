@@ -66,8 +66,8 @@ public abstract class HttpBaseServlet extends HttpServlet {
     }
 
     /**
-     * 配合 &#64;WebAction 使用。
-     * 用于对&#64;WebAction方法中参数描述
+     * 配合 &#64;WebMapping 使用。
+     * 用于对&#64;WebMapping方法中参数描述
      *
      * <p>
      * 详情见: https://redkale.org
@@ -102,6 +102,34 @@ public abstract class HttpBaseServlet extends HttpServlet {
     }
 
     /**
+     * 使用 WebMapping 替代。
+     * <p>
+     * 详情见: https://redkale.org
+     *
+     * @author zhangjx
+     */
+    @Deprecated
+    @Documented
+    @Target({METHOD})
+    @Retention(RUNTIME)
+    protected @interface WebAction {
+
+        int actionid() default 0;
+
+        String url();
+
+        String[] methods() default {};//允许方法(不区分大小写),如:GET/POST/PUT,为空表示允许所有方法
+
+        String comment() default ""; //备注描述
+
+        boolean inherited() default true; //是否能被继承, 当 HttpBaseServlet 被继承后该方法是否能被子类继承
+
+        String result() default "Object"; //输出结果的数据类型
+
+        Class[] results() default {}; //输出结果的数据类型集合，由于结果类型可能是泛型而注解的参数值不支持泛型，因此加入明细数据类型集合
+    }
+
+    /**
      * 配合 HttpBaseServlet 使用。
      * 用于对&#64;WebServlet对应的url进行细分。 其url必须是包含WebServlet中定义的前缀， 且不能是正则表达式
      *
@@ -113,7 +141,7 @@ public abstract class HttpBaseServlet extends HttpServlet {
     @Documented
     @Target({METHOD})
     @Retention(RUNTIME)
-    protected @interface WebAction {
+    protected @interface WebMapping {
 
         int actionid() default 0;
 
@@ -153,7 +181,7 @@ public abstract class HttpBaseServlet extends HttpServlet {
         int seconds() default 15;
     }
 
-    private Map.Entry<String, Entry>[] actions;
+    private Map.Entry<String, Entry>[] mappings;
 
     public boolean preExecute(HttpRequest request, HttpResponse response) throws IOException {
         return true;
@@ -162,7 +190,7 @@ public abstract class HttpBaseServlet extends HttpServlet {
     @Override
     public final void execute(HttpRequest request, HttpResponse response) throws IOException {
         if (!preExecute(request, response)) return;
-        for (Map.Entry<String, Entry> en : actions) {
+        for (Map.Entry<String, Entry> en : mappings) {
             if (request.getRequestURI().startsWith(en.getKey())) {
                 Entry entry = en.getValue();
                 if (!entry.checkMethod(request.getMethod())) {
@@ -193,13 +221,13 @@ public abstract class HttpBaseServlet extends HttpServlet {
         WebServlet ws = this.getClass().getAnnotation(WebServlet.class);
         if (ws != null && !ws.repair()) path = "";
         HashMap<String, Entry> map = load();
-        this.actions = new Map.Entry[map.size()];
+        this.mappings = new Map.Entry[map.size()];
         int i = -1;
         for (Map.Entry<String, Entry> en : map.entrySet()) {
-            actions[++i] = new AbstractMap.SimpleEntry<>(path + en.getKey(), en.getValue());
+            mappings[++i] = new AbstractMap.SimpleEntry<>(path + en.getKey(), en.getValue());
         }
         //必须要倒排序, /query /query1 /query12  确保含子集的优先匹配 /query12  /query1  /query
-        Arrays.sort(actions, (o1, o2) -> o2.getKey().compareTo(o1.getKey()));
+        Arrays.sort(mappings, (o1, o2) -> o2.getKey().compareTo(o1.getKey()));
     }
 
     public final void postDestroy(HttpContext context, AnyValue config) {
@@ -242,17 +270,20 @@ public abstract class HttpBaseServlet extends HttpServlet {
                 if (exps.length > 0 && (exps.length != 1 || exps[0] != IOException.class)) continue;
                 //-----------------------------------------------
 
+                final WebMapping mapping = method.getAnnotation(WebMapping.class);
                 final WebAction action = method.getAnnotation(WebAction.class);
-                if (action == null) continue;
-                if (!action.inherited() && selfClz != clz) continue; //忽略不被继承的方法
-                final int actionid = action.actionid();
-                final String name = action.url().trim();
+                if (mapping == null && action == null) continue;
+                final boolean inherited = action == null ? action.inherited() : mapping.inherited();
+                if (!inherited && selfClz != clz) continue; //忽略不被继承的方法
+                final int actionid = action == null ? action.actionid() : mapping.actionid();
+                final String name = action == null ? action.url().trim() : mapping.url().trim();
+                final String[] methods = action == null ? action.methods() : mapping.methods();
                 if (nameset.containsKey(name)) {
                     if (nameset.get(name) != clz) continue;
-                    throw new RuntimeException(this.getClass().getSimpleName() + " has two same " + WebAction.class.getSimpleName() + "(" + name + ")");
+                    throw new RuntimeException(this.getClass().getSimpleName() + " has two same " + WebMapping.class.getSimpleName() + "(" + name + ")");
                 }
                 nameset.put(name, clz);
-                map.put(name, new Entry(typeIgnore, serviceid, actionid, name, action.methods(), method, createHttpServlet(method)));
+                map.put(name, new Entry(typeIgnore, serviceid, actionid, name, methods, method, createHttpServlet(method)));
             }
         } while ((clz = clz.getSuperclass()) != HttpBaseServlet.class);
         return map;

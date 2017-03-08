@@ -40,7 +40,7 @@ public @interface RestMapping {
     String name() default "";
 
     /**
-     * 备注描述, 对应&#64;WebAction.comment
+     * 备注描述, 对应&#64;WebMapping.comment
      *
      * @return String
      */
@@ -54,7 +54,7 @@ public @interface RestMapping {
     boolean auth() default false;
 
     /**
-     * 操作ID值，鉴权时用到, 对应&#64;WebAction.actionid
+     * 操作ID值，鉴权时用到, 对应&#64;WebMapping.actionid
      *
      * @return int
      */
@@ -68,7 +68,7 @@ public @interface RestMapping {
     int cacheseconds() default 0;
 
     /**
-     * 允许方法(不区分大小写),如:GET/POST/PUT,为空表示允许所有方法, 对应&#64;WebAction.methods
+     * 允许方法(不区分大小写),如:GET/POST/PUT,为空表示允许所有方法, 对应&#64;WebMapping.methods
      *
      * @return String[]
      */

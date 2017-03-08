@@ -16,7 +16,7 @@ import org.redkale.util.*;
 
 /**
  * API接口文档生成类，作用：生成Application实例中所有HttpServer的可用HttpServlet的API接口方法   <br>
- * 继承 HttpBaseServlet 是为了获取 WebAction 信息
+ 继承 HttpBaseServlet 是为了获取 WebMapping 信息
  *
  * <p>
  * 详情见: https://redkale.org
@@ -63,8 +63,8 @@ public class ApiDocs extends HttpBaseServlet {
                 servletmap.put("name", ws.name());
                 servletmap.put("comment", ws.comment());
 
-                List<Map> actionsList = new ArrayList<>();
-                servletmap.put("actions", actionsList);
+                List<Map> mappingsList = new ArrayList<>();
+                servletmap.put("mappings", mappingsList);
                 final Class selfClz = servlet.getClass();
                 Class clz = servlet.getClass();
                 HashSet<String> actionurls = new HashSet<>();
@@ -72,18 +72,18 @@ public class ApiDocs extends HttpBaseServlet {
                     if (Modifier.isAbstract(clz.getModifiers())) break;
                     for (Method method : clz.getMethods()) {
                         if (method.getParameterCount() != 2) continue;
-                        WebAction action = method.getAnnotation(WebAction.class);
+                        WebMapping action = method.getAnnotation(WebMapping.class);
                         if (action == null) continue;
                         if (!action.inherited() && selfClz != clz) continue; //忽略不被继承的方法
-                        final Map<String, Object> actionmap = new LinkedHashMap<>();
+                        final Map<String, Object> mappingmap = new LinkedHashMap<>();
                         if (actionurls.contains(action.url())) continue;
-                        actionmap.put("url", prefix + action.url());
+                        mappingmap.put("url", prefix + action.url());
                         actionurls.add(action.url());
-                        actionmap.put("auth", method.getAnnotation(AuthIgnore.class) == null);
-                        actionmap.put("actionid", action.actionid());
-                        actionmap.put("comment", action.comment());
+                        mappingmap.put("auth", method.getAnnotation(AuthIgnore.class) == null);
+                        mappingmap.put("actionid", action.actionid());
+                        mappingmap.put("comment", action.comment());
                         List<Map> paramsList = new ArrayList<>();
-                        actionmap.put("params", paramsList);
+                        mappingmap.put("params", paramsList);
                         List<String> results = new ArrayList<>();
                         for (final Class rtype : action.results()) {
                             results.add(rtype.getName());
@@ -121,7 +121,7 @@ public class ApiDocs extends HttpBaseServlet {
                             } while ((loop = loop.getSuperclass()) != Object.class);
                             typesmap.put(rtype.getName(), typemap);
                         }
-                        actionmap.put("results", results);
+                        mappingmap.put("results", results);
                         for (WebParam param : method.getAnnotationsByType(WebParam.class)) {
                             final Map<String, Object> parammap = new LinkedHashMap<>();
                             final boolean isarray = param.type().isArray();
@@ -171,11 +171,11 @@ public class ApiDocs extends HttpBaseServlet {
 
                             typesmap.put(ptype.getName(), typemap);
                         }
-                        actionmap.put("result", action.result());
-                        actionsList.add(actionmap);
+                        mappingmap.put("result", action.result());
+                        mappingsList.add(mappingmap);
                     }
                 } while ((clz = clz.getSuperclass()) != HttpServlet.class);
-                actionsList.sort((o1, o2) -> ((String) o1.get("url")).compareTo((String) o2.get("url")));
+                mappingsList.sort((o1, o2) -> ((String) o1.get("url")).compareTo((String) o2.get("url")));
                 servletsList.add(servletmap);
             }
             servletsList.sort((o1, o2) -> {

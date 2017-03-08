@@ -42,7 +42,7 @@ public class _DynHelloRestServlet1 extends SimpleRestServlet {
     }
 
     @AuthIgnore
-    @WebAction(url = "/hello/create")
+    @WebMapping(url = "/hello/create")
     public void create(HttpRequest req, HttpResponse resp) throws IOException {
         HelloService service = _servicemap == null ? _service : _servicemap.get(req.getHeader(Rest.REST_HEADER_RESOURCE_NAME, ""));
         HelloEntity bean = req.getJsonParameter(HelloEntity.class, "bean");
@@ -54,7 +54,7 @@ public class _DynHelloRestServlet1 extends SimpleRestServlet {
     }
 
     @AuthIgnore
-    @WebAction(url = "/hello/delete/")
+    @WebMapping(url = "/hello/delete/")
     public void delete(HttpRequest req, HttpResponse resp) throws IOException {
         HelloService service = _servicemap == null ? _service : _servicemap.get(req.getHeader(Rest.REST_HEADER_RESOURCE_NAME, ""));
         int id = Integer.parseInt(req.getRequstURILastPath());
@@ -63,7 +63,7 @@ public class _DynHelloRestServlet1 extends SimpleRestServlet {
     }
 
     @AuthIgnore
-    @WebAction(url = "/hello/update")
+    @WebMapping(url = "/hello/update")
     public void update(HttpRequest req, HttpResponse resp) throws IOException {
         HelloService service = _servicemap == null ? _service : _servicemap.get(req.getHeader(Rest.REST_HEADER_RESOURCE_NAME, ""));
         String clientaddr = req.getRemoteAddr();
@@ -75,7 +75,7 @@ public class _DynHelloRestServlet1 extends SimpleRestServlet {
     }
 
     @AuthIgnore
-    @WebAction(url = "/hello/partupdate")
+    @WebMapping(url = "/hello/partupdate")
     public void partupdate(HttpRequest req, HttpResponse resp) throws IOException {
         HelloService service = _servicemap == null ? _service : _servicemap.get(req.getHeader(Rest.REST_HEADER_RESOURCE_NAME, ""));
         HelloEntity bean = req.getJsonParameter(HelloEntity.class, "bean");
@@ -87,7 +87,7 @@ public class _DynHelloRestServlet1 extends SimpleRestServlet {
     }
 
     @AuthIgnore
-    @WebAction(url = "/hello/query")
+    @WebMapping(url = "/hello/query")
     public void query(HttpRequest req, HttpResponse resp) throws IOException {
         HelloService service = _servicemap == null ? _service : _servicemap.get(req.getHeader(Rest.REST_HEADER_RESOURCE_NAME, ""));
         HelloBean bean = req.getJsonParameter(HelloBean.class, "bean");
@@ -101,7 +101,7 @@ public class _DynHelloRestServlet1 extends SimpleRestServlet {
     }
 
     @AuthIgnore
-    @WebAction(url = "/hello/list")
+    @WebMapping(url = "/hello/list")
     public void list(HttpRequest req, HttpResponse resp) throws IOException {
         HelloService service = _servicemap == null ? _service : _servicemap.get(req.getHeader(Rest.REST_HEADER_RESOURCE_NAME, ""));
         HelloBean bean = req.getJsonParameter(HelloBean.class, "bean");
@@ -114,7 +114,7 @@ public class _DynHelloRestServlet1 extends SimpleRestServlet {
     }
 
     @AuthIgnore
-    @WebAction(url = "/hello/find/")
+    @WebMapping(url = "/hello/find/")
     public void find(HttpRequest req, HttpResponse resp) throws IOException {
         HelloService service = _servicemap == null ? _service : _servicemap.get(req.getHeader(Rest.REST_HEADER_RESOURCE_NAME, ""));
         int id = Integer.parseInt(req.getRequstURILastPath());

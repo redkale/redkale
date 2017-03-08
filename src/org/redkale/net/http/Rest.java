@@ -82,7 +82,7 @@ public final class Rest {
         final String attrDesc = Type.getDescriptor(org.redkale.util.Attribute.class);
         final String authDesc = Type.getDescriptor(HttpBaseServlet.AuthIgnore.class);
         final String cacheDesc = Type.getDescriptor(HttpBaseServlet.HttpCacheable.class);
-        final String actionDesc = Type.getDescriptor(HttpBaseServlet.WebAction.class);
+        final String mappingDesc = Type.getDescriptor(HttpBaseServlet.WebMapping.class);
         final String webparamDesc = Type.getDescriptor(HttpBaseServlet.WebParam.class);
         final String webparamsDesc = Type.getDescriptor(HttpBaseServlet.WebParams.class);
         final String sourcetypeDesc = Type.getDescriptor(HttpBaseServlet.ParamSourceType.class);
@@ -122,7 +122,7 @@ public final class Rest {
         AsmMethodVisitor mv;
         AnnotationVisitor av0;
         Map<String, Object> classMap = new LinkedHashMap<>();
-        List<Map<String, Object>> actionMaps = new ArrayList<>();
+        List<Map<String, Object>> mappingMaps = new ArrayList<>();
         cw.visit(V1_8, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynName, null, supDynName, null);
 
         { //RestDynamic
@@ -207,7 +207,7 @@ public final class Rest {
                 }
             }
         }
-        if (entrys.isEmpty()) return null; //没有可WebAction的方法
+        if (entrys.isEmpty()) return null; //没有可WebMapping的方法
         for (final MappingEntry entry : entrys) {
             final Method method = entry.mappingMethod;
             final Class returnType = method.getReturnType();
@@ -316,9 +316,9 @@ public final class Rest {
                 paramlist.add(new Object[]{param, n, ptype, radix, comment, required, annpara, annsid, annaddr, annhead, anncookie});
             }
 
-            Map<String, Object> actionMap = new LinkedHashMap<>();
+            Map<String, Object> mappingMap = new LinkedHashMap<>();
             {
-                //设置 WebAction
+                //设置 WebMapping
                 boolean reqpath = false;
                 for (Object[] ps : paramlist) {
                     if ("#".equals((String) ps[1])) {
@@ -326,7 +326,7 @@ public final class Rest {
                         break;
                     }
                 }
-                av0 = mv.visitAnnotation(actionDesc, true);
+                av0 = mv.visitAnnotation(mappingDesc, true);
                 String url = "/" + defmodulename.toLowerCase() + "/" + entry.name + (reqpath ? "/" : "");
                 av0.visit("url", url);
                 av0.visit("actionid", entry.actionid);
@@ -342,13 +342,13 @@ public final class Rest {
                 av0.visit("result", grt == returnType ? returnType.getName() : String.valueOf(grt));
 
                 av0.visitEnd();
-                actionMap.put("url", url);
-                actionMap.put("auth", entry.auth);
-                actionMap.put("cachetimeout", entry.cacheseconds);
-                actionMap.put("actionid", entry.actionid);
-                actionMap.put("comment", entry.comment);
-                actionMap.put("methods", entry.methods);
-                actionMap.put("result", grt == returnType ? returnType.getName() : String.valueOf(grt));
+                mappingMap.put("url", url);
+                mappingMap.put("auth", entry.auth);
+                mappingMap.put("cachetimeout", entry.cacheseconds);
+                mappingMap.put("actionid", entry.actionid);
+                mappingMap.put("comment", entry.comment);
+                mappingMap.put("methods", entry.methods);
+                mappingMap.put("result", grt == returnType ? returnType.getName() : String.valueOf(grt));
             }
 
             {
@@ -838,8 +838,8 @@ public final class Rest {
                 maxLocals++;
             }
             mv.visitMaxs(maxStack, maxLocals);
-            actionMap.put("params", paramMaps);
-            actionMaps.add(actionMap);
+            mappingMap.put("params", paramMaps);
+            mappingMaps.add(mappingMap);
         } // end  for each 
 
         for (String attrname : restAttributes.keySet()) {
@@ -847,7 +847,7 @@ public final class Rest {
             fv.visitEnd();
         }
 
-        classMap.put("actions", actionMaps);
+        classMap.put("mappings", mappingMaps);
 
         { //toString函数
             mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC, "toString", "()Ljava/lang/String;", null, null));

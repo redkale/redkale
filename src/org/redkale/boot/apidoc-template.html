@@ -36,8 +36,8 @@
                         if (html.length > 2) html.push(' <tr><th colspan="5" style="border-bottom:0;">&nbsp;</th></tr>');
                         html.push(' <tr><th colspan="5" style="border-top:' + ((html.length > 2) ? 0 : 1) + ';">' + (servlet.comment || '未知模块') + '</th></tr>');
                         html.push(' <tr><th>请求URL</th><th>描 述</th><th>鉴 权</th><th>参 数 <span style="font-size:12px;">(粗体: 必填项; 红色: Header; 蓝色: Cookie)</span></th><th>输 出</th></tr>');
-                        for (var k = 0; k < servlet.actions.length; k++) {
-                            var action = servlet.actions[k];
+                        for (var k = 0; k < servlet.mappings.length; k++) {
+                            var action = servlet.mappings[k];
                             html.push(' <tr>');
                             html.push('<td style="color:#ff00ff;">' + action.url + '</td>');
                             html.push('<td>' + action.comment + '</td>');
