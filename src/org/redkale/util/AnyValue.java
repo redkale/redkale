@@ -387,9 +387,9 @@ public abstract class AnyValue {
         return new DefaultAnyValue();
     }
 
-    public String toString(int len) {
-        if (len < 0) len = 0;
-        char[] chars = new char[len];
+    public String toString(int indent) { //indent: 缩进长度
+        if (indent < 0) indent = 0;
+        char[] chars = new char[indent];
         Arrays.fill(chars, ' ');
         final String space = new String(chars);
         StringBuilder sb = new StringBuilder();
@@ -398,7 +398,7 @@ public abstract class AnyValue {
             sb.append(space).append("    '").append(en.name).append("': '").append(en.value).append("',\r\n");
         }
         for (Entry<AnyValue> en : getAnyEntrys()) {
-            sb.append(space).append("    '").append(en.name).append("': '").append(en.value.toString(len + 4)).append("',\r\n");
+            sb.append(space).append("    '").append(en.name).append("': '").append(en.value.toString(indent + 4)).append("',\r\n");
         }
         sb.append(space).append('}');
         return sb.toString();
