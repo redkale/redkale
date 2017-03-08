@@ -64,6 +64,20 @@ public abstract class AnyValue {
          *
          * @return DefaultAnyValue对象
          */
+        public static final DefaultAnyValue create(String name, Number value) {
+            DefaultAnyValue conf = new DefaultAnyValue();
+            conf.addValue(name, value);
+            return conf;
+        }
+
+        /**
+         * 创建含name-value值的DefaultAnyValue对象
+         *
+         * @param name  name
+         * @param value value值
+         *
+         * @return DefaultAnyValue对象
+         */
         public static final DefaultAnyValue create(String name, String value) {
             DefaultAnyValue conf = new DefaultAnyValue();
             conf.addValue(name, value);
