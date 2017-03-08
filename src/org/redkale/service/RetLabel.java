@@ -7,6 +7,7 @@ package org.redkale.service;
 
 import java.lang.annotation.*;
 import java.lang.reflect.*;
+import java.text.MessageFormat;
 import java.util.*;
 
 /**
@@ -27,6 +28,39 @@ import java.util.*;
 public @interface RetLabel {
 
     String value();
+
+    public static abstract class AbstractRetCode {
+
+        protected static final Map<Integer, String> rets = new HashMap();
+
+        protected static void load(Class clazz) {
+            rets.putAll(RetLoader.load(clazz));
+        }
+
+        public static RetResult retResult(int retcode) {
+            if (retcode == 0) return RetResult.success();
+            return new RetResult(retcode, retInfo(retcode));
+        }
+
+        public static RetResult retResult(int retcode, Object... args) {
+            if (retcode == 0) return RetResult.success();
+            if (args == null || args.length < 1) return new RetResult(retcode, retInfo(retcode));
+            String info = MessageFormat.format(retInfo(retcode), args);
+            return new RetResult(retcode, info);
+        }
+
+        public static RetResult set(RetResult result, int retcode, Object... args) {
+            if (retcode == 0) return result.retcode(0).retinfo("");
+            if (args == null || args.length < 1) return result.retcode(retcode).retinfo(retInfo(retcode));
+            String info = MessageFormat.format(retInfo(retcode), args);
+            return result.retcode(retcode).retinfo(info);
+        }
+
+        public static String retInfo(int retcode) {
+            if (retcode == 0) return "成功";
+            return rets.getOrDefault(retcode, "未知错误");
+        }
+    }
 
     public static abstract class RetLoader {
 
