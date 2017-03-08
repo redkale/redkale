@@ -231,7 +231,7 @@
     <span class="kd">private</span> <span class="n">HelloService</span> <span class="n">_service</span><span class="o">;</span>
 
     <span class="nd">@AuthIgnore</span>
-    <span class="nd">@WebAction</span><span class="o">(</span><span class="n">url</span> <span class="o">=</span> <span class="s">&quot;/hello/create&quot;</span><span class="o">)</span>
+    <span class="nd">@WebMapping</span><span class="o">(</span><span class="n">url</span> <span class="o">=</span> <span class="s">&quot;/hello/create&quot;</span><span class="o">)</span>
     <span class="kd">public</span> <span class="kt">void</span> <span class="nf">create</span><span class="o">(</span><span class="n">HttpRequest</span> <span class="n">req</span><span class="o">,</span> <span class="n">HttpResponse</span> <span class="n">resp</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
         <span class="n">HelloEntity</span> <span class="n">bean</span> <span class="o">=</span> <span class="n">req</span><span class="o">.</span><span class="na">getJsonParameter</span><span class="o">(</span><span class="n">HelloEntity</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="s">&quot;bean&quot;</span><span class="o">);</span>
         <span class="n">UserInfo</span> <span class="n">user</span> <span class="o">=</span> <span class="n">currentUser</span><span class="o">(</span><span class="n">req</span><span class="o">);</span>
@@ -240,7 +240,7 @@
     <span class="o">}</span>
 
     <span class="nd">@AuthIgnore</span>
-    <span class="nd">@WebAction</span><span class="o">(</span><span class="n">url</span> <span class="o">=</span> <span class="s">&quot;/hello/delete/&quot;</span><span class="o">)</span>
+    <span class="nd">@WebMapping</span><span class="o">(</span><span class="n">url</span> <span class="o">=</span> <span class="s">&quot;/hello/delete/&quot;</span><span class="o">)</span>
     <span class="kd">public</span> <span class="kt">void</span> <span class="nf">delete</span><span class="o">(</span><span class="n">HttpRequest</span> <span class="n">req</span><span class="o">,</span> <span class="n">HttpResponse</span> <span class="n">resp</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
         <span class="kt">int</span> <span class="n">id</span> <span class="o">=</span> <span class="n">Integer</span><span class="o">.</span><span class="na">parseInt</span><span class="o">(</span><span class="n">req</span><span class="o">.</span><span class="na">getRequstURILastPath</span><span class="o">());</span>
         <span class="n">_service</span><span class="o">.</span><span class="na">deleteHello</span><span class="o">(</span><span class="n">id</span><span class="o">);</span>
@@ -248,7 +248,7 @@
     <span class="o">}</span>
 
     <span class="nd">@AuthIgnore</span>
-    <span class="nd">@WebAction</span><span class="o">(</span><span class="n">url</span> <span class="o">=</span> <span class="s">&quot;/hello/update&quot;</span><span class="o">)</span>
+    <span class="nd">@WebMapping</span><span class="o">(</span><span class="n">url</span> <span class="o">=</span> <span class="s">&quot;/hello/update&quot;</span><span class="o">)</span>
     <span class="kd">public</span> <span class="kt">void</span> <span class="nf">update</span><span class="o">(</span><span class="n">HttpRequest</span> <span class="n">req</span><span class="o">,</span> <span class="n">HttpResponse</span> <span class="n">resp</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
         <span class="n">HelloEntity</span> <span class="n">bean</span> <span class="o">=</span> <span class="n">req</span><span class="o">.</span><span class="na">getJsonParameter</span><span class="o">(</span><span class="n">HelloEntity</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="s">&quot;bean&quot;</span><span class="o">);</span>
         <span class="n">_service</span><span class="o">.</span><span class="na">updateHello</span><span class="o">(</span><span class="n">bean</span><span class="o">);</span>
@@ -256,7 +256,7 @@
     <span class="o">}</span>
 
     <span class="nd">@AuthIgnore</span>
-    <span class="nd">@WebAction</span><span class="o">(</span><span class="n">url</span> <span class="o">=</span> <span class="s">&quot;/hello/query&quot;</span><span class="o">)</span>
+    <span class="nd">@WebMapping</span><span class="o">(</span><span class="n">url</span> <span class="o">=</span> <span class="s">&quot;/hello/query&quot;</span><span class="o">)</span>
     <span class="kd">public</span> <span class="kt">void</span> <span class="nf">query</span><span class="o">(</span><span class="n">HttpRequest</span> <span class="n">req</span><span class="o">,</span> <span class="n">HttpResponse</span> <span class="n">resp</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
         <span class="n">HelloBean</span> <span class="n">bean</span> <span class="o">=</span> <span class="n">req</span><span class="o">.</span><span class="na">getJsonParameter</span><span class="o">(</span><span class="n">HelloBean</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="s">&quot;bean&quot;</span><span class="o">);</span>
         <span class="n">Flipper</span> <span class="n">flipper</span> <span class="o">=</span> <span class="n">req</span><span class="o">.</span><span class="na">getFlipper</span><span class="o">();</span>
@@ -265,7 +265,7 @@
     <span class="o">}</span>
 
     <span class="nd">@AuthIgnore</span>
-    <span class="nd">@WebAction</span><span class="o">(</span><span class="n">url</span> <span class="o">=</span> <span class="s">&quot;/hello/find/&quot;</span><span class="o">)</span>
+    <span class="nd">@WebMapping</span><span class="o">(</span><span class="n">url</span> <span class="o">=</span> <span class="s">&quot;/hello/find/&quot;</span><span class="o">)</span>
     <span class="kd">public</span> <span class="kt">void</span> <span class="nf">find</span><span class="o">(</span><span class="n">HttpRequest</span> <span class="n">req</span><span class="o">,</span> <span class="n">HttpResponse</span> <span class="n">resp</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
         <span class="kt">int</span> <span class="n">id</span> <span class="o">=</span> <span class="n">Integer</span><span class="o">.</span><span class="na">parseInt</span><span class="o">(</span><span class="n">req</span><span class="o">.</span><span class="na">getRequstURILastPath</span><span class="o">());</span>
         <span class="n">HelloEntity</span> <span class="n">bean</span> <span class="o">=</span> <span class="n">_service</span><span class="o">.</span><span class="na">findHello</span><span class="o">(</span><span class="n">id</span><span class="o">);</span>
@@ -345,7 +345,7 @@
     <span class="kd">private</span> <span class="n">HelloService</span> <span class="n">_service</span><span class="o">;</span>
 
     <span class="nd">@AuthIgnore</span>
-    <span class="nd">@WebAction</span><span class="o">(</span><span class="n">url</span> <span class="o">=</span> <span class="s">&quot;/hello/create&quot;</span><span class="o">)</span>
+    <span class="nd">@WebMapping</span><span class="o">(</span><span class="n">url</span> <span class="o">=</span> <span class="s">&quot;/hello/create&quot;</span><span class="o">)</span>
     <span class="kd">public</span> <span class="kt">void</span> <span class="nf">create</span><span class="o">(</span><span class="n">HttpRequest</span> <span class="n">req</span><span class="o">,</span> <span class="n">HttpResponse</span> <span class="n">resp</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
         <span class="n">HelloEntity</span> <span class="n">bean</span> <span class="o">=</span> <span class="n">req</span><span class="o">.</span><span class="na">getJsonParameter</span><span class="o">(</span><span class="n">HelloEntity</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="s">&quot;bean&quot;</span><span class="o">);</span>
         <span class="n">UserInfo</span> <span class="n">user</span> <span class="o">=</span> <span class="n">currentUser</span><span class="o">(</span><span class="n">req</span><span class="o">);</span>
@@ -354,7 +354,7 @@
     <span class="o">}</span>
 
     <span class="nd">@AuthIgnore</span>
-    <span class="nd">@WebAction</span><span class="o">(</span><span class="n">url</span> <span class="o">=</span> <span class="s">&quot;/hello/delete/&quot;</span><span class="o">)</span>
+    <span class="nd">@WebMapping</span><span class="o">(</span><span class="n">url</span> <span class="o">=</span> <span class="s">&quot;/hello/delete/&quot;</span><span class="o">)</span>
     <span class="kd">public</span> <span class="kt">void</span> <span class="nf">delete</span><span class="o">(</span><span class="n">HttpRequest</span> <span class="n">req</span><span class="o">,</span> <span class="n">HttpResponse</span> <span class="n">resp</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
         <span class="kt">int</span> <span class="n">id</span> <span class="o">=</span> <span class="n">Integer</span><span class="o">.</span><span class="na">parseInt</span><span class="o">(</span><span class="n">req</span><span class="o">.</span><span class="na">getRequstURILastPath</span><span class="o">());</span>
         <span class="n">_service</span><span class="o">.</span><span class="na">deleteHello</span><span class="o">(</span><span class="n">id</span><span class="o">);</span>
@@ -362,7 +362,7 @@
     <span class="o">}</span>
 
     <span class="nd">@AuthIgnore</span>
-    <span class="nd">@WebAction</span><span class="o">(</span><span class="n">url</span> <span class="o">=</span> <span class="s">&quot;/hello/update&quot;</span><span class="o">)</span>
+    <span class="nd">@WebMapping</span><span class="o">(</span><span class="n">url</span> <span class="o">=</span> <span class="s">&quot;/hello/update&quot;</span><span class="o">)</span>
     <span class="kd">public</span> <span class="kt">void</span> <span class="nf">update</span><span class="o">(</span><span class="n">HttpRequest</span> <span class="n">req</span><span class="o">,</span> <span class="n">HttpResponse</span> <span class="n">resp</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
         <span class="n">HelloEntity</span> <span class="n">bean</span> <span class="o">=</span> <span class="n">req</span><span class="o">.</span><span class="na">getJsonParameter</span><span class="o">(</span><span class="n">HelloEntity</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="s">&quot;bean&quot;</span><span class="o">);</span>
         <span class="n">_service</span><span class="o">.</span><span class="na">updateHello</span><span class="o">(</span><span class="n">bean</span><span class="o">);</span>
@@ -370,7 +370,7 @@
     <span class="o">}</span>
 
     <span class="nd">@AuthIgnore</span>
-    <span class="nd">@WebAction</span><span class="o">(</span><span class="n">url</span> <span class="o">=</span> <span class="s">&quot;/hello/partupdate&quot;</span><span class="o">)</span>
+    <span class="nd">@WebMapping</span><span class="o">(</span><span class="n">url</span> <span class="o">=</span> <span class="s">&quot;/hello/partupdate&quot;</span><span class="o">)</span>
     <span class="kd">public</span> <span class="kt">void</span> <span class="nf">partupdate</span><span class="o">(</span><span class="n">HttpRequest</span> <span class="n">req</span><span class="o">,</span> <span class="n">HttpResponse</span> <span class="n">resp</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
         <span class="n">HelloEntity</span> <span class="n">bean</span> <span class="o">=</span> <span class="n">req</span><span class="o">.</span><span class="na">getJsonParameter</span><span class="o">(</span><span class="n">HelloEntity</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="s">&quot;bean&quot;</span><span class="o">);</span>
         <span class="n">String</span><span class="o">[]</span> <span class="n">cols</span> <span class="o">=</span> <span class="n">req</span><span class="o">.</span><span class="na">getJsonParameter</span><span class="o">(</span><span class="n">String</span><span class="o">[].</span><span class="na">class</span><span class="o">,</span> <span class="s">&quot;cols&quot;</span><span class="o">);</span>
@@ -379,7 +379,7 @@
     <span class="o">}</span>
 
     <span class="nd">@AuthIgnore</span>
-    <span class="nd">@WebAction</span><span class="o">(</span><span class="n">url</span> <span class="o">=</span> <span class="s">&quot;/hello/query&quot;</span><span class="o">)</span>
+    <span class="nd">@WebMapping</span><span class="o">(</span><span class="n">url</span> <span class="o">=</span> <span class="s">&quot;/hello/query&quot;</span><span class="o">)</span>
     <span class="kd">public</span> <span class="kt">void</span> <span class="nf">query</span><span class="o">(</span><span class="n">HttpRequest</span> <span class="n">req</span><span class="o">,</span> <span class="n">HttpResponse</span> <span class="n">resp</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
         <span class="n">HelloBean</span> <span class="n">bean</span> <span class="o">=</span> <span class="n">req</span><span class="o">.</span><span class="na">getJsonParameter</span><span class="o">(</span><span class="n">HelloBean</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="s">&quot;bean&quot;</span><span class="o">);</span>
         <span class="n">Flipper</span> <span class="n">flipper</span> <span class="o">=</span> <span class="n">req</span><span class="o">.</span><span class="na">getFlipper</span><span class="o">();</span>
@@ -388,7 +388,7 @@
     <span class="o">}</span>
 
     <span class="nd">@AuthIgnore</span>
-    <span class="nd">@WebAction</span><span class="o">(</span><span class="n">url</span> <span class="o">=</span> <span class="s">&quot;/hello/list&quot;</span><span class="o">)</span>
+    <span class="nd">@WebMapping</span><span class="o">(</span><span class="n">url</span> <span class="o">=</span> <span class="s">&quot;/hello/list&quot;</span><span class="o">)</span>
     <span class="kd">public</span> <span class="kt">void</span> <span class="nf">list</span><span class="o">(</span><span class="n">HttpRequest</span> <span class="n">req</span><span class="o">,</span> <span class="n">HttpResponse</span> <span class="n">resp</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
         <span class="n">HelloBean</span> <span class="n">bean</span> <span class="o">=</span> <span class="n">req</span><span class="o">.</span><span class="na">getJsonParameter</span><span class="o">(</span><span class="n">HelloBean</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="s">&quot;bean&quot;</span><span class="o">);</span>
         <span class="n">List</span><span class="o">&lt;</span><span class="n">HelloEntity</span><span class="o">&gt;</span> <span class="n">result</span> <span class="o">=</span> <span class="n">_service</span><span class="o">.</span><span class="na">queryHello</span><span class="o">(</span><span class="n">bean</span><span class="o">);</span>
@@ -396,7 +396,7 @@
     <span class="o">}</span>
 
     <span class="nd">@AuthIgnore</span>
-    <span class="nd">@WebAction</span><span class="o">(</span><span class="n">url</span> <span class="o">=</span> <span class="s">&quot;/hello/find/&quot;</span><span class="o">)</span>
+    <span class="nd">@WebMapping</span><span class="o">(</span><span class="n">url</span> <span class="o">=</span> <span class="s">&quot;/hello/find/&quot;</span><span class="o">)</span>
     <span class="kd">public</span> <span class="kt">void</span> <span class="nf">find</span><span class="o">(</span><span class="n">HttpRequest</span> <span class="n">req</span><span class="o">,</span> <span class="n">HttpResponse</span> <span class="n">resp</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
         <span class="kt">int</span> <span class="n">id</span> <span class="o">=</span> <span class="n">Integer</span><span class="o">.</span><span class="na">parseInt</span><span class="o">(</span><span class="n">req</span><span class="o">.</span><span class="na">getRequstURILastPath</span><span class="o">());</span>
         <span class="n">HelloEntity</span> <span class="n">bean</span> <span class="o">=</span> <span class="n">_service</span><span class="o">.</span><span class="na">findHello</span><span class="o">(</span><span class="n">id</span><span class="o">);</span>
