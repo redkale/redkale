@@ -7,6 +7,7 @@ package org.redkale.boot;
 
 import java.net.InetSocketAddress;
 import java.util.*;
+import org.redkale.convert.json.JsonConvert;
 
 /**
  * 协议地址组合对象, 对应application.xml 中 resources-&#62;group 节点信息
@@ -72,4 +73,8 @@ public class GroupInfo {
         this.addrs = addrs;
     }
 
+    @Override
+    public String toString() {
+        return JsonConvert.root().convertTo(this);
+    }
 }
