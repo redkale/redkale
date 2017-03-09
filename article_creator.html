@@ -31,51 +31,81 @@
             <p>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Creator是一个接口， 只有一个public T create(Object... params)方法，可变参数既适合空参数的Constructor也适合含参数的Constructor。得利于Java 8的新语法特性可以在接口上加上静态方法，Creator对象可以通过Creator.create(Class clazz)方法创建。构建原理是通过Constructor的参数来动态创建的。
             </p>
-            <div class="highlight"><pre><span class="n">Constructor</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">constructor0</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
-<span class="k">for</span> <span class="o">(</span><span class="n">Constructor</span> <span class="n">c</span> <span class="o">:</span> <span class="n">clazz</span><span class="o">.</span><span class="na">getConstructors</span><span class="o">())</span> <span class="o">{</span>  <span class="c1">//优先找public 的构造函数</span>
-<span class="k">if</span> <span class="o">(</span><span class="n">c</span><span class="o">.</span><span class="na">getParameterCount</span><span class="o">()</span> <span class="o">==</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{</span>
-        <span class="n">constructor0</span> <span class="o">=</span> <span class="n">c</span><span class="o">;</span>
-        <span class="k">break</span><span class="o">;</span>
-    <span class="o">}</span>
-<span class="o">}</span>
-<span class="k">if</span> <span class="o">(</span><span class="n">constructor0</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span><span class="c1">//其次找非private带ConstructorProperties的构造函数</span>
-    <span class="k">for</span> <span class="o">(</span><span class="n">Constructor</span> <span class="n">c</span> <span class="o">:</span> <span class="n">clazz</span><span class="o">.</span><span class="na">getDeclaredConstructors</span><span class="o">())</span> <span class="o">{</span>
-        <span class="k">if</span> <span class="o">(</span><span class="n">Modifier</span><span class="o">.</span><span class="na">isPrivate</span><span class="o">(</span><span class="n">c</span><span class="o">.</span><span class="na">getModifiers</span><span class="o">()))</span> <span class="k">continue</span><span class="o">;</span>
-        <span class="k">if</span> <span class="o">(</span><span class="n">c</span><span class="o">.</span><span class="na">getAnnotation</span><span class="o">(</span><span class="n">ConstructorProperties</span><span class="o">.</span><span class="na">class</span><span class="o">)</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
-            <span class="n">constructor0</span> <span class="o">=</span> <span class="n">c</span><span class="o">;</span>
-            <span class="k">break</span><span class="o">;</span>
-        <span class="o">}</span>
-    <span class="o">}</span>
-<span class="o">}</span>
-<span class="k">if</span> <span class="o">(</span><span class="n">constructor0</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span><span class="c1">//再次找非private且带-parameters编译项的构造函数 java 8以上才支持</span>
-    <span class="k">for</span> <span class="o">(</span><span class="n">Constructor</span> <span class="n">c</span> <span class="o">:</span> <span class="n">clazz</span><span class="o">.</span><span class="na">getDeclaredConstructors</span><span class="o">())</span> <span class="o">{</span>
-        <span class="k">if</span> <span class="o">(</span><span class="n">Modifier</span><span class="o">.</span><span class="na">isPrivate</span><span class="o">(</span><span class="n">c</span><span class="o">.</span><span class="na">getModifiers</span><span class="o">()))</span> <span class="k">continue</span><span class="o">;</span>
-        <span class="n">Parameter</span><span class="o">[]</span> <span class="n">params</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="na">getParameters</span><span class="o">();</span>
-        <span class="k">if</span> <span class="o">(</span><span class="n">params</span><span class="o">.</span><span class="na">length</span> <span class="o">==</span> <span class="mi">0</span><span class="o">)</span> <span class="k">continue</span><span class="o">;</span>
-        <span class="kt">boolean</span> <span class="n">flag</span> <span class="o">=</span> <span class="kc">true</span><span class="o">;</span>
-        <span class="k">for</span> <span class="o">(</span><span class="n">Parameter</span> <span class="n">param</span> <span class="o">:</span> <span class="n">params</span><span class="o">)</span> <span class="o">{</span>
-            <span class="k">try</span> <span class="o">{</span>
-                <span class="n">clazz</span><span class="o">.</span><span class="na">getDeclaredField</span><span class="o">(</span><span class="n">param</span><span class="o">.</span><span class="na">getName</span><span class="o">());</span>
-            <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">Exception</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
-                <span class="n">flag</span> <span class="o">=</span> <span class="kc">false</span><span class="o">;</span>
-                <span class="k">break</span><span class="o">;</span>
-            <span class="o">}</span>
-        <span class="o">}</span>
-        <span class="k">if</span> <span class="o">(</span><span class="n">flag</span><span class="o">)</span> <span class="o">{</span>
-            <span class="n">constructor0</span> <span class="o">=</span> <span class="n">c</span><span class="o">;</span>
-            <span class="k">break</span><span class="o">;</span>
-        <span class="o">}</span>
-    <span class="o">}</span>
-<span class="o">}</span>
-<span class="k">if</span> <span class="o">(</span><span class="n">constructor0</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span><span class="c1">//最后找非private的空构造函数</span>
-    <span class="k">for</span> <span class="o">(</span><span class="n">Constructor</span> <span class="n">c</span> <span class="o">:</span> <span class="n">clazz</span><span class="o">.</span><span class="na">getDeclaredConstructors</span><span class="o">())</span> <span class="o">{</span>
-        <span class="k">if</span> <span class="o">(</span><span class="n">Modifier</span><span class="o">.</span><span class="na">isPrivate</span><span class="o">(</span><span class="n">c</span><span class="o">.</span><span class="na">getModifiers</span><span class="o">()))</span> <span class="k">continue</span><span class="o">;</span>
-        <span class="k">if</span> <span class="o">(</span><span class="n">c</span><span class="o">.</span><span class="na">getParameterCount</span><span class="o">()</span> <span class="o">==</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{</span>
-            <span class="n">constructor0</span> <span class="o">=</span> <span class="n">c</span><span class="o">;</span>
-            <span class="k">break</span><span class="o">;</span>
-        <span class="o">}</span>
-    <span class="o">}</span>
-<span class="o">}</span></pre></div>
+            <div class="highlight"><pre><span></span>        <span class="nx">Constructor</span><span class="o">&lt;</span><span class="nx">T</span><span class="o">&gt;</span> <span class="nx">constructor0</span> <span class="o">=</span> <span class="kc">null</span><span class="p">;</span>
+        <span class="nx">SimpleEntry</span><span class="o">&lt;</span><span class="nb">String</span><span class="p">,</span> <span class="nx">Class</span><span class="o">&gt;</span><span class="p">[]</span> <span class="nx">constructorParameters0</span> <span class="o">=</span> <span class="kc">null</span><span class="p">;</span> <span class="c1">//构造函数的参数</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="nx">constructor0</span> <span class="o">==</span> <span class="kc">null</span><span class="p">)</span> <span class="p">{</span>  <span class="c1">// 1、查找public的空参数构造函数</span>
+            <span class="k">for</span> <span class="p">(</span><span class="nx">Constructor</span> <span class="nx">c</span> <span class="o">:</span> <span class="nx">clazz</span><span class="p">.</span><span class="nx">getConstructors</span><span class="p">())</span> <span class="p">{</span>
+                <span class="k">if</span> <span class="p">(</span><span class="nx">c</span><span class="p">.</span><span class="nx">getParameterCount</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="nx">constructor0</span> <span class="o">=</span> <span class="nx">c</span><span class="p">;</span>
+                    <span class="nx">constructorParameters0</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">SimpleEntry</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+                    <span class="k">break</span><span class="p">;</span>
+                <span class="p">}</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">constructor0</span> <span class="o">==</span> <span class="kc">null</span><span class="p">)</span> <span class="p">{</span>  <span class="c1">// 2、查找public带ConstructorProperties注解的构造函数</span>
+            <span class="k">for</span> <span class="p">(</span><span class="nx">Constructor</span> <span class="nx">c</span> <span class="o">:</span> <span class="nx">clazz</span><span class="p">.</span><span class="nx">getConstructors</span><span class="p">())</span> <span class="p">{</span>
+                <span class="nx">ConstructorProperties</span> <span class="nx">cp</span> <span class="o">=</span> <span class="p">(</span><span class="nx">ConstructorProperties</span><span class="p">)</span> <span class="nx">c</span><span class="p">.</span><span class="nx">getAnnotation</span><span class="p">(</span><span class="nx">ConstructorProperties</span><span class="p">.</span><span class="kr">class</span><span class="p">);</span>
+                <span class="k">if</span> <span class="p">(</span><span class="nx">cp</span> <span class="o">==</span> <span class="kc">null</span><span class="p">)</span> <span class="k">continue</span><span class="p">;</span>
+                <span class="nx">SimpleEntry</span><span class="o">&lt;</span><span class="nb">String</span><span class="p">,</span> <span class="nx">Class</span><span class="o">&gt;</span><span class="p">[]</span> <span class="nx">fields</span> <span class="o">=</span> <span class="nx">ConstructorParameters</span><span class="p">.</span><span class="nx">CreatorInner</span><span class="p">.</span><span class="nx">getConstructorField</span><span class="p">(</span><span class="nx">clazz</span><span class="p">,</span> <span class="nx">cp</span><span class="p">.</span><span class="nx">value</span><span class="p">());</span>
+                <span class="k">if</span> <span class="p">(</span><span class="nx">fields</span> <span class="o">!=</span> <span class="kc">null</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="nx">constructor0</span> <span class="o">=</span> <span class="nx">c</span><span class="p">;</span>
+                    <span class="nx">constructorParameters0</span> <span class="o">=</span> <span class="nx">fields</span><span class="p">;</span>
+                    <span class="k">break</span><span class="p">;</span>
+                <span class="p">}</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">constructor0</span> <span class="o">==</span> <span class="kc">null</span><span class="p">)</span> <span class="p">{</span>  <span class="c1">// 3、查找public且不带ConstructorProperties注解的构造函数</span>
+            <span class="nx">List</span><span class="o">&lt;</span><span class="nx">Constructor</span><span class="o">&gt;</span> <span class="nx">cs</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">ArrayList</span><span class="o">&lt;&gt;</span><span class="p">();</span>
+            <span class="k">for</span> <span class="p">(</span><span class="nx">Constructor</span> <span class="nx">c</span> <span class="o">:</span> <span class="nx">clazz</span><span class="p">.</span><span class="nx">getConstructors</span><span class="p">())</span> <span class="p">{</span>
+                <span class="k">if</span> <span class="p">(</span><span class="nx">c</span><span class="p">.</span><span class="nx">getAnnotation</span><span class="p">(</span><span class="nx">ConstructorProperties</span><span class="p">.</span><span class="kr">class</span><span class="p">)</span> <span class="o">!=</span> <span class="kc">null</span><span class="p">)</span> <span class="k">continue</span><span class="p">;</span>
+                <span class="k">if</span> <span class="p">(</span><span class="nx">c</span><span class="p">.</span><span class="nx">getParameterCount</span><span class="p">()</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">)</span> <span class="k">continue</span><span class="p">;</span>
+                <span class="nx">cs</span><span class="p">.</span><span class="nx">add</span><span class="p">(</span><span class="nx">c</span><span class="p">);</span>
+            <span class="p">}</span>
+            <span class="c1">//优先参数最多的构造函数</span>
+            <span class="nx">cs</span><span class="p">.</span><span class="nx">sort</span><span class="p">((</span><span class="nx">o1</span><span class="p">,</span> <span class="nx">o2</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nx">o2</span><span class="p">.</span><span class="nx">getParameterCount</span><span class="p">()</span> <span class="o">-</span> <span class="nx">o1</span><span class="p">.</span><span class="nx">getParameterCount</span><span class="p">());</span>
+            <span class="k">for</span> <span class="p">(</span><span class="nx">Constructor</span> <span class="nx">c</span> <span class="o">:</span> <span class="nx">cs</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nx">SimpleEntry</span><span class="o">&lt;</span><span class="nb">String</span><span class="p">,</span> <span class="nx">Class</span><span class="o">&gt;</span><span class="p">[]</span> <span class="nx">fields</span> <span class="o">=</span> <span class="nx">ConstructorParameters</span><span class="p">.</span><span class="nx">CreatorInner</span><span class="p">.</span><span class="nx">getConstructorField</span><span class="p">(</span><span class="nx">clazz</span><span class="p">,</span> <span class="nx">Type</span><span class="p">.</span><span class="nx">getConstructorDescriptor</span><span class="p">(</span><span class="nx">c</span><span class="p">));</span>
+                <span class="k">if</span> <span class="p">(</span><span class="nx">fields</span> <span class="o">!=</span> <span class="kc">null</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="nx">constructor0</span> <span class="o">=</span> <span class="nx">c</span><span class="p">;</span>
+                    <span class="nx">constructorParameters0</span> <span class="o">=</span> <span class="nx">fields</span><span class="p">;</span>
+                    <span class="k">break</span><span class="p">;</span>
+                <span class="p">}</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">constructor0</span> <span class="o">==</span> <span class="kc">null</span><span class="p">)</span> <span class="p">{</span>  <span class="c1">// 4、查找非private带ConstructorProperties的构造函数</span>
+            <span class="k">for</span> <span class="p">(</span><span class="nx">Constructor</span> <span class="nx">c</span> <span class="o">:</span> <span class="nx">clazz</span><span class="p">.</span><span class="nx">getDeclaredConstructors</span><span class="p">())</span> <span class="p">{</span>
+                <span class="k">if</span> <span class="p">(</span><span class="nx">Modifier</span><span class="p">.</span><span class="nx">isPublic</span><span class="p">(</span><span class="nx">c</span><span class="p">.</span><span class="nx">getModifiers</span><span class="p">())</span> <span class="o">||</span> <span class="nx">Modifier</span><span class="p">.</span><span class="nx">isPrivate</span><span class="p">(</span><span class="nx">c</span><span class="p">.</span><span class="nx">getModifiers</span><span class="p">()))</span> <span class="k">continue</span><span class="p">;</span>
+                <span class="nx">ConstructorProperties</span> <span class="nx">cp</span> <span class="o">=</span> <span class="p">(</span><span class="nx">ConstructorProperties</span><span class="p">)</span> <span class="nx">c</span><span class="p">.</span><span class="nx">getAnnotation</span><span class="p">(</span><span class="nx">ConstructorProperties</span><span class="p">.</span><span class="kr">class</span><span class="p">);</span>
+                <span class="k">if</span> <span class="p">(</span><span class="nx">cp</span> <span class="o">==</span> <span class="kc">null</span><span class="p">)</span> <span class="k">continue</span><span class="p">;</span>
+                <span class="nx">SimpleEntry</span><span class="o">&lt;</span><span class="nb">String</span><span class="p">,</span> <span class="nx">Class</span><span class="o">&gt;</span><span class="p">[]</span> <span class="nx">fields</span> <span class="o">=</span> <span class="nx">ConstructorParameters</span><span class="p">.</span><span class="nx">CreatorInner</span><span class="p">.</span><span class="nx">getConstructorField</span><span class="p">(</span><span class="nx">clazz</span><span class="p">,</span> <span class="nx">cp</span><span class="p">.</span><span class="nx">value</span><span class="p">());</span>
+                <span class="k">if</span> <span class="p">(</span><span class="nx">fields</span> <span class="o">!=</span> <span class="kc">null</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="nx">constructor0</span> <span class="o">=</span> <span class="nx">c</span><span class="p">;</span>
+                    <span class="nx">constructorParameters0</span> <span class="o">=</span> <span class="nx">fields</span><span class="p">;</span>
+                    <span class="k">break</span><span class="p">;</span>
+                <span class="p">}</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">constructor0</span> <span class="o">==</span> <span class="kc">null</span><span class="p">)</span> <span class="p">{</span>  <span class="c1">// 5、查找非private且不带ConstructorProperties的构造函数</span>
+            <span class="nx">List</span><span class="o">&lt;</span><span class="nx">Constructor</span><span class="o">&gt;</span> <span class="nx">cs</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">ArrayList</span><span class="o">&lt;&gt;</span><span class="p">();</span>
+            <span class="k">for</span> <span class="p">(</span><span class="nx">Constructor</span> <span class="nx">c</span> <span class="o">:</span> <span class="nx">clazz</span><span class="p">.</span><span class="nx">getDeclaredConstructors</span><span class="p">())</span> <span class="p">{</span>
+                <span class="k">if</span> <span class="p">(</span><span class="nx">Modifier</span><span class="p">.</span><span class="nx">isPublic</span><span class="p">(</span><span class="nx">c</span><span class="p">.</span><span class="nx">getModifiers</span><span class="p">())</span> <span class="o">||</span> <span class="nx">Modifier</span><span class="p">.</span><span class="nx">isPrivate</span><span class="p">(</span><span class="nx">c</span><span class="p">.</span><span class="nx">getModifiers</span><span class="p">()))</span> <span class="k">continue</span><span class="p">;</span>
+                <span class="k">if</span> <span class="p">(</span><span class="nx">c</span><span class="p">.</span><span class="nx">getAnnotation</span><span class="p">(</span><span class="nx">ConstructorProperties</span><span class="p">.</span><span class="kr">class</span><span class="p">)</span> <span class="o">!=</span> <span class="kc">null</span><span class="p">)</span> <span class="k">continue</span><span class="p">;</span>
+                <span class="k">if</span> <span class="p">(</span><span class="nx">c</span><span class="p">.</span><span class="nx">getParameterCount</span><span class="p">()</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">)</span> <span class="k">continue</span><span class="p">;</span>
+                <span class="nx">cs</span><span class="p">.</span><span class="nx">add</span><span class="p">(</span><span class="nx">c</span><span class="p">);</span>
+            <span class="p">}</span>
+            <span class="c1">//优先参数最多的构造函数</span>
+            <span class="nx">cs</span><span class="p">.</span><span class="nx">sort</span><span class="p">((</span><span class="nx">o1</span><span class="p">,</span> <span class="nx">o2</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nx">o2</span><span class="p">.</span><span class="nx">getParameterCount</span><span class="p">()</span> <span class="o">-</span> <span class="nx">o1</span><span class="p">.</span><span class="nx">getParameterCount</span><span class="p">());</span>
+            <span class="k">for</span> <span class="p">(</span><span class="nx">Constructor</span> <span class="nx">c</span> <span class="o">:</span> <span class="nx">cs</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nx">SimpleEntry</span><span class="o">&lt;</span><span class="nb">String</span><span class="p">,</span> <span class="nx">Class</span><span class="o">&gt;</span><span class="p">[]</span> <span class="nx">fields</span> <span class="o">=</span> <span class="nx">ConstructorParameters</span><span class="p">.</span><span class="nx">CreatorInner</span><span class="p">.</span><span class="nx">getConstructorField</span><span class="p">(</span><span class="nx">clazz</span><span class="p">,</span> <span class="nx">Type</span><span class="p">.</span><span class="nx">getConstructorDescriptor</span><span class="p">(</span><span class="nx">c</span><span class="p">));</span>
+                <span class="k">if</span> <span class="p">(</span><span class="nx">fields</span> <span class="o">!=</span> <span class="kc">null</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="nx">constructor0</span> <span class="o">=</span> <span class="nx">c</span><span class="p">;</span>
+                    <span class="nx">constructorParameters0</span> <span class="o">=</span> <span class="nx">fields</span><span class="p">;</span>
+                    <span class="k">break</span><span class="p">;</span>
+                <span class="p">}</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+                </pre></div>
             <p>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;从以上代码可以看出，根据优先级选择Constructor，为了减少学习成本，Creator直接重用了java.beans.ConstructorProperties注解，又因ConstructorProperties只能标记在Constructor上，因此定义一个Creator.ConstructorParameters注解，用于标记在Creator的create方法上。
             </p>
