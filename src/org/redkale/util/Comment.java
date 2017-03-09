@@ -19,7 +19,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  */
 @Inherited
 @Documented
-@Target({TYPE, METHOD, FIELD, PARAMETER})
+@Target({TYPE, METHOD, FIELD, PARAMETER, CONSTRUCTOR, LOCAL_VARIABLE, ANNOTATION_TYPE, TYPE_PARAMETER})
 @Retention(RUNTIME)
 public @interface Comment {
 
