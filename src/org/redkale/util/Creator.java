@@ -116,6 +116,7 @@ public interface Creator<T> {
             public static SimpleEntry<String, Class>[] getConstructorField(Class clazz, String constructorDesc) {
                 String n = clazz.getName();
                 InputStream in = clazz.getResourceAsStream(n.substring(n.lastIndexOf('.') + 1) + ".class");
+                if (in == null) return null;
                 ByteArrayOutputStream out = new ByteArrayOutputStream(1024);
                 byte[] bytes = new byte[1024];
                 int pos;
