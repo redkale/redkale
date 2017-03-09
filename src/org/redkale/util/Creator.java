@@ -86,6 +86,7 @@ public interface Creator<T> {
      * 创建对象
      *
      * @param params 构造函数的参数
+     *
      * @return 构建的对象
      */
     public T create(Object... params);
@@ -95,6 +96,7 @@ public interface Creator<T> {
      *
      * @param <T>   构建类的数据类型
      * @param clazz 构建类
+     *
      * @return Creator对象
      */
     @SuppressWarnings("unchecked")
@@ -109,7 +111,7 @@ public interface Creator<T> {
         if (clazz.isInterface() || Modifier.isAbstract(clazz.getModifiers())) {
             throw new RuntimeException("[" + clazz + "] is a interface or abstract class, cannot create it's Creator.");
         }
-        for (final Method method : clazz.getDeclaredMethods()) {
+        for (final Method method : clazz.getDeclaredMethods()) { //查找类中是否存在提供创建Creator实例的静态方法
             if (!Modifier.isStatic(method.getModifiers())) continue;
             if (method.getParameterTypes().length != 0) continue;
             if (method.getReturnType() != Creator.class) continue;
