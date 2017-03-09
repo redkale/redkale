@@ -10,6 +10,7 @@ import static org.redkale.convert.Reader.*;
 import org.redkale.util.*;
 
 /**
+ * JSON数据源
  *
  * <p>
  * 详情见: https://redkale.org

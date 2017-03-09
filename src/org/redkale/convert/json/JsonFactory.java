@@ -13,6 +13,7 @@ import org.redkale.convert.ext.*;
 import org.redkale.util.*;
 
 /**
+ * JSON的ConvertFactory
  *
  * <p>
  * 详情见: https://redkale.org

@@ -11,6 +11,7 @@ import org.redkale.convert.ext.*;
 import org.redkale.util.*;
 
 /**
+ * BSON数据源
  *
  * <p>
  * 详情见: https://redkale.org

@@ -10,6 +10,7 @@ import java.util.function.*;
 import org.redkale.util.Utility;
 
 /**
+ * 以ByteBuffer为数据载体的BsonWriter
  *
  * <p>
  * 详情见: https://redkale.org

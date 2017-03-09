@@ -13,6 +13,7 @@ import org.redkale.convert.*;
 import org.redkale.util.*;
 
 /**
+ * 以ByteBuffer为数据载体的JsonWriter
  *
  * <p>
  * 详情见: https://redkale.org

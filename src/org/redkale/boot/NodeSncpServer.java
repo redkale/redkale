@@ -13,6 +13,7 @@ import org.redkale.net.sncp.*;
 import org.redkale.util.*;
 
 /**
+ * SNCP Server节点的配置Server
  *
  * <p>
  * 详情见: https://redkale.org

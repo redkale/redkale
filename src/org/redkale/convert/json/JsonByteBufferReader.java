@@ -11,9 +11,10 @@ import org.redkale.convert.*;
 import static org.redkale.convert.Reader.*;
 
 /**
- * 
+ * 以ByteBuffer为数据载体的JsonReader   <br>
+ *
  * 只支持UTF-8格式
- * 
+ *
  * 详情见: https://redkale.org
  *
  * @author zhangjx
