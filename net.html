@@ -252,7 +252,7 @@
 <span class="o">}</span></pre></div>
 
             <p id="net_httprequest">&nbsp;&nbsp;<b>. HttpRequest 对象</b> </p>
-            <div class="highlight"><pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">HttpRequest</span> <span class="o">{</span>
+            <div class="highlight"><pre><span></span><span class="kd">public</span> <span class="kd">class</span> <span class="nc">HttpRequest</span> <span class="o">{</span>
 
     <span class="c1">//获取客户端地址IP</span>
     <span class="kd">public</span> <span class="n">SocketAddress</span> <span class="nf">getRemoteAddress</span><span class="o">();</span>
@@ -278,6 +278,9 @@
 
     <span class="c1">//更新sessionid</span>
     <span class="kd">public</span> <span class="n">String</span> <span class="nf">changeSessionid</span><span class="o">();</span>
+
+    <span class="c1">//指定值更新sessionid</span>
+    <span class="kd">public</span> <span class="n">String</span> <span class="nf">changeSessionid</span><span class="o">(</span><span class="n">String</span> <span class="n">newsessionid</span><span class="o">);</span>
 
     <span class="c1">//使sessionid失效</span>
     <span class="kd">public</span> <span class="kt">void</span> <span class="nf">invalidateSession</span><span class="o">();</span>
@@ -314,6 +317,46 @@
 
     <span class="c1">//截取getRequestURI最后的一个/后面的部分</span>
     <span class="kd">public</span> <span class="n">String</span> <span class="nf">getRequstURILastPath</span><span class="o">();</span>
+
+    <span class="c1">// 获取请求URL最后的一个/后面的部分的short值   &lt;br&gt;</span>
+    <span class="c1">// 例如请求URL /pipes/record/query/2   &lt;br&gt;</span>
+    <span class="c1">// 获取type参数: short type = request.getRequstURILastPath((short)0); //type = 2</span>
+    <span class="kd">public</span> <span class="kt">short</span> <span class="nf">getRequstURILastPath</span><span class="o">(</span><span class="kt">short</span> <span class="n">defvalue</span><span class="o">);</span>
+
+    <span class="c1">// 获取请求URL最后的一个/后面的部分的short值   &lt;br&gt;</span>
+    <span class="c1">// 例如请求URL /pipes/record/query/2   &lt;br&gt;</span>
+    <span class="c1">// 获取type参数: short type = request.getRequstURILastPath((short)0); //type = 2</span>
+    <span class="kd">public</span> <span class="kt">short</span> <span class="nf">getRequstURILastPath</span><span class="o">(</span><span class="kt">int</span> <span class="n">radix</span><span class="o">,</span> <span class="kt">short</span> <span class="n">defvalue</span><span class="o">);</span>
+
+    <span class="c1">// 获取请求URL最后的一个/后面的部分的int值   &lt;br&gt;</span>
+    <span class="c1">// 例如请求URL /pipes/record/query/2   &lt;br&gt;</span>
+    <span class="c1">// 获取type参数: int type = request.getRequstURILastPath(0); //type = 2</span>
+    <span class="kd">public</span> <span class="kt">int</span> <span class="nf">getRequstURILastPath</span><span class="o">(</span><span class="kt">int</span> <span class="n">defvalue</span><span class="o">);</span>
+
+    <span class="c1">// 获取请求URL最后的一个/后面的部分的int值   &lt;br&gt;</span>
+    <span class="c1">// 例如请求URL /pipes/record/query/2   &lt;br&gt;</span>
+    <span class="c1">// 获取type参数: int type = request.getRequstURILastPath(0); //type = 2</span>
+    <span class="kd">public</span> <span class="kt">int</span> <span class="nf">getRequstURILastPath</span><span class="o">(</span><span class="kt">int</span> <span class="n">radix</span><span class="o">,</span> <span class="kt">int</span> <span class="n">defvalue</span><span class="o">);</span>
+
+    <span class="c1">// 获取请求URL最后的一个/后面的部分的float值   &lt;br&gt;</span>
+    <span class="c1">// 例如请求URL /pipes/record/query/2   &lt;br&gt;</span>
+    <span class="c1">// 获取type参数: float type = request.getRequstURILastPath(0.f); //type = 2.f</span>
+    <span class="kd">public</span> <span class="kt">float</span> <span class="nf">getRequstURILastPath</span><span class="o">(</span><span class="kt">float</span> <span class="n">defvalue</span><span class="o">);</span>
+
+    <span class="c1">// 获取请求URL最后的一个/后面的部分的long值   &lt;br&gt;</span>
+    <span class="c1">// 例如请求URL /pipes/record/query/2   &lt;br&gt;</span>
+    <span class="c1">// 获取type参数: long type = request.getRequstURILastPath(0L); //type = 2</span>
+    <span class="kd">public</span> <span class="kt">long</span> <span class="nf">getRequstURILastPath</span><span class="o">(</span><span class="kt">long</span> <span class="n">defvalue</span><span class="o">);</span>
+
+    <span class="c1">// 获取请求URL最后的一个/后面的部分的long值   &lt;br&gt;</span>
+    <span class="c1">// 例如请求URL /pipes/record/query/2   &lt;br&gt;</span>
+    <span class="c1">// 获取type参数: long type = request.getRequstURILastPath(0L); //type = 2</span>
+    <span class="kd">public</span> <span class="kt">long</span> <span class="nf">getRequstURILastPath</span><span class="o">(</span><span class="kt">int</span> <span class="n">radix</span><span class="o">,</span> <span class="kt">long</span> <span class="n">defvalue</span><span class="o">);</span>
+
+    <span class="c1">// 获取请求URL最后的一个/后面的部分的double值   &lt;br&gt;</span>
+    <span class="c1">// 例如请求URL /pipes/record/query/2   &lt;br&gt;</span>
+    <span class="c1">// 获取type参数: double type = request.getRequstURILastPath(0.0); //type = 2.0</span>
+    <span class="kd">public</span> <span class="kt">double</span> <span class="nf">getRequstURILastPath</span><span class="o">(</span><span class="kt">double</span> <span class="n">defvalue</span><span class="o">);</span>
 
     <span class="c1">//从prefix之后截取getRequestURI再对&quot;/&quot;进行分隔</span>
     <span class="kd">public</span> <span class="n">String</span><span class="o">[]</span> <span class="nf">getRequstURIPaths</span><span class="o">(</span><span class="n">String</span> <span class="n">prefix</span><span class="o">);</span>
@@ -457,24 +500,24 @@
 
     <span class="c1">//获取指定的参数double值, 没有返回默认double值</span>
     <span class="kd">public</span> <span class="kt">double</span> <span class="nf">getDoubleParameter</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">,</span> <span class="kt">double</span> <span class="n">defaultValue</span><span class="o">);</span>
-    
+
     <span class="c1">//获取翻页对象 同 getFlipper(&quot;flipper&quot;, false, 0);</span>
     <span class="kd">public</span> <span class="n">org</span><span class="o">.</span><span class="na">redkale</span><span class="o">.</span><span class="na">source</span><span class="o">.</span><span class="na">Flipper</span> <span class="nf">getFlipper</span><span class="o">();</span>
-    
+
     <span class="c1">//获取翻页对象 同 getFlipper(&quot;flipper&quot;, needcreate, 0);</span>
     <span class="kd">public</span> <span class="n">org</span><span class="o">.</span><span class="na">redkale</span><span class="o">.</span><span class="na">source</span><span class="o">.</span><span class="na">Flipper</span> <span class="nf">getFlipper</span><span class="o">(</span><span class="kt">boolean</span> <span class="n">needcreate</span><span class="o">);</span>
-    
+
     <span class="c1">//获取翻页对象 同 getFlipper(&quot;flipper&quot;, false, maxLimit);</span>
     <span class="kd">public</span> <span class="n">org</span><span class="o">.</span><span class="na">redkale</span><span class="o">.</span><span class="na">source</span><span class="o">.</span><span class="na">Flipper</span> <span class="nf">getFlipper</span><span class="o">(</span><span class="kt">int</span> <span class="n">maxLimit</span><span class="o">);</span>
-    
+
     <span class="c1">//获取翻页对象 同 getFlipper(&quot;flipper&quot;, needcreate, maxLimit)</span>
     <span class="kd">public</span> <span class="n">org</span><span class="o">.</span><span class="na">redkale</span><span class="o">.</span><span class="na">source</span><span class="o">.</span><span class="na">Flipper</span> <span class="nf">getFlipper</span><span class="o">(</span><span class="kt">boolean</span> <span class="n">needcreate</span><span class="o">,</span> <span class="kt">int</span> <span class="n">maxLimit</span><span class="o">);</span>
-    
+
     <span class="c1">//获取翻页对象 http://redkale.org/pipes/records/list/offset:0/limit:20/sort:createtime%20ASC</span>
     <span class="c1">//http://redkale.org/pipes/records/list?flipper={&#39;offset&#39;:0,&#39;limit&#39;:20, &#39;sort&#39;:&#39;createtime ASC&#39;}</span>
     <span class="c1">//以上两种接口都可以获取到翻页对象</span>
     <span class="kd">public</span> <span class="n">org</span><span class="o">.</span><span class="na">redkale</span><span class="o">.</span><span class="na">source</span><span class="o">.</span><span class="na">Flipper</span> <span class="nf">getFlipper</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">,</span> <span class="kt">boolean</span> <span class="n">needcreate</span><span class="o">,</span> <span class="kt">int</span> <span class="n">maxLimit</span><span class="o">);</span>
-    
+
     <span class="c1">//获取HTTP上下文对象</span>
     <span class="kd">public</span> <span class="n">HttpContext</span> <span class="nf">getContext</span><span class="o">();</span>
 
@@ -497,7 +540,7 @@
 
 
             <p id="net_httpresponse">&nbsp;&nbsp;<b>. HttpResponse 对象</b> </p>
-            <div class="highlight"><pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">HttpResponse</span> <span class="o">{</span>
+            <div class="highlight"><pre><span></span><span class="kd">public</span> <span class="kd">class</span> <span class="nc">HttpResponse</span> <span class="o">{</span>
 
     <span class="c1">//增加Cookie值</span>
     <span class="kd">public</span> <span class="n">HttpResponse</span> <span class="nf">addCookie</span><span class="o">(</span><span class="n">HttpCookie</span><span class="o">...</span> <span class="n">cookies</span><span class="o">);</span>
@@ -578,6 +621,9 @@
     <span class="c1">//以404状态码输出</span>
     <span class="kd">public</span> <span class="kt">void</span> <span class="nf">finish404</span><span class="o">();</span>
 
+    <span class="c1">//将指定byte[]按响应结果输出</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">finish</span><span class="o">(</span><span class="kd">final</span> <span class="kt">byte</span><span class="o">[]</span> <span class="n">bs</span><span class="o">);</span>
+
     <span class="c1">//将指定ByteBuffer按响应结果输出</span>
     <span class="kd">public</span> <span class="kt">void</span> <span class="nf">finish</span><span class="o">(</span><span class="n">ByteBuffer</span> <span class="n">buffer</span><span class="o">);</span>
 
@@ -600,6 +646,7 @@
 
     <span class="c1">//HttpResponse回收时回调的监听方法</span>
     <span class="kd">public</span> <span class="kt">void</span> <span class="nf">setRecycleListener</span><span class="o">(</span><span class="n">BiConsumer</span><span class="o">&lt;</span><span class="n">HttpRequest</span><span class="o">,</span> <span class="n">HttpResponse</span><span class="o">&gt;</span> <span class="n">recycleListener</span><span class="o">);</span>
+
 <span class="o">}</span>
                 </pre></div>
 
