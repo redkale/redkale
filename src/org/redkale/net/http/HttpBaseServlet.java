@@ -273,11 +273,11 @@ public abstract class HttpBaseServlet extends HttpServlet {
                 final WebMapping mapping = method.getAnnotation(WebMapping.class);
                 final WebAction action = method.getAnnotation(WebAction.class);
                 if (mapping == null && action == null) continue;
-                final boolean inherited = action == null ? action.inherited() : mapping.inherited();
+                final boolean inherited = mapping == null ? action.inherited() : mapping.inherited();
                 if (!inherited && selfClz != clz) continue; //忽略不被继承的方法
-                final int actionid = action == null ? action.actionid() : mapping.actionid();
-                final String name = action == null ? action.url().trim() : mapping.url().trim();
-                final String[] methods = action == null ? action.methods() : mapping.methods();
+                final int actionid = mapping == null ? action.actionid() : mapping.actionid();
+                final String name = mapping == null ? action.url().trim() : mapping.url().trim();
+                final String[] methods = mapping == null ? action.methods() : mapping.methods();
                 if (nameset.containsKey(name)) {
                     if (nameset.get(name) != clz) continue;
                     throw new RuntimeException(this.getClass().getSimpleName() + " has two same " + WebMapping.class.getSimpleName() + "(" + name + ")");
