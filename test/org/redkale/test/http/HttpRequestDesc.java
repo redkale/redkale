@@ -43,7 +43,7 @@ public interface HttpRequestDesc {
 
     //更新sessionid
     public String changeSessionid();
-    
+
     //指定值更新sessionid
     public String changeSessionid(String newsessionid);
 
@@ -82,6 +82,46 @@ public interface HttpRequestDesc {
 
     //截取getRequestURI最后的一个/后面的部分
     public String getRequstURILastPath();
+
+    // 获取请求URL最后的一个/后面的部分的short值   <br>
+    // 例如请求URL /pipes/record/query/2   <br>
+    // 获取type参数: short type = request.getRequstURILastPath((short)0); //type = 2
+    public short getRequstURILastPath(short defvalue);
+
+    // 获取请求URL最后的一个/后面的部分的short值   <br>
+    // 例如请求URL /pipes/record/query/2   <br>
+    // 获取type参数: short type = request.getRequstURILastPath((short)0); //type = 2
+    public short getRequstURILastPath(int radix, short defvalue);
+
+    // 获取请求URL最后的一个/后面的部分的int值   <br>
+    // 例如请求URL /pipes/record/query/2   <br>
+    // 获取type参数: int type = request.getRequstURILastPath(0); //type = 2
+    public int getRequstURILastPath(int defvalue);
+
+    // 获取请求URL最后的一个/后面的部分的int值   <br>
+    // 例如请求URL /pipes/record/query/2   <br>
+    // 获取type参数: int type = request.getRequstURILastPath(0); //type = 2
+    public int getRequstURILastPath(int radix, int defvalue);
+
+    // 获取请求URL最后的一个/后面的部分的float值   <br>
+    // 例如请求URL /pipes/record/query/2   <br>
+    // 获取type参数: float type = request.getRequstURILastPath(0.f); //type = 2.f
+    public float getRequstURILastPath(float defvalue);
+
+    // 获取请求URL最后的一个/后面的部分的long值   <br>
+    // 例如请求URL /pipes/record/query/2   <br>
+    // 获取type参数: long type = request.getRequstURILastPath(0L); //type = 2
+    public long getRequstURILastPath(long defvalue);
+
+    // 获取请求URL最后的一个/后面的部分的long值   <br>
+    // 例如请求URL /pipes/record/query/2   <br>
+    // 获取type参数: long type = request.getRequstURILastPath(0L); //type = 2
+    public long getRequstURILastPath(int radix, long defvalue);
+
+    // 获取请求URL最后的一个/后面的部分的double值   <br>
+    // 例如请求URL /pipes/record/query/2   <br>
+    // 获取type参数: double type = request.getRequstURILastPath(0.0); //type = 2.0
+    public double getRequstURILastPath(double defvalue);
 
     //从prefix之后截取getRequestURI再对"/"进行分隔
     public String[] getRequstURIPaths(String prefix);
@@ -225,24 +265,24 @@ public interface HttpRequestDesc {
 
     //获取指定的参数double值, 没有返回默认double值
     public double getDoubleParameter(String name, double defaultValue);
-    
+
     //获取翻页对象 同 getFlipper("flipper", false, 0);
     public org.redkale.source.Flipper getFlipper();
-    
+
     //获取翻页对象 同 getFlipper("flipper", needcreate, 0);
     public org.redkale.source.Flipper getFlipper(boolean needcreate);
-    
+
     //获取翻页对象 同 getFlipper("flipper", false, maxLimit);
     public org.redkale.source.Flipper getFlipper(int maxLimit);
-    
+
     //获取翻页对象 同 getFlipper("flipper", needcreate, maxLimit)
     public org.redkale.source.Flipper getFlipper(boolean needcreate, int maxLimit);
-    
+
     //获取翻页对象 http://redkale.org/pipes/records/list/offset:0/limit:20/sort:createtime%20ASC
     //http://redkale.org/pipes/records/list?flipper={'offset':0,'limit':20, 'sort':'createtime ASC'}
     //以上两种接口都可以获取到翻页对象
     public org.redkale.source.Flipper getFlipper(String name, boolean needcreate, int maxLimit);
-    
+
     //获取HTTP上下文对象
     public HttpContext getContext();
 

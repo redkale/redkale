@@ -513,6 +513,123 @@ public class HttpRequest extends Request<HttpContext> {
     }
 
     /**
+     * 获取请求URL最后的一个/后面的部分的short值   <br>
+     * 例如请求URL /pipes/record/query/2   <br>
+     * 获取type参数: short type = request.getRequstURILastPath((short)0); //type = 2
+     *
+     * @param defvalue 默认short值
+     *
+     * @return short值
+     */
+    public short getRequstURILastPath(short defvalue) {
+        String val = getRequstURILastPath();
+        if (val.isEmpty()) return defvalue;
+        return val.isEmpty() ? defvalue : Short.parseShort(val);
+    }
+
+    /**
+     * 获取请求URL最后的一个/后面的部分的short值   <br>
+     * 例如请求URL /pipes/record/query/2   <br>
+     * 获取type参数: short type = request.getRequstURILastPath(16, (short)0); //type = 2
+     *
+     * @param radix    进制数
+     * @param defvalue 默认short值
+     *
+     * @return short值
+     */
+    public short getRequstURILastPath(int radix, short defvalue) {
+        String val = getRequstURILastPath();
+        if (val.isEmpty()) return defvalue;
+        return val.isEmpty() ? defvalue : Short.parseShort(val, radix);
+    }
+
+    /**
+     * 获取请求URL最后的一个/后面的部分的int值   <br>
+     * 例如请求URL /pipes/record/query/2   <br>
+     * 获取type参数: int type = request.getRequstURILastPath(0); //type = 2
+     *
+     * @param defvalue 默认int值
+     *
+     * @return int值
+     */
+    public int getRequstURILastPath(int defvalue) {
+        String val = getRequstURILastPath();
+        return val.isEmpty() ? defvalue : Integer.parseInt(val);
+    }
+
+    /**
+     * 获取请求URL最后的一个/后面的部分的int值   <br>
+     * 例如请求URL /pipes/record/query/2   <br>
+     * 获取type参数: int type = request.getRequstURILastPath(16, 0); //type = 2
+     *
+     * @param radix    进制数
+     * @param defvalue 默认int值
+     *
+     * @return int值
+     */
+    public int getRequstURILastPath(int radix, int defvalue) {
+        String val = getRequstURILastPath();
+        return val.isEmpty() ? defvalue : Integer.parseInt(val, radix);
+    }
+
+    /**
+     * 获取请求URL最后的一个/后面的部分的float值   <br>
+     * 例如请求URL /pipes/record/query/2   <br>
+     * 获取type参数: float type = request.getRequstURILastPath(0.0f); //type = 2.0f
+     *
+     * @param defvalue 默认float值
+     *
+     * @return float值
+     */
+    public float getRequstURILastPath(float defvalue) {
+        String val = getRequstURILastPath();
+        return val.isEmpty() ? defvalue : Float.parseFloat(val);
+    }
+
+    /**
+     * 获取请求URL最后的一个/后面的部分的int值   <br>
+     * 例如请求URL /pipes/record/query/2   <br>
+     * 获取type参数: long type = request.getRequstURILastPath(0L); //type = 2
+     *
+     * @param defvalue 默认long值
+     *
+     * @return long值
+     */
+    public long getRequstURILastPath(long defvalue) {
+        String val = getRequstURILastPath();
+        return val.isEmpty() ? defvalue : Long.parseLong(val);
+    }
+
+    /**
+     * 获取请求URL最后的一个/后面的部分的int值   <br>
+     * 例如请求URL /pipes/record/query/2   <br>
+     * 获取type参数: long type = request.getRequstURILastPath(16, 0L); //type = 2
+     *
+     * @param radix    进制数
+     * @param defvalue 默认long值
+     *
+     * @return long值
+     */
+    public long getRequstURILastPath(int radix, long defvalue) {
+        String val = getRequstURILastPath();
+        return val.isEmpty() ? defvalue : Long.parseLong(val, radix);
+    }
+
+    /**
+     * 获取请求URL最后的一个/后面的部分的double值   <br>
+     * 例如请求URL /pipes/record/query/2   <br>
+     * 获取type参数: double type = request.getRequstURILastPath(0.0); //type = 2.0
+     *
+     * @param defvalue 默认double值
+     *
+     * @return double值
+     */
+    public double getRequstURILastPath(double defvalue) {
+        String val = getRequstURILastPath();
+        return val.isEmpty() ? defvalue : Double.parseDouble(val);
+    }
+
+    /**
      *
      * 从prefix之后截取getRequestURI再对"/"进行分隔
      * <p>
