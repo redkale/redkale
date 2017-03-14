@@ -85,7 +85,7 @@ public abstract class WebSocket {
 
     //----------------------------------------------------------------
     /**
-     * 发送消息体, 包含二进制/文本
+     * 给自身发送消息体, 包含二进制/文本
      *
      * @param packet WebSocketPacket
      *
@@ -99,7 +99,7 @@ public abstract class WebSocket {
     }
 
     /**
-     * 发送单一的文本消息
+     * 给自身发送单一的文本消息
      *
      * @param text 不可为空
      *
@@ -110,7 +110,7 @@ public abstract class WebSocket {
     }
 
     /**
-     * 发送文本消息
+     * 给自身发送文本消息
      *
      * @param text 不可为空
      * @param last 是否最后一条
@@ -139,7 +139,7 @@ public abstract class WebSocket {
     }
 
     /**
-     * 发送单一的二进制消息
+     * 给自身发送单一的二进制消息
      *
      * @param data byte[]
      *
@@ -150,7 +150,7 @@ public abstract class WebSocket {
     }
 
     /**
-     * 发送二进制消息
+     * 给自身发送二进制消息
      *
      * @param data 不可为空
      * @param last 是否最后一条
@@ -162,7 +162,7 @@ public abstract class WebSocket {
     }
 
     /**
-     * 发送消息, 消息类型是String或byte[]
+     * 给自身发送消息, 消息类型是String或byte[]
      *
      * @param message 不可为空, 只能是String或者byte[]
      * @param last    是否最后一条
@@ -289,7 +289,7 @@ public abstract class WebSocket {
     }
 
     /**
-     * 获取在线用户的节点地址列表
+     * 获取指定groupid在线用户的节点地址列表
      *
      * @param groupid groupid
      *
@@ -300,7 +300,7 @@ public abstract class WebSocket {
     }
 
     /**
-     * 获取在线用户的详细连接信息
+     * 获取指定groupid在线用户的详细连接信息
      *
      * @param groupid groupid
      *
