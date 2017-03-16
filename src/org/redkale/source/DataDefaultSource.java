@@ -246,6 +246,12 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
         }
     }
 
+    @Override
+    public <T> void insert(final AsyncHandler<Void, T[]> handler, final T... values) {
+        insert(values);
+        if (handler != null) handler.completed(null, values);
+    }
+
     private <T> void insert(final Connection conn, final EntityInfo<T> info, T... values) {
         if (values.length == 0) return;
         try {
@@ -416,6 +422,12 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
         }
     }
 
+    @Override
+    public <T> void delete(final AsyncHandler<Integer, T[]> handler, final T... values) {
+        int rs = delete(values);
+        if (handler != null) handler.completed(rs, values);
+    }
+
     private <T> int delete(final Connection conn, final EntityInfo<T> info, T... values) {
         if (values.length == 0) return -1;
         final Attribute primary = info.getPrimary();
@@ -439,6 +451,12 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
         } finally {
             closeSQLConnection(conn);
         }
+    }
+
+    @Override
+    public <T> void delete(final AsyncHandler<Integer, Serializable[]> handler, final Class<T> clazz, final Serializable... ids) {
+        int rs = delete(clazz, ids);
+        if (handler != null) handler.completed(rs, ids);
     }
 
     private <T> int delete(final Connection conn, final EntityInfo<T> info, Serializable... keys) {
@@ -490,6 +508,12 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
     }
 
     @Override
+    public <T> void delete(final AsyncHandler<Integer, FilterNode> handler, final Class<T> clazz, final FilterNode node) {
+        int rs = delete(clazz, node);
+        if (handler != null) handler.completed(rs, node);
+    }
+
+    @Override
     public <T> int delete(Class<T> clazz, final Flipper flipper, FilterNode node) {
         final EntityInfo<T> info = loadEntityInfo(clazz);
         if (info.isVirtualEntity()) {
@@ -501,6 +525,12 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
         } finally {
             closeSQLConnection(conn);
         }
+    }
+
+    @Override
+    public <T> void delete(final AsyncHandler<Integer, FilterNode> handler, final Class<T> clazz, final Flipper flipper, FilterNode node) {
+        int rs = delete(clazz, flipper, node);
+        if (handler != null) handler.completed(rs, node);
     }
 
     private <T> int delete(final Connection conn, final EntityInfo<T> info, final Flipper flipper, final FilterNode node) {
@@ -586,6 +616,12 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
         } finally {
             closeSQLConnection(conn);
         }
+    }
+
+    @Override
+    public <T> void update(final AsyncHandler<Integer, T[]> handler, final T... values) {
+        int rs = update(values);
+        if (handler != null) handler.completed(rs, values);
     }
 
     private <T> int update(final Connection conn, final EntityInfo<T> info, T... values) {
@@ -679,6 +715,12 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
         }
     }
 
+    @Override
+    public <T> void updateColumn(final AsyncHandler<Integer, Serializable> handler, final Class<T> clazz, final Serializable id, final String column, final Serializable value) {
+        int rs = updateColumn(clazz, id, column, value);
+        if (handler != null) handler.completed(rs, id);
+    }
+
     private <T> int updateColumn(Connection conn, final EntityInfo<T> info, Serializable id, String column, final Serializable value) {
         try {
             int c = -1;
@@ -739,6 +781,12 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
         } finally {
             closeSQLConnection(conn);
         }
+    }
+
+    @Override
+    public <T> void updateColumn(final AsyncHandler<Integer, FilterNode> handler, final Class<T> clazz, final String column, final Serializable value, final FilterNode node) {
+        int rs = updateColumn(clazz, column, value, node);
+        if (handler != null) handler.completed(rs, node);
     }
 
     private <T> int updateColumn(Connection conn, final EntityInfo<T> info, String column, final Serializable value, FilterNode node) {
@@ -816,6 +864,12 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
         } finally {
             closeSQLConnection(conn);
         }
+    }
+
+    @Override
+    public <T> void updateColumn(final AsyncHandler<Integer, Serializable> handler, final Class<T> clazz, final Serializable id, final ColumnValue... values) {
+        int rs = updateColumn(clazz, id, values);
+        if (handler != null) handler.completed(rs, id);
     }
 
     private <T> int updateColumn(final Connection conn, final EntityInfo<T> info, final Serializable id, final ColumnValue... values) {
@@ -899,6 +953,12 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
         }
     }
 
+    @Override
+    public <T> void updateColumn(final AsyncHandler<Integer, FilterNode> handler, final Class<T> clazz, final FilterNode node, final ColumnValue... values) {
+        int rs = updateColumn(clazz, node, values);
+        if (handler != null) handler.completed(rs, node);
+    }
+
     /**
      * 根据主键值更新对象的多个column对应的值， 必须是Entity Class
      *
@@ -922,6 +982,12 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
         } finally {
             closeSQLConnection(conn);
         }
+    }
+
+    @Override
+    public <T> void updateColumn(final AsyncHandler<Integer, FilterNode> handler, final Class<T> clazz, final FilterNode node, final Flipper flipper, final ColumnValue... values) {
+        int rs = updateColumn(clazz, node, flipper, values);
+        if (handler != null) handler.completed(rs, node);
     }
 
     private <T> int updateColumn(final Connection conn, final EntityInfo<T> info, final FilterNode node, final Flipper flipper, final ColumnValue... values) {
@@ -1001,6 +1067,12 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
     }
 
     @Override
+    public <T> void updateColumn(final AsyncHandler<Integer, T> handler, final T bean, final String... columns) {
+        int rs = updateColumn(bean, columns);
+        if (handler != null) handler.completed(rs, bean);
+    }
+
+    @Override
     public <T> int updateColumn(final T bean, final SelectColumn selects) {
         final EntityInfo<T> info = loadEntityInfo((Class<T>) bean.getClass());
         if (info.isVirtualEntity()) {
@@ -1012,6 +1084,12 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
         } finally {
             closeSQLConnection(conn);
         }
+    }
+
+    @Override
+    public <T> void updateColumn(final AsyncHandler<Integer, T> handler, final T bean, final SelectColumn selects) {
+        int rs = updateColumn(bean, selects);
+        if (handler != null) handler.completed(rs, bean);
     }
 
     private <T> int updateColumns(final Connection conn, final EntityInfo<T> info, final T bean, final SelectColumn selects) {
@@ -1077,6 +1155,12 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
     }
 
     @Override
+    public <T> void updateColumn(final AsyncHandler<Integer, FilterNode> handler, final T bean, final FilterNode node, final String... columns) {
+        int rs = updateColumn(bean, node, columns);
+        if (handler != null) handler.completed(rs, node);
+    }
+
+    @Override
     public <T> int updateColumn(final T bean, final FilterNode node, final SelectColumn selects) {
         final EntityInfo<T> info = loadEntityInfo((Class<T>) bean.getClass());
         if (info.isVirtualEntity()) {
@@ -1088,6 +1172,12 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
         } finally {
             closeSQLConnection(conn);
         }
+    }
+
+    @Override
+    public <T> void updateColumn(final AsyncHandler<Integer, FilterNode> handler, final T bean, final FilterNode node, final SelectColumn selects) {
+        int rs = updateColumn(bean, node, selects);
+        if (handler != null) handler.completed(rs, node);
     }
 
     private <T> int updateColumns(final Connection conn, final EntityInfo<T> info, final T bean, final FilterNode node, final SelectColumn selects) {
@@ -1192,8 +1282,19 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
     }
 
     @Override
+    public void getNumberResult(final AsyncHandler<Number, String> handler, final Class entityClass, final FilterFunc func, final String column) {
+        Number rs = getNumberResult(entityClass, func, column);
+        if (handler != null) handler.completed(rs, column);
+    }
+
+    @Override
     public Number getNumberResult(final Class entityClass, final FilterFunc func, final String column, FilterBean bean) {
         return getNumberResult(entityClass, func, null, column, FilterNodeBean.createFilterNode(bean));
+    }
+
+    @Override
+    public final void getNumberResult(final AsyncHandler<Number, FilterNode> handler, final Class entityClass, final FilterFunc func, final String column, final FilterBean bean) {
+        getNumberResult(handler, entityClass, func, column, FilterNodeBean.createFilterNode(bean));
     }
 
     @Override
@@ -1202,8 +1303,20 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
     }
 
     @Override
+    public void getNumberResult(final AsyncHandler<Number, FilterNode> handler, final Class entityClass, final FilterFunc func, final String column, final FilterNode node) {
+        Number rs = getNumberResult(entityClass, func, column, node);
+        if (handler != null) handler.completed(rs, node);
+    }
+
+    @Override
     public Number getNumberResult(final Class entityClass, final FilterFunc func, final Number defVal, final String column) {
         return getNumberResult(entityClass, func, defVal, column, (FilterNode) null);
+    }
+
+    @Override
+    public void getNumberResult(final AsyncHandler<Number, String> handler, final Class entityClass, final FilterFunc func, final Number defVal, final String column) {
+        Number rs = getNumberResult(entityClass, func, defVal, column);
+        if (handler != null) handler.completed(rs, column);
     }
 
     @Override
@@ -1212,13 +1325,29 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
     }
 
     @Override
+    public final void getNumberResult(final AsyncHandler<Number, String> handler, final Class entityClass, final FilterFunc func, final Number defVal, final String column, final FilterBean bean) {
+        getNumberResult(handler, entityClass, func, defVal, column, FilterNodeBean.createFilterNode(bean));
+    }
+
+    @Override
     public <N extends Number> Map<String, N> getNumberMap(final Class entityClass, final FilterFuncColumn... columns) {
         return getNumberMap(entityClass, (FilterNode) null, columns);
     }
 
     @Override
+    public <N extends Number> void getNumberMap(final AsyncHandler<Map<String, N>, FilterFuncColumn[]> handler, final Class entityClass, final FilterFuncColumn... columns) {
+        Map<String, N> rs = getNumberMap(entityClass, columns);
+        if (handler != null) handler.completed(rs, columns);
+    }
+
+    @Override
     public <N extends Number> Map<String, N> getNumberMap(final Class entityClass, final FilterBean bean, final FilterFuncColumn... columns) {
         return getNumberMap(entityClass, FilterNodeBean.createFilterNode(bean), columns);
+    }
+
+    @Override
+    public final <N extends Number> void getNumberMap(final AsyncHandler<Map<String, N>, FilterNode> handler, final Class entityClass, final FilterBean bean, final FilterFuncColumn... columns) {
+        getNumberMap(handler, entityClass, FilterNodeBean.createFilterNode(bean), columns);
     }
 
     @Override
@@ -1286,6 +1415,12 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
     }
 
     @Override
+    public <N extends Number> void getNumberMap(final AsyncHandler<Map<String, N>, FilterNode> handler, final Class entityClass, final FilterNode node, final FilterFuncColumn... columns) {
+        Map<String, N> rs = getNumberMap(entityClass, node, columns);
+        if (handler != null) handler.completed(rs, node);
+    }
+
+    @Override
     public Number getNumberResult(final Class entityClass, final FilterFunc func, final Number defVal, final String column, final FilterNode node) {
         final EntityInfo info = loadEntityInfo(entityClass);
         final Connection conn = createReadSQLConnection();
@@ -1321,6 +1456,12 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
         }
     }
 
+    @Override
+    public void getNumberResult(final AsyncHandler<Number, String> handler, final Class entityClass, final FilterFunc func, final Number defVal, final String column, final FilterNode node) {
+        Number rs = getNumberResult(entityClass, func, defVal, column, node);
+        if (handler != null) handler.completed(rs, column);
+    }
+
     //-----------------------queryColumnMap-----------------------------
     @Override
     public <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMap(final Class<T> entityClass, final String keyColumn, FilterFunc func, final String funcColumn) {
@@ -1328,8 +1469,19 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
     }
 
     @Override
+    public <T, K extends Serializable, N extends Number> void queryColumnMap(final AsyncHandler<Map<K, N>, String> handler, final Class<T> entityClass, final String keyColumn, final FilterFunc func, final String funcColumn) {
+        Map<K, N> rs = queryColumnMap(entityClass, keyColumn, func, funcColumn);
+        if (handler != null) handler.completed(rs, keyColumn);
+    }
+
+    @Override
     public <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMap(final Class<T> entityClass, final String keyColumn, FilterFunc func, final String funcColumn, FilterBean bean) {
         return queryColumnMap(entityClass, keyColumn, func, funcColumn, FilterNodeBean.createFilterNode(bean));
+    }
+
+    @Override
+    public final <T, K extends Serializable, N extends Number> void queryColumnMap(final AsyncHandler<Map<K, N>, String> handler, final Class<T> entityClass, final String keyColumn, final FilterFunc func, final String funcColumn, final FilterBean bean) {
+        queryColumnMap(handler, entityClass, keyColumn, func, funcColumn, FilterNodeBean.createFilterNode(bean));
     }
 
     @Override
@@ -1370,6 +1522,12 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
         }
     }
 
+    @Override
+    public <T, K extends Serializable, N extends Number> void queryColumnMap(final AsyncHandler<Map<K, N>, String> handler, final Class<T> entityClass, final String keyColumn, final FilterFunc func, final String funcColumn, final FilterNode node) {
+        Map<K, N> rs = queryColumnMap(entityClass, keyColumn, func, funcColumn, node);
+        if (handler != null) handler.completed(rs, keyColumn);
+    }
+
     //-----------------------find----------------------------
     /**
      * 根据主键获取对象
@@ -1383,6 +1541,12 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
     @Override
     public <T> T find(Class<T> clazz, Serializable pk) {
         return find(clazz, (SelectColumn) null, pk);
+    }
+
+    @Override
+    public <T> void find(final AsyncHandler<T, Serializable> handler, final Class<T> clazz, final Serializable pk) {
+        T rs = find(clazz, pk);
+        if (handler != null) handler.completed(rs, pk);
     }
 
     @Override
@@ -1418,8 +1582,20 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
     }
 
     @Override
+    public <T> void find(final AsyncHandler<T, Serializable> handler, final Class<T> clazz, SelectColumn selects, final Serializable pk) {
+        T rs = find(clazz, selects, pk);
+        if (handler != null) handler.completed(rs, pk);
+    }
+
+    @Override
     public <T> T find(final Class<T> clazz, final String column, final Serializable key) {
         return find(clazz, null, FilterNode.create(column, key));
+    }
+
+    @Override
+    public <T> void find(final AsyncHandler<T, Serializable> handler, final Class<T> clazz, final String column, final Serializable key) {
+        T rs = find(clazz, column, key);
+        if (handler != null) handler.completed(rs, key);
     }
 
     @Override
@@ -1428,13 +1604,29 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
     }
 
     @Override
+    public final <T> void find(final AsyncHandler<T, FilterNode> handler, final Class<T> clazz, final FilterBean bean) {
+        find(handler, clazz, FilterNodeBean.createFilterNode(bean));
+    }
+
+    @Override
     public <T> T find(final Class<T> clazz, final FilterNode node) {
         return find(clazz, null, node);
     }
 
     @Override
+    public <T> void find(final AsyncHandler<T, FilterNode> handler, final Class<T> clazz, final FilterNode node) {
+        T rs = find(clazz, node);
+        if (handler != null) handler.completed(rs, node);
+    }
+
+    @Override
     public <T> T find(final Class<T> clazz, final SelectColumn selects, final FilterBean bean) {
         return find(clazz, selects, FilterNodeBean.createFilterNode(bean));
+    }
+
+    @Override
+    public final <T> void find(final AsyncHandler<T, FilterNode> handler, final Class<T> clazz, final SelectColumn selects, final FilterBean bean) {
+        find(handler, clazz, selects, FilterNodeBean.createFilterNode(bean));
     }
 
     @Override
@@ -1470,8 +1662,20 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
     }
 
     @Override
+    public <T> void find(final AsyncHandler<T, FilterNode> handler, final Class<T> clazz, final SelectColumn selects, final FilterNode node) {
+        T rs = find(clazz, selects, node);
+        if (handler != null) handler.completed(rs, node);
+    }
+
+    @Override
     public <T> Serializable findColumn(final Class<T> clazz, final String column, final Serializable pk) {
         return findColumn(clazz, column, null, pk);
+    }
+
+    @Override
+    public <T> void findColumn(final AsyncHandler<Serializable, Serializable> handler, final Class<T> clazz, final String column, final Serializable pk) {
+        Serializable rs = findColumn(clazz, column, pk);
+        if (handler != null) handler.completed(rs, pk);
     }
 
     @Override
@@ -1480,8 +1684,19 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
     }
 
     @Override
+    public final <T> void findColumn(final AsyncHandler<Serializable, FilterNode> handler, final Class<T> clazz, final String column, final FilterBean bean) {
+        findColumn(handler, clazz, column, FilterNodeBean.createFilterNode(bean));
+    }
+
+    @Override
     public <T> Serializable findColumn(final Class<T> clazz, final String column, final FilterNode node) {
         return findColumn(clazz, column, null, node);
+    }
+
+    @Override
+    public <T> void findColumn(final AsyncHandler<Serializable, FilterNode> handler, final Class<T> clazz, final String column, final FilterNode node) {
+        Serializable rs = findColumn(clazz, column, node);
+        if (handler != null) handler.completed(rs, node);
     }
 
     @Override
@@ -1525,8 +1740,19 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
     }
 
     @Override
+    public <T> void findColumn(final AsyncHandler<Serializable, Serializable> handler, final Class<T> clazz, final String column, final Serializable defValue, final Serializable pk) {
+        Serializable rs = findColumn(clazz, column, defValue, pk);
+        if (handler != null) handler.completed(rs, pk);
+    }
+
+    @Override
     public <T> Serializable findColumn(final Class<T> clazz, final String column, final Serializable defValue, final FilterBean bean) {
         return findColumn(clazz, column, defValue, FilterNodeBean.createFilterNode(bean));
+    }
+
+    @Override
+    public final <T> void findColumn(final AsyncHandler<Serializable, FilterNode> handler, final Class<T> clazz, final String column, final Serializable defValue, final FilterBean bean) {
+        findColumn(handler, clazz, column, defValue, FilterNodeBean.createFilterNode(bean));
     }
 
     @Override
@@ -1570,6 +1796,12 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
     }
 
     @Override
+    public <T> void findColumn(final AsyncHandler<Serializable, FilterNode> handler, final Class<T> clazz, final String column, final Serializable defValue, final FilterNode node) {
+        Serializable rs = findColumn(clazz, column, defValue, node);
+        if (handler != null) handler.completed(rs, node);
+    }
+
+    @Override
     public <T> boolean exists(Class<T> clazz, Serializable pk) {
         final EntityInfo<T> info = loadEntityInfo(clazz);
         final EntityCache<T> cache = info.getCache();
@@ -1604,8 +1836,19 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
     }
 
     @Override
+    public <T> void exists(final AsyncHandler<Boolean, Serializable> handler, final Class<T> clazz, final Serializable pk) {
+        boolean rs = exists(clazz, pk);
+        if (handler != null) handler.completed(rs, pk);
+    }
+
+    @Override
     public <T> boolean exists(final Class<T> clazz, final FilterBean bean) {
         return exists(clazz, FilterNodeBean.createFilterNode(bean));
+    }
+
+    @Override
+    public final <T> void exists(final AsyncHandler<Boolean, FilterNode> handler, final Class<T> clazz, final FilterBean bean) {
+        exists(handler, clazz, FilterNodeBean.createFilterNode(bean));
     }
 
     @Override
@@ -1642,10 +1885,22 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
         }
     }
 
+    @Override
+    public <T> void exists(final AsyncHandler<Boolean, FilterNode> handler, final Class<T> clazz, final FilterNode node) {
+        boolean rs = exists(clazz, node);
+        if (handler != null) handler.completed(rs, node);
+    }
+
     //-----------------------list set----------------------------
     @Override
     public <T, V extends Serializable> HashSet<V> queryColumnSet(String selectedColumn, Class<T> clazz, String column, Serializable key) {
         return queryColumnSet(selectedColumn, clazz, FilterNode.create(column, key));
+    }
+
+    @Override
+    public <T, V extends Serializable> void queryColumnSet(final AsyncHandler<HashSet<V>, String> handler, final String selectedColumn, final Class<T> clazz, final String column, final Serializable key) {
+        HashSet<V> rs = queryColumnSet(selectedColumn, clazz, column, key);
+        if (handler != null) handler.completed(rs, column);
     }
 
     @Override
@@ -1654,8 +1909,19 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
     }
 
     @Override
+    public final <T, V extends Serializable> void queryColumnSet(final AsyncHandler<HashSet<V>, FilterNode> handler, final String selectedColumn, final Class<T> clazz, final FilterBean bean) {
+        queryColumnSet(handler, selectedColumn, clazz, FilterNodeBean.createFilterNode(bean));
+    }
+
+    @Override
     public <T, V extends Serializable> HashSet<V> queryColumnSet(String selectedColumn, Class<T> clazz, FilterNode node) {
         return new LinkedHashSet<>(queryColumnList(selectedColumn, clazz, node));
+    }
+
+    @Override
+    public <T, V extends Serializable> void queryColumnSet(final AsyncHandler<HashSet<V>, FilterNode> handler, final String selectedColumn, final Class<T> clazz, final FilterNode node) {
+        HashSet<V> rs = queryColumnSet(selectedColumn, clazz, node);
+        if (handler != null) handler.completed(rs, node);
     }
 
     @Override
@@ -1664,8 +1930,19 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
     }
 
     @Override
+    public <T, V extends Serializable> void queryColumnList(final AsyncHandler<List<V>, Serializable> handler, final String selectedColumn, final Class<T> clazz, final String column, final Serializable key) {
+        List<V> rs = queryColumnList(selectedColumn, clazz, column, key);
+        if (handler != null) handler.completed(rs, key);
+    }
+
+    @Override
     public <T, V extends Serializable> List<V> queryColumnList(final String selectedColumn, final Class<T> clazz, final FilterBean bean) {
         return queryColumnList(selectedColumn, clazz, FilterNodeBean.createFilterNode(bean));
+    }
+
+    @Override
+    public final <T, V extends Serializable> void queryColumnList(final AsyncHandler<List<V>, FilterNode> handler, String selectedColumn, Class<T> clazz, FilterBean bean) {
+        queryColumnList(handler, selectedColumn, clazz, FilterNodeBean.createFilterNode(bean));
     }
 
     @Override
@@ -1674,13 +1951,30 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
     }
 
     @Override
+    public <T, V extends Serializable> void queryColumnList(final AsyncHandler<List<V>, FilterNode> handler, final String selectedColumn, final Class<T> clazz, final FilterNode node) {
+        List<V> rs = queryColumnList(selectedColumn, clazz, node);
+        if (handler != null) handler.completed(rs, node);
+    }
+
+    @Override
     public <T, V extends Serializable> List<V> queryColumnList(final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterBean bean) {
         return queryColumnList(selectedColumn, clazz, FilterNodeBean.createFilterNode(bean));
     }
 
     @Override
+    public final <T, V extends Serializable> void queryColumnList(final AsyncHandler<List<V>, FilterNode> handler, String selectedColumn, Class<T> clazz, Flipper flipper, FilterBean bean) {
+        queryColumnList(handler, selectedColumn, clazz, flipper, FilterNodeBean.createFilterNode(bean));
+    }
+
+    @Override
     public <T, V extends Serializable> List<V> queryColumnList(final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterNode node) {
         return (List<V>) queryColumnSheet(false, selectedColumn, clazz, flipper, node).list(true);
+    }
+
+    @Override
+    public <T, V extends Serializable> void queryColumnList(final AsyncHandler<List<V>, FilterNode> handler, final String selectedColumn, final Class<T> clazz, Flipper flipper, final FilterNode node) {
+        List<V> rs = queryColumnList(selectedColumn, clazz, flipper, node);
+        if (handler != null) handler.completed(rs, node);
     }
 
     /**
@@ -1701,8 +1995,19 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
     }
 
     @Override
+    public final <T, V extends Serializable> void queryColumnSheet(final AsyncHandler<Sheet<V>, FilterNode> handler, String selectedColumn, Class<T> clazz, Flipper flipper, FilterBean bean) {
+        queryColumnSheet(handler, selectedColumn, clazz, flipper, FilterNodeBean.createFilterNode(bean));
+    }
+
+    @Override
     public <T, V extends Serializable> Sheet<V> queryColumnSheet(final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterNode node) {
         return queryColumnSheet(true, selectedColumn, clazz, flipper, node);
+    }
+
+    @Override
+    public <T, V extends Serializable> void queryColumnSheet(final AsyncHandler<Sheet<V>, FilterNode> handler, final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterNode node) {
+        Sheet<V> rs = queryColumnSheet(selectedColumn, clazz, flipper, node);
+        if (handler != null) handler.completed(rs, node);
     }
 
     private <T, V extends Serializable> Sheet<V> queryColumnSheet(final boolean needtotal, final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterNode node) {
@@ -1735,6 +2040,12 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
         return queryList(clazz, FilterNode.create(column, key));
     }
 
+    @Override
+    public <T> void queryList(final AsyncHandler<List<T>, Serializable> handler, final Class<T> clazz, final String column, final Serializable key) {
+        List<T> rs = queryList(clazz, column, key);
+        if (handler != null) handler.completed(rs, key);
+    }
+
     /**
      * 根据过滤对象FilterBean查询对象集合
      *
@@ -1750,8 +2061,19 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
     }
 
     @Override
+    public final <T> void queryList(final AsyncHandler<List<T>, FilterNode> handler, final Class<T> clazz, final FilterBean bean) {
+        queryList(handler, clazz, FilterNodeBean.createFilterNode(bean));
+    }
+
+    @Override
     public <T> List<T> queryList(final Class<T> clazz, final FilterNode node) {
         return queryList(clazz, (SelectColumn) null, node);
+    }
+
+    @Override
+    public <T> void queryList(final AsyncHandler<List<T>, FilterNode> handler, final Class<T> clazz, final FilterNode node) {
+        List<T> rs = queryList(clazz, node);
+        if (handler != null) handler.completed(rs, node);
     }
 
     /**
@@ -1770,8 +2092,19 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
     }
 
     @Override
+    public final <T> void queryList(final AsyncHandler<List<T>, FilterNode> handler, final Class<T> clazz, final SelectColumn selects, final FilterBean bean) {
+        queryList(handler, clazz, selects, FilterNodeBean.createFilterNode(bean));
+    }
+
+    @Override
     public <T> List<T> queryList(final Class<T> clazz, final SelectColumn selects, final FilterNode node) {
         return queryList(clazz, selects, (Flipper) null, node);
+    }
+
+    @Override
+    public <T> void queryList(final AsyncHandler<List<T>, FilterNode> handler, final Class<T> clazz, final SelectColumn selects, final FilterNode node) {
+        List<T> rs = queryList(clazz, selects, node);
+        if (handler != null) handler.completed(rs, node);
     }
 
     @Override
@@ -1780,8 +2113,19 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
     }
 
     @Override
+    public <T> void queryList(final AsyncHandler<List<T>, Serializable> handler, final Class<T> clazz, final Flipper flipper, final String column, final Serializable key) {
+        List<T> rs = queryList(clazz, flipper, column, key);
+        if (handler != null) handler.completed(rs, key);
+    }
+
+    @Override
     public <T> List<T> queryList(final Class<T> clazz, final Flipper flipper, final FilterBean bean) {
         return queryList(clazz, null, flipper, bean);
+    }
+
+    @Override
+    public final <T> void queryList(final AsyncHandler<List<T>, FilterNode> handler, final Class<T> clazz, final Flipper flipper, final FilterBean bean) {
+        queryList(handler, clazz, flipper, FilterNodeBean.createFilterNode(bean));
     }
 
     @Override
@@ -1790,13 +2134,30 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
     }
 
     @Override
+    public <T> void queryList(final AsyncHandler<List<T>, FilterNode> handler, final Class<T> clazz, final Flipper flipper, final FilterNode node) {
+        List<T> rs = queryList(clazz, flipper, node);
+        if (handler != null) handler.completed(rs, node);
+    }
+
+    @Override
     public <T> List<T> queryList(final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterBean bean) {
         return querySheet(true, false, clazz, selects, flipper, FilterNodeBean.createFilterNode(bean)).list(true);
     }
 
     @Override
+    public final <T> void queryList(final AsyncHandler<List<T>, FilterNode> handler, final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterBean bean) {
+        queryList(handler, clazz, selects, flipper, FilterNodeBean.createFilterNode(bean));
+    }
+
+    @Override
     public <T> List<T> queryList(final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterNode node) {
         return querySheet(true, false, clazz, selects, flipper, node).list(true);
+    }
+
+    @Override
+    public <T> void queryList(final AsyncHandler<List<T>, FilterNode> handler, final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterNode node) {
+        List<T> rs = queryList(clazz, selects, flipper, node);
+        if (handler != null) handler.completed(rs, node);
     }
 
     //-----------------------sheet----------------------------
@@ -1816,8 +2177,19 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
     }
 
     @Override
+    public final <T> void querySheet(final AsyncHandler<Sheet<T>, FilterNode> handler, final Class<T> clazz, final Flipper flipper, final FilterBean bean) {
+        querySheet(handler, clazz, flipper, FilterNodeBean.createFilterNode(bean));
+    }
+
+    @Override
     public <T> Sheet<T> querySheet(final Class<T> clazz, final Flipper flipper, final FilterNode node) {
         return querySheet(clazz, null, flipper, node);
+    }
+
+    @Override
+    public <T> void querySheet(final AsyncHandler<Sheet<T>, FilterNode> handler, final Class<T> clazz, final Flipper flipper, final FilterNode node) {
+        Sheet<T> rs = querySheet(clazz, flipper, node);
+        if (handler != null) handler.completed(rs, node);
     }
 
     /**
@@ -1837,8 +2209,19 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
     }
 
     @Override
+    public final <T> void querySheet(final AsyncHandler<Sheet<T>, FilterNode> handler, final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterBean bean) {
+        querySheet(handler, clazz, selects, flipper, FilterNodeBean.createFilterNode(bean));
+    }
+
+    @Override
     public <T> Sheet<T> querySheet(final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterNode node) {
         return querySheet(true, true, clazz, selects, flipper, node);
+    }
+
+    @Override
+    public <T> void querySheet(final AsyncHandler<Sheet<T>, FilterNode> handler, final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterNode node) {
+        Sheet<T> rs = querySheet(clazz, selects, flipper, node);
+        if (handler != null) handler.completed(rs, node);
     }
 
     private <T> Sheet<T> querySheet(final boolean readcache, final boolean needtotal, final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterNode node) {

@@ -10,7 +10,7 @@ import java.nio.channels.CompletionHandler;
 import java.util.function.*;
 
 /**
- * 异步接口
+ * 异步回调函数
  *
  *
  * <p>
