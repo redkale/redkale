@@ -59,27 +59,27 @@ public interface CacheSource<K extends Serializable, V extends Object> {
 
     public void getAndRefresh(final AsyncHandler<V, K> handler, final K key, final int expireSeconds);
 
-    public void refresh(final AsyncVoidHandler<K> handler, final K key, final int expireSeconds);
+    public void refresh(final AsyncHandler<Void, K> handler, final K key, final int expireSeconds);
 
-    public void set(final AsyncVoidHandler<K> handler, final K key, final V value);
+    public void set(final AsyncHandler<Void, K> handler, final K key, final V value);
 
-    public void set(final AsyncVoidHandler<K> handler, final int expireSeconds, final K key, final V value);
+    public void set(final AsyncHandler<Void, K> handler, final int expireSeconds, final K key, final V value);
 
-    public void setExpireSeconds(final AsyncVoidHandler<K> handler, final K key, final int expireSeconds);
+    public void setExpireSeconds(final AsyncHandler<Void, K> handler, final K key, final int expireSeconds);
 
-    public void remove(final AsyncVoidHandler<K> handler, final K key);
+    public void remove(final AsyncHandler<Void, K> handler, final K key);
 
     public void getCollection(final AsyncHandler<Collection<V>, K> handler, final K key);
 
     public void getCollectionAndRefresh(final AsyncHandler<Collection<V>, K> handler, final K key, final int expireSeconds);
 
-    public void appendListItem(final AsyncVoidHandler<K> handler, final K key, final V value);
+    public void appendListItem(final AsyncHandler<Void, K> handler, final K key, final V value);
 
-    public void removeListItem(final AsyncVoidHandler<K> handler, final K key, final V value);
+    public void removeListItem(final AsyncHandler<Void, K> handler, final K key, final V value);
 
-    public void appendSetItem(final AsyncVoidHandler<K> handler, final K key, final V value);
+    public void appendSetItem(final AsyncHandler<Void, K> handler, final K key, final V value);
 
-    public void removeSetItem(final AsyncVoidHandler<K> handler, final K key, final V value);
+    public void removeSetItem(final AsyncHandler<Void, K> handler, final K key, final V value);
 
     default void isOpen(final AsyncHandler<Boolean, Void> handler) {
         if (handler != null) handler.completed(Boolean.TRUE, null);

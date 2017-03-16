@@ -243,7 +243,7 @@ public class CacheSourceService<K extends Serializable, V extends Object> implem
     }
 
     @Override
-    public void refresh(final AsyncVoidHandler<K> handler, @RpcAttachment final K key, final int expireSeconds) {
+    public void refresh(final AsyncHandler<Void, K> handler, @RpcAttachment final K key, final int expireSeconds) {
         refresh(key, expireSeconds);
         if (handler != null) handler.completed(null, key);
     }
@@ -264,7 +264,7 @@ public class CacheSourceService<K extends Serializable, V extends Object> implem
     }
 
     @Override
-    public void set(final AsyncVoidHandler<K> handler, @RpcAttachment final K key, final V value) {
+    public void set(final AsyncHandler<Void, K> handler, @RpcAttachment final K key, final V value) {
         set(key, value);
         if (handler != null) handler.completed(null, key);
     }
@@ -285,7 +285,7 @@ public class CacheSourceService<K extends Serializable, V extends Object> implem
     }
 
     @Override
-    public void set(final AsyncVoidHandler<K> handler, final int expireSeconds, @RpcAttachment final K key, final V value) {
+    public void set(final AsyncHandler<Void, K> handler, final int expireSeconds, @RpcAttachment final K key, final V value) {
         set(expireSeconds, key, value);
         if (handler != null) handler.completed(null, key);
     }
@@ -300,7 +300,7 @@ public class CacheSourceService<K extends Serializable, V extends Object> implem
     }
 
     @Override
-    public void setExpireSeconds(final AsyncVoidHandler<K> handler, @RpcAttachment final K key, final int expireSeconds) {
+    public void setExpireSeconds(final AsyncHandler<Void, K> handler, @RpcAttachment final K key, final int expireSeconds) {
         setExpireSeconds(key, expireSeconds);
         if (handler != null) handler.completed(null, key);
     }
@@ -313,7 +313,7 @@ public class CacheSourceService<K extends Serializable, V extends Object> implem
     }
 
     @Override
-    public void remove(final AsyncVoidHandler<K> handler, @RpcAttachment final K key) {
+    public void remove(final AsyncHandler<Void, K> handler, @RpcAttachment final K key) {
         remove(key);
         if (handler != null) handler.completed(null, key);
     }
@@ -357,7 +357,7 @@ public class CacheSourceService<K extends Serializable, V extends Object> implem
     }
 
     @Override
-    public void appendListItem(final AsyncVoidHandler<K> handler, @RpcAttachment final K key, final V value) {
+    public void appendListItem(final AsyncHandler<Void, K> handler, @RpcAttachment final K key, final V value) {
         appendListItem(key, value);
         if (handler != null) handler.completed(null, key);
     }
@@ -372,7 +372,7 @@ public class CacheSourceService<K extends Serializable, V extends Object> implem
     }
 
     @Override
-    public void removeListItem(final AsyncVoidHandler<K> handler, @RpcAttachment final K key, final V value) {
+    public void removeListItem(final AsyncHandler<Void, K> handler, @RpcAttachment final K key, final V value) {
         removeListItem(key, value);
         if (handler != null) handler.completed(null, key);
     }
@@ -394,7 +394,7 @@ public class CacheSourceService<K extends Serializable, V extends Object> implem
     }
 
     @Override
-    public void appendSetItem(final AsyncVoidHandler<K> handler, @RpcAttachment final K key, final V value) {
+    public void appendSetItem(final AsyncHandler<Void, K> handler, @RpcAttachment final K key, final V value) {
         appendSetItem(key, value);
         if (handler != null) handler.completed(null, key);
     }
@@ -409,7 +409,7 @@ public class CacheSourceService<K extends Serializable, V extends Object> implem
     }
 
     @Override
-    public void removeSetItem(final AsyncVoidHandler<K> handler, @RpcAttachment final K key, final V value) {
+    public void removeSetItem(final AsyncHandler<Void, K> handler, @RpcAttachment final K key, final V value) {
         removeSetItem(key, value);
         if (handler != null) handler.completed(null, key);
     }
