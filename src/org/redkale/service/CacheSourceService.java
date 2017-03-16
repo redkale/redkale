@@ -192,6 +192,12 @@ public class CacheSourceService<K extends Serializable, V extends Object> implem
     }
 
     @Override
+    public void exists(final AsyncHandler<Boolean, K> handler, @RpcAttachment final K key) {
+        boolean rs = exists(key);
+        if (handler != null) handler.completed(rs, key);
+    }
+
+    @Override
     public V get(K key) {
         if (key == null) return null;
         CacheEntry entry = container.get(key);
@@ -199,6 +205,12 @@ public class CacheSourceService<K extends Serializable, V extends Object> implem
         if (entry.isListCacheType()) return (V) new ArrayList((Collection) entry.value);
         if (entry.isSetCacheType()) return (V) new HashSet((Collection) entry.value);
         return (V) entry.getValue();
+    }
+
+    @Override
+    public void get(final AsyncHandler<V, K> handler, @RpcAttachment final K key) {
+        V rs = get(key);
+        if (handler != null) handler.completed(rs, key);
     }
 
     @Override
@@ -215,6 +227,12 @@ public class CacheSourceService<K extends Serializable, V extends Object> implem
     }
 
     @Override
+    public void getAndRefresh(final AsyncHandler<V, K> handler, @RpcAttachment final K key, final int expireSeconds) {
+        V rs = getAndRefresh(key, expireSeconds);
+        if (handler != null) handler.completed(rs, key);
+    }
+
+    @Override
     @RpcMultiRun
     public void refresh(K key, final int expireSeconds) {
         if (key == null) return;
@@ -222,6 +240,12 @@ public class CacheSourceService<K extends Serializable, V extends Object> implem
         if (entry == null) return;
         entry.lastAccessed = (int) (System.currentTimeMillis() / 1000);
         entry.expireSeconds = expireSeconds;
+    }
+
+    @Override
+    public void refresh(final AsyncVoidHandler<K> handler, @RpcAttachment final K key, final int expireSeconds) {
+        refresh(key, expireSeconds);
+        if (handler != null) handler.completed(null, key);
     }
 
     @Override
@@ -240,6 +264,12 @@ public class CacheSourceService<K extends Serializable, V extends Object> implem
     }
 
     @Override
+    public void set(final AsyncVoidHandler<K> handler, @RpcAttachment final K key, final V value) {
+        set(key, value);
+        if (handler != null) handler.completed(null, key);
+    }
+
+    @Override
     @RpcMultiRun
     public void set(int expireSeconds, K key, V value) {
         if (key == null) return;
@@ -255,12 +285,24 @@ public class CacheSourceService<K extends Serializable, V extends Object> implem
     }
 
     @Override
+    public void set(final AsyncVoidHandler<K> handler, final int expireSeconds, @RpcAttachment final K key, final V value) {
+        set(expireSeconds, key, value);
+        if (handler != null) handler.completed(null, key);
+    }
+
+    @Override
     @RpcMultiRun
     public void setExpireSeconds(K key, int expireSeconds) {
         if (key == null) return;
         CacheEntry entry = container.get(key);
         if (entry == null) return;
         entry.expireSeconds = expireSeconds;
+    }
+
+    @Override
+    public void setExpireSeconds(final AsyncVoidHandler<K> handler, @RpcAttachment final K key, final int expireSeconds) {
+        setExpireSeconds(key, expireSeconds);
+        if (handler != null) handler.completed(null, key);
     }
 
     @Override
@@ -271,13 +313,31 @@ public class CacheSourceService<K extends Serializable, V extends Object> implem
     }
 
     @Override
+    public void remove(final AsyncVoidHandler<K> handler, @RpcAttachment final K key) {
+        remove(key);
+        if (handler != null) handler.completed(null, key);
+    }
+
+    @Override
     public Collection<V> getCollection(final K key) {
         return (Collection<V>) get(key);
     }
 
     @Override
+    public void getCollection(final AsyncHandler<Collection<V>, K> handler, @RpcAttachment final K key) {
+        Collection<V> rs = getCollection(key);
+        if (handler != null) handler.completed(rs, key);
+    }
+
+    @Override
     public Collection<V> getCollectionAndRefresh(final K key, final int expireSeconds) {
         return (Collection<V>) getAndRefresh(key, expireSeconds);
+    }
+
+    @Override
+    public void getCollectionAndRefresh(final AsyncHandler<Collection<V>, K> handler, @RpcAttachment final K key, final int expireSeconds) {
+        Collection<V> rs = getCollectionAndRefresh(key, expireSeconds);
+        if (handler != null) handler.completed(rs, key);
     }
 
     @Override
@@ -297,12 +357,24 @@ public class CacheSourceService<K extends Serializable, V extends Object> implem
     }
 
     @Override
+    public void appendListItem(final AsyncVoidHandler<K> handler, @RpcAttachment final K key, final V value) {
+        appendListItem(key, value);
+        if (handler != null) handler.completed(null, key);
+    }
+
+    @Override
     @RpcMultiRun
     public void removeListItem(K key, V value) {
         if (key == null) return;
         CacheEntry entry = container.get(key);
         if (entry == null || !entry.isListCacheType()) return;
         ((Collection) entry.getValue()).remove(value);
+    }
+
+    @Override
+    public void removeListItem(final AsyncVoidHandler<K> handler, @RpcAttachment final K key, final V value) {
+        removeListItem(key, value);
+        if (handler != null) handler.completed(null, key);
     }
 
     @Override
@@ -322,12 +394,24 @@ public class CacheSourceService<K extends Serializable, V extends Object> implem
     }
 
     @Override
+    public void appendSetItem(final AsyncVoidHandler<K> handler, @RpcAttachment final K key, final V value) {
+        appendSetItem(key, value);
+        if (handler != null) handler.completed(null, key);
+    }
+
+    @Override
     @RpcMultiRun
     public void removeSetItem(K key, V value) {
         if (key == null) return;
         CacheEntry entry = container.get(key);
         if (entry == null || !(entry.value instanceof Set)) return;
         ((Set) entry.getValue()).remove(value);
+    }
+
+    @Override
+    public void removeSetItem(final AsyncVoidHandler<K> handler, @RpcAttachment final K key, final V value) {
+        removeSetItem(key, value);
+        if (handler != null) handler.completed(null, key);
     }
 
     public static enum CacheEntryType {
