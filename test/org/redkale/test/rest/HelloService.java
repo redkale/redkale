@@ -1,6 +1,5 @@
 package org.redkale.test.rest;
 
-import java.io.Serializable;
 import java.util.*;
 import javax.annotation.Resource;
 import org.redkale.net.http.*;
@@ -73,7 +72,7 @@ public class HelloService implements Service {
 
     //查询List列表
     @RestMapping(name = "listmap")
-    public List<HelloEntity> queryHello(HelloBean bean, @RestParam(name = "map") Map<String, Serializable> map) { //通过 /pipes/hello/list?bean={...} 查询List列表
+    public List<HelloEntity> queryHello(HelloBean bean, @RestParam(name = "map") Map<String, String> map) { //通过 /pipes/hello/list?bean={...} 查询List列表
         System.out.println("map参数: " + map);
         if (source != null) return source.queryList(HelloEntity.class, bean);
         return null;
