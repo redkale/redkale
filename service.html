@@ -408,7 +408,7 @@
             <p>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;通常配置都需要编写一个 <b>org.redkale.net.http.RestHttpServlet</b> 子类，主要用于获取当前用户信息和鉴权，且必须指定具体的User对象类。开发者的实现类可以参考 <a href="https://github.com/redkale/redkale-demo/tree/master/src/org/redkale/demo/base" target="_blank">redkale-demo</a> 中的BaseServlet类，以下是一个简单的范例: <br>
             </p>
-            <div class="highlight"><pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">SimpleRestServlet</span> <span class="kd">extends</span> <span class="n">RestHttpServlet</span><span class="o">&lt;</span><span class="n">UserInfo</span><span class="o">&gt;</span> <span class="o">{</span>
+            <div class="highlight"><pre><span></span><span class="kd">public</span> <span class="kd">class</span> <span class="nc">SimpleRestServlet</span> <span class="kd">extends</span> <span class="n">RestHttpServlet</span><span class="o">&lt;</span><span class="n">UserInfo</span><span class="o">&gt;</span> <span class="o">{</span>
 
     <span class="kd">protected</span> <span class="kd">static</span> <span class="kd">final</span> <span class="n">RetResult</span> <span class="n">RET_UNLOGIN</span> <span class="o">=</span> <span class="n">RetCodes</span><span class="o">.</span><span class="na">retResult</span><span class="o">(</span><span class="n">RetCodes</span><span class="o">.</span><span class="na">RET_USER_UNLOGIN</span><span class="o">);</span>
 
@@ -427,16 +427,16 @@
 
     <span class="c1">//普通鉴权</span>
     <span class="nd">@Override</span>
-    <span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">authenticate</span><span class="o">(</span><span class="kt">int</span> <span class="n">module</span><span class="o">,</span> <span class="kt">int</span> <span class="n">actionid</span><span class="o">,</span> <span class="n">HttpRequest</span> <span class="n">request</span><span class="o">,</span> <span class="n">HttpResponse</span> <span class="n">response</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">authenticate</span><span class="o">(</span><span class="kt">int</span> <span class="n">module</span><span class="o">,</span> <span class="kt">int</span> <span class="n">actionid</span><span class="o">,</span> <span class="n">HttpRequest</span> <span class="n">request</span><span class="o">,</span> <span class="n">HttpResponse</span> <span class="n">response</span><span class="o">,</span> <span class="n">HttpServlet</span> <span class="n">next</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
         <span class="n">UserInfo</span> <span class="n">info</span> <span class="o">=</span> <span class="n">currentUser</span><span class="o">(</span><span class="n">request</span><span class="o">);</span>
         <span class="k">if</span> <span class="o">(</span><span class="n">info</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
             <span class="n">response</span><span class="o">.</span><span class="na">finishJson</span><span class="o">(</span><span class="n">RET_UNLOGIN</span><span class="o">);</span>
-            <span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
-        <span class="o">}</span> <span class="k">else</span> <span class="nf">if</span> <span class="o">(!</span><span class="n">info</span><span class="o">.</span><span class="na">checkAuth</span><span class="o">(</span><span class="n">module</span><span class="o">,</span> <span class="n">actionid</span><span class="o">))</span> <span class="o">{</span>
+            <span class="k">return</span><span class="o">;</span>
+        <span class="o">}</span> <span class="k">else</span> <span class="k">if</span> <span class="o">(!</span><span class="n">info</span><span class="o">.</span><span class="na">checkAuth</span><span class="o">(</span><span class="n">module</span><span class="o">,</span> <span class="n">actionid</span><span class="o">))</span> <span class="o">{</span>
             <span class="n">response</span><span class="o">.</span><span class="na">finishJson</span><span class="o">(</span><span class="n">RET_AUTHILLEGAL</span><span class="o">);</span>
-            <span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
+            <span class="k">return</span><span class="o">;</span>
         <span class="o">}</span>
-        <span class="k">return</span> <span class="kc">true</span><span class="o">;</span>
+        <span class="n">next</span><span class="o">.</span><span class="na">execute</span><span class="o">(</span><span class="n">request</span><span class="o">,</span> <span class="n">response</span><span class="o">);</span>
     <span class="o">}</span>
 
 <span class="o">}</span>

@@ -40,7 +40,7 @@
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;编写Redkale的HttpServlet与 JSR 340中的javax.servlet.http.HttpServlet 基本相同，只需继承 org.redkale.net.http.HttpServlet, Redkale也提供了更友好的基类 org.redkale.net.http.HttpBaseServlet, 比较好的习惯是一个项目先定义一个项目级的BaseServlet类，这样方便以后加入类似javax.servlet.Filter的功能。 <br/> <br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;一个典型的BaseSerlvet实现: 
             </p> 
-            <div class="highlight"><pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">BaseSerlvet</span> <span class="kd">extends</span> <span class="n">org</span><span class="o">.</span><span class="na">redkale</span><span class="o">.</span><span class="na">net</span><span class="o">.</span><span class="na">http</span><span class="o">.</span><span class="na">HttpBaseServlet</span> <span class="o">{</span>
+            <div class="highlight"><pre><span></span><span class="kd">public</span> <span class="kd">class</span> <span class="nc">BaseSerlvet</span> <span class="kd">extends</span> <span class="n">org</span><span class="o">.</span><span class="na">redkale</span><span class="o">.</span><span class="na">net</span><span class="o">.</span><span class="na">http</span><span class="o">.</span><span class="na">HttpBaseServlet</span> <span class="o">{</span>
 
     <span class="kd">protected</span> <span class="kd">final</span> <span class="n">Logger</span> <span class="n">logger</span> <span class="o">=</span> <span class="n">Logger</span><span class="o">.</span><span class="na">getLogger</span><span class="o">(</span><span class="k">this</span><span class="o">.</span><span class="na">getClass</span><span class="o">().</span><span class="na">getSimpleName</span><span class="o">());</span>
 
@@ -69,35 +69,38 @@
     <span class="c1">//在调用authenticate之前调用， 返回false表示请求不合法</span>
     <span class="c1">//该方法可以用于判断请求源是否合法或加入一些全局的拦截操作</span>
     <span class="nd">@Override</span>
-    <span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">preExecute</span><span class="o">(</span><span class="kd">final</span> <span class="n">HttpRequest</span> <span class="n">request</span><span class="o">,</span> <span class="kd">final</span> <span class="n">HttpResponse</span> <span class="n">response</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">preExecute</span><span class="o">(</span><span class="kd">final</span> <span class="n">HttpRequest</span> <span class="n">request</span><span class="o">,</span> <span class="kd">final</span> <span class="n">HttpResponse</span> <span class="n">response</span><span class="o">,</span> <span class="n">HttpServlet</span> <span class="n">next</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
         <span class="k">if</span> <span class="o">(!</span><span class="n">request</span><span class="o">.</span><span class="na">getHeader</span><span class="o">(</span><span class="s">&quot;User-Agent&quot;</span><span class="o">,</span> <span class="s">&quot;&quot;</span><span class="o">).</span><span class="na">contains</span><span class="o">(</span><span class="s">&quot;Redkale-Agent&quot;</span><span class="o">))</span> <span class="o">{</span>  <span class="c1">//只用移动APP的接口可以判断User-Agent是否正确</span>
             <span class="n">response</span><span class="o">.</span><span class="na">addHeader</span><span class="o">(</span><span class="s">&quot;retcode&quot;</span><span class="o">,</span> <span class="s">&quot;10001&quot;</span><span class="o">);</span>
             <span class="n">response</span><span class="o">.</span><span class="na">addHeader</span><span class="o">(</span><span class="s">&quot;retmessage&quot;</span><span class="o">,</span> <span class="s">&quot;User-Agent error&quot;</span><span class="o">);</span>
             <span class="n">response</span><span class="o">.</span><span class="na">finish</span><span class="o">(</span><span class="mi">201</span><span class="o">,</span> <span class="s">&quot;{&#39;success&#39;:false, &#39;message&#39;:&#39;User-Agent error, must be Redkale-Agent&#39;}&quot;</span><span class="o">);</span>
-            <span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
+            <span class="k">return</span><span class="o">;</span>
         <span class="o">}</span>
         <span class="c1">//可以加上一些统计操作</span>
         <span class="k">if</span> <span class="o">(</span><span class="n">fine</span><span class="o">)</span> <span class="n">response</span><span class="o">.</span><span class="na">setRecycleListener</span><span class="o">((</span><span class="n">req</span><span class="o">,</span> <span class="n">resp</span><span class="o">)</span> <span class="o">-&gt;</span> <span class="o">{</span>  <span class="c1">//记录处理时间太长的请求操作</span>
                 <span class="kt">long</span> <span class="n">e</span> <span class="o">=</span> <span class="n">System</span><span class="o">.</span><span class="na">currentTimeMillis</span><span class="o">()</span> <span class="o">-</span> <span class="n">request</span><span class="o">.</span><span class="na">getCreatetime</span><span class="o">();</span>
                 <span class="k">if</span> <span class="o">(</span><span class="n">e</span> <span class="o">&gt;</span> <span class="mi">500</span><span class="o">)</span> <span class="n">logger</span><span class="o">.</span><span class="na">fine</span><span class="o">(</span><span class="s">&quot;耗时居然用了 &quot;</span> <span class="o">+</span> <span class="n">e</span> <span class="o">+</span> <span class="s">&quot; 毫秒. 请求为: &quot;</span> <span class="o">+</span> <span class="n">req</span><span class="o">);</span>
             <span class="o">});</span>
-        <span class="k">return</span> <span class="kc">true</span><span class="o">;</span>
+        <span class="n">next</span><span class="o">.</span><span class="na">execute</span><span class="o">(</span><span class="n">request</span><span class="o">,</span> <span class="n">response</span><span class="o">);</span>
     <span class="o">}</span>
 
     <span class="c1">//标记为@AuthIgnore 的方法将不会调用authenticate方法</span>
     <span class="c1">//一般用于判断用户的登录态, 返回false表示鉴权失败</span>
     <span class="c1">//moduleid值来自 @WebServlet.moduleid()用于定义模块ID; actionid值自来@WebMapping.actionid()用于定义操作ID; 需要系统化的鉴权需要定义这两个值</span>
     <span class="nd">@Override</span>
-    <span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">authenticate</span><span class="o">(</span><span class="kt">int</span> <span class="n">moduleid</span><span class="o">,</span> <span class="kt">int</span> <span class="n">actionid</span><span class="o">,</span> <span class="n">HttpRequest</span> <span class="n">request</span><span class="o">,</span> <span class="n">HttpResponse</span> <span class="n">response</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
-        <span class="n">UserInfo</span> <span class="n">user</span> <span class="o">=</span> <span class="o">(</span><span class="n">UserInfo</span><span class="o">)</span> <span class="n">request</span><span class="o">.</span><span class="na">getAttribute</span><span class="o">(</span><span class="s">&quot;_current_userinfo&quot;</span><span class="o">);</span>
-        <span class="k">if</span> <span class="o">(</span><span class="n">user</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="k">return</span> <span class="kc">true</span><span class="o">;</span>  <span class="c1">//已经判断过了</span>
-        <span class="n">String</span> <span class="n">sessionid</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="na">getSessionid</span><span class="o">(</span><span class="kc">false</span><span class="o">);</span>
-        <span class="k">if</span> <span class="o">(</span><span class="n">sessionid</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="k">return</span> <span class="kc">false</span><span class="o">;</span> <span class="c1">//没有sessionid表示没有登录</span>
-        <span class="n">user</span> <span class="o">=</span> <span class="n">service</span><span class="o">.</span><span class="na">current</span><span class="o">(</span><span class="n">sessionid</span><span class="o">);</span>
-        <span class="k">if</span> <span class="o">(</span><span class="n">user</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="n">request</span><span class="o">.</span><span class="na">setAttribute</span><span class="o">(</span><span class="s">&quot;_current_userinfo&quot;</span><span class="o">,</span> <span class="n">user</span><span class="o">);</span>
-        <span class="k">return</span> <span class="n">user</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">;</span> <span class="c1">//存在用户表示登录态正常</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">authenticate</span><span class="o">(</span><span class="kt">int</span> <span class="n">moduleid</span><span class="o">,</span> <span class="kt">int</span> <span class="n">actionid</span><span class="o">,</span> <span class="n">HttpRequest</span> <span class="n">request</span><span class="o">,</span> <span class="n">HttpResponse</span> <span class="n">response</span><span class="o">,</span> <span class="n">HttpServlet</span> <span class="n">next</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
+        <span class="n">UserInfo</span> <span class="n">info</span> <span class="o">=</span> <span class="n">currentUser</span><span class="o">(</span><span class="n">request</span><span class="o">);</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">info</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+            <span class="n">response</span><span class="o">.</span><span class="na">finishJson</span><span class="o">(</span><span class="n">RetCodes</span><span class="o">.</span><span class="na">retResult</span><span class="o">(</span><span class="n">RetCodes</span><span class="o">.</span><span class="na">RET_USER_UNLOGIN</span><span class="o">));</span>
+            <span class="k">return</span><span class="o">;</span>
+        <span class="o">}</span> <span class="k">else</span> <span class="k">if</span> <span class="o">(!</span><span class="n">info</span><span class="o">.</span><span class="na">checkAuth</span><span class="o">(</span><span class="n">module</span><span class="o">,</span> <span class="n">actionid</span><span class="o">))</span> <span class="o">{</span>
+            <span class="n">response</span><span class="o">.</span><span class="na">finishJson</span><span class="o">(</span><span class="n">RetCodes</span><span class="o">.</span><span class="na">retResult</span><span class="o">(</span><span class="n">RetCodes</span><span class="o">.</span><span class="na">RET_USER_AUTH_ILLEGAL</span><span class="o">));</span>
+            <span class="k">return</span><span class="o">;</span>
+        <span class="o">}</span>
+        <span class="n">next</span><span class="o">.</span><span class="na">execute</span><span class="o">(</span><span class="n">request</span><span class="o">,</span> <span class="n">response</span><span class="o">);</span>
     <span class="o">}</span>
-<span class="o">}</span></pre></div>
+<span class="o">}</span>
+                </pre></div>
 
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;继承HttpBaseServlet的子类可以使用其自带的鉴权、请求分支、缓存等功能， 一个典型的操作<span id="userservlet">用户HttpServlet</span>: </p> 
             <div class="highlight"><pre><span class="nd">@WebServlet</span><span class="o">(</span><span class="n">value</span> <span class="o">=</span> <span class="o">{</span><span class="s">&quot;/user/*&quot;</span><span class="o">},</span> <span class="n">comment</span> <span class="o">=</span> <span class="s">&quot;用户模块服务&quot;</span><span class="o">)</span>  <span class="c1">//拦截所有 /user/ 开头的请求</span>
@@ -582,6 +585,9 @@
     <span class="c1">//异步输出指定内容</span>
     <span class="kd">public</span> <span class="o">&lt;</span><span class="n">A</span><span class="o">&gt;</span> <span class="kt">void</span> <span class="nf">sendBody</span><span class="o">(</span><span class="n">ByteBuffer</span> <span class="n">buffer</span><span class="o">,</span> <span class="n">A</span> <span class="n">attachment</span><span class="o">,</span> <span class="n">AsyncHandler</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">,</span> <span class="n">A</span><span class="o">&gt;</span> <span class="n">handler</span><span class="o">);</span>
 
+    <span class="c1">//创建AsyncHandler实例，将非字符串对象以JSON格式输出，字符串以文本输出</span>
+    <span class="kd">public</span> <span class="n">AsyncHandler</span> <span class="nf">createAsyncHandler</span><span class="o">();</span>
+
     <span class="c1">//关闭HTTP连接，如果是keep-alive则不强制关闭</span>
     <span class="kd">public</span> <span class="kt">void</span> <span class="nf">finish</span><span class="o">();</span>
 
@@ -646,7 +652,6 @@
 
     <span class="c1">//HttpResponse回收时回调的监听方法</span>
     <span class="kd">public</span> <span class="kt">void</span> <span class="nf">setRecycleListener</span><span class="o">(</span><span class="n">BiConsumer</span><span class="o">&lt;</span><span class="n">HttpRequest</span><span class="o">,</span> <span class="n">HttpResponse</span><span class="o">&gt;</span> <span class="n">recycleListener</span><span class="o">);</span>
-
 <span class="o">}</span>
                 </pre></div>
 
