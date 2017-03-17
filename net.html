@@ -580,7 +580,7 @@
     <span class="kd">public</span> <span class="n">HttpResponse</span> <span class="nf">skipHeader</span><span class="o">();</span>
 
     <span class="c1">//异步输出指定内容</span>
-    <span class="kd">public</span> <span class="o">&lt;</span><span class="n">A</span><span class="o">&gt;</span> <span class="kt">void</span> <span class="nf">sendBody</span><span class="o">(</span><span class="n">ByteBuffer</span> <span class="n">buffer</span><span class="o">,</span> <span class="n">A</span> <span class="n">attachment</span><span class="o">,</span> <span class="n">CompletionHandler</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">,</span> <span class="n">A</span><span class="o">&gt;</span> <span class="n">handler</span><span class="o">);</span>
+    <span class="kd">public</span> <span class="o">&lt;</span><span class="n">A</span><span class="o">&gt;</span> <span class="kt">void</span> <span class="nf">sendBody</span><span class="o">(</span><span class="n">ByteBuffer</span> <span class="n">buffer</span><span class="o">,</span> <span class="n">A</span> <span class="n">attachment</span><span class="o">,</span> <span class="n">AsyncHandler</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">,</span> <span class="n">A</span><span class="o">&gt;</span> <span class="n">handler</span><span class="o">);</span>
 
     <span class="c1">//关闭HTTP连接，如果是keep-alive则不强制关闭</span>
     <span class="kd">public</span> <span class="kt">void</span> <span class="nf">finish</span><span class="o">();</span>
