@@ -14,7 +14,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * 方法在资源被更新以后调用。
  *
  * <blockquote><pre>
- * public class Record {
+ * public class RecordService implements Service {
  *
  *    &#64;Resource(name = "record.id")
  *    private int id;
