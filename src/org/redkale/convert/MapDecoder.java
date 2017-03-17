@@ -5,13 +5,15 @@
  */
 package org.redkale.convert;
 
+import java.io.Serializable;
 import org.redkale.util.Creator;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Map;
 
 /**
- * Map的反序列化操作类
+ * Map的反序列化操作类 <br>
+ * key、value的类型如果是Serializable， 会自动转换成String
  *
  * <p>
  * 详情见: https://redkale.org
@@ -48,8 +50,8 @@ public final class MapDecoder<K, V> implements Decodeable<Reader, Map<K, V>> {
                 this.valueType = pt.getActualTypeArguments()[1];
                 this.creator = factory.loadCreator((Class) pt.getRawType());
                 factory.register(type, this);
-                this.keyDecoder = factory.loadDecoder(this.keyType);
-                this.valueDecoder = factory.loadDecoder(this.valueType);
+                this.keyDecoder = factory.loadDecoder(this.keyType == Serializable.class ? String.class : this.keyType);
+                this.valueDecoder = factory.loadDecoder(this.valueType == Serializable.class ? String.class : this.valueType);
             } else {
                 throw new ConvertException("mapdecoder not support the type (" + type + ")");
             }

@@ -36,6 +36,8 @@ public final class Rest {
 
     static final String REST_SERVICEMAP_FIELD_NAME = "_servicemap"; //如果只有name=""的Service资源，则实例中_servicemap必须为null
 
+    private static final String REST_PARAMTYPES_FIELD_NAME = "_paramtypes"; //存在泛型的参数数组 Type[][] 第1维度是方法的下标， 第二维度是参数的下标
+
     private static final Set<String> EXCLUDERMETHODS = new HashSet<>();
 
     static {
@@ -99,10 +101,7 @@ public final class Rest {
         if (controller != null && controller.ignore()) return null; //标记为ignore=true不创建Servlet
         ClassLoader loader = Sncp.class.getClassLoader();
         String newDynName = serviceTypeInternalName.substring(0, serviceTypeInternalName.lastIndexOf('/') + 1) + "_Dyn" + serviceType.getSimpleName().replaceAll("Service.*$", "") + "RestServlet";
-        try {
-            return ((Class<T>) Class.forName(newDynName.replace('/', '.'))).newInstance();
-        } catch (Exception ex) {
-        }
+
         Method currentUserMethod = null;
         try {
             currentUserMethod = baseServletClass.getDeclaredMethod("currentUser", HttpRequest.class);
@@ -163,6 +162,10 @@ public final class Rest {
             fv = cw.visitField(ACC_PRIVATE, REST_SERVICEMAP_FIELD_NAME, "Ljava/util/Map;", "Ljava/util/Map<Ljava/lang/String;" + serviceDesc + ">;", null);
             fv.visitEnd();
         }
+        { //_paramtypes字段 java.lang.reflect.Type[][]
+            fv = cw.visitField(ACC_PRIVATE, REST_PARAMTYPES_FIELD_NAME, "[[Ljava/lang/reflect/Type;", null, null);
+            fv.visitEnd();
+        }
         { //构造函数
             mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null));
             //mv.setDebug(true);
@@ -176,6 +179,8 @@ public final class Rest {
         final List<MappingEntry> entrys = new ArrayList<>();
         final Map<String, org.redkale.util.Attribute> restAttributes = new LinkedHashMap<>();
         //获取所有可以转换成WebMapping的方法
+        int methodidex = 0;
+        final List<java.lang.reflect.Type[]> paramtypes = new ArrayList<>();
         for (final Method method : serviceType.getMethods()) {
             if (Modifier.isStatic(method.getModifiers())) continue;
             Class[] extypes = method.getExceptionTypes();
@@ -195,17 +200,19 @@ public final class Rest {
                 }
             }
             if (ignore) continue;
+            paramtypes.add(method.getGenericParameterTypes());
             if (mappings.length == 0) { //没有Mapping，设置一个默认值
-                MappingEntry entry = new MappingEntry(null, defmodulename, method);
+                MappingEntry entry = new MappingEntry(methodidex, null, defmodulename, method);
                 if (entrys.contains(entry)) throw new RuntimeException(serviceType.getName() + " on " + method.getName() + " 's mapping(" + entry.name + ") is repeat");
                 entrys.add(entry);
             } else {
                 for (RestMapping mapping : mappings) {
-                    MappingEntry entry = new MappingEntry(mapping, defmodulename, method);
+                    MappingEntry entry = new MappingEntry(methodidex, mapping, defmodulename, method);
                     if (entrys.contains(entry)) throw new RuntimeException(serviceType.getName() + " on " + method.getName() + " 's mapping(" + entry.name + ") is repeat");
                     entrys.add(entry);
                 }
             }
+            methodidex++;
         }
         if (entrys.isEmpty()) return null; //没有可WebMapping的方法
 
@@ -380,6 +387,7 @@ public final class Rest {
             boolean hasAsyncHandler = false;
             for (Object[] ps : paramlist) {
                 Map<String, Object> paramMap = new LinkedHashMap<>();
+                final Parameter param = (Parameter) ps[0]; //参数类型
                 String pname = (String) ps[1]; //参数名
                 Class ptype = (Class) ps[2]; //参数类型
                 int radix = (Integer) ps[3];
@@ -644,7 +652,31 @@ public final class Rest {
                     varInsns.add(new int[]{ALOAD, maxLocals});
                 } else { //其他Json对象
                     mv.visitVarInsn(ALOAD, 1);
-                    mv.visitLdcInsn(Type.getType(Type.getDescriptor(ptype)));
+                    if (param.getType() == param.getParameterizedType()) {
+                        mv.visitLdcInsn(Type.getType(Type.getDescriptor(ptype)));
+                    } else {
+                        mv.visitVarInsn(ALOAD, 0);
+                        mv.visitFieldInsn(GETFIELD, newDynName, REST_PARAMTYPES_FIELD_NAME, "[[Ljava/lang/reflect/Type;");
+                        if (entry.methodidx <= 5) {  //方法下标
+                            mv.visitInsn(ICONST_0 + entry.methodidx);
+                        } else {
+                            mv.visitIntInsn(BIPUSH, entry.methodidx);
+                        }
+                        mv.visitInsn(AALOAD);
+                        int paramidx = 0;
+                        for (int i = 0; i < params.length; i++) {
+                            if (params[i] == param) {
+                                paramidx = i;
+                                break;
+                            }
+                        }
+                        if (paramidx <= 5) {  //参数下标
+                            mv.visitInsn(ICONST_0 + paramidx);
+                        } else {
+                            mv.visitIntInsn(BIPUSH, paramidx);
+                        }
+                        mv.visitInsn(AALOAD);
+                    }
                     mv.visitLdcInsn(pname);
                     mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, ishead ? "getJsonHeader" : "getJsonParameter", "(Ljava/lang/reflect/Type;Ljava/lang/String;)Ljava/lang/Object;", false);
                     mv.visitTypeInsn(CHECKCAST, ptype.getName().replace('.', '/'));
@@ -885,6 +917,12 @@ public final class Rest {
                 attrField.setAccessible(true);
                 attrField.set(obj, en.getValue());
             }
+            Field typesfield = newClazz.getDeclaredField(REST_PARAMTYPES_FIELD_NAME);
+            typesfield.setAccessible(true);
+            java.lang.reflect.Type[][] paramtypeArray = new java.lang.reflect.Type[paramtypes.size()][];
+            paramtypeArray = paramtypes.toArray(paramtypeArray);
+            typesfield.set(obj, paramtypeArray);
+
             return obj;
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -916,8 +954,9 @@ public final class Rest {
             }
         }
 
-        public MappingEntry(RestMapping mapping, final String defmodulename, Method method) {
+        public MappingEntry(int methodidx, RestMapping mapping, final String defmodulename, Method method) {
             if (mapping == null) mapping = DEFAULT__MAPPING;
+            this.methodidx = methodidx;
             this.ignore = mapping.ignore();
             String n = mapping.name().toLowerCase();
             if (n.isEmpty()) n = method.getName().toLowerCase().replace(defmodulename.toLowerCase(), "");
@@ -929,6 +968,8 @@ public final class Rest {
             this.cacheseconds = mapping.cacheseconds();
             this.comment = mapping.comment();
         }
+
+        public final int methodidx; // _paramtypes 的下标，从0开始
 
         public final Method mappingMethod;
 
