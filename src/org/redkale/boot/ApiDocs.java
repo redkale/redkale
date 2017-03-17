@@ -16,7 +16,7 @@ import org.redkale.util.*;
 
 /**
  * API接口文档生成类，作用：生成Application实例中所有HttpServer的可用HttpServlet的API接口方法   <br>
- 继承 HttpBaseServlet 是为了获取 WebMapping 信息
+ * 继承 HttpBaseServlet 是为了获取 WebMapping 信息
  *
  * <p>
  * 详情见: https://redkale.org
@@ -205,7 +205,7 @@ public class ApiDocs extends HttpBaseServlet {
     }
 
     @Override
-    public boolean authenticate(int moduleid, int actionid, HttpRequest request, HttpResponse response) throws IOException {
-        return true;
+    public void authenticate(int moduleid, int actionid, HttpRequest request, HttpResponse response, HttpServlet next) throws IOException {
+        next.execute(request, response);
     }
 }

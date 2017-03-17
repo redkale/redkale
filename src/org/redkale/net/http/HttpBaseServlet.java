@@ -224,23 +224,8 @@ public abstract class HttpBaseServlet extends HttpServlet {
         }
     };
 
-    /**
-     * 使用 public void preExecute(HttpRequest request, HttpResponse response, final HttpServlet next) throws IOException 方法代替
-     *
-     * @param request  HttpRequest
-     * @param response HttpResponse
-     *
-     * @return boolean
-     * @throws IOException IOException
-     * @deprecated
-     */
-    @Deprecated
-    public boolean preExecute(HttpRequest request, HttpResponse response) throws IOException {
-        return true;
-    }
-
     public void preExecute(HttpRequest request, HttpResponse response, final HttpServlet next) throws IOException {
-        if (preExecute(request, response)) next.execute(request, response);
+        next.execute(request, response);
     }
 
     @Override
@@ -282,9 +267,7 @@ public abstract class HttpBaseServlet extends HttpServlet {
         return true;
     }
 
-    public void authenticate(int moduleid, int actionid, HttpRequest request, HttpResponse response, final HttpServlet next) throws IOException {
-        if (authenticate(moduleid, actionid, request, response)) next.execute(request, response);
-    }
+    public abstract void authenticate(int moduleid, int actionid, HttpRequest request, HttpResponse response, final HttpServlet next) throws IOException;
 
     protected void setHeader(HttpRequest request, String name, Serializable value) {
         request.header.setValue(name, String.valueOf(value));
