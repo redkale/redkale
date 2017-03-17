@@ -66,6 +66,8 @@ public class HttpRequest extends Request<HttpContext> {
 
     private final String remoteAddrHeader;
 
+    Object attachment; //供 HttpBaseServlet传递Entry使用
+
     public HttpRequest(HttpContext context, String remoteAddrHeader) {
         super(context);
         this.remoteAddrHeader = remoteAddrHeader;
@@ -335,6 +337,8 @@ public class HttpRequest extends Request<HttpContext> {
         this.contentLength = -1;
         this.boundary = false;
         this.bodyparsed = false;
+
+        this.attachment = null;
 
         this.header.clear();
         this.params.clear();

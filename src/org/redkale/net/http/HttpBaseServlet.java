@@ -183,37 +183,69 @@ public abstract class HttpBaseServlet extends HttpServlet {
 
     private Map.Entry<String, Entry>[] mappings;
 
+    private final HttpServlet authSuccessServlet = new HttpServlet() {
+        @Override
+        public void execute(HttpRequest request, HttpResponse response) throws IOException {
+            Entry entry = (Entry) request.attachment;
+            if (entry.cacheseconds > 0) {//有缓存设置
+                CacheEntry ce = entry.cache.get(request.getRequestURI());
+                if (ce != null && ce.time + entry.cacheseconds > System.currentTimeMillis()) { //缓存有效
+                    response.setStatus(ce.status);
+                    response.setContentType(ce.contentType);
+                    response.finish(ce.getBuffers());
+                    return;
+                }
+                response.setBufferHandler(entry.cacheHandler);
+            }
+            entry.servlet.execute(request, response);
+        }
+    };
+
+    private final HttpServlet preSuccessServlet = new HttpServlet() {
+        @Override
+        public void execute(HttpRequest request, HttpResponse response) throws IOException {
+            for (Map.Entry<String, Entry> en : mappings) {
+                if (request.getRequestURI().startsWith(en.getKey())) {
+                    Entry entry = en.getValue();
+                    if (!entry.checkMethod(request.getMethod())) {
+                        response.finishJson(new RetResult(RET_METHOD_ERROR, "Method(" + request.getMethod() + ") Error"));
+                        return;
+                    }
+                    request.attachment = entry;
+                    if (entry.ignore) {
+                        authSuccessServlet.execute(request, response);
+                    } else {
+                        authenticate(entry.moduleid, entry.actionid, request, response, authSuccessServlet);
+                    }
+                    return;
+                }
+            }
+            throw new IOException(this.getClass().getName() + " not found method for URI(" + request.getRequestURI() + ")");
+        }
+    };
+
+    /**
+     * 使用 public void preExecute(HttpRequest request, HttpResponse response, final HttpServlet next) throws IOException 方法代替
+     *
+     * @param request  HttpRequest
+     * @param response HttpResponse
+     *
+     * @return boolean
+     * @throws IOException
+     * @deprecated
+     */
+    @Deprecated
     public boolean preExecute(HttpRequest request, HttpResponse response) throws IOException {
         return true;
     }
 
+    public void preExecute(HttpRequest request, HttpResponse response, final HttpServlet next) throws IOException {
+        if (preExecute(request, response)) next.execute(request, response);
+    }
+
     @Override
     public final void execute(HttpRequest request, HttpResponse response) throws IOException {
-        if (!preExecute(request, response)) return;
-        for (Map.Entry<String, Entry> en : mappings) {
-            if (request.getRequestURI().startsWith(en.getKey())) {
-                Entry entry = en.getValue();
-                if (!entry.checkMethod(request.getMethod())) {
-                    response.finishJson(new RetResult(RET_METHOD_ERROR, "Method(" + request.getMethod() + ") Error"));
-                    return;
-                }
-                if (entry.ignore || authenticate(entry.moduleid, entry.actionid, request, response)) {
-                    if (entry.cacheseconds > 0) {//有缓存设置
-                        CacheEntry ce = entry.cache.get(request.getRequestURI());
-                        if (ce != null && ce.time + entry.cacheseconds > System.currentTimeMillis()) { //缓存有效
-                            response.setStatus(ce.status);
-                            response.setContentType(ce.contentType);
-                            response.finish(ce.getBuffers());
-                            return;
-                        }
-                        response.setBufferHandler(entry.cacheHandler);
-                    }
-                    entry.servlet.execute(request, response);
-                }
-                return;
-            }
-        }
-        throw new IOException(this.getClass().getName() + " not found method for URI(" + request.getRequestURI() + ")");
+        preExecute(request, response, preSuccessServlet);
     }
 
     public final void preInit(HttpContext context, AnyValue config) {
@@ -233,7 +265,26 @@ public abstract class HttpBaseServlet extends HttpServlet {
     public final void postDestroy(HttpContext context, AnyValue config) {
     }
 
-    public abstract boolean authenticate(int moduleid, int actionid, HttpRequest request, HttpResponse response) throws IOException;
+    /**
+     * 使用 public void authenticate(int moduleid, int actionid, HttpRequest request, HttpResponse response, final HttpServlet next) throws IOException 代替
+     *
+     * @param moduleid moduleid
+     * @param actionid actionid
+     * @param request  HttpRequest
+     * @param response HttpResponse
+     *
+     * @return boolean
+     * @throws IOException
+     * @deprecated
+     */
+    @Deprecated
+    public boolean authenticate(int moduleid, int actionid, HttpRequest request, HttpResponse response) throws IOException {
+        return true;
+    }
+
+    public void authenticate(int moduleid, int actionid, HttpRequest request, HttpResponse response, final HttpServlet next) throws IOException {
+        if (authenticate(moduleid, actionid, request, response)) next.execute(request, response);
+    }
 
     protected void setHeader(HttpRequest request, String name, Serializable value) {
         request.header.setValue(name, String.valueOf(value));
