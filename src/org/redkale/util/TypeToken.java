@@ -38,6 +38,7 @@ public abstract class TypeToken<T> {
      * 例如: Map&#60; String, String &#62; 返回 ture; Map&#60; ? extends Serializable, String &#62; 返回false;
      *
      * @param type Type对象
+     *
      * @return 是否可反解析
      */
     public final static boolean isClassType(final Type type) {
@@ -56,11 +57,57 @@ public abstract class TypeToken<T> {
     }
 
     /**
+     * 动态创建类型为ParameterizedType或Class的Type
+     *
+     * @param type           当前泛型
+     * @param declaringType0 子类
+     *
+     * @return Type
+     */
+    public static Type createClassType(final Type type, final Type declaringType0) {
+        if (isClassType(type)) return type;
+        if (type instanceof ParameterizedType) {  // e.g. Map<String, String>
+            final ParameterizedType pt = (ParameterizedType) type;
+            final Type[] paramTypes = pt.getActualTypeArguments();
+            for (int i = 0; i < paramTypes.length; i++) {
+                paramTypes[i] = createClassType(paramTypes[i], declaringType0);
+            }
+            return createParameterizedType(pt.getOwnerType(), pt.getRawType(), paramTypes);
+        }
+        Type declaringType = declaringType0;
+        if (declaringType instanceof Class) {
+            do {
+                declaringType = ((Class) declaringType).getGenericSuperclass();
+                if (declaringType == Object.class) return Object.class;
+            } while (declaringType instanceof Class);
+        }
+        //存在通配符则declaringType 必须是 ParameterizedType
+        if (!(declaringType instanceof ParameterizedType)) return Object.class;
+        final ParameterizedType declaringPType = (ParameterizedType) declaringType;
+        final Type[] virTypes = ((Class) declaringPType.getRawType()).getTypeParameters();
+        final Type[] desTypes = declaringPType.getActualTypeArguments();
+        if (type instanceof WildcardType) {   // e.g. <? extends Serializable>
+            final WildcardType wt = (WildcardType) type;
+            for (Type f : wt.getUpperBounds()) {
+                for (int i = 0; i < virTypes.length; i++) {
+                    if (virTypes[i].equals(f)) return desTypes.length <= i ? Object.class : desTypes[i];
+                }
+            }
+        } else if (type instanceof TypeVariable) { // e.g.  <? extends E>
+            for (int i = 0; i < virTypes.length; i++) {
+                if (virTypes[i].equals(type)) return desTypes.length <= i ? Object.class : desTypes[i];
+            }
+        }
+        return type;
+    }
+
+    /**
      * 动态创建 ParameterizedType
      *
      * @param ownerType0           ParameterizedType 的 ownerType
      * @param rawType0             ParameterizedType 的 rawType
      * @param actualTypeArguments0 ParameterizedType 的 actualTypeArguments
+     *
      * @return Type
      */
     public static Type createParameterizedType(final Type ownerType0, final Type rawType0, final Type... actualTypeArguments0) {
@@ -104,8 +151,8 @@ public abstract class TypeToken<T> {
                 final ParameterizedType that = (ParameterizedType) o;
                 if (this == that) return true;
                 return Objects.equals(ownerType, that.getOwnerType())
-                        && Objects.equals(rawType, that.getRawType())
-                        && Arrays.equals(actualTypeArguments, that.getActualTypeArguments());
+                    && Objects.equals(rawType, that.getRawType())
+                    && Arrays.equals(actualTypeArguments, that.getActualTypeArguments());
             }
 
             @Override

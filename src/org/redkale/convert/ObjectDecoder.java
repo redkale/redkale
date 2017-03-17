@@ -76,7 +76,7 @@ public final class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T
                     if (Modifier.isStatic(field.getModifiers())) continue;
                     ref = factory.findRef(field);
                     if (ref != null && ref.ignore()) continue;
-                    Type t = ObjectEncoder.createClassType(field.getGenericType(), this.type);
+                    Type t = TypeToken.createClassType(field.getGenericType(), this.type);
                     list.add(new DeMember(ObjectEncoder.createAttribute(factory, clazz, field, null, null), factory.loadDecoder(t)));
                 }
                 final boolean reversible = factory.isReversible();
@@ -99,7 +99,7 @@ public final class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T
                     }
                     ref = factory.findRef(method);
                     if (ref != null && ref.ignore()) continue;
-                    Type t = ObjectEncoder.createClassType(method.getGenericParameterTypes()[0], this.type);
+                    Type t = TypeToken.createClassType(method.getGenericParameterTypes()[0], this.type);
                     list.add(new DeMember(ObjectEncoder.createAttribute(factory, clazz, null, null, method), factory.loadDecoder(t)));
                 }
                 if (cps != null) { //可能存在某些构造函数中的字段名不存在setter方法
@@ -115,7 +115,7 @@ public final class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T
                         //不存在setter方法
                         try {
                             Field f = clazz.getDeclaredField(constructorField);
-                            Type t = ObjectEncoder.createClassType(f.getGenericType(), this.type);
+                            Type t = TypeToken.createClassType(f.getGenericType(), this.type);
                             list.add(new DeMember(ObjectEncoder.createAttribute(factory, clazz, f, null, null), factory.loadDecoder(t)));
                         } catch (NoSuchFieldException nsfe) { //不存在field， 可能存在getter方法
                             char[] fs = constructorField.toCharArray();
@@ -127,7 +127,7 @@ public final class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T
                             } catch (NoSuchMethodException ex) {
                                 getter = clazz.getMethod("is" + mn);
                             }
-                            Type t = ObjectEncoder.createClassType(getter.getGenericParameterTypes()[0], this.type);
+                            Type t = TypeToken.createClassType(getter.getGenericParameterTypes()[0], this.type);
                             list.add(new DeMember(ObjectEncoder.createAttribute(factory, clazz, null, getter, null), factory.loadDecoder(t)));
                         }
                     }

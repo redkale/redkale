@@ -68,7 +68,7 @@ public final class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T
                     if (Modifier.isStatic(field.getModifiers())) continue;
                     ref = factory.findRef(field);
                     if (ref != null && ref.ignore()) continue;
-                    Type t = createClassType(field.getGenericType(), this.type);
+                    Type t = TypeToken.createClassType(field.getGenericType(), this.type);
                     list.add(new EnMember(createAttribute(factory, clazz, field, null, null), factory.loadEncoder(t)));
                 }
                 for (final Method method : clazz.getMethods()) {
@@ -91,7 +91,7 @@ public final class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T
                     }
                     ref = factory.findRef(method);
                     if (ref != null && ref.ignore()) continue;
-                    Type t = createClassType(method.getGenericReturnType(), this.type);
+                    Type t = TypeToken.createClassType(method.getGenericReturnType(), this.type);
                     list.add(new EnMember(createAttribute(factory, clazz, null, method, null), factory.loadEncoder(t)));
                 }
                 this.members = list.toArray(new EnMember[list.size()]);
@@ -146,42 +146,6 @@ public final class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T
         return "ObjectEncoder{" + "type=" + type + ", members=" + Arrays.toString(members) + '}';
     }
 
-    static Type createClassType(final Type type, final Type declaringType0) {
-        if (TypeToken.isClassType(type)) return type;
-        if (type instanceof ParameterizedType) {  // e.g. Map<String, String>
-            final ParameterizedType pt = (ParameterizedType) type;
-            final Type[] paramTypes = pt.getActualTypeArguments();
-            for (int i = 0; i < paramTypes.length; i++) {
-                paramTypes[i] = createClassType(paramTypes[i], declaringType0);
-            }
-            return TypeToken.createParameterizedType(pt.getOwnerType(), pt.getRawType(), paramTypes);
-        }
-        Type declaringType = declaringType0;
-        if (declaringType instanceof Class) {
-            do {
-                declaringType = ((Class) declaringType).getGenericSuperclass();
-                if (declaringType == Object.class) return Object.class;
-            } while (declaringType instanceof Class);
-        }
-        //存在通配符则declaringType 必须是 ParameterizedType
-        if (!(declaringType instanceof ParameterizedType)) return Object.class;
-        final ParameterizedType declaringPType = (ParameterizedType) declaringType;
-        final Type[] virTypes = ((Class) declaringPType.getRawType()).getTypeParameters();
-        final Type[] desTypes = declaringPType.getActualTypeArguments();
-        if (type instanceof WildcardType) {   // e.g. <? extends Serializable>
-            final WildcardType wt = (WildcardType) type;
-            for (Type f : wt.getUpperBounds()) {
-                for (int i = 0; i < virTypes.length; i++) {
-                    if (virTypes[i].equals(f)) return desTypes.length <= i ? Object.class : desTypes[i];
-                }
-            }
-        } else if (type instanceof TypeVariable) { // e.g.  <? extends E>
-            for (int i = 0; i < virTypes.length; i++) {
-                if (virTypes[i].equals(type)) return desTypes.length <= i ? Object.class : desTypes[i];
-            }
-        }
-        return type;
-    }
 //
 //    static Type makeGenericType(final Type type, final Type[] virGenericTypes, final Type[] realGenericTypes) {
 //        if (type instanceof Class) {  //e.g. String
@@ -230,7 +194,6 @@ public final class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T
 //        }
 //        return type;
 //    }
-
     static boolean contains(String[] values, String value) {
         for (String str : values) {
             if (str.equals(value)) return true;
