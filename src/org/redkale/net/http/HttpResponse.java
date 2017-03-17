@@ -14,6 +14,7 @@ import java.nio.file.*;
 import java.text.*;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.logging.Level;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.*;
 import org.redkale.util.AnyValue.DefaultAnyValue;
@@ -198,6 +199,26 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
     public HttpResponse addCookie(Collection<HttpCookie> cookies) {
         this.cookies = Utility.append(this.cookies, cookies);
         return this;
+    }
+
+    /**
+     * 创建AsyncHandler实例，将非字符串对象以JSON格式输出，字符串以文本输出
+     *
+     * @return AsyncHandler
+     */
+    public AsyncHandler createAsyncHandler() {
+        return AsyncHandler.create((v, a) -> {
+            if (v instanceof org.redkale.service.RetResult) {
+                finishJson((org.redkale.service.RetResult) v);
+            } else if (v instanceof CharSequence) {
+                finish(String.valueOf(v));
+            } else {
+                finishJson(v);
+            }
+        }, (t, a) -> {
+            request.getContext().getLogger().log(Level.WARNING, "Servlet occur, forece to close channel. request = " + request, t);
+            finish(500, null);
+        });
     }
 
     /**
@@ -457,7 +478,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * @param attachment 异步回调参数
      * @param handler    异步回调函数
      */
-    public <A> void sendBody(ByteBuffer buffer, A attachment, CompletionHandler<Integer, A> handler) {
+    public <A> void sendBody(ByteBuffer buffer, A attachment, AsyncHandler<Integer, A> handler) {
         if (!this.headsended) {
             if (this.contentLength < 0) this.contentLength = buffer == null ? 0 : buffer.remaining();
             ByteBuffer headbuf = createHeader();
@@ -796,7 +817,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         this.bufferHandler = bufferHandler;
     }
 
-    protected final class TransferFileHandler implements CompletionHandler<Integer, ByteBuffer> {
+    protected final class TransferFileHandler implements AsyncHandler<Integer, ByteBuffer> {
 
         private final AsynchronousFileChannel filechannel;
 

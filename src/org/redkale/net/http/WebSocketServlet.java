@@ -8,7 +8,6 @@ package org.redkale.net.http;
 import java.io.*;
 import java.net.*;
 import java.nio.*;
-import java.nio.channels.*;
 import java.security.*;
 import java.util.*;
 import java.util.logging.*;
@@ -128,7 +127,7 @@ public abstract class WebSocketServlet extends HttpServlet {
         response.setHeader("Connection", "Upgrade");
         response.addHeader("Upgrade", "websocket");
         response.addHeader("Sec-WebSocket-Accept", key);
-        response.sendBody((ByteBuffer) null, null, new CompletionHandler<Integer, Void>() {
+        response.sendBody((ByteBuffer) null, null, new AsyncHandler<Integer, Void>() {
 
             @Override
             public void completed(Integer result, Void attachment) {
