@@ -67,7 +67,8 @@ public final class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T
                 clazz = (Class) type;
             }
             this.creator = factory.loadCreator(clazz);
-
+            if (this.creator == null) throw new ConvertException("Cannot create a creator for " + clazz);
+            
             final Set<DeMember> list = new HashSet();
             final String[] cps = ObjectEncoder.findConstructorProperties(this.creator);
             try {
