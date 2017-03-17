@@ -36,10 +36,10 @@ public class CacheTestBean {
         Attribute nameattr = Attribute.create(CacheTestBean.class, "name");
         Attribute priceattr = Attribute.create(CacheTestBean.class, "price");
         BiFunction<DataSource, Class, List> fullloader = (s, z) -> list;
-        Method method = EntityInfo.class.getDeclaredMethod("load", Class.class, int.class, boolean.class, Properties.class,
+        Method method = EntityInfo.class.getDeclaredMethod("load", Class.class, boolean.class, Properties.class,
             DataSource.class, BiFunction.class);
         method.setAccessible(true);
-        final EntityInfo<CacheTestBean> info = (EntityInfo<CacheTestBean>) method.invoke(null, CacheTestBean.class, 0, true, new Properties(), null, fullloader);
+        final EntityInfo<CacheTestBean> info = (EntityInfo<CacheTestBean>) method.invoke(null, CacheTestBean.class, true, new Properties(), null, fullloader);
         EntityCache<CacheTestBean> cache = new EntityCache(info, null);
         cache.fullLoad();
 

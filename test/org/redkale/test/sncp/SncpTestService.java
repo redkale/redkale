@@ -61,6 +61,11 @@ public class SncpTestService implements SncpTestIService {
         return "result: " + bean;
     }
 
+    public void queryResult(AsyncHandler<String, SncpTestBean> handler, @RpcAttachment SncpTestBean bean) {
+        System.out.println(Thread.currentThread().getName() + " handler 运行了queryResult方法");
+        if (handler != null) handler.completed("result: " + bean, bean);
+    }
+
     @RpcMultiRun
     public String updateBean(@RpcCall(CallAttribute.class) SncpTestBean bean) {
         bean.setId(System.currentTimeMillis());
