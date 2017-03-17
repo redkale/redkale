@@ -73,6 +73,7 @@ public final class SncpClient {
                 for (int i = 0; i < params.length; i++) {
                     if (AsyncHandler.class.isAssignableFrom(params[i])) {
                         handlerFuncIndex = i;
+                        this.paramTypes[i] = AsyncHandler.class;
                         break;
                     }
                 }
@@ -106,7 +107,6 @@ public final class SncpClient {
             this.handlerFuncParamIndex = handlerFuncIndex;
             this.handlerAttachParamIndex = handlerAttachIndex;
             this.paramAttrs = hasattr ? atts : null;
-            if (this.handlerFuncParamIndex >= 0 && method.getReturnType() != void.class) throw new RuntimeException(method + " has AsyncHandler type parameter but return type is not void");
         }
 
         @Override
