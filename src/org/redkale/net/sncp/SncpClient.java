@@ -73,7 +73,6 @@ public final class SncpClient {
                 for (int i = 0; i < params.length; i++) {
                     if (AsyncHandler.class.isAssignableFrom(params[i])) {
                         handlerFuncIndex = i;
-                        this.paramTypes[i] = AsyncHandler.class;
                         break;
                     }
                 }
@@ -107,6 +106,15 @@ public final class SncpClient {
             this.handlerFuncParamIndex = handlerFuncIndex;
             this.handlerAttachParamIndex = handlerAttachIndex;
             this.paramAttrs = hasattr ? atts : null;
+            if (handlerFuncIndex > 0) {
+                Type handlerFuncType = this.paramTypes[handlerFuncIndex];
+                if (handlerFuncType instanceof ParameterizedType) {
+                    ParameterizedType handlerpt = (ParameterizedType) handlerFuncType;
+                    //后续可以添加验证， AsyncHandler的第一个泛型必须与方法返回值类型相同， 第二个泛型必须与@RpcAttachment的参数类型相同
+                    //需要考虑AsyncHandler的子类形态， 有可能0、1、2、。。。多个泛型
+                }
+                this.paramTypes[handlerFuncIndex] = AsyncHandler.class;
+            }
         }
 
         @Override
