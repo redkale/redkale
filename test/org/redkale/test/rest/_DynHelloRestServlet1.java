@@ -38,6 +38,9 @@ public class _DynHelloRestServlet1 extends SimpleRestServlet {
         //headers.put(Rest.REST_HEADER_RESOURCE_NAME, "my-res");
         String url = "http://127.0.0.1:" + port + "/pipes/hello/update?entity={}&bean2={}";
         System.out.println(Utility.postHttpContent(url, headers, null));
+        
+        url = "http://127.0.0.1:" + port + "/pipes/hello/findone/1234";
+        System.out.println(Utility.postHttpContent(url, headers, null));
 
     }
 

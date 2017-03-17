@@ -175,7 +175,7 @@ public final class Rest {
 
         final List<MappingEntry> entrys = new ArrayList<>();
         final Map<String, org.redkale.util.Attribute> restAttributes = new LinkedHashMap<>();
-
+        //获取所有可以转换成WebMapping的方法
         for (final Method method : serviceType.getMethods()) {
             if (Modifier.isStatic(method.getModifiers())) continue;
             Class[] extypes = method.getExceptionTypes();
@@ -208,6 +208,8 @@ public final class Rest {
             }
         }
         if (entrys.isEmpty()) return null; //没有可WebMapping的方法
+
+        //将每个Service可转换的方法生成HttpServlet对应的WebMapping方法
         for (final MappingEntry entry : entrys) {
             final Method method = entry.mappingMethod;
             final Class returnType = method.getReturnType();
@@ -257,6 +259,7 @@ public final class Rest {
             int argIndex = 0;
 
             List<Object[]> paramlist = new ArrayList<>();
+            //解析方法中的每个参数
             for (final Parameter param : params) {
                 final Class ptype = param.getType();
                 String n = null;
@@ -317,7 +320,7 @@ public final class Rest {
             }
 
             Map<String, Object> mappingMap = new LinkedHashMap<>();
-            {
+            { // 设置 Annotation
                 //设置 WebMapping
                 boolean reqpath = false;
                 for (Object[] ps : paramlist) {
@@ -351,7 +354,7 @@ public final class Rest {
                 mappingMap.put("result", grt == returnType ? returnType.getName() : String.valueOf(grt));
             }
 
-            {
+            { // 设置 Annotation
                 av0 = mv.visitAnnotation(webparamsDesc, true);
                 AnnotationVisitor av1 = av0.visitArray("value");
                 //设置 WebParam
@@ -373,10 +376,12 @@ public final class Rest {
                 av0.visitEnd();
             }
             List<Map<String, Object>> paramMaps = new ArrayList<>();
+            //获取每个参数的值
+            boolean hasAsyncHandler = false;
             for (Object[] ps : paramlist) {
                 Map<String, Object> paramMap = new LinkedHashMap<>();
                 String pname = (String) ps[1]; //参数名
-                Class ptype = (Class) ps[2];
+                Class ptype = (Class) ps[2]; //参数类型
                 int radix = (Integer) ps[3];
                 String comment = (String) ps[4];
                 boolean required = (Boolean) ps[5];
@@ -391,7 +396,13 @@ public final class Rest {
 
                 paramMap.put("name", pname);
                 paramMap.put("type", ptype.getName());
-                if (annsid != null) { //HttpRequest.getSessionid(true|false)
+                if (ptype == AsyncHandler.class) { //HttpResponse.createAsyncHandler()
+                    mv.visitVarInsn(ALOAD, 2);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "createAsyncHandler", "()Lorg/redkale/util/AsyncHandler;", false);
+                    mv.visitVarInsn(ASTORE, maxLocals);
+                    varInsns.add(new int[]{ALOAD, maxLocals});
+                    hasAsyncHandler = true;
+                } else if (annsid != null) { //HttpRequest.getSessionid(true|false)
                     mv.visitVarInsn(ALOAD, 1);
                     mv.visitInsn(annsid.create() ? ICONST_1 : ICONST_0);
                     mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getSessionid", "(Z)Ljava/lang/String;", false);
@@ -723,7 +734,9 @@ public final class Rest {
                 mv.visitVarInsn(ins[0], ins[1]);
             }
             mv.visitMethodInsn(INVOKEVIRTUAL, serviceTypeInternalName, method.getName(), methodDesc, false);
-            if (returnType == void.class) {
+            if (hasAsyncHandler) {
+                mv.visitInsn(RETURN);
+            } else if (returnType == void.class) {
                 mv.visitVarInsn(ALOAD, 2);
                 mv.visitMethodInsn(INVOKESTATIC, retInternalName, "success", "()" + retDesc, false);
                 mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishJson", "(" + retDesc + ")V", false);

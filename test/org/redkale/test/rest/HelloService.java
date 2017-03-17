@@ -7,7 +7,7 @@ import org.redkale.net.http.*;
 import org.redkale.service.*;
 import org.redkale.source.DataSource;
 import org.redkale.source.Flipper;
-import org.redkale.util.Sheet;
+import org.redkale.util.*;
 
 /**
  * 类说明:
@@ -76,4 +76,13 @@ public class HelloService implements Service {
         return source.find(HelloEntity.class, id);
     }
 
+    //查询单个
+    @RestMapping(name = "findone")
+    public HelloEntity findOneHello(AsyncHandler handler, @RestParam(name = "#") int id) {  //通过 /pipes/hello/find/1234、/pipes/hello/jsfind/1234 查询对象
+        if (source != null) source.find(handler, HelloEntity.class, id);
+        HelloEntity rs = new HelloEntity();
+        rs.setHelloname("Hello名称");
+        if (handler != null) handler.completed(rs, null);
+        return null;
+    }
 }
