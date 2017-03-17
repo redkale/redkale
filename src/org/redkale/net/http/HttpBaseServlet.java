@@ -231,7 +231,7 @@ public abstract class HttpBaseServlet extends HttpServlet {
      * @param response HttpResponse
      *
      * @return boolean
-     * @throws IOException
+     * @throws IOException IOException
      * @deprecated
      */
     @Deprecated
@@ -274,7 +274,7 @@ public abstract class HttpBaseServlet extends HttpServlet {
      * @param response HttpResponse
      *
      * @return boolean
-     * @throws IOException
+     * @throws IOException IOException
      * @deprecated
      */
     @Deprecated
