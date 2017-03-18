@@ -224,9 +224,77 @@ public abstract class HttpBaseServlet extends HttpServlet {
         }
     };
 
+    /**
+     * <p>
+     * 预执行方法，在execute方法之前运行，通常用于常规统计或基础检测，例如 : <br>
+     * <blockquote><pre>
+     *      &#64;Override
+     *      public void preExecute(final HttpRequest request, final HttpResponse response, HttpServlet next) throws IOException {
+     *          if (finer) response.setRecycleListener((req, resp) -&#62; {  //记录处理时间比较长的请求
+     *              long e = System.currentTimeMillis() - ((HttpRequest) req).getCreatetime();
+     *              if (e &#62; 200) logger.finer("http-execute-cost-time: " + e + " ms. request = " + req);
+     *          });
+     *          next.execute(request, response);
+     *      }
+     * </pre></blockquote>
+     * <p>
+     *
+     * @param request  HttpRequest
+     * @param response HttpResponse
+     * @param next     HttpServlet
+     *
+     * @throws IOException IOException
+     */
     public void preExecute(HttpRequest request, HttpResponse response, final HttpServlet next) throws IOException {
         next.execute(request, response);
     }
+
+    /**
+     * 使用 public void authenticate(int moduleid, int actionid, HttpRequest request, HttpResponse response, final HttpServlet next) throws IOException 代替
+     *
+     * @param moduleid int
+     * @param actionid int
+     * @param request  HttpRequest
+     * @param response HttpResponse
+     *
+     * @return boolean
+     * @throws IOException IOException
+     * @deprecated
+     */
+    @Deprecated
+    public boolean authenticate(int moduleid, int actionid, HttpRequest request, HttpResponse response) throws IOException {
+        return true;
+    }
+
+    /**
+     * <p>
+     * 用户登录或权限验证， 没有注解为&#64;AuthIgnore 的方法会执行authenticate方法, 若验证成功则必须调用next.execute(request, response);进行下一步操作, 例如: <br>
+     * <blockquote><pre>
+     *      &#64;Override
+     *      public void authenticate(int moduleid, int actionid, HttpRequest request, HttpResponse response, final HttpServlet next) throws IOException {
+     *          UserInfo info = currentUser(request);
+     *          if (info == null) {
+     *              response.finishJson(RET_UNLOGIN);
+     *              return;
+     *          } else if (!info.checkAuth(module, actionid)) {
+     *              response.finishJson(RET_AUTHILLEGAL);
+     *              return;
+     *          }
+     *          next.execute(request, response);
+     *      }
+     * </pre></blockquote>
+     * <p>
+     *
+     *
+     * @param moduleid int
+     * @param actionid int
+     * @param request  HttpRequest
+     * @param response HttpResponse
+     * @param next     HttpServlet
+     *
+     * @throws IOException IOException
+     */
+    public abstract void authenticate(int moduleid, int actionid, HttpRequest request, HttpResponse response, final HttpServlet next) throws IOException;
 
     @Override
     public final void execute(HttpRequest request, HttpResponse response) throws IOException {
@@ -249,25 +317,6 @@ public abstract class HttpBaseServlet extends HttpServlet {
 
     public final void postDestroy(HttpContext context, AnyValue config) {
     }
-
-    /**
-     * 使用 public void authenticate(int moduleid, int actionid, HttpRequest request, HttpResponse response, final HttpServlet next) throws IOException 代替
-     *
-     * @param moduleid moduleid
-     * @param actionid actionid
-     * @param request  HttpRequest
-     * @param response HttpResponse
-     *
-     * @return boolean
-     * @throws IOException IOException
-     * @deprecated
-     */
-    @Deprecated
-    public boolean authenticate(int moduleid, int actionid, HttpRequest request, HttpResponse response) throws IOException {
-        return true;
-    }
-
-    public abstract void authenticate(int moduleid, int actionid, HttpRequest request, HttpResponse response, final HttpServlet next) throws IOException;
 
     protected void setHeader(HttpRequest request, String name, Serializable value) {
         request.header.setValue(name, String.valueOf(value));
