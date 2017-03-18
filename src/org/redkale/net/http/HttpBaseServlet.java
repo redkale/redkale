@@ -286,8 +286,8 @@ public abstract class HttpBaseServlet extends HttpServlet {
      * <p>
      *
      *
-     * @param moduleid int
-     * @param actionid int
+     * @param moduleid 模块ID，来自&#64;WebServlet.moduleid()
+     * @param actionid 操作ID，来自&#64;WebMapping.actionid()
      * @param request  HttpRequest
      * @param response HttpResponse
      * @param next     HttpServlet
