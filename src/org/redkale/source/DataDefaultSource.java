@@ -25,7 +25,7 @@ import org.redkale.util.*;
  * @author zhangjx
  */
 @SuppressWarnings("unchecked")
-public final class DataDefaultSource implements DataSource, Function<Class, EntityInfo>, AutoCloseable {
+public final class DataDefaultSource implements DataSource, Function<Class, EntityInfo>, AutoCloseable { 
 
     public static final String DATASOURCE_CONFPATH = "DATASOURCE_CONFPATH";
 
