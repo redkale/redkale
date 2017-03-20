@@ -5,8 +5,7 @@
  */
 package org.redkale.test.source;
 
-import org.redkale.source.DataDefaultSource;
-import org.redkale.source.DataSource;
+import org.redkale.source.*;
 
 /**
  *
@@ -15,7 +14,7 @@ import org.redkale.source.DataSource;
 public class JDBCTest {
 
     public static void main(String[] args) throws Exception {
-        DataSource source = new DataDefaultSource();  //耗时：37415
+        DataSource source = Sources.createDataSource("");  //耗时：37415
         int count = 1000;
         LoginTestRecord last = null;
         long s = System.currentTimeMillis();

@@ -5,7 +5,6 @@
  */
 package org.redkale.source;
 
-import static org.redkale.source.DataDefaultSource.*;
 import java.io.*;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Method;
@@ -17,6 +16,7 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import javax.sql.*;
+import static org.redkale.source.Sources.*;
 
 /**
  *
@@ -26,26 +26,6 @@ import javax.sql.*;
  * @author zhangjx
  */
 public class JDBCPoolSource {
-
-    static final String JDBC_CONNECTIONSMAX = "javax.persistence.connections.limit";
-
-    static final String JDBC_CONTAIN_SQLTEMPLATE = "javax.persistence.contain.sqltemplate";
-
-    static final String JDBC_NOTCONTAIN_SQLTEMPLATE = "javax.persistence.notcontain.sqltemplate";
-
-    static final String JDBC_TABLENOTEXIST_SQLSTATES = "javax.persistence.tablenotexist.sqlstates";
-
-    static final String JDBC_TABLECOPY_SQLTEMPLATE = "javax.persistence.tablecopy.sqltemplate";
-
-    static final String JDBC_URL = "javax.persistence.jdbc.url";
-
-    static final String JDBC_USER = "javax.persistence.jdbc.user";
-
-    static final String JDBC_PWD = "javax.persistence.jdbc.password";
-
-    static final String JDBC_DRIVER = "javax.persistence.jdbc.driver";
-
-    static final String JDBC_SOURCE = "javax.persistence.jdbc.source";
 
     private static final Map<String, AbstractMap.SimpleEntry<WatchService, List<WeakReference<JDBCPoolSource>>>> maps = new HashMap<>();
 
@@ -230,7 +210,7 @@ public class JDBCPoolSource {
                                 Thread.sleep(2000L);
                                 if (d == f.lastModified()) break;
                             }
-                            final Map<String, Properties> m = loadProperties(new FileInputStream(file));
+                            final Map<String, Properties> m = loadPersistenceXml(new FileInputStream(file));
                             key.pollEvents().stream().forEach((event) -> {
                                 if (event.kind() != ENTRY_MODIFY) return;
                                 if (!((Path) event.context()).toFile().getName().equals(f.getName())) return;

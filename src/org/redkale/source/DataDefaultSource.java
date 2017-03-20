@@ -13,7 +13,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.*;
 import java.util.logging.*;
 import javax.annotation.Resource;
-import javax.xml.stream.*;
 import org.redkale.util.*;
 
 /**
@@ -25,9 +24,7 @@ import org.redkale.util.*;
  * @author zhangjx
  */
 @SuppressWarnings("unchecked")
-public final class DataDefaultSource implements DataSource, Function<Class, EntityInfo>, AutoCloseable { 
-
-    public static final String DATASOURCE_CONFPATH = "DATASOURCE_CONFPATH";
+public final class DataDefaultSource implements DataSource, Function<Class, EntityInfo>, AutoCloseable {
 
     private static final Flipper FLIPPER_ONE = new Flipper(1);
 
@@ -50,112 +47,12 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
 
     private final BiFunction<DataSource, Class, List> fullloader = (s, t) -> querySheet(false, false, t, null, null, (FilterNode) null).list(true);
 
-    public DataDefaultSource() throws IOException {
-        this("");
-    }
-
-    public DataDefaultSource(final String unitName) throws IOException {
-        this(unitName, System.getProperty(DATASOURCE_CONFPATH) == null
-            ? DataDefaultSource.class.getResource("/META-INF/persistence.xml")
-            : new File(System.getProperty(DATASOURCE_CONFPATH)).toURI().toURL());
-    }
-
-    public DataDefaultSource(final String unitName, URL url) throws IOException {
-        if (url == null) url = this.getClass().getResource("/persistence.xml");
-        InputStream in = url.openStream();
-        Map<String, Properties> map = loadProperties(in);
-        Properties readprop = null;
-        Properties writeprop = null;
-        if (unitName != null) {
-            readprop = map.get(unitName);
-            writeprop = readprop;
-            if (readprop == null) {
-                readprop = map.get(unitName + ".read");
-                writeprop = map.get(unitName + ".write");
-            }
-        }
-        if ((unitName == null || unitName.isEmpty()) || readprop == null) {
-            String key = null;
-            for (Map.Entry<String, Properties> en : map.entrySet()) {
-                key = en.getKey();
-                readprop = en.getValue();
-                writeprop = readprop;
-                break;
-            }
-            if (key != null && (key.endsWith(".read") || key.endsWith(".write"))) {
-                if (key.endsWith(".read")) {
-                    writeprop = map.get(key.substring(0, key.lastIndexOf('.')) + ".write");
-                } else {
-                    readprop = map.get(key.substring(0, key.lastIndexOf('.')) + ".read");
-                }
-            }
-        }
-        if (readprop == null) throw new RuntimeException("not found persistence properties (unit:" + unitName + ")");
-        this.name = unitName;
-        this.conf = url;
-        this.readPool = new JDBCPoolSource(this, "read", readprop);
-        this.writePool = new JDBCPoolSource(this, "write", writeprop);
-        this.cacheForbidden = "NONE".equalsIgnoreCase(readprop.getProperty("shared-cache-mode"));
-    }
-
     public DataDefaultSource(String unitName, Properties readprop, Properties writeprop) {
         this.name = unitName;
         this.conf = null;
         this.readPool = new JDBCPoolSource(this, "read", readprop);
         this.writePool = new JDBCPoolSource(this, "write", writeprop);
         this.cacheForbidden = "NONE".equalsIgnoreCase(readprop.getProperty("shared-cache-mode"));
-    }
-
-    public static Map<String, DataDefaultSource> create(final InputStream in) {
-        Map<String, Properties> map = loadProperties(in);
-        Map<String, Properties[]> maps = new HashMap<>();
-        map.entrySet().stream().forEach((en) -> {
-            if (en.getKey().endsWith(".read") || en.getKey().endsWith(".write")) {
-                String key = en.getKey().substring(0, en.getKey().lastIndexOf('.'));
-                if (maps.containsKey(key)) return;
-                boolean read = en.getKey().endsWith(".read");
-                Properties rp = read ? en.getValue() : map.get(key + ".read");
-                Properties wp = read ? map.get(key + ".write") : en.getValue();
-                maps.put(key, new Properties[]{rp, wp});
-            } else {
-                maps.put(en.getKey(), new Properties[]{en.getValue(), en.getValue()});
-            }
-        });
-        Map<String, DataDefaultSource> result = new HashMap<>();
-        maps.entrySet().stream().forEach((en) -> {
-            result.put(en.getKey(), new DataDefaultSource(en.getKey(), en.getValue()[0], en.getValue()[1]));
-        });
-        return result;
-    }
-
-    static Map<String, Properties> loadProperties(final InputStream in0) {
-        final Map<String, Properties> map = new LinkedHashMap();
-        Properties result = new Properties();
-        boolean flag = false;
-        try (final InputStream in = in0) {
-            XMLStreamReader reader = XMLInputFactory.newFactory().createXMLStreamReader(in);
-            while (reader.hasNext()) {
-                int event = reader.next();
-                if (event == XMLStreamConstants.START_ELEMENT) {
-                    if ("persistence-unit".equalsIgnoreCase(reader.getLocalName())) {
-                        if (!result.isEmpty()) result = new Properties();
-                        map.put(reader.getAttributeValue(null, "name"), result);
-                        flag = true;
-                    } else if (flag && "property".equalsIgnoreCase(reader.getLocalName())) {
-                        String name = reader.getAttributeValue(null, "name");
-                        String value = reader.getAttributeValue(null, "value");
-                        if (name == null) continue;
-                        result.put(name, value);
-                    } else if (flag && "shared-cache-mode".equalsIgnoreCase(reader.getLocalName())) {
-                        result.put(reader.getLocalName(), reader.getElementText());
-                    }
-                }
-            }
-            in.close();
-        } catch (Exception ex) {
-            throw new RuntimeException(ex);
-        }
-        return map;
     }
 
     public final String name() {
