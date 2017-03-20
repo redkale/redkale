@@ -118,6 +118,9 @@ public final class Application {
     //全局根ResourceFactory
     final ResourceFactory resourceFactory = ResourceFactory.root();
 
+    //服务配置项
+    final AnyValue config;
+
     //临时计数器
     CountDownLatch servicecdl;  //会出现两次赋值
 
@@ -133,9 +136,6 @@ public final class Application {
 
     //日志
     private final Logger logger;
-
-    //服务配置项
-    private final AnyValue config;
 
     //服务启动时间
     private final long startTime = System.currentTimeMillis();

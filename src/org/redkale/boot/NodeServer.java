@@ -191,6 +191,31 @@ public abstract class NodeServer {
         final NodeServer self = this;
         //---------------------------------------------------------------------------------------------
         final ResourceFactory appResFactory = application.getResourceFactory();
+        //------------------------------------- 注册Resource --------------------------------------------------------
+        resourceFactory.register((ResourceFactory rf, final Object src, String resourceName, Field field, final Object attachment) -> {
+            try {
+                Resource res = field.getAnnotation(Resource.class);
+                if (res == null || !res.name().startsWith("properties.")) return;
+                if ((src instanceof Service) && Sncp.isRemote((Service) src)) return; //远程模式不得注入 DataSource
+                Class type = field.getType();
+                if (type != AnyValue.class && type != AnyValue[].class) return;
+                Object resource = null;
+                final AnyValue resources = application.config.getAnyValue("resources");
+                final AnyValue properties = resources == null ? null : resources.getAnyValue("properties");
+                if (properties != null && type == AnyValue.class) {
+                    resource = properties.getAnyValue(res.name().substring("properties.".length()));
+                    appResFactory.register(resourceName, AnyValue.class, resource);
+                } else if (properties != null && type == AnyValue[].class) {
+                    resource = properties.getAnyValues(res.name().substring("properties.".length()));
+                    appResFactory.register(resourceName, AnyValue[].class, resource);
+                }
+                field.set(src, resource);
+            } catch (Exception e) {
+                logger.log(Level.SEVERE, "Resource inject error", e);
+            }
+        }, AnyValue.class, AnyValue[].class);
+
+        //------------------------------------- 注册DataSource --------------------------------------------------------        
         resourceFactory.register((ResourceFactory rf, final Object src, String resourceName, Field field, final Object attachment) -> {
             try {
                 if (field.getAnnotation(Resource.class) == null) return;
@@ -220,6 +245,8 @@ public abstract class NodeServer {
                 logger.log(Level.SEVERE, "DataSource inject error", e);
             }
         }, DataSource.class);
+
+        //------------------------------------- 注册CacheSource --------------------------------------------------------
         resourceFactory.register((ResourceFactory rf, final Object src, final String resourceName, Field field, final Object attachment) -> {
             try {
                 if (field.getAnnotation(Resource.class) == null) return;

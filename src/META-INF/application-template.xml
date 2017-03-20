@@ -28,7 +28,7 @@
     <!-- 
         【节点全局唯一】
         所有服务所需的资源 
-    -->      
+    -->
     <resources>  
         <!--
             【节点全局唯一】
@@ -59,7 +59,7 @@
         </group>
         <!-- 
             【节点全局唯一】
-            全局的参数配置, 可以通过@Resource(name="property.xxxxxx") 进行注入, 被注解的字段类型只能是String、primitive class
+            全局的参数配置, 可以通过@Resource(name="property.xxxxxx") 进行注入<property>的信息, 被注解的字段类型只能是String、primitive class
             如果name是system.property.开头的值将会在进程启动时进行System.setProperty("yyyy", "YYYYYY")操作。
             如果name是mimetype.property.开头的值将会在进程启动时进行MimeType.add("yyyy", "YYYYYY")操作。
             load:  加载文件，多个用;隔开。
@@ -70,6 +70,8 @@
                System.setProperty("convert.bson.pool.size", "128");
                System.setProperty("convert.json.writer.buffer.defsize", "4096");
                System.setProperty("convert.bson.writer.buffer.defsize", "4096");
+               
+            <properties>节点下也可包含非<property>节点，其节点可以通过@Resource(name="properties.xxxxxx")进行注入, 被注解的字段类型只能是AnyValue、AnyValue[]
         -->
         <properties load="config.properties">
             <property name="system.property.yyyy" value="YYYYYY"/>
@@ -77,6 +79,7 @@
             <property name="xxxxxx" value="XXXXXXXX"/>
             <property name="xxxxxx" value="XXXXXXXX"/>
         </properties>
+                
     </resources> 
     <!--
         protocol: required  server所启动的协议，Redkale内置的有HTTP、SNCP，SNCP使用TCP实现; 
