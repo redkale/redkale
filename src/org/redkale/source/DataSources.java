@@ -15,7 +15,7 @@ import javax.xml.stream.*;
  *
  * @author zhangjx
  */
-public final class Sources {
+public final class DataSources {
 
     public static final String DATASOURCE_CONFPATH = "DATASOURCE_CONFPATH";
 
@@ -41,7 +41,7 @@ public final class Sources {
 
     public static final String JDBC_SOURCE = "javax.persistence.jdbc.source";
 
-    private Sources() {
+    private DataSources() {
     }
 
     public static DataSource createDataSource(final String unitName) throws IOException {
@@ -51,7 +51,7 @@ public final class Sources {
     }
 
     public static DataSource createDataSource(final String unitName, URL url) throws IOException {
-        if (url == null) url = Sources.class.getResource("/persistence.xml");
+        if (url == null) url = DataSources.class.getResource("/persistence.xml");
         InputStream in = url.openStream();
         if (in == null) return null;
         Map<String, Properties> map = loadPersistenceXml(in);

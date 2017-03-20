@@ -304,11 +304,11 @@ public final class EntityInfo<T> {
             this.cache = null;
         }
         if (conf == null) conf = new Properties();
-        this.containSQL = conf.getProperty(Sources.JDBC_CONTAIN_SQLTEMPLATE, "LOCATE(${keystr}, ${column}) > 0");
-        this.notcontainSQL = conf.getProperty(Sources.JDBC_NOTCONTAIN_SQLTEMPLATE, "LOCATE(${keystr}, ${column}) = 0");
+        this.containSQL = conf.getProperty(DataSources.JDBC_CONTAIN_SQLTEMPLATE, "LOCATE(${keystr}, ${column}) > 0");
+        this.notcontainSQL = conf.getProperty(DataSources.JDBC_NOTCONTAIN_SQLTEMPLATE, "LOCATE(${keystr}, ${column}) = 0");
 
-        this.tablenotexistSqlstates = ";" + conf.getProperty(Sources.JDBC_TABLENOTEXIST_SQLSTATES, "42000;42S02") + ";";
-        this.tablecopySQL = conf.getProperty(Sources.JDBC_TABLECOPY_SQLTEMPLATE, "CREATE TABLE ${newtable} LIKE ${oldtable}");
+        this.tablenotexistSqlstates = ";" + conf.getProperty(DataSources.JDBC_TABLENOTEXIST_SQLSTATES, "42000;42S02") + ";";
+        this.tablecopySQL = conf.getProperty(DataSources.JDBC_TABLECOPY_SQLTEMPLATE, "CREATE TABLE ${newtable} LIKE ${oldtable}");
     }
 
     /**
