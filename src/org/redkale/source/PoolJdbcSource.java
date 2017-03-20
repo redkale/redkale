@@ -25,9 +25,9 @@ import static org.redkale.source.Sources.*;
  *
  * @author zhangjx
  */
-public class JDBCPoolSource {
+public class PoolJdbcSource {
 
-    private static final Map<String, AbstractMap.SimpleEntry<WatchService, List<WeakReference<JDBCPoolSource>>>> maps = new HashMap<>();
+    private static final Map<String, AbstractMap.SimpleEntry<WatchService, List<WeakReference<PoolJdbcSource>>>> maps = new HashMap<>();
 
     private final AtomicLong usingCounter = new AtomicLong();
 
@@ -43,7 +43,7 @@ public class JDBCPoolSource {
 
     private final ConnectionEventListener listener;
 
-    private final DataDefaultSource dataSource;
+    private final DataJdbcSource dataSource;
 
     private final String stype; // "" 或 "read"  或 "write"
 
@@ -57,7 +57,7 @@ public class JDBCPoolSource {
 
     final Properties props;
 
-    public JDBCPoolSource(DataDefaultSource source, String stype, Properties prop) {
+    public PoolJdbcSource(DataJdbcSource source, String stype, Properties prop) {
         this.dataSource = source;
         this.stype = stype;
         this.props = prop;
@@ -190,13 +190,13 @@ public class JDBCPoolSource {
         final File f = new File(file);
         if (!f.isFile() || !f.canRead()) return;
         synchronized (maps) {
-            AbstractMap.SimpleEntry<WatchService, List<WeakReference<JDBCPoolSource>>> entry = maps.get(file);
+            AbstractMap.SimpleEntry<WatchService, List<WeakReference<PoolJdbcSource>>> entry = maps.get(file);
             if (entry != null) {
                 entry.getValue().add(new WeakReference<>(this));
                 return;
             }
             final WatchService watcher = f.toPath().getFileSystem().newWatchService();
-            final List<WeakReference<JDBCPoolSource>> list = new CopyOnWriteArrayList<>();
+            final List<WeakReference<PoolJdbcSource>> list = new CopyOnWriteArrayList<>();
             Thread watchThread = new Thread() {
 
                 @Override
@@ -214,8 +214,8 @@ public class JDBCPoolSource {
                             key.pollEvents().stream().forEach((event) -> {
                                 if (event.kind() != ENTRY_MODIFY) return;
                                 if (!((Path) event.context()).toFile().getName().equals(f.getName())) return;
-                                for (WeakReference<JDBCPoolSource> ref : list) {
-                                    JDBCPoolSource pool = ref.get();
+                                for (WeakReference<PoolJdbcSource> ref : list) {
+                                    PoolJdbcSource pool = ref.get();
                                     if (pool == null) continue;
                                     try {
                                         Properties property = m.get(pool.dataSource.name);

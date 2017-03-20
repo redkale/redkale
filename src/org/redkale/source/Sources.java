@@ -46,7 +46,7 @@ public final class Sources {
 
     public static DataSource createDataSource(final String unitName) throws IOException {
         return createDataSource(unitName, System.getProperty(DATASOURCE_CONFPATH) == null
-            ? DataDefaultSource.class.getResource("/META-INF/persistence.xml")
+            ? DataJdbcSource.class.getResource("/META-INF/persistence.xml")
             : new File(System.getProperty(DATASOURCE_CONFPATH)).toURI().toURL());
     }
 
@@ -82,8 +82,8 @@ public final class Sources {
             }
         }
         if (readprop == null) throw new IOException("Cannot find (resource.name = '" + unitName + "') DataSource");
-        String impl = readprop.getProperty(JDBC_DATASOURCE_CLASS, DataDefaultSource.class.getName());
-        if (DataDefaultSource.class.getName().equals(impl)) return new DataDefaultSource(unitName, readprop, writeprop);
+        String impl = readprop.getProperty(JDBC_DATASOURCE_CLASS, DataJdbcSource.class.getName());
+        if (DataJdbcSource.class.getName().equals(impl)) return new DataJdbcSource(unitName, readprop, writeprop);
         try {
             Class ds = Class.forName(impl);
             for (Constructor d : ds.getConstructors()) {

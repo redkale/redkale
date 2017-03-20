@@ -9,14 +9,16 @@ import java.io.Serializable;
 
 /**
  *
- * <p> 详情见: https://redkale.org
+ * <p>
+ * 详情见: https://redkale.org
+ *
  * @author zhangjx
  */
 public interface DataCacheListener {
 
-    public <T> void insertCache(Class<T> clazz, T... entitys);
+    public <T> int insertCache(Class<T> clazz, T... entitys);
 
-    public <T> void updateCache(Class<T> clazz, T... entitys);
+    public <T> int updateCache(Class<T> clazz, T... entitys);
 
-    public <T> void deleteCache(Class<T> clazz, Serializable... ids);
+    public <T> int deleteCache(Class<T> clazz, Serializable... ids);
 }

@@ -7,9 +7,9 @@
         <shared-cache-mode>NONE</shared-cache-mode>
         <properties>
             <!-- 
-                DataSource的实现类，没有设置默认为org.redkale.source.DataDefaultSource的实现，使用常规基于JDBC的数据库驱动一般无需设置
+                DataSource的实现类，没有设置默认为org.redkale.source.DataJdbcSource的实现，使用常规基于JDBC的数据库驱动一般无需设置
             -->
-            <property name="javax.persistence.datasource" value="org.redkale.source.DataDefaultSource"/>
+            <property name="javax.persistence.datasource" value="org.redkale.source.DataJdbcSource"/>
             
             <property name="javax.persistence.jdbc.url" value="jdbc:mysql://127.0.0.1:3306/dbuser?characterEncoding=utf8"/>
             <!-- 

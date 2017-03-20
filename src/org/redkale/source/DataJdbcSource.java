@@ -24,11 +24,11 @@ import org.redkale.util.*;
  * @author zhangjx
  */
 @SuppressWarnings("unchecked")
-public final class DataDefaultSource implements DataSource, Function<Class, EntityInfo>, AutoCloseable {
+public final class DataJdbcSource implements DataSource, DataCacheListener, Function<Class, EntityInfo>, AutoCloseable {
 
     private static final Flipper FLIPPER_ONE = new Flipper(1);
 
-    final Logger logger = Logger.getLogger(DataDefaultSource.class.getSimpleName());
+    final Logger logger = Logger.getLogger(DataJdbcSource.class.getSimpleName());
 
     final AtomicBoolean debug = new AtomicBoolean(logger.isLoggable(Level.FINEST));
 
@@ -38,20 +38,20 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
 
     final boolean cacheForbidden;
 
-    private final JDBCPoolSource readPool;
+    private final PoolJdbcSource readPool;
 
-    private final JDBCPoolSource writePool;
+    private final PoolJdbcSource writePool;
 
     @Resource(name = "$")
     private DataCacheListener cacheListener;
 
     private final BiFunction<DataSource, Class, List> fullloader = (s, t) -> querySheet(false, false, t, null, null, (FilterNode) null).list(true);
 
-    public DataDefaultSource(String unitName, Properties readprop, Properties writeprop) {
+    public DataJdbcSource(String unitName, Properties readprop, Properties writeprop) {
         this.name = unitName;
         this.conf = null;
-        this.readPool = new JDBCPoolSource(this, "read", readprop);
-        this.writePool = new JDBCPoolSource(this, "write", writeprop);
+        this.readPool = new PoolJdbcSource(this, "read", readprop);
+        this.writePool = new PoolJdbcSource(this, "write", writeprop);
         this.cacheForbidden = "NONE".equalsIgnoreCase(readprop.getProperty("shared-cache-mode"));
     }
 
@@ -273,14 +273,17 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
         return prestmt;
     }
 
-    public <T> void insertCache(Class<T> clazz, T... values) {
-        if (values.length == 0) return;
+    @Override
+    public <T> int insertCache(Class<T> clazz, T... values) {
+        if (values.length == 0) return 0;
         final EntityInfo<T> info = loadEntityInfo(clazz);
         final EntityCache<T> cache = info.getCache();
-        if (cache == null) return;
+        if (cache == null) return -1;
+        int c = 0;
         for (T value : values) {
-            cache.insert(value);
+            c += cache.insert(value);
         }
+        return c;
     }
 
     //-------------------------deleteCache--------------------------
@@ -471,6 +474,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
         }
     }
 
+    @Override
     public <T> int deleteCache(Class<T> clazz, Serializable... ids) {
         if (ids.length == 0) return 0;
         final EntityInfo<T> info = loadEntityInfo(clazz);
@@ -1160,6 +1164,7 @@ public final class DataDefaultSource implements DataSource, Function<Class, Enti
         }
     }
 
+    @Override
     public <T> int updateCache(Class<T> clazz, T... values) {
         if (values.length == 0) return 0;
         final EntityInfo<T> info = loadEntityInfo(clazz);
