@@ -53,11 +53,11 @@ public interface CacheSource<K extends Serializable, V extends Object> {
     public void removeSetItem(final K key, final V value);
 
     //----------------------异步版---------------------------------
-    public boolean exists(final AsyncHandler<Boolean, K> handler, final K key);
+    public void exists(final AsyncHandler<Boolean, K> handler, final K key);
 
-    public V get(final AsyncHandler<V, K> handler, final K key);
+    public void get(final AsyncHandler<V, K> handler, final K key);
 
-    public V getAndRefresh(final AsyncHandler<V, K> handler, final K key, final int expireSeconds);
+    public void getAndRefresh(final AsyncHandler<V, K> handler, final K key, final int expireSeconds);
 
     public void refresh(final AsyncHandler<Void, K> handler, final K key, final int expireSeconds);
 
@@ -69,9 +69,9 @@ public interface CacheSource<K extends Serializable, V extends Object> {
 
     public void remove(final AsyncHandler<Void, K> handler, final K key);
 
-    public Collection<V> getCollection(final AsyncHandler<Collection<V>, K> handler, final K key);
+    public void getCollection(final AsyncHandler<Collection<V>, K> handler, final K key);
 
-    public Collection<V> getCollectionAndRefresh(final AsyncHandler<Collection<V>, K> handler, final K key, final int expireSeconds);
+    public void getCollectionAndRefresh(final AsyncHandler<Collection<V>, K> handler, final K key, final int expireSeconds);
 
     public void appendListItem(final AsyncHandler<Void, K> handler, final K key, final V value);
 
@@ -81,8 +81,7 @@ public interface CacheSource<K extends Serializable, V extends Object> {
 
     public void removeSetItem(final AsyncHandler<Void, K> handler, final K key, final V value);
 
-    default boolean isOpen(final AsyncHandler<Boolean, Void> handler) {
+    default void isOpen(final AsyncHandler<Boolean, Void> handler) {
         if (handler != null) handler.completed(Boolean.TRUE, null);
-        return true;
     }
 }

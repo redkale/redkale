@@ -44,8 +44,8 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
-    public <T> int delete(final AsyncHandler<Integer, T[]> handler, @RpcAttachment final T... values) {
-        return source.delete(handler, values);
+    public <T> void delete(final AsyncHandler<Integer, T[]> handler, @RpcAttachment final T... values) {
+        source.delete(handler, values);
     }
 
     @Override
@@ -54,8 +54,8 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
-    public <T> int delete(final AsyncHandler<Integer, Serializable[]> handler, final Class<T> clazz, @RpcAttachment final Serializable... ids) {
-        return source.delete(handler, clazz, ids);
+    public <T> void delete(final AsyncHandler<Integer, Serializable[]> handler, final Class<T> clazz, @RpcAttachment final Serializable... ids) {
+        source.delete(handler, clazz, ids);
     }
 
     @Override
@@ -64,8 +64,8 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
-    public <T> int delete(final AsyncHandler<Integer, FilterNode> handler, final Class<T> clazz, @RpcAttachment final FilterNode node) {
-        return source.delete(handler, clazz, node);
+    public <T> void delete(final AsyncHandler<Integer, FilterNode> handler, final Class<T> clazz, @RpcAttachment final FilterNode node) {
+        source.delete(handler, clazz, node);
     }
 
     @Override
@@ -74,8 +74,8 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
-    public <T> int delete(final AsyncHandler<Integer, FilterNode> handler, final Class<T> clazz, final Flipper flipper, @RpcAttachment FilterNode node) {
-        return source.delete(handler, clazz, flipper, node);
+    public <T> void delete(final AsyncHandler<Integer, FilterNode> handler, final Class<T> clazz, final Flipper flipper, @RpcAttachment FilterNode node) {
+        source.delete(handler, clazz, flipper, node);
     }
 
     @Override
@@ -84,8 +84,8 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
-    public <T> int update(final AsyncHandler<Integer, T[]> handler, @RpcAttachment final T... values) {
-        return source.update(handler, values);
+    public <T> void update(final AsyncHandler<Integer, T[]> handler, @RpcAttachment final T... values) {
+        source.update(handler, values);
     }
 
     @Override
@@ -94,8 +94,8 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
-    public <T> int updateColumn(final AsyncHandler<Integer, Serializable> handler, final Class<T> clazz, @RpcAttachment final Serializable id, final String column, final Serializable value) {
-        return source.updateColumn(handler, clazz, id, column, value);
+    public <T> void updateColumn(final AsyncHandler<Integer, Serializable> handler, final Class<T> clazz, @RpcAttachment final Serializable id, final String column, final Serializable value) {
+        source.updateColumn(handler, clazz, id, column, value);
     }
 
     @Override
@@ -104,8 +104,8 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
-    public <T> int updateColumn(final AsyncHandler<Integer, FilterNode> handler, final Class<T> clazz, final String column, final Serializable value, @RpcAttachment final FilterNode node) {
-        return source.updateColumn(handler, clazz, column, value, node);
+    public <T> void updateColumn(final AsyncHandler<Integer, FilterNode> handler, final Class<T> clazz, final String column, final Serializable value, @RpcAttachment final FilterNode node) {
+        source.updateColumn(handler, clazz, column, value, node);
     }
 
     @Override
@@ -114,8 +114,8 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
-    public <T> int updateColumn(final AsyncHandler<Integer, Serializable> handler, final Class<T> clazz, @RpcAttachment final Serializable id, final ColumnValue... values) {
-        return source.updateColumn(handler, clazz, id, values);
+    public <T> void updateColumn(final AsyncHandler<Integer, Serializable> handler, final Class<T> clazz, @RpcAttachment final Serializable id, final ColumnValue... values) {
+        source.updateColumn(handler, clazz, id, values);
     }
 
     @Override
@@ -124,8 +124,8 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
-    public <T> int updateColumn(final AsyncHandler<Integer, FilterNode> handler, final Class<T> clazz, @RpcAttachment final FilterNode node, final ColumnValue... values) {
-        return source.updateColumn(handler, clazz, node, values);
+    public <T> void updateColumn(final AsyncHandler<Integer, FilterNode> handler, final Class<T> clazz, @RpcAttachment final FilterNode node, final ColumnValue... values) {
+        source.updateColumn(handler, clazz, node, values);
     }
 
     @Override
@@ -134,8 +134,8 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
-    public <T> int updateColumn(final AsyncHandler<Integer, FilterNode> handler, final Class<T> clazz, @RpcAttachment final FilterNode node, final Flipper flipper, final ColumnValue... values) {
-        return source.updateColumn(handler, clazz, node, flipper, values);
+    public <T> void updateColumn(final AsyncHandler<Integer, FilterNode> handler, final Class<T> clazz, @RpcAttachment final FilterNode node, final Flipper flipper, final ColumnValue... values) {
+        source.updateColumn(handler, clazz, node, flipper, values);
     }
 
     @Override
@@ -144,8 +144,8 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
-    public <T> int updateColumn(final AsyncHandler<Integer, T> handler, @RpcAttachment final T bean, final String... columns) {
-        return source.updateColumn(handler, bean, columns);
+    public <T> void updateColumn(final AsyncHandler<Integer, T> handler, @RpcAttachment final T bean, final String... columns) {
+        source.updateColumn(handler, bean, columns);
     }
 
     @Override
@@ -154,8 +154,8 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
-    public <T> int updateColumn(final AsyncHandler<Integer, FilterNode> handler, final T bean, @RpcAttachment final FilterNode node, final String... columns) {
-        return source.updateColumn(handler, bean, node, columns);
+    public <T> void updateColumn(final AsyncHandler<Integer, FilterNode> handler, final T bean, @RpcAttachment final FilterNode node, final String... columns) {
+        source.updateColumn(handler, bean, node, columns);
     }
 
     @Override
@@ -164,8 +164,8 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
-    public <T> int updateColumn(final AsyncHandler<Integer, T> handler, @RpcAttachment final T bean, final SelectColumn selects) {
-        return source.updateColumn(handler, bean, selects);
+    public <T> void updateColumn(final AsyncHandler<Integer, T> handler, @RpcAttachment final T bean, final SelectColumn selects) {
+        source.updateColumn(handler, bean, selects);
     }
 
     @Override
@@ -174,8 +174,8 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
-    public <T> int updateColumn(final AsyncHandler<Integer, FilterNode> handler, final T bean, @RpcAttachment final FilterNode node, final SelectColumn selects) {
-        return source.updateColumn(handler, bean, node, selects);
+    public <T> void updateColumn(final AsyncHandler<Integer, FilterNode> handler, final T bean, @RpcAttachment final FilterNode node, final SelectColumn selects) {
+        source.updateColumn(handler, bean, node, selects);
     }
 
     @Override
@@ -184,8 +184,8 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
-    public Number getNumberResult(final AsyncHandler<Number, String> handler, final Class entityClass, final FilterFunc func, @RpcAttachment final String column) {
-        return source.getNumberResult(handler, entityClass, func, column);
+    public void getNumberResult(final AsyncHandler<Number, String> handler, final Class entityClass, final FilterFunc func, @RpcAttachment final String column) {
+        source.getNumberResult(handler, entityClass, func, column);
     }
 
     @Override
@@ -194,8 +194,8 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
-    public <B extends FilterBean> Number getNumberResult(final AsyncHandler<Number, B> handler, final Class entityClass, final FilterFunc func, final String column, @RpcAttachment final B bean) {
-        return source.getNumberResult(handler, entityClass, func, column, bean);
+    public <B extends FilterBean> void getNumberResult(final AsyncHandler<Number, B> handler, final Class entityClass, final FilterFunc func, final String column, @RpcAttachment final B bean) {
+        source.getNumberResult(handler, entityClass, func, column, bean);
     }
 
     @Override
@@ -204,8 +204,8 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
-    public Number getNumberResult(final AsyncHandler<Number, FilterNode> handler, final Class entityClass, final FilterFunc func, final String column, @RpcAttachment final FilterNode node) {
-        return source.getNumberResult(handler, entityClass, func, column, node);
+    public void getNumberResult(final AsyncHandler<Number, FilterNode> handler, final Class entityClass, final FilterFunc func, final String column, @RpcAttachment final FilterNode node) {
+        source.getNumberResult(handler, entityClass, func, column, node);
     }
 
     @Override
@@ -214,8 +214,8 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
-    public Number getNumberResult(final AsyncHandler<Number, String> handler, final Class entityClass, final FilterFunc func, final Number defVal, @RpcAttachment final String column) {
-        return source.getNumberResult(handler, entityClass, func, defVal, column);
+    public void getNumberResult(final AsyncHandler<Number, String> handler, final Class entityClass, final FilterFunc func, final Number defVal, @RpcAttachment final String column) {
+        source.getNumberResult(handler, entityClass, func, defVal, column);
     }
 
     @Override
@@ -224,8 +224,8 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
-    public Number getNumberResult(final AsyncHandler<Number, String> handler, final Class entityClass, final FilterFunc func, final Number defVal, @RpcAttachment final String column, final FilterBean bean) {
-        return source.getNumberResult(handler, entityClass, func, defVal, column, bean);
+    public void getNumberResult(final AsyncHandler<Number, String> handler, final Class entityClass, final FilterFunc func, final Number defVal, @RpcAttachment final String column, final FilterBean bean) {
+        source.getNumberResult(handler, entityClass, func, defVal, column, bean);
     }
 
     @Override
@@ -234,8 +234,8 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
-    public Number getNumberResult(final AsyncHandler<Number, String> handler, final Class entityClass, final FilterFunc func, final Number defVal, @RpcAttachment final String column, final FilterNode node) {
-        return source.getNumberResult(handler, entityClass, func, defVal, column, node);
+    public void getNumberResult(final AsyncHandler<Number, String> handler, final Class entityClass, final FilterFunc func, final Number defVal, @RpcAttachment final String column, final FilterNode node) {
+        source.getNumberResult(handler, entityClass, func, defVal, column, node);
     }
 
     @Override
@@ -244,8 +244,8 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
-    public <N extends Number> Map<String, N> getNumberMap(final AsyncHandler<Map<String, N>, FilterFuncColumn[]> handler, final Class entityClass, @RpcAttachment final FilterFuncColumn... columns) {
-        return source.getNumberMap(handler, entityClass, columns);
+    public <N extends Number> void getNumberMap(final AsyncHandler<Map<String, N>, FilterFuncColumn[]> handler, final Class entityClass, @RpcAttachment final FilterFuncColumn... columns) {
+        source.getNumberMap(handler, entityClass, columns);
     }
 
     @Override
@@ -254,8 +254,8 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
-    public <N extends Number, B extends FilterBean> Map<String, N> getNumberMap(final AsyncHandler<Map<String, N>, B> handler, final Class entityClass, @RpcAttachment final B bean, final FilterFuncColumn... columns) {
-        return source.getNumberMap(handler, entityClass, bean, columns);
+    public <N extends Number, B extends FilterBean> void getNumberMap(final AsyncHandler<Map<String, N>, B> handler, final Class entityClass, @RpcAttachment final B bean, final FilterFuncColumn... columns) {
+        source.getNumberMap(handler, entityClass, bean, columns);
     }
 
     @Override
@@ -264,8 +264,8 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
-    public <N extends Number> Map<String, N> getNumberMap(final AsyncHandler<Map<String, N>, FilterNode> handler, final Class entityClass, @RpcAttachment final FilterNode node, final FilterFuncColumn... columns) {
-        return source.getNumberMap(handler, entityClass, node, columns);
+    public <N extends Number> void getNumberMap(final AsyncHandler<Map<String, N>, FilterNode> handler, final Class entityClass, @RpcAttachment final FilterNode node, final FilterFuncColumn... columns) {
+        source.getNumberMap(handler, entityClass, node, columns);
     }
 
     @Override
@@ -274,8 +274,8 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
-    public <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMap(final AsyncHandler<Map<K, N>, String> handler, final Class<T> entityClass, @RpcAttachment final String keyColumn, final FilterFunc func, final String funcColumn) {
-        return source.queryColumnMap(handler, entityClass, keyColumn, func, funcColumn);
+    public <T, K extends Serializable, N extends Number> void queryColumnMap(final AsyncHandler<Map<K, N>, String> handler, final Class<T> entityClass, @RpcAttachment final String keyColumn, final FilterFunc func, final String funcColumn) {
+        source.queryColumnMap(handler, entityClass, keyColumn, func, funcColumn);
     }
 
     @Override
@@ -284,8 +284,8 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
-    public <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMap(final AsyncHandler<Map<K, N>, String> handler, final Class<T> entityClass, @RpcAttachment final String keyColumn, final FilterFunc func, final String funcColumn, final FilterBean bean) {
-        return source.queryColumnMap(handler, entityClass, keyColumn, func, funcColumn, bean);
+    public <T, K extends Serializable, N extends Number> void queryColumnMap(final AsyncHandler<Map<K, N>, String> handler, final Class<T> entityClass, @RpcAttachment final String keyColumn, final FilterFunc func, final String funcColumn, final FilterBean bean) {
+        source.queryColumnMap(handler, entityClass, keyColumn, func, funcColumn, bean);
     }
 
     @Override
@@ -294,8 +294,8 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
-    public <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMap(final AsyncHandler<Map<K, N>, String> handler, final Class<T> entityClass, @RpcAttachment final String keyColumn, final FilterFunc func, final String funcColumn, final FilterNode node) {
-        return source.queryColumnMap(handler, entityClass, keyColumn, func, funcColumn, node);
+    public <T, K extends Serializable, N extends Number> void queryColumnMap(final AsyncHandler<Map<K, N>, String> handler, final Class<T> entityClass, @RpcAttachment final String keyColumn, final FilterFunc func, final String funcColumn, final FilterNode node) {
+        source.queryColumnMap(handler, entityClass, keyColumn, func, funcColumn, node);
     }
 
     @Override
@@ -304,8 +304,8 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
-    public <T> T find(final AsyncHandler<T, Serializable> handler, final Class<T> clazz, @RpcAttachment final Serializable pk) {
-        return source.find(handler, clazz, pk);
+    public <T> void find(final AsyncHandler<T, Serializable> handler, final Class<T> clazz, @RpcAttachment final Serializable pk) {
+        source.find(handler, clazz, pk);
     }
 
     @Override
@@ -314,8 +314,8 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
-    public <T> T find(final AsyncHandler<T, Serializable> handler, final Class<T> clazz, SelectColumn selects, @RpcAttachment final Serializable pk) {
-        return source.find(handler, clazz, selects, pk);
+    public <T> void find(final AsyncHandler<T, Serializable> handler, final Class<T> clazz, SelectColumn selects, @RpcAttachment final Serializable pk) {
+        source.find(handler, clazz, selects, pk);
     }
 
     @Override
@@ -324,8 +324,8 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
-    public <T> T find(final AsyncHandler<T, Serializable> handler, final Class<T> clazz, final String column, @RpcAttachment final Serializable key) {
-        return source.find(handler, clazz, column, key);
+    public <T> void find(final AsyncHandler<T, Serializable> handler, final Class<T> clazz, final String column, @RpcAttachment final Serializable key) {
+        source.find(handler, clazz, column, key);
     }
 
     @Override
@@ -334,8 +334,8 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
-    public <T, B extends FilterBean> T find(final AsyncHandler<T, B> handler, final Class<T> clazz, @RpcAttachment final B bean) {
-        return source.find(handler, clazz, bean);
+    public <T, B extends FilterBean> void find(final AsyncHandler<T, B> handler, final Class<T> clazz, @RpcAttachment final B bean) {
+        source.find(handler, clazz, bean);
     }
 
     @Override
@@ -344,8 +344,8 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
-    public <T> T find(final AsyncHandler<T, FilterNode> handler, final Class<T> clazz, @RpcAttachment final FilterNode node) {
-        return source.find(handler, clazz, node);
+    public <T> void find(final AsyncHandler<T, FilterNode> handler, final Class<T> clazz, @RpcAttachment final FilterNode node) {
+        source.find(handler, clazz, node);
     }
 
     @Override
@@ -354,8 +354,8 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
-    public <T, B extends FilterBean> T find(final AsyncHandler<T, B> handler, final Class<T> clazz, final SelectColumn selects, @RpcAttachment final B bean) {
-        return source.find(handler, clazz, selects, bean);
+    public <T, B extends FilterBean> void find(final AsyncHandler<T, B> handler, final Class<T> clazz, final SelectColumn selects, @RpcAttachment final B bean) {
+        source.find(handler, clazz, selects, bean);
     }
 
     @Override
@@ -364,8 +364,8 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
-    public <T> T find(final AsyncHandler<T, FilterNode> handler, final Class<T> clazz, final SelectColumn selects, @RpcAttachment final FilterNode node) {
-        return source.find(handler, clazz, selects, node);
+    public <T> void find(final AsyncHandler<T, FilterNode> handler, final Class<T> clazz, final SelectColumn selects, @RpcAttachment final FilterNode node) {
+        source.find(handler, clazz, selects, node);
     }
 
     @Override
@@ -374,8 +374,8 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
-    public <T> Serializable findColumn(final AsyncHandler<Serializable, Serializable> handler, final Class<T> clazz, final String column, @RpcAttachment final Serializable pk) {
-        return source.findColumn(handler, clazz, column, pk);
+    public <T> void findColumn(final AsyncHandler<Serializable, Serializable> handler, final Class<T> clazz, final String column, @RpcAttachment final Serializable pk) {
+        source.findColumn(handler, clazz, column, pk);
     }
 
     @Override
@@ -384,8 +384,8 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
-    public <T, B extends FilterBean> Serializable findColumn(final AsyncHandler<Serializable, B> handler, final Class<T> clazz, final String column, @RpcAttachment final B bean) {
-        return source.findColumn(handler, clazz, column, bean);
+    public <T, B extends FilterBean> void findColumn(final AsyncHandler<Serializable, B> handler, final Class<T> clazz, final String column, @RpcAttachment final B bean) {
+        source.findColumn(handler, clazz, column, bean);
     }
 
     @Override
@@ -394,8 +394,8 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
-    public <T> Serializable findColumn(final AsyncHandler<Serializable, FilterNode> handler, final Class<T> clazz, final String column, @RpcAttachment final FilterNode node) {
-        return source.findColumn(handler, clazz, column, node);
+    public <T> void findColumn(final AsyncHandler<Serializable, FilterNode> handler, final Class<T> clazz, final String column, @RpcAttachment final FilterNode node) {
+        source.findColumn(handler, clazz, column, node);
     }
 
     @Override
@@ -404,8 +404,8 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
-    public <T> Serializable findColumn(final AsyncHandler<Serializable, Serializable> handler, final Class<T> clazz, final String column, final Serializable defValue, @RpcAttachment final Serializable pk) {
-        return source.findColumn(handler, clazz, column, defValue, pk);
+    public <T> void findColumn(final AsyncHandler<Serializable, Serializable> handler, final Class<T> clazz, final String column, final Serializable defValue, @RpcAttachment final Serializable pk) {
+        source.findColumn(handler, clazz, column, defValue, pk);
     }
 
     @Override
@@ -414,8 +414,8 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
-    public <T, B extends FilterBean> Serializable findColumn(final AsyncHandler<Serializable, B> handler, final Class<T> clazz, final String column, final Serializable defValue, @RpcAttachment final B bean) {
-        return source.findColumn(handler, clazz, column, defValue, bean);
+    public <T, B extends FilterBean> void findColumn(final AsyncHandler<Serializable, B> handler, final Class<T> clazz, final String column, final Serializable defValue, @RpcAttachment final B bean) {
+        source.findColumn(handler, clazz, column, defValue, bean);
     }
 
     @Override
@@ -424,8 +424,8 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
-    public <T> Serializable findColumn(final AsyncHandler<Serializable, FilterNode> handler, final Class<T> clazz, final String column, final Serializable defValue, @RpcAttachment final FilterNode node) {
-        return source.findColumn(handler, clazz, column, defValue, node);
+    public <T> void findColumn(final AsyncHandler<Serializable, FilterNode> handler, final Class<T> clazz, final String column, final Serializable defValue, @RpcAttachment final FilterNode node) {
+        source.findColumn(handler, clazz, column, defValue, node);
     }
 
     @Override
@@ -434,8 +434,8 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
-    public <T> boolean exists(final AsyncHandler<Boolean, Serializable> handler, final Class<T> clazz, @RpcAttachment final Serializable pk) {
-        return source.exists(handler, clazz, pk);
+    public <T> void exists(final AsyncHandler<Boolean, Serializable> handler, final Class<T> clazz, @RpcAttachment final Serializable pk) {
+        source.exists(handler, clazz, pk);
     }
 
     @Override
@@ -444,8 +444,8 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
-    public <T, B extends FilterBean> boolean exists(final AsyncHandler<Boolean, B> handler, final Class<T> clazz, @RpcAttachment final B bean) {
-        return source.exists(handler, clazz, bean);
+    public <T, B extends FilterBean> void exists(final AsyncHandler<Boolean, B> handler, final Class<T> clazz, @RpcAttachment final B bean) {
+        source.exists(handler, clazz, bean);
     }
 
     @Override
@@ -454,8 +454,8 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
-    public <T> boolean exists(final AsyncHandler<Boolean, FilterNode> handler, final Class<T> clazz, @RpcAttachment final FilterNode node) {
-        return source.exists(handler, clazz, node);
+    public <T> void exists(final AsyncHandler<Boolean, FilterNode> handler, final Class<T> clazz, @RpcAttachment final FilterNode node) {
+        source.exists(handler, clazz, node);
     }
 
     @Override
@@ -464,8 +464,8 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
-    public <T, V extends Serializable> HashSet<V> queryColumnSet(final AsyncHandler<HashSet<V>, String> handler, final String selectedColumn, final Class<T> clazz, @RpcAttachment final String column, final Serializable key) {
-        return source.queryColumnSet(handler, selectedColumn, clazz, column, key);
+    public <T, V extends Serializable> void queryColumnSet(final AsyncHandler<HashSet<V>, String> handler, final String selectedColumn, final Class<T> clazz, @RpcAttachment final String column, final Serializable key) {
+        source.queryColumnSet(handler, selectedColumn, clazz, column, key);
 
     }
 
@@ -475,8 +475,8 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
-    public <T, V extends Serializable, B extends FilterBean> HashSet<V> queryColumnSet(final AsyncHandler<HashSet<V>, B> handler, final String selectedColumn, final Class<T> clazz, @RpcAttachment final B bean) {
-        return source.queryColumnSet(handler, selectedColumn, clazz, bean);
+    public <T, V extends Serializable, B extends FilterBean> void queryColumnSet(final AsyncHandler<HashSet<V>, B> handler, final String selectedColumn, final Class<T> clazz, @RpcAttachment final B bean) {
+        source.queryColumnSet(handler, selectedColumn, clazz, bean);
     }
 
     @Override
@@ -485,8 +485,8 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
-    public <T, V extends Serializable> HashSet<V> queryColumnSet(final AsyncHandler<HashSet<V>, FilterNode> handler, final String selectedColumn, final Class<T> clazz, @RpcAttachment final FilterNode node) {
-        return source.queryColumnSet(handler, selectedColumn, clazz, node);
+    public <T, V extends Serializable> void queryColumnSet(final AsyncHandler<HashSet<V>, FilterNode> handler, final String selectedColumn, final Class<T> clazz, @RpcAttachment final FilterNode node) {
+        source.queryColumnSet(handler, selectedColumn, clazz, node);
     }
 
     @Override
@@ -495,8 +495,8 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
-    public <T, V extends Serializable> List<V> queryColumnList(final AsyncHandler<List<V>, Serializable> handler, final String selectedColumn, final Class<T> clazz, final String column, @RpcAttachment final Serializable key) {
-        return source.queryColumnList(handler, selectedColumn, clazz, column, key);
+    public <T, V extends Serializable> void queryColumnList(final AsyncHandler<List<V>, Serializable> handler, final String selectedColumn, final Class<T> clazz, final String column, @RpcAttachment final Serializable key) {
+        source.queryColumnList(handler, selectedColumn, clazz, column, key);
     }
 
     @Override
@@ -505,8 +505,8 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
-    public <T, V extends Serializable, B extends FilterBean> List<V> queryColumnList(final AsyncHandler<List<V>, B> handler, String selectedColumn, Class<T> clazz, @RpcAttachment final B bean) {
-        return source.queryColumnList(handler, selectedColumn, clazz, bean);
+    public <T, V extends Serializable, B extends FilterBean> void queryColumnList(final AsyncHandler<List<V>, B> handler, String selectedColumn, Class<T> clazz, @RpcAttachment final B bean) {
+        source.queryColumnList(handler, selectedColumn, clazz, bean);
     }
 
     @Override
@@ -515,8 +515,8 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
-    public <T, V extends Serializable> List<V> queryColumnList(final AsyncHandler<List<V>, FilterNode> handler, final String selectedColumn, final Class<T> clazz, @RpcAttachment final FilterNode node) {
-        return source.queryColumnList(handler, selectedColumn, clazz, node);
+    public <T, V extends Serializable> void queryColumnList(final AsyncHandler<List<V>, FilterNode> handler, final String selectedColumn, final Class<T> clazz, @RpcAttachment final FilterNode node) {
+        source.queryColumnList(handler, selectedColumn, clazz, node);
     }
 
     @Override
@@ -525,8 +525,8 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
-    public <T, V extends Serializable, B extends FilterBean> List<V> queryColumnList(final AsyncHandler<List<V>, B> handler, String selectedColumn, Class<T> clazz, Flipper flipper, @RpcAttachment final B bean) {
-        return source.queryColumnList(handler, selectedColumn, clazz, flipper, bean);
+    public <T, V extends Serializable, B extends FilterBean> void queryColumnList(final AsyncHandler<List<V>, B> handler, String selectedColumn, Class<T> clazz, Flipper flipper, @RpcAttachment final B bean) {
+        source.queryColumnList(handler, selectedColumn, clazz, flipper, bean);
 
     }
 
@@ -536,8 +536,8 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
-    public <T, V extends Serializable> List<V> queryColumnList(final AsyncHandler<List<V>, FilterNode> handler, final String selectedColumn, final Class<T> clazz, Flipper flipper, @RpcAttachment final FilterNode node) {
-        return source.queryColumnList(handler, selectedColumn, clazz, flipper, node);
+    public <T, V extends Serializable> void queryColumnList(final AsyncHandler<List<V>, FilterNode> handler, final String selectedColumn, final Class<T> clazz, Flipper flipper, @RpcAttachment final FilterNode node) {
+        source.queryColumnList(handler, selectedColumn, clazz, flipper, node);
     }
 
     @Override
@@ -546,8 +546,8 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
-    public <T, V extends Serializable, B extends FilterBean> Sheet<V> queryColumnSheet(final AsyncHandler<Sheet<V>, B> handler, String selectedColumn, Class<T> clazz, Flipper flipper, @RpcAttachment B bean) {
-        return source.queryColumnSheet(handler, selectedColumn, clazz, flipper, bean);
+    public <T, V extends Serializable, B extends FilterBean> void queryColumnSheet(final AsyncHandler<Sheet<V>, B> handler, String selectedColumn, Class<T> clazz, Flipper flipper, @RpcAttachment B bean) {
+        source.queryColumnSheet(handler, selectedColumn, clazz, flipper, bean);
     }
 
     @Override
@@ -556,8 +556,8 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
-    public <T, V extends Serializable> Sheet<V> queryColumnSheet(final AsyncHandler<Sheet<V>, FilterNode> handler, final String selectedColumn, final Class<T> clazz, final Flipper flipper, @RpcAttachment final FilterNode node) {
-        return source.queryColumnSheet(handler, selectedColumn, clazz, flipper, node);
+    public <T, V extends Serializable> void queryColumnSheet(final AsyncHandler<Sheet<V>, FilterNode> handler, final String selectedColumn, final Class<T> clazz, final Flipper flipper, @RpcAttachment final FilterNode node) {
+        source.queryColumnSheet(handler, selectedColumn, clazz, flipper, node);
     }
 
     @Override
@@ -566,8 +566,8 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
-    public <T> List<T> queryList(final AsyncHandler<List<T>, Serializable> handler, final Class<T> clazz, final String column, @RpcAttachment final Serializable key) {
-        return source.queryList(handler, clazz, column, key);
+    public <T> void queryList(final AsyncHandler<List<T>, Serializable> handler, final Class<T> clazz, final String column, @RpcAttachment final Serializable key) {
+        source.queryList(handler, clazz, column, key);
     }
 
     @Override
@@ -576,8 +576,8 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
-    public <T, B extends FilterBean> List<T> queryList(final AsyncHandler<List<T>, B> handler, final Class<T> clazz, @RpcAttachment final B bean) {
-        return source.queryList(handler, clazz, bean);
+    public <T, B extends FilterBean> void queryList(final AsyncHandler<List<T>, B> handler, final Class<T> clazz, @RpcAttachment final B bean) {
+        source.queryList(handler, clazz, bean);
     }
 
     @Override
@@ -586,8 +586,8 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
-    public <T> List<T> queryList(final AsyncHandler<List<T>, FilterNode> handler, final Class<T> clazz, @RpcAttachment final FilterNode node) {
-        return source.queryList(handler, clazz, node);
+    public <T> void queryList(final AsyncHandler<List<T>, FilterNode> handler, final Class<T> clazz, @RpcAttachment final FilterNode node) {
+        source.queryList(handler, clazz, node);
     }
 
     @Override
@@ -596,8 +596,8 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
-    public <T, B extends FilterBean> List<T> queryList(final AsyncHandler<List<T>, B> handler, final Class<T> clazz, final SelectColumn selects, @RpcAttachment final B bean) {
-        return source.queryList(handler, clazz, selects, bean);
+    public <T, B extends FilterBean> void queryList(final AsyncHandler<List<T>, B> handler, final Class<T> clazz, final SelectColumn selects, @RpcAttachment final B bean) {
+        source.queryList(handler, clazz, selects, bean);
     }
 
     @Override
@@ -606,8 +606,8 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
-    public <T> List<T> queryList(final AsyncHandler<List<T>, FilterNode> handler, final Class<T> clazz, final SelectColumn selects, @RpcAttachment final FilterNode node) {
-        return source.queryList(handler, clazz, selects, node);
+    public <T> void queryList(final AsyncHandler<List<T>, FilterNode> handler, final Class<T> clazz, final SelectColumn selects, @RpcAttachment final FilterNode node) {
+        source.queryList(handler, clazz, selects, node);
     }
 
     @Override
@@ -616,8 +616,8 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
-    public <T> List<T> queryList(final AsyncHandler<List<T>, Serializable> handler, final Class<T> clazz, final Flipper flipper, final String column, @RpcAttachment final Serializable key) {
-        return source.queryList(handler, clazz, flipper, column, key);
+    public <T> void queryList(final AsyncHandler<List<T>, Serializable> handler, final Class<T> clazz, final Flipper flipper, final String column, @RpcAttachment final Serializable key) {
+        source.queryList(handler, clazz, flipper, column, key);
     }
 
     @Override
@@ -626,8 +626,8 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
-    public <T, B extends FilterBean> List<T> queryList(final AsyncHandler<List<T>, B> handler, final Class<T> clazz, final Flipper flipper, @RpcAttachment final B bean) {
-        return source.queryList(handler, clazz, flipper, bean);
+    public <T, B extends FilterBean> void queryList(final AsyncHandler<List<T>, B> handler, final Class<T> clazz, final Flipper flipper, @RpcAttachment final B bean) {
+        source.queryList(handler, clazz, flipper, bean);
     }
 
     @Override
@@ -636,8 +636,8 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
-    public <T> List<T> queryList(final AsyncHandler<List<T>, FilterNode> handler, final Class<T> clazz, final Flipper flipper, @RpcAttachment final FilterNode node) {
-        return source.queryList(handler, clazz, flipper, node);
+    public <T> void queryList(final AsyncHandler<List<T>, FilterNode> handler, final Class<T> clazz, final Flipper flipper, @RpcAttachment final FilterNode node) {
+        source.queryList(handler, clazz, flipper, node);
     }
 
     @Override
@@ -646,8 +646,8 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
-    public <T, B extends FilterBean> List<T> queryList(final AsyncHandler<List<T>, B> handler, final Class<T> clazz, final SelectColumn selects, final Flipper flipper, @RpcAttachment final B bean) {
-        return source.queryList(handler, clazz, selects, flipper, bean);
+    public <T, B extends FilterBean> void queryList(final AsyncHandler<List<T>, B> handler, final Class<T> clazz, final SelectColumn selects, final Flipper flipper, @RpcAttachment final B bean) {
+        source.queryList(handler, clazz, selects, flipper, bean);
 
     }
 
@@ -657,8 +657,8 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
-    public <T> List<T> queryList(final AsyncHandler<List<T>, FilterNode> handler, final Class<T> clazz, final SelectColumn selects, final Flipper flipper, @RpcAttachment final FilterNode node) {
-        return source.queryList(handler, clazz, selects, flipper, node);
+    public <T> void queryList(final AsyncHandler<List<T>, FilterNode> handler, final Class<T> clazz, final SelectColumn selects, final Flipper flipper, @RpcAttachment final FilterNode node) {
+        source.queryList(handler, clazz, selects, flipper, node);
     }
 
     @Override
@@ -667,8 +667,8 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
-    public <T, B extends FilterBean> Sheet<T> querySheet(final AsyncHandler<Sheet<T>, B> handler, final Class<T> clazz, final Flipper flipper, @RpcAttachment final B bean) {
-        return source.querySheet(handler, clazz, flipper, bean);
+    public <T, B extends FilterBean> void querySheet(final AsyncHandler<Sheet<T>, B> handler, final Class<T> clazz, final Flipper flipper, @RpcAttachment final B bean) {
+        source.querySheet(handler, clazz, flipper, bean);
     }
 
     @Override
@@ -677,8 +677,8 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
-    public <T> Sheet<T> querySheet(final AsyncHandler<Sheet<T>, FilterNode> handler, final Class<T> clazz, final Flipper flipper, @RpcAttachment final FilterNode node) {
-        return source.querySheet(handler, clazz, flipper, node);
+    public <T> void querySheet(final AsyncHandler<Sheet<T>, FilterNode> handler, final Class<T> clazz, final Flipper flipper, @RpcAttachment final FilterNode node) {
+        source.querySheet(handler, clazz, flipper, node);
     }
 
     @Override
@@ -687,8 +687,8 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
-    public <T, B extends FilterBean> Sheet<T> querySheet(final AsyncHandler<Sheet<T>, B> handler, final Class<T> clazz, final SelectColumn selects, final Flipper flipper, @RpcAttachment final B bean) {
-        return source.querySheet(handler, clazz, selects, flipper, bean);
+    public <T, B extends FilterBean> void querySheet(final AsyncHandler<Sheet<T>, B> handler, final Class<T> clazz, final SelectColumn selects, final Flipper flipper, @RpcAttachment final B bean) {
+        source.querySheet(handler, clazz, selects, flipper, bean);
     }
 
     @Override
@@ -697,8 +697,8 @@ public class DataSourceService implements DataSource, Service, AutoCloseable {
     }
 
     @Override
-    public <T> Sheet<T> querySheet(final AsyncHandler<Sheet<T>, FilterNode> handler, final Class<T> clazz, final SelectColumn selects, final Flipper flipper, @RpcAttachment final FilterNode node) {
-        return source.querySheet(handler, clazz, selects, flipper, node);
+    public <T> void querySheet(final AsyncHandler<Sheet<T>, FilterNode> handler, final Class<T> clazz, final SelectColumn selects, final Flipper flipper, @RpcAttachment final FilterNode node) {
+        source.querySheet(handler, clazz, selects, flipper, node);
     }
 
     @Override

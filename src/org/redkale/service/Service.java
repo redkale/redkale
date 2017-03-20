@@ -20,6 +20,19 @@ import org.redkale.util.*;
  * </pre></blockquote>
  *
  * <p>
+ * <blockquote><pre>
+ * 异步方法：
+ * Service编写异步方法：
+ *    1、异步方法有且仅有一个类型为AsyncHandler的参数，方法返回类型必须是void。
+ *    2、必须存在对应的同步方法，同步的方法名与异步方法必须相同，方法的参数列表必须与异步方法除AsyncHandler参数的参数列表相同。
+ * 例如:
+ *      public int insertRecord(String name, Record record);
+ *
+ *      public void insertRecord(AsyncHandler&#60;Integer, Record&#62; handler, String name, &#64;RpcAttachment Record record);
+ *
+ * </pre></blockquote>
+ *
+ * <p>
  * 详情见: https://redkale.org
  *
  * @author zhangjx

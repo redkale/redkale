@@ -323,10 +323,9 @@ public final class DataJdbcSource implements DataSource, DataCacheListener, Func
     }
 
     @Override
-    public <T> int delete(final AsyncHandler<Integer, T[]> handler, final T... values) {
+    public <T> void delete(final AsyncHandler<Integer, T[]> handler, final T... values) {
         int rs = delete(values);
         if (handler != null) handler.completed(rs, values);
-        return rs;
     }
 
     private <T> int delete(final Connection conn, final EntityInfo<T> info, T... values) {
@@ -355,10 +354,9 @@ public final class DataJdbcSource implements DataSource, DataCacheListener, Func
     }
 
     @Override
-    public <T> int delete(final AsyncHandler<Integer, Serializable[]> handler, final Class<T> clazz, final Serializable... ids) {
+    public <T> void delete(final AsyncHandler<Integer, Serializable[]> handler, final Class<T> clazz, final Serializable... ids) {
         int rs = delete(clazz, ids);
         if (handler != null) handler.completed(rs, ids);
-        return rs;
     }
 
     private <T> int delete(final Connection conn, final EntityInfo<T> info, Serializable... keys) {
@@ -410,10 +408,9 @@ public final class DataJdbcSource implements DataSource, DataCacheListener, Func
     }
 
     @Override
-    public <T> int delete(final AsyncHandler<Integer, FilterNode> handler, final Class<T> clazz, final FilterNode node) {
+    public <T> void delete(final AsyncHandler<Integer, FilterNode> handler, final Class<T> clazz, final FilterNode node) {
         int rs = delete(clazz, node);
         if (handler != null) handler.completed(rs, node);
-        return rs;
     }
 
     @Override
@@ -431,10 +428,9 @@ public final class DataJdbcSource implements DataSource, DataCacheListener, Func
     }
 
     @Override
-    public <T> int delete(final AsyncHandler<Integer, FilterNode> handler, final Class<T> clazz, final Flipper flipper, FilterNode node) {
+    public <T> void delete(final AsyncHandler<Integer, FilterNode> handler, final Class<T> clazz, final Flipper flipper, FilterNode node) {
         int rs = delete(clazz, flipper, node);
         if (handler != null) handler.completed(rs, node);
-        return rs;
     }
 
     private <T> int delete(final Connection conn, final EntityInfo<T> info, final Flipper flipper, final FilterNode node) {
@@ -524,10 +520,9 @@ public final class DataJdbcSource implements DataSource, DataCacheListener, Func
     }
 
     @Override
-    public <T> int update(final AsyncHandler<Integer, T[]> handler, final T... values) {
+    public <T> void update(final AsyncHandler<Integer, T[]> handler, final T... values) {
         int rs = update(values);
         if (handler != null) handler.completed(rs, values);
-        return rs;
     }
 
     private <T> int update(final Connection conn, final EntityInfo<T> info, T... values) {
@@ -622,10 +617,9 @@ public final class DataJdbcSource implements DataSource, DataCacheListener, Func
     }
 
     @Override
-    public <T> int updateColumn(final AsyncHandler<Integer, Serializable> handler, final Class<T> clazz, final Serializable id, final String column, final Serializable value) {
+    public <T> void updateColumn(final AsyncHandler<Integer, Serializable> handler, final Class<T> clazz, final Serializable id, final String column, final Serializable value) {
         int rs = updateColumn(clazz, id, column, value);
         if (handler != null) handler.completed(rs, id);
-        return rs;
     }
 
     private <T> int updateColumn(Connection conn, final EntityInfo<T> info, Serializable id, String column, final Serializable value) {
@@ -691,10 +685,9 @@ public final class DataJdbcSource implements DataSource, DataCacheListener, Func
     }
 
     @Override
-    public <T> int updateColumn(final AsyncHandler<Integer, FilterNode> handler, final Class<T> clazz, final String column, final Serializable value, final FilterNode node) {
+    public <T> void updateColumn(final AsyncHandler<Integer, FilterNode> handler, final Class<T> clazz, final String column, final Serializable value, final FilterNode node) {
         int rs = updateColumn(clazz, column, value, node);
         if (handler != null) handler.completed(rs, node);
-        return rs;
     }
 
     private <T> int updateColumn(Connection conn, final EntityInfo<T> info, String column, final Serializable value, FilterNode node) {
@@ -775,10 +768,9 @@ public final class DataJdbcSource implements DataSource, DataCacheListener, Func
     }
 
     @Override
-    public <T> int updateColumn(final AsyncHandler<Integer, Serializable> handler, final Class<T> clazz, final Serializable id, final ColumnValue... values) {
+    public <T> void updateColumn(final AsyncHandler<Integer, Serializable> handler, final Class<T> clazz, final Serializable id, final ColumnValue... values) {
         int rs = updateColumn(clazz, id, values);
         if (handler != null) handler.completed(rs, id);
-        return rs;
     }
 
     private <T> int updateColumn(final Connection conn, final EntityInfo<T> info, final Serializable id, final ColumnValue... values) {
@@ -863,10 +855,9 @@ public final class DataJdbcSource implements DataSource, DataCacheListener, Func
     }
 
     @Override
-    public <T> int updateColumn(final AsyncHandler<Integer, FilterNode> handler, final Class<T> clazz, final FilterNode node, final ColumnValue... values) {
+    public <T> void updateColumn(final AsyncHandler<Integer, FilterNode> handler, final Class<T> clazz, final FilterNode node, final ColumnValue... values) {
         int rs = updateColumn(clazz, node, values);
         if (handler != null) handler.completed(rs, node);
-        return rs;
     }
 
     /**
@@ -895,10 +886,9 @@ public final class DataJdbcSource implements DataSource, DataCacheListener, Func
     }
 
     @Override
-    public <T> int updateColumn(final AsyncHandler<Integer, FilterNode> handler, final Class<T> clazz, final FilterNode node, final Flipper flipper, final ColumnValue... values) {
+    public <T> void updateColumn(final AsyncHandler<Integer, FilterNode> handler, final Class<T> clazz, final FilterNode node, final Flipper flipper, final ColumnValue... values) {
         int rs = updateColumn(clazz, node, flipper, values);
         if (handler != null) handler.completed(rs, node);
-        return rs;
     }
 
     private <T> int updateColumn(final Connection conn, final EntityInfo<T> info, final FilterNode node, final Flipper flipper, final ColumnValue... values) {
@@ -978,10 +968,9 @@ public final class DataJdbcSource implements DataSource, DataCacheListener, Func
     }
 
     @Override
-    public <T> int updateColumn(final AsyncHandler<Integer, T> handler, final T bean, final String... columns) {
+    public <T> void updateColumn(final AsyncHandler<Integer, T> handler, final T bean, final String... columns) {
         int rs = updateColumn(bean, columns);
         if (handler != null) handler.completed(rs, bean);
-        return rs;
     }
 
     @Override
@@ -999,10 +988,9 @@ public final class DataJdbcSource implements DataSource, DataCacheListener, Func
     }
 
     @Override
-    public <T> int updateColumn(final AsyncHandler<Integer, T> handler, final T bean, final SelectColumn selects) {
+    public <T> void updateColumn(final AsyncHandler<Integer, T> handler, final T bean, final SelectColumn selects) {
         int rs = updateColumn(bean, selects);
         if (handler != null) handler.completed(rs, bean);
-        return rs;
     }
 
     private <T> int updateColumns(final Connection conn, final EntityInfo<T> info, final T bean, final SelectColumn selects) {
@@ -1068,10 +1056,9 @@ public final class DataJdbcSource implements DataSource, DataCacheListener, Func
     }
 
     @Override
-    public <T> int updateColumn(final AsyncHandler<Integer, FilterNode> handler, final T bean, final FilterNode node, final String... columns) {
+    public <T> void updateColumn(final AsyncHandler<Integer, FilterNode> handler, final T bean, final FilterNode node, final String... columns) {
         int rs = updateColumn(bean, node, columns);
         if (handler != null) handler.completed(rs, node);
-        return rs;
     }
 
     @Override
@@ -1089,10 +1076,9 @@ public final class DataJdbcSource implements DataSource, DataCacheListener, Func
     }
 
     @Override
-    public <T> int updateColumn(final AsyncHandler<Integer, FilterNode> handler, final T bean, final FilterNode node, final SelectColumn selects) {
+    public <T> void updateColumn(final AsyncHandler<Integer, FilterNode> handler, final T bean, final FilterNode node, final SelectColumn selects) {
         int rs = updateColumn(bean, node, selects);
         if (handler != null) handler.completed(rs, node);
-        return rs;
     }
 
     private <T> int updateColumns(final Connection conn, final EntityInfo<T> info, final T bean, final FilterNode node, final SelectColumn selects) {
@@ -1198,10 +1184,9 @@ public final class DataJdbcSource implements DataSource, DataCacheListener, Func
     }
 
     @Override
-    public Number getNumberResult(final AsyncHandler<Number, String> handler, final Class entityClass, final FilterFunc func, final String column) {
+    public void getNumberResult(final AsyncHandler<Number, String> handler, final Class entityClass, final FilterFunc func, final String column) {
         Number rs = getNumberResult(entityClass, func, column);
         if (handler != null) handler.completed(rs, column);
-        return rs;
     }
 
     @Override
@@ -1210,10 +1195,9 @@ public final class DataJdbcSource implements DataSource, DataCacheListener, Func
     }
 
     @Override
-    public <B extends FilterBean> Number getNumberResult(final AsyncHandler<Number, B> handler, final Class entityClass, final FilterFunc func, final String column, final B bean) {
+    public <B extends FilterBean> void getNumberResult(final AsyncHandler<Number, B> handler, final Class entityClass, final FilterFunc func, final String column, final B bean) {
         Number rs = getNumberResult(entityClass, func, column, bean);
         if (handler != null) handler.completed(rs, bean);
-        return rs;
     }
 
     @Override
@@ -1222,10 +1206,9 @@ public final class DataJdbcSource implements DataSource, DataCacheListener, Func
     }
 
     @Override
-    public Number getNumberResult(final AsyncHandler<Number, FilterNode> handler, final Class entityClass, final FilterFunc func, final String column, final FilterNode node) {
+    public void getNumberResult(final AsyncHandler<Number, FilterNode> handler, final Class entityClass, final FilterFunc func, final String column, final FilterNode node) {
         Number rs = getNumberResult(entityClass, func, column, node);
         if (handler != null) handler.completed(rs, node);
-        return rs;
     }
 
     @Override
@@ -1234,10 +1217,9 @@ public final class DataJdbcSource implements DataSource, DataCacheListener, Func
     }
 
     @Override
-    public Number getNumberResult(final AsyncHandler<Number, String> handler, final Class entityClass, final FilterFunc func, final Number defVal, final String column) {
+    public void getNumberResult(final AsyncHandler<Number, String> handler, final Class entityClass, final FilterFunc func, final Number defVal, final String column) {
         Number rs = getNumberResult(entityClass, func, defVal, column);
         if (handler != null) handler.completed(rs, column);
-        return rs;
     }
 
     @Override
@@ -1246,8 +1228,8 @@ public final class DataJdbcSource implements DataSource, DataCacheListener, Func
     }
 
     @Override
-    public Number getNumberResult(final AsyncHandler<Number, String> handler, final Class entityClass, final FilterFunc func, final Number defVal, final String column, final FilterBean bean) {
-        return getNumberResult(handler, entityClass, func, defVal, column, FilterNodeBean.createFilterNode(bean));
+    public void getNumberResult(final AsyncHandler<Number, String> handler, final Class entityClass, final FilterFunc func, final Number defVal, final String column, final FilterBean bean) {
+        getNumberResult(handler, entityClass, func, defVal, column, FilterNodeBean.createFilterNode(bean));
     }
 
     @Override
@@ -1256,10 +1238,9 @@ public final class DataJdbcSource implements DataSource, DataCacheListener, Func
     }
 
     @Override
-    public <N extends Number> Map<String, N> getNumberMap(final AsyncHandler<Map<String, N>, FilterFuncColumn[]> handler, final Class entityClass, final FilterFuncColumn... columns) {
+    public <N extends Number> void getNumberMap(final AsyncHandler<Map<String, N>, FilterFuncColumn[]> handler, final Class entityClass, final FilterFuncColumn... columns) {
         Map<String, N> rs = getNumberMap(entityClass, columns);
         if (handler != null) handler.completed(rs, columns);
-        return rs;
     }
 
     @Override
@@ -1268,10 +1249,9 @@ public final class DataJdbcSource implements DataSource, DataCacheListener, Func
     }
 
     @Override
-    public <N extends Number, B extends FilterBean> Map<String, N> getNumberMap(final AsyncHandler<Map<String, N>, B> handler, final Class entityClass, final B bean, final FilterFuncColumn... columns) {
+    public <N extends Number, B extends FilterBean> void getNumberMap(final AsyncHandler<Map<String, N>, B> handler, final Class entityClass, final B bean, final FilterFuncColumn... columns) {
         Map<String, N> rs = getNumberMap(entityClass, bean, columns);
         if (handler != null) handler.completed(rs, bean);
-        return rs;
     }
 
     @Override
@@ -1339,10 +1319,9 @@ public final class DataJdbcSource implements DataSource, DataCacheListener, Func
     }
 
     @Override
-    public <N extends Number> Map<String, N> getNumberMap(final AsyncHandler<Map<String, N>, FilterNode> handler, final Class entityClass, final FilterNode node, final FilterFuncColumn... columns) {
+    public <N extends Number> void getNumberMap(final AsyncHandler<Map<String, N>, FilterNode> handler, final Class entityClass, final FilterNode node, final FilterFuncColumn... columns) {
         Map<String, N> rs = getNumberMap(entityClass, node, columns);
         if (handler != null) handler.completed(rs, node);
-        return rs;
     }
 
     @Override
@@ -1382,10 +1361,9 @@ public final class DataJdbcSource implements DataSource, DataCacheListener, Func
     }
 
     @Override
-    public Number getNumberResult(final AsyncHandler<Number, String> handler, final Class entityClass, final FilterFunc func, final Number defVal, final String column, final FilterNode node) {
+    public void getNumberResult(final AsyncHandler<Number, String> handler, final Class entityClass, final FilterFunc func, final Number defVal, final String column, final FilterNode node) {
         Number rs = getNumberResult(entityClass, func, defVal, column, node);
         if (handler != null) handler.completed(rs, column);
-        return rs;
     }
 
     //-----------------------queryColumnMap-----------------------------
@@ -1395,10 +1373,9 @@ public final class DataJdbcSource implements DataSource, DataCacheListener, Func
     }
 
     @Override
-    public <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMap(final AsyncHandler<Map<K, N>, String> handler, final Class<T> entityClass, final String keyColumn, final FilterFunc func, final String funcColumn) {
+    public <T, K extends Serializable, N extends Number> void queryColumnMap(final AsyncHandler<Map<K, N>, String> handler, final Class<T> entityClass, final String keyColumn, final FilterFunc func, final String funcColumn) {
         Map<K, N> rs = queryColumnMap(entityClass, keyColumn, func, funcColumn);
         if (handler != null) handler.completed(rs, keyColumn);
-        return rs;
     }
 
     @Override
@@ -1407,8 +1384,8 @@ public final class DataJdbcSource implements DataSource, DataCacheListener, Func
     }
 
     @Override
-    public <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMap(final AsyncHandler<Map<K, N>, String> handler, final Class<T> entityClass, final String keyColumn, final FilterFunc func, final String funcColumn, final FilterBean bean) {
-        return queryColumnMap(handler, entityClass, keyColumn, func, funcColumn, FilterNodeBean.createFilterNode(bean));
+    public <T, K extends Serializable, N extends Number> void queryColumnMap(final AsyncHandler<Map<K, N>, String> handler, final Class<T> entityClass, final String keyColumn, final FilterFunc func, final String funcColumn, final FilterBean bean) {
+        queryColumnMap(handler, entityClass, keyColumn, func, funcColumn, FilterNodeBean.createFilterNode(bean));
     }
 
     @Override
@@ -1450,10 +1427,9 @@ public final class DataJdbcSource implements DataSource, DataCacheListener, Func
     }
 
     @Override
-    public <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMap(final AsyncHandler<Map<K, N>, String> handler, final Class<T> entityClass, final String keyColumn, final FilterFunc func, final String funcColumn, final FilterNode node) {
+    public <T, K extends Serializable, N extends Number> void queryColumnMap(final AsyncHandler<Map<K, N>, String> handler, final Class<T> entityClass, final String keyColumn, final FilterFunc func, final String funcColumn, final FilterNode node) {
         Map<K, N> rs = queryColumnMap(entityClass, keyColumn, func, funcColumn, node);
         if (handler != null) handler.completed(rs, keyColumn);
-        return rs;
     }
 
     //-----------------------find----------------------------
@@ -1472,10 +1448,9 @@ public final class DataJdbcSource implements DataSource, DataCacheListener, Func
     }
 
     @Override
-    public <T> T find(final AsyncHandler<T, Serializable> handler, final Class<T> clazz, final Serializable pk) {
+    public <T> void find(final AsyncHandler<T, Serializable> handler, final Class<T> clazz, final Serializable pk) {
         T rs = find(clazz, pk);
         if (handler != null) handler.completed(rs, pk);
-        return rs;
     }
 
     @Override
@@ -1511,10 +1486,9 @@ public final class DataJdbcSource implements DataSource, DataCacheListener, Func
     }
 
     @Override
-    public <T> T find(final AsyncHandler<T, Serializable> handler, final Class<T> clazz, SelectColumn selects, final Serializable pk) {
+    public <T> void find(final AsyncHandler<T, Serializable> handler, final Class<T> clazz, SelectColumn selects, final Serializable pk) {
         T rs = find(clazz, selects, pk);
         if (handler != null) handler.completed(rs, pk);
-        return rs;
     }
 
     @Override
@@ -1523,10 +1497,9 @@ public final class DataJdbcSource implements DataSource, DataCacheListener, Func
     }
 
     @Override
-    public <T> T find(final AsyncHandler<T, Serializable> handler, final Class<T> clazz, final String column, final Serializable key) {
+    public <T> void find(final AsyncHandler<T, Serializable> handler, final Class<T> clazz, final String column, final Serializable key) {
         T rs = find(clazz, column, key);
         if (handler != null) handler.completed(rs, key);
-        return rs;
     }
 
     @Override
@@ -1535,10 +1508,9 @@ public final class DataJdbcSource implements DataSource, DataCacheListener, Func
     }
 
     @Override
-    public <T, B extends FilterBean> T find(final AsyncHandler<T, B> handler, final Class<T> clazz, final B bean) {
+    public <T, B extends FilterBean> void find(final AsyncHandler<T, B> handler, final Class<T> clazz, final B bean) {
         T rs = find(clazz, bean);
         if (handler != null) handler.completed(rs, bean);
-        return rs;
     }
 
     @Override
@@ -1547,10 +1519,9 @@ public final class DataJdbcSource implements DataSource, DataCacheListener, Func
     }
 
     @Override
-    public <T> T find(final AsyncHandler<T, FilterNode> handler, final Class<T> clazz, final FilterNode node) {
+    public <T> void find(final AsyncHandler<T, FilterNode> handler, final Class<T> clazz, final FilterNode node) {
         T rs = find(clazz, node);
         if (handler != null) handler.completed(rs, node);
-        return rs;
     }
 
     @Override
@@ -1559,10 +1530,9 @@ public final class DataJdbcSource implements DataSource, DataCacheListener, Func
     }
 
     @Override
-    public <T, B extends FilterBean> T find(final AsyncHandler<T, B> handler, final Class<T> clazz, final SelectColumn selects, final B bean) {
+    public <T, B extends FilterBean> void find(final AsyncHandler<T, B> handler, final Class<T> clazz, final SelectColumn selects, final B bean) {
         T rs = find(clazz, selects, bean);
         if (handler != null) handler.completed(rs, bean);
-        return rs;
     }
 
     @Override
@@ -1598,10 +1568,9 @@ public final class DataJdbcSource implements DataSource, DataCacheListener, Func
     }
 
     @Override
-    public <T> T find(final AsyncHandler<T, FilterNode> handler, final Class<T> clazz, final SelectColumn selects, final FilterNode node) {
+    public <T> void find(final AsyncHandler<T, FilterNode> handler, final Class<T> clazz, final SelectColumn selects, final FilterNode node) {
         T rs = find(clazz, selects, node);
         if (handler != null) handler.completed(rs, node);
-        return rs;
     }
 
     @Override
@@ -1610,10 +1579,9 @@ public final class DataJdbcSource implements DataSource, DataCacheListener, Func
     }
 
     @Override
-    public <T> Serializable findColumn(final AsyncHandler<Serializable, Serializable> handler, final Class<T> clazz, final String column, final Serializable pk) {
+    public <T> void findColumn(final AsyncHandler<Serializable, Serializable> handler, final Class<T> clazz, final String column, final Serializable pk) {
         Serializable rs = findColumn(clazz, column, pk);
         if (handler != null) handler.completed(rs, pk);
-        return rs;
     }
 
     @Override
@@ -1622,10 +1590,9 @@ public final class DataJdbcSource implements DataSource, DataCacheListener, Func
     }
 
     @Override
-    public <T, B extends FilterBean> Serializable findColumn(final AsyncHandler<Serializable, B> handler, final Class<T> clazz, final String column, final B bean) {
+    public <T, B extends FilterBean> void findColumn(final AsyncHandler<Serializable, B> handler, final Class<T> clazz, final String column, final B bean) {
         Serializable rs = findColumn(clazz, column, bean);
         if (handler != null) handler.completed(rs, bean);
-        return rs;
     }
 
     @Override
@@ -1634,10 +1601,9 @@ public final class DataJdbcSource implements DataSource, DataCacheListener, Func
     }
 
     @Override
-    public <T> Serializable findColumn(final AsyncHandler<Serializable, FilterNode> handler, final Class<T> clazz, final String column, final FilterNode node) {
+    public <T> void findColumn(final AsyncHandler<Serializable, FilterNode> handler, final Class<T> clazz, final String column, final FilterNode node) {
         Serializable rs = findColumn(clazz, column, node);
         if (handler != null) handler.completed(rs, node);
-        return rs;
     }
 
     @Override
@@ -1681,10 +1647,9 @@ public final class DataJdbcSource implements DataSource, DataCacheListener, Func
     }
 
     @Override
-    public <T> Serializable findColumn(final AsyncHandler<Serializable, Serializable> handler, final Class<T> clazz, final String column, final Serializable defValue, final Serializable pk) {
+    public <T> void findColumn(final AsyncHandler<Serializable, Serializable> handler, final Class<T> clazz, final String column, final Serializable defValue, final Serializable pk) {
         Serializable rs = findColumn(clazz, column, defValue, pk);
         if (handler != null) handler.completed(rs, pk);
-        return rs;
     }
 
     @Override
@@ -1693,10 +1658,9 @@ public final class DataJdbcSource implements DataSource, DataCacheListener, Func
     }
 
     @Override
-    public <T, B extends FilterBean> Serializable findColumn(final AsyncHandler<Serializable, B> handler, final Class<T> clazz, final String column, final Serializable defValue, final B bean) {
+    public <T, B extends FilterBean> void findColumn(final AsyncHandler<Serializable, B> handler, final Class<T> clazz, final String column, final Serializable defValue, final B bean) {
         Serializable rs = findColumn(clazz, column, defValue, bean);
         if (handler != null) handler.completed(rs, bean);
-        return rs;
     }
 
     @Override
@@ -1740,10 +1704,9 @@ public final class DataJdbcSource implements DataSource, DataCacheListener, Func
     }
 
     @Override
-    public <T> Serializable findColumn(final AsyncHandler<Serializable, FilterNode> handler, final Class<T> clazz, final String column, final Serializable defValue, final FilterNode node) {
+    public <T> void findColumn(final AsyncHandler<Serializable, FilterNode> handler, final Class<T> clazz, final String column, final Serializable defValue, final FilterNode node) {
         Serializable rs = findColumn(clazz, column, defValue, node);
         if (handler != null) handler.completed(rs, node);
-        return rs;
     }
 
     @Override
@@ -1781,10 +1744,9 @@ public final class DataJdbcSource implements DataSource, DataCacheListener, Func
     }
 
     @Override
-    public <T> boolean exists(final AsyncHandler<Boolean, Serializable> handler, final Class<T> clazz, final Serializable pk) {
+    public <T> void exists(final AsyncHandler<Boolean, Serializable> handler, final Class<T> clazz, final Serializable pk) {
         boolean rs = exists(clazz, pk);
         if (handler != null) handler.completed(rs, pk);
-        return rs;
     }
 
     @Override
@@ -1793,10 +1755,9 @@ public final class DataJdbcSource implements DataSource, DataCacheListener, Func
     }
 
     @Override
-    public <T, B extends FilterBean> boolean exists(final AsyncHandler<Boolean, B> handler, final Class<T> clazz, final B bean) {
+    public <T, B extends FilterBean> void exists(final AsyncHandler<Boolean, B> handler, final Class<T> clazz, final B bean) {
         boolean rs = exists(clazz, bean);
         if (handler != null) handler.completed(rs, bean);
-        return rs;
     }
 
     @Override
@@ -1834,10 +1795,9 @@ public final class DataJdbcSource implements DataSource, DataCacheListener, Func
     }
 
     @Override
-    public <T> boolean exists(final AsyncHandler<Boolean, FilterNode> handler, final Class<T> clazz, final FilterNode node) {
+    public <T> void exists(final AsyncHandler<Boolean, FilterNode> handler, final Class<T> clazz, final FilterNode node) {
         boolean rs = exists(clazz, node);
         if (handler != null) handler.completed(rs, node);
-        return rs;
     }
 
     //-----------------------list set----------------------------
@@ -1847,10 +1807,9 @@ public final class DataJdbcSource implements DataSource, DataCacheListener, Func
     }
 
     @Override
-    public <T, V extends Serializable> HashSet<V> queryColumnSet(final AsyncHandler<HashSet<V>, String> handler, final String selectedColumn, final Class<T> clazz, final String column, final Serializable key) {
+    public <T, V extends Serializable> void queryColumnSet(final AsyncHandler<HashSet<V>, String> handler, final String selectedColumn, final Class<T> clazz, final String column, final Serializable key) {
         HashSet<V> rs = queryColumnSet(selectedColumn, clazz, column, key);
         if (handler != null) handler.completed(rs, column);
-        return rs;
     }
 
     @Override
@@ -1859,10 +1818,9 @@ public final class DataJdbcSource implements DataSource, DataCacheListener, Func
     }
 
     @Override
-    public <T, V extends Serializable, B extends FilterBean> HashSet<V> queryColumnSet(final AsyncHandler<HashSet<V>, B> handler, final String selectedColumn, final Class<T> clazz, final B bean) {
+    public <T, V extends Serializable, B extends FilterBean> void queryColumnSet(final AsyncHandler<HashSet<V>, B> handler, final String selectedColumn, final Class<T> clazz, final B bean) {
         HashSet<V> rs = queryColumnSet(selectedColumn, clazz, bean);
         if (handler != null) handler.completed(rs, bean);
-        return rs;
     }
 
     @Override
@@ -1871,10 +1829,9 @@ public final class DataJdbcSource implements DataSource, DataCacheListener, Func
     }
 
     @Override
-    public <T, V extends Serializable> HashSet<V> queryColumnSet(final AsyncHandler<HashSet<V>, FilterNode> handler, final String selectedColumn, final Class<T> clazz, final FilterNode node) {
+    public <T, V extends Serializable> void queryColumnSet(final AsyncHandler<HashSet<V>, FilterNode> handler, final String selectedColumn, final Class<T> clazz, final FilterNode node) {
         HashSet<V> rs = queryColumnSet(selectedColumn, clazz, node);
         if (handler != null) handler.completed(rs, node);
-        return rs;
     }
 
     @Override
@@ -1883,10 +1840,9 @@ public final class DataJdbcSource implements DataSource, DataCacheListener, Func
     }
 
     @Override
-    public <T, V extends Serializable> List<V> queryColumnList(final AsyncHandler<List<V>, Serializable> handler, final String selectedColumn, final Class<T> clazz, final String column, final Serializable key) {
+    public <T, V extends Serializable> void queryColumnList(final AsyncHandler<List<V>, Serializable> handler, final String selectedColumn, final Class<T> clazz, final String column, final Serializable key) {
         List<V> rs = queryColumnList(selectedColumn, clazz, column, key);
         if (handler != null) handler.completed(rs, key);
-        return rs;
     }
 
     @Override
@@ -1895,10 +1851,9 @@ public final class DataJdbcSource implements DataSource, DataCacheListener, Func
     }
 
     @Override
-    public <T, V extends Serializable, B extends FilterBean> List<V> queryColumnList(final AsyncHandler<List<V>, B> handler, String selectedColumn, Class<T> clazz, B bean) {
+    public <T, V extends Serializable, B extends FilterBean> void queryColumnList(final AsyncHandler<List<V>, B> handler, String selectedColumn, Class<T> clazz, B bean) {
         List<V> rs = queryColumnList(selectedColumn, clazz, bean);
         if (handler != null) handler.completed(rs, bean);
-        return rs;
     }
 
     @Override
@@ -1907,10 +1862,9 @@ public final class DataJdbcSource implements DataSource, DataCacheListener, Func
     }
 
     @Override
-    public <T, V extends Serializable> List<V> queryColumnList(final AsyncHandler<List<V>, FilterNode> handler, final String selectedColumn, final Class<T> clazz, final FilterNode node) {
+    public <T, V extends Serializable> void queryColumnList(final AsyncHandler<List<V>, FilterNode> handler, final String selectedColumn, final Class<T> clazz, final FilterNode node) {
         List<V> rs = queryColumnList(selectedColumn, clazz, node);
         if (handler != null) handler.completed(rs, node);
-        return rs;
     }
 
     @Override
@@ -1919,10 +1873,9 @@ public final class DataJdbcSource implements DataSource, DataCacheListener, Func
     }
 
     @Override
-    public <T, V extends Serializable, B extends FilterBean> List<V> queryColumnList(final AsyncHandler<List<V>, B> handler, String selectedColumn, Class<T> clazz, Flipper flipper, B bean) {
+    public <T, V extends Serializable, B extends FilterBean> void queryColumnList(final AsyncHandler<List<V>, B> handler, String selectedColumn, Class<T> clazz, Flipper flipper, B bean) {
         List<V> rs = queryColumnList(selectedColumn, clazz, flipper, bean);
         if (handler != null) handler.completed(rs, bean);
-        return rs;
     }
 
     @Override
@@ -1931,10 +1884,9 @@ public final class DataJdbcSource implements DataSource, DataCacheListener, Func
     }
 
     @Override
-    public <T, V extends Serializable> List<V> queryColumnList(final AsyncHandler<List<V>, FilterNode> handler, final String selectedColumn, final Class<T> clazz, Flipper flipper, final FilterNode node) {
+    public <T, V extends Serializable> void queryColumnList(final AsyncHandler<List<V>, FilterNode> handler, final String selectedColumn, final Class<T> clazz, Flipper flipper, final FilterNode node) {
         List<V> rs = queryColumnList(selectedColumn, clazz, flipper, node);
         if (handler != null) handler.completed(rs, node);
-        return rs;
     }
 
     /**
@@ -1955,10 +1907,9 @@ public final class DataJdbcSource implements DataSource, DataCacheListener, Func
     }
 
     @Override
-    public <T, V extends Serializable, B extends FilterBean> Sheet<V> queryColumnSheet(final AsyncHandler<Sheet<V>, B> handler, String selectedColumn, Class<T> clazz, Flipper flipper, B bean) {
+    public <T, V extends Serializable, B extends FilterBean> void queryColumnSheet(final AsyncHandler<Sheet<V>, B> handler, String selectedColumn, Class<T> clazz, Flipper flipper, B bean) {
         Sheet<V> rs = queryColumnSheet(selectedColumn, clazz, flipper, bean);
         if (handler != null) handler.completed(rs, bean);
-        return rs;
     }
 
     @Override
@@ -1967,10 +1918,9 @@ public final class DataJdbcSource implements DataSource, DataCacheListener, Func
     }
 
     @Override
-    public <T, V extends Serializable> Sheet<V> queryColumnSheet(final AsyncHandler<Sheet<V>, FilterNode> handler, final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterNode node) {
+    public <T, V extends Serializable> void queryColumnSheet(final AsyncHandler<Sheet<V>, FilterNode> handler, final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterNode node) {
         Sheet<V> rs = queryColumnSheet(selectedColumn, clazz, flipper, node);
         if (handler != null) handler.completed(rs, node);
-        return rs;
     }
 
     private <T, V extends Serializable> Sheet<V> queryColumnSheet(final boolean needtotal, final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterNode node) {
@@ -2004,10 +1954,9 @@ public final class DataJdbcSource implements DataSource, DataCacheListener, Func
     }
 
     @Override
-    public <T> List<T> queryList(final AsyncHandler<List<T>, Serializable> handler, final Class<T> clazz, final String column, final Serializable key) {
+    public <T> void queryList(final AsyncHandler<List<T>, Serializable> handler, final Class<T> clazz, final String column, final Serializable key) {
         List<T> rs = queryList(clazz, column, key);
         if (handler != null) handler.completed(rs, key);
-        return rs;
     }
 
     /**
@@ -2025,10 +1974,9 @@ public final class DataJdbcSource implements DataSource, DataCacheListener, Func
     }
 
     @Override
-    public <T, B extends FilterBean> List<T> queryList(final AsyncHandler<List<T>, B> handler, final Class<T> clazz, final B bean) {
+    public <T, B extends FilterBean> void queryList(final AsyncHandler<List<T>, B> handler, final Class<T> clazz, final B bean) {
         List<T> rs = queryList(clazz, bean);
         if (handler != null) handler.completed(rs, bean);
-        return rs;
     }
 
     @Override
@@ -2037,10 +1985,9 @@ public final class DataJdbcSource implements DataSource, DataCacheListener, Func
     }
 
     @Override
-    public <T> List<T> queryList(final AsyncHandler<List<T>, FilterNode> handler, final Class<T> clazz, final FilterNode node) {
+    public <T> void queryList(final AsyncHandler<List<T>, FilterNode> handler, final Class<T> clazz, final FilterNode node) {
         List<T> rs = queryList(clazz, node);
         if (handler != null) handler.completed(rs, node);
-        return rs;
     }
 
     /**
@@ -2059,10 +2006,9 @@ public final class DataJdbcSource implements DataSource, DataCacheListener, Func
     }
 
     @Override
-    public <T, B extends FilterBean> List<T> queryList(final AsyncHandler<List<T>, B> handler, final Class<T> clazz, final SelectColumn selects, final B bean) {
+    public <T, B extends FilterBean> void queryList(final AsyncHandler<List<T>, B> handler, final Class<T> clazz, final SelectColumn selects, final B bean) {
         List<T> rs = queryList(clazz, selects, bean);
         if (handler != null) handler.completed(rs, bean);
-        return rs;
     }
 
     @Override
@@ -2071,10 +2017,9 @@ public final class DataJdbcSource implements DataSource, DataCacheListener, Func
     }
 
     @Override
-    public <T> List<T> queryList(final AsyncHandler<List<T>, FilterNode> handler, final Class<T> clazz, final SelectColumn selects, final FilterNode node) {
+    public <T> void queryList(final AsyncHandler<List<T>, FilterNode> handler, final Class<T> clazz, final SelectColumn selects, final FilterNode node) {
         List<T> rs = queryList(clazz, selects, node);
         if (handler != null) handler.completed(rs, node);
-        return rs;
     }
 
     @Override
@@ -2083,10 +2028,9 @@ public final class DataJdbcSource implements DataSource, DataCacheListener, Func
     }
 
     @Override
-    public <T> List<T> queryList(final AsyncHandler<List<T>, Serializable> handler, final Class<T> clazz, final Flipper flipper, final String column, final Serializable key) {
+    public <T> void queryList(final AsyncHandler<List<T>, Serializable> handler, final Class<T> clazz, final Flipper flipper, final String column, final Serializable key) {
         List<T> rs = queryList(clazz, flipper, column, key);
         if (handler != null) handler.completed(rs, key);
-        return rs;
     }
 
     @Override
@@ -2095,10 +2039,9 @@ public final class DataJdbcSource implements DataSource, DataCacheListener, Func
     }
 
     @Override
-    public <T, B extends FilterBean> List<T> queryList(final AsyncHandler<List<T>, B> handler, final Class<T> clazz, final Flipper flipper, final B bean) {
+    public <T, B extends FilterBean> void queryList(final AsyncHandler<List<T>, B> handler, final Class<T> clazz, final Flipper flipper, final B bean) {
         List<T> rs = queryList(clazz, flipper, bean);
         if (handler != null) handler.completed(rs, bean);
-        return rs;
     }
 
     @Override
@@ -2107,10 +2050,9 @@ public final class DataJdbcSource implements DataSource, DataCacheListener, Func
     }
 
     @Override
-    public <T> List<T> queryList(final AsyncHandler<List<T>, FilterNode> handler, final Class<T> clazz, final Flipper flipper, final FilterNode node) {
+    public <T> void queryList(final AsyncHandler<List<T>, FilterNode> handler, final Class<T> clazz, final Flipper flipper, final FilterNode node) {
         List<T> rs = queryList(clazz, flipper, node);
         if (handler != null) handler.completed(rs, node);
-        return rs;
     }
 
     @Override
@@ -2119,10 +2061,9 @@ public final class DataJdbcSource implements DataSource, DataCacheListener, Func
     }
 
     @Override
-    public <T, B extends FilterBean> List<T> queryList(final AsyncHandler<List<T>, B> handler, final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final B bean) {
+    public <T, B extends FilterBean> void queryList(final AsyncHandler<List<T>, B> handler, final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final B bean) {
         List<T> rs = queryList(clazz, selects, flipper, bean);
         if (handler != null) handler.completed(rs, bean);
-        return rs;
     }
 
     @Override
@@ -2131,10 +2072,9 @@ public final class DataJdbcSource implements DataSource, DataCacheListener, Func
     }
 
     @Override
-    public <T> List<T> queryList(final AsyncHandler<List<T>, FilterNode> handler, final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterNode node) {
+    public <T> void queryList(final AsyncHandler<List<T>, FilterNode> handler, final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterNode node) {
         List<T> rs = queryList(clazz, selects, flipper, node);
         if (handler != null) handler.completed(rs, node);
-        return rs;
     }
 
     //-----------------------sheet----------------------------
@@ -2154,10 +2094,9 @@ public final class DataJdbcSource implements DataSource, DataCacheListener, Func
     }
 
     @Override
-    public <T, B extends FilterBean> Sheet<T> querySheet(final AsyncHandler<Sheet<T>, B> handler, final Class<T> clazz, final Flipper flipper, final B bean) {
+    public <T, B extends FilterBean> void querySheet(final AsyncHandler<Sheet<T>, B> handler, final Class<T> clazz, final Flipper flipper, final B bean) {
         Sheet<T> rs = querySheet(clazz, flipper, bean);
         if (handler != null) handler.completed(rs, bean);
-        return rs;
     }
 
     @Override
@@ -2166,10 +2105,9 @@ public final class DataJdbcSource implements DataSource, DataCacheListener, Func
     }
 
     @Override
-    public <T> Sheet<T> querySheet(final AsyncHandler<Sheet<T>, FilterNode> handler, final Class<T> clazz, final Flipper flipper, final FilterNode node) {
+    public <T> void querySheet(final AsyncHandler<Sheet<T>, FilterNode> handler, final Class<T> clazz, final Flipper flipper, final FilterNode node) {
         Sheet<T> rs = querySheet(clazz, flipper, node);
         if (handler != null) handler.completed(rs, node);
-        return rs;
     }
 
     /**
@@ -2189,10 +2127,9 @@ public final class DataJdbcSource implements DataSource, DataCacheListener, Func
     }
 
     @Override
-    public <T, B extends FilterBean> Sheet<T> querySheet(final AsyncHandler<Sheet<T>, B> handler, final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final B bean) {
+    public <T, B extends FilterBean> void querySheet(final AsyncHandler<Sheet<T>, B> handler, final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final B bean) {
         Sheet<T> rs = querySheet(clazz, selects, flipper, bean);
         if (handler != null) handler.completed(rs, bean);
-        return rs;
     }
 
     @Override
@@ -2201,10 +2138,9 @@ public final class DataJdbcSource implements DataSource, DataCacheListener, Func
     }
 
     @Override
-    public <T> Sheet<T> querySheet(final AsyncHandler<Sheet<T>, FilterNode> handler, final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterNode node) {
+    public <T> void querySheet(final AsyncHandler<Sheet<T>, FilterNode> handler, final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterNode node) {
         Sheet<T> rs = querySheet(clazz, selects, flipper, node);
         if (handler != null) handler.completed(rs, node);
-        return rs;
     }
 
     private <T> Sheet<T> querySheet(final boolean readcache, final boolean needtotal, final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterNode node) {

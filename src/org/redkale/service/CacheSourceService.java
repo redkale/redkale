@@ -192,10 +192,9 @@ public class CacheSourceService<K extends Serializable, V extends Object> implem
     }
 
     @Override
-    public boolean exists(final AsyncHandler<Boolean, K> handler, @RpcAttachment final K key) {
+    public void exists(final AsyncHandler<Boolean, K> handler, @RpcAttachment final K key) {
         boolean rs = exists(key);
         if (handler != null) handler.completed(rs, key);
-        return rs;
     }
 
     @Override
@@ -209,10 +208,9 @@ public class CacheSourceService<K extends Serializable, V extends Object> implem
     }
 
     @Override
-    public V get(final AsyncHandler<V, K> handler, @RpcAttachment final K key) {
+    public void get(final AsyncHandler<V, K> handler, @RpcAttachment final K key) {
         V rs = get(key);
         if (handler != null) handler.completed(rs, key);
-        return rs;
     }
 
     @Override
@@ -229,10 +227,9 @@ public class CacheSourceService<K extends Serializable, V extends Object> implem
     }
 
     @Override
-    public V getAndRefresh(final AsyncHandler<V, K> handler, @RpcAttachment final K key, final int expireSeconds) {
+    public void getAndRefresh(final AsyncHandler<V, K> handler, @RpcAttachment final K key, final int expireSeconds) {
         V rs = getAndRefresh(key, expireSeconds);
         if (handler != null) handler.completed(rs, key);
-        return rs;
     }
 
     @Override
@@ -327,10 +324,9 @@ public class CacheSourceService<K extends Serializable, V extends Object> implem
     }
 
     @Override
-    public Collection<V> getCollection(final AsyncHandler<Collection<V>, K> handler, @RpcAttachment final K key) {
+    public void getCollection(final AsyncHandler<Collection<V>, K> handler, @RpcAttachment final K key) {
         Collection<V> rs = getCollection(key);
         if (handler != null) handler.completed(rs, key);
-        return rs;
     }
 
     @Override
@@ -339,10 +335,9 @@ public class CacheSourceService<K extends Serializable, V extends Object> implem
     }
 
     @Override
-    public Collection<V> getCollectionAndRefresh(final AsyncHandler<Collection<V>, K> handler, @RpcAttachment final K key, final int expireSeconds) {
+    public void getCollectionAndRefresh(final AsyncHandler<Collection<V>, K> handler, @RpcAttachment final K key, final int expireSeconds) {
         Collection<V> rs = getCollectionAndRefresh(key, expireSeconds);
         if (handler != null) handler.completed(rs, key);
-        return rs;
     }
 
     @Override

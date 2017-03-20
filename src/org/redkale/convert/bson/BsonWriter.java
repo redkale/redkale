@@ -236,11 +236,11 @@ public class BsonWriter extends Writer {
             return;
         }
         char[] chars = Utility.charArray(value);
-        if (chars.length > 255) throw new ConvertException("'" + value + "' has  very long length");
+        if (chars.length > 255) throw new ConvertException("'" + value + "' have  very long length");
         byte[] bytes = new byte[chars.length + 1];
         bytes[0] = (byte) chars.length;
         for (int i = 0; i < chars.length; i++) {
-            if (chars[i] > Byte.MAX_VALUE) throw new ConvertException("'" + value + "'  has double-word");
+            if (chars[i] > Byte.MAX_VALUE) throw new ConvertException("'" + value + "'  have double-word");
             bytes[i + 1] = (byte) chars[i];
         }
         writeTo(bytes);

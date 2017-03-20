@@ -40,10 +40,10 @@ public class _DynHelloRestServlet1 extends SimpleRestServlet {
         System.out.println(Utility.postHttpContent(url, headers, null));
 
         url = "http://127.0.0.1:" + port + "/pipes/hello/asyncfind/1234";
-        System.out.println(Utility.postHttpContent(url, headers, null));
-        
+        System.out.println("异步查找: " + Utility.postHttpContent(url, headers, null));
+
         url = "http://127.0.0.1:" + port + "/pipes/hello/listmap?map={'a':5}";
-        System.out.println(Utility.postHttpContent(url, headers, null));
+        System.out.println("listmap: " + Utility.postHttpContent(url, headers, null));
 
     }
 

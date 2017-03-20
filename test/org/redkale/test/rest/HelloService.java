@@ -75,7 +75,7 @@ public class HelloService implements Service {
     public List<HelloEntity> queryHello(HelloBean bean, @RestParam(name = "map") Map<String, String> map) { //通过 /pipes/hello/list?bean={...} 查询List列表
         System.out.println("map参数: " + map);
         if (source != null) return source.queryList(HelloEntity.class, bean);
-        return null;
+        return new ArrayList<>();
     }
     
     //查询单个
@@ -86,11 +86,10 @@ public class HelloService implements Service {
 
     //异步查询单个
     @RestMapping(name = "asyncfind")
-    public HelloEntity findHello(AsyncHandler handler, @RestParam(name = "#") int id) {  //通过 /pipes/hello/find/1234、/pipes/hello/jsfind/1234 查询对象
+    public void findHello(AsyncHandler handler, @RestParam(name = "#") int id) {  //通过 /pipes/hello/find/1234、/pipes/hello/jsfind/1234 查询对象
         if (source != null) source.find(handler, HelloEntity.class, id);
         HelloEntity rs = new HelloEntity();
         rs.setHelloname("Hello名称");
         if (handler != null) handler.completed(rs, null);
-        return null;
     }
 }

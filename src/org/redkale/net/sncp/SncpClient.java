@@ -51,8 +51,10 @@ public final class SncpClient {
 
         protected final int addressSourceParamIndex;
 
-        public SncpAction(Method method, DLong actionid) {
-            this.actionid = actionid;
+        protected final SncpAction syncAction; //异步方法对应的同步方法Action， 只有方法包含AsyncHandler参数时，本字段才有值
+
+        public SncpAction(final Class clazz, Method method, DLong actionid) {
+            this.actionid = actionid == null ? Sncp.hash(method) : actionid;
             Type rt = method.getGenericReturnType();
             if (rt instanceof TypeVariable) {
                 TypeVariable tv = (TypeVariable) rt;
@@ -72,6 +74,9 @@ public final class SncpClient {
                 Class<?>[] params = method.getParameterTypes();
                 for (int i = 0; i < params.length; i++) {
                     if (AsyncHandler.class.isAssignableFrom(params[i])) {
+                        if (handlerFuncIndex >= 0) {
+                            throw new RuntimeException(method + " have more than one AsyncHandler type parameter");
+                        }
                         handlerFuncIndex = i;
                         break;
                     }
@@ -80,6 +85,9 @@ public final class SncpClient {
                     if (anns[i].length > 0) {
                         for (Annotation ann : anns[i]) {
                             if (ann.annotationType() == RpcAttachment.class) {
+                                if (handlerAttachIndex >= 0) {
+                                    throw new RuntimeException(method + " have more than one @RpcAttachment parameter");
+                                }
                                 handlerAttachIndex = i;
                             } else if (ann.annotationType() == RpcTargetAddress.class && SocketAddress.class.isAssignableFrom(params[i])) {
                                 targetAddrIndex = i;
@@ -106,14 +114,25 @@ public final class SncpClient {
             this.handlerFuncParamIndex = handlerFuncIndex;
             this.handlerAttachParamIndex = handlerAttachIndex;
             this.paramAttrs = hasattr ? atts : null;
-            if (handlerFuncIndex > 0) {
-                Type handlerFuncType = this.paramTypes[handlerFuncIndex];
-                if (handlerFuncType instanceof ParameterizedType) {
-                    ParameterizedType handlerpt = (ParameterizedType) handlerFuncType;
-                    //后续可以添加验证， AsyncHandler的第一个泛型必须与方法返回值类型相同， 第二个泛型必须与@RpcAttachment的参数类型相同
-                    //需要考虑AsyncHandler的子类形态， 有可能0、1、2、。。。多个泛型
+            if (this.handlerFuncParamIndex >= 0 && method.getReturnType() != void.class) {
+                throw new RuntimeException(method + " have AsyncHandler type parameter but return type is not void");
+            }
+            if (this.handlerFuncParamIndex >= 0) {
+                List<Class> syncparams = new ArrayList<>();
+                for (Class p : method.getParameterTypes()) {
+                    if (!AsyncHandler.class.isAssignableFrom(p)) {
+                        syncparams.add(p);
+                    }
                 }
-                this.paramTypes[handlerFuncIndex] = AsyncHandler.class;
+                Method syncMethod = null;
+                try {
+                    syncMethod = clazz.getMethod(method.getName(), syncparams.toArray(new Class[syncparams.size()]));
+                } catch (NoSuchMethodException e) {
+                    throw new RuntimeException("Async menthod (" + method + ") have no sync menthod ");
+                }
+                this.syncAction = new SncpAction(clazz, syncMethod, Sncp.hash(syncMethod));
+            } else {
+                this.syncAction = null;
             }
         }
 
@@ -161,7 +180,7 @@ public final class SncpClient {
         final List<SncpAction> methodens = new ArrayList<>();
         //------------------------------------------------------------------------------
         for (java.lang.reflect.Method method : parseMethod(serviceClass)) {
-            methodens.add(new SncpAction(method, Sncp.hash(method)));
+            methodens.add(new SncpAction(serviceClass, method, Sncp.hash(method)));
         }
         this.actions = methodens.toArray(new SncpAction[methodens.size()]);
         this.addrBytes = clientAddress == null ? new byte[4] : clientAddress.getAddress().getAddress();
@@ -172,7 +191,7 @@ public final class SncpClient {
         final List<SncpAction> actions = new ArrayList<>();
         //------------------------------------------------------------------------------
         for (java.lang.reflect.Method method : parseMethod(serviceClass)) {
-            actions.add(new SncpAction(method, Sncp.hash(method)));
+            actions.add(new SncpAction(serviceClass, method, Sncp.hash(method)));
         }
         return actions;
     }
@@ -296,7 +315,7 @@ public final class SncpClient {
                 final Attribute attr = action.paramAttrs[i];
                 attr.set(params[i - 1], bsonConvert.convertFrom(attr.type(), reader));
             }
-            return bsonConvert.convertFrom(action.resultTypes, reader);
+            return bsonConvert.convertFrom(action.syncAction == null ? action.resultTypes : action.syncAction.resultTypes, reader);
         } catch (InterruptedException | ExecutionException | TimeoutException e) {
             logger.log(Level.SEVERE, actions[index].method + " sncp (params: " + jsonConvert.convertTo(params) + ") remote error", e);
             throw new RuntimeException(actions[index].method + " sncp remote error", e);
@@ -331,11 +350,13 @@ public final class SncpClient {
         final BsonWriter writer = bsonConvert.pollBsonWriter(transport.getBufferSupplier()); // 将head写入
         writer.writeTo(DEFAULT_HEADER);
         for (int i = 0; i < params.length; i++) {
-            bsonConvert.convertTo(writer, myparamtypes[i], params[i]);
+            if (action.handlerFuncParamIndex != i) { //AsyncHandler参数不能传递
+                bsonConvert.convertTo(writer, myparamtypes[i], params[i]);
+            }
         }
         final int reqBodyLength = writer.count() - HEADER_SIZE; //body总长度
         final long seqid = System.nanoTime();
-        final DLong actionid = action.actionid;
+        final DLong actionid = action.syncAction == null ? action.actionid : action.syncAction.actionid;
         final SocketAddress addr = addr0 == null ? (action.addressTargetParamIndex >= 0 ? (SocketAddress) params[action.addressTargetParamIndex] : null) : addr0;
         final AsyncConnection conn = transport.pollConnection(addr);
         if (conn == null || !conn.isOpen()) {
@@ -438,7 +459,7 @@ public final class SncpClient {
                                     final Attribute attr = action.paramAttrs[i];
                                     attr.set(params[i - 1], bsonConvert.convertFrom(attr.type(), reader));
                                 }
-                                Object rs = bsonConvert.convertFrom(action.resultTypes, reader);
+                                Object rs = bsonConvert.convertFrom(action.syncAction == null ? action.resultTypes : action.syncAction.resultTypes, reader);
                                 handler.completed(rs, handlerAttach);
                             } catch (Exception e) {
                                 handler.failed(e, handlerAttach);
@@ -481,7 +502,8 @@ public final class SncpClient {
         int version = buffer.getInt();
         if (version != this.serviceversion) throw new RuntimeException("sncp(" + action.method + ") response.serviceversion = " + serviceversion + ", but request.serviceversion =" + version);
         DLong raction = DLong.read(buffer);
-        if (!action.actionid.equals(raction)) throw new RuntimeException("sncp(" + action.method + ") response.actionid = " + action.actionid + ", but request.actionid =(" + raction + ")");
+        DLong actid = action.syncAction == null ? action.actionid : action.syncAction.actionid;
+        if (!actid.equals(raction)) throw new RuntimeException("sncp(" + action.method + ") response.actionid = " + action.actionid + ", but request.actionid =(" + raction + ")");
         buffer.getInt();  //地址
         buffer.getChar(); //端口
     }

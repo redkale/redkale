@@ -363,7 +363,7 @@ public abstract class HttpBaseServlet extends HttpServlet {
                 final String[] methods = mapping == null ? action.methods() : mapping.methods();
                 if (nameset.containsKey(name)) {
                     if (nameset.get(name) != clz) continue;
-                    throw new RuntimeException(this.getClass().getSimpleName() + " has two same " + WebMapping.class.getSimpleName() + "(" + name + ")");
+                    throw new RuntimeException(this.getClass().getSimpleName() + " have two same " + WebMapping.class.getSimpleName() + "(" + name + ")");
                 }
                 nameset.put(name, clz);
                 map.put(name, new Entry(typeIgnore, serviceid, actionid, name, methods, method, createHttpServlet(method)));

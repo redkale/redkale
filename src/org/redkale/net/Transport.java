@@ -165,7 +165,7 @@ public final class Transport {
     public AsyncConnection pollConnection(SocketAddress addr) {
         if (addr == null && remoteAddres.length == 1) addr = remoteAddres[0];
         final boolean rand = addr == null;
-        if (rand && remoteAddres.length < 1) throw new RuntimeException("Transport (" + this.name + ") has no remoteAddress list");
+        if (rand && remoteAddres.length < 1) throw new RuntimeException("Transport (" + this.name + ") have no remoteAddress list");
         try {
             if (tcp) {
                 AsynchronousSocketChannel channel = null;
