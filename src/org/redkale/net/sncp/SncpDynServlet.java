@@ -121,6 +121,22 @@ public final class SncpDynServlet extends SncpServlet {
             out.writeTo(DEFAULT_HEADER);
             BsonReader in = action.convert.pollBsonReader();
             try {
+                AsyncHandler handler = action.handlerFuncParamIndex >= 0 ? AsyncHandler.create((v, a) -> {
+                    try {
+                        action.convert.convertTo(out, Object.class, v);
+                        response.finish(0, out);
+                    } catch (Exception e) {
+                        response.getContext().getLogger().log(Level.INFO, "sncp execute error(" + request + ")", e);
+                        response.finish(SncpResponse.RETCODE_THROWEXCEPTION, null);
+                    } finally {
+                        action.convert.offerBsonReader(in);
+                        action.convert.offerBsonWriter(out);
+                    }
+                }, (t, a) -> {
+                    response.getContext().getLogger().log(Level.INFO, "sncp execute error(" + request + ")", t);
+                    response.finish(SncpResponse.RETCODE_THROWEXCEPTION, null);
+                }) : null;
+
                 in.setBytes(request.getBody());
                 action.action(in, out);
                 response.finish(0, out);
@@ -144,6 +160,8 @@ public final class SncpDynServlet extends SncpServlet {
         protected org.redkale.util.Attribute[] paramAttrs; // 为null表示无RpcCall处理，index=0固定为null, 其他为参数标记的RpcCall回调方法
 
         protected java.lang.reflect.Type[] paramTypes;  //index=0表示返回参数的type， void的返回参数类型为null
+
+        protected int handlerFuncParamIndex = -1;  //handlerFuncParamIndex>=0表示存在AsyncHandler参数
 
         public abstract void action(final BsonReader in, final BsonWriter out) throws Throwable;
 
@@ -236,6 +254,7 @@ public final class SncpDynServlet extends SncpServlet {
             } catch (Exception ex) {
                 throw new RuntimeException(ex); //不可能会发生
             }
+            int handlerFuncIndex = -1;
             { // action方法
                 mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC, "action", "(" + convertReaderDesc + convertWriterDesc + ")V", null, new String[]{"java/lang/Throwable"}));
                 //mv.setDebug(true);
@@ -245,6 +264,12 @@ public final class SncpDynServlet extends SncpServlet {
                 final Class[] paramClasses = method.getParameterTypes();
                 int[][] codes = new int[paramClasses.length][2];
                 for (int i = 0; i < paramClasses.length; i++) { //参数
+                    if (AsyncHandler.class.isAssignableFrom(paramClasses[i])) {
+                        if (handlerFuncIndex >= 0) {
+                            throw new RuntimeException(method + " have more than one AsyncHandler type parameter");
+                        }
+                        handlerFuncIndex = i;
+                    }
                     mv.visitVarInsn(ALOAD, 0);
                     mv.visitFieldInsn(GETFIELD, newDynName, "convert", Type.getDescriptor(BsonConvert.class));
                     mv.visitVarInsn(ALOAD, 0);
@@ -318,44 +343,45 @@ public final class SncpDynServlet extends SncpServlet {
                     }
                     mv.visitVarInsn(ASTORE, store);  //11
                 }
-                //------------------------- _callParameter 方法 --------------------------------
-                mv.visitVarInsn(ALOAD, 0);
-                mv.visitVarInsn(ALOAD, 2);
-                if (paramClasses.length <= 5) {  //参数总数量
-                    mv.visitInsn(ICONST_0 + paramClasses.length);
-                } else {
-                    mv.visitIntInsn(BIPUSH, paramClasses.length);
-                }
-                mv.visitTypeInsn(ANEWARRAY, "java/lang/Object");
-                int insn = 2;
-                for (int j = 0; j < paramClasses.length; j++) {
-                    final Class pt = paramClasses[j];
-                    mv.visitInsn(DUP);
-                    insn++;
-                    if (j <= 5) {
-                        mv.visitInsn(ICONST_0 + j);
+                if (true) {
+                    //------------------------- _callParameter 方法 --------------------------------
+                    mv.visitVarInsn(ALOAD, 0);
+                    mv.visitVarInsn(ALOAD, 2);
+                    if (paramClasses.length <= 5) {  //参数总数量
+                        mv.visitInsn(ICONST_0 + paramClasses.length);
                     } else {
-                        mv.visitIntInsn(BIPUSH, j);
+                        mv.visitIntInsn(BIPUSH, paramClasses.length);
                     }
-                    if (pt.isPrimitive()) {
-                        if (pt == long.class) {
-                            mv.visitVarInsn(LLOAD, insn++);
-                        } else if (pt == float.class) {
-                            mv.visitVarInsn(FLOAD, insn++);
-                        } else if (pt == double.class) {
-                            mv.visitVarInsn(DLOAD, insn++);
+                    mv.visitTypeInsn(ANEWARRAY, "java/lang/Object");
+                    int insn = 2;
+                    for (int j = 0; j < paramClasses.length; j++) {
+                        final Class pt = paramClasses[j];
+                        mv.visitInsn(DUP);
+                        insn++;
+                        if (j <= 5) {
+                            mv.visitInsn(ICONST_0 + j);
                         } else {
-                            mv.visitVarInsn(ILOAD, insn);
+                            mv.visitIntInsn(BIPUSH, j);
                         }
-                        Class bigclaz = java.lang.reflect.Array.get(java.lang.reflect.Array.newInstance(pt, 1), 0).getClass();
-                        mv.visitMethodInsn(INVOKESTATIC, bigclaz.getName().replace('.', '/'), "valueOf", "(" + Type.getDescriptor(pt) + ")" + Type.getDescriptor(bigclaz), false);
-                    } else {
-                        mv.visitVarInsn(ALOAD, insn);
+                        if (pt.isPrimitive()) {
+                            if (pt == long.class) {
+                                mv.visitVarInsn(LLOAD, insn++);
+                            } else if (pt == float.class) {
+                                mv.visitVarInsn(FLOAD, insn++);
+                            } else if (pt == double.class) {
+                                mv.visitVarInsn(DLOAD, insn++);
+                            } else {
+                                mv.visitVarInsn(ILOAD, insn);
+                            }
+                            Class bigclaz = java.lang.reflect.Array.get(java.lang.reflect.Array.newInstance(pt, 1), 0).getClass();
+                            mv.visitMethodInsn(INVOKESTATIC, bigclaz.getName().replace('.', '/'), "valueOf", "(" + Type.getDescriptor(pt) + ")" + Type.getDescriptor(bigclaz), false);
+                        } else {
+                            mv.visitVarInsn(ALOAD, insn);
+                        }
+                        mv.visitInsn(AASTORE);
                     }
-                    mv.visitInsn(AASTORE);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, newDynName, "_callParameter", "(" + convertWriterDesc + "[Ljava/lang/Object;)V", false);
                 }
-                mv.visitMethodInsn(INVOKEVIRTUAL, newDynName, "_callParameter", "(" + convertWriterDesc + "[Ljava/lang/Object;)V", false);
-
                 //-------------------------直接返回  或者  调用convertTo方法 --------------------------------
                 int maxStack = codes.length > 0 ? codes[codes.length - 1][1] : 1;
                 if (returnClass == void.class) { //返回
@@ -398,6 +424,7 @@ public final class SncpDynServlet extends SncpServlet {
                 types[0] = rt;
                 System.arraycopy(ptypes, 0, types, 1, ptypes.length);
                 instance.paramTypes = types;
+                instance.handlerFuncParamIndex = handlerFuncIndex;
 
                 org.redkale.util.Attribute[] atts = new org.redkale.util.Attribute[ptypes.length + 1];
                 Annotation[][] anns = method.getParameterAnnotations();

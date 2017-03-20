@@ -18,16 +18,16 @@ public class BCService implements Service {
     @Resource
     private CService cService;
 
-    public String showCurrentTime(final String name) {
-        String rs = "同步showCurrentTime: " + cService.getCurrentTime(name).getResult();
-        System.out.println("执行了 BCService.showCurrentTime++++同步方法");
+    public String bcCurrentTime(final String name) {
+        String rs = "同步bcCurrentTime: " + cService.ccCurrentTime(name).getResult();
+        System.out.println("执行了 BCService.bcCurrentTime++++同步方法");
         return rs;
     }
 
-    public void showCurrentTime(final AsyncHandler<String, Void> handler, final String name) {
-        cService.getCurrentTime(AsyncHandler.create((v, a) -> {
-            System.out.println("执行了 BCService.showCurrentTime----异步方法");
-            String rs = "异步showCurrentTime: " + v.getResult();
+    public void bcCurrentTime(final AsyncHandler<String, Void> handler, final String name) {
+        cService.ccCurrentTime(AsyncHandler.create((v, a) -> {
+            System.out.println("执行了 BCService.bcCurrentTime----异步方法");
+            String rs = "异步bcCurrentTime: " + v.getResult();
             if (handler != null) handler.completed(rs, null);
         }, (t, a) -> {
         }), name);

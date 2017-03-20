@@ -51,8 +51,6 @@ public final class SncpClient {
 
         protected final int addressSourceParamIndex;
 
-        protected final SncpAction syncAction; //异步方法对应的同步方法Action， 只有方法包含AsyncHandler参数时，本字段才有值
-
         public SncpAction(final Class clazz, Method method, DLong actionid) {
             this.actionid = actionid == null ? Sncp.hash(method) : actionid;
             Type rt = method.getGenericReturnType();
@@ -116,23 +114,6 @@ public final class SncpClient {
             this.paramAttrs = hasattr ? atts : null;
             if (this.handlerFuncParamIndex >= 0 && method.getReturnType() != void.class) {
                 throw new RuntimeException(method + " have AsyncHandler type parameter but return type is not void");
-            }
-            if (this.handlerFuncParamIndex >= 0) {
-                List<Class> syncparams = new ArrayList<>();
-                for (Class p : method.getParameterTypes()) {
-                    if (!AsyncHandler.class.isAssignableFrom(p)) {
-                        syncparams.add(p);
-                    }
-                }
-                Method syncMethod = null;
-                try {
-                    syncMethod = clazz.getMethod(method.getName(), syncparams.toArray(new Class[syncparams.size()]));
-                } catch (NoSuchMethodException e) {
-                    throw new RuntimeException("Async menthod (" + method + ") have no sync menthod ");
-                }
-                this.syncAction = new SncpAction(clazz, syncMethod, Sncp.hash(syncMethod));
-            } else {
-                this.syncAction = null;
             }
         }
 
@@ -315,7 +296,7 @@ public final class SncpClient {
                 final Attribute attr = action.paramAttrs[i];
                 attr.set(params[i - 1], bsonConvert.convertFrom(attr.type(), reader));
             }
-            return bsonConvert.convertFrom(action.syncAction == null ? action.resultTypes : action.syncAction.resultTypes, reader);
+            return bsonConvert.convertFrom(action.resultTypes, reader);
         } catch (InterruptedException | ExecutionException | TimeoutException e) {
             logger.log(Level.SEVERE, actions[index].method + " sncp (params: " + jsonConvert.convertTo(params) + ") remote error", e);
             throw new RuntimeException(actions[index].method + " sncp remote error", e);
@@ -350,13 +331,11 @@ public final class SncpClient {
         final BsonWriter writer = bsonConvert.pollBsonWriter(transport.getBufferSupplier()); // 将head写入
         writer.writeTo(DEFAULT_HEADER);
         for (int i = 0; i < params.length; i++) {
-            if (action.handlerFuncParamIndex != i) { //AsyncHandler参数不能传递
-                bsonConvert.convertTo(writer, myparamtypes[i], params[i]);
-            }
+            bsonConvert.convertTo(writer, myparamtypes[i], params[i]);
         }
         final int reqBodyLength = writer.count() - HEADER_SIZE; //body总长度
         final long seqid = System.nanoTime();
-        final DLong actionid = action.syncAction == null ? action.actionid : action.syncAction.actionid;
+        final DLong actionid = action.actionid;
         final SocketAddress addr = addr0 == null ? (action.addressTargetParamIndex >= 0 ? (SocketAddress) params[action.addressTargetParamIndex] : null) : addr0;
         final AsyncConnection conn = transport.pollConnection(addr);
         if (conn == null || !conn.isOpen()) {
@@ -459,7 +438,7 @@ public final class SncpClient {
                                     final Attribute attr = action.paramAttrs[i];
                                     attr.set(params[i - 1], bsonConvert.convertFrom(attr.type(), reader));
                                 }
-                                Object rs = bsonConvert.convertFrom(action.syncAction == null ? action.resultTypes : action.syncAction.resultTypes, reader);
+                                Object rs = bsonConvert.convertFrom(action.resultTypes, reader);
                                 handler.completed(rs, handlerAttach);
                             } catch (Exception e) {
                                 handler.failed(e, handlerAttach);
@@ -502,7 +481,7 @@ public final class SncpClient {
         int version = buffer.getInt();
         if (version != this.serviceversion) throw new RuntimeException("sncp(" + action.method + ") response.serviceversion = " + serviceversion + ", but request.serviceversion =" + version);
         DLong raction = DLong.read(buffer);
-        DLong actid = action.syncAction == null ? action.actionid : action.syncAction.actionid;
+        DLong actid = action.actionid;
         if (!actid.equals(raction)) throw new RuntimeException("sncp(" + action.method + ") response.actionid = " + action.actionid + ", but request.actionid =(" + raction + ")");
         buffer.getInt();  //地址
         buffer.getChar(); //端口

@@ -147,14 +147,14 @@ public class ABMainService implements Service {
 
     @RestMapping(name = "syncabtime")
     public String abCurrentTime(@RestParam(name = "#") final String name) {
-        String rs = "同步abCurrentTime: " + bcService.showCurrentTime(name);
+        String rs = "同步abCurrentTime: " + bcService.bcCurrentTime(name);
         System.out.println("执行了 ABMainService.abCurrentTime++++同步方法");
         return rs;
     }
 
     @RestMapping(name = "asyncabtime")
     public void abCurrentTime(final AsyncHandler<String, Void> handler, @RestParam(name = "#") final String name) {
-        bcService.showCurrentTime(AsyncHandler.create((v, a) -> {
+        bcService.bcCurrentTime(AsyncHandler.create((v, a) -> {
             System.out.println("执行了 ABMainService.abCurrentTime----异步方法");
             String rs = "异步abCurrentTime: " + v;
             if (handler != null) handler.completed(rs, null);

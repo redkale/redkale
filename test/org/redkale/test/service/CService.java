@@ -14,15 +14,15 @@ import org.redkale.util.*;
  */
 public class CService implements Service {
 
-    public RetResult<String> getCurrentTime(final String name) {
-        String rs = "同步getCurrentTime: " + name + ": " + Utility.formatTime(System.currentTimeMillis());
-        System.out.println("执行了 CService.getCurrentTime++++同步方法");
+    public RetResult<String> ccCurrentTime(final String name) {
+        String rs = "同步ccCurrentTime: " + name + ": " + Utility.formatTime(System.currentTimeMillis());
+        System.out.println("执行了 CService.ccCurrentTime++++同步方法");
         return new RetResult(rs);
     }
 
-    public void getCurrentTime(final AsyncHandler<RetResult<String>, Void> handler, final String name) {
-        String rs = "异步getCurrentTime: " + name + ": " + Utility.formatTime(System.currentTimeMillis());
-        System.out.println("执行了 CService.getCurrentTime----异步方法");
+    public void ccCurrentTime(final AsyncHandler<RetResult<String>, Void> handler, final String name) {
+        String rs = "异步ccCurrentTime: " + name + ": " + Utility.formatTime(System.currentTimeMillis());
+        System.out.println("执行了 CService.ccCurrentTime----异步方法");
         if (handler != null) handler.completed(new RetResult(rs), null);
     }
 }
