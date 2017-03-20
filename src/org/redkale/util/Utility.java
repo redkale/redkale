@@ -122,6 +122,34 @@ public final class Utility {
     }
 
     /**
+     * 将多个元素组合成一个Set
+     *
+     * @param <T>   泛型
+     * @param items 元素
+     *
+     * @return Set
+     */
+    public static <T> Set<T> ofSet(T... items) {
+        Set<T> set = new LinkedHashSet<>();
+        for (T item : items) set.add(item);
+        return set;
+    }
+
+    /**
+     * 将多个元素组合成一个List
+     *
+     * @param <T>   泛型
+     * @param items 元素
+     *
+     * @return List
+     */
+    public static <T> List<T> ofList(T... items) {
+        List<T> list = new ArrayList<>();
+        for (T item : items) list.add(item);
+        return list;
+    }
+
+    /**
      * 获取不带"-"的UUID值
      *
      * @return 不带"-"UUID值
