@@ -19,7 +19,6 @@ import org.redkale.util.*;
  * 第二种方式需要在具体实现类上使用&#64;ResourceType指明资源注入的类型。
  * </pre></blockquote>
  *
- * <p>
  * <blockquote><pre>
  * 异步方法：
  * Service编写异步方法：
