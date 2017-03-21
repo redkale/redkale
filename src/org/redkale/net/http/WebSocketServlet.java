@@ -39,7 +39,7 @@ import org.redkale.util.*;
  *
  * @author zhangjx
  */
-public abstract class WebSocketServlet extends HttpServlet {
+public abstract class WebSocketServlet extends HttpServlet implements Resourcable {
 
     @Comment("WebScoket服务器给客户端进行ping操作的间隔时间, 单位: 秒")
     public static final String WEBPARAM__LIVEINTERVAL = "liveinterval";
@@ -69,7 +69,7 @@ public abstract class WebSocketServlet extends HttpServlet {
 
     public final void preInit(HttpContext context, AnyValue conf) {
         InetSocketAddress addr = context.getServerAddress();
-        this.engine = new WebSocketEngine(addr.getHostString() + ":" + addr.getPort() + "-[" + getResourceName() + "]", this.node, logger);
+        this.engine = new WebSocketEngine(addr.getHostString() + ":" + addr.getPort() + "-[" + resourceName() + "]", this.node, logger);
         if (this.node == null) this.node = createWebSocketNode();
         if (this.node == null) {
             this.node = new WebSocketNodeService();
@@ -86,7 +86,8 @@ public abstract class WebSocketServlet extends HttpServlet {
         engine.close();
     }
 
-    public String getResourceName() {
+    @Override
+    public String resourceName() {
         return this.getClass().getSimpleName().replace("Servlet", "").replace("WebSocket", "").toLowerCase();
     }
 

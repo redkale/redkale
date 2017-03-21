@@ -24,7 +24,7 @@ import org.redkale.util.*;
  * @author zhangjx
  */
 @SuppressWarnings("unchecked")
-public final class DataJdbcSource implements DataSource, DataCacheListener, Function<Class, EntityInfo>, AutoCloseable {
+public final class DataJdbcSource implements DataSource, Resourcable, DataCacheListener, Function<Class, EntityInfo>, AutoCloseable {
 
     private static final Flipper FLIPPER_ONE = new Flipper(1);
 
@@ -55,7 +55,7 @@ public final class DataJdbcSource implements DataSource, DataCacheListener, Func
         this.cacheForbidden = "NONE".equalsIgnoreCase(readprop.getProperty("shared-cache-mode"));
     }
 
-    public final String name() {
+    public final String resourceName() {
         return name;
     }
 

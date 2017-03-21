@@ -323,17 +323,17 @@ public final class ResourceFactory {
                     if (consumer != null) consumer.accept(src, field);
                     String tname = rc.name();
                     if (tname.contains(RESOURCE_PARENT_NAME)) {
-                        try {
-                            Resource res = src.getClass().getAnnotation(Resource.class);
-                            if (res == null) {
-                                String srcname = (String) src.getClass().getMethod("getResourceName").invoke(src);
-                                tname = tname.replace(RESOURCE_PARENT_NAME, srcname);
+                        Resource res = src.getClass().getAnnotation(Resource.class);
+                        if (res == null) {
+                            if (src instanceof Resourcable) {
+                                tname = tname.replace(RESOURCE_PARENT_NAME, ((Resourcable) src).resourceName());
                             } else {
-                                tname = res.name();
+                                logger.log(Level.SEVERE, src.getClass().getName() + " not found @Resource on Class or not implements Resourcable");
                             }
-                        } catch (Exception e) { // 获取src中的name()方法的值， 异常则忽略
-                            logger.log(Level.SEVERE, src.getClass().getName() + " not found @Resource on Class or [public String getResourceName()] method", e);
+                        } else {
+                            tname = res.name();
                         }
+
                     }
                     final String rcname = tname;
                     ResourceEntry re = findEntry(rcname, genctype);

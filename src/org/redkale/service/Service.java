@@ -9,7 +9,7 @@ import org.redkale.util.*;
 
 /**
  * 所有Service的实现类不得声明为final， 允许远程模式的public方法都不能声明为final。<br>
- * 注意: "$"是一个很特殊的Service.name值 。 被标记为@Resource(name = "$") 的Service的资源名与所属父Service的资源名一致。<br>
+ * 注意: "$"是一个很特殊的Service.name值 。 被标记为&#64;Resource(name = "$") 的Service的资源名与所属父Service的资源名一致。<br>
  *
  * <blockquote><pre>
  * Service的资源类型
@@ -23,11 +23,9 @@ import org.redkale.util.*;
  * <blockquote><pre>
  * 异步方法：
  * Service编写异步方法：
- *    1、异步方法有且仅有一个类型为AsyncHandler的参数，方法返回类型必须是void。
- *    2、必须存在对应的同步方法，同步的方法名与异步方法必须相同，方法的参数列表必须与异步方法除AsyncHandler参数的参数列表相同。
- * 例如:
- *      public int insertRecord(String name, Record record);
- *
+ *    1、异步方法有且仅有一个类型为AsyncHandler的参数。
+ *    2、异步方法返回类型必须是void。
+ * 例如: 
  *      public void insertRecord(AsyncHandler&#60;Integer, Record&#62; handler, String name, &#64;RpcAttachment Record record);
  *
  * </pre></blockquote>
