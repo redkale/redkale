@@ -280,6 +280,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
     }
 
     private static boolean needSplit(final FilterExpress express, final Object val0) {
+        if(val0 == null) return false;
         boolean items = express != IN && express != NOTIN;  //是否数组集合的表达式
         if (!items) {
             if (val0.getClass().isArray()) {
@@ -303,7 +304,6 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
 
     protected final <T> CharSequence createElementSQLExpress(final EntityInfo<T> info, String talis) {
         final Object val0 = getValue();
-        if (val0 == null) return null;
         if (needSplit(val0)) {
             if (val0 instanceof Collection) {
                 StringBuilder sb = new StringBuilder();
@@ -1727,7 +1727,6 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
 
     protected final StringBuilder toElementString(final String prefix) {
         Serializable val0 = getValue();
-        if (val0 == null) return null;
         if (needSplit(val0)) {
             if (val0 instanceof Collection) {
                 StringBuilder sb = new StringBuilder();
