@@ -494,6 +494,37 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
     }
 
     /**
+     * 异步输出指定内容
+     *
+     * @param <A>        泛型
+     * @param buffers    输出内容
+     * @param attachment 异步回调参数
+     * @param handler    异步回调函数
+     */
+    public <A> void sendBody(ByteBuffer[] buffers, A attachment, AsyncHandler<Integer, A> handler) {
+        if (!this.headsended) {
+            if (this.contentLength < 0) {
+                int len = 0;
+                if (buffers != null && buffers.length > 0) {
+                    for (ByteBuffer b : buffers) {
+                        len += b.remaining();
+                    }
+                }
+                this.contentLength = len;
+            }
+            ByteBuffer headbuf = createHeader();
+            headbuf.flip();
+            if (buffers == null || buffers.length == 0) {
+                super.send(headbuf, attachment, handler);
+            } else {
+                super.send(Utility.unshift(buffers, headbuf), attachment, handler);
+            }
+        } else {
+            super.send(buffers, attachment, handler);
+        }
+    }
+
+    /**
      * 将指定文件按响应结果输出
      *
      * @param file 输出文件

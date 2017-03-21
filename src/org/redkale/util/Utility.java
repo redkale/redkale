@@ -96,7 +96,7 @@ public final class Utility {
      * @return Map
      */
     public static Map<String, String> ofMap(String... items) {
-        HashMap<String, String> map = new HashMap<>();
+        HashMap<String, String> map = new LinkedHashMap<>();
         int len = items.length / 2;
         for (int i = 0; i < len; i++) {
             map.put(items[i * 2], items[i * 2 + 1]);
@@ -113,7 +113,7 @@ public final class Utility {
      * @return Map
      */
     public static Map<Object, Object> ofMap(Object... items) {
-        HashMap<Object, Object> map = new HashMap<>();
+        HashMap<Object, Object> map = new LinkedHashMap<>();
         int len = items.length / 2;
         for (int i = 0; i < len; i++) {
             map.put(items[i * 2], items[i * 2 + 1]);
@@ -159,7 +159,54 @@ public final class Utility {
     }
 
     /**
-     * 数组上追加数据
+     * 将一个或多个新元素添加到数组开始，数组中的元素自动后移
+     *
+     * @param <T>   泛型
+     * @param array 原数组
+     * @param objs  待追加数据
+     *
+     * @return 新数组
+     */
+    public static <T> T[] unshift(final T[] array, final T... objs) {
+        if (array == null || array.length == 0) return objs;
+        final T[] news = (T[]) Array.newInstance(array.getClass().getComponentType(), array.length + objs.length);
+        System.arraycopy(objs, 0, news, 0, objs.length);
+        System.arraycopy(array, 0, news, objs.length, array.length);
+        return news;
+    }
+
+    /**
+     * 将一个或多个新元素添加到数组开始，数组中的元素自动后移
+     *
+     * @param <T>   泛型
+     * @param array 原数组
+     * @param objs  待追加数据
+     *
+     * @return 新数组
+     */
+    public static <T> T[] unshift(final T[] array, final Collection<T> objs) {
+        if (objs == null || objs.isEmpty()) return array;
+        if (array == null) {
+            T one = null;
+            for (T t : objs) {
+                if (t != null) one = t;
+                break;
+            }
+            if (one == null) return array;
+            T[] news = (T[]) Array.newInstance(one.getClass(), objs.size());
+            return objs.toArray(news);
+        }
+        T[] news = (T[]) Array.newInstance(array.getClass().getComponentType(), array.length + objs.size());
+        int index = -1;
+        for (T t : objs) {
+            news[(++index)] = t;
+        }
+        System.arraycopy(array, 0, news, objs.size(), array.length);
+        return news;
+    }
+
+    /**
+     * 将一个或多个新元素添加到数组结尾
      *
      * @param <T>   泛型
      * @param array 原数组
@@ -176,7 +223,7 @@ public final class Utility {
     }
 
     /**
-     * 数组上追加数据
+     * 将一个或多个新元素添加到数组结尾
      *
      * @param <T>   泛型
      * @param array 原数组
