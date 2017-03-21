@@ -15,10 +15,13 @@ import java.util.regex.Pattern;
 import javax.annotation.Resource;
 
 /**
- * 如果Resource(name = "$") 表示资源name采用所属对象的name
+ * 如果&#64;Resource(name = "$") 表示资源name采用所属对象的name  <br>
+ * 如果没有&#64;Resource 则会取对象的getResourceName()方法值(若存在)
+ * <blockquote><pre>
  * name规则:
- * 1: "$"有特殊含义, 不能表示"$"资源本身
- * 2: 只能是字母、数字、(短横)-、(下划线)_、点(.)的组合
+ *    1: "$"有特殊含义, 不能表示"$"资源本身
+ *    2: 只能是字母、数字、(短横)-、(下划线)_、点(.)的组合
+ * </pre></blockquote>
  * <p>
  * 详情见: https://redkale.org
  *
@@ -323,13 +326,13 @@ public final class ResourceFactory {
                         try {
                             Resource res = src.getClass().getAnnotation(Resource.class);
                             if (res == null) {
-                                String srcname = (String) src.getClass().getMethod("name").invoke(src);
+                                String srcname = (String) src.getClass().getMethod("getResourceName").invoke(src);
                                 tname = tname.replace(RESOURCE_PARENT_NAME, srcname);
                             } else {
                                 tname = res.name();
                             }
                         } catch (Exception e) { // 获取src中的name()方法的值， 异常则忽略
-                            logger.log(Level.SEVERE, src.getClass().getName() + " not found @Resource on Class or [public String name()] method", e);
+                            logger.log(Level.SEVERE, src.getClass().getName() + " not found @Resource on Class or [public String getResourceName()] method", e);
                         }
                     }
                     final String rcname = tname;

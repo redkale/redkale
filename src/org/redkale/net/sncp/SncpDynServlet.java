@@ -63,7 +63,7 @@ public final class SncpDynServlet extends SncpServlet {
             if (method.getName().equals("equals") || method.getName().equals("hashCode")) continue;
             if (method.getName().equals("notify") || method.getName().equals("notifyAll") || method.getName().equals("wait")) continue;
             if (method.getName().equals("init") || method.getName().equals("destroy")) continue;
-            if (method.getName().equals("version") || method.getName().equals("name")) continue;
+            //if (method.getName().equals("version") || method.getName().equals("name")) continue;
             final DLong actionid = Sncp.hash(method);
             SncpServletAction action = SncpServletAction.create(service, actionid, method);
             action.convert = convert;

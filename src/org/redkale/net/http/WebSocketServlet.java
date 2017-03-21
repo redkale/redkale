@@ -69,7 +69,7 @@ public abstract class WebSocketServlet extends HttpServlet {
 
     public final void preInit(HttpContext context, AnyValue conf) {
         InetSocketAddress addr = context.getServerAddress();
-        this.engine = new WebSocketEngine(addr.getHostString() + ":" + addr.getPort() + "-[" + name() + "]", this.node, logger);
+        this.engine = new WebSocketEngine(addr.getHostString() + ":" + addr.getPort() + "-[" + getResourceName() + "]", this.node, logger);
         if (this.node == null) this.node = createWebSocketNode();
         if (this.node == null) {
             this.node = new WebSocketNodeService();
@@ -86,7 +86,7 @@ public abstract class WebSocketServlet extends HttpServlet {
         engine.close();
     }
 
-    public String name() {
+    public String getResourceName() {
         return this.getClass().getSimpleName().replace("Servlet", "").replace("WebSocket", "").toLowerCase();
     }
 

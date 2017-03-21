@@ -8,8 +8,8 @@ package org.redkale.service;
 import org.redkale.util.*;
 
 /**
- * 所有Service的实现类不得声明为final， 允许远程模式的public方法都不能声明为final。
- * 注意: "$"是一个很特殊的Service.name值 。 被标记为@Resource(name = "$") 的Service的资源名与所属父Service的资源名一致。
+ * 所有Service的实现类不得声明为final， 允许远程模式的public方法都不能声明为final。<br>
+ * 注意: "$"是一个很特殊的Service.name值 。 被标记为@Resource(name = "$") 的Service的资源名与所属父Service的资源名一致。<br>
  *
  * <blockquote><pre>
  * Service的资源类型
@@ -57,16 +57,6 @@ public interface Service {
      */
     default void destroy(AnyValue config) {
 
-    }
-
-    /**
-     * Service的接口版本号
-     * <b>注: public方法的参数或返回类型或参数类型内部变更后改值必须进行改变</b>
-     *
-     * @return 接口版本号
-     */
-    default int version() {
-        return 0;
     }
 
 }
