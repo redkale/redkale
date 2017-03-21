@@ -303,6 +303,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
 
     protected final <T> CharSequence createElementSQLExpress(final EntityInfo<T> info, String talis) {
         final Object val0 = getValue();
+        if (val0 == null) return null;
         if (needSplit(val0)) {
             if (val0 instanceof Collection) {
                 StringBuilder sb = new StringBuilder();
@@ -1709,7 +1710,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
     protected StringBuilder toString(final String prefix) {
         StringBuilder sb = new StringBuilder();
         StringBuilder element = toElementString(prefix);
-        boolean more = element.length() > 0 && this.nodes != null;
+        boolean more = element != null && element.length() > 0 && this.nodes != null;
         if (more) sb.append('(');
         sb.append(element);
         if (this.nodes != null) {
@@ -1726,6 +1727,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
 
     protected final StringBuilder toElementString(final String prefix) {
         Serializable val0 = getValue();
+        if (val0 == null) return null;
         if (needSplit(val0)) {
             if (val0 instanceof Collection) {
                 StringBuilder sb = new StringBuilder();
