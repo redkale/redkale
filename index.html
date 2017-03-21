@@ -34,6 +34,7 @@
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4、提供分布式与集中式部署的无缝切换 <br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;5、提供类似JPA功能，包含数据缓存自动同步、分表分库与简洁的数据层操作接口 <br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;6、支持依赖注入的资源的动态修改 <br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;7、Servlet、Service、Source组件均支持异步接口 <br/>
             </p>
 
             <h3><a id="redkale_think" class="anchor" href="#" aria-hidden="true"></a>设计理念</h3>
@@ -60,6 +61,11 @@
             <h3><a class="anchor" href="source.html#source_datasource" target="_blank" aria-hidden="true">亮点四. DataSource</a></h3>
 
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Redkale提供DataSource类对数据层进行操作，其功能类似JPA。最大程度的简化数据层的操作，免去SQL/JPQL语句的编写。同时提供过滤查询与JavaBean的结合、读写分离、数据库热切换、本地/远程部署、数据分表分库、进程间缓存自动同步等功能。</p>
+
+
+            <h3><a class="anchor" href="net.html#net_sncp" target="_blank" aria-hidden="true">亮点四. 异步接口</a></h3>
+
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Net、Service、DataSource、CacheSource都支持异步接口，<a href="service.html#service_local" target="_blank">本地模式</a>、<a href="service.html#service_remote" target="_blank">远程模式</a>的Service均支持。</p>
 
             <h3><a id="redkale_code" class="anchor" href="#" aria-hidden="true"></a>Java 源码</h3>
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="https://github.com/redkale" target="_blank" >Github 源码 &nbsp;&nbsp; https://github.com/redkale</a><br/>
