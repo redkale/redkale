@@ -20,6 +20,7 @@ import org.redkale.util.AsyncHandler;
  */
 public abstract class SncpAsyncHandler<V, A> implements AsyncHandler<V, A> {
 
+    //为了在回调函数中调用_callParameter方法
     protected Object[] params;
 
     public Object[] getParams() {

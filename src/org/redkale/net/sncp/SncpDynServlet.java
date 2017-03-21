@@ -187,17 +187,25 @@ public final class SncpDynServlet extends SncpServlet {
         /**
          * <blockquote><pre>
          *  public class TestService implements Service {
+         *
          *      public boolean change(TestBean bean, String name, int id) {
-         *
+         *          return false;
          *      }
-         *  }
          *
-         *  public class DynActionTestService_change extends SncpServletAction {
+         *      public void insert(AsyncHandler&#60;Boolean, TestBean&#62; handler, TestBean bean, String name, int id) {
+         *      }
+         *
+         *      public void update(long show, short v2, AsyncHandler&#60;Boolean, TestBean&#62; handler, TestBean bean, String name, int id) {
+         *      }
+         * }
+         *
+         *
+         * class DynActionTestService_change extends SncpServletAction {
          *
          *      public TestService service;
          *
-         *      &#64;Override
-         *      public void action(final BsonReader in, final BsonWriter out) throws Throwable {
+         *      &#064;Override
+         *      public void action(BsonReader in, BsonWriter out, SncpAsyncHandler handler) throws Throwable {
          *          TestBean arg1 = convert.convertFrom(paramTypes[1], in);
          *          String arg2 = convert.convertFrom(paramTypes[2], in);
          *          int arg3 = convert.convertFrom(paramTypes[3], in);
@@ -205,7 +213,42 @@ public final class SncpDynServlet extends SncpServlet {
          *          _callParameter(out, arg1, arg2, arg3);
          *          convert.convertTo(out, paramTypes[0], rs);
          *      }
-         *  }
+         * }
+         *
+         * class DynActionTestService_insert extends SncpServletAction {
+         *
+         *      public TestService service;
+         *
+         *      &#064;Override
+         *      public void action(BsonReader in, BsonWriter out, SncpAsyncHandler handler) throws Throwable {
+         *          SncpAsyncHandler arg0 = handler;
+         *          convert.convertFrom(AsyncHandler.class, in);
+         *          TestBean arg1 = convert.convertFrom(paramTypes[2], in);
+         *          String arg2 = convert.convertFrom(paramTypes[3], in);
+         *          int arg3 = convert.convertFrom(paramTypes[4], in);
+         *          handler.setParams(arg0, arg1, arg2, arg3);
+         *          service.insert(arg0, arg1, arg2, arg3);
+         *       }         
+         * }
+         *
+         * class DynActionTestService_update extends SncpServletAction {
+         *
+         *      public TestService service;
+         *
+         *      &#064;Override
+         *      public void action(BsonReader in, BsonWriter out, SncpAsyncHandler handler) throws Throwable {
+         *          long a1 = convert.convertFrom(paramTypes[1], in);
+         *          short a2 = convert.convertFrom(paramTypes[2], in);
+         *          SncpAsyncHandler a3 = handler;
+         *          convert.convertFrom(AsyncHandler.class, in);
+         *          TestBean arg1 = convert.convertFrom(paramTypes[4], in);
+         *          String arg2 = convert.convertFrom(paramTypes[5], in);
+         *          int arg3 = convert.convertFrom(paramTypes[6], in);
+         *          handler.setParams(a1, a2, a3, arg1, arg2, arg3);
+         *          service.update(a1, a2, a3, arg1, arg2, arg3);
+         *      }         
+         * }
+         * 
          * </pre></blockquote>
          *
          * @param service  Service
