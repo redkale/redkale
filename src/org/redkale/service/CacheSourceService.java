@@ -82,7 +82,7 @@ public class CacheSourceService<K extends Serializable, V extends Object> implem
             if (storeKeyStr != null && storeValueStr != null) {
                 try {
                     this.setStoreType(Class.forName(storeKeyStr), Class.forName(storeValueStr));
-                } catch (Exception e) {
+                } catch (Throwable e) {
                     logger.log(Level.SEVERE, self.getClass().getSimpleName() + " load key & value store class (" + storeKeyStr + ", " + storeValueStr + ") error", e);
                 }
             }
@@ -92,7 +92,7 @@ public class CacheSourceService<K extends Serializable, V extends Object> implem
         if (expireHandlerClass != null) {
             try {
                 this.expireHandler = (Consumer<CacheEntry>) Class.forName(expireHandlerClass).newInstance();
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 logger.log(Level.SEVERE, self.getClass().getSimpleName() + " new expirehandler class (" + expireHandlerClass + ") instance error", e);
             }
         }

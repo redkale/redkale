@@ -231,7 +231,7 @@ public final class SncpDynServlet extends SncpServlet {
                 try {
                     Class.forName(newDynName.replace('/', '.'));
                     newDynName += "_";
-                } catch (Exception ex) {
+                } catch (Throwable ex) {
                     break;
                 }
             }

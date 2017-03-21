@@ -42,7 +42,7 @@ public interface Reproduce<D, S> extends BiFunction<D, S, D> {
         }
         try {
             return (Reproduce) Class.forName(newDynName.replace('/', '.')).newInstance();
-        } catch (Exception ex) {
+        } catch (Throwable ex) {
         }
         // ------------------------------------------------------------------------------
         ClassWriter cw = new ClassWriter(COMPUTE_FRAMES);

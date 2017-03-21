@@ -183,7 +183,7 @@ public abstract class TypeToken<T> {
             try {
                 Class.forName(newDynName.replace('/', '.'));
                 newDynName = TypeToken.class.getName().replace('.', '/') + "_Dyn" + Math.abs(System.nanoTime());
-            } catch (Exception ex) {  //异常说明类不存在
+            } catch (Throwable ex) {  //异常说明类不存在
                 break;
             }
         }

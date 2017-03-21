@@ -213,7 +213,7 @@ public interface Creator<T> {
         }
         try {
             return (Creator) Class.forName(newDynName.replace('/', '.')).newInstance();
-        } catch (Exception ex) {
+        } catch (Throwable ex) {
         }
 
         Constructor<T> constructor0 = null;

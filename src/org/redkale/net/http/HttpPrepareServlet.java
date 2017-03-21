@@ -71,7 +71,7 @@ public class HttpPrepareServlet extends PrepareServlet<String, HttpContext, Http
         String resServlet = resConfig.getValue("servlet", HttpResourceServlet.class.getName());
         try {
             this.resourceHttpServlet = (HttpServlet) Class.forName(resServlet).newInstance();
-        } catch (Exception e) {
+        } catch (Throwable e) {
             this.resourceHttpServlet = new HttpResourceServlet();
             logger.log(Level.WARNING, "init HttpResourceSerlvet(" + resServlet + ") error", e);
         }

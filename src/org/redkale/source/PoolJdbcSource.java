@@ -131,7 +131,7 @@ public class PoolJdbcSource {
                     try {
                         Class.forName("com.mysql.cj.jdbc.MysqlConnectionPoolDataSource");
                         source = "com.mysql.cj.jdbc.MysqlConnectionPoolDataSource";
-                    } catch (Exception e) {
+                    } catch (Throwable e) {
                         source = "com.mysql.jdbc.jdbc2.optional.MysqlConnectionPoolDataSource";
                     }
                     break;

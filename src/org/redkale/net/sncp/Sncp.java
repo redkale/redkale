@@ -239,7 +239,7 @@ public abstract class Sncp {
         }
         try {
             return (Class<T>) Class.forName(newDynName.replace('/', '.'));
-        } catch (Exception ex) {
+        } catch (Throwable ex) {
         }
         //------------------------------------------------------------------------------
         ClassWriter cw = new ClassWriter(COMPUTE_FRAMES);
@@ -942,7 +942,7 @@ public abstract class Sncp {
                 s.set(rs, sb.toString());
             }
             return rs;
-        } catch (Exception ex) {
+        } catch (Throwable ex) {
         }
         //------------------------------------------------------------------------------
         ClassWriter cw = new ClassWriter(COMPUTE_FRAMES);

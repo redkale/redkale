@@ -387,7 +387,7 @@ public abstract class HttpBaseServlet extends HttpServlet {
             try {
                 Class.forName(newDynName.replace('/', '.'));
                 newDynName += "_" + (++i);
-            } catch (Exception ex) {
+            } catch (Throwable ex) {
                 break;
             }
         }

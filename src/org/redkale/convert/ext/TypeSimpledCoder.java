@@ -38,7 +38,7 @@ public class TypeSimpledCoder<R extends Reader, W extends Writer> extends Simple
         if (str == null) return null;
         try {
             return Class.forName(str);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             return null;
         }
     }
