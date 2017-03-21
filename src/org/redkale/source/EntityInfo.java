@@ -659,6 +659,8 @@ public final class EntityInfo<T> {
                                 o = ((Number) o).byteValue();
                             } else if (t == char.class) {
                                 o = (char) ((Number) o).intValue();
+                            } else if (t == boolean.class) {
+                                o = (Boolean) o;
                             }
                         } else if (t == int.class) {
                             o = 0;
