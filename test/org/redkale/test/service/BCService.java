@@ -27,9 +27,10 @@ public class BCService implements Service {
     public void bcCurrentTime(final AsyncHandler<String, Void> handler, final String name) {
         cService.ccCurrentTime(AsyncHandler.create((v, a) -> {
             System.out.println("执行了 BCService.bcCurrentTime----异步方法");
-            String rs = "异步bcCurrentTime: " + v.getResult();
+            String rs = "异步bcCurrentTime: " + (v == null ? null : v.getResult());
             if (handler != null) handler.completed(rs, null);
         }, (t, a) -> {
+            if (handler != null) handler.failed(t, a);
         }), name);
     }
 }

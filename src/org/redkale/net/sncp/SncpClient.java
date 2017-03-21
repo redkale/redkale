@@ -296,7 +296,7 @@ public final class SncpClient {
                 final Attribute attr = action.paramAttrs[i];
                 attr.set(params[i - 1], bsonConvert.convertFrom(attr.type(), reader));
             }
-            return bsonConvert.convertFrom(action.resultTypes, reader);
+            return bsonConvert.convertFrom(action.handlerFuncParamIndex >= 0 ? Object.class : action.resultTypes, reader);
         } catch (InterruptedException | ExecutionException | TimeoutException e) {
             logger.log(Level.SEVERE, actions[index].method + " sncp (params: " + jsonConvert.convertTo(params) + ") remote error", e);
             throw new RuntimeException(actions[index].method + " sncp remote error", e);
@@ -438,7 +438,7 @@ public final class SncpClient {
                                     final Attribute attr = action.paramAttrs[i];
                                     attr.set(params[i - 1], bsonConvert.convertFrom(attr.type(), reader));
                                 }
-                                Object rs = bsonConvert.convertFrom(action.resultTypes, reader);
+                                Object rs = bsonConvert.convertFrom(action.handlerFuncParamIndex >= 0 ? Object.class : action.resultTypes, reader);
                                 handler.completed(rs, handlerAttach);
                             } catch (Exception e) {
                                 handler.failed(e, handlerAttach);

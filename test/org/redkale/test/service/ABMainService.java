@@ -50,7 +50,7 @@ public class ABMainService implements Service {
         //------------------------ 初始化 BCService ------------------------------------
         final Transport bctransport = new Transport("", WatchFactory.root(), "", newBufferPool(), newChannelGroup(), null, Utility.ofSet(new InetSocketAddress("127.0.0.1", 5577)));
         BCService bcservice = Sncp.createLocalService("", null, ResourceFactory.root(), BCService.class, new InetSocketAddress("127.0.0.1", 5588), bctransport, null);
-        CService remoteCService = Sncp.createRemoteService("", null, CService.class, new InetSocketAddress("127.0.0.1", 5588), bctransport);        
+        CService remoteCService = Sncp.createRemoteService("", null, CService.class, new InetSocketAddress("127.0.0.1", 5588), bctransport);
         factory.inject(remoteCService);
         factory.register("", remoteCService);
         SncpServer bcserver = new SncpServer();
@@ -61,7 +61,7 @@ public class ABMainService implements Service {
         //------------------------ 初始化 ABMainService ------------------------------------
         final Transport abtransport = new Transport("", WatchFactory.root(), "", newBufferPool(), newChannelGroup(), null, Utility.ofSet(new InetSocketAddress("127.0.0.1", 5588)));
         ABMainService service = Sncp.createLocalService("", null, ResourceFactory.root(), ABMainService.class, new InetSocketAddress("127.0.0.1", 5599), bctransport, null);
-        BCService remoteBCService = Sncp.createRemoteService("", null, BCService.class, new InetSocketAddress("127.0.0.1", 5599), abtransport);        
+        BCService remoteBCService = Sncp.createRemoteService("", null, BCService.class, new InetSocketAddress("127.0.0.1", 5599), abtransport);
         factory.inject(remoteBCService);
         factory.register("", remoteBCService);
 
@@ -157,8 +157,9 @@ public class ABMainService implements Service {
         bcService.bcCurrentTime(AsyncHandler.create((v, a) -> {
             System.out.println("执行了 ABMainService.abCurrentTime----异步方法");
             String rs = "异步abCurrentTime: " + v;
-            if (handler != null) handler.completed(rs, null);
+            if (handler != null) handler.completed(rs, a);
         }, (t, a) -> {
+            if (handler != null) handler.failed(t, a);
         }), name);
     }
 }
