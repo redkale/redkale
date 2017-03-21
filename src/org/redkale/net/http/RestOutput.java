@@ -34,14 +34,16 @@ public class RestOutput<T> {
         this.result = result;
     }
 
-    public void addHeader(String name, Serializable value) {
+    public RestOutput<T> addHeader(String name, Serializable value) {
         if (this.headers == null) this.headers = new HashMap<>();
         this.headers.put(name, String.valueOf(value));
+        return this;
     }
 
-    public void addCookie(HttpCookie cookie) {
+    public RestOutput<T> addCookie(HttpCookie cookie) {
         if (this.cookies == null) this.cookies = new ArrayList<>();
         this.cookies.add(cookie);
+        return this;
     }
 
     public Map<String, String> getHeaders() {
