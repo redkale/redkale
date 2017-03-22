@@ -149,7 +149,8 @@ public abstract class Sncp {
                 }
             }
         }
-        if (constructorflag) throw new RuntimeException(param + " must have a empty parameter Constructor");
+        if (param.getDeclaredConstructors().length == 0) constructorflag = true;
+        if (!constructorflag) throw new RuntimeException(param + " must have a empty parameter Constructor");
         for (Method m : param.getMethods()) {
             if (m.getName().equals("completed") && Modifier.isFinal(m.getModifiers())) {
                 throw new RuntimeException(param + "'s completed method cannot final modifier");

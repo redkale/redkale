@@ -6,9 +6,11 @@
 package org.redkale.net.sncp;
 
 import java.util.logging.Level;
+import jdk.internal.org.objectweb.asm.*;
+import static jdk.internal.org.objectweb.asm.Opcodes.*;
 import org.redkale.convert.bson.*;
 import org.redkale.net.sncp.SncpDynServlet.SncpServletAction;
-import org.redkale.util.AsyncHandler;
+import org.redkale.util.*;
 
 /**
  * 异步回调函数  <br>
@@ -33,59 +35,168 @@ public interface SncpAsyncHandler<V, A> extends AsyncHandler<V, A> {
 
         /**
          * <blockquote><pre>
-         * 若参数类型为AsyncHandler子类，必须保证其子类可被继承且completed、failed可被重载且包含空参数的构造函数。
+         *
          * 考虑点：
          *      1、AsyncHandler子类是接口，且还有其他多个方法
          *      2、AsyncHandler子类是类， 需要继承，且必须有空参数构造函数
          *      3、AsyncHandler子类无论是接口还是类，都可能存在其他泛型
          *
-         *  public class _DyncSncpAsyncHandler_xxx extends XXXAsyncHandler implements SncpAsyncHandler {
+         *  public class XXXAsyncHandler_DyncSncpAsyncHandler_4323 extends XXXAsyncHandler implements SncpAsyncHandler {
          *
-         *      public SncpAsyncHandler handler;
+         *      private SncpAsyncHandler sncphandler;
          *
-         *      protected Object[] params;
+         *      &#64;java.beans.ConstructorProperties({"sncphandler"})
+         *      public XXXAsyncHandler_DyncSncpAsyncHandler_4323(SncpAsyncHandler sncphandler) {
+         *          super();
+         *          this.sncphandler = sncphandler;
+         *      }
          *
          *      &#64;Override
          *      public void completed(Object result, Object attachment) {
-         *          handler.completed(result, attachment);
+         *          sncphandler.completed(result, attachment);
          *      }
          *
          *      &#64;Override
          *      public void failed(Throwable exc, Object attachment) {
-         *          handler.failed(exc, attachment);
+         *          sncphandler.failed(exc, attachment);
          *      }
          *
          *      &#64;Override
          *      public Object[] sncp_getParams() {
-         *          return params;
+         *          return sncphandler.sncp_getParams();
          *      }
          *
          *      &#64;Override
          *      public void sncp_setParams(Object... params) {
-         *          this.params = params;
-         *          handler.sncp_setParams(params);
+         *          sncphandler.sncp_setParams(params);
          *      }
          *  }
          *
          * </pre></blockquote>
          *
-         * @param <V>          结果对象的泛型
-         * @param <A>          附件对象的泛型
          * @param handlerClass AsyncHandler类型或子类
-         * @param action       SncpServletAction
-         * @param in           BsonReader
-         * @param out          BsonWriter
-         * @param request      SncpRequest
-         * @param response     SncpResponse
          *
-         * @return SncpAsyncHandler
+         * @return Creator
          */
-        public static <V, A> SncpAsyncHandler<V, A> create(Class<? extends AsyncHandler> handlerClass, SncpServletAction action,
-            BsonReader in, BsonWriter out, SncpRequest request, SncpResponse response) {
-            if (handlerClass == AsyncHandler.class) return new DefaultSncpAsyncHandler(action, in, out, request, response);
-            //子类,  待实现
-            return new DefaultSncpAsyncHandler(action, in, out, request, response);
+        public static Creator<SncpAsyncHandler> createCreator(Class<? extends AsyncHandler> handlerClass) {
+            //------------------------------------------------------------- 
+            final boolean handlerinterface = handlerClass.isInterface();
+            final String handlerClassName = handlerClass.getName().replace('.', '/');
+            final String sncyHandlerName = SncpAsyncHandler.class.getName().replace('.', '/');
+            final String sncyHandlerDesc = Type.getDescriptor(SncpAsyncHandler.class);
+            final String newDynName = handlerClass.getName().replace('.', '/') + "_Dync" + SncpAsyncHandler.class.getSimpleName() + "_" + (System.currentTimeMillis() % 10000);
+
+            ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
+            FieldVisitor fv;
+            AsmMethodVisitor mv;
+            AnnotationVisitor av0;
+            cw.visit(V1_8, ACC_PUBLIC + ACC_SUPER, newDynName, null, handlerinterface ? "java/lang/Object" : handlerClassName, handlerinterface ? new String[]{handlerClassName, sncyHandlerName} : new String[]{sncyHandlerName});
+
+            { //handler 属性
+                fv = cw.visitField(ACC_PRIVATE, "sncphandler", sncyHandlerDesc, null, null);
+                fv.visitEnd();
+            }
+            {//构造方法
+                mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC, "<init>", "(" + sncyHandlerDesc + ")V", null, null));
+                //mv.setDebug(true);
+                {
+                    av0 = mv.visitAnnotation("Ljava/beans/ConstructorProperties;", true);
+                    {
+                        AnnotationVisitor av1 = av0.visitArray("value");
+                        av1.visit(null, "sncphandler");
+                        av1.visitEnd();
+                    }
+                    av0.visitEnd();
+                }
+                mv.visitVarInsn(ALOAD, 0);
+                mv.visitMethodInsn(INVOKESPECIAL, handlerinterface ? "java/lang/Object" : handlerClassName, "<init>", "()V", false);
+                mv.visitVarInsn(ALOAD, 0);
+                mv.visitVarInsn(ALOAD, 1);
+                mv.visitFieldInsn(PUTFIELD, newDynName, "sncphandler", sncyHandlerDesc);
+                mv.visitInsn(RETURN);
+                mv.visitMaxs(2, 2);
+                mv.visitEnd();
+            }
+
+            for (java.lang.reflect.Method method : handlerClass.getMethods()) { //
+                if ("completed".equals(method.getName()) && method.getParameterCount() == 2) {
+                    mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC, "completed", Type.getMethodDescriptor(method), null, null));
+                    mv.visitVarInsn(ALOAD, 0);
+                    mv.visitFieldInsn(GETFIELD, newDynName, "sncphandler", sncyHandlerDesc);
+                    mv.visitVarInsn(ALOAD, 1);
+                    mv.visitVarInsn(ALOAD, 2);
+                    mv.visitMethodInsn(INVOKEINTERFACE, sncyHandlerName, "completed", "(Ljava/lang/Object;Ljava/lang/Object;)V", true);
+                    mv.visitInsn(RETURN);
+                    mv.visitMaxs(3, 3);
+                    mv.visitEnd();
+                } else if ("failed".equals(method.getName()) && method.getParameterCount() == 2) {
+                    mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC, "failed", Type.getMethodDescriptor(method), null, null));
+                    mv.visitVarInsn(ALOAD, 0);
+                    mv.visitFieldInsn(GETFIELD, newDynName, "sncphandler", sncyHandlerDesc);
+                    mv.visitVarInsn(ALOAD, 1);
+                    mv.visitVarInsn(ALOAD, 2);
+                    mv.visitMethodInsn(INVOKEINTERFACE, sncyHandlerName, "failed", "(Ljava/lang/Throwable;Ljava/lang/Object;)V", true);
+                    mv.visitInsn(RETURN);
+                    mv.visitMaxs(3, 3);
+                    mv.visitEnd();
+                } else if (handlerinterface || java.lang.reflect.Modifier.isAbstract(method.getModifiers())) {
+                    mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC, method.getName(), Type.getMethodDescriptor(method), null, null));
+                    Class returnType = method.getReturnType();
+                    if (returnType == void.class) {
+                        mv.visitInsn(RETURN);
+                        mv.visitMaxs(0, 1);
+                    } else if (returnType.isPrimitive()) {
+                        mv.visitInsn(ICONST_0);
+                        if (returnType == long.class) {
+                            mv.visitInsn(LRETURN);
+                            mv.visitMaxs(2, 1);
+                        } else if (returnType == float.class) {
+                            mv.visitInsn(FRETURN);
+                            mv.visitMaxs(2, 1);
+                        } else if (returnType == double.class) {
+                            mv.visitInsn(DRETURN);
+                            mv.visitMaxs(2, 1);
+                        } else {
+                            mv.visitInsn(IRETURN);
+                            mv.visitMaxs(1, 1);
+                        }
+                    } else {
+                        mv.visitInsn(ACONST_NULL);
+                        mv.visitInsn(ARETURN);
+                        mv.visitMaxs(1, 1);
+                    }
+                    mv.visitEnd();
+                }
+            }
+            { // sncp_getParams
+                mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC, "sncp_getParams", "()[Ljava/lang/Object;", null, null));
+                mv.visitVarInsn(ALOAD, 0);
+                mv.visitFieldInsn(GETFIELD, newDynName, "sncphandler", sncyHandlerDesc);
+                mv.visitMethodInsn(INVOKEINTERFACE, sncyHandlerName, "sncp_getParams", "()[Ljava/lang/Object;", true);
+                mv.visitInsn(ARETURN);
+                mv.visitMaxs(1, 1);
+                mv.visitEnd();
+            }
+            {  // sncp_setParams
+                mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC + ACC_VARARGS, "sncp_setParams", "([Ljava/lang/Object;)V", null, null));
+                mv.visitVarInsn(ALOAD, 0);
+                mv.visitFieldInsn(GETFIELD, newDynName, "sncphandler", sncyHandlerDesc);
+                mv.visitVarInsn(ALOAD, 1);
+                mv.visitMethodInsn(INVOKEINTERFACE, sncyHandlerName, "sncp_setParams", "([Ljava/lang/Object;)V", true);
+                mv.visitInsn(RETURN);
+                mv.visitMaxs(2, 2);
+                mv.visitEnd();
+            }
+            cw.visitEnd();
+            byte[] bytes = cw.toByteArray();
+            Class<SncpAsyncHandler> newHandlerClazz = (Class<SncpAsyncHandler>) new ClassLoader(handlerClass.getClassLoader()) {
+                public final Class<?> loadClass(String name, byte[] b) {
+                    return defineClass(name, b, 0, b.length);
+                }
+            }.loadClass(newDynName.replace('/', '.'), bytes);
+            return Creator.create(newHandlerClazz);
         }
+
     }
 
     static class DefaultSncpAsyncHandler<V, A> implements SncpAsyncHandler<V, A> {

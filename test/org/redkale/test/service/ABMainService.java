@@ -85,6 +85,10 @@ public class ABMainService implements Service {
         url = "http://127.0.0.1:" + abport + "/pipes/abmain/asyncabtime/张先生";
         System.out.println(Utility.postHttpContent(url));
 
+        //异步方法
+        url = "http://127.0.0.1:" + abport + "/pipes/abmain/asyncabtime2/张先生";
+        System.out.println(Utility.postHttpContent(url));
+        
         server.shutdown();
     }
 
@@ -118,6 +122,10 @@ public class ABMainService implements Service {
 
         //异步方法
         url = "http://127.0.0.1:" + abport + "/pipes/abmain/asyncabtime/张先生";
+        System.out.println(Utility.postHttpContent(url));
+
+        //异步方法
+        url = "http://127.0.0.1:" + abport + "/pipes/abmain/asyncabtime2/张先生";
         System.out.println(Utility.postHttpContent(url));
 
         server.shutdown();
@@ -161,5 +169,26 @@ public class ABMainService implements Service {
         }, (t, a) -> {
             if (handler != null) handler.failed(t, a);
         }), name);
+    }
+
+    @RestMapping(name = "asyncabtime2")
+    public void abCurrentTime(final MyAsyncHandler<String, Void> handler, @RestParam(name = "#") final String name) {
+        bcService.bcCurrentTime(new MyAsyncHandler<String, Void>() {
+            @Override
+            public int id() {
+                return 1;
+            }
+
+            @Override
+            public void completed(String v, Void a) {
+                System.out.println("执行了 ABMainService.abCurrentTime----异步方法2");
+                String rs = "异步abCurrentTime: " + v;
+                if (handler != null) handler.completed(rs, a);
+            }
+
+            @Override
+            public void failed(Throwable exc, Void attachment) {
+            }
+        }, name);
     }
 }

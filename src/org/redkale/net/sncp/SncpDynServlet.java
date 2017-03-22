@@ -19,6 +19,7 @@ import static jdk.internal.org.objectweb.asm.ClassWriter.COMPUTE_FRAMES;
 import static jdk.internal.org.objectweb.asm.Opcodes.*;
 import jdk.internal.org.objectweb.asm.Type;
 import org.redkale.convert.bson.*;
+import org.redkale.net.sncp.SncpAsyncHandler.DefaultSncpAsyncHandler;
 import org.redkale.service.*;
 import org.redkale.util.*;
 import org.redkale.service.RpcCall;
@@ -123,7 +124,16 @@ public final class SncpDynServlet extends SncpServlet {
             SncpAsyncHandler handler = null;
             try {
                 if (action.handlerFuncParamIndex >= 0) {
-                    handler = SncpAsyncHandler.Factory.create(action.handlerFuncParamClass, action, in, out, request, response);
+                    if (action.handlerFuncParamClass == AsyncHandler.class) {
+                        handler = new DefaultSncpAsyncHandler(action, in, out, request, response);
+                    } else {
+                        Creator<SncpAsyncHandler> creator = action.handlerCreator;
+                        if (creator == null) {
+                            creator = SncpAsyncHandler.Factory.createCreator(action.handlerFuncParamClass);
+                            action.handlerCreator = creator;
+                        }
+                        handler = creator.create(new DefaultSncpAsyncHandler(action, in, out, request, response));
+                    }
                 }
                 in.setBytes(request.getBody());
                 action.action(in, out, handler);
@@ -142,6 +152,8 @@ public final class SncpDynServlet extends SncpServlet {
     public static abstract class SncpServletAction {
 
         public Method method;
+
+        public Creator<SncpAsyncHandler> handlerCreator;
 
         @Resource
         protected BsonConvert convert;

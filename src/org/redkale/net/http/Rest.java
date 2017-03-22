@@ -404,11 +404,21 @@ public final class Rest {
 
                 paramMap.put("name", pname);
                 paramMap.put("type", ptype.getName());
-                if (ptype == AsyncHandler.class) { //HttpResponse.createAsyncHandler()
-                    mv.visitVarInsn(ALOAD, 2);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "createAsyncHandler", "()Lorg/redkale/util/AsyncHandler;", false);
-                    mv.visitVarInsn(ASTORE, maxLocals);
-                    varInsns.add(new int[]{ALOAD, maxLocals});
+                if (AsyncHandler.class.isAssignableFrom(ptype)) { //HttpResponse.createAsyncHandler() or HttpResponse.createAsyncHandler(Class)
+                    if (ptype == AsyncHandler.class) {
+                        mv.visitVarInsn(ALOAD, 2);
+                        mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "createAsyncHandler", "()Lorg/redkale/util/AsyncHandler;", false);
+                        mv.visitVarInsn(ASTORE, maxLocals);
+                        varInsns.add(new int[]{ALOAD, maxLocals});
+                    } else {
+                        mv.visitVarInsn(ALOAD, 0);
+                        mv.visitVarInsn(ALOAD, 2);
+                        mv.visitLdcInsn(Type.getType(Type.getDescriptor(ptype)));
+                        mv.visitMethodInsn(INVOKEVIRTUAL, newDynName, "createAsyncHandler", "(Lorg/redkale/net/http/HttpResponse;Ljava/lang/Class;)Lorg/redkale/util/AsyncHandler;", false);
+                        mv.visitTypeInsn(CHECKCAST, ptype.getName().replace('.', '/'));
+                        mv.visitVarInsn(ASTORE, maxLocals);
+                        varInsns.add(new int[]{ALOAD, maxLocals});
+                    }
                     hasAsyncHandler = true;
                 } else if (annsid != null) { //HttpRequest.getSessionid(true|false)
                     mv.visitVarInsn(ALOAD, 1);

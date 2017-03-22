@@ -41,6 +41,8 @@ public final class SncpClient {
 
         protected final Type[] paramTypes;
 
+        protected final Class[] paramClass;
+
         protected final Attribute[] paramAttrs; // 为null表示无RpcCall处理，index=0固定为null, 其他为参数标记的RpcCall回调方法
 
         protected final int handlerFuncParamIndex;
@@ -60,6 +62,7 @@ public final class SncpClient {
             }
             this.resultTypes = rt == void.class ? null : rt;
             this.paramTypes = method.getGenericParameterTypes();
+            this.paramClass = method.getParameterTypes();
             this.method = method;
             Annotation[][] anns = method.getParameterAnnotations();
             int targetAddrIndex = -1;
@@ -328,11 +331,12 @@ public final class SncpClient {
 
     private SncpFuture<byte[]> remoteSncp0(final AsyncHandler handler, final BsonConvert bsonConvert, final Transport transport, final SocketAddress addr0, final SncpAction action, final Object... params) {
         Type[] myparamtypes = action.paramTypes;
+        Class[] myparamclass = action.paramClass;
         if (action.addressSourceParamIndex >= 0) params[action.addressSourceParamIndex] = this.clientAddress;
         final BsonWriter writer = bsonConvert.pollBsonWriter(transport.getBufferSupplier()); // 将head写入
         writer.writeTo(DEFAULT_HEADER);
         for (int i = 0; i < params.length; i++) {
-            bsonConvert.convertTo(writer, myparamtypes[i], params[i]);
+            bsonConvert.convertTo(writer, AsyncHandler.class.isAssignableFrom(myparamclass[i]) ? AsyncHandler.class : myparamtypes[i], params[i]);
         }
         final int reqBodyLength = writer.count() - HEADER_SIZE; //body总长度
         final long seqid = System.nanoTime();
