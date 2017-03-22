@@ -5,14 +5,14 @@
  */
 package org.redkale.test.service;
 
+import org.redkale.util.AsyncHandler;
+
 /**
  *
  * @author zhangjx
- * @param <V> V
- * @param <A> A
  */
-public abstract class MyAsyncHandler<V, A> extends MyAsyncInnerHandler<V, A> {
+public abstract class MyAsyncInnerHandler<V, A> implements AsyncHandler<V, A> {
 
-    public abstract int id();
+    protected abstract int id2();
 
 }

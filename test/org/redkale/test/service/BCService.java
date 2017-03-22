@@ -6,7 +6,7 @@
 package org.redkale.test.service;
 
 import javax.annotation.Resource;
-import org.redkale.service.Service;
+import org.redkale.service.*;
 import org.redkale.util.AsyncHandler;
 
 /**
@@ -33,14 +33,29 @@ public class BCService implements Service {
             if (handler != null) handler.failed(t, a);
         }), name);
     }
-    
+
     public void bcCurrentTime(final MyAsyncHandler<String, Void> handler, final String name) {
-        cService.ccCurrentTime(AsyncHandler.create((v, a) -> {
-            System.out.println("执行了 BCService.bcCurrentTime----异步方法2");
-            String rs = "异步bcCurrentTime: " + (v == null ? null : v.getResult());
-            if (handler != null) handler.completed(rs, null);
-        }, (t, a) -> {
-            if (handler != null) handler.failed(t, a);
-        }), name);
+        cService.mcCurrentTime(new MyAsyncHandler<RetResult<String>, Void>() {
+            @Override
+            public int id() {
+                return 1;
+            }
+
+            @Override
+            public void completed(RetResult<String> v, Void a) {
+                System.out.println("执行了 BCService.bcCurrentTime----异步方法2");
+                String rs = "异步bcCurrentTime: " + (v == null ? null : v.getResult());
+                if (handler != null) handler.completed(rs, null);
+            }
+
+            @Override
+            public void failed(Throwable exc, Void attachment) {
+            }
+
+            @Override
+            public int id2() {
+                return 2;
+            }
+        }, name);
     }
 }

@@ -43,6 +43,7 @@ public class ABMainService implements Service {
         //------------------------ 初始化 CService ------------------------------------
         CService cservice = Sncp.createLocalService("", null, ResourceFactory.root(), CService.class, new InetSocketAddress("127.0.0.1", 5577), null, null);
         SncpServer cserver = new SncpServer();
+        cserver.getLogger().setLevel(Level.WARNING);
         cserver.addSncpServlet(new ServiceWrapper(cservice, "", "", new HashSet<>(), null));
         cserver.init(DefaultAnyValue.create("port", 5577));
         cserver.start();
@@ -54,6 +55,7 @@ public class ABMainService implements Service {
         factory.inject(remoteCService);
         factory.register("", remoteCService);
         SncpServer bcserver = new SncpServer();
+        bcserver.getLogger().setLevel(Level.WARNING);
         bcserver.addSncpServlet(new ServiceWrapper(bcservice, "", "", new HashSet<>(), null));
         bcserver.init(DefaultAnyValue.create("port", 5588));
         bcserver.start();
@@ -66,6 +68,7 @@ public class ABMainService implements Service {
         factory.register("", remoteBCService);
 
         HttpServer server = new HttpServer();
+        server.getLogger().setLevel(Level.WARNING);
 
         server.addRestServlet("", ABMainService.class, service, DefaultRestServlet.class, "/pipes");
 
@@ -93,9 +96,6 @@ public class ABMainService implements Service {
     }
 
     public static void main(String[] args) throws Throwable {
-        Logger.getLogger(Server.class.getSimpleName()).setLevel(Level.WARNING);
-        Logger.getLogger(HttpServer.class.getSimpleName()).setLevel(Level.WARNING);
-        Logger.getLogger(SncpServer.class.getSimpleName()).setLevel(Level.WARNING);
         System.out.println("------------------- 本地模式调用 -----------------------------------");
         final int abport = 8888;
         ResourceFactory factory = ResourceFactory.root();
@@ -109,6 +109,7 @@ public class ABMainService implements Service {
         factory.inject(service);
 
         HttpServer server = new HttpServer();
+        server.getLogger().setLevel(Level.WARNING);
 
         server.addRestServlet("", ABMainService.class, service, DefaultRestServlet.class, "/pipes");
 
@@ -188,6 +189,11 @@ public class ABMainService implements Service {
 
             @Override
             public void failed(Throwable exc, Void attachment) {
+            }
+
+            @Override
+            public int id2() {
+               return 2;
             }
         }, name);
     }
