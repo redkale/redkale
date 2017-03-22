@@ -37,7 +37,8 @@ public class HttpPrepareServlet extends PrepareServlet<String, HttpContext, Http
 
     @Override
     public void init(HttpContext context, AnyValue config) {
-        this.servlets.forEach(s -> {
+        Collection<HttpServlet> servlets = getServlets();
+        servlets.forEach(s -> {
             if (s instanceof WebSocketServlet) {
                 ((WebSocketServlet) s).preInit(context, getServletConf(s));
             } else if (s instanceof HttpBaseServlet) {
@@ -47,7 +48,7 @@ public class HttpPrepareServlet extends PrepareServlet<String, HttpContext, Http
         });
         final WatchFactory watch = context.getWatchFactory();
         if (watch != null) {
-            this.servlets.forEach(s -> {
+            servlets.forEach(s -> {
                 watch.inject(s);
             });
         }
@@ -82,7 +83,7 @@ public class HttpPrepareServlet extends PrepareServlet<String, HttpContext, Http
     public void execute(HttpRequest request, HttpResponse response) throws IOException {
         try {
             final String uri = request.getRequestURI();
-            Servlet<HttpContext, HttpRequest, HttpResponse> servlet = this.mappings.isEmpty() ? null : this.mappings.get(uri);
+            Servlet<HttpContext, HttpRequest, HttpResponse> servlet = mappingServlet(uri);
             if (servlet == null && this.regArray != null) {
                 for (SimpleEntry<Predicate<String>, HttpServlet> en : regArray) {
                     if (en.getKey().test(uri)) {
@@ -138,7 +139,7 @@ public class HttpPrepareServlet extends PrepareServlet<String, HttpContext, Http
                         regArray[regArray.length - 1] = new SimpleEntry<>(Pattern.compile(mapping).asPredicate(), servlet);
                     }
                 } else if (mapping != null && !mapping.isEmpty()) {
-                    super.mappings.put(mapping, servlet);
+                    putMapping(mapping, servlet);
                 }
                 if (this.allMapStrings.containsKey(mapping)) {
                     Class old = this.allMapStrings.get(mapping);
@@ -148,7 +149,7 @@ public class HttpPrepareServlet extends PrepareServlet<String, HttpContext, Http
             }
             setServletConf(servlet, conf);
             servlet._prefix = prefix.toString();
-            this.servlets.add(servlet);
+            putServlet(servlet);
         }
     }
 
@@ -175,7 +176,7 @@ public class HttpPrepareServlet extends PrepareServlet<String, HttpContext, Http
     @Override
     public void destroy(HttpContext context, AnyValue config) {
         this.resourceHttpServlet.destroy(context, config);
-        this.servlets.forEach(s -> {
+        getServlets().forEach(s -> {
             s.destroy(context, getServletConf(s));
             if (s instanceof WebSocketServlet) {
                 ((WebSocketServlet) s).postDestroy(context, getServletConf(s));

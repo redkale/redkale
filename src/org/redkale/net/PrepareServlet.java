@@ -15,7 +15,7 @@ import org.redkale.util.*;
 
 /**
  * 根Servlet， 一个Server只能存在一个根Servlet
- * 
+ *
  * 用于分发Request请求
  *
  * <p>
@@ -34,9 +34,33 @@ public abstract class PrepareServlet<K extends Serializable, C extends Context, 
 
     protected final AtomicLong illRequestCounter = new AtomicLong(); //错误请求次数
 
-    protected final Set<S> servlets = new HashSet<>();
+    private final Object lock1 = new Object();
 
-    protected final Map<K, S> mappings = new HashMap<>();
+    private Set<S> servlets = new HashSet<>();
+
+    private final Object lock2 = new Object();
+
+    private Map<K, S> mappings = new HashMap<>();
+
+    protected void putServlet(S servlet) {
+        synchronized (lock1) {
+            Set<S> newservlets = new HashSet<>(servlets);
+            newservlets.add(servlet);
+            this.servlets = newservlets;
+        }
+    }
+
+    protected void putMapping(K key, S value) {
+        synchronized (lock2) {
+            Map<K, S> newmappings = new HashMap<>(mappings);
+            newmappings.put(key, value);
+            this.mappings = newmappings;
+        }
+    }
+
+    protected S mappingServlet(K key) {
+        return mappings.get(key);
+    }
 
     public abstract void addServlet(S servlet, Object attachment, AnyValue conf, K... mappings);
 

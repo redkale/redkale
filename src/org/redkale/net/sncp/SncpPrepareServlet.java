@@ -30,26 +30,22 @@ public class SncpPrepareServlet extends PrepareServlet<DLong, SncpContext, SncpR
 
     public void addServlet(SncpServlet servlet, AnyValue conf) {
         setServletConf(servlet, conf);
-        synchronized (mappings) {
-            mappings.put(servlet.getServiceid(), servlet);
-            servlets.add(servlet);
-        }
+        putMapping(servlet.getServiceid(), servlet);
+        putServlet(servlet);
     }
 
     public List<SncpServlet> getSncpServlets() {
-        ArrayList<SncpServlet> list = new ArrayList<>(servlets.size());
-        servlets.forEach(x -> list.add((SncpServlet) x));
-        return list;
+        return new ArrayList<>(getServlets());
     }
 
     @Override
     public void init(SncpContext context, AnyValue config) {
-        servlets.forEach(s -> s.init(context, getServletConf(s)));
+        getServlets().forEach(s -> s.init(context, getServletConf(s)));
     }
 
     @Override
     public void destroy(SncpContext context, AnyValue config) {
-        servlets.forEach(s -> s.destroy(context, getServletConf(s)));
+        getServlets().forEach(s -> s.destroy(context, getServletConf(s)));
     }
 
     @Override
@@ -58,7 +54,7 @@ public class SncpPrepareServlet extends PrepareServlet<DLong, SncpContext, SncpR
             response.finish(pongBuffer.duplicate());
             return;
         }
-        SncpServlet servlet = (SncpServlet) mappings.get(request.getServiceid());
+        SncpServlet servlet = (SncpServlet) mappingServlet(request.getServiceid());
         if (servlet == null) {
             response.finish(SncpResponse.RETCODE_ILLSERVICEID, null);  //无效serviceid
         } else {
