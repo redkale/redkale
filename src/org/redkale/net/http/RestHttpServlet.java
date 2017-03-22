@@ -9,7 +9,6 @@ import java.io.*;
 import java.util.concurrent.ConcurrentHashMap;
 import jdk.internal.org.objectweb.asm.*;
 import static jdk.internal.org.objectweb.asm.Opcodes.*;
-import org.redkale.net.sncp.SncpAsyncHandler;
 import org.redkale.util.*;
 
 /**
@@ -156,7 +155,7 @@ public abstract class RestHttpServlet<T> extends HttpBaseServlet {
         }
         cw.visitEnd();
         byte[] bytes = cw.toByteArray();
-        Class<SncpAsyncHandler> newHandlerClazz = (Class<SncpAsyncHandler>) new ClassLoader(handlerClass.getClassLoader()) {
+        Class<AsyncHandler> newHandlerClazz = (Class<AsyncHandler>) new ClassLoader(handlerClass.getClassLoader()) {
             public final Class<?> loadClass(String name, byte[] b) {
                 return defineClass(name, b, 0, b.length);
             }
