@@ -268,6 +268,7 @@ public abstract class Sncp {
             for (char ch : name.toCharArray()) {
                 if (!((ch >= '0' && ch <= '9') || ch == '_' || (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z'))) normal = false;
             }
+            if (!normal) throw new RuntimeException(serviceClass + "'s resource name is illegal, must be 0-9 _ a-z A-Z");
             newDynName += "_" + (normal ? name : hash(name));
         }
         try {
