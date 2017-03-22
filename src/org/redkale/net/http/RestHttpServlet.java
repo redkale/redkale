@@ -64,6 +64,7 @@ public abstract class RestHttpServlet<T> extends HttpBaseServlet {
     private static final ConcurrentHashMap<Class, Creator> creators = new ConcurrentHashMap<>();
 
     private static <H extends AsyncHandler> Creator<H> createCreator(Class<H> handlerClass) {
+        //生成规则与SncpAsyncHandler.Factory 很类似
         //------------------------------------------------------------- 
         final boolean handlerinterface = handlerClass.isInterface();
         final String handlerClassName = handlerClass.getName().replace('.', '/');
