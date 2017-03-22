@@ -75,6 +75,7 @@ public final class SncpClient {
                         if (handlerFuncIndex >= 0) {
                             throw new RuntimeException(method + " have more than one AsyncHandler type parameter");
                         }
+                        Sncp.checkAsyncModifier(params[i], method);
                         handlerFuncIndex = i;
                         break;
                     }

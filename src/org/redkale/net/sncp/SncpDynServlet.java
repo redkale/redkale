@@ -120,29 +120,11 @@ public final class SncpDynServlet extends SncpServlet {
             BsonWriter out = action.convert.pollBsonWriter(bufferSupplier);
             out.writeTo(DEFAULT_HEADER);
             BsonReader in = action.convert.pollBsonReader();
-            SncpAsyncHandler handler;
+            SncpAsyncHandler handler = null;
             try {
-                handler = action.handlerFuncParamIndex >= 0 ? new SncpAsyncHandler() {
-                    @Override
-                    public void completed(Object result, Object attachment) {
-                        try {
-                            action._callParameter(out, params);
-                            action.convert.convertTo(out, Object.class, result);
-                            response.finish(0, out);
-                        } catch (Exception e) {
-                            failed(e, attachment);
-                        } finally {
-                            action.convert.offerBsonReader(in);
-                            action.convert.offerBsonWriter(out);
-                        }
-                    }
-
-                    @Override
-                    public void failed(Throwable exc, Object attachment) {
-                        response.getContext().getLogger().log(Level.INFO, "sncp execute error(" + request + ")", exc);
-                        response.finish(SncpResponse.RETCODE_THROWEXCEPTION, null);
-                    }
-                } : null;
+                if (action.handlerFuncParamIndex >= 0) {
+                    handler = SncpAsyncHandler.Factory.create(action.handlerFuncParamClass, action, in, out, request, response);
+                }
                 in.setBytes(request.getBody());
                 action.action(in, out, handler);
                 if (handler == null) {
@@ -169,6 +151,8 @@ public final class SncpDynServlet extends SncpServlet {
         protected java.lang.reflect.Type[] paramTypes;  //index=0表示返回参数的type， void的返回参数类型为null
 
         protected int handlerFuncParamIndex = -1;  //handlerFuncParamIndex>=0表示存在AsyncHandler参数
+
+        protected Class handlerFuncParamClass; //AsyncHandler参数的类型
 
         public abstract void action(final BsonReader in, final BsonWriter out, final SncpAsyncHandler handler) throws Throwable;
 
@@ -226,9 +210,9 @@ public final class SncpDynServlet extends SncpServlet {
          *          TestBean arg1 = convert.convertFrom(paramTypes[2], in);
          *          String arg2 = convert.convertFrom(paramTypes[3], in);
          *          int arg3 = convert.convertFrom(paramTypes[4], in);
-         *          handler.setParams(arg0, arg1, arg2, arg3);
+         *          handler.sncp_setParams(arg0, arg1, arg2, arg3);
          *          service.insert(arg0, arg1, arg2, arg3);
-         *       }         
+         *       }
          * }
          *
          * class DynActionTestService_update extends SncpServletAction {
@@ -244,11 +228,11 @@ public final class SncpDynServlet extends SncpServlet {
          *          TestBean arg1 = convert.convertFrom(paramTypes[4], in);
          *          String arg2 = convert.convertFrom(paramTypes[5], in);
          *          int arg3 = convert.convertFrom(paramTypes[6], in);
-         *          handler.setParams(a1, a2, a3, arg1, arg2, arg3);
+         *          handler.sncp_setParams(a1, a2, a3, arg1, arg2, arg3);
          *          service.update(a1, a2, a3, arg1, arg2, arg3);
-         *      }         
+         *      }
          * }
-         * 
+         *
          * </pre></blockquote>
          *
          * @param service  Service
@@ -307,6 +291,7 @@ public final class SncpDynServlet extends SncpServlet {
                 throw new RuntimeException(ex); //不可能会发生
             }
             int handlerFuncIndex = -1;
+            Class handlerFuncClass = null;
             { // action方法
                 mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC, "action", "(" + convertReaderDesc + convertWriterDesc + asyncHandlerDesc + ")V", null, new String[]{"java/lang/Throwable"}));
                 //mv.setDebug(true);
@@ -320,8 +305,11 @@ public final class SncpDynServlet extends SncpServlet {
                         if (handlerFuncIndex >= 0) {
                             throw new RuntimeException(method + " have more than one AsyncHandler type parameter");
                         }
+                        Sncp.checkAsyncModifier(paramClasses[i], method);
                         handlerFuncIndex = i;
+                        handlerFuncClass = paramClasses[i];
                         mv.visitVarInsn(ALOAD, 3);
+                        mv.visitTypeInsn(CHECKCAST, paramClasses[i].getName().replace('.', '/'));
                         mv.visitVarInsn(ASTORE, store);
                         codes[i] = new int[]{ALOAD, store};
                         store++;
@@ -421,7 +409,7 @@ public final class SncpDynServlet extends SncpServlet {
                         }
                         mv.visitInsn(AASTORE);
                     }
-                    mv.visitMethodInsn(INVOKEVIRTUAL, handlerName, "setParams", "([Ljava/lang/Object;)V", false);
+                    mv.visitMethodInsn(INVOKEINTERFACE, handlerName, "sncp_setParams", "([Ljava/lang/Object;)V", true);
                 }
                 {  //调用service
                     mv.visitVarInsn(ALOAD, 0);
@@ -527,6 +515,7 @@ public final class SncpDynServlet extends SncpServlet {
                 System.arraycopy(ptypes, 0, types, 1, ptypes.length);
                 instance.paramTypes = types;
                 instance.handlerFuncParamIndex = handlerFuncIndex;
+                instance.handlerFuncParamClass = handlerFuncClass;
 
                 org.redkale.util.Attribute[] atts = new org.redkale.util.Attribute[ptypes.length + 1];
                 Annotation[][] anns = method.getParameterAnnotations();

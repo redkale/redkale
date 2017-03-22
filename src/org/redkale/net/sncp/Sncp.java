@@ -130,6 +130,39 @@ public abstract class Sncp {
         }
     }
 
+    static void checkAsyncModifier(Class param, Method method) {
+        if (param == AsyncHandler.class) return;
+        if (Modifier.isFinal(param.getModifiers())) {
+            throw new RuntimeException("AsyncHandler Type Parameter on {" + method + "} cannot final modifier");
+        }
+        if (!Modifier.isPublic(param.getModifiers())) {
+            throw new RuntimeException("AsyncHandler Type Parameter on {" + method + "} must be public modifier");
+        }
+        if (param.isInterface()) return;
+        boolean constructorflag = false;
+        for (Constructor c : param.getDeclaredConstructors()) {
+            if (c.getParameterCount() == 0) {
+                int mod = c.getModifiers();
+                if (Modifier.isPublic(mod) || Modifier.isProtected(mod)) {
+                    constructorflag = true;
+                    break;
+                }
+            }
+        }
+        if (constructorflag) throw new RuntimeException(param + " must have a empty parameter Constructor");
+        for (Method m : param.getMethods()) {
+            if (m.getName().equals("completed") && Modifier.isFinal(m.getModifiers())) {
+                throw new RuntimeException(param + "'s completed method cannot final modifier");
+            } else if (m.getName().equals("failed") && Modifier.isFinal(m.getModifiers())) {
+                throw new RuntimeException(param + "'s failed method cannot final modifier");
+            } else if (m.getName().equals("sncp_getParams") && Modifier.isFinal(m.getModifiers())) {
+                throw new RuntimeException(param + "'s sncp_getParams method cannot final modifier");
+            } else if (m.getName().equals("sncp_setParams") && Modifier.isFinal(m.getModifiers())) {
+                throw new RuntimeException(param + "'s sncp_setParams method cannot final modifier");
+            }
+        }
+    }
+
     /**
      * <blockquote><pre>
      * public class TestService implements Service{
@@ -139,16 +172,16 @@ public abstract class Sncp {
      *      }
      *
      *      &#64;RpcMultiRun(selfrun = false)
-      public void createSomeThing(TestBean bean){
-          //do something
-      }
-
-      &#64;RpcMultiRun
-      public String updateSomeThing(String id){
-          return "hello" + id;
-      }
- }
- </pre></blockquote>
+     * public void createSomeThing(TestBean bean){
+     * //do something
+     * }
+     *
+     * &#64;RpcMultiRun
+     * public String updateSomeThing(String id){
+     * return "hello" + id;
+     * }
+     * }
+     * </pre></blockquote>
      *
      * <blockquote><pre>
      * &#64;Resource(name = "")
@@ -362,7 +395,13 @@ public abstract class Sncp {
                 mv.visitInsn(mrun.samerun() ? ICONST_1 : ICONST_0);
                 mv.visitInsn(mrun.diffrun() ? ICONST_1 : ICONST_0);
                 int varindex = 0;
+                boolean handlerFuncFlag = false;
                 for (Class pt : paramtypes) {
+                    if (AsyncHandler.class.isAssignableFrom(pt)) {
+                        if (handlerFuncFlag) throw new RuntimeException(method + " have more than one AsyncHandler type parameter");
+                        checkAsyncModifier(pt, method);
+                        handlerFuncFlag = true;
+                    }
                     if (pt.isPrimitive()) {
                         if (pt == long.class) {
                             mv.visitVarInsn(LLOAD, ++varindex);
@@ -403,8 +442,15 @@ public abstract class Sncp {
                 //mv.setDebug(true);  
                 { //给参数加上 Annotation
                     final Annotation[][] anns = method.getParameterAnnotations();
+                    boolean handlerAttachFlag = false;
                     for (int k = 0; k < anns.length; k++) {
                         for (Annotation ann : anns[k]) {
+                            if (ann.annotationType() == RpcAttachment.class) {
+                                if (handlerAttachFlag) {
+                                    throw new RuntimeException(method + " have more than one @RpcAttachment parameter");
+                                }
+                                handlerAttachFlag = true;
+                            }
                             if (ann instanceof SncpDyn || ann instanceof RpcMultiRun) continue; //必须过滤掉 RpcMultiRun、SncpDyn，否则生成远程模式Service时会出错
                             visitAnnotation(mv.visitParameterAnnotation(k, Type.getDescriptor(ann.annotationType()), true), ann);
                         }
