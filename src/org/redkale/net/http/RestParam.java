@@ -32,9 +32,10 @@ public @interface RestParam {
      * name='&#38;'表示当前用户;  <br>
      * name='#'表示截取uri最后一段;  <br>
      * name='#xxx:'表示从uri中/pipes/xxx:v/截取xxx:的值  <br>
+     * 若方法名以find、delete开头且方法的参数只有一个且参数类型是基本数据类型或String，则默认值为"#"  <br>
      *
      * @return String
-     */    
+     */
     String name();
 
     /**
