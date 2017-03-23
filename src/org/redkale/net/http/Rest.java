@@ -60,6 +60,42 @@ public final class Rest {
     private Rest() {
     }
 
+    public static class MethodParamClassVisitor extends ClassVisitor {
+
+        private final Map<String, List<String>> fieldmap;
+
+        public MethodParamClassVisitor(int api, final Map<String, List<String>> fieldmap) {
+            super(api);
+            this.fieldmap = fieldmap;
+        }
+
+        @Override
+        public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
+            if (java.lang.reflect.Modifier.isStatic(access)) return null;
+            List<String> fieldnames = new ArrayList<>();
+            fieldmap.put(name + ":" + desc, fieldnames);
+            return new MethodVisitor(Opcodes.ASM5) {
+                @Override
+                public void visitLocalVariable(String name, String description, String signature, Label start, Label end, int index) {
+                    if (index > 0) fieldnames.add(name);
+                }
+            };
+        }
+
+        //返回的List中参数列表可能会比方法参数量多，因为方法内的临时变量也会存入list中， 所以需要list的元素集合比方法的参数多
+        public static Map<String, List<String>> getMethodParamNames(Class clazz) {
+            String n = clazz.getName();
+            InputStream in = clazz.getResourceAsStream(n.substring(n.lastIndexOf('.') + 1) + ".class");
+            Map<String, List<String>> map = new HashMap<>();
+            if (in == null) return map;
+            try {
+                new ClassReader(Utility.readBytesThenClose(in)).accept(new MethodParamClassVisitor(Opcodes.ASM5, map), 0);
+            } catch (Exception e) { //无需理会                
+            }
+            return map;
+        }
+    }
+
     static String getWebModuleName(Class<? extends Service> serviceType) {
         final RestService controller = serviceType.getAnnotation(RestService.class);
         if (controller == null) return serviceType.getSimpleName().replaceAll("Service.*$", "").toLowerCase();
@@ -217,6 +253,7 @@ public final class Rest {
         if (entrys.isEmpty()) return null; //没有可WebMapping的方法
 
         //将每个Service可转换的方法生成HttpServlet对应的WebMapping方法
+        final Map<String, List<String>> asmParamMap = MethodParamClassVisitor.getMethodParamNames(serviceType);
         for (final MappingEntry entry : entrys) {
             final Method method = entry.mappingMethod;
             final Class returnType = method.getReturnType();
@@ -263,11 +300,12 @@ public final class Rest {
             final int maxStack = 3 + params.length;
             List<int[]> varInsns = new ArrayList<>();
             int maxLocals = 4;
-            int argIndex = 0;
 
+            List<String> asmParamNames = asmParamMap == null ? null : asmParamMap.get(method.getName() + ":" + Type.getMethodDescriptor(method));
             List<Object[]> paramlist = new ArrayList<>();
             //解析方法中的每个参数
-            for (final Parameter param : params) {
+            for (int i = 0; i < params.length; i++) {
+                final Parameter param = params[i];
                 final Class ptype = param.getType();
                 String n = null;
                 String comment = "";
@@ -310,13 +348,14 @@ public final class Rest {
                 if (annpara != null) required = annpara.required();
                 if (n == null) n = (annpara == null || annpara.name().isEmpty()) ? null : annpara.name();
                 if (n == null && ptype == userType) n = "&"; //用户类型特殊处理
+                if (n == null && asmParamNames != null && asmParamNames.size() > i) n = asmParamNames.get(i);
                 if (n == null) {
                     if (param.isNamePresent()) {
                         n = param.getName();
                     } else if (ptype == Flipper.class) {
                         n = "flipper";
                     } else {
-                        n = (++argIndex > 1) ? ("bean" + argIndex) : "bean";
+                        n = ("bean" + i);
                     }
                 }
                 if (annhead == null && anncookie == null && annaddr == null

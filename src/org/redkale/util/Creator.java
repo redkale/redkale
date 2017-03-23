@@ -104,6 +104,7 @@ public interface Creator<T> {
                     if (constructorDesc != null && !constructorDesc.equals(desc)) return null;
                     if (this.started) return null;
                     this.started = true;
+                    //返回的List中参数列表可能会比方法参数量多，因为方法内的临时变量也会存入list中， 所以需要list的元素集合比方法的参数多
                     return new MethodVisitor(Opcodes.ASM5) {
                         @Override
                         public void visitLocalVariable(String name, String description, String signature, Label start, Label end, int index) {
@@ -113,7 +114,7 @@ public interface Creator<T> {
                 }
             }
 
-            public static SimpleEntry<String, Class>[] getConstructorField(Class clazz, String constructorDesc) {
+            public static SimpleEntry<String, Class>[] getConstructorField(Class clazz, int paramcount, String constructorDesc) {
                 String n = clazz.getName();
                 InputStream in = clazz.getResourceAsStream(n.substring(n.lastIndexOf('.') + 1) + ".class");
                 if (in == null) return null;
@@ -131,10 +132,18 @@ public interface Creator<T> {
                 final List<String> fieldnames = new ArrayList<>();
                 new ClassReader(out.toByteArray()).accept(new SimpleClassVisitor(Opcodes.ASM5, fieldnames, constructorDesc), 0);
                 if (fieldnames.isEmpty()) return null;
-                return getConstructorField(clazz, fieldnames.toArray(new String[fieldnames.size()]));
+                if (paramcount == fieldnames.size()) {
+                    return getConstructorField(clazz, paramcount, fieldnames.toArray(new String[fieldnames.size()]));
+                } else {
+                    String[] fs = new String[paramcount];
+                    for (int i = 0; i < fs.length; i++) {
+                        fs[i] = fieldnames.get(i);
+                    }
+                    return getConstructorField(clazz, paramcount, fs);
+                }
             }
 
-            public static SimpleEntry<String, Class>[] getConstructorField(Class clazz, String[] names) {
+            public static SimpleEntry<String, Class>[] getConstructorField(Class clazz, int paramcount, String[] names) {
                 SimpleEntry<String, Class>[] se = new SimpleEntry[names.length];
                 for (int i = 0; i < names.length; i++) { //查询参数名对应的Field
                     try {
@@ -147,7 +156,7 @@ public interface Creator<T> {
                 return se;
             }
 
-            public static SimpleEntry<String, Class>[] getConstructorField(Class clazz, Parameter[] params) {
+            public static SimpleEntry<String, Class>[] getConstructorField(Class clazz, int paramcount, Parameter[] params) {
                 SimpleEntry<String, Class>[] se = new SimpleEntry[params.length];
                 for (int i = 0; i < params.length; i++) { //查询参数名对应的Field
                     try {
@@ -232,7 +241,7 @@ public interface Creator<T> {
             for (Constructor c : clazz.getConstructors()) {
                 ConstructorProperties cp = (ConstructorProperties) c.getAnnotation(ConstructorProperties.class);
                 if (cp == null) continue;
-                SimpleEntry<String, Class>[] fields = ConstructorParameters.CreatorInner.getConstructorField(clazz, cp.value());
+                SimpleEntry<String, Class>[] fields = ConstructorParameters.CreatorInner.getConstructorField(clazz, c.getParameterCount(), cp.value());
                 if (fields != null) {
                     constructor0 = c;
                     constructorParameters0 = fields;
@@ -250,7 +259,7 @@ public interface Creator<T> {
             //优先参数最多的构造函数
             cs.sort((o1, o2) -> o2.getParameterCount() - o1.getParameterCount());
             for (Constructor c : cs) {
-                SimpleEntry<String, Class>[] fields = ConstructorParameters.CreatorInner.getConstructorField(clazz, Type.getConstructorDescriptor(c));
+                SimpleEntry<String, Class>[] fields = ConstructorParameters.CreatorInner.getConstructorField(clazz, c.getParameterCount(), Type.getConstructorDescriptor(c));
                 if (fields != null) {
                     constructor0 = c;
                     constructorParameters0 = fields;
@@ -263,7 +272,7 @@ public interface Creator<T> {
                 if (Modifier.isPublic(c.getModifiers()) || Modifier.isPrivate(c.getModifiers())) continue;
                 ConstructorProperties cp = (ConstructorProperties) c.getAnnotation(ConstructorProperties.class);
                 if (cp == null) continue;
-                SimpleEntry<String, Class>[] fields = ConstructorParameters.CreatorInner.getConstructorField(clazz, cp.value());
+                SimpleEntry<String, Class>[] fields = ConstructorParameters.CreatorInner.getConstructorField(clazz, c.getParameterCount(), cp.value());
                 if (fields != null) {
                     constructor0 = c;
                     constructorParameters0 = fields;
@@ -282,7 +291,7 @@ public interface Creator<T> {
             //优先参数最多的构造函数
             cs.sort((o1, o2) -> o2.getParameterCount() - o1.getParameterCount());
             for (Constructor c : cs) {
-                SimpleEntry<String, Class>[] fields = ConstructorParameters.CreatorInner.getConstructorField(clazz, Type.getConstructorDescriptor(c));
+                SimpleEntry<String, Class>[] fields = ConstructorParameters.CreatorInner.getConstructorField(clazz, c.getParameterCount(), Type.getConstructorDescriptor(c));
                 if (fields != null) {
                     constructor0 = c;
                     constructorParameters0 = fields;
