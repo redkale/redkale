@@ -70,13 +70,13 @@ public class WebSocketNodeService extends WebSocketNode implements Service {
 
     @Override
     public void connect(Serializable groupid, InetSocketAddress addr) {
-        source.appendSetItem(groupid, addr);
+        sncpNodes.appendSetItem(groupid, addr);
         if (finest) logger.finest(WebSocketNodeService.class.getSimpleName() + ".event: " + groupid + " connect from " + addr);
     }
 
     @Override
     public void disconnect(Serializable groupid, InetSocketAddress addr) {
-        source.removeSetItem(groupid, addr);
+        sncpNodes.removeSetItem(groupid, addr);
         if (finest) logger.finest(WebSocketNodeService.class.getSimpleName() + ".event: " + groupid + " disconnect from " + addr);
     }
 }

@@ -38,7 +38,7 @@ public abstract class WebSocketNode {
 
     //存放所有用户分布在节点上的队列信息,Set<InetSocketAddress> 为 sncpnode 的集合
     @Resource(name = "$")
-    protected CacheSource<Serializable, InetSocketAddress> source;
+    protected CacheSource<Serializable, InetSocketAddress> sncpNodes;
 
     //存放本地节点上所有在线用户的队列信息,Set<String> 为 engineid 的集合
     protected final ConcurrentHashMap<Serializable, Set<String>> localNodes = new ConcurrentHashMap();
@@ -85,7 +85,7 @@ public abstract class WebSocketNode {
      * @return 地址列表
      */
     public Collection<InetSocketAddress> getOnlineNodes(final Serializable groupid) {
-        return source == null ? null : source.getCollection(groupid);
+        return sncpNodes == null ? null : sncpNodes.getCollection(groupid);
     }
 
     /**
@@ -152,7 +152,7 @@ public abstract class WebSocketNode {
                 }
             }
         }
-        if ((recent && rscode == 0) || remoteNode == null || source == null) {
+        if ((recent && rscode == 0) || remoteNode == null || sncpNodes == null) {
             if (finest) {
                 if ((recent && rscode == 0)) {
                     logger.finest("websocket want send recent message success");
@@ -163,7 +163,7 @@ public abstract class WebSocketNode {
             return rscode;
         }
         //-----------------------发送远程的-----------------------------
-        Collection<InetSocketAddress> addrs = source.getCollection(groupid);
+        Collection<InetSocketAddress> addrs = sncpNodes.getCollection(groupid);
         if (finest) logger.finest("websocket found groupid:" + groupid + " on " + addrs);
         if (addrs != null && !addrs.isEmpty()) {   //对方连接在远程节点(包含本地节点)，所以正常情况下addrs不会为空。
             if (recent) {
