@@ -162,13 +162,14 @@ public abstract class Response<C extends Context, R extends Request<C>> {
     }
 
     public void finish(boolean kill) {
-        if (!this.inited) return; //重复关闭
+        if (!this.inited) return; //避免重复关闭
         //System.println("耗时: " + (System.currentTimeMillis() - request.createtime));
         if (kill) refuseAlive();
         this.context.responsePool.offer(this);
     }
 
     public void finish(final byte[] bs) {
+        if (!this.inited) return; //避免重复关闭
         if (this.context.bufferCapacity == bs.length) {
             ByteBuffer buffer = this.context.pollBuffer();
             buffer.put(bs);
@@ -180,19 +181,23 @@ public abstract class Response<C extends Context, R extends Request<C>> {
     }
 
     public void finish(ByteBuffer buffer) {
+        if (!this.inited) return; //避免重复关闭
         this.channel.write(buffer, buffer, finishHandler);
     }
 
     public void finish(boolean kill, ByteBuffer buffer) {
+        if (!this.inited) return; //避免重复关闭
         if (kill) refuseAlive();
         this.channel.write(buffer, buffer, finishHandler);
     }
 
     public void finish(ByteBuffer... buffers) {
+        if (!this.inited) return; //避免重复关闭
         this.channel.write(buffers, buffers, finishHandler2);
     }
 
     public void finish(boolean kill, ByteBuffer... buffers) {
+        if (!this.inited) return; //避免重复关闭
         if (kill) refuseAlive();
         this.channel.write(buffers, buffers, finishHandler2);
     }

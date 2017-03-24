@@ -317,6 +317,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * @param obj 输出内容
      */
     public void finish(String obj) {
+        if (isClosed()) return;
         if (this.recycleListener != null) this.output = obj;
         if (obj == null || obj.isEmpty()) {
             final ByteBuffer headbuf = createHeader();
@@ -358,6 +359,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * @param message 输出内容
      */
     public void finish(int status, String message) {
+        if (isClosed()) return;
         this.status = status;
         if (status != 200) super.refuseAlive();
         finish(message);
@@ -384,6 +386,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      */
     @Override
     public void finish(final byte[] bs) {
+        if (isClosed()) return; //避免重复关闭
         if (this.context.getBufferCapacity() == bs.length) {
             ByteBuffer buffer = this.context.pollBuffer();
             buffer.put(bs);
@@ -412,6 +415,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      */
     @Override
     public void finish(boolean kill, ByteBuffer buffer) {
+        if (isClosed()) return; //避免重复关闭
         if (!this.headsended) {
             this.contentLength = buffer == null ? 0 : buffer.remaining();
             ByteBuffer headbuf = createHeader();
@@ -444,6 +448,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      */
     @Override
     public void finish(boolean kill, ByteBuffer... buffers) {
+        if (isClosed()) return; //避免重复关闭
         if (bufferHandler != null) {
             ByteBuffer[] bufs = bufferHandler.execute(this, buffers);
             if (bufs != null) buffers = bufs;
