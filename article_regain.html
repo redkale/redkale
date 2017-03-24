@@ -26,17 +26,47 @@
             <h3>Redkale 让你重新认识Java</h3>
 
             <p>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Java 已经走过了二十二个年头，依靠强大的功能、庞大的开发社区和无人能及的生态系统，成为当之无愧的业界之王。<br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Java 已经走过了二十二个年头，依靠强大的功能、庞大的开发社区和无人能及的生态系统，长期占据世界编程语言排行榜首，成为当之无愧的业界之王。在大学时期被这种很有艺术性的开发语言所吸引，果断抛弃C，学习方式很简单，只看JDK API源码，直到现在都是如此。刚毕业就一直从事Java开发方面的工作，至今也有十来年了。从JSP、WebWork到Struts、JSF，从JDBC、Hibernate到TopLink、JPA。从NIO、Mina到Netty、Grizzly。很多框架都用过，研究过。后来渐渐觉得各阶段主流的框架功能很强大，设计理念也很好，但是我们大部分情况只使用其中一小部分功能，且实现上性能都很一般(除少数追求性能的框架)，在结合当时新版JDK发布版本普及会滞后两三年以上。慢慢地发现用了那么多整合的框架并没有比蛮荒时代的开发速度敏捷多少，很多时候在原始的Servlet、JDBC基础上做些简单的封装就能满足大部分的需求。在长期看JDK API源码、学习开源框架设计理念和参考JavaEE规范接口设计的习惯下自然有了自己的思路和设计想法，开始学写自己的框架。于是，在2015年框架基本雏形出来并命名为<a href="http://redkale.org" target="_blank">Redkale</a>，2016年正式开源。<br/>
             </p>  
-            
+
             <p>&nbsp;&nbsp;<b>太臃肿</b></p>
             <p>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如今在Java界，Tomcat、Struts2、Hibernate、MyBatis、Jetty、Spring MVC/Spring Boot/Spring XXX这些框架大家都耳熟能详，似乎不懂两三个以上都不好意思说自己会Java。在一些新手眼里，Java就是Tomcat、Java就是Spring。2004年发布正式版的Spring以其轻量著称，一战成名，打败了J2EE，成为Java事实上的"标准"。然而经过十几年的发展，其生态越来越庞大，功能的增多，复杂的配置，兼容性，历史包袱，使得整个框架体系越来越臃肿，还有不计其数的衍生插件，已经不比当年J2EE轻多少了。在那个JBuilder还是主流IDE的年代，建一个Web系统还是比较简单，除了Tomcat比较大点，其他都算轻量。现在很多人建一个Web项目，需要复杂的Maven建工程，一行代码还没开始写，仅仅是导入SSH/SSM这些框架就需要好几十M，还得进行一堆SSH配置,简单的日志都需要配备log4j/snf4j。可能只是简单的管理系统，必须要搞这么复杂吗？ 如今一个1-2M的框架大家都会觉得算轻量级，MyBatis是JDBC基础上的再次封装，jar包大小近6M，但比Hibernate还是轻量些。这些只是基础框架，如果系统还需要其他功能性的框架(Lucene、Mail、Json) 会使开发包更大。同时大量的开源框架抑制了新JDK的普及，NIO出来都十五年， AIO(NIO.2)也出来六年了，如今还有很多人把NIO给贴上高性能的标签，JDK 5--Java第一个重大更新的版本在2004年发布，直到五-六年后Spring的注解方式才得到普及， Java第二个重大更新的版本JDK 8发布也有三年了，大部分人还停留在只识语法糖Lambda的层级，在JDK功能越来越强大的情况下，开发Java系统并不简化多少。相对于现在流行的NodeJs做个Web系统来说，Java就是个巨无霸。其实呢，Java无需这么复杂，真的可以很简单。
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如今在Java界，Tomcat、Struts2、Hibernate、MyBatis、Jetty、Spring MVC/Spring Boot/Spring XXX这些框架大家都耳熟能详，似乎不懂两三个以上都不好意思说自己会Java，Spring成了Java的代名词。2004年发布正式版的Spring以其轻量著称，一战成名，打败了J2EE，成为Java事实上的"标准"。然而经过十几年的发展，其生态越来越庞大，功能的增多，复杂的配置，兼容性，历史包袱，使得整个框架体系越来越臃肿，还有不计其数的衍生插件，已经不比当年J2EE轻多少了。在那个JBuilder还是主流IDE的年代，建一个Web系统还是比较简单，除了Tomcat比较大点，其他都算轻量。现在很多人建一个Web项目，需要复杂的Maven建工程，一行代码还没开始写，仅仅是导入SSH/SSM这些框架就需要好几十M，还得进行一堆SSH配置,简单的日志都需要配备log4j/snf4j。可能只是简单的管理系统，必须要搞这么复杂吗？ 现在一个1-2M的框架大家都认为是轻量级，MyBatis是JDBC基础上的再次封装，jar包大小近6M，但比Hibernate还是轻量些。这些只是基础框架，如果系统还需要其他功能性的框架(Lucene、Mail、Json) 会使开发包更大。同时大量的开源框架抑制了新JDK的普及，NIO出来都十五年， AIO(NIO.2)也出来六年了，如今还有很多人把NIO给贴上高性能的标签，JDK 5——Java第一个重大更新的版本在2004年发布，直到五-六年后Spring的注解方式才得到普及(Spring旧版本xml方式普及度高)， Java第二个重大更新的版本JDK 8发布也有三年了，大部分人还停留在只识语法糖Lambda的程度，在JDK功能越来越强大的情况下，开发Java系统并不简化多少。相对于现在流行的NodeJs做个Web系统来说，Java就是个巨无霸。其实呢，Java无需这么复杂，真的可以很简单。
             </p>
-            
+
             <p>&nbsp;&nbsp;<b>异步呢</b></p>
             <p>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;用Java开发异步系统是件很难的事情，首先Java规范中异步接口很少，Servlet 3.0虽然支持异步，也出来好几年了，但现在直接用Servlet写代码的人已经不多，而基于Servlet的Struts、Spring Boot这些框架又没把异步太当回事，基本都是实现的Servet同步方法。JDBC更是迄今为止还没有异步接口。其次开源框架以异步接口为主的凤毛麟角。 所以Java程序员在写业务代码时基本都是用同步方式，特别是最耗时的数据源操作JDBC无法异步。 
+            </p>
+            <div class="highlight"><pre><span></span><span class="nd">@WebServlet</span><span class="o">(</span><span class="n">value</span> <span class="o">=</span> <span class="o">{</span><span class="s">&quot;/order/*&quot;</span><span class="o">},</span> <span class="n">comment</span> <span class="o">=</span> <span class="s">&quot;订单模块&quot;</span><span class="o">)</span>
+<span class="kd">public</span> <span class="kd">class</span>  <span class="nc">OrderServlet</span> <span class="kd">extends</span> <span class="n">HttpBaseServlet</span> <span class="o">{</span>
+    
+    <span class="nd">@Resource</span>
+    <span class="kd">private</span> <span class="n">OrderService</span> <span class="n">service</span><span class="o">;</span>
+    
+    <span class="nd">@WebMapping</span><span class="o">(</span><span class="n">url</span> <span class="o">=</span> <span class="s">&quot;/order/find&quot;</span><span class="o">,</span> <span class="n">comment</span> <span class="o">=</span> <span class="s">&quot;查询单个订单&quot;</span><span class="o">)</span>
+    <span class="nd">@WebParam</span><span class="o">(</span><span class="n">name</span> <span class="o">=</span> <span class="s">&quot;#&quot;</span><span class="o">,</span> <span class="n">type</span> <span class="o">=</span> <span class="kt">long</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="n">comment</span> <span class="o">=</span> <span class="s">&quot;订单ID&quot;</span><span class="o">)</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">logout</span><span class="o">(</span><span class="n">HttpRequest</span> <span class="n">req</span><span class="o">,</span> <span class="n">HttpResponse</span> <span class="n">resp</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
+        <span class="kt">long</span> <span class="n">orderid</span> <span class="o">=</span>  <span class="n">req</span><span class="o">.</span><span class="na">getRequstURILastPath</span><span class="o">(</span><span class="mi">0</span><span class="n">L</span><span class="o">);</span>
+        <span class="n">resp</span><span class="o">.</span><span class="na">finishJson</span><span class="o">(</span><span class="n">service</span><span class="o">.</span><span class="na">findOrder</span><span class="o">(</span><span class="n">orderid</span><span class="o">));</span> 
+    <span class="o">}</span>
+<span class="o">}</span>
+
+
+<span class="nd">@Comment</span><span class="o">(</span><span class="s">&quot;订单服务&quot;</span><span class="o">)</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">OrderService</span> <span class="kd">implements</span> <span class="n">Service</span> <span class="o">{</span>
+
+    <span class="nd">@Resource</span>
+    <span class="kd">private</span> <span class="n">DataSource</span> <span class="n">source</span><span class="o">;</span>
+
+    <span class="nd">@Comment</span><span class="o">(</span><span class="s">&quot;查询单个订单&quot;</span><span class="o">)</span>
+    <span class="kd">public</span> <span class="n">Order</span> <span class="nf">findOrder</span><span class="o">(</span><span class="kt">long</span> <span class="n">orderid</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="n">source</span><span class="o">.</span><span class="na">find</span><span class="o">(</span><span class="n">Order</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="n">orderid</span><span class="o">);</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+                </pre></div>
+            <p>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;以上范例是大多数Java开发者的常规写法，Servlet调用Service，Serivce调用数据库操作返回结果，都是同步操作, 而基于JDBC的开发使得最耗时的数据库操作占用了大量的线程时间，即使HTTP使用NIO、AIO(NIO.2)都收效甚微。而在NodeJs里，IO操作都是异步的。如下：
             </p>
             <div class="highlight"><pre><span></span><span class="nx">http</span><span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s">&quot;/url&quot;</span><span class="p">,</span> <span class="p">{</span><span class="nx">id</span><span class="o">:</span><span class="mi">10</span><span class="p">},</span> <span class="kd">function</span><span class="p">(</span><span class="nx">request</span><span class="p">,</span> <span class="nx">response</span><span class="p">)</span> <span class="p">{</span>
   <span class="nx">service</span><span class="p">.</span><span class="nx">getResource</span><span class="p">(</span><span class="nx">request</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">result</span><span class="p">){</span>
@@ -52,88 +82,38 @@
     <span class="nx">connection</span><span class="p">.</span><span class="nx">end</span><span class="p">();</span>
   <span class="p">});</span>
 <span class="p">});</span>
-</pre></div>
+                </pre></div>
             <p>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;而在NodeJs里，IO操作都是异步的。这也是为什么有的用Nodejs做的系统比Java还快。Java在语言上和(NIO/NIO.2)框架的性能优势弥补不了同步的副作用。
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这也是Nodejs做些小系统比Java还快。Java在语言和IO上的性能优势弥补不了同步来带的线程消耗。
             </p>
-            <p>&nbsp;&nbsp;<b>新设计</b></p>
+
+            <p>&nbsp;&nbsp;<b><a href="http://redkale.org" target="_blank">Redkale</a></b></p>
             <p>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Redkale 一个全新设计的Java异步微服务框架。集HTTP、WebSocket、REST、JSON、RPC、DB操作、依赖注入等功能于一身，其jar包大小仅790K，且不依赖任何第三方包。
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://redkale.org" target="_blank">Redkale</a> 一个全新设计的Java异步微服务框架。集HTTP、WebSocket、REST、JSON、RPC、DB操作、依赖注入等功能于一身，其 <a href="http://repo.maven.apache.org/maven2/org/redkale/redkale/1.6.1/" target="_blank">redkale-1.6.1.jar</a> 包大小仅790K，且不依赖任何第三方包。大部分框架自身就很庞大，满足了开发者的需求同时也带来复杂的配置。如同上班只有三四里路，要买辆汽车代步，虽然感觉去公司很快，但算上车的保险保养，加油，下车库，找停车位， 其效果还不如一辆自行车来得简单高效。<a href="http://redkale.org" target="_blank">Redkale</a> 返璞归真，抛弃沉重的历史包袱(javax.servlet、JPA等)，基于JDK 8设计微服务架构，尽可能挖掘新JDK的优势，在保证高性能的情况下追求框架的简易性。其核心分三层结构：接入层Servlet、逻辑层Service、数据层Source。 并且三层都支持异步接口，从HTTP接收请求到Service处理逻辑再到Source拉取数据，全程都可异步，最大限度的提高CPU使用率。<br>
             </p>
+            <p>&nbsp;&nbsp;<b>Servlet</b></p>
             <p>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;从以上代码可以看出，根据优先级选择Constructor，为了减少学习成本，Creator直接重用了java.beans.ConstructorProperties注解，又因ConstructorProperties只能标记在Constructor上，因此定义一个Creator.ConstructorParameters注解，用于标记在Creator的create方法上。
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在设计上，<a href="http://redkale.org" target="_blank">Redkale</a>下足了功夫，敢于抛弃标准，其HTTP服务不是javax.servlet——J2EE中使用最多的规范的实现，在接口形式上与NodeJs的http模块很类似，也很简单。Servlet规范对于现在的应用来说过于庞大，NodeJs中的http模块源码不过十几K，Java里Http主流还是Tomcat——一个8M的重型机器。 JSP在当年前端还不发达的情况下，这种由后台生成页面的方式有其存在意义。现如今REST流行，前端框架玲琅满目，浏览器性能很高，类似velocity的模板引擎也很多，JSP显得很多余。其他语言的http框架在处理请求后大多是由response来关闭整个处理工程，而Servlet规范却是在service方法执行后关闭，Servlet3.0规范虽然支持异步，显然与其他语言框架比，比较生涩难懂，使用上还需与同步方式区别对待，且接口设计本身就会导致实现上性能不佳，而response关闭的方式就天然得把同步与异步等同对待，无论是当前线程还是另开线程处理请求，都由response来结束处理流程。Servlet规范中WebSocket接口设计上也是过于复杂，其实WebSocket形式上就像一个keepalive的Http请求,应该只是一种特殊的HttpServlet。所以<a href="http://redkale.org" target="_blank">Redkale</a>在设计WebSocket时尽量与HttpServlet形态保持一致，同时还集成了分布式功能，让开发者也可以很简单的实现多部署。 <br>
             </p>
-            <div class="highlight"><pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Record</span> <span class="o">{</span>
-
-    <span class="kd">private</span> <span class="kd">final</span> <span class="kt">int</span> <span class="n">id</span><span class="o">;</span>
-
-    <span class="kd">private</span> <span class="n">String</span> <span class="n">name</span><span class="o">;</span>
-
-    <span class="nd">@ConstructorProperties</span><span class="o">({</span><span class="s">&quot;id&quot;</span><span class="o">,</span> <span class="s">&quot;name&quot;</span><span class="o">})</span>
-    <span class="n">Record</span><span class="o">(</span><span class="kt">int</span> <span class="n">id</span><span class="o">,</span> <span class="n">String</span> <span class="n">name</span><span class="o">)</span> <span class="o">{</span>
-        <span class="k">this</span><span class="o">.</span><span class="na">id</span> <span class="o">=</span> <span class="n">id</span><span class="o">;</span>
-        <span class="k">this</span><span class="o">.</span><span class="na">name</span> <span class="o">=</span> <span class="n">name</span><span class="o">;</span>
-    <span class="o">}</span>
-
-    <span class="kd">public</span> <span class="kt">int</span> <span class="nf">getId</span><span class="o">()</span> <span class="o">{</span>
-        <span class="k">return</span> <span class="n">id</span><span class="o">;</span>
-    <span class="o">}</span>
-
-    <span class="kd">public</span> <span class="n">String</span> <span class="nf">getName</span><span class="o">()</span> <span class="o">{</span>
-        <span class="k">return</span> <span class="n">name</span><span class="o">;</span>
-    <span class="o">}</span>
-
-    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">setName</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">)</span> <span class="o">{</span>
-        <span class="k">this</span><span class="o">.</span><span class="na">name</span> <span class="o">=</span> <span class="n">name</span><span class="o">;</span>
-    <span class="o">}</span>
-<span class="o">}</span>
-
-
-<span class="na"><b>Record.class通过ASM自动构建与Record同package的Creator类如下:</b></span>
-
-<span class="kd">public</span> <span class="kd">final</span> <span class="kd">class</span> <span class="nc">Record_DynCreator</span> <span class="kd">implements</span> <span class="n">Creator</span><span class="o">&lt;</span><span class="n">Record</span><span class="o">&gt;</span> <span class="o">{</span>
-
-    <span class="nd">@Override</span>
-    <span class="nd">@Creator.ConstructorParameters</span><span class="o">({</span><span class="s">&quot;id&quot;</span><span class="o">,</span> <span class="s">&quot;name&quot;</span><span class="o">})</span>
-    <span class="kd">public</span> <span class="n">Record</span> <span class="nf">create</span><span class="o">(</span><span class="n">Object</span><span class="o">...</span> <span class="n">params</span><span class="o">)</span> <span class="o">{</span>
-        <span class="k">if</span> <span class="o">(</span><span class="n">params</span><span class="o">[</span><span class="mi">0</span><span class="o">]</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="n">params</span><span class="o">[</span><span class="mi">0</span><span class="o">]</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span>
-        <span class="k">return</span> <span class="k">new</span> <span class="nf">Record</span><span class="o">((</span><span class="n">Integer</span><span class="o">)</span> <span class="n">params</span><span class="o">[</span><span class="mi">0</span><span class="o">],</span> <span class="o">(</span><span class="n">String</span><span class="o">)</span> <span class="n">params</span><span class="o">[</span><span class="mi">1</span><span class="o">]);</span>
-    <span class="o">}</span>
-<span class="o">}</span></pre></div>
+            <p>&nbsp;&nbsp;<b>Service</b></p>
             <p>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如上代码，若构造参数是primitive类，而Creator.create传入的参数可能是null，因此需要给null的primitive对象赋予默认值0。细心的人可能发现了Record的构造函数并不是public的，虽然Record_DynCreator与Record在同一package，但由于两者不是同一个ClassLoader，故不能直接new Record。Redkale曲线救国，通过URLClassLoader的私有方法在Record.class的ClassLoader加载Record_DynCreator。
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://redkale.org" target="_blank">Redkale</a>放入接口设计中最精简的当属RPC功能，RPC没有API方法。Service不仅仅是个逻辑层的定义，还自带RPC功能，开发者只需知道RPC功能的存在，无需在代码上调用任何API。在依赖注入过程中创建Service时通过基本的IP配置自动识别是创建本地模式的Service还是远程模式的Service，远程模式的Service使用的就是RPC，但在代码层Service的调用本地模式与远程模式完全一样。更神奇的是，带有异步回调函数AsyncHandler 的Service方法同样能执行远程模式。这种RPC的简易性是其他框架都无可匹敌的。REST接口设计上尽量减少注解性的配置。<br>
             </p>
-            <div class="highlight"><pre><span class="k">if</span> <span class="o">(</span><span class="n">loader</span> <span class="k">instanceof</span> <span class="n">URLClassLoader</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="n">Modifier</span><span class="o">.</span><span class="na">isPublic</span><span class="o">(</span><span class="n">constructor</span><span class="o">.</span><span class="na">getModifiers</span><span class="o">()))</span> <span class="o">{</span>
-    <span class="k">try</span> <span class="o">{</span>
-        <span class="kd">final</span> <span class="n">URLClassLoader</span> <span class="n">urlLoader</span> <span class="o">=</span> <span class="o">(</span><span class="n">URLClassLoader</span><span class="o">)</span> <span class="n">loader</span><span class="o">;</span>
-        <span class="kd">final</span> <span class="n">URL</span> <span class="n">url</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">URL</span><span class="o">(</span><span class="s">&quot;memclass&quot;</span><span class="o">,</span> <span class="s">&quot;localhost&quot;</span><span class="o">,</span> <span class="o">-</span><span class="mi">1</span><span class="o">,</span> <span class="s">&quot;/&quot;</span> <span class="o">+</span> <span class="n">newDynName</span><span class="o">.</span><span class="na">replace</span><span class="o">(</span><span class="sc">&#39;/&#39;</span><span class="o">,</span> <span class="sc">&#39;.&#39;</span><span class="o">)</span> <span class="o">+</span> <span class="s">&quot;/&quot;</span><span class="o">,</span> <span class="k">new</span> <span class="nf">URLStreamHandler</span><span class="o">()</span> <span class="o">{</span>
-            <span class="nd">@Override</span>
-            <span class="kd">protected</span> <span class="n">URLConnection</span> <span class="nf">openConnection</span><span class="o">(</span><span class="n">URL</span> <span class="n">u</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
-                <span class="k">return</span> <span class="k">new</span> <span class="nf">URLConnection</span><span class="o">(</span><span class="n">u</span><span class="o">)</span> <span class="o">{</span>
-                    <span class="nd">@Override</span>
-                    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">connect</span><span class="o">()</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
-                    <span class="o">}</span>
-
-                    <span class="nd">@Override</span>
-                    <span class="kd">public</span> <span class="n">InputStream</span> <span class="nf">getInputStream</span><span class="o">()</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
-                        <span class="k">return</span> <span class="k">new</span> <span class="nf">ByteArrayInputStream</span><span class="o">(</span><span class="n">bytes</span><span class="o">);</span>
-                    <span class="o">}</span>
-                <span class="o">};</span>
-            <span class="o">}</span>
-        <span class="o">});</span>
-        <span class="n">Method</span> <span class="n">addURLMethod</span> <span class="o">=</span> <span class="n">URLClassLoader</span><span class="o">.</span><span class="na">class</span><span class="o">.</span><span class="na">getDeclaredMethod</span><span class="o">(</span><span class="s">&quot;addURL&quot;</span><span class="o">,</span> <span class="n">URL</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
-        <span class="n">addURLMethod</span><span class="o">.</span><span class="na">setAccessible</span><span class="o">(</span><span class="kc">true</span><span class="o">);</span>
-        <span class="n">addURLMethod</span><span class="o">.</span><span class="na">invoke</span><span class="o">(</span><span class="n">urlLoader</span><span class="o">,</span> <span class="n">url</span><span class="o">);</span>
-        <span class="n">resultClazz</span> <span class="o">=</span> <span class="n">urlLoader</span><span class="o">.</span><span class="na">loadClass</span><span class="o">(</span><span class="n">newDynName</span><span class="o">.</span><span class="na">replace</span><span class="o">(</span><span class="sc">&#39;/&#39;</span><span class="o">,</span> <span class="sc">&#39;.&#39;</span><span class="o">));</span>
-    <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">Throwable</span> <span class="n">t</span><span class="o">)</span> <span class="o">{</span> <span class="c1">//异常无需理会， 使用下一种loader方式</span>
-        <span class="n">t</span><span class="o">.</span><span class="na">printStackTrace</span><span class="o">();</span>
-    <span class="o">}</span>
-<span class="o">}</span></pre></div>
+            <p>&nbsp;&nbsp;<b>Source</b></p>
             <p>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如上代码，构建一个虚拟协议的URL来实现加载，若Record.class的ClassLoader不是URLClassLoader导致resultClazz为null则会抛出异常。
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;只要不是开发数据库管理工具，大部分情况下开发者只用到了基本的增删改查功能，Hibernate、MyBatis这些框架对象新增、对象更新、对象删除和主键查找对象接口定义都比较简单，但是带有过滤条件的操作，就变得难用。MyBatis需要配各种SQL，大量if else，Hibernate需要写HQL或SQL，JPA规范需要写JPQL或使用Criteria功能。过滤查询、翻页查询、过滤修改、局部修改、过滤删除都是很常见的功能，而主流ORM框架对这类操作进行简化程度很有限。<a href="http://redkale.org" target="_blank">Redkale</a> 结合常规的使用场景，以JavaBean的方式提供过滤功能，使过滤性的操作(删改查)API变得异常简单。DataSource另一个亮点是分表分库操作与单表操作的API一样。同时每个操作都提供成异步接口。 DataSource提供的缓存功能还能保持进程间的自动同步(得利于RPC)。<br>
+            </p>
+            <p>&nbsp;&nbsp;<b>异步</b></p>
+            <p>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;待续……。<br>
+            </p>
+            
+            <p>&nbsp;&nbsp;<b>约束</b></p>
+            <p>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;待续……。<br>
             </p>
             <p>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Creator是一个典型通过ASM构建一个简单功能地动态类，同类型还有 <a href="https://redkale.org/javadoc/org/redkale/util/Attribute.html" target="_blank">org.redkale.util.Attribute</a>、<a href="https://redkale.org/javadoc/org/redkale/util/Reproduce.html" target="_blank">org.redkale.util.Reproduce</a>。
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;想了解更多关于Redkale的资料， 请访问Redkale官网: ：<a href="http://redkale.org" target="_blank">http://redkale.org</a>。
             </p>            
             <br/>
             <p>
