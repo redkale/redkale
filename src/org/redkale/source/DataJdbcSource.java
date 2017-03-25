@@ -55,6 +55,7 @@ public final class DataJdbcSource implements DataSource, Resourcable, DataCacheL
         this.cacheForbidden = "NONE".equalsIgnoreCase(readprop.getProperty("shared-cache-mode"));
     }
 
+    @Override
     public final String resourceName() {
         return name;
     }
@@ -63,10 +64,6 @@ public final class DataJdbcSource implements DataSource, Resourcable, DataCacheL
     public void close() throws Exception {
         readPool.close();
         writePool.close();
-    }
-
-    public String getName() {
-        return name;
     }
 
     private Connection createReadSQLConnection() {
@@ -450,7 +447,7 @@ public final class DataJdbcSource implements DataSource, Resourcable, DataCacheL
                 }
                 String sql = "DELETE " + (this.readPool.isMysql() ? "a" : "") + " FROM " + info.getTable(node) + " a" + (join1 == null ? "" : (", " + join1))
                     + ((where == null || where.length() == 0) ? (join2 == null ? "" : (" WHERE " + join2))
-                        : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2)))) + info.createSQLOrderby(flipper)
+                    : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2)))) + info.createSQLOrderby(flipper)
                     + ((flipper == null || flipper.getLimit() < 1) ? "" : (" LIMIT " + flipper.getLimit()));
                 if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(info.getType().getSimpleName() + " delete sql=" + sql);
                 conn.setReadOnly(false);
@@ -709,7 +706,7 @@ public final class DataJdbcSource implements DataSource, Resourcable, DataCacheL
                     String sql = "UPDATE " + info.getTable(node) + " a " + (join1 == null ? "" : (", " + join1))
                         + " SET " + info.getSQLColumn("a", column) + " = ?"
                         + ((where == null || where.length() == 0) ? (join2 == null ? "" : (" WHERE " + join2))
-                            : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))));
+                        : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))));
                     if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
                     conn.setReadOnly(false);
                     Blob blob = conn.createBlob();
@@ -722,7 +719,7 @@ public final class DataJdbcSource implements DataSource, Resourcable, DataCacheL
                     String sql = "UPDATE " + info.getTable(node) + " a " + (join1 == null ? "" : (", " + join1))
                         + " SET " + info.getSQLColumn("a", column) + " = " + info.formatToString(value)
                         + ((where == null || where.length() == 0) ? (join2 == null ? "" : (" WHERE " + join2))
-                            : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))));
+                        : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))));
                     if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
                     conn.setReadOnly(false);
                     final Statement stmt = conn.createStatement();
@@ -930,7 +927,7 @@ public final class DataJdbcSource implements DataSource, Resourcable, DataCacheL
                 }
                 String sql = "UPDATE " + info.getTable(node) + " a " + (join1 == null ? "" : (", " + join1)) + " SET " + setsql
                     + ((where == null || where.length() == 0) ? (join2 == null ? "" : (" WHERE " + join2))
-                        : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))));
+                    : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))));
                 //注：LIMIT 仅支持MySQL 且在多表关联式会异常， 该BUG尚未解决
                 sql += info.createSQLOrderby(flipper) + ((flipper == null || flipper.getLimit() < 1) ? "" : (" LIMIT " + flipper.getLimit()));
                 if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
@@ -1120,7 +1117,7 @@ public final class DataJdbcSource implements DataSource, Resourcable, DataCacheL
                 }
                 String sql = "UPDATE " + info.getTable(node) + " a " + (join1 == null ? "" : (", " + join1)) + " SET " + setsql
                     + ((where == null || where.length() == 0) ? (join2 == null ? "" : (" WHERE " + join2))
-                        : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))));
+                    : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))));
                 if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
                 conn.setReadOnly(false);
                 if (blobs != null) {
@@ -1273,7 +1270,8 @@ public final class DataJdbcSource implements DataSource, Resourcable, DataCacheL
                 }
             }
             final Map<Class, String> joinTabalis = node == null ? null : node.getJoinTabalis();
-            final CharSequence join = node == null ? null : node.createSQLJoin(this, false, joinTabalis, new HashSet<>(), info);
+            final Set<String> haset = new HashSet<>();
+            final CharSequence join = node == null ? null : node.createSQLJoin(this, false, joinTabalis, haset, info);
             final CharSequence where = node == null ? null : node.createSQLExpress(info, joinTabalis);
             StringBuilder sb = new StringBuilder();
             for (FilterFuncColumn ffc : columns) {
@@ -1336,7 +1334,8 @@ public final class DataJdbcSource implements DataSource, Resourcable, DataCacheL
                 }
             }
             final Map<Class, String> joinTabalis = node == null ? null : node.getJoinTabalis();
-            final CharSequence join = node == null ? null : node.createSQLJoin(this, false, joinTabalis, new HashSet<>(), info);
+            final Set<String> haset = new HashSet<>();
+            final CharSequence join = node == null ? null : node.createSQLJoin(this, false, joinTabalis, haset, info);
             final CharSequence where = node == null ? null : node.createSQLExpress(info, joinTabalis);
             final String sql = "SELECT " + func.getColumn((column == null || column.isEmpty() ? "*" : ("a." + column))) + " FROM " + info.getTable(node) + " a"
                 + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
@@ -1401,7 +1400,8 @@ public final class DataJdbcSource implements DataSource, Resourcable, DataCacheL
             }
             final String sqlkey = info.getSQLColumn(null, keyColumn);
             final Map<Class, String> joinTabalis = node == null ? null : node.getJoinTabalis();
-            final CharSequence join = node == null ? null : node.createSQLJoin(this, false, joinTabalis, new HashSet<>(), info);
+            final Set<String> haset = new HashSet<>();
+            final CharSequence join = node == null ? null : node.createSQLJoin(this, false, joinTabalis, haset, info);
             final CharSequence where = node == null ? null : node.createSQLExpress(info, joinTabalis);
             final String sql = "SELECT a." + sqlkey + ", " + func.getColumn((funcColumn == null || funcColumn.isEmpty() ? "*" : ("a." + funcColumn)))
                 + " FROM " + info.getTable(node) + " a" + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where)) + " GROUP BY a." + sqlkey;
