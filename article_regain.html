@@ -36,7 +36,7 @@
 
             <p>&nbsp;&nbsp;<b>异步呢</b></p>
             <p>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;用Java开发异步系统是件很难的事情，首先Java规范中异步接口很少，Servlet 3.0虽然支持异步，也出来好几年了，但现在直接用Servlet写代码的人已经不多，而基于Servlet的Struts、Spring Boot这些框架又没把异步太当回事，基本都是实现的Servet同步方法。JDBC更是迄今为止还没有异步接口。其次开源框架以异步接口为主的凤毛麟角。 所以Java程序员在写业务代码时基本都是用同步方式，特别是最耗时的数据源操作JDBC无法异步。 
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;用Java开发异步系统是件很难的事情，首先Java规范中异步接口很少，Servlet 3.0虽然支持异步，也出来好几年了，但现在直接用Servlet写代码的人已经不多，而基于Servlet的Struts、Spring Boot这些框架又没把异步太当回事，基本都是实现的Servet同步方法。其次JDBC更是迄今为止还没有异步接口，基于JDBC的Hibernate、MyBatis同样不会有异步接口。再者开源框架以异步接口为主的凤毛麟角。 所以Java程序员在写业务代码时基本都是用同步方式，特别是最耗时的数据源操作JDBC无法异步。 
             </p>
             <div class="highlight"><pre><span></span><span class="nd">@WebServlet</span><span class="o">(</span><span class="n">value</span> <span class="o">=</span> <span class="o">{</span><span class="s">&quot;/order/*&quot;</span><span class="o">},</span> <span class="n">comment</span> <span class="o">=</span> <span class="s">&quot;订单模块&quot;</span><span class="o">)</span>
 <span class="kd">public</span> <span class="kd">class</span>  <span class="nc">OrderServlet</span> <span class="kd">extends</span> <span class="n">HttpBaseServlet</span> <span class="o">{</span>
@@ -93,7 +93,8 @@
             </p>
             <p>&nbsp;&nbsp;<b>Servlet</b></p>
             <p>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在设计上，<a href="http://redkale.org" target="_blank">Redkale</a>下足了功夫，敢于抛弃标准，其HTTP服务不是javax.servlet——J2EE中使用最多的规范的实现，在接口形式上与NodeJs的http模块很类似，也很简单。Servlet规范对于现在的应用来说过于庞大，NodeJs中的http模块源码不过十几K，Java里Http主流还是Tomcat——一个8M的重型机器。 JSP在当年前端还不发达的情况下，这种由后台生成页面的方式有其存在意义。现如今REST流行，前端框架玲琅满目，浏览器性能很高，类似velocity的模板引擎也很多，JSP显得很多余。其他语言的http框架在处理请求后大多是由response来关闭整个处理工程，而Servlet规范却是在service方法执行后关闭，Servlet3.0规范虽然支持异步，显然与其他语言框架比，比较生涩难懂，使用上还需与同步方式区别对待，且接口设计本身就会导致实现上性能不佳，而response关闭的方式就天然得把同步与异步等同对待，无论是当前线程还是另开线程处理请求，都由response来结束处理流程。Servlet规范中WebSocket接口设计上也是过于复杂，其实WebSocket形式上就像一个keepalive的Http请求,应该只是一种特殊的HttpServlet。所以<a href="http://redkale.org" target="_blank">Redkale</a>在设计WebSocket时尽量与HttpServlet形态保持一致，同时还集成了分布式功能，让开发者也可以很简单的实现多部署。 <br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在API设计上，<a href="http://redkale.org" target="_blank">Redkale</a>下足了功夫，敢于抛弃标准，其HTTP服务不是javax.servlet——J2EE中使用最多的规范的实现，在接口形式上与NodeJs的http模块很类似，也很简单。Servlet规范对于现在的应用来说过于庞大，NodeJs中的http模块源码不过十几K，Java里Http主流还是Tomcat——一个8M的重型机器。 JSP在当年前端还不发达的情况下，这种由后台生成页面的方式有其存在意义。现如今REST流行，前端JS框架玲琅满目，浏览器性能不可同日而语，类似velocity的模板引擎也很多，JSP显得很多余, 所以<a href="http://redkale.org" target="_blank">Redkale</a>没有必须再去提供JSP功能。 <br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;其他语言的http框架在处理请求后大多是由response来关闭整个处理工程，而Servlet规范却是在service方法执行后关闭，Servlet3.0规范虽然支持异步，显然与其他语言框架比，比较生涩难懂，使用上还需与同步方式区别对待，且接口设计本身就会导致实现上性能不佳，而response关闭的方式就天然得把同步与异步等同对待，无论是当前线程还是另开线程处理请求，都由response来结束处理流程。Servlet规范中WebSocket接口设计上也是过于复杂，且只是针对协议本身的实现，没有考虑大多开发者的使用场景，其实WebSocket形式上就像一个keepalive的Http请求,雷同HttpServlet。所以<a href="http://redkale.org" target="_blank">Redkale</a>在设计WebSocket时尽量与HttpServlet形态保持一致，同时还集成了分布式功能，让开发者也可以很简单的实现多部署。 <br>
             </p>
             <p>&nbsp;&nbsp;<b>Service</b></p>
             <p>
@@ -101,7 +102,7 @@
             </p>
             <p>&nbsp;&nbsp;<b>Source</b></p>
             <p>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;只要不是开发数据库管理工具，大部分情况下开发者只用到了基本的增删改查功能，Hibernate、MyBatis这些框架对象新增、对象更新、对象删除和主键查找对象接口定义都比较简单，但是带有过滤条件的操作，就变得难用。MyBatis需要配各种SQL，大量if else，Hibernate需要写HQL或SQL，JPA规范需要写JPQL或使用Criteria功能。过滤查询、翻页查询、过滤修改、局部修改、过滤删除都是很常见的功能，而主流ORM框架对这类操作进行简化程度很有限。<a href="http://redkale.org" target="_blank">Redkale</a> 结合常规的使用场景，以JavaBean的方式提供过滤功能，使过滤性的操作(删改查)API变得异常简单。DataSource另一个亮点是分表分库操作与单表操作的API一样。同时每个操作都提供成异步接口。 DataSource提供的缓存功能还能保持进程间的自动同步(得利于RPC)。<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;只要不是开发数据库管理工具，大部分情况下开发者只用到了基本的增删改查功能，Hibernate、MyBatis这些框架对象新增、对象更新、对象删除和主键查找对象接口定义都比较简单，但是带有过滤条件的操作，就变得难用。MyBatis需要配各种SQL，大量if else，Hibernate需要写HQL或SQL，JPA规范需要写JPQL或使用Criteria功能。过滤查询、翻页查询、过滤修改、局部修改、过滤删除都是很常见的操作，而主流ORM框架对这类操作进行简化程度很有限。<a href="http://redkale.org" target="_blank">Redkale</a> 结合常规的使用场景，以JavaBean的方式提供过滤功能，使过滤性的操作(删改查)API变得异常简单。DataSource另一个亮点是分表分库操作与单表操作的API一样。同时每个操作都提供成异步接口。 DataSource提供的缓存功能还能保持进程间的自动同步(得利于RPC)。<br>
             </p>
             <p>&nbsp;&nbsp;<b>异步</b></p>
             <p>
