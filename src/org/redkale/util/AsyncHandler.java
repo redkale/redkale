@@ -55,7 +55,7 @@ public interface AsyncHandler<V, A> extends CompletionHandler<V, A> {
      *
      * @return AsyncHandler
      */
-    public static <A> AsyncHandler<Void, A> createNoResultHandler(final Consumer<A> success, final BiConsumer<Throwable, A> fail) {
+    public static <A> AsyncHandler<Void, A> create(final Consumer<A> success, final BiConsumer<Throwable, A> fail) {
         return new AsyncHandler<Void, A>() {
             @Override
             public void completed(Void result, A attachment) {
@@ -78,7 +78,7 @@ public interface AsyncHandler<V, A> extends CompletionHandler<V, A> {
      *
      * @return AsyncHandler
      */
-    public static <V> AsyncHandler<V, Void> createNoAttachHandler(final Consumer<V> success, final Consumer<Throwable> fail) {
+    public static <V> AsyncHandler<V, Void> create(final Consumer<V> success, final Consumer<Throwable> fail) {
         return new AsyncHandler<V, Void>() {
             @Override
             public void completed(V result, Void attachment) {
