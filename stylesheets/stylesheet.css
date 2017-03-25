@@ -775,7 +775,7 @@ a:hover {
 
 @media screen and (min-width: 79em)  and (max-width: 96em) {
     .main-content {
-        max-width: 76rem;
+        max-width: 86rem;
         padding: 2rem 3rem;
         margin: 0 auto;
         font-size: 1.1rem;
