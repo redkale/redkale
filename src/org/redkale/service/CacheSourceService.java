@@ -30,7 +30,7 @@ import org.redkale.util.*;
  */
 @AutoLoad(false)
 @ResourceType({CacheSourceService.class, CacheSource.class})
-public class CacheSourceService<K extends Serializable, V extends Object> implements CacheSource<K, V>, Service, AutoCloseable {
+public class CacheSourceService<K extends Serializable, V extends Object> implements CacheSource<K, V>, Service, AutoCloseable, Resourcable {
 
     @Resource(name = "APP_HOME")
     private File home;
@@ -116,7 +116,7 @@ public class CacheSourceService<K extends Serializable, V extends Object> implem
                     if (expireHandler != null && entry != null) expireHandler.accept(entry);
                 }
             }, 10, 10, TimeUnit.SECONDS);
-            logger.finest(self.getClass().getSimpleName() + ":" + self.name() + " start schedule expire executor");
+            logger.finest(self.getClass().getSimpleName() + ":" + self.resourceName() + " start schedule expire executor");
         }
         if (Sncp.isRemote(self)) return;
 
@@ -125,7 +125,7 @@ public class CacheSourceService<K extends Serializable, V extends Object> implem
         // TODO
         if (!this.needStore) return;
         try {
-            File store = new File(home, "cache/" + name());
+            File store = new File(home, "cache/" + resourceName());
             if (!store.isFile() || !store.canRead()) return;
             LineNumberReader reader = new LineNumberReader(new FileReader(store));
             if (this.keyType == null) this.keyType = Serializable.class;
@@ -148,7 +148,7 @@ public class CacheSourceService<K extends Serializable, V extends Object> implem
             reader.close();
             store.delete();
         } catch (Exception e) {
-            logger.log(Level.SEVERE, CacheSource.class.getSimpleName() + "(" + name() + ") load store file error ", e);
+            logger.log(Level.SEVERE, CacheSource.class.getSimpleName() + "(" + resourceName() + ") load store file error ", e);
         }
     }
 
@@ -157,8 +157,10 @@ public class CacheSourceService<K extends Serializable, V extends Object> implem
         destroy(null);
     }
 
-    public String name() {
-        return this.getClass().getAnnotation(Resource.class).name();
+    @Override
+    public String resourceName() {
+        Resource res = this.getClass().getAnnotation(Resource.class);
+        return res == null ? null : res.name();
     }
 
     @Override
@@ -166,7 +168,7 @@ public class CacheSourceService<K extends Serializable, V extends Object> implem
         if (scheduler != null) scheduler.shutdownNow();
         if (!this.needStore || Sncp.isRemote(this) || container.isEmpty()) return;
         try {
-            File store = new File(home, "cache/" + name());
+            File store = new File(home, "cache/" + resourceName());
             store.getParentFile().mkdirs();
             PrintStream stream = new PrintStream(store, "UTF-8");
             final Type storeObjType = TypeToken.createParameterizedType(null, CacheEntry.class, keyType, objValueType);
@@ -179,7 +181,7 @@ public class CacheSourceService<K extends Serializable, V extends Object> implem
             container.clear();
             stream.close();
         } catch (Exception e) {
-            logger.log(Level.SEVERE, CacheSource.class.getSimpleName() + "(" + name() + ") store to file error ", e);
+            logger.log(Level.SEVERE, CacheSource.class.getSimpleName() + "(" + resourceName() + ") store to file error ", e);
         }
     }
 
