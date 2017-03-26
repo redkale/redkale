@@ -248,6 +248,7 @@ public final class SncpClient {
     }
 
     public void remoteSameGroup(final BsonConvert bsonConvert, final JsonConvert jsonConvert, Transport transport, final int index, final Object... params) {
+        if (transport == null) return;
         final SncpAction action = actions[index];
         if (action.handlerFuncParamIndex >= 0) params[action.handlerFuncParamIndex] = null; //不能让远程调用handler，因为之前本地方法已经调用过了
         for (InetSocketAddress addr : transport.getRemoteAddresses()) {
@@ -256,6 +257,7 @@ public final class SncpClient {
     }
 
     public void asyncRemoteSameGroup(final BsonConvert bsonConvert, final JsonConvert jsonConvert, Transport transport, final int index, final Object... params) {
+        if (transport == null) return;
         if (executor != null) {
             executor.accept(() -> {
                 remoteSameGroup(bsonConvert, jsonConvert, transport, index, params);
