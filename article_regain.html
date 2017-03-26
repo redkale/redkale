@@ -102,7 +102,7 @@
             </p>
             <p>&nbsp;&nbsp;<b>Source</b></p>
             <p>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;只要不是开发数据库管理工具，大部分情况下开发者只用到了基本的增删改查功能，Hibernate、MyBatis这些框架对象新增、对象更新、对象删除和主键查找对象接口定义都比较简单，但是带有过滤条件的操作，就变得难用。MyBatis需要配各种SQL，大量if else，Hibernate需要写HQL或SQL，JPA规范需要写JPQL或使用Criteria功能。过滤查询、翻页查询、过滤修改、局部修改、过滤删除都是很常见的操作，而主流ORM框架对这类操作进行简化程度很有限。<a href="http://redkale.org" target="_blank">Redkale</a> 结合常规的使用场景，以JavaBean的方式提供过滤功能，使过滤性的操作(删改查)API变得异常简单。DataSource另一个亮点是分表分库操作与单表操作的API一样。同时每个操作都提供成异步接口。 DataSource提供的缓存功能还能保持进程间的自动同步(得利于RPC)。<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;只要不是开发数据库管理工具，大部分情况下开发者只用到了基本的增删改查功能，Hibernate、MyBatis这些框架对象新增、对象更新、对象删除和主键查找对象接口定义都比较简单，但是带有过滤条件的操作，就变得难用。MyBatis需要配各种SQL，大量if else，Hibernate需要写HQL或SQL，JPA规范需要写JPQL或使用Criteria功能。过滤查询、翻页查询、过滤修改、局部修改、过滤删除都是很常见的操作，而主流ORM框架对这类操作进行简化程度很有限。<a href="http://redkale.org" target="_blank">Redkale</a> 结合常规的使用场景，以JavaBean的方式提供过滤功能，使过滤性的操作(删改查)API变得异常简单。DataSource另一个亮点是分表分库操作与单表操作的API一样。同时每个操作都提供成异步接口。 DataSource提供的缓存功能还能保持进程间的同步(得利于RPC)。<br>
             </p>
             <p>&nbsp;&nbsp;<b>异步</b></p>
             <p>
