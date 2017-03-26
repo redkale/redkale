@@ -257,7 +257,7 @@ public abstract class NodeServer {
                 Transport[] dts = Sncp.getDiffGroupTransports((Service) src);
                 List<Transport> diffGroupTransports = dts == null ? new ArrayList<>() : Arrays.asList(dts);
                 final InetSocketAddress sncpAddr = client == null ? null : client.getClientAddress();
-                final CacheSourceService source = Sncp.createLocalService(resourceName, getExecutor(), appResFactory, CacheSourceService.class, sncpAddr, sameGroupTransport, diffGroupTransports);
+                final CacheMemorySource source = Sncp.createLocalService(resourceName, getExecutor(), appResFactory, CacheMemorySource.class, sncpAddr, sameGroupTransport, diffGroupTransports);
                 Type genericType = field.getGenericType();
                 ParameterizedType pt = (genericType instanceof ParameterizedType) ? (ParameterizedType) genericType : null;
                 Type valType = pt == null ? null : pt.getActualTypeArguments()[1];
@@ -270,10 +270,10 @@ public abstract class NodeServer {
                 rf.inject(source, self); //
                 ((Service) source).init(null);
 
-                if ((src instanceof WebSocketNodeService) && sncpAddr != null) { //只有WebSocketNodeService的服务才需要给SNCP服务注入CacheSourceService
+                if ((src instanceof WebSocketNodeService) && sncpAddr != null) { //只有WebSocketNodeService的服务才需要给SNCP服务注入CacheMemorySource
                     NodeSncpServer sncpServer = application.findNodeSncpServer(sncpAddr);
                     Set<String> gs = application.findSncpGroups(sameGroupTransport, diffGroupTransports);
-                    ServiceWrapper wrapper = new ServiceWrapper(CacheSourceService.class, (Service) source, resourceName, sncpServer.getSncpGroup(), gs, null);
+                    ServiceWrapper wrapper = new ServiceWrapper(CacheMemorySource.class, (Service) source, resourceName, sncpServer.getSncpGroup(), gs, null);
                     sncpServer.getSncpServer().addSncpServlet(wrapper);
                     logger.info("[" + Thread.currentThread().getName() + "] Load Service " + wrapper.getService());
                 }

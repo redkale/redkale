@@ -3,23 +3,24 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.redkale.service;
+package org.redkale.source;
 
-import java.beans.*;
+import java.beans.ConstructorProperties;
 import java.io.*;
-import java.lang.reflect.*;
+import java.lang.reflect.Type;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.function.*;
+import java.util.function.Consumer;
 import java.util.logging.*;
-import javax.annotation.*;
-import org.redkale.convert.*;
+import javax.annotation.Resource;
+import org.redkale.convert.ConvertColumn;
 import org.redkale.convert.json.*;
-import org.redkale.net.sncp.*;
-import org.redkale.source.*;
+import org.redkale.net.sncp.Sncp;
+import org.redkale.service.*;
 import org.redkale.util.*;
 
 /**
+ * CacheSource的默认实现--内存缓存
  *
  * @param <K> key类型
  * @param <V> value类型
@@ -28,9 +29,10 @@ import org.redkale.util.*;
  *
  * @author zhangjx
  */
+@LocalService
 @AutoLoad(false)
-@ResourceType({CacheSourceService.class, CacheSource.class})
-public class CacheSourceService<K extends Serializable, V extends Object> implements CacheSource<K, V>, Service, AutoCloseable, Resourcable {
+@ResourceType({CacheSource.class})
+public class CacheMemorySource<K extends Serializable, V extends Object> implements CacheSource<K, V>, Service, AutoCloseable, Resourcable {
 
     @Resource(name = "APP_HOME")
     private File home;
@@ -56,10 +58,10 @@ public class CacheSourceService<K extends Serializable, V extends Object> implem
 
     protected final ConcurrentHashMap<K, CacheEntry<K, ?>> container = new ConcurrentHashMap<>();
 
-    public CacheSourceService() {
+    public CacheMemorySource() {
     }
 
-    public final CacheSourceService setStoreType(Class keyType, Class valueType) {
+    public final CacheMemorySource setStoreType(Class keyType, Class valueType) {
         this.keyType = keyType;
         this.objValueType = valueType;
         this.setValueType = TypeToken.createParameterizedType(null, CopyOnWriteArraySet.class, valueType);
@@ -74,7 +76,7 @@ public class CacheSourceService<K extends Serializable, V extends Object> implem
 
     @Override
     public void init(AnyValue conf) {
-        final CacheSourceService self = this;
+        final CacheMemorySource self = this;
         AnyValue prop = conf == null ? null : conf.getAnyValue("property");
         if (keyType == null && prop != null) {
             String storeKeyStr = prop.getValue("key-type");
