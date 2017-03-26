@@ -264,6 +264,7 @@ public final class EntityInfo<T> {
                 attributeMap.put(fieldname, attr);
             }
         } while ((cltmp = cltmp.getSuperclass()) != Object.class);
+        if (idAttr0 == null) throw new RuntimeException(type.getName() + " have no primary column by @javax.persistence.Id");
         this.primary = idAttr0;
         this.aliasmap = aliasmap0;
         this.attributes = attributeMap.values().toArray(new Attribute[attributeMap.size()]);
