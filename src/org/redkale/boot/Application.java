@@ -338,6 +338,7 @@ public final class Application {
                     String name = prop.getValue("name");
                     String value = prop.getValue("value");
                     if (name == null || value == null) continue;
+                    value = value.replace("${APP_HOME}", home.getCanonicalPath()).replace('\\', '/');
                     if (name.startsWith("system.property.")) {
                         System.setProperty(name.substring("system.property.".length()), value);
                     } else if (name.startsWith("mimetype.property.")) {
@@ -349,11 +350,6 @@ public final class Application {
                     }
                 }
             }
-        }
-        if (this.localAddress != null && this.resourceFactory.find("property.datasource.nodeid", String.class) == null) {
-            byte[] bs = this.localAddress.getAddress();
-            int v = (0xff & bs[bs.length - 2]) % 10 * 100 + (0xff & bs[bs.length - 1]);
-            this.resourceFactory.register("property.datasource.nodeid", "" + v);
         }
         this.resourceFactory.register(BsonFactory.root());
         this.resourceFactory.register(JsonFactory.root());

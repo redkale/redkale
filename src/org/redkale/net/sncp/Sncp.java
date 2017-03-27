@@ -55,11 +55,6 @@ public abstract class Sncp {
     private Sncp() {
     }
 
-    public static long nodeid(InetSocketAddress ip) {
-        byte[] bytes = ip.getAddress().getAddress();
-        return ((0L + ip.getPort()) << 32) | ((0xffffffff & bytes[0]) << 24) | ((0xffffff & bytes[1]) << 16) | ((0xffff & bytes[2]) << 8) | (0xff & bytes[3]);
-    }
-
     public static DLong hash(final java.lang.reflect.Method method) {
         if (method == null) return DLong.ZERO;
         StringBuilder sb = new StringBuilder(); //不能使用method.toString() 因为包含declaringClass信息导致接口与实现类的方法hash不一致

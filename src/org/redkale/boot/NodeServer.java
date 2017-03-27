@@ -240,7 +240,7 @@ public abstract class NodeServer {
                     logger.info("[" + Thread.currentThread().getName() + "] Load Service " + wrapper.getService());
                 }
                 field.set(src, source);
-                rf.inject(source, self); // 给 "datasource.nodeid" 赋值;
+                rf.inject(source, self); // 给其可能包含@Resource的字段赋值;
             } catch (Exception e) {
                 logger.log(Level.SEVERE, "DataSource inject error", e);
             }
@@ -250,7 +250,7 @@ public abstract class NodeServer {
         resourceFactory.register((ResourceFactory rf, final Object src, final String resourceName, Field field, final Object attachment) -> {
             try {
                 if (field.getAnnotation(Resource.class) == null) return;
-                if ((src instanceof Service) && Sncp.isRemote((Service) src)) return; //远程模式不得注入 CacheSource   
+                if ((src instanceof Service) && Sncp.isRemote((Service) src)) return; //远程模式不需要注入 CacheSource   
 
                 SncpClient client = Sncp.getSncpClient((Service) src);
                 Transport sameGroupTransport = Sncp.getSameGroupTransport((Service) src);
