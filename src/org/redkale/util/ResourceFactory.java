@@ -15,6 +15,9 @@ import java.util.regex.Pattern;
 import javax.annotation.Resource;
 
 /**
+ *
+ * 依赖注入功能主类   <br>
+ *
  * 如果&#64;Resource(name = "$") 表示资源name采用所属对象的name  <br>
  * 如果没有&#64;Resource 则会取对象的getResourceName()方法值(若存在)
  * <blockquote><pre>
