@@ -52,13 +52,13 @@ public class ApiDocs extends HttpBaseServlet {
                 }
                 final Map<String, Object> servletmap = new LinkedHashMap<>();
                 String prefix = _prefix(servlet);
-                String[] mappings = ws.value();
+                String[] urlregs = ws.value();
                 if (prefix != null && !prefix.isEmpty()) {
-                    for (int i = 0; i < mappings.length; i++) {
-                        mappings[i] = prefix + mappings[i];
+                    for (int i = 0; i < urlregs.length; i++) {
+                        urlregs[i] = prefix + urlregs[i];
                     }
                 }
-                servletmap.put("mappings", mappings);
+                servletmap.put("urlregs", urlregs);
                 servletmap.put("moduleid", ws.moduleid());
                 servletmap.put("name", ws.name());
                 servletmap.put("comment", ws.comment());
@@ -179,9 +179,9 @@ public class ApiDocs extends HttpBaseServlet {
                 servletsList.add(servletmap);
             }
             servletsList.sort((o1, o2) -> {
-                String[] mappings1 = (String[]) o1.get("mappings");
-                String[] mappings2 = (String[]) o2.get("mappings");
-                return mappings1.length > 0 ? (mappings2.length > 0 ? mappings1[0].compareTo(mappings2[0]) : 1) : -1;
+                String[] urlregs1 = (String[]) o1.get("urlregs");
+                String[] urlregs2 = (String[]) o2.get("urlregs");
+                return urlregs1.length > 0 ? (urlregs2.length > 0 ? urlregs1[0].compareTo(urlregs2[0]) : 1) : -1;
             });
         }
         Map<String, Object> resultmap = new LinkedHashMap<>();
