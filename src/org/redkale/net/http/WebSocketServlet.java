@@ -12,6 +12,7 @@ import java.security.*;
 import java.util.*;
 import java.util.logging.*;
 import javax.annotation.*;
+import org.redkale.convert.json.JsonConvert;
 import org.redkale.service.WebSocketNodeService;
 import org.redkale.util.*;
 
@@ -62,6 +63,9 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
     @Comment("是否用于二进制流传输")
     protected final boolean wsbinary = getClass().getAnnotation(WebSocketBinary.class) != null;
 
+    @Resource
+    protected JsonConvert jsonConvert;
+
     @Resource(name = "$")
     protected WebSocketNode node;
 
@@ -109,6 +113,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
         }
         final WebSocket webSocket = this.createWebSocket();
         webSocket._engine = engine;
+        webSocket._jsonConvert = jsonConvert;
         webSocket._remoteAddress = request.getRemoteAddress();
         webSocket._remoteAddr = request.getRemoteAddr();
         Serializable sessionid = webSocket.onOpen(request);

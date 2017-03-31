@@ -10,6 +10,7 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.*;
 import org.redkale.util.Comment;
 
@@ -75,6 +76,8 @@ public abstract class WebSocket {
     SocketAddress _remoteAddress;//不可能为空 
 
     String _remoteAddr;//不可能为空 
+
+    JsonConvert _jsonConvert; //不可能为空 
 
     private final long createtime = System.currentTimeMillis();
 
@@ -162,15 +165,30 @@ public abstract class WebSocket {
     }
 
     /**
-     * 给自身发送消息, 消息类型是String或byte[]
+     * 给自身发送消息, 消息类型是String或byte[]或可JSON化对象
      *
-     * @param message 不可为空, 只能是String或者byte[]
+     * @param message 不可为空, 只能是String或byte[]或可JSON化对象
+     *
+     * @return 0表示成功， 非0表示错误码
+     */
+    public final int send(Object message) {
+        return send(message, true);
+    }
+
+    /**
+     * 给自身发送消息, 消息类型是String或byte[]或可JSON化对象
+     *
+     * @param message 不可为空, 只能是String或byte[]或可JSON化对象
      * @param last    是否最后一条
      *
      * @return 0表示成功， 非0表示错误码
      */
-    public final int send(Serializable message, boolean last) {
-        return send(new WebSocketPacket(message, last));
+    public final int send(Object message, boolean last) {
+        if (message == null || message instanceof CharSequence || message instanceof byte[]) {
+            return send(new WebSocketPacket((Serializable) message, last));
+        } else {
+            return send(new WebSocketPacket(_jsonConvert.convertTo(message), last));
+        }
     }
 
     //----------------------------------------------------------------
@@ -195,7 +213,19 @@ public abstract class WebSocket {
      * @return 为0表示成功， 其他值表示异常
      */
     public final int sendEachMessage(Serializable groupid, byte[] data) {
-        return WebSocket.this.sendEachMessage(groupid, data, true);
+        return sendEachMessage(groupid, data, true);
+    }
+
+    /**
+     * 给指定groupid的WebSocketGroup下所有WebSocket节点发送可JSON化对象消息
+     *
+     * @param groupid groupid
+     * @param message 不可为空
+     *
+     * @return 为0表示成功， 其他值表示异常
+     */
+    public final int sendEachMessage(Serializable groupid, Object message) {
+        return sendEachMessage(groupid, message, true);
     }
 
     /**
@@ -225,6 +255,19 @@ public abstract class WebSocket {
     }
 
     /**
+     * 给指定groupid的WebSocketGroup下所有WebSocket节点发送可JSON化对象消息
+     *
+     * @param groupid groupid
+     * @param message 不可为空
+     * @param last    是否最后一条
+     *
+     * @return 为0表示成功， 其他值表示异常
+     */
+    public final int sendEachMessage(Serializable groupid, Object message, boolean last) {
+        return sendMessage(groupid, false, message, last);
+    }
+
+    /**
      * 给指定groupid的WebSocketGroup下最近接入的WebSocket节点发送文本消息
      *
      * @param groupid groupid
@@ -246,6 +289,18 @@ public abstract class WebSocket {
      */
     public final int sendRecentMessage(Serializable groupid, byte[] data) {
         return sendRecentMessage(groupid, data, true);
+    }
+
+    /**
+     * 给指定groupid的WebSocketGroup下最近接入的WebSocket节点发送可JSON化对象消息
+     *
+     * @param groupid groupid
+     * @param message 不可为空
+     *
+     * @return 为0表示成功， 其他值表示异常
+     */
+    public final int sendRecentMessage(Serializable groupid, Object message) {
+        return sendMessage(groupid, true, message, true);
     }
 
     /**
@@ -274,6 +329,19 @@ public abstract class WebSocket {
         return sendMessage(groupid, true, data, last);
     }
 
+    /**
+     * 给指定groupid的WebSocketGroup下最近接入的WebSocket节点发送可JSON化对象消息
+     *
+     * @param groupid groupid
+     * @param message 不可为空
+     * @param last    是否最后一条
+     *
+     * @return 为0表示成功， 其他值表示异常
+     */
+    public final int sendRecentMessage(Serializable groupid, Object message, boolean last) {
+        return sendMessage(groupid, true, message, last);
+    }
+
     private int sendMessage(Serializable groupid, boolean recent, String text, boolean last) {
         if (_engine.node == null) return RETCODE_NODESERVICE_NULL;
         int rs = _engine.node.sendMessage(groupid, recent, text, last);
@@ -285,6 +353,13 @@ public abstract class WebSocket {
         if (_engine.node == null) return RETCODE_NODESERVICE_NULL;
         int rs = _engine.node.sendMessage(groupid, recent, data, last);
         if (_engine.finest) _engine.logger.finest("wsgroupid:" + groupid + " " + (recent ? "recent " : "") + "send websocket result is " + rs + " on " + this + " by message(byte[" + data.length + "])");
+        return rs;
+    }
+
+    private int sendMessage(Serializable groupid, boolean recent, Object message, boolean last) {
+        if (_engine.node == null) return RETCODE_NODESERVICE_NULL;
+        int rs = _engine.node.sendMessage(groupid, recent, message, last);
+        if (_engine.finest) _engine.logger.finest("wsgroupid:" + groupid + " " + (recent ? "recent " : "") + "send websocket result is " + rs + " on " + this + " by message(" + _jsonConvert.convertTo(message) + ")");
         return rs;
     }
 

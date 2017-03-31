@@ -83,7 +83,7 @@ public final class WebSocketGroup {
         attributes.put(name, value);
     }
 
-    public final int send(boolean recent, Serializable message, boolean last) {
+    public final int send(boolean recent, Object message, boolean last) {
         if (recent) {
             return recentWebSocket.send(message, last);
         } else {
@@ -91,7 +91,7 @@ public final class WebSocketGroup {
         }
     }
 
-    public final int sendEach(Serializable message) {
+    public final int sendEach(Object message) {
         return sendEach(message, true);
     }
 
@@ -111,7 +111,7 @@ public final class WebSocketGroup {
         return rs;
     }
 
-    public final int sendRecent(Serializable message) {
+    public final int sendRecent(Object message) {
         return sendRecent(message, true);
     }
 
@@ -119,7 +119,10 @@ public final class WebSocketGroup {
         return recentWebSocket.send(packet);
     }
 
-    public final int sendEach(Serializable message, boolean last) {
+    public final int sendEach(Object message, boolean last) {
+        if (message != null && !(message instanceof byte[]) && !(message instanceof CharSequence)) {
+            message = recentWebSocket._jsonConvert.convertTo(message);
+        }
         int rs = 0;
         for (WebSocket s : list) {
             rs |= s.send(message, last);
@@ -127,7 +130,7 @@ public final class WebSocketGroup {
         return rs;
     }
 
-    public final int sendRecent(Serializable message, boolean last) {
+    public final int sendRecent(Object message, boolean last) {
         return recentWebSocket.send(message, last);
     }
 

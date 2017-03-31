@@ -15,7 +15,9 @@ import org.redkale.util.*;
 
 /**
  *
- * <p> 详情见: https://redkale.org
+ * <p>
+ * 详情见: https://redkale.org
+ *
  * @author zhangjx
  */
 public final class WebSocketEngine {
