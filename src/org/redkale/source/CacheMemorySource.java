@@ -32,7 +32,7 @@ import org.redkale.util.*;
 @LocalService
 @AutoLoad(false)
 @ResourceType({CacheSource.class})
-public class CacheMemorySource<K extends Serializable, V extends Object> implements CacheSource<K, V>, Service, AutoCloseable, Resourcable {
+public class CacheMemorySource<K extends Serializable, V extends Object> extends AbstractService implements CacheSource<K, V>, Service, AutoCloseable, Resourcable {
 
     @Resource(name = "APP_HOME")
     private File home;
