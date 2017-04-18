@@ -11,6 +11,7 @@ import static java.lang.annotation.ElementType.*;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.lang.reflect.*;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import jdk.internal.org.objectweb.asm.*;
 import static jdk.internal.org.objectweb.asm.ClassWriter.COMPUTE_FRAMES;
 import static jdk.internal.org.objectweb.asm.Opcodes.*;
@@ -115,6 +116,7 @@ public final class Rest {
         final String reqDesc = Type.getDescriptor(HttpRequest.class);
         final String respDesc = Type.getDescriptor(HttpResponse.class);
         final String retDesc = Type.getDescriptor(RetResult.class);
+        final String futureDesc = Type.getDescriptor(CompletableFuture.class);
         final String flipperDesc = Type.getDescriptor(Flipper.class);
         final String restoutputDesc = Type.getDescriptor(RestOutput.class);
         final String attrDesc = Type.getDescriptor(org.redkale.util.Attribute.class);
@@ -921,6 +923,13 @@ public final class Rest {
                 mv.visitVarInsn(ALOAD, maxLocals);
                 mv.visitMethodInsn(INVOKESTATIC, "java/lang/String", "valueOf", "(Ljava/lang/Object;)Ljava/lang/String;", false);
                 mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finish", "(Ljava/lang/String;)V", false);
+                mv.visitInsn(RETURN);
+                maxLocals++;
+            } else if (CompletableFuture.class.isAssignableFrom(returnType)) {
+                mv.visitVarInsn(ASTORE, maxLocals);
+                mv.visitVarInsn(ALOAD, 2);//response
+                mv.visitVarInsn(ALOAD, maxLocals);
+                mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishJson", "(" + futureDesc + ")V", false);
                 mv.visitInsn(RETURN);
                 maxLocals++;
             } else {
