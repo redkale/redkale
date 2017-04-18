@@ -567,13 +567,13 @@ public abstract class Sncp {
 
                 mv.visitInsn(DUP);
                 mv.visitInsn(ICONST_1);
-                mv.visitInsn(ICONST_0);   //第一个参数  samerunnable
+                mv.visitInsn(ICONST_0);   //第二个参数  samerunnable
                 mv.visitMethodInsn(INVOKESTATIC, "java/lang/Boolean", "valueOf", "(Z)Ljava/lang/Boolean;", false);
                 mv.visitInsn(AASTORE);
 
                 mv.visitInsn(DUP);
                 mv.visitInsn(ICONST_2);
-                mv.visitInsn(ICONST_0);   //第二个参数  diffrunnable
+                mv.visitInsn(ICONST_0);   //第三个参数  diffrunnable
                 mv.visitMethodInsn(INVOKESTATIC, "java/lang/Boolean", "valueOf", "(Z)Ljava/lang/Boolean;", false);
                 mv.visitInsn(AASTORE);
 
