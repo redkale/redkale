@@ -13,6 +13,7 @@ import java.nio.channels.*;
 import java.nio.file.*;
 import java.text.*;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import org.redkale.convert.json.JsonConvert;
@@ -309,6 +310,62 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
             this.header.addValue("retinfo", ret.getRetinfo());
         }
         finish(convert.convertTo(context.getBufferSupplier(), ret));
+    }
+
+    /**
+     * 将CompletableFuture的结果对象以JSON格式输出
+     *
+     * @param future 输出对象的句柄
+     */
+    public void finishJson(final CompletableFuture future) {
+        finishJson(request.getJsonConvert(), future);
+    }
+
+    /**
+     * 将CompletableFuture的结果对象以JSON格式输出
+     *
+     * @param convert 指定的JsonConvert
+     * @param future  输出对象的句柄
+     */
+    public void finishJson(final JsonConvert convert, final CompletableFuture future) {
+        future.whenCompleteAsync((v, e) -> {
+            if (e != null) {
+                context.getLogger().log(Level.WARNING, "Servlet occur, forece to close channel. request = " + request, e);
+                finish(500, null);
+                return;
+            }
+            if (v instanceof CharSequence) {
+                finish(v.toString());
+            } else if (v instanceof org.redkale.service.RetResult) {
+                finishJson(convert, (org.redkale.service.RetResult) v);
+            } else {
+                finishJson(convert, v);
+            }
+        }, this.context.getExecutor());
+    }
+
+    /**
+     * 将CompletableFuture的结果对象以JSON格式输出
+     *
+     * @param convert 指定的JsonConvert
+     * @param type    指定的类型
+     * @param future  输出对象的句柄
+     */
+    public void finishJson(final JsonConvert convert, final Type type, final CompletableFuture future) {
+        future.whenCompleteAsync((v, e) -> {
+            if (e != null) {
+                context.getLogger().log(Level.WARNING, "Servlet occur, forece to close channel. request = " + request, e);
+                finish(500, null);
+                return;
+            }
+            if (v instanceof CharSequence) {
+                finish(v.toString());
+            } else if (v instanceof org.redkale.service.RetResult) {
+                finishJson(convert, (org.redkale.service.RetResult) v);
+            } else {
+                finishJson(convert, type, v);
+            }
+        }, this.context.getExecutor());
     }
 
     /**

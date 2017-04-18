@@ -10,6 +10,7 @@ import java.lang.reflect.*;
 import java.net.*;
 import java.nio.*;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.BiConsumer;
 import org.redkale.convert.json.*;
 import org.redkale.net.http.*;
@@ -60,10 +61,10 @@ public interface HttpResponseDesc {
 
     //异步输出指定内容
     public <A> void sendBody(ByteBuffer buffer, A attachment, AsyncHandler<Integer, A> handler);
-    
+
     //创建AsyncHandler实例，将非字符串对象以JSON格式输出，字符串以文本输出
     public AsyncHandler createAsyncHandler();
-    
+
     //关闭HTTP连接，如果是keep-alive则不强制关闭
     public void finish();
 
@@ -91,6 +92,15 @@ public interface HttpResponseDesc {
     //将RetResult对象以JSON格式输出
     public void finishJson(final JsonConvert convert, final org.redkale.service.RetResult ret);
 
+    //将CompletableFuture的结果对象以JSON格式输出
+    public void finishJson(final CompletableFuture future);
+
+    //将CompletableFuture的结果对象以JSON格式输出
+    public void finishJson(final JsonConvert convert, final CompletableFuture future);
+
+    //将CompletableFuture的结果对象以JSON格式输出
+    public void finishJson(final JsonConvert convert, final Type type, final CompletableFuture future);
+    
     //将指定字符串以响应结果输出
     public void finish(String obj);
 
