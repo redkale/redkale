@@ -7,6 +7,7 @@ package org.redkale.test.sncp;
 
 import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
+import java.util.concurrent.CompletableFuture;
 import org.redkale.net.sncp.*;
 import org.redkale.service.*;
 import org.redkale.source.DataCallArrayAttribute;
@@ -18,6 +19,25 @@ import org.redkale.util.*;
  */
 @ResourceType({SncpTestIService.class})
 public class SncpTestServiceImpl implements SncpTestIService {
+
+    @Override
+    public CompletableFuture<String> queryResultAsync(SncpTestBean bean) {
+        final CompletableFuture<String> future = new CompletableFuture<>();
+        new Thread() {
+            @Override
+            public void run() {
+                try {
+                    Thread.sleep(1000);
+                    System.out.println(Thread.currentThread().getName() + " 运行了异步方法-----------queryResultAsync方法");
+                    future.complete("异步result: " + bean);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }.start();
+        return future;
+
+    }
 
     public static class CallAttribute implements Attribute<SncpTestBean, Long> {
 
@@ -50,12 +70,14 @@ public class SncpTestServiceImpl implements SncpTestIService {
 
     }
 
+    @Override
     public void insert(@RpcCall(DataCallArrayAttribute.class) SncpTestBean... beans) {
         for (SncpTestBean bean : beans) {
             bean.setId(System.currentTimeMillis());
         }
     }
 
+    @Override
     public String queryResult(SncpTestBean bean) {
         System.out.println(Thread.currentThread().getName() + " 运行了queryResult方法");
         return "result: " + bean;
@@ -67,6 +89,7 @@ public class SncpTestServiceImpl implements SncpTestIService {
     }
 
     @RpcMultiRun
+    @Override
     public String updateBean(@RpcCall(CallAttribute.class) SncpTestBean bean) {
         bean.setId(System.currentTimeMillis());
         System.out.println(Thread.currentThread().getName() + " 运行了updateBean方法");

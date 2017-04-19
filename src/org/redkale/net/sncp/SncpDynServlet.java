@@ -11,6 +11,7 @@ import java.lang.annotation.*;
 import java.lang.reflect.*;
 import java.nio.*;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.*;
 import java.util.logging.*;
 import javax.annotation.*;
@@ -113,7 +114,7 @@ public final class SncpDynServlet extends SncpServlet {
         if (bufferSupplier == null) {
             bufferSupplier = request.getContext().getBufferSupplier();
         }
-        SncpServletAction action = actions.get(request.getActionid());
+        final SncpServletAction action = actions.get(request.getActionid());
         //if (finest) logger.log(Level.FINEST, "sncpdyn.execute: " + request + ", " + (action == null ? "null" : action.method));
         if (action == null) {
             response.finish(SncpResponse.RETCODE_ILLACTIONID, null);  //无效actionid
@@ -134,6 +135,8 @@ public final class SncpDynServlet extends SncpServlet {
                         }
                         handler = creator.create(new DefaultSncpAsyncHandler(action, in, out, request, response));
                     }
+                } else if (action.boolReturnTypeFuture) {
+                    handler = new DefaultSncpAsyncHandler(action, in, out, request, response);
                 }
                 in.setBytes(request.getBody());
                 action.action(in, out, handler);
@@ -141,6 +144,26 @@ public final class SncpDynServlet extends SncpServlet {
                     response.finish(0, out);
                     action.convert.offerBsonReader(in);
                     action.convert.offerBsonWriter(out);
+                } else if (action.boolReturnTypeFuture) {
+                    CompletableFuture future = handler.sncp_getFuture();
+                    if (future == null) {
+                        action._callParameter(out, handler.sncp_getParams());
+                        action.convert.convertTo(out, Object.class, null);
+                    } else {
+                        Object[] sncpParams = handler.sncp_getParams();
+                        future.whenCompleteAsync((v, e) -> {
+                            if (e != null) {
+                                response.getContext().getLogger().log(Level.INFO, "sncp CompleteAsync error(" + request + ")", e);
+                                response.finish(SncpResponse.RETCODE_THROWEXCEPTION, null);
+                                return;
+                            }
+                            action._callParameter(out, sncpParams);
+                            action.convert.convertTo(out, Object.class, v);
+                            response.finish(0, out);
+                            action.convert.offerBsonReader(in);
+                            action.convert.offerBsonWriter(out);
+                        }, getExecutor());
+                    }
                 }
             } catch (Throwable t) {
                 response.getContext().getLogger().log(Level.INFO, "sncp execute error(" + request + ")", t);
@@ -164,10 +187,13 @@ public final class SncpDynServlet extends SncpServlet {
 
         protected int handlerFuncParamIndex = -1;  //handlerFuncParamIndex>=0表示存在AsyncHandler参数
 
+        protected boolean boolReturnTypeFuture = false; // 返回结果类型是否为 CompletableFuture
+
         protected Class handlerFuncParamClass; //AsyncHandler参数的类型
 
         public abstract void action(final BsonReader in, final BsonWriter out, final SncpAsyncHandler handler) throws Throwable;
 
+        //只有同步方法才调用 (没有AsyncHandler、CompletableFuture)
         public final void _callParameter(final BsonWriter out, final Object... params) {
             if (paramAttrs != null) {
                 for (int i = 1; i < paramAttrs.length; i++) {
@@ -192,6 +218,10 @@ public final class SncpDynServlet extends SncpServlet {
          *      }
          *
          *      public void update(long show, short v2, AsyncHandler&#60;Boolean, TestBean&#62; handler, TestBean bean, String name, int id) {
+         *      }
+         *
+         *      public CompletableFuture&#60;String&#62; changeName(TestBean bean, String name, int id) {
+         *          return null;
          *      }
          * }
          *
@@ -245,6 +275,22 @@ public final class SncpDynServlet extends SncpServlet {
          *      }
          * }
          *
+         *
+         * class DynActionTestService_changeName extends SncpServletAction {
+         *
+         *      public TestService service;
+         *
+         *      &#064;Override
+         *      public void action(final BsonReader in, final BsonWriter out, final SncpAsyncHandler handler) throws Throwable {
+         *          TestBean arg1 = convert.convertFrom(paramTypes[1], in);
+         *          String arg2 = convert.convertFrom(paramTypes[2], in);
+         *          int arg3 = convert.convertFrom(paramTypes[3], in);
+         *          handler.sncp_setParams(arg1, arg2, arg3);
+         *          CompletableFuture future = service.changeName(arg1, arg2, arg3);
+         *          handler.sncp_setFuture(future);
+         *      }
+         * }
+         *
          * </pre></blockquote>
          *
          * @param service  Service
@@ -264,6 +310,7 @@ public final class SncpDynServlet extends SncpServlet {
             final String convertReaderDesc = Type.getDescriptor(BsonReader.class);
             final String convertWriterDesc = Type.getDescriptor(BsonWriter.class);
             final String serviceDesc = Type.getDescriptor(serviceClass);
+            final boolean boolReturnTypeFuture = CompletableFuture.class.isAssignableFrom(method.getReturnType());
             String newDynName = serviceName.substring(0, serviceName.lastIndexOf('/') + 1)
                 + "DynAction" + serviceClass.getSimpleName() + "_" + method.getName() + "_" + actionid;
             while (true) {
@@ -312,8 +359,11 @@ public final class SncpDynServlet extends SncpServlet {
                 int store = 4; //action的参数个数+1
                 final Class[] paramClasses = method.getParameterTypes();
                 int[][] codes = new int[paramClasses.length][2];
-                for (int i = 0; i < paramClasses.length; i++) { //参数
+                for (int i = 0; i < paramClasses.length; i++) { //反序列化方法的每个参数
                     if (AsyncHandler.class.isAssignableFrom(paramClasses[i])) {
+                        if (boolReturnTypeFuture) {
+                            throw new RuntimeException(method + " have both AsyncHandler and CompletableFuture");
+                        }
                         if (handlerFuncIndex >= 0) {
                             throw new RuntimeException(method + " have more than one AsyncHandler type parameter");
                         }
@@ -386,7 +436,7 @@ public final class SncpDynServlet extends SncpServlet {
                     intconst++;
                     store++;
                 }
-                if (handlerFuncIndex >= 0) {  //调用SncpAsyncHandler.setParams(Object... params)
+                if (boolReturnTypeFuture || handlerFuncIndex >= 0) {  //调用SncpAsyncHandler.setParams(Object... params)
                     mv.visitVarInsn(ALOAD, 3);
                     if (paramClasses.length > 5) {
                         mv.visitIntInsn(BIPUSH, paramClasses.length);
@@ -444,8 +494,13 @@ public final class SncpDynServlet extends SncpServlet {
                         }
                     }
                     mv.visitVarInsn(ASTORE, store);  //11
+                    if (boolReturnTypeFuture) {
+                        mv.visitVarInsn(ALOAD, 3);
+                        mv.visitVarInsn(ALOAD, store);
+                        mv.visitMethodInsn(INVOKEINTERFACE, handlerName, "sncp_setFuture", "(Ljava/util/concurrent/CompletableFuture;)V", true);
+                    }
                 }
-                if (handlerFuncIndex < 0) {
+                if (!boolReturnTypeFuture && handlerFuncIndex < 0) { //同步方法
                     //------------------------- _callParameter 方法 --------------------------------
                     mv.visitVarInsn(ALOAD, 0);
                     mv.visitVarInsn(ALOAD, 2);
@@ -486,10 +541,10 @@ public final class SncpDynServlet extends SncpServlet {
                 }
                 //-------------------------直接返回  或者  调用convertTo方法 --------------------------------
                 int maxStack = codes.length > 0 ? codes[codes.length - 1][1] : 1;
-                if (returnClass == void.class) { //返回
+                if (boolReturnTypeFuture || returnClass == void.class) { //返回
                     mv.visitInsn(RETURN);
                     maxStack = 8;
-                } else {
+                } else {  //同步方法调用
                     mv.visitVarInsn(ALOAD, 0);
                     mv.visitFieldInsn(GETFIELD, newDynName, "convert", Type.getDescriptor(BsonConvert.class));
                     mv.visitVarInsn(ALOAD, 2);
@@ -528,6 +583,7 @@ public final class SncpDynServlet extends SncpServlet {
                 instance.paramTypes = types;
                 instance.handlerFuncParamIndex = handlerFuncIndex;
                 instance.handlerFuncParamClass = handlerFuncClass;
+                instance.boolReturnTypeFuture = boolReturnTypeFuture;
 
                 org.redkale.util.Attribute[] atts = new org.redkale.util.Attribute[ptypes.length + 1];
                 Annotation[][] anns = method.getParameterAnnotations();

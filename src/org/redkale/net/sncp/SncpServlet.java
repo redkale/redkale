@@ -6,6 +6,7 @@
 package org.redkale.net.sncp;
 
 import java.util.Objects;
+import java.util.concurrent.*;
 import org.redkale.net.*;
 import org.redkale.util.*;
 
@@ -19,6 +20,14 @@ import org.redkale.util.*;
 public abstract class SncpServlet extends Servlet<SncpContext, SncpRequest, SncpResponse> implements Comparable<SncpServlet> {
 
     public abstract DLong getServiceid();
+
+    protected ExecutorService getExecutor() {
+        Thread thread = Thread.currentThread();
+        if (thread instanceof WorkThread) {
+            return ((WorkThread) thread).getExecutor();
+        }
+        return ForkJoinPool.commonPool();
+    }
 
     @Override
     public final boolean equals(Object obj) {

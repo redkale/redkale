@@ -5,6 +5,7 @@
  */
 package org.redkale.net.sncp;
 
+import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
 import jdk.internal.org.objectweb.asm.*;
 import static jdk.internal.org.objectweb.asm.Opcodes.*;
@@ -31,6 +32,10 @@ public interface SncpAsyncHandler<V, A> extends AsyncHandler<V, A> {
 
     public void sncp_setParams(Object... params);
 
+    public void sncp_setFuture(CompletableFuture future);
+
+    public CompletableFuture sncp_getFuture();
+
     static class Factory {
 
         /**
@@ -44,6 +49,8 @@ public interface SncpAsyncHandler<V, A> extends AsyncHandler<V, A> {
          *  public class XXXAsyncHandler_DyncSncpAsyncHandler_4323 extends XXXAsyncHandler implements SncpAsyncHandler {
          *
          *      private SncpAsyncHandler sncphandler;
+         *
+         *      private CompletableFuture sncpfuture;
          *
          *      &#64;java.beans.ConstructorProperties({"sncphandler"})
          *      public XXXAsyncHandler_DyncSncpAsyncHandler_4323(SncpAsyncHandler sncphandler) {
@@ -70,6 +77,16 @@ public interface SncpAsyncHandler<V, A> extends AsyncHandler<V, A> {
          *      public void sncp_setParams(Object... params) {
          *          sncphandler.sncp_setParams(params);
          *      }
+         *
+         *      &#64;Override
+         *      public void sncp_setFuture(CompletableFuture future) {
+         *          this.sncpfuture = future;
+         *      }
+         *
+         *      &#64;Override
+         *      public CompletableFuture sncp_getFuture() {
+         *          return this.sncpfuture;
+         *      }
          *  }
          *
          * </pre></blockquote>
@@ -82,22 +99,27 @@ public interface SncpAsyncHandler<V, A> extends AsyncHandler<V, A> {
             //------------------------------------------------------------- 
             final boolean handlerinterface = handlerClass.isInterface();
             final String handlerClassName = handlerClass.getName().replace('.', '/');
-            final String sncyHandlerName = SncpAsyncHandler.class.getName().replace('.', '/');
-            final String sncyHandlerDesc = Type.getDescriptor(SncpAsyncHandler.class);
+            final String sncpHandlerName = SncpAsyncHandler.class.getName().replace('.', '/');
+            final String sncpHandlerDesc = Type.getDescriptor(SncpAsyncHandler.class);
+            final String sncpFutureDesc = Type.getDescriptor(CompletableFuture.class);
             final String newDynName = handlerClass.getName().replace('.', '/') + "_Dync" + SncpAsyncHandler.class.getSimpleName() + "_" + (System.currentTimeMillis() % 10000);
 
             ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
             FieldVisitor fv;
             AsmMethodVisitor mv;
             AnnotationVisitor av0;
-            cw.visit(V1_8, ACC_PUBLIC + ACC_SUPER, newDynName, null, handlerinterface ? "java/lang/Object" : handlerClassName, handlerinterface ? new String[]{handlerClassName, sncyHandlerName} : new String[]{sncyHandlerName});
+            cw.visit(V1_8, ACC_PUBLIC + ACC_SUPER, newDynName, null, handlerinterface ? "java/lang/Object" : handlerClassName, handlerinterface ? new String[]{handlerClassName, sncpHandlerName} : new String[]{sncpHandlerName});
 
             { //handler 属性
-                fv = cw.visitField(ACC_PRIVATE, "sncphandler", sncyHandlerDesc, null, null);
+                fv = cw.visitField(ACC_PRIVATE, "sncphandler", sncpHandlerDesc, null, null);
+                fv.visitEnd();
+            }
+            { //future 属性
+                fv = cw.visitField(ACC_PRIVATE, "sncpfuture", sncpFutureDesc, null, null);
                 fv.visitEnd();
             }
             {//构造方法
-                mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC, "<init>", "(" + sncyHandlerDesc + ")V", null, null));
+                mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC, "<init>", "(" + sncpHandlerDesc + ")V", null, null));
                 //mv.setDebug(true);
                 {
                     av0 = mv.visitAnnotation("Ljava/beans/ConstructorProperties;", true);
@@ -112,7 +134,7 @@ public interface SncpAsyncHandler<V, A> extends AsyncHandler<V, A> {
                 mv.visitMethodInsn(INVOKESPECIAL, handlerinterface ? "java/lang/Object" : handlerClassName, "<init>", "()V", false);
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitVarInsn(ALOAD, 1);
-                mv.visitFieldInsn(PUTFIELD, newDynName, "sncphandler", sncyHandlerDesc);
+                mv.visitFieldInsn(PUTFIELD, newDynName, "sncphandler", sncpHandlerDesc);
                 mv.visitInsn(RETURN);
                 mv.visitMaxs(2, 2);
                 mv.visitEnd();
@@ -122,20 +144,20 @@ public interface SncpAsyncHandler<V, A> extends AsyncHandler<V, A> {
                 if ("completed".equals(method.getName()) && method.getParameterCount() == 2) {
                     mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC, "completed", Type.getMethodDescriptor(method), null, null));
                     mv.visitVarInsn(ALOAD, 0);
-                    mv.visitFieldInsn(GETFIELD, newDynName, "sncphandler", sncyHandlerDesc);
+                    mv.visitFieldInsn(GETFIELD, newDynName, "sncphandler", sncpHandlerDesc);
                     mv.visitVarInsn(ALOAD, 1);
                     mv.visitVarInsn(ALOAD, 2);
-                    mv.visitMethodInsn(INVOKEINTERFACE, sncyHandlerName, "completed", "(Ljava/lang/Object;Ljava/lang/Object;)V", true);
+                    mv.visitMethodInsn(INVOKEINTERFACE, sncpHandlerName, "completed", "(Ljava/lang/Object;Ljava/lang/Object;)V", true);
                     mv.visitInsn(RETURN);
                     mv.visitMaxs(3, 3);
                     mv.visitEnd();
                 } else if ("failed".equals(method.getName()) && method.getParameterCount() == 2) {
                     mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC, "failed", Type.getMethodDescriptor(method), null, null));
                     mv.visitVarInsn(ALOAD, 0);
-                    mv.visitFieldInsn(GETFIELD, newDynName, "sncphandler", sncyHandlerDesc);
+                    mv.visitFieldInsn(GETFIELD, newDynName, "sncphandler", sncpHandlerDesc);
                     mv.visitVarInsn(ALOAD, 1);
                     mv.visitVarInsn(ALOAD, 2);
-                    mv.visitMethodInsn(INVOKEINTERFACE, sncyHandlerName, "failed", "(Ljava/lang/Throwable;Ljava/lang/Object;)V", true);
+                    mv.visitMethodInsn(INVOKEINTERFACE, sncpHandlerName, "failed", "(Ljava/lang/Throwable;Ljava/lang/Object;)V", true);
                     mv.visitInsn(RETURN);
                     mv.visitMaxs(3, 3);
                     mv.visitEnd();
@@ -171,8 +193,8 @@ public interface SncpAsyncHandler<V, A> extends AsyncHandler<V, A> {
             { // sncp_getParams
                 mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC, "sncp_getParams", "()[Ljava/lang/Object;", null, null));
                 mv.visitVarInsn(ALOAD, 0);
-                mv.visitFieldInsn(GETFIELD, newDynName, "sncphandler", sncyHandlerDesc);
-                mv.visitMethodInsn(INVOKEINTERFACE, sncyHandlerName, "sncp_getParams", "()[Ljava/lang/Object;", true);
+                mv.visitFieldInsn(GETFIELD, newDynName, "sncphandler", sncpHandlerDesc);
+                mv.visitMethodInsn(INVOKEINTERFACE, sncpHandlerName, "sncp_getParams", "()[Ljava/lang/Object;", true);
                 mv.visitInsn(ARETURN);
                 mv.visitMaxs(1, 1);
                 mv.visitEnd();
@@ -180,11 +202,28 @@ public interface SncpAsyncHandler<V, A> extends AsyncHandler<V, A> {
             {  // sncp_setParams
                 mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC + ACC_VARARGS, "sncp_setParams", "([Ljava/lang/Object;)V", null, null));
                 mv.visitVarInsn(ALOAD, 0);
-                mv.visitFieldInsn(GETFIELD, newDynName, "sncphandler", sncyHandlerDesc);
+                mv.visitFieldInsn(GETFIELD, newDynName, "sncphandler", sncpHandlerDesc);
                 mv.visitVarInsn(ALOAD, 1);
-                mv.visitMethodInsn(INVOKEINTERFACE, sncyHandlerName, "sncp_setParams", "([Ljava/lang/Object;)V", true);
+                mv.visitMethodInsn(INVOKEINTERFACE, sncpHandlerName, "sncp_setParams", "([Ljava/lang/Object;)V", true);
                 mv.visitInsn(RETURN);
                 mv.visitMaxs(2, 2);
+                mv.visitEnd();
+            }
+            {  // sncp_setFuture
+                mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC, "sncp_setFuture", "(" + sncpFutureDesc + ")V", null, null));
+                mv.visitVarInsn(ALOAD, 0);
+                mv.visitVarInsn(ALOAD, 1);
+                mv.visitFieldInsn(PUTFIELD, newDynName, "sncpfuture", sncpFutureDesc);
+                mv.visitInsn(RETURN);
+                mv.visitMaxs(2, 2);
+                mv.visitEnd();
+            }
+            { // sncp_getFuture
+                mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC, "sncp_getFuture", "()" + sncpFutureDesc, null, null));
+                mv.visitVarInsn(ALOAD, 0);
+                mv.visitFieldInsn(GETFIELD, newDynName, "sncpfuture", sncpFutureDesc);
+                mv.visitInsn(ARETURN);
+                mv.visitMaxs(1, 1);
                 mv.visitEnd();
             }
             cw.visitEnd();
@@ -213,6 +252,8 @@ public interface SncpAsyncHandler<V, A> extends AsyncHandler<V, A> {
         protected SncpRequest request;
 
         protected SncpResponse response;
+
+        protected CompletableFuture future;
 
         public DefaultSncpAsyncHandler(SncpServletAction action, BsonReader in, BsonWriter out, SncpRequest request, SncpResponse response) {
             this.action = action;
@@ -250,6 +291,16 @@ public interface SncpAsyncHandler<V, A> extends AsyncHandler<V, A> {
         @Override
         public void sncp_setParams(Object... params) {
             this.params = params;
+        }
+
+        @Override
+        public void sncp_setFuture(CompletableFuture future) {
+            this.future = future;
+        }
+
+        @Override
+        public CompletableFuture sncp_getFuture() {
+            return this.future;
         }
 
     }

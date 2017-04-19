@@ -52,7 +52,43 @@ public interface CacheSource<K extends Serializable, V extends Object> {
 
     public void removeSetItem(final K key, final V value);
 
-    //----------------------异步版---------------------------------
+    //---------------------- CompletableFuture 异步版 ---------------------------------
+    /**
+    public CompletableFuture<Boolean> existsAsync(final K key);
+
+    public CompletableFuture<V> getAsync(final K key);
+
+    public CompletableFuture<V> getAndRefreshAsync(final K key, final int expireSeconds);
+
+    public CompletableFuture<Void> refreshAsync(final K key, final int expireSeconds);
+
+    public CompletableFuture<Void> setAsync(final K key, final V value);
+
+    public CompletableFuture<Void> setAsync(final int expireSeconds, final K key, final V value);
+
+    public CompletableFuture<Void> setExpireSecondsAsync(final K key, final int expireSeconds);
+
+    public CompletableFuture<Void> removeAsync(final K key);
+
+    public CompletableFuture<Collection<V>> getCollectionAsync(final K key);
+
+    public CompletableFuture<Collection<V>> getCollectionAndRefreshAsync(final K key, final int expireSeconds);
+
+    public CompletableFuture<Void> appendListItemAsync(final K key, final V value);
+
+    public CompletableFuture<Void> removeListItemAsync(final K key, final V value);
+
+    public CompletableFuture<Void> appendSetItemAsync(final K key, final V value);
+
+    public CompletableFuture<Void> removeSetItemAsync(final K key, final V value);
+
+    default CompletableFuture<Boolean> isOpenAsync() {
+        CompletableFuture<Boolean> future = new CompletableFuture();
+        future.complete(true);
+        return future;
+    }
+    */
+    //---------------------- AsyncHandler 异步版 ---------------------------------
     public void exists(final AsyncHandler<Boolean, K> handler, final K key);
 
     public void get(final AsyncHandler<V, K> handler, final K key);

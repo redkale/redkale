@@ -53,6 +53,10 @@ public final class SncpClient {
 
         protected final int addressSourceParamIndex;
 
+        protected final boolean boolReturnTypeFuture; // 返回结果类型是否为 CompletableFuture
+
+        protected final Creator<? extends CompletableFuture> futureCreator;
+
         public SncpAction(final Class clazz, Method method, DLong actionid) {
             this.actionid = actionid == null ? Sncp.hash(method) : actionid;
             Type rt = method.getGenericReturnType();
@@ -61,6 +65,8 @@ public final class SncpClient {
                 if (tv.getBounds().length == 1) rt = tv.getBounds()[0];
             }
             this.resultTypes = rt == void.class ? null : rt;
+            this.boolReturnTypeFuture = CompletableFuture.class.isAssignableFrom(method.getReturnType());
+            this.futureCreator = boolReturnTypeFuture ? Creator.create((Class<? extends CompletableFuture>) method.getReturnType()) : null;
             this.paramTypes = method.getGenericParameterTypes();
             this.paramClass = method.getParameterTypes();
             this.method = method;
@@ -75,6 +81,9 @@ public final class SncpClient {
                 Class<?>[] params = method.getParameterTypes();
                 for (int i = 0; i < params.length; i++) {
                     if (AsyncHandler.class.isAssignableFrom(params[i])) {
+                        if (boolReturnTypeFuture) {
+                            throw new RuntimeException(method + " have both AsyncHandler and CompletableFuture");
+                        }
                         if (handlerFuncIndex >= 0) {
                             throw new RuntimeException(method + " have more than one AsyncHandler type parameter");
                         }
@@ -292,9 +301,32 @@ public final class SncpClient {
         final SncpAction action = actions[index];
         final AsyncHandler handlerFunc = action.handlerFuncParamIndex >= 0 ? (AsyncHandler) params[action.handlerFuncParamIndex] : null;
         if (action.handlerFuncParamIndex >= 0) params[action.handlerFuncParamIndex] = null;
-        SncpFuture<byte[]> future = remote0(handlerFunc, bsonConvert, jsonConvert, transport, null, action, params);
-        if (handlerFunc != null) return null;
         final BsonReader reader = bsonConvert.pollBsonReader();
+        CompletableFuture<byte[]> future = remote0(handlerFunc, bsonConvert, jsonConvert, transport, null, action, params);
+        if (action.boolReturnTypeFuture) {
+            CompletableFuture result = action.futureCreator.create();
+            future.whenCompleteAsync((v, e) -> {
+                try {
+                    if (e != null) {
+                        result.completeExceptionally(e);
+                    } else {
+                        reader.setBytes(v);
+                        byte i;
+                        while ((i = reader.readByte()) != 0) {
+                            final Attribute attr = action.paramAttrs[i];
+                            attr.set(params[i - 1], bsonConvert.convertFrom(attr.type(), reader));
+                        }
+                        Object rs = bsonConvert.convertFrom(Object.class, reader);
+
+                        result.complete(rs);
+                    }
+                } finally {
+                    bsonConvert.offerBsonReader(reader);
+                }
+            }); //需要获取  Executor
+            return (T) result;
+        }
+        if (handlerFunc != null) return null;
         try {
             reader.setBytes(future.get(5, TimeUnit.SECONDS));
             byte i;
@@ -319,7 +351,7 @@ public final class SncpClient {
         }
     }
 
-    private SncpFuture<byte[]> remote0(final AsyncHandler handler, final BsonConvert bsonConvert, final JsonConvert jsonConvert, final Transport transport, final SocketAddress addr0, final SncpAction action, final Object... params) {
+    private CompletableFuture<byte[]> remote0(final AsyncHandler handler, final BsonConvert bsonConvert, final JsonConvert jsonConvert, final Transport transport, final SocketAddress addr0, final SncpAction action, final Object... params) {
         if ("rest".equalsIgnoreCase(transport.getSubprotocol())) {
             return remoteRest0(handler, jsonConvert, transport, addr0, action, params);
         }
@@ -327,11 +359,11 @@ public final class SncpClient {
     }
 
     //尚未实现
-    private SncpFuture<byte[]> remoteRest0(final AsyncHandler handler, final JsonConvert jsonConvert, final Transport transport, final SocketAddress addr0, final SncpAction action, final Object... params) {
+    private CompletableFuture<byte[]> remoteRest0(final AsyncHandler handler, final JsonConvert jsonConvert, final Transport transport, final SocketAddress addr0, final SncpAction action, final Object... params) {
         return null;
     }
 
-    private SncpFuture<byte[]> remoteSncp0(final AsyncHandler handler, final BsonConvert bsonConvert, final Transport transport, final SocketAddress addr0, final SncpAction action, final Object... params) {
+    private CompletableFuture<byte[]> remoteSncp0(final AsyncHandler handler, final BsonConvert bsonConvert, final Transport transport, final SocketAddress addr0, final SncpAction action, final Object... params) {
         Type[] myparamtypes = action.paramTypes;
         Class[] myparamclass = action.paramClass;
         if (action.addressSourceParamIndex >= 0) params[action.addressSourceParamIndex] = this.clientAddress;
@@ -353,7 +385,7 @@ public final class SncpClient {
         fillHeader(sendBuffers[0], seqid, actionid, reqBodyLength);
 
         final ByteBuffer buffer = transport.pollBuffer();
-        final SncpFuture<byte[]> future = new SncpFuture(false);
+        final CompletableFuture<byte[]> future = new CompletableFuture();
         conn.write(sendBuffers, sendBuffers, new CompletionHandler<Integer, ByteBuffer[]>() {
 
             @Override
@@ -387,7 +419,7 @@ public final class SncpClient {
                     @Override
                     public void completed(Integer count, Void attachment2) {
                         if (count < 1 && buffer.remaining() == buffer.limit()) {   //没有数据可读
-                            future.set(new RuntimeException(action.method + " sncp[" + conn.getRemoteAddress() + "] remote no response data"));
+                            future.completeExceptionally(new RuntimeException(action.method + " sncp[" + conn.getRemoteAddress() + "] remote no response data"));
                             transport.offerBuffer(buffer);
                             transport.offerConnection(true, conn);
                             return;
@@ -432,7 +464,7 @@ public final class SncpClient {
                     }
 
                     public void success() {
-                        future.set(this.body);
+                        future.complete(this.body);
                         transport.offerBuffer(buffer);
                         transport.offerConnection(false, conn);
                         if (handler != null) {
@@ -458,7 +490,7 @@ public final class SncpClient {
                     @Override
                     public void failed(Throwable exc, Void attachment2) {
                         logger.log(Level.SEVERE, action.method + " sncp (params: " + convert.convertTo(params) + ") remote read exec failed", exc);
-                        future.set(new RuntimeException(action.method + " sncp remote exec failed"));
+                        future.completeExceptionally(new RuntimeException(action.method + " sncp remote exec failed"));
                         transport.offerBuffer(buffer);
                         transport.offerConnection(true, conn);
                         if (handler != null) {
@@ -510,91 +542,4 @@ public final class SncpClient {
         buffer.position(currentpos);
     }
 
-    protected static final class SncpFuture<T> implements Future<T> {
-
-        private volatile boolean done;
-
-        private T result;
-
-        private RuntimeException ex;
-
-        private final boolean rest;
-
-        public SncpFuture(boolean rest) {
-            this.rest = rest;
-        }
-
-        public SncpFuture(boolean rest, T result) {
-            this.rest = rest;
-            this.result = result;
-            this.done = true;
-        }
-
-        public boolean isRest() {
-            return this.rest;
-        }
-
-        public void set(T result) {
-            this.result = result;
-            this.done = true;
-            synchronized (this) {
-                notifyAll();
-            }
-        }
-
-        public void set(RuntimeException ex) {
-            this.ex = ex;
-            this.done = true;
-            synchronized (this) {
-                notifyAll();
-            }
-        }
-
-        @Override
-        public boolean cancel(boolean mayInterruptIfRunning) {
-            return false;
-        }
-
-        @Override
-        public boolean isCancelled() {
-            return false;
-        }
-
-        @Override
-        public boolean isDone() {
-            return done;
-        }
-
-        @Override
-        public T get() throws InterruptedException, ExecutionException {
-            if (done) {
-                if (ex != null) throw ex;
-                return result;
-            }
-            synchronized (this) {
-                if (!done) wait(10_000);
-            }
-            if (done) {
-                if (ex != null) throw ex;
-                return result;
-            }
-            throw new InterruptedException();
-        }
-
-        @Override
-        public T get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
-            if (done) {
-                if (ex != null) throw ex;
-                return result;
-            }
-            synchronized (this) {
-                if (!done) wait(unit.toMillis(timeout));
-            }
-            if (done) {
-                if (ex != null) throw ex;
-                return result;
-            }
-            throw new TimeoutException();
-        }
-    }
 }

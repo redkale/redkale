@@ -132,6 +132,13 @@ public class SncpTest {
             }.start();
         }
         cld.await();
+        final CountDownLatch cld2 = new CountDownLatch(1);
+        final CompletableFuture<String> future = service.queryResultAsync(callbean);
+        future.whenComplete((v, e) -> {
+            cld2.countDown();
+            System.out.println("异步执行完毕: " + v + ", 异常为: " + e);
+        });
+        cld2.await();
         System.out.println("---全部运行完毕---");
         System.exit(0);
     }

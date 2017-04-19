@@ -195,6 +195,13 @@ public class CacheMemorySource<K extends Serializable, V extends Object> extends
         return !entry.isExpired();
     }
 
+    //@Override
+    public CompletableFuture<Boolean> existsAsync(final K key) {
+        CompletableFuture<Boolean> future = new CompletableFuture();
+        future.complete(exists(key));
+        return future;
+    }
+
     @Override
     public void exists(final AsyncHandler<Boolean, K> handler, @RpcAttachment final K key) {
         boolean rs = exists(key);
@@ -209,6 +216,13 @@ public class CacheMemorySource<K extends Serializable, V extends Object> extends
         if (entry.isListCacheType()) return (V) new ArrayList((Collection) entry.value);
         if (entry.isSetCacheType()) return (V) new HashSet((Collection) entry.value);
         return (V) entry.getValue();
+    }
+
+    //@Override
+    public CompletableFuture<V> getAsync(final K key) {
+        CompletableFuture<V> future = new CompletableFuture();
+        future.complete(get(key));
+        return future;
     }
 
     @Override
@@ -228,6 +242,13 @@ public class CacheMemorySource<K extends Serializable, V extends Object> extends
         if (entry.isListCacheType()) return (V) new ArrayList((Collection) entry.value);
         if (entry.isSetCacheType()) return (V) new HashSet((Collection) entry.value);
         return (V) entry.getValue();
+    }
+
+    //@Override
+    public CompletableFuture<V> getAndRefreshAsync(final K key, final int expireSeconds) {
+        CompletableFuture<V> future = new CompletableFuture();
+        future.complete(getAndRefresh(key, expireSeconds));
+        return future;
     }
 
     @Override
