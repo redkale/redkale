@@ -203,7 +203,7 @@ public class CacheMemorySource<K extends Serializable, V extends Object> extends
     }
 
     @Override
-    public void exists(final AsyncHandler<Boolean, K> handler, @RpcAttachment final K key) {
+    public void existsAsync(final AsyncHandler<Boolean, K> handler, @RpcAttachment final K key) {
         boolean rs = exists(key);
         if (handler != null) handler.completed(rs, key);
     }
@@ -226,7 +226,7 @@ public class CacheMemorySource<K extends Serializable, V extends Object> extends
     }
 
     @Override
-    public void get(final AsyncHandler<V, K> handler, @RpcAttachment final K key) {
+    public void getAsync(final AsyncHandler<V, K> handler, @RpcAttachment final K key) {
         V rs = get(key);
         if (handler != null) handler.completed(rs, key);
     }
@@ -252,7 +252,7 @@ public class CacheMemorySource<K extends Serializable, V extends Object> extends
     }
 
     @Override
-    public void getAndRefresh(final AsyncHandler<V, K> handler, @RpcAttachment final K key, final int expireSeconds) {
+    public void getAndRefreshAsync(final AsyncHandler<V, K> handler, @RpcAttachment final K key, final int expireSeconds) {
         V rs = getAndRefresh(key, expireSeconds);
         if (handler != null) handler.completed(rs, key);
     }
@@ -268,7 +268,7 @@ public class CacheMemorySource<K extends Serializable, V extends Object> extends
     }
 
     @Override
-    public void refresh(final AsyncHandler<Void, K> handler, @RpcAttachment final K key, final int expireSeconds) {
+    public void refreshAsync(final AsyncHandler<Void, K> handler, @RpcAttachment final K key, final int expireSeconds) {
         refresh(key, expireSeconds);
         if (handler != null) handler.completed(null, key);
     }
@@ -289,7 +289,7 @@ public class CacheMemorySource<K extends Serializable, V extends Object> extends
     }
 
     @Override
-    public void set(final AsyncHandler<Void, K> handler, @RpcAttachment final K key, final V value) {
+    public void setAsync(final AsyncHandler<Void, K> handler, @RpcAttachment final K key, final V value) {
         set(key, value);
         if (handler != null) handler.completed(null, key);
     }
@@ -310,7 +310,7 @@ public class CacheMemorySource<K extends Serializable, V extends Object> extends
     }
 
     @Override
-    public void set(final AsyncHandler<Void, K> handler, final int expireSeconds, @RpcAttachment final K key, final V value) {
+    public void setAsync(final AsyncHandler<Void, K> handler, final int expireSeconds, @RpcAttachment final K key, final V value) {
         set(expireSeconds, key, value);
         if (handler != null) handler.completed(null, key);
     }
@@ -325,7 +325,7 @@ public class CacheMemorySource<K extends Serializable, V extends Object> extends
     }
 
     @Override
-    public void setExpireSeconds(final AsyncHandler<Void, K> handler, @RpcAttachment final K key, final int expireSeconds) {
+    public void setExpireSecondsAsync(final AsyncHandler<Void, K> handler, @RpcAttachment final K key, final int expireSeconds) {
         setExpireSeconds(key, expireSeconds);
         if (handler != null) handler.completed(null, key);
     }
@@ -338,7 +338,7 @@ public class CacheMemorySource<K extends Serializable, V extends Object> extends
     }
 
     @Override
-    public void remove(final AsyncHandler<Void, K> handler, @RpcAttachment final K key) {
+    public void removeAsync(final AsyncHandler<Void, K> handler, @RpcAttachment final K key) {
         remove(key);
         if (handler != null) handler.completed(null, key);
     }
@@ -349,7 +349,7 @@ public class CacheMemorySource<K extends Serializable, V extends Object> extends
     }
 
     @Override
-    public void getCollection(final AsyncHandler<Collection<V>, K> handler, @RpcAttachment final K key) {
+    public void getCollectionAsync(final AsyncHandler<Collection<V>, K> handler, @RpcAttachment final K key) {
         Collection<V> rs = getCollection(key);
         if (handler != null) handler.completed(rs, key);
     }
@@ -360,7 +360,7 @@ public class CacheMemorySource<K extends Serializable, V extends Object> extends
     }
 
     @Override
-    public void getCollectionAndRefresh(final AsyncHandler<Collection<V>, K> handler, @RpcAttachment final K key, final int expireSeconds) {
+    public void getCollectionAndRefreshAsync(final AsyncHandler<Collection<V>, K> handler, @RpcAttachment final K key, final int expireSeconds) {
         Collection<V> rs = getCollectionAndRefresh(key, expireSeconds);
         if (handler != null) handler.completed(rs, key);
     }
@@ -382,7 +382,7 @@ public class CacheMemorySource<K extends Serializable, V extends Object> extends
     }
 
     @Override
-    public void appendListItem(final AsyncHandler<Void, K> handler, @RpcAttachment final K key, final V value) {
+    public void appendListItemAsync(final AsyncHandler<Void, K> handler, @RpcAttachment final K key, final V value) {
         appendListItem(key, value);
         if (handler != null) handler.completed(null, key);
     }
@@ -397,7 +397,7 @@ public class CacheMemorySource<K extends Serializable, V extends Object> extends
     }
 
     @Override
-    public void removeListItem(final AsyncHandler<Void, K> handler, @RpcAttachment final K key, final V value) {
+    public void removeListItemAsync(final AsyncHandler<Void, K> handler, @RpcAttachment final K key, final V value) {
         removeListItem(key, value);
         if (handler != null) handler.completed(null, key);
     }
@@ -419,7 +419,7 @@ public class CacheMemorySource<K extends Serializable, V extends Object> extends
     }
 
     @Override
-    public void appendSetItem(final AsyncHandler<Void, K> handler, @RpcAttachment final K key, final V value) {
+    public void appendSetItemAsync(final AsyncHandler<Void, K> handler, @RpcAttachment final K key, final V value) {
         appendSetItem(key, value);
         if (handler != null) handler.completed(null, key);
     }
@@ -434,7 +434,7 @@ public class CacheMemorySource<K extends Serializable, V extends Object> extends
     }
 
     @Override
-    public void removeSetItem(final AsyncHandler<Void, K> handler, @RpcAttachment final K key, final V value) {
+    public void removeSetItemAsync(final AsyncHandler<Void, K> handler, @RpcAttachment final K key, final V value) {
         removeSetItem(key, value);
         if (handler != null) handler.completed(null, key);
     }

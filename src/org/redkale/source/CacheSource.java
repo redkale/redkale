@@ -89,35 +89,36 @@ public interface CacheSource<K extends Serializable, V extends Object> {
     }
     */
     //---------------------- AsyncHandler 异步版 ---------------------------------
-    public void exists(final AsyncHandler<Boolean, K> handler, final K key);
+    
+    public void existsAsync(final AsyncHandler<Boolean, K> handler, final K key);
 
-    public void get(final AsyncHandler<V, K> handler, final K key);
+    public void getAsync(final AsyncHandler<V, K> handler, final K key);
 
-    public void getAndRefresh(final AsyncHandler<V, K> handler, final K key, final int expireSeconds);
+    public void getAndRefreshAsync(final AsyncHandler<V, K> handler, final K key, final int expireSeconds);
 
-    public void refresh(final AsyncHandler<Void, K> handler, final K key, final int expireSeconds);
+    public void refreshAsync(final AsyncHandler<Void, K> handler, final K key, final int expireSeconds);
 
-    public void set(final AsyncHandler<Void, K> handler, final K key, final V value);
+    public void setAsync(final AsyncHandler<Void, K> handler, final K key, final V value);
 
-    public void set(final AsyncHandler<Void, K> handler, final int expireSeconds, final K key, final V value);
+    public void setAsync(final AsyncHandler<Void, K> handler, final int expireSeconds, final K key, final V value);
 
-    public void setExpireSeconds(final AsyncHandler<Void, K> handler, final K key, final int expireSeconds);
+    public void setExpireSecondsAsync(final AsyncHandler<Void, K> handler, final K key, final int expireSeconds);
 
-    public void remove(final AsyncHandler<Void, K> handler, final K key);
+    public void removeAsync(final AsyncHandler<Void, K> handler, final K key);
 
-    public void getCollection(final AsyncHandler<Collection<V>, K> handler, final K key);
+    public void getCollectionAsync(final AsyncHandler<Collection<V>, K> handler, final K key);
 
-    public void getCollectionAndRefresh(final AsyncHandler<Collection<V>, K> handler, final K key, final int expireSeconds);
+    public void getCollectionAndRefreshAsync(final AsyncHandler<Collection<V>, K> handler, final K key, final int expireSeconds);
 
-    public void appendListItem(final AsyncHandler<Void, K> handler, final K key, final V value);
+    public void appendListItemAsync(final AsyncHandler<Void, K> handler, final K key, final V value);
 
-    public void removeListItem(final AsyncHandler<Void, K> handler, final K key, final V value);
+    public void removeListItemAsync(final AsyncHandler<Void, K> handler, final K key, final V value);
 
-    public void appendSetItem(final AsyncHandler<Void, K> handler, final K key, final V value);
+    public void appendSetItemAsync(final AsyncHandler<Void, K> handler, final K key, final V value);
 
-    public void removeSetItem(final AsyncHandler<Void, K> handler, final K key, final V value);
+    public void removeSetItemAsync(final AsyncHandler<Void, K> handler, final K key, final V value);
 
-    default void isOpen(final AsyncHandler<Boolean, Void> handler) {
+    default void isOpenAsync(final AsyncHandler<Boolean, Void> handler) {
         if (handler != null) handler.completed(Boolean.TRUE, null);
     }
 }

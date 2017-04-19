@@ -24,7 +24,7 @@ import org.redkale.util.*;
 @SuppressWarnings("unchecked")
 public interface DataSource {
 
-    //----------------------insert-----------------------------
+    //----------------------insertAsync-----------------------------
     /**
      * 新增记录， 多对象必须是同一个Entity类  <br>
      *
@@ -40,9 +40,9 @@ public interface DataSource {
      * @param handler 回调函数
      * @param values  Entity对象
      */
-    public <T> void insert(final AsyncHandler<Void, T[]> handler, final T... values);
+    public <T> void insertAsync(final AsyncHandler<Void, T[]> handler, final T... values);
 
-    //-------------------------delete--------------------------
+    //-------------------------deleteAsync--------------------------
     /**
      * 删除指定主键值的记录， 多对象必须是同一个Entity类  <br>
      * 等价SQL: DELETE FROM {table} WHERE {primary} IN {values.id}  <br>
@@ -64,7 +64,7 @@ public interface DataSource {
      *
      *
      */
-    public <T> void delete(final AsyncHandler<Integer, T[]> handler, final T... values);
+    public <T> void deleteAsync(final AsyncHandler<Integer, T[]> handler, final T... values);
 
     /**
      * 删除指定主键值的记录  <br>
@@ -89,7 +89,7 @@ public interface DataSource {
      *
      *
      */
-    public <T> void delete(final AsyncHandler<Integer, Serializable[]> handler, final Class<T> clazz, final Serializable... ids);
+    public <T> void deleteAsync(final AsyncHandler<Integer, Serializable[]> handler, final Class<T> clazz, final Serializable... ids);
 
     /**
      * 删除符合过滤条件的记录  <br>
@@ -114,7 +114,7 @@ public interface DataSource {
      *
      *
      */
-    public <T> void delete(final AsyncHandler<Integer, FilterNode> handler, final Class<T> clazz, final FilterNode node);
+    public <T> void deleteAsync(final AsyncHandler<Integer, FilterNode> handler, final Class<T> clazz, final FilterNode node);
 
     /**
      * 删除符合过滤条件且指定最大影响条数的记录  <br>
@@ -143,9 +143,9 @@ public interface DataSource {
      *
      *
      */
-    public <T> void delete(final AsyncHandler<Integer, FilterNode> handler, final Class<T> clazz, final Flipper flipper, final FilterNode node);
+    public <T> void deleteAsync(final AsyncHandler<Integer, FilterNode> handler, final Class<T> clazz, final Flipper flipper, final FilterNode node);
 
-    //------------------------update---------------------------
+    //------------------------updateAsync---------------------------
     /**
      * 更新记录， 多对象必须是同一个Entity类  <br>
      * 等价SQL:  <br>
@@ -173,7 +173,7 @@ public interface DataSource {
      *
      *
      */
-    public <T> void update(final AsyncHandler<Integer, T[]> handler, final T... values);
+    public <T> void updateAsync(final AsyncHandler<Integer, T[]> handler, final T... values);
 
     /**
      * 更新单个记录的单个字段  <br>
@@ -204,7 +204,7 @@ public interface DataSource {
      *
      *
      */
-    public <T> void updateColumn(final AsyncHandler<Integer, Serializable> handler, final Class<T> clazz, final Serializable id, final String column, final Serializable value);
+    public <T> void updateColumnAsync(final AsyncHandler<Integer, Serializable> handler, final Class<T> clazz, final Serializable id, final String column, final Serializable value);
 
     /**
      * 更新符合过滤条件记录的单个字段   <br>
@@ -235,7 +235,7 @@ public interface DataSource {
      *
      *
      */
-    public <T> void updateColumn(final AsyncHandler<Integer, FilterNode> handler, final Class<T> clazz, final String column, final Serializable value, final FilterNode node);
+    public <T> void updateColumnAsync(final AsyncHandler<Integer, FilterNode> handler, final Class<T> clazz, final String column, final Serializable value, final FilterNode node);
 
     /**
      * 更新指定主键值记录的部分字段   <br>
@@ -264,7 +264,7 @@ public interface DataSource {
      *
      *
      */
-    public <T> void updateColumn(final AsyncHandler<Integer, Serializable> handler, final Class<T> clazz, final Serializable id, final ColumnValue... values);
+    public <T> void updateColumnAsync(final AsyncHandler<Integer, Serializable> handler, final Class<T> clazz, final Serializable id, final ColumnValue... values);
 
     /**
      * 更新符合过滤条件记录的部分字段   <br>
@@ -295,7 +295,7 @@ public interface DataSource {
      *
      *
      */
-    public <T> void updateColumn(final AsyncHandler<Integer, FilterNode> handler, final Class<T> clazz, final FilterNode node, final ColumnValue... values);
+    public <T> void updateColumnAsync(final AsyncHandler<Integer, FilterNode> handler, final Class<T> clazz, final FilterNode node, final ColumnValue... values);
 
     /**
      * 更新符合过滤条件的记录的指定字段   <br>
@@ -328,7 +328,7 @@ public interface DataSource {
      *
      *
      */
-    public <T> void updateColumn(final AsyncHandler<Integer, FilterNode> handler, final Class<T> clazz, final FilterNode node, final Flipper flipper, final ColumnValue... values);
+    public <T> void updateColumnAsync(final AsyncHandler<Integer, FilterNode> handler, final Class<T> clazz, final FilterNode node, final Flipper flipper, final ColumnValue... values);
 
     /**
      * 更新单个记录的指定字段   <br>
@@ -354,7 +354,7 @@ public interface DataSource {
      * @param columns 需更新的字段名
      *
      */
-    public <T> void updateColumn(final AsyncHandler<Integer, T> handler, final T bean, final String... columns);
+    public <T> void updateColumnAsync(final AsyncHandler<Integer, T> handler, final T bean, final String... columns);
 
     /**
      * 更新符合过滤条件记录的指定字段   <br>
@@ -383,7 +383,7 @@ public interface DataSource {
      *
      *
      */
-    public <T> void updateColumn(final AsyncHandler<Integer, FilterNode> handler, final T bean, final FilterNode node, final String... columns);
+    public <T> void updateColumnAsync(final AsyncHandler<Integer, FilterNode> handler, final T bean, final FilterNode node, final String... columns);
 
     /**
      * 更新单个记录的指定字段   <br>
@@ -410,7 +410,7 @@ public interface DataSource {
      *
      *
      */
-    public <T> void updateColumn(final AsyncHandler<Integer, T> handler, final T bean, final SelectColumn selects);
+    public <T> void updateColumnAsync(final AsyncHandler<Integer, T> handler, final T bean, final SelectColumn selects);
 
     /**
      * 更新符合过滤条件记录的指定字段   <br>
@@ -439,14 +439,14 @@ public interface DataSource {
      *
      *
      */
-    public <T> void updateColumn(final AsyncHandler<Integer, FilterNode> handler, final T bean, final FilterNode node, final SelectColumn selects);
+    public <T> void updateColumnAsync(final AsyncHandler<Integer, FilterNode> handler, final T bean, final FilterNode node, final SelectColumn selects);
 
     //############################################# 查询接口 #############################################
     //-----------------------getXXXXResult-----------------------------
     /**
      * 获取符合过滤条件记录的聚合结果, 无结果返回null   <br>
      * 等价SQL: SELECT FUNC{column} FROM {table}  <br>
-     * 如 getNumberResult(Record.class, FilterFunc.COUNT, null) 等价于: SELECT COUNT(*) FROM {table} <br>
+     * 如 getNumberResultAsync(Record.class, FilterFunc.COUNT, null) 等价于: SELECT COUNT(*) FROM {table} <br>
      *
      * @param entityClass Entity类
      * @param func        聚合函数
@@ -459,7 +459,7 @@ public interface DataSource {
     /**
      * 获取符合过滤条件记录的聚合结果, 无结果返回null   <br>
      * 等价SQL: SELECT FUNC{column} FROM {table}  <br>
-     * 如 getNumberResult(Record.class, FilterFunc.COUNT, null) 等价于: SELECT COUNT(*) FROM {table} <br>
+     * 如 getNumberResultAsync(Record.class, FilterFunc.COUNT, null) 等价于: SELECT COUNT(*) FROM {table} <br>
      *
      * @param handler     回调函数
      * @param entityClass Entity类
@@ -468,12 +468,12 @@ public interface DataSource {
      *
      *
      */
-    public void getNumberResult(final AsyncHandler<Number, String> handler, final Class entityClass, final FilterFunc func, final String column);
+    public void getNumberResultAsync(final AsyncHandler<Number, String> handler, final Class entityClass, final FilterFunc func, final String column);
 
     /**
      * 获取符合过滤条件记录的聚合结果, 无结果返回null   <br>
      * 等价SQL: SELECT FUNC{column} FROM {table} WHERE {filter bean}  <br>
-     * 如 getNumberResult(Record.class, FilterFunc.COUNT, null, (FilterBean)null) 等价于: SELECT COUNT(*) FROM {table} <br>
+     * 如 getNumberResultAsync(Record.class, FilterFunc.COUNT, null, (FilterBean)null) 等价于: SELECT COUNT(*) FROM {table} <br>
      *
      * @param entityClass Entity类
      * @param func        聚合函数
@@ -487,7 +487,7 @@ public interface DataSource {
     /**
      * 获取符合过滤条件记录的聚合结果, 无结果返回null   <br>
      * 等价SQL: SELECT FUNC{column} FROM {table} WHERE {filter bean}  <br>
-     * 如 getNumberResult(Record.class, FilterFunc.COUNT, null, (FilterBean)null) 等价于: SELECT COUNT(*) FROM {table} <br>
+     * 如 getNumberResultAsync(Record.class, FilterFunc.COUNT, null, (FilterBean)null) 等价于: SELECT COUNT(*) FROM {table} <br>
      *
      * @param <B>         Filter泛型
      * @param handler     回调函数
@@ -498,12 +498,12 @@ public interface DataSource {
      *
      *
      */
-    public <B extends FilterBean> void getNumberResult(final AsyncHandler<Number, B> handler, final Class entityClass, final FilterFunc func, final String column, final B bean);
+    public <B extends FilterBean> void getNumberResultAsync(final AsyncHandler<Number, B> handler, final Class entityClass, final FilterFunc func, final String column, final B bean);
 
     /**
      * 获取符合过滤条件记录的聚合结果, 无结果返回null   <br>
      * 等价SQL: SELECT FUNC{column} FROM {table} WHERE {filter node}  <br>
-     * 如 getNumberResult(Record.class, FilterFunc.MAX, "createtime", (FilterNode)null) 等价于: SELECT MAX(createtime) FROM {table} <br>
+     * 如 getNumberResultAsync(Record.class, FilterFunc.MAX, "createtime", (FilterNode)null) 等价于: SELECT MAX(createtime) FROM {table} <br>
      *
      * @param entityClass Entity类
      * @param func        聚合函数
@@ -517,7 +517,7 @@ public interface DataSource {
     /**
      * 获取符合过滤条件记录的聚合结果, 无结果返回null   <br>
      * 等价SQL: SELECT FUNC{column} FROM {table} WHERE {filter node}  <br>
-     * 如 getNumberResult(Record.class, FilterFunc.MAX, "createtime", (FilterNode)null) 等价于: SELECT MAX(createtime) FROM {table} <br>
+     * 如 getNumberResultAsync(Record.class, FilterFunc.MAX, "createtime", (FilterNode)null) 等价于: SELECT MAX(createtime) FROM {table} <br>
      *
      * @param handler     回调函数
      * @param entityClass Entity类
@@ -527,12 +527,12 @@ public interface DataSource {
      *
      *
      */
-    public void getNumberResult(final AsyncHandler<Number, FilterNode> handler, final Class entityClass, final FilterFunc func, final String column, final FilterNode node);
+    public void getNumberResultAsync(final AsyncHandler<Number, FilterNode> handler, final Class entityClass, final FilterFunc func, final String column, final FilterNode node);
 
     /**
      * 获取符合过滤条件记录的聚合结果, 无结果返回默认值   <br>
      * 等价SQL: SELECT FUNC{column} FROM {table}  <br>
-     * 如 getNumberResult(Record.class, FilterFunc.MAX, "createtime") 等价于: SELECT MAX(createtime) FROM {table} <br>
+     * 如 getNumberResultAsync(Record.class, FilterFunc.MAX, "createtime") 等价于: SELECT MAX(createtime) FROM {table} <br>
      *
      * @param entityClass Entity类
      * @param func        聚合函数
@@ -546,7 +546,7 @@ public interface DataSource {
     /**
      * 获取符合过滤条件记录的聚合结果, 无结果返回默认值   <br>
      * 等价SQL: SELECT FUNC{column} FROM {table}  <br>
-     * 如 getNumberResult(Record.class, FilterFunc.MAX, "createtime") 等价于: SELECT MAX(createtime) FROM {table} <br>
+     * 如 getNumberResultAsync(Record.class, FilterFunc.MAX, "createtime") 等价于: SELECT MAX(createtime) FROM {table} <br>
      *
      * @param handler     回调函数
      * @param entityClass Entity类
@@ -555,12 +555,12 @@ public interface DataSource {
      * @param column      指定字段
      *
      */
-    public void getNumberResult(final AsyncHandler<Number, String> handler, final Class entityClass, final FilterFunc func, final Number defVal, final String column);
+    public void getNumberResultAsync(final AsyncHandler<Number, String> handler, final Class entityClass, final FilterFunc func, final Number defVal, final String column);
 
     /**
      * 获取符合过滤条件记录的聚合结果, 无结果返回默认值   <br>
      * 等价SQL: SELECT FUNC{column} FROM {table} WHERE {filter bean}  <br>
-     * 如 getNumberResult(Record.class, FilterFunc.MAX, "createtime", (FilterNode)null) 等价于: SELECT MAX(createtime) FROM {table} <br>
+     * 如 getNumberResultAsync(Record.class, FilterFunc.MAX, "createtime", (FilterNode)null) 等价于: SELECT MAX(createtime) FROM {table} <br>
      *
      * @param entityClass Entity类
      * @param func        聚合函数
@@ -575,7 +575,7 @@ public interface DataSource {
     /**
      * 获取符合过滤条件记录的聚合结果, 无结果返回默认值   <br>
      * 等价SQL: SELECT FUNC{column} FROM {table} WHERE {filter bean}  <br>
-     * 如 getNumberResult(Record.class, FilterFunc.MAX, "createtime", (FilterNode)null) 等价于: SELECT MAX(createtime) FROM {table} <br>
+     * 如 getNumberResultAsync(Record.class, FilterFunc.MAX, "createtime", (FilterNode)null) 等价于: SELECT MAX(createtime) FROM {table} <br>
      *
      * @param handler     回调函数
      * @param entityClass Entity类
@@ -585,12 +585,12 @@ public interface DataSource {
      * @param bean        过滤条件
      *
      */
-    public void getNumberResult(final AsyncHandler<Number, String> handler, final Class entityClass, final FilterFunc func, final Number defVal, final String column, final FilterBean bean);
+    public void getNumberResultAsync(final AsyncHandler<Number, String> handler, final Class entityClass, final FilterFunc func, final Number defVal, final String column, final FilterBean bean);
 
     /**
      * 获取符合过滤条件记录的聚合结果, 无结果返回默认值   <br>
      * 等价SQL: SELECT FUNC{column} FROM {table} WHERE {filter node}  <br>
-     * 如 getNumberResult(Record.class, FilterFunc.MAX, "createtime", (FilterNode)null) 等价于: SELECT MAX(createtime) FROM {table} <br>
+     * 如 getNumberResultAsync(Record.class, FilterFunc.MAX, "createtime", (FilterNode)null) 等价于: SELECT MAX(createtime) FROM {table} <br>
      *
      * @param entityClass Entity类
      * @param func        聚合函数
@@ -605,7 +605,7 @@ public interface DataSource {
     /**
      * 获取符合过滤条件记录的聚合结果, 无结果返回默认值   <br>
      * 等价SQL: SELECT FUNC{column} FROM {table} WHERE {filter node}  <br>
-     * 如 getNumberResult(Record.class, FilterFunc.MAX, "createtime", (FilterNode)null) 等价于: SELECT MAX(createtime) FROM {table} <br>
+     * 如 getNumberResultAsync(Record.class, FilterFunc.MAX, "createtime", (FilterNode)null) 等价于: SELECT MAX(createtime) FROM {table} <br>
      *
      * @param handler     回调函数
      * @param entityClass Entity类
@@ -616,12 +616,12 @@ public interface DataSource {
      *
      *
      */
-    public void getNumberResult(final AsyncHandler<Number, String> handler, final Class entityClass, final FilterFunc func, final Number defVal, final String column, final FilterNode node);
+    public void getNumberResultAsync(final AsyncHandler<Number, String> handler, final Class entityClass, final FilterFunc func, final Number defVal, final String column, final FilterNode node);
 
     /**
      * 获取符合过滤条件记录的聚合结果Map   <br>
      * 等价SQL: SELECT FUNC1{column1}, FUNC2{column2}, &#183;&#183;&#183; FROM {table}  <br>
-     * 如 getNumberMap(Record.class, new FilterFuncColumn(FilterFunc.MAX, "createtime")) 等价于: SELECT MAX(createtime) FROM {table} <br>
+     * 如 getNumberMapAsync(Record.class, new FilterFuncColumn(FilterFunc.MAX, "createtime")) 等价于: SELECT MAX(createtime) FROM {table} <br>
      *
      * @param <N>         Number
      * @param entityClass Entity类
@@ -634,7 +634,7 @@ public interface DataSource {
     /**
      * 获取符合过滤条件记录的聚合结果Map   <br>
      * 等价SQL: SELECT FUNC1{column1}, FUNC2{column2}, &#183;&#183;&#183; FROM {table}  <br>
-     * 如 getNumberMap(Record.class, new FilterFuncColumn(FilterFunc.MAX, "createtime")) 等价于: SELECT MAX(createtime) FROM {table} <br>
+     * 如 getNumberMapAsync(Record.class, new FilterFuncColumn(FilterFunc.MAX, "createtime")) 等价于: SELECT MAX(createtime) FROM {table} <br>
      *
      * @param <N>         Number
      * @param handler     回调函数
@@ -642,12 +642,12 @@ public interface DataSource {
      * @param columns     聚合字段
      *
      */
-    public <N extends Number> void getNumberMap(final AsyncHandler<Map<String, N>, FilterFuncColumn[]> handler, final Class entityClass, final FilterFuncColumn... columns);
+    public <N extends Number> void getNumberMapAsync(final AsyncHandler<Map<String, N>, FilterFuncColumn[]> handler, final Class entityClass, final FilterFuncColumn... columns);
 
     /**
      * 获取符合过滤条件记录的聚合结果Map   <br>
      * 等价SQL: SELECT FUNC1{column1}, FUNC2{column2}, &#183;&#183;&#183; FROM {table} WHERE {filter bean}  <br>
-     * 如 getNumberMap(Record.class, (FilterBean)null, new FilterFuncColumn(FilterFunc.MAX, "createtime")) 等价于: SELECT MAX(createtime) FROM {table} <br>
+     * 如 getNumberMapAsync(Record.class, (FilterBean)null, new FilterFuncColumn(FilterFunc.MAX, "createtime")) 等价于: SELECT MAX(createtime) FROM {table} <br>
      *
      * @param <N>         Number
      * @param entityClass Entity类
@@ -661,7 +661,7 @@ public interface DataSource {
     /**
      * 获取符合过滤条件记录的聚合结果Map   <br>
      * 等价SQL: SELECT FUNC1{column1}, FUNC2{column2}, &#183;&#183;&#183; FROM {table} WHERE {filter bean}  <br>
-     * 如 getNumberMap(Record.class, (FilterBean)null, new FilterFuncColumn(FilterFunc.MAX, "createtime")) 等价于: SELECT MAX(createtime) FROM {table} <br>
+     * 如 getNumberMapAsync(Record.class, (FilterBean)null, new FilterFuncColumn(FilterFunc.MAX, "createtime")) 等价于: SELECT MAX(createtime) FROM {table} <br>
      *
      * @param <N>         Number
      * @param <B>         Filter泛型
@@ -671,12 +671,12 @@ public interface DataSource {
      * @param columns     聚合字段
      *
      */
-    public <N extends Number, B extends FilterBean> void getNumberMap(final AsyncHandler<Map<String, N>, B> handler, final Class entityClass, final B bean, final FilterFuncColumn... columns);
+    public <N extends Number, B extends FilterBean> void getNumberMapAsync(final AsyncHandler<Map<String, N>, B> handler, final Class entityClass, final B bean, final FilterFuncColumn... columns);
 
     /**
      * 获取符合过滤条件记录的聚合结果Map   <br>
      * 等价SQL: SELECT FUNC1{column1}, FUNC2{column2}, &#183;&#183;&#183; FROM {table} WHERE {filter node}  <br>
-     * 如 getNumberMap(Record.class, (FilterNode)null, new FilterFuncColumn(FilterFunc.MAX, "createtime")) 等价于: SELECT MAX(createtime) FROM {table} <br>
+     * 如 getNumberMapAsync(Record.class, (FilterNode)null, new FilterFuncColumn(FilterFunc.MAX, "createtime")) 等价于: SELECT MAX(createtime) FROM {table} <br>
      *
      * @param <N>         Number
      * @param entityClass Entity类
@@ -690,7 +690,7 @@ public interface DataSource {
     /**
      * 获取符合过滤条件记录的聚合结果Map   <br>
      * 等价SQL: SELECT FUNC1{column1}, FUNC2{column2}, &#183;&#183;&#183; FROM {table} WHERE {filter node}  <br>
-     * 如 getNumberMap(Record.class, (FilterNode)null, new FilterFuncColumn(FilterFunc.MAX, "createtime")) 等价于: SELECT MAX(createtime) FROM {table} <br>
+     * 如 getNumberMapAsync(Record.class, (FilterNode)null, new FilterFuncColumn(FilterFunc.MAX, "createtime")) 等价于: SELECT MAX(createtime) FROM {table} <br>
      *
      * @param <N>         Number
      * @param handler     回调函数
@@ -699,12 +699,12 @@ public interface DataSource {
      * @param columns     聚合字段
      *
      */
-    public <N extends Number> void getNumberMap(final AsyncHandler<Map<String, N>, FilterNode> handler, final Class entityClass, final FilterNode node, final FilterFuncColumn... columns);
+    public <N extends Number> void getNumberMapAsync(final AsyncHandler<Map<String, N>, FilterNode> handler, final Class entityClass, final FilterNode node, final FilterFuncColumn... columns);
 
     /**
      * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
      * 等价SQL: SELECT keyColumn, FUNC{funcColumn} FROM {table} GROUP BY {keyColumn}  <br>
-     * 如 queryColumnMap(Record.class, "name", FilterFunc.MAX, "createtime") 等价于: SELECT name, MAX(createtime) FROM record GROUP BY name<br>
+     * 如 queryColumnMapAsync(Record.class, "name", FilterFunc.MAX, "createtime") 等价于: SELECT name, MAX(createtime) FROM record GROUP BY name<br>
      *
      * @param <T>         Entity泛型
      * @param <K>         Key字段的数据类型
@@ -721,7 +721,7 @@ public interface DataSource {
     /**
      * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
      * 等价SQL: SELECT keyColumn, FUNC{funcColumn} FROM {table} GROUP BY {keyColumn}  <br>
-     * 如 queryColumnMap(Record.class, "name", FilterFunc.MAX, "createtime") 等价于: SELECT name, MAX(createtime) FROM record GROUP BY name<br>
+     * 如 queryColumnMapAsync(Record.class, "name", FilterFunc.MAX, "createtime") 等价于: SELECT name, MAX(createtime) FROM record GROUP BY name<br>
      *
      * @param <T>         Entity泛型
      * @param <K>         Key字段的数据类型
@@ -733,12 +733,12 @@ public interface DataSource {
      * @param funcColumn  聚合字段
      *
      */
-    public <T, K extends Serializable, N extends Number> void queryColumnMap(final AsyncHandler<Map<K, N>, String> handler, final Class<T> entityClass, final String keyColumn, final FilterFunc func, final String funcColumn);
+    public <T, K extends Serializable, N extends Number> void queryColumnMapAsync(final AsyncHandler<Map<K, N>, String> handler, final Class<T> entityClass, final String keyColumn, final FilterFunc func, final String funcColumn);
 
     /**
      * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
      * 等价SQL: SELECT keyColumn, FUNC{funcColumn} FROM {table} WHERE {filter bean} GROUP BY {keyColumn}  <br>
-     * 如 queryColumnMap(Record.class, "name", FilterFunc.MAX, "createtime", (FilterBean)null) 等价于: SELECT name, MAX(createtime) FROM record GROUP BY name<br>
+     * 如 queryColumnMapAsync(Record.class, "name", FilterFunc.MAX, "createtime", (FilterBean)null) 等价于: SELECT name, MAX(createtime) FROM record GROUP BY name<br>
      *
      * @param <T>         Entity泛型
      * @param <K>         Key字段的数据类型
@@ -756,7 +756,7 @@ public interface DataSource {
     /**
      * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
      * 等价SQL: SELECT keyColumn, FUNC{funcColumn} FROM {table} WHERE {filter bean} GROUP BY {keyColumn}  <br>
-     * 如 queryColumnMap(Record.class, "name", FilterFunc.MAX, "createtime", (FilterBean)null) 等价于: SELECT name, MAX(createtime) FROM record GROUP BY name<br>
+     * 如 queryColumnMapAsync(Record.class, "name", FilterFunc.MAX, "createtime", (FilterBean)null) 等价于: SELECT name, MAX(createtime) FROM record GROUP BY name<br>
      *
      * @param <T>         Entity泛型
      * @param <K>         Key字段的数据类型
@@ -769,12 +769,12 @@ public interface DataSource {
      * @param bean        过滤条件
      *
      */
-    public <T, K extends Serializable, N extends Number> void queryColumnMap(final AsyncHandler<Map<K, N>, String> handler, final Class<T> entityClass, final String keyColumn, final FilterFunc func, final String funcColumn, final FilterBean bean);
+    public <T, K extends Serializable, N extends Number> void queryColumnMapAsync(final AsyncHandler<Map<K, N>, String> handler, final Class<T> entityClass, final String keyColumn, final FilterFunc func, final String funcColumn, final FilterBean bean);
 
     /**
      * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
      * 等价SQL: SELECT keyColumn, FUNC{funcColumn} FROM {table} WHERE {filter node} GROUP BY {keyColumn}  <br>
-     * 如 queryColumnMap(Record.class, "name", FilterFunc.MAX, "createtime", (FilterNode)null) 等价于: SELECT name, MAX(createtime) FROM record GROUP BY name<br>
+     * 如 queryColumnMapAsync(Record.class, "name", FilterFunc.MAX, "createtime", (FilterNode)null) 等价于: SELECT name, MAX(createtime) FROM record GROUP BY name<br>
      *
      * @param <T>         Entity泛型
      * @param <K>         Key字段的数据类型
@@ -792,7 +792,7 @@ public interface DataSource {
     /**
      * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
      * 等价SQL: SELECT keyColumn, FUNC{funcColumn} FROM {table} WHERE {filter node} GROUP BY {keyColumn}  <br>
-     * 如 queryColumnMap(Record.class, "name", FilterFunc.MAX, "createtime", (FilterNode)null) 等价于: SELECT name, MAX(createtime) FROM record GROUP BY name<br>
+     * 如 queryColumnMapAsync(Record.class, "name", FilterFunc.MAX, "createtime", (FilterNode)null) 等价于: SELECT name, MAX(createtime) FROM record GROUP BY name<br>
      *
      * @param <T>         Entity泛型
      * @param <K>         Key字段的数据类型
@@ -805,9 +805,9 @@ public interface DataSource {
      * @param node        过滤条件
      *
      */
-    public <T, K extends Serializable, N extends Number> void queryColumnMap(final AsyncHandler<Map<K, N>, String> handler, final Class<T> entityClass, final String keyColumn, final FilterFunc func, final String funcColumn, final FilterNode node);
+    public <T, K extends Serializable, N extends Number> void queryColumnMapAsync(final AsyncHandler<Map<K, N>, String> handler, final Class<T> entityClass, final String keyColumn, final FilterFunc func, final String funcColumn, final FilterNode node);
 
-    //-----------------------find----------------------------
+    //-----------------------findAsync----------------------------
     /**
      * 获取指定主键值的单个记录, 返回null表示不存在值   <br>
      * 等价SQL: SELECT * FROM {table} WHERE {primary} = {id}  <br>
@@ -830,7 +830,7 @@ public interface DataSource {
      * @param pk      主键值
      *
      */
-    public <T> void find(final AsyncHandler<T, Serializable> handler, final Class<T> clazz, final Serializable pk);
+    public <T> void findAsync(final AsyncHandler<T, Serializable> handler, final Class<T> clazz, final Serializable pk);
 
     /**
      * 获取指定主键值的单个记录, 返回null表示不存在值   <br>
@@ -856,7 +856,7 @@ public interface DataSource {
      * @param pk      主键值
      *
      */
-    public <T> void find(final AsyncHandler<T, Serializable> handler, final Class<T> clazz, final SelectColumn selects, final Serializable pk);
+    public <T> void findAsync(final AsyncHandler<T, Serializable> handler, final Class<T> clazz, final SelectColumn selects, final Serializable pk);
 
     /**
      * 获取符合过滤条件单个记录, 返回null表示不存在值   <br>
@@ -882,7 +882,7 @@ public interface DataSource {
      * @param key     过滤字段值
      *
      */
-    public <T> void find(final AsyncHandler<T, Serializable> handler, final Class<T> clazz, final String column, final Serializable key);
+    public <T> void findAsync(final AsyncHandler<T, Serializable> handler, final Class<T> clazz, final String column, final Serializable key);
 
     /**
      * 获取符合过滤条件单个记录, 返回null表示不存在值   <br>
@@ -907,7 +907,7 @@ public interface DataSource {
      * @param bean    过滤条件
      *
      */
-    public <T, B extends FilterBean> void find(final AsyncHandler<T, B> handler, final Class<T> clazz, final B bean);
+    public <T, B extends FilterBean> void findAsync(final AsyncHandler<T, B> handler, final Class<T> clazz, final B bean);
 
     /**
      * 获取符合过滤条件单个记录, 返回null表示不存在值   <br>
@@ -931,7 +931,7 @@ public interface DataSource {
      * @param node    过滤条件
      *
      */
-    public <T> void find(final AsyncHandler<T, FilterNode> handler, final Class<T> clazz, final FilterNode node);
+    public <T> void findAsync(final AsyncHandler<T, FilterNode> handler, final Class<T> clazz, final FilterNode node);
 
     /**
      * 获取符合过滤条件单个记录, 返回null表示不存在值   <br>
@@ -958,7 +958,7 @@ public interface DataSource {
      * @param bean    过滤条件
      *
      */
-    public <T, B extends FilterBean> void find(final AsyncHandler<T, B> handler, final Class<T> clazz, final SelectColumn selects, final B bean);
+    public <T, B extends FilterBean> void findAsync(final AsyncHandler<T, B> handler, final Class<T> clazz, final SelectColumn selects, final B bean);
 
     /**
      * 获取符合过滤条件单个记录, 返回null表示不存在值   <br>
@@ -984,7 +984,7 @@ public interface DataSource {
      * @param node    过滤条件
      *
      */
-    public <T> void find(final AsyncHandler<T, FilterNode> handler, final Class<T> clazz, final SelectColumn selects, final FilterNode node);
+    public <T> void findAsync(final AsyncHandler<T, FilterNode> handler, final Class<T> clazz, final SelectColumn selects, final FilterNode node);
 
     /**
      * 获取符合过滤条件单个记录的单个字段值, 返回null表示不存在值   <br>
@@ -1010,7 +1010,7 @@ public interface DataSource {
      * @param pk      主键值
      *
      */
-    public <T> void findColumn(final AsyncHandler<Serializable, Serializable> handler, final Class<T> clazz, final String column, final Serializable pk);
+    public <T> void findColumnAsync(final AsyncHandler<Serializable, Serializable> handler, final Class<T> clazz, final String column, final Serializable pk);
 
     /**
      * 获取符合过滤条件单个记录的单个字段值, 返回null表示不存在值   <br>
@@ -1037,7 +1037,7 @@ public interface DataSource {
      * @param bean    过滤条件
      *
      */
-    public <T, B extends FilterBean> void findColumn(final AsyncHandler<Serializable, B> handler, final Class<T> clazz, final String column, final B bean);
+    public <T, B extends FilterBean> void findColumnAsync(final AsyncHandler<Serializable, B> handler, final Class<T> clazz, final String column, final B bean);
 
     /**
      * 获取符合过滤条件单个记录的单个字段值, 返回null表示不存在值   <br>
@@ -1063,7 +1063,7 @@ public interface DataSource {
      * @param node    过滤条件
      *
      */
-    public <T> void findColumn(final AsyncHandler<Serializable, FilterNode> handler, final Class<T> clazz, final String column, final FilterNode node);
+    public <T> void findColumnAsync(final AsyncHandler<Serializable, FilterNode> handler, final Class<T> clazz, final String column, final FilterNode node);
 
     /**
      * 获取符合过滤条件单个记录的单个字段值, 不存在值则返回默认值   <br>
@@ -1091,7 +1091,7 @@ public interface DataSource {
      * @param pk       主键值
      *
      */
-    public <T> void findColumn(final AsyncHandler<Serializable, Serializable> handler, final Class<T> clazz, final String column, final Serializable defValue, final Serializable pk);
+    public <T> void findColumnAsync(final AsyncHandler<Serializable, Serializable> handler, final Class<T> clazz, final String column, final Serializable defValue, final Serializable pk);
 
     /**
      * 获取符合过滤条件单个记录的单个字段值, 不存在值则返回默认值   <br>
@@ -1120,7 +1120,7 @@ public interface DataSource {
      * @param bean     过滤条件
      *
      */
-    public <T, B extends FilterBean> void findColumn(final AsyncHandler<Serializable, B> handler, final Class<T> clazz, final String column, final Serializable defValue, final B bean);
+    public <T, B extends FilterBean> void findColumnAsync(final AsyncHandler<Serializable, B> handler, final Class<T> clazz, final String column, final Serializable defValue, final B bean);
 
     /**
      * 获取符合过滤条件单个记录的单个字段值, 不存在值则返回默认值   <br>
@@ -1148,7 +1148,7 @@ public interface DataSource {
      * @param node     过滤条件
      *
      */
-    public <T> void findColumn(final AsyncHandler<Serializable, FilterNode> handler, final Class<T> clazz, final String column, final Serializable defValue, final FilterNode node);
+    public <T> void findColumnAsync(final AsyncHandler<Serializable, FilterNode> handler, final Class<T> clazz, final String column, final Serializable defValue, final FilterNode node);
 
     /**
      * 判断是否存在主键值的记录   <br>
@@ -1172,7 +1172,7 @@ public interface DataSource {
      * @param pk      主键值
      *
      */
-    public <T> void exists(final AsyncHandler<Boolean, Serializable> handler, final Class<T> clazz, final Serializable pk);
+    public <T> void existsAsync(final AsyncHandler<Boolean, Serializable> handler, final Class<T> clazz, final Serializable pk);
 
     /**
      * 判断是否存在符合过滤条件的记录   <br>
@@ -1197,7 +1197,7 @@ public interface DataSource {
      * @param bean    过滤条件
      *
      */
-    public <T, B extends FilterBean> void exists(final AsyncHandler<Boolean, B> handler, final Class<T> clazz, final B bean);
+    public <T, B extends FilterBean> void existsAsync(final AsyncHandler<Boolean, B> handler, final Class<T> clazz, final B bean);
 
     /**
      * 判断是否存在符合过滤条件的记录   <br>
@@ -1221,7 +1221,7 @@ public interface DataSource {
      * @param node    过滤条件
      *
      */
-    public <T> void exists(final AsyncHandler<Boolean, FilterNode> handler, final Class<T> clazz, final FilterNode node);
+    public <T> void existsAsync(final AsyncHandler<Boolean, FilterNode> handler, final Class<T> clazz, final FilterNode node);
 
     //-----------------------list set----------------------------
     /**
@@ -1252,7 +1252,7 @@ public interface DataSource {
      * @param key            过滤字段值
      *
      */
-    public <T, V extends Serializable> void queryColumnSet(final AsyncHandler<HashSet<V>, String> handler, final String selectedColumn, final Class<T> clazz, final String column, final Serializable key);
+    public <T, V extends Serializable> void queryColumnSetAsync(final AsyncHandler<HashSet<V>, String> handler, final String selectedColumn, final Class<T> clazz, final String column, final Serializable key);
 
     /**
      * 查询符合过滤条件记录的某个字段Set集合   <br>
@@ -1281,7 +1281,7 @@ public interface DataSource {
      * @param bean           过滤条件
      *
      */
-    public <T, V extends Serializable, B extends FilterBean> void queryColumnSet(final AsyncHandler<HashSet<V>, B> handler, final String selectedColumn, final Class<T> clazz, final B bean);
+    public <T, V extends Serializable, B extends FilterBean> void queryColumnSetAsync(final AsyncHandler<HashSet<V>, B> handler, final String selectedColumn, final Class<T> clazz, final B bean);
 
     /**
      * 查询符合过滤条件记录的某个字段Set集合   <br>
@@ -1309,7 +1309,7 @@ public interface DataSource {
      * @param node           过滤条件
      *
      */
-    public <T, V extends Serializable> void queryColumnSet(final AsyncHandler<HashSet<V>, FilterNode> handler, final String selectedColumn, final Class<T> clazz, final FilterNode node);
+    public <T, V extends Serializable> void queryColumnSetAsync(final AsyncHandler<HashSet<V>, FilterNode> handler, final String selectedColumn, final Class<T> clazz, final FilterNode node);
 
     /**
      * 查询符合过滤条件记录的某个字段List集合   <br>
@@ -1339,7 +1339,7 @@ public interface DataSource {
      * @param key            过滤字段值
      *
      */
-    public <T, V extends Serializable> void queryColumnList(final AsyncHandler<List<V>, Serializable> handler, final String selectedColumn, final Class<T> clazz, final String column, final Serializable key);
+    public <T, V extends Serializable> void queryColumnListAsync(final AsyncHandler<List<V>, Serializable> handler, final String selectedColumn, final Class<T> clazz, final String column, final Serializable key);
 
     /**
      * 查询符合过滤条件记录的某个字段List集合   <br>
@@ -1368,7 +1368,7 @@ public interface DataSource {
      * @param bean           过滤条件
      *
      */
-    public <T, V extends Serializable, B extends FilterBean> void queryColumnList(final AsyncHandler<List<V>, B> handler, final String selectedColumn, final Class<T> clazz, final B bean);
+    public <T, V extends Serializable, B extends FilterBean> void queryColumnListAsync(final AsyncHandler<List<V>, B> handler, final String selectedColumn, final Class<T> clazz, final B bean);
 
     /**
      * 查询符合过滤条件记录的某个字段List集合   <br>
@@ -1396,7 +1396,7 @@ public interface DataSource {
      * @param node           过滤条件
      *
      */
-    public <T, V extends Serializable> void queryColumnList(final AsyncHandler<List<V>, FilterNode> handler, final String selectedColumn, final Class<T> clazz, final FilterNode node);
+    public <T, V extends Serializable> void queryColumnListAsync(final AsyncHandler<List<V>, FilterNode> handler, final String selectedColumn, final Class<T> clazz, final FilterNode node);
 
     /**
      * 查询符合过滤条件记录的某个字段List集合   <br>
@@ -1427,7 +1427,7 @@ public interface DataSource {
      * @param bean           过滤条件
      *
      */
-    public <T, V extends Serializable, B extends FilterBean> void queryColumnList(final AsyncHandler<List<V>, B> handler, final String selectedColumn, final Class<T> clazz, final Flipper flipper, final B bean);
+    public <T, V extends Serializable, B extends FilterBean> void queryColumnListAsync(final AsyncHandler<List<V>, B> handler, final String selectedColumn, final Class<T> clazz, final Flipper flipper, final B bean);
 
     /**
      * 查询符合过滤条件记录的某个字段List集合   <br>
@@ -1457,7 +1457,7 @@ public interface DataSource {
      * @param node           过滤条件
      *
      */
-    public <T, V extends Serializable> void queryColumnList(final AsyncHandler<List<V>, FilterNode> handler, final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterNode node);
+    public <T, V extends Serializable> void queryColumnListAsync(final AsyncHandler<List<V>, FilterNode> handler, final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterNode node);
 
     /**
      * 查询符合过滤条件记录的某个字段Sheet集合   <br>
@@ -1488,7 +1488,7 @@ public interface DataSource {
      * @param bean           过滤条件
      *
      */
-    public <T, V extends Serializable, B extends FilterBean> void queryColumnSheet(final AsyncHandler<Sheet<V>, B> handler, final String selectedColumn, final Class<T> clazz, final Flipper flipper, final B bean);
+    public <T, V extends Serializable, B extends FilterBean> void queryColumnSheetAsync(final AsyncHandler<Sheet<V>, B> handler, final String selectedColumn, final Class<T> clazz, final Flipper flipper, final B bean);
 
     /**
      * 查询符合过滤条件记录的某个字段Sheet集合   <br>
@@ -1518,7 +1518,7 @@ public interface DataSource {
      * @param node           过滤条件
      *
      */
-    public <T, V extends Serializable> void queryColumnSheet(final AsyncHandler<Sheet<V>, FilterNode> handler, final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterNode node);
+    public <T, V extends Serializable> void queryColumnSheetAsync(final AsyncHandler<Sheet<V>, FilterNode> handler, final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterNode node);
 
     /**
      * 查询符合过滤条件记录的List集合   <br>
@@ -1544,7 +1544,7 @@ public interface DataSource {
      * @param key     过滤字段值
      *
      */
-    public <T> void queryList(final AsyncHandler<List<T>, Serializable> handler, final Class<T> clazz, final String column, final Serializable key);
+    public <T> void queryListAsync(final AsyncHandler<List<T>, Serializable> handler, final Class<T> clazz, final String column, final Serializable key);
 
     /**
      * 查询符合过滤条件记录的List集合   <br>
@@ -1569,7 +1569,7 @@ public interface DataSource {
      * @param bean    过滤条件
      *
      */
-    public <T, B extends FilterBean> void queryList(final AsyncHandler<List<T>, B> handler, final Class<T> clazz, final B bean);
+    public <T, B extends FilterBean> void queryListAsync(final AsyncHandler<List<T>, B> handler, final Class<T> clazz, final B bean);
 
     /**
      * 查询符合过滤条件记录的List集合   <br>
@@ -1593,7 +1593,7 @@ public interface DataSource {
      * @param node    过滤条件
      *
      */
-    public <T> void queryList(final AsyncHandler<List<T>, FilterNode> handler, final Class<T> clazz, final FilterNode node);
+    public <T> void queryListAsync(final AsyncHandler<List<T>, FilterNode> handler, final Class<T> clazz, final FilterNode node);
 
     /**
      * 查询符合过滤条件记录的List集合   <br>
@@ -1620,7 +1620,7 @@ public interface DataSource {
      * @param bean    过滤条件
      *
      */
-    public <T, B extends FilterBean> void queryList(final AsyncHandler<List<T>, B> handler, final Class<T> clazz, final SelectColumn selects, final B bean);
+    public <T, B extends FilterBean> void queryListAsync(final AsyncHandler<List<T>, B> handler, final Class<T> clazz, final SelectColumn selects, final B bean);
 
     /**
      * 查询符合过滤条件记录的List集合   <br>
@@ -1646,7 +1646,7 @@ public interface DataSource {
      * @param node    过滤条件
      *
      */
-    public <T> void queryList(final AsyncHandler<List<T>, FilterNode> handler, final Class<T> clazz, final SelectColumn selects, final FilterNode node);
+    public <T> void queryListAsync(final AsyncHandler<List<T>, FilterNode> handler, final Class<T> clazz, final SelectColumn selects, final FilterNode node);
 
     /**
      * 查询符合过滤条件记录的List集合   <br>
@@ -1674,7 +1674,7 @@ public interface DataSource {
      * @param key     过滤字段值
      *
      */
-    public <T> void queryList(final AsyncHandler<List<T>, Serializable> handler, final Class<T> clazz, final Flipper flipper, final String column, final Serializable key);
+    public <T> void queryListAsync(final AsyncHandler<List<T>, Serializable> handler, final Class<T> clazz, final Flipper flipper, final String column, final Serializable key);
 
     /**
      * 查询符合过滤条件记录的List集合   <br>
@@ -1701,7 +1701,7 @@ public interface DataSource {
      * @param bean    过滤条件
      *
      */
-    public <T, B extends FilterBean> void queryList(final AsyncHandler<List<T>, B> handler, final Class<T> clazz, final Flipper flipper, final B bean);
+    public <T, B extends FilterBean> void queryListAsync(final AsyncHandler<List<T>, B> handler, final Class<T> clazz, final Flipper flipper, final B bean);
 
     /**
      * 查询符合过滤条件记录的List集合   <br>
@@ -1729,7 +1729,7 @@ public interface DataSource {
      * @param node    过滤条件
      *
      */
-    public <T> void queryList(final AsyncHandler<List<T>, FilterNode> handler, final Class<T> clazz, final Flipper flipper, final FilterNode node);
+    public <T> void queryListAsync(final AsyncHandler<List<T>, FilterNode> handler, final Class<T> clazz, final Flipper flipper, final FilterNode node);
 
     /**
      * 查询符合过滤条件记录的List集合   <br>
@@ -1758,7 +1758,7 @@ public interface DataSource {
      * @param bean    过滤条件
      *
      */
-    public <T, B extends FilterBean> void queryList(final AsyncHandler<List<T>, B> handler, final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final B bean);
+    public <T, B extends FilterBean> void queryListAsync(final AsyncHandler<List<T>, B> handler, final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final B bean);
 
     /**
      * 查询符合过滤条件记录的List集合   <br>
@@ -1786,7 +1786,7 @@ public interface DataSource {
      * @param node    过滤条件
      *
      */
-    public <T> void queryList(final AsyncHandler<List<T>, FilterNode> handler, final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterNode node);
+    public <T> void queryListAsync(final AsyncHandler<List<T>, FilterNode> handler, final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterNode node);
 
     //-----------------------sheet----------------------------
     /**
@@ -1814,7 +1814,7 @@ public interface DataSource {
      * @param bean    过滤条件
      *
      */
-    public <T, B extends FilterBean> void querySheet(final AsyncHandler<Sheet<T>, B> handler, final Class<T> clazz, final Flipper flipper, final B bean);
+    public <T, B extends FilterBean> void querySheetAsync(final AsyncHandler<Sheet<T>, B> handler, final Class<T> clazz, final Flipper flipper, final B bean);
 
     /**
      * 查询符合过滤条件记录的Sheet集合   <br>
@@ -1840,7 +1840,7 @@ public interface DataSource {
      * @param node    过滤条件
      *
      */
-    public <T> void querySheet(final AsyncHandler<Sheet<T>, FilterNode> handler, final Class<T> clazz, final Flipper flipper, final FilterNode node);
+    public <T> void querySheetAsync(final AsyncHandler<Sheet<T>, FilterNode> handler, final Class<T> clazz, final Flipper flipper, final FilterNode node);
 
     /**
      * 查询符合过滤条件记录的Sheet集合   <br>
@@ -1869,7 +1869,7 @@ public interface DataSource {
      * @param bean    过滤条件
      *
      */
-    public <T, B extends FilterBean> void querySheet(final AsyncHandler<Sheet<T>, B> handler, final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final B bean);
+    public <T, B extends FilterBean> void querySheetAsync(final AsyncHandler<Sheet<T>, B> handler, final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final B bean);
 
     /**
      * 查询符合过滤条件记录的Sheet集合   <br>
@@ -1897,7 +1897,7 @@ public interface DataSource {
      * @param node    过滤条件
      *
      */
-    public <T> void querySheet(final AsyncHandler<Sheet<T>, FilterNode> handler, final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterNode node);
+    public <T> void querySheetAsync(final AsyncHandler<Sheet<T>, FilterNode> handler, final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterNode node);
 
     //-----------------------direct----------------------------
     /**

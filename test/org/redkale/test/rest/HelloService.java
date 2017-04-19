@@ -87,7 +87,7 @@ public class HelloService implements Service {
     //异步查询单个
     @RestMapping(name = "asyncfind")
     public void findHello(AsyncHandler handler, @RestParam(name = "#") int id) {  //通过 /pipes/hello/find/1234、/pipes/hello/jsfind/1234 查询对象
-        if (source != null) source.find(handler, HelloEntity.class, id);
+        if (source != null) source.findAsync(handler, HelloEntity.class, id);
         HelloEntity rs = new HelloEntity();
         rs.setHelloname("Hello名称");
         if (handler != null) handler.completed(rs, null);
