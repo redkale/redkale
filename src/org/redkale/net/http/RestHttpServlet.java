@@ -6,7 +6,8 @@
 package org.redkale.net.http;
 
 import java.io.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.*;
+import java.util.logging.Level;
 import jdk.internal.org.objectweb.asm.*;
 import static jdk.internal.org.objectweb.asm.Opcodes.*;
 import org.redkale.util.*;
@@ -21,6 +22,22 @@ import org.redkale.util.*;
 public abstract class RestHttpServlet<T> extends HttpBaseServlet {
 
     protected abstract T currentUser(HttpRequest req) throws IOException;
+
+    protected void finishJson(final HttpResponse response, CompletableFuture<RestOutput> future) throws IOException {
+        future.whenCompleteAsync((output, e) -> {
+            if (e != null) {
+                response.getContext().getLogger().log(Level.WARNING, "Servlet occur, forece to close channel. request = " + response.getRequest(), e);
+                response.finish(500, null);
+                return;
+            }
+            try {
+                finishJson(response, output);
+            } catch (IOException ioe) {
+                response.getContext().getLogger().log(Level.WARNING, "Servlet finish RestOutput occur, forece to close channel. request = " + response.getRequest(), ioe);
+                response.finish(500, null);
+            }
+        }, response.getContext().getExecutor());
+    }
 
     protected void finishJson(final HttpResponse response, RestOutput output) throws IOException {
         if (output == null) {

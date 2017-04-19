@@ -111,6 +111,8 @@ public final class Rest {
         if (!java.lang.reflect.Modifier.isPublic(mod)) return null;
         if (java.lang.reflect.Modifier.isAbstract(mod)) return null;
 
+        final java.lang.reflect.Type futureRestOutputType = new TypeToken<CompletableFuture<RestOutput>>() {
+        }.getType();
         final String serviceDesc = Type.getDescriptor(serviceType);
         final String webServletDesc = Type.getDescriptor(WebServlet.class);
         final String reqDesc = Type.getDescriptor(HttpRequest.class);
@@ -259,6 +261,7 @@ public final class Rest {
         for (final MappingEntry entry : entrys) {
             final Method method = entry.mappingMethod;
             final Class returnType = method.getReturnType();
+            final java.lang.reflect.Type returnGenericType = method.getGenericReturnType();
             final String methodDesc = Type.getMethodDescriptor(method);
             final Parameter[] params = method.getParameters();
 
@@ -923,6 +926,14 @@ public final class Rest {
                 mv.visitVarInsn(ALOAD, maxLocals);
                 mv.visitMethodInsn(INVOKESTATIC, "java/lang/String", "valueOf", "(Ljava/lang/Object;)Ljava/lang/String;", false);
                 mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finish", "(Ljava/lang/String;)V", false);
+                mv.visitInsn(RETURN);
+                maxLocals++;
+            } else if (futureRestOutputType == returnGenericType) {
+                mv.visitVarInsn(ASTORE, maxLocals);
+                mv.visitVarInsn(ALOAD, 0);
+                mv.visitVarInsn(ALOAD, 2);
+                mv.visitVarInsn(ALOAD, maxLocals);
+                mv.visitMethodInsn(INVOKEVIRTUAL, newDynName, "finishJson", "(" + respDesc + futureDesc + ")V", false);
                 mv.visitInsn(RETURN);
                 maxLocals++;
             } else if (CompletableFuture.class.isAssignableFrom(returnType)) {
