@@ -16,8 +16,8 @@ import org.redkale.util.*;
  *
  * @author zhangjx
  */
-@ResourceType({SncpTestIService.class, SncpTestService.class})
-public class SncpTestService implements SncpTestIService {
+@ResourceType({SncpTestIService.class})
+public class SncpTestServiceImpl implements SncpTestIService {
 
     public static class CallAttribute implements Attribute<SncpTestBean, Long> {
 
@@ -74,7 +74,7 @@ public class SncpTestService implements SncpTestIService {
     }
 
     public static void main(String[] args) throws Exception {
-        Service service = Sncp.createLocalService("", null, ResourceFactory.root(), SncpTestService.class, new InetSocketAddress("127.0.0.1", 7070), null, null);
+        Service service = Sncp.createLocalService("", null, ResourceFactory.root(), SncpTestServiceImpl.class, new InetSocketAddress("127.0.0.1", 7070), null, null);
         for (Method method : service.getClass().getDeclaredMethods()) {
             System.out.println(method);
         }
@@ -83,7 +83,7 @@ public class SncpTestService implements SncpTestIService {
             System.out.println(method);
         }
         System.out.println("-----------------------------------");
-        service = Sncp.createRemoteService("", null, SncpTestService.class, new InetSocketAddress("127.0.0.1", 7070), null);
+        service = Sncp.createRemoteService("", null, SncpTestServiceImpl.class, new InetSocketAddress("127.0.0.1", 7070), null);
         for (Method method : service.getClass().getDeclaredMethods()) {
             System.out.println(method);
         }

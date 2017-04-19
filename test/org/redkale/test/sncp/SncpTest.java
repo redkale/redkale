@@ -82,7 +82,7 @@ public class SncpTest {
         if (port2 > 0) set.add(new InetSocketAddress(myhost, port2));
         //String name, WatchFactory, ObjectPool<ByteBuffer>, AsynchronousChannelGroup, InetSocketAddress clientAddress, Collection<InetSocketAddress>
         final Transport transport = new Transport("", WatchFactory.root(), "", newBufferPool(), newChannelGroup(), null, set);
-        final SncpTestService service = Sncp.createRemoteService(serviceName, null, SncpTestService.class, null, transport);
+        final SncpTestIService service = Sncp.createRemoteService(serviceName, null, SncpTestIService.class, null, transport);
         ResourceFactory.root().inject(service);
 
 //        SncpTestBean bean = new SncpTestBean();
@@ -152,7 +152,7 @@ public class SncpTest {
                     if (port2 > 0) set.add(new InetSocketAddress(myhost, port2));
                     //String name, WatchFactory, ObjectPool<ByteBuffer>, AsynchronousChannelGroup, InetSocketAddress clientAddress, Collection<InetSocketAddress>
                     final Transport transport = new Transport("", WatchFactory.root(), "", newBufferPool(), newChannelGroup(), null, set);
-                    SncpTestService service = Sncp.createLocalService("", null, ResourceFactory.root(), SncpTestService.class, addr, transport, null);
+                    SncpTestIService service = Sncp.createLocalService("", null, ResourceFactory.root(), SncpTestServiceImpl.class, addr, transport, null);
                     ResourceFactory.root().inject(service);
                     server.addSncpServlet(new ServiceWrapper(service, "", "", new HashSet<>(), null));
                     System.out.println(service);
@@ -186,7 +186,7 @@ public class SncpTest {
                     set.add(new InetSocketAddress(myhost, port));
                     //String name, WatchFactory, ObjectPool<ByteBuffer>, AsynchronousChannelGroup, InetSocketAddress clientAddress, Collection<InetSocketAddress>
                     final Transport transport = new Transport("", WatchFactory.root(), "", newBufferPool(), newChannelGroup(), null, set);
-                    Service service = Sncp.createLocalService("", null, ResourceFactory.root(), SncpTestService.class, addr, transport, null);
+                    Service service = Sncp.createLocalService("", null, ResourceFactory.root(), SncpTestServiceImpl.class, addr, transport, null);
                     server.addSncpServlet(new ServiceWrapper(service, "", "", new HashSet<>(), null));
                     AnyValue.DefaultAnyValue conf = new AnyValue.DefaultAnyValue();
                     conf.addValue("host", "0.0.0.0");

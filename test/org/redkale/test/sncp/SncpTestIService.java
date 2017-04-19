@@ -18,5 +18,5 @@ public interface SncpTestIService extends Service {
 
     public void insert(@RpcCall(DataCallArrayAttribute.class) SncpTestBean... beans);
 
-    public String updateBean(@RpcCall(SncpTestService.CallAttribute.class) SncpTestBean bean);
+    public String updateBean(@RpcCall(SncpTestServiceImpl.CallAttribute.class) SncpTestBean bean);
 }
