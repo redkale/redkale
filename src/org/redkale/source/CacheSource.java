@@ -83,9 +83,7 @@ public interface CacheSource<K extends Serializable, V extends Object> {
     public CompletableFuture<Void> removeSetItemAsync(final K key, final V value);
 
     default CompletableFuture<Boolean> isOpenAsync() {
-        CompletableFuture<Boolean> future = new CompletableFuture();
-        future.complete(true);
-        return future;
+        return CompletableFuture.completedFuture(true);
     }
 
     //---------------------- AsyncHandler 异步版 ---------------------------------
