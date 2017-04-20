@@ -146,7 +146,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
                 }
                 webSocket._groupid = groupid;
                 engine.add(webSocket);
-                context.submit(new WebSocketRunner(context, webSocket, response.removeChannel(), wsbinary));
+                context.runAsync(new WebSocketRunner(context, webSocket, response.removeChannel(), wsbinary));
                 response.finish(true);
             }
 

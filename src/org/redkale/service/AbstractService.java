@@ -14,12 +14,13 @@ import org.redkale.net.WorkThread;
  */
 public abstract class AbstractService implements Service {
 
-    protected Future<?> submit(Runnable runner) {
+    protected void execute(Runnable runner) {
         Thread thread = Thread.currentThread();
         if (thread instanceof WorkThread) {
-            return ((WorkThread) thread).submit(runner);
+            ((WorkThread) thread).runAsync(runner);
+        } else {
+            ForkJoinPool.commonPool().execute(runner);
         }
-        return ForkJoinPool.commonPool().submit(runner);
     }
 
     protected ExecutorService getExecutor() {

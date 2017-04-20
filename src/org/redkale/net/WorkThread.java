@@ -25,8 +25,8 @@ public class WorkThread extends Thread {
         this.setDaemon(true);
     }
 
-    public Future<?> submit(Runnable runner) {
-        return executor.submit(runner);
+    public void runAsync(Runnable runner) {
+        executor.execute(runner);
     }
 
     public ExecutorService getExecutor() {

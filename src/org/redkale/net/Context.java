@@ -109,8 +109,12 @@ public class Context {
         return charset;
     }
 
-    public void submit(Runnable r) {
-        executor.submit(r);
+    public Future<?> submitAsync(Runnable r) {
+        return executor.submit(r);
+    }
+
+    public void runAsync(Runnable r) {
+        executor.execute(r);
     }
 
     public int getBufferCapacity() {

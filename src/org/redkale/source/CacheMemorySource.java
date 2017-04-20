@@ -197,9 +197,7 @@ public class CacheMemorySource<K extends Serializable, V extends Object> extends
 
     @Override
     public CompletableFuture<Boolean> existsAsync(final K key) {
-        CompletableFuture<Boolean> future = new CompletableFuture();
-        future.complete(exists(key));
-        return future;
+        return CompletableFuture.supplyAsync(() -> exists(key));
     }
 
     @Override
@@ -220,9 +218,7 @@ public class CacheMemorySource<K extends Serializable, V extends Object> extends
 
     @Override
     public CompletableFuture<V> getAsync(final K key) {
-        CompletableFuture<V> future = new CompletableFuture();
-        future.complete(get(key));
-        return future;
+        return CompletableFuture.supplyAsync(() -> get(key));
     }
 
     @Override
@@ -246,9 +242,7 @@ public class CacheMemorySource<K extends Serializable, V extends Object> extends
 
     @Override
     public CompletableFuture<V> getAndRefreshAsync(final K key, final int expireSeconds) {
-        CompletableFuture<V> future = new CompletableFuture();
-        future.complete(getAndRefresh(key, expireSeconds));
-        return future;
+        return CompletableFuture.supplyAsync(() -> getAndRefresh(key, expireSeconds));
     }
 
     @Override
@@ -269,10 +263,7 @@ public class CacheMemorySource<K extends Serializable, V extends Object> extends
 
     @Override
     public CompletableFuture<Void> refreshAsync(final K key, final int expireSeconds) {
-        CompletableFuture<Void> future = new CompletableFuture();
-        refresh(key, expireSeconds);
-        future.complete(null);
-        return future;
+        return CompletableFuture.runAsync(() -> refresh(key, expireSeconds));
     }
 
     @Override
@@ -298,10 +289,7 @@ public class CacheMemorySource<K extends Serializable, V extends Object> extends
 
     @Override
     public CompletableFuture<Void> setAsync(K key, V value) {
-        CompletableFuture<Void> future = new CompletableFuture();
-        set(key, value);
-        future.complete(null);
-        return future;
+        return CompletableFuture.runAsync(() -> set(key, value));
     }
 
     @Override
@@ -327,10 +315,7 @@ public class CacheMemorySource<K extends Serializable, V extends Object> extends
 
     @Override
     public CompletableFuture<Void> setAsync(int expireSeconds, K key, V value) {
-        CompletableFuture<Void> future = new CompletableFuture();
-        set(expireSeconds, key, value);
-        future.complete(null);
-        return future;
+        return CompletableFuture.runAsync(() -> set(expireSeconds, key, value));
     }
 
     @Override
@@ -350,10 +335,7 @@ public class CacheMemorySource<K extends Serializable, V extends Object> extends
 
     @Override
     public CompletableFuture<Void> setExpireSecondsAsync(final K key, final int expireSeconds) {
-        CompletableFuture<Void> future = new CompletableFuture();
-        setExpireSeconds(key, expireSeconds);
-        future.complete(null);
-        return future;
+        return CompletableFuture.runAsync(() -> setExpireSeconds(key, expireSeconds));
     }
 
     @Override
@@ -371,10 +353,7 @@ public class CacheMemorySource<K extends Serializable, V extends Object> extends
 
     @Override
     public CompletableFuture<Void> removeAsync(final K key) {
-        CompletableFuture<Void> future = new CompletableFuture();
-        remove(key);
-        future.complete(null);
-        return future;
+        return CompletableFuture.runAsync(() -> remove(key));
     }
 
     @Override
@@ -390,9 +369,7 @@ public class CacheMemorySource<K extends Serializable, V extends Object> extends
 
     @Override
     public CompletableFuture<Collection<V>> getCollectionAsync(final K key) {
-        CompletableFuture<Collection<V>> future = new CompletableFuture();
-        future.complete((Collection<V>) get(key));
-        return future;
+        return CompletableFuture.supplyAsync(() -> getCollection(key));
     }
 
     @Override
@@ -408,9 +385,7 @@ public class CacheMemorySource<K extends Serializable, V extends Object> extends
 
     @Override
     public CompletableFuture<Collection<V>> getCollectionAndRefreshAsync(final K key, final int expireSeconds) {
-        CompletableFuture<Collection<V>> future = new CompletableFuture();
-        future.complete((Collection<V>) getAndRefresh(key, expireSeconds));
-        return future;
+        return CompletableFuture.supplyAsync(() -> getCollectionAndRefresh(key, expireSeconds));
     }
 
     @Override
@@ -437,10 +412,7 @@ public class CacheMemorySource<K extends Serializable, V extends Object> extends
 
     @Override
     public CompletableFuture<Void> appendListItemAsync(final K key, final V value) {
-        CompletableFuture<Void> future = new CompletableFuture();
-        appendListItem(key, value);
-        future.complete(null);
-        return future;
+        return CompletableFuture.runAsync(() -> appendListItem(key, value));
     }
 
     @Override
@@ -460,10 +432,7 @@ public class CacheMemorySource<K extends Serializable, V extends Object> extends
 
     @Override
     public CompletableFuture<Void> removeListItemAsync(final K key, final V value) {
-        CompletableFuture<Void> future = new CompletableFuture();
-        removeListItem(key, value);
-        future.complete(null);
-        return future;
+        return CompletableFuture.runAsync(() -> removeListItem(key, value));
     }
 
     @Override
@@ -490,10 +459,7 @@ public class CacheMemorySource<K extends Serializable, V extends Object> extends
 
     @Override
     public CompletableFuture<Void> appendSetItemAsync(final K key, final V value) {
-        CompletableFuture<Void> future = new CompletableFuture();
-        appendSetItem(key, value);
-        future.complete(null);
-        return future;
+        return CompletableFuture.runAsync(() -> appendSetItem(key, value));
     }
 
     @Override
@@ -513,10 +479,7 @@ public class CacheMemorySource<K extends Serializable, V extends Object> extends
 
     @Override
     public CompletableFuture<Void> removeSetItemAsync(final K key, final V value) {
-        CompletableFuture<Void> future = new CompletableFuture();
-        removeSetItem(key, value);
-        future.complete(null);
-        return future;
+        return CompletableFuture.runAsync(() -> removeSetItem(key, value));
     }
 
     @Override

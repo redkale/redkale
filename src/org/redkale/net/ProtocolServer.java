@@ -92,7 +92,7 @@ public abstract class ProtocolServer {
                             SocketAddress address = serchannel.receive(buffer);
                             buffer.flip();
                             AsyncConnection conn = AsyncConnection.create(serchannel, address, false, readTimeoutSecond, writeTimeoutSecond);
-                            context.submit(new PrepareRunner(context, conn, buffer));
+                            context.runAsync(new PrepareRunner(context, conn, buffer));
                         } catch (Exception e) {
                             context.offerBuffer(buffer);
                         }
@@ -160,7 +160,7 @@ public abstract class ProtocolServer {
                 @Override
                 public void completed(final AsynchronousSocketChannel channel, Void attachment) {
                     serchannel.accept(null, this);
-                    context.submit(new PrepareRunner(context, AsyncConnection.create(channel, null, context.readTimeoutSecond, context.writeTimeoutSecond), null));
+                    context.submitAsync(new PrepareRunner(context, AsyncConnection.create(channel, null, context.readTimeoutSecond, context.writeTimeoutSecond), null));
                 }
 
                 @Override
