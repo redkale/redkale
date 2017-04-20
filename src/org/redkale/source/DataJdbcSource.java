@@ -147,7 +147,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
 
     @Override
     public <T> CompletableFuture<Void> insertAsync(@RpcCall(DataCallArrayAttribute.class) T... values) {
-        return CompletableFuture.runAsync(() -> insert(values));
+        return CompletableFuture.runAsync(() -> insert(values), getExecutor());
     }
 
     @Override
@@ -331,7 +331,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
 
     @Override
     public <T> CompletableFuture<Integer> deleteAsync(final T... values) {
-        return CompletableFuture.supplyAsync(() -> delete(values));
+        return CompletableFuture.supplyAsync(() -> delete(values), getExecutor());
     }
 
     @Override
@@ -367,7 +367,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
 
     @Override
     public <T> CompletableFuture<Integer> deleteAsync(final Class<T> clazz, final Serializable... ids) {
-        return CompletableFuture.supplyAsync(() -> delete(clazz, ids));
+        return CompletableFuture.supplyAsync(() -> delete(clazz, ids), getExecutor());
     }
 
     @Override
@@ -426,7 +426,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
 
     @Override
     public <T> CompletableFuture<Integer> deleteAsync(final Class<T> clazz, final FilterNode node) {
-        return CompletableFuture.supplyAsync(() -> delete(clazz, node));
+        return CompletableFuture.supplyAsync(() -> delete(clazz, node), getExecutor());
     }
 
     @Override
@@ -451,7 +451,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
 
     @Override
     public <T> CompletableFuture<Integer> deleteAsync(final Class<T> clazz, final Flipper flipper, FilterNode node) {
-        return CompletableFuture.supplyAsync(() -> delete(clazz, flipper, node));
+        return CompletableFuture.supplyAsync(() -> delete(clazz, flipper, node), getExecutor());
     }
 
     @Override
@@ -548,7 +548,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
 
     @Override
     public <T> CompletableFuture<Integer> updateAsync(final T... values) {
-        return CompletableFuture.supplyAsync(() -> update(values));
+        return CompletableFuture.supplyAsync(() -> update(values), getExecutor());
     }
 
     @Override
@@ -650,7 +650,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
 
     @Override
     public <T> CompletableFuture<Integer> updateColumnupdateColumnAsync(final Class<T> clazz, final Serializable id, final String column, final Serializable value) {
-        return CompletableFuture.supplyAsync(() -> updateColumn(clazz, id, column, value));
+        return CompletableFuture.supplyAsync(() -> updateColumn(clazz, id, column, value), getExecutor());
     }
 
     @Override
@@ -723,7 +723,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
 
     @Override
     public <T> CompletableFuture<Integer> updateColumnAsync(final Class<T> clazz, final String column, final Serializable value, final FilterNode node) {
-        return CompletableFuture.supplyAsync(() -> updateColumn(clazz, column, value, node));
+        return CompletableFuture.supplyAsync(() -> updateColumn(clazz, column, value, node), getExecutor());
     }
 
     @Override
@@ -811,7 +811,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
 
     @Override
     public <T> CompletableFuture<Integer> updateColumnAsync(final Class<T> clazz, final Serializable id, final ColumnValue... values) {
-        return CompletableFuture.supplyAsync(() -> updateColumn(clazz, id, values));
+        return CompletableFuture.supplyAsync(() -> updateColumn(clazz, id, values), getExecutor());
     }
 
     @Override
@@ -903,7 +903,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
 
     @Override
     public <T> CompletableFuture<Integer> updateColumnAsync(final Class<T> clazz, final FilterNode node, final ColumnValue... values) {
-        return CompletableFuture.supplyAsync(() -> updateColumn(clazz, node, values));
+        return CompletableFuture.supplyAsync(() -> updateColumn(clazz, node, values), getExecutor());
     }
 
     @Override
@@ -939,7 +939,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
 
     @Override
     public <T> CompletableFuture<Integer> updateColumnAsync(final Class<T> clazz, final FilterNode node, final Flipper flipper, final ColumnValue... values) {
-        return CompletableFuture.supplyAsync(() -> updateColumn(clazz, node, flipper, values));
+        return CompletableFuture.supplyAsync(() -> updateColumn(clazz, node, flipper, values), getExecutor());
     }
 
     @Override
@@ -1026,7 +1026,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
 
     @Override
     public <T> CompletableFuture<Integer> updateColumnAsync(final T bean, final String... columns) {
-        return CompletableFuture.supplyAsync(() -> updateColumn(bean, columns));
+        return CompletableFuture.supplyAsync(() -> updateColumn(bean, columns), getExecutor());
     }
 
     @Override
@@ -1042,7 +1042,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
 
     @Override
     public <T> CompletableFuture<Integer> updateColumnAsync(final T bean, final FilterNode node, final String... columns) {
-        return CompletableFuture.supplyAsync(() -> updateColumn(bean, node, columns));
+        return CompletableFuture.supplyAsync(() -> updateColumn(bean, node, columns), getExecutor());
     }
 
     @Override
@@ -1067,7 +1067,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
 
     @Override
     public <T> CompletableFuture<Integer> updateColumnAsync(final T bean, final SelectColumn selects) {
-        return CompletableFuture.supplyAsync(() -> updateColumn(bean, selects));
+        return CompletableFuture.supplyAsync(() -> updateColumn(bean, selects), getExecutor());
     }
 
     @Override
@@ -1149,7 +1149,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
 
     @Override
     public <T> CompletableFuture<Integer> updateColumnAsync(final T bean, final FilterNode node, final SelectColumn selects) {
-        return CompletableFuture.supplyAsync(() -> updateColumn(bean, node, selects));
+        return CompletableFuture.supplyAsync(() -> updateColumn(bean, node, selects), getExecutor());
     }
 
     @Override
@@ -1262,7 +1262,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
 
     @Override
     public CompletableFuture<Number> getNumberResultAsync(final Class entityClass, final FilterFunc func, final String column) {
-        return CompletableFuture.supplyAsync(() -> getNumberResult(entityClass, func, column));
+        return CompletableFuture.supplyAsync(() -> getNumberResult(entityClass, func, column), getExecutor());
     }
 
     @Override
@@ -1278,7 +1278,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
 
     @Override
     public CompletableFuture<Number> getNumberResultAsync(final Class entityClass, final FilterFunc func, final String column, final FilterBean bean) {
-        return CompletableFuture.supplyAsync(() -> getNumberResult(entityClass, func, column, bean));
+        return CompletableFuture.supplyAsync(() -> getNumberResult(entityClass, func, column, bean), getExecutor());
     }
 
     @Override
@@ -1294,7 +1294,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
 
     @Override
     public CompletableFuture<Number> getNumberResultAsync(final Class entityClass, final FilterFunc func, final String column, final FilterNode node) {
-        return CompletableFuture.supplyAsync(() -> getNumberResult(entityClass, func, column, node));
+        return CompletableFuture.supplyAsync(() -> getNumberResult(entityClass, func, column, node), getExecutor());
     }
 
     @Override
@@ -1310,7 +1310,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
 
     @Override
     public CompletableFuture<Number> getNumberResultAsync(final Class entityClass, final FilterFunc func, final Number defVal, final String column) {
-        return CompletableFuture.supplyAsync(() -> getNumberResult(entityClass, func, defVal, column));
+        return CompletableFuture.supplyAsync(() -> getNumberResult(entityClass, func, defVal, column), getExecutor());
     }
 
     @Override
@@ -1326,7 +1326,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
 
     @Override
     public CompletableFuture<Number> getNumberResultAsync(final Class entityClass, final FilterFunc func, final Number defVal, final String column, final FilterBean bean) {
-        return CompletableFuture.supplyAsync(() -> getNumberResult(entityClass, func, defVal, column, bean));
+        return CompletableFuture.supplyAsync(() -> getNumberResult(entityClass, func, defVal, column, bean), getExecutor());
     }
 
     @Override
@@ -1336,7 +1336,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
 
     @Override
     public CompletableFuture<Number> getNumberResultAsync(final Class entityClass, final FilterFunc func, final Number defVal, final String column, final FilterNode node) {
-        return CompletableFuture.supplyAsync(() -> getNumberResult(entityClass, func, defVal, column, node));
+        return CompletableFuture.supplyAsync(() -> getNumberResult(entityClass, func, defVal, column, node), getExecutor());
     }
 
     @Override
@@ -1352,7 +1352,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
 
     @Override
     public <N extends Number> CompletableFuture<Map<String, N>> getNumberMapAsync(final Class entityClass, final FilterFuncColumn... columns) {
-        return CompletableFuture.supplyAsync(() -> getNumberMap(entityClass, columns));
+        return CompletableFuture.supplyAsync(() -> getNumberMap(entityClass, columns), getExecutor());
     }
 
     @Override
@@ -1368,7 +1368,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
 
     @Override
     public <N extends Number> CompletableFuture<Map<String, N>> getNumberMapAsync(final Class entityClass, final FilterBean bean, final FilterFuncColumn... columns) {
-        return CompletableFuture.supplyAsync(() -> getNumberMap(entityClass, bean, columns));
+        return CompletableFuture.supplyAsync(() -> getNumberMap(entityClass, bean, columns), getExecutor());
     }
 
     @Override
@@ -1444,7 +1444,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
 
     @Override
     public <N extends Number> CompletableFuture<Map<String, N>> getNumberMapAsync(final Class entityClass, final FilterNode node, final FilterFuncColumn... columns) {
-        return CompletableFuture.supplyAsync(() -> getNumberMap(entityClass, node, columns));
+        return CompletableFuture.supplyAsync(() -> getNumberMap(entityClass, node, columns), getExecutor());
     }
 
     @Override
@@ -1498,7 +1498,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
 
     @Override
     public <T, K extends Serializable, N extends Number> CompletableFuture<Map<K, N>> queryColumnMapAsync(final Class<T> entityClass, final String keyColumn, final FilterFunc func, final String funcColumn) {
-        return CompletableFuture.supplyAsync(() -> queryColumnMap(entityClass, keyColumn, func, funcColumn));
+        return CompletableFuture.supplyAsync(() -> queryColumnMap(entityClass, keyColumn, func, funcColumn), getExecutor());
     }
 
     @Override
@@ -1514,7 +1514,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
 
     @Override
     public <T, K extends Serializable, N extends Number> CompletableFuture<Map<K, N>> queryColumnMapAsync(final Class<T> entityClass, final String keyColumn, final FilterFunc func, final String funcColumn, final FilterBean bean) {
-        return CompletableFuture.supplyAsync(() -> queryColumnMap(entityClass, keyColumn, func, funcColumn, bean));
+        return CompletableFuture.supplyAsync(() -> queryColumnMap(entityClass, keyColumn, func, funcColumn, bean), getExecutor());
     }
 
     @Override
@@ -1563,7 +1563,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
 
     @Override
     public <T, K extends Serializable, N extends Number> CompletableFuture<Map<K, N>> queryColumnMapAsync(final Class<T> entityClass, final String keyColumn, final FilterFunc func, final String funcColumn, final FilterNode node) {
-        return CompletableFuture.supplyAsync(() -> queryColumnMap(entityClass, keyColumn, func, funcColumn, node));
+        return CompletableFuture.supplyAsync(() -> queryColumnMap(entityClass, keyColumn, func, funcColumn, node), getExecutor());
     }
 
     @Override
@@ -1589,7 +1589,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
 
     @Override
     public <T> CompletableFuture<T> findAsync(final Class<T> clazz, final Serializable pk) {
-        return CompletableFuture.supplyAsync(() -> find(clazz, pk));
+        return CompletableFuture.supplyAsync(() -> find(clazz, pk), getExecutor());
     }
 
     @Override
@@ -1632,7 +1632,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
 
     @Override
     public <T> CompletableFuture<T> findAsync(final Class<T> clazz, final SelectColumn selects, final Serializable pk) {
-        return CompletableFuture.supplyAsync(() -> find(clazz, selects, pk));
+        return CompletableFuture.supplyAsync(() -> find(clazz, selects, pk), getExecutor());
     }
 
     @Override
@@ -1648,7 +1648,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
 
     @Override
     public <T> CompletableFuture<T> findAsync(final Class<T> clazz, final String column, final Serializable key) {
-        return CompletableFuture.supplyAsync(() -> find(clazz, column, key));
+        return CompletableFuture.supplyAsync(() -> find(clazz, column, key), getExecutor());
     }
 
     @Override
@@ -1664,7 +1664,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
 
     @Override
     public <T> CompletableFuture<T> findAsync(final Class<T> clazz, final FilterBean bean) {
-        return CompletableFuture.supplyAsync(() -> find(clazz, bean));
+        return CompletableFuture.supplyAsync(() -> find(clazz, bean), getExecutor());
     }
 
     @Override
@@ -1680,7 +1680,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
 
     @Override
     public <T> CompletableFuture<T> findAsync(final Class<T> clazz, final FilterNode node) {
-        return CompletableFuture.supplyAsync(() -> find(clazz, node));
+        return CompletableFuture.supplyAsync(() -> find(clazz, node), getExecutor());
     }
 
     @Override
@@ -1696,7 +1696,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
 
     @Override
     public <T> CompletableFuture<T> findAsync(final Class<T> clazz, final SelectColumn selects, final FilterBean bean) {
-        return CompletableFuture.supplyAsync(() -> find(clazz, selects, bean));
+        return CompletableFuture.supplyAsync(() -> find(clazz, selects, bean), getExecutor());
     }
 
     @Override
@@ -1739,7 +1739,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
 
     @Override
     public <T> CompletableFuture<T> findAsync(final Class<T> clazz, final SelectColumn selects, final FilterNode node) {
-        return CompletableFuture.supplyAsync(() -> find(clazz, selects, node));
+        return CompletableFuture.supplyAsync(() -> find(clazz, selects, node), getExecutor());
     }
 
     @Override
@@ -1755,7 +1755,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
 
     @Override
     public <T> CompletableFuture<Serializable> findColumnAsync(final Class<T> clazz, final String column, final Serializable pk) {
-        return CompletableFuture.supplyAsync(() -> findColumn(clazz, column, pk));
+        return CompletableFuture.supplyAsync(() -> findColumn(clazz, column, pk), getExecutor());
     }
 
     @Override
@@ -1771,7 +1771,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
 
     @Override
     public <T> CompletableFuture<Serializable> findColumnAsync(final Class<T> clazz, final String column, final FilterBean bean) {
-        return CompletableFuture.supplyAsync(() -> findColumn(clazz, column, bean));
+        return CompletableFuture.supplyAsync(() -> findColumn(clazz, column, bean), getExecutor());
     }
 
     @Override
@@ -1787,7 +1787,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
 
     @Override
     public <T> CompletableFuture<Serializable> findColumnAsync(final Class<T> clazz, final String column, final FilterNode node) {
-        return CompletableFuture.supplyAsync(() -> findColumn(clazz, column, node));
+        return CompletableFuture.supplyAsync(() -> findColumn(clazz, column, node), getExecutor());
     }
 
     @Override
@@ -1838,7 +1838,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
 
     @Override
     public <T> CompletableFuture<Serializable> findColumnAsync(final Class<T> clazz, final String column, final Serializable defValue, final Serializable pk) {
-        return CompletableFuture.supplyAsync(() -> findColumn(clazz, column, defValue, pk));
+        return CompletableFuture.supplyAsync(() -> findColumn(clazz, column, defValue, pk), getExecutor());
     }
 
     @Override
@@ -1854,7 +1854,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
 
     @Override
     public <T> CompletableFuture<Serializable> findColumnAsync(final Class<T> clazz, final String column, final Serializable defValue, final FilterBean bean) {
-        return CompletableFuture.supplyAsync(() -> findColumn(clazz, column, defValue, bean));
+        return CompletableFuture.supplyAsync(() -> findColumn(clazz, column, defValue, bean), getExecutor());
     }
 
     @Override
@@ -1905,7 +1905,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
 
     @Override
     public <T> CompletableFuture<Serializable> findColumnAsync(final Class<T> clazz, final String column, final Serializable defValue, final FilterNode node) {
-        return CompletableFuture.supplyAsync(() -> findColumn(clazz, column, defValue, node));
+        return CompletableFuture.supplyAsync(() -> findColumn(clazz, column, defValue, node), getExecutor());
     }
 
     @Override
@@ -1950,7 +1950,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
 
     @Override
     public <T> CompletableFuture<Boolean> existsAsync(final Class<T> clazz, final Serializable pk) {
-        return CompletableFuture.supplyAsync(() -> exists(clazz, pk));
+        return CompletableFuture.supplyAsync(() -> exists(clazz, pk), getExecutor());
     }
 
     @Override
@@ -1966,7 +1966,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
 
     @Override
     public <T> CompletableFuture<Boolean> existsAsync(final Class<T> clazz, final FilterBean bean) {
-        return CompletableFuture.supplyAsync(() -> exists(clazz, bean));
+        return CompletableFuture.supplyAsync(() -> exists(clazz, bean), getExecutor());
     }
 
     @Override
@@ -2011,7 +2011,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
 
     @Override
     public <T> CompletableFuture<Boolean> existsAsync(final Class<T> clazz, final FilterNode node) {
-        return CompletableFuture.supplyAsync(() -> exists(clazz, node));
+        return CompletableFuture.supplyAsync(() -> exists(clazz, node), getExecutor());
     }
 
     @Override
@@ -2028,7 +2028,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
 
     @Override
     public <T, V extends Serializable> CompletableFuture<HashSet<V>> queryColumnSetAsync(final String selectedColumn, Class<T> clazz, String column, Serializable key) {
-        return CompletableFuture.supplyAsync(() -> queryColumnSet(selectedColumn, clazz, column, key));
+        return CompletableFuture.supplyAsync(() -> queryColumnSet(selectedColumn, clazz, column, key), getExecutor());
     }
 
     @Override
@@ -2044,7 +2044,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
 
     @Override
     public <T, V extends Serializable> CompletableFuture<HashSet<V>> queryColumnSetAsync(final String selectedColumn, final Class<T> clazz, final FilterBean bean) {
-        return CompletableFuture.supplyAsync(() -> queryColumnSet(selectedColumn, clazz, bean));
+        return CompletableFuture.supplyAsync(() -> queryColumnSet(selectedColumn, clazz, bean), getExecutor());
     }
 
     @Override
@@ -2060,7 +2060,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
 
     @Override
     public <T, V extends Serializable> CompletableFuture<HashSet<V>> queryColumnSetAsync(final String selectedColumn, final Class<T> clazz, final FilterNode node) {
-        return CompletableFuture.supplyAsync(() -> queryColumnSet(selectedColumn, clazz, node));
+        return CompletableFuture.supplyAsync(() -> queryColumnSet(selectedColumn, clazz, node), getExecutor());
     }
 
     @Override
@@ -2076,7 +2076,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
 
     @Override
     public <T, V extends Serializable> CompletableFuture<List<V>> queryColumnListAsync(final String selectedColumn, final Class<T> clazz, final String column, final Serializable key) {
-        return CompletableFuture.supplyAsync(() -> queryColumnList(selectedColumn, clazz, column, key));
+        return CompletableFuture.supplyAsync(() -> queryColumnList(selectedColumn, clazz, column, key), getExecutor());
     }
 
     @Override
@@ -2092,7 +2092,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
 
     @Override
     public <T, V extends Serializable> CompletableFuture<List<V>> queryColumnListAsync(final String selectedColumn, final Class<T> clazz, final FilterBean bean) {
-        return CompletableFuture.supplyAsync(() -> queryColumnList(selectedColumn, clazz, bean));
+        return CompletableFuture.supplyAsync(() -> queryColumnList(selectedColumn, clazz, bean), getExecutor());
     }
 
     @Override
@@ -2108,7 +2108,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
 
     @Override
     public <T, V extends Serializable> CompletableFuture<List<V>> queryColumnListAsync(final String selectedColumn, final Class<T> clazz, final FilterNode node) {
-        return CompletableFuture.supplyAsync(() -> queryColumnList(selectedColumn, clazz, node));
+        return CompletableFuture.supplyAsync(() -> queryColumnList(selectedColumn, clazz, node), getExecutor());
     }
 
     @Override
@@ -2124,7 +2124,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
 
     @Override
     public <T, V extends Serializable> CompletableFuture<List<V>> queryColumnListAsync(final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterBean bean) {
-        return CompletableFuture.supplyAsync(() -> queryColumnList(selectedColumn, clazz, flipper, bean));
+        return CompletableFuture.supplyAsync(() -> queryColumnList(selectedColumn, clazz, flipper, bean), getExecutor());
     }
 
     @Override
@@ -2140,7 +2140,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
 
     @Override
     public <T, V extends Serializable> CompletableFuture<List<V>> queryColumnListAsync(final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterNode node) {
-        return CompletableFuture.supplyAsync(() -> queryColumnList(selectedColumn, clazz, flipper, node));
+        return CompletableFuture.supplyAsync(() -> queryColumnList(selectedColumn, clazz, flipper, node), getExecutor());
     }
 
     @Override
@@ -2168,7 +2168,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
 
     @Override
     public <T, V extends Serializable> CompletableFuture<Sheet<V>> queryColumnSheetAsync(final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterBean bean) {
-        return CompletableFuture.supplyAsync(() -> queryColumnSheet(selectedColumn, clazz, flipper, bean));
+        return CompletableFuture.supplyAsync(() -> queryColumnSheet(selectedColumn, clazz, flipper, bean), getExecutor());
     }
 
     @Override
@@ -2184,7 +2184,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
 
     @Override
     public <T, V extends Serializable> CompletableFuture<Sheet<V>> queryColumnSheetAsync(final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterNode node) {
-        return CompletableFuture.supplyAsync(() -> queryColumnSheet(selectedColumn, clazz, flipper, node));
+        return CompletableFuture.supplyAsync(() -> queryColumnSheet(selectedColumn, clazz, flipper, node), getExecutor());
     }
 
     @Override
@@ -2225,7 +2225,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
 
     @Override
     public <T> CompletableFuture<List<T>> queryListAsync(final Class<T> clazz, final String column, final Serializable key) {
-        return CompletableFuture.supplyAsync(() -> queryList(clazz, column, key));
+        return CompletableFuture.supplyAsync(() -> queryList(clazz, column, key), getExecutor());
     }
 
     @Override
@@ -2250,7 +2250,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
 
     @Override
     public <T> CompletableFuture<List<T>> queryListAsync(final Class<T> clazz, final FilterBean bean) {
-        return CompletableFuture.supplyAsync(() -> queryList(clazz, bean));
+        return CompletableFuture.supplyAsync(() -> queryList(clazz, bean), getExecutor());
     }
 
     @Override
@@ -2266,7 +2266,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
 
     @Override
     public <T> CompletableFuture<List<T>> queryListAsync(final Class<T> clazz, final FilterNode node) {
-        return CompletableFuture.supplyAsync(() -> queryList(clazz, node));
+        return CompletableFuture.supplyAsync(() -> queryList(clazz, node), getExecutor());
     }
 
     @Override
@@ -2292,7 +2292,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
 
     @Override
     public <T> CompletableFuture<List<T>> queryListAsync(final Class<T> clazz, SelectColumn selects, final FilterBean bean) {
-        return CompletableFuture.supplyAsync(() -> queryList(clazz, selects, bean));
+        return CompletableFuture.supplyAsync(() -> queryList(clazz, selects, bean), getExecutor());
     }
 
     @Override
@@ -2308,7 +2308,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
 
     @Override
     public <T> CompletableFuture<List<T>> queryListAsync(final Class<T> clazz, SelectColumn selects, final FilterNode node) {
-        return CompletableFuture.supplyAsync(() -> queryList(clazz, selects, node));
+        return CompletableFuture.supplyAsync(() -> queryList(clazz, selects, node), getExecutor());
     }
 
     @Override
@@ -2324,7 +2324,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
 
     @Override
     public <T> CompletableFuture<List<T>> queryListAsync(final Class<T> clazz, final Flipper flipper, final String column, final Serializable key) {
-        return CompletableFuture.supplyAsync(() -> queryList(clazz, flipper, column, key));
+        return CompletableFuture.supplyAsync(() -> queryList(clazz, flipper, column, key), getExecutor());
     }
 
     @Override
@@ -2340,7 +2340,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
 
     @Override
     public <T> CompletableFuture<List<T>> queryListAsync(final Class<T> clazz, final Flipper flipper, final FilterBean bean) {
-        return CompletableFuture.supplyAsync(() -> queryList(clazz, flipper, bean));
+        return CompletableFuture.supplyAsync(() -> queryList(clazz, flipper, bean), getExecutor());
     }
 
     @Override
@@ -2356,7 +2356,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
 
     @Override
     public <T> CompletableFuture<List<T>> queryListAsync(final Class<T> clazz, final Flipper flipper, final FilterNode node) {
-        return CompletableFuture.supplyAsync(() -> queryList(clazz, flipper, node));
+        return CompletableFuture.supplyAsync(() -> queryList(clazz, flipper, node), getExecutor());
     }
 
     @Override
@@ -2372,7 +2372,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
 
     @Override
     public <T> CompletableFuture<List<T>> queryListAsync(final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterBean bean) {
-        return CompletableFuture.supplyAsync(() -> queryList(clazz, selects, flipper, bean));
+        return CompletableFuture.supplyAsync(() -> queryList(clazz, selects, flipper, bean), getExecutor());
     }
 
     @Override
@@ -2388,7 +2388,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
 
     @Override
     public <T> CompletableFuture<List<T>> queryListAsync(final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterNode node) {
-        return CompletableFuture.supplyAsync(() -> queryList(clazz, selects, flipper, node));
+        return CompletableFuture.supplyAsync(() -> queryList(clazz, selects, flipper, node), getExecutor());
     }
 
     @Override
@@ -2415,7 +2415,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
 
     @Override
     public <T> CompletableFuture<Sheet<T>> querySheetAsync(final Class<T> clazz, final Flipper flipper, final FilterBean bean) {
-        return CompletableFuture.supplyAsync(() -> querySheet(clazz, flipper, bean));
+        return CompletableFuture.supplyAsync(() -> querySheet(clazz, flipper, bean), getExecutor());
     }
 
     @Override
@@ -2431,7 +2431,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
 
     @Override
     public <T> CompletableFuture<Sheet<T>> querySheetAsync(final Class<T> clazz, final Flipper flipper, final FilterNode node) {
-        return CompletableFuture.supplyAsync(() -> querySheet(clazz, flipper, node));
+        return CompletableFuture.supplyAsync(() -> querySheet(clazz, flipper, node), getExecutor());
     }
 
     @Override
@@ -2458,7 +2458,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
 
     @Override
     public <T> CompletableFuture<Sheet<T>> querySheetAsync(final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterBean bean) {
-        return CompletableFuture.supplyAsync(() -> querySheet(clazz, selects, flipper, bean));
+        return CompletableFuture.supplyAsync(() -> querySheet(clazz, selects, flipper, bean), getExecutor());
     }
 
     @Override
@@ -2474,7 +2474,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
 
     @Override
     public <T> CompletableFuture<Sheet<T>> querySheetAsync(final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterNode node) {
-        return CompletableFuture.supplyAsync(() -> querySheet(clazz, selects, flipper, node));
+        return CompletableFuture.supplyAsync(() -> querySheet(clazz, selects, flipper, node), getExecutor());
     }
 
     @Override
