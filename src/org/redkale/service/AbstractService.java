@@ -14,7 +14,7 @@ import org.redkale.net.WorkThread;
  */
 public abstract class AbstractService implements Service {
 
-    protected void execute(Runnable runner) {
+    protected void runAsync(Runnable runner) {
         Thread thread = Thread.currentThread();
         if (thread instanceof WorkThread) {
             ((WorkThread) thread).runAsync(runner);
