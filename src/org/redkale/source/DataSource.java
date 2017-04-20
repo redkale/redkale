@@ -37,7 +37,7 @@ public interface DataSource {
     /**
      * 新增记录， 多对象必须是同一个Entity类  <br>
      *
-     * @param <T>
+     * @param <T>    泛型
      * @param values Entity对象
      *
      * @return CompletableFuture
