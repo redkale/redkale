@@ -328,7 +328,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * @param future  输出对象的句柄
      */
     public void finishJson(final JsonConvert convert, final CompletableFuture future) {
-        future.whenCompleteAsync((v, e) -> {
+        future.whenComplete((v, e) -> {
             if (e != null) {
                 context.getLogger().log(Level.WARNING, "Servlet occur, forece to close channel. request = " + request, e);
                 finish(500, null);
@@ -341,7 +341,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
             } else {
                 finishJson(convert, v);
             }
-        }, this.context.getExecutor());
+        });
     }
 
     /**
@@ -352,7 +352,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * @param future  输出对象的句柄
      */
     public void finishJson(final JsonConvert convert, final Type type, final CompletableFuture future) {
-        future.whenCompleteAsync((v, e) -> {
+        future.whenComplete((v, e) -> {
             if (e != null) {
                 context.getLogger().log(Level.WARNING, "Servlet occur, forece to close channel. request = " + request, e);
                 finish(500, null);
@@ -365,7 +365,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
             } else {
                 finishJson(convert, type, v);
             }
-        }, this.context.getExecutor());
+        });
     }
 
     /**

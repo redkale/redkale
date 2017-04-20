@@ -7,6 +7,7 @@ package org.redkale.source;
 
 import java.io.*;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import org.redkale.util.*;
 
 /**
@@ -53,7 +54,6 @@ public interface CacheSource<K extends Serializable, V extends Object> {
     public void removeSetItem(final K key, final V value);
 
     //---------------------- CompletableFuture 异步版 ---------------------------------
-    /**
     public CompletableFuture<Boolean> existsAsync(final K key);
 
     public CompletableFuture<V> getAsync(final K key);
@@ -87,9 +87,8 @@ public interface CacheSource<K extends Serializable, V extends Object> {
         future.complete(true);
         return future;
     }
-    */
+
     //---------------------- AsyncHandler 异步版 ---------------------------------
-    
     public void existsAsync(final AsyncHandler<Boolean, K> handler, final K key);
 
     public void getAsync(final AsyncHandler<V, K> handler, final K key);

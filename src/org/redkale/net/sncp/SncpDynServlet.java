@@ -151,7 +151,7 @@ public final class SncpDynServlet extends SncpServlet {
                         action.convert.convertTo(out, Object.class, null);
                     } else {
                         Object[] sncpParams = handler.sncp_getParams();
-                        future.whenCompleteAsync((v, e) -> {
+                        future.whenComplete((v, e) -> {
                             if (e != null) {
                                 response.getContext().getLogger().log(Level.INFO, "sncp CompleteAsync error(" + request + ")", e);
                                 response.finish(SncpResponse.RETCODE_THROWEXCEPTION, null);
@@ -162,7 +162,7 @@ public final class SncpDynServlet extends SncpServlet {
                             response.finish(0, out);
                             action.convert.offerBsonReader(in);
                             action.convert.offerBsonWriter(out);
-                        }, getExecutor());
+                        });
                     }
                 }
             } catch (Throwable t) {

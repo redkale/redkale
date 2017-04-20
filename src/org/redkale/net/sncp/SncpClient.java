@@ -305,7 +305,7 @@ public final class SncpClient {
         CompletableFuture<byte[]> future = remote0(handlerFunc, bsonConvert, jsonConvert, transport, null, action, params);
         if (action.boolReturnTypeFuture) {
             CompletableFuture result = action.futureCreator.create();
-            future.whenCompleteAsync((v, e) -> {
+            future.whenComplete((v, e) -> {
                 try {
                     if (e != null) {
                         result.completeExceptionally(e);

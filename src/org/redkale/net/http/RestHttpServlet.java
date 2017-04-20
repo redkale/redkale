@@ -24,7 +24,7 @@ public abstract class RestHttpServlet<T> extends HttpBaseServlet {
     protected abstract T currentUser(HttpRequest req) throws IOException;
 
     protected void finishJson(final HttpResponse response, CompletableFuture<RestOutput> future) throws IOException {
-        future.whenCompleteAsync((output, e) -> {
+        future.whenComplete((output, e) -> {
             if (e != null) {
                 response.getContext().getLogger().log(Level.WARNING, "Servlet occur, forece to close channel. request = " + response.getRequest(), e);
                 response.finish(500, null);
@@ -36,7 +36,7 @@ public abstract class RestHttpServlet<T> extends HttpBaseServlet {
                 response.getContext().getLogger().log(Level.WARNING, "Servlet finish RestOutput occur, forece to close channel. request = " + response.getRequest(), ioe);
                 response.finish(500, null);
             }
-        }, response.getContext().getExecutor());
+        });
     }
 
     protected void finishJson(final HttpResponse response, RestOutput output) throws IOException {
