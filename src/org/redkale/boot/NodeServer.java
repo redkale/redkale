@@ -69,7 +69,7 @@ public abstract class NodeServer {
     private InetSocketAddress sncpAddress;
 
     //加载Service时的处理函数
-    protected Consumer<ServiceWrapper> consumer;
+    protected Consumer<Service> consumer;
 
     //server节点的配置
     protected AnyValue serverConf;
@@ -78,13 +78,17 @@ public abstract class NodeServer {
     protected NodeInterceptor interceptor;
 
     //供interceptor使用的Service对象集合
-    protected final Set<NodeInterceptor.InterceptorServiceWrapper> interceptorServiceWrappers = new LinkedHashSet<>();
+    protected final Set<Service> interceptorServices = new LinkedHashSet<>();
 
     //本地模式的Service对象集合
-    protected final Set<ServiceWrapper> localServiceWrappers = new LinkedHashSet<>();
+    protected final Set<Service> localServices = new LinkedHashSet<>();
 
     //远程模式的Service对象集合
-    protected final Set<ServiceWrapper> remoteServiceWrappers = new LinkedHashSet<>();
+    protected final Set<Service> remoteServices = new LinkedHashSet<>();
+
+    private volatile int maxClassNameLength = 0;
+
+    private volatile int maxNameLength = 0;
 
     public NodeServer(Application application, Server server) {
         this.application = application;
@@ -228,16 +232,15 @@ public abstract class NodeServer {
                 Transport sameGroupTransport = Sncp.getSameGroupTransport((Service) src);
                 List<Transport> diffGroupTransports = Arrays.asList(Sncp.getDiffGroupTransports((Service) src));
                 final InetSocketAddress sncpAddr = client == null ? null : client.getClientAddress();
-                if ((src instanceof DataSource) && sncpAddr != null && resourceFactory.find(resourceName, DataCacheListener.class) == null) { //只有DataSourceService 才能赋值 DataCacheListener
-                    Service cacheListenerService = Sncp.createLocalService(resourceName, getExecutor(), appResFactory, DataCacheListenerService.class, sncpAddr, sameGroupTransport, diffGroupTransports);
-                    appResFactory.register(resourceName, DataCacheListener.class, cacheListenerService);
+                if ((src instanceof DataSource) && sncpAddr != null && resourceFactory.find(resourceName, DataCacheListener.class) == null) { //只有DataSourceService 才能赋值 DataCacheListener   
                     final NodeSncpServer sncpServer = application.findNodeSncpServer(sncpAddr);
                     Set<String> gs = application.findSncpGroups(sameGroupTransport, diffGroupTransports);
-                    ServiceWrapper wrapper = new ServiceWrapper(DataCacheListenerService.class, cacheListenerService, resourceName, sncpServer.getSncpGroup(), gs, null);
-                    localServiceWrappers.add(wrapper);
-                    sncpServer.consumerAccept(wrapper);
+                    Service cacheListenerService = Sncp.createLocalService(resourceName, getExecutor(), appResFactory, DataCacheListenerService.class, sncpAddr, sncpServer.getSncpGroup(), gs, Sncp.getConf((Service) src), sameGroupTransport, diffGroupTransports);
+                    appResFactory.register(resourceName, DataCacheListener.class, cacheListenerService);
+                    localServices.add(cacheListenerService);
+                    sncpServer.consumerAccept(cacheListenerService);
                     rf.inject(cacheListenerService, self);
-                    logger.info("[" + Thread.currentThread().getName() + "] Load Service " + wrapper.getService());
+                    logger.info("[" + Thread.currentThread().getName() + "] Load Service " + cacheListenerService);
                 }
                 field.set(src, source);
                 rf.inject(source, self); // 给其可能包含@Resource的字段赋值;
@@ -251,13 +254,13 @@ public abstract class NodeServer {
             try {
                 if (field.getAnnotation(Resource.class) == null) return;
                 if ((src instanceof Service) && Sncp.isRemote((Service) src)) return; //远程模式不需要注入 CacheSource   
-
-                SncpClient client = Sncp.getSncpClient((Service) src);
-                Transport sameGroupTransport = Sncp.getSameGroupTransport((Service) src);
+                final Service srcService = (Service) src;
+                SncpClient client = Sncp.getSncpClient(srcService);
+                Transport sameGroupTransport = Sncp.getSameGroupTransport(srcService);
                 Transport[] dts = Sncp.getDiffGroupTransports((Service) src);
                 List<Transport> diffGroupTransports = dts == null ? new ArrayList<>() : Arrays.asList(dts);
                 final InetSocketAddress sncpAddr = client == null ? null : client.getClientAddress();
-                final CacheMemorySource source = Sncp.createLocalService(resourceName, getExecutor(), appResFactory, CacheMemorySource.class, sncpAddr, sameGroupTransport, diffGroupTransports);
+                final CacheMemorySource source = Sncp.createLocalService(resourceName, getExecutor(), appResFactory, CacheMemorySource.class, sncpAddr, Sncp.getSncpGroup(srcService), Sncp.getGroups(srcService), Sncp.getConf(srcService), sameGroupTransport, diffGroupTransports);
                 Type genericType = field.getGenericType();
                 ParameterizedType pt = (genericType instanceof ParameterizedType) ? (ParameterizedType) genericType : null;
                 Type valType = pt == null ? null : pt.getActualTypeArguments()[1];
@@ -273,9 +276,8 @@ public abstract class NodeServer {
                 if ((src instanceof WebSocketNodeService) && sncpAddr != null) { //只有WebSocketNodeService的服务才需要给SNCP服务注入CacheMemorySource
                     NodeSncpServer sncpServer = application.findNodeSncpServer(sncpAddr);
                     Set<String> gs = application.findSncpGroups(sameGroupTransport, diffGroupTransports);
-                    ServiceWrapper wrapper = new ServiceWrapper(CacheMemorySource.class, (Service) source, resourceName, sncpServer.getSncpGroup(), gs, null);
-                    sncpServer.getSncpServer().addSncpServlet(wrapper);
-                    logger.info("[" + Thread.currentThread().getName() + "] Load Service " + wrapper.getService());
+                    sncpServer.getSncpServer().addSncpServlet((Service) source);
+                    logger.info("[" + Thread.currentThread().getName() + "] Load Service " + source);
                 }
                 logger.info("[" + Thread.currentThread().getName() + "] Load Source " + source);
             } catch (Exception e) {
@@ -305,7 +307,7 @@ public abstract class NodeServer {
             if (entry.getName().contains("$")) throw new RuntimeException("<name> value cannot contains '$' in " + entry.getProperty());
             Service oldother = resourceFactory.find(entry.getName(), serviceImplClass);
             if (oldother != null) { //Server加载Service时需要判断是否已经加载过了。
-                interceptorServiceWrappers.add(new NodeInterceptor.InterceptorServiceWrapper(entry.getName(), serviceImplClass, oldother));
+                interceptorServices.add(oldother);
                 continue;
             }
             final HashSet<String> groups = entry.getGroups(); //groups.isEmpty()表示<services>没有配置groups属性。
@@ -321,26 +323,26 @@ public abstract class NodeServer {
                     Service service;
                     if (localed) { //本地模式
                         service = Sncp.createLocalService(entry.getName(), getExecutor(), application.getResourceFactory(), serviceImplClass,
-                            NodeServer.this.sncpAddress, loadTransport(NodeServer.this.sncpGroup), loadTransports(groups));
+                            NodeServer.this.sncpAddress, NodeServer.this.sncpGroup, groups, entry.getProperty(), loadTransport(NodeServer.this.sncpGroup), loadTransports(groups));
                     } else {
-                        service = Sncp.createRemoteService(entry.getName(), getExecutor(), serviceImplClass, NodeServer.this.sncpAddress, loadTransport(groups));
+                        service = Sncp.createRemoteService(entry.getName(), getExecutor(), serviceImplClass, NodeServer.this.sncpAddress, null, groups, entry.getProperty(), loadTransport(groups));
                     }
                     if (SncpClient.parseMethod(serviceImplClass).isEmpty()) return; //class没有可用的方法， 通常为BaseService
-                    final ServiceWrapper wrapper = new ServiceWrapper(serviceImplClass, service, entry.getName(), localed ? NodeServer.this.sncpGroup : null, groups, entry.getProperty());
-                    for (final Class restype : wrapper.getTypes()) {
-                        if (resourceFactory.find(wrapper.getName(), restype) == null) {
-                            regFactory.register(wrapper.getName(), restype, wrapper.getService());
-                            if (needinject) rf.inject(wrapper.getService()); //动态加载的Service也存在按需加载的注入资源
+                    //final ServiceWrapper wrapper = new ServiceWrapper(serviceImplClass, service, entry.getName(), localed ? NodeServer.this.sncpGroup : null, groups, entry.getProperty());
+                    for (final Class restype : Sncp.getResourceTypes(service)) {
+                        if (resourceFactory.find(entry.getName(), restype) == null) {
+                            regFactory.register(entry.getName(), restype, service);
+                            if (needinject) rf.inject(service); //动态加载的Service也存在按需加载的注入资源
                         } else if (isSNCP() && !entry.isAutoload()) {
-                            throw new RuntimeException(ServiceWrapper.class.getSimpleName() + "(class:" + serviceImplClass.getName() + ", name:" + entry.getName() + ", group:" + groups + ") is repeat.");
+                            throw new RuntimeException(restype.getSimpleName() + "(class:" + serviceImplClass.getName() + ", name:" + entry.getName() + ", group:" + groups + ") is repeat.");
                         }
                     }
-                    if (wrapper.isRemote()) {
-                        remoteServiceWrappers.add(wrapper);
+                    if (Sncp.isRemote(service)) {
+                        remoteServices.add(service);
                     } else {
-                        localServiceWrappers.add(wrapper);
-                        interceptorServiceWrappers.add(new NodeInterceptor.InterceptorServiceWrapper(entry.getName(), serviceImplClass, service));
-                        if (consumer != null) consumer.accept(wrapper);
+                        localServices.add(service);
+                        interceptorServices.add(service);
+                        if (consumer != null) consumer.accept(service);
                     }
                 } catch (RuntimeException ex) {
                     throw ex;
@@ -352,7 +354,9 @@ public abstract class NodeServer {
                 ResourceFactory.ResourceLoader resourceLoader = (ResourceFactory rf, final Object src, final String resourceName, Field field, final Object attachment) -> {
                     runner.accept(rf, true);
                 };
-                for (final Class restype : ServiceWrapper.parseTypes(entry.getType())) {
+                ResourceType rty = entry.getType().getAnnotation(ResourceType.class);
+                Class[] resTypes = rty == null ? new Class[]{} : rty.value();
+                for (final Class restype : resTypes) {
                     resourceFactory.register(resourceLoader, restype);
                 }
             } else {
@@ -366,30 +370,38 @@ public abstract class NodeServer {
 
         final StringBuilder sb = logger.isLoggable(Level.INFO) ? new StringBuilder() : null;
         //---------------- inject ----------------
-        new ArrayList<>(localServiceWrappers).forEach(y -> {
-            resourceFactory.inject(y.getService(), NodeServer.this);
+        new ArrayList<>(localServices).forEach(y -> {
+            resourceFactory.inject(y, NodeServer.this);
+            calcMaxLength(y);
         });
-        new ArrayList<>(remoteServiceWrappers).forEach(y -> {
-            resourceFactory.inject(y.getService(), NodeServer.this);
+        new ArrayList<>(remoteServices).forEach(y -> {
+            resourceFactory.inject(y, NodeServer.this);
+            calcMaxLength(y);
         });
+
         if (sb != null) {
-            remoteServiceWrappers.forEach(y -> {
-                sb.append(threadName).append(y.toSimpleString()).append(" load and inject").append(LINE_SEPARATOR);
+            remoteServices.forEach(y -> {
+                sb.append(threadName).append(Sncp.toSimpleString(y, maxNameLength, maxClassNameLength)).append(" load and inject").append(LINE_SEPARATOR);
             });
         }
         //----------------- init -----------------
-        List<ServiceWrapper> swlist = new ArrayList<>(localServiceWrappers);
-        Collections.sort(swlist);
-        localServiceWrappers.clear();
-        localServiceWrappers.addAll(swlist);
+        List<Service> swlist = new ArrayList<>(localServices);
+        Collections.sort(swlist, (o1, o2) -> {
+            int rs = Sncp.getResourceTypes(o1)[0].getName().compareTo(Sncp.getResourceTypes(o2)[0].getName());
+            if (rs == 0) rs = Sncp.getResourceName(o1).compareTo(Sncp.getResourceName(o2));
+            return rs;
+        });
+        localServices.clear();
+        localServices.addAll(swlist);
         final List<String> slist = sb == null ? null : new CopyOnWriteArrayList<>();
-        CountDownLatch clds = new CountDownLatch(localServiceWrappers.size());
-        localServiceWrappers.parallelStream().forEach(y -> {
+        CountDownLatch clds = new CountDownLatch(localServices.size());
+        localServices.parallelStream().forEach(y -> {
             try {
                 long s = System.currentTimeMillis();
-                y.getService().init(y.getConf());
+                y.init(Sncp.getConf(y));
                 long e = System.currentTimeMillis() - s;
-                if (slist != null) slist.add(new StringBuilder().append(threadName).append(y.toSimpleString()).append(" load and init in ").append(e).append(" ms").append(LINE_SEPARATOR).toString());
+                String serstr = Sncp.toSimpleString(y, maxNameLength, maxClassNameLength);
+                if (slist != null) slist.add(new StringBuilder().append(threadName).append(serstr).append(" load and init in ").append(e).append(" ms").append(LINE_SEPARATOR).toString());
             } finally {
                 clds.countDown();
             }
@@ -403,6 +415,20 @@ public abstract class NodeServer {
             }
         }
         if (sb != null && sb.length() > 0) logger.log(Level.INFO, sb.toString());
+    }
+
+    private void calcMaxLength(Service y) { //计算toString中的长度
+        maxNameLength = Math.max(maxNameLength, Sncp.getResourceName(y).length());
+        StringBuilder s = new StringBuilder();
+        Class[] types = Sncp.getResourceTypes(y);
+        if (types.length == 1) {
+            s.append(types[0].getName());
+        } else {
+            s.append('[');
+            s.append(Arrays.asList(types).stream().map((Class t) -> t.getName()).collect(Collectors.joining(",")));
+            s.append(']');
+        }
+        maxClassNameLength = Math.max(maxClassNameLength, s.length() + 1);
     }
 
     protected List<Transport> loadTransports(final HashSet<String> groups) {
@@ -559,12 +585,12 @@ public abstract class NodeServer {
     public void shutdown() throws IOException {
         if (interceptor != null) interceptor.preShutdown(this);
         final StringBuilder sb = logger.isLoggable(Level.INFO) ? new StringBuilder() : null;
-        localServiceWrappers.forEach(y -> {
+        localServices.forEach(y -> {
             long s = System.currentTimeMillis();
-            y.getService().destroy(y.getConf());
+            y.destroy(Sncp.getConf(y));
             long e = System.currentTimeMillis() - s;
             if (e > 2 && sb != null) {
-                sb.append(y.toSimpleString()).append(" destroy ").append(e).append("ms").append(LINE_SEPARATOR);
+                sb.append(Sncp.toSimpleString(y, maxNameLength, maxClassNameLength)).append(" destroy ").append(e).append("ms").append(LINE_SEPARATOR);
             }
         });
         if (sb != null && sb.length() > 0) logger.log(Level.INFO, sb.toString());
@@ -575,16 +601,16 @@ public abstract class NodeServer {
         return (T) server;
     }
 
-    public Set<NodeInterceptor.InterceptorServiceWrapper> getInterceptorServiceWrappers() {
-        return new LinkedHashSet<>(interceptorServiceWrappers);
+    public Set<Service> getInterceptorServices() {
+        return new LinkedHashSet<>(interceptorServices);
     }
 
-    public Set<ServiceWrapper> getLocalServiceWrappers() {
-        return new LinkedHashSet<>(localServiceWrappers);
+    public Set<Service> getLocalServices() {
+        return new LinkedHashSet<>(localServices);
     }
 
-    public Set<ServiceWrapper> getRemoteServiceWrappers() {
-        return new LinkedHashSet<>(remoteServiceWrappers);
+    public Set<Service> getRemoteServices() {
+        return new LinkedHashSet<>(remoteServices);
     }
 
 }

@@ -162,7 +162,7 @@ public final class SncpClient {
 
     protected final Consumer<Runnable> executor;
 
-    public <T extends Service> SncpClient(final String serviceName, final Class<T> serviceType, final T service, final Consumer<Runnable> executor,
+    public <T extends Service> SncpClient(final String serviceName, final Class<T> serviceTypeOrImplClass, final T service, final Consumer<Runnable> executor,
         final boolean remote, final Class serviceClass, final InetSocketAddress clientAddress) {
         this.remote = remote;
         this.executor = executor;
@@ -170,7 +170,10 @@ public final class SncpClient {
         this.serviceversion = 0;
         this.clientAddress = clientAddress;
         this.name = serviceName;
-        this.serviceid = Sncp.hash(serviceType.getName() + ':' + serviceName);
+        Class tn = serviceTypeOrImplClass;
+        ResourceType rt = (ResourceType) tn.getAnnotation(ResourceType.class);
+        if (rt != null && rt.value().length > 0) tn = rt.value()[0];
+        this.serviceid = Sncp.hash(tn.getName() + ':' + serviceName);
         final List<SncpAction> methodens = new ArrayList<>();
         //------------------------------------------------------------------------------
         for (java.lang.reflect.Method method : parseMethod(serviceClass)) {

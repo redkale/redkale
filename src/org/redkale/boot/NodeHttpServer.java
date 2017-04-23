@@ -74,7 +74,7 @@ public class NodeHttpServer extends NodeServer {
                 synchronized (regFactory) {
                     Service nodeService = (Service) rf.find(resourceName, WebSocketNode.class);
                     if (nodeService == null) {
-                        nodeService = Sncp.createLocalService(resourceName, getExecutor(), application.getResourceFactory(), WebSocketNodeService.class, (InetSocketAddress) null, (Transport) null, (Collection<Transport>) null);
+                        nodeService = Sncp.createLocalService(resourceName, getExecutor(), application.getResourceFactory(), WebSocketNodeService.class, (InetSocketAddress) null, (String) null, (Set<String>) null, (AnyValue) null, (Transport) null, (Collection<Transport>) null);
                         regFactory.register(resourceName, WebSocketNode.class, nodeService);
                         resourceFactory.inject(nodeService, self);
                         logger.fine("[" + Thread.currentThread().getName() + "] Load Service " + nodeService);
@@ -124,9 +124,9 @@ public class NodeHttpServer extends NodeServer {
                 ss.add(new AbstractMap.SimpleEntry<>(clazz.getName(), mappings));
             }
         }
+        int max = 0;
         if (ss != null && sb != null) {
             Collections.sort(ss, (AbstractMap.SimpleEntry<String, String[]> o1, AbstractMap.SimpleEntry<String, String[]> o2) -> o1.getKey().compareTo(o2.getKey()));
-            int max = 0;
             for (AbstractMap.SimpleEntry<String, String[]> as : ss) {
                 if (as.getKey().length() > max) max = as.getKey().length();
             }
@@ -138,18 +138,17 @@ public class NodeHttpServer extends NodeServer {
                 sb.append("  mapping to  ").append(Arrays.toString(as.getValue())).append(LINE_SEPARATOR);
             }
         }
-        if (sb != null && sb.length() > 0) logger.log(Level.INFO, sb.toString());
         if (rest && serverConf != null) {
             for (AnyValue restConf : serverConf.getAnyValues("rest")) {
-                loadRestServlet(prefix, restConf);
+                loadRestServlet(prefix, restConf, sb);
             }
         }
+        if (sb != null && sb.length() > 0) logger.log(Level.INFO, sb.toString());
     }
 
-    protected void loadRestServlet(final String prefix, final AnyValue restConf) throws Exception {
+    protected void loadRestServlet(final String prefix, final AnyValue restConf, final StringBuilder sb) throws Exception {
         if (!rest) return;
         if (restConf == null) return; //不存在REST服务
-        final StringBuilder sb = logger.isLoggable(Level.INFO) ? new StringBuilder() : null;
         final String threadName = "[" + Thread.currentThread().getName() + "] ";
         final List<AbstractMap.SimpleEntry<String, String[]>> ss = sb == null ? null : new ArrayList<>();
 
@@ -170,8 +169,9 @@ public class NodeHttpServer extends NodeServer {
 
         final ClassFilter restFilter = ClassFilter.create(restConf.getValue("includes", ""), restConf.getValue("excludes", ""), includeValues, excludeValues);
 
-        super.interceptorServiceWrappers.forEach((wrapper) -> {
-            final Class stype = wrapper.getType();
+        super.interceptorServices.forEach((service) -> {
+            final Class stype = Sncp.getServiceType(service);
+            final String name = Sncp.getResourceName(service);
             RestService rs = (RestService) stype.getAnnotation(RestService.class);
             if (rs != null && rs.ignore()) return;
             if (mustsign && rs == null) return;
@@ -181,17 +181,15 @@ public class NodeHttpServer extends NodeServer {
             if (!autoload && !includeValues.contains(stypename)) return;
             if (!restFilter.accept(stypename)) return;
 
-            RestHttpServlet servlet = httpServer.addRestServlet(wrapper.getName(), stype, wrapper.getService(), baseServletClass, prefix, (AnyValue) null);
+            RestHttpServlet servlet = httpServer.addRestServlet(name, stype, service, baseServletClass, prefix, (AnyValue) null);
             resourceFactory.inject(servlet, NodeHttpServer.this);
-            if (finest) logger.finest("Create RestServlet[resource=" + wrapper.getName() + "] = " + servlet);
+            if (finest) logger.finest(threadName + " Create RestServlet(resource.name='" + name + "') = " + servlet);
             if (ss != null) {
                 String[] mappings = servlet.getClass().getAnnotation(WebServlet.class).value();
                 for (int i = 0; i < mappings.length; i++) {
                     mappings[i] = prefix + mappings[i];
                 }
-                if (servlet.getClass().getSimpleName().charAt(0) != '_') {
-                    ss.add(new AbstractMap.SimpleEntry<>(servlet.getClass().getName(), mappings));
-                }
+                ss.add(new AbstractMap.SimpleEntry<>(servlet.getClass().getName(), mappings));
             }
         });
         //输出信息
@@ -201,6 +199,7 @@ public class NodeHttpServer extends NodeServer {
             for (AbstractMap.SimpleEntry<String, String[]> as : ss) {
                 if (as.getKey().length() > max) max = as.getKey().length();
             }
+            sb.append(threadName).append(" ").append(LINE_SEPARATOR);
             for (AbstractMap.SimpleEntry<String, String[]> as : ss) {
                 sb.append(threadName).append(" Load ").append(as.getKey());
                 for (int i = 0; i < max - as.getKey().length(); i++) {
@@ -209,6 +208,5 @@ public class NodeHttpServer extends NodeServer {
                 sb.append("  mapping to  ").append(Arrays.toString(as.getValue())).append(LINE_SEPARATOR);
             }
         }
-        if (sb != null && sb.length() > 0) logger.log(Level.INFO, sb.toString());
     }
 }

@@ -5,7 +5,6 @@
  */
 package org.redkale.test.service;
 
-import java.util.HashSet;
 import org.redkale.net.sncp.*;
 import org.redkale.service.Service;
 import org.redkale.util.*;
@@ -26,7 +25,7 @@ public class TestService implements Service {
     
     public static void main(String[] args) throws Throwable {
         SncpServer cserver = new SncpServer();
-        cserver.addSncpServlet(new ServiceWrapper(new TestService(), "", "", new HashSet<>(), null));
+        cserver.addSncpServlet(new TestService());
         cserver.init(AnyValue.DefaultAnyValue.create("port", 5577));
     }
 }

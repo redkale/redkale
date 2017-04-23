@@ -38,15 +38,15 @@ public final class SncpServer extends Server<DLong, SncpContext, SncpRequest, Sn
         super.init(config);
     }
 
-    public void addSncpServlet(ServiceWrapper entry) {
-        for (Class type : entry.getTypes()) {
-            SncpDynServlet sds = new SncpDynServlet(BsonFactory.root().getConvert(), entry.getName(), type, entry.getService());
-            this.prepare.addServlet(sds, null, entry.getConf());
+    public void addSncpServlet(Service sncpService) {
+        for (Class type : Sncp.getResourceTypes(sncpService)) {
+            SncpDynServlet sds = new SncpDynServlet(BsonFactory.root().getConvert(), Sncp.getResourceName(sncpService), type, sncpService);
+            this.prepare.addServlet(sds, null, Sncp.getConf(sncpService));
         }
     }
 
-    public <T extends Service> void addSncpServlet(Class<T> serviceType, String name, T service, AnyValue conf) {
-        SncpDynServlet sds = new SncpDynServlet(BsonFactory.root().getConvert(), name, serviceType, service);
+    public <T extends Service> void addSncpServlet(Class<T> serviceTypeClass, String name, T service, AnyValue conf) {
+        SncpDynServlet sds = new SncpDynServlet(BsonFactory.root().getConvert(), name, serviceTypeClass, service);
         this.prepare.addServlet(sds, null, conf);
     }
 

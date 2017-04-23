@@ -10,6 +10,7 @@ import java.util.*;
 import java.util.logging.*;
 import org.redkale.net.*;
 import org.redkale.net.sncp.*;
+import org.redkale.service.Service;
 import org.redkale.util.*;
 
 /**
@@ -48,8 +49,8 @@ public class NodeSncpServer extends NodeServer {
         return sncpServer == null ? null : sncpServer.getSocketAddress();
     }
 
-    public void consumerAccept(ServiceWrapper wrapper) {
-        if (this.consumer != null) this.consumer.accept(wrapper);
+    public void consumerAccept(Service service) {
+        if (this.consumer != null) this.consumer.accept(service);
     }
 
     @Override

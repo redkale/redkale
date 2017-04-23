@@ -7,6 +7,7 @@ package org.redkale.test.sncp;
 
 import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
+import java.util.HashSet;
 import java.util.concurrent.CompletableFuture;
 import org.redkale.net.sncp.*;
 import org.redkale.service.*;
@@ -97,7 +98,7 @@ public class SncpTestServiceImpl implements SncpTestIService {
     }
 
     public static void main(String[] args) throws Exception {
-        Service service = Sncp.createLocalService("", null, ResourceFactory.root(), SncpTestServiceImpl.class, new InetSocketAddress("127.0.0.1", 7070), null, null);
+        Service service = Sncp.createLocalService("", null, ResourceFactory.root(), SncpTestServiceImpl.class, new InetSocketAddress("127.0.0.1", 7070), "", new HashSet<>(), (AnyValue) null, null, null);
         for (Method method : service.getClass().getDeclaredMethods()) {
             System.out.println(method);
         }
@@ -106,7 +107,7 @@ public class SncpTestServiceImpl implements SncpTestIService {
             System.out.println(method);
         }
         System.out.println("-----------------------------------");
-        service = Sncp.createRemoteService("", null, SncpTestServiceImpl.class, new InetSocketAddress("127.0.0.1", 7070), null);
+        service = Sncp.createSimpleRemoteService("",  SncpTestServiceImpl.class, new InetSocketAddress("127.0.0.1", 7070), null);
         for (Method method : service.getClass().getDeclaredMethods()) {
             System.out.println(method);
         }
@@ -115,7 +116,7 @@ public class SncpTestServiceImpl implements SncpTestIService {
             System.out.println(method);
         }
         System.out.println("-----------------------------------");
-        service = Sncp.createRemoteService("", null, SncpTestIService.class, new InetSocketAddress("127.0.0.1", 7070), null);
+        service = Sncp.createSimpleRemoteService("",  SncpTestIService.class, new InetSocketAddress("127.0.0.1", 7070), null);
         for (Method method : service.getClass().getDeclaredMethods()) {
             System.out.println(method);
         }
