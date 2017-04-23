@@ -51,6 +51,7 @@ public interface DataSource {
      * @param handler 回调函数
      * @param values  Entity对象
      */
+    @Deprecated
     public <T> void insertAsync(final AsyncHandler<Void, T[]> handler, final T... values);
 
     //-------------------------deleteAsync--------------------------
@@ -86,6 +87,7 @@ public interface DataSource {
      *
      *
      */
+    @Deprecated
     public <T> void deleteAsync(final AsyncHandler<Integer, T[]> handler, final T... values);
 
     /**
@@ -123,6 +125,7 @@ public interface DataSource {
      *
      *
      */
+    @Deprecated
     public <T> void deleteAsync(final AsyncHandler<Integer, Serializable[]> handler, final Class<T> clazz, final Serializable... ids);
 
     /**
@@ -160,6 +163,7 @@ public interface DataSource {
      *
      *
      */
+    @Deprecated
     public <T> void deleteAsync(final AsyncHandler<Integer, FilterNode> handler, final Class<T> clazz, final FilterNode node);
 
     /**
@@ -203,6 +207,7 @@ public interface DataSource {
      *
      *
      */
+    @Deprecated
     public <T> void deleteAsync(final AsyncHandler<Integer, FilterNode> handler, final Class<T> clazz, final Flipper flipper, final FilterNode node);
 
     //------------------------updateAsync---------------------------
@@ -247,6 +252,7 @@ public interface DataSource {
      *
      *
      */
+    @Deprecated
     public <T> void updateAsync(final AsyncHandler<Integer, T[]> handler, final T... values);
 
     /**
@@ -293,6 +299,7 @@ public interface DataSource {
      *
      *
      */
+    @Deprecated
     public <T> void updateColumnAsync(final AsyncHandler<Integer, Serializable> handler, final Class<T> clazz, final Serializable id, final String column, final Serializable value);
 
     /**
@@ -339,6 +346,7 @@ public interface DataSource {
      *
      *
      */
+    @Deprecated
     public <T> void updateColumnAsync(final AsyncHandler<Integer, FilterNode> handler, final Class<T> clazz, final String column, final Serializable value, final FilterNode node);
 
     /**
@@ -382,6 +390,7 @@ public interface DataSource {
      *
      *
      */
+    @Deprecated
     public <T> void updateColumnAsync(final AsyncHandler<Integer, Serializable> handler, final Class<T> clazz, final Serializable id, final ColumnValue... values);
 
     /**
@@ -428,6 +437,7 @@ public interface DataSource {
      *
      *
      */
+    @Deprecated
     public <T> void updateColumnAsync(final AsyncHandler<Integer, FilterNode> handler, final Class<T> clazz, final FilterNode node, final ColumnValue... values);
 
     /**
@@ -477,6 +487,7 @@ public interface DataSource {
      *
      *
      */
+    @Deprecated
     public <T> void updateColumnAsync(final AsyncHandler<Integer, FilterNode> handler, final Class<T> clazz, final FilterNode node, final Flipper flipper, final ColumnValue... values);
 
     /**
@@ -516,6 +527,7 @@ public interface DataSource {
      * @param columns 需更新的字段名
      *
      */
+    @Deprecated
     public <T> void updateColumnAsync(final AsyncHandler<Integer, T> handler, final T bean, final String... columns);
 
     /**
@@ -559,6 +571,7 @@ public interface DataSource {
      *
      *
      */
+    @Deprecated
     public <T> void updateColumnAsync(final AsyncHandler<Integer, FilterNode> handler, final T bean, final FilterNode node, final String... columns);
 
     /**
@@ -599,6 +612,7 @@ public interface DataSource {
      *
      *
      */
+    @Deprecated
     public <T> void updateColumnAsync(final AsyncHandler<Integer, T> handler, final T bean, final SelectColumn selects);
 
     /**
@@ -642,6 +656,7 @@ public interface DataSource {
      *
      *
      */
+    @Deprecated
     public <T> void updateColumnAsync(final AsyncHandler<Integer, FilterNode> handler, final T bean, final FilterNode node, final SelectColumn selects);
 
     //############################################# 查询接口 #############################################
@@ -684,6 +699,7 @@ public interface DataSource {
      *
      *
      */
+    @Deprecated
     public void getNumberResultAsync(final AsyncHandler<Number, String> handler, final Class entityClass, final FilterFunc func, final String column);
 
     /**
@@ -728,6 +744,7 @@ public interface DataSource {
      *
      *
      */
+    @Deprecated
     public <B extends FilterBean> void getNumberResultAsync(final AsyncHandler<Number, B> handler, final Class entityClass, final FilterFunc func, final String column, final B bean);
 
     /**
@@ -771,6 +788,7 @@ public interface DataSource {
      *
      *
      */
+    @Deprecated
     public void getNumberResultAsync(final AsyncHandler<Number, FilterNode> handler, final Class entityClass, final FilterFunc func, final String column, final FilterNode node);
 
     /**
@@ -813,6 +831,7 @@ public interface DataSource {
      * @param column      指定字段
      *
      */
+    @Deprecated
     public void getNumberResultAsync(final AsyncHandler<Number, String> handler, final Class entityClass, final FilterFunc func, final Number defVal, final String column);
 
     /**
@@ -858,6 +877,7 @@ public interface DataSource {
      * @param bean        过滤条件
      *
      */
+    @Deprecated
     public void getNumberResultAsync(final AsyncHandler<Number, String> handler, final Class entityClass, final FilterFunc func, final Number defVal, final String column, final FilterBean bean);
 
     /**
@@ -904,6 +924,7 @@ public interface DataSource {
      *
      *
      */
+    @Deprecated
     public void getNumberResultAsync(final AsyncHandler<Number, String> handler, final Class entityClass, final FilterFunc func, final Number defVal, final String column, final FilterNode node);
 
     /**
@@ -943,6 +964,7 @@ public interface DataSource {
      * @param columns     聚合字段
      *
      */
+    @Deprecated
     public <N extends Number> void getNumberMapAsync(final AsyncHandler<Map<String, N>, FilterFuncColumn[]> handler, final Class entityClass, final FilterFuncColumn... columns);
 
     /**
@@ -986,6 +1008,7 @@ public interface DataSource {
      * @param columns     聚合字段
      *
      */
+    @Deprecated
     public <N extends Number, B extends FilterBean> void getNumberMapAsync(final AsyncHandler<Map<String, N>, B> handler, final Class entityClass, final B bean, final FilterFuncColumn... columns);
 
     /**
@@ -1028,6 +1051,7 @@ public interface DataSource {
      * @param columns     聚合字段
      *
      */
+    @Deprecated
     public <N extends Number> void getNumberMapAsync(final AsyncHandler<Map<String, N>, FilterNode> handler, final Class entityClass, final FilterNode node, final FilterFuncColumn... columns);
 
     /**
@@ -1079,6 +1103,7 @@ public interface DataSource {
      * @param funcColumn  聚合字段
      *
      */
+    @Deprecated
     public <T, K extends Serializable, N extends Number> void queryColumnMapAsync(final AsyncHandler<Map<K, N>, String> handler, final Class<T> entityClass, final String keyColumn, final FilterFunc func, final String funcColumn);
 
     /**
@@ -1133,6 +1158,7 @@ public interface DataSource {
      * @param bean        过滤条件
      *
      */
+    @Deprecated
     public <T, K extends Serializable, N extends Number> void queryColumnMapAsync(final AsyncHandler<Map<K, N>, String> handler, final Class<T> entityClass, final String keyColumn, final FilterFunc func, final String funcColumn, final FilterBean bean);
 
     /**
@@ -1187,6 +1213,7 @@ public interface DataSource {
      * @param node        过滤条件
      *
      */
+    @Deprecated
     public <T, K extends Serializable, N extends Number> void queryColumnMapAsync(final AsyncHandler<Map<K, N>, String> handler, final Class<T> entityClass, final String keyColumn, final FilterFunc func, final String funcColumn, final FilterNode node);
 
     //-----------------------findAsync----------------------------
@@ -1224,6 +1251,7 @@ public interface DataSource {
      * @param pk      主键值
      *
      */
+    @Deprecated
     public <T> void findAsync(final AsyncHandler<T, Serializable> handler, final Class<T> clazz, final Serializable pk);
 
     /**
@@ -1263,6 +1291,7 @@ public interface DataSource {
      * @param pk      主键值
      *
      */
+    @Deprecated
     public <T> void findAsync(final AsyncHandler<T, Serializable> handler, final Class<T> clazz, final SelectColumn selects, final Serializable pk);
 
     /**
@@ -1302,6 +1331,7 @@ public interface DataSource {
      * @param key     过滤字段值
      *
      */
+    @Deprecated
     public <T> void findAsync(final AsyncHandler<T, Serializable> handler, final Class<T> clazz, final String column, final Serializable key);
 
     /**
@@ -1339,6 +1369,7 @@ public interface DataSource {
      * @param bean    过滤条件
      *
      */
+    @Deprecated
     public <T, B extends FilterBean> void findAsync(final AsyncHandler<T, B> handler, final Class<T> clazz, final B bean);
 
     /**
@@ -1375,6 +1406,7 @@ public interface DataSource {
      * @param node    过滤条件
      *
      */
+    @Deprecated
     public <T> void findAsync(final AsyncHandler<T, FilterNode> handler, final Class<T> clazz, final FilterNode node);
 
     /**
@@ -1415,6 +1447,7 @@ public interface DataSource {
      * @param bean    过滤条件
      *
      */
+    @Deprecated
     public <T, B extends FilterBean> void findAsync(final AsyncHandler<T, B> handler, final Class<T> clazz, final SelectColumn selects, final B bean);
 
     /**
@@ -1454,6 +1487,7 @@ public interface DataSource {
      * @param node    过滤条件
      *
      */
+    @Deprecated
     public <T> void findAsync(final AsyncHandler<T, FilterNode> handler, final Class<T> clazz, final SelectColumn selects, final FilterNode node);
 
     /**
@@ -1493,6 +1527,7 @@ public interface DataSource {
      * @param pk      主键值
      *
      */
+    @Deprecated
     public <T> void findColumnAsync(final AsyncHandler<Serializable, Serializable> handler, final Class<T> clazz, final String column, final Serializable pk);
 
     /**
@@ -1533,6 +1568,7 @@ public interface DataSource {
      * @param bean    过滤条件
      *
      */
+    @Deprecated
     public <T, B extends FilterBean> void findColumnAsync(final AsyncHandler<Serializable, B> handler, final Class<T> clazz, final String column, final B bean);
 
     /**
@@ -1572,6 +1608,7 @@ public interface DataSource {
      * @param node    过滤条件
      *
      */
+    @Deprecated
     public <T> void findColumnAsync(final AsyncHandler<Serializable, FilterNode> handler, final Class<T> clazz, final String column, final FilterNode node);
 
     /**
@@ -1614,6 +1651,7 @@ public interface DataSource {
      * @param pk       主键值
      *
      */
+    @Deprecated
     public <T> void findColumnAsync(final AsyncHandler<Serializable, Serializable> handler, final Class<T> clazz, final String column, final Serializable defValue, final Serializable pk);
 
     /**
@@ -1657,6 +1695,7 @@ public interface DataSource {
      * @param bean     过滤条件
      *
      */
+    @Deprecated
     public <T, B extends FilterBean> void findColumnAsync(final AsyncHandler<Serializable, B> handler, final Class<T> clazz, final String column, final Serializable defValue, final B bean);
 
     /**
@@ -1699,6 +1738,7 @@ public interface DataSource {
      * @param node     过滤条件
      *
      */
+    @Deprecated
     public <T> void findColumnAsync(final AsyncHandler<Serializable, FilterNode> handler, final Class<T> clazz, final String column, final Serializable defValue, final FilterNode node);
 
     /**
@@ -1735,6 +1775,7 @@ public interface DataSource {
      * @param pk      主键值
      *
      */
+    @Deprecated
     public <T> void existsAsync(final AsyncHandler<Boolean, Serializable> handler, final Class<T> clazz, final Serializable pk);
 
     /**
@@ -1772,6 +1813,7 @@ public interface DataSource {
      * @param bean    过滤条件
      *
      */
+    @Deprecated
     public <T, B extends FilterBean> void existsAsync(final AsyncHandler<Boolean, B> handler, final Class<T> clazz, final B bean);
 
     /**
@@ -1808,6 +1850,7 @@ public interface DataSource {
      * @param node    过滤条件
      *
      */
+    @Deprecated
     public <T> void existsAsync(final AsyncHandler<Boolean, FilterNode> handler, final Class<T> clazz, final FilterNode node);
 
     //-----------------------list set----------------------------
@@ -1854,6 +1897,7 @@ public interface DataSource {
      * @param key            过滤字段值
      *
      */
+    @Deprecated
     public <T, V extends Serializable> void queryColumnSetAsync(final AsyncHandler<HashSet<V>, String> handler, final String selectedColumn, final Class<T> clazz, final String column, final Serializable key);
 
     /**
@@ -1897,6 +1941,7 @@ public interface DataSource {
      * @param bean           过滤条件
      *
      */
+    @Deprecated
     public <T, V extends Serializable, B extends FilterBean> void queryColumnSetAsync(final AsyncHandler<HashSet<V>, B> handler, final String selectedColumn, final Class<T> clazz, final B bean);
 
     /**
@@ -1939,6 +1984,7 @@ public interface DataSource {
      * @param node           过滤条件
      *
      */
+    @Deprecated
     public <T, V extends Serializable> void queryColumnSetAsync(final AsyncHandler<HashSet<V>, FilterNode> handler, final String selectedColumn, final Class<T> clazz, final FilterNode node);
 
     /**
@@ -1984,6 +2030,7 @@ public interface DataSource {
      * @param key            过滤字段值
      *
      */
+    @Deprecated
     public <T, V extends Serializable> void queryColumnListAsync(final AsyncHandler<List<V>, Serializable> handler, final String selectedColumn, final Class<T> clazz, final String column, final Serializable key);
 
     /**
@@ -2027,6 +2074,7 @@ public interface DataSource {
      * @param bean           过滤条件
      *
      */
+    @Deprecated
     public <T, V extends Serializable, B extends FilterBean> void queryColumnListAsync(final AsyncHandler<List<V>, B> handler, final String selectedColumn, final Class<T> clazz, final B bean);
 
     /**
@@ -2069,6 +2117,7 @@ public interface DataSource {
      * @param node           过滤条件
      *
      */
+    @Deprecated
     public <T, V extends Serializable> void queryColumnListAsync(final AsyncHandler<List<V>, FilterNode> handler, final String selectedColumn, final Class<T> clazz, final FilterNode node);
 
     /**
@@ -2115,6 +2164,7 @@ public interface DataSource {
      * @param bean           过滤条件
      *
      */
+    @Deprecated
     public <T, V extends Serializable, B extends FilterBean> void queryColumnListAsync(final AsyncHandler<List<V>, B> handler, final String selectedColumn, final Class<T> clazz, final Flipper flipper, final B bean);
 
     /**
@@ -2160,6 +2210,7 @@ public interface DataSource {
      * @param node           过滤条件
      *
      */
+    @Deprecated
     public <T, V extends Serializable> void queryColumnListAsync(final AsyncHandler<List<V>, FilterNode> handler, final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterNode node);
 
     /**
@@ -2206,6 +2257,7 @@ public interface DataSource {
      * @param bean           过滤条件
      *
      */
+    @Deprecated
     public <T, V extends Serializable, B extends FilterBean> void queryColumnSheetAsync(final AsyncHandler<Sheet<V>, B> handler, final String selectedColumn, final Class<T> clazz, final Flipper flipper, final B bean);
 
     /**
@@ -2251,6 +2303,7 @@ public interface DataSource {
      * @param node           过滤条件
      *
      */
+    @Deprecated
     public <T, V extends Serializable> void queryColumnSheetAsync(final AsyncHandler<Sheet<V>, FilterNode> handler, final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterNode node);
 
     /**
@@ -2290,6 +2343,7 @@ public interface DataSource {
      * @param key     过滤字段值
      *
      */
+    @Deprecated
     public <T> void queryListAsync(final AsyncHandler<List<T>, Serializable> handler, final Class<T> clazz, final String column, final Serializable key);
 
     /**
@@ -2327,6 +2381,7 @@ public interface DataSource {
      * @param bean    过滤条件
      *
      */
+    @Deprecated
     public <T, B extends FilterBean> void queryListAsync(final AsyncHandler<List<T>, B> handler, final Class<T> clazz, final B bean);
 
     /**
@@ -2363,6 +2418,7 @@ public interface DataSource {
      * @param node    过滤条件
      *
      */
+    @Deprecated
     public <T> void queryListAsync(final AsyncHandler<List<T>, FilterNode> handler, final Class<T> clazz, final FilterNode node);
 
     /**
@@ -2403,6 +2459,7 @@ public interface DataSource {
      * @param bean    过滤条件
      *
      */
+    @Deprecated
     public <T, B extends FilterBean> void queryListAsync(final AsyncHandler<List<T>, B> handler, final Class<T> clazz, final SelectColumn selects, final B bean);
 
     /**
@@ -2442,6 +2499,7 @@ public interface DataSource {
      * @param node    过滤条件
      *
      */
+    @Deprecated
     public <T> void queryListAsync(final AsyncHandler<List<T>, FilterNode> handler, final Class<T> clazz, final SelectColumn selects, final FilterNode node);
 
     /**
@@ -2484,6 +2542,7 @@ public interface DataSource {
      * @param key     过滤字段值
      *
      */
+    @Deprecated
     public <T> void queryListAsync(final AsyncHandler<List<T>, Serializable> handler, final Class<T> clazz, final Flipper flipper, final String column, final Serializable key);
 
     /**
@@ -2524,6 +2583,7 @@ public interface DataSource {
      * @param bean    过滤条件
      *
      */
+    @Deprecated
     public <T, B extends FilterBean> void queryListAsync(final AsyncHandler<List<T>, B> handler, final Class<T> clazz, final Flipper flipper, final B bean);
 
     /**
@@ -2565,6 +2625,7 @@ public interface DataSource {
      * @param node    过滤条件
      *
      */
+    @Deprecated
     public <T> void queryListAsync(final AsyncHandler<List<T>, FilterNode> handler, final Class<T> clazz, final Flipper flipper, final FilterNode node);
 
     /**
@@ -2608,6 +2669,7 @@ public interface DataSource {
      * @param bean    过滤条件
      *
      */
+    @Deprecated
     public <T, B extends FilterBean> void queryListAsync(final AsyncHandler<List<T>, B> handler, final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final B bean);
 
     /**
@@ -2650,6 +2712,7 @@ public interface DataSource {
      * @param node    过滤条件
      *
      */
+    @Deprecated
     public <T> void queryListAsync(final AsyncHandler<List<T>, FilterNode> handler, final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterNode node);
 
     //-----------------------sheet----------------------------
@@ -2691,6 +2754,7 @@ public interface DataSource {
      * @param bean    过滤条件
      *
      */
+    @Deprecated
     public <T, B extends FilterBean> void querySheetAsync(final AsyncHandler<Sheet<T>, B> handler, final Class<T> clazz, final Flipper flipper, final B bean);
 
     /**
@@ -2730,6 +2794,7 @@ public interface DataSource {
      * @param node    过滤条件
      *
      */
+    @Deprecated
     public <T> void querySheetAsync(final AsyncHandler<Sheet<T>, FilterNode> handler, final Class<T> clazz, final Flipper flipper, final FilterNode node);
 
     /**
@@ -2773,6 +2838,7 @@ public interface DataSource {
      * @param bean    过滤条件
      *
      */
+    @Deprecated
     public <T, B extends FilterBean> void querySheetAsync(final AsyncHandler<Sheet<T>, B> handler, final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final B bean);
 
     /**
@@ -2815,6 +2881,7 @@ public interface DataSource {
      * @param node    过滤条件
      *
      */
+    @Deprecated
     public <T> void querySheetAsync(final AsyncHandler<Sheet<T>, FilterNode> handler, final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterNode node);
 
     //-----------------------direct----------------------------
