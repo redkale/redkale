@@ -27,6 +27,10 @@ public class RestOutput<T> {
 
     private T result;
 
+    private int status = 0; //不设置则为 200
+
+    private String message;
+
     public RestOutput() {
     }
 
@@ -76,6 +80,22 @@ public class RestOutput<T> {
 
     public void setResult(T result) {
         this.result = result;
+    }
+
+    public int getStatus() {
+        return status;
+    }
+
+    public void setStatus(int status) {
+        this.status = status;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
     }
 
 }

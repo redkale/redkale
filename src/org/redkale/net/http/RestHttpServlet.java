@@ -47,11 +47,13 @@ public abstract class RestHttpServlet<T> extends HttpBaseServlet {
         if (output.getContentType() != null) response.setContentType(output.getContentType());
         response.addHeader(output.getHeaders());
         response.addCookie(output.getCookies());
-
+        response.setStatus(output.getStatus() < 1 ? 200 : output.getStatus());
         if (output.getResult() instanceof File) {
             response.finish((File) output.getResult());
         } else if (output.getResult() instanceof String) {
             response.finish((String) output.getResult());
+        } else if (output.getResult() == null) {
+            response.finish(output.getMessage());
         } else {
             response.finishJson(output.getResult());
         }
