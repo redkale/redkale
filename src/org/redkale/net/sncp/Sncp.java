@@ -770,7 +770,7 @@ public abstract class Sncp {
      * @param name                资源名
      * @param executor            线程池
      * @param resourceFactory     资源容器
-     * @param serviceClass        Service类
+     * @param serviceImplClass        Service类
      * @param clientAddress       本地IP地址
      * @param sameGroupTransport  同组的通信组件
      * @param diffGroupTransports 异组的通信组件列表
@@ -779,9 +779,9 @@ public abstract class Sncp {
      */
     @SuppressWarnings("unchecked")
     public static <T extends Service> T createLocalService(final String name, final Consumer<Runnable> executor, final ResourceFactory resourceFactory,
-        final Class<T> serviceClass, final InetSocketAddress clientAddress, final Transport sameGroupTransport, final Collection<Transport> diffGroupTransports) {
+        final Class<T> serviceImplClass, final InetSocketAddress clientAddress, final Transport sameGroupTransport, final Collection<Transport> diffGroupTransports) {
         try {
-            final Class newClazz = createLocalServiceClass(name, serviceClass);
+            final Class newClazz = createLocalServiceClass(name, serviceImplClass);
             T rs = (T) newClazz.newInstance();
             //--------------------------------------            
             Service remoteService = null;
@@ -813,7 +813,7 @@ public abstract class Sncp {
                             }
                         }
                         if (remoteService == null && remoteTransport != null) {
-                            remoteService = createRemoteService(name, executor, serviceClass, clientAddress, remoteTransport);
+                            remoteService = createRemoteService(name, executor, serviceImplClass, clientAddress, remoteTransport);
                         }
                         if (remoteService != null) field.set(rs, remoteService);
                     }
@@ -824,7 +824,7 @@ public abstract class Sncp {
                 try {
                     Field e = newClazz.getDeclaredField(FIELDPREFIX + "_client");
                     e.setAccessible(true);
-                    client = new SncpClient(name, serviceClass, rs, executor, false, newClazz, clientAddress);
+                    client = new SncpClient(name, serviceImplClass, rs, executor, false, newClazz, clientAddress);
                     e.set(rs, client);
                 } catch (NoSuchFieldException ne) {
                 }
@@ -937,21 +937,21 @@ public abstract class Sncp {
      * @param <T>           Service泛型
      * @param name          资源名
      * @param executor      线程池
-     * @param serviceClass  Service类
+     * @param serviceTypeOrImplClass  Service类
      * @param clientAddress 本地IP地址
      * @param transport     通信组件
      *
      * @return Service的远程模式实例
      */
     @SuppressWarnings("unchecked")
-    public static <T extends Service> T createRemoteService(final String name, final Consumer<Runnable> executor, final Class<T> serviceClass,
+    public static <T extends Service> T createRemoteService(final String name, final Consumer<Runnable> executor, final Class<T> serviceTypeOrImplClass,
         final InetSocketAddress clientAddress, final Transport transport) {
-        if (serviceClass == null) return null;
-        if (!Service.class.isAssignableFrom(serviceClass)) return null;
-        int mod = serviceClass.getModifiers();
-        boolean realed = !(java.lang.reflect.Modifier.isAbstract(mod) || serviceClass.isInterface());
+        if (serviceTypeOrImplClass == null) return null;
+        if (!Service.class.isAssignableFrom(serviceTypeOrImplClass)) return null;
+        int mod = serviceTypeOrImplClass.getModifiers();
+        boolean realed = !(java.lang.reflect.Modifier.isAbstract(mod) || serviceTypeOrImplClass.isInterface());
         if (!java.lang.reflect.Modifier.isPublic(mod)) return null;
-        final String supDynName = serviceClass.getName().replace('.', '/');
+        final String supDynName = serviceTypeOrImplClass.getName().replace('.', '/');
         final String clientName = SncpClient.class.getName().replace('.', '/');
         final String clientDesc = Type.getDescriptor(SncpClient.class);
         final String sncpDynDesc = Type.getDescriptor(SncpDyn.class);
@@ -960,11 +960,11 @@ public abstract class Sncp {
         final String transportDesc = Type.getDescriptor(Transport.class);
         final String anyValueDesc = Type.getDescriptor(AnyValue.class);
         ClassLoader loader = Sncp.class.getClassLoader();
-        String newDynName = supDynName.substring(0, supDynName.lastIndexOf('/') + 1) + REMOTEPREFIX + serviceClass.getSimpleName();
+        String newDynName = supDynName.substring(0, supDynName.lastIndexOf('/') + 1) + REMOTEPREFIX + serviceTypeOrImplClass.getSimpleName();
         try {
             Class newClazz = Class.forName(newDynName.replace('/', '.'));
             T rs = (T) newClazz.newInstance();
-            SncpClient client = new SncpClient(name, serviceClass, rs, executor, true, realed ? createLocalServiceClass(name, serviceClass) : serviceClass, clientAddress);
+            SncpClient client = new SncpClient(name, serviceTypeOrImplClass, rs, executor, true, realed ? createLocalServiceClass(name, serviceTypeOrImplClass) : serviceTypeOrImplClass, clientAddress);
             Field c = newClazz.getDeclaredField(FIELDPREFIX + "_client");
             c.setAccessible(true);
             c.set(rs, client);
@@ -993,7 +993,7 @@ public abstract class Sncp {
         AsmMethodVisitor mv;
         AnnotationVisitor av0;
 
-        cw.visit(V1_8, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynName, null, serviceClass.isInterface() ? "java/lang/Object" : supDynName, serviceClass.isInterface() ? new String[]{supDynName} : null);
+        cw.visit(V1_8, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynName, null, serviceTypeOrImplClass.isInterface() ? "java/lang/Object" : supDynName, serviceTypeOrImplClass.isInterface() ? new String[]{supDynName} : null);
         {
             av0 = cw.visitAnnotation("Ljavax/annotation/Resource;", true);
             av0.visit("name", name);
@@ -1003,9 +1003,9 @@ public abstract class Sncp {
             av0 = cw.visitAnnotation(Type.getDescriptor(ResourceType.class), true);
             {
                 AnnotationVisitor av1 = av0.visitArray("value");
-                ResourceType rty = serviceClass.getAnnotation(ResourceType.class);
+                ResourceType rty = serviceTypeOrImplClass.getAnnotation(ResourceType.class);
                 if (rty == null) {
-                    av1.visit(null, Type.getType(Type.getDescriptor(serviceClass)));
+                    av1.visit(null, Type.getType(Type.getDescriptor(serviceTypeOrImplClass)));
                 } else {
                     for (Class cl : rty.value()) {
                         av1.visit(null, Type.getType(Type.getDescriptor(cl)));
@@ -1021,7 +1021,7 @@ public abstract class Sncp {
             av0.visitEnd();
         }
         { //给新类加上 原有的Annotation
-            for (Annotation ann : serviceClass.getAnnotations()) {
+            for (Annotation ann : serviceTypeOrImplClass.getAnnotations()) {
                 if (ann instanceof Resource || ann instanceof SncpDyn || ann instanceof ResourceType) continue;
                 visitAnnotation(cw.visitAnnotation(Type.getDescriptor(ann.annotationType()), true), ann);
             }
@@ -1054,7 +1054,7 @@ public abstract class Sncp {
             mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null));
             //mv.setDebug(true);
             mv.visitVarInsn(ALOAD, 0);
-            mv.visitMethodInsn(INVOKESPECIAL, serviceClass.isInterface() ? "java/lang/Object" : supDynName, "<init>", "()V", false);
+            mv.visitMethodInsn(INVOKESPECIAL, serviceTypeOrImplClass.isInterface() ? "java/lang/Object" : supDynName, "<init>", "()V", false);
             mv.visitInsn(RETURN);
             mv.visitMaxs(1, 1);
             mv.visitEnd();
@@ -1090,7 +1090,7 @@ public abstract class Sncp {
             mv.visitEnd();
         }
         int i = -1;
-        for (final SncpAction entry : SncpClient.getSncpActions(realed ? createLocalServiceClass(name, serviceClass) : serviceClass)) {
+        for (final SncpAction entry : SncpClient.getSncpActions(realed ? createLocalServiceClass(name, serviceTypeOrImplClass) : serviceTypeOrImplClass)) {
             final int index = ++i;
             final java.lang.reflect.Method method = entry.method;
             {
@@ -1201,7 +1201,7 @@ public abstract class Sncp {
             T rs = (T) newClazz.newInstance();
             Field c = newClazz.getDeclaredField(FIELDPREFIX + "_client");
             c.setAccessible(true);
-            SncpClient client = new SncpClient(name, serviceClass, rs, executor, true, realed ? createLocalServiceClass(name, serviceClass) : serviceClass, clientAddress);
+            SncpClient client = new SncpClient(name, serviceTypeOrImplClass, rs, executor, true, realed ? createLocalServiceClass(name, serviceTypeOrImplClass) : serviceTypeOrImplClass, clientAddress);
             c.set(rs, client);
             Field t = newClazz.getDeclaredField(FIELDPREFIX + "_transport");
             t.setAccessible(true);

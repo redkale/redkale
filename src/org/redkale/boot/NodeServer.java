@@ -292,54 +292,54 @@ public abstract class NodeServer {
         ResourceFactory regFactory = isSNCP() ? application.getResourceFactory() : resourceFactory;
 
         for (FilterEntry<Service> entry : entrys) { //service实现类
-            final Class<? extends Service> type = entry.getType();
-            if (Modifier.isFinal(type.getModifiers())) continue; //修饰final的类跳过
-            if (!Modifier.isPublic(type.getModifiers())) continue;
+            final Class<? extends Service> serviceImplClass = entry.getType();
+            if (Modifier.isFinal(serviceImplClass.getModifiers())) continue; //修饰final的类跳过
+            if (!Modifier.isPublic(serviceImplClass.getModifiers())) continue;
             if (entry.isExpect()) {
-                if (Modifier.isAbstract(type.getModifiers())) continue; //修饰abstract的类跳过
-                if (DataSource.class.isAssignableFrom(type)) continue;
-                if (CacheSource.class.isAssignableFrom(type)) continue;
-                if (DataCacheListener.class.isAssignableFrom(type)) continue;
-                if (WebSocketNode.class.isAssignableFrom(type)) continue;
+                if (Modifier.isAbstract(serviceImplClass.getModifiers())) continue; //修饰abstract的类跳过
+                if (DataSource.class.isAssignableFrom(serviceImplClass)) continue;
+                if (CacheSource.class.isAssignableFrom(serviceImplClass)) continue;
+                if (DataCacheListener.class.isAssignableFrom(serviceImplClass)) continue;
+                if (WebSocketNode.class.isAssignableFrom(serviceImplClass)) continue;
             }
             if (entry.getName().contains("$")) throw new RuntimeException("<name> value cannot contains '$' in " + entry.getProperty());
-            Service oldother = resourceFactory.find(entry.getName(), type);
+            Service oldother = resourceFactory.find(entry.getName(), serviceImplClass);
             if (oldother != null) { //Server加载Service时需要判断是否已经加载过了。
-                interceptorServiceWrappers.add(new NodeInterceptor.InterceptorServiceWrapper(entry.getName(), type, oldother));
+                interceptorServiceWrappers.add(new NodeInterceptor.InterceptorServiceWrapper(entry.getName(), serviceImplClass, oldother));
                 continue;
             }
             final HashSet<String> groups = entry.getGroups(); //groups.isEmpty()表示<services>没有配置groups属性。
             if (groups.isEmpty() && isSNCP() && this.sncpGroup != null) groups.add(this.sncpGroup);
 
-            final boolean localed = (this.sncpAddress == null && entry.isEmptyGroups() && !type.isInterface() && !Modifier.isAbstract(type.getModifiers())) //非SNCP的Server，通常是单点服务
+            final boolean localed = (this.sncpAddress == null && entry.isEmptyGroups() && !serviceImplClass.isInterface() && !Modifier.isAbstract(serviceImplClass.getModifiers())) //非SNCP的Server，通常是单点服务
                 || groups.contains(this.sncpGroup) //本地IP含在内的
                 || (this.sncpGroup == null && entry.isEmptyGroups()) //空的SNCP配置
-                || type.getAnnotation(LocalService.class) != null;//本地模式
-            if (localed && (type.isInterface() || Modifier.isAbstract(type.getModifiers()))) continue; //本地模式不能实例化接口和抽象类的Service类
+                || serviceImplClass.getAnnotation(LocalService.class) != null;//本地模式
+            if (localed && (serviceImplClass.isInterface() || Modifier.isAbstract(serviceImplClass.getModifiers()))) continue; //本地模式不能实例化接口和抽象类的Service类
             final BiConsumer<ResourceFactory, Boolean> runner = (ResourceFactory rf, Boolean needinject) -> {
                 try {
                     Service service;
                     if (localed) { //本地模式
-                        service = Sncp.createLocalService(entry.getName(), getExecutor(), application.getResourceFactory(), type,
+                        service = Sncp.createLocalService(entry.getName(), getExecutor(), application.getResourceFactory(), serviceImplClass,
                             NodeServer.this.sncpAddress, loadTransport(NodeServer.this.sncpGroup), loadTransports(groups));
                     } else {
-                        service = Sncp.createRemoteService(entry.getName(), getExecutor(), type, NodeServer.this.sncpAddress, loadTransport(groups));
+                        service = Sncp.createRemoteService(entry.getName(), getExecutor(), serviceImplClass, NodeServer.this.sncpAddress, loadTransport(groups));
                     }
-                    if (SncpClient.parseMethod(type).isEmpty()) return; //class没有可用的方法， 通常为BaseService
-                    final ServiceWrapper wrapper = new ServiceWrapper(type, service, entry.getName(), localed ? NodeServer.this.sncpGroup : null, groups, entry.getProperty());
+                    if (SncpClient.parseMethod(serviceImplClass).isEmpty()) return; //class没有可用的方法， 通常为BaseService
+                    final ServiceWrapper wrapper = new ServiceWrapper(serviceImplClass, service, entry.getName(), localed ? NodeServer.this.sncpGroup : null, groups, entry.getProperty());
                     for (final Class restype : wrapper.getTypes()) {
                         if (resourceFactory.find(wrapper.getName(), restype) == null) {
                             regFactory.register(wrapper.getName(), restype, wrapper.getService());
                             if (needinject) rf.inject(wrapper.getService()); //动态加载的Service也存在按需加载的注入资源
                         } else if (isSNCP() && !entry.isAutoload()) {
-                            throw new RuntimeException(ServiceWrapper.class.getSimpleName() + "(class:" + type.getName() + ", name:" + entry.getName() + ", group:" + groups + ") is repeat.");
+                            throw new RuntimeException(ServiceWrapper.class.getSimpleName() + "(class:" + serviceImplClass.getName() + ", name:" + entry.getName() + ", group:" + groups + ") is repeat.");
                         }
                     }
                     if (wrapper.isRemote()) {
                         remoteServiceWrappers.add(wrapper);
                     } else {
                         localServiceWrappers.add(wrapper);
-                        interceptorServiceWrappers.add(new NodeInterceptor.InterceptorServiceWrapper(entry.getName(), type, service));
+                        interceptorServiceWrappers.add(new NodeInterceptor.InterceptorServiceWrapper(entry.getName(), serviceImplClass, service));
                         if (consumer != null) consumer.accept(wrapper);
                     }
                 } catch (RuntimeException ex) {
