@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<assembly xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/2.0.0"  
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"  
+          xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/2.0.0 http://maven.apache.org/xsd/assembly-2.0.0.xsd">
+    <id>redkale</id>  
+    <formats>  
+        <format>tar.gz</format>  
+    </formats>  
+    <includeBaseDirectory>false</includeBaseDirectory>
+    <fileSets>
+        <fileSet>  
+            <directory>${project.basedir}/bin</directory>  
+            <outputDirectory>bin</outputDirectory>  
+        </fileSet>  
+        <fileSet>  
+            <directory>${project.basedir}/conf</directory>  
+            <outputDirectory>conf</outputDirectory>  
+        </fileSet>  
+        <fileSet>  
+            <directory>${project.basedir}/logs</directory>  
+            <outputDirectory>logs</outputDirectory>  
+        </fileSet> 
+    </fileSets>
+    <dependencySets>  
+        <dependencySet>  
+            <useProjectArtifact>true</useProjectArtifact>
+            <useTransitiveDependencies>false</useTransitiveDependencies>
+            <outputDirectory>lib</outputDirectory>  
+            <scope>runtime</scope>  
+        </dependencySet>  
+    </dependencySets> 
+</assembly>  
