@@ -50,13 +50,6 @@ public @interface WebServlet {
     int moduleid() default 0;
 
     /**
-     * 参数
-     *
-     * @return WebInitParam[]
-     */
-    WebInitParam[] initParams() default {};
-
-    /**
      * 备注描述
      *
      * @return String

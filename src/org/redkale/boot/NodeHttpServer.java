@@ -109,13 +109,6 @@ public class NodeHttpServer extends NodeServer {
             final String[] mappings = ws.value();
             String pref = ws.repair() ? prefix : "";
             DefaultAnyValue servletConf = (DefaultAnyValue) en.getProperty();
-            WebInitParam[] webparams = ws.initParams();
-            if (webparams.length > 0) {
-                if (servletConf == null) servletConf = new DefaultAnyValue();
-                for (WebInitParam webparam : webparams) {
-                    servletConf.addValue(webparam.name(), webparam.value());
-                }
-            }
             this.httpServer.addHttpServlet(servlet, pref, servletConf, mappings);
             if (ss != null) {
                 for (int i = 0; i < mappings.length; i++) {
