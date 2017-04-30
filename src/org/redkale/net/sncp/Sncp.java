@@ -667,7 +667,7 @@ public abstract class Sncp {
                 mv.visitVarInsn(ALOAD, 0);  //传递 _sameGroupTransport
                 mv.visitFieldInsn(GETFIELD, newDynName, FIELDPREFIX + "_sameGroupTransport", transportDesc);
 
-                final int preparams = 4; //调用selfrunnable之前的参数个数;  _client/_bsonConvert/_jsonConvert/_sameGroupTransport
+                final int preparams = 3; //调用selfrunnable之前的参数个数;  _client/_bsonConvert/_jsonConvert/_sameGroupTransport
 
                 if (index <= 5) {  //第几个 SncpAction 
                     mv.visitInsn(ICONST_0 + index);
