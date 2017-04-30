@@ -62,7 +62,7 @@ public final class ResourceFactory {
     }
 
     public void checkName(String name) {
-        if (name == null || (!name.isEmpty() && !name.matches("^[a-zA-Z0-9_\\-\\.\\[\\]\\(\\)]+$"))) {
+        if (name == null || (!name.isEmpty() && !name.matches("^[a-zA-Z0-9_;\\-\\.\\[\\]\\(\\)]+$"))) {
             throw new IllegalArgumentException("Resource.name(" + name + ") contains illegal character, must be (a-z,A-Z,0-9,_,.,(,),-,[,])");
         }
     }
