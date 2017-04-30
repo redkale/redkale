@@ -258,14 +258,14 @@ public abstract class Sncp {
      *      }
      *
      *      &#64;RpcMultiRun(selfrun = false)
-     * public void createSomeThing(TestBean bean){
-     * //do something
-     * }
+     *      public void createSomeThing(TestBean bean){
+     *          //do something
+     *      }
      *
-     * &#64;RpcMultiRun
-     * public String updateSomeThing(String id){
-     * return "hello" + id;
-     * }
+     *      &#64;RpcMultiRun
+     *      public String updateSomeThing(String id){
+     *          return "hello" + id;
+     *      }
      * }
      * </pre></blockquote>
      *
