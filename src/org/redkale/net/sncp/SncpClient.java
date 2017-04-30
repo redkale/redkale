@@ -367,12 +367,12 @@ public final class SncpClient {
     }
 
     private CompletableFuture<byte[]> remoteSncp0(final AsyncHandler handler, final BsonConvert bsonConvert, final Transport transport, final SocketAddress addr0, final SncpAction action, final Object... params) {
-        Type[] myparamtypes = action.paramTypes;
-        Class[] myparamclass = action.paramClass;
+        final Type[] myparamtypes = action.paramTypes;
+        final Class[] myparamclass = action.paramClass;
         if (action.addressSourceParamIndex >= 0) params[action.addressSourceParamIndex] = this.clientAddress;
         final BsonWriter writer = bsonConvert.pollBsonWriter(transport.getBufferSupplier()); // 将head写入
         writer.writeTo(DEFAULT_HEADER);
-        for (int i = 0; i < params.length; i++) {
+        for (int i = 0; i < myparamtypes.length; i++) {  //params 可能包含: 3 个 boolean
             bsonConvert.convertTo(writer, AsyncHandler.class.isAssignableFrom(myparamclass[i]) ? AsyncHandler.class : myparamtypes[i], params[i]);
         }
         final int reqBodyLength = writer.count() - HEADER_SIZE; //body总长度
