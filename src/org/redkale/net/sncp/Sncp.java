@@ -311,8 +311,8 @@ public abstract class Sncp {
      *      public void _redkale_createSomeThing(boolean selfrunnable, boolean samerunnable, boolean diffrunnable, TestBean bean){
      *          if(selfrunnable) super.createSomeThing(bean);
      *          if (_redkale_client== null) return;
-     *          if (samerunnable) _redkale_client.remoteSameGroup(_redkale_bsonConvert, _redkale_jsonConvert, _sameGroupTransport, 0, true, false, false, bean);
-     *          if (diffrunnable) _redkale_client.remoteDiffGroup(_redkale_bsonConvert, _redkale_jsonConvert, _diffGroupTransports, 0, true, true, false, bean);
+     *          if (samerunnable) _redkale_client.remoteSameGroup(_redkale_bsonConvert, _redkale_jsonConvert, _redkale_sameGroupTransport, 0, true, false, false, bean);
+     *          if (diffrunnable) _redkale_client.remoteDiffGroup(_redkale_bsonConvert, _redkale_jsonConvert, _redkale_diffGroupTransports, 0, true, true, false, bean);
      *      }
      *
      *      &#64;Override
@@ -323,9 +323,9 @@ public abstract class Sncp {
      *      &#64;SncpDyn(remote = false, index = 1)
      *      public String _redkale_updateSomeThing(boolean selfrunnable, boolean samerunnable, boolean diffrunnable, String id){
      *          String rs = super.updateSomeThing(id);
-     *          if (_redkale_client== null) return;
-     *          if (samerunnable) _redkale_client.remoteSameGroup(_redkale_bsonConvert, _redkale_jsonConvert, _sameGroupTransport, 1, true, false, false, id);
-     *          if (diffrunnable) _redkale_client.remoteDiffGroup(_redkale_bsonConvert, _redkale_jsonConvert, _diffGroupTransports, 1, true, true, false, id);
+     *          if (_redkale_client== null) return rs;
+     *          if (samerunnable) _redkale_client.remoteSameGroup(_redkale_bsonConvert, _redkale_jsonConvert, _redkale_sameGroupTransport, 1, true, false, false, id);
+     *          if (diffrunnable) _redkale_client.remoteDiffGroup(_redkale_bsonConvert, _redkale_jsonConvert, _redkale_diffGroupTransports, 1, true, true, false, id);
      *          return rs;
      *      }
      * }
