@@ -85,7 +85,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
     }
 
     public final void postDestroy(HttpContext context, AnyValue conf) {
-        this.node.destroy(conf);
+        this.node.postDestroy(conf);
         super.destroy(context, conf);
         engine.close();
     }

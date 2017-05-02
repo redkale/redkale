@@ -49,7 +49,7 @@ public abstract class WebSocketNode {
 
     }
 
-    public void destroy(AnyValue conf) {
+    public final void postDestroy(AnyValue conf) {
         HashMap<Serializable, Set<String>> nodes = new HashMap<>(localNodes);
         nodes.forEach((k, v) -> {
             new HashSet<>(v).forEach(e -> {
