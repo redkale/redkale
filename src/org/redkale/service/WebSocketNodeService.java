@@ -36,7 +36,7 @@ public class WebSocketNodeService extends WebSocketNode implements Service {
     @Override
     public List<String> getOnlineRemoteAddresses(@RpcTargetAddress InetSocketAddress targetAddress, Serializable groupid) {
         if (localSncpAddress == null || !localSncpAddress.equals(targetAddress)) return remoteOnlineRemoteAddresses(targetAddress, groupid);
-        final Set<String> engineids = localNodes.get(groupid);
+        final Set<String> engineids = localEngines.get(groupid);
         if (engineids == null || engineids.isEmpty()) return null;
         final List<String> rs = new ArrayList<>();
         for (String engineid : engineids) {
@@ -50,7 +50,7 @@ public class WebSocketNodeService extends WebSocketNode implements Service {
 
     @Override
     public int sendMessage(@RpcTargetAddress InetSocketAddress addr, Serializable groupid, boolean recent, Object message, boolean last) {
-        final Set<String> engineids = localNodes.get(groupid);
+        final Set<String> engineids = localEngines.get(groupid);
         if (engineids == null || engineids.isEmpty()) return RETCODE_GROUP_EMPTY;
         int code = RETCODE_GROUP_EMPTY;
         for (String engineid : engineids) {
@@ -70,13 +70,13 @@ public class WebSocketNodeService extends WebSocketNode implements Service {
 
     @Override
     public void connect(Serializable groupid, InetSocketAddress addr) {
-        sncpNodes.appendSetItem(groupid, addr);
+        sncpAddressNodes.appendSetItem(groupid, addr);
         if (finest) logger.finest(WebSocketNodeService.class.getSimpleName() + ".event: " + groupid + " connect from " + addr);
     }
 
     @Override
     public void disconnect(Serializable groupid, InetSocketAddress addr) {
-        sncpNodes.removeSetItem(groupid, addr);
+        sncpAddressNodes.removeSetItem(groupid, addr);
         if (finest) logger.finest(WebSocketNodeService.class.getSimpleName() + ".event: " + groupid + " disconnect from " + addr);
     }
 }
