@@ -111,7 +111,7 @@ public abstract class WebSocketNode {
         return map;
     }
 
-    public final void connect(Serializable groupid, String engineid) {
+    final void connect(Serializable groupid, String engineid) {
         if (finest) logger.finest(localSncpAddress + " receive websocket connect event (" + groupid + " on " + engineid + ").");
         Set<String> engineids = localNodes.get(groupid);
         if (engineids == null) {
@@ -122,7 +122,7 @@ public abstract class WebSocketNode {
         engineids.add(engineid);
     }
 
-    public final void disconnect(Serializable groupid, String engineid) {
+    final void disconnect(Serializable groupid, String engineid) {
         if (finest) logger.finest(localSncpAddress + " receive websocket disconnect event (" + groupid + " on " + engineid + ").");
         Set<String> engineids = localNodes.get(groupid);
         if (engineids == null || engineids.isEmpty()) return;
@@ -137,7 +137,7 @@ public abstract class WebSocketNode {
         engines.put(engine.getEngineid(), engine);
     }
 
-    public final int sendMessage(Serializable groupid, boolean recent, Object message, boolean last) {
+    public int sendMessage(Serializable groupid, boolean recent, Object message, boolean last) {
         final Set<String> engineids = localNodes.get(groupid);
         if (finest) logger.finest("websocket want send message {groupid:" + groupid + ", content:'" + message + "'} from locale node to " + engineids);
         int rscode = RETCODE_GROUP_EMPTY;
