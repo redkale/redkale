@@ -30,6 +30,7 @@ public class WebSocketNodeService extends WebSocketNode implements Service {
 
     @Override
     public void destroy(AnyValue conf) {
+        super.destroy(conf);
     }
 
     @Override
