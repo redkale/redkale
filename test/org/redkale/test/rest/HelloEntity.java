@@ -22,6 +22,12 @@ public class HelloEntity {
     @RestHeader(name = "hello-res")
     private String resname;
 
+    @RestBody
+    private String bodystr;
+
+    @RestBody
+    private byte[] bodys;
+
     @RestAddress
     private String clientaddr;
 
@@ -80,6 +86,22 @@ public class HelloEntity {
 
     public void setResname(String resname) {
         this.resname = resname;
+    }
+
+    public String getBodystr() {
+        return bodystr;
+    }
+
+    public void setBodystr(String bodystr) {
+        this.bodystr = bodystr;
+    }
+
+    public byte[] getBodys() {
+        return bodys;
+    }
+
+    public void setBodys(byte[] bodys) {
+        this.bodys = bodys;
     }
 
     @Override

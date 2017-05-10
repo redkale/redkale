@@ -34,6 +34,8 @@ public class _DynHelloRestServlet2 extends SimpleRestServlet {
         HelloEntity bean = req.getJsonParameter(HelloEntity.class, "bean");
         bean.setClientaddr(req.getRemoteAddr());
         bean.setResname(req.getHeader("hello-res"));
+        bean.setBodys(req.getBody());
+        bean.setBodystr(req.getBodyUTF8());
         UserInfo user = currentUser(req);
         RetResult<HelloEntity> result = service.createHello(user, bean);
         resp.finishJson(result);
@@ -57,6 +59,8 @@ public class _DynHelloRestServlet2 extends SimpleRestServlet {
         HelloEntity bean = req.getJsonParameter(HelloEntity.class, "bean");
         bean.setClientaddr(req.getRemoteAddr());
         bean.setResname(req.getHeader("hello-res"));
+        bean.setBodys(req.getBody());
+        bean.setBodystr(req.getBodyUTF8());
         service.updateHello(bean);
         resp.finishJson(RetResult.success());
     }

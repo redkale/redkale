@@ -283,6 +283,15 @@ public class HttpRequest extends Request<HttpContext> {
     }
 
     /**
+     * 获取请求内容的byte[]
+     *
+     * @return 内容
+     */
+    public byte[] getBody() {
+        return array.getBytes();
+    }
+
+    /**
      * 直接获取body对象
      *
      * @return body对象

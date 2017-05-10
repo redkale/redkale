@@ -32,6 +32,9 @@ public interface HttpRequestDesc {
     //获取请求内容的UTF-8编码字符串
     public String getBodyUTF8();
 
+    //获取请求内容的byte[]
+    public byte[] getBody();
+
     //获取文件上传对象
     public MultiContext getMultiContext();
 
