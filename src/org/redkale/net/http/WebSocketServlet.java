@@ -98,9 +98,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
     @Override
     public final void execute(final HttpRequest request, final HttpResponse response) throws IOException {
         final boolean debug = logger.isLoggable(Level.FINEST);
-        if (!"GET".equalsIgnoreCase(request.getMethod())
-            || !request.getConnection().contains("Upgrade")
-            || !"websocket".equalsIgnoreCase(request.getHeader("Upgrade"))) {
+        if (!request.isWebSocket()) {
             if (debug) logger.finest("WebSocket connect abort, (Not GET Method) or (Connection != Upgrade) or (Upgrade != websocket). request=" + request);
             response.finish(true);
             return;

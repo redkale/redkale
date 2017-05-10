@@ -50,10 +50,10 @@ public abstract class PrepareServlet<K extends Serializable, C extends Context, 
         }
     }
 
-    protected void putMapping(K key, S value) {
+    protected void putMapping(K key, S servlet) {
         synchronized (lock2) {
             Map<K, S> newmappings = new HashMap<>(mappings);
-            newmappings.put(key, value);
+            newmappings.put(key, servlet);
             this.mappings = newmappings;
         }
     }

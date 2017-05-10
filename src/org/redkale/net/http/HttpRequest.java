@@ -73,6 +73,10 @@ public class HttpRequest extends Request<HttpContext> {
         this.remoteAddrHeader = remoteAddrHeader;
     }
 
+    protected boolean isWebSocket() {
+        return connection != null && connection.contains("Upgrade") && "GET".equalsIgnoreCase(method) && "websocket".equalsIgnoreCase(getHeader("Upgrade"));
+    }
+
     protected void setKeepAlive(boolean keepAlive) {
         this.keepAlive = keepAlive;
     }

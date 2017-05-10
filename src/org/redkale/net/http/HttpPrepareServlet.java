@@ -29,7 +29,11 @@ public class HttpPrepareServlet extends PrepareServlet<String, HttpContext, Http
 
     protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
 
-    protected SimpleEntry<Predicate<String>, HttpServlet>[] regArray = new SimpleEntry[0];
+    protected SimpleEntry<Predicate<String>, HttpServlet>[] regArray = null; //regArray 包含 regWsArray
+
+    protected Map<String, WebSocketServlet> wsmappings = new HashMap<>(); //super.mappings 包含 wsmappings
+
+    protected SimpleEntry<Predicate<String>, WebSocketServlet>[] regWsArray = null;
 
     protected HttpServlet resourceHttpServlet = new HttpResourceServlet();
 
@@ -83,17 +87,34 @@ public class HttpPrepareServlet extends PrepareServlet<String, HttpContext, Http
     public void execute(HttpRequest request, HttpResponse response) throws IOException {
         try {
             final String uri = request.getRequestURI();
-            Servlet<HttpContext, HttpRequest, HttpResponse> servlet = mappingServlet(uri);
-            if (servlet == null && this.regArray != null) {
-                for (SimpleEntry<Predicate<String>, HttpServlet> en : regArray) {
-                    if (en.getKey().test(uri)) {
-                        servlet = en.getValue();
-                        break;
+            Servlet<HttpContext, HttpRequest, HttpResponse> servlet = null;
+            if (request.isWebSocket()) {
+                servlet = wsmappings.get(uri);
+                if (servlet == null && this.regWsArray != null) {
+                    for (SimpleEntry<Predicate<String>, WebSocketServlet> en : regWsArray) {
+                        if (en.getKey().test(uri)) {
+                            servlet = en.getValue();
+                            break;
+                        }
                     }
                 }
+                if (servlet == null) {
+                    response.finish(500, null);
+                    return;
+                }
+            } else {
+                servlet = mappingServlet(uri);
+                if (servlet == null && this.regArray != null) {
+                    for (SimpleEntry<Predicate<String>, HttpServlet> en : regArray) {
+                        if (en.getKey().test(uri)) {
+                            servlet = en.getValue();
+                            break;
+                        }
+                    }
+                }
+                //找不到匹配的HttpServlet则使用静态资源HttpResourceServlet
+                if (servlet == null) servlet = this.resourceHttpServlet;
             }
-            //找不到匹配的HttpServlet则使用静态资源HttpResourceServlet
-            if (servlet == null) servlet = this.resourceHttpServlet;
             servlet.execute(request, response);
         } catch (Exception e) {
             request.getContext().getLogger().log(Level.WARNING, "Servlet occur, forece to close channel. request = " + request, e);
@@ -138,8 +159,22 @@ public class HttpPrepareServlet extends PrepareServlet<String, HttpContext, Http
                         regArray = Arrays.copyOf(regArray, regArray.length + 1);
                         regArray[regArray.length - 1] = new SimpleEntry<>(Pattern.compile(mapping).asPredicate(), servlet);
                     }
+                    if (servlet instanceof WebSocketServlet) {
+                        if (regWsArray == null) {
+                            regWsArray = new SimpleEntry[1];
+                            regWsArray[0] = new SimpleEntry<>(Pattern.compile(mapping).asPredicate(), (WebSocketServlet) servlet);
+                        } else {
+                            regWsArray = Arrays.copyOf(regWsArray, regWsArray.length + 1);
+                            regWsArray[regWsArray.length - 1] = new SimpleEntry<>(Pattern.compile(mapping).asPredicate(), (WebSocketServlet) servlet);
+                        }
+                    }
                 } else if (mapping != null && !mapping.isEmpty()) {
                     putMapping(mapping, servlet);
+                    if (servlet instanceof WebSocketServlet) {
+                        Map<String, WebSocketServlet> newmappings = new HashMap<>(wsmappings);
+                        newmappings.put(mapping, (WebSocketServlet) servlet);
+                        this.wsmappings = newmappings;
+                    }
                 }
                 if (this.allMapStrings.containsKey(mapping)) {
                     Class old = this.allMapStrings.get(mapping);
@@ -185,6 +220,9 @@ public class HttpPrepareServlet extends PrepareServlet<String, HttpContext, Http
             }
         });
         this.allMapStrings.clear();
+        this.wsmappings.clear();
+        this.regArray = null;
+        this.regWsArray = null;
     }
 
 }
