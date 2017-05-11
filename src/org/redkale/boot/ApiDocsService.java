@@ -11,6 +11,7 @@ import java.util.*;
 import javax.persistence.*;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.http.*;
+import org.redkale.service.Service;
 import org.redkale.source.*;
 import org.redkale.util.*;
 
@@ -23,11 +24,11 @@ import org.redkale.util.*;
  *
  * @author zhangjx
  */
-public class ApiDocs extends HttpBaseServlet {
+public class ApiDocsService extends DefaultRestServlet implements Service {
 
     private final Application app; //Application全局对象
 
-    public ApiDocs(Application app) {
+    public ApiDocsService(Application app) {
         this.app = app;
     }
 
@@ -196,7 +197,7 @@ public class ApiDocs extends HttpBaseServlet {
         if (doctemplate.isFile() && doctemplate.canRead()) {
             in = new FileInputStream(doctemplate);
         }
-        if (in == null) in = ApiDocs.class.getResourceAsStream("apidoc-template.html");
+        if (in == null) in = ApiDocsService.class.getResourceAsStream("apidoc-template.html");
         String content = Utility.read(in).replace("'${content}'", json);
         in.close();
         FileOutputStream outhtml = new FileOutputStream(new File(app.getHome(), "apidoc.html"));
@@ -204,8 +205,4 @@ public class ApiDocs extends HttpBaseServlet {
         outhtml.close();
     }
 
-    @Override
-    public void authenticate(int moduleid, int actionid, HttpRequest request, HttpResponse response, HttpServlet next) throws IOException {
-        next.execute(request, response);
-    }
 }

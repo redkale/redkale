@@ -431,7 +431,7 @@ public final class Application {
                             }
                         } else if ("APIDOC".equalsIgnoreCase(new String(bytes))) {
                             try {
-                                new ApiDocs(application).run();
+                                new ApiDocsService(application).run();
                                 buffer.clear();
                                 buffer.put("APIDOC OK".getBytes());
                                 buffer.flip();
@@ -476,7 +476,7 @@ public final class Application {
                     final Application application = Application.create(true);
                     application.init();
                     application.start();
-                    new ApiDocs(application).run();
+                    new ApiDocsService(application).run();
                     logger.info("APIDOC OK");
                     return;
                 }
