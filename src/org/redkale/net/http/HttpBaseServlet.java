@@ -215,6 +215,7 @@ public abstract class HttpBaseServlet extends HttpServlet {
                     if (entry.ignore) {
                         authSuccessServlet.execute(request, response);
                     } else {
+                        response.nextEvent(authSuccessServlet);
                         authenticate(entry.moduleid, entry.actionid, request, response, authSuccessServlet);
                     }
                     return;
@@ -225,28 +226,42 @@ public abstract class HttpBaseServlet extends HttpServlet {
     };
 
     /**
+     * 使用 public void preExecute(HttpRequest request, HttpResponse response) throws IOException 代替
+     *
+     * @param request  HttpRequest
+     * @param response HttpResponse
+     * @param next     HttpServlet
+     *
+     * @deprecated
+     *
+     * @throws IOException IOException
+     */
+    @Deprecated
+    public void preExecute(HttpRequest request, HttpResponse response, final HttpServlet next) throws IOException {
+    }
+
+    /**
      * <p>
      * 预执行方法，在execute方法之前运行，通常用于常规统计或基础检测，例如 : <br>
      * <blockquote><pre>
      *      &#64;Override
-     *      public void preExecute(final HttpRequest request, final HttpResponse response, HttpServlet next) throws IOException {
+     *      public void preExecute(final HttpRequest request, final HttpResponse response) throws IOException {
      *          if (finer) response.setRecycleListener((req, resp) -&#62; {  //记录处理时间比较长的请求
      *              long e = System.currentTimeMillis() - ((HttpRequest) req).getCreatetime();
      *              if (e &#62; 200) logger.finer("http-execute-cost-time: " + e + " ms. request = " + req);
      *          });
-     *          next.execute(request, response);
+     *          response.nextEvent();
      *      }
      * </pre></blockquote>
      * <p>
      *
      * @param request  HttpRequest
      * @param response HttpResponse
-     * @param next     HttpServlet
      *
      * @throws IOException IOException
      */
-    public void preExecute(HttpRequest request, HttpResponse response, final HttpServlet next) throws IOException {
-        next.execute(request, response);
+    public void preExecute(HttpRequest request, HttpResponse response) throws IOException {
+        response.nextEvent();
     }
 
     /**
@@ -298,7 +313,10 @@ public abstract class HttpBaseServlet extends HttpServlet {
 
     @Override
     public final void execute(HttpRequest request, HttpResponse response) throws IOException {
-        preExecute(request, response, preSuccessServlet);
+        response.nextEvent(preSuccessServlet);
+        preExecute(request, response);
+        //兼容以前
+        //preExecute(request, response, preSuccessServlet);
     }
 
     public final void preInit(HttpContext context, AnyValue config) {

@@ -5,6 +5,7 @@
  */
 package org.redkale.net;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.CompletionHandler;
 import java.util.function.BiConsumer;
@@ -33,6 +34,8 @@ public abstract class Response<C extends Context, R extends Request<C>> {
     protected Object output; //输出的结果对象
 
     protected BiConsumer<R, Response<C, R>> recycleListener;
+
+    protected Servlet nextServlet;
 
     private final CompletionHandler finishHandler = new CompletionHandler<Integer, ByteBuffer>() {
 
@@ -114,6 +117,7 @@ public abstract class Response<C extends Context, R extends Request<C>> {
             recycleListener = null;
         }
         this.output = null;
+        this.nextServlet = null;
         request.recycle();
         if (channel != null) {
             if (keepAlive) {
@@ -138,6 +142,20 @@ public abstract class Response<C extends Context, R extends Request<C>> {
         this.channel = channel;
         this.request.channel = channel;
         this.request.createtime = System.currentTimeMillis();
+    }
+
+    @SuppressWarnings("unchecked")
+    protected <S extends Servlet> void nextEvent(S nextServlet) {
+        this.nextServlet = nextServlet;
+    }
+
+    @SuppressWarnings("unchecked")
+    protected void nextEvent() throws IOException {
+        if (this.nextServlet != null) {
+            Servlet s = this.nextServlet;
+            this.nextServlet = null;
+            s.execute(request, this);
+        }
     }
 
     public void setRecycleListener(BiConsumer<R, Response<C, R>> recycleListener) {
