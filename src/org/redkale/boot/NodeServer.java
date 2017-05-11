@@ -244,6 +244,7 @@ public abstract class NodeServer {
                 }
                 field.set(src, source);
                 rf.inject(source, self); // 给其可能包含@Resource的字段赋值;
+                if (source instanceof Service) ((Service) source).init(null);
             } catch (Exception e) {
                 logger.log(Level.SEVERE, "DataSource inject error", e);
             }
@@ -271,7 +272,7 @@ public abstract class NodeServer {
                 appResFactory.register(resourceName, CacheSource.class, source);
                 field.set(src, source);
                 rf.inject(source, self); //
-                ((Service) source).init(null);
+                if (source instanceof Service) ((Service) source).init(null);
 
                 if ((src instanceof WebSocketNodeService) && sncpAddr != null) { //只有WebSocketNodeService的服务才需要给SNCP服务注入CacheMemorySource
                     NodeSncpServer sncpServer = application.findNodeSncpServer(sncpAddr);
