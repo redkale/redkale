@@ -11,27 +11,17 @@
         </properties>
         -->
     </resources> 
-    
-    
-    <server protocol="HTTP" host="0.0.0.0" port="6060" root="root">         
+        
+    <server protocol="HTTP" host="0.0.0.0" port="6060" root="root">      
+        <!--
+        <rest base="DefaultRestServlet"/>   
+        -->
         <!--
         <request>
             <remoteaddr value="request.headers.X-RemoteAddress"/>
         </request>
-        <response>
-            <addheader name="X-Node" value="system.property.APP_NODE" />             
-            <addheader name="Access-Control-Allow-Origin" value="request.headers.Origin" /> 
-            <setheader name="Access-Control-Allow-Credentials" value="true"/> 
-        </response>
         -->
         <services autoload="true"/>
-        <servlets path="/pipes" autoload="true" >
-            <!--
-            <resource-servlet>
-                <caches  limit="0"/>
-                <rewrite type="location" match="^/([^-]+)(-[^-\.]+)+\.html(.*)" forward="/$1.html"/>
-            </resource-servlet>            
-            -->
-        </servlets>
+        <servlets path="/pipes" autoload="true" />
     </server>
 </application>
