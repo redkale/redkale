@@ -87,49 +87,34 @@ public interface CacheSource<K extends Serializable, V extends Object> {
     }
 
     //---------------------- AsyncHandler 异步版 ---------------------------------
-    @Deprecated
     public void existsAsync(final AsyncHandler<Boolean, K> handler, final K key);
 
-    @Deprecated
     public void getAsync(final AsyncHandler<V, K> handler, final K key);
 
-    @Deprecated
     public void getAndRefreshAsync(final AsyncHandler<V, K> handler, final K key, final int expireSeconds);
 
-    @Deprecated
     public void refreshAsync(final AsyncHandler<Void, K> handler, final K key, final int expireSeconds);
 
-    @Deprecated
     public void setAsync(final AsyncHandler<Void, K> handler, final K key, final V value);
 
-    @Deprecated
     public void setAsync(final AsyncHandler<Void, K> handler, final int expireSeconds, final K key, final V value);
 
-    @Deprecated
     public void setExpireSecondsAsync(final AsyncHandler<Void, K> handler, final K key, final int expireSeconds);
 
-    @Deprecated
     public void removeAsync(final AsyncHandler<Void, K> handler, final K key);
 
-    @Deprecated
     public void getCollectionAsync(final AsyncHandler<Collection<V>, K> handler, final K key);
 
-    @Deprecated
     public void getCollectionAndRefreshAsync(final AsyncHandler<Collection<V>, K> handler, final K key, final int expireSeconds);
 
-    @Deprecated
     public void appendListItemAsync(final AsyncHandler<Void, K> handler, final K key, final V value);
 
-    @Deprecated
     public void removeListItemAsync(final AsyncHandler<Void, K> handler, final K key, final V value);
 
-    @Deprecated
     public void appendSetItemAsync(final AsyncHandler<Void, K> handler, final K key, final V value);
 
-    @Deprecated
     public void removeSetItemAsync(final AsyncHandler<Void, K> handler, final K key, final V value);
 
-    @Deprecated
     default void isOpenAsync(final AsyncHandler<Boolean, Void> handler) {
         if (handler != null) handler.completed(Boolean.TRUE, null);
     }
