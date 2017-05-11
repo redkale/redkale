@@ -1149,13 +1149,22 @@ public final class Utility {
         return read(in, "UTF-8");
     }
 
+    public static String readThenClose(InputStream in) throws IOException {
+        return read(in, "UTF-8", true);
+    }
+
     public static String read(InputStream in, String charsetName) throws IOException {
+        return read(in, charsetName, false);
+    }
+
+    private static String read(InputStream in, String charsetName, boolean close) throws IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream(1024);
         byte[] bytes = new byte[1024];
         int pos;
         while ((pos = in.read(bytes)) != -1) {
             out.write(bytes, 0, pos);
         }
+        if (close) in.close();
         return charsetName == null ? out.toString() : out.toString(charsetName);
     }
 
