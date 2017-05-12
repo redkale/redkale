@@ -37,8 +37,8 @@ public @interface HttpParam {
     boolean required() default true; //参数是否必传
 
     /**
-     * 配合 &#64;WebParam 使用。
-     * 用于对&#64;WebParam中参数的来源类型
+     * 配合 &#64;HttpParam 使用。
+     * 用于对&#64;HttpParam中参数的来源类型
      *
      * <p>
      * 详情见: https://redkale.org
