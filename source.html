@@ -75,7 +75,7 @@
             </table>
             <p>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;以上接口除了directXXX，其他都有等同的异步接口。insert、delete、update接口与JPA同名接口用法一样。DataSource提供了丰富的查询接口，且有独特的翻页查询功能。每以系列的方法主要重载三类： 单个字段过滤、FilterBean过滤和FilterNode过滤。<br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>带 AsyncHandler 参数或返回类型为CompletableFuture的接口均为异步接口</b>。<br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>返回类型为CompletableFuture的接口均为异步接口</b>。<br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;开发者可以借鉴 <a href="https://github.com/redkale/redkale-demo" target="_blank">Redkale-demo</a> 中的 <a href="https://github.com/redkale/redkale-demo/blob/master/src/org/redkale/demo/base/AutoClassCreator.java" target="_blank"> AutoClassCreator</a>的代码根据数据表自动生成Entity代码。
             </p>
             <p>&nbsp;&nbsp;&nbsp;&nbsp;<b>过滤条件</b></p>
