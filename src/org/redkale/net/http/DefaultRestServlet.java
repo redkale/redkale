@@ -12,8 +12,10 @@ import java.io.IOException;
  * <p>
  * 详情见: https://redkale.org
  *
+ * @deprecated
  * @author zhangjx
  */
+@Deprecated
 public class DefaultRestServlet extends RestHttpServlet<Object> {
 
     @Override

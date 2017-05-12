@@ -360,6 +360,32 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
     }
 
     /**
+     * 将CompletableFuture的结果对象以JSON格式输出
+     *
+     * @param convert 指定的JsonConvert
+     * @param type    指定的类型
+     * @param future  输出对象的句柄
+     */
+    public void finishJson(final JsonConvert convert, final Type type, final CompletableFuture future) {
+        future.whenComplete((v, e) -> {
+            if (e != null) {
+                context.getLogger().log(Level.WARNING, "Servlet occur, forece to close channel. request = " + request, e);
+                finish(500, null);
+                return;
+            }
+            if (v instanceof CharSequence) {
+                finish(v.toString());
+            } else if (v instanceof HttpResult) {
+                finishJson(convert, (HttpResult) v);
+            } else if (v instanceof org.redkale.service.RetResult) {
+                finishJson(convert, (org.redkale.service.RetResult) v);
+            } else {
+                finishJson(convert, type, v);
+            }
+        });
+    }
+
+    /**
      * 将HttpResult的结果对象以JSON格式输出
      *
      * @param result HttpResult对象
@@ -395,30 +421,6 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         } else {
             finishJson(result.getResult());
         }
-    }
-
-    /**
-     * 将CompletableFuture的结果对象以JSON格式输出
-     *
-     * @param convert 指定的JsonConvert
-     * @param type    指定的类型
-     * @param future  输出对象的句柄
-     */
-    public void finishJson(final JsonConvert convert, final Type type, final CompletableFuture future) {
-        future.whenComplete((v, e) -> {
-            if (e != null) {
-                context.getLogger().log(Level.WARNING, "Servlet occur, forece to close channel. request = " + request, e);
-                finish(500, null);
-                return;
-            }
-            if (v instanceof CharSequence) {
-                finish(v.toString());
-            } else if (v instanceof org.redkale.service.RetResult) {
-                finishJson(convert, (org.redkale.service.RetResult) v);
-            } else {
-                finishJson(convert, type, v);
-            }
-        });
     }
 
     /**

@@ -111,8 +111,6 @@ public final class Rest {
         if (!java.lang.reflect.Modifier.isPublic(mod)) return null;
         if (java.lang.reflect.Modifier.isAbstract(mod)) return null;
 
-        final java.lang.reflect.Type futureRestOutputType = new TypeToken<CompletableFuture<RestOutput>>() {
-        }.getType();
         final String serviceDesc = Type.getDescriptor(serviceType);
         final String webServletDesc = Type.getDescriptor(WebServlet.class);
         final String reqDesc = Type.getDescriptor(HttpRequest.class);
@@ -120,7 +118,7 @@ public final class Rest {
         final String retDesc = Type.getDescriptor(RetResult.class);
         final String futureDesc = Type.getDescriptor(CompletableFuture.class);
         final String flipperDesc = Type.getDescriptor(Flipper.class);
-        final String restoutputDesc = Type.getDescriptor(RestOutput.class);
+        final String httprsDesc = Type.getDescriptor(HttpResult.class);
         final String attrDesc = Type.getDescriptor(org.redkale.util.Attribute.class);
         final String authDesc = Type.getDescriptor(AuthIgnore.class);
         final String cacheDesc = Type.getDescriptor(HttpCacheable.class);
@@ -464,10 +462,10 @@ public final class Rest {
                         mv.visitVarInsn(ASTORE, maxLocals);
                         varInsns.add(new int[]{ALOAD, maxLocals});
                     } else {
-                        mv.visitVarInsn(ALOAD, 0);
+                        mv.visitVarInsn(ALOAD, 3);
                         mv.visitVarInsn(ALOAD, 2);
                         mv.visitLdcInsn(Type.getType(Type.getDescriptor(ptype)));
-                        mv.visitMethodInsn(INVOKEVIRTUAL, newDynName, "createAsyncHandler", "(Lorg/redkale/net/http/HttpResponse;Ljava/lang/Class;)Lorg/redkale/util/AsyncHandler;", false);
+                        mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "createAsyncHandler", "(Ljava/lang/Class;)Lorg/redkale/util/AsyncHandler;", false);
                         mv.visitTypeInsn(CHECKCAST, ptype.getName().replace('.', '/'));
                         mv.visitVarInsn(ASTORE, maxLocals);
                         varInsns.add(new int[]{ALOAD, maxLocals});
@@ -945,12 +943,11 @@ public final class Rest {
                 mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishJson", "(" + retDesc + ")V", false);
                 mv.visitInsn(RETURN);
                 maxLocals++;
-            } else if (RestOutput.class.isAssignableFrom(returnType)) {
+            } else if (HttpResult.class.isAssignableFrom(returnType)) {
                 mv.visitVarInsn(ASTORE, maxLocals);
-                mv.visitVarInsn(ALOAD, 0);
-                mv.visitVarInsn(ALOAD, 2);
+                mv.visitVarInsn(ALOAD, 2); //response
                 mv.visitVarInsn(ALOAD, maxLocals);
-                mv.visitMethodInsn(INVOKEVIRTUAL, newDynName, "finishJson", "(" + respDesc + restoutputDesc + ")V", false);
+                mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishJson", "(" + httprsDesc + ")V", false);
                 mv.visitInsn(RETURN);
                 maxLocals++;
             } else if (Number.class.isAssignableFrom(returnType) || CharSequence.class.isAssignableFrom(returnType)) {   //returnType == String.class 必须放在前面
@@ -959,14 +956,6 @@ public final class Rest {
                 mv.visitVarInsn(ALOAD, maxLocals);
                 mv.visitMethodInsn(INVOKESTATIC, "java/lang/String", "valueOf", "(Ljava/lang/Object;)Ljava/lang/String;", false);
                 mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finish", "(Ljava/lang/String;)V", false);
-                mv.visitInsn(RETURN);
-                maxLocals++;
-            } else if (futureRestOutputType == returnGenericType) {
-                mv.visitVarInsn(ASTORE, maxLocals);
-                mv.visitVarInsn(ALOAD, 0);
-                mv.visitVarInsn(ALOAD, 2);
-                mv.visitVarInsn(ALOAD, maxLocals);
-                mv.visitMethodInsn(INVOKEVIRTUAL, newDynName, "finishJson", "(" + respDesc + futureDesc + ")V", false);
                 mv.visitInsn(RETURN);
                 maxLocals++;
             } else if (CompletableFuture.class.isAssignableFrom(returnType)) {
