@@ -8,6 +8,7 @@ package org.redkale.net.http;
 import java.io.Serializable;
 import java.net.HttpCookie;
 import java.util.*;
+import org.redkale.convert.json.JsonConvert;
 
 /**
  *
@@ -100,4 +101,8 @@ public class HttpResult<T> {
         this.message = message;
     }
 
+    @Override
+    public String toString() {
+        return JsonConvert.root().convertTo(this);
+    }
 }
