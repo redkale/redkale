@@ -22,31 +22,31 @@ import static jdk.internal.org.objectweb.asm.Opcodes.*;
 import org.redkale.service.RetResult;
 
 /**
+ * 直接只用HttpServlet代替, 将在1.9版本移除
  *
  * <p>
  * 详情见: https://redkale.org
  *
+ * @deprecated
  * @author zhangjx
  */
+@Deprecated
 public abstract class HttpBaseServlet extends HttpServlet {
 
-    public static final int RET_SERVER_ERROR = 1800_0001;
-
-    public static final int RET_METHOD_ERROR = 1800_0002;
-
     /**
-     * 配合 HttpBaseServlet 使用。
-     * 当标记为 &#64;AuthIgnore 的方法在执行execute之前不会调用authenticate 方法。
+     * 使用 org.redkale.util.AuthIgnore 代替
      *
      * <p>
      * 详情见: https://redkale.org
      *
+     * @deprecated
      * @author zhangjx
      */
     @Inherited
     @Documented
     @Target({METHOD, TYPE})
     @Retention(RUNTIME)
+    @Deprecated
     protected @interface AuthIgnore {
 
     }
@@ -66,18 +66,20 @@ public abstract class HttpBaseServlet extends HttpServlet {
     }
 
     /**
-     * 配合 &#64;WebMapping 使用。
-     * 用于对&#64;WebMapping方法中参数描述
+     *
+     * 使用 org.redkale.net.http.HttpParam 代替
      *
      * <p>
      * 详情见: https://redkale.org
      *
+     * @deprecated
      * @author zhangjx
      */
     @Documented
     @Target({METHOD})
     @Retention(RUNTIME)
     @Repeatable(WebParams.class)
+    @Deprecated
     protected @interface WebParam {
 
         String name(); //参数名
@@ -102,16 +104,17 @@ public abstract class HttpBaseServlet extends HttpServlet {
     }
 
     /**
-     * 使用 WebMapping 替代。
+     * 使用 org.redkale.net.http.HttpMapping 替代。
      * <p>
      * 详情见: https://redkale.org
      *
+     * @deprecated
      * @author zhangjx
      */
-    @Deprecated
     @Documented
     @Target({METHOD})
     @Retention(RUNTIME)
+    @Deprecated
     protected @interface WebAction {
 
         int actionid() default 0;
@@ -130,17 +133,18 @@ public abstract class HttpBaseServlet extends HttpServlet {
     }
 
     /**
-     * 配合 HttpBaseServlet 使用。
-     * 用于对&#64;WebServlet对应的url进行细分。 其url必须是包含WebServlet中定义的前缀， 且不能是正则表达式
+     * 使用 org.redkale.net.http.HttpMapping 替代。
      *
      * <p>
      * 详情见: https://redkale.org
      *
+     * @deprecated
      * @author zhangjx
      */
     @Documented
     @Target({METHOD})
     @Retention(RUNTIME)
+    @Deprecated
     protected @interface WebMapping {
 
         int actionid() default 0;
@@ -159,18 +163,15 @@ public abstract class HttpBaseServlet extends HttpServlet {
     }
 
     /**
-     * 配合 HttpBaseServlet 使用。
-     * 当标记为 &#64;HttpCacheable 的方法使用response.finish的参数将被缓存一段时间(默认值 seconds=15秒)。
-     * 通常情况下 &#64;HttpCacheable 需要与 &#64;AuthIgnore 一起使用，没有标记&#64;AuthIgnore的方法一般输出的结果与当前用户信息有关。
+     * 使用 org.redkale.net.http.HttpCacheable 替代。
      *
-     * <p>
-     * 详情见: https://redkale.org
-     *
+     * @deprecated
      * @author zhangjx
      */
     @Documented
     @Target({METHOD})
     @Retention(RUNTIME)
+    @Deprecated
     protected @interface HttpCacheable {
 
         /**
@@ -215,8 +216,7 @@ public abstract class HttpBaseServlet extends HttpServlet {
                     if (entry.ignore) {
                         authSuccessServlet.execute(request, response);
                     } else {
-                        response.nextEvent(authSuccessServlet);
-                        authenticate(entry.moduleid, entry.actionid, request, response, authSuccessServlet);
+                        HttpBaseServlet.this.authenticate(entry.moduleid, entry.actionid, request, response, authSuccessServlet);
                     }
                     return;
                 }
@@ -226,42 +226,28 @@ public abstract class HttpBaseServlet extends HttpServlet {
     };
 
     /**
-     * 使用 public void preExecute(HttpRequest request, HttpResponse response) throws IOException 代替
-     *
-     * @param request  HttpRequest
-     * @param response HttpResponse
-     * @param next     HttpServlet
-     *
-     * @deprecated
-     *
-     * @throws IOException IOException
-     */
-    @Deprecated
-    public void preExecute(HttpRequest request, HttpResponse response, final HttpServlet next) throws IOException {
-    }
-
-    /**
      * <p>
      * 预执行方法，在execute方法之前运行，通常用于常规统计或基础检测，例如 : <br>
      * <blockquote><pre>
      *      &#64;Override
-     *      public void preExecute(final HttpRequest request, final HttpResponse response) throws IOException {
+     *      public void preExecute(final HttpRequest request, final HttpResponse response, HttpServlet next) throws IOException {
      *          if (finer) response.setRecycleListener((req, resp) -&#62; {  //记录处理时间比较长的请求
      *              long e = System.currentTimeMillis() - ((HttpRequest) req).getCreatetime();
      *              if (e &#62; 200) logger.finer("http-execute-cost-time: " + e + " ms. request = " + req);
      *          });
-     *          response.nextEvent();
+     *          next.execute(request, response);
      *      }
      * </pre></blockquote>
      * <p>
      *
      * @param request  HttpRequest
      * @param response HttpResponse
+     * @param next     HttpServlet
      *
      * @throws IOException IOException
      */
-    public void preExecute(HttpRequest request, HttpResponse response) throws IOException {
-        response.nextEvent();
+    public void preExecute(HttpRequest request, HttpResponse response, final HttpServlet next) throws IOException {
+        next.execute(request, response);
     }
 
     /**
@@ -313,10 +299,7 @@ public abstract class HttpBaseServlet extends HttpServlet {
 
     @Override
     public final void execute(HttpRequest request, HttpResponse response) throws IOException {
-        response.nextEvent(preSuccessServlet);
-        preExecute(request, response);
-        //兼容以前
-        //preExecute(request, response, preSuccessServlet);
+        preExecute(request, response, preSuccessServlet);
     }
 
     public final void preInit(HttpContext context, AnyValue config) {

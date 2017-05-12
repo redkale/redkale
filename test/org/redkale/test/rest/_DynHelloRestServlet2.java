@@ -11,7 +11,7 @@ import javax.annotation.Resource;
 import org.redkale.net.http.*;
 import org.redkale.service.RetResult;
 import org.redkale.source.Flipper;
-import org.redkale.util.Sheet;
+import org.redkale.util.*;
 
 /**
  *
@@ -27,8 +27,8 @@ public class _DynHelloRestServlet2 extends SimpleRestServlet {
     private Map<String, HelloService2> _servicemap;
 
     @AuthIgnore
-    @WebMapping(url = "/hello/create", comment = "创建Hello对象")
-    @WebParam(name = "bean", type = HelloEntity.class, comment = "Hello对象")
+    @HttpMapping(url = "/hello/create", comment = "创建Hello对象")
+    @HttpParam(name = "bean", type = HelloEntity.class, comment = "Hello对象")
     public void create(HttpRequest req, HttpResponse resp) throws IOException {
         HelloService2 service = _servicemap == null ? _service : _servicemap.get(req.getHeader(Rest.REST_HEADER_RESOURCE_NAME, ""));
         HelloEntity bean = req.getJsonParameter(HelloEntity.class, "bean");
@@ -42,8 +42,8 @@ public class _DynHelloRestServlet2 extends SimpleRestServlet {
     }
 
     @AuthIgnore
-    @WebMapping(url = "/hello/delete/", comment = "根据id删除Hello对象")
-    @WebParam(name = "#", type = int.class, comment = "Hello对象id")
+    @HttpMapping(url = "/hello/delete/", comment = "根据id删除Hello对象")
+    @HttpParam(name = "#", type = int.class, comment = "Hello对象id")
     public void delete(HttpRequest req, HttpResponse resp) throws IOException {
         HelloService2 service = _servicemap == null ? _service : _servicemap.get(req.getHeader(Rest.REST_HEADER_RESOURCE_NAME, ""));
         int id = Integer.parseInt(req.getRequstURILastPath());
@@ -52,8 +52,8 @@ public class _DynHelloRestServlet2 extends SimpleRestServlet {
     }
 
     @AuthIgnore
-    @WebMapping(url = "/hello/update", comment = "修改Hello对象")
-    @WebParam(name = "bean", type = HelloEntity.class, comment = "Hello对象")
+    @HttpMapping(url = "/hello/update", comment = "修改Hello对象")
+    @HttpParam(name = "bean", type = HelloEntity.class, comment = "Hello对象")
     public void update(HttpRequest req, HttpResponse resp) throws IOException {
         HelloService2 service = _servicemap == null ? _service : _servicemap.get(req.getHeader(Rest.REST_HEADER_RESOURCE_NAME, ""));
         HelloEntity bean = req.getJsonParameter(HelloEntity.class, "bean");
@@ -66,8 +66,8 @@ public class _DynHelloRestServlet2 extends SimpleRestServlet {
     }
 
     @AuthIgnore
-    @WebMapping(url = "/hello/query", comment = "查询Hello对象列表")
-    @WebParam(name = "bean", type = HelloBean.class, comment = "过滤条件")
+    @HttpMapping(url = "/hello/query", comment = "查询Hello对象列表")
+    @HttpParam(name = "bean", type = HelloBean.class, comment = "过滤条件")
     public void query(HttpRequest req, HttpResponse resp) throws IOException {
         HelloService2 service = _servicemap == null ? _service : _servicemap.get(req.getHeader(Rest.REST_HEADER_RESOURCE_NAME, ""));
         HelloBean bean = req.getJsonParameter(HelloBean.class, "bean");
@@ -81,8 +81,8 @@ public class _DynHelloRestServlet2 extends SimpleRestServlet {
     }
 
     @AuthIgnore
-    @WebMapping(url = "/hello/find/", comment = "根据id删除Hello对象")
-    @WebParam(name = "#", type = int.class, comment = "Hello对象id")
+    @HttpMapping(url = "/hello/find/", comment = "根据id删除Hello对象")
+    @HttpParam(name = "#", type = int.class, comment = "Hello对象id")
     public void find(HttpRequest req, HttpResponse resp) throws IOException {
         HelloService2 service = _servicemap == null ? _service : _servicemap.get(req.getHeader(Rest.REST_HEADER_RESOURCE_NAME, ""));
         int id = Integer.parseInt(req.getRequstURILastPath());

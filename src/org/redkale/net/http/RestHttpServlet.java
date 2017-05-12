@@ -19,7 +19,7 @@ import org.redkale.util.*;
  * @author zhangjx
  * @param <T> 当前用户对象类型
  */
-public abstract class RestHttpServlet<T> extends HttpBaseServlet {
+public abstract class RestHttpServlet<T> extends HttpServlet {
 
     protected abstract T currentUser(HttpRequest req) throws IOException;
 

@@ -43,11 +43,7 @@ public class HttpPrepareServlet extends PrepareServlet<String, HttpContext, Http
     public void init(HttpContext context, AnyValue config) {
         Collection<HttpServlet> servlets = getServlets();
         servlets.forEach(s -> {
-            if (s instanceof WebSocketServlet) {
-                ((WebSocketServlet) s).preInit(context, getServletConf(s));
-            } else if (s instanceof HttpBaseServlet) {
-                ((HttpBaseServlet) s).preInit(context, getServletConf(s));
-            }
+            s.preInit(context, getServletConf(s));
             s.init(context, getServletConf(s));
         });
         final WatchFactory watch = context.getWatchFactory();
@@ -213,11 +209,7 @@ public class HttpPrepareServlet extends PrepareServlet<String, HttpContext, Http
         this.resourceHttpServlet.destroy(context, config);
         getServlets().forEach(s -> {
             s.destroy(context, getServletConf(s));
-            if (s instanceof WebSocketServlet) {
-                ((WebSocketServlet) s).postDestroy(context, getServletConf(s));
-            } else if (s instanceof HttpBaseServlet) {
-                ((HttpBaseServlet) s).postDestroy(context, getServletConf(s));
-            }
+            s.postDestroy(context, getServletConf(s));
         });
         this.allMapStrings.clear();
         this.wsmappings.clear();

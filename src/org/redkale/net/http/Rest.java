@@ -122,12 +122,12 @@ public final class Rest {
         final String flipperDesc = Type.getDescriptor(Flipper.class);
         final String restoutputDesc = Type.getDescriptor(RestOutput.class);
         final String attrDesc = Type.getDescriptor(org.redkale.util.Attribute.class);
-        final String authDesc = Type.getDescriptor(HttpBaseServlet.AuthIgnore.class);
-        final String cacheDesc = Type.getDescriptor(HttpBaseServlet.HttpCacheable.class);
-        final String mappingDesc = Type.getDescriptor(HttpBaseServlet.WebMapping.class);
-        final String webparamDesc = Type.getDescriptor(HttpBaseServlet.WebParam.class);
-        final String webparamsDesc = Type.getDescriptor(HttpBaseServlet.WebParams.class);
-        final String sourcetypeDesc = Type.getDescriptor(HttpBaseServlet.ParamSourceType.class);
+        final String authDesc = Type.getDescriptor(AuthIgnore.class);
+        final String cacheDesc = Type.getDescriptor(HttpCacheable.class);
+        final String mappingDesc = Type.getDescriptor(HttpMapping.class);
+        final String webparamDesc = Type.getDescriptor(HttpParam.class);
+        final String webparamsDesc = Type.getDescriptor(HttpParam.HttpParams.class);
+        final String sourcetypeDesc = Type.getDescriptor(HttpParam.HttpParamSourceType.class);
 
         final String reqInternalName = Type.getInternalName(HttpRequest.class);
         final String respInternalName = Type.getInternalName(HttpResponse.class);
@@ -218,7 +218,7 @@ public final class Rest {
 
         final List<MappingEntry> entrys = new ArrayList<>();
         final Map<String, org.redkale.util.Attribute> restAttributes = new LinkedHashMap<>();
-        //获取所有可以转换成WebMapping的方法
+        //获取所有可以转换成HttpMapping的方法
         int methodidex = 0;
         final List<java.lang.reflect.Type[]> paramtypes = new ArrayList<>();
         for (final Method method : serviceType.getMethods()) {
@@ -254,9 +254,9 @@ public final class Rest {
             }
             methodidex++;
         }
-        if (entrys.isEmpty()) return null; //没有可WebMapping的方法
+        if (entrys.isEmpty()) return null; //没有可HttpMapping的方法
 
-        //将每个Service可转换的方法生成HttpServlet对应的WebMapping方法
+        //将每个Service可转换的方法生成HttpServlet对应的HttpMapping方法
         final Map<String, List<String>> asmParamMap = MethodParamClassVisitor.getMethodParamNames(serviceType);
         for (final MappingEntry entry : entrys) {
             final Method method = entry.mappingMethod;
@@ -380,7 +380,7 @@ public final class Rest {
 
             Map<String, Object> mappingMap = new LinkedHashMap<>();
             { // 设置 Annotation
-                //设置 WebMapping
+                //设置 HttpMapping
                 boolean reqpath = false;
                 for (Object[] ps : paramlist) {
                     if ("#".equals((String) ps[1])) {
@@ -425,8 +425,8 @@ public final class Rest {
                     av2.visit("name", (String) ps[1]);
                     av2.visit("type", Type.getType(Type.getDescriptor((Class) ps[2])));
                     av2.visit("radix", (Integer) ps[3]);
-                    av2.visitEnum("src", sourcetypeDesc, ishead ? HttpBaseServlet.ParamSourceType.HEADER.name()
-                        : (iscookie ? HttpBaseServlet.ParamSourceType.COOKIE.name() : HttpBaseServlet.ParamSourceType.PARAMETER.name()));
+                    av2.visitEnum("src", sourcetypeDesc, ishead ? HttpParam.HttpParamSourceType.HEADER.name()
+                        : (iscookie ? HttpParam.HttpParamSourceType.COOKIE.name() : HttpParam.HttpParamSourceType.PARAMETER.name()));
                     av2.visit("comment", (String) ps[4]);
                     av2.visit("required", (Boolean) ps[5]);
                     av2.visitEnd();

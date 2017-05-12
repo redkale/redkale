@@ -64,6 +64,10 @@ public class HttpRequest extends Request<HttpContext> {
 
     protected boolean boundary = false;
 
+    protected int moduleid;
+
+    protected int actionid;
+
     private final String remoteAddrHeader;
 
     Object attachment; //供 HttpBaseServlet传递Entry使用
@@ -237,6 +241,24 @@ public class HttpRequest extends Request<HttpContext> {
     }
 
     /**
+     * 获取模块ID，来自&#64;HttpServlet.moduleid()
+     *
+     * @return 模块ID
+     */
+    public int getModuleid() {
+        return this.moduleid;
+    }
+
+    /**
+     * 获取操作ID，来自&#64;HttpMapping.actionid()
+     *
+     * @return 模块ID
+     */
+    public int getActionid() {
+        return this.actionid;
+    }
+
+    /**
      * 获取客户端地址IP
      *
      * @return 地址
@@ -350,6 +372,8 @@ public class HttpRequest extends Request<HttpContext> {
         this.contentLength = -1;
         this.boundary = false;
         this.bodyparsed = false;
+        this.moduleid = 0;
+        this.actionid = 0;
 
         this.attachment = null;
 

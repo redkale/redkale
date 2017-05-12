@@ -25,16 +25,16 @@ public class SimpleRestServlet extends RestHttpServlet<UserInfo> {
 
     //普通鉴权
     @Override
-    public void authenticate(int module, int actionid, HttpRequest request, HttpResponse response, HttpServlet next) throws IOException {
+    public void authenticate(HttpRequest request, HttpResponse response) throws IOException {
         UserInfo info = currentUser(request);
         if (info == null) {
             response.finishJson(RET_UNLOGIN);
             return;
-        } else if (!info.checkAuth(module, actionid)) {
+        } else if (!info.checkAuth(request.getModuleid(), request.getActionid())) {
             response.finishJson(RET_AUTHILLEGAL);
             return;
         }
-        next.execute(request, response);
+        response.nextEvent();
     }
 
 }

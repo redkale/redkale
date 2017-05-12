@@ -213,7 +213,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
     }
 
     /**
-     * 创建AsyncHandler实例，将非字符串对象以JSON格式输出，字符串以文本输出
+     * 创建AsyncHandler实例
      *
      * @return AsyncHandler
      */
@@ -230,6 +230,21 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
             request.getContext().getLogger().log(Level.WARNING, "Servlet occur, forece to close channel. request = " + request, t);
             finish(500, null);
         });
+    }
+
+    /**
+     * 创建AsyncHandler子类的实例 <br>
+     *
+     * 传入的AsyncHandler子类必须是public，且保证其子类可被继承且completed、failed可被重载且包含空参数的构造函数。
+     *
+     * @param <H>          泛型
+     * @param handlerClass AsyncHandler子类
+     *
+     * @return AsyncHandler AsyncHandler
+     */
+    public <H extends AsyncHandler> H createAsyncHandler(Class<H> handlerClass) {
+        if (handlerClass == null || handlerClass == AsyncHandler.class) return (H) createAsyncHandler();
+        return context.loadAsyncHandlerCreator(handlerClass).create(createAsyncHandler());
     }
 
     /**
@@ -352,6 +367,44 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
                 finishJson(convert, v);
             }
         });
+    }
+
+    /**
+     * 将HttpResult的结果对象以JSON格式输出
+     *
+     * @param result HttpResult对象
+     */
+    public void finishJson(final HttpResult result) {
+        finishJson(request.getJsonConvert(), result);
+    }
+
+    /**
+     * 将HttpResult的结果对象以JSON格式输出
+     *
+     * @param convert 指定的JsonConvert
+     * @param result  HttpResult对象
+     */
+    public void finishJson(final JsonConvert convert, final HttpResult result) {
+        if (output == null) {
+            finish("");
+            return;
+        }
+        if (result.getContentType() != null) setContentType(result.getContentType());
+        addHeader(result.getHeaders()).addCookie(result.getCookies()).setStatus(result.getStatus() < 1 ? 200 : result.getStatus());
+        if (result.getResult() instanceof File) {
+            try {
+                finish((File) result.getResult());
+            } catch (IOException e) {
+                getContext().getLogger().log(Level.WARNING, "HttpServlet finishJson HttpResult File occur, forece to close channel. request = " + getRequest(), e);
+                finish(500, null);
+            }
+        } else if (result.getResult() instanceof String) {
+            finish((String) result.getResult());
+        } else if (result.getResult() == null) {
+            finish(result.getMessage());
+        } else {
+            finishJson(result.getResult());
+        }
     }
 
     /**

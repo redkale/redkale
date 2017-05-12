@@ -71,7 +71,8 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
 
     protected WebSocketEngine engine;
 
-    public final void preInit(HttpContext context, AnyValue conf) {
+    @Override
+    final void preInit(HttpContext context, AnyValue conf) {
         InetSocketAddress addr = context.getServerAddress();
         this.engine = new WebSocketEngine(addr.getHostString() + ":" + addr.getPort() + "-[" + resourceName() + "]", this.node, logger);
         if (this.node == null) this.node = createWebSocketNode();
@@ -84,7 +85,8 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
         this.engine.init(conf);
     }
 
-    public final void postDestroy(HttpContext context, AnyValue conf) {
+    @Override
+    final void postDestroy(HttpContext context, AnyValue conf) {
         this.node.postDestroy(conf);
         super.destroy(context, conf);
         engine.close();

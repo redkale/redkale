@@ -21,9 +21,4 @@ public class DefaultRestServlet extends RestHttpServlet<Object> {
         return new Object();
     }
 
-    @Override
-    public void authenticate(int moduleid, int actionid, HttpRequest request, HttpResponse response, HttpServlet next) throws IOException {
-        next.execute(request, response);
-    }
-
 }

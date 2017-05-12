@@ -10,17 +10,16 @@ import java.net.HttpCookie;
 import java.util.*;
 
 /**
- * 使用 HttpResult 代替
  *
  * <p>
  * 详情见: https://redkale.org
  *
- * @deprecated
  * @author zhangjx
  * @param <T> 结果对象的类型
  */
-@Deprecated
-public class RestOutput<T> {
+public class HttpResult<T> {
+
+    public static final String SESSIONID_COOKIENAME = HttpRequest.SESSIONID_NAME;
 
     private Map<String, String> headers;
 
@@ -34,20 +33,20 @@ public class RestOutput<T> {
 
     private String message;
 
-    public RestOutput() {
+    public HttpResult() {
     }
 
-    public RestOutput(T result) {
+    public HttpResult(T result) {
         this.result = result;
     }
 
-    public RestOutput<T> addHeader(String name, Serializable value) {
+    public HttpResult<T> addHeader(String name, Serializable value) {
         if (this.headers == null) this.headers = new HashMap<>();
         this.headers.put(name, String.valueOf(value));
         return this;
     }
 
-    public RestOutput<T> addCookie(HttpCookie cookie) {
+    public HttpResult<T> addCookie(HttpCookie cookie) {
         if (this.cookies == null) this.cookies = new ArrayList<>();
         this.cookies.add(cookie);
         return this;

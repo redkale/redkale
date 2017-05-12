@@ -158,7 +158,19 @@ public abstract class Response<C extends Context, R extends Request<C>> {
         }
     }
 
+    /**
+     * 使用 public void recycleListener(BiConsumer recycleListener) 代替
+     *
+     * @param recycleListener BiConsumer
+     *
+     * @deprecated
+     */
+    @Deprecated
     public void setRecycleListener(BiConsumer<R, Response<C, R>> recycleListener) {
+        this.recycleListener = recycleListener;
+    }
+
+    public void recycleListener(BiConsumer<R, Response<C, R>> recycleListener) {
         this.recycleListener = recycleListener;
     }
 

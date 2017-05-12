@@ -11,7 +11,7 @@ import java.util.*;
 import javax.persistence.*;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.http.*;
-import org.redkale.service.Service;
+import org.redkale.service.*;
 import org.redkale.source.*;
 import org.redkale.util.*;
 
@@ -24,7 +24,9 @@ import org.redkale.util.*;
  *
  * @author zhangjx
  */
-public class ApiDocsService extends DefaultRestServlet implements Service {
+@AutoLoad(false)
+@LocalService
+public final class ApiDocsService extends AbstractService {
 
     private final Application app; //Application全局对象
 
@@ -34,7 +36,8 @@ public class ApiDocsService extends DefaultRestServlet implements Service {
 
     public void run() throws Exception {
         List<Map> serverList = new ArrayList<>();
-
+        Field __prefix = HttpServlet.class.getDeclaredField("__prefix");
+        __prefix.setAccessible(true);
         Map<String, Map<String, Map<String, Object>>> typesmap = new LinkedHashMap<>();
         for (NodeServer node : app.servers) {
             if (!(node instanceof NodeHttpServer)) continue;
@@ -52,7 +55,7 @@ public class ApiDocsService extends DefaultRestServlet implements Service {
                     continue;
                 }
                 final Map<String, Object> servletmap = new LinkedHashMap<>();
-                String prefix = _prefix(servlet);
+                String prefix = (String) __prefix.get(servlet);
                 String[] urlregs = ws.value();
                 if (prefix != null && !prefix.isEmpty()) {
                     for (int i = 0; i < urlregs.length; i++) {
@@ -73,7 +76,7 @@ public class ApiDocsService extends DefaultRestServlet implements Service {
                     if (Modifier.isAbstract(clz.getModifiers())) break;
                     for (Method method : clz.getMethods()) {
                         if (method.getParameterCount() != 2) continue;
-                        WebMapping action = method.getAnnotation(WebMapping.class);
+                        HttpMapping action = method.getAnnotation(HttpMapping.class);
                         if (action == null) continue;
                         if (!action.inherited() && selfClz != clz) continue; //忽略不被继承的方法
                         final Map<String, Object> mappingmap = new LinkedHashMap<>();
@@ -123,7 +126,7 @@ public class ApiDocsService extends DefaultRestServlet implements Service {
                             typesmap.put(rtype.getName(), typemap);
                         }
                         mappingmap.put("results", results);
-                        for (WebParam param : method.getAnnotationsByType(WebParam.class)) {
+                        for (HttpParam param : method.getAnnotationsByType(HttpParam.class)) {
                             final Map<String, Object> parammap = new LinkedHashMap<>();
                             final boolean isarray = param.type().isArray();
                             final Class ptype = isarray ? param.type().getComponentType() : param.type();
