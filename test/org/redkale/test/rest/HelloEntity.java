@@ -1,5 +1,6 @@
 package org.redkale.test.rest;
 
+import java.util.Map;
 import javax.persistence.Id;
 import org.redkale.convert.json.JsonFactory;
 import org.redkale.net.http.*;
@@ -28,8 +29,18 @@ public class HelloEntity {
     @RestBody
     private byte[] bodys;
 
+    @RestBody
+    private Map<String, String> bodymap;
+
     @RestAddress
     private String clientaddr;
+
+    public HelloEntity() {
+    }
+
+    public HelloEntity(int id) {
+        this.helloid = id;
+    }
 
     /** 以下省略getter setter方法 */
     public int getHelloid() {
@@ -102,6 +113,14 @@ public class HelloEntity {
 
     public void setBodys(byte[] bodys) {
         this.bodys = bodys;
+    }
+
+    public Map<String, String> getBodymap() {
+        return bodymap;
+    }
+
+    public void setBodymap(Map<String, String> bodymap) {
+        this.bodymap = bodymap;
     }
 
     @Override

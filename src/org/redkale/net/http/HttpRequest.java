@@ -305,6 +305,35 @@ public class HttpRequest extends Request<HttpContext> {
     }
 
     /**
+     * 获取请求内容的JavaBean对象
+     *
+     * @param <T>  泛型
+     * @param type 类型
+     *
+     * @return 内容
+     */
+    public <T> T getBodyJson(java.lang.reflect.Type type) {
+        String str = array.toString(UTF8);
+        if (str == null || str.isEmpty()) return null;
+        return context.getJsonConvert().convertFrom(type, str);
+    }
+
+    /**
+     * 获取请求内容的JavaBean对象
+     *
+     * @param <T>     泛型
+     * @param convert JsonConvert
+     * @param type    类型
+     *
+     * @return 内容
+     */
+    public <T> T getBodyJson(JsonConvert convert, java.lang.reflect.Type type) {
+        String str = array.toString(UTF8);
+        if (str == null || str.isEmpty()) return null;
+        return convert.convertFrom(type, str);
+    }
+
+    /**
      * 获取请求内容的byte[]
      *
      * @return 内容

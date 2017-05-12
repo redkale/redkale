@@ -45,6 +45,16 @@ public class _DynHelloRestServlet1 extends SimpleRestServlet {
         url = "http://127.0.0.1:" + port + "/pipes/hello/listmap?map={'a':5}";
         System.out.println("listmap: " + Utility.postHttpContent(url, headers, null));
 
+        url = "http://127.0.0.1:" + port + "/pipes/hello/create?entity={}";
+        System.out.println("增加记录: " + Utility.postHttpContent(url, headers, "{'a':2,'b':3}"));
+        
+        url = "http://127.0.0.1:" + port + "/pipes/hello/asyncfind/111111";
+        System.out.println("listmap: " + Utility.postHttpContent(url, headers, null));
+        url = "http://127.0.0.1:" + port + "/pipes/hello/asyncfind2/22222";
+        System.out.println("listmap: " + Utility.postHttpContent(url, headers, null));
+        url = "http://127.0.0.1:" + port + "/pipes/hello/asyncfind3/333333";
+        System.out.println("listmap: " + Utility.postHttpContent(url, headers, null));
+
     }
 
     @AuthIgnore
@@ -55,7 +65,7 @@ public class _DynHelloRestServlet1 extends SimpleRestServlet {
         bean.setClientaddr(req.getRemoteAddr());
         bean.setResname(req.getHeader("hello-res"));
         UserInfo user = currentUser(req);
-        RetResult<HelloEntity> result = service.createHello(user, bean);
+        RetResult<HelloEntity> result = service.createHello(user, bean, req.getBodyJson(Map.class)); 
         resp.finishJson(result);
     }
 
@@ -134,5 +144,21 @@ public class _DynHelloRestServlet1 extends SimpleRestServlet {
         HelloService service = _servicemap == null ? _service : _servicemap.get(req.getHeader(Rest.REST_HEADER_RESOURCE_NAME, ""));
         int id = Integer.parseInt(req.getRequstURILastPath());
         resp.finishJson(service.asyncFindHello(id));
+    }
+
+    @AuthIgnore
+    @HttpMapping(url = "/hello/asyncfind2/")
+    public void asyncfind2(HttpRequest req, HttpResponse resp) throws IOException {
+        HelloService service = _servicemap == null ? _service : _servicemap.get(req.getHeader(Rest.REST_HEADER_RESOURCE_NAME, ""));
+        int id = Integer.parseInt(req.getRequstURILastPath());
+        service.asyncFindHello(resp.createAsyncHandler(), id);
+    }
+
+    @AuthIgnore
+    @HttpMapping(url = "/hello/asyncfind3/")
+    public void asyncfind3(HttpRequest req, HttpResponse resp) throws IOException {
+        HelloService service = _servicemap == null ? _service : _servicemap.get(req.getHeader(Rest.REST_HEADER_RESOURCE_NAME, ""));
+        int id = Integer.parseInt(req.getRequstURILastPath());
+        service.asyncFindHello(resp.createAsyncHandler(HelloAsyncHandler.class), id);
     }
 }

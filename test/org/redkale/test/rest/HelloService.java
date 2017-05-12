@@ -34,10 +34,11 @@ public class HelloService implements Service {
     }
 
     //增加记录
-    public RetResult<HelloEntity> createHello(UserInfo info, HelloEntity entity) {
+    public RetResult<HelloEntity> createHello(UserInfo info, HelloEntity entity, @RestBody Map<String, String> body) {
+        System.out.println("增加记录----------------" + nodeid + ": body =" + body + ", entity =" + entity);
         entity.setCreator(info == null ? 0 : info.getUserid()); //设置当前用户ID
         entity.setCreatetime(System.currentTimeMillis());
-        source.insert(entity);
+        if (source != null) source.insert(entity);
         return new RetResult<>(entity);
     }
 
@@ -88,7 +89,24 @@ public class HelloService implements Service {
     //异步查询单个
     @RestMapping(name = "asyncfind")
     public CompletableFuture<HelloEntity> asyncFindHello(@RestParam(name = "#") int id) {  //通过 /pipes/hello/find/1234、/pipes/hello/jsfind/1234 查询对象
-        if (source != null)  source.findAsync(HelloEntity.class, id);
+        if (source != null) source.findAsync(HelloEntity.class, id);
+        System.out.println("------------进入asyncfind1-------");
         return CompletableFuture.completedFuture(new HelloEntity());
+    }
+
+    //异步查询单个
+    @RestMapping(name = "asyncfind2")
+    public void asyncFindHello(AsyncHandler hander, @RestParam(name = "#") int id) {  //通过 /pipes/hello/find/1234、/pipes/hello/jsfind/1234 查询对象
+        if (source != null) source.findAsync(HelloEntity.class, id);
+        System.out.println("-----------进入asyncfind2--------" + hander);
+        hander.completed(new HelloEntity(id), id);
+    }
+
+    //异步查询单个
+    @RestMapping(name = "asyncfind3")
+    public void asyncFindHello(HelloAsyncHandler hander, @RestParam(name = "#") int id) {  //通过 /pipes/hello/find/1234、/pipes/hello/jsfind/1234 查询对象
+        if (source != null) source.findAsync(HelloEntity.class, id);
+        System.out.println("-----------进入asyncfind3--------" + hander);
+        hander.completed(new HelloEntity(id), id);
     }
 }

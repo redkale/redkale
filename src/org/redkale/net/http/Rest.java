@@ -115,6 +115,7 @@ public final class Rest {
         final String webServletDesc = Type.getDescriptor(WebServlet.class);
         final String reqDesc = Type.getDescriptor(HttpRequest.class);
         final String respDesc = Type.getDescriptor(HttpResponse.class);
+        final String contextDesc = Type.getDescriptor(HttpContext.class);
         final String retDesc = Type.getDescriptor(RetResult.class);
         final String futureDesc = Type.getDescriptor(CompletableFuture.class);
         final String flipperDesc = Type.getDescriptor(Flipper.class);
@@ -129,6 +130,7 @@ public final class Rest {
 
         final String reqInternalName = Type.getInternalName(HttpRequest.class);
         final String respInternalName = Type.getInternalName(HttpResponse.class);
+        final String contextInternalName = Type.getInternalName(HttpContext.class);
         final String attrInternalName = Type.getInternalName(org.redkale.util.Attribute.class);
         final String retInternalName = Type.getInternalName(RetResult.class);
         final String serviceTypeInternalName = Type.getInternalName(serviceType);
@@ -256,6 +258,8 @@ public final class Rest {
 
         //将每个Service可转换的方法生成HttpServlet对应的HttpMapping方法
         final Map<String, List<String>> asmParamMap = MethodParamClassVisitor.getMethodParamNames(serviceType);
+        final Map<String, java.lang.reflect.Type> bodyTypes = new HashMap<>();
+
         for (final MappingEntry entry : entrys) {
             final Method method = entry.mappingMethod;
             final Class returnType = method.getReturnType();
@@ -350,7 +354,7 @@ public final class Rest {
                     if (anncookie != null) throw new RuntimeException("@RestBody and @RestCookie cannot on the same Parameter in " + method);
                     if (annsid != null) throw new RuntimeException("@RestBody and @RestSessionid cannot on the same Parameter in " + method);
                     if (annaddr != null) throw new RuntimeException("@RestBody and @RestAddress cannot on the same Parameter in " + method);
-                    if (ptype != String.class && ptype != byte[].class) throw new RuntimeException("@RestBody must on String or byte[] Parameter in " + method);
+                    if (ptype.isPrimitive()) throw new RuntimeException("@RestBody cannot on primitive type Parameter in " + method);
                 }
 
                 RestParam annpara = param.getAnnotation(RestParam.class);
@@ -373,7 +377,7 @@ public final class Rest {
                     && (entry.name.startsWith("find") || entry.name.startsWith("delete")) && params.length == 1) {
                     if (ptype.isPrimitive() || ptype == String.class) n = "#";
                 }
-                paramlist.add(new Object[]{param, n, ptype, radix, comment, required, annpara, annsid, annaddr, annhead, anncookie, annbody});
+                paramlist.add(new Object[]{param, n, ptype, radix, comment, required, annpara, annsid, annaddr, annhead, anncookie, annbody, param.getParameterizedType()});
             }
 
             Map<String, Object> mappingMap = new LinkedHashMap<>();
@@ -415,7 +419,7 @@ public final class Rest {
                 av0 = mv.visitAnnotation(webparamsDesc, true);
                 AnnotationVisitor av1 = av0.visitArray("value");
                 //设置 WebParam
-                for (Object[] ps : paramlist) { //{param, n, ptype, radix, comment, required, annpara, annsid, annaddr, annhead, anncookie, annbody}   
+                for (Object[] ps : paramlist) { //{param, n, ptype, radix, comment, required, annpara, annsid, annaddr, annhead, anncookie, annbody, pgentype}   
                     final boolean ishead = ((RestHeader) ps[9]) != null; //是否取getHeader 而不是 getParameter
                     final boolean iscookie = ((RestCookie) ps[10]) != null; //是否取getCookie
 
@@ -449,6 +453,7 @@ public final class Rest {
                 RestHeader annhead = (RestHeader) ps[9];
                 RestCookie anncookie = (RestCookie) ps[10];
                 RestBody annbody = (RestBody) ps[11];
+                java.lang.reflect.Type pgentype = (java.lang.reflect.Type) ps[12];
 
                 final boolean ishead = annhead != null; //是否取getHeader 而不是 getParameter
                 final boolean iscookie = anncookie != null; //是否取getCookie
@@ -488,9 +493,19 @@ public final class Rest {
                         mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getBodyUTF8", "()Ljava/lang/String;", false);
                         mv.visitVarInsn(ASTORE, maxLocals);
                         varInsns.add(new int[]{ALOAD, maxLocals});
-                    } else {
+                    } else if (ptype == byte[].class) {
                         mv.visitVarInsn(ALOAD, 1);
                         mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getBody", "()[B", false);
+                        mv.visitVarInsn(ASTORE, maxLocals);
+                        varInsns.add(new int[]{ALOAD, maxLocals});
+                    } else { //JavaBean 转 Json
+                        String typefieldname = "_redkale_body_jsontype_" + bodyTypes.size();
+                        bodyTypes.put(typefieldname, pgentype);
+                        mv.visitVarInsn(ALOAD, 1);
+                        mv.visitVarInsn(ALOAD, 0);
+                        mv.visitFieldInsn(GETFIELD, newDynName, typefieldname, "Ljava/lang/reflect/Type;");
+                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getBodyJson", "(Ljava/lang/reflect/Type;)Ljava/lang/Object;", false);
+                        mv.visitTypeInsn(CHECKCAST, Type.getInternalName(ptype));
                         mv.visitVarInsn(ASTORE, maxLocals);
                         varInsns.add(new int[]{ALOAD, maxLocals});
                     }
@@ -771,12 +786,12 @@ public final class Rest {
                             RestSessionid rs = field.getAnnotation(RestSessionid.class);
                             RestAddress ra = field.getAnnotation(RestAddress.class);
                             RestBody rb = field.getAnnotation(RestBody.class);
-                            if (rh == null && rc == null && ra == null) continue;
+                            if (rh == null && rc == null && ra == null && rb == null) continue;
                             if (rh != null && field.getType() != String.class) throw new RuntimeException("@RestHeader must on String Field in " + field);
                             if (rc != null && field.getType() != String.class) throw new RuntimeException("@RestCookie must on String Field in " + field);
                             if (rs != null && field.getType() != String.class) throw new RuntimeException("@RestSessionid must on String Field in " + field);
                             if (ra != null && field.getType() != String.class) throw new RuntimeException("@RestAddress must on String Field in " + field);
-                            if (rb != null && field.getType() != String.class && field.getType() != byte[].class) throw new RuntimeException("@RestAddress must on String or byte[] Field in " + field);
+                            if (rb != null && field.getType().isPrimitive()) throw new RuntimeException("@RestBody must on cannot on primitive type Field in " + field);
                             org.redkale.util.Attribute attr = org.redkale.util.Attribute.create(loop, field);
                             String attrFieldName;
                             String restname = "";
@@ -798,11 +813,14 @@ public final class Rest {
                             } else if (rb != null && field.getType() == byte[].class) {
                                 attrFieldName = "_redkale_attr_bodybytes_" + restAttributes.size();
                                 //restname = "";
+                            } else if (rb != null && field.getType() != String.class && field.getType() != byte[].class) {
+                                attrFieldName = "_redkale_attr_bodyjson_" + restAttributes.size();
+                                //restname = "";
                             } else {
                                 continue;
                             }
                             restAttributes.put(attrFieldName, attr);
-                            attrParaNames.put(attrFieldName, new Object[]{restname, field.getType()});
+                            attrParaNames.put(attrFieldName, new Object[]{restname, field.getType(), field.getGenericType()});
                             fields.add(field.getName());
                         }
                     } while ((loop = loop.getSuperclass()) != Object.class);
@@ -833,6 +851,13 @@ public final class Rest {
                                 mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getBodyUTF8", "()Ljava/lang/String;", false);
                             } else if (en.getKey().contains("_bodybytes_")) {
                                 mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getBody", "()[B", false);
+                            } else if (en.getKey().contains("_bodyjson_")) {//JavaBean 转 Json
+                                String typefieldname = "_redkale_body_jsontype_" + bodyTypes.size();
+                                bodyTypes.put(typefieldname, (java.lang.reflect.Type) en.getValue()[2]);
+                                mv.visitVarInsn(ALOAD, 0);
+                                mv.visitFieldInsn(GETFIELD, newDynName, typefieldname, "Ljava/lang/reflect/Type;");
+                                mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getBodyJson", "(Ljava/lang/reflect/Type;)Ljava/lang/Object;", false);
+                                mv.visitTypeInsn(CHECKCAST, Type.getInternalName((Class) en.getValue()[1]));
                             }
                             mv.visitMethodInsn(INVOKEINTERFACE, attrInternalName, "set", "(Ljava/lang/Object;Ljava/lang/Object;)V", true);
                         }
@@ -978,6 +1003,11 @@ public final class Rest {
             mappingMaps.add(mappingMap);
         } // end  for each 
 
+        for (Map.Entry<String, java.lang.reflect.Type> en : bodyTypes.entrySet()) {
+            fv = cw.visitField(ACC_PRIVATE, en.getKey(), "Ljava/lang/reflect/Type;", null, null);
+            fv.visitEnd();
+        }
+
         for (String attrname : restAttributes.keySet()) {
             fv = cw.visitField(ACC_PRIVATE, attrname, attrDesc, null, null);
             fv.visitEnd();
@@ -1007,6 +1037,11 @@ public final class Rest {
                 Field attrField = newClazz.getDeclaredField(en.getKey());
                 attrField.setAccessible(true);
                 attrField.set(obj, en.getValue());
+            }
+            for (Map.Entry<String, java.lang.reflect.Type> en : bodyTypes.entrySet()) {
+                Field genField = newClazz.getDeclaredField(en.getKey());
+                genField.setAccessible(true);
+                genField.set(obj, en.getValue());
             }
             Field typesfield = newClazz.getDeclaredField(REST_PARAMTYPES_FIELD_NAME);
             typesfield.setAccessible(true);
