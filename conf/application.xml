@@ -13,9 +13,9 @@
     </resources> 
         
     <server protocol="HTTP" host="0.0.0.0" port="6060" root="root">      
-        <!--
-        <rest base="org.redkale.net.http.DefaultRestServlet"/>   
-        -->
+      
+        <rest base="org.redkale.net.http.RestHttpServlet"/>   
+       
         <!--
         <request>
             <remoteaddr value="request.headers.X-RemoteAddress"/>
