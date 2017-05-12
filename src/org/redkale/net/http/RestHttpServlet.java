@@ -14,8 +14,10 @@ import java.io.*;
  * @author zhangjx
  * @param <T> 当前用户对象类型
  */
-public abstract class RestHttpServlet<T> extends HttpServlet {
+public class RestHttpServlet<T> extends HttpServlet {
 
-    protected abstract T currentUser(HttpRequest req) throws IOException;
+    protected T currentUser(HttpRequest req) throws IOException {
+        return null;
+    }
 
 }
