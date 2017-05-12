@@ -90,46 +90,46 @@ public final class HttpServer extends Server<String, HttpContext, HttpRequest, H
     }
 
     /**
-     * 添加RestHttpServlet
+     * 添加RestServlet
      *
      * @param <S>              Service
-     * @param <T>              RestHttpServlet
+     * @param <T>              RestServlet
      * @param name             Service的资源名
      * @param serviceType      Service的类型
      * @param service          Service对象
-     * @param baseServletClass RestHttpServlet基类
+     * @param baseServletClass RestServlet基类
      * @param prefix           url前缀
      *
-     * @return RestHttpServlet
+     * @return RestServlet
      */
-    public <S extends Service, T extends RestHttpServlet> RestHttpServlet addRestServlet(String name, Class<S> serviceType, S service, Class<T> baseServletClass, String prefix) {
+    public <S extends Service, T extends RestServlet> RestServlet addRestServlet(String name, Class<S> serviceType, S service, Class<T> baseServletClass, String prefix) {
         return addRestServlet(name, serviceType, service, baseServletClass, prefix, null);
     }
 
     /**
-     * 添加RestHttpServlet
+     * 添加RestServlet
      *
      * @param <S>              Service
-     * @param <T>              RestHttpServlet
+     * @param <T>              RestServlet
      * @param name             Service的资源名
      * @param serviceType      Service的类型
      * @param service          Service对象
-     * @param baseServletClass RestHttpServlet基类
+     * @param baseServletClass RestServlet基类
      * @param prefix           url前缀
      * @param conf             配置信息
      *
-     * @return RestHttpServlet
+     * @return RestServlet
      */
-    public <S extends Service, T extends RestHttpServlet> RestHttpServlet addRestServlet(
+    public <S extends Service, T extends RestServlet> RestServlet addRestServlet(
         final String name, Class<S> serviceType, final S service, final Class<T> baseServletClass, final String prefix, AnyValue conf) {
-        RestHttpServlet servlet = null;
+        RestServlet servlet = null;
         for (final HttpServlet item : ((HttpPrepareServlet) this.prepare).getServlets()) {
-            if (!(item instanceof RestHttpServlet)) continue;
+            if (!(item instanceof RestServlet)) continue;
             if (item.getClass().getAnnotation(Rest.RestDynamic.class) == null) continue;
             try {
                 Field field = item.getClass().getDeclaredField(Rest.REST_SERVICE_FIELD_NAME);
                 if (serviceType.equals(field.getType())) {
-                    servlet = (RestHttpServlet) item;
+                    servlet = (RestServlet) item;
                     break;
                 }
             } catch (NoSuchFieldException | SecurityException e) {

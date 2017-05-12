@@ -14,14 +14,18 @@
         
     <server protocol="HTTP" host="0.0.0.0" port="6060" root="root">      
       
-        <rest base="org.redkale.net.http.RestHttpServlet"/>   
-       
         <!--
         <request>
             <remoteaddr value="request.headers.X-RemoteAddress"/>
         </request>
         -->
+        <!-- 自定Rest实现类需要继承org.redkale.net.http.RestServlet，不自定义则默认使用org.redkale.net.http.RestServlet  -->
+        <rest base="org.redkale.net.http.RestServlet"/>   
+       
         <services autoload="true"/>
+        
         <servlets path="/pipes" autoload="true" />
+        
     </server>
+    
 </application>

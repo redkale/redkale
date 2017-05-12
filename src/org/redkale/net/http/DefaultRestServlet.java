@@ -8,7 +8,7 @@ package org.redkale.net.http;
 import java.io.IOException;
 
 /**
- * 默认Servlet, 没有配置RestHttpServlet实现类则使用该默认类
+ * 默认Servlet, 没有配置RestServlet实现类则使用该默认类
  * <p>
  * 详情见: https://redkale.org
  *

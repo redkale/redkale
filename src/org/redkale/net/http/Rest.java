@@ -48,7 +48,7 @@ public final class Rest {
     }
 
     /**
-     * 用于标记由Rest.createRestServlet 方法创建的RestHttpServlet
+     * 用于标记由Rest.createRestServlet 方法创建的RestServlet
      */
     @Inherited
     @Documented
@@ -104,9 +104,9 @@ public final class Rest {
         return (!controller.name().isEmpty()) ? controller.name() : serviceType.getSimpleName().replaceAll("Service.*$", "").toLowerCase();
     }
 
-    static <T extends RestHttpServlet> T createRestServlet(final Class<T> baseServletClass, final Class<? extends Service> serviceType) {
+    static <T extends RestServlet> T createRestServlet(final Class<T> baseServletClass, final Class<? extends Service> serviceType) {
         if (baseServletClass == null || serviceType == null) return null;
-        if (!RestHttpServlet.class.isAssignableFrom(baseServletClass)) return null;
+        if (!RestServlet.class.isAssignableFrom(baseServletClass)) return null;
         int mod = baseServletClass.getModifiers();
         if (!java.lang.reflect.Modifier.isPublic(mod)) return null;
         if (java.lang.reflect.Modifier.isAbstract(mod)) return null;
@@ -1060,7 +1060,7 @@ public final class Rest {
         if (type instanceof Class) return getSuperUserType((Class) type);
         if (type instanceof java.lang.reflect.ParameterizedType) {
             java.lang.reflect.ParameterizedType pt = (java.lang.reflect.ParameterizedType) type;
-            if (pt.getRawType() == RestHttpServlet.class) {
+            if (pt.getRawType() == RestServlet.class) {
                 java.lang.reflect.Type usert = pt.getActualTypeArguments()[0];
                 if (usert instanceof Class) return (Class) usert;
             }
