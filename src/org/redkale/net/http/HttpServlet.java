@@ -18,7 +18,7 @@ import org.redkale.service.RetResult;
 import org.redkale.util.*;
 
 /**
- * HTTP版的Servlet， 执行顺序 execute --> preExecute --> authenticate --> HttpMapping对应的方法
+ * HTTP版的Servlet， 执行顺序 execute --&#62; preExecute --&#62; authenticate --&#62; HttpMapping对应的方法
  *
  * <p>
  * 详情见: https://redkale.org
