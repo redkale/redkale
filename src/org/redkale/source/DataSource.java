@@ -6,10 +6,8 @@
 package org.redkale.source;
 
 import java.io.Serializable;
-import java.sql.ResultSet;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Consumer;
 import org.redkale.util.*;
 
 /**
@@ -1867,23 +1865,4 @@ public interface DataSource {
      */
     public <T> CompletableFuture<Sheet<T>> querySheetAsync(final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterNode node);
 
-    //-----------------------direct----------------------------
-    /**
-     * 直接本地执行SQL语句进行查询，远程模式不可用   <br>
-     * 通常用于复杂的关联查询   <br>
-     *
-     * @param sql      SQL语句
-     * @param consumer 回调函数
-     */
-    public void directQuery(String sql, final Consumer<ResultSet> consumer);
-
-    /**
-     * 直接本地执行SQL语句进行增删改操作，远程模式不可用   <br>
-     * 通常用于复杂的更新操作   <br>
-     *
-     * @param sqls SQL语句
-     *
-     * @return 结果数组
-     */
-    public int[] directExecute(String... sqls);
 }
