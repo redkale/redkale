@@ -8,7 +8,6 @@ package org.redkale.source;
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import org.redkale.util.*;
 
 /**
  *
@@ -86,36 +85,4 @@ public interface CacheSource<K extends Serializable, V extends Object> {
         return CompletableFuture.completedFuture(true);
     }
 
-    //---------------------- AsyncHandler 异步版 ---------------------------------
-    public void existsAsync(final AsyncHandler<Boolean, K> handler, final K key);
-
-    public void getAsync(final AsyncHandler<V, K> handler, final K key);
-
-    public void getAndRefreshAsync(final AsyncHandler<V, K> handler, final K key, final int expireSeconds);
-
-    public void refreshAsync(final AsyncHandler<Void, K> handler, final K key, final int expireSeconds);
-
-    public void setAsync(final AsyncHandler<Void, K> handler, final K key, final V value);
-
-    public void setAsync(final AsyncHandler<Void, K> handler, final int expireSeconds, final K key, final V value);
-
-    public void setExpireSecondsAsync(final AsyncHandler<Void, K> handler, final K key, final int expireSeconds);
-
-    public void removeAsync(final AsyncHandler<Void, K> handler, final K key);
-
-    public void getCollectionAsync(final AsyncHandler<Collection<V>, K> handler, final K key);
-
-    public void getCollectionAndRefreshAsync(final AsyncHandler<Collection<V>, K> handler, final K key, final int expireSeconds);
-
-    public void appendListItemAsync(final AsyncHandler<Void, K> handler, final K key, final V value);
-
-    public void removeListItemAsync(final AsyncHandler<Void, K> handler, final K key, final V value);
-
-    public void appendSetItemAsync(final AsyncHandler<Void, K> handler, final K key, final V value);
-
-    public void removeSetItemAsync(final AsyncHandler<Void, K> handler, final K key, final V value);
-
-    default void isOpenAsync(final AsyncHandler<Boolean, Void> handler) {
-        if (handler != null) handler.completed(Boolean.TRUE, null);
-    }
 }

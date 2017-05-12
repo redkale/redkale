@@ -201,18 +201,6 @@ public class CacheMemorySource<K extends Serializable, V extends Object> extends
     }
 
     @Override
-    public void existsAsync(final AsyncHandler<Boolean, K> handler, @RpcAttachment final K key) {
-        super.runAsync(() -> {
-            try {
-                boolean rs = exists(key);
-                if (handler != null) handler.completed(rs, key);
-            } catch (Throwable t) {
-                if (handler != null) handler.failed(t, key);
-            }
-        });
-    }
-
-    @Override
     public V get(K key) {
         if (key == null) return null;
         CacheEntry entry = container.get(key);
@@ -225,18 +213,6 @@ public class CacheMemorySource<K extends Serializable, V extends Object> extends
     @Override
     public CompletableFuture<V> getAsync(final K key) {
         return CompletableFuture.supplyAsync(() -> get(key), getExecutor());
-    }
-
-    @Override
-    public void getAsync(final AsyncHandler<V, K> handler, @RpcAttachment final K key) {
-        super.runAsync(() -> {
-            try {
-                V rs = get(key);
-                if (handler != null) handler.completed(rs, key);
-            } catch (Throwable t) {
-                if (handler != null) handler.failed(t, key);
-            }
-        });
     }
 
     @Override
@@ -258,18 +234,6 @@ public class CacheMemorySource<K extends Serializable, V extends Object> extends
     }
 
     @Override
-    public void getAndRefreshAsync(final AsyncHandler<V, K> handler, @RpcAttachment final K key, final int expireSeconds) {
-        super.runAsync(() -> {
-            try {
-                V rs = getAndRefresh(key, expireSeconds);
-                if (handler != null) handler.completed(rs, key);
-            } catch (Throwable t) {
-                if (handler != null) handler.failed(t, key);
-            }
-        });
-    }
-
-    @Override
     @RpcMultiRun
     public void refresh(K key, final int expireSeconds) {
         if (key == null) return;
@@ -282,18 +246,6 @@ public class CacheMemorySource<K extends Serializable, V extends Object> extends
     @Override
     public CompletableFuture<Void> refreshAsync(final K key, final int expireSeconds) {
         return CompletableFuture.runAsync(() -> refresh(key, expireSeconds), getExecutor());
-    }
-
-    @Override
-    public void refreshAsync(final AsyncHandler<Void, K> handler, @RpcAttachment final K key, final int expireSeconds) {
-        super.runAsync(() -> {
-            try {
-                refresh(key, expireSeconds);
-                if (handler != null) handler.completed(null, key);
-            } catch (Throwable t) {
-                if (handler != null) handler.failed(t, key);
-            }
-        });
     }
 
     @Override
@@ -317,18 +269,6 @@ public class CacheMemorySource<K extends Serializable, V extends Object> extends
     }
 
     @Override
-    public void setAsync(final AsyncHandler<Void, K> handler, @RpcAttachment final K key, final V value) {
-        super.runAsync(() -> {
-            try {
-                set(key, value);
-                if (handler != null) handler.completed(null, key);
-            } catch (Throwable t) {
-                if (handler != null) handler.failed(t, key);
-            }
-        });
-    }
-
-    @Override
     @RpcMultiRun
     public void set(int expireSeconds, K key, V value) {
         if (key == null) return;
@@ -349,18 +289,6 @@ public class CacheMemorySource<K extends Serializable, V extends Object> extends
     }
 
     @Override
-    public void setAsync(final AsyncHandler<Void, K> handler, final int expireSeconds, @RpcAttachment final K key, final V value) {
-        super.runAsync(() -> {
-            try {
-                set(expireSeconds, key, value);
-                if (handler != null) handler.completed(null, key);
-            } catch (Throwable t) {
-                if (handler != null) handler.failed(t, key);
-            }
-        });
-    }
-
-    @Override
     @RpcMultiRun
     public void setExpireSeconds(K key, int expireSeconds) {
         if (key == null) return;
@@ -372,18 +300,6 @@ public class CacheMemorySource<K extends Serializable, V extends Object> extends
     @Override
     public CompletableFuture<Void> setExpireSecondsAsync(final K key, final int expireSeconds) {
         return CompletableFuture.runAsync(() -> setExpireSeconds(key, expireSeconds), getExecutor());
-    }
-
-    @Override
-    public void setExpireSecondsAsync(final AsyncHandler<Void, K> handler, @RpcAttachment final K key, final int expireSeconds) {
-        super.runAsync(() -> {
-            try {
-                setExpireSeconds(key, expireSeconds);
-                if (handler != null) handler.completed(null, key);
-            } catch (Throwable t) {
-                if (handler != null) handler.failed(t, key);
-            }
-        });
     }
 
     @Override
@@ -399,18 +315,6 @@ public class CacheMemorySource<K extends Serializable, V extends Object> extends
     }
 
     @Override
-    public void removeAsync(final AsyncHandler<Void, K> handler, @RpcAttachment final K key) {
-        super.runAsync(() -> {
-            try {
-                remove(key);
-                if (handler != null) handler.completed(null, key);
-            } catch (Throwable t) {
-                if (handler != null) handler.failed(t, key);
-            }
-        });
-    }
-
-    @Override
     public Collection<V> getCollection(final K key) {
         return (Collection<V>) get(key);
     }
@@ -421,18 +325,6 @@ public class CacheMemorySource<K extends Serializable, V extends Object> extends
     }
 
     @Override
-    public void getCollectionAsync(final AsyncHandler<Collection<V>, K> handler, @RpcAttachment final K key) {
-        super.runAsync(() -> {
-            try {
-                Collection<V> rs = getCollection(key);
-                if (handler != null) handler.completed(rs, key);
-            } catch (Throwable t) {
-                if (handler != null) handler.failed(t, key);
-            }
-        });
-    }
-
-    @Override
     public Collection<V> getCollectionAndRefresh(final K key, final int expireSeconds) {
         return (Collection<V>) getAndRefresh(key, expireSeconds);
     }
@@ -440,18 +332,6 @@ public class CacheMemorySource<K extends Serializable, V extends Object> extends
     @Override
     public CompletableFuture<Collection<V>> getCollectionAndRefreshAsync(final K key, final int expireSeconds) {
         return CompletableFuture.supplyAsync(() -> getCollectionAndRefresh(key, expireSeconds), getExecutor());
-    }
-
-    @Override
-    public void getCollectionAndRefreshAsync(final AsyncHandler<Collection<V>, K> handler, @RpcAttachment final K key, final int expireSeconds) {
-        super.runAsync(() -> {
-            try {
-                Collection<V> rs = getCollectionAndRefresh(key, expireSeconds);
-                if (handler != null) handler.completed(rs, key);
-            } catch (Throwable t) {
-                if (handler != null) handler.failed(t, key);
-            }
-        });
     }
 
     @Override
@@ -476,18 +356,6 @@ public class CacheMemorySource<K extends Serializable, V extends Object> extends
     }
 
     @Override
-    public void appendListItemAsync(final AsyncHandler<Void, K> handler, @RpcAttachment final K key, final V value) {
-        super.runAsync(() -> {
-            try {
-                appendListItem(key, value);
-                if (handler != null) handler.completed(null, key);
-            } catch (Throwable t) {
-                if (handler != null) handler.failed(t, key);
-            }
-        });
-    }
-
-    @Override
     @RpcMultiRun
     public void removeListItem(K key, V value) {
         if (key == null) return;
@@ -499,18 +367,6 @@ public class CacheMemorySource<K extends Serializable, V extends Object> extends
     @Override
     public CompletableFuture<Void> removeListItemAsync(final K key, final V value) {
         return CompletableFuture.runAsync(() -> removeListItem(key, value), getExecutor());
-    }
-
-    @Override
-    public void removeListItemAsync(final AsyncHandler<Void, K> handler, @RpcAttachment final K key, final V value) {
-        super.runAsync(() -> {
-            try {
-                removeListItem(key, value);
-                if (handler != null) handler.completed(null, key);
-            } catch (Throwable t) {
-                if (handler != null) handler.failed(t, key);
-            }
-        });
     }
 
     @Override
@@ -535,18 +391,6 @@ public class CacheMemorySource<K extends Serializable, V extends Object> extends
     }
 
     @Override
-    public void appendSetItemAsync(final AsyncHandler<Void, K> handler, @RpcAttachment final K key, final V value) {
-        super.runAsync(() -> {
-            try {
-                appendSetItem(key, value);
-                if (handler != null) handler.completed(null, key);
-            } catch (Throwable t) {
-                if (handler != null) handler.failed(t, key);
-            }
-        });
-    }
-
-    @Override
     @RpcMultiRun
     public void removeSetItem(K key, V value) {
         if (key == null) return;
@@ -558,18 +402,6 @@ public class CacheMemorySource<K extends Serializable, V extends Object> extends
     @Override
     public CompletableFuture<Void> removeSetItemAsync(final K key, final V value) {
         return CompletableFuture.runAsync(() -> removeSetItem(key, value), getExecutor());
-    }
-
-    @Override
-    public void removeSetItemAsync(final AsyncHandler<Void, K> handler, @RpcAttachment final K key, final V value) {
-        super.runAsync(() -> {
-            try {
-                removeSetItem(key, value);
-                if (handler != null) handler.completed(null, key);
-            } catch (Throwable t) {
-                if (handler != null) handler.failed(t, key);
-            }
-        });
     }
 
     public static enum CacheEntryType {

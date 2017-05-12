@@ -150,18 +150,6 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
         return CompletableFuture.runAsync(() -> insert(values), getExecutor());
     }
 
-    @Override
-    public <T> void insertAsync(final AsyncHandler<Void, T[]> handler, @RpcAttachment @RpcCall(DataCallArrayAttribute.class) final T... values) {
-        super.runAsync(() -> {
-            try {
-                insert(values);
-                if (handler != null) handler.completed(null, values);
-            } catch (Throwable t) {
-                if (handler != null) handler.failed(t, values);
-            }
-        });
-    }
-
     private <T> void insert(final Connection conn, final EntityInfo<T> info, T... values) {
         if (values.length == 0) return;
         try {
@@ -340,18 +328,6 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
         return CompletableFuture.supplyAsync(() -> delete(values), getExecutor());
     }
 
-    @Override
-    public <T> void deleteAsync(final AsyncHandler<Integer, T[]> handler, @RpcAttachment final T... values) {
-        super.runAsync(() -> {
-            try {
-                int rs = delete(values);
-                if (handler != null) handler.completed(rs, values);
-            } catch (Throwable t) {
-                if (handler != null) handler.failed(t, values);
-            }
-        });
-    }
-
     private <T> int delete(final Connection conn, final EntityInfo<T> info, T... values) {
         if (values.length == 0) return -1;
         final Attribute primary = info.getPrimary();
@@ -380,18 +356,6 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
     @Override
     public <T> CompletableFuture<Integer> deleteAsync(final Class<T> clazz, final Serializable... ids) {
         return CompletableFuture.supplyAsync(() -> delete(clazz, ids), getExecutor());
-    }
-
-    @Override
-    public <T> void deleteAsync(final AsyncHandler<Integer, Serializable[]> handler, final Class<T> clazz, @RpcAttachment final Serializable... ids) {
-        super.runAsync(() -> {
-            try {
-                int rs = delete(clazz, ids);
-                if (handler != null) handler.completed(rs, ids);
-            } catch (Throwable t) {
-                if (handler != null) handler.failed(t, ids);
-            }
-        });
     }
 
     private <T> int delete(final Connection conn, final EntityInfo<T> info, Serializable... keys) {
@@ -448,18 +412,6 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
     }
 
     @Override
-    public <T> void deleteAsync(final AsyncHandler<Integer, FilterNode> handler, final Class<T> clazz, @RpcAttachment final FilterNode node) {
-        super.runAsync(() -> {
-            try {
-                int rs = delete(clazz, node);
-                if (handler != null) handler.completed(rs, node);
-            } catch (Throwable t) {
-                if (handler != null) handler.failed(t, node);
-            }
-        });
-    }
-
-    @Override
     public <T> int delete(Class<T> clazz, final Flipper flipper, FilterNode node) {
         final EntityInfo<T> info = loadEntityInfo(clazz);
         if (info.isVirtualEntity()) {
@@ -476,18 +428,6 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
     @Override
     public <T> CompletableFuture<Integer> deleteAsync(final Class<T> clazz, final Flipper flipper, FilterNode node) {
         return CompletableFuture.supplyAsync(() -> delete(clazz, flipper, node), getExecutor());
-    }
-
-    @Override
-    public <T> void deleteAsync(final AsyncHandler<Integer, FilterNode> handler, final Class<T> clazz, final Flipper flipper, @RpcAttachment FilterNode node) {
-        super.runAsync(() -> {
-            try {
-                int rs = delete(clazz, flipper, node);
-                if (handler != null) handler.completed(rs, node);
-            } catch (Throwable t) {
-                if (handler != null) handler.failed(t, node);
-            }
-        });
     }
 
     private <T> int delete(final Connection conn, final EntityInfo<T> info, final Flipper flipper, final FilterNode node) {
@@ -507,7 +447,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
                 }
                 String sql = "DELETE " + (this.readPool.isMysql() ? "a" : "") + " FROM " + info.getTable(node) + " a" + (join1 == null ? "" : (", " + join1))
                     + ((where == null || where.length() == 0) ? (join2 == null ? "" : (" WHERE " + join2))
-                    : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2)))) + info.createSQLOrderby(flipper)
+                        : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2)))) + info.createSQLOrderby(flipper)
                     + ((flipper == null || flipper.getLimit() < 1) ? "" : (" LIMIT " + flipper.getLimit()));
                 if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(info.getType().getSimpleName() + " delete sql=" + sql);
                 conn.setReadOnly(false);
@@ -579,18 +519,6 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
     @Override
     public <T> CompletableFuture<Integer> updateAsync(final T... values) {
         return CompletableFuture.supplyAsync(() -> update(values), getExecutor());
-    }
-
-    @Override
-    public <T> void updateAsync(final AsyncHandler<Integer, T[]> handler, @RpcAttachment final T... values) {
-        super.runAsync(() -> {
-            try {
-                int rs = update(values);
-                if (handler != null) handler.completed(rs, values);
-            } catch (Throwable t) {
-                if (handler != null) handler.failed(t, values);
-            }
-        });
     }
 
     private <T> int update(final Connection conn, final EntityInfo<T> info, T... values) {
@@ -689,18 +617,6 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
         return CompletableFuture.supplyAsync(() -> updateColumn(clazz, id, column, value), getExecutor());
     }
 
-    @Override
-    public <T> void updateColumnAsync(final AsyncHandler<Integer, Serializable> handler, final Class<T> clazz, final Serializable id, final String column, final Serializable value) {
-        super.runAsync(() -> {
-            try {
-                int rs = updateColumn(clazz, id, column, value);
-                if (handler != null) handler.completed(rs, id);
-            } catch (Throwable t) {
-                if (handler != null) handler.failed(t, id);
-            }
-        });
-    }
-
     private <T> int updateColumn(Connection conn, final EntityInfo<T> info, Serializable id, String column, final Serializable value) {
         try {
             int c = -1;
@@ -768,18 +684,6 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
         return CompletableFuture.supplyAsync(() -> updateColumn(clazz, column, value, node), getExecutor());
     }
 
-    @Override
-    public <T> void updateColumnAsync(final AsyncHandler<Integer, FilterNode> handler, final Class<T> clazz, final String column, final Serializable value, @RpcAttachment final FilterNode node) {
-        super.runAsync(() -> {
-            try {
-                int rs = updateColumn(clazz, column, value, node);
-                if (handler != null) handler.completed(rs, node);
-            } catch (Throwable t) {
-                if (handler != null) handler.failed(t, node);
-            }
-        });
-    }
-
     private <T> int updateColumn(Connection conn, final EntityInfo<T> info, String column, final Serializable value, FilterNode node) {
         try {
             int c = -1;
@@ -799,7 +703,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
                     String sql = "UPDATE " + info.getTable(node) + " a " + (join1 == null ? "" : (", " + join1))
                         + " SET " + info.getSQLColumn("a", column) + " = ?"
                         + ((where == null || where.length() == 0) ? (join2 == null ? "" : (" WHERE " + join2))
-                        : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))));
+                            : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))));
                     if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
                     conn.setReadOnly(false);
                     Blob blob = conn.createBlob();
@@ -812,7 +716,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
                     String sql = "UPDATE " + info.getTable(node) + " a " + (join1 == null ? "" : (", " + join1))
                         + " SET " + info.getSQLColumn("a", column) + " = " + info.formatToString(value)
                         + ((where == null || where.length() == 0) ? (join2 == null ? "" : (" WHERE " + join2))
-                        : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))));
+                            : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))));
                     if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
                     conn.setReadOnly(false);
                     final Statement stmt = conn.createStatement();
@@ -860,18 +764,6 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
     @Override
     public <T> CompletableFuture<Integer> updateColumnAsync(final Class<T> clazz, final Serializable id, final ColumnValue... values) {
         return CompletableFuture.supplyAsync(() -> updateColumn(clazz, id, values), getExecutor());
-    }
-
-    @Override
-    public <T> void updateColumnAsync(final AsyncHandler<Integer, Serializable> handler, final Class<T> clazz, @RpcAttachment final Serializable id, final ColumnValue... values) {
-        super.runAsync(() -> {
-            try {
-                int rs = updateColumn(clazz, id, values);
-                if (handler != null) handler.completed(rs, id);
-            } catch (Throwable t) {
-                if (handler != null) handler.failed(t, id);
-            }
-        });
     }
 
     private <T> int updateColumn(final Connection conn, final EntityInfo<T> info, final Serializable id, final ColumnValue... values) {
@@ -960,18 +852,6 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
         return CompletableFuture.supplyAsync(() -> updateColumn(clazz, node, values), getExecutor());
     }
 
-    @Override
-    public <T> void updateColumnAsync(final AsyncHandler<Integer, FilterNode> handler, final Class<T> clazz, @RpcAttachment final FilterNode node, final ColumnValue... values) {
-        super.runAsync(() -> {
-            try {
-                int rs = updateColumn(clazz, node, values);
-                if (handler != null) handler.completed(rs, node);
-            } catch (Throwable t) {
-                if (handler != null) handler.failed(t, node);
-            }
-        });
-    }
-
     /**
      * 根据主键值更新对象的多个column对应的值， 必须是Entity Class
      *
@@ -1000,18 +880,6 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
     @Override
     public <T> CompletableFuture<Integer> updateColumnAsync(final Class<T> clazz, final FilterNode node, final Flipper flipper, final ColumnValue... values) {
         return CompletableFuture.supplyAsync(() -> updateColumn(clazz, node, flipper, values), getExecutor());
-    }
-
-    @Override
-    public <T> void updateColumnAsync(final AsyncHandler<Integer, FilterNode> handler, final Class<T> clazz, @RpcAttachment final FilterNode node, final Flipper flipper, final ColumnValue... values) {
-        super.runAsync(() -> {
-            try {
-                int rs = updateColumn(clazz, node, flipper, values);
-                if (handler != null) handler.completed(rs, node);
-            } catch (Throwable t) {
-                if (handler != null) handler.failed(t, node);
-            }
-        });
     }
 
     private <T> int updateColumn(final Connection conn, final EntityInfo<T> info, final FilterNode node, final Flipper flipper, final ColumnValue... values) {
@@ -1053,7 +921,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
                 }
                 String sql = "UPDATE " + info.getTable(node) + " a " + (join1 == null ? "" : (", " + join1)) + " SET " + setsql
                     + ((where == null || where.length() == 0) ? (join2 == null ? "" : (" WHERE " + join2))
-                    : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))));
+                        : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))));
                 //注：LIMIT 仅支持MySQL 且在多表关联式会异常， 该BUG尚未解决
                 sql += info.createSQLOrderby(flipper) + ((flipper == null || flipper.getLimit() < 1) ? "" : (" LIMIT " + flipper.getLimit()));
                 if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
@@ -1096,18 +964,6 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
     }
 
     @Override
-    public <T> void updateColumnAsync(final AsyncHandler<Integer, T> handler, @RpcAttachment final T bean, final String... columns) {
-        super.runAsync(() -> {
-            try {
-                int rs = updateColumn(bean, columns);
-                if (handler != null) handler.completed(rs, bean);
-            } catch (Throwable t) {
-                if (handler != null) handler.failed(t, bean);
-            }
-        });
-    }
-
-    @Override
     public <T> int updateColumn(final T bean, final FilterNode node, final String... columns) {
         return updateColumn(bean, node, SelectColumn.createIncludes(columns));
     }
@@ -1115,18 +971,6 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
     @Override
     public <T> CompletableFuture<Integer> updateColumnAsync(final T bean, final FilterNode node, final String... columns) {
         return CompletableFuture.supplyAsync(() -> updateColumn(bean, node, columns), getExecutor());
-    }
-
-    @Override
-    public <T> void updateColumnAsync(final AsyncHandler<Integer, FilterNode> handler, final T bean, @RpcAttachment final FilterNode node, final String... columns) {
-        super.runAsync(() -> {
-            try {
-                int rs = updateColumn(bean, node, columns);
-                if (handler != null) handler.completed(rs, node);
-            } catch (Throwable t) {
-                if (handler != null) handler.failed(t, node);
-            }
-        });
     }
 
     @Override
@@ -1146,18 +990,6 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
     @Override
     public <T> CompletableFuture<Integer> updateColumnAsync(final T bean, final SelectColumn selects) {
         return CompletableFuture.supplyAsync(() -> updateColumn(bean, selects), getExecutor());
-    }
-
-    @Override
-    public <T> void updateColumnAsync(final AsyncHandler<Integer, T> handler, @RpcAttachment final T bean, final SelectColumn selects) {
-        super.runAsync(() -> {
-            try {
-                int rs = updateColumn(bean, selects);
-                if (handler != null) handler.completed(rs, bean);
-            } catch (Throwable t) {
-                if (handler != null) handler.failed(t, bean);
-            }
-        });
     }
 
     private <T> int updateColumns(final Connection conn, final EntityInfo<T> info, final T bean, final SelectColumn selects) {
@@ -1236,18 +1068,6 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
         return CompletableFuture.supplyAsync(() -> updateColumn(bean, node, selects), getExecutor());
     }
 
-    @Override
-    public <T> void updateColumnAsync(final AsyncHandler<Integer, FilterNode> handler, final T bean, @RpcAttachment final FilterNode node, final SelectColumn selects) {
-        super.runAsync(() -> {
-            try {
-                int rs = updateColumn(bean, node, selects);
-                if (handler != null) handler.completed(rs, node);
-            } catch (Throwable t) {
-                if (handler != null) handler.failed(t, node);
-            }
-        });
-    }
-
     private <T> int updateColumns(final Connection conn, final EntityInfo<T> info, final T bean, final FilterNode node, final SelectColumn selects) {
         if (bean == null || node == null || selects == null) return -1;
         try {
@@ -1287,7 +1107,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
                 }
                 String sql = "UPDATE " + info.getTable(node) + " a " + (join1 == null ? "" : (", " + join1)) + " SET " + setsql
                     + ((where == null || where.length() == 0) ? (join2 == null ? "" : (" WHERE " + join2))
-                    : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))));
+                        : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))));
                 if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
                 conn.setReadOnly(false);
                 if (blobs != null) {
@@ -1356,18 +1176,6 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
     }
 
     @Override
-    public void getNumberResultAsync(final AsyncHandler<Number, String> handler, final Class entityClass, final FilterFunc func, @RpcAttachment final String column) {
-        super.runAsync(() -> {
-            try {
-                Number rs = getNumberResult(entityClass, func, column);
-                if (handler != null) handler.completed(rs, column);
-            } catch (Throwable t) {
-                if (handler != null) handler.failed(t, column);
-            }
-        });
-    }
-
-    @Override
     public Number getNumberResult(final Class entityClass, final FilterFunc func, final String column, FilterBean bean) {
         return getNumberResult(entityClass, func, null, column, FilterNodeBean.createFilterNode(bean));
     }
@@ -1375,18 +1183,6 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
     @Override
     public CompletableFuture<Number> getNumberResultAsync(final Class entityClass, final FilterFunc func, final String column, final FilterBean bean) {
         return CompletableFuture.supplyAsync(() -> getNumberResult(entityClass, func, column, bean), getExecutor());
-    }
-
-    @Override
-    public <B extends FilterBean> void getNumberResultAsync(final AsyncHandler<Number, B> handler, final Class entityClass, final FilterFunc func, final String column, @RpcAttachment final B bean) {
-        super.runAsync(() -> {
-            try {
-                Number rs = getNumberResult(entityClass, func, column, bean);
-                if (handler != null) handler.completed(rs, bean);
-            } catch (Throwable t) {
-                if (handler != null) handler.failed(t, bean);
-            }
-        });
     }
 
     @Override
@@ -1400,18 +1196,6 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
     }
 
     @Override
-    public void getNumberResultAsync(final AsyncHandler<Number, FilterNode> handler, final Class entityClass, final FilterFunc func, final String column, @RpcAttachment final FilterNode node) {
-        super.runAsync(() -> {
-            try {
-                Number rs = getNumberResult(entityClass, func, column, node);
-                if (handler != null) handler.completed(rs, node);
-            } catch (Throwable t) {
-                if (handler != null) handler.failed(t, node);
-            }
-        });
-    }
-
-    @Override
     public Number getNumberResult(final Class entityClass, final FilterFunc func, final Number defVal, final String column) {
         return getNumberResult(entityClass, func, defVal, column, (FilterNode) null);
     }
@@ -1419,18 +1203,6 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
     @Override
     public CompletableFuture<Number> getNumberResultAsync(final Class entityClass, final FilterFunc func, final Number defVal, final String column) {
         return CompletableFuture.supplyAsync(() -> getNumberResult(entityClass, func, defVal, column), getExecutor());
-    }
-
-    @Override
-    public void getNumberResultAsync(final AsyncHandler<Number, String> handler, final Class entityClass, final FilterFunc func, final Number defVal, @RpcAttachment final String column) {
-        super.runAsync(() -> {
-            try {
-                Number rs = getNumberResult(entityClass, func, defVal, column);
-                if (handler != null) handler.completed(rs, column);
-            } catch (Throwable t) {
-                if (handler != null) handler.failed(t, column);
-            }
-        });
     }
 
     @Override
@@ -1444,25 +1216,8 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
     }
 
     @Override
-    public void getNumberResultAsync(final AsyncHandler<Number, String> handler, final Class entityClass, final FilterFunc func, final Number defVal, @RpcAttachment final String column, final FilterBean bean) {
-        getNumberResultAsync(handler, entityClass, func, defVal, column, FilterNodeBean.createFilterNode(bean));
-    }
-
-    @Override
     public CompletableFuture<Number> getNumberResultAsync(final Class entityClass, final FilterFunc func, final Number defVal, final String column, final FilterNode node) {
         return CompletableFuture.supplyAsync(() -> getNumberResult(entityClass, func, defVal, column, node), getExecutor());
-    }
-
-    @Override
-    public void getNumberResultAsync(final AsyncHandler<Number, String> handler, final Class entityClass, final FilterFunc func, final Number defVal, @RpcAttachment final String column, final FilterNode node) {
-        super.runAsync(() -> {
-            try {
-                Number rs = getNumberResult(entityClass, func, defVal, column, node);
-                if (handler != null) handler.completed(rs, column);
-            } catch (Throwable t) {
-                if (handler != null) handler.failed(t, column);
-            }
-        });
     }
 
     @Override
@@ -1476,18 +1231,6 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
     }
 
     @Override
-    public <N extends Number> void getNumberMapAsync(final AsyncHandler<Map<String, N>, FilterFuncColumn[]> handler, final Class entityClass, @RpcAttachment final FilterFuncColumn... columns) {
-        super.runAsync(() -> {
-            try {
-                Map<String, N> rs = getNumberMap(entityClass, columns);
-                if (handler != null) handler.completed(rs, columns);
-            } catch (Throwable t) {
-                if (handler != null) handler.failed(t, columns);
-            }
-        });
-    }
-
-    @Override
     public <N extends Number> Map<String, N> getNumberMap(final Class entityClass, final FilterBean bean, final FilterFuncColumn... columns) {
         return getNumberMap(entityClass, FilterNodeBean.createFilterNode(bean), columns);
     }
@@ -1495,18 +1238,6 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
     @Override
     public <N extends Number> CompletableFuture<Map<String, N>> getNumberMapAsync(final Class entityClass, final FilterBean bean, final FilterFuncColumn... columns) {
         return CompletableFuture.supplyAsync(() -> getNumberMap(entityClass, bean, columns), getExecutor());
-    }
-
-    @Override
-    public <N extends Number, B extends FilterBean> void getNumberMapAsync(final AsyncHandler<Map<String, N>, B> handler, final Class entityClass, @RpcAttachment final B bean, final FilterFuncColumn... columns) {
-        super.runAsync(() -> {
-            try {
-                Map<String, N> rs = getNumberMap(entityClass, bean, columns);
-                if (handler != null) handler.completed(rs, bean);
-            } catch (Throwable t) {
-                if (handler != null) handler.failed(t, bean);
-            }
-        });
     }
 
     @Override
@@ -1580,18 +1311,6 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
     }
 
     @Override
-    public <N extends Number> void getNumberMapAsync(final AsyncHandler<Map<String, N>, FilterNode> handler, final Class entityClass, @RpcAttachment final FilterNode node, final FilterFuncColumn... columns) {
-        super.runAsync(() -> {
-            try {
-                Map<String, N> rs = getNumberMap(entityClass, node, columns);
-                if (handler != null) handler.completed(rs, node);
-            } catch (Throwable t) {
-                if (handler != null) handler.failed(t, node);
-            }
-        });
-    }
-
-    @Override
     public Number getNumberResult(final Class entityClass, final FilterFunc func, final Number defVal, final String column, final FilterNode node) {
         final EntityInfo info = loadEntityInfo(entityClass);
         final Connection conn = createReadSQLConnection();
@@ -1640,18 +1359,6 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
     }
 
     @Override
-    public <T, K extends Serializable, N extends Number> void queryColumnMapAsync(final AsyncHandler<Map<K, N>, String> handler, final Class<T> entityClass, @RpcAttachment final String keyColumn, final FilterFunc func, final String funcColumn) {
-        super.runAsync(() -> {
-            try {
-                Map<K, N> rs = queryColumnMap(entityClass, keyColumn, func, funcColumn);
-                if (handler != null) handler.completed(rs, keyColumn);
-            } catch (Throwable t) {
-                if (handler != null) handler.failed(t, keyColumn);
-            }
-        });
-    }
-
-    @Override
     public <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMap(final Class<T> entityClass, final String keyColumn, FilterFunc func, final String funcColumn, FilterBean bean) {
         return queryColumnMap(entityClass, keyColumn, func, funcColumn, FilterNodeBean.createFilterNode(bean));
     }
@@ -1659,11 +1366,6 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
     @Override
     public <T, K extends Serializable, N extends Number> CompletableFuture<Map<K, N>> queryColumnMapAsync(final Class<T> entityClass, final String keyColumn, final FilterFunc func, final String funcColumn, final FilterBean bean) {
         return CompletableFuture.supplyAsync(() -> queryColumnMap(entityClass, keyColumn, func, funcColumn, bean), getExecutor());
-    }
-
-    @Override
-    public <T, K extends Serializable, N extends Number> void queryColumnMapAsync(final AsyncHandler<Map<K, N>, String> handler, final Class<T> entityClass, @RpcAttachment final String keyColumn, final FilterFunc func, final String funcColumn, final FilterBean bean) {
-        queryColumnMapAsync(handler, entityClass, keyColumn, func, funcColumn, FilterNodeBean.createFilterNode(bean));
     }
 
     @Override
@@ -1710,18 +1412,6 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
         return CompletableFuture.supplyAsync(() -> queryColumnMap(entityClass, keyColumn, func, funcColumn, node), getExecutor());
     }
 
-    @Override
-    public <T, K extends Serializable, N extends Number> void queryColumnMapAsync(final AsyncHandler<Map<K, N>, String> handler, final Class<T> entityClass, @RpcAttachment final String keyColumn, final FilterFunc func, final String funcColumn, final FilterNode node) {
-        super.runAsync(() -> {
-            try {
-                Map<K, N> rs = queryColumnMap(entityClass, keyColumn, func, funcColumn, node);
-                if (handler != null) handler.completed(rs, keyColumn);
-            } catch (Throwable t) {
-                if (handler != null) handler.failed(t, keyColumn);
-            }
-        });
-    }
-
     //-----------------------findAsync----------------------------
     /**
      * 根据主键获取对象
@@ -1740,18 +1430,6 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
     @Override
     public <T> CompletableFuture<T> findAsync(final Class<T> clazz, final Serializable pk) {
         return CompletableFuture.supplyAsync(() -> find(clazz, pk), getExecutor());
-    }
-
-    @Override
-    public <T> void findAsync(final AsyncHandler<T, Serializable> handler, final Class<T> clazz, @RpcAttachment final Serializable pk) {
-        super.runAsync(() -> {
-            try {
-                T rs = find(clazz, pk);
-                if (handler != null) handler.completed(rs, pk);
-            } catch (Throwable t) {
-                if (handler != null) handler.failed(t, pk);
-            }
-        });
     }
 
     @Override
@@ -1792,18 +1470,6 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
     }
 
     @Override
-    public <T> void findAsync(final AsyncHandler<T, Serializable> handler, final Class<T> clazz, SelectColumn selects, @RpcAttachment final Serializable pk) {
-        super.runAsync(() -> {
-            try {
-                T rs = find(clazz, selects, pk);
-                if (handler != null) handler.completed(rs, pk);
-            } catch (Throwable t) {
-                if (handler != null) handler.failed(t, pk);
-            }
-        });
-    }
-
-    @Override
     public <T> T find(final Class<T> clazz, final String column, final Serializable key) {
         return find(clazz, null, FilterNode.create(column, key));
     }
@@ -1811,18 +1477,6 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
     @Override
     public <T> CompletableFuture<T> findAsync(final Class<T> clazz, final String column, final Serializable key) {
         return CompletableFuture.supplyAsync(() -> find(clazz, column, key), getExecutor());
-    }
-
-    @Override
-    public <T> void findAsync(final AsyncHandler<T, Serializable> handler, final Class<T> clazz, final String column, @RpcAttachment final Serializable key) {
-        super.runAsync(() -> {
-            try {
-                T rs = find(clazz, column, key);
-                if (handler != null) handler.completed(rs, key);
-            } catch (Throwable t) {
-                if (handler != null) handler.failed(t, key);
-            }
-        });
     }
 
     @Override
@@ -1836,18 +1490,6 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
     }
 
     @Override
-    public <T, B extends FilterBean> void findAsync(final AsyncHandler<T, B> handler, final Class<T> clazz, @RpcAttachment final B bean) {
-        super.runAsync(() -> {
-            try {
-                T rs = find(clazz, bean);
-                if (handler != null) handler.completed(rs, bean);
-            } catch (Throwable t) {
-                if (handler != null) handler.failed(t, bean);
-            }
-        });
-    }
-
-    @Override
     public <T> T find(final Class<T> clazz, final FilterNode node) {
         return find(clazz, null, node);
     }
@@ -1858,18 +1500,6 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
     }
 
     @Override
-    public <T> void findAsync(final AsyncHandler<T, FilterNode> handler, final Class<T> clazz, @RpcAttachment final FilterNode node) {
-        super.runAsync(() -> {
-            try {
-                T rs = find(clazz, node);
-                if (handler != null) handler.completed(rs, node);
-            } catch (Throwable t) {
-                if (handler != null) handler.failed(t, node);
-            }
-        });
-    }
-
-    @Override
     public <T> T find(final Class<T> clazz, final SelectColumn selects, final FilterBean bean) {
         return find(clazz, selects, FilterNodeBean.createFilterNode(bean));
     }
@@ -1877,18 +1507,6 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
     @Override
     public <T> CompletableFuture<T> findAsync(final Class<T> clazz, final SelectColumn selects, final FilterBean bean) {
         return CompletableFuture.supplyAsync(() -> find(clazz, selects, bean), getExecutor());
-    }
-
-    @Override
-    public <T, B extends FilterBean> void findAsync(final AsyncHandler<T, B> handler, final Class<T> clazz, final SelectColumn selects, @RpcAttachment final B bean) {
-        super.runAsync(() -> {
-            try {
-                T rs = find(clazz, selects, bean);
-                if (handler != null) handler.completed(rs, bean);
-            } catch (Throwable t) {
-                if (handler != null) handler.failed(t, bean);
-            }
-        });
     }
 
     @Override
@@ -1929,18 +1547,6 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
     }
 
     @Override
-    public <T> void findAsync(final AsyncHandler<T, FilterNode> handler, final Class<T> clazz, final SelectColumn selects, @RpcAttachment final FilterNode node) {
-        super.runAsync(() -> {
-            try {
-                T rs = find(clazz, selects, node);
-                if (handler != null) handler.completed(rs, node);
-            } catch (Throwable t) {
-                if (handler != null) handler.failed(t, node);
-            }
-        });
-    }
-
-    @Override
     public <T> Serializable findColumn(final Class<T> clazz, final String column, final Serializable pk) {
         return findColumn(clazz, column, null, pk);
     }
@@ -1948,18 +1554,6 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
     @Override
     public <T> CompletableFuture<Serializable> findColumnAsync(final Class<T> clazz, final String column, final Serializable pk) {
         return CompletableFuture.supplyAsync(() -> findColumn(clazz, column, pk), getExecutor());
-    }
-
-    @Override
-    public <T> void findColumnAsync(final AsyncHandler<Serializable, Serializable> handler, final Class<T> clazz, final String column, @RpcAttachment final Serializable pk) {
-        super.runAsync(() -> {
-            try {
-                Serializable rs = findColumn(clazz, column, pk);
-                if (handler != null) handler.completed(rs, pk);
-            } catch (Throwable t) {
-                if (handler != null) handler.failed(t, pk);
-            }
-        });
     }
 
     @Override
@@ -1973,18 +1567,6 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
     }
 
     @Override
-    public <T, B extends FilterBean> void findColumnAsync(final AsyncHandler<Serializable, B> handler, final Class<T> clazz, final String column, @RpcAttachment final B bean) {
-        super.runAsync(() -> {
-            try {
-                Serializable rs = findColumn(clazz, column, bean);
-                if (handler != null) handler.completed(rs, bean);
-            } catch (Throwable t) {
-                if (handler != null) handler.failed(t, bean);
-            }
-        });
-    }
-
-    @Override
     public <T> Serializable findColumn(final Class<T> clazz, final String column, final FilterNode node) {
         return findColumn(clazz, column, null, node);
     }
@@ -1992,18 +1574,6 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
     @Override
     public <T> CompletableFuture<Serializable> findColumnAsync(final Class<T> clazz, final String column, final FilterNode node) {
         return CompletableFuture.supplyAsync(() -> findColumn(clazz, column, node), getExecutor());
-    }
-
-    @Override
-    public <T> void findColumnAsync(final AsyncHandler<Serializable, FilterNode> handler, final Class<T> clazz, final String column, @RpcAttachment final FilterNode node) {
-        super.runAsync(() -> {
-            try {
-                Serializable rs = findColumn(clazz, column, node);
-                if (handler != null) handler.completed(rs, node);
-            } catch (Throwable t) {
-                if (handler != null) handler.failed(t, node);
-            }
-        });
     }
 
     @Override
@@ -2052,18 +1622,6 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
     }
 
     @Override
-    public <T> void findColumnAsync(final AsyncHandler<Serializable, Serializable> handler, final Class<T> clazz, final String column, final Serializable defValue, @RpcAttachment final Serializable pk) {
-        super.runAsync(() -> {
-            try {
-                Serializable rs = findColumn(clazz, column, defValue, pk);
-                if (handler != null) handler.completed(rs, pk);
-            } catch (Throwable t) {
-                if (handler != null) handler.failed(t, pk);
-            }
-        });
-    }
-
-    @Override
     public <T> Serializable findColumn(final Class<T> clazz, final String column, final Serializable defValue, final FilterBean bean) {
         return findColumn(clazz, column, defValue, FilterNodeBean.createFilterNode(bean));
     }
@@ -2071,18 +1629,6 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
     @Override
     public <T> CompletableFuture<Serializable> findColumnAsync(final Class<T> clazz, final String column, final Serializable defValue, final FilterBean bean) {
         return CompletableFuture.supplyAsync(() -> findColumn(clazz, column, defValue, bean), getExecutor());
-    }
-
-    @Override
-    public <T, B extends FilterBean> void findColumnAsync(final AsyncHandler<Serializable, B> handler, final Class<T> clazz, final String column, final Serializable defValue, @RpcAttachment final B bean) {
-        super.runAsync(() -> {
-            try {
-                Serializable rs = findColumn(clazz, column, defValue, bean);
-                if (handler != null) handler.completed(rs, bean);
-            } catch (Throwable t) {
-                if (handler != null) handler.failed(t, bean);
-            }
-        });
     }
 
     @Override
@@ -2131,18 +1677,6 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
     }
 
     @Override
-    public <T> void findColumnAsync(final AsyncHandler<Serializable, FilterNode> handler, final Class<T> clazz, final String column, final Serializable defValue, @RpcAttachment final FilterNode node) {
-        super.runAsync(() -> {
-            try {
-                Serializable rs = findColumn(clazz, column, defValue, node);
-                if (handler != null) handler.completed(rs, node);
-            } catch (Throwable t) {
-                if (handler != null) handler.failed(t, node);
-            }
-        });
-    }
-
-    @Override
     public <T> boolean exists(Class<T> clazz, Serializable pk) {
         final EntityInfo<T> info = loadEntityInfo(clazz);
         final EntityCache<T> cache = info.getCache();
@@ -2182,18 +1716,6 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
     }
 
     @Override
-    public <T> void existsAsync(final AsyncHandler<Boolean, Serializable> handler, final Class<T> clazz, @RpcAttachment final Serializable pk) {
-        super.runAsync(() -> {
-            try {
-                boolean rs = exists(clazz, pk);
-                if (handler != null) handler.completed(rs, pk);
-            } catch (Throwable t) {
-                if (handler != null) handler.failed(t, pk);
-            }
-        });
-    }
-
-    @Override
     public <T> boolean exists(final Class<T> clazz, final FilterBean bean) {
         return exists(clazz, FilterNodeBean.createFilterNode(bean));
     }
@@ -2201,18 +1723,6 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
     @Override
     public <T> CompletableFuture<Boolean> existsAsync(final Class<T> clazz, final FilterBean bean) {
         return CompletableFuture.supplyAsync(() -> exists(clazz, bean), getExecutor());
-    }
-
-    @Override
-    public <T, B extends FilterBean> void existsAsync(final AsyncHandler<Boolean, B> handler, final Class<T> clazz, @RpcAttachment final B bean) {
-        super.runAsync(() -> {
-            try {
-                boolean rs = exists(clazz, bean);
-                if (handler != null) handler.completed(rs, bean);
-            } catch (Throwable t) {
-                if (handler != null) handler.failed(t, bean);
-            }
-        });
     }
 
     @Override
@@ -2254,18 +1764,6 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
         return CompletableFuture.supplyAsync(() -> exists(clazz, node), getExecutor());
     }
 
-    @Override
-    public <T> void existsAsync(final AsyncHandler<Boolean, FilterNode> handler, final Class<T> clazz, @RpcAttachment final FilterNode node) {
-        super.runAsync(() -> {
-            try {
-                boolean rs = exists(clazz, node);
-                if (handler != null) handler.completed(rs, node);
-            } catch (Throwable t) {
-                if (handler != null) handler.failed(t, node);
-            }
-        });
-    }
-
     //-----------------------list set----------------------------
     @Override
     public <T, V extends Serializable> HashSet<V> queryColumnSet(final String selectedColumn, Class<T> clazz, String column, Serializable key) {
@@ -2275,18 +1773,6 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
     @Override
     public <T, V extends Serializable> CompletableFuture<HashSet<V>> queryColumnSetAsync(final String selectedColumn, Class<T> clazz, String column, Serializable key) {
         return CompletableFuture.supplyAsync(() -> queryColumnSet(selectedColumn, clazz, column, key), getExecutor());
-    }
-
-    @Override
-    public <T, V extends Serializable> void queryColumnSetAsync(final AsyncHandler<HashSet<V>, String> handler, final String selectedColumn, final Class<T> clazz, @RpcAttachment final String column, final Serializable key) {
-        super.runAsync(() -> {
-            try {
-                HashSet<V> rs = queryColumnSet(selectedColumn, clazz, column, key);
-                if (handler != null) handler.completed(rs, column);
-            } catch (Throwable t) {
-                if (handler != null) handler.failed(t, column);
-            }
-        });
     }
 
     @Override
@@ -2300,18 +1786,6 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
     }
 
     @Override
-    public <T, V extends Serializable, B extends FilterBean> void queryColumnSetAsync(final AsyncHandler<HashSet<V>, B> handler, final String selectedColumn, final Class<T> clazz, @RpcAttachment final B bean) {
-        super.runAsync(() -> {
-            try {
-                HashSet<V> rs = queryColumnSet(selectedColumn, clazz, bean);
-                if (handler != null) handler.completed(rs, bean);
-            } catch (Throwable t) {
-                if (handler != null) handler.failed(t, bean);
-            }
-        });
-    }
-
-    @Override
     public <T, V extends Serializable> HashSet<V> queryColumnSet(String selectedColumn, Class<T> clazz, FilterNode node) {
         return new LinkedHashSet<>(queryColumnList(selectedColumn, clazz, node));
     }
@@ -2319,18 +1793,6 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
     @Override
     public <T, V extends Serializable> CompletableFuture<HashSet<V>> queryColumnSetAsync(final String selectedColumn, final Class<T> clazz, final FilterNode node) {
         return CompletableFuture.supplyAsync(() -> queryColumnSet(selectedColumn, clazz, node), getExecutor());
-    }
-
-    @Override
-    public <T, V extends Serializable> void queryColumnSetAsync(final AsyncHandler<HashSet<V>, FilterNode> handler, final String selectedColumn, final Class<T> clazz, @RpcAttachment final FilterNode node) {
-        super.runAsync(() -> {
-            try {
-                HashSet<V> rs = queryColumnSet(selectedColumn, clazz, node);
-                if (handler != null) handler.completed(rs, node);
-            } catch (Throwable t) {
-                if (handler != null) handler.failed(t, node);
-            }
-        });
     }
 
     @Override
@@ -2344,18 +1806,6 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
     }
 
     @Override
-    public <T, V extends Serializable> void queryColumnListAsync(final AsyncHandler<List<V>, Serializable> handler, final String selectedColumn, final Class<T> clazz, final String column, @RpcAttachment final Serializable key) {
-        super.runAsync(() -> {
-            try {
-                List<V> rs = queryColumnList(selectedColumn, clazz, column, key);
-                if (handler != null) handler.completed(rs, key);
-            } catch (Throwable t) {
-                if (handler != null) handler.failed(t, key);
-            }
-        });
-    }
-
-    @Override
     public <T, V extends Serializable> List<V> queryColumnList(final String selectedColumn, final Class<T> clazz, final FilterBean bean) {
         return queryColumnList(selectedColumn, clazz, FilterNodeBean.createFilterNode(bean));
     }
@@ -2363,18 +1813,6 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
     @Override
     public <T, V extends Serializable> CompletableFuture<List<V>> queryColumnListAsync(final String selectedColumn, final Class<T> clazz, final FilterBean bean) {
         return CompletableFuture.supplyAsync(() -> queryColumnList(selectedColumn, clazz, bean), getExecutor());
-    }
-
-    @Override
-    public <T, V extends Serializable, B extends FilterBean> void queryColumnListAsync(final AsyncHandler<List<V>, B> handler, String selectedColumn, Class<T> clazz, @RpcAttachment B bean) {
-        super.runAsync(() -> {
-            try {
-                List<V> rs = queryColumnList(selectedColumn, clazz, bean);
-                if (handler != null) handler.completed(rs, bean);
-            } catch (Throwable t) {
-                if (handler != null) handler.failed(t, bean);
-            }
-        });
     }
 
     @Override
@@ -2388,18 +1826,6 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
     }
 
     @Override
-    public <T, V extends Serializable> void queryColumnListAsync(final AsyncHandler<List<V>, FilterNode> handler, final String selectedColumn, final Class<T> clazz, @RpcAttachment final FilterNode node) {
-        super.runAsync(() -> {
-            try {
-                List<V> rs = queryColumnList(selectedColumn, clazz, node);
-                if (handler != null) handler.completed(rs, node);
-            } catch (Throwable t) {
-                if (handler != null) handler.failed(t, node);
-            }
-        });
-    }
-
-    @Override
     public <T, V extends Serializable> List<V> queryColumnList(final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterBean bean) {
         return queryColumnList(selectedColumn, clazz, FilterNodeBean.createFilterNode(bean));
     }
@@ -2410,18 +1836,6 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
     }
 
     @Override
-    public <T, V extends Serializable, B extends FilterBean> void queryColumnListAsync(final AsyncHandler<List<V>, B> handler, String selectedColumn, Class<T> clazz, Flipper flipper, @RpcAttachment B bean) {
-        super.runAsync(() -> {
-            try {
-                List<V> rs = queryColumnList(selectedColumn, clazz, flipper, bean);
-                if (handler != null) handler.completed(rs, bean);
-            } catch (Throwable t) {
-                if (handler != null) handler.failed(t, bean);
-            }
-        });
-    }
-
-    @Override
     public <T, V extends Serializable> List<V> queryColumnList(final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterNode node) {
         return (List<V>) queryColumnSheet(false, selectedColumn, clazz, flipper, node).list(true);
     }
@@ -2429,18 +1843,6 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
     @Override
     public <T, V extends Serializable> CompletableFuture<List<V>> queryColumnListAsync(final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterNode node) {
         return CompletableFuture.supplyAsync(() -> queryColumnList(selectedColumn, clazz, flipper, node), getExecutor());
-    }
-
-    @Override
-    public <T, V extends Serializable> void queryColumnListAsync(final AsyncHandler<List<V>, FilterNode> handler, final String selectedColumn, final Class<T> clazz, Flipper flipper, @RpcAttachment final FilterNode node) {
-        super.runAsync(() -> {
-            try {
-                List<V> rs = queryColumnList(selectedColumn, clazz, flipper, node);
-                if (handler != null) handler.completed(rs, node);
-            } catch (Throwable t) {
-                if (handler != null) handler.failed(t, node);
-            }
-        });
     }
 
     /**
@@ -2466,18 +1868,6 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
     }
 
     @Override
-    public <T, V extends Serializable, B extends FilterBean> void queryColumnSheetAsync(final AsyncHandler<Sheet<V>, B> handler, String selectedColumn, Class<T> clazz, Flipper flipper, @RpcAttachment B bean) {
-        super.runAsync(() -> {
-            try {
-                Sheet<V> rs = queryColumnSheet(selectedColumn, clazz, flipper, bean);
-                if (handler != null) handler.completed(rs, bean);
-            } catch (Throwable t) {
-                if (handler != null) handler.failed(t, bean);
-            }
-        });
-    }
-
-    @Override
     public <T, V extends Serializable> Sheet<V> queryColumnSheet(final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterNode node) {
         return queryColumnSheet(true, selectedColumn, clazz, flipper, node);
     }
@@ -2485,18 +1875,6 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
     @Override
     public <T, V extends Serializable> CompletableFuture<Sheet<V>> queryColumnSheetAsync(final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterNode node) {
         return CompletableFuture.supplyAsync(() -> queryColumnSheet(selectedColumn, clazz, flipper, node), getExecutor());
-    }
-
-    @Override
-    public <T, V extends Serializable> void queryColumnSheetAsync(final AsyncHandler<Sheet<V>, FilterNode> handler, final String selectedColumn, final Class<T> clazz, final Flipper flipper, @RpcAttachment final FilterNode node) {
-        super.runAsync(() -> {
-            try {
-                Sheet<V> rs = queryColumnSheet(selectedColumn, clazz, flipper, node);
-                if (handler != null) handler.completed(rs, node);
-            } catch (Throwable t) {
-                if (handler != null) handler.failed(t, node);
-            }
-        });
     }
 
     private <T, V extends Serializable> Sheet<V> queryColumnSheet(final boolean needtotal, final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterNode node) {
@@ -2534,18 +1912,6 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
         return CompletableFuture.supplyAsync(() -> queryList(clazz, column, key), getExecutor());
     }
 
-    @Override
-    public <T> void queryListAsync(final AsyncHandler<List<T>, Serializable> handler, final Class<T> clazz, final String column, @RpcAttachment final Serializable key) {
-        super.runAsync(() -> {
-            try {
-                List<T> rs = queryList(clazz, column, key);
-                if (handler != null) handler.completed(rs, key);
-            } catch (Throwable t) {
-                if (handler != null) handler.failed(t, key);
-            }
-        });
-    }
-
     /**
      * 根据过滤对象FilterBean查询对象集合
      *
@@ -2566,18 +1932,6 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
     }
 
     @Override
-    public <T, B extends FilterBean> void queryListAsync(final AsyncHandler<List<T>, B> handler, final Class<T> clazz, @RpcAttachment final B bean) {
-        super.runAsync(() -> {
-            try {
-                List<T> rs = queryList(clazz, bean);
-                if (handler != null) handler.completed(rs, bean);
-            } catch (Throwable t) {
-                if (handler != null) handler.failed(t, bean);
-            }
-        });
-    }
-
-    @Override
     public <T> List<T> queryList(final Class<T> clazz, final FilterNode node) {
         return queryList(clazz, (SelectColumn) null, node);
     }
@@ -2585,18 +1939,6 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
     @Override
     public <T> CompletableFuture<List<T>> queryListAsync(final Class<T> clazz, final FilterNode node) {
         return CompletableFuture.supplyAsync(() -> queryList(clazz, node), getExecutor());
-    }
-
-    @Override
-    public <T> void queryListAsync(final AsyncHandler<List<T>, FilterNode> handler, final Class<T> clazz, @RpcAttachment final FilterNode node) {
-        super.runAsync(() -> {
-            try {
-                List<T> rs = queryList(clazz, node);
-                if (handler != null) handler.completed(rs, node);
-            } catch (Throwable t) {
-                if (handler != null) handler.failed(t, node);
-            }
-        });
     }
 
     /**
@@ -2620,18 +1962,6 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
     }
 
     @Override
-    public <T, B extends FilterBean> void queryListAsync(final AsyncHandler<List<T>, B> handler, final Class<T> clazz, final SelectColumn selects, @RpcAttachment final B bean) {
-        super.runAsync(() -> {
-            try {
-                List<T> rs = queryList(clazz, selects, bean);
-                if (handler != null) handler.completed(rs, bean);
-            } catch (Throwable t) {
-                if (handler != null) handler.failed(t, bean);
-            }
-        });
-    }
-
-    @Override
     public <T> List<T> queryList(final Class<T> clazz, final SelectColumn selects, final FilterNode node) {
         return queryList(clazz, selects, (Flipper) null, node);
     }
@@ -2639,18 +1969,6 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
     @Override
     public <T> CompletableFuture<List<T>> queryListAsync(final Class<T> clazz, SelectColumn selects, final FilterNode node) {
         return CompletableFuture.supplyAsync(() -> queryList(clazz, selects, node), getExecutor());
-    }
-
-    @Override
-    public <T> void queryListAsync(final AsyncHandler<List<T>, FilterNode> handler, final Class<T> clazz, final SelectColumn selects, @RpcAttachment final FilterNode node) {
-        super.runAsync(() -> {
-            try {
-                List<T> rs = queryList(clazz, selects, node);
-                if (handler != null) handler.completed(rs, node);
-            } catch (Throwable t) {
-                if (handler != null) handler.failed(t, node);
-            }
-        });
     }
 
     @Override
@@ -2664,18 +1982,6 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
     }
 
     @Override
-    public <T> void queryListAsync(final AsyncHandler<List<T>, Serializable> handler, final Class<T> clazz, final Flipper flipper, final String column, @RpcAttachment final Serializable key) {
-        super.runAsync(() -> {
-            try {
-                List<T> rs = queryList(clazz, flipper, column, key);
-                if (handler != null) handler.completed(rs, key);
-            } catch (Throwable t) {
-                if (handler != null) handler.failed(t, key);
-            }
-        });
-    }
-
-    @Override
     public <T> List<T> queryList(final Class<T> clazz, final Flipper flipper, final FilterBean bean) {
         return queryList(clazz, null, flipper, bean);
     }
@@ -2683,18 +1989,6 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
     @Override
     public <T> CompletableFuture<List<T>> queryListAsync(final Class<T> clazz, final Flipper flipper, final FilterBean bean) {
         return CompletableFuture.supplyAsync(() -> queryList(clazz, flipper, bean), getExecutor());
-    }
-
-    @Override
-    public <T, B extends FilterBean> void queryListAsync(final AsyncHandler<List<T>, B> handler, final Class<T> clazz, final Flipper flipper, @RpcAttachment final B bean) {
-        super.runAsync(() -> {
-            try {
-                List<T> rs = queryList(clazz, flipper, bean);
-                if (handler != null) handler.completed(rs, bean);
-            } catch (Throwable t) {
-                if (handler != null) handler.failed(t, bean);
-            }
-        });
     }
 
     @Override
@@ -2708,18 +2002,6 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
     }
 
     @Override
-    public <T> void queryListAsync(final AsyncHandler<List<T>, FilterNode> handler, final Class<T> clazz, final Flipper flipper, @RpcAttachment final FilterNode node) {
-        super.runAsync(() -> {
-            try {
-                List<T> rs = queryList(clazz, flipper, node);
-                if (handler != null) handler.completed(rs, node);
-            } catch (Throwable t) {
-                if (handler != null) handler.failed(t, node);
-            }
-        });
-    }
-
-    @Override
     public <T> List<T> queryList(final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterBean bean) {
         return querySheet(true, false, clazz, selects, flipper, FilterNodeBean.createFilterNode(bean)).list(true);
     }
@@ -2730,18 +2012,6 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
     }
 
     @Override
-    public <T, B extends FilterBean> void queryListAsync(final AsyncHandler<List<T>, B> handler, final Class<T> clazz, final SelectColumn selects, final Flipper flipper, @RpcAttachment final B bean) {
-        super.runAsync(() -> {
-            try {
-                List<T> rs = queryList(clazz, selects, flipper, bean);
-                if (handler != null) handler.completed(rs, bean);
-            } catch (Throwable t) {
-                if (handler != null) handler.failed(t, bean);
-            }
-        });
-    }
-
-    @Override
     public <T> List<T> queryList(final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterNode node) {
         return querySheet(true, false, clazz, selects, flipper, node).list(true);
     }
@@ -2749,18 +2019,6 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
     @Override
     public <T> CompletableFuture<List<T>> queryListAsync(final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterNode node) {
         return CompletableFuture.supplyAsync(() -> queryList(clazz, selects, flipper, node), getExecutor());
-    }
-
-    @Override
-    public <T> void queryListAsync(final AsyncHandler<List<T>, FilterNode> handler, final Class<T> clazz, final SelectColumn selects, final Flipper flipper, @RpcAttachment final FilterNode node) {
-        super.runAsync(() -> {
-            try {
-                List<T> rs = queryList(clazz, selects, flipper, node);
-                if (handler != null) handler.completed(rs, node);
-            } catch (Throwable t) {
-                if (handler != null) handler.failed(t, node);
-            }
-        });
     }
 
     //-----------------------sheet----------------------------
@@ -2785,18 +2043,6 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
     }
 
     @Override
-    public <T, B extends FilterBean> void querySheetAsync(final AsyncHandler<Sheet<T>, B> handler, final Class<T> clazz, final Flipper flipper, @RpcAttachment final B bean) {
-        super.runAsync(() -> {
-            try {
-                Sheet<T> rs = querySheet(clazz, flipper, bean);
-                if (handler != null) handler.completed(rs, bean);
-            } catch (Throwable t) {
-                if (handler != null) handler.failed(t, bean);
-            }
-        });
-    }
-
-    @Override
     public <T> Sheet<T> querySheet(final Class<T> clazz, final Flipper flipper, final FilterNode node) {
         return querySheet(clazz, null, flipper, node);
     }
@@ -2804,18 +2050,6 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
     @Override
     public <T> CompletableFuture<Sheet<T>> querySheetAsync(final Class<T> clazz, final Flipper flipper, final FilterNode node) {
         return CompletableFuture.supplyAsync(() -> querySheet(clazz, flipper, node), getExecutor());
-    }
-
-    @Override
-    public <T> void querySheetAsync(final AsyncHandler<Sheet<T>, FilterNode> handler, final Class<T> clazz, final Flipper flipper, @RpcAttachment final FilterNode node) {
-        super.runAsync(() -> {
-            try {
-                Sheet<T> rs = querySheet(clazz, flipper, node);
-                if (handler != null) handler.completed(rs, node);
-            } catch (Throwable t) {
-                if (handler != null) handler.failed(t, node);
-            }
-        });
     }
 
     /**
@@ -2840,18 +2074,6 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
     }
 
     @Override
-    public <T, B extends FilterBean> void querySheetAsync(final AsyncHandler<Sheet<T>, B> handler, final Class<T> clazz, final SelectColumn selects, final Flipper flipper, @RpcAttachment final B bean) {
-        super.runAsync(() -> {
-            try {
-                Sheet<T> rs = querySheet(clazz, selects, flipper, bean);
-                if (handler != null) handler.completed(rs, bean);
-            } catch (Throwable t) {
-                if (handler != null) handler.failed(t, bean);
-            }
-        });
-    }
-
-    @Override
     public <T> Sheet<T> querySheet(final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterNode node) {
         return querySheet(true, true, clazz, selects, flipper, node);
     }
@@ -2859,18 +2081,6 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
     @Override
     public <T> CompletableFuture<Sheet<T>> querySheetAsync(final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterNode node) {
         return CompletableFuture.supplyAsync(() -> querySheet(clazz, selects, flipper, node), getExecutor());
-    }
-
-    @Override
-    public <T> void querySheetAsync(final AsyncHandler<Sheet<T>, FilterNode> handler, final Class<T> clazz, final SelectColumn selects, final Flipper flipper, @RpcAttachment final FilterNode node) {
-        super.runAsync(() -> {
-            try {
-                Sheet<T> rs = querySheet(clazz, selects, flipper, node);
-                if (handler != null) handler.completed(rs, node);
-            } catch (Throwable t) {
-                if (handler != null) handler.failed(t, node);
-            }
-        });
     }
 
     private <T> Sheet<T> querySheet(final boolean readcache, final boolean needtotal, final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterNode node) {

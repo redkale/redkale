@@ -1,6 +1,7 @@
 package org.redkale.test.rest;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import javax.annotation.Resource;
 import org.redkale.net.http.*;
 
@@ -77,7 +78,7 @@ public class HelloService implements Service {
         if (source != null) return source.queryList(HelloEntity.class, bean);
         return new ArrayList<>();
     }
-    
+
     //查询单个
     @RestMapping(name = "find")
     public HelloEntity findHello(@RestParam(name = "#") int id) {  //通过 /pipes/hello/find/1234、/pipes/hello/jsfind/1234 查询对象
@@ -86,10 +87,7 @@ public class HelloService implements Service {
 
     //异步查询单个
     @RestMapping(name = "asyncfind")
-    public void findHello(AsyncHandler handler, @RestParam(name = "#") int id) {  //通过 /pipes/hello/find/1234、/pipes/hello/jsfind/1234 查询对象
-        if (source != null) source.findAsync(handler, HelloEntity.class, id);
-        HelloEntity rs = new HelloEntity();
-        rs.setHelloname("Hello名称");
-        if (handler != null) handler.completed(rs, null);
+    public CompletableFuture<HelloEntity> asyncFindHello(@RestParam(name = "#") int id) {  //通过 /pipes/hello/find/1234、/pipes/hello/jsfind/1234 查询对象
+        return source.findAsync(HelloEntity.class, id);
     }
 }

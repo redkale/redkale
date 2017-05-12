@@ -133,6 +133,6 @@ public class _DynHelloRestServlet1 extends SimpleRestServlet {
     public void asyncfind(HttpRequest req, HttpResponse resp) throws IOException {
         HelloService service = _servicemap == null ? _service : _servicemap.get(req.getHeader(Rest.REST_HEADER_RESOURCE_NAME, ""));
         int id = Integer.parseInt(req.getRequstURILastPath());
-        service.findHello(resp.createAsyncHandler(), id);
+        resp.finishJson(service.asyncFindHello(id));
     }
 }
