@@ -633,7 +633,7 @@
         
         <span class="c">&lt;!-- </span>
 <span class="c">           REST的核心配置项, 存在[rest]节点则Server启动时会加载REST服务, 当Server为SNCP协议时,则SncpServer会变成REST的HttpServer, 节点可以多个</span>
-<span class="c">           base:     REST服务的BaseServlet，必须是 org.redkale.net.http.RestHttpServlet 的子类，该属性值默认值为 org.redkale.net.http.DefaultRestServlet。</span>
+<span class="c">           base:     REST服务的BaseServlet，必须是 org.redkale.net.http.RestHttpServlet 的子类，该属性值默认值为 org.redkale.net.http.RestHttpServlet。</span>
 <span class="c">           autoload：默认值&quot;true&quot;  默认值. 加载当前server所能使用的Servce对象;    </span>
 <span class="c">           mustsign：默认值&quot;true&quot; 是否只加载标记为RestService的Service类，默认只加载标记RestService且ignore=false的Service</span>
 <span class="c">           includes：当autoload=&quot;true&quot;， 拉取类名与includes中的正则表达式匹配的类, 多个正则表达式用分号;隔开</span>

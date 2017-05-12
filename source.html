@@ -404,14 +404,19 @@
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;以上是个简单的范例，用于用户模块存放sessionid。</p>
 
             <h3><a id="source_confxml" href="#" aria-hidden="true"></a>persistence.xml 配置说明</h3>
-            <div class="highlight"><pre><span></span><span class="c">&lt;!-- 其配置算是标准的JPA配置文件的缩略版 --&gt;</span>
+            <div class="highlight"><pre><span class="c">&lt;!-- 其配置算是标准的JPA配置文件的缩略版 --&gt;</span>
 <span class="p">&lt;</span><span class="nt">persistence</span><span class="p">&gt;</span>	
     <span class="c">&lt;!-- 系统基本库 --&gt;</span>
-    <span class="p">&lt;</span><span class="nt">persistence-unit</span> <span class="na">name</span><span class="o">=</span><span class="s">&quot;demouser&quot;</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">persistence-unit</span> <span class="na">name</span><span class="o">=</span><span class="s">"demouser"</span><span class="p">&gt;</span>
         <span class="c">&lt;!-- 为NONE表示不启动缓存，@Cacheable 失效； 非NONE值(通常用ALL)表示开启缓存。 --&gt;</span>
         <span class="p">&lt;</span><span class="nt">shared-cache-mode</span><span class="p">&gt;</span>NONE<span class="p">&lt;/</span><span class="nt">shared-cache-mode</span><span class="p">&gt;</span>
         <span class="p">&lt;</span><span class="nt">properties</span><span class="p">&gt;</span>
-            <span class="p">&lt;</span><span class="nt">property</span> <span class="na">name</span><span class="o">=</span><span class="s">&quot;javax.persistence.jdbc.url&quot;</span> <span class="na">value</span><span class="o">=</span><span class="s">&quot;jdbc:mysql://127.0.0.1:3306/dbuser?characterEncoding=utf8&quot;</span><span class="p">/&gt;</span>
+            <span class="c">&lt;!-- </span>
+<span class="c">                DataSource的实现类，没有设置默认为org.redkale.source.DataJdbcSource的实现，使用常规基于JDBC的数据库驱动一般无需设置</span>
+<span class="c">            --&gt;</span>
+            <span class="p">&lt;</span><span class="nt">property</span> <span class="na">name</span><span class="o">=</span><span class="s">"javax.persistence.datasource"</span> <span class="na">value</span><span class="o">=</span><span class="s">"org.redkale.source.DataJdbcSource"</span><span class="p">/&gt;</span>
+            
+            <span class="p">&lt;</span><span class="nt">property</span> <span class="na">name</span><span class="o">=</span><span class="s">"javax.persistence.jdbc.url"</span> <span class="na">value</span><span class="o">=</span><span class="s">"jdbc:mysql://127.0.0.1:3306/dbuser?characterEncoding=utf8"</span><span class="p">/&gt;</span>
             <span class="c">&lt;!-- </span>
 <span class="c">                javax.persistence.jdbc.driver在JPA的值是JDBC驱动，Redkale有所不同，值应该是javax.sql.DataSource的子类。 </span>
 <span class="c">                为了兼容用户习惯，Redkale内置常见JDBC驱动到javax.sql.DataSource的映射关系：</span>
@@ -423,32 +428,32 @@
 <span class="c">                因此 com.mysql.jdbc.Driver 会被自动转换成 com.mysql.jdbc.jdbc2.optional.MysqlConnectionPoolDataSource</span>
 <span class="c">                并且如果JDBC驱动是以上几个版本，javax.persistence.jdbc.driver属性都可以省略，Redkale会根据javax.persistence.jdbc.url的值来识别驱动</span>
 <span class="c">            --&gt;</span>
-            <span class="p">&lt;</span><span class="nt">property</span> <span class="na">name</span><span class="o">=</span><span class="s">&quot;javax.persistence.jdbc.driver&quot;</span> <span class="na">value</span><span class="o">=</span><span class="s">&quot;com.mysql.jdbc.Driver&quot;</span><span class="p">/&gt;</span>
-            <span class="p">&lt;</span><span class="nt">property</span> <span class="na">name</span><span class="o">=</span><span class="s">&quot;javax.persistence.jdbc.user&quot;</span> <span class="na">value</span><span class="o">=</span><span class="s">&quot;root&quot;</span><span class="p">/&gt;</span>
-            <span class="p">&lt;</span><span class="nt">property</span> <span class="na">name</span><span class="o">=</span><span class="s">&quot;javax.persistence.jdbc.password&quot;</span> <span class="na">value</span><span class="o">=</span><span class="s">&quot;123456&quot;</span><span class="p">/&gt;</span>
+            <span class="p">&lt;</span><span class="nt">property</span> <span class="na">name</span><span class="o">=</span><span class="s">"javax.persistence.jdbc.driver"</span> <span class="na">value</span><span class="o">=</span><span class="s">"com.mysql.jdbc.Driver"</span><span class="p">/&gt;</span>
+            <span class="p">&lt;</span><span class="nt">property</span> <span class="na">name</span><span class="o">=</span><span class="s">"javax.persistence.jdbc.user"</span> <span class="na">value</span><span class="o">=</span><span class="s">"root"</span><span class="p">/&gt;</span>
+            <span class="p">&lt;</span><span class="nt">property</span> <span class="na">name</span><span class="o">=</span><span class="s">"javax.persistence.jdbc.password"</span> <span class="na">value</span><span class="o">=</span><span class="s">"123456"</span><span class="p">/&gt;</span>
             
             <span class="c">&lt;!-- 最大连接数，默认值：CPU数*16  --&gt;</span>
-            <span class="p">&lt;</span><span class="nt">property</span> <span class="na">name</span><span class="o">=</span><span class="s">&quot;javax.persistence.connections.limit&quot;</span> <span class="na">value</span><span class="o">=</span><span class="s">&quot;32&quot;</span><span class="p">/&gt;</span>
+            <span class="p">&lt;</span><span class="nt">property</span> <span class="na">name</span><span class="o">=</span><span class="s">"javax.persistence.connections.limit"</span> <span class="na">value</span><span class="o">=</span><span class="s">"32"</span><span class="p">/&gt;</span>
             
             <span class="c">&lt;!--  包含的SQL模板，相当于反向LIKE，不同的JDBC驱动的SQL语句不一样，Redkale内置了MySQL的语句 --&gt;</span>
-            <span class="p">&lt;</span><span class="nt">property</span> <span class="na">name</span><span class="o">=</span><span class="s">&quot;javax.persistence.contain.sqltemplate&quot;</span> <span class="na">value</span><span class="o">=</span><span class="s">&quot;LOCATE(${keystr}, ${column}) &gt; 0&quot;</span><span class="p">/&gt;</span>
-            <span class="p">&lt;</span><span class="nt">property</span> <span class="na">name</span><span class="o">=</span><span class="s">&quot;javax.persistence.notcontain.sqltemplate&quot;</span> <span class="na">value</span><span class="o">=</span><span class="s">&quot;LOCATE(${keystr}, ${column}) = 0&quot;</span><span class="p">/&gt;</span>
+            <span class="p">&lt;</span><span class="nt">property</span> <span class="na">name</span><span class="o">=</span><span class="s">"javax.persistence.contain.sqltemplate"</span> <span class="na">value</span><span class="o">=</span><span class="s">"LOCATE(${keystr}, ${column}) &gt; 0"</span><span class="p">/&gt;</span>
+            <span class="p">&lt;</span><span class="nt">property</span> <span class="na">name</span><span class="o">=</span><span class="s">"javax.persistence.notcontain.sqltemplate"</span> <span class="na">value</span><span class="o">=</span><span class="s">"LOCATE(${keystr}, ${column}) = 0"</span><span class="p">/&gt;</span>
             
             <span class="c">&lt;!--  复制表结构的SQL模板，Redkale内置了MySQL的语句 --&gt;</span>
-            <span class="p">&lt;</span><span class="nt">property</span> <span class="na">name</span><span class="o">=</span><span class="s">&quot;javax.persistence.tablenotexist.sqlstates&quot;</span> <span class="na">value</span><span class="o">=</span><span class="s">&quot;42000;42S02&quot;</span><span class="p">/&gt;</span>
-            <span class="p">&lt;</span><span class="nt">property</span> <span class="na">name</span><span class="o">=</span><span class="s">&quot;javax.persistence.tablecopy.sqltemplate&quot;</span> <span class="na">value</span><span class="o">=</span><span class="s">&quot;CREATE TABLE ${newtable} LIKE ${oldtable}&quot;</span><span class="p">/&gt;</span>
+            <span class="p">&lt;</span><span class="nt">property</span> <span class="na">name</span><span class="o">=</span><span class="s">"javax.persistence.tablenotexist.sqlstates"</span> <span class="na">value</span><span class="o">=</span><span class="s">"42000;42S02"</span><span class="p">/&gt;</span>
+            <span class="p">&lt;</span><span class="nt">property</span> <span class="na">name</span><span class="o">=</span><span class="s">"javax.persistence.tablecopy.sqltemplate"</span> <span class="na">value</span><span class="o">=</span><span class="s">"CREATE TABLE ${newtable} LIKE ${oldtable}"</span><span class="p">/&gt;</span>
            
         <span class="p">&lt;/</span><span class="nt">properties</span><span class="p">&gt;</span>
     <span class="p">&lt;/</span><span class="nt">persistence-unit</span><span class="p">&gt;</span>
     <span class="c">&lt;!-- IM消息库 --&gt;</span>
-    <span class="p">&lt;</span><span class="nt">persistence-unit</span> <span class="na">name</span><span class="o">=</span><span class="s">&quot;demoim&quot;</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">persistence-unit</span> <span class="na">name</span><span class="o">=</span><span class="s">"demoim"</span><span class="p">&gt;</span>
         <span class="p">&lt;</span><span class="nt">shared-cache-mode</span><span class="p">&gt;</span>NONE<span class="p">&lt;/</span><span class="nt">shared-cache-mode</span><span class="p">&gt;</span>
         <span class="p">&lt;</span><span class="nt">properties</span><span class="p">&gt;</span>
             <span class="c">&lt;!-- jdbc:mysql://127.0.0.1:3306/dbim?autoReconnect=true&amp;amp;autoReconnectForPools=true&amp;amp;characterEncoding=utf8 --&gt;</span>
-            <span class="p">&lt;</span><span class="nt">property</span> <span class="na">name</span><span class="o">=</span><span class="s">&quot;javax.persistence.jdbc.url&quot;</span> <span class="na">value</span><span class="o">=</span><span class="s">&quot;jdbc:mysql://127.0.0.1:3306/dbim?characterEncoding=utf8&quot;</span><span class="p">/&gt;</span>
-            <span class="p">&lt;</span><span class="nt">property</span> <span class="na">name</span><span class="o">=</span><span class="s">&quot;javax.persistence.jdbc.driver&quot;</span> <span class="na">value</span><span class="o">=</span><span class="s">&quot;com.mysql.jdbc.Driver&quot;</span><span class="p">/&gt;</span>
-            <span class="p">&lt;</span><span class="nt">property</span> <span class="na">name</span><span class="o">=</span><span class="s">&quot;javax.persistence.jdbc.user&quot;</span> <span class="na">value</span><span class="o">=</span><span class="s">&quot;root&quot;</span><span class="p">/&gt;</span>
-            <span class="p">&lt;</span><span class="nt">property</span> <span class="na">name</span><span class="o">=</span><span class="s">&quot;javax.persistence.jdbc.password&quot;</span> <span class="na">value</span><span class="o">=</span><span class="s">&quot;123456&quot;</span><span class="p">/&gt;</span>
+            <span class="p">&lt;</span><span class="nt">property</span> <span class="na">name</span><span class="o">=</span><span class="s">"javax.persistence.jdbc.url"</span> <span class="na">value</span><span class="o">=</span><span class="s">"jdbc:mysql://127.0.0.1:3306/dbim?characterEncoding=utf8"</span><span class="p">/&gt;</span>
+            <span class="p">&lt;</span><span class="nt">property</span> <span class="na">name</span><span class="o">=</span><span class="s">"javax.persistence.jdbc.driver"</span> <span class="na">value</span><span class="o">=</span><span class="s">"com.mysql.jdbc.Driver"</span><span class="p">/&gt;</span>
+            <span class="p">&lt;</span><span class="nt">property</span> <span class="na">name</span><span class="o">=</span><span class="s">"javax.persistence.jdbc.user"</span> <span class="na">value</span><span class="o">=</span><span class="s">"root"</span><span class="p">/&gt;</span>
+            <span class="p">&lt;</span><span class="nt">property</span> <span class="na">name</span><span class="o">=</span><span class="s">"javax.persistence.jdbc.password"</span> <span class="na">value</span><span class="o">=</span><span class="s">"123456"</span><span class="p">/&gt;</span>
         <span class="p">&lt;/</span><span class="nt">properties</span><span class="p">&gt;</span>
     <span class="p">&lt;/</span><span class="nt">persistence-unit</span><span class="p">&gt;</span>
 <span class="p">&lt;/</span><span class="nt">persistence</span><span class="p">&gt;</span>
