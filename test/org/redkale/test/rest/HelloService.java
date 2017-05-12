@@ -88,6 +88,7 @@ public class HelloService implements Service {
     //异步查询单个
     @RestMapping(name = "asyncfind")
     public CompletableFuture<HelloEntity> asyncFindHello(@RestParam(name = "#") int id) {  //通过 /pipes/hello/find/1234、/pipes/hello/jsfind/1234 查询对象
-        return source.findAsync(HelloEntity.class, id);
+        if (source != null)  source.findAsync(HelloEntity.class, id);
+        return CompletableFuture.completedFuture(new HelloEntity());
     }
 }
