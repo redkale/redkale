@@ -158,16 +158,6 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         super.init(channel);
     }
 
-    @Override
-    protected <S extends Servlet> void nextEvent(S nextServlet) {
-        super.nextEvent(nextServlet);
-    }
-
-    @Override
-    public void nextEvent() throws IOException {
-        super.nextEvent();
-    }
-
     /**
      * 获取状态码对应的状态描述
      *

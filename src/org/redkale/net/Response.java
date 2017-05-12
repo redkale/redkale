@@ -145,12 +145,12 @@ public abstract class Response<C extends Context, R extends Request<C>> {
     }
 
     @SuppressWarnings("unchecked")
-    protected <S extends Servlet> void nextEvent(S nextServlet) {
+    public <S extends Servlet> void thenEvent(S nextServlet) {
         this.nextServlet = nextServlet;
     }
 
     @SuppressWarnings("unchecked")
-    protected void nextEvent() throws IOException {
+    public void nextEvent() throws IOException {
         if (this.nextServlet != null) {
             Servlet s = this.nextServlet;
             this.nextServlet = null;

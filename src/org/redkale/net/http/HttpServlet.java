@@ -71,7 +71,7 @@ public abstract class HttpServlet extends Servlet<HttpContext, HttpRequest, Http
                     if (entry.ignore) {
                         authSuccessServlet.execute(request, response);
                     } else {
-                        response.nextEvent(authSuccessServlet);
+                        response.thenEvent(authSuccessServlet);
                         authenticate(request, response);
                     }
                     return;
@@ -153,7 +153,7 @@ public abstract class HttpServlet extends Servlet<HttpContext, HttpRequest, Http
 
     @Override
     public void execute(HttpRequest request, HttpResponse response) throws IOException {
-        response.nextEvent(preSuccessServlet);
+        response.thenEvent(preSuccessServlet);
         preExecute(request, response);
     }
 
