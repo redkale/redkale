@@ -62,56 +62,16 @@ public abstract class WebSocketNode {
         });
     }
 
-    protected abstract List<String> getOnlineRemoteAddresses(@RpcTargetAddress InetSocketAddress targetAddress, Serializable groupid);
+    protected abstract CompletableFuture<List<String>> getOnlineRemoteAddresses(@RpcTargetAddress InetSocketAddress targetAddress, Serializable groupid);
 
-    protected abstract int sendMessage(@RpcTargetAddress InetSocketAddress targetAddress, Serializable groupid, boolean recent, Object message, boolean last);
+    protected abstract CompletableFuture<Integer> sendMessage(@RpcTargetAddress InetSocketAddress targetAddress, Serializable groupid, boolean recent, Object message, boolean last);
 
-    protected abstract void connect(Serializable groupid, InetSocketAddress addr);
+    protected abstract CompletableFuture<Void> connect(Serializable groupid, InetSocketAddress addr);
 
-    protected abstract void disconnect(Serializable groupid, InetSocketAddress addr);
+    protected abstract CompletableFuture<Void> disconnect(Serializable groupid, InetSocketAddress addr);
 
     //--------------------------------------------------------------------------------
-    protected List<String> remoteOnlineRemoteAddresses(@RpcTargetAddress InetSocketAddress targetAddress, Serializable groupid) {
-        if (remoteNode == null) return null;
-        try {
-            return remoteNode.getOnlineRemoteAddresses(targetAddress, groupid);
-        } catch (Exception e) {
-            logger.log(Level.WARNING, "remote " + targetAddress + " websocket getOnlineRemoteAddresses error", e);
-            return null;
-        }
-    }
-
-    /**
-     * 获取在线用户的节点地址列表
-     *
-     * @param groupid groupid
-     *
-     * @return 地址列表
-     */
-    public Collection<InetSocketAddress> getOnlineNodes(final Serializable groupid) {
-        return sncpAddressNodes == null ? null : sncpAddressNodes.getCollection(groupid);
-    }
-
-    /**
-     * 获取在线用户的详细连接信息
-     *
-     * @param groupid groupid
-     *
-     * @return 地址集合
-     */
-    public Map<InetSocketAddress, List<String>> getOnlineRemoteAddress(final Serializable groupid) {
-        Collection<InetSocketAddress> nodes = getOnlineNodes(groupid);
-        if (nodes == null) return null;
-        final Map<InetSocketAddress, List<String>> map = new HashMap();
-        for (InetSocketAddress nodeAddress : nodes) {
-            List<String> list = getOnlineRemoteAddresses(nodeAddress, groupid);
-            if (list == null) list = new ArrayList();
-            map.put(nodeAddress, list);
-        }
-        return map;
-    }
-
-     final void connect(Serializable groupid, String engineid) {
+    final void connect(Serializable groupid, String engineid) {
         if (finest) logger.finest(localSncpAddress + " receive websocket connect event (" + groupid + " on " + engineid + ").");
         Set<String> engineids = localEngines.get(groupid);
         if (engineids == null) {
@@ -137,126 +97,179 @@ public abstract class WebSocketNode {
         engines.put(engine.getEngineid(), engine);
     }
 
-    public final int sendMessage(Serializable groupid, boolean recent, Object message, boolean last) {
-        final Set<String> engineids = localEngines.get(groupid);
-        if (finest) logger.finest("websocket want send message {groupid:" + groupid + ", content:'" + message + "'} from locale node to " + engineids);
-        int rscode = RETCODE_GROUP_EMPTY;
-        if (engineids != null && !engineids.isEmpty()) {
-            for (String engineid : engineids) {
-                final WebSocketEngine engine = engines.get(engineid);
-                if (engine != null) { //在本地
-                    final WebSocketGroup group = engine.getWebSocketGroup(groupid);
-                    if (group == null || group.isEmpty()) {
-                        engineids.remove(engineid);
-                        if (finest) logger.finest("websocket want send message {engineid:'" + engineid + "', groupid:" + groupid + ", content:'" + message + "'} but websocket group is empty ");
-                        rscode = RETCODE_GROUP_EMPTY;
-                        break;
+    //--------------------------------------------------------------------------------
+    protected CompletableFuture<List<String>> remoteOnlineRemoteAddresses(@RpcTargetAddress InetSocketAddress targetAddress, Serializable groupid) {
+        if (remoteNode == null) return CompletableFuture.completedFuture(null);
+        try {
+            return remoteNode.getOnlineRemoteAddresses(targetAddress, groupid);
+        } catch (Exception e) {
+            logger.log(Level.WARNING, "remote " + targetAddress + " websocket getOnlineRemoteAddresses error", e);
+            return CompletableFuture.completedFuture(null);
+        }
+    }
+
+    /**
+     * 获取在线用户的节点地址列表
+     *
+     * @param groupid groupid
+     *
+     * @return 地址列表
+     */
+    public CompletableFuture<Collection<InetSocketAddress>> getOnlineNodes(final Serializable groupid) {
+        return sncpAddressNodes == null ? CompletableFuture.completedFuture(null) : sncpAddressNodes.getCollectionAsync(groupid);
+    }
+
+    /**
+     * 获取在线用户的详细连接信息
+     *
+     * @param groupid groupid
+     *
+     * @return 地址集合
+     */
+    //异步待优化
+    public CompletableFuture<Map<InetSocketAddress, List<String>>> getOnlineRemoteAddress(final Serializable groupid) {
+        final CompletableFuture<Map<InetSocketAddress, List<String>>> rs = new CompletableFuture<>();
+        CompletableFuture< Collection<InetSocketAddress>> nodesFuture = getOnlineNodes(groupid);
+        if (nodesFuture == null) return CompletableFuture.completedFuture(null);
+        nodesFuture.whenComplete((nodes, e) -> {
+            if (e != null) {
+                rs.completeExceptionally(e);
+            } else {
+                final Map<InetSocketAddress, List<String>> map = new HashMap();
+                for (final InetSocketAddress nodeAddress : nodes) {
+                    List<String> list = getOnlineRemoteAddresses(nodeAddress, groupid).join();
+                    if (list == null) list = new ArrayList();
+                    map.put(nodeAddress, list);
+                }
+                rs.complete(map);
+            }
+        });
+        return rs;
+    }
+
+    //异步待优化
+    public final CompletableFuture<Integer> sendMessage(final Serializable groupid, final boolean recent, final Object message, final boolean last) {
+        return CompletableFuture.supplyAsync(() -> {
+            final Set<String> engineids = localEngines.get(groupid);
+            if (finest) logger.finest("websocket want send message {groupid:" + groupid + ", content:'" + message + "'} from locale node to " + engineids);
+            int rscode = RETCODE_GROUP_EMPTY;
+            if (engineids != null && !engineids.isEmpty()) {
+                for (String engineid : engineids) {
+                    final WebSocketEngine engine = engines.get(engineid);
+                    if (engine != null) { //在本地
+                        final WebSocketGroup group = engine.getWebSocketGroup(groupid);
+                        if (group == null || group.isEmpty()) {
+                            engineids.remove(engineid);
+                            if (finest) logger.finest("websocket want send message {engineid:'" + engineid + "', groupid:" + groupid + ", content:'" + message + "'} but websocket group is empty ");
+                            rscode = RETCODE_GROUP_EMPTY;
+                            break;
+                        }
+                        rscode = group.send(recent, message, last);
                     }
-                    rscode = group.send(recent, message, last);
                 }
             }
-        }
-        if ((recent && rscode == 0) || remoteNode == null || sncpAddressNodes == null) {
-            if (finest) {
-                if ((recent && rscode == 0)) {
-                    logger.finest("websocket want send recent message success");
-                } else {
-                    logger.finest("websocket remote node is null");
+            if ((recent && rscode == 0) || remoteNode == null || sncpAddressNodes == null) {
+                if (finest) {
+                    if ((recent && rscode == 0)) {
+                        logger.finest("websocket want send recent message success");
+                    } else {
+                        logger.finest("websocket remote node is null");
+                    }
                 }
+                return rscode;
+            }
+            //-----------------------发送远程的-----------------------------
+            Collection<InetSocketAddress> addrs = sncpAddressNodes.getCollection(groupid);
+            if (finest) logger.finest("websocket found groupid:" + groupid + " on " + addrs);
+            if (addrs != null && !addrs.isEmpty()) {   //对方连接在远程节点(包含本地节点)，所以正常情况下addrs不会为空。
+                if (recent) {
+                    InetSocketAddress one = null;
+                    for (InetSocketAddress addr : addrs) {
+                        one = addr;
+                    }
+                    rscode = remoteNode.sendMessage(one, groupid, recent, message, last).join();
+                } else {
+                    for (InetSocketAddress addr : addrs) {
+                        if (!addr.equals(localSncpAddress)) {
+                            rscode |= remoteNode.sendMessage(addr, groupid, recent, message, last).join();
+                        }
+                    }
+                }
+            } else {
+                rscode = RETCODE_GROUP_EMPTY;
             }
             return rscode;
-        }
-        //-----------------------发送远程的-----------------------------
-        Collection<InetSocketAddress> addrs = sncpAddressNodes.getCollection(groupid);
-        if (finest) logger.finest("websocket found groupid:" + groupid + " on " + addrs);
-        if (addrs != null && !addrs.isEmpty()) {   //对方连接在远程节点(包含本地节点)，所以正常情况下addrs不会为空。
-            if (recent) {
-                InetSocketAddress one = null;
-                for (InetSocketAddress addr : addrs) {
-                    one = addr;
-                }
-                rscode = remoteNode.sendMessage(one, groupid, recent, message, last);
-            } else {
-                for (InetSocketAddress addr : addrs) {
-                    if (!addr.equals(localSncpAddress)) {
-                        rscode |= remoteNode.sendMessage(addr, groupid, recent, message, last);
-                    }
-                }
-            }
-        } else {
-            rscode = RETCODE_GROUP_EMPTY;
-        }
-        return rscode;
+        });
     }
 
     //--------------------------------------------------------------------------------
-    public final int sendEachMessage(Serializable groupid, String text) {
+    public final CompletableFuture<Integer> sendEachMessage(Serializable groupid, String text) {
         return sendMessage(groupid, false, (Object) text, true);
     }
 
-    public final int sendEachMessage(Serializable groupid, String text, boolean last) {
+    public final CompletableFuture<Integer> sendEachMessage(Serializable groupid, String text, boolean last) {
         return sendMessage(groupid, false, (Object) text, last);
     }
 
-    public final int sendRecentMessage(Serializable groupid, String text) {
+    public final CompletableFuture<Integer> sendRecentMessage(Serializable groupid, String text) {
         return sendMessage(groupid, true, (Object) text, true);
     }
 
-    public final int sendRecentMessage(Serializable groupid, String text, boolean last) {
+    public final CompletableFuture<Integer> sendRecentMessage(Serializable groupid, String text, boolean last) {
         return sendMessage(groupid, true, (Object) text, last);
     }
 
-    public final int sendMessage(Serializable groupid, boolean recent, String text) {
+    public final CompletableFuture<Integer> sendMessage(Serializable groupid, boolean recent, String text) {
         return sendMessage(groupid, recent, (Object) text, true);
     }
 
-    public final int sendMessage(Serializable groupid, boolean recent, String text, boolean last) {
+    public final CompletableFuture<Integer> sendMessage(Serializable groupid, boolean recent, String text, boolean last) {
         return sendMessage(groupid, recent, (Object) text, last);
     }
 
     //--------------------------------------------------------------------------------
-    public final int sendEachMessage(Serializable groupid, byte[] data) {
+    public final CompletableFuture<Integer> sendEachMessage(Serializable groupid, byte[] data) {
         return sendMessage(groupid, false, (Object) data, true);
     }
 
-    public final int sendEachMessage(Serializable groupid, byte[] data, boolean last) {
+    public final CompletableFuture<Integer> sendEachMessage(Serializable groupid, byte[] data, boolean last) {
         return sendMessage(groupid, false, (Object) data, last);
     }
 
-    public final int sendRecentMessage(Serializable groupid, byte[] data) {
+    public final CompletableFuture<Integer> sendRecentMessage(Serializable groupid, byte[] data) {
         return sendMessage(groupid, true, (Object) data, true);
     }
 
-    public final int sendRecentMessage(Serializable groupid, byte[] data, boolean last) {
+    public final CompletableFuture<Integer> sendRecentMessage(Serializable groupid, byte[] data, boolean last) {
         return sendMessage(groupid, true, (Object) data, last);
     }
 
-    public final int sendMessage(Serializable groupid, boolean recent, byte[] data) {
+    public final CompletableFuture<Integer> sendMessage(Serializable groupid, boolean recent, byte[] data) {
         return sendMessage(groupid, recent, data, true);
     }
 
-    public final int sendMessage(Serializable groupid, boolean recent, byte[] data, boolean last) {
+    public final CompletableFuture<Integer> sendMessage(Serializable groupid, boolean recent, byte[] data, boolean last) {
         return sendMessage(groupid, recent, (Object) data, last);
     }
 
     //--------------------------------------------------------------------------------
-    public final int sendEachMessage(Serializable groupid, Object message) {
+    public final CompletableFuture<Integer> sendEachMessage(Serializable groupid, Object message) {
         return sendMessage(groupid, false, message, true);
     }
 
-    public final int sendEachMessage(Serializable groupid, Object message, boolean last) {
+    public final CompletableFuture<Integer> sendEachMessage(Serializable groupid, Object message, boolean last) {
         return sendMessage(groupid, false, message, last);
     }
 
-    public final int sendRecentMessage(Serializable groupid, Object message) {
+    public final CompletableFuture<Integer> sendRecentMessage(Serializable groupid, Object message) {
         return sendMessage(groupid, true, message, true);
     }
 
-    public final int sendRecentMessage(Serializable groupid, Object message, boolean last) {
+    public final CompletableFuture<Integer> sendRecentMessage(Serializable groupid, Object message, boolean last) {
         return sendMessage(groupid, true, message, last);
     }
 
-    public final int sendMessage(Serializable groupid, boolean recent, Object message) {
+    public final CompletableFuture<Integer> sendMessage(Serializable groupid, boolean recent, Object message) {
         return sendMessage(groupid, recent, message, true);
     }
 

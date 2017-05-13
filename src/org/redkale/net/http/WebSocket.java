@@ -9,7 +9,7 @@ import org.redkale.net.http.WebSocketPacket.FrameType;
 import java.io.*;
 import java.net.*;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.*;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.*;
 import org.redkale.util.Comment;
@@ -200,7 +200,7 @@ public abstract class WebSocket {
      *
      * @return 为0表示成功， 其他值表示异常
      */
-    public final int sendEachMessage(Serializable groupid, String text) {
+    public final CompletableFuture<Integer> sendEachMessage(Serializable groupid, String text) {
         return sendEachMessage(groupid, text, true);
     }
 
@@ -212,7 +212,7 @@ public abstract class WebSocket {
      *
      * @return 为0表示成功， 其他值表示异常
      */
-    public final int sendEachMessage(Serializable groupid, byte[] data) {
+    public final CompletableFuture<Integer> sendEachMessage(Serializable groupid, byte[] data) {
         return sendEachMessage(groupid, data, true);
     }
 
@@ -224,7 +224,7 @@ public abstract class WebSocket {
      *
      * @return 为0表示成功， 其他值表示异常
      */
-    public final int sendEachMessage(Serializable groupid, Object message) {
+    public final CompletableFuture<Integer> sendEachMessage(Serializable groupid, Object message) {
         return sendEachMessage(groupid, message, true);
     }
 
@@ -237,7 +237,7 @@ public abstract class WebSocket {
      *
      * @return 为0表示成功， 其他值表示异常
      */
-    public final int sendEachMessage(Serializable groupid, String text, boolean last) {
+    public final CompletableFuture<Integer> sendEachMessage(Serializable groupid, String text, boolean last) {
         return sendMessage(groupid, false, text, last);
     }
 
@@ -250,7 +250,7 @@ public abstract class WebSocket {
      *
      * @return 为0表示成功， 其他值表示异常
      */
-    public final int sendEachMessage(Serializable groupid, byte[] data, boolean last) {
+    public final CompletableFuture<Integer> sendEachMessage(Serializable groupid, byte[] data, boolean last) {
         return sendMessage(groupid, false, data, last);
     }
 
@@ -263,7 +263,7 @@ public abstract class WebSocket {
      *
      * @return 为0表示成功， 其他值表示异常
      */
-    public final int sendEachMessage(Serializable groupid, Object message, boolean last) {
+    public final CompletableFuture<Integer> sendEachMessage(Serializable groupid, Object message, boolean last) {
         return sendMessage(groupid, false, message, last);
     }
 
@@ -275,7 +275,7 @@ public abstract class WebSocket {
      *
      * @return 为0表示成功， 其他值表示异常
      */
-    public final int sendRecentMessage(Serializable groupid, String text) {
+    public final CompletableFuture<Integer> sendRecentMessage(Serializable groupid, String text) {
         return sendRecentMessage(groupid, text, true);
     }
 
@@ -287,7 +287,7 @@ public abstract class WebSocket {
      *
      * @return 为0表示成功， 其他值表示异常
      */
-    public final int sendRecentMessage(Serializable groupid, byte[] data) {
+    public final CompletableFuture<Integer> sendRecentMessage(Serializable groupid, byte[] data) {
         return sendRecentMessage(groupid, data, true);
     }
 
@@ -299,7 +299,7 @@ public abstract class WebSocket {
      *
      * @return 为0表示成功， 其他值表示异常
      */
-    public final int sendRecentMessage(Serializable groupid, Object message) {
+    public final CompletableFuture<Integer> sendRecentMessage(Serializable groupid, Object message) {
         return sendMessage(groupid, true, message, true);
     }
 
@@ -312,7 +312,7 @@ public abstract class WebSocket {
      *
      * @return 为0表示成功， 其他值表示异常
      */
-    public final int sendRecentMessage(Serializable groupid, String text, boolean last) {
+    public final CompletableFuture<Integer> sendRecentMessage(Serializable groupid, String text, boolean last) {
         return sendMessage(groupid, true, text, last);
     }
 
@@ -325,7 +325,7 @@ public abstract class WebSocket {
      *
      * @return 为0表示成功， 其他值表示异常
      */
-    public final int sendRecentMessage(Serializable groupid, byte[] data, boolean last) {
+    public final CompletableFuture<Integer> sendRecentMessage(Serializable groupid, byte[] data, boolean last) {
         return sendMessage(groupid, true, data, last);
     }
 
@@ -338,27 +338,27 @@ public abstract class WebSocket {
      *
      * @return 为0表示成功， 其他值表示异常
      */
-    public final int sendRecentMessage(Serializable groupid, Object message, boolean last) {
+    public final CompletableFuture<Integer> sendRecentMessage(Serializable groupid, Object message, boolean last) {
         return sendMessage(groupid, true, message, last);
     }
 
-    private int sendMessage(Serializable groupid, boolean recent, String text, boolean last) {
-        if (_engine.node == null) return RETCODE_NODESERVICE_NULL;
-        int rs = _engine.node.sendMessage(groupid, recent, text, last);
+    private CompletableFuture<Integer> sendMessage(Serializable groupid, boolean recent, String text, boolean last) {
+        if (_engine.node == null) return CompletableFuture.completedFuture(RETCODE_NODESERVICE_NULL);
+        CompletableFuture<Integer> rs = _engine.node.sendMessage(groupid, recent, text, last);
         if (_engine.finest) _engine.logger.finest("wsgroupid:" + groupid + " " + (recent ? "recent " : "") + "send websocket result is " + rs + " on " + this + " by message(" + text + ")");
         return rs;
     }
 
-    private int sendMessage(Serializable groupid, boolean recent, byte[] data, boolean last) {
-        if (_engine.node == null) return RETCODE_NODESERVICE_NULL;
-        int rs = _engine.node.sendMessage(groupid, recent, data, last);
+    private CompletableFuture<Integer> sendMessage(Serializable groupid, boolean recent, byte[] data, boolean last) {
+        if (_engine.node == null) return CompletableFuture.completedFuture(RETCODE_NODESERVICE_NULL);
+        CompletableFuture<Integer> rs = _engine.node.sendMessage(groupid, recent, data, last);
         if (_engine.finest) _engine.logger.finest("wsgroupid:" + groupid + " " + (recent ? "recent " : "") + "send websocket result is " + rs + " on " + this + " by message(byte[" + data.length + "])");
         return rs;
     }
 
-    private int sendMessage(Serializable groupid, boolean recent, Object message, boolean last) {
-        if (_engine.node == null) return RETCODE_NODESERVICE_NULL;
-        int rs = _engine.node.sendMessage(groupid, recent, message, last);
+    private CompletableFuture<Integer> sendMessage(Serializable groupid, boolean recent, Object message, boolean last) {
+        if (_engine.node == null) return CompletableFuture.completedFuture(RETCODE_NODESERVICE_NULL);
+        CompletableFuture<Integer> rs = _engine.node.sendMessage(groupid, recent, message, last);
         if (_engine.finest) _engine.logger.finest("wsgroupid:" + groupid + " " + (recent ? "recent " : "") + "send websocket result is " + rs + " on " + this + " by message(" + _jsonConvert.convertTo(message) + ")");
         return rs;
     }
@@ -370,7 +370,7 @@ public abstract class WebSocket {
      *
      * @return 地址列表
      */
-    protected final Collection<InetSocketAddress> getOnlineNodes(Serializable groupid) {
+    protected final CompletableFuture<Collection<InetSocketAddress>> getOnlineNodes(Serializable groupid) {
         return _engine.node.getOnlineNodes(groupid);
     }
 
@@ -381,7 +381,7 @@ public abstract class WebSocket {
      *
      * @return 地址集合
      */
-    protected final Map<InetSocketAddress, List<String>> getOnlineRemoteAddress(Serializable groupid) {
+    protected final CompletableFuture<Map<InetSocketAddress, List<String>>> getOnlineRemoteAddress(Serializable groupid) {
         return _engine.node.getOnlineRemoteAddress(groupid);
     }
 
