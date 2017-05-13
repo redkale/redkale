@@ -62,6 +62,10 @@ public final class WebSocketEngine {
         if (finest) logger.finest(this.getClass().getSimpleName() + "(" + engineid + ")" + " start keeplive(delay:" + delay + ", interval:" + liveinterval + "s) scheduler executor");
     }
 
+    void destroy(AnyValue conf) {
+        if (scheduler != null) scheduler.shutdownNow();
+    }
+
     void add(WebSocket socket) {
         WebSocketGroup group = containers.get(socket._groupid);
         if (group == null) {
@@ -91,10 +95,6 @@ public final class WebSocketEngine {
 
     public WebSocketGroup getWebSocketGroup(Serializable groupid) {
         return containers.get(groupid);
-    }
-
-    void close() {
-        if (scheduler != null) scheduler.shutdownNow();
     }
 
     public String getEngineid() {
