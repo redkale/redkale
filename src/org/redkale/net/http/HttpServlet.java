@@ -124,7 +124,7 @@ public abstract class HttpServlet extends Servlet<HttpContext, HttpRequest, Http
 
     /**
      * <p>
-     * 用户登录或权限验证， 没有注解为&#64;AuthIgnore 的方法会执行authenticate方法, 若验证成功则必须调用response.nextEvent();进行下一步操作, 例如: <br>
+     * 用户登录或权限验证， 注解为&#64;HttpMapping.auth == true 的方法会执行authenticate方法, 若验证成功则必须调用response.nextEvent();进行下一步操作, 例如: <br>
      * <blockquote><pre>
      *      &#64;Override
      *      public void authenticate(HttpRequest request, HttpResponse response) throws IOException {
