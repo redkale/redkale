@@ -16,15 +16,17 @@ public class SimpleRestServlet extends HttpServlet {
     @Resource
     private UserService userService;
 
+    @Override
+    public void preExecute(HttpRequest request, HttpResponse response) throws IOException {
+        final String sessionid = request.getSessionid(false);
+        if (sessionid != null) request.setCurrentUser(userService.current(sessionid));
+        response.nextEvent();
+    }
+
     //普通鉴权
     @Override
     public void authenticate(HttpRequest request, HttpResponse response) throws IOException {
         UserInfo info = request.currentUser();
-        if (info == null) {
-            String sessionid = request.getSessionid(false);
-            if (sessionid != null) info = userService.current(sessionid);
-            if (info != null) request.setCurrentUser(info); //必须赋值给request.currentUser
-        }
         if (info == null) {
             response.finishJson(RET_UNLOGIN);
             return;

@@ -317,7 +317,7 @@ public abstract class NodeServer {
             final boolean localed = (this.sncpAddress == null && entry.isEmptyGroups() && !serviceImplClass.isInterface() && !Modifier.isAbstract(serviceImplClass.getModifiers())) //非SNCP的Server，通常是单点服务
                 || groups.contains(this.sncpGroup) //本地IP含在内的
                 || (this.sncpGroup == null && entry.isEmptyGroups()) //空的SNCP配置
-                || serviceImplClass.getAnnotation(LocalService.class) != null;//本地模式
+                || serviceImplClass.getAnnotation(Local.class) != null;//本地模式
             if (localed && (serviceImplClass.isInterface() || Modifier.isAbstract(serviceImplClass.getModifiers()))) continue; //本地模式不能实例化接口和抽象类的Service类
             final BiConsumer<ResourceFactory, Boolean> runner = (ResourceFactory rf, Boolean needinject) -> {
                 try {

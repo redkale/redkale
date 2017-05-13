@@ -168,7 +168,7 @@ public class NodeHttpServer extends NodeServer {
             RestService rs = (RestService) stype.getAnnotation(RestService.class);
             if (rs != null && rs.ignore()) return;
             if (mustsign && rs == null) return;
-            if (stype.getAnnotation(LocalService.class) != null && rs == null) return;
+            if (stype.getAnnotation(Local.class) != null && rs == null) return;
 
             final String stypename = stype.getName();
             if (!autoload && !includeValues.contains(stypename)) return;

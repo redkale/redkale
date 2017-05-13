@@ -25,7 +25,7 @@ import org.redkale.util.*;
  *
  * @author zhangjx
  */
-@LocalService
+@Local
 @AutoLoad(false)
 @SuppressWarnings("unchecked")
 @ResourceType({DataSource.class})

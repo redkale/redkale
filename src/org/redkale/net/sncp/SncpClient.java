@@ -228,6 +228,7 @@ public final class SncpClient {
             final int mod = method.getModifiers();
             if (Modifier.isStatic(mod)) continue;
             if (Modifier.isFinal(mod)) continue;
+            if (method.getAnnotation(Local.class) != null) continue;
             if (method.getName().equals("getClass") || method.getName().equals("toString")) continue;
             if (method.getName().equals("equals") || method.getName().equals("hashCode")) continue;
             if (method.getName().equals("notify") || method.getName().equals("notifyAll") || method.getName().equals("wait")) continue;

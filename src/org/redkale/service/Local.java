@@ -6,12 +6,12 @@
 package org.redkale.service;
 
 import java.lang.annotation.*;
-import static java.lang.annotation.ElementType.TYPE;
+import static java.lang.annotation.ElementType.*;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * 本地模式注解。
- * 声明为LocalService的Service只能以本地模式存在， 即使配置文件中配置成远程模式也将被忽略。
+ * 声明为Local的Service只能以本地模式存在， 即使配置文件中配置成远程模式也将被忽略。
  *
  * <p>
  * 详情见: https://redkale.org
@@ -20,9 +20,9 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  */
 @Inherited
 @Documented
-@Target({TYPE})
+@Target({TYPE, METHOD, PARAMETER})
 @Retention(RUNTIME)
-public @interface LocalService {
+public @interface Local {
 
     String comment() default ""; //备注描述
 }

@@ -100,10 +100,14 @@ public abstract class HttpServlet extends Servlet<HttpContext, HttpRequest, Http
 
     /**
      * <p>
-     * 预执行方法，在execute方法之前运行，通常用于常规统计或基础检测，例如 : <br>
+     * 预执行方法，在execute方法之前运行，设置当前用户信息，或者加入常规统计和基础检测，例如 : <br>
      * <blockquote><pre>
      *      &#64;Override
      *      public void preExecute(final HttpRequest request, final HttpResponse response) throws IOException {
+     *          //设置当前用户信息
+     *          final String sessionid = request.getSessionid(false);
+     *          if (sessionid != null) request.setCurrentUser(userService.current(sessionid));
+     *
      *          if (finer) response.recycleListener((req, resp) -&#62; {  //记录处理时间比较长的请求
      *              long e = System.currentTimeMillis() - ((HttpRequest) req).getCreatetime();
      *              if (e &#62; 200) logger.finer("http-execute-cost-time: " + e + " ms. request = " + req);
@@ -128,7 +132,7 @@ public abstract class HttpServlet extends Servlet<HttpContext, HttpRequest, Http
      * <blockquote><pre>
      *      &#64;Override
      *      public void authenticate(HttpRequest request, HttpResponse response) throws IOException {
-     *          UserInfo info = currentUser(request);
+     *          UserInfo info = request.currentUser();
      *          if (info == null) {
      *              response.finishJson(RET_UNLOGIN);
      *              return;

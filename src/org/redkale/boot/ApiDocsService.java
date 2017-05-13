@@ -25,7 +25,7 @@ import org.redkale.util.*;
  * @author zhangjx
  */
 @AutoLoad(false)
-@LocalService
+@Local
 public final class ApiDocsService extends AbstractService {
 
     private final Application app; //Application全局对象

@@ -243,7 +243,7 @@ public class HttpRequest extends Request<HttpContext> {
     }
 
     /**
-     * 设置当前用户信息, 通常在HttpServlet.authenticate方法里设置currentUser <br>
+     * 设置当前用户信息, 通常在HttpServlet.preExecute方法里设置currentUser <br>
      * 数据类型由&#64;HttpUserType指定
      *
      * @param <T>  泛型
@@ -257,7 +257,7 @@ public class HttpRequest extends Request<HttpContext> {
     }
 
     /**
-     * 获取当前用户信息, 通常在HttpServlet.authenticate方法里设置currentUser <br>
+     * 获取当前用户信息<br>
      * 数据类型由&#64;HttpUserType指定
      *
      * @param <T> &#64;HttpUserType指定的用户信息类型
