@@ -19,7 +19,7 @@ import org.redkale.util.Sheet;
  * HelloBean: Hello模块实现FilterBean的过滤Bean类
  *
  */
-@RestService(name = "hello", moduleid = 0, repair = true, ignore = false, comment = "Hello服务模块")
+@RestService(name = "hello", moduleid = 0, automapping = true, repair = true, ignore = false, comment = "Hello服务模块")
 public class HelloService2 implements Service { 
 
     @Resource

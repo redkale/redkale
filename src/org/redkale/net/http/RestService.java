@@ -37,6 +37,13 @@ public @interface RestService {
     int moduleid() default 0;
 
     /**
+     * 没有标记&#64;RestMapping的方法是否转换， 默认为false
+     *
+     * @return 默认false
+     */
+    boolean automapping() default false;
+
+    /**
      * 是否屏蔽该类的转换
      *
      * @return 默认false

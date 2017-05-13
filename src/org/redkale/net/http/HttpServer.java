@@ -103,7 +103,7 @@ public final class HttpServer extends Server<String, HttpContext, HttpRequest, H
      * @return RestServlet
      */
     public <S extends Service, T extends HttpServlet> T addRestServlet(String name, Class<S> serviceType, S service, Class<T> baseServletClass, String prefix) {
-        return addRestServlet(name, serviceType, service, baseServletClass, true, prefix, null);
+        return addRestServlet(name, serviceType, service, baseServletClass, prefix, null);
     }
 
     /**
@@ -115,32 +115,13 @@ public final class HttpServer extends Server<String, HttpContext, HttpRequest, H
      * @param serviceType      Service的类型
      * @param service          Service对象
      * @param baseServletClass RestServlet基类
-     * @param mustsign         是否必须有Rest注解标记才生成Rest方法
-     * @param prefix           url前缀
-     *
-     * @return RestServlet
-     */
-    public <S extends Service, T extends HttpServlet> T addRestServlet(String name, Class<S> serviceType, S service, Class<T> baseServletClass, final boolean mustsign, String prefix) {
-        return addRestServlet(name, serviceType, service, baseServletClass, mustsign, prefix, null);
-    }
-
-    /**
-     * 添加RestServlet
-     *
-     * @param <S>              Service
-     * @param <T>              RestServlet
-     * @param name             Service的资源名
-     * @param serviceType      Service的类型
-     * @param service          Service对象
-     * @param baseServletClass RestServlet基类
-     * @param mustsign         是否必须有Rest注解标记才生成Rest方法
      * @param prefix           url前缀
      * @param conf             配置信息
      *
      * @return RestServlet
      */
-    public <S extends Service, T extends HttpServlet> T addRestServlet(
-        final String name, Class<S> serviceType, final S service, final Class<T> baseServletClass, final boolean mustsign, final String prefix, AnyValue conf) {
+    public <S extends Service, T extends HttpServlet> T addRestServlet(final String name, final Class<S> serviceType,
+        final S service, final Class<T> baseServletClass, final String prefix, final AnyValue conf) {
         T servlet = null;
         for (final HttpServlet item : ((HttpPrepareServlet) this.prepare).getServlets()) {
             if (!(item instanceof HttpServlet)) continue;
@@ -157,7 +138,7 @@ public final class HttpServer extends Server<String, HttpContext, HttpRequest, H
             }
         }
         final boolean first = servlet == null;
-        if (servlet == null) servlet = Rest.createRestServlet(baseServletClass, serviceType, mustsign);
+        if (servlet == null) servlet = Rest.createRestServlet(baseServletClass, serviceType);
         try { //若提供动态变更Service服务功能，则改Rest服务无法做出相应更新
             Field field = servlet.getClass().getDeclaredField(Rest.REST_SERVICE_FIELD_NAME);
             field.setAccessible(true);

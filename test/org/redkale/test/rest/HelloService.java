@@ -18,7 +18,7 @@ import org.redkale.util.*;
  * HelloBean: Hello模块实现FilterBean的过滤Bean类
  *
  */
-@RestService
+@RestService(automapping = true)
 public class HelloService implements Service {
 
     private int nodeid;

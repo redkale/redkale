@@ -104,7 +104,7 @@ public final class Rest {
         return (!controller.name().isEmpty()) ? controller.name() : serviceType.getSimpleName().replaceAll("Service.*$", "").toLowerCase();
     }
 
-    static <T extends HttpServlet> T createRestServlet(final Class<T> baseServletClass, final Class<? extends Service> serviceType, final boolean mustsign) {
+    static <T extends HttpServlet> T createRestServlet(final Class<T> baseServletClass, final Class<? extends Service> serviceType) {
         if (baseServletClass == null || serviceType == null) return null;
         if (!HttpServlet.class.isAssignableFrom(baseServletClass)) return null;
         int mod = baseServletClass.getModifiers();
@@ -223,7 +223,8 @@ public final class Rest {
             if ("version".equals(method.getName())) continue;
 
             RestMapping[] mappings = method.getAnnotationsByType(RestMapping.class);
-            if (mustsign && mappings.length < 1) continue;
+            if (controller == null) continue;
+            if (!controller.automapping() && mappings.length < 1) continue;
             boolean ignore = false;
             for (RestMapping mapping : mappings) {
                 if (mapping.ignore()) {

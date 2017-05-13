@@ -148,7 +148,6 @@ public class NodeHttpServer extends NodeServer {
         final Class baseServletClass = Class.forName(restConf.getValue("base", DefaultRestServlet.class.getName()));
 
         final boolean autoload = restConf.getBoolValue("autoload", true);
-        final boolean mustsign = restConf.getBoolValue("mustsign", true); //是否只加载标记@RestService的Service类
 
         final Set<String> includeValues = new HashSet<>();
         final Set<String> excludeValues = new HashSet<>();
@@ -166,15 +165,13 @@ public class NodeHttpServer extends NodeServer {
             final Class stype = Sncp.getServiceType(service);
             final String name = Sncp.getResourceName(service);
             RestService rs = (RestService) stype.getAnnotation(RestService.class);
-            if (rs != null && rs.ignore()) return;
-            if (mustsign && rs == null) return;
-            if (stype.getAnnotation(Local.class) != null && rs == null) return;
+            if (rs == null || rs.ignore()) return;
 
             final String stypename = stype.getName();
             if (!autoload && !includeValues.contains(stypename)) return;
             if (!restFilter.accept(stypename)) return;
 
-            HttpServlet servlet = httpServer.addRestServlet(name, stype, service, baseServletClass, mustsign, prefix, (AnyValue) null);
+            HttpServlet servlet = httpServer.addRestServlet(name, stype, service, baseServletClass, prefix, (AnyValue) null);
             resourceFactory.inject(servlet, NodeHttpServer.this);
             if (finest) logger.finest(threadName + " Create RestServlet(resource.name='" + name + "') = " + servlet);
             if (ss != null) {
