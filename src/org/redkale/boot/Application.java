@@ -546,7 +546,9 @@ public final class Application {
                                                 p = p.toUpperCase();
                                                 if ("SNCP".equals(p) || "HTTP".equals(p)) continue;
                                                 final Class<? extends NodeServer> old = nodeClasses.get(p);
-                                                if (old != null && old != type) throw new RuntimeException("Protocol(" + p + ") had NodeServer-Class(" + old.getName() + ") but repeat NodeServer-Class(" + type.getName() + ")");
+                                                if (old != null && old != type) {
+                                                    throw new RuntimeException("Protocol(" + p + ") had NodeServer-Class(" + old.getName() + ") but repeat NodeServer-Class(" + type.getName() + ")");
+                                                }
                                                 nodeClasses.put(p, type);
                                             }
                                         }
