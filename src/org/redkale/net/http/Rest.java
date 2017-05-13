@@ -1056,7 +1056,11 @@ public final class Rest {
             this.methodidx = methodidx;
             this.ignore = mapping.ignore();
             String n = mapping.name().toLowerCase();
-            if (n.isEmpty()) n = method.getName().toLowerCase().replace(defmodulename.toLowerCase(), "");
+            if (n.isEmpty()) {
+                String t = method.getName().toLowerCase();
+                int pos = t.indexOf(defmodulename.toLowerCase());
+                n = pos > 0 ? t.substring(0, pos) : t;
+            }
             this.name = n;
             this.mappingMethod = method;
             this.methods = mapping.methods();
