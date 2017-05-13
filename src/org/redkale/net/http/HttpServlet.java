@@ -25,7 +25,7 @@ import org.redkale.util.*;
  *
  * @author zhangjx
  */
-public abstract class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse> {
+public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse> {
 
     public static final int RET_SERVER_ERROR = 1800_0001;
 
