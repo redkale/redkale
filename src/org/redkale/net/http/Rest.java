@@ -105,11 +105,11 @@ public final class Rest {
     }
 
     static <T extends HttpServlet> T createRestServlet(final Class<T> baseServletClass, final Class<? extends Service> serviceType) {
-        if (baseServletClass == null || serviceType == null) return null;
-        if (!HttpServlet.class.isAssignableFrom(baseServletClass)) return null;
+        if (baseServletClass == null || serviceType == null) throw new RuntimeException(" Servlet or Service is null Class on createRestServlet");
+        if (!HttpServlet.class.isAssignableFrom(baseServletClass)) throw new RuntimeException(baseServletClass + " is not HttpServlet Class on createRestServlet");
         int mod = baseServletClass.getModifiers();
-        if (!java.lang.reflect.Modifier.isPublic(mod)) return null;
-        if (java.lang.reflect.Modifier.isAbstract(mod)) return null;
+        if (!java.lang.reflect.Modifier.isPublic(mod)) throw new RuntimeException(baseServletClass + " is not Public Class on createRestServlet");
+        if (java.lang.reflect.Modifier.isAbstract(mod)) throw new RuntimeException(baseServletClass + " is abstract Class on createRestServlet");
 
         final String serviceDesc = Type.getDescriptor(serviceType);
         final String webServletDesc = Type.getDescriptor(WebServlet.class);
