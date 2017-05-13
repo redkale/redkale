@@ -21,7 +21,7 @@ import static java.lang.annotation.RetentionPolicy.*;
 @Documented
 @Target({METHOD})
 @Retention(RUNTIME)
-@Repeatable(RestMappings.class)
+@Repeatable(RestMapping.RestMappings.class)
 public @interface RestMapping {
 
     /**
@@ -74,4 +74,12 @@ public @interface RestMapping {
      */
     String[] methods() default {};
 
+    @Inherited
+    @Documented
+    @Target({METHOD})
+    @Retention(RUNTIME)
+    @interface RestMappings {
+
+        RestMapping[] value();
+    }
 }
