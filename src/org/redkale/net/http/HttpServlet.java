@@ -158,9 +158,9 @@ public abstract class HttpServlet extends Servlet<HttpContext, HttpRequest, Http
     }
 
     private HashMap<String, Entry> load() {
-        final boolean typeIgnore = this.getClass().getAnnotation(AuthIgnore.class) != null;
         WebServlet module = this.getClass().getAnnotation(WebServlet.class);
         final int serviceid = module == null ? 0 : module.moduleid();
+        final boolean typeIgnore = module == null ? true : !module.auth();
         final HashMap<String, Entry> map = new HashMap<>();
         HashMap<String, Class> nameset = new HashMap<>();
         final Class selfClz = this.getClass();
@@ -286,9 +286,9 @@ public abstract class HttpServlet extends Servlet<HttpContext, HttpRequest, Http
             this.methods = methods;
             this.method = method;
             this.servlet = servlet;
-            this.ignore = typeIgnore || method.getAnnotation(AuthIgnore.class) != null;
-            HttpCacheable hc = method.getAnnotation(HttpCacheable.class);
-            this.cacheseconds = hc == null ? 0 : hc.seconds() * 1000;
+            HttpMapping mapping = method.getAnnotation(HttpMapping.class);
+            this.ignore = typeIgnore || (mapping == null || !mapping.auth());
+            this.cacheseconds = mapping == null ? 0 : mapping.cacheseconds();
             this.cache = cacheseconds > 0 ? new ConcurrentHashMap() : null;
             this.cacheHandler = cacheseconds > 0 ? (HttpResponse response, ByteBuffer[] buffers) -> {
                 int status = response.getStatus();

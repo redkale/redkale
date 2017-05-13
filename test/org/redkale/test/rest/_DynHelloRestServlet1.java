@@ -47,7 +47,7 @@ public class _DynHelloRestServlet1 extends SimpleRestServlet {
 
         url = "http://127.0.0.1:" + port + "/pipes/hello/create?entity={}";
         System.out.println("增加记录: " + Utility.postHttpContent(url, headers, "{'a':2,'b':3}"));
-        
+
         url = "http://127.0.0.1:" + port + "/pipes/hello/asyncfind/111111";
         System.out.println("listmap: " + Utility.postHttpContent(url, headers, null));
         url = "http://127.0.0.1:" + port + "/pipes/hello/asyncfind2/22222";
@@ -57,20 +57,18 @@ public class _DynHelloRestServlet1 extends SimpleRestServlet {
 
     }
 
-    @AuthIgnore
-    @HttpMapping(url = "/hello/create")
+    @HttpMapping(url = "/hello/create", auth = false)
     public void create(HttpRequest req, HttpResponse resp) throws IOException {
         HelloService service = _servicemap == null ? _service : _servicemap.get(req.getHeader(Rest.REST_HEADER_RESOURCE_NAME, ""));
         HelloEntity bean = req.getJsonParameter(HelloEntity.class, "bean");
         bean.setClientaddr(req.getRemoteAddr());
         bean.setResname(req.getHeader("hello-res"));
         UserInfo user = req.currentUser();
-        RetResult<HelloEntity> result = service.createHello(user, bean, req.getBodyJson(Map.class)); 
+        RetResult<HelloEntity> result = service.createHello(user, bean, req.getBodyJson(Map.class));
         resp.finishJson(result);
     }
 
-    @AuthIgnore
-    @HttpMapping(url = "/hello/delete/")
+    @HttpMapping(url = "/hello/delete/", auth = false)
     public void delete(HttpRequest req, HttpResponse resp) throws IOException {
         HelloService service = _servicemap == null ? _service : _servicemap.get(req.getHeader(Rest.REST_HEADER_RESOURCE_NAME, ""));
         int id = Integer.parseInt(req.getRequstURILastPath());
@@ -78,8 +76,7 @@ public class _DynHelloRestServlet1 extends SimpleRestServlet {
         resp.finishJson(RetResult.success());
     }
 
-    @AuthIgnore
-    @HttpMapping(url = "/hello/update")
+    @HttpMapping(url = "/hello/update", auth = false)
     public void update(HttpRequest req, HttpResponse resp) throws IOException {
         HelloService service = _servicemap == null ? _service : _servicemap.get(req.getHeader(Rest.REST_HEADER_RESOURCE_NAME, ""));
         String clientaddr = req.getRemoteAddr();
@@ -90,8 +87,7 @@ public class _DynHelloRestServlet1 extends SimpleRestServlet {
         resp.finishJson(RetResult.success());
     }
 
-    @AuthIgnore
-    @HttpMapping(url = "/hello/partupdate")
+    @HttpMapping(url = "/hello/partupdate", auth = false)
     public void partupdate(HttpRequest req, HttpResponse resp) throws IOException {
         HelloService service = _servicemap == null ? _service : _servicemap.get(req.getHeader(Rest.REST_HEADER_RESOURCE_NAME, ""));
         HelloEntity bean = req.getJsonParameter(HelloEntity.class, "bean");
@@ -102,8 +98,7 @@ public class _DynHelloRestServlet1 extends SimpleRestServlet {
         resp.finishJson(RetResult.success());
     }
 
-    @AuthIgnore
-    @HttpMapping(url = "/hello/query")
+    @HttpMapping(url = "/hello/query", auth = false)
     public void query(HttpRequest req, HttpResponse resp) throws IOException {
         HelloService service = _servicemap == null ? _service : _servicemap.get(req.getHeader(Rest.REST_HEADER_RESOURCE_NAME, ""));
         HelloBean bean = req.getJsonParameter(HelloBean.class, "bean");
@@ -116,8 +111,7 @@ public class _DynHelloRestServlet1 extends SimpleRestServlet {
         resp.finishJson(result);
     }
 
-    @AuthIgnore
-    @HttpMapping(url = "/hello/list")
+    @HttpMapping(url = "/hello/list", auth = false)
     public void list(HttpRequest req, HttpResponse resp) throws IOException {
         HelloService service = _servicemap == null ? _service : _servicemap.get(req.getHeader(Rest.REST_HEADER_RESOURCE_NAME, ""));
         HelloBean bean = req.getJsonParameter(HelloBean.class, "bean");
@@ -129,8 +123,7 @@ public class _DynHelloRestServlet1 extends SimpleRestServlet {
         resp.finishJson(result);
     }
 
-    @AuthIgnore
-    @HttpMapping(url = "/hello/find/")
+    @HttpMapping(url = "/hello/find/", auth = false)
     public void find(HttpRequest req, HttpResponse resp) throws IOException {
         HelloService service = _servicemap == null ? _service : _servicemap.get(req.getHeader(Rest.REST_HEADER_RESOURCE_NAME, ""));
         int id = Integer.parseInt(req.getRequstURILastPath());
@@ -138,24 +131,21 @@ public class _DynHelloRestServlet1 extends SimpleRestServlet {
         resp.finishJson(bean);
     }
 
-    @AuthIgnore
-    @HttpMapping(url = "/hello/asyncfind/")
+    @HttpMapping(url = "/hello/asyncfind/", auth = false)
     public void asyncfind(HttpRequest req, HttpResponse resp) throws IOException {
         HelloService service = _servicemap == null ? _service : _servicemap.get(req.getHeader(Rest.REST_HEADER_RESOURCE_NAME, ""));
         int id = Integer.parseInt(req.getRequstURILastPath());
         resp.finishJson(service.asyncFindHello(id));
     }
 
-    @AuthIgnore
-    @HttpMapping(url = "/hello/asyncfind2/")
+    @HttpMapping(url = "/hello/asyncfind2/", auth = false)
     public void asyncfind2(HttpRequest req, HttpResponse resp) throws IOException {
         HelloService service = _servicemap == null ? _service : _servicemap.get(req.getHeader(Rest.REST_HEADER_RESOURCE_NAME, ""));
         int id = Integer.parseInt(req.getRequstURILastPath());
         service.asyncFindHello(resp.createAsyncHandler(), id);
     }
 
-    @AuthIgnore
-    @HttpMapping(url = "/hello/asyncfind3/")
+    @HttpMapping(url = "/hello/asyncfind3/", auth = false)
     public void asyncfind3(HttpRequest req, HttpResponse resp) throws IOException {
         HelloService service = _servicemap == null ? _service : _servicemap.get(req.getHeader(Rest.REST_HEADER_RESOURCE_NAME, ""));
         int id = Integer.parseInt(req.getRequstURILastPath());

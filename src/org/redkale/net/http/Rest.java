@@ -120,8 +120,6 @@ public final class Rest {
         final String flipperDesc = Type.getDescriptor(Flipper.class);
         final String httprsDesc = Type.getDescriptor(HttpResult.class);
         final String attrDesc = Type.getDescriptor(org.redkale.util.Attribute.class);
-        final String authDesc = Type.getDescriptor(AuthIgnore.class);
-        final String cacheDesc = Type.getDescriptor(HttpCacheable.class);
         final String mappingDesc = Type.getDescriptor(HttpMapping.class);
         final String webparamDesc = Type.getDescriptor(HttpParam.class);
         final String webparamsDesc = Type.getDescriptor(HttpParam.HttpParams.class);
@@ -263,15 +261,6 @@ public final class Rest {
             mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC, entry.name, "(" + reqDesc + respDesc + ")V", null, new String[]{"java/io/IOException"}));
             //mv.setDebug(true);
             mv.debugLine();
-            if (!entry.auth) { //设置 AuthIgnore
-                av0 = mv.visitAnnotation(authDesc, true);
-                av0.visitEnd();
-            }
-            if (entry.cacheseconds > 0) { //设置 HttpCacheable
-                av0 = mv.visitAnnotation(cacheDesc, true);
-                av0.visit("seconds", entry.cacheseconds);
-                av0.visitEnd();
-            }
 
             mv.visitVarInsn(ALOAD, 0);
             mv.visitFieldInsn(GETFIELD, newDynName, REST_SERVICEMAP_FIELD_NAME, "Ljava/util/Map;");
@@ -386,6 +375,8 @@ public final class Rest {
                 av0 = mv.visitAnnotation(mappingDesc, true);
                 String url = "/" + defmodulename.toLowerCase() + "/" + entry.name + (reqpath ? "/" : "");
                 av0.visit("url", url);
+                av0.visit("auth", entry.auth);
+                av0.visit("cacheseconds", entry.cacheseconds);
                 av0.visit("actionid", entry.actionid);
                 av0.visit("comment", entry.comment);
 
@@ -401,7 +392,7 @@ public final class Rest {
                 av0.visitEnd();
                 mappingMap.put("url", url);
                 mappingMap.put("auth", entry.auth);
-                mappingMap.put("cachetimeout", entry.cacheseconds);
+                mappingMap.put("cacheseconds", entry.cacheseconds);
                 mappingMap.put("actionid", entry.actionid);
                 mappingMap.put("comment", entry.comment);
                 mappingMap.put("methods", entry.methods);

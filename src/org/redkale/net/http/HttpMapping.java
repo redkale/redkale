@@ -23,17 +23,64 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface HttpMapping {
 
+    /**
+     * 操作ID值，鉴权时用到
+     *
+     * @return int
+     */
     int actionid() default 0;
 
     String url();
 
-    String[] methods() default {};//允许方法(不区分大小写),如:GET/POST/PUT,为空表示允许所有方法
+    /**
+     * 结果缓存的秒数, 为0表示不缓存 <br>
+     *  * 当值大于0，将被缓存一段时间(默认值 seconds=15秒)。 <br>
+     * 通常情况下需要 auth() == true 才使用，没有标记auth==true方法一般输出的结果与当前用户信息有关。 <br>
+     *
+     * @return int
+     */
+    int cacheseconds() default 0;
 
-    String comment() default ""; //备注描述
+    /**
+     * 是否鉴权，默认不鉴权 <br>
+     * 如&#64;WebServlet.auth = false， 该值忽略
+     *
+     * @return boolean
+     */
+    boolean auth() default false;
 
-    boolean inherited() default true; //是否能被继承, 当 HttpServlet 被继承后该方法是否能被子类继承
+    /**
+     * 允许方法(不区分大小写),如:GET/POST/PUT,为空表示允许所有方法
+     *
+     * @return String[]
+     */
+    String[] methods() default {};
 
-    String result() default "Object"; //输出结果的数据类型
+    /**
+     * 是否能被继承, 当 HttpServlet 被继承后该方法是否能被子类继承
+     *
+     * @return boolean
+     */
+    boolean inherited() default true;
 
-    Class[] results() default {}; //输出结果的数据类型集合，由于结果类型可能是泛型而注解的参数值不支持泛型，因此加入明细数据类型集合
+    /**
+     * 输出结果的数据类型
+     *
+     * @return String
+     */
+    String result() default "Object";
+
+    /**
+     * 输出结果的数据类型集合，由于结果类型可能是泛型而注解的参数值不支持泛型，因此加入明细数据类型集合
+     *
+     * @return Class[]
+     */
+    Class[] results() default {};
+
+    /**
+     * 备注描述
+     *
+     * @return String
+     */
+    String comment() default "";
 }

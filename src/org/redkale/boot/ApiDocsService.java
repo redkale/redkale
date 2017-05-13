@@ -83,7 +83,7 @@ public final class ApiDocsService extends AbstractService {
                         if (actionurls.contains(action.url())) continue;
                         mappingmap.put("url", prefix + action.url());
                         actionurls.add(action.url());
-                        mappingmap.put("auth", method.getAnnotation(AuthIgnore.class) == null);
+                        mappingmap.put("auth", action.auth());
                         mappingmap.put("actionid", action.actionid());
                         mappingmap.put("comment", action.comment());
                         List<Map> paramsList = new ArrayList<>();
