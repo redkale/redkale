@@ -38,11 +38,11 @@ public class WebSocketNodeService extends WebSocketNode implements Service {
     public CompletableFuture<List<String>> getOnlineRemoteAddresses(final @RpcTargetAddress InetSocketAddress targetAddress, final Serializable groupid) {
         if (localSncpAddress == null || !localSncpAddress.equals(targetAddress)) return remoteOnlineRemoteAddresses(targetAddress, groupid);
         return CompletableFuture.supplyAsync(() -> {
-            final Set<String> engineids = localEngines.get(groupid);
+            final Set<String> engineids = localEngineids.get(groupid);
             if (engineids == null || engineids.isEmpty()) return null;
             final List<String> rs = new ArrayList<>();
             for (String engineid : engineids) {
-                final WebSocketEngine engine = engines.get(engineid);
+                final WebSocketEngine engine = localEngines.get(engineid);
                 if (engine == null) continue;
                 final WebSocketGroup group = engine.getWebSocketGroup(groupid);
                 group.getWebSockets().forEach(x -> rs.add("ws" + Objects.hashCode(x) + '@' + x.getRemoteAddr()));
@@ -54,11 +54,11 @@ public class WebSocketNodeService extends WebSocketNode implements Service {
     @Override
     public CompletableFuture<Integer> sendMessage(@RpcTargetAddress InetSocketAddress addr, Serializable groupid, boolean recent, Object message, boolean last) {
         return CompletableFuture.supplyAsync(() -> {
-            final Set<String> engineids = localEngines.get(groupid);
+            final Set<String> engineids = localEngineids.get(groupid);
             if (engineids == null || engineids.isEmpty()) return RETCODE_GROUP_EMPTY;
             int code = RETCODE_GROUP_EMPTY;
             for (String engineid : engineids) {
-                final WebSocketEngine engine = engines.get(engineid);
+                final WebSocketEngine engine = localEngines.get(engineid);
                 if (engine != null) { //在本地
                     final WebSocketGroup group = engine.getWebSocketGroup(groupid);
                     if (group == null || group.isEmpty()) {
