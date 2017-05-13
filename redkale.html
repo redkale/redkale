@@ -635,11 +635,10 @@
 <span class="c">           REST的核心配置项, 存在[rest]节点则Server启动时会加载REST服务, 当Server为SNCP协议时,则SncpServer会变成REST的HttpServer, 节点可以多个</span>
 <span class="c">           base:     REST服务的BaseServlet，必须是org.redkale.net.http.HttpServlet的子类，且子类必须标记 <b>@HttpUserType</b>。</span>
 <span class="c">           autoload：默认值&quot;true&quot;  默认值. 加载当前server所能使用的Servce对象;    </span>
-<span class="c">           mustsign：默认值&quot;true&quot; 是否只加载标记为RestService的Service类，默认只加载标记RestService且ignore=false的Service</span>
 <span class="c">           includes：当autoload=&quot;true&quot;， 拉取类名与includes中的正则表达式匹配的类, 多个正则表达式用分号;隔开</span>
 <span class="c">           excludes：当autoload=&quot;true&quot;， 排除类名与excludes中的正则表达式匹配的类, 多个正则表达式用分号;隔开</span>
 <span class="c">        --&gt;</span>
-        <span class="nt">&lt;rest</span> <span class="na">base=</span><span class="s">&quot;org.redkale.net.http.HttpServlet&quot;</span> <span class="na">mustsign=</span><span class="s">&quot;false&quot;</span> <span class="na">autoload=</span><span class="s">&quot;true&quot;</span> <span class="na">includes=</span><span class="s">&quot;&quot;</span> <span class="na">excludes=</span><span class="s">&quot;&quot;</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;rest</span> <span class="na">base=</span><span class="s">&quot;org.redkale.net.http.HttpServlet&quot;</span> <span class="na">autoload=</span><span class="s">&quot;true&quot;</span> <span class="na">includes=</span><span class="s">&quot;&quot;</span> <span class="na">excludes=</span><span class="s">&quot;&quot;</span><span class="nt">&gt;</span>
             <span class="c">&lt;!-- </span>
 <span class="c">               value:  Service类名，列出的表示必须被加载的Service对象</span>
 <span class="c">               ignore: 是否忽略，设置为true则不会加载该Service对象，默认值为false</span>
