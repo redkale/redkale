@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en-us">
+    <head>
+        <meta charset="UTF-8">
+        <title>Redkale(红菜苔)--基于Java 8全新的微服务开源框架 - Redkale官网</title>
+        <meta name="keywords" content="Redkale,redkale,java,微服务,架构"/>
+        <meta name="description" content="Redkale(红菜苔)是基于Java 8全新的微服务开源框架"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    </head>
+    <body>
+        <section class="page-header">
+            <a href="index.html" class="project-name">Redkale</a>
+            <h2 class="project-tagline"></h2>
+            <a href="redkale.html" class="btn">Redkale 入门</a> 
+            <a href="convert.html" class="btn">Convert 组件</a> 
+            <a href="service.html" class="btn">Service 组件</a> 
+            <a href="source.html" class="btn">Source 组件</a> 
+            <a href="net.html" class="btn">Net 组件</a> 
+            <a href="watch.html" class="btn">Watch 组件</a> 
+            <a href="plugins.html" class="btn">Redkale 插件</a>
+            <a href="articles.html" class="btn">技术文章</a> 
+        </section>
+
+        <section class="main-content">
+            <h3>Redkale 入门教程 03 -- 用户鉴权</h3>
+
+            <p>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="index.html" target="_blank">Redkale</a> 里大量使用了双亲委托模型，序列化的ConvertFactory、依赖注入的ResourceFactory、服务管理的WatchFactory均采用双亲委托模型。用于优先加载自定义的处理类，同时也保证两个同级的子Factory不会相互干扰。<br/>
+            </p>
+
+            <p>ClassLoader类加载</p>
+            <p>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;双亲委托模型最经典的例子就是JVM的类加载器ClassLoader。每个ClassLoader实例都有一个父类加载器的引用（不是继承关系，是包含关系），虚拟机内置的类加载器（Bootstrap ClassLoader）本身没有父类加载器，但可以用作其它ClassLoader实例的的父类加载器。当一个ClassLoader实例需要加载某个类时，它会试图亲自搜索某个类之前，先把这个任务委托给它的父类加载器，这个过程是由上至下依次检查的，首先由最顶层的类加载器Bootstrap ClassLoader试图加载，如果没加载到，则把任务转交给Extension ClassLoader试图加载，如果也没加载到，则转交给App ClassLoader 进行加载，如果它也没有加载得到的话，则返回给委托的发起者，由它到指定的文件系统或网络等URL中加载该类。如果它们都没有加载到这个类时，则抛出ClassNotFoundException异常。否则将这个找到的类生成一个类的定义，并将它加载到内存当中，最后返回这个类在内存中的Class实例对象。<br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ClassLoader采用双亲委托有两个好处：避免类的重复加载和保证类的安全性。由类加载的顺序可以看出父加载器加载过的类在子加载器中不会被重复加载，同时也保证了安全性，一些非系统的class是不可靠的，若定义一个恶意的java.io.File类覆盖JDK自带的类会带来不安全性。而使用双亲委托机制的话该File类永远不会被调用，因为委托BootStrapClassLoader加载后会加载JDK中的File类而不会加载自定义的这个。
+            </p>
+
+            <p>Redkale 双亲委托</p>
+            <p>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ConvertFactory、ResourceFactory、WatchFactory三者的双亲委托模型设计完全一样。下面以ConvertFactory为例说明，ConvertFactory的搜索顺序与ClassLoader相反，ClassLoader为了避免类的重复而先加载父加载器后加载子加载器，ConvertFactory为了优先加载自定义的Encoder和Decoder先搜索自身的ConvertFactory，找不到再从父ConvertFactory中搜索。
+            </p>
+            <div class="highlight"><pre><span class="kd">public</span> <span class="kd">final</span> <span class="o">&lt;</span><span class="n">E</span><span class="o">&gt;</span> <span class="n">Encodeable</span><span class="o">&lt;</span><span class="n">W</span><span class="o">,</span> <span class="n">E</span><span class="o">&gt;</span> <span class="nf">findEncoder</span><span class="o">(</span><span class="kd">final</span> <span class="n">Type</span> <span class="n">type</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">Encodeable</span><span class="o">&lt;</span><span class="n">W</span><span class="o">,</span> <span class="n">E</span><span class="o">&gt;</span> <span class="n">rs</span> <span class="o">=</span> <span class="o">(</span><span class="n">Encodeable</span><span class="o">&lt;</span><span class="n">W</span><span class="o">,</span> <span class="n">E</span><span class="o">&gt;)</span> <span class="n">encoders</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="n">type</span><span class="o">);</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">rs</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="k">return</span> <span class="n">rs</span><span class="o">;</span>
+    <span class="k">return</span> <span class="k">this</span><span class="o">.</span><span class="na">parent</span> <span class="o">==</span> <span class="kc">null</span> <span class="o">?</span> <span class="kc">null</span> <span class="o">:</span> <span class="k">this</span><span class="o">.</span><span class="na">parent</span><span class="o">.</span><span class="na">findEncoder</span><span class="o">(</span><span class="n">type</span><span class="o">);</span>
+<span class="o">}</span></pre></div>
+            <p>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;当搜索不到Encoder、Decoder时，自身的ConvertFactory会自动创建一个ObjectEncoder、ObjectDecoder。
+            </p>
+            <div class="highlight"><pre><span class="kd">public</span> <span class="kd">final</span> <span class="o">&lt;</span><span class="n">E</span><span class="o">&gt;</span> <span class="n">Encodeable</span><span class="o">&lt;</span><span class="n">W</span><span class="o">,</span> <span class="n">E</span><span class="o">&gt;</span> <span class="nf">loadEncoder</span><span class="o">(</span><span class="kd">final</span> <span class="n">Type</span> <span class="n">type</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">Encodeable</span><span class="o">&lt;</span><span class="n">W</span><span class="o">,</span> <span class="n">E</span><span class="o">&gt;</span> <span class="n">encoder</span> <span class="o">=</span> <span class="n">findEncoder</span><span class="o">(</span><span class="n">type</span><span class="o">);</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">encoder</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="k">return</span> <span class="n">encoder</span><span class="o">;</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">type</span> <span class="k">instanceof</span> <span class="n">GenericArrayType</span><span class="o">)</span> <span class="k">return</span> <span class="k">new</span> <span class="nf">ArrayEncoder</span><span class="o">(</span><span class="k">this</span><span class="o">,</span> <span class="n">type</span><span class="o">);</span>
+    <span class="n">Class</span> <span class="n">clazz</span><span class="o">;</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">type</span> <span class="k">instanceof</span> <span class="n">ParameterizedType</span><span class="o">)</span> <span class="o">{</span>
+        <span class="kd">final</span> <span class="n">ParameterizedType</span> <span class="n">pts</span> <span class="o">=</span> <span class="o">(</span><span class="n">ParameterizedType</span><span class="o">)</span> <span class="n">type</span><span class="o">;</span>
+        <span class="n">clazz</span> <span class="o">=</span> <span class="o">(</span><span class="n">Class</span><span class="o">)</span> <span class="o">(</span><span class="n">pts</span><span class="o">).</span><span class="na">getRawType</span><span class="o">();</span>
+    <span class="o">}</span> <span class="k">else</span> <span class="nf">if</span> <span class="o">(</span><span class="n">type</span> <span class="k">instanceof</span> <span class="n">TypeVariable</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">TypeVariable</span> <span class="n">tv</span> <span class="o">=</span> <span class="o">(</span><span class="n">TypeVariable</span><span class="o">)</span> <span class="n">type</span><span class="o">;</span>
+        <span class="n">Type</span> <span class="n">t</span> <span class="o">=</span> <span class="n">Object</span><span class="o">.</span><span class="na">class</span><span class="o">;</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">tv</span><span class="o">.</span><span class="na">getBounds</span><span class="o">().</span><span class="na">length</span> <span class="o">==</span> <span class="mi">1</span><span class="o">)</span> <span class="o">{</span>
+            <span class="n">t</span> <span class="o">=</span> <span class="n">tv</span><span class="o">.</span><span class="na">getBounds</span><span class="o">()[</span><span class="mi">0</span><span class="o">];</span>
+        <span class="o">}</span>
+        <span class="k">if</span> <span class="o">(!(</span><span class="n">t</span> <span class="k">instanceof</span> <span class="n">Class</span><span class="o">))</span> <span class="n">t</span> <span class="o">=</span> <span class="n">Object</span><span class="o">.</span><span class="na">class</span><span class="o">;</span>
+        <span class="n">clazz</span> <span class="o">=</span> <span class="o">(</span><span class="n">Class</span><span class="o">)</span> <span class="n">t</span><span class="o">;</span>
+    <span class="o">}</span> <span class="k">else</span> <span class="nf">if</span> <span class="o">(</span><span class="n">type</span> <span class="k">instanceof</span> <span class="n">Class</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">clazz</span> <span class="o">=</span> <span class="o">(</span><span class="n">Class</span><span class="o">)</span> <span class="n">type</span><span class="o">;</span>
+    <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+        <span class="k">throw</span> <span class="k">new</span> <span class="nf">ConvertException</span><span class="o">(</span><span class="s">&quot;not support the type (&quot;</span> <span class="o">+</span> <span class="n">type</span> <span class="o">+</span> <span class="s">&quot;)&quot;</span><span class="o">);</span>
+    <span class="o">}</span>
+    <span class="n">encoder</span> <span class="o">=</span> <span class="n">findEncoder</span><span class="o">(</span><span class="n">clazz</span><span class="o">);</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">encoder</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="k">return</span> <span class="n">encoder</span><span class="o">;</span>
+    <span class="k">return</span> <span class="nf">createEncoder</span><span class="o">(</span><span class="n">type</span><span class="o">,</span> <span class="n">clazz</span><span class="o">);</span>
+<span class="o">}</span></pre></div>
+            <p>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;大部分情况下Convert的处理对象会根据JavaBean类自定生成，而有些场景需要覆盖处理类，这样需要子ConvertFactory，如 <a href="convert.html#convert_base" target="_blank">Convert基本用法</a> 例子中使用JsonFactory.root().createChild()重定义。且与JsonFactory.root()中的定义可以并存，也不会产出冲突。
+            </p>
+            <p>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Redkale可以启动多个协议Server服务(配置文件中含多个server节点)，为避免冲突，每个非SNCP的Server的ResourceFactory也是独立的。
+            </p>
+            <div class="highlight"><pre><span class="kd">public</span> <span class="nf">NodeServer</span><span class="o">(</span><span class="n">Application</span> <span class="n">application</span><span class="o">,</span> <span class="n">Server</span> <span class="n">server</span><span class="o">)</span> <span class="o">{</span>
+    <span class="k">this</span><span class="o">.</span><span class="na">application</span> <span class="o">=</span> <span class="n">application</span><span class="o">;</span>
+    <b><span class="k">this</span><span class="o">.</span><span class="na">resourceFactory</span> <span class="o">=</span> <span class="n">application</span><span class="o">.</span><span class="na">getResourceFactory</span><span class="o">().</span><span class="na">createChild</span><span class="o">();</span></b>
+    <span class="k">this</span><span class="o">.</span><span class="na">server</span> <span class="o">=</span> <span class="n">server</span><span class="o">;</span>
+    <span class="k">this</span><span class="o">.</span><span class="na">logger</span> <span class="o">=</span> <span class="n">Logger</span><span class="o">.</span><span class="na">getLogger</span><span class="o">(</span><span class="k">this</span><span class="o">.</span><span class="na">getClass</span><span class="o">().</span><span class="na">getSimpleName</span><span class="o">());</span>
+<span class="o">}</span></pre></div>
+            <p>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;双亲委托模型既可让同级子Factory保持独立，也可重用父Factory内的配置，因此在Redkale这种支持多Server、多种配置的场景下很是适合。
+            </p>
+            <br/>
+            <p>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;转载请注明出处：<a href="https://redkale.org/article_parents.html" target="_blank">https://redkale.org/article_parents.html</a>
+            </p>
+
+            <footer class="site-footer">
+                <span class="site-footer-owner">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;欢迎加入Redkale QQ群: 527523235</span>
+            </footer>
+
+        </section>
+
+        <script>
+            var _hmt = _hmt || [];
+            (function () {
+                var hm = document.createElement("script");
+                hm.src = "//hm.baidu.com/hm.js?b4e05d7de8b5f3401dd93e3c6b35ffa5";
+                var s = document.getElementsByTagName("script")[0];
+                s.parentNode.insertBefore(hm, s);
+            })();
+        </script>
+    </body>
+</html>
