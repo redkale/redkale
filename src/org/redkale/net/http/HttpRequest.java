@@ -251,7 +251,7 @@ public class HttpRequest extends Request<HttpContext> {
      *
      * @return HttpRequest
      */
-    public <T> HttpRequest currentUser(T user) {
+    public <T> HttpRequest setCurrentUser(T user) {
         this.currentUser = user;
         return this;
     }

@@ -23,7 +23,7 @@ public class SimpleRestServlet extends HttpServlet {
         if (info == null) {
             String sessionid = request.getSessionid(false);
             if (sessionid != null) info = userService.current(sessionid);
-            if (info != null) request.currentUser(info); //必须赋值给request.currentUser
+            if (info != null) request.setCurrentUser(info); //必须赋值给request.currentUser
         }
         if (info == null) {
             response.finishJson(RET_UNLOGIN);
