@@ -64,7 +64,7 @@ public class _DynHelloRestServlet1 extends SimpleRestServlet {
         HelloEntity bean = req.getJsonParameter(HelloEntity.class, "bean");
         bean.setClientaddr(req.getRemoteAddr());
         bean.setResname(req.getHeader("hello-res"));
-        UserInfo user = currentUser(req);
+        UserInfo user = req.currentUser();
         RetResult<HelloEntity> result = service.createHello(user, bean, req.getBodyJson(Map.class)); 
         resp.finishJson(result);
     }

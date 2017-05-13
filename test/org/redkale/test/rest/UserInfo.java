@@ -1,5 +1,6 @@
 package org.redkale.test.rest;
 
+import javax.persistence.Id;
 import org.redkale.convert.json.JsonFactory;
 
 /**
@@ -9,6 +10,7 @@ import org.redkale.convert.json.JsonFactory;
  */
 public class UserInfo {
 
+    @Id
     private int userid;
 
     private String username = "";

@@ -19,8 +19,8 @@
             <remoteaddr value="request.headers.X-RemoteAddress"/>
         </request>
         -->
-        <!-- 自定Rest实现类需要继承org.redkale.net.http.RestServlet，不自定义则默认使用org.redkale.net.http.RestServlet  -->
-        <rest base="org.redkale.net.http.RestServlet"/>   
+        <!-- base指定的自定义HttpServlet子类必须标记@HttpUserType, 不设置base则视为没有当前用户信息设置  -->
+        <rest base="org.redkale.net.http.HttpServlet"/>   
        
         <services autoload="true"/>
         

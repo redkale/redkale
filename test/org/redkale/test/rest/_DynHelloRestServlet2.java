@@ -36,7 +36,7 @@ public class _DynHelloRestServlet2 extends SimpleRestServlet {
         bean.setResname(req.getHeader("hello-res"));
         bean.setBodys(req.getBody());
         bean.setBodystr(req.getBodyUTF8());
-        UserInfo user = currentUser(req);
+        UserInfo user = req.currentUser();
         RetResult<HelloEntity> result = service.createHello(user, bean);
         resp.finishJson(result);
     }

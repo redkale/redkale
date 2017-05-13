@@ -6,7 +6,8 @@ import javax.annotation.Resource;
 import org.redkale.net.http.*;
 import org.redkale.service.RetResult;
 
-public class SimpleRestServlet extends RestHttpServlet<UserInfo> {
+@HttpUserType(UserInfo.class)
+public class SimpleRestServlet extends HttpServlet {
 
     protected static final RetResult RET_UNLOGIN = RetCodes.retResult(RetCodes.RET_USER_UNLOGIN);
 
@@ -15,18 +16,15 @@ public class SimpleRestServlet extends RestHttpServlet<UserInfo> {
     @Resource
     private UserService userService;
 
-    //获取当前用户信息
-    @Override
-    protected UserInfo currentUser(HttpRequest req) throws IOException {
-        String sessionid = req.getSessionid(false);
-        if (sessionid == null || sessionid.isEmpty()) return null;
-        return userService.current(sessionid);
-    }
-
     //普通鉴权
     @Override
     public void authenticate(HttpRequest request, HttpResponse response) throws IOException {
-        UserInfo info = currentUser(request);
+        UserInfo info = request.currentUser();
+        if (info == null) {
+            String sessionid = request.getSessionid(false);
+            if (sessionid != null) info = userService.current(sessionid);
+            if (info != null) request.currentUser(info); //必须赋值给request.currentUser
+        }
         if (info == null) {
             response.finishJson(RET_UNLOGIN);
             return;
