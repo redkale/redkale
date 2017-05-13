@@ -104,7 +104,7 @@ public final class Rest {
         return (!controller.name().isEmpty()) ? controller.name() : serviceType.getSimpleName().replaceAll("Service.*$", "").toLowerCase();
     }
 
-    static <T extends HttpServlet> T createRestServlet(final Class<T> baseServletClass, final Class<? extends Service> serviceType) {
+    static <T extends HttpServlet> T createRestServlet(final Class<T> baseServletClass, final Class<? extends Service> serviceType, final boolean mustsign) {
         if (baseServletClass == null || serviceType == null) return null;
         if (!HttpServlet.class.isAssignableFrom(baseServletClass)) return null;
         int mod = baseServletClass.getModifiers();
@@ -223,6 +223,7 @@ public final class Rest {
             if ("version".equals(method.getName())) continue;
 
             RestMapping[] mappings = method.getAnnotationsByType(RestMapping.class);
+            if (mustsign && mappings.length < 1) continue;
             boolean ignore = false;
             for (RestMapping mapping : mappings) {
                 if (mapping.ignore()) {
@@ -770,7 +771,7 @@ public final class Rest {
                             RestSessionid rs = field.getAnnotation(RestSessionid.class);
                             RestAddress ra = field.getAnnotation(RestAddress.class);
                             RestBody rb = field.getAnnotation(RestBody.class);
-                            if (rh == null && rc == null && ra == null && rb == null) continue;
+                            if (rh == null && rc == null && ra == null && rb == null && rs == null) continue;
                             if (rh != null && field.getType() != String.class) throw new RuntimeException("@RestHeader must on String Field in " + field);
                             if (rc != null && field.getType() != String.class) throw new RuntimeException("@RestCookie must on String Field in " + field);
                             if (rs != null && field.getType() != String.class) throw new RuntimeException("@RestSessionid must on String Field in " + field);

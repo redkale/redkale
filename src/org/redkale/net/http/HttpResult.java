@@ -41,15 +41,35 @@ public class HttpResult<T> {
         this.result = result;
     }
 
-    public HttpResult<T> addHeader(String name, Serializable value) {
+    public HttpResult<T> header(String name, Serializable value) {
         if (this.headers == null) this.headers = new HashMap<>();
         this.headers.put(name, String.valueOf(value));
         return this;
     }
 
-    public HttpResult<T> addCookie(HttpCookie cookie) {
+    public HttpResult<T> cookie(HttpCookie cookie) {
         if (this.cookies == null) this.cookies = new ArrayList<>();
         this.cookies.add(cookie);
+        return this;
+    }
+
+    public HttpResult<T> contentType(String contentType) {
+        this.contentType = contentType;
+        return this;
+    }
+
+    public HttpResult<T> result(T result) {
+        this.result = result;
+        return this;
+    }
+
+    public HttpResult<T> status(int status) {
+        this.status = status;
+        return this;
+    }
+
+    public HttpResult<T> message(String message) {
+        this.message = message;
         return this;
     }
 
