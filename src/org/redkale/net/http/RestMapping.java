@@ -25,7 +25,7 @@ import static java.lang.annotation.RetentionPolicy.*;
 public @interface RestMapping {
 
     /**
-     * 是否屏蔽该方法的转换
+     * 是否屏蔽该方法进行HttpMapping转换
      *
      * @return boolean
      */
@@ -47,7 +47,7 @@ public @interface RestMapping {
     String comment() default "";
 
     /**
-     * 是否鉴权，默认不鉴权, 对应&#64;AuthIgnore
+     * 是否鉴权，默认不鉴权, 对应&#64;HttpMapping.auth
      *
      * @return boolean
      */
