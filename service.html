@@ -290,7 +290,7 @@
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;生成远程模式Service时发现参数带有@RpcCall注解的方法，在远程调用返回结果时会进行回调处理。</p>
 
             <h3><a id="service_rest" class="anchor" href="#" aria-hidden="true"></a>Service REST</h3>
-            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;RestService提供类似Spring Boot的功能。开启REST功能的HTTP Server在实例化标记为@RestService的Service后自动生成对应的HttpServlet，免去开发人员编写HttpServlet的工作量。RestService生成的HttpServlet均是RestServlet的子类。主要通过<a href="/javadoc/org/redkale/net/http/RestService.html" target="_blank">@RestService</a>、<a href="/javadoc/org/redkale/net/http/RestMapping.html" target="_blank">@RestMapping</a>、<a href="/javadoc/org/redkale/net/http/RestParam.html" target="_blank">@RestParam</a>这三个注解来实现，同时为了获取其他类型的参数也有<a href="/javadoc/org/redkale/net/http/RestAddress.html" target="_blank">@RestAddress</a>、<a href="/javadoc/org/redkale/net/http/RestCookie.html" target="_blank">@RestCookie</a>、<a href="/javadoc/org/redkale/net/http/RestHeader.html" target="_blank">@RestHeader</a>、<a href="/javadoc/org/redkale/net/http/RestSessionid.html" target="_blank">@RestSessionid</a>、<a href="/javadoc/org/redkale/net/http/RestBody.html" target="_blank">@RestBody</a> 提供其扩展功能。<br/></p>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;RestService提供类似Spring Boot的功能。开启REST功能的HTTP Server在实例化标记为@RestService的Service后自动生成对应的HttpServlet，免去开发人员编写HttpServlet的工作量。主要通过<a href="/javadoc/org/redkale/net/http/RestService.html" target="_blank">@RestService</a>、<a href="/javadoc/org/redkale/net/http/RestMapping.html" target="_blank">@RestMapping</a>、<a href="/javadoc/org/redkale/net/http/RestParam.html" target="_blank">@RestParam</a>这三个注解来实现，同时为了获取其他类型的参数也有<a href="/javadoc/org/redkale/net/http/RestAddress.html" target="_blank">@RestAddress</a>、<a href="/javadoc/org/redkale/net/http/RestCookie.html" target="_blank">@RestCookie</a>、<a href="/javadoc/org/redkale/net/http/RestHeader.html" target="_blank">@RestHeader</a>、<a href="/javadoc/org/redkale/net/http/RestSessionid.html" target="_blank">@RestSessionid</a>、<a href="/javadoc/org/redkale/net/http/RestBody.html" target="_blank">@RestBody</a> 提供其扩展功能。<br/></p>
             <p>
                 &nbsp;&nbsp;&nbsp;&nbsp;@RestService ： <br>
             </p>
@@ -391,13 +391,13 @@
             <div class="highlight"><pre>
         <span class="c">&lt;!-- </span>
 <span class="c">           REST的核心配置项, 存在[rest]节点则Server启动时会加载REST服务, 当Server为SNCP协议时,则SncpServer会变成REST的HttpServer, 节点可以多个</span>
-<span class="c">           base:     REST服务的BaseServlet，必须是 org.redkale.net.http.RestServlet 的子类，该属性值默认值为 org.redkale.net.http.RestServlet。</span>
+<span class="c">           base:     REST服务的BaseServlet，必须是org.redkale.net.http.HttpServlet的子类，且子类必须标记 <b>@HttpUserType</b>。</span>
 <span class="c">           autoload：默认值&quot;true&quot;  默认值. 加载当前server所能使用的Servce对象;    </span>
 <span class="c">           mustsign：默认值&quot;true&quot; 是否只加载标记为RestService的Service类，默认只加载标记RestService且ignore=false的Service</span>
 <span class="c">           includes：当autoload=&quot;true&quot;， 拉取类名与includes中的正则表达式匹配的类, 多个正则表达式用分号;隔开</span>
 <span class="c">           excludes：当autoload=&quot;true&quot;， 排除类名与excludes中的正则表达式匹配的类, 多个正则表达式用分号;隔开</span>
 <span class="c">        --&gt;</span>
-        <span class="nt">&lt;rest</span> <span class="na">base=</span><span class="s">&quot;org.redkale.net.http.RestServlet&quot;</span> <span class="na">mustsign=</span><span class="s">&quot;true&quot;</span> <span class="na">autoload=</span><span class="s">&quot;true&quot;</span> <span class="na">includes=</span><span class="s">&quot;&quot;</span> <span class="na">excludes=</span><span class="s">&quot;&quot;</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;rest</span> <span class="na">base=</span><span class="s">&quot;org.redkale.net.http.HttpServlet&quot;</span> <span class="na">mustsign=</span><span class="s">&quot;true&quot;</span> <span class="na">autoload=</span><span class="s">&quot;true&quot;</span> <span class="na">includes=</span><span class="s">&quot;&quot;</span> <span class="na">excludes=</span><span class="s">&quot;&quot;</span><span class="nt">&gt;</span>
             <span class="c">&lt;!-- </span>
 <span class="c">               value:  Service类名，列出的表示必须被加载的Service对象</span>
 <span class="c">               ignore: 是否忽略，设置为true则不会加载该Service对象，默认值为false</span>
@@ -407,9 +407,10 @@
                 </pre></div>
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Redkale中的REST并非严格遵循标准的REST规范，在尽量满足规范的同时也考虑到开发的灵活性和简易性。以下通过简单的实例来说明其特性。<br/></p>
             <p>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;通常配置都需要编写一个 <b>org.redkale.net.http.RestServlet</b> 子类，主要用于获取当前用户信息和鉴权，且必须指定具体的User对象类。开发者的实现类可以参考 <a href="https://github.com/redkale/redkale-demo/tree/master/src/org/redkale/demo/base" target="_blank">redkale-demo</a> 中的BaseServlet类，以下是一个简单的范例: <br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;通常配置都需要编写一个 <b>org.redkale.net.http.HttpServlet</b> 子类，主要用于获取当前用户信息和鉴权，且必须指定具体的User对象类。开发者的实现类可以参考 <a href="https://github.com/redkale/redkale-demo/tree/master/src/org/redkale/demo/base" target="_blank">redkale-demo</a> 中的BaseServlet类，以下是一个简单的范例: <br>
             </p>
-            <div class="highlight"><pre><span></span><span class="kd">public</span> <span class="kd">class</span> <span class="nc">SimpleRestServlet</span> <span class="kd">extends</span> <span class="n">RestServlet</span><span class="o">&lt;</span><span class="n">UserInfo</span><span class="o">&gt;</span> <span class="o">{</span>
+            <div class="highlight"><pre><span></span><span class="nd">@HttpUserType</span><span class="o">(</span><span class="n">UserInfo</span><span class="o">.</span><span class="na">class</span><span class="o">)</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">SimpleRestServlet</span> <span class="kd">extends</span> <span class="n">HttpServlet</span> <span class="o">{</span>
 
     <span class="kd">protected</span> <span class="kd">static</span> <span class="kd">final</span> <span class="n">RetResult</span> <span class="n">RET_UNLOGIN</span> <span class="o">=</span> <span class="n">RetCodes</span><span class="o">.</span><span class="na">retResult</span><span class="o">(</span><span class="n">RetCodes</span><span class="o">.</span><span class="na">RET_USER_UNLOGIN</span><span class="o">);</span>
 
@@ -418,22 +419,20 @@
     <span class="nd">@Resource</span>
     <span class="kd">private</span> <span class="n">UserService</span> <span class="n">userService</span><span class="o">;</span>
 
-    <span class="c1">//获取当前用户信息</span>
-    <span class="nd">@Override</span>
-    <span class="kd">protected</span> <span class="n">UserInfo</span> <span class="nf">currentUser</span><span class="o">(</span><span class="n">HttpRequest</span> <span class="n">req</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
-        <span class="n">String</span> <span class="n">sessionid</span> <span class="o">=</span> <span class="n">req</span><span class="o">.</span><span class="na">getSessionid</span><span class="o">(</span><span class="kc">false</span><span class="o">);</span>
-        <span class="k">if</span> <span class="o">(</span><span class="n">sessionid</span> <span class="o">==</span> <span class="kc">null</span> <span class="o">||</span> <span class="n">sessionid</span><span class="o">.</span><span class="na">isEmpty</span><span class="o">())</span> <span class="k">return</span> <span class="kc">null</span><span class="o">;</span>
-        <span class="k">return</span> <span class="n">userService</span><span class="o">.</span><span class="na">current</span><span class="o">(</span><span class="n">sessionid</span><span class="o">);</span>
-    <span class="o">}</span>
-
     <span class="c1">//普通鉴权</span>
     <span class="nd">@Override</span>
     <span class="kd">public</span> <span class="kt">void</span> <span class="nf">authenticate</span><span class="o">(</span><span class="n">HttpRequest</span> <span class="n">request</span><span class="o">,</span> <span class="n">HttpResponse</span> <span class="n">response</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
-        <span class="n">UserInfo</span> <span class="n">info</span> <span class="o">=</span> <span class="n">currentUser</span><span class="o">(</span><span class="n">request</span><span class="o">);</span>
+
+        <span class="n">UserInfo</span> <span class="n">info</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="na">currentUser</span><span class="o">();</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">info</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+            <span class="n">String</span> <span class="n">sessionid</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="na">getSessionid</span><span class="o">(</span><span class="kc">false</span><span class="o">);</span>
+            <span class="k">if</span> <span class="o">(</span><span class="n">sessionid</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="n">info</span> <span class="o">=</span> <span class="n">userService</span><span class="o">.</span><span class="na">current</span><span class="o">(</span><span class="n">sessionid</span><span class="o">);</span>
+            <span class="k">if</span> <span class="o">(</span><span class="n">info</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="n">request</span><span class="o">.</span><span class="na">currentUser</span><span class="o">(</span><span class="n">info</span><span class="o">);</span> <span class="c1">//必须赋值给request.currentUser</span>
+        <span class="o">}</span>
         <span class="k">if</span> <span class="o">(</span><span class="n">info</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
             <span class="n">response</span><span class="o">.</span><span class="na">finishJson</span><span class="o">(</span><span class="n">RET_UNLOGIN</span><span class="o">);</span>
             <span class="k">return</span><span class="o">;</span>
-        <span class="o">}</span> <span class="k">else</span> <span class="k">if</span> <span class="o">(!</span><span class="n">info</span><span class="o">.</span><span class="na">checkAuth</span><span class="o">(</span><span class="n">module</span><span class="o">,</span> <span class="n">actionid</span><span class="o">))</span> <span class="o">{</span>
+        <span class="o">}</span> <span class="k">else</span> <span class="k">if</span> <span class="o">(!</span><span class="n">info</span><span class="o">.</span><span class="na">checkAuth</span><span class="o">(</span><span class="n">request</span><span class="o">.</span><span class="na">getModuleid</span><span class="o">(),</span> <span class="n">request</span><span class="o">.</span><span class="na">getActionid</span><span class="o">()))</span> <span class="o">{</span>
             <span class="n">response</span><span class="o">.</span><span class="na">finishJson</span><span class="o">(</span><span class="n">RET_AUTHILLEGAL</span><span class="o">);</span>
             <span class="k">return</span><span class="o">;</span>
         <span class="o">}</span>
@@ -546,7 +545,7 @@
                 </pre></div>
 
             <p>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;根据默认命名规则可以看出，以上范例生成的RestServlet与去掉所有@RestService、@RestMapping、@RestParam后的Service生成的是完全相同的。 REST根据Service会动态生成HttpServlet，以上范例自动生成的HttpServlet如下：<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;根据默认命名规则可以看出，以上范例生成的HttpServlet与去掉所有@RestService、@RestMapping、@RestParam后的Service生成的是完全相同的。 REST根据Service会动态生成HttpServlet，以上范例自动生成的HttpServlet如下：<br>
             </p>
 
             <div class="highlight"><pre><span></span><span class="nd">@WebServlet</span><span class="o">(</span><span class="n">value</span> <span class="o">=</span> <span class="o">{</span><span class="s">&quot;/hello/*&quot;</span><span class="o">},</span> <span class="n">repair</span> <span class="o">=</span> <span class="kc">true</span><span class="o">)</span>
