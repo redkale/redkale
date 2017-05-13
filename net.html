@@ -66,7 +66,7 @@
     <span class="nd">@Resource</span>
     <span class="kd">private</span> <span class="n">UserService</span> <span class="n">service</span><span class="o">;</span>
 
-    <span class="c1">//在调用authenticate之前调用， 返回false表示请求不合法</span>
+    <span class="c1">//在调用authenticate之前调用</span>
     <span class="c1">//该方法可以用于判断请求源是否合法或加入一些全局的拦截操作</span>
     <span class="nd">@Override</span>
     <span class="kd">public</span> <span class="kt">void</span> <span class="nf">preExecute</span><span class="o">(</span><span class="kd">final</span> <span class="n">HttpRequest</span> <span class="n">request</span><span class="o">,</span> <span class="kd">final</span> <span class="n">HttpResponse</span> <span class="n">response</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
