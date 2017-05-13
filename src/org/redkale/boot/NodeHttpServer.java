@@ -174,7 +174,7 @@ public class NodeHttpServer extends NodeServer {
             if (!autoload && !includeValues.contains(stypename)) return;
             if (!restFilter.accept(stypename)) return;
 
-            RestServlet servlet = httpServer.addRestServlet(name, stype, service, baseServletClass, prefix, (AnyValue) null);
+            HttpServlet servlet = httpServer.addRestServlet(name, stype, service, baseServletClass, prefix, (AnyValue) null);
             resourceFactory.inject(servlet, NodeHttpServer.this);
             if (finest) logger.finest(threadName + " Create RestServlet(resource.name='" + name + "') = " + servlet);
             if (ss != null) {

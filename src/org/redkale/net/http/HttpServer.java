@@ -102,7 +102,7 @@ public final class HttpServer extends Server<String, HttpContext, HttpRequest, H
      *
      * @return RestServlet
      */
-    public <S extends Service, T extends RestServlet> RestServlet addRestServlet(String name, Class<S> serviceType, S service, Class<T> baseServletClass, String prefix) {
+    public <S extends Service, T extends HttpServlet> T addRestServlet(String name, Class<S> serviceType, S service, Class<T> baseServletClass, String prefix) {
         return addRestServlet(name, serviceType, service, baseServletClass, prefix, null);
     }
 
@@ -120,16 +120,16 @@ public final class HttpServer extends Server<String, HttpContext, HttpRequest, H
      *
      * @return RestServlet
      */
-    public <S extends Service, T extends RestServlet> RestServlet addRestServlet(
+    public <S extends Service, T extends HttpServlet> T addRestServlet(
         final String name, Class<S> serviceType, final S service, final Class<T> baseServletClass, final String prefix, AnyValue conf) {
-        RestServlet servlet = null;
+        T servlet = null;
         for (final HttpServlet item : ((HttpPrepareServlet) this.prepare).getServlets()) {
-            if (!(item instanceof RestServlet)) continue;
+            if (!(item instanceof HttpServlet)) continue;
             if (item.getClass().getAnnotation(Rest.RestDynamic.class) == null) continue;
             try {
                 Field field = item.getClass().getDeclaredField(Rest.REST_SERVICE_FIELD_NAME);
                 if (serviceType.equals(field.getType())) {
-                    servlet = (RestServlet) item;
+                    servlet = (T) item;
                     break;
                 }
             } catch (NoSuchFieldException | SecurityException e) {

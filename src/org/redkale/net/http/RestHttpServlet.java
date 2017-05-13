@@ -17,7 +17,7 @@ import java.io.*;
  * @param <T> 当前用户对象类型
  */
 @Deprecated
-public class RestHttpServlet<T> extends RestServlet<T> {
+public class RestHttpServlet<T> extends HttpServlet {
 
     protected T currentUser(HttpRequest req) throws IOException {
         return null;

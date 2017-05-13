@@ -134,13 +134,13 @@
         <!-- 
            REST的核心配置项
            当Server为HTTP协议时, rest节点才有效。存在[rest]节点则Server启动时会加载REST服务, 节点可以多个
-           base:     REST服务的BaseServlet，必须是 org.redkale.net.http.RestServlet 的子类，该属性值默认值为 org.redkale.net.http.RestServlet。
+           base:     REST服务的BaseServlet，必须是 org.redkale.net.http.HttpServlet 的子类，且子类必须标记@HttpUserType。
            autoload：默认值"true"  默认值. 加载当前server所能使用的Servce对象;    
            mustsign：默认值"true" 是否只加载标记为RestService的Service类，默认只加载标记RestService且ignore=false的Service
            includes：当autoload="true"， 拉取类名与includes中的正则表达式匹配的类, 多个正则表达式用分号;隔开
            excludes：当autoload="true"， 排除类名与excludes中的正则表达式匹配的类, 多个正则表达式用分号;隔开
         -->
-        <rest base="org.redkale.net.http.DefaultRestServlet" mustsign="true" autoload="true" includes="" excludes="">
+        <rest base="org.redkale.net.http.HttpServlet" mustsign="true" autoload="true" includes="" excludes="">
             <!-- 
                value:  Service类名，列出的表示必须被加载的Service对象
                ignore: 是否忽略，设置为true则不会加载该Service对象，默认值为false

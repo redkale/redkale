@@ -104,9 +104,9 @@ public final class Rest {
         return (!controller.name().isEmpty()) ? controller.name() : serviceType.getSimpleName().replaceAll("Service.*$", "").toLowerCase();
     }
 
-    static <T extends RestServlet> T createRestServlet(final Class<T> baseServletClass, final Class<? extends Service> serviceType) {
+    static <T extends HttpServlet> T createRestServlet(final Class<T> baseServletClass, final Class<? extends Service> serviceType) {
         if (baseServletClass == null || serviceType == null) return null;
-        if (!RestServlet.class.isAssignableFrom(baseServletClass)) return null;
+        if (!HttpServlet.class.isAssignableFrom(baseServletClass)) return null;
         int mod = baseServletClass.getModifiers();
         if (!java.lang.reflect.Modifier.isPublic(mod)) return null;
         if (java.lang.reflect.Modifier.isAbstract(mod)) return null;
@@ -115,7 +115,6 @@ public final class Rest {
         final String webServletDesc = Type.getDescriptor(WebServlet.class);
         final String reqDesc = Type.getDescriptor(HttpRequest.class);
         final String respDesc = Type.getDescriptor(HttpResponse.class);
-        final String contextDesc = Type.getDescriptor(HttpContext.class);
         final String retDesc = Type.getDescriptor(RetResult.class);
         final String futureDesc = Type.getDescriptor(CompletableFuture.class);
         final String flipperDesc = Type.getDescriptor(Flipper.class);
@@ -130,24 +129,18 @@ public final class Rest {
 
         final String reqInternalName = Type.getInternalName(HttpRequest.class);
         final String respInternalName = Type.getInternalName(HttpResponse.class);
-        final String contextInternalName = Type.getInternalName(HttpContext.class);
         final String attrInternalName = Type.getInternalName(org.redkale.util.Attribute.class);
         final String retInternalName = Type.getInternalName(RetResult.class);
         final String serviceTypeInternalName = Type.getInternalName(serviceType);
 
-        final Class userType = getSuperUserType(baseServletClass);
+        HttpUserType hut = baseServletClass.getAnnotation(HttpUserType.class);
+        final Class userType = hut == null ? Object.class : hut.value();
         final String supDynName = baseServletClass.getName().replace('.', '/');
         final RestService controller = serviceType.getAnnotation(RestService.class);
         if (controller != null && controller.ignore()) return null; //标记为ignore=true不创建Servlet
         ClassLoader loader = Sncp.class.getClassLoader();
         String newDynName = serviceTypeInternalName.substring(0, serviceTypeInternalName.lastIndexOf('/') + 1) + "_Dyn" + serviceType.getSimpleName().replaceAll("Service.*$", "") + "RestServlet";
 
-        Method currentUserMethod = null;
-        try {
-            currentUserMethod = baseServletClass.getDeclaredMethod("currentUser", HttpRequest.class);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
         //------------------------------------------------------------------------------
         final String defmodulename = getWebModuleName(serviceType);
         for (char ch : defmodulename.toCharArray()) {
@@ -656,9 +649,9 @@ public final class Rest {
                         throw new RuntimeException(method + " only " + RestParam.class.getSimpleName() + "(#) to Type(primitive class or String)");
                     }
                 } else if ("&".equals(pname) && ptype == userType) { //当前用户对象的类名
-                    mv.visitVarInsn(ALOAD, 0);
                     mv.visitVarInsn(ALOAD, 1);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, newDynName, "currentUser", Type.getMethodDescriptor(currentUserMethod), false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "currentUser", "()Ljava/lang/Object;", false);
+                    mv.visitTypeInsn(CHECKCAST, Type.getInternalName(userType));
                     mv.visitVarInsn(ASTORE, maxLocals);
                     varInsns.add(new int[]{ALOAD, maxLocals});
                 } else if (ptype == boolean.class) {
@@ -1053,19 +1046,6 @@ public final class Rest {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-    }
-
-    private static Class getSuperUserType(Class servletClass) {
-        java.lang.reflect.Type type = servletClass.getGenericSuperclass();
-        if (type instanceof Class) return getSuperUserType((Class) type);
-        if (type instanceof java.lang.reflect.ParameterizedType) {
-            java.lang.reflect.ParameterizedType pt = (java.lang.reflect.ParameterizedType) type;
-            if (pt.getRawType() == RestServlet.class) {
-                java.lang.reflect.Type usert = pt.getActualTypeArguments()[0];
-                if (usert instanceof Class) return (Class) usert;
-            }
-        }
-        return null;
     }
 
     private static class MappingEntry {
