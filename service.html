@@ -356,9 +356,9 @@
 
     <span class="n">String</span> <span class="nf">comment</span><span class="o">()</span> <span class="k">default</span> <span class="s">&quot;&quot;</span><span class="o">;</span> <span class="c1">//备注描述, 对应&#64;HttpMapping.comment </span>
 
-    <span class="kt">boolean</span> <span class="nf">authignore</span><span class="o">()</span> <span class="k">default</span> <span class="kc">true</span><span class="o">;</span> <span class="c1">//是否鉴权，默认不鉴权, 对应&#64;AuthIgnore </span>
+    <span class="kt">boolean</span> <span class="nf">auth</span><span class="o">()</span> <span class="k">default</span> <span class="kc">true</span><span class="o">;</span> <span class="c1">//是否鉴权，默认不鉴权, 对应&#64;HttpMapping.auth </span>
 
-    <span class="kt">int</span> <span class="nf">cacheseconds</span><span class="o">()</span> <span class="k">default</span> <span class="mi">0</span><span class="o">;</span> <span class="c1">//结果缓存的秒数, 为0表示不缓存, 对应&#64;HttpCacheable.seconds</span>
+    <span class="kt">int</span> <span class="nf">cacheseconds</span><span class="o">()</span> <span class="k">default</span> <span class="mi">0</span><span class="o">;</span> <span class="c1">//结果缓存的秒数, 为0表示不缓存, 对应&#64;HttpMapping.cacheseconds</span>
 
     <span class="kt">int</span> <span class="nf">actionid</span><span class="o">()</span> <span class="k">default</span> <span class="mi">0</span><span class="o">;</span> <span class="c1">//操作ID值，鉴权时用到, 对应&#64;HttpMapping.actionid</span>
 
@@ -382,6 +382,8 @@
     <span class="n">String</span> <span class="nf">name</span><span class="o">();</span> 
 
     <span class="kt">int</span> <span class="nf">radix</span><span class="o">()</span> <span class="k">default</span> <span class="mi">10</span><span class="o">;</span> <span class="c1">//转换数字byte/short/int/long时所用的进制数， 默认10进制</span>
+
+    <span class="kt">boolean</span> <span class="nf">required</span><span class="o">()</span> <span class="k">default</span> <span class="mi">0</span><span class="o">;</span> <span class="c1">//参数是否必传 </span>
 
     <span class="n">String</span> <span class="nf">comment</span><span class="o">()</span> <span class="k">default</span> <span class="s">&quot;&quot;</span><span class="o">;</span> <span class="c1">//备注描述, 对应&#64;HttpMapping.comment </span>
 <span class="o">}</span>
@@ -557,7 +559,6 @@
     <span class="nd">@Resource</span>
     <span class="kd">private</span> <span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">HelloService</span><span class="o">&gt;</span> <span class="n">_servicemap</span><span class="o">;</span>
 
-    <span class="nd">@AuthIgnore</span>
     <span class="nd">@HttpMapping</span><span class="o">(</span><span class="n">url</span> <span class="o">=</span> <span class="s">&quot;/hello/create&quot;</span><span class="o">,</span> <span class="n">comment</span> <span class="o">=</span> <span class="s">&quot;创建Hello对象&quot;</span><span class="o">)</span>
     <span class="nd">@HttpParam</span><span class="o">(</span><span class="n">name</span> <span class="o">=</span> <span class="s">&quot;bean&quot;</span><span class="o">,</span> <span class="n">type</span> <span class="o">=</span> <span class="n">HelloEntity</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="n">comment</span> <span class="o">=</span> <span class="s">&quot;Hello对象&quot;</span><span class="o">)</span>
     <span class="kd">public</span> <span class="kt">void</span> <span class="nf">create</span><span class="o">(</span><span class="n">HttpRequest</span> <span class="n">req</span><span class="o">,</span> <span class="n">HttpResponse</span> <span class="n">resp</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
@@ -570,7 +571,6 @@
         <span class="n">resp</span><span class="o">.</span><span class="na">finishJson</span><span class="o">(</span><span class="n">result</span><span class="o">);</span>
     <span class="o">}</span>
 
-    <span class="nd">@AuthIgnore</span>
     <span class="nd">@HttpMapping</span><span class="o">(</span><span class="n">url</span> <span class="o">=</span> <span class="s">&quot;/hello/delete/&quot;</span><span class="o">,</span> <span class="n">comment</span> <span class="o">=</span> <span class="s">&quot;根据id删除Hello对象&quot;</span><span class="o">)</span>
     <span class="nd">@HttpParam</span><span class="o">(</span><span class="n">name</span> <span class="o">=</span> <span class="s">&quot;#&quot;</span><span class="o">,</span> <span class="n">type</span> <span class="o">=</span> <span class="kt">int</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="n">comment</span> <span class="o">=</span> <span class="s">&quot;Hello对象id&quot;</span><span class="o">)</span>
     <span class="kd">public</span> <span class="kt">void</span> <span class="nf">delete</span><span class="o">(</span><span class="n">HttpRequest</span> <span class="n">req</span><span class="o">,</span> <span class="n">HttpResponse</span> <span class="n">resp</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
@@ -580,7 +580,6 @@
         <span class="n">resp</span><span class="o">.</span><span class="na">finishJson</span><span class="o">(</span><span class="n">RetResult</span><span class="o">.</span><span class="na">success</span><span class="o">());</span>
     <span class="o">}</span>
 
-    <span class="nd">@AuthIgnore</span>
     <span class="nd">@HttpMapping</span><span class="o">(</span><span class="n">url</span> <span class="o">=</span> <span class="s">&quot;/hello/update&quot;</span><span class="o">,</span> <span class="n">comment</span> <span class="o">=</span> <span class="s">&quot;修改Hello对象&quot;</span><span class="o">)</span>
     <span class="nd">@HttpParam</span><span class="o">(</span><span class="n">name</span> <span class="o">=</span> <span class="s">&quot;bean&quot;</span><span class="o">,</span> <span class="n">type</span> <span class="o">=</span> <span class="n">HelloEntity</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="n">comment</span> <span class="o">=</span> <span class="s">&quot;Hello对象&quot;</span><span class="o">)</span>
     <span class="kd">public</span> <span class="kt">void</span> <span class="nf">update</span><span class="o">(</span><span class="n">HttpRequest</span> <span class="n">req</span><span class="o">,</span> <span class="n">HttpResponse</span> <span class="n">resp</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
@@ -592,7 +591,6 @@
         <span class="n">resp</span><span class="o">.</span><span class="na">finishJson</span><span class="o">(</span><span class="n">RetResult</span><span class="o">.</span><span class="na">success</span><span class="o">());</span>
     <span class="o">}</span>
 
-    <span class="nd">@AuthIgnore</span>
     <span class="nd">@HttpMapping</span><span class="o">(</span><span class="n">url</span> <span class="o">=</span> <span class="s">&quot;/hello/query&quot;</span><span class="o">,</span> <span class="n">comment</span> <span class="o">=</span> <span class="s">&quot;查询Hello对象列表&quot;</span><span class="o">)</span>
     <span class="nd">@HttpParam</span><span class="o">(</span><span class="n">name</span> <span class="o">=</span> <span class="s">&quot;bean&quot;</span><span class="o">,</span> <span class="n">type</span> <span class="o">=</span> <span class="n">HelloBean</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="n">comment</span> <span class="o">=</span> <span class="s">&quot;过滤条件&quot;</span><span class="o">)</span>
     <span class="kd">public</span> <span class="kt">void</span> <span class="nf">query</span><span class="o">(</span><span class="n">HttpRequest</span> <span class="n">req</span><span class="o">,</span> <span class="n">HttpResponse</span> <span class="n">resp</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
@@ -607,7 +605,6 @@
         <span class="n">resp</span><span class="o">.</span><span class="na">finishJson</span><span class="o">(</span><span class="n">result</span><span class="o">);</span>
     <span class="o">}</span>
 
-    <span class="nd">@AuthIgnore</span>
     <span class="nd">@HttpMapping</span><span class="o">(</span><span class="n">url</span> <span class="o">=</span> <span class="s">&quot;/hello/find/&quot;</span><span class="o">,</span> <span class="n">comment</span> <span class="o">=</span> <span class="s">&quot;根据id查找单个Hello对象&quot;</span><span class="o">)</span>
     <span class="nd">@HttpParam</span><span class="o">(</span><span class="n">name</span> <span class="o">=</span> <span class="s">&quot;#&quot;</span><span class="o">,</span> <span class="n">type</span> <span class="o">=</span> <span class="kt">int</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="n">comment</span> <span class="o">=</span> <span class="s">&quot;Hello对象id&quot;</span><span class="o">)</span>
     <span class="kd">public</span> <span class="kt">void</span> <span class="nf">find</span><span class="o">(</span><span class="n">HttpRequest</span> <span class="n">req</span><span class="o">,</span> <span class="n">HttpResponse</span> <span class="n">resp</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
@@ -617,7 +614,6 @@
         <span class="n">resp</span><span class="o">.</span><span class="na">finishJson</span><span class="o">(</span><span class="n">bean</span><span class="o">);</span>
     <span class="o">}</span>
 
-    <span class="nd">@AuthIgnore</span>
     <span class="nd">@HttpMapping</span><span class="o">(</span><span class="n">url</span> <span class="o">=</span> <span class="s">&quot;/hello/asyncfind/&quot;</span><span class="o">,</span> <span class="n">comment</span> <span class="o">=</span> <span class="s">&quot;根据id查找单个Hello对象&quot;</span><span class="o">)</span>
     <span class="nd">@HttpParam</span><span class="o">(</span><span class="n">name</span> <span class="o">=</span> <span class="s">&quot;#&quot;</span><span class="o">,</span> <span class="n">type</span> <span class="o">=</span> <span class="kt">int</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="n">comment</span> <span class="o">=</span> <span class="s">&quot;Hello对象id&quot;</span><span class="o">)</span>
     <span class="kd">public</span> <span class="kt">void</span> <span class="nf">asyncfind</span><span class="o">(</span><span class="n">HttpRequest</span> <span class="n">req</span><span class="o">,</span> <span class="n">HttpResponse</span> <span class="n">resp</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>

@@ -180,7 +180,6 @@
     <span class="o">}</span>
 
     <span class="c1">// 获取他人基本信息</span>
-    <span class="nd">@AuthIgnore</span>
     <span class="nd">@HttpMapping</span><span class="o">(</span><span class="n">url</span> <span class="o">=</span> <span class="s">&quot;/user/info/&quot;</span><span class="o">)</span>
     <span class="kd">public</span> <span class="kt">void</span> <span class="nf">info</span><span class="o">(</span><span class="n">HttpRequest</span> <span class="n">req</span><span class="o">,</span> <span class="n">HttpResponse</span> <span class="n">resp</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
         <span class="kt">int</span> <span class="n">userid</span> <span class="o">=</span> <span class="n">Integer</span><span class="o">.</span><span class="na">parseInt</span><span class="o">(</span><span class="n">req</span><span class="o">.</span><span class="na">getRequstURILastPath</span><span class="o">());</span>

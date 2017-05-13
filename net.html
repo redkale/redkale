@@ -84,7 +84,6 @@
         <span class="n">response</span><span class="o">.</span><span class="na">nextEvent</span><span class="o">();</span>
     <span class="o">}</span>
 
-    <span class="c1">//标记为@AuthIgnore 的方法将不会调用authenticate方法</span>
     <span class="c1">//一般用于判断用户的登录态, 返回false表示鉴权失败</span>
     <span class="c1">//moduleid值来自 @WebServlet.moduleid()用于定义模块ID; actionid值自来@HttpMapping.actionid()用于定义操作ID; 需要系统化的鉴权需要定义这两个值</span>
     <span class="nd">@Override</span>
@@ -115,7 +114,6 @@
     <span class="kd">private</span> <span class="n">UserService</span> <span class="n">service</span><span class="o">;</span>
 
     <span class="c1">//登录操作 </span>
-    <span class="nd">@AuthIgnore</span>  <span class="c1">//登录操作不要判断登录态，所以需要标记为@AuthIgnore，不会调用 BaseSerlvet.authenticate 方法</span>
     <span class="c1">//因为HttpMapping的判断规则用的是String.startsWith，所以HttpMapping.url不能用正则表达式，只能是getRequestURI的前缀</span>
     <span class="c1">//且同一个HttpServlet类内的所有HttpMapping不能存在包含关系, 如 /user/myinfo 和 /user/myinforecord 不能存在同一HttpServlet中。</span>
     <span class="nd">@HttpMapping</span><span class="o">(</span><span class="n">url</span> <span class="o">=</span> <span class="s">&quot;/user/login&quot;</span><span class="o">,</span> <span class="n">comment</span> <span class="o">=</span> <span class="s">&quot;用户登录&quot;</span><span class="o">)</span>
@@ -136,11 +134,7 @@
     <span class="o">}</span>
 
     <span class="c1">//获取指定用户ID的用户信息, 请求如: /user/username/43565443</span>
-    <span class="nd">@AuthIgnore</span>
-    <span class="c1">// 默认缓存时间是15秒，HttpServlet会将每个进入该方法的请求的响应结果缓存15秒，缓存命中时不会再进入该方法，过期会清空。</span>
-    <span class="c1">// @HttpCacheable 必须配合  @AuthIgnore 使用， 因为跟当前用户有关的请求一般不适合所有用户请求。 </span>
     <span class="c1">// 翻页查询想缓存就需要将翻页信息带进url: /user/query/page:2/size:50 。</span>
-    <span class="nd">@HttpCacheable</span><span class="o">(</span><span class="n">seconds</span> <span class="o">=</span> <span class="mi">30</span><span class="o">)</span>  <span class="c1">//有效期30秒</span>
     <span class="nd">@HttpMapping</span><span class="o">(</span><span class="n">url</span> <span class="o">=</span> <span class="s">&quot;/user/userinfo/&quot;</span><span class="o">,</span> <span class="n">comment</span> <span class="o">=</span> <span class="s">&quot;获取指定用户ID的用户信息&quot;</span><span class="o">)</span>
     <span class="nd">@HttpParam</span><span class="o">(</span><span class="n">name</span> <span class="o">=</span> <span class="s">&quot;#&quot;</span><span class="o">,</span> <span class="n">type</span> <span class="o">=</span> <span class="kd">int</span><span class="o">.</span><span class="kd">class</span><span class="o">,</span> <span class="n">comment</span> <span class="o">=</span> <span class="s">&quot;用户ID&quot;</span><span class="o">)</span>
     <span class="kd">public</span> <span class="kt">void</span> <span class="nf">userinfo</span><span class="o">(</span><span class="n">HttpRequest</span> <span class="n">req</span><span class="o">,</span> <span class="n">HttpResponse</span> <span class="n">resp</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
