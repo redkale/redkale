@@ -26,19 +26,27 @@
             <h3>Redkale 入门教程 01 -- Hello Word！</h3>
 
             <p>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="index.html" target="_blank">Redkale</a> 里大量使用了双亲委托模型，序列化的ConvertFactory、依赖注入的ResourceFactory、服务管理的WatchFactory均采用双亲委托模型。用于优先加载自定义的处理类，同时也保证两个同级的子Factory不会相互干扰。<br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="index.html" target="_blank">Redkale</a> 可以说是Java界最精简的框架，不到1M的jar包可以替代Tomcat、Spring/Spring Boot、Hibernate/MyBatis、JackJson/fastjson、Netty的集合，四两拨千斤。低调开源一年多，经过两次大的改善后终于达到让自己满意的地步。Redkale不仅仅提供简易的API，还附有很多不同于传统思维的设计思路。由于时间有限，一年多也没写入门教程，现在开始抽点时间写一些教程，希望能给想学Redkale的同学一点帮助。 废话不多说，下面进入正题。<br/>
             </p>
 
-            <p>ClassLoader类加载</p>
+            <p>下载Redkale</p>
             <p>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;双亲委托模型最经典的例子就是JVM的类加载器ClassLoader。每个ClassLoader实例都有一个父类加载器的引用（不是继承关系，是包含关系），虚拟机内置的类加载器（Bootstrap ClassLoader）本身没有父类加载器，但可以用作其它ClassLoader实例的的父类加载器。当一个ClassLoader实例需要加载某个类时，它会试图亲自搜索某个类之前，先把这个任务委托给它的父类加载器，这个过程是由上至下依次检查的，首先由最顶层的类加载器Bootstrap ClassLoader试图加载，如果没加载到，则把任务转交给Extension ClassLoader试图加载，如果也没加载到，则转交给App ClassLoader 进行加载，如果它也没有加载得到的话，则返回给委托的发起者，由它到指定的文件系统或网络等URL中加载该类。如果它们都没有加载到这个类时，则抛出ClassNotFoundException异常。否则将这个找到的类生成一个类的定义，并将它加载到内存当中，最后返回这个类在内存中的Class实例对象。<br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ClassLoader采用双亲委托有两个好处：避免类的重复加载和保证类的安全性。由类加载的顺序可以看出父加载器加载过的类在子加载器中不会被重复加载，同时也保证了安全性，一些非系统的class是不可靠的，若定义一个恶意的java.io.File类覆盖JDK自带的类会带来不安全性。而使用双亲委托机制的话该File类永远不会被调用，因为委托BootStrapClassLoader加载后会加载JDK中的File类而不会加载自定义的这个。
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;源码可以从 <a href="https://github.com/redkale" target="_blank" >https://github.com/redkale</a> 和 <a href="http://git.oschina.net/redkale/redkale" target="_blank" >http://git.oschina.net/redkale/redkale</a> 下载 。<br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;jar包可以从 <a href="http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.redkale%22%20AND%20a%3A%22redkale%22" target="_blank" >http://search.maven.org</a> 和 <a href="https://repo1.maven.org/maven2/org/redkale/redkale/" target="_blank" >https://repo1.maven.org/maven2/org/redkale/redkale/</a> 下载最新版本的包。<br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;当前最新版为 1.8， 下载 <a href="https://repo1.maven.org/maven2/org/redkale/redkale/1.8/redkale-1.8.tar.gz" target="_blank" >redkale-1.8.tar.gz</a> 放在本地。<br/>
             </p>
 
-            <p>Redkale 双亲委托</p>
+            <p>创建工程</p>
             <p>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ConvertFactory、ResourceFactory、WatchFactory三者的双亲委托模型设计完全一样。下面以ConvertFactory为例说明，ConvertFactory的搜索顺序与ClassLoader相反，ClassLoader为了避免类的重复而先加载父加载器后加载子加载器，ConvertFactory为了优先加载自定义的Encoder和Decoder先搜索自身的ConvertFactory，找不到再从父ConvertFactory中搜索。
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;本人使用NetBeans很多年了，所以本教程以NetBeans来创建工程， 使用IntelliJ IDEA 或 Eclipse的同学请自行参考。
             </p>
+            <p style="text-align: center;"><img src="images/hello_01.png" alt=""/><img src="images/hello_02.png" alt=""/></p>
+            <p style="text-align: center;"><img src="images/hello_03.png" alt=""/><img src="images/hello_04.png" alt=""/></p>
+            <p style="text-align: center;"><img src="images/hello_05.png" alt=""/><img src="images/hello_06.png" alt=""/></p>
+            <p style="text-align: center;"><img src="images/hello_07.png" alt=""/><img src="images/hello_08.png" alt=""/></p>
+            <p style="text-align: center;"><img src="images/hello_09.png" alt=""/><img src="images/hello_10.png" alt=""/></p>
+            <p style="text-align: center;"><img src="images/hello_11.png" alt=""/><img src="images/hello_12.png" alt=""/></p>
+            
             <div class="highlight"><pre><span class="kd">public</span> <span class="kd">final</span> <span class="o">&lt;</span><span class="n">E</span><span class="o">&gt;</span> <span class="n">Encodeable</span><span class="o">&lt;</span><span class="n">W</span><span class="o">,</span> <span class="n">E</span><span class="o">&gt;</span> <span class="nf">findEncoder</span><span class="o">(</span><span class="kd">final</span> <span class="n">Type</span> <span class="n">type</span><span class="o">)</span> <span class="o">{</span>
     <span class="n">Encodeable</span><span class="o">&lt;</span><span class="n">W</span><span class="o">,</span> <span class="n">E</span><span class="o">&gt;</span> <span class="n">rs</span> <span class="o">=</span> <span class="o">(</span><span class="n">Encodeable</span><span class="o">&lt;</span><span class="n">W</span><span class="o">,</span> <span class="n">E</span><span class="o">&gt;)</span> <span class="n">encoders</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="n">type</span><span class="o">);</span>
     <span class="k">if</span> <span class="o">(</span><span class="n">rs</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="k">return</span> <span class="n">rs</span><span class="o">;</span>
