@@ -61,7 +61,7 @@ public @interface RestMapping {
     int actionid() default 0;
 
     /**
-     * 结果缓存的秒数, 为0表示不缓存, 对应&#64;HttpCacheable.seconds
+     * 结果缓存的秒数, 为0表示不缓存, 对应&#64;HttpMapping.cacheseconds
      *
      * @return int
      */
