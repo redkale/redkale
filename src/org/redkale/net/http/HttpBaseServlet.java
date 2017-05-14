@@ -187,7 +187,7 @@ public abstract class HttpBaseServlet extends HttpServlet {
     private final HttpServlet authSuccessServlet = new HttpServlet() {
         @Override
         public void execute(HttpRequest request, HttpResponse response) throws IOException {
-            Entry entry = (Entry) request.attachment;
+            Entry entry = (Entry) request.getAttribute("_redkale_entry");
             if (entry.cacheseconds > 0) {//有缓存设置
                 CacheEntry ce = entry.cache.get(request.getRequestURI());
                 if (ce != null && ce.time + entry.cacheseconds > System.currentTimeMillis()) { //缓存有效
@@ -212,7 +212,7 @@ public abstract class HttpBaseServlet extends HttpServlet {
                         response.finishJson(new RetResult(RET_METHOD_ERROR, "Method(" + request.getMethod() + ") Error"));
                         return;
                     }
-                    request.attachment = entry;
+                    request.setAttribute("_redkale_entry", entry);
                     if (entry.ignore) {
                         authSuccessServlet.execute(request, response);
                     } else {

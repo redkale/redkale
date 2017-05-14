@@ -42,6 +42,10 @@ public abstract class PrepareServlet<K extends Serializable, C extends Context, 
 
     private Map<K, S> mappings = new HashMap<>();
 
+    private List<Filter<C, R, P>> filters = new ArrayList<>();
+
+    protected Filter<C, R, P> headFilter;
+
     protected void putServlet(S servlet) {
         synchronized (lock1) {
             Set<S> newservlets = new HashSet<>(servlets);
@@ -62,6 +66,36 @@ public abstract class PrepareServlet<K extends Serializable, C extends Context, 
         return mappings.get(key);
     }
 
+    @Override
+    public void init(C context, AnyValue config) {
+        if (filters != null && !filters.isEmpty()) {
+            Collections.sort(filters);
+            for (Filter<C, R, P> filter : filters) {
+                filter.init(context, config);
+            }
+            this.headFilter = filters.get(0);
+            Filter<C, R, P> filter = this.headFilter;
+            for (int i = 1; i < filters.size(); i++) {
+                filter._next = filters.get(i);
+                filter = filter._next;
+            }
+        }
+    }
+
+    @Override
+    public void destroy(C context, AnyValue config) {
+        if (filters != null && !filters.isEmpty()) {
+            for (Filter filter : filters) {
+                filter.destroy(context, config);
+            }
+        }
+    }
+
+    public void addFilter(Filter<C, R, P> filter, AnyValue conf) {
+        filter._conf = conf;
+        this.filters.add(filter);
+    }
+
     public abstract void addServlet(S servlet, Object attachment, AnyValue conf, K... mappings);
 
     public final void prepare(final ByteBuffer buffer, final R request, final P response) throws IOException {
@@ -74,7 +108,9 @@ public abstract class PrepareServlet<K extends Serializable, C extends Context, 
         } else if (rs == 0) {
             response.context.offerBuffer(buffer);
             request.prepare();
-            this.execute(request, response);
+            response.filter = this.headFilter;
+            response.servlet = this;
+            response.nextEvent();
         } else {
             buffer.clear();
             final AtomicInteger ai = new AtomicInteger(rs);
@@ -91,7 +127,9 @@ public abstract class PrepareServlet<K extends Serializable, C extends Context, 
                         response.context.offerBuffer(buffer);
                         request.prepare();
                         try {
-                            execute(request, response);
+                            response.filter = PrepareServlet.this.headFilter;
+                            response.servlet = PrepareServlet.this;
+                            response.nextEvent();
                         } catch (Exception e) {
                             illRequestCounter.incrementAndGet();
                             response.finish(true);

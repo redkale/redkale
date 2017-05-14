@@ -19,6 +19,7 @@ import javax.annotation.Resource;
 import javax.persistence.Transient;
 import static org.redkale.boot.Application.*;
 import org.redkale.boot.ClassFilter.FilterEntry;
+import org.redkale.net.Filter;
 import org.redkale.net.*;
 import org.redkale.net.http.WebSocketNode;
 import org.redkale.net.sncp.*;
@@ -161,21 +162,31 @@ public abstract class NodeServer {
             this.interceptor = (NodeInterceptor) clazz.newInstance();
         }
 
-        ClassFilter<Servlet> servletFilter = createServletClassFilter();
         ClassFilter<Service> serviceFilter = createServiceClassFilter();
+        ClassFilter<Filter> filterFilter = createFilterClassFilter();
+        ClassFilter<Servlet> servletFilter = createServletClassFilter();
         long s = System.currentTimeMillis();
         if (servletFilter == null) {
-            ClassFilter.Loader.load(application.getHome(), serverConf.getValue("excludelibs", "").split(";"), serviceFilter);
-        } else {
+            if (filterFilter == null) {
+                ClassFilter.Loader.load(application.getHome(), serverConf.getValue("excludelibs", "").split(";"), serviceFilter);
+            } else {
+                ClassFilter.Loader.load(application.getHome(), serverConf.getValue("excludelibs", "").split(";"), serviceFilter, filterFilter);
+            }
+        } else if (filterFilter == null) {
             ClassFilter.Loader.load(application.getHome(), serverConf.getValue("excludelibs", "").split(";"), serviceFilter, servletFilter);
+        } else {
+            ClassFilter.Loader.load(application.getHome(), serverConf.getValue("excludelibs", "").split(";"), serviceFilter, filterFilter, servletFilter);
         }
         long e = System.currentTimeMillis() - s;
         logger.info(this.getClass().getSimpleName() + " load filter class in " + e + " ms");
         loadService(serviceFilter); //必须在servlet之前
+        loadFilter(filterFilter);
         loadServlet(servletFilter);
 
         if (this.interceptor != null) this.resourceFactory.inject(this.interceptor);
     }
+
+    protected abstract void loadFilter(ClassFilter<? extends Filter> filterFilter) throws Exception;
 
     protected abstract void loadServlet(ClassFilter<? extends Servlet> servletFilter) throws Exception;
 
@@ -477,6 +488,8 @@ public abstract class NodeServer {
         return transport;
     }
 
+    protected abstract ClassFilter<Filter> createFilterClassFilter();
+
     protected abstract ClassFilter<Servlet> createServletClassFilter();
 
     protected ClassFilter<Service> createServiceClassFilter() {
@@ -486,10 +499,19 @@ public abstract class NodeServer {
     protected ClassFilter createClassFilter(final String localGroup, Class<? extends Annotation> ref,
         Class inter, Class[] excludeSuperClasses, Class<? extends Annotation> ref2, String properties, String property) {
         ClassFilter cf = new ClassFilter(ref, inter, excludeSuperClasses, null);
-        if (properties == null && properties == null) return cf;
-        if (this.serverConf == null) return cf;
+        if (properties == null && properties == null) {
+            cf.setRefused(true);
+            return cf;
+        }
+        if (this.serverConf == null) {
+            cf.setRefused(true);
+            return cf;
+        }
         AnyValue[] proplist = this.serverConf.getAnyValues(properties);
-        if (proplist == null || proplist.length < 1) return cf;
+        if (proplist == null || proplist.length < 1) {
+            cf.setRefused(true);
+            return cf;
+        }
         cf = null;
         for (AnyValue list : proplist) {
             DefaultAnyValue prop = null;

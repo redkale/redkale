@@ -40,11 +40,13 @@ public class SncpPrepareServlet extends PrepareServlet<DLong, SncpContext, SncpR
 
     @Override
     public void init(SncpContext context, AnyValue config) {
+        super.init(context, config); //必须要执行
         getServlets().forEach(s -> s.init(context, getServletConf(s)));
     }
 
     @Override
     public void destroy(SncpContext context, AnyValue config) {
+        super.destroy(context, config); //必须要执行
         getServlets().forEach(s -> s.destroy(context, getServletConf(s)));
     }
 

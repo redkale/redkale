@@ -47,6 +47,19 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
     }
 
     /**
+     * 添加HttpFilter
+     *
+     * @param filter HttpFilter
+     * @param conf   AnyValue
+     *
+     * @return HttpServer
+     */
+    public HttpServer addHttpFilter(HttpFilter filter, AnyValue conf) {
+        this.prepare.addFilter(filter, conf);
+        return this;
+    }
+
+    /**
      * 添加HttpServlet
      *
      * @param prefix   url前缀
@@ -87,7 +100,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
         this.prepare.addServlet(servlet, prefix, conf, mappings);
         return this;
     }
-
+ 
     /**
      * 添加RestServlet
      *
@@ -95,14 +108,14 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
      * @param <T>              RestServlet
      * @param name             Service的资源名
      * @param serviceType      Service的类型
-     * @param service          Service对象
+     * @param service          Service对象 
      * @param baseServletClass RestServlet基类
      * @param prefix           url前缀
      *
      * @return RestServlet
      */
     public <S extends Service, T extends HttpServlet> T addRestServlet(String name, Class<S> serviceType, S service, Class<T> baseServletClass, String prefix) {
-        return addRestServlet(name, serviceType, service, baseServletClass, prefix, null);
+        return addRestServlet(name, serviceType, service, null, baseServletClass, prefix, null);
     }
 
     /**
@@ -113,14 +126,33 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
      * @param name             Service的资源名
      * @param serviceType      Service的类型
      * @param service          Service对象
+     * @param userType         用户数据类型
      * @param baseServletClass RestServlet基类
      * @param prefix           url前缀
-     * @param conf             配置信息
+     *
+     * @return RestServlet
+     */
+    public <S extends Service, T extends HttpServlet> T addRestServlet(String name, Class<S> serviceType, S service, final Class userType, Class<T> baseServletClass, String prefix) {
+        return addRestServlet(name, serviceType, service, userType, baseServletClass, prefix, null);
+    }
+
+    /**
+     * 添加RestServlet
+     *
+     * @param <S>             Service
+     * @param <T>             RestServlet
+     * @param name            Service的资源名
+     * @param serviceType     Service的类型
+     * @param service         Service对象
+     * @param userType        用户数据类型
+     * @param baseServletType RestServlet基类
+     * @param prefix          url前缀
+     * @param conf            配置信息
      *
      * @return RestServlet
      */
     public <S extends Service, T extends HttpServlet> T addRestServlet(final String name, final Class<S> serviceType,
-        final S service, final Class<T> baseServletClass, final String prefix, final AnyValue conf) {
+        final S service, final Class userType, final Class<T> baseServletType, final String prefix, final AnyValue conf) {
         T servlet = null;
         for (final HttpServlet item : ((HttpPrepareServlet) this.prepare).getServlets()) {
             if (!(item instanceof HttpServlet)) continue;
@@ -137,7 +169,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
             }
         }
         final boolean first = servlet == null;
-        if (servlet == null) servlet = Rest.createRestServlet(baseServletClass, serviceType);
+        if (servlet == null) servlet = Rest.createRestServlet(userType, baseServletType, serviceType);
         if (servlet == null) return null; //没有HttpMapping方法的HttpServlet调用Rest.createRestServlet就会返回null 
         try { //若提供动态变更Service服务功能，则改Rest服务无法做出相应更新
             Field field = servlet.getClass().getDeclaredField(Rest.REST_SERVICE_FIELD_NAME);

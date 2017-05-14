@@ -178,6 +178,11 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         return v == null ? defValue : v;
     }
 
+    @Override
+    protected void thenEvent(Servlet servlet) {
+        this.servlet = servlet;
+    }
+
     /**
      * 增加Cookie值
      *

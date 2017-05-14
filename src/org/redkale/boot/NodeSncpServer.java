@@ -5,13 +5,16 @@
  */
 package org.redkale.boot;
 
+import java.lang.reflect.Modifier;
 import java.net.*;
 import java.util.*;
-import java.util.logging.*;
+import java.util.logging.Level;
+import org.redkale.boot.ClassFilter.FilterEntry;
 import org.redkale.net.*;
 import org.redkale.net.sncp.*;
 import org.redkale.service.Service;
 import org.redkale.util.*;
+import org.redkale.util.AnyValue.DefaultAnyValue;
 
 /**
  * SNCP Server节点的配置Server
@@ -78,7 +81,33 @@ public class NodeSncpServer extends NodeServer {
     }
 
     @Override
+    protected void loadFilter(ClassFilter<? extends Filter> filterFilter) throws Exception {
+        if (sncpServer != null) loadSncpFilter(this.serverConf.getAnyValue("fliters"), filterFilter);
+    }
+
+    protected void loadSncpFilter(final AnyValue servletsConf, final ClassFilter<? extends Filter> classFilter) throws Exception {
+        final StringBuilder sb = logger.isLoggable(Level.INFO) ? new StringBuilder() : null;
+        final String threadName = "[" + Thread.currentThread().getName() + "] ";
+        List<FilterEntry<? extends Filter>> list = new ArrayList(classFilter.getFilterEntrys());
+        for (FilterEntry<? extends Filter> en : list) {
+            Class<SncpFilter> clazz = (Class<SncpFilter>) en.getType();
+            if (Modifier.isAbstract(clazz.getModifiers())) continue;
+            final SncpFilter filter = clazz.newInstance();
+            resourceFactory.inject(filter, this);
+            DefaultAnyValue filterConf = (DefaultAnyValue) en.getProperty();
+            this.sncpServer.addSncpFilter(filter, filterConf);
+            if (sb != null) sb.append(threadName).append(" Load ").append(clazz.getName()).append(LINE_SEPARATOR);
+        }
+        if (sb != null && sb.length() > 0) logger.log(Level.INFO, sb.toString());
+    }
+
+    @Override
     protected void loadServlet(ClassFilter<? extends Servlet> servletFilter) throws Exception {
+    }
+
+    @Override
+    protected ClassFilter<Filter> createFilterClassFilter() {
+        return createClassFilter(null, null, SncpFilter.class, null, null, "filters", "filter");
     }
 
     @Override

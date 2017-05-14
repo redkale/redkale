@@ -59,7 +59,7 @@ public final class MultiContext {
 
     public MultiContext(final Charset charsetName, final String contentType, final DefaultAnyValue params, final InputStream in, String fielnameRegex) {
         this.charset = charsetName == null ? UTF8 : charsetName;
-        this.contentType = contentType.trim();
+        this.contentType = contentType == null ? "" : contentType.trim();
         this.parameters = params;
         this.boundary = parseBoundary(this.contentType);
         this.endboundarray = ("--" + this.boundary + "--").getBytes();

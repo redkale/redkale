@@ -37,6 +37,19 @@ public class SncpServer extends Server<DLong, SncpContext, SncpRequest, SncpResp
         super.init(config);
     }
 
+    /**
+     * 添加SncpFilter
+     *
+     * @param filter SncpFilter
+     * @param conf   AnyValue
+     *
+     * @return HttpServer
+     */
+    public SncpServer addSncpFilter(SncpFilter filter, AnyValue conf) {
+        this.prepare.addFilter(filter, conf);
+        return this;
+    }
+
     public void addSncpServlet(Service sncpService) {
         for (Class type : Sncp.getResourceTypes(sncpService)) {
             SncpDynServlet sds = new SncpDynServlet(BsonFactory.root().getConvert(), Sncp.getResourceName(sncpService), type, sncpService);

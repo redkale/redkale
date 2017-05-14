@@ -97,6 +97,7 @@ public class HttpPrepareServlet extends PrepareServlet<String, HttpContext, Http
 
     @Override
     public void init(HttpContext context, AnyValue config) {
+        super.init(context, config); //必须要执行
         Collection<HttpServlet> servlets = getServlets();
         servlets.forEach(s -> {
             s.preInit(context, getServletConf(s));
@@ -269,6 +270,7 @@ public class HttpPrepareServlet extends PrepareServlet<String, HttpContext, Http
 
     @Override
     public void destroy(HttpContext context, AnyValue config) {
+        super.destroy(context, config); //必须要执行
         this.resourceHttpServlet.destroy(context, config);
         getServlets().forEach(s -> {
             s.destroy(context, getServletConf(s));

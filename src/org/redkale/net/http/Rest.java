@@ -104,12 +104,12 @@ public final class Rest {
         return (!controller.name().isEmpty()) ? controller.name() : serviceType.getSimpleName().replaceAll("Service.*$", "").toLowerCase();
     }
 
-    static <T extends HttpServlet> T createRestServlet(final Class<T> baseServletClass, final Class<? extends Service> serviceType) {
-        if (baseServletClass == null || serviceType == null) throw new RuntimeException(" Servlet or Service is null Class on createRestServlet");
-        if (!HttpServlet.class.isAssignableFrom(baseServletClass)) throw new RuntimeException(baseServletClass + " is not HttpServlet Class on createRestServlet");
-        int mod = baseServletClass.getModifiers();
-        if (!java.lang.reflect.Modifier.isPublic(mod)) throw new RuntimeException(baseServletClass + " is not Public Class on createRestServlet");
-        if (java.lang.reflect.Modifier.isAbstract(mod)) throw new RuntimeException(baseServletClass + " is abstract Class on createRestServlet");
+    static <T extends HttpServlet> T createRestServlet(final Class userType0, final Class<T> baseServletType, final Class<? extends Service> serviceType) {
+        if (baseServletType == null || serviceType == null) throw new RuntimeException(" Servlet or Service is null Class on createRestServlet");
+        if (!HttpServlet.class.isAssignableFrom(baseServletType)) throw new RuntimeException(baseServletType + " is not HttpServlet Class on createRestServlet");
+        int mod = baseServletType.getModifiers();
+        if (!java.lang.reflect.Modifier.isPublic(mod)) throw new RuntimeException(baseServletType + " is not Public Class on createRestServlet");
+        if (java.lang.reflect.Modifier.isAbstract(mod)) throw new RuntimeException(baseServletType + " cannot a abstract Class on createRestServlet");
 
         final String serviceDesc = Type.getDescriptor(serviceType);
         final String webServletDesc = Type.getDescriptor(WebServlet.class);
@@ -131,11 +131,12 @@ public final class Rest {
         final String retInternalName = Type.getInternalName(RetResult.class);
         final String serviceTypeInternalName = Type.getInternalName(serviceType);
 
-        HttpUserType hut = baseServletClass.getAnnotation(HttpUserType.class);
-        final Class userType = hut == null ? Object.class : hut.value();
-        final String supDynName = baseServletClass.getName().replace('.', '/');
+        HttpUserType hut = baseServletType.getAnnotation(HttpUserType.class);
+        final Class userType = (userType0 == null || userType0 == Object.class) ? (hut == null ? null : hut.value()) : userType0;
+
+        final String supDynName = baseServletType.getName().replace('.', '/');
         final RestService controller = serviceType.getAnnotation(RestService.class);
-        if (controller != null && controller.ignore()) throw new RuntimeException(baseServletClass + " is ignore Rest Service Class"); //标记为ignore=true不创建Servlet
+        if (controller != null && controller.ignore()) throw new RuntimeException(serviceType + " is ignore Rest Service Class"); //标记为ignore=true不创建Servlet
         ClassLoader loader = Sncp.class.getClassLoader();
         String newDynName = serviceTypeInternalName.substring(0, serviceTypeInternalName.lastIndexOf('/') + 1) + "_Dyn" + serviceType.getSimpleName().replaceAll("Service.*$", "") + "RestServlet";
 
@@ -697,7 +698,7 @@ public final class Rest {
                 } else if ("&".equals(pname) && ptype == userType) { //当前用户对象的类名
                     mv.visitVarInsn(ALOAD, 1);
                     mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "currentUser", "()Ljava/lang/Object;", false);
-                    mv.visitTypeInsn(CHECKCAST, Type.getInternalName(userType));
+                    mv.visitTypeInsn(CHECKCAST, Type.getInternalName(ptype));
                     mv.visitVarInsn(ASTORE, maxLocals);
                     varInsns.add(new int[]{ALOAD, maxLocals});
                 } else if (ptype == boolean.class) {

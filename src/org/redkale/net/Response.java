@@ -35,7 +35,9 @@ public abstract class Response<C extends Context, R extends Request<C>> {
 
     protected BiConsumer<R, Response<C, R>> recycleListener;
 
-    protected Servlet nextServlet;
+    protected Filter<C, R, ? extends Response<C, R>> filter;
+
+    protected Servlet<C, R, ? extends Response<C, R>> servlet;
 
     private final CompletionHandler finishHandler = new CompletionHandler<Integer, ByteBuffer>() {
 
@@ -117,7 +119,8 @@ public abstract class Response<C extends Context, R extends Request<C>> {
             recycleListener = null;
         }
         this.output = null;
-        this.nextServlet = null;
+        this.filter = null;
+        this.servlet = null;
         request.recycle();
         if (channel != null) {
             if (keepAlive) {
@@ -144,16 +147,25 @@ public abstract class Response<C extends Context, R extends Request<C>> {
         this.request.createtime = System.currentTimeMillis();
     }
 
-    @SuppressWarnings("unchecked")
-    public <S extends Servlet> void thenEvent(S nextServlet) {
-        this.nextServlet = nextServlet;
+    protected void setFilter(Filter<C, R, Response<C, R>> filter) {
+        this.filter = filter;
+    }
+
+    protected void thenEvent(Servlet servlet) {
+        this.servlet = servlet;
     }
 
     @SuppressWarnings("unchecked")
     public void nextEvent() throws IOException {
-        if (this.nextServlet != null) {
-            Servlet s = this.nextServlet;
-            this.nextServlet = null;
+        if (this.filter != null) {
+            Filter runner = this.filter;
+            this.filter = this.filter._next;
+            runner.doFilter(request, this);
+            return;
+        }
+        if (this.servlet != null) {
+            Servlet s = this.servlet;
+            this.servlet = null;
             s.execute(request, this);
         }
     }

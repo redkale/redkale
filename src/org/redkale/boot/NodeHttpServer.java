@@ -19,7 +19,7 @@ import org.redkale.net.sncp.Sncp;
 import org.redkale.service.*;
 import org.redkale.util.AnyValue.DefaultAnyValue;
 import org.redkale.util.*;
-import org.redkale.watch.WatchServlet;
+import org.redkale.watch.*;
 
 /**
  * HTTP Server节点的配置Server
@@ -52,24 +52,34 @@ public class NodeHttpServer extends NodeServer {
     }
 
     @Override
-    protected ClassFilter<Servlet> createServletClassFilter() {
-        return createClassFilter(null, WebServlet.class, HttpServlet.class, new Class[]{WatchServlet.class}, null, "servlets", "servlet");
-    }
-
-    @Override
     protected ClassFilter<Service> createServiceClassFilter() {
         return createClassFilter(this.sncpGroup, null, Service.class, new Class[]{WatchService.class}, Annotation.class, "services", "service");
     }
 
     @Override
-    protected void loadServlet(ClassFilter<? extends Servlet> servletFilter) throws Exception {
-        if (httpServer != null) loadHttpServlet(this.serverConf.getAnyValue("servlets"), servletFilter);
+    protected ClassFilter<Filter> createFilterClassFilter() {
+        return createClassFilter(null, null, HttpFilter.class, new Class[]{WatchFilter.class}, null, "filters", "filter");
+    }
+
+    @Override
+    protected ClassFilter<Servlet> createServletClassFilter() {
+        return createClassFilter(null, WebServlet.class, HttpServlet.class, new Class[]{WatchServlet.class}, null, "servlets", "servlet");
     }
 
     @Override
     protected void loadService(ClassFilter serviceFilter) throws Exception {
         super.loadService(serviceFilter);
         initWebSocketService();
+    }
+
+    @Override
+    protected void loadFilter(ClassFilter<? extends Filter> filterFilter) throws Exception {
+        if (httpServer != null) loadHttpFilter(this.serverConf.getAnyValue("fliters"), filterFilter);
+    }
+
+    @Override
+    protected void loadServlet(ClassFilter<? extends Servlet> servletFilter) throws Exception {
+        if (httpServer != null) loadHttpServlet(this.serverConf.getAnyValue("servlets"), servletFilter);
     }
 
     private void initWebSocketService() {
@@ -95,6 +105,22 @@ public class NodeHttpServer extends NodeServer {
         }, WebSocketNode.class);
     }
 
+    protected void loadHttpFilter(final AnyValue servletsConf, final ClassFilter<? extends Filter> classFilter) throws Exception {
+        final StringBuilder sb = logger.isLoggable(Level.INFO) ? new StringBuilder() : null;
+        final String threadName = "[" + Thread.currentThread().getName() + "] ";
+        List<FilterEntry<? extends Filter>> list = new ArrayList(classFilter.getFilterEntrys());
+        for (FilterEntry<? extends Filter> en : list) {
+            Class<HttpFilter> clazz = (Class<HttpFilter>) en.getType();
+            if (Modifier.isAbstract(clazz.getModifiers())) continue;
+            final HttpFilter filter = clazz.newInstance();
+            resourceFactory.inject(filter, this);
+            DefaultAnyValue filterConf = (DefaultAnyValue) en.getProperty();
+            this.httpServer.addHttpFilter(filter, filterConf);
+            if (sb != null) sb.append(threadName).append(" Load ").append(clazz.getName()).append(LINE_SEPARATOR);
+        }
+        if (sb != null && sb.length() > 0) logger.log(Level.INFO, sb.toString());
+    }
+
     protected void loadHttpServlet(final AnyValue servletsConf, final ClassFilter<? extends Servlet> filter) throws Exception {
         final StringBuilder sb = logger.isLoggable(Level.INFO) ? new StringBuilder() : null;
         final String prefix = servletsConf == null ? "" : servletsConf.getValue("path", "");
@@ -109,11 +135,11 @@ public class NodeHttpServer extends NodeServer {
         final List<AbstractMap.SimpleEntry<String, String[]>> ss = sb == null ? null : new ArrayList<>();
         for (FilterEntry<? extends Servlet> en : list) {
             Class<HttpServlet> clazz = (Class<HttpServlet>) en.getType();
-            if (WatchServlet.class.isAssignableFrom(clazz)) continue; //给Watch服务使用
             if (Modifier.isAbstract(clazz.getModifiers())) continue;
             WebServlet ws = clazz.getAnnotation(WebServlet.class);
             if (ws == null || ws.value().length == 0) continue;
             final HttpServlet servlet = clazz.newInstance();
+            resourceFactory.inject(servlet, this);
             final String[] mappings = ws.value();
             String pref = ws.repair() ? prefix : "";
             DefaultAnyValue servletConf = (DefaultAnyValue) en.getProperty();
@@ -153,7 +179,9 @@ public class NodeHttpServer extends NodeServer {
         final String threadName = "[" + Thread.currentThread().getName() + "] ";
         final List<AbstractMap.SimpleEntry<String, String[]>> ss = sb == null ? null : new ArrayList<>();
 
-        final Class baseServletClass = Class.forName(restConf.getValue("base", HttpServlet.class.getName()));
+        String userTypeStr = restConf.getValue("usertype");
+        final Class userType = userTypeStr == null ? null : Class.forName(userTypeStr);
+        final Class baseServletType = Class.forName(restConf.getValue("base", HttpServlet.class.getName()));
 
         final boolean autoload = restConf.getBoolValue("autoload", true);
 
@@ -179,7 +207,7 @@ public class NodeHttpServer extends NodeServer {
             if (!autoload && !includeValues.contains(stypename)) return;
             if (!restFilter.accept(stypename)) return;
 
-            HttpServlet servlet = httpServer.addRestServlet(name, stype, service, baseServletClass, prefix, (AnyValue) null);
+            HttpServlet servlet = httpServer.addRestServlet(name, stype, service, userType, baseServletType, prefix, (AnyValue) null);
             if (servlet == null) return; //没有HttpMapping方法的HttpServlet调用Rest.createRestServlet就会返回null 
             resourceFactory.inject(servlet, NodeHttpServer.this);
             if (finest) logger.finest(threadName + " Create RestServlet(resource.name='" + name + "') = " + servlet);
