@@ -154,7 +154,7 @@ public class NodeHttpServer extends NodeServer {
         final String threadName = "[" + Thread.currentThread().getName() + "] ";
         final List<AbstractMap.SimpleEntry<String, String[]>> ss = sb == null ? null : new ArrayList<>();
 
-        final Class baseServletClass = Class.forName(restConf.getValue("base", DefaultRestServlet.class.getName()));
+        final Class baseServletClass = Class.forName(restConf.getValue("base", HttpServlet.class.getName()));
 
         final boolean autoload = restConf.getBoolValue("autoload", true);
 
