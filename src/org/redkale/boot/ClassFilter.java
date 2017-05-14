@@ -40,6 +40,8 @@ public final class ClassFilter<T> {
 
     private Class superClass; //符合的父类型。不为空时，扫描结果的class必须是superClass的子类
 
+    private Class[] excludeSuperClasses; //不符合的父类型。
+
     private Class<? extends Annotation> annotationClass;//符合的注解。不为空时，扫描结果的class必须包含该注解
 
     private Pattern[] includePatterns; //符合的classname正则表达式
@@ -56,18 +58,19 @@ public final class ClassFilter<T> {
 
     private AnyValue conf; //基本配置信息, 当符合条件时将conf的属性赋值到FilterEntry中去。
 
-    public ClassFilter(Class<? extends Annotation> annotationClass, Class superClass) {
-        this(annotationClass, superClass, null);
+    public ClassFilter(Class<? extends Annotation> annotationClass, Class superClass, Class[] excludeSuperClasses) {
+        this(annotationClass, superClass, excludeSuperClasses, null);
     }
 
-    public ClassFilter(Class<? extends Annotation> annotationClass, Class superClass, AnyValue conf) {
+    public ClassFilter(Class<? extends Annotation> annotationClass, Class superClass, Class[] excludeSuperClasses, AnyValue conf) {
         this.annotationClass = annotationClass;
         this.superClass = superClass;
+        this.excludeSuperClasses = excludeSuperClasses;
         this.conf = conf;
     }
 
-    public static ClassFilter create(String includeregs, String excluderegs, Set<String> includeValues, Set<String> excludeValues) {
-        ClassFilter filter = new ClassFilter(null, null);
+    public static ClassFilter create(Class[] excludeSuperClasses, String includeregs, String excluderegs, Set<String> includeValues, Set<String> excludeValues) {
+        ClassFilter filter = new ClassFilter(null, null, excludeSuperClasses);
         filter.setIncludePatterns(includeregs == null ? null : includeregs.split(";"));
         filter.setExcludePatterns(excluderegs == null ? null : excluderegs.split(";"));
         filter.setPrivilegeIncludes(includeValues);
@@ -247,7 +250,13 @@ public final class ClassFilter<T> {
     public boolean accept(AnyValue property, Class clazz, boolean autoscan) {
         if (this.refused || !Modifier.isPublic(clazz.getModifiers())) return false;
         if (annotationClass != null && clazz.getAnnotation(annotationClass) == null) return false;
-        return superClass == null || (clazz != superClass && superClass.isAssignableFrom(clazz));
+        boolean rs = superClass == null || (clazz != superClass && superClass.isAssignableFrom(clazz));
+        if (rs && this.excludeSuperClasses != null && this.excludeSuperClasses.length > 0) {
+            for (Class c : this.excludeSuperClasses) {
+                if (c != null && (clazz == c || clazz.isAssignableFrom(c))) return false;
+            }
+        }
+        return rs;
     }
 
     public static Pattern[] toPattern(String[] regs) {
@@ -267,6 +276,18 @@ public final class ClassFilter<T> {
 
     public void setSuperClass(Class superClass) {
         this.superClass = superClass;
+    }
+
+    public Class getSuperClass() {
+        return superClass;
+    }
+
+    public Class[] getExcludeSuperClasses() {
+        return excludeSuperClasses;
+    }
+
+    public void setExcludeSuperClasses(Class[] excludeSuperClasses) {
+        this.excludeSuperClasses = excludeSuperClasses;
     }
 
     public void setAnnotationClass(Class<? extends Annotation> annotationClass) {
@@ -291,10 +312,6 @@ public final class ClassFilter<T> {
 
     public Class<? extends Annotation> getAnnotationClass() {
         return annotationClass;
-    }
-
-    public Class getSuperClass() {
-        return superClass;
     }
 
     public boolean isRefused() {

@@ -63,7 +63,7 @@ public abstract class NodeServer {
     protected final Server server;
 
     //当前Server的SNCP协议的组
-    private String sncpGroup = null;
+    protected String sncpGroup = null;
 
     //SNCP服务的地址， 非SNCP为null
     private InetSocketAddress sncpAddress;
@@ -492,12 +492,12 @@ public abstract class NodeServer {
     protected abstract ClassFilter<Servlet> createServletClassFilter();
 
     protected ClassFilter<Service> createServiceClassFilter() {
-        return createClassFilter(this.sncpGroup, null, Service.class, Annotation.class, "services", "service");
+        return createClassFilter(this.sncpGroup, null, Service.class, null, Annotation.class, "services", "service");
     }
 
     protected ClassFilter createClassFilter(final String localGroup, Class<? extends Annotation> ref,
-        Class inter, Class<? extends Annotation> ref2, String properties, String property) {
-        ClassFilter cf = new ClassFilter(ref, inter, null);
+        Class inter, Class[] excludeSuperClasses, Class<? extends Annotation> ref2, String properties, String property) {
+        ClassFilter cf = new ClassFilter(ref, inter, excludeSuperClasses, null);
         if (properties == null && properties == null) return cf;
         if (this.serverConf == null) return cf;
         AnyValue[] proplist = this.serverConf.getAnyValues(properties);
@@ -515,7 +515,7 @@ public abstract class NodeServer {
                 prop = new AnyValue.DefaultAnyValue();
                 prop.addValue("groups", sc);
             }
-            ClassFilter filter = new ClassFilter(ref, inter, prop);
+            ClassFilter filter = new ClassFilter(ref, inter, excludeSuperClasses, prop);
             for (AnyValue av : list.getAnyValues(property)) { // <service> 或  <servlet> 节点
                 final AnyValue[] items = av.getAnyValues("property");
                 if (av instanceof DefaultAnyValue && items.length > 0) { //存在 <property>节点

@@ -13,12 +13,16 @@ import java.util.function.LongSupplier;
 
 /**
  *
- * <p> 详情见: https://redkale.org
+ * <p>
+ * 详情见: https://redkale.org
+ *
  * @author zhangjx
  */
 public final class WatchFactory {
 
     private static final WatchFactory instance = new WatchFactory(null);
+
+    private final List<WeakReference<WatchFactory>> chidren = new CopyOnWriteArrayList<>();
 
     private final List<WeakReference<WatchNode>> beans = new CopyOnWriteArrayList<>();
 
@@ -29,7 +33,9 @@ public final class WatchFactory {
     }
 
     public void register(WatchNode bean) {
-        if (bean != null) beans.add(new WeakReference<>(bean));
+        if (bean == null) return;
+        checkName(bean.getName());
+        beans.add(new WeakReference<>(bean));
     }
 
     public static WatchFactory root() {
@@ -37,7 +43,27 @@ public final class WatchFactory {
     }
 
     public WatchFactory createChild() {
-        return new WatchFactory(this);
+        WatchFactory child = new WatchFactory(this);
+        this.chidren.add(new WeakReference<>(child));
+        return child;
+    }
+
+    public List<WatchFactory> getChildren() {
+        List<WatchFactory> result = new ArrayList<>();
+        for (WeakReference<WatchFactory> ref : chidren) {
+            WatchFactory rf = ref.get();
+            if (rf != null) result.add(rf);
+        }
+        return result;
+    }
+
+    public List<WatchNode> getWatchNodes() {
+        List<WatchNode> result = new ArrayList<>();
+        for (WeakReference<WatchNode> ref : beans) {
+            WatchNode rf = ref.get();
+            if (rf != null) result.add(rf);
+        }
+        return result;
     }
 
     public WatchNumber createWatchNumber(String name) {
@@ -72,6 +98,12 @@ public final class WatchFactory {
 
     public void register(String name, String description, LongSupplier supplier) {
         register(new WatchSupplier(name, description, supplier));
+    }
+
+    public void checkName(String name) {
+        if (name == null || (!name.isEmpty() && !name.matches("^[a-zA-Z0-9_;/\\-\\.\\[\\]\\(\\)]+$")) || name.contains("//")) {
+            throw new IllegalArgumentException("Watch.name(" + name + ") contains illegal character, must be (a-z,A-Z,0-9,/,_,.,(,),-,[,]) and cannot contains //");
+        }
     }
 
     public boolean inject(final Object src) {

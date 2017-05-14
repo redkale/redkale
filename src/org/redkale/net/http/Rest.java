@@ -135,7 +135,7 @@ public final class Rest {
         final Class userType = hut == null ? Object.class : hut.value();
         final String supDynName = baseServletClass.getName().replace('.', '/');
         final RestService controller = serviceType.getAnnotation(RestService.class);
-        if (controller != null && controller.ignore()) return null; //标记为ignore=true不创建Servlet
+        if (controller != null && controller.ignore()) throw new RuntimeException(baseServletClass + " is ignore Rest Service Class"); //标记为ignore=true不创建Servlet
         ClassLoader loader = Sncp.class.getClassLoader();
         String newDynName = serviceTypeInternalName.substring(0, serviceTypeInternalName.lastIndexOf('/') + 1) + "_Dyn" + serviceType.getSimpleName().replaceAll("Service.*$", "") + "RestServlet";
 

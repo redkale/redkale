@@ -23,7 +23,7 @@ import org.redkale.watch.WatchFactory;
  *
  * @author zhangjx
  */
-public final class HttpServer extends Server<String, HttpContext, HttpRequest, HttpResponse, HttpServlet> {
+public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpResponse, HttpServlet> {
 
     public HttpServer() {
         this(System.currentTimeMillis(), null);
@@ -139,6 +139,7 @@ public final class HttpServer extends Server<String, HttpContext, HttpRequest, H
         }
         final boolean first = servlet == null;
         if (servlet == null) servlet = Rest.createRestServlet(baseServletClass, serviceType);
+        if (servlet == null) return null; //没有HttpMapping方法的HttpServlet调用Rest.createRestServlet就会返回null 
         try { //若提供动态变更Service服务功能，则改Rest服务无法做出相应更新
             Field field = servlet.getClass().getDeclaredField(Rest.REST_SERVICE_FIELD_NAME);
             field.setAccessible(true);
@@ -258,4 +259,21 @@ public final class HttpServer extends Server<String, HttpContext, HttpRequest, H
         return httpcontext;
     }
 
+    /**
+     * 增加可以屏蔽的URL正则表达式
+     *
+     * @param urlreg URL正则表达式
+     */
+    public void addExcludeUrlReg(final String urlreg) {
+        ((HttpPrepareServlet) this.prepare).addExcludeUrlReg(urlreg);
+    }
+
+    /**
+     * 删除可以屏蔽的URL正则表达式
+     *
+     * @param urlreg URL正则表达式
+     */
+    public void removeExcludeUrlReg(final String urlreg) {
+        ((HttpPrepareServlet) this.prepare).removeExcludeUrlReg(urlreg);
+    }
 }

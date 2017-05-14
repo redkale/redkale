@@ -11,7 +11,6 @@ import java.util.*;
 import javax.persistence.*;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.http.*;
-import org.redkale.service.*;
 import org.redkale.source.*;
 import org.redkale.util.*;
 
@@ -24,9 +23,7 @@ import org.redkale.util.*;
  *
  * @author zhangjx
  */
-@AutoLoad(false)
-@Local
-public final class ApiDocsService extends AbstractService {
+public final class ApiDocsService {
 
     private final Application app; //Application全局对象
 

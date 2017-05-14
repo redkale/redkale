@@ -41,6 +41,8 @@ public final class ResourceFactory {
 
     private static final ResourceFactory instance = new ResourceFactory(null);
 
+    private final List<WeakReference<ResourceFactory>> chidren = new CopyOnWriteArrayList<>();
+
     private final ConcurrentHashMap<Type, ResourceLoader> loadermap = new ConcurrentHashMap();
 
     private final ConcurrentHashMap<Type, ConcurrentHashMap<String, ResourceEntry>> store = new ConcurrentHashMap();
@@ -54,7 +56,18 @@ public final class ResourceFactory {
     }
 
     public ResourceFactory createChild() {
-        return new ResourceFactory(this);
+        ResourceFactory child = new ResourceFactory(this);
+        this.chidren.add(new WeakReference<>(child));
+        return child;
+    }
+
+    public List<ResourceFactory> getChildren() {
+        List<ResourceFactory> result = new ArrayList<>();
+        for (WeakReference<ResourceFactory> ref : chidren) {
+            ResourceFactory rf = ref.get();
+            if (rf != null) result.add(rf);
+        }
+        return result;
     }
 
     public void release() {

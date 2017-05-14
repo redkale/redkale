@@ -39,6 +39,50 @@ public class HttpPrepareServlet extends PrepareServlet<String, HttpContext, Http
 
     protected final Map<String, Class> allMapStrings = new HashMap<>();
 
+    private final Object excludeLock = new Object();
+
+    private Map<String, Predicate<String>> excludeUrlMaps; //禁用的URL的正则表达式, 必须与 excludeUrlPredicates 保持一致
+
+    private Predicate<String>[] excludeUrlPredicates; //禁用的URL的Predicate, 必须与 excludeUrlMaps 保持一致
+
+    public void addExcludeUrlReg(final String urlreg) {
+        if (urlreg == null || urlreg.isEmpty()) return;
+        synchronized (excludeLock) {
+            if (excludeUrlMaps != null && excludeUrlMaps.containsKey(urlreg)) return;
+            if (excludeUrlMaps == null) excludeUrlMaps = new HashMap<>();
+            Predicate<String> predicate = Pattern.compile(urlreg).asPredicate();
+            excludeUrlMaps.put(urlreg, predicate);
+            excludeUrlPredicates = Utility.append(excludeUrlPredicates, predicate);
+        }
+    }
+
+    public void removeExcludeUrlReg(final String urlreg) {
+        if (urlreg == null || urlreg.isEmpty()) return;
+        synchronized (excludeLock) {
+            if (excludeUrlMaps == null || excludeUrlPredicates == null || !excludeUrlMaps.containsKey(urlreg)) return;
+            Predicate<String> predicate = excludeUrlMaps.get(urlreg);
+            excludeUrlMaps.remove(urlreg);
+            int index = -1;
+            for (int i = 0; i < excludeUrlPredicates.length; i++) {
+                if (excludeUrlPredicates[i] == predicate) {
+                    index = i;
+                    break;
+                }
+            }
+            if (index > -1) {
+                if (excludeUrlPredicates.length == 1) {
+                    excludeUrlPredicates = null;
+                } else {
+                    int newlen = excludeUrlPredicates.length - 1;
+                    Predicate[] news = new Predicate[newlen];
+                    System.arraycopy(excludeUrlPredicates, 0, news, 0, index);
+                    System.arraycopy(excludeUrlPredicates, index + 1, news, index, newlen - index);
+                    excludeUrlPredicates = news;
+                }
+            }
+        }
+    }
+
     @Override
     public void init(HttpContext context, AnyValue config) {
         Collection<HttpServlet> servlets = getServlets();
@@ -83,6 +127,19 @@ public class HttpPrepareServlet extends PrepareServlet<String, HttpContext, Http
     public void execute(HttpRequest request, HttpResponse response) throws IOException {
         try {
             final String uri = request.getRequestURI();
+            boolean forbid = false;
+            if (excludeUrlPredicates != null && excludeUrlPredicates.length > 0) {
+                for (Predicate<String> predicate : excludeUrlPredicates) {
+                    if (predicate != null && predicate.test(uri)) {
+                        forbid = true;
+                        break;
+                    }
+                }
+            }
+            if (forbid) {
+                response.finish(403, response.getHttpCode(403));
+                return;
+            }
             Servlet<HttpContext, HttpRequest, HttpResponse> servlet = null;
             if (request.isWebSocket()) {
                 servlet = wsmappings.get(uri);

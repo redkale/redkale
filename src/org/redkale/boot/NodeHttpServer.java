@@ -5,8 +5,10 @@
  */
 package org.redkale.boot;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
 import java.net.InetSocketAddress;
+import java.nio.file.WatchService;
 import java.util.*;
 import java.util.logging.Level;
 import javax.annotation.Resource;
@@ -17,6 +19,7 @@ import org.redkale.net.sncp.Sncp;
 import org.redkale.service.*;
 import org.redkale.util.AnyValue.DefaultAnyValue;
 import org.redkale.util.*;
+import org.redkale.watch.WatchServlet;
 
 /**
  * HTTP Server节点的配置Server
@@ -50,7 +53,12 @@ public class NodeHttpServer extends NodeServer {
 
     @Override
     protected ClassFilter<Servlet> createServletClassFilter() {
-        return createClassFilter(null, WebServlet.class, HttpServlet.class, null, "servlets", "servlet");
+        return createClassFilter(null, WebServlet.class, HttpServlet.class, new Class[]{WatchServlet.class}, null, "servlets", "servlet");
+    }
+
+    @Override
+    protected ClassFilter<Service> createServiceClassFilter() {
+        return createClassFilter(this.sncpGroup, null, Service.class, new Class[]{WatchService.class}, Annotation.class, "services", "service");
     }
 
     @Override
@@ -101,6 +109,7 @@ public class NodeHttpServer extends NodeServer {
         final List<AbstractMap.SimpleEntry<String, String[]>> ss = sb == null ? null : new ArrayList<>();
         for (FilterEntry<? extends Servlet> en : list) {
             Class<HttpServlet> clazz = (Class<HttpServlet>) en.getType();
+            if (WatchServlet.class.isAssignableFrom(clazz)) continue; //给Watch服务使用
             if (Modifier.isAbstract(clazz.getModifiers())) continue;
             WebServlet ws = clazz.getAnnotation(WebServlet.class);
             if (ws == null || ws.value().length == 0) continue;
@@ -159,7 +168,7 @@ public class NodeHttpServer extends NodeServer {
             }
         }
 
-        final ClassFilter restFilter = ClassFilter.create(restConf.getValue("includes", ""), restConf.getValue("excludes", ""), includeValues, excludeValues);
+        final ClassFilter restFilter = ClassFilter.create(null, restConf.getValue("includes", ""), restConf.getValue("excludes", ""), includeValues, excludeValues);
 
         super.interceptorServices.forEach((service) -> {
             final Class stype = Sncp.getServiceType(service);
@@ -172,6 +181,7 @@ public class NodeHttpServer extends NodeServer {
             if (!restFilter.accept(stypename)) return;
 
             HttpServlet servlet = httpServer.addRestServlet(name, stype, service, baseServletClass, prefix, (AnyValue) null);
+            if (servlet == null) return; //没有HttpMapping方法的HttpServlet调用Rest.createRestServlet就会返回null 
             resourceFactory.inject(servlet, NodeHttpServer.this);
             if (finest) logger.finest(threadName + " Create RestServlet(resource.name='" + name + "') = " + servlet);
             if (ss != null) {
