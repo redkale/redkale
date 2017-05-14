@@ -244,6 +244,7 @@ public abstract class NodeServer {
                 }
                 field.set(src, source);
                 rf.inject(source, self); // 给其可能包含@Resource的字段赋值;
+                //NodeServer.this.watchFactory.inject(src);
                 if (source instanceof Service) ((Service) source).init(null);
             } catch (Exception e) {
                 logger.log(Level.SEVERE, "DataSource inject error", e);

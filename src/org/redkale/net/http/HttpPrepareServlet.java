@@ -14,7 +14,6 @@ import java.util.logging.*;
 import java.util.regex.*;
 import org.redkale.net.*;
 import org.redkale.util.*;
-import org.redkale.watch.*;
 
 /**
  * HTTP Servlet的总入口，请求在HttpPrepareServlet中进行分流。  <br>
@@ -103,12 +102,6 @@ public class HttpPrepareServlet extends PrepareServlet<String, HttpContext, Http
             s.preInit(context, getServletConf(s));
             s.init(context, getServletConf(s));
         });
-        final WatchFactory watch = context.getWatchFactory();
-        if (watch != null) {
-            servlets.forEach(s -> {
-                watch.inject(s);
-            });
-        }
         AnyValue resConfig = config.getAnyValue("resource-servlet");
         if ((resConfig instanceof DefaultAnyValue) && resConfig.getValue("webroot", "").isEmpty()) {
             ((DefaultAnyValue) resConfig).addValue("webroot", config.getValue("root"));

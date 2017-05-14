@@ -41,7 +41,7 @@ public class NodeSncpServer extends NodeServer {
     }
 
     private static Server createServer(Application application, AnyValue serconf) {
-        return new SncpServer(application.getStartTime(), application.getWatchFactory());
+        return new SncpServer(application.getStartTime());
     }
 
     @Override

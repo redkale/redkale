@@ -15,7 +15,6 @@ import jdk.internal.org.objectweb.asm.*;
 import static jdk.internal.org.objectweb.asm.Opcodes.*;
 import org.redkale.net.*;
 import org.redkale.util.*;
-import org.redkale.watch.*;
 
 /**
  * HTTP服务的上下文对象
@@ -33,9 +32,9 @@ public class HttpContext extends Context {
 
     public HttpContext(long serverStartTime, Logger logger, ExecutorService executor, int bufferCapacity, ObjectPool<ByteBuffer> bufferPool,
         ObjectPool<Response> responsePool, int maxbody, Charset charset, InetSocketAddress address, PrepareServlet prepare,
-        WatchFactory watch, int readTimeoutSecond, int writeTimeoutSecond) {
+        int readTimeoutSecond, int writeTimeoutSecond) {
         super(serverStartTime, logger, executor, bufferCapacity, bufferPool, responsePool, maxbody, charset,
-            address, prepare, watch, readTimeoutSecond, writeTimeoutSecond);
+            address, prepare, readTimeoutSecond, writeTimeoutSecond);
 
         random.setSeed(Math.abs(System.nanoTime()));
     }
@@ -44,10 +43,6 @@ public class HttpContext extends Context {
         byte[] bytes = new byte[16];
         random.nextBytes(bytes);
         return new String(Utility.binToHex(bytes));
-    }
-
-    protected WatchFactory getWatchFactory() {
-        return watch;
     }
 
     protected ExecutorService getExecutor() {

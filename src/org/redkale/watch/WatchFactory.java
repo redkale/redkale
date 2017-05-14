@@ -20,15 +20,18 @@ import java.util.function.LongSupplier;
  */
 public final class WatchFactory {
 
-    private static final WatchFactory instance = new WatchFactory(null);
+    private static final WatchFactory instance = new WatchFactory("", null);
 
     private final List<WeakReference<WatchFactory>> chidren = new CopyOnWriteArrayList<>();
 
     private final List<WeakReference<WatchNode>> beans = new CopyOnWriteArrayList<>();
 
+    private final String name;
+
     private final WatchFactory parent;
 
-    private WatchFactory(WatchFactory parent) {
+    private WatchFactory(String name, WatchFactory parent) {
+        this.name = name;
         this.parent = parent;
     }
 
@@ -42,8 +45,8 @@ public final class WatchFactory {
         return instance;
     }
 
-    public WatchFactory createChild() {
-        WatchFactory child = new WatchFactory(this);
+    public WatchFactory createChild(final String name) {
+        WatchFactory child = new WatchFactory(name, this);
         this.chidren.add(new WeakReference<>(child));
         return child;
     }
@@ -87,9 +90,7 @@ public final class WatchFactory {
     }
 
     public WatchNumber createWatchNumber(String name, String description, boolean interval, long v) {
-        WatchNumber bean = new WatchNumber(name, description, interval, v);
-        register(bean);
-        return bean;
+        return new WatchNumber(name, description, interval, v);
     }
 
     public void register(String name, LongSupplier supplier) {
@@ -106,11 +107,15 @@ public final class WatchFactory {
         }
     }
 
-    public boolean inject(final Object src) {
-        return inject(src, new ArrayList<>());
+    protected <T> boolean inject(final Object src) {
+        return inject(src, null);
     }
 
-    private boolean inject(final Object src, final List<Object> list) {
+    protected <T> boolean inject(final Object src, final T attachment) {
+        return inject(src, attachment, new ArrayList<>());
+    }
+
+    private <T> boolean inject(final Object src, final T attachment, final List<Object> list) {
         if (src == null) return false;
         try {
             list.add(src);
@@ -121,7 +126,7 @@ public final class WatchFactory {
                     field.setAccessible(true);
                     final Class type = field.getType();
                     Watchable wo = field.getAnnotation(Watchable.class);
-
+                    if (wo == null && !WatchNode.class.isAssignableFrom(type)) continue;
                 }
             } while ((clazz = clazz.getSuperclass()) != Object.class);
             return true;

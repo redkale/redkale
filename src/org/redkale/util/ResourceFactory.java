@@ -11,7 +11,6 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.BiConsumer;
 import java.util.logging.*;
-import java.util.regex.Pattern;
 import javax.annotation.Resource;
 
 /**
@@ -277,20 +276,6 @@ public final class ResourceFactory {
             if (v != null) return (A) v.value;
         }
         return null;
-    }
-
-    private <A> void load(final Pattern reg, Class<? extends A> clazz, final A exclude, final Map<String, A> result) {
-        ConcurrentHashMap<String, ResourceEntry> map = this.store.get(clazz);
-        if (map != null) {
-            for (Map.Entry<String, ResourceEntry> en : map.entrySet()) {  // 不用forEach为兼容JDK 6
-                String x = en.getKey();
-                ResourceEntry re = en.getValue();
-                if (re == null) continue;
-                Object y = re.value;
-                if (y != exclude && reg.matcher(x).find() && result.get(x) == null) result.put(x, (A) y);
-            }
-        }
-        if (parent != null) parent.load(reg, clazz, exclude, result);
     }
 
     public <T> boolean inject(final Object src) {

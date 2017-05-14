@@ -14,7 +14,6 @@ import java.util.logging.*;
 import org.redkale.convert.bson.*;
 import org.redkale.convert.json.*;
 import org.redkale.util.*;
-import org.redkale.watch.*;
 
 /**
  * 服务器上下文对象
@@ -70,12 +69,8 @@ public class Context {
     //JSON操作工厂
     protected final JsonFactory jsonFactory;
 
-    //监控对象
-    protected final WatchFactory watch;
-
     public Context(long serverStartTime, Logger logger, ExecutorService executor, int bufferCapacity, ObjectPool<ByteBuffer> bufferPool, ObjectPool<Response> responsePool,
-        final int maxbody, Charset charset, InetSocketAddress address, final PrepareServlet prepare, final WatchFactory watch,
-        final int readTimeoutSecond, final int writeTimeoutSecond) {
+        final int maxbody, Charset charset, InetSocketAddress address, final PrepareServlet prepare, final int readTimeoutSecond, final int writeTimeoutSecond) {
         this.serverStartTime = serverStartTime;
         this.logger = logger;
         this.executor = executor;
@@ -86,7 +81,6 @@ public class Context {
         this.charset = UTF8.equals(charset) ? null : charset;
         this.address = address;
         this.prepare = prepare;
-        this.watch = watch;
         this.readTimeoutSecond = readTimeoutSecond;
         this.writeTimeoutSecond = writeTimeoutSecond;
         this.jsonFactory = JsonFactory.root();

@@ -43,7 +43,7 @@ public class NodeHttpServer extends NodeServer {
     }
 
     private static Server createServer(Application application, AnyValue serconf) {
-        return new HttpServer(application.getStartTime(), application.getWatchFactory());
+        return new HttpServer(application.getStartTime());
     }
 
     @Override
@@ -114,7 +114,6 @@ public class NodeHttpServer extends NodeServer {
             WebServlet ws = clazz.getAnnotation(WebServlet.class);
             if (ws == null || ws.value().length == 0) continue;
             final HttpServlet servlet = clazz.newInstance();
-            resourceFactory.inject(servlet, this);
             final String[] mappings = ws.value();
             String pref = ws.repair() ? prefix : "";
             DefaultAnyValue servletConf = (DefaultAnyValue) en.getProperty();

@@ -15,7 +15,6 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 import org.redkale.util.AnyValue;
-import org.redkale.watch.WatchFactory;
 
 /**
  *
@@ -38,9 +37,6 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
     //-------------------------------------------------------------
     //服务的启动时间
     protected final long serverStartTime;
-
-    //监控对象
-    protected final WatchFactory watch;
 
     //服务的名称
     protected String name;
@@ -93,11 +89,10 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
     //IO写入 的超时秒数，小于1视为不设置
     protected int writeTimeoutSecond;
 
-    protected Server(long serverStartTime, String protocol, PrepareServlet<K, C, R, P, S> servlet, final WatchFactory watch) {
+    protected Server(long serverStartTime, String protocol, PrepareServlet<K, C, R, P, S> servlet) {
         this.serverStartTime = serverStartTime;
         this.protocol = protocol;
         this.prepare = servlet;
-        this.watch = watch;
     }
 
     public void init(final AnyValue config) throws Exception {
@@ -161,7 +156,6 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
     public void start() throws IOException {
         this.context = this.createContext();
         this.prepare.init(this.context, config);
-        if (this.watch != null) this.watch.inject(this.prepare);
         this.serverChannel = ProtocolServer.create(this.protocol, context);
         this.serverChannel.open();
         if (this.serverChannel.supportedOptions().contains(StandardSocketOptions.TCP_NODELAY)) {
