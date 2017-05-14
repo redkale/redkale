@@ -168,7 +168,7 @@ public class NodeHttpServer extends NodeServer {
         }
 
         final ClassFilter restFilter = ClassFilter.create(null, restConf.getValue("includes", ""), restConf.getValue("excludes", ""), includeValues, excludeValues);
-
+        final boolean finest = logger.isLoggable(Level.FINEST);
         super.interceptorServices.forEach((service) -> {
             final Class stype = Sncp.getServiceType(service);
             final String name = Sncp.getResourceName(service);

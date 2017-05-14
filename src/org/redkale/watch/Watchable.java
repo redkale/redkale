@@ -6,7 +6,7 @@
 package org.redkale.watch;
 
 import java.lang.annotation.*;
-import static java.lang.annotation.ElementType.FIELD;
+import static java.lang.annotation.ElementType.*;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
@@ -19,7 +19,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  */
 @Inherited
 @Documented
-@Target({FIELD})
+@Target({FIELD, METHOD})
 @Retention(RUNTIME)
 public @interface Watchable {
 
