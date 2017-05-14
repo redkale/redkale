@@ -6,7 +6,7 @@
 package org.redkale.boot;
 
 import java.io.*;
-import java.lang.reflect.Modifier;
+import java.lang.reflect.*;
 import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
@@ -15,13 +15,14 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 import java.util.logging.*;
+import javax.annotation.Resource;
 import javax.xml.parsers.*;
 import org.redkale.boot.ClassFilter.FilterEntry;
 import org.redkale.convert.bson.BsonFactory;
 import org.redkale.convert.json.JsonFactory;
 import org.redkale.net.*;
 import org.redkale.net.http.MimeType;
-import org.redkale.net.sncp.SncpClient;
+import org.redkale.net.sncp.*;
 import org.redkale.service.Service;
 import org.redkale.source.*;
 import org.redkale.util.AnyValue.DefaultAnyValue;
@@ -142,15 +143,15 @@ public final class Application {
 
     //Server启动的计数器，用于确保所有Server都启动完后再进行下一步处理
     private final CountDownLatch serversLatch;
-    
+
     private Application(final AnyValue config) {
         this(false, config);
     }
-    
+
     private Application(final boolean singletonrun, final AnyValue config) {
         this.singletonrun = singletonrun;
         this.config = config;
-        
+
         final File root = new File(System.getProperty(RESNAME_APP_HOME));
         this.resourceFactory.register(RESNAME_APP_TIME, long.class, this.startTime);
         this.resourceFactory.register(RESNAME_APP_HOME, Path.class, root.toPath());
@@ -193,7 +194,7 @@ public final class Application {
                 properties.entrySet().stream().forEach(x -> {
                     x.setValue(x.getValue().toString().replace("${APP_HOME}", rootpath));
                 });
-                
+
                 if (properties.getProperty("java.util.logging.FileHandler.formatter") == null) {
                     properties.setProperty("java.util.logging.FileHandler.formatter", LogFileHandler.LoggingFormater.class.getName());
                 }
@@ -275,31 +276,31 @@ public final class Application {
         this.transportExecutor = transportExec;
         this.transportChannelGroup = transportGroup;
     }
-    
+
     public ResourceFactory getResourceFactory() {
         return resourceFactory;
     }
-    
+
     public WatchFactory getWatchFactory() {
         return watchFactory;
     }
-    
+
     public List<NodeServer> getNodeServers() {
         return new ArrayList<>(servers);
     }
-    
+
     public File getHome() {
         return home;
     }
-    
+
     public long getStartTime() {
         return startTime;
     }
-    
+
     private void initLogging() {
-        
+
     }
-    
+
     public void init() throws Exception {
         System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", "" + Runtime.getRuntime().availableProcessors() * 4);
         System.setProperty("convert.bson.tiny", "true");
@@ -308,7 +309,7 @@ public final class Application {
         System.setProperty("convert.json.pool.size", "128");
         System.setProperty("convert.bson.writer.buffer.defsize", "4096");
         System.setProperty("convert.json.writer.buffer.defsize", "4096");
-        
+
         File persist = new File(this.home, "conf/persistence.xml");
         final String homepath = this.home.getCanonicalPath();
         if (persist.isFile()) System.setProperty(DataSources.DATASOURCE_CONFPATH, persist.getCanonicalPath());
@@ -359,9 +360,27 @@ public final class Application {
         this.resourceFactory.register(JsonFactory.root());
         this.resourceFactory.register(BsonFactory.root().getConvert());
         this.resourceFactory.register(JsonFactory.root().getConvert());
+        //只有WatchService才能加载Application、WatchFactory
+        final Application application = this;
+        this.resourceFactory.register((ResourceFactory rf, final Object src, String resourceName, Field field, final Object attachment) -> {
+            try {
+                Resource res = field.getAnnotation(Resource.class);
+                if (res == null || !res.name().isEmpty()) return;
+                if (!(src instanceof WatchService) || Sncp.isRemote((Service) src)) return; //远程模式不得注入 
+                Class type = field.getType();
+                if (type == Application.class) {
+                    field.set(src, application);
+                } else if (type == WatchFactory.class) {
+                    field.set(src, application.watchFactory);
+                }
+            } catch (Exception e) {
+                logger.log(Level.SEVERE, "Resource inject error", e);
+            }
+        }, Application.class, WatchFactory.class);
+        //--------------------------------------------------------------------------
         initResources();
     }
-    
+
     private void initResources() throws Exception {
         //-------------------------------------------------------------------------
         final AnyValue resources = config.getAnyValue("resources");
@@ -390,14 +409,14 @@ public final class Application {
         }
         //------------------------------------------------------------------------
     }
-    
+
     private void startSelfServer() throws Exception {
         final Application application = this;
         new Thread() {
             {
                 setName("Application-Control-Thread");
             }
-            
+
             @Override
             public void run() {
                 try {
@@ -455,7 +474,7 @@ public final class Application {
             }
         }.start();
     }
-    
+
     private void sendCommand(String command) throws Exception {
         final DatagramChannel channel = DatagramChannel.open();
         channel.configureBlocking(true);
@@ -488,7 +507,7 @@ public final class Application {
             throw e;
         }
     }
-    
+
     public void start() throws Exception {
         final AnyValue[] entrys = config.getAnyValues("server");
         CountDownLatch timecd = new CountDownLatch(entrys.length);
@@ -514,7 +533,7 @@ public final class Application {
         logger.info(this.getClass().getSimpleName() + " started in " + (System.currentTimeMillis() - startTime) + " ms");
         if (!singletonrun) this.serversLatch.await();
     }
-    
+
     @SuppressWarnings("unchecked")
     private void runServers(CountDownLatch timecd, final List<AnyValue> serconfs) throws Exception {
         this.servicecdl = new CountDownLatch(serconfs.size());
@@ -528,7 +547,7 @@ public final class Application {
                     setName(serconf.getValue("protocol", "Server").toUpperCase() + "-" + host + ":" + serconf.getIntValue("port") + "-Thread");
                     this.setDaemon(true);
                 }
-                
+
                 @Override
                 public void run() {
                     try {
@@ -594,11 +613,11 @@ public final class Application {
         }
         sercdl.await();
     }
-    
+
     public static <T extends Service> T singleton(Class<T> serviceClass) throws Exception {
         return singleton("", serviceClass);
     }
-    
+
     public static <T extends Service> T singleton(String name, Class<T> serviceClass) throws Exception {
         if (serviceClass == null) throw new IllegalArgumentException("serviceClass is null");
         final Application application = Application.create(true);
@@ -612,14 +631,14 @@ public final class Application {
         if (serviceClass.isInterface()) throw new IllegalArgumentException("interface class not allowed");
         throw new IllegalArgumentException(serviceClass.getName() + " maybe have zero not-final public method");
     }
-    
+
     public static Application create(final boolean singleton) throws IOException {
         final String home = new File(System.getProperty(RESNAME_APP_HOME, "")).getCanonicalPath();
         System.setProperty(RESNAME_APP_HOME, home);
         File appfile = new File(home, "conf/application.xml");
         return new Application(singleton, load(new FileInputStream(appfile)));
     }
-    
+
     public static void main(String[] args) throws Exception {
         Utility.midnight(); //先初始化一下Utility
         //运行主程序
@@ -641,7 +660,7 @@ public final class Application {
         }
         System.exit(0);
     }
-    
+
     Set<String> findSncpGroups(Transport sameGroupTransport, Collection<Transport> diffGroupTransports) {
         Set<String> gs = new HashSet<>();
         if (sameGroupTransport != null) gs.add(sameGroupTransport.getName());
@@ -652,7 +671,7 @@ public final class Application {
         }
         return gs;
     }
-    
+
     NodeSncpServer findNodeSncpServer(final InetSocketAddress sncpAddr) {
         for (NodeServer node : servers) {
             if (node.isSNCP() && sncpAddr.equals(node.getSncpAddress())) {
@@ -661,12 +680,12 @@ public final class Application {
         }
         return null;
     }
-    
+
     GroupInfo findGroupInfo(String group) {
         if (group == null) return null;
         return globalGroups.get(group);
     }
-    
+
     private void shutdown() throws Exception {
         servers.stream().forEach((server) -> {
             try {
@@ -677,7 +696,7 @@ public final class Application {
                 serversLatch.countDown();
             }
         });
-        
+
         for (DataSource source : dataSources) {
             try {
                 source.getClass().getMethod("close").invoke(source);
@@ -700,7 +719,7 @@ public final class Application {
             }
         }
     }
-    
+
     private static AnyValue load(final InputStream in0) {
         final DefaultAnyValue any = new DefaultAnyValue();
         try (final InputStream in = in0) {
@@ -714,7 +733,7 @@ public final class Application {
         }
         return any;
     }
-    
+
     private static void load(final DefaultAnyValue any, final Node root) {
         final String home = System.getProperty(RESNAME_APP_HOME);
         NamedNodeMap nodes = root.getAttributes();
@@ -732,6 +751,6 @@ public final class Application {
             load(sub, node);
             any.addValue(node.getNodeName(), sub);
         }
-        
+
     }
 }
