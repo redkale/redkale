@@ -82,7 +82,7 @@
                 
     </resources> 
     <!--
-        protocol: required  server所启动的协议，Redkale内置的有HTTP、SNCP，SNCP使用TCP实现; 
+        protocol: required  server所启动的协议，Redkale内置的有HTTP、SNCP、WATCH，SNCP使用TCP实现; 
         name: 服务的名称，用于监控识别，一个配置文件中的server.name不能重复,命名规则: 字母、数字、下划线、减号
         host:  服务所占address ， 默认: 0.0.0.0
         port:  required 服务所占端口 
@@ -133,7 +133,7 @@
         
         <!-- 
            REST的核心配置项
-           当Server为HTTP协议时, rest节点才有效。存在[rest]节点则Server启动时会加载REST服务, 节点可以多个
+           当Server为HTTP协议时, rest节点才有效。存在[rest]节点则Server启动时会加载REST服务, 节点可以多个,(WATCH协议不需要设置，系统会自动生成)
            base:     REST服务的BaseServlet，必须是 org.redkale.net.http.HttpServlet 的子类，且子类必须标记@HttpUserType。
            autoload：默认值"true"  默认值. 加载当前server所能使用的Servce对象;    
            includes：当autoload="true"， 拉取类名与includes中的正则表达式匹配的类, 多个正则表达式用分号;隔开
