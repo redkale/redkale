@@ -29,6 +29,9 @@ public class HelloEntity {
     @RestBody
     private byte[] bodys;
 
+    @RestUploadFile
+    private byte[] uploads;
+
     @RestBody
     private Map<String, String> bodymap;
 
@@ -121,6 +124,14 @@ public class HelloEntity {
 
     public void setBodymap(Map<String, String> bodymap) {
         this.bodymap = bodymap;
+    }
+
+    public byte[] getUploads() {
+        return uploads;
+    }
+
+    public void setUploads(byte[] uploads) {
+        this.uploads = uploads;
     }
 
     @Override

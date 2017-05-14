@@ -5,6 +5,7 @@
  */
 package org.redkale.convert;
 
+import java.io.File;
 import java.lang.reflect.*;
 import java.math.BigInteger;
 import java.net.*;
@@ -91,6 +92,7 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
             this.register(Class.class, TypeSimpledCoder.instance);
             this.register(InetSocketAddress.class, InetSocketAddressSimpledCoder.instance);
             this.register(Pattern.class, PatternSimpledCoder.instance);
+            this.register(File.class, FileSimpledCoder.instance);
             this.register(CompletionHandler.class, CompletionHandlerSimpledCoder.instance);
             this.register(AsyncHandler.class, AsyncHandlerSimpledCoder.instance);
             this.register(URL.class, URLSimpledCoder.instance);

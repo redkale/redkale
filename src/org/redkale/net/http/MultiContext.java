@@ -87,10 +87,103 @@ public final class MultiContext {
         return this.boundary != null;
     }
 
+    //或被 REST 用到 
+    /**
+     * 获取第一个文件的二进制
+     *
+     * @param max            可接收的文件大小最大值
+     * @param filenameReg    可接收的文件名正则表达式
+     * @param contentTypeReg 可接收的ContentType正则表达式
+     *
+     * @return 二进制文件
+     * @throws IOException
+     */
+    public byte[] partsFirstBytes(final long max, final String filenameReg, final String contentTypeReg) throws IOException {
+        if (!isMultipart()) return null;
+        for (MultiPart part : parts()) {
+            if (filenameReg != null && !filenameReg.isEmpty() && !part.getFilename().matches(filenameReg)) return null;
+            if (contentTypeReg != null && !contentTypeReg.isEmpty() && !part.getContentType().matches(contentTypeReg)) return null;
+            return part.getContentBytes(max < 1 ? Long.MAX_VALUE : max);
+        }
+        return null;
+    }
+
+    //或被 REST 用到 
+    /**
+     * 获取第一个文件
+     *
+     * @param home           进程目录
+     * @param max            可接收的文件大小最大值
+     * @param filenameReg    可接收的文件名正则表达式
+     * @param contentTypeReg 可接收的ContentType正则表达式
+     *
+     * @return 文件
+     * @throws IOException
+     */
+    public File partsFirstFile(final File home, final long max, final String filenameReg, final String contentTypeReg) throws IOException {
+        if (!isMultipart()) return null;
+        for (MultiPart part : parts()) {
+            if (filenameReg != null && !filenameReg.isEmpty() && !part.getFilename().matches(filenameReg)) return null;
+            if (contentTypeReg != null && !contentTypeReg.isEmpty() && !part.getContentType().matches(contentTypeReg)) return null;
+            String name = part.getFilename();
+            int pos = name.lastIndexOf('.');
+            if (pos > 0) {
+                int pos2 = name.lastIndexOf('.', pos - 1);
+                if (pos2 >= 0) pos = pos2;
+            }
+            File file = new File(home, "tmp/redkale_" + System.nanoTime() + (pos > 0 ? name.substring(pos) : name));
+            file.getParentFile().mkdirs();
+            boolean rs = part.save(max < 1 ? Long.MAX_VALUE : max, file);
+            if (!rs) {
+                file.delete();
+                return null;
+            }
+            return file;
+        }
+        return null;
+    }
+
+    //或被 REST 用到 
+    /**
+     * 获取所有文件
+     *
+     * @param home           进程目录
+     * @param max            可接收的文件大小最大值
+     * @param filenameReg    可接收的文件名正则表达式
+     * @param contentTypeReg 可接收的ContentType正则表达式
+     *
+     * @return 文件列表
+     * @throws IOException
+     */
+    public File[] partsFiles(final File home, final long max, final String filenameReg, final String contentTypeReg) throws IOException {
+        if (!isMultipart()) return null;
+        List<File> files = null;
+        for (MultiPart part : parts()) {
+            if (filenameReg != null && !filenameReg.isEmpty() && !part.getFilename().matches(filenameReg)) continue;
+            if (contentTypeReg != null && !contentTypeReg.isEmpty() && !part.getContentType().matches(contentTypeReg)) continue;
+            String name = part.getFilename();
+            int pos = name.lastIndexOf('.');
+            if (pos > 0) {
+                int pos2 = name.lastIndexOf('.', pos - 1);
+                if (pos2 >= 0) pos = pos2;
+            }
+            File file = new File(home, "tmp/redkale_" + System.nanoTime() + (pos > 0 ? name.substring(pos) : name));
+            file.getParentFile().mkdirs();
+            boolean rs = part.save(max < 1 ? Long.MAX_VALUE : max, file);
+            if (!rs) {
+                file.delete();
+                continue;
+            }
+            if (files == null) files = new ArrayList<>();
+            files.add(file);
+        }
+        return files == null ? null : files.toArray(new File[files.size()]);
+    }
+
     /**
      * 获取上传文件信息列表
      *
-     * @return Iterable 
+     * @return Iterable
      * @throws IOException IOException
      */
     public Iterable<MultiPart> parts() throws IOException {
