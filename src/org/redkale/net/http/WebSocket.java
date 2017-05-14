@@ -81,7 +81,7 @@ public abstract class WebSocket {
 
     private final long createtime = System.currentTimeMillis();
 
-    private final Map<String, Object> attributes = new ConcurrentHashMap<>();
+    private  Map<String, Object> attributes = new HashMap<>(); //非线程安全
 
     protected WebSocket() {
     }
@@ -386,7 +386,7 @@ public abstract class WebSocket {
     }
 
     /**
-     * 获取当前WebSocket下的属性
+     * 获取当前WebSocket下的属性，非线程安全
      *
      * @param <T>  属性值的类型
      * @param name 属性名
@@ -395,11 +395,11 @@ public abstract class WebSocket {
      */
     @SuppressWarnings("unchecked")
     public final <T> T getAttribute(String name) {
-        return (T) attributes.get(name);
+        return attributes == null ? null : (T) attributes.get(name);
     }
 
     /**
-     * 移出当前WebSocket下的属性
+     * 移出当前WebSocket下的属性，非线程安全
      *
      * @param <T>  属性值的类型
      * @param name 属性名
@@ -407,16 +407,17 @@ public abstract class WebSocket {
      * @return 属性值
      */
     public final <T> T removeAttribute(String name) {
-        return (T) attributes.remove(name);
+        return attributes == null ? null : (T)  attributes.remove(name);
     }
 
     /**
-     * 给当前WebSocket下的增加属性
+     * 给当前WebSocket下的增加属性，非线程安全
      *
      * @param name  属性值
      * @param value 属性值
      */
     public final void setAttribute(String name, Object value) {
+        if(attributes == null) attributes = new HashMap<>();
         attributes.put(name, value);
     }
 
