@@ -41,16 +41,29 @@ public class HttpPrepareServlet extends PrepareServlet<String, HttpContext, Http
 
     private final Object excludeLock = new Object();
 
-    private Map<String, Predicate<String>> excludeUrlMaps; //禁用的URL的正则表达式, 必须与 excludeUrlPredicates 保持一致
+    private Map<String, BiPredicate<String, String>> excludeUrlMaps; //禁用的URL的正则表达式, 必须与 excludeUrlPredicates 保持一致
 
-    private Predicate<String>[] excludeUrlPredicates; //禁用的URL的Predicate, 必须与 excludeUrlMaps 保持一致
+    private BiPredicate<String, String>[] excludeUrlPredicates; //禁用的URL的Predicate, 必须与 excludeUrlMaps 保持一致
 
     public void addExcludeUrlReg(final String urlreg) {
         if (urlreg == null || urlreg.isEmpty()) return;
         synchronized (excludeLock) {
             if (excludeUrlMaps != null && excludeUrlMaps.containsKey(urlreg)) return;
             if (excludeUrlMaps == null) excludeUrlMaps = new HashMap<>();
-            Predicate<String> predicate = Pattern.compile(urlreg).asPredicate();
+            String mapping = urlreg;
+            if (Utility.contains(mapping, '.', '*', '{', '[', '(', '|', '^', '$', '+', '?', '\\')) { //是否是正则表达式))
+                if (mapping.endsWith("/*")) {
+                    mapping = mapping.substring(0, mapping.length() - 1) + ".*";
+                } else {
+                    mapping = mapping + "$";
+                }
+            }
+            final String reg = mapping;
+            final boolean begin = mapping.charAt(0) == '^';
+            final Predicate regPredicate = Pattern.compile(reg).asPredicate();
+            BiPredicate<String, String> predicate = (prefix, uri) -> {
+                return begin || prefix.isEmpty() ? regPredicate.test(uri) : uri.matches(prefix + reg);
+            };
             excludeUrlMaps.put(urlreg, predicate);
             excludeUrlPredicates = Utility.append(excludeUrlPredicates, predicate);
         }
@@ -60,7 +73,7 @@ public class HttpPrepareServlet extends PrepareServlet<String, HttpContext, Http
         if (urlreg == null || urlreg.isEmpty()) return;
         synchronized (excludeLock) {
             if (excludeUrlMaps == null || excludeUrlPredicates == null || !excludeUrlMaps.containsKey(urlreg)) return;
-            Predicate<String> predicate = excludeUrlMaps.get(urlreg);
+            BiPredicate<String, String> predicate = excludeUrlMaps.get(urlreg);
             excludeUrlMaps.remove(urlreg);
             int index = -1;
             for (int i = 0; i < excludeUrlPredicates.length; i++) {
@@ -74,7 +87,7 @@ public class HttpPrepareServlet extends PrepareServlet<String, HttpContext, Http
                     excludeUrlPredicates = null;
                 } else {
                     int newlen = excludeUrlPredicates.length - 1;
-                    Predicate[] news = new Predicate[newlen];
+                    BiPredicate[] news = new BiPredicate[newlen];
                     System.arraycopy(excludeUrlPredicates, 0, news, 0, index);
                     System.arraycopy(excludeUrlPredicates, index + 1, news, index, newlen - index);
                     excludeUrlPredicates = news;
@@ -127,20 +140,7 @@ public class HttpPrepareServlet extends PrepareServlet<String, HttpContext, Http
     public void execute(HttpRequest request, HttpResponse response) throws IOException {
         try {
             final String uri = request.getRequestURI();
-            boolean forbid = false;
-            if (excludeUrlPredicates != null && excludeUrlPredicates.length > 0) {
-                for (Predicate<String> predicate : excludeUrlPredicates) {
-                    if (predicate != null && predicate.test(uri)) {
-                        forbid = true;
-                        break;
-                    }
-                }
-            }
-            if (forbid) {
-                response.finish(403, response.getHttpCode(403));
-                return;
-            }
-            Servlet<HttpContext, HttpRequest, HttpResponse> servlet = null;
+            HttpServlet servlet = null;
             if (request.isWebSocket()) {
                 servlet = wsmappings.get(uri);
                 if (servlet == null && this.regWsArray != null) {
@@ -167,6 +167,19 @@ public class HttpPrepareServlet extends PrepareServlet<String, HttpContext, Http
                 }
                 //找不到匹配的HttpServlet则使用静态资源HttpResourceServlet
                 if (servlet == null) servlet = this.resourceHttpServlet;
+            }
+            boolean forbid = false;
+            if (excludeUrlPredicates != null && excludeUrlPredicates.length > 0) {
+                for (BiPredicate<String, String> predicate : excludeUrlPredicates) {
+                    if (predicate != null && predicate.test(servlet._prefix, uri)) {
+                        forbid = true;
+                        break;
+                    }
+                }
+            }
+            if (forbid) {
+                response.finish(403, response.getHttpCode(403));
+                return;
             }
             servlet.execute(request, response);
         } catch (Exception e) {
