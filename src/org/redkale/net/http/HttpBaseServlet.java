@@ -163,7 +163,7 @@ public abstract class HttpBaseServlet extends HttpServlet {
     }
 
     /**
-     * 使用 org.redkale.net.http.HttpCacheable 替代。
+     * 使用 org.redkale.net.http.HttpMapping.cacheseconds 替代。
      *
      * @deprecated
      * @author zhangjx
