@@ -22,7 +22,6 @@ import org.redkale.net.sncp.*;
 import org.redkale.service.Service;
 import org.redkale.util.AnyValue.DefaultAnyValue;
 import org.redkale.util.*;
-import org.redkale.watch.WatchFactory;
 
 /**
  *
@@ -49,7 +48,7 @@ public class ABMainService implements Service {
         cserver.start();
 
         //------------------------ 初始化 BCService ------------------------------------
-        final Transport bctransport = new Transport("", WatchFactory.root(), "", newBufferPool(), newChannelGroup(), null, Utility.ofSet(new InetSocketAddress("127.0.0.1", 5577)));
+        final Transport bctransport = new Transport("", "", newBufferPool(), newChannelGroup(), null, Utility.ofSet(new InetSocketAddress("127.0.0.1", 5577)));
         BCService bcservice = Sncp.createLocalService("", null, ResourceFactory.root(), BCService.class, new InetSocketAddress("127.0.0.1", 5588), "", new HashSet<>(), (AnyValue) null, bctransport, null);
         CService remoteCService = Sncp.createRemoteService("", null, CService.class, new InetSocketAddress("127.0.0.1", 5588), "", new HashSet<>(), (AnyValue) null, bctransport);
         factory.inject(remoteCService);
@@ -61,7 +60,7 @@ public class ABMainService implements Service {
         bcserver.start();
 
         //------------------------ 初始化 ABMainService ------------------------------------
-        final Transport abtransport = new Transport("", WatchFactory.root(), "", newBufferPool(), newChannelGroup(), null, Utility.ofSet(new InetSocketAddress("127.0.0.1", 5588)));
+        final Transport abtransport = new Transport("", "", newBufferPool(), newChannelGroup(), null, Utility.ofSet(new InetSocketAddress("127.0.0.1", 5588)));
         ABMainService service = Sncp.createLocalService("", null, ResourceFactory.root(), ABMainService.class, new InetSocketAddress("127.0.0.1", 5599), "", new HashSet<>(), (AnyValue) null, bctransport, null);
         BCService remoteBCService = Sncp.createRemoteService("", null, BCService.class, new InetSocketAddress("127.0.0.1", 5599), "", new HashSet<>(), (AnyValue) null, abtransport);
         factory.inject(remoteBCService);
@@ -91,7 +90,7 @@ public class ABMainService implements Service {
         //异步方法
         url = "http://127.0.0.1:" + abport + "/pipes/abmain/asyncabtime2/张先生";
         System.out.println(Utility.postHttpContent(url));
-        
+
         server.shutdown();
     }
 
@@ -193,7 +192,7 @@ public class ABMainService implements Service {
 
             @Override
             public int id2() {
-               return 2;
+                return 2;
             }
         }, name);
     }

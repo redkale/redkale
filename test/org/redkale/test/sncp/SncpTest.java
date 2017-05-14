@@ -18,7 +18,6 @@ import org.redkale.net.Transport;
 import org.redkale.net.sncp.*;
 import org.redkale.service.Service;
 import org.redkale.util.*;
-import org.redkale.watch.WatchFactory;
 
 /**
  *
@@ -81,7 +80,7 @@ public class SncpTest {
         set.add(addr);
         if (port2 > 0) set.add(new InetSocketAddress(myhost, port2));
         //String name, WatchFactory, ObjectPool<ByteBuffer>, AsynchronousChannelGroup, InetSocketAddress clientAddress, Collection<InetSocketAddress>
-        final Transport transport = new Transport("", WatchFactory.root(), "", newBufferPool(), newChannelGroup(), null, set);
+        final Transport transport = new Transport("", "", newBufferPool(), newChannelGroup(), null, set);
         final SncpTestIService service = Sncp.createSimpleRemoteService(serviceName, SncpTestIService.class, addr, transport);
         ResourceFactory.root().inject(service);
 
@@ -158,7 +157,7 @@ public class SncpTest {
                     Set<InetSocketAddress> set = new LinkedHashSet<>();
                     if (port2 > 0) set.add(new InetSocketAddress(myhost, port2));
                     //String name, WatchFactory, ObjectPool<ByteBuffer>, AsynchronousChannelGroup, InetSocketAddress clientAddress, Collection<InetSocketAddress>
-                    final Transport transport = new Transport("", WatchFactory.root(), "", newBufferPool(), newChannelGroup(), null, set);
+                    final Transport transport = new Transport("", "", newBufferPool(), newChannelGroup(), null, set);
                     SncpTestIService service = Sncp.createSimpleLocalService("", SncpTestServiceImpl.class, addr, transport);
                     ResourceFactory.root().inject(service);
                     server.addSncpServlet(service);
@@ -192,7 +191,7 @@ public class SncpTest {
                     Set<InetSocketAddress> set = new LinkedHashSet<>();
                     set.add(new InetSocketAddress(myhost, port));
                     //String name, WatchFactory, ObjectPool<ByteBuffer>, AsynchronousChannelGroup, InetSocketAddress clientAddress, Collection<InetSocketAddress>
-                    final Transport transport = new Transport("", WatchFactory.root(), "", newBufferPool(), newChannelGroup(), null, set);
+                    final Transport transport = new Transport("", "", newBufferPool(), newChannelGroup(), null, set);
                     Service service = Sncp.createSimpleLocalService("", SncpTestServiceImpl.class, addr, transport);
                     server.addSncpServlet(service);
                     AnyValue.DefaultAnyValue conf = new AnyValue.DefaultAnyValue();

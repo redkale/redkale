@@ -13,7 +13,6 @@ import java.util.concurrent.*;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.redkale.util.ObjectPool;
-import org.redkale.watch.WatchFactory;
 
 /**
  * 传输客户端
@@ -50,8 +49,6 @@ public final class Transport {
 
     protected final String protocol;
 
-    protected final WatchFactory watch;
-
     protected final AsynchronousChannelGroup group;
 
     protected final InetSocketAddress clientAddress;
@@ -62,15 +59,14 @@ public final class Transport {
 
     protected final ConcurrentHashMap<SocketAddress, BlockingQueue<AsyncConnection>> connPool = new ConcurrentHashMap<>();
 
-    public Transport(String name, WatchFactory watch, String subprotocol, final ObjectPool<ByteBuffer> transportBufferPool,
+    public Transport(String name, String subprotocol, final ObjectPool<ByteBuffer> transportBufferPool,
         final AsynchronousChannelGroup transportChannelGroup, final InetSocketAddress clientAddress, final Collection<InetSocketAddress> addresses) {
-        this(name, DEFAULT_PROTOCOL, watch, subprotocol, transportBufferPool, transportChannelGroup, clientAddress, addresses);
+        this(name, DEFAULT_PROTOCOL, subprotocol, transportBufferPool, transportChannelGroup, clientAddress, addresses);
     }
 
-    public Transport(String name, String protocol, WatchFactory watch, String subprotocol, final ObjectPool<ByteBuffer> transportBufferPool,
+    public Transport(String name, String protocol, String subprotocol, final ObjectPool<ByteBuffer> transportBufferPool,
         final AsynchronousChannelGroup transportChannelGroup, final InetSocketAddress clientAddress, final Collection<InetSocketAddress> addresses) {
         this.name = name;
-        this.watch = watch;
         this.subprotocol = subprotocol == null ? "" : subprotocol.trim();
         this.protocol = protocol;
         this.tcp = "TCP".equalsIgnoreCase(protocol);
@@ -92,7 +88,7 @@ public final class Transport {
         if (first == null) throw new NullPointerException("Collection<Transport> is null or empty");
         //必须按字母排列顺序确保，相同内容的transport列表组合的name相同，而不会因为list的顺序不同产生不同的name
         this.name = tmpgroup.stream().sorted().collect(Collectors.joining(";"));
-        this.watch = first.watch;
+        //this.watch = first.watch;
         this.subprotocol = first.subprotocol;
         this.protocol = first.protocol;
         this.tcp = "TCP".equalsIgnoreCase(first.protocol);

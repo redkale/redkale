@@ -445,7 +445,7 @@ public abstract class NodeServer {
         transports.forEach(t -> addrs.addAll(Arrays.asList(t.getRemoteAddresses())));
         Transport first = transports.get(0);
         GroupInfo ginfo = application.findGroupInfo(first.getName());
-        Transport newTransport = new Transport(groupid, ginfo.getProtocol(), application.getWatchFactory(),
+        Transport newTransport = new Transport(groupid, ginfo.getProtocol(),
             ginfo.getSubprotocol(), application.transportBufferPool, application.transportChannelGroup, this.sncpAddress, addrs);
         synchronized (application.resourceFactory) {
             transport = application.resourceFactory.find(groupid, Transport.class);
@@ -471,8 +471,7 @@ public abstract class NodeServer {
             GroupInfo ginfo = application.findGroupInfo(group);
             Set<InetSocketAddress> addrs = ginfo.copyAddrs();
             if (addrs == null) throw new RuntimeException("Not found <group> = " + group + " on <resources> ");
-            transport = new Transport(group, ginfo.getProtocol(), application.getWatchFactory(),
-                ginfo.getSubprotocol(), application.transportBufferPool, application.transportChannelGroup, this.sncpAddress, addrs);
+            transport = new Transport(group, ginfo.getProtocol(), ginfo.getSubprotocol(), application.transportBufferPool, application.transportChannelGroup, this.sncpAddress, addrs);
             application.resourceFactory.register(group, transport);
         }
         return transport;

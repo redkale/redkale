@@ -130,8 +130,7 @@ public final class Application {
     private final boolean singletonrun;
 
     //根WatchFactory
-    private final WatchFactory watchFactory = WatchFactory.root();
-
+    //private final WatchFactory watchFactory = WatchFactory.root();
     //进程根目录
     private final File home;
 
@@ -245,8 +244,8 @@ public final class Application {
             if (groupsize > 0 && transportConf == null) transportConf = new DefaultAnyValue();
             if (transportConf != null) {
                 //--------------transportBufferPool-----------
-                AtomicLong createBufferCounter = watchFactory == null ? new AtomicLong() : watchFactory.createWatchNumber(Transport.class.getSimpleName() + ".Buffer.creatCounter");
-                AtomicLong cycleBufferCounter = watchFactory == null ? new AtomicLong() : watchFactory.createWatchNumber(Transport.class.getSimpleName() + ".Buffer.cycleCounter");
+                AtomicLong createBufferCounter = new AtomicLong();
+                AtomicLong cycleBufferCounter = new AtomicLong();
                 final int bufferCapacity = transportConf.getIntValue("bufferCapacity", 8 * 1024);
                 final int bufferPoolSize = transportConf.getIntValue("bufferPoolSize", groupsize * Runtime.getRuntime().availableProcessors() * 8);
                 final int threads = transportConf.getIntValue("threads", groupsize * Runtime.getRuntime().availableProcessors() * 8);
@@ -281,10 +280,10 @@ public final class Application {
         return resourceFactory;
     }
 
-    public WatchFactory getWatchFactory() {
-        return watchFactory;
-    }
-
+//    public WatchFactory getWatchFactory() {
+//        return watchFactory;
+//    }
+    
     public List<NodeServer> getNodeServers() {
         return new ArrayList<>(servers);
     }
@@ -370,8 +369,8 @@ public final class Application {
                 Class type = field.getType();
                 if (type == Application.class) {
                     field.set(src, application);
-                } else if (type == WatchFactory.class) {
-                    field.set(src, application.watchFactory);
+//                } else if (type == WatchFactory.class) {
+//                    field.set(src, application.watchFactory);
                 }
             } catch (Exception e) {
                 logger.log(Level.SEVERE, "Resource inject error", e);
