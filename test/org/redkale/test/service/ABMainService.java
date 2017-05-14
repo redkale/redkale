@@ -70,7 +70,7 @@ public class ABMainService implements Service {
         HttpServer server = new HttpServer();
         server.getLogger().setLevel(Level.WARNING);
 
-        server.addRestServlet("", ABMainService.class, service, DefaultRestServlet.class, "/pipes");
+        server.addRestServlet("", ABMainService.class, service, HttpServlet.class, "/pipes");
 
         factory.inject(cservice);
         factory.inject(bcservice);
@@ -111,7 +111,7 @@ public class ABMainService implements Service {
         HttpServer server = new HttpServer();
         server.getLogger().setLevel(Level.WARNING);
 
-        server.addRestServlet("", ABMainService.class, service, DefaultRestServlet.class, "/pipes");
+        server.addRestServlet("", ABMainService.class, service, HttpServlet.class, "/pipes");
 
         server.init(DefaultAnyValue.create("port", "" + abport));
         server.start();
