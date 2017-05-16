@@ -50,14 +50,6 @@ public @interface WebServlet {
     int moduleid() default 0;
 
     /**
-     * 是否鉴权，默认不鉴权 <br>
-     * 标记为不鉴权的HttpServlet， 其内部所有方法都将不进行鉴权
-     *
-     * @return boolean
-     */
-    boolean auth() default false;
-
-    /**
      * 备注描述
      *
      * @return String

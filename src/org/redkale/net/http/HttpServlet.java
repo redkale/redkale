@@ -164,7 +164,6 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
     private HashMap<String, Entry> load() {
         WebServlet module = this.getClass().getAnnotation(WebServlet.class);
         final int serviceid = module == null ? 0 : module.moduleid();
-        final boolean typeIgnore = module == null ? true : !module.auth();
         final HashMap<String, Entry> map = new HashMap<>();
         HashMap<String, Class> nameset = new HashMap<>();
         final Class selfClz = this.getClass();
@@ -196,7 +195,7 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
                     throw new RuntimeException(this.getClass().getSimpleName() + " have two same " + HttpMapping.class.getSimpleName() + "(" + name + ")");
                 }
                 nameset.put(name, clz);
-                map.put(name, new Entry(typeIgnore, serviceid, actionid, name, methods, method, createHttpServlet(method)));
+                map.put(name, new Entry(serviceid, actionid, name, methods, method, createHttpServlet(method)));
             }
         } while ((clz = clz.getSuperclass()) != HttpServlet.class);
         return map;
@@ -283,7 +282,7 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
 
     private static final class Entry {
 
-        public Entry(boolean typeIgnore, int moduleid, int actionid, String name, String[] methods, Method method, HttpServlet servlet) {
+        public Entry(int moduleid, int actionid, String name, String[] methods, Method method, HttpServlet servlet) {
             this.moduleid = moduleid;
             this.actionid = actionid;
             this.name = name;
@@ -291,7 +290,7 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
             this.method = method;
             this.servlet = servlet;
             HttpMapping mapping = method.getAnnotation(HttpMapping.class);
-            this.ignore = typeIgnore || (mapping == null || !mapping.auth());
+            this.ignore = mapping == null || !mapping.auth();
             this.cacheseconds = mapping == null ? 0 : mapping.cacheseconds();
             this.cache = cacheseconds > 0 ? new ConcurrentHashMap() : null;
             this.cacheHandler = cacheseconds > 0 ? (HttpResponse response, ByteBuffer[] buffers) -> {

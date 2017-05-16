@@ -164,7 +164,6 @@ public final class Rest {
         { //注入 @WebServlet 注解
             String urlpath = "/" + defmodulename + "/*";
             int moduleid = controller == null ? 0 : controller.moduleid();
-            boolean auth = controller == null ? false : controller.auth();
             boolean repair = controller == null ? true : controller.repair();
             String comment = controller == null ? "" : controller.comment();
             av0 = cw.visitAnnotation(webServletDesc, true);
@@ -174,13 +173,11 @@ public final class Rest {
                 av1.visitEnd();
             }
             av0.visit("moduleid", moduleid);
-            av0.visit("auth", auth);
             av0.visit("repair", repair);
             av0.visit("comment", comment);
             av0.visitEnd();
             classMap.put("type", serviceType.getName());
             classMap.put("url", urlpath);
-            classMap.put("auth", auth);
             classMap.put("moduleid", moduleid);
             classMap.put("repair", repair);
             classMap.put("comment", comment);
