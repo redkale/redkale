@@ -51,6 +51,14 @@ public @interface RestService {
     boolean ignore() default false;
 
     /**
+     * 是否鉴权，默认不鉴权 <br>
+     * 同&#64;WebServlet的auth属性
+     *
+     * @return boolean
+     */
+    boolean auth() default false;
+    
+    /**
      * 同&#64;WebServlet的repair属性
      *
      * @return 默认true
