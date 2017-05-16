@@ -37,16 +37,11 @@ public class WebSocketNodeService extends WebSocketNode implements Service {
     @Override
     public CompletableFuture<List<String>> getOnlineRemoteAddresses(final @RpcTargetAddress InetSocketAddress targetAddress, final Serializable groupid) {
         if (localSncpAddress == null || !localSncpAddress.equals(targetAddress)) return remoteOnlineRemoteAddresses(targetAddress, groupid);
+        if (this._localEngine == null) return CompletableFuture.completedFuture(new ArrayList<>());
         return CompletableFuture.supplyAsync(() -> {
-            final Set<String> engineids = localEngineids.get(groupid);
-            if (engineids == null || engineids.isEmpty()) return null;
             final List<String> rs = new ArrayList<>();
-            for (String engineid : engineids) {
-                final WebSocketEngine engine = localEngines.get(engineid);
-                if (engine == null) continue;
-                final WebSocketGroup group = engine.getWebSocketGroup(groupid);
-                group.getWebSockets().forEach(x -> rs.add("ws" + Objects.hashCode(x) + '@' + x.getRemoteAddr()));
-            }
+            final WebSocketGroup group = this._localEngine.getWebSocketGroup(groupid);
+            if (group != null) group.getWebSockets().forEach(x -> rs.add("ws" + Objects.hashCode(x) + '@' + x.getRemoteAddr()));
             return rs;
         });
     }
@@ -54,36 +49,45 @@ public class WebSocketNodeService extends WebSocketNode implements Service {
     @Override
     public CompletableFuture<Integer> sendMessage(@RpcTargetAddress InetSocketAddress addr, Serializable groupid, boolean recent, Object message, boolean last) {
         return CompletableFuture.supplyAsync(() -> {
-            final Set<String> engineids = localEngineids.get(groupid);
-            if (engineids == null || engineids.isEmpty()) return RETCODE_GROUP_EMPTY;
-            int code = RETCODE_GROUP_EMPTY;
-            for (String engineid : engineids) {
-                final WebSocketEngine engine = localEngines.get(engineid);
-                if (engine != null) { //在本地
-                    final WebSocketGroup group = engine.getWebSocketGroup(groupid);
-                    if (group == null || group.isEmpty()) {
-                        if (finest) logger.finest("receive websocket message {engineid:'" + engineid + "', groupid:" + groupid + ", content:'" + message + "'} from " + addr + " but send result is " + RETCODE_GROUP_EMPTY);
-                        return RETCODE_GROUP_EMPTY;
-                    }
-                    code = group.send(recent, message, last);
-                    if (finest) logger.finest("websocket node send message (" + message + ") from " + addr + " result is " + code);
-                }
+            if (this._localEngine == null) return RETCODE_GROUP_EMPTY;
+            final WebSocketGroup group = this._localEngine.getWebSocketGroup(groupid);
+            if (group == null || group.isEmpty()) {
+                if (finest) logger.finest("receive websocket message {engineid:'" + this._localEngine.getEngineid() + "', groupid:" + groupid + ", content:'" + message + "'} from " + addr + " but send result is " + RETCODE_GROUP_EMPTY);
+                return RETCODE_GROUP_EMPTY;
             }
+            int code = group.send(recent, message, last);
+            if (finest) logger.finest("websocket node send message (" + message + ") from " + addr + " result is " + code);
             return code;
         });
     }
 
+    /**
+     * 当用户连接到节点，需要更新到CacheSource
+     *
+     * @param groupid  String
+     * @param sncpAddr InetSocketAddress
+     *
+     * @return 无返回值
+     */
     @Override
-    public CompletableFuture<Void> connect(Serializable groupid, InetSocketAddress addr) {
-        CompletableFuture<Void> future = sncpAddressNodes.appendSetItemAsync(groupid, addr);
-        if (finest) logger.finest(WebSocketNodeService.class.getSimpleName() + ".event: " + groupid + " connect from " + addr);
+    public CompletableFuture<Void> connect(Serializable groupid, InetSocketAddress sncpAddr) {
+        CompletableFuture<Void> future = sncpAddressNodes.appendSetItemAsync(groupid, sncpAddr);
+        if (finest) logger.finest(WebSocketNodeService.class.getSimpleName() + ".event: " + groupid + " connect from " + sncpAddr);
         return future;
     }
 
+    /**
+     * 当用户从一个节点断掉了所有的连接，需要从CacheSource中删除
+     *
+     * @param groupid  String
+     * @param sncpAddr InetSocketAddress
+     *
+     * @return 无返回值
+     */
     @Override
-    public CompletableFuture<Void> disconnect(Serializable groupid, InetSocketAddress addr) {
-        CompletableFuture<Void> future = sncpAddressNodes.removeSetItemAsync(groupid, addr);
-        if (finest) logger.finest(WebSocketNodeService.class.getSimpleName() + ".event: " + groupid + " disconnect from " + addr);
+    public CompletableFuture<Void> disconnect(Serializable groupid, InetSocketAddress sncpAddr) {
+        CompletableFuture<Void> future = sncpAddressNodes.removeSetItemAsync(groupid, sncpAddr);
+        if (finest) logger.finest(WebSocketNodeService.class.getSimpleName() + ".event: " + groupid + " disconnect from " + sncpAddr);
         return future;
     }
 }

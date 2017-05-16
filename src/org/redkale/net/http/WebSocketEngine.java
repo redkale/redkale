@@ -79,21 +79,21 @@ public final class WebSocketEngine {
         if (group == null) {
             group = new WebSocketGroup(socket._groupid);
             containers.putIfAbsent(socket._groupid, group);
+            if (node != null) node.connect(socket._groupid);
         }
         group.add(socket);
-        if (node != null) node.connect(socket._groupid, engineid);
     }
 
     void remove(WebSocket socket) { //非线程安全， 在常规场景中无需锁
         final WebSocketGroup group = containers.get(socket._groupid);
         if (group == null) {
-            if (node != null) node.disconnect(socket._groupid, engineid);
+            if (node != null) node.disconnect(socket._groupid);
             return;
         }
         group.remove(socket);
         if (group.isEmpty()) {
             containers.remove(socket._groupid);
-            if (node != null) node.disconnect(socket._groupid, engineid);
+            if (node != null) node.disconnect(socket._groupid);
         }
     }
 

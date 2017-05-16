@@ -13,7 +13,7 @@ import java.util.*;
 import java.util.logging.*;
 import javax.annotation.*;
 import org.redkale.convert.json.JsonConvert;
-import org.redkale.service.WebSocketNodeService;
+import org.redkale.service.*;
 import org.redkale.util.*;
 
 /**
@@ -76,11 +76,11 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
         InetSocketAddress addr = context.getServerAddress();
         this.engine = new WebSocketEngine(addr.getHostString() + ":" + addr.getPort() + "-[" + resourceName() + "]", this.node, logger);
         if (this.node == null) this.node = createWebSocketNode();
-        if (this.node == null) {
+        if (this.node == null) {  //没有部署SNCP，即不是分布式
             this.node = new WebSocketNodeService();
             if (logger.isLoggable(Level.WARNING)) logger.warning("Not found WebSocketNode, create a default value for " + getClass().getName());
         }
-        this.node.putWebSocketEngine(engine);
+        this.node._localEngine = engine; //存在WebSocketServlet，则此WebSocketNode必须是本地模式Service
         this.node.init(conf);
         this.engine.init(conf);
     }

@@ -40,13 +40,8 @@ public abstract class WebSocketNode {
     @Resource(name = "$")
     protected CacheSource<Serializable, InetSocketAddress> sncpAddressNodes;
 
-    //protected WebSocketEngine onlyoneEngine; 
-    
-    //存放本地节点上所有WebSocketEngine
-    protected final ConcurrentHashMap<String, WebSocketEngine> localEngines = new ConcurrentHashMap();
-
-    //存放本地节点上所有在线用户的队列信息,Set<String> 为 engineid 的集合， key: groupid
-    protected final ConcurrentHashMap<Serializable, Set<String>> localEngineids = new ConcurrentHashMap();
+    //当前节点的本地WebSocketEngine
+    protected WebSocketEngine _localEngine;
 
     public void init(AnyValue conf) {
 
@@ -57,12 +52,8 @@ public abstract class WebSocketNode {
     }
 
     public final void postDestroy(AnyValue conf) {
-        HashMap<Serializable, Set<String>> engines = new HashMap<>(localEngineids);
-        engines.forEach((k, v) -> {
-            new HashSet<>(v).forEach(e -> {
-                if (localEngines.containsKey(e)) disconnect(k, e);
-            });
-        });
+        if (this._localEngine == null) return;
+        this._localEngine.getWebSocketGroups().forEach(g -> disconnect(g.getGroupid()));
     }
 
     protected abstract CompletableFuture<List<String>> getOnlineRemoteAddresses(@RpcTargetAddress InetSocketAddress targetAddress, Serializable groupid);
@@ -74,41 +65,25 @@ public abstract class WebSocketNode {
     protected abstract CompletableFuture<Void> disconnect(Serializable groupid, InetSocketAddress addr);
 
     //--------------------------------------------------------------------------------
-    final void connect(final Serializable groupid, final String engineid) {
-        if (finest) logger.finest(localSncpAddress + " receive websocket connect event (" + groupid + " on " + engineid + ").");
-        Set<String> engineids = localEngineids.get(groupid);
-        if (engineids == null) {
-            engineids = new CopyOnWriteArraySet<>();
-            localEngineids.putIfAbsent(groupid, engineids);
-        }
-        final Set<String> engineids0 = engineids;
-        if (localSncpAddress != null && engineids.isEmpty()) {
-            CompletableFuture<Void> future = connect(groupid, localSncpAddress);
-            if (future != null) {
-                future.whenComplete((u, e) -> { //成功才记录
-                    if (e != null) engineids0.add(engineid);
-                });
-            }
-        }
-
+    final CompletableFuture<Void> connect(final Serializable groupid) {
+        if (finest) logger.finest(localSncpAddress + " receive websocket connect event (" + groupid + " on " + this._localEngine.getEngineid() + ").");
+        return connect(groupid, localSncpAddress);
     }
 
-    final void disconnect(Serializable groupid, String engineid) {
-        if (finest) logger.finest(localSncpAddress + " receive websocket disconnect event (" + groupid + " on " + engineid + ").");
-        Set<String> engineids = localEngineids.get(groupid);
-        if (engineids == null || engineids.isEmpty()) return;
-        engineids.remove(engineid);
-        if (engineids.isEmpty()) {
-            localEngineids.remove(groupid);
-            if (localSncpAddress != null) disconnect(groupid, localSncpAddress);
-        }
-    }
-
-    final void putWebSocketEngine(WebSocketEngine engine) {
-        localEngines.put(engine.getEngineid(), engine);
+    final CompletableFuture<Void> disconnect(Serializable groupid) {
+        if (finest) logger.finest(localSncpAddress + " receive websocket disconnect event (" + groupid + " on " + this._localEngine.getEngineid() + ").");
+        return disconnect(groupid, localSncpAddress);
     }
 
     //--------------------------------------------------------------------------------
+    /**
+     * 获取目标地址
+     *
+     * @param targetAddress
+     * @param groupid
+     *
+     * @return
+     */
     protected CompletableFuture<List<String>> remoteOnlineRemoteAddresses(@RpcTargetAddress InetSocketAddress targetAddress, Serializable groupid) {
         if (remoteNode == null) return CompletableFuture.completedFuture(null);
         try {
@@ -158,28 +133,25 @@ public abstract class WebSocketNode {
         return rs;
     }
 
+    /**
+     * 向指定用户发送消息，先发送本地连接，再发送远程连接  <br>
+     * 如果当前WebSocketNode是远程模式，此方法只发送远程连接
+     *
+     * @param groupid String
+     * @param recent  是否只发送给最近接入的WebSocket节点
+     * @param message 消息内容
+     * @param last    是否最后一条
+     *
+     * @return 为0表示成功， 其他值表示异常
+     */
     //异步待优化
     public final CompletableFuture<Integer> sendMessage(final Serializable groupid, final boolean recent, final Object message, final boolean last) {
         return CompletableFuture.supplyAsync(() -> {
-            final Set<String> engineids = localEngineids.get(groupid);
-            if (finest) logger.finest("websocket want send message {groupid:" + groupid + ", content:'" + message + "'} from locale node to " + engineids);
+            if (finest) logger.finest("websocket want send message {groupid:" + groupid + ", content:'" + message + "'} from locale node to locale engine");
             int rscode = RETCODE_GROUP_EMPTY;
-            if (engineids != null && !engineids.isEmpty()) {
-                for (String engineid : engineids) {
-                    final WebSocketEngine engine = localEngines.get(engineid);
-                    if (engine != null) { //在本地
-                        final WebSocketGroup group = engine.getWebSocketGroup(groupid);
-                        if (group == null || group.isEmpty()) {
-                            engineids.remove(engineid);
-                            if (finest) logger.finest("websocket want send message {engineid:'" + engineid + "', groupid:" + groupid + ", content:'" + message + "'} but websocket group is empty ");
-                            rscode = RETCODE_GROUP_EMPTY;
-                            break;
-                        }
-                        rscode = group.send(recent, message, last);
-                    }
-                }
-            }
-            if ((recent && rscode == 0) || remoteNode == null || sncpAddressNodes == null) {
+            WebSocketGroup group = this._localEngine == null ? null : this._localEngine.getWebSocketGroup(groupid);
+            if (group != null) rscode = group.send(recent, message, last);
+            if ((recent && rscode == 0) || remoteNode == null || sncpAddressNodes == null) { //没有其他远程的WebSocket连接
                 if (finest) {
                     if ((recent && rscode == 0)) {
                         logger.finest("websocket want send recent message success");
@@ -189,8 +161,9 @@ public abstract class WebSocketNode {
                 }
                 return rscode;
             }
+            if (this.sncpAddressNodes == null || this.remoteNode == null) return rscode;  //没有CacheSource就不会有分布式节点
             //-----------------------发送远程的-----------------------------
-            Collection<InetSocketAddress> addrs = sncpAddressNodes.getCollection(groupid);
+            Collection<InetSocketAddress> addrs = sncpAddressNodes.getCollectionAsync(groupid).join();
             if (finest) logger.finest("websocket found groupid:" + groupid + " on " + addrs);
             if (addrs != null && !addrs.isEmpty()) {   //对方连接在远程节点(包含本地节点)，所以正常情况下addrs不会为空。
                 if (recent) {

@@ -18,8 +18,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.*;
 
 /**
+ * WebSocket的消息接收发送器, 一个WebSocket对应一个WebSocketRunner
  *
- * <p> 详情见: https://redkale.org
+ * <p>
+ * 详情见: https://redkale.org
+ *
  * @author zhangjx
  */
 public class WebSocketRunner implements Runnable {
@@ -386,6 +389,7 @@ public class WebSocketRunner implements Runnable {
          *
          * @param buffer
          * @param exbuffers
+         *
          * @return
          */
         public WebSocketPacket decode(final ByteBuffer buffer, ByteBuffer... exbuffers) {
