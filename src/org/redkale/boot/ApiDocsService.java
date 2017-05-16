@@ -33,7 +33,7 @@ public final class ApiDocsService {
 
     public void run() throws Exception {
         List<Map> serverList = new ArrayList<>();
-        Field __prefix = HttpServlet.class.getDeclaredField("__prefix");
+        Field __prefix = HttpServlet.class.getDeclaredField("_prefix");
         __prefix.setAccessible(true);
         Map<String, Map<String, Map<String, Object>>> typesmap = new LinkedHashMap<>();
         for (NodeServer node : app.servers) {
