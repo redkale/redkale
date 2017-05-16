@@ -20,13 +20,13 @@ public final class Flipper implements Serializable, Cloneable {
 
     public static int DEFAULT_LIMIT = 20;
 
-    @Comment("一页数据的最大数量")
+    @Comment("每页多少行")
     private int limit = DEFAULT_LIMIT;
 
-    @Comment("一页的起始偏移量，从0开始")
+    @Comment("记录行的偏移量，从0开始")
     private int offset = 0;
 
-    @Comment("排序字段")
+    @Comment("排序字段, 可多字段排序")
     private String sort = "";
 
     public Flipper() {
