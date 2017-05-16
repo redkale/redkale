@@ -22,20 +22,28 @@ import org.redkale.util.*;
  */
 public final class WebSocketEngine {
 
+    //全局自增长ID
     private static final AtomicInteger sequence = new AtomicInteger();
 
+    //Engine自增长序号ID
     private final int index;
 
+    //当前WebSocket对应的Engine
     private final String engineid;
 
+    //当前WebSocket对应的Node
     protected final WebSocketNode node;
 
+    //在线用户ID对应的WebSocket组，当WebSocketGroup内没有WebSocket会从containers删掉
     private final Map<Serializable, WebSocketGroup> containers = new ConcurrentHashMap<>();
 
+    //用于PING的定时器
     private ScheduledThreadPoolExecutor scheduler;
 
+    //日志
     protected final Logger logger;
 
+    //FINEST日志级别
     protected final boolean finest;
 
     protected WebSocketEngine(String engineid, WebSocketNode node, Logger logger) {
@@ -66,7 +74,7 @@ public final class WebSocketEngine {
         if (scheduler != null) scheduler.shutdownNow();
     }
 
-    void add(WebSocket socket) {
+    void add(WebSocket socket) {  //非线程安全， 在常规场景中无需锁
         WebSocketGroup group = containers.get(socket._groupid);
         if (group == null) {
             group = new WebSocketGroup(socket._groupid);
@@ -76,7 +84,7 @@ public final class WebSocketEngine {
         if (node != null) node.connect(socket._groupid, engineid);
     }
 
-    void remove(WebSocket socket) {
+    void remove(WebSocket socket) { //非线程安全， 在常规场景中无需锁
         final WebSocketGroup group = containers.get(socket._groupid);
         if (group == null) {
             if (node != null) node.disconnect(socket._groupid, engineid);
@@ -95,6 +103,10 @@ public final class WebSocketEngine {
 
     public WebSocketGroup getWebSocketGroup(Serializable groupid) {
         return containers.get(groupid);
+    }
+
+    public boolean existsWebSocketGroup(Serializable groupid) {
+        return containers.containsKey(groupid);
     }
 
     public String getEngineid() {
