@@ -166,17 +166,7 @@ public abstract class NodeServer {
         ClassFilter<Filter> filterFilter = createFilterClassFilter();
         ClassFilter<Servlet> servletFilter = createServletClassFilter();
         long s = System.currentTimeMillis();
-        if (servletFilter == null) {
-            if (filterFilter == null) {
-                ClassFilter.Loader.load(application.getHome(), serverConf.getValue("excludelibs", "").split(";"), serviceFilter);
-            } else {
-                ClassFilter.Loader.load(application.getHome(), serverConf.getValue("excludelibs", "").split(";"), serviceFilter, filterFilter);
-            }
-        } else if (filterFilter == null) {
-            ClassFilter.Loader.load(application.getHome(), serverConf.getValue("excludelibs", "").split(";"), serviceFilter, servletFilter);
-        } else {
-            ClassFilter.Loader.load(application.getHome(), serverConf.getValue("excludelibs", "").split(";"), serviceFilter, filterFilter, servletFilter);
-        }
+        ClassFilter.Loader.load(application.getHome(), serverConf.getValue("excludelibs", "").split(";"), serviceFilter, filterFilter, servletFilter);
         long e = System.currentTimeMillis() - s;
         logger.info(this.getClass().getSimpleName() + " load filter class in " + e + " ms");
         loadService(serviceFilter); //必须在servlet之前
