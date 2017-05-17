@@ -30,8 +30,8 @@ public abstract class WebSocketNode {
 
     protected final boolean finest = logger.isLoggable(Level.FINEST);
 
-    //如果不是分布式(没有SNCP) 值为null
-    @Resource(name = Application.RESNAME_SERVER_ADDR)
+    //"SNCP_ADDR" 如果不是分布式(没有SNCP) 值为null
+    @Resource(name = Application.RESNAME_SNCP_ADDR)
     protected InetSocketAddress localSncpAddress;  //为SncpServer的服务address
 
     @RpcRemote

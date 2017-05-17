@@ -75,17 +75,17 @@ public final class Application {
     public static final String RESNAME_APP_ADDR = "APP_ADDR";
 
     /**
-     * 当前Service的IP地址+端口 类型: SocketAddress、InetSocketAddress、String
+     * 当前Service所属的SNCP Server的地址 类型: SocketAddress、InetSocketAddress、String <br>
      */
-    public static final String RESNAME_SERVER_ADDR = "SERVER_ADDR";
+    public static final String RESNAME_SNCP_ADDR = "SNCP_ADDR";
 
     /**
-     * 当前SNCP Server所属的组 类型: String
+     * 当前Service所属的SNCP Server所属的组 类型: String<br>
      */
-    public static final String RESNAME_SERVER_GROUP = "SERVER_GROUP";
+    public static final String RESNAME_SNCP_GROUP = "SNCP_GROUP";
 
     /**
-     * 当前Server的ROOT目录 类型：String、File、Path
+     * "SERVER_ROOT" 当前Server的ROOT目录类型：String、File、Path
      */
     public static final String RESNAME_SERVER_ROOT = Server.RESNAME_SERVER_ROOT;
 
@@ -283,7 +283,6 @@ public final class Application {
 //    public WatchFactory getWatchFactory() {
 //        return watchFactory;
 //    }
-    
     public List<NodeServer> getNodeServers() {
         return new ArrayList<>(servers);
     }

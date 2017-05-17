@@ -885,8 +885,8 @@ public abstract class Sncp {
         }
     }
 
-    public static <T extends Service> T createSimpleLocalService(final String name, final Class<T> serviceImplClass, final InetSocketAddress clientAddress, final Transport sameGroupTransport) {
-        return createLocalService(name, null, ResourceFactory.root(), serviceImplClass, clientAddress, null, new HashSet<>(), null, sameGroupTransport, null);
+    public static <T extends Service> T createSimpleLocalService(final String name, final Class<T> serviceImplClass, final InetSocketAddress clientSncpAddress, final Transport sameGroupTransport) {
+        return createLocalService(name, null, ResourceFactory.root(), serviceImplClass, clientSncpAddress, null, new HashSet<>(), null, sameGroupTransport, null);
     }
 
     /**
@@ -898,7 +898,7 @@ public abstract class Sncp {
      * @param executor            线程池
      * @param resourceFactory     资源容器
      * @param serviceImplClass    Service类
-     * @param clientAddress       本地IP地址
+     * @param clientSncpAddress       本地IP地址
      * @param sncpGroup           自身的组节点名 可能为null
      * @param groups              所有的组节点，包含自身
      * @param conf                启动配置项
@@ -913,7 +913,7 @@ public abstract class Sncp {
         final Consumer<Runnable> executor,
         final ResourceFactory resourceFactory,
         final Class<T> serviceImplClass,
-        final InetSocketAddress clientAddress,
+        final InetSocketAddress clientSncpAddress,
         final String sncpGroup,
         final Set<String> groups,
         final AnyValue conf,
@@ -952,7 +952,7 @@ public abstract class Sncp {
                             }
                         }
                         if (remoteService == null && remoteTransport != null) {
-                            remoteService = createRemoteService(name, executor, serviceImplClass, clientAddress, sncpGroup, groups, conf, remoteTransport);
+                            remoteService = createRemoteService(name, executor, serviceImplClass, clientSncpAddress, sncpGroup, groups, conf, remoteTransport);
                         }
                         if (remoteService != null) field.set(rs, remoteService);
                     }
@@ -963,7 +963,7 @@ public abstract class Sncp {
                 try {
                     Field e = newClazz.getDeclaredField(FIELDPREFIX + "_client");
                     e.setAccessible(true);
-                    client = new SncpClient(name, serviceImplClass, rs, executor, false, newClazz, clientAddress);
+                    client = new SncpClient(name, serviceImplClass, rs, executor, false, newClazz, clientSncpAddress);
                     e.set(rs, client);
                 } catch (NoSuchFieldException ne) {
                 }
@@ -982,7 +982,7 @@ public abstract class Sncp {
 //                            groups.add(t.getName());
 //                        }
 //                    }
-                    sb.append(", address = ").append(clientAddress).append(", groups = ").append(groups);
+                    sb.append(", address = ").append(clientSncpAddress).append(", groups = ").append(groups);
                     sb.append(", sameaddrs = ").append(sameGroupTransport == null ? null : Arrays.asList(sameGroupTransport.getRemoteAddresses()));
 
                     List<InetSocketAddress> addrs = new ArrayList<>();

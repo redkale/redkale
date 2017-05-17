@@ -134,8 +134,8 @@ public abstract class NodeServer {
             //if (this.sncpGroup == null) throw new RuntimeException("Server (" + String.valueOf(config).replaceAll("\\s+", " ") + ") not found <group> info");
         }
         //单点服务不会有 sncpAddress、sncpGroup
-        if (this.sncpAddress != null) this.resourceFactory.register(RESNAME_SERVER_ADDR, this.sncpAddress);
-        if (this.sncpGroup != null) this.resourceFactory.register(RESNAME_SERVER_GROUP, this.sncpGroup);
+        if (this.sncpAddress != null) this.resourceFactory.register(RESNAME_SNCP_ADDR, this.sncpAddress);
+        if (this.sncpGroup != null) this.resourceFactory.register(RESNAME_SNCP_GROUP, this.sncpGroup);
         {
             //设置root文件夹
             String webroot = this.serverConf.getValue("root", "root");
