@@ -30,6 +30,7 @@ public abstract class WebSocketNode {
 
     protected final boolean finest = logger.isLoggable(Level.FINEST);
 
+    //如果不是分布式(没有SNCP) 值为null
     @Resource(name = Application.RESNAME_SERVER_ADDR)
     protected InetSocketAddress localSncpAddress;  //为SncpServer的服务address
 
@@ -37,7 +38,7 @@ public abstract class WebSocketNode {
     protected WebSocketNode remoteNode;
 
     //存放所有用户分布在节点上的队列信息,Set<InetSocketAddress> 为 sncpnode 的集合， key: groupid
-    //如果不是分布式(没有SNCP)，则InetSocketAddress为当前WebSocketServlet的监听地址
+    //如果不是分布式(没有SNCP)，sncpAddressNodes 将不会被用到
     @Resource(name = "$")
     protected CacheSource<Serializable, InetSocketAddress> sncpAddressNodes;
 
