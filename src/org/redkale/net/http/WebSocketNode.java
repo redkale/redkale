@@ -152,17 +152,15 @@ public abstract class WebSocketNode {
             int rscode = RETCODE_GROUP_EMPTY;
             WebSocketGroup group = this.localEngine == null ? null : this.localEngine.getWebSocketGroup(groupid);
             if (group != null) rscode = group.send(recent, message, last);
-            if ((recent && rscode == 0) || remoteNode == null || sncpAddressNodes == null) { //没有其他远程的WebSocket连接
-                if (finest) {
-                    if ((recent && rscode == 0)) {
-                        logger.finest("websocket want send recent message success");
-                    } else {
-                        logger.finest("websocket remote node is null");
-                    }
-                }
+            if (recent && rscode == 0) { //已经给最近连接发送的消息
+                if (finest) logger.finest("websocket want send recent message success");
                 return rscode;
             }
-            if (this.sncpAddressNodes == null || this.remoteNode == null) return rscode;  //没有CacheSource就不会有分布式节点
+            if (this.sncpAddressNodes == null || this.remoteNode == null) {
+                if (finest) logger.finest("websocket remote node is null");
+                //没有CacheSource就不会有分布式节点
+                return rscode;
+            }
             //-----------------------发送远程的-----------------------------
             Collection<InetSocketAddress> addrs = sncpAddressNodes.getCollectionAsync(groupid).join();
             if (finest) logger.finest("websocket found groupid:" + groupid + " on " + addrs);
