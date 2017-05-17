@@ -69,27 +69,25 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
     @Resource(name = "$")
     protected WebSocketNode node;
 
-    protected WebSocketEngine engine;
-
     @Override
     final void preInit(HttpContext context, AnyValue conf) {
         InetSocketAddress addr = context.getServerAddress();
-        this.engine = new WebSocketEngine(addr.getHostString() + ":" + addr.getPort() + "-[" + resourceName() + "]", this.node, logger);
         if (this.node == null) this.node = createWebSocketNode();
         if (this.node == null) {  //没有部署SNCP，即不是分布式
             this.node = new WebSocketNodeService();
             if (logger.isLoggable(Level.WARNING)) logger.warning("Not found WebSocketNode, create a default value for " + getClass().getName());
         }
-        this.node._localEngine = engine; //存在WebSocketServlet，则此WebSocketNode必须是本地模式Service
+        //存在WebSocketServlet，则此WebSocketNode必须是本地模式Service
+        this.node.localEngine = new WebSocketEngine(addr.getHostString() + ":" + addr.getPort() + "-[" + resourceName() + "]", this.node, logger);
         this.node.init(conf);
-        this.engine.init(conf);
+        this.node.localEngine.init(conf);
     }
 
     @Override
     final void postDestroy(HttpContext context, AnyValue conf) {
         this.node.postDestroy(conf);
         super.destroy(context, conf);
-        this.engine.destroy(conf);
+        this.node.localEngine.destroy(conf);
     }
 
     @Override
@@ -112,7 +110,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
             return;
         }
         final WebSocket webSocket = this.createWebSocket();
-        webSocket._engine = engine;
+        webSocket._engine = this.node.localEngine;
         webSocket._jsonConvert = jsonConvert;
         webSocket._remoteAddress = request.getRemoteAddress();
         webSocket._remoteAddr = request.getRemoteAddr();
@@ -145,7 +143,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
                     return;
                 }
                 webSocket._groupid = groupid;
-                engine.add(webSocket);
+                WebSocketServlet.this.node.localEngine.add(webSocket);
                 context.runAsync(new WebSocketRunner(context, webSocket, response.removeChannel(), wsbinary));
                 response.finish(true);
             }

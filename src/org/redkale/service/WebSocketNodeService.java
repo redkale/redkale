@@ -37,10 +37,10 @@ public class WebSocketNodeService extends WebSocketNode implements Service {
     @Override
     public CompletableFuture<List<String>> getOnlineRemoteAddresses(final @RpcTargetAddress InetSocketAddress targetAddress, final Serializable groupid) {
         if (localSncpAddress == null || !localSncpAddress.equals(targetAddress)) return remoteOnlineRemoteAddresses(targetAddress, groupid);
-        if (this._localEngine == null) return CompletableFuture.completedFuture(new ArrayList<>());
+        if (this.localEngine == null) return CompletableFuture.completedFuture(new ArrayList<>());
         return CompletableFuture.supplyAsync(() -> {
             final List<String> rs = new ArrayList<>();
-            final WebSocketGroup group = this._localEngine.getWebSocketGroup(groupid);
+            final WebSocketGroup group = this.localEngine.getWebSocketGroup(groupid);
             if (group != null) group.getWebSockets().forEach(x -> rs.add("ws" + Objects.hashCode(x) + '@' + x.getRemoteAddr()));
             return rs;
         });
@@ -49,10 +49,10 @@ public class WebSocketNodeService extends WebSocketNode implements Service {
     @Override
     public CompletableFuture<Integer> sendMessage(@RpcTargetAddress InetSocketAddress addr, Serializable groupid, boolean recent, Object message, boolean last) {
         return CompletableFuture.supplyAsync(() -> {
-            if (this._localEngine == null) return RETCODE_GROUP_EMPTY;
-            final WebSocketGroup group = this._localEngine.getWebSocketGroup(groupid);
+            if (this.localEngine == null) return RETCODE_GROUP_EMPTY;
+            final WebSocketGroup group = this.localEngine.getWebSocketGroup(groupid);
             if (group == null || group.isEmpty()) {
-                if (finest) logger.finest("receive websocket message {engineid:'" + this._localEngine.getEngineid() + "', groupid:" + groupid + ", content:'" + message + "'} from " + addr + " but send result is " + RETCODE_GROUP_EMPTY);
+                if (finest) logger.finest("receive websocket message {engineid:'" + this.localEngine.getEngineid() + "', groupid:" + groupid + ", content:'" + message + "'} from " + addr + " but send result is " + RETCODE_GROUP_EMPTY);
                 return RETCODE_GROUP_EMPTY;
             }
             int code = group.send(recent, message, last);

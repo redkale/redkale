@@ -37,23 +37,23 @@ public abstract class WebSocketNode {
     protected WebSocketNode remoteNode;
 
     //存放所有用户分布在节点上的队列信息,Set<InetSocketAddress> 为 sncpnode 的集合， key: groupid
+    //如果不是分布式(没有SNCP)，则InetSocketAddress为当前WebSocketServlet的监听地址
     @Resource(name = "$")
     protected CacheSource<Serializable, InetSocketAddress> sncpAddressNodes;
 
     //当前节点的本地WebSocketEngine
-    protected WebSocketEngine _localEngine;
+    protected WebSocketEngine localEngine;
 
     public void init(AnyValue conf) {
-
     }
 
     public void destroy(AnyValue conf) {
-
     }
 
     public final void postDestroy(AnyValue conf) {
-        if (this._localEngine == null) return;
-        this._localEngine.getWebSocketGroups().forEach(g -> disconnect(g.getGroupid()));
+        if (this.localEngine == null) return;
+        //关掉所有本地本地WebSocket
+        this.localEngine.getWebSocketGroups().forEach(g -> disconnect(g.getGroupid()));
     }
 
     protected abstract CompletableFuture<List<String>> getOnlineRemoteAddresses(@RpcTargetAddress InetSocketAddress targetAddress, Serializable groupid);
@@ -66,12 +66,12 @@ public abstract class WebSocketNode {
 
     //--------------------------------------------------------------------------------
     final CompletableFuture<Void> connect(final Serializable groupid) {
-        if (finest) logger.finest(localSncpAddress + " receive websocket connect event (" + groupid + " on " + this._localEngine.getEngineid() + ").");
+        if (finest) logger.finest(localSncpAddress + " receive websocket connect event (" + groupid + " on " + this.localEngine.getEngineid() + ").");
         return connect(groupid, localSncpAddress);
     }
 
     final CompletableFuture<Void> disconnect(Serializable groupid) {
-        if (finest) logger.finest(localSncpAddress + " receive websocket disconnect event (" + groupid + " on " + this._localEngine.getEngineid() + ").");
+        if (finest) logger.finest(localSncpAddress + " receive websocket disconnect event (" + groupid + " on " + this.localEngine.getEngineid() + ").");
         return disconnect(groupid, localSncpAddress);
     }
 
@@ -149,7 +149,7 @@ public abstract class WebSocketNode {
         return CompletableFuture.supplyAsync(() -> {
             if (finest) logger.finest("websocket want send message {groupid:" + groupid + ", content:'" + message + "'} from locale node to locale engine");
             int rscode = RETCODE_GROUP_EMPTY;
-            WebSocketGroup group = this._localEngine == null ? null : this._localEngine.getWebSocketGroup(groupid);
+            WebSocketGroup group = this.localEngine == null ? null : this.localEngine.getWebSocketGroup(groupid);
             if (group != null) rscode = group.send(recent, message, last);
             if ((recent && rscode == 0) || remoteNode == null || sncpAddressNodes == null) { //没有其他远程的WebSocket连接
                 if (finest) {
