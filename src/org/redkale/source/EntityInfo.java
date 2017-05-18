@@ -43,6 +43,15 @@ public final class EntityInfo<T> {
     //Entity构建器
     private final Creator<T> creator;
 
+    //Entity构建器参数
+    private final String[] constructorParameters;
+
+    //Entity构建器参数Attribute
+    private final Attribute<T, Serializable>[] constructorAttributes;
+
+    //Entity构建器参数Attribute
+    private final Attribute<T, Serializable>[] unconstructorAttributes;
+
     //主键
     final Attribute<T, Serializable> primary;
 
@@ -202,6 +211,13 @@ public final class EntityInfo<T> {
         this.tableStrategy = dts;
 
         this.creator = Creator.create(type);
+        Creator.ConstructorParameters cp = null;
+        try {
+            cp = this.creator.getClass().getMethod("create", Object[].class).getAnnotation(Creator.ConstructorParameters.class);
+        } catch (Exception e) {
+            logger.severe(type + " cannot find ConstructorParameters Creator", e);
+        }
+        this.constructorParameters = (cp == null || cp.value().length < 1) ? null : cp.value();
         Attribute idAttr0 = null;
         Map<String, String> aliasmap0 = null;
         Class cltmp = type;
@@ -271,6 +287,22 @@ public final class EntityInfo<T> {
         this.queryAttributes = queryattrs.toArray(new Attribute[queryattrs.size()]);
         this.insertAttributes = insertattrs.toArray(new Attribute[insertattrs.size()]);
         this.updateAttributes = updateattrs.toArray(new Attribute[updateattrs.size()]);
+        if (this.constructorParameters == null) {
+            this.constructorAttributes = null;
+            this.unconstructorAttributes = null;
+        } else {
+            this.constructorAttributes = new Attribute[this.constructorParameters.length];
+            List<Attribute<T, Serializable>> unconstructorAttrs = new ArrayList<>();
+            for (Attribute<T, Serializable> attr : queryAttributes) {
+                int pos = Arrays.binarySearch(this.constructorParameters, attr.field());
+                if (pos >= 0) {
+                    this.constructorAttributes[pos] = attr;
+                } else {
+                    unconstructorAttrs.add(attr);
+                }
+            }
+            this.unconstructorAttributes = unconstructorAttrs.toArray(new Attribute[unconstructorAttrs.size()]);
+        }
         if (table != null) {
             StringBuilder insertsb = new StringBuilder();
             StringBuilder insertsb2 = new StringBuilder();
@@ -630,61 +662,79 @@ public final class EntityInfo<T> {
      * @throws SQLException SQLException
      */
     protected T getValue(final SelectColumn sels, final ResultSet set) throws SQLException {
-        T obj = creator.create();
-        for (Attribute<T, Serializable> attr : queryAttributes) {
-            if (sels == null || sels.test(attr.field())) {
-                final Class t = attr.type();
-                Serializable o;
-                if (t == byte[].class) {
-                    Blob blob = set.getBlob(this.getSQLColumn(null, attr.field()));
-                    if (blob == null) {
-                        o = null;
-                    } else { //不支持超过2G的数据
-                        o = blob.getBytes(1, (int) blob.length());
-                    }
-                } else {
-                    o = (Serializable) set.getObject(this.getSQLColumn(null, attr.field()));
-                    if (t.isPrimitive()) {
-                        if (o != null) {
-                            if (t == int.class) {
-                                o = ((Number) o).intValue();
-                            } else if (t == long.class) {
-                                o = ((Number) o).longValue();
-                            } else if (t == short.class) {
-                                o = ((Number) o).shortValue();
-                            } else if (t == float.class) {
-                                o = ((Number) o).floatValue();
-                            } else if (t == double.class) {
-                                o = ((Number) o).doubleValue();
-                            } else if (t == byte.class) {
-                                o = ((Number) o).byteValue();
-                            } else if (t == char.class) {
-                                o = (char) ((Number) o).intValue();
-                            } else if (t == boolean.class) {
-                                o = (Boolean) o;
-                            }
-                        } else if (t == int.class) {
-                            o = 0;
-                        } else if (t == long.class) {
-                            o = 0L;
-                        } else if (t == short.class) {
-                            o = (short) 0;
-                        } else if (t == float.class) {
-                            o = 0.0f;
-                        } else if (t == double.class) {
-                            o = 0.0d;
-                        } else if (t == byte.class) {
-                            o = (byte) 0;
-                        } else if (t == boolean.class) {
-                            o = false;
-                        } else if (t == char.class) {
-                            o = (char) 0;
-                        }
-                    }
+        T obj;
+        Attribute<T, Serializable>[] attrs = this.queryAttributes;
+        if (this.constructorParameters == null) {
+            obj = creator.create();
+        } else {
+            Object[] cps = new Object[this.constructorParameters.length];
+            for (int i = 0; i < this.constructorAttributes.length; i++) {
+                Attribute<T, Serializable> attr = this.constructorAttributes[i];
+                if (sels == null || sels.test(attr.field())) {
+                    cps[i] = getFieldValue(attr, set);
                 }
-                attr.set(obj, o);
+            }
+            obj = creator.create(cps);
+            attrs = this.unconstructorAttributes;
+        }
+        for (Attribute<T, Serializable> attr : attrs) {
+            if (sels == null || sels.test(attr.field())) {
+                attr.set(obj, getFieldValue(attr, set));
             }
         }
         return obj;
+    }
+
+    protected Serializable getFieldValue(Attribute<T, Serializable> attr, final ResultSet set) throws SQLException {
+        final Class t = attr.type();
+        Serializable o;
+        if (t == byte[].class) {
+            Blob blob = set.getBlob(this.getSQLColumn(null, attr.field()));
+            if (blob == null) {
+                o = null;
+            } else { //不支持超过2G的数据
+                o = blob.getBytes(1, (int) blob.length());
+            }
+        } else {
+            o = (Serializable) set.getObject(this.getSQLColumn(null, attr.field()));
+            if (t.isPrimitive()) {
+                if (o != null) {
+                    if (t == int.class) {
+                        o = ((Number) o).intValue();
+                    } else if (t == long.class) {
+                        o = ((Number) o).longValue();
+                    } else if (t == short.class) {
+                        o = ((Number) o).shortValue();
+                    } else if (t == float.class) {
+                        o = ((Number) o).floatValue();
+                    } else if (t == double.class) {
+                        o = ((Number) o).doubleValue();
+                    } else if (t == byte.class) {
+                        o = ((Number) o).byteValue();
+                    } else if (t == char.class) {
+                        o = (char) ((Number) o).intValue();
+                    } else if (t == boolean.class) {
+                        o = (Boolean) o;
+                    }
+                } else if (t == int.class) {
+                    o = 0;
+                } else if (t == long.class) {
+                    o = 0L;
+                } else if (t == short.class) {
+                    o = (short) 0;
+                } else if (t == float.class) {
+                    o = 0.0f;
+                } else if (t == double.class) {
+                    o = 0.0d;
+                } else if (t == byte.class) {
+                    o = (byte) 0;
+                } else if (t == boolean.class) {
+                    o = false;
+                } else if (t == char.class) {
+                    o = (char) 0;
+                }
+            }
+        }
+        return o;
     }
 }
