@@ -81,7 +81,9 @@ public abstract class WebSocket {
 
     private final long createtime = System.currentTimeMillis();
 
-    private  Map<String, Object> attributes = new HashMap<>(); //非线程安全
+    private Map<String, Object> attributes = new HashMap<>(); //非线程安全
+
+    protected final long websocketid = System.nanoTime(); //唯一ID
 
     protected WebSocket() {
     }
@@ -364,28 +366,6 @@ public abstract class WebSocket {
     }
 
     /**
-     * 获取指定groupid在线用户的节点地址列表
-     *
-     * @param groupid groupid
-     *
-     * @return 地址列表
-     */
-    protected final CompletableFuture<Collection<InetSocketAddress>> getOnlineNodes(Serializable groupid) {
-        return _engine.node.getOnlineNodes(groupid);
-    }
-
-    /**
-     * 获取指定groupid在线用户的详细连接信息
-     *
-     * @param groupid groupid
-     *
-     * @return 地址集合
-     */
-    protected final CompletableFuture<Map<InetSocketAddress, List<String>>> getOnlineRemoteAddress(Serializable groupid) {
-        return _engine.node.getOnlineRemoteAddress(groupid);
-    }
-
-    /**
      * 获取当前WebSocket下的属性，非线程安全
      *
      * @param <T>  属性值的类型
@@ -407,7 +387,7 @@ public abstract class WebSocket {
      * @return 属性值
      */
     public final <T> T removeAttribute(String name) {
-        return attributes == null ? null : (T)  attributes.remove(name);
+        return attributes == null ? null : (T) attributes.remove(name);
     }
 
     /**
@@ -417,7 +397,7 @@ public abstract class WebSocket {
      * @param value 属性值
      */
     public final void setAttribute(String name, Object value) {
-        if(attributes == null) attributes = new HashMap<>();
+        if (attributes == null) attributes = new HashMap<>();
         attributes.put(name, value);
     }
 

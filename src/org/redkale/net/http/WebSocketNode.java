@@ -38,6 +38,7 @@ public abstract class WebSocketNode {
     protected WebSocketNode remoteNode;
 
     //存放所有用户分布在节点上的队列信息,Set<InetSocketAddress> 为 sncpnode 的集合， key: groupid
+    //包含 localSncpAddress
     //如果不是分布式(没有SNCP)，sncpAddressNodes 将不会被用到
     @Resource(name = "$")
     protected CacheSource<Serializable, InetSocketAddress> sncpAddressNodes;
@@ -96,18 +97,24 @@ public abstract class WebSocketNode {
     }
 
     /**
-     * 获取在线用户的节点地址列表
+     * 获取用户在线的SNCP节点地址列表，不是分布式则返回空列表<br>
+     * InetSocketAddress 为 SNCP节点地址
      *
      * @param groupid groupid
      *
      * @return 地址列表
      */
     public CompletableFuture<Collection<InetSocketAddress>> getOnlineNodes(final Serializable groupid) {
-        return sncpAddressNodes == null ? CompletableFuture.completedFuture(null) : sncpAddressNodes.getCollectionAsync(groupid);
+        if (this.sncpAddressNodes != null) return this.sncpAddressNodes.getCollectionAsync(groupid);
+        List<InetSocketAddress> rs = new ArrayList<>();
+        if (this.localSncpAddress != null) rs.add(this.localSncpAddress);
+        return CompletableFuture.completedFuture(rs);
     }
 
     /**
-     * 获取在线用户的详细连接信息
+     * 获取在线用户的详细连接信息 <br>
+     * Map.key 为 SNCP节点地址
+     * Map.value 为 用户客户端的IP
      *
      * @param groupid groupid
      *
@@ -116,7 +123,7 @@ public abstract class WebSocketNode {
     //异步待优化
     public CompletableFuture<Map<InetSocketAddress, List<String>>> getOnlineRemoteAddress(final Serializable groupid) {
         final CompletableFuture<Map<InetSocketAddress, List<String>>> rs = new CompletableFuture<>();
-        CompletableFuture< Collection<InetSocketAddress>> nodesFuture = getOnlineNodes(groupid);
+        CompletableFuture<Collection<InetSocketAddress>> nodesFuture = getOnlineNodes(groupid);
         if (nodesFuture == null) return CompletableFuture.completedFuture(null);
         nodesFuture.whenComplete((nodes, e) -> {
             if (e != null) {
