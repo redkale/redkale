@@ -38,6 +38,9 @@ public class HelloEntity {
     @RestAddress
     private String clientaddr;
 
+    @RestURI
+    private String uri;
+
     public HelloEntity() {
     }
 
@@ -132,6 +135,14 @@ public class HelloEntity {
 
     public void setUploads(byte[] uploads) {
         this.uploads = uploads;
+    }
+
+    public String getUri() {
+        return uri;
+    }
+
+    public void setUri(String uri) {
+        this.uri = uri;
     }
 
     @Override

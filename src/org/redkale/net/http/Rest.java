@@ -361,6 +361,17 @@ public final class Rest {
                     if (ptype != byte[].class && ptype != File.class && ptype != File[].class) throw new RuntimeException("@RestUploadFile must on byte[] or File or File[] Parameter in " + method);
                 }
 
+                RestURI annuri = param.getAnnotation(RestURI.class);
+                if (annuri != null) {
+                    if (annhead != null) throw new RuntimeException("@RestURI and @RestHeader cannot on the same Parameter in " + method);
+                    if (anncookie != null) throw new RuntimeException("@RestURI and @RestCookie cannot on the same Parameter in " + method);
+                    if (annsid != null) throw new RuntimeException("@RestURI and @RestSessionid cannot on the same Parameter in " + method);
+                    if (annaddr != null) throw new RuntimeException("@RestURI and @RestAddress cannot on the same Parameter in " + method);
+                    if (annbody != null) throw new RuntimeException("@RestURI and @RestBody cannot on the same Parameter in " + method);
+                    if (annfile != null) throw new RuntimeException("@RestURI and @RestUploadFile cannot on the same Parameter in " + method);
+                    if (ptype != String.class) throw new RuntimeException("@RestURI must on String Parameter in " + method);
+                }
+
                 RestParam annpara = param.getAnnotation(RestParam.class);
                 if (annpara != null) radix = annpara.radix();
                 if (annpara != null) comment = annpara.comment();
@@ -381,7 +392,7 @@ public final class Rest {
                     && (entry.name.startsWith("find") || entry.name.startsWith("delete")) && params.length == 1) {
                     if (ptype.isPrimitive() || ptype == String.class) n = "#";
                 }
-                paramlist.add(new Object[]{param, n, ptype, radix, comment, required, annpara, annsid, annaddr, annhead, anncookie, annbody, annfile, param.getParameterizedType()});
+                paramlist.add(new Object[]{param, n, ptype, radix, comment, required, annpara, annsid, annaddr, annhead, anncookie, annbody, annfile, annuri, param.getParameterizedType()});
             }
 
             Map<String, Object> mappingMap = new LinkedHashMap<>();
@@ -425,7 +436,7 @@ public final class Rest {
                 av0 = mv.visitAnnotation(webparamsDesc, true);
                 AnnotationVisitor av1 = av0.visitArray("value");
                 //设置 WebParam
-                for (Object[] ps : paramlist) { //{param, n, ptype, radix, comment, required, annpara, annsid, annaddr, annhead, anncookie, annbody, annfile, pgentype}   
+                for (Object[] ps : paramlist) { //{param, n, ptype, radix, comment, required, annpara, annsid, annaddr, annhead, anncookie, annbody, annfile, annuri, pgentype}   
                     final boolean ishead = ((RestHeader) ps[9]) != null; //是否取getHeader 而不是 getParameter
                     final boolean iscookie = ((RestCookie) ps[10]) != null; //是否取getCookie
 
@@ -460,7 +471,8 @@ public final class Rest {
                 RestCookie anncookie = (RestCookie) ps[10];
                 RestBody annbody = (RestBody) ps[11];
                 RestUploadFile annfile = (RestUploadFile) ps[12];
-                java.lang.reflect.Type pgentype = (java.lang.reflect.Type) ps[13];
+                RestURI annuri = (RestURI) ps[13];
+                java.lang.reflect.Type pgentype = (java.lang.reflect.Type) ps[14];
 
                 final boolean ishead = annhead != null; //是否取getHeader 而不是 getParameter
                 final boolean iscookie = anncookie != null; //是否取getCookie
@@ -549,6 +561,11 @@ public final class Rest {
                         mv.visitVarInsn(ASTORE, maxLocals);
                         varInsns.add(new int[]{ALOAD, maxLocals});
                     }
+                } else if (annuri != null) { //HttpRequest.getRequestURI
+                    mv.visitVarInsn(ALOAD, 1);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getRequestURI", "()Ljava/lang/String;", false);
+                    mv.visitVarInsn(ASTORE, maxLocals);
+                    varInsns.add(new int[]{ALOAD, maxLocals});
                 } else if ("#".equals(pname)) { //从request.getRequstURI 中取参数
                     if (ptype == boolean.class) {
                         mv.visitVarInsn(ALOAD, 1);
@@ -827,7 +844,8 @@ public final class Rest {
                             RestAddress ra = field.getAnnotation(RestAddress.class);
                             RestBody rb = field.getAnnotation(RestBody.class);
                             RestUploadFile ru = field.getAnnotation(RestUploadFile.class);
-                            if (rh == null && rc == null && ra == null && rb == null && rs == null && ru == null) continue;
+                            RestURI ri = field.getAnnotation(RestURI.class);
+                            if (rh == null && rc == null && ra == null && rb == null && rs == null && ru == null && ri == null) continue;
                             if (rh != null && field.getType() != String.class) throw new RuntimeException("@RestHeader must on String Field in " + field);
                             if (rc != null && field.getType() != String.class) throw new RuntimeException("@RestCookie must on String Field in " + field);
                             if (rs != null && field.getType() != String.class) throw new RuntimeException("@RestSessionid must on String Field in " + field);
@@ -840,6 +858,7 @@ public final class Rest {
                                 if (hasupload) throw new RuntimeException("@RestUploadFile repeat on Field(" + field + ") in " + method);
                                 hasupload = true;
                             }
+                            if (ri != null && field.getType() != String.class) throw new RuntimeException("@RestURI must on String Field in " + field);
                             org.redkale.util.Attribute attr = org.redkale.util.Attribute.create(loop, field);
                             String attrFieldName;
                             String restname = "";
@@ -873,6 +892,9 @@ public final class Rest {
                             } else if (ru != null && field.getType() == File[].class) {
                                 attrFieldName = "_redkale_attr_uploadfiles_" + restAttributes.size();
                                 //restname = "";
+                            } else if (ri != null && field.getType() == String.class) {
+                                attrFieldName = "_redkale_attr_uri_" + restAttributes.size();
+                                //restname = "";
                             } else {
                                 continue;
                             }
@@ -905,6 +927,8 @@ public final class Rest {
                                 mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getSessionid", "(Z)Ljava/lang/String;", false);
                             } else if (en.getKey().contains("_address_")) {
                                 mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getRemoteAddr", "()Ljava/lang/String;", false);
+                            } else if (en.getKey().contains("_uri_")) {
+                                mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getRequestURI", "()Ljava/lang/String;", false);
                             } else if (en.getKey().contains("_bodystring_")) {
                                 mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getBodyUTF8", "()Ljava/lang/String;", false);
                             } else if (en.getKey().contains("_bodybytes_")) {
