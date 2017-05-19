@@ -47,6 +47,29 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
     }
 
     /**
+     * 删除HttpFilter
+     *
+     * @param filterName HttpFilter名称
+     *
+     * @return HttpFilter
+     */
+    public HttpFilter removeFilter(String filterName) {
+        return (HttpFilter) this.prepare.removeFilter(filterName);
+    }
+
+    /**
+     * 删除HttpFilter
+     *
+     * @param <T>         泛型
+     * @param filterClass HttpFilter类
+     *
+     * @return HttpFilter
+     */
+    public <T extends HttpFilter> T removeFilter(Class<T> filterClass) {
+        return (T) this.prepare.removeFilter(filterClass);
+    }
+
+    /**
      * 添加HttpFilter
      *
      * @param filter HttpFilter
@@ -100,7 +123,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
         this.prepare.addServlet(servlet, prefix, conf, mappings);
         return this;
     }
- 
+
     /**
      * 添加RestServlet
      *
@@ -108,7 +131,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
      * @param <T>              RestServlet
      * @param name             Service的资源名
      * @param serviceType      Service的类型
-     * @param service          Service对象 
+     * @param service          Service对象
      * @param baseServletClass RestServlet基类
      * @param prefix           url前缀
      *

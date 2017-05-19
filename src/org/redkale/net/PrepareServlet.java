@@ -10,6 +10,7 @@ import java.nio.*;
 import java.nio.channels.*;
 import java.util.*;
 import java.util.concurrent.atomic.*;
+import java.util.function.Predicate;
 import java.util.logging.*;
 import org.redkale.util.*;
 
@@ -42,7 +43,7 @@ public abstract class PrepareServlet<K extends Serializable, C extends Context, 
 
     private Map<K, S> mappings = new HashMap<>();
 
-    private List<Filter<C, R, P>> filters = new ArrayList<>();
+    private final List<Filter<C, R, P>> filters = new ArrayList<>();
 
     protected Filter<C, R, P> headFilter;
 
@@ -68,32 +69,68 @@ public abstract class PrepareServlet<K extends Serializable, C extends Context, 
 
     @Override
     public void init(C context, AnyValue config) {
-        if (filters != null && !filters.isEmpty()) {
-            Collections.sort(filters);
-            for (Filter<C, R, P> filter : filters) {
-                filter.init(context, config);
-            }
-            this.headFilter = filters.get(0);
-            Filter<C, R, P> filter = this.headFilter;
-            for (int i = 1; i < filters.size(); i++) {
-                filter._next = filters.get(i);
-                filter = filter._next;
+        synchronized (filters) {
+            if (!filters.isEmpty()) {
+                Collections.sort(filters);
+                for (Filter<C, R, P> filter : filters) {
+                    filter.init(context, config);
+                }
+                this.headFilter = filters.get(0);
+                Filter<C, R, P> filter = this.headFilter;
+                for (int i = 1; i < filters.size(); i++) {
+                    filter._next = filters.get(i);
+                    filter = filter._next;
+                }
             }
         }
     }
 
     @Override
     public void destroy(C context, AnyValue config) {
-        if (filters != null && !filters.isEmpty()) {
-            for (Filter filter : filters) {
-                filter.destroy(context, config);
+        synchronized (filters) {
+            if (!filters.isEmpty()) {
+                for (Filter filter : filters) {
+                    filter.destroy(context, config);
+                }
             }
         }
     }
 
     public void addFilter(Filter<C, R, P> filter, AnyValue conf) {
         filter._conf = conf;
-        this.filters.add(filter);
+        synchronized (filters) {
+            this.filters.add(filter);
+        }
+    }
+
+    public Filter<C, R, P> removeFilter(Class<? extends Filter<C, R, P>> filterClass) {
+        return removeFilter(f -> filterClass.equals(f.getClass()));
+    }
+
+    public Filter<C, R, P> removeFilter(String filterName) {
+        return removeFilter(f -> filterName.equals(f.resourceName()));
+    }
+
+    public Filter<C, R, P> removeFilter(Predicate<Filter<C, R, P>> predicate) {
+        if (this.headFilter == null || predicate == null) return null;
+        synchronized (filters) {
+            Filter filter = this.headFilter;
+            Filter prev = null;
+            do {
+                if (predicate.test(filter)) break;
+                prev = filter;
+            } while ((filter = filter._next) != null);
+            if (filter != null) {
+                if (prev == null) {
+                    this.headFilter = filter._next;
+                } else {
+                    prev._next = filter._next;
+                }
+                filter._next = null;
+                this.filters.remove(filter);
+            }
+            return filter;
+        }
     }
 
     public abstract void addServlet(S servlet, Object attachment, AnyValue conf, K... mappings);
