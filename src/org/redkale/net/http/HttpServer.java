@@ -58,6 +58,28 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
     }
 
     /**
+     * 屏蔽请求URL的正则表达式
+     *
+     * @param urlreg 正则表达式
+     *
+     * @return 是否成功
+     */
+    public boolean addForbidURIReg(final String urlreg) {
+        return ((HttpPrepareServlet) this.prepare).addForbidURIReg(urlreg);
+    }
+
+    /**
+     * 删除屏蔽请求URL的正则表达式
+     *
+     * @param urlreg 正则表达式
+     *
+     * @return 是否成功
+     */
+    public boolean removeForbidURIReg(final String urlreg) {
+        return ((HttpPrepareServlet) this.prepare).removeForbidURIReg(urlreg);
+    }
+
+    /**
      * 删除HttpFilter
      *
      * @param <T>         泛型
@@ -313,21 +335,4 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
         return httpcontext;
     }
 
-    /**
-     * 增加可以屏蔽的URL正则表达式
-     *
-     * @param urlreg URL正则表达式
-     */
-    public void addExcludeUrlReg(final String urlreg) {
-        ((HttpPrepareServlet) this.prepare).addExcludeUrlReg(urlreg);
-    }
-
-    /**
-     * 删除可以屏蔽的URL正则表达式
-     *
-     * @param urlreg URL正则表达式
-     */
-    public void removeExcludeUrlReg(final String urlreg) {
-        ((HttpPrepareServlet) this.prepare).removeExcludeUrlReg(urlreg);
-    }
 }

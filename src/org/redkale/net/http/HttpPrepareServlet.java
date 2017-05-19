@@ -40,15 +40,15 @@ public class HttpPrepareServlet extends PrepareServlet<String, HttpContext, Http
 
     private final Object excludeLock = new Object();
 
-    private Map<String, BiPredicate<String, String>> excludeUrlMaps; //禁用的URL的正则表达式, 必须与 excludeUrlPredicates 保持一致
+    private Map<String, BiPredicate<String, String>> forbidURIMaps; //禁用的URL的正则表达式, 必须与 forbidURIPredicates 保持一致
 
-    private BiPredicate<String, String>[] excludeUrlPredicates; //禁用的URL的Predicate, 必须与 excludeUrlMaps 保持一致
+    private BiPredicate<String, String>[] forbidURIPredicates; //禁用的URL的Predicate, 必须与 forbidURIMaps 保持一致
 
-    public void addExcludeUrlReg(final String urlreg) {
-        if (urlreg == null || urlreg.isEmpty()) return;
+    public boolean addForbidURIReg(final String urlreg) {
+        if (urlreg == null || urlreg.isEmpty()) return false;
         synchronized (excludeLock) {
-            if (excludeUrlMaps != null && excludeUrlMaps.containsKey(urlreg)) return;
-            if (excludeUrlMaps == null) excludeUrlMaps = new HashMap<>();
+            if (forbidURIMaps != null && forbidURIMaps.containsKey(urlreg)) return false;
+            if (forbidURIMaps == null) forbidURIMaps = new HashMap<>();
             String mapping = urlreg;
             if (Utility.contains(mapping, '.', '*', '{', '[', '(', '|', '^', '$', '+', '?', '\\')) { //是否是正则表达式))
                 if (mapping.endsWith("/*")) {
@@ -63,35 +63,37 @@ public class HttpPrepareServlet extends PrepareServlet<String, HttpContext, Http
             BiPredicate<String, String> predicate = (prefix, uri) -> {
                 return begin || prefix.isEmpty() ? regPredicate.test(uri) : uri.matches(prefix + reg);
             };
-            excludeUrlMaps.put(urlreg, predicate);
-            excludeUrlPredicates = Utility.append(excludeUrlPredicates, predicate);
+            forbidURIMaps.put(urlreg, predicate);
+            forbidURIPredicates = Utility.append(forbidURIPredicates, predicate);
+            return true;
         }
     }
 
-    public void removeExcludeUrlReg(final String urlreg) {
-        if (urlreg == null || urlreg.isEmpty()) return;
+    public boolean removeForbidURIReg(final String urlreg) {
+        if (urlreg == null || urlreg.isEmpty()) return false;
         synchronized (excludeLock) {
-            if (excludeUrlMaps == null || excludeUrlPredicates == null || !excludeUrlMaps.containsKey(urlreg)) return;
-            BiPredicate<String, String> predicate = excludeUrlMaps.get(urlreg);
-            excludeUrlMaps.remove(urlreg);
+            if (forbidURIMaps == null || forbidURIPredicates == null || !forbidURIMaps.containsKey(urlreg)) return false;
+            BiPredicate<String, String> predicate = forbidURIMaps.get(urlreg);
+            forbidURIMaps.remove(urlreg);
             int index = -1;
-            for (int i = 0; i < excludeUrlPredicates.length; i++) {
-                if (excludeUrlPredicates[i] == predicate) {
+            for (int i = 0; i < forbidURIPredicates.length; i++) {
+                if (forbidURIPredicates[i] == predicate) {
                     index = i;
                     break;
                 }
             }
             if (index > -1) {
-                if (excludeUrlPredicates.length == 1) {
-                    excludeUrlPredicates = null;
+                if (forbidURIPredicates.length == 1) {
+                    forbidURIPredicates = null;
                 } else {
-                    int newlen = excludeUrlPredicates.length - 1;
+                    int newlen = forbidURIPredicates.length - 1;
                     BiPredicate[] news = new BiPredicate[newlen];
-                    System.arraycopy(excludeUrlPredicates, 0, news, 0, index);
-                    System.arraycopy(excludeUrlPredicates, index + 1, news, index, newlen - index);
-                    excludeUrlPredicates = news;
+                    System.arraycopy(forbidURIPredicates, 0, news, 0, index);
+                    System.arraycopy(forbidURIPredicates, index + 1, news, index, newlen - index);
+                    forbidURIPredicates = news;
                 }
             }
+            return true;
         }
     }
 
@@ -134,7 +136,7 @@ public class HttpPrepareServlet extends PrepareServlet<String, HttpContext, Http
     public void execute(HttpRequest request, HttpResponse response) throws IOException {
         try {
             final String uri = request.getRequestURI();
-            HttpServlet servlet = null;
+            HttpServlet servlet;
             if (request.isWebSocket()) {
                 servlet = wsmappings.get(uri);
                 if (servlet == null && this.regWsArray != null) {
@@ -163,8 +165,9 @@ public class HttpPrepareServlet extends PrepareServlet<String, HttpContext, Http
                 if (servlet == null) servlet = this.resourceHttpServlet;
             }
             boolean forbid = false;
-            if (excludeUrlPredicates != null && excludeUrlPredicates.length > 0) {
-                for (BiPredicate<String, String> predicate : excludeUrlPredicates) {
+            BiPredicate<String, String>[] forbidUrlPredicates = this.forbidURIPredicates;
+            if (forbidUrlPredicates != null && forbidUrlPredicates.length > 0) {
+                for (BiPredicate<String, String> predicate : forbidUrlPredicates) {
                     if (predicate != null && predicate.test(servlet._prefix, uri)) {
                         forbid = true;
                         break;

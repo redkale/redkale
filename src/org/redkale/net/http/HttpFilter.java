@@ -8,6 +8,10 @@ package org.redkale.net.http;
 import org.redkale.net.Filter;
 
 /**
+ * HTTP 过滤器  <br>
+ *
+ * <p>
+ * 详情见: https://redkale.org
  *
  * @author zhangjx
  */
