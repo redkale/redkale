@@ -6,7 +6,7 @@
 package org.redkale.net;
 
 import java.io.IOException;
-import org.redkale.util.AnyValue;
+import org.redkale.util.*;
 
 /**
  * 协议拦截器类
@@ -19,7 +19,7 @@ import org.redkale.util.AnyValue;
  * @param <R> Request的子类型
  * @param <P> Response的子类型
  */
-public abstract class Filter<C extends Context, R extends Request<C>, P extends Response<C, R>> implements Comparable {
+public abstract class Filter<C extends Context, R extends Request<C>, P extends Response<C, R>> implements Comparable, Resourcable {
 
     AnyValue _conf; //当前Filter的配置
 
@@ -33,7 +33,8 @@ public abstract class Filter<C extends Context, R extends Request<C>, P extends 
     public void destroy(C context, AnyValue config) {
     }
 
-    public String getName() {
+    @Override
+    public String resourceName() {
         return "";
     }
 
