@@ -38,12 +38,35 @@ public class SncpServer extends Server<DLong, SncpContext, SncpRequest, SncpResp
     }
 
     /**
+     * 删除SncpFilter
+     *
+     * @param filterName SncpFilter名称
+     *
+     * @return SncpFilter
+     */
+    public SncpFilter removeFilter(String filterName) {
+        return (SncpFilter) this.prepare.removeFilter(filterName);
+    }
+
+    /**
+     * 删除SncpFilter
+     *
+     * @param <T>         泛型
+     * @param filterClass SncpFilter类
+     *
+     * @return SncpFilter
+     */
+    public <T extends SncpFilter> T removeFilter(Class<T> filterClass) {
+        return (T) this.prepare.removeFilter(filterClass);
+    }
+
+    /**
      * 添加SncpFilter
      *
      * @param filter SncpFilter
      * @param conf   AnyValue
      *
-     * @return HttpServer
+     * @return SncpServer
      */
     public SncpServer addSncpFilter(SncpFilter filter, AnyValue conf) {
         this.prepare.addFilter(filter, conf);
