@@ -107,11 +107,12 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
      * @param group               连接AsynchronousChannelGroup
      * @param readTimeoutSecond0  读取超时秒数
      * @param writeTimeoutSecond0 写入超时秒数
+     *
      * @return 连接
      * @throws java.io.IOException 异常
      */
     public static AsyncConnection create(final String protocol, final AsynchronousChannelGroup group, final SocketAddress address,
-                                         final int readTimeoutSecond0, final int writeTimeoutSecond0) throws IOException {
+        final int readTimeoutSecond0, final int writeTimeoutSecond0) throws IOException {
         if ("TCP".equalsIgnoreCase(protocol)) {
             AsynchronousSocketChannel channel = AsynchronousSocketChannel.open(group);
             try {
@@ -143,7 +144,7 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
         private final boolean client;
 
         public BIOUDPAsyncConnection(final DatagramChannel ch, SocketAddress addr,
-                                     final boolean client0, final int readTimeoutSecond0, final int writeTimeoutSecond0) {
+            final boolean client0, final int readTimeoutSecond0, final int writeTimeoutSecond0) {
             this.channel = ch;
             this.client = client0;
             this.readTimeoutSecond = readTimeoutSecond0;
@@ -213,7 +214,7 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
         public Future<Integer> read(ByteBuffer dst) {
             try {
                 int rs = channel.read(dst);
-                return new SimpleFuture(rs);
+                return CompletableFuture.completedFuture(rs);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -233,7 +234,7 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
         public Future<Integer> write(ByteBuffer src) {
             try {
                 int rs = channel.send(src, remoteAddress);
-                return new SimpleFuture(rs);
+                return CompletableFuture.completedFuture(rs);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -257,43 +258,8 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
     }
 
     public static AsyncConnection create(final DatagramChannel ch, SocketAddress addr,
-                                         final boolean client0, final int readTimeoutSecond0, final int writeTimeoutSecond0) {
+        final boolean client0, final int readTimeoutSecond0, final int writeTimeoutSecond0) {
         return new BIOUDPAsyncConnection(ch, addr, client0, readTimeoutSecond0, writeTimeoutSecond0);
-    }
-
-    private static class SimpleFuture implements Future<Integer> {
-
-        private final int rs;
-
-        public SimpleFuture(int rs) {
-            this.rs = rs;
-        }
-
-        @Override
-        public boolean cancel(boolean mayInterruptIfRunning) {
-            return true;
-        }
-
-        @Override
-        public boolean isCancelled() {
-            return false;
-        }
-
-        @Override
-        public boolean isDone() {
-            return true;
-        }
-
-        @Override
-        public Integer get() throws InterruptedException, ExecutionException {
-            return rs;
-        }
-
-        @Override
-        public Integer get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
-            return rs;
-        }
-
     }
 
     private static class BIOTCPAsyncConnection extends AsyncConnection {
@@ -398,7 +364,7 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
         public Future<Integer> read(ByteBuffer dst) {
             try {
                 int rs = readChannel.read(dst);
-                return new SimpleFuture(rs);
+                return CompletableFuture.completedFuture(rs);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -418,7 +384,7 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
         public Future<Integer> write(ByteBuffer src) {
             try {
                 int rs = writeChannel.write(src);
-                return new SimpleFuture(rs);
+                return CompletableFuture.completedFuture(rs);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -440,6 +406,7 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
      * 通常用于 ssl socket
      *
      * @param socket Socket对象
+     *
      * @return 连接对象
      */
     public static AsyncConnection create(final Socket socket) {
