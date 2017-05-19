@@ -52,14 +52,6 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
 
     private final MessageDigest digest = getMessageDigest();
 
-    private static MessageDigest getMessageDigest() {
-        try {
-            return MessageDigest.getInstance("SHA-1");
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     @Comment("是否用于二进制流传输")
     protected final boolean wsbinary = getClass().getAnnotation(WebSocketBinary.class) != null;
 
@@ -92,7 +84,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
 
     @Override
     public String resourceName() {
-        return this.getClass().getSimpleName().replace("Servlet", "").replace("WebSocket", "").toLowerCase();
+        return this.getClass().getSimpleName().replace("Servlet", "").replace("WebSocket", "").replace("_Dyn", "").toLowerCase();
     }
 
     @Override
@@ -163,4 +155,13 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
     }
 
     protected abstract WebSocket createWebSocket();
+
+    private static MessageDigest getMessageDigest() {
+        try {
+            return MessageDigest.getInstance("SHA-1");
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
 }
