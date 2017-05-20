@@ -191,7 +191,13 @@ public class WebSocketRunner implements Runnable {
 
                 @Override
                 public void completed(Integer result, ByteBuffer attachment) {
-                    if (attachment == null || closed) return;
+                    if (attachment == null || closed) {
+                        if (future != null) {
+                            future.complete(RETCODE_WSOCKET_CLOSED);
+                            future = null;
+                        }
+                        return;
+                    }
                     try {
                         if (attachment.hasRemaining()) {
                             if (debug) context.getLogger().log(Level.FINEST, "WebSocketRunner write completed reemaining: " + attachment.remaining());
@@ -204,8 +210,15 @@ public class WebSocketRunner implements Runnable {
                         }
                         QueueEntry entry = queue.poll();
                         ByteBuffer localWriteBuffer = writeBuffer;
-                        if (entry == null || localWriteBuffer == null) return;  //没有数据了
+                        if (entry == null) return;  //没有数据了
                         future = entry.future;
+                        if (localWriteBuffer == null) {
+                            if (future != null) {
+                                future.complete(RETCODE_WSOCKET_CLOSED);
+                                future = null;
+                            }
+                            return;
+                        }
                         byte[] bs = entry.bytes;
                         ByteBuffer sendBuffer;
                         if (bs.length <= localWriteBuffer.capacity()) {
@@ -217,7 +230,6 @@ public class WebSocketRunner implements Runnable {
                             sendBuffer = ByteBuffer.wrap(bs);
                         }
                         channel.write(sendBuffer, sendBuffer, this);
-                        
                     } catch (Exception e) {
                         closeRunner();
                         context.getLogger().log(Level.WARNING, "WebSocket sendMessage abort on rewrite, force to close channel, live " + (System.currentTimeMillis() - webSocket.getCreatetime()) / 1000 + " seconds", e);
