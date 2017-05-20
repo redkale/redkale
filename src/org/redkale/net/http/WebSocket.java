@@ -518,6 +518,10 @@ public abstract class WebSocket {
     public void onClose(int code, String reason) {
     }
 
+    public long getLastSendTime() {
+        return this._runner == null ? 0 : this._runner.lastSendTime;
+    }
+
     /**
      * 显式地关闭WebSocket
      */

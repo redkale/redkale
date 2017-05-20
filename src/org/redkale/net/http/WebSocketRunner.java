@@ -49,7 +49,7 @@ public class WebSocketRunner implements Runnable {
 
     private final boolean wsbinary;
     
-    private long lastSendTime;
+    protected long lastSendTime;
 
     public WebSocketRunner(Context context, WebSocket webSocket, AsyncConnection channel, final boolean wsbinary) {
         this.context = context;

@@ -123,7 +123,9 @@ public class NodeHttpServer extends NodeServer {
 
     protected void loadHttpServlet(final AnyValue servletsConf, final ClassFilter<? extends Servlet> filter) throws Exception {
         final StringBuilder sb = logger.isLoggable(Level.INFO) ? new StringBuilder() : null;
-        final String prefix = servletsConf == null ? "" : servletsConf.getValue("path", "");
+        String prefix0 = servletsConf == null ? "" : servletsConf.getValue("path", "");
+        if (!prefix0.isEmpty() && prefix0.charAt(prefix0.length() - 1) == '/') prefix0 = prefix0.substring(0, prefix0.length() - 1);
+        final String prefix = prefix0;
         final String threadName = "[" + Thread.currentThread().getName() + "] ";
         List<FilterEntry<? extends Servlet>> list = new ArrayList(filter.getFilterEntrys());
         list.sort((FilterEntry<? extends Servlet> o1, FilterEntry<? extends Servlet> o2) -> {  //必须保证WebSocketServlet优先加载， 因为要确保其他的HttpServlet可以注入本地模式的WebSocketNode
