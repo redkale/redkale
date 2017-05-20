@@ -125,6 +125,7 @@ public class NodeHttpServer extends NodeServer {
         final StringBuilder sb = logger.isLoggable(Level.INFO) ? new StringBuilder() : null;
         String prefix0 = servletsConf == null ? "" : servletsConf.getValue("path", "");
         if (!prefix0.isEmpty() && prefix0.charAt(prefix0.length() - 1) == '/') prefix0 = prefix0.substring(0, prefix0.length() - 1);
+        if (!prefix0.isEmpty() && prefix0.charAt(0) != '/') prefix0 = '/' + prefix0;
         final String prefix = prefix0;
         final String threadName = "[" + Thread.currentThread().getName() + "] ";
         List<FilterEntry<? extends Servlet>> list = new ArrayList(filter.getFilterEntrys());
