@@ -48,17 +48,13 @@ public class WebSocketNodeService extends WebSocketNode implements Service {
 
     @Override
     public CompletableFuture<Integer> sendMessage(@RpcTargetAddress InetSocketAddress addr, Serializable groupid, boolean recent, Object message, boolean last) {
-        return CompletableFuture.supplyAsync(() -> {
-            if (this.localEngine == null) return RETCODE_GROUP_EMPTY;
-            final WebSocketGroup group = this.localEngine.getWebSocketGroup(groupid);
-            if (group == null || group.isEmpty()) {
-                if (finest) logger.finest("receive websocket message {engineid:'" + this.localEngine.getEngineid() + "', groupid:" + groupid + ", content:'" + message + "'} from " + addr + " but send result is " + RETCODE_GROUP_EMPTY);
-                return RETCODE_GROUP_EMPTY;
-            }
-            int code = group.send(recent, message, last);
-            if (finest) logger.finest("websocket node send message (" + message + ") from " + addr + " result is " + code);
-            return code;
-        });
+        if (this.localEngine == null) return CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY);
+        final WebSocketGroup group = this.localEngine.getWebSocketGroup(groupid);
+        if (group == null || group.isEmpty()) {
+            if (finest) logger.finest("receive websocket message {engineid:'" + this.localEngine.getEngineid() + "', groupid:" + groupid + ", content:'" + message + "'} from " + addr + " but send result is " + RETCODE_GROUP_EMPTY);
+            return CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY);
+        }
+        return group.send(recent, message, last);
     }
 
     /**

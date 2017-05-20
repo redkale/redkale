@@ -158,7 +158,7 @@ public abstract class WebSocketNode {
             if (finest) logger.finest("websocket want send message {groupid:" + groupid + ", content:'" + message + "'} from locale node to locale engine");
             int rscode = RETCODE_GROUP_EMPTY;
             WebSocketGroup group = this.localEngine == null ? null : this.localEngine.getWebSocketGroup(groupid);
-            if (group != null) rscode = group.send(recent, message, last);
+            if (group != null) rscode = group.send(recent, message, last).join();  //临时，　要改
             if (recent && rscode == 0) { //已经给最近连接发送的消息
                 if (finest) logger.finest("websocket want send recent message success");
                 return rscode;

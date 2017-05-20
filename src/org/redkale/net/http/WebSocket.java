@@ -83,7 +83,7 @@ public abstract class WebSocket {
 
     private Map<String, Object> attributes = new HashMap<>(); //非线程安全
 
-    protected final long websocketid = System.nanoTime(); //唯一ID
+    protected final long websocketid = Math.abs(System.nanoTime()); //唯一ID
 
     protected WebSocket() {
     }
@@ -96,11 +96,11 @@ public abstract class WebSocket {
      *
      * @return 0表示成功， 非0表示错误码
      */
-    public final int send(WebSocketPacket packet) {
-        int rs = RETCODE_WSOCKET_CLOSED;
+    public final CompletableFuture<Integer> send(WebSocketPacket packet) {
+        CompletableFuture<Integer> rs = null;
         if (this._runner != null) rs = this._runner.sendMessage(packet);
         if (_engine.finest) _engine.logger.finest("wsgroupid:" + getGroupid() + " send websocket result is " + rs + " on " + this + " by message(" + packet + ")");
-        return rs;
+        return rs == null ? CompletableFuture.completedFuture(RETCODE_WSOCKET_CLOSED) : rs;
     }
 
     /**
@@ -110,7 +110,7 @@ public abstract class WebSocket {
      *
      * @return 0表示成功， 非0表示错误码
      */
-    public final int send(String text) {
+    public final CompletableFuture<Integer> send(String text) {
         return send(text, true);
     }
 
@@ -122,20 +122,20 @@ public abstract class WebSocket {
      *
      * @return 0表示成功， 非0表示错误码
      */
-    public final int send(String text, boolean last) {
+    public final CompletableFuture<Integer> send(String text, boolean last) {
         return send(new WebSocketPacket(text, last));
     }
 
-    public final int sendPing() {
+    public final CompletableFuture<Integer> sendPing() {
         //if (_engine.finest) _engine.logger.finest(this + " on "+_engine.getEngineid()+" ping...");
         return send(WebSocketPacket.DEFAULT_PING_PACKET);
     }
 
-    public final int sendPing(byte[] data) {
+    public final CompletableFuture<Integer> sendPing(byte[] data) {
         return send(new WebSocketPacket(FrameType.PING, data));
     }
 
-    public final int sendPong(byte[] data) {
+    public final CompletableFuture<Integer> sendPong(byte[] data) {
         return send(new WebSocketPacket(FrameType.PONG, data));
     }
 
@@ -150,7 +150,7 @@ public abstract class WebSocket {
      *
      * @return 0表示成功， 非0表示错误码
      */
-    public final int send(byte[] data) {
+    public final CompletableFuture<Integer> send(byte[] data) {
         return send(data, true);
     }
 
@@ -162,7 +162,7 @@ public abstract class WebSocket {
      *
      * @return 0表示成功， 非0表示错误码
      */
-    public final int send(byte[] data, boolean last) {
+    public final CompletableFuture<Integer> send(byte[] data, boolean last) {
         return send(new WebSocketPacket(data, last));
     }
 
@@ -173,7 +173,7 @@ public abstract class WebSocket {
      *
      * @return 0表示成功， 非0表示错误码
      */
-    public final int send(Object message) {
+    public final CompletableFuture<Integer> send(Object message) {
         return send(message, true);
     }
 
@@ -185,7 +185,7 @@ public abstract class WebSocket {
      *
      * @return 0表示成功， 非0表示错误码
      */
-    public final int send(Object message, boolean last) {
+    public final CompletableFuture<Integer> send(Object message, boolean last) {
         if (message == null || message instanceof CharSequence || message instanceof byte[]) {
             return send(new WebSocketPacket((Serializable) message, last));
         } else {
@@ -527,6 +527,6 @@ public abstract class WebSocket {
 
     @Override
     public String toString() {
-        return "ws" + Objects.hashCode(this) + "@" + _remoteAddr;
+        return this.websocketid + "@" + _remoteAddr;
     }
 }

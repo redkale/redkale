@@ -7,7 +7,7 @@ package org.redkale.net.http;
 
 import java.io.*;
 import java.util.*;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.*;
 import java.util.stream.Stream;
 
 /**
@@ -83,7 +83,7 @@ public final class WebSocketGroup {
         attributes.put(name, value);
     }
 
-    public final int send(boolean recent, Object message, boolean last) {
+    public final CompletableFuture<Integer> send(boolean recent, Object message, boolean last) {
         if (recent) {
             return recentWebSocket.send(message, last);
         } else {
@@ -91,46 +91,42 @@ public final class WebSocketGroup {
         }
     }
 
-    public final int sendEach(Object message) {
+    public final CompletableFuture<Integer> sendEach(Object message) {
         return sendEach(message, true);
     }
 
-    public final int sendEach(WebSocketPacket packet) {
-        int rs = 0;
+    public final CompletableFuture<Integer> sendEach(WebSocketPacket packet) {
+        CompletableFuture<Integer> future = null;
         for (WebSocket s : list) {
-            rs |= s.send(packet);
+            if (future == null) {
+                future = s.send(packet);
+            } else {
+                future.thenCombine(s.send(packet), (a, b) -> a | b);
+            }
         }
-        return rs;
+        return future == null ? CompletableFuture.completedFuture(0) : future;
     }
 
-    public final int sendEachPing() {
-        int rs = 0;
-        for (WebSocket s : list) {
-            rs |= s.sendPing();
-        }
-        return rs;
+    public final CompletableFuture<Integer> sendEachPing() {
+        return sendEach(WebSocketPacket.DEFAULT_PING_PACKET);
     }
 
-    public final int sendRecent(Object message) {
+    public final CompletableFuture<Integer> sendRecent(Object message) {
         return sendRecent(message, true);
     }
 
-    public final int sendRecent(WebSocketPacket packet) {
+    public final CompletableFuture<Integer> sendRecent(WebSocketPacket packet) {
         return recentWebSocket.send(packet);
     }
 
-    public final int sendEach(Object message, boolean last) {
+    public final CompletableFuture<Integer> sendEach(Object message, boolean last) {
         if (message != null && !(message instanceof byte[]) && !(message instanceof CharSequence)) {
             message = recentWebSocket._jsonConvert.convertTo(message);
         }
-        int rs = 0;
-        for (WebSocket s : list) {
-            rs |= s.send(message, last);
-        }
-        return rs;
+        return sendEach(new WebSocketPacket((Serializable) message, last));
     }
 
-    public final int sendRecent(Object message, boolean last) {
+    public final CompletableFuture<Integer> sendRecent(Object message, boolean last) {
         return recentWebSocket.send(message, last);
     }
 

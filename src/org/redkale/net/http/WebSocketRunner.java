@@ -48,6 +48,8 @@ public class WebSocketRunner implements Runnable {
     private final BlockingQueue<byte[]> queue = new ArrayBlockingQueue(1024);
 
     private final boolean wsbinary;
+    
+    private long lastSendTime;
 
     public WebSocketRunner(Context context, WebSocket webSocket, AsyncConnection channel, final boolean wsbinary) {
         this.context = context;
@@ -158,19 +160,20 @@ public class WebSocketRunner implements Runnable {
         }
     }
 
-    public int sendMessage(WebSocketPacket packet) {
-        if (packet == null) return RETCODE_SEND_ILLPACKET;
-        if (closed) return RETCODE_WSOCKET_CLOSED;
+    public CompletableFuture<Integer> sendMessage(WebSocketPacket packet) {
+        if (packet == null) return CompletableFuture.completedFuture(RETCODE_SEND_ILLPACKET);
+        if (closed) return CompletableFuture.completedFuture(RETCODE_WSOCKET_CLOSED);
         final boolean debug = this.coder.debugable;
         //System.out.println("推送消息");
         final byte[] bytes = coder.encode(packet);
         if (debug) context.getLogger().log(Level.FINEST, "send web socket message's length = " + bytes.length);
+        this.lastSendTime = System.currentTimeMillis();
         if (writing.getAndSet(true)) {
             queue.add(bytes);
-            return 0;
+            return CompletableFuture.completedFuture(0);
         }
-        if (writeBuffer == null) return RETCODE_ILLEGALBUFFER;
-        ByteBuffer sendBuffer = null;
+        if (writeBuffer == null) return CompletableFuture.completedFuture(RETCODE_ILLEGALBUFFER);
+        ByteBuffer sendBuffer;
         if (bytes.length <= writeBuffer.capacity()) {
             writeBuffer.clear();
             writeBuffer.put(bytes);
@@ -222,12 +225,12 @@ public class WebSocketRunner implements Runnable {
                     }
                 }
             });
-            return 0;
+            return CompletableFuture.completedFuture(0);
         } catch (Exception t) {
             writing.set(false);
             closeRunner();
             context.getLogger().log(Level.FINE, "WebSocket sendMessage abort, force to close channel, live " + (System.currentTimeMillis() - webSocket.getCreatetime()) / 1000 + " seconds", t);
-            return RETCODE_SENDEXCEPTION;
+            return CompletableFuture.completedFuture(RETCODE_SENDEXCEPTION);
         }
     }
 
