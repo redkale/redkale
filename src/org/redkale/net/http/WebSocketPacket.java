@@ -214,7 +214,7 @@ public final class WebSocketPacket {
                     remain += b == null ? 0 : b.remaining();
                 }
             }
-            logger.log(Level.FINEST, "read web socket message's length = " + remain);
+            logger.log(Level.FINEST, "read websocket message's length = " + remain);
         }
         if (buffer.remaining() < 2) return null;
         byte opcode = buffer.get();
@@ -276,7 +276,11 @@ public final class WebSocketPacket {
                 data[i] ^= mask[i % 4];
             }
         }
-        this.bytes = data;
+        if (type == FrameType.TEXT) {
+            this.payload = new String(Utility.decodeUTF8(data));
+        } else {
+            this.bytes = data;
+        }
         return this;
     }
 
