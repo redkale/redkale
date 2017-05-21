@@ -189,8 +189,21 @@ public abstract class WebSocket {
         if (message == null || message instanceof CharSequence || message instanceof byte[]) {
             return send(new WebSocketPacket((Serializable) message, last));
         } else {
-            return send(new WebSocketPacket(_jsonConvert.convertTo(message), last));
+            return send(new WebSocketPacket(_jsonConvert, message, last));
         }
+    }
+
+    /**
+     * 给自身发送消息, 消息类型是JSON对象
+     *
+     * @param convert JsonConvert
+     * @param message 不可为空, 只能是String或byte[]或可JSON化对象
+     * @param last    是否最后一条
+     *
+     * @return 0表示成功， 非0表示错误码
+     */
+    public final CompletableFuture<Integer> send(JsonConvert convert, Object message, boolean last) {
+        return send(new WebSocketPacket(convert == null ? _jsonConvert : convert, message, last));
     }
 
     //----------------------------------------------------------------
