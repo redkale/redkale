@@ -15,6 +15,7 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.*;
+import org.redkale.convert.json.JsonConvert;
 
 /**
  * WebSocket的消息接收发送器, 一个WebSocket对应一个WebSocketRunner
@@ -48,6 +49,8 @@ public class WebSocketRunner implements Runnable {
 
     protected long lastSendTime;
 
+    protected final JsonConvert convert;
+
     public WebSocketRunner(Context context, WebSocket webSocket, AsyncConnection channel, final boolean wsbinary) {
         this.context = context;
         this.engine = webSocket._engine;
@@ -55,6 +58,7 @@ public class WebSocketRunner implements Runnable {
         this.channel = channel;
         this.wsbinary = wsbinary;
         this.readBuffer = context.pollBuffer();
+        this.convert = context.getJsonConvert();
     }
 
     @Override
@@ -101,38 +105,61 @@ public class WebSocketRunner implements Runnable {
                                     b.flip();
                                 }
                             }
-                            WebSocketPacket packet = null;
                             try {
-                                packet = new WebSocketPacket().decode(context.getLogger(), readBuffer, exBuffers);
+
+                                WebSocketPacket packet = new WebSocketPacket().decode(context.getLogger(), readBuffer, exBuffers);
+
+                                if (packet == null) {
+                                    failed(null, attachment1);
+                                    if (debug) context.getLogger().log(Level.FINEST, "WebSocketRunner abort on decode WebSocketPacket, force to close channel, live " + (System.currentTimeMillis() - webSocket.getCreatetime()) / 1000 + " seconds");
+                                    return;
+                                }
+                                webSocket._group.setRecentWebSocket(webSocket);
+                                try {
+                                    if (packet.type == FrameType.TEXT) {
+                                        Object message = convert.convertFrom(webSocket.getTextMessageType(), packet.receiveMasker, packet.receiveBuffers);
+                                        if (readBuffer != null) {
+                                            readBuffer.clear();
+                                            channel.read(readBuffer, null, this);
+                                        }
+                                        webSocket.onMessage(message);
+                                    } else if (packet.type == FrameType.BINARY) {
+                                        Object message = convert.convertFrom(byte[].class, packet.receiveMasker, packet.receiveBuffers);
+                                        if (readBuffer != null) {
+                                            readBuffer.clear();
+                                            channel.read(readBuffer, null, this);
+                                        }
+                                        webSocket.onMessage(message);
+                                    } else if (packet.type == FrameType.PONG) {
+                                        byte[] message = convert.convertFrom(byte[].class, packet.receiveMasker, packet.receiveBuffers);
+                                        if (readBuffer != null) {
+                                            readBuffer.clear();
+                                            channel.read(readBuffer, null, this);
+                                        }
+                                        webSocket.onPong(message);
+                                    } else if (packet.type == FrameType.PING) {
+                                        byte[] message = convert.convertFrom(byte[].class, packet.receiveMasker, packet.receiveBuffers);
+                                        if (readBuffer != null) {
+                                            readBuffer.clear();
+                                            channel.read(readBuffer, null, this);
+                                        }
+                                        webSocket.onPing(message);
+                                    } else {
+                                        context.getLogger().log(Level.WARNING, "WebSocketRunner onMessage by unknown FrameType : " + packet);
+                                        if (readBuffer != null) {
+                                            readBuffer.clear();
+                                            channel.read(readBuffer, null, this);
+                                        }
+                                    }
+                                } catch (Exception e) {
+                                    context.getLogger().log(Level.INFO, "WebSocket onMessage error (" + packet + ")", e);
+                                }
                             } finally {
                                 if (exBuffers != null) {
                                     for (ByteBuffer b : exBuffers) {
                                         context.offerBuffer(b);
                                     }
                                 }
-                            }
-                            if (packet == null) {
-                                failed(null, attachment1);
-                                if (debug) context.getLogger().log(Level.FINEST, "WebSocketRunner abort on decode WebSocketPacket, force to close channel, live " + (System.currentTimeMillis() - webSocket.getCreatetime()) / 1000 + " seconds");
-                                return;
-                            }
-                            if (readBuffer != null) {
-                                readBuffer.clear();
-                                channel.read(readBuffer, null, this);
-                            }
-                            webSocket._group.setRecentWebSocket(webSocket);
-                            try {
-                                if (packet.type == FrameType.TEXT) {
-                                    webSocket.onMessage(packet.getPayload());
-                                } else if (packet.type == FrameType.BINARY) {
-                                    webSocket.onMessage(packet.getBytes());
-                                } else if (packet.type == FrameType.PONG) {
-                                    webSocket.onPong(packet.getBytes());
-                                } else if (packet.type == FrameType.PING) {
-                                    webSocket.onPing(packet.getBytes());
-                                }
-                            } catch (Exception e) {
-                                context.getLogger().log(Level.INFO, "WebSocket onMessage error (" + packet + ")", e);
                             }
                         } catch (Throwable t) {
                             closeRunner();

@@ -216,6 +216,7 @@ public final class Utility {
      */
     public static <T> T[] append(final T[] array, final T... objs) {
         if (array == null || array.length == 0) return objs;
+        if (objs == null || objs.length == 0) return array;
         final T[] news = (T[]) Array.newInstance(array.getClass().getComponentType(), array.length + objs.length);
         System.arraycopy(array, 0, news, 0, array.length);
         System.arraycopy(objs, 0, news, array.length, objs.length);

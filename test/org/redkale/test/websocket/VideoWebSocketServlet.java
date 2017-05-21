@@ -87,7 +87,7 @@ public class VideoWebSocketServlet extends WebSocketServlet {
             }
 
             @Override
-            public void onMessage(String text) {
+            public void onMessage(Object text) {
                 //System.out.println("接收到消息: " + text);
                 super.getWebSocketGroup().getWebSockets().filter(x -> x != this).forEach(x -> {
                     x.send(text);

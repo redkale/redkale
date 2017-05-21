@@ -9,6 +9,7 @@ import org.redkale.net.http.WebServlet;
 import org.redkale.net.http.WebSocketServlet;
 import org.redkale.net.http.WebSocket;
 import java.io.*;
+import java.lang.reflect.Type;
 import java.util.concurrent.atomic.*;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.util.Utility;
@@ -55,17 +56,22 @@ public class ChatWebSocketServlet extends WebSocketServlet {
         return new WebSocket() {
 
             @Override
-            public void onMessage(String text) {
+            public void onMessage(Object text) {
                 icounter.incrementAndGet();
                 counter.incrementAndGet();
-                ChatMessage message = jsonConvert.convertFrom(ChatMessage.class, text);
-                if (debug) System.out.println("收到消息: " + text + ", " + message);
+                ChatMessage message = (ChatMessage) text;//jsonConvert.convertFrom(ChatMessage.class, text.toString());
+                if (debug) System.out.println("收到消息: " + message);
                 super.getWebSocketGroup().getWebSockets().forEach(x -> x.send(message));
             }
 
             @Override
             protected Serializable createGroupid() {
                 return "";
+            }
+            
+            @Override
+            public Type getTextMessageType(){
+                return ChatMessage.class;
             }
         };
     }

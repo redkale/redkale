@@ -10,6 +10,7 @@ import java.io.*;
 import java.nio.ByteBuffer;
 import java.util.function.Supplier;
 import java.util.logging.*;
+import org.redkale.convert.ConvertMask;
 import org.redkale.convert.json.JsonConvert;
 
 /**
@@ -57,9 +58,13 @@ public final class WebSocketPacket {
 
     protected boolean last = true;
 
-    protected Object json;
+    protected Object sendJson;
 
-    JsonConvert convert;
+    JsonConvert sendConvert;
+
+    ConvertMask receiveMasker;
+
+    ByteBuffer[] receiveBuffers;
 
     public WebSocketPacket() {
     }
@@ -88,8 +93,8 @@ public final class WebSocketPacket {
 
     public WebSocketPacket(JsonConvert convert, Object json, boolean fin) {
         this.type = FrameType.TEXT;
-        this.convert = convert;
-        this.json = json;
+        this.sendConvert = convert;
+        this.sendJson = json;
         this.last = fin;
     }
 
@@ -147,7 +152,7 @@ public final class WebSocketPacket {
      */
     ByteBuffer[] encode(final Supplier<ByteBuffer> supplier) {
         final byte opcode = (byte) (this.type.getValue() | 0x80);
-        if (this.convert != null) {
+        if (this.sendConvert != null) {
             Supplier<ByteBuffer> newsupplier = new Supplier<ByteBuffer>() {
 
                 private ByteBuffer buf = supplier.get();
@@ -163,7 +168,7 @@ public final class WebSocketPacket {
                     return supplier.get();
                 }
             };
-            ByteBuffer[] buffers = this.convert.convertTo(newsupplier, json);
+            ByteBuffer[] buffers = this.sendConvert.convertTo(newsupplier, sendJson);
             int len = 0;
             for (ByteBuffer buf : buffers) {
                 len += buf.remaining();
@@ -229,23 +234,20 @@ public final class WebSocketPacket {
         return buffers;
     }
 
-    /**
-     *
-     * <blockquote><pre>
-     * public static void main(String[] args) throws Throwable {
-     *      byte[] mask = new byte[]{(byte) 0x8f, (byte) 0xf8, (byte) 0x6d, (byte) 0x94};
-     *      ByteBuffer buffer = ByteBuffer.wrap(new byte[]{(byte) 0x67, (byte) 0x47, (byte) 0xf4, (byte) 0x70, (byte) 0x37, (byte) 0x52, (byte) 0x8b, (byte) 0x0c, (byte) 0x20, (byte) 0x1e, (byte) 0xdb, (byte) 0x1c, (byte) 0x69, (byte) 0x79, (byte) 0xc2});
-     *      ConvertMask masker = new ConvertMask() {
-     *          private int index = 0;
-     *          public byte unmask(byte value) {
-     *              return (byte) (value ^ mask[index++ % 4]);
-     *          }
-     *      };
-     *      String rs = JsonConvert.root().convertFrom(String.class, masker, buffer);
-     *      System.out.println(rs);
-     * }
-     * </pre></blockquote>
-     */
+//    public static void main(String[] args) throws Throwable {
+//        byte[] mask = new byte[]{(byte) 0x8f, (byte) 0xf8, (byte) 0x6d, (byte) 0x94};
+//        ByteBuffer buffer = ByteBuffer.wrap(new byte[]{(byte) 0x67, (byte) 0x47, (byte) 0xf4, (byte) 0x70, (byte) 0x37, (byte) 0x52, (byte) 0x8b, (byte) 0x0c, (byte) 0x20, (byte) 0x1e, (byte) 0xdb, (byte) 0x1c, (byte) 0x69, (byte) 0x79, (byte) 0xc2});
+//        ConvertMask masker = new ConvertMask() {
+//            private int index = 0;
+//
+//            public byte unmask(byte value) {
+//                return (byte) (value ^ mask[index++ % 4]);
+//            }
+//        };
+//        String rs = JsonConvert.root().convertFrom(String.class, masker, buffer);
+//        System.out.println(rs);
+//    }
+
     /**
      * 消息解码  <br>
      *
@@ -290,7 +292,7 @@ public final class WebSocketPacket {
         this.type = FrameType.valueOf(opcode & 0xF);
         if (type == FrameType.CLOSE) {
             if (debug) logger.log(Level.FINEST, " receive close command from websocket client");
-            return null;
+            return this;
         }
         final boolean checkrsv = false;//暂时不校验
         if (checkrsv && (opcode & 0b0111_0000) != 0) {
@@ -323,34 +325,20 @@ public final class WebSocketPacket {
                 length = buffer.getInt();
             }
         }
-        byte[] mask = null;
         if (masked) {
-            mask = new byte[4];
-            buffer.get(mask);
+            final byte[] masks = new byte[4];
+            buffer.get(masks);
+            this.receiveMasker = new ConvertMask() {
+
+                private int index = 0;
+
+                @Override
+                public byte unmask(byte value) {
+                    return (byte) (value ^ masks[index++ % 4]);
+                }
+            };
         }
-        final byte[] data = new byte[length];
-        if (buffer.remaining() >= length) {
-            buffer.get(data);
-        } else { //必须有 exbuffers
-            int offset = buffer.remaining();
-            buffer.get(data, 0, offset);
-            for (ByteBuffer b : exbuffers) {
-                int r = b.remaining();
-                b.get(data, offset, r);
-                offset += r;
-                if (offset >= length) break;
-            }
-        }
-        if (mask != null) {
-            for (int i = 0; i < data.length; i++) {
-                data[i] ^= mask[i % 4];
-            }
-        }
-        if (type == FrameType.TEXT) {
-            this.payload = new String(Utility.decodeUTF8(data));
-        } else {
-            this.bytes = data;
-        }
+        this.receiveBuffers = Utility.append(new ByteBuffer[]{buffer}, exbuffers);
         return this;
     }
 
