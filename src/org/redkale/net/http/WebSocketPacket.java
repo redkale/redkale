@@ -169,8 +169,8 @@ public final class WebSocketPacket {
         buffers[0] = buffer;
         for (int i = 1; i < buffers.length; i++) {
             ByteBuffer buf = supplier.get();
-            buffer.put(content, start, Math.min(pend, capacity));
-            buffer.flip();
+            buf.put(content, start, Math.min(pend, capacity));
+            buf.flip();
             buffers[i] = buf;
             start += capacity;
             pend -= capacity;
