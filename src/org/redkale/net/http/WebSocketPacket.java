@@ -165,7 +165,7 @@ public final class WebSocketPacket {
         buffer.put(content, 0, buffer.remaining());
         buffer.flip();
         final int capacity = buffer.capacity();
-        final ByteBuffer[] buffers = new ByteBuffer[pend / capacity + 1];
+        final ByteBuffer[] buffers = new ByteBuffer[(pend / capacity) + 1 + ((pend % capacity) > 0 ? 1 : 0)];
         buffers[0] = buffer;
         for (int i = 1; i < buffers.length; i++) {
             ByteBuffer buf = supplier.get();
