@@ -206,7 +206,7 @@ public final class WebSocketPacket {
      * @return
      */
     WebSocketPacket decode(final Logger logger, final ByteBuffer buffer, ByteBuffer... exbuffers) {
-        final boolean debug = true;
+        final boolean debug = false; //调试开关
         if (debug) {
             int remain = buffer.remaining();
             if (exbuffers != null) {
