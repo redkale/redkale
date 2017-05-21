@@ -37,13 +37,11 @@ public class WebSocketRunner implements Runnable {
 
     private ByteBuffer readBuffer;
 
-    private ByteBuffer writeBuffer;
+    private ByteBuffer[] writeBuffers;
 
     protected volatile boolean closed = false;
 
     private AtomicBoolean writing = new AtomicBoolean();
-
-    private final Coder coder = new Coder();
 
     private final BlockingQueue<QueueEntry> queue = new ArrayBlockingQueue(1024);
 
@@ -57,15 +55,12 @@ public class WebSocketRunner implements Runnable {
         this.webSocket = webSocket;
         this.channel = channel;
         this.wsbinary = wsbinary;
-        this.coder.logger = context.getLogger();
-        this.coder.debugable = false;//context.getLogger().isLoggable(Level.FINEST);
         this.readBuffer = context.pollBuffer();
-        this.writeBuffer = context.pollBuffer();
     }
 
     @Override
     public void run() {
-        final boolean debug = this.coder.debugable;
+        final boolean debug = true;
         try {
             webSocket.onConnected();
             channel.setReadTimeoutSecond(300); //读取超时5分钟
@@ -107,10 +102,14 @@ public class WebSocketRunner implements Runnable {
                                     b.flip();
                                 }
                             }
-                            WebSocketPacket packet = coder.decode(readBuffer, exBuffers);
-                            if (exBuffers != null) {
-                                for (ByteBuffer b : exBuffers) {
-                                    context.offerBuffer(b);
+                            WebSocketPacket packet = null;
+                            try {
+                                packet = new WebSocketPacket().decode(context.getLogger(), readBuffer, exBuffers);
+                            } finally {
+                                if (exBuffers != null) {
+                                    for (ByteBuffer b : exBuffers) {
+                                        context.offerBuffer(b);
+                                    }
                                 }
                             }
                             if (packet == null) {
@@ -163,73 +162,66 @@ public class WebSocketRunner implements Runnable {
     public CompletableFuture<Integer> sendMessage(WebSocketPacket packet) {
         if (packet == null) return CompletableFuture.completedFuture(RETCODE_SEND_ILLPACKET);
         if (closed) return CompletableFuture.completedFuture(RETCODE_WSOCKET_CLOSED);
-        final boolean debug = this.coder.debugable;
+        boolean debug = true;
         //System.out.println("推送消息");
-        final byte[] bytes = coder.encode(packet);
-        if (debug) context.getLogger().log(Level.FINEST, "send web socket message's length = " + bytes.length);
+        if (debug) context.getLogger().log(Level.FINEST, "send web socket message:  " + packet);
         this.lastSendTime = System.currentTimeMillis();
         final CompletableFuture<Integer> futureResult = new CompletableFuture<>();
         if (writing.getAndSet(true)) {
-            queue.add(new QueueEntry(futureResult, bytes));
+            queue.add(new QueueEntry(futureResult, packet));
             return futureResult;
         }
-        ByteBuffer localWriteBuffer = writeBuffer;
-        if (localWriteBuffer == null) return CompletableFuture.completedFuture(RETCODE_ILLEGALBUFFER);
-        ByteBuffer sendBuffer;
-        if (bytes.length <= localWriteBuffer.capacity()) {
-            localWriteBuffer.clear();
-            localWriteBuffer.put(bytes);
-            localWriteBuffer.flip();
-            sendBuffer = localWriteBuffer;
-        } else {
-            sendBuffer = ByteBuffer.wrap(bytes);
-        }
+        ByteBuffer[] buffers = packet.encode(this.context.getBufferSupplier());
+        this.writeBuffers = buffers;
         try {
-            channel.write(sendBuffer, sendBuffer, new CompletionHandler<Integer, ByteBuffer>() {
+            channel.write(buffers, buffers, new CompletionHandler<Integer, ByteBuffer[]>() {
 
                 private CompletableFuture<Integer> future = futureResult;
 
                 @Override
-                public void completed(Integer result, ByteBuffer attachment) {
-                    if (attachment == null || closed) {
+                public void completed(Integer result, ByteBuffer[] attachments) {
+                    if (attachments == null || closed) {
                         if (future != null) {
                             future.complete(RETCODE_WSOCKET_CLOSED);
                             future = null;
+                            if (writeBuffers != null) {
+                                for (ByteBuffer buf : writeBuffers) {
+                                    context.offerBuffer(buf);
+                                }
+                                writeBuffers = null;
+                            }
                         }
                         return;
                     }
                     try {
-                        if (attachment.hasRemaining()) {
-                            if (debug) context.getLogger().log(Level.FINEST, "WebSocketRunner write completed reemaining: " + attachment.remaining());
-                            channel.write(attachment, attachment, this);
+                        int index = -1;
+                        for (int i = 0; i < attachments.length; i++) {
+                            if (attachments[i].hasRemaining()) {
+                                index = i;
+                                break;
+                            }
+                        }
+                        if (index >= 0) {
+                            channel.write(attachments, index, attachments.length - index, attachments, this);
                             return;
                         }
                         if (future != null) {
                             future.complete(0);
                             future = null;
+                            if (writeBuffers != null) {
+                                for (ByteBuffer buf : writeBuffers) {
+                                    context.offerBuffer(buf);
+                                }
+                                writeBuffers = null;
+                            }
                         }
                         QueueEntry entry = queue.poll();
-                        ByteBuffer localWriteBuffer = writeBuffer;
-                        if (entry == null) return;  //没有数据了
-                        future = entry.future;
-                        if (localWriteBuffer == null) {
-                            if (future != null) {
-                                future.complete(RETCODE_WSOCKET_CLOSED);
-                                future = null;
-                            }
-                            return;
+                        if (entry != null) {
+                            future = entry.future;
+                            ByteBuffer[] buffers = packet.encode(context.getBufferSupplier());
+                            writeBuffers = buffers;
+                            channel.write(buffers, buffers, this);
                         }
-                        byte[] bs = entry.bytes;
-                        ByteBuffer sendBuffer;
-                        if (bs.length <= localWriteBuffer.capacity()) {
-                            localWriteBuffer.clear();
-                            localWriteBuffer.put(bs);
-                            localWriteBuffer.flip();
-                            sendBuffer = localWriteBuffer;
-                        } else {
-                            sendBuffer = ByteBuffer.wrap(bs);
-                        }
-                        channel.write(sendBuffer, sendBuffer, this);
                     } catch (Exception e) {
                         closeRunner();
                         context.getLogger().log(Level.WARNING, "WebSocket sendMessage abort on rewrite, force to close channel, live " + (System.currentTimeMillis() - webSocket.getCreatetime()) / 1000 + " seconds", e);
@@ -238,7 +230,7 @@ public class WebSocketRunner implements Runnable {
                 }
 
                 @Override
-                public void failed(Throwable exc, ByteBuffer attachment) {
+                public void failed(Throwable exc, ByteBuffer[] attachments) {
                     writing.set(false);
                     closeRunner();
                     if (exc != null) {
@@ -265,9 +257,13 @@ public class WebSocketRunner implements Runnable {
             } catch (Throwable t) {
             }
             context.offerBuffer(readBuffer);
-            context.offerBuffer(writeBuffer);
             readBuffer = null;
-            writeBuffer = null;
+            if (writeBuffers != null) {
+                for (ByteBuffer buf : writeBuffers) {
+                    context.offerBuffer(buf);
+                }
+                writeBuffers = null;
+            }
             engine.remove(webSocket);
             webSocket.onClose(0, null);
         }
@@ -277,11 +273,11 @@ public class WebSocketRunner implements Runnable {
 
         public final CompletableFuture<Integer> future;
 
-        public final byte[] bytes;
+        public final WebSocketPacket packet;
 
-        public QueueEntry(CompletableFuture<Integer> future, byte[] bytes) {
+        public QueueEntry(CompletableFuture<Integer> future, WebSocketPacket packet) {
             this.future = future;
-            this.bytes = bytes;
+            this.packet = packet;
         }
 
     }
@@ -389,7 +385,7 @@ public class WebSocketRunner implements Runnable {
         }
     }
 
-    private static final class Coder {
+    private static final class WebSocketCoder {
 
         protected byte inFragmentedType;
 

@@ -104,7 +104,8 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         this.readTimeoutSecond = config.getIntValue("readTimeoutSecond", 0);
         this.writeTimeoutSecond = config.getIntValue("writeTimeoutSecond", 0);
         this.maxbody = config.getIntValue("maxbody", 64 * 1024);
-        this.bufferCapacity = config.getIntValue("bufferCapacity", 8 * 1024);
+        int bufCapacity = config.getIntValue("bufferCapacity", 8 * 1024);
+        this.bufferCapacity = bufCapacity < 256 ? 256 : bufCapacity;
         this.threads = config.getIntValue("threads", Runtime.getRuntime().availableProcessors() * 16);
         this.bufferPoolSize = config.getIntValue("bufferPoolSize", Runtime.getRuntime().availableProcessors() * 512);
         this.responsePoolSize = config.getIntValue("responsePoolSize", Runtime.getRuntime().availableProcessors() * 256);

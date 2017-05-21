@@ -43,7 +43,7 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
         write(srcs, 0, srcs.length, attachment, handler);
     }
 
-    protected abstract <A> void write(ByteBuffer[] srcs, int offset, int length, A attachment, CompletionHandler<Integer, ? super A> handler);
+    public abstract <A> void write(ByteBuffer[] srcs, int offset, int length, A attachment, CompletionHandler<Integer, ? super A> handler);
 
     public void dispose() {//同close， 只是去掉throws IOException
         try {
@@ -187,7 +187,7 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
         }
 
         @Override
-        protected <A> void write(ByteBuffer[] srcs, int offset, int length, A attachment, CompletionHandler<Integer, ? super A> handler) {
+        public <A> void write(ByteBuffer[] srcs, int offset, int length, A attachment, CompletionHandler<Integer, ? super A> handler) {
             try {
                 int rs = 0;
                 for (int i = offset; i < offset + length; i++) {
@@ -338,7 +338,7 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
         }
 
         @Override
-        protected <A> void write(ByteBuffer[] srcs, int offset, int length, A attachment, CompletionHandler<Integer, ? super A> handler) {
+        public <A> void write(ByteBuffer[] srcs, int offset, int length, A attachment, CompletionHandler<Integer, ? super A> handler) {
             try {
                 int rs = 0;
                 for (int i = offset; i < offset + length; i++) {
