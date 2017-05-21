@@ -10,6 +10,7 @@ import org.redkale.net.http.WebSocketServlet;
 import org.redkale.net.http.WebSocket;
 import java.io.*;
 import java.util.concurrent.atomic.*;
+import org.redkale.convert.json.JsonConvert;
 import org.redkale.util.Utility;
 
 /**
@@ -26,7 +27,7 @@ public class ChatWebSocketServlet extends WebSocketServlet {
     private final boolean debug;
 
     public ChatWebSocketServlet() {
-        debug = "true".equalsIgnoreCase(System.getProperty("debug", "false"));
+        debug = "true".equalsIgnoreCase(System.getProperty("debug", "true"));
         Thread t = new Thread() {
 
             {
@@ -37,7 +38,7 @@ public class ChatWebSocketServlet extends WebSocketServlet {
             public void run() {
                 while (true) {
                     try {
-                        sleep(60 * 1000);
+                        sleep(300 * 1000);
                     } catch (Exception e) {
                         return;
                     }
@@ -57,8 +58,9 @@ public class ChatWebSocketServlet extends WebSocketServlet {
             public void onMessage(String text) {
                 icounter.incrementAndGet();
                 counter.incrementAndGet();
-                if (debug) System.out.println("收到消息: " + text);
-                super.getWebSocketGroup().getWebSockets().forEach(x -> x.send(text));
+                ChatMessage message = jsonConvert.convertFrom(ChatMessage.class, text);
+                if (debug) System.out.println("收到消息: " + text + ", " + message);
+                super.getWebSocketGroup().getWebSockets().forEach(x -> x.send(message));
             }
 
             @Override
@@ -68,4 +70,13 @@ public class ChatWebSocketServlet extends WebSocketServlet {
         };
     }
 
+    public static class ChatMessage {
+
+        public String message;
+
+        @Override
+        public String toString() {
+            return JsonConvert.root().convertTo(this);
+        }
+    }
 }
