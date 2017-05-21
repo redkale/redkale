@@ -124,7 +124,7 @@ public class WebSocketRunner implements Runnable {
                                         }
                                         webSocket.onMessage(message);
                                     } else if (packet.type == FrameType.BINARY) {
-                                        Object message = convert.convertFrom(byte[].class, packet.receiveMasker, packet.receiveBuffers);
+                                        byte[] message = convert.convertFrom(byte[].class, packet.receiveMasker, packet.receiveBuffers);
                                         if (readBuffer != null) {
                                             readBuffer.clear();
                                             channel.read(readBuffer, null, this);
