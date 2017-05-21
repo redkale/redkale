@@ -36,8 +36,9 @@ import org.redkale.util.Comment;
  * 详情见: https://redkale.org
  *
  * @author zhangjx
+ * @param <T> 泛型
  */
-public abstract class WebSocket {
+public abstract class WebSocket<T> {
 
     @Comment("消息不合法")
     public static final int RETCODE_SEND_ILLPACKET = 1 << 1; //2
@@ -78,6 +79,8 @@ public abstract class WebSocket {
     String _remoteAddr;//不可能为空 
 
     JsonConvert _jsonConvert; //不可能为空 
+
+    java.lang.reflect.Type _messageTextType; //不可能为空
 
     private final long createtime = System.currentTimeMillis();
 
@@ -528,17 +531,13 @@ public abstract class WebSocket {
     public void onPong(byte[] bytes) {
     }
 
-    public java.lang.reflect.Type getTextMessageType() {
-        return String.class;
-    }
-
-    public void onMessage(Object message) {
+    public void onMessage(T message) {
     }
 
     public void onMessage(byte[] bytes) {
     }
 
-    public void onFragment(Object message, boolean last) {
+    public void onFragment(T message, boolean last) {
     }
 
     public void onFragment(byte[] bytes, boolean last) {

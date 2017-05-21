@@ -6,6 +6,7 @@
 package org.redkale.net.http;
 
 import java.io.*;
+import java.lang.reflect.*;
 import java.net.*;
 import java.nio.*;
 import java.security.*;
@@ -61,6 +62,27 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
     @Resource(name = "$")
     protected WebSocketNode node;
 
+    protected final Type messageTextType;
+
+    protected WebSocketServlet() {
+        Type msgtype = String.class;
+        try {
+            for (Method method : this.getClass().getDeclaredMethods()) {
+                if (!method.getName().equals("createWebSocket")) continue;
+                if (method.getParameterCount() > 0) continue;
+                Type rt = method.getGenericReturnType();
+                if (rt instanceof ParameterizedType) {
+                    msgtype = ((ParameterizedType) rt).getActualTypeArguments()[0];
+                }
+                if (msgtype == Object.class) msgtype = String.class;
+                break;
+            }
+        } catch (Exception e) {
+            logger.warning(this.getClass().getName() + " not designate text message type on createWebSocket Method");
+        }
+        this.messageTextType = msgtype;
+    }
+
     @Override
     final void preInit(HttpContext context, AnyValue conf) {
         InetSocketAddress addr = context.getServerAddress();
@@ -103,6 +125,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
         }
         final WebSocket webSocket = this.createWebSocket();
         webSocket._engine = this.node.localEngine;
+        webSocket._messageTextType = this.messageTextType;
         webSocket._jsonConvert = jsonConvert;
         webSocket._remoteAddress = request.getRemoteAddress();
         webSocket._remoteAddr = request.getRemoteAddr();

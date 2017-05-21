@@ -117,7 +117,7 @@ public class WebSocketRunner implements Runnable {
                                 webSocket._group.setRecentWebSocket(webSocket);
                                 try {
                                     if (packet.type == FrameType.TEXT) {
-                                        Object message = convert.convertFrom(webSocket.getTextMessageType(), packet.receiveMasker, packet.receiveBuffers);
+                                        Object message = convert.convertFrom(webSocket._messageTextType, packet.receiveMasker, packet.receiveBuffers);
                                         if (readBuffer != null) {
                                             readBuffer.clear();
                                             channel.read(readBuffer, null, this);

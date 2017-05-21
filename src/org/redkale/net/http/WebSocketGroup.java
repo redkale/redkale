@@ -99,9 +99,9 @@ public final class WebSocketGroup {
         CompletableFuture<Integer> future = null;
         for (WebSocket s : list) {
             if (future == null) {
-                future = s.send(packet);
+                future = s.sendPacket(packet);
             } else {
-                future.thenCombine(s.send(packet), (a, b) -> a | b);
+                future.thenCombine(s.sendPacket(packet), (a, b) -> a | (Integer) b);
             }
         }
         return future == null ? CompletableFuture.completedFuture(0) : future;
