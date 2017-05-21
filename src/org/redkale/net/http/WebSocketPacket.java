@@ -267,8 +267,10 @@ public final class WebSocketPacket {
             int offset = buffer.remaining();
             buffer.get(data, 0, offset);
             for (ByteBuffer b : exbuffers) {
-                offset += b.remaining();
-                b.get(data, offset, b.remaining());
+                int r = b.remaining();
+                b.get(data, offset, r);
+                offset += r;
+                if (offset >= length) break;
             }
         }
         if (mask != null) {
