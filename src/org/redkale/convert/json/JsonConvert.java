@@ -48,7 +48,7 @@ public final class JsonConvert extends Convert<JsonReader, JsonWriter> {
 
     //------------------------------ reader -----------------------------------------------------------
     public JsonReader pollJsonReader(final ByteBuffer... buffers) {
-        return new JsonByteBufferReader(buffers);
+        return new JsonByteBufferReader((ConvertMask) null, buffers);
     }
 
     public JsonReader pollJsonReader(final InputStream in) {
@@ -111,7 +111,12 @@ public final class JsonConvert extends Convert<JsonReader, JsonWriter> {
 
     public <T> T convertFrom(final Type type, final ByteBuffer... buffers) {
         if (type == null || buffers == null || buffers.length == 0) return null;
-        return (T) factory.loadDecoder(type).convertFrom(new JsonByteBufferReader(buffers));
+        return (T) factory.loadDecoder(type).convertFrom(new JsonByteBufferReader((ConvertMask) null, buffers));
+    }
+
+    public <T> T convertFrom(final Type type, final ConvertMask mask, final ByteBuffer... buffers) {
+        if (type == null || buffers == null || buffers.length == 0) return null;
+        return (T) factory.loadDecoder(type).convertFrom(new JsonByteBufferReader(mask, buffers));
     }
 
     public <T> T convertFrom(final Type type, final JsonReader reader) {

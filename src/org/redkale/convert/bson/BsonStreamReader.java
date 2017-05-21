@@ -9,7 +9,7 @@ import java.io.*;
 import org.redkale.convert.*;
 
 /**
- * 
+ *
  * 详情见: https://redkale.org
  *
  * @author zhangjx
@@ -21,6 +21,7 @@ class BsonStreamReader extends BsonByteBufferReader {
     private byte currByte;
 
     protected BsonStreamReader(InputStream in) {
+        super((ConvertMask) null);
         this.in = in;
     }
 

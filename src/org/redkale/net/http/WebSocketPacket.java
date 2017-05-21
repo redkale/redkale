@@ -179,6 +179,23 @@ public final class WebSocketPacket {
     }
 
     /**
+     *
+     * <blockquote><pre>
+     * public static void main(String[] args) throws Throwable {
+     *      byte[] mask = new byte[]{(byte) 0x8f, (byte) 0xf8, (byte) 0x6d, (byte) 0x94};
+     *      ByteBuffer buffer = ByteBuffer.wrap(new byte[]{(byte) 0x67, (byte) 0x47, (byte) 0xf4, (byte) 0x70, (byte) 0x37, (byte) 0x52, (byte) 0x8b, (byte) 0x0c, (byte) 0x20, (byte) 0x1e, (byte) 0xdb, (byte) 0x1c, (byte) 0x69, (byte) 0x79, (byte) 0xc2});
+     *      ConvertMask masker = new ConvertMask() {
+     *          private int index = 0;
+     *          public byte unmask(byte value) {
+     *              return (byte) (value ^ mask[index++ % 4]);
+     *          }
+     *      };
+     *      String rs = JsonConvert.root().convertFrom(String.class, masker, buffer);
+     *      System.out.println(rs);
+     * }
+     * </pre></blockquote>
+     */
+    /**
      * 消息解码  <br>
      *
      * 0 1 2 3
