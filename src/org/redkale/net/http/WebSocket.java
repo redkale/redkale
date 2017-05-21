@@ -167,9 +167,9 @@ public abstract class WebSocket {
     }
 
     /**
-     * 给自身发送消息, 消息类型是String或byte[]或可JSON化对象
+     * 给自身发送消息, 消息类型是String或byte[]或可JavaBean对象
      *
-     * @param message 不可为空, 只能是String或byte[]或可JSON化对象
+     * @param message 不可为空, 只能是String或byte[]或可JavaBean对象
      *
      * @return 0表示成功， 非0表示错误码
      */
@@ -178,9 +178,9 @@ public abstract class WebSocket {
     }
 
     /**
-     * 给自身发送消息, 消息类型是String或byte[]或可JSON化对象
+     * 给自身发送消息, 消息类型是String或byte[]或可JavaBean对象
      *
-     * @param message 不可为空, 只能是String或byte[]或可JSON化对象
+     * @param message 不可为空, 只能是String或byte[]或可JavaBean对象
      * @param last    是否最后一条
      *
      * @return 0表示成功， 非0表示错误码
@@ -194,10 +194,22 @@ public abstract class WebSocket {
     }
 
     /**
-     * 给自身发送消息, 消息类型是JSON对象
+     * 给自身发送消息, 消息类型是JavaBean对象
      *
      * @param convert JsonConvert
-     * @param message 不可为空, 只能是String或byte[]或可JSON化对象
+     * @param message 不可为空, 只能是JSON对象
+     *
+     * @return 0表示成功， 非0表示错误码
+     */
+    public final CompletableFuture<Integer> send(JsonConvert convert, Object message) {
+        return send(new WebSocketPacket(convert == null ? _jsonConvert : convert, message, true));
+    }
+
+    /**
+     * 给自身发送消息, 消息类型是JavaBean对象
+     *
+     * @param convert JsonConvert
+     * @param message 不可为空, 只能是JavaBean对象
      * @param last    是否最后一条
      *
      * @return 0表示成功， 非0表示错误码
@@ -232,7 +244,7 @@ public abstract class WebSocket {
     }
 
     /**
-     * 给指定groupid的WebSocketGroup下所有WebSocket节点发送可JSON化对象消息
+     * 给指定groupid的WebSocketGroup下所有WebSocket节点发送可JavaBean对象消息
      *
      * @param groupid groupid
      * @param message 不可为空
@@ -270,7 +282,7 @@ public abstract class WebSocket {
     }
 
     /**
-     * 给指定groupid的WebSocketGroup下所有WebSocket节点发送可JSON化对象消息
+     * 给指定groupid的WebSocketGroup下所有WebSocket节点发送可JavaBean对象消息
      *
      * @param groupid groupid
      * @param message 不可为空
@@ -307,7 +319,7 @@ public abstract class WebSocket {
     }
 
     /**
-     * 给指定groupid的WebSocketGroup下最近接入的WebSocket节点发送可JSON化对象消息
+     * 给指定groupid的WebSocketGroup下最近接入的WebSocket节点发送可JavaBean对象消息
      *
      * @param groupid groupid
      * @param message 不可为空
@@ -345,7 +357,7 @@ public abstract class WebSocket {
     }
 
     /**
-     * 给指定groupid的WebSocketGroup下最近接入的WebSocket节点发送可JSON化对象消息
+     * 给指定groupid的WebSocketGroup下最近接入的WebSocket节点发送可JavaBean对象消息
      *
      * @param groupid groupid
      * @param message 不可为空
