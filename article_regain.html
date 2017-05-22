@@ -93,7 +93,7 @@
             </p>
             <p>&nbsp;&nbsp;<b>Servlet</b></p>
             <p>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在API设计上，<a href="http://redkale.org" target="_blank">Redkale</a>下足了功夫，敢于抛弃标准。其HTTP服务不再是javax.servlet——J2EE中使用最多的规范的实现，在接口形式上与NodeJs的HTTP模块很类似，易于操作。Servlet规范对于现在的应用来说过于体系化。时下移动APP、发达的前端、高性能浏览器、静动分离、REST、分布式这些因素已经让JSP、PHP、ASP这些通过后台生成页面的集中式开发框架显得不适时宜。NodeJs中的HTTP模块源码不过十几K，而Java里HTTP服务主流还是Tomcat——一个8M的重型机器。 <a href="http://redkale.org" target="_blank">Redkale</a>摒弃了已经落伍的规范和功能(JSP、InputStream/OutputStream操作、Session对象、Filter等)，弱化Web概念，HTTP与SNCP服务一样，只是接入层，无需做过重的设计。 <br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在API设计上，<a href="http://redkale.org" target="_blank">Redkale</a>下足了功夫，敢于抛弃标准。其HTTP服务不再是javax.servlet——J2EE中使用最多的规范的实现，在接口形式上与NodeJs的HTTP模块很类似，易于操作。Servlet规范对于现在的应用来说过于体系化。时下移动APP、发达的前端、高性能浏览器、静动分离、REST、分布式这些因素已经让JSP、PHP、ASP这些通过后台生成页面的集中式开发框架显得不适时宜。NodeJs中的HTTP模块源码不过十几K，而Java里HTTP服务主流还是Tomcat——一个8M的重型机器。 <a href="http://redkale.org" target="_blank">Redkale</a>摒弃了已经落伍的规范和功能(JSP、InputStream/OutputStream操作、Session对象等)，弱化Web概念，HTTP与SNCP服务一样，只是接入层，无需做过重的设计。 <br>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;其他语言的HTTP框架在处理请求后大多是以response关闭整个请求处理的方式为主，而Servlet规范却是在service方法执行后关闭，Servlet3.0规范虽然支持异步，显然与其他语言框架比，比较生涩难懂，其API使用方式还需与同步方式区别对待，且接口设计本身就会导致实现上性能不佳，而response关闭的方式天然的把同步与异步等同对待，无论是当前线程还是另开线程处理请求，都由response来结束请求处理。同样Servlet规范中WebSocket接口设计上也是过于复杂，且只是针对协议本身的实现，没有考虑大多开发者的使用场景，WebSocket本质上就像一个keepalive的Http请求,雷同HttpServlet。所以<a href="http://redkale.org" target="_blank">Redkale</a>在设计WebSocket时尽量与HttpServlet形态保持一致，同时还集成了分布式功能，让开发者也可以很简单的实现多部署。 <br>
             </p>
             <p>&nbsp;&nbsp;<b>Service</b></p>
@@ -106,7 +106,7 @@
             </p>           
             <p>&nbsp;&nbsp;<b>思维</b></p>
             <p>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://redkale.org" target="_blank">Redkale</a> 追求大道至简，不仅提供高性能的功能和简易的API，还带来不同的设计思维。作为一名有追求的开发者，不能只停留在API层面，更多的是需要掌握设计能力，一个好的设计方案往往能少写很多代码。Java里很多规范和框架就是考虑太过全面，为了迎合各种良莠不齐的想法和设计。比如HTTP服务，只是系统的一个接入层，有必须设计ServletConfig、ServletContextListener、Filter、HttpSessionListener等这么多API吗，开发者在系统初期养成定义全局的BaseHttpServlet这些基类的习惯就可以控制很多东西，普通功能也无需去使用什么拦截器或AOP功能。提交表单前先将表单数据转换成JSON字符串传给后台，后台的接口既可用于Web也可用于APP，非要按原始表单提交，那只能使用Struts这类笨重的框架了。再如DB操作，开发者设计好的数据结构可以把关系型数据库当NoSQL数据库操作，会发现对JDBC做一定的封装就可以基本杜绝写SQL。非要写存储过程、关联五六张表进行复杂查询，再好的DB框架都满足不了你。再如Date，Date对象的本质是long值，很多人习惯性的数据库就用Date类型，这样会增加很多麻烦，增加数据库的通用性难度，JSON还需要提供各种DateFormat，如果使用long类型，时间只交给页面去format就简单很多，long的性能也更好。说了这么多，只是想表达一个观点，开发时摆脱传统思维的桎栲，换个思路去思考，很多东西会变得很简单。<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://redkale.org" target="_blank">Redkale</a> 追求大道至简，不仅提供高性能的功能和简易的API，还带来不同的设计思维。作为一名有追求的开发者，不能只停留在API层面，更多的是需要掌握设计能力，一个好的设计方案往往能少写很多代码。Java里很多规范和框架就是考虑太过全面，为了迎合各种良莠不齐的想法和设计。比如HTTP服务，只是系统的一个接入层，有必须设计ServletConfig、ServletContextListener、HttpSessionListener等这么多API吗，开发者在系统初期养成定义全局的BaseHttpServlet这些基类的习惯就可以控制很多东西，普通功能也无需去使用什么拦截器或AOP功能。提交表单前先将表单数据转换成JSON字符串传给后台，后台的接口既可用于Web也可用于APP，非要按原始表单提交，那只能使用Struts这类笨重的框架了。再如DB操作，开发者设计好的数据结构可以把关系型数据库当NoSQL数据库操作，会发现对JDBC做一定的封装就可以基本杜绝写SQL。非要写存储过程、关联五六张表进行复杂查询，再好的DB框架都满足不了你。再如Date，Date对象的本质是long值，很多人习惯性的数据库就用Date类型，这样会增加很多麻烦，增加数据库的通用性难度，JSON还需要提供各种DateFormat，如果使用long类型，时间只交给页面去format就简单很多，long的性能也更好。说了这么多，只是想表达一个观点，开发时摆脱传统思维的桎栲，换个思路去思考，很多东西会变得很简单。<br>
             </p>
             <p>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;想了解更多关于Redkale的资料， 请访问Redkale官网: ：<a href="http://redkale.org" target="_blank">http://redkale.org</a>。
