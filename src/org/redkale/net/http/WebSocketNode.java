@@ -130,19 +130,8 @@ public abstract class WebSocketNode {
             CompletableFuture<Map<InetSocketAddress, List<String>>> future = null;
             for (final InetSocketAddress nodeAddress : addrs) {
                 CompletableFuture<Map<InetSocketAddress, List<String>>> mapFuture = getWebSocketAddresses(nodeAddress, groupid)
-                    .thenCompose((List<String> list) -> {
-                        Map<InetSocketAddress, List<String>> map = new HashMap<>();
-                        map.put(nodeAddress, list);
-                        return CompletableFuture.completedFuture(map);
-                    });
-                if (future == null) {
-                    future = mapFuture;
-                } else {
-                    future = future.thenCombine(mapFuture, (a, b) -> {
-                        a.putAll(b);
-                        return a;
-                    });
-                }
+                    .thenCompose((List<String> list) -> CompletableFuture.completedFuture(Utility.ofMap(nodeAddress, list)));
+                future = future == null ? mapFuture : future.thenCombine(mapFuture, (a, b) -> Utility.merge(a, b));
             }
             return future == null ? CompletableFuture.completedFuture(new HashMap<>()) : future;
         });
@@ -203,11 +192,8 @@ public abstract class WebSocketNode {
             CompletableFuture<Integer> future = null;
             for (InetSocketAddress addr : addrs) {
                 if (addr == null || addr.equals(localSncpAddress)) continue;
-                if (future == null) {
-                    future = remoteNode.sendMessage(addr, groupid, recent, message, last);
-                } else {
-                    future = future.thenCombine(remoteNode.sendMessage(addr, groupid, recent, message, last), (a, b) -> a | b);
-                }
+                future = future == null ? remoteNode.sendMessage(addr, groupid, recent, message, last)
+                    : future.thenCombine(remoteNode.sendMessage(addr, groupid, recent, message, last), (a, b) -> a | b);
             }
             return future == null ? CompletableFuture.completedFuture(0) : future;
         });

@@ -108,15 +108,38 @@ public final class Utility {
      * 将多个key:value对应值组合成一个Map，items长度必须是偶数, 参数个数若是奇数的话，最后一个会被忽略
      * 类似 JDK9中的 Map.of 方法
      *
+     * @param <K>   泛型
+     * @param <V>   泛型
      * @param items 键值对
      *
      * @return Map
      */
-    public static Map<Object, Object> ofMap(Object... items) {
-        HashMap<Object, Object> map = new LinkedHashMap<>();
+    public static <K, V> Map<K, V> ofMap(Object... items) {
+        HashMap<K, V> map = new LinkedHashMap<>();
         int len = items.length / 2;
         for (int i = 0; i < len; i++) {
-            map.put(items[i * 2], items[i * 2 + 1]);
+            map.put((K) items[i * 2], (V) items[i * 2 + 1]);
+        }
+        return map;
+    }
+
+    /**
+     * 将多个Map合并成一个Map
+     *
+     * @param <K>  泛型
+     * @param <V>  泛型
+     * @param maps Map
+     *
+     * @return Map
+     */
+    public static <K, V> Map<K, V> merge(Map<K, V>... maps) {
+        Map<K, V> map = null;
+        for (Map<K, V> m : maps) {
+            if (map == null) {
+                map = m;
+            } else if (m != null) {
+                map.putAll(m);
+            }
         }
         return map;
     }
