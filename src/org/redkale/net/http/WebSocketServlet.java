@@ -177,7 +177,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
         return null;
     }
 
-    protected abstract WebSocket createWebSocket();
+    protected abstract <T> WebSocket<T> createWebSocket();
 
     private static MessageDigest getMessageDigest() {
         try {
