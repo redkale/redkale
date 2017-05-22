@@ -41,7 +41,7 @@ public abstract class Filter<C extends Context, R extends Request<C>, P extends 
     /**
      * 值越小越靠前执行
      *
-     * @return
+     * @return int
      */
     public int getIndex() {
         return 0;

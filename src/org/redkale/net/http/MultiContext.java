@@ -96,7 +96,7 @@ public final class MultiContext {
      * @param contentTypeReg 可接收的ContentType正则表达式
      *
      * @return 二进制文件
-     * @throws IOException
+     * @throws IOException IOException
      */
     public byte[] partsFirstBytes(final long max, final String filenameReg, final String contentTypeReg) throws IOException {
         if (!isMultipart()) return null;
@@ -118,7 +118,7 @@ public final class MultiContext {
      * @param contentTypeReg 可接收的ContentType正则表达式
      *
      * @return 文件
-     * @throws IOException
+     * @throws IOException IOException
      */
     public File partsFirstFile(final File home, final long max, final String filenameReg, final String contentTypeReg) throws IOException {
         if (!isMultipart()) return null;
@@ -153,7 +153,7 @@ public final class MultiContext {
      * @param contentTypeReg 可接收的ContentType正则表达式
      *
      * @return 文件列表
-     * @throws IOException
+     * @throws IOException IOException
      */
     public File[] partsFiles(final File home, final long max, final String filenameReg, final String contentTypeReg) throws IOException {
         if (!isMultipart()) return null;

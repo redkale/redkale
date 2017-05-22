@@ -83,10 +83,10 @@ public abstract class WebSocketNode {
      * 获取目标地址 <br>
      * 该方法仅供内部调用
      *
-     * @param targetAddress
-     * @param groupid
+     * @param targetAddress InetSocketAddress
+     * @param groupid       Serializable
      *
-     * @return
+     * @return 客户端地址列表
      */
     protected CompletableFuture<List<String>> remoteWebSocketAddresses(@RpcTargetAddress InetSocketAddress targetAddress, Serializable groupid) {
         if (remoteNode == null) return CompletableFuture.completedFuture(null);
@@ -102,7 +102,7 @@ public abstract class WebSocketNode {
      * 获取用户在线的SNCP节点地址列表，不是分布式则返回元素数量为1，且元素值为null的列表<br>
      * InetSocketAddress 为 SNCP节点地址
      *
-     * @param groupid groupid
+     * @param groupid Serializable
      *
      * @return 地址列表
      */
@@ -118,7 +118,7 @@ public abstract class WebSocketNode {
      * Map.key 为 SNCP节点地址, 含值为null的key表示没有分布式
      * Map.value 为 用户客户端的IP
      *
-     * @param groupid groupid
+     * @param groupid Serializable
      *
      * @return 地址集合
      */
