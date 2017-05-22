@@ -197,7 +197,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
         return null;
     }
 
-    protected void initRestWebSocket(WebSocket websocket) { //RestWebSocket设置@Resource资源
+    protected void initRestWebSocket(WebSocket websocket) { //设置WebSocket中的@Resource资源
     }
 
     protected BiConsumer<WebSocket, Object> createRestOnMessageConsumer() {
