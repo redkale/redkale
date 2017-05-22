@@ -67,7 +67,7 @@ public class WebSocketNodeService extends WebSocketNode implements Service {
      */
     @Override
     public CompletableFuture<Void> connect(Serializable groupid, InetSocketAddress sncpAddr) {
-        CompletableFuture<Void> future = sncpAddressNodes.appendSetItemAsync(groupid, sncpAddr);
+        CompletableFuture<Void> future = sncpNodeAddresses.appendSetItemAsync(groupid, sncpAddr);
         if (finest) logger.finest(WebSocketNodeService.class.getSimpleName() + ".event: " + groupid + " connect from " + sncpAddr);
         return future;
     }
@@ -82,7 +82,7 @@ public class WebSocketNodeService extends WebSocketNode implements Service {
      */
     @Override
     public CompletableFuture<Void> disconnect(Serializable groupid, InetSocketAddress sncpAddr) {
-        CompletableFuture<Void> future = sncpAddressNodes.removeSetItemAsync(groupid, sncpAddr);
+        CompletableFuture<Void> future = sncpNodeAddresses.removeSetItemAsync(groupid, sncpAddr);
         if (finest) logger.finest(WebSocketNodeService.class.getSimpleName() + ".event: " + groupid + " disconnect from " + sncpAddr);
         return future;
     }
