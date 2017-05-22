@@ -368,7 +368,7 @@ public abstract class WebSocket<G extends Serializable, T> {
      *
      * @return sessionid
      */
-    public CompletableFuture<Serializable> onOpen(final HttpRequest request) {
+    protected CompletableFuture<Serializable> onOpen(final HttpRequest request) {
         return CompletableFuture.completedFuture(request.getSessionid(false));
     }
 
