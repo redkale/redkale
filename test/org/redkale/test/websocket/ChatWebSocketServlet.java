@@ -56,7 +56,7 @@ public class ChatWebSocketServlet extends WebSocketServlet {
         return new WebSocket<ChatMessage>() {
 
             @Override
-            public void onMessage(ChatMessage message) {
+            public void onMessage(ChatMessage message, boolean  last) {
                 icounter.incrementAndGet();
                 counter.incrementAndGet();
                 if (debug) System.out.println("收到消息: " + message);

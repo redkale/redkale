@@ -141,6 +141,27 @@ public abstract class WebSocketNode {
         return rs;
     }
 
+    //--------------------------------------------------------------------------------
+    public final CompletableFuture<Integer> sendEachMessage(Serializable groupid, Object message) {
+        return sendMessage(groupid, false, message, true);
+    }
+
+    public final CompletableFuture<Integer> sendEachMessage(Serializable groupid, Object message, boolean last) {
+        return sendMessage(groupid, false, message, last);
+    }
+
+    public final CompletableFuture<Integer> sendRecentMessage(Serializable groupid, Object message) {
+        return sendMessage(groupid, true, message, true);
+    }
+
+    public final CompletableFuture<Integer> sendRecentMessage(Serializable groupid, Object message, boolean last) {
+        return sendMessage(groupid, true, message, last);
+    }
+
+    public final CompletableFuture<Integer> sendMessage(Serializable groupid, boolean recent, Object message) {
+        return sendMessage(groupid, recent, message, true);
+    }
+
     /**
      * 向指定用户发送消息，先发送本地连接，再发送远程连接  <br>
      * 如果当前WebSocketNode是远程模式，此方法只发送远程连接
@@ -190,77 +211,6 @@ public abstract class WebSocketNode {
             }
             return rscode;
         });
-    }
-
-    //--------------------------------------------------------------------------------
-    public final CompletableFuture<Integer> sendEachMessage(Serializable groupid, String text) {
-        return sendMessage(groupid, false, (Object) text, true);
-    }
-
-    public final CompletableFuture<Integer> sendEachMessage(Serializable groupid, String text, boolean last) {
-        return sendMessage(groupid, false, (Object) text, last);
-    }
-
-    public final CompletableFuture<Integer> sendRecentMessage(Serializable groupid, String text) {
-        return sendMessage(groupid, true, (Object) text, true);
-    }
-
-    public final CompletableFuture<Integer> sendRecentMessage(Serializable groupid, String text, boolean last) {
-        return sendMessage(groupid, true, (Object) text, last);
-    }
-
-    public final CompletableFuture<Integer> sendMessage(Serializable groupid, boolean recent, String text) {
-        return sendMessage(groupid, recent, (Object) text, true);
-    }
-
-    public final CompletableFuture<Integer> sendMessage(Serializable groupid, boolean recent, String text, boolean last) {
-        return sendMessage(groupid, recent, (Object) text, last);
-    }
-
-    //--------------------------------------------------------------------------------
-    public final CompletableFuture<Integer> sendEachMessage(Serializable groupid, byte[] data) {
-        return sendMessage(groupid, false, (Object) data, true);
-    }
-
-    public final CompletableFuture<Integer> sendEachMessage(Serializable groupid, byte[] data, boolean last) {
-        return sendMessage(groupid, false, (Object) data, last);
-    }
-
-    public final CompletableFuture<Integer> sendRecentMessage(Serializable groupid, byte[] data) {
-        return sendMessage(groupid, true, (Object) data, true);
-    }
-
-    public final CompletableFuture<Integer> sendRecentMessage(Serializable groupid, byte[] data, boolean last) {
-        return sendMessage(groupid, true, (Object) data, last);
-    }
-
-    public final CompletableFuture<Integer> sendMessage(Serializable groupid, boolean recent, byte[] data) {
-        return sendMessage(groupid, recent, data, true);
-    }
-
-    public final CompletableFuture<Integer> sendMessage(Serializable groupid, boolean recent, byte[] data, boolean last) {
-        return sendMessage(groupid, recent, (Object) data, last);
-    }
-
-    //--------------------------------------------------------------------------------
-    public final CompletableFuture<Integer> sendEachMessage(Serializable groupid, Object message) {
-        return sendMessage(groupid, false, message, true);
-    }
-
-    public final CompletableFuture<Integer> sendEachMessage(Serializable groupid, Object message, boolean last) {
-        return sendMessage(groupid, false, message, last);
-    }
-
-    public final CompletableFuture<Integer> sendRecentMessage(Serializable groupid, Object message) {
-        return sendMessage(groupid, true, message, true);
-    }
-
-    public final CompletableFuture<Integer> sendRecentMessage(Serializable groupid, Object message, boolean last) {
-        return sendMessage(groupid, true, message, last);
-    }
-
-    public final CompletableFuture<Integer> sendMessage(Serializable groupid, boolean recent, Object message) {
-        return sendMessage(groupid, recent, message, true);
     }
 
 }

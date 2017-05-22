@@ -122,14 +122,14 @@ public class WebSocketRunner implements Runnable {
                                             readBuffer.clear();
                                             channel.read(readBuffer, null, this);
                                         }
-                                        webSocket.onMessage(message);
+                                        webSocket.onMessage(message, packet.last);
                                     } else if (packet.type == FrameType.BINARY) {
                                         byte[] message = convert.convertFrom(byte[].class, packet.receiveMasker, packet.receiveBuffers);
                                         if (readBuffer != null) {
                                             readBuffer.clear();
                                             channel.read(readBuffer, null, this);
                                         }
-                                        webSocket.onMessage(message);
+                                        webSocket.onMessage(message, packet.last);
                                     } else if (packet.type == FrameType.PONG) {
                                         byte[] message = convert.convertFrom(byte[].class, packet.receiveMasker, packet.receiveBuffers);
                                         if (readBuffer != null) {

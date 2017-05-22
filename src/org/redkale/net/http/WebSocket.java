@@ -94,65 +94,19 @@ public abstract class WebSocket<T> {
     //----------------------------------------------------------------
     public final CompletableFuture<Integer> sendPing() {
         //if (_engine.finest) _engine.logger.finest(this + " on "+_engine.getEngineid()+" ping...");
-        return send(WebSocketPacket.DEFAULT_PING_PACKET);
+        return sendPacket(WebSocketPacket.DEFAULT_PING_PACKET);
     }
 
     public final CompletableFuture<Integer> sendPing(byte[] data) {
-        return send(new WebSocketPacket(FrameType.PING, data));
+        return sendPacket(new WebSocketPacket(FrameType.PING, data));
     }
 
     public final CompletableFuture<Integer> sendPong(byte[] data) {
-        return send(new WebSocketPacket(FrameType.PONG, data));
+        return sendPacket(new WebSocketPacket(FrameType.PONG, data));
     }
 
     public final long getCreatetime() {
         return createtime;
-    }
-
-    /**
-     * 给自身发送单一的文本消息
-     *
-     * @param text 不可为空
-     *
-     * @return 0表示成功， 非0表示错误码
-     */
-    public final CompletableFuture<Integer> send(String text) {
-        return send(text, true);
-    }
-
-    /**
-     * 给自身发送文本消息
-     *
-     * @param text 不可为空
-     * @param last 是否最后一条
-     *
-     * @return 0表示成功， 非0表示错误码
-     */
-    public final CompletableFuture<Integer> send(String text, boolean last) {
-        return sendPacket(new WebSocketPacket(text, last));
-    }
-
-    /**
-     * 给自身发送单一的二进制消息
-     *
-     * @param data byte[]
-     *
-     * @return 0表示成功， 非0表示错误码
-     */
-    public final CompletableFuture<Integer> send(byte[] data) {
-        return send(data, true);
-    }
-
-    /**
-     * 给自身发送二进制消息
-     *
-     * @param data 不可为空
-     * @param last 是否最后一条
-     *
-     * @return 0表示成功， 非0表示错误码
-     */
-    public final CompletableFuture<Integer> send(byte[] data, boolean last) {
-        return sendPacket(new WebSocketPacket(data, last));
     }
 
     /**
@@ -215,39 +169,14 @@ public abstract class WebSocket<T> {
      * @return 0表示成功， 非0表示错误码
      */
     CompletableFuture<Integer> sendPacket(WebSocketPacket packet) {
-        CompletableFuture<Integer> rs = null;
-        if (this._runner != null) rs = this._runner.sendMessage(packet);
+        CompletableFuture<Integer> rs = this._runner.sendMessage(packet);
         if (_engine.finest) _engine.logger.finest("wsgroupid:" + getGroupid() + " send websocket result is " + rs + " on " + this + " by message(" + packet + ")");
         return rs == null ? CompletableFuture.completedFuture(RETCODE_WSOCKET_CLOSED) : rs;
     }
 
     //----------------------------------------------------------------
     /**
-     * 给指定groupid的WebSocketGroup下所有WebSocket节点发送文本消息
-     *
-     * @param groupid groupid
-     * @param text    不可为空
-     *
-     * @return 为0表示成功， 其他值表示异常
-     */
-    public final CompletableFuture<Integer> sendEachMessage(Serializable groupid, String text) {
-        return sendEachMessage(groupid, text, true);
-    }
-
-    /**
-     * 给指定groupid的WebSocketGroup下所有WebSocket节点发送二进制消息
-     *
-     * @param groupid groupid
-     * @param data    不可为空
-     *
-     * @return 为0表示成功， 其他值表示异常
-     */
-    public final CompletableFuture<Integer> sendEachMessage(Serializable groupid, byte[] data) {
-        return sendEachMessage(groupid, data, true);
-    }
-
-    /**
-     * 给指定groupid的WebSocketGroup下所有WebSocket节点发送可JavaBean对象消息
+     * 给指定groupid的WebSocketGroup下所有WebSocket节点发送 二进制消息/文本消息/JavaBean对象消息
      *
      * @param groupid groupid
      * @param message 不可为空
@@ -259,33 +188,7 @@ public abstract class WebSocket<T> {
     }
 
     /**
-     * 给指定groupid的WebSocketGroup下所有WebSocket节点发送文本消息
-     *
-     * @param groupid groupid
-     * @param text    不可为空
-     * @param last    是否最后一条
-     *
-     * @return 为0表示成功， 其他值表示异常
-     */
-    public final CompletableFuture<Integer> sendEachMessage(Serializable groupid, String text, boolean last) {
-        return sendMessage(groupid, false, text, last);
-    }
-
-    /**
-     * 给指定groupid的WebSocketGroup下所有WebSocket节点发送二进制消息
-     *
-     * @param groupid groupid
-     * @param data    不可为空
-     * @param last    是否最后一条
-     *
-     * @return 为0表示成功， 其他值表示异常
-     */
-    public final CompletableFuture<Integer> sendEachMessage(Serializable groupid, byte[] data, boolean last) {
-        return sendMessage(groupid, false, data, last);
-    }
-
-    /**
-     * 给指定groupid的WebSocketGroup下所有WebSocket节点发送可JavaBean对象消息
+     * 给指定groupid的WebSocketGroup下所有WebSocket节点发送 二进制消息/文本消息/JavaBean对象消息
      *
      * @param groupid groupid
      * @param message 不可为空
@@ -298,31 +201,7 @@ public abstract class WebSocket<T> {
     }
 
     /**
-     * 给指定groupid的WebSocketGroup下最近接入的WebSocket节点发送文本消息
-     *
-     * @param groupid groupid
-     * @param text    不可为空
-     *
-     * @return 为0表示成功， 其他值表示异常
-     */
-    public final CompletableFuture<Integer> sendRecentMessage(Serializable groupid, String text) {
-        return sendRecentMessage(groupid, text, true);
-    }
-
-    /**
-     * 给指定groupid的WebSocketGroup下最近接入的WebSocket节点发送二进制消息
-     *
-     * @param groupid groupid
-     * @param data    不可为空
-     *
-     * @return 为0表示成功， 其他值表示异常
-     */
-    public final CompletableFuture<Integer> sendRecentMessage(Serializable groupid, byte[] data) {
-        return sendRecentMessage(groupid, data, true);
-    }
-
-    /**
-     * 给指定groupid的WebSocketGroup下最近接入的WebSocket节点发送可JavaBean对象消息
+     * 给指定groupid的WebSocketGroup下最近接入的WebSocket节点发送 二进制消息/文本消息/JavaBean对象消息
      *
      * @param groupid groupid
      * @param message 不可为空
@@ -334,33 +213,7 @@ public abstract class WebSocket<T> {
     }
 
     /**
-     * 给指定groupid的WebSocketGroup下最近接入的WebSocket节点发送文本消息
-     *
-     * @param groupid groupid
-     * @param text    不可为空
-     * @param last    是否最后一条
-     *
-     * @return 为0表示成功， 其他值表示异常
-     */
-    public final CompletableFuture<Integer> sendRecentMessage(Serializable groupid, String text, boolean last) {
-        return sendMessage(groupid, true, text, last);
-    }
-
-    /**
-     * 给指定groupid的WebSocketGroup下最近接入的WebSocket节点发送二进制消息
-     *
-     * @param groupid groupid
-     * @param data    不可为空
-     * @param last    是否最后一条
-     *
-     * @return 为0表示成功， 其他值表示异常
-     */
-    public final CompletableFuture<Integer> sendRecentMessage(Serializable groupid, byte[] data, boolean last) {
-        return sendMessage(groupid, true, data, last);
-    }
-
-    /**
-     * 给指定groupid的WebSocketGroup下最近接入的WebSocket节点发送可JavaBean对象消息
+     * 给指定groupid的WebSocketGroup下最近接入的WebSocket节点发送 二进制消息/文本消息/JavaBean对象消息
      *
      * @param groupid groupid
      * @param message 不可为空
@@ -372,21 +225,17 @@ public abstract class WebSocket<T> {
         return sendMessage(groupid, true, message, last);
     }
 
-    private CompletableFuture<Integer> sendMessage(Serializable groupid, boolean recent, String text, boolean last) {
-        if (_engine.node == null) return CompletableFuture.completedFuture(RETCODE_NODESERVICE_NULL);
-        CompletableFuture<Integer> rs = _engine.node.sendMessage(groupid, recent, text, last);
-        if (_engine.finest) _engine.logger.finest("wsgroupid:" + groupid + " " + (recent ? "recent " : "") + "send websocket result is " + rs + " on " + this + " by message(" + text + ")");
-        return rs;
-    }
-
-    private CompletableFuture<Integer> sendMessage(Serializable groupid, boolean recent, byte[] data, boolean last) {
-        if (_engine.node == null) return CompletableFuture.completedFuture(RETCODE_NODESERVICE_NULL);
-        CompletableFuture<Integer> rs = _engine.node.sendMessage(groupid, recent, data, last);
-        if (_engine.finest) _engine.logger.finest("wsgroupid:" + groupid + " " + (recent ? "recent " : "") + "send websocket result is " + rs + " on " + this + " by message(byte[" + data.length + "])");
-        return rs;
-    }
-
-    private CompletableFuture<Integer> sendMessage(Serializable groupid, boolean recent, Object message, boolean last) {
+    /**
+     * 给指定groupid的WebSocketGroup下WebSocket节点发送 二进制消息/文本消息/JavaBean对象消息
+     *
+     * @param groupid groupid
+     * @param recent  是否只发最近接入的WebSocket
+     * @param message 不可为空
+     * @param last    是否最后一条
+     *
+     * @return 为0表示成功， 其他值表示异常
+     */
+    public final CompletableFuture<Integer> sendMessage(Serializable groupid, boolean recent, Object message, boolean last) {
         if (_engine.node == null) return CompletableFuture.completedFuture(RETCODE_NODESERVICE_NULL);
         CompletableFuture<Integer> rs = _engine.node.sendMessage(groupid, recent, message, last);
         if (_engine.finest) _engine.logger.finest("wsgroupid:" + groupid + " " + (recent ? "recent " : "") + "send websocket result is " + rs + " on " + this + " by message(" + _jsonConvert.convertTo(message) + ")");
@@ -522,30 +371,60 @@ public abstract class WebSocket<T> {
     public void onRead(AsyncConnection channel) {
     }
 
+    /**
+     * WebSokcet连接成功后的回调方法
+     */
     public void onConnected() {
     }
 
+    /**
+     * ping后的回调方法
+     *
+     * @param bytes 数据
+     */
     public void onPing(byte[] bytes) {
     }
 
+    /**
+     * pong后的回调方法
+     *
+     * @param bytes 数据
+     */
     public void onPong(byte[] bytes) {
     }
 
-    public void onMessage(T message) {
+    /**
+     * 接收到消息的回调方法
+     *
+     * @param message 消息
+     * @param last    是否最后一条
+     */
+    public void onMessage(T message, boolean last) {
     }
 
-    public void onMessage(byte[] bytes) {
+    /**
+     * 接收到二进制消息的回调方法
+     *
+     * @param bytes 消息
+     * @param last  是否最后一条
+     */
+    public void onMessage(byte[] bytes, boolean last) {
     }
 
-    public void onFragment(T message, boolean last) {
-    }
-
-    public void onFragment(byte[] bytes, boolean last) {
-    }
-
+    /**
+     * 关闭的回调方法，调用此方法时WebSocket已经被关闭
+     *
+     * @param code   结果码，非0表示非正常关闭
+     * @param reason 关闭原因
+     */
     public void onClose(int code, String reason) {
     }
 
+    /**
+     * 获取最后一次发送消息的时间
+     *
+     * @return long
+     */
     public long getLastSendTime() {
         return this._runner == null ? 0 : this._runner.lastSendTime;
     }
