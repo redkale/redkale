@@ -35,13 +35,13 @@ public class WebSocketNodeService extends WebSocketNode implements Service {
     }
 
     @Override
-    public CompletableFuture<List<String>> getOnlineRemoteAddresses(final @RpcTargetAddress InetSocketAddress targetAddress, final Serializable groupid) {
-        if (localSncpAddress == null || !localSncpAddress.equals(targetAddress)) return remoteOnlineRemoteAddresses(targetAddress, groupid);
+    public CompletableFuture<List<String>> getWebSocketAddresses(final @RpcTargetAddress InetSocketAddress targetAddress, final Serializable groupid) {
+        if (localSncpAddress == null || !localSncpAddress.equals(targetAddress)) return remoteWebSocketAddresses(targetAddress, groupid);
         if (this.localEngine == null) return CompletableFuture.completedFuture(new ArrayList<>());
         return CompletableFuture.supplyAsync(() -> {
             final List<String> rs = new ArrayList<>();
             final WebSocketGroup group = this.localEngine.getWebSocketGroup(groupid);
-            if (group != null) group.getWebSockets().forEach(x -> rs.add("ws" + Objects.hashCode(x) + '@' + x.getRemoteAddr()));
+            if (group != null) group.getWebSockets().forEach(x -> rs.add(x.getRemoteAddr()));
             return rs;
         });
     }
