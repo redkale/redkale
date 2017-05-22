@@ -130,6 +130,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
         webSocket._jsonConvert = jsonConvert;
         webSocket._remoteAddress = request.getRemoteAddress();
         webSocket._remoteAddr = request.getRemoteAddr();
+        initWebSocket(webSocket);
         CompletableFuture<Serializable> sessionFuture = webSocket.onOpen(request);
         if (sessionFuture == null) {
             if (debug) logger.finest("WebSocket connect abort, Not found sessionid. request=" + request);
@@ -185,6 +186,10 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
                 }
             });
         });
+    }
+
+    protected void initWebSocket(WebSocket websocket) {
+
     }
 
     protected WebSocketNode createWebSocketNode() {
