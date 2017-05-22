@@ -9,6 +9,7 @@ import org.redkale.net.http.WebServlet;
 import org.redkale.net.http.WebSocketServlet;
 import org.redkale.net.http.WebSocket;
 import java.io.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.*;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.util.Utility;
@@ -63,8 +64,8 @@ public class ChatWebSocketServlet extends WebSocketServlet {
             }
 
             @Override
-            protected Serializable createGroupid() {
-                return "";
+            protected CompletableFuture<Serializable> createGroupid() {
+                return CompletableFuture.completedFuture("2"); 
             }
 
         };

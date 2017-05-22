@@ -503,8 +503,8 @@ public abstract class WebSocket<T> {
      *
      * @return sessionid
      */
-    public Serializable onOpen(final HttpRequest request) {
-        return request.getSessionid(false);
+    public CompletableFuture<Serializable> onOpen(final HttpRequest request) {
+        return CompletableFuture.completedFuture(request.getSessionid(false));
     }
 
     /**
@@ -512,7 +512,7 @@ public abstract class WebSocket<T> {
      *
      * @return groupid
      */
-    protected abstract Serializable createGroupid();
+    protected abstract CompletableFuture<Serializable> createGroupid();
 
     /**
      * 标记为WebSocketBinary才需要重写此方法

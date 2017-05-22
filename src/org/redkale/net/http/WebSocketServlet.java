@@ -11,6 +11,7 @@ import java.net.*;
 import java.nio.*;
 import java.security.*;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.logging.*;
 import javax.annotation.*;
 import org.redkale.convert.json.JsonConvert;
@@ -117,7 +118,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
             response.finish(true);
             return;
         }
-        String key = request.getHeader("Sec-WebSocket-Key");
+        final String key = request.getHeader("Sec-WebSocket-Key");
         if (key == null) {
             if (debug) logger.finest("WebSocket connect abort, Not found Sec-WebSocket-Key header. request=" + request);
             response.finish(true);
@@ -129,47 +130,60 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
         webSocket._jsonConvert = jsonConvert;
         webSocket._remoteAddress = request.getRemoteAddress();
         webSocket._remoteAddr = request.getRemoteAddr();
-        Serializable sessionid = webSocket.onOpen(request);
-        if (sessionid == null) {
+        CompletableFuture<Serializable> sessionFuture = webSocket.onOpen(request);
+        if (sessionFuture == null) {
             if (debug) logger.finest("WebSocket connect abort, Not found sessionid. request=" + request);
             response.finish(true);
             return;
         }
-        webSocket._sessionid = sessionid;
-        request.setKeepAlive(true);
-        byte[] bytes = (key + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11").getBytes();
-        synchronized (digest) {
-            bytes = digest.digest(bytes);
-        }
-        key = Base64.getEncoder().encodeToString(bytes);
-        response.setStatus(101);
-        response.setHeader("Connection", "Upgrade");
-        response.addHeader("Upgrade", "websocket");
-        response.addHeader("Sec-WebSocket-Accept", key);
-        response.sendBody((ByteBuffer) null, null, new AsyncHandler<Integer, Void>() {
+        sessionFuture.whenComplete((sessionid, ex) -> {
+            if (sessionid == null || ex != null) {
+                if (debug || ex != null) logger.log(ex == null ? Level.FINEST : Level.FINE, "WebSocket connect abort, Not found sessionid or occur error. request=" + request, ex);
+                response.finish(true);
+                return;
+            }
+            webSocket._sessionid = sessionid;
+            request.setKeepAlive(true);
+            byte[] bytes = (key + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11").getBytes();
+            synchronized (digest) {
+                bytes = digest.digest(bytes);
+            }
+            response.setStatus(101);
+            response.setHeader("Connection", "Upgrade");
+            response.addHeader("Upgrade", "websocket");
+            response.addHeader("Sec-WebSocket-Accept", Base64.getEncoder().encodeToString(bytes));
+            response.sendBody((ByteBuffer) null, null, new AsyncHandler<Integer, Void>() {
 
-            @Override
-            public void completed(Integer result, Void attachment) {
-                HttpContext context = response.getContext();
-                Serializable groupid = webSocket.createGroupid();
-                if (groupid == null) {
-                    if (debug) logger.finest("WebSocket connect abort, Create groupid abort. request = " + request);
-                    response.finish(true);
-                    return;
+                @Override
+                public void completed(Integer result, Void attachment) {
+                    HttpContext context = response.getContext();
+                    CompletableFuture<Serializable> groupFuture = webSocket.createGroupid();
+                    if (groupFuture == null) {
+                        if (debug) logger.finest("WebSocket connect abort, Create groupid abort. request = " + request);
+                        response.finish(true);
+                        return;
+                    }
+                    groupFuture.whenComplete((groupid, ex) -> {
+                        if (groupid == null || ex != null) {
+                            if (debug || ex != null) logger.log(ex == null ? Level.FINEST : Level.FINE, "WebSocket connect abort, Create groupid abort. request = " + request, ex);
+                            response.finish(true);
+                            return;
+                        }
+                        webSocket._groupid = groupid;
+                        WebSocketServlet.this.node.localEngine.add(webSocket);
+                        WebSocketRunner runner = new WebSocketRunner(context, webSocket, response.removeChannel(), wsbinary);
+                        webSocket._runner = runner;
+                        context.runAsync(runner);
+                        response.finish(true);
+                    });
                 }
-                webSocket._groupid = groupid;
-                WebSocketServlet.this.node.localEngine.add(webSocket);
-                WebSocketRunner runner = new WebSocketRunner(context, webSocket, response.removeChannel(), wsbinary);
-                webSocket._runner = runner;
-                context.runAsync(runner);
-                response.finish(true);
-            }
 
-            @Override
-            public void failed(Throwable exc, Void attachment) {
-                logger.log(Level.FINEST, "WebSocket connect abort, Response send abort. request = " + request, exc);
-                response.finish(true);
-            }
+                @Override
+                public void failed(Throwable exc, Void attachment) {
+                    logger.log(Level.FINEST, "WebSocket connect abort, Response send abort. request = " + request, exc);
+                    response.finish(true);
+                }
+            });
         });
     }
 

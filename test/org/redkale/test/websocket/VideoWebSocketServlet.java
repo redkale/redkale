@@ -14,7 +14,7 @@ import org.redkale.util.TypeToken;
 import org.redkale.util.AnyValue;
 import java.io.*;
 import java.util.*;
-import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.*;
 
 /**
  *
@@ -52,7 +52,7 @@ public class VideoWebSocketServlet extends WebSocketServlet {
             private boolean repeat = false;
 
             @Override
-            public String onOpen(final HttpRequest request) {
+            public CompletableFuture<String> onOpen(final HttpRequest request) {
                 String uri = request.getRequestURI();
                 int pos = uri.indexOf("/listen/");
                 uri = uri.substring(pos + "/listen/".length());
@@ -61,7 +61,7 @@ public class VideoWebSocketServlet extends WebSocketServlet {
                 String sessionid = Long.toString(System.nanoTime());
                 if (uri.indexOf('\'') >= 0 || uri.indexOf('"') >= 0) return null;
                 if (!repeat) sessionid = uri;
-                return sessionid;
+                return CompletableFuture.completedFuture(sessionid);
             }
 
             @Override
@@ -104,8 +104,8 @@ public class VideoWebSocketServlet extends WebSocketServlet {
             }
 
             @Override
-            protected Serializable createGroupid() {
-                return "";
+            protected CompletableFuture<Serializable> createGroupid() {
+                return CompletableFuture.completedFuture("2");
             }
         };
         return socket;
