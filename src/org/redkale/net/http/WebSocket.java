@@ -362,14 +362,14 @@ public abstract class WebSocket<G extends Serializable, T> {
 
     //-------------------------------------------------------------------
     /**
-     * 返回sessionid, null表示连接不合法或异常,默认实现是request.getSessionid(false)，通常需要重写该方法
+     * 返回sessionid, null表示连接不合法或异常,默认实现是request.getSessionid(true)，通常需要重写该方法
      *
      * @param request HttpRequest
      *
      * @return sessionid
      */
     protected CompletableFuture<Serializable> onOpen(final HttpRequest request) {
-        return CompletableFuture.completedFuture(request.getSessionid(false));
+        return CompletableFuture.completedFuture(request.getSessionid(true));
     }
 
     /**
