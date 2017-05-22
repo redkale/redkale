@@ -11,6 +11,7 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 import java.util.logging.*;
+import static org.redkale.net.http.WebSocket.RETCODE_GROUP_EMPTY;
 import org.redkale.util.*;
 
 /**
@@ -95,6 +96,16 @@ public final class WebSocketEngine {
             containers.remove(socket._groupid);
             if (node != null) node.disconnect(socket._groupid);
         }
+    }
+
+    CompletableFuture<Integer> sendMessage(final boolean recent, final Object message, final boolean last, final Serializable... groupids) {
+        CompletableFuture<Integer> future = null;
+        for (Serializable groupid : groupids) {
+            WebSocketGroup group = getWebSocketGroup(groupid);
+            if (group == null) continue;
+            future = future == null ? group.send(recent, message, last) : future.thenCombine(group.send(recent, message, last), (a, b) -> a | b);
+        }
+        return future == null ? CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY) : future;
     }
 
     Collection<WebSocketGroup> getWebSocketGroups() {

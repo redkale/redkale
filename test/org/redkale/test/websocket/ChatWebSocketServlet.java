@@ -8,7 +8,6 @@ package org.redkale.test.websocket;
 import org.redkale.net.http.WebServlet;
 import org.redkale.net.http.WebSocketServlet;
 import org.redkale.net.http.WebSocket;
-import java.io.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.*;
 import org.redkale.convert.json.JsonConvert;
@@ -51,12 +50,12 @@ public class ChatWebSocketServlet extends WebSocketServlet {
     }
 
     @Override
-    protected WebSocket<ChatMessage> createWebSocket() {
+    protected WebSocket<String, ChatMessage> createWebSocket() {
 
-        return new WebSocket<ChatMessage>() {
+        return new WebSocket<String, ChatMessage>() {
 
             @Override
-            public void onMessage(ChatMessage message, boolean  last) {
+            public void onMessage(ChatMessage message, boolean last) {
                 icounter.incrementAndGet();
                 counter.incrementAndGet();
                 if (debug) System.out.println("收到消息: " + message);
@@ -64,8 +63,8 @@ public class ChatWebSocketServlet extends WebSocketServlet {
             }
 
             @Override
-            protected CompletableFuture<Serializable> createGroupid() {
-                return CompletableFuture.completedFuture("2"); 
+            protected CompletableFuture<String> createGroupid() {
+                return CompletableFuture.completedFuture("2");
             }
 
         };

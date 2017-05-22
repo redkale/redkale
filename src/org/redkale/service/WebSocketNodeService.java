@@ -47,7 +47,7 @@ public class WebSocketNodeService extends WebSocketNode implements Service {
     }
 
     @Override
-    public CompletableFuture<Integer> sendMessage(@RpcTargetAddress InetSocketAddress addr, Serializable groupid, boolean recent, Object message, boolean last) {
+    public CompletableFuture<Integer> sendMessage(@RpcTargetAddress InetSocketAddress addr, boolean recent, Object message, boolean last, Serializable groupid) {
         if (this.localEngine == null) return CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY);
         final WebSocketGroup group = this.localEngine.getWebSocketGroup(groupid);
         if (group == null || group.isEmpty()) {
