@@ -101,7 +101,7 @@ public final class WebSocketGroup {
             if (future == null) {
                 future = s.sendPacket(packet);
             } else {
-                future.thenCombine(s.sendPacket(packet), (a, b) -> a | (Integer) b);
+                future = future.thenCombine(s.sendPacket(packet), (a, b) -> a | (Integer) b);
             }
         }
         return future == null ? CompletableFuture.completedFuture(0) : future;
