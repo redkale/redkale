@@ -12,6 +12,7 @@ import java.nio.*;
 import java.security.*;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.BiConsumer;
 import java.util.logging.*;
 import javax.annotation.*;
 import org.redkale.convert.json.JsonConvert;
@@ -57,13 +58,15 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
     @Comment("是否用于二进制流传输")
     protected final boolean wsbinary = getClass().getAnnotation(WebSocketBinary.class) != null;
 
+    private final BiConsumer<WebSocket, Object> restMessageConsumer = createRestOnMessageConsumer();
+
+    Type messageTextType;  //RestWebSocket时会被修改
+
     @Resource
     protected JsonConvert jsonConvert;
 
     @Resource(name = "$")
     protected WebSocketNode node;
-
-    protected final Type messageTextType;
 
     protected WebSocketServlet() {
         Type msgtype = String.class;
@@ -73,7 +76,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
                 if (method.getParameterCount() > 0) continue;
                 Type rt = method.getGenericReturnType();
                 if (rt instanceof ParameterizedType) {
-                    msgtype = ((ParameterizedType) rt).getActualTypeArguments()[0];
+                    msgtype = ((ParameterizedType) rt).getActualTypeArguments()[1];
                 }
                 if (msgtype == Object.class) msgtype = String.class;
                 break;
@@ -130,8 +133,8 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
         webSocket._jsonConvert = jsonConvert;
         webSocket._remoteAddress = request.getRemoteAddress();
         webSocket._remoteAddr = request.getRemoteAddr();
-        initWebSocket(webSocket);
-        CompletableFuture<Serializable> sessionFuture = webSocket.onOpen(request);
+        initRestWebSocket(webSocket);
+        CompletableFuture<String> sessionFuture = webSocket.onOpen(request);
         if (sessionFuture == null) {
             if (debug) logger.finest("WebSocket connect abort, Not found sessionid. request=" + request);
             response.finish(true);
@@ -172,7 +175,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
                         }
                         webSocket._groupid = groupid;
                         WebSocketServlet.this.node.localEngine.add(webSocket);
-                        WebSocketRunner runner = new WebSocketRunner(context, webSocket, response.removeChannel(), wsbinary);
+                        WebSocketRunner runner = new WebSocketRunner(context, webSocket, restMessageConsumer, response.removeChannel(), wsbinary);
                         webSocket._runner = runner;
                         context.runAsync(runner);
                         response.finish(true);
@@ -188,15 +191,18 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
         });
     }
 
-    protected void initWebSocket(WebSocket websocket) {
-
-    }
+    protected abstract <G extends Serializable, T> WebSocket<G, T> createWebSocket();
 
     protected WebSocketNode createWebSocketNode() {
         return null;
     }
 
-    protected abstract <G extends Serializable, T> WebSocket<G, T> createWebSocket();
+    protected void initRestWebSocket(WebSocket websocket) { //RestWebSocket设置@Resource资源
+    }
+
+    protected BiConsumer<WebSocket, Object> createRestOnMessageConsumer() {
+        return null;
+    }
 
     private static MessageDigest getMessageDigest() {
         try {

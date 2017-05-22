@@ -14,6 +14,7 @@ import java.nio.channels.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.BiConsumer;
 import java.util.logging.*;
 import org.redkale.convert.json.JsonConvert;
 
@@ -25,7 +26,7 @@ import org.redkale.convert.json.JsonConvert;
  *
  * @author zhangjx
  */
-public class WebSocketRunner implements Runnable {
+class WebSocketRunner implements Runnable {
 
     private final WebSocketEngine engine;
 
@@ -47,14 +48,17 @@ public class WebSocketRunner implements Runnable {
 
     private final boolean wsbinary;
 
+    private final BiConsumer<WebSocket, Object> restMessageConsumer;  //主要供RestWebSocket使用
+
     protected long lastSendTime;
 
     protected final JsonConvert convert;
 
-    public WebSocketRunner(Context context, WebSocket webSocket, AsyncConnection channel, final boolean wsbinary) {
+    WebSocketRunner(Context context, WebSocket webSocket, BiConsumer<WebSocket, Object> messageConsumer, AsyncConnection channel, final boolean wsbinary) {
         this.context = context;
         this.engine = webSocket._engine;
         this.webSocket = webSocket;
+        this.restMessageConsumer = messageConsumer;
         this.channel = channel;
         this.wsbinary = wsbinary;
         this.readBuffer = context.pollBuffer();
@@ -123,7 +127,11 @@ public class WebSocketRunner implements Runnable {
                                     channel.read(readBuffer, null, this);
                                 }
                                 try {
-                                    webSocket.onMessage(message, packet.last);
+                                    if (restMessageConsumer != null) { //主要供RestWebSocket使用
+                                        restMessageConsumer.accept(webSocket, message);
+                                    } else {
+                                        webSocket.onMessage(message, packet.last);
+                                    }
                                 } catch (Exception e) {
                                     context.getLogger().log(Level.SEVERE, "WebSocket onTextMessage error (" + packet + ")", e);
                                 }

@@ -71,7 +71,7 @@ public abstract class WebSocket<G extends Serializable, T> {
 
     WebSocketGroup _group; //不可能为空 
 
-    Serializable _sessionid; //不可能为空 
+    String _sessionid; //不可能为空 
 
     G _groupid; //不可能为空 
 
@@ -83,11 +83,11 @@ public abstract class WebSocket<G extends Serializable, T> {
 
     java.lang.reflect.Type _messageTextType; //不可能为空
 
-    private final long createtime = System.currentTimeMillis();
+    private long createtime = System.currentTimeMillis();
 
     private Map<String, Object> attributes = new HashMap<>(); //非线程安全
 
-    protected final long websocketid = Math.abs(System.nanoTime()); //唯一ID
+    protected long websocketid = Math.abs(System.nanoTime()); //唯一ID
 
     protected WebSocket() {
     }
@@ -308,7 +308,7 @@ public abstract class WebSocket<G extends Serializable, T> {
      *
      * @return sessionid
      */
-    public final Serializable getSessionid() {
+    public final String getSessionid() {
         return _sessionid;
     }
 
@@ -368,7 +368,7 @@ public abstract class WebSocket<G extends Serializable, T> {
      *
      * @return sessionid
      */
-    protected CompletableFuture<Serializable> onOpen(final HttpRequest request) {
+    protected CompletableFuture<String> onOpen(final HttpRequest request) {
         return CompletableFuture.completedFuture(request.getSessionid(true));
     }
 
