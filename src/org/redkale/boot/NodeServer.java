@@ -275,7 +275,8 @@ public abstract class NodeServer {
                 final InetSocketAddress sncpAddr = client == null ? null : client.getClientAddress();
                 final AnyValue sourceConf = cacheResource.get(resourceName);
                 final Class sourceType = sourceConf == null ? CacheMemorySource.class : Class.forName(sourceConf.getValue("type"));
-                final CacheSource source = Sncp.createLocalService(resourceName, getExecutor(), appResFactory, sourceType, sncpAddr, Sncp.getSncpGroup(srcService), Sncp.getGroups(srcService), Sncp.getConf(srcService), sameGroupTransport, diffGroupTransports);
+                @SuppressWarnings("unchecked")
+                final CacheSource source = (CacheSource) Sncp.createLocalService(resourceName, getExecutor(), appResFactory, (Class<? extends Service>) sourceType, sncpAddr, Sncp.getSncpGroup(srcService), Sncp.getGroups(srcService), Sncp.getConf(srcService), sameGroupTransport, diffGroupTransports);
                 Type genericType = field.getGenericType();
                 ParameterizedType pt = (genericType instanceof ParameterizedType) ? (ParameterizedType) genericType : null;
                 Type valType = pt == null ? null : pt.getActualTypeArguments()[1];
