@@ -36,8 +36,8 @@ import org.w3c.dom.*;
  * <pre>
  * 程序启动执行步骤:
  *     1、读取application.xml
- *     2、进行classpath扫描动态加载Service与Servlet
- *     3、优先加载所有SNCP协议的服务，再加载其他协议服务
+ *     2、进行classpath扫描动态加载Service、WebSocket与Servlet
+ *     3、优先加载所有SNCP协议的服务，再加载其他协议服务， 最后加载WATCH协议的服务
  *     4、最后进行Service、Servlet与其他资源之间的依赖注入
  * </pre>
  * <p>
@@ -696,17 +696,19 @@ public final class Application {
         });
 
         for (DataSource source : dataSources) {
+            if (source == null) continue;
             try {
                 source.getClass().getMethod("close").invoke(source);
             } catch (Exception e) {
-                logger.log(Level.FINER, "close DataSource erroneous", e);
+                logger.log(Level.FINER, source.getClass() + " close DataSource erroneous", e);
             }
         }
         for (CacheSource source : cacheSources) {
+            if (source == null) continue;
             try {
                 source.getClass().getMethod("close").invoke(source);
             } catch (Exception e) {
-                logger.log(Level.FINER, "close CacheSource erroneous", e);
+                logger.log(Level.FINER, source.getClass() + " close CacheSource erroneous", e);
             }
         }
         if (this.transportChannelGroup != null) {

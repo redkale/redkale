@@ -184,6 +184,29 @@ public abstract class NodeServer {
         final NodeServer self = this;
         //---------------------------------------------------------------------------------------------
         final ResourceFactory appResFactory = application.getResourceFactory();
+        final AnyValue resources = application.config.getAnyValue("resources");
+        final Map<String, AnyValue> cacheResource = new HashMap<>();
+        //final Map<String, AnyValue> dataResources = new HashMap<>();
+        if (resources != null) {
+            for (AnyValue sourceConf : resources.getAnyValues("source")) {
+                try {
+                    Class type = Class.forName(sourceConf.getValue("type"));
+                    if (!Service.class.isAssignableFrom(type)) {
+                        logger.log(Level.SEVERE, "load application source resource, but not Service error: " + sourceConf);
+                    } else if (CacheSource.class.isAssignableFrom(type)) {
+                        cacheResource.put(sourceConf.getValue("name", ""), sourceConf);
+                    } else if (DataSource.class.isAssignableFrom(type)) {
+                        //dataResources.put(sourceConf.getValue("name", ""), sourceConf);
+                        //暂时不支持DataSource通过<resources>设置
+                        logger.log(Level.SEVERE, "load application source resource, but not CacheSource error: " + sourceConf);
+                    } else {
+                        logger.log(Level.SEVERE, "load application source resource, but not CacheSource error: " + sourceConf);
+                    }
+                } catch (Exception e) {
+                    logger.log(Level.SEVERE, "load application source resource error: " + sourceConf, e);
+                }
+            }
+        }
         //------------------------------------- 注册Resource --------------------------------------------------------
         resourceFactory.register((ResourceFactory rf, final Object src, String resourceName, Field field, final Object attachment) -> {
             try {
@@ -193,7 +216,6 @@ public abstract class NodeServer {
                 Class type = field.getType();
                 if (type != AnyValue.class && type != AnyValue[].class) return;
                 Object resource = null;
-                final AnyValue resources = application.config.getAnyValue("resources");
                 final AnyValue properties = resources == null ? null : resources.getAnyValue("properties");
                 if (properties != null && type == AnyValue.class) {
                     resource = properties.getAnyValue(res.name().substring("properties.".length()));
@@ -251,7 +273,9 @@ public abstract class NodeServer {
                 Transport[] dts = Sncp.getDiffGroupTransports((Service) src);
                 List<Transport> diffGroupTransports = dts == null ? new ArrayList<>() : Arrays.asList(dts);
                 final InetSocketAddress sncpAddr = client == null ? null : client.getClientAddress();
-                final CacheMemorySource source = Sncp.createLocalService(resourceName, getExecutor(), appResFactory, CacheMemorySource.class, sncpAddr, Sncp.getSncpGroup(srcService), Sncp.getGroups(srcService), Sncp.getConf(srcService), sameGroupTransport, diffGroupTransports);
+                final AnyValue sourceConf = cacheResource.get(resourceName);
+                Class sourceType = sourceConf == null ? CacheMemorySource.class : Class.forName(sourceConf.getValue("type"));
+                final CacheMemorySource source = Sncp.createLocalService(resourceName, getExecutor(), appResFactory, sourceType, sncpAddr, Sncp.getSncpGroup(srcService), Sncp.getGroups(srcService), Sncp.getConf(srcService), sameGroupTransport, diffGroupTransports);
                 Type genericType = field.getGenericType();
                 ParameterizedType pt = (genericType instanceof ParameterizedType) ? (ParameterizedType) genericType : null;
                 Type valType = pt == null ? null : pt.getActualTypeArguments()[1];
@@ -262,7 +286,7 @@ public abstract class NodeServer {
                 appResFactory.register(resourceName, CacheSource.class, source);
                 field.set(src, source);
                 rf.inject(source, self); //
-                if (source instanceof Service) ((Service) source).init(null);
+                if (source instanceof Service) ((Service) source).init(sourceConf);
 
                 if ((src instanceof WebSocketNodeService) && sncpAddr != null) { //只有WebSocketNodeService的服务才需要给SNCP服务注入CacheMemorySource
                     NodeSncpServer sncpServer = application.findNodeSncpServer(sncpAddr);
