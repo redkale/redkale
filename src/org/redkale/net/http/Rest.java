@@ -104,7 +104,7 @@ public final class Rest {
         return (!controller.name().isEmpty()) ? controller.name() : serviceType.getSimpleName().replaceAll("Service.*$", "").toLowerCase();
     }
 
-    static <T extends HttpServlet> T createRestWebSocketServlet(final Class userType0, final Class<? extends WebSocket> webSocketType) {
+    static <T extends HttpServlet> T createRestWebSocketServlet(final Class<? extends WebSocket> webSocketType) {
         return null; //待实现   
     }
 
