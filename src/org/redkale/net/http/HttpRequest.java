@@ -12,8 +12,8 @@ import java.nio.channels.Channels;
 import java.nio.charset.Charset;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.*;
+import org.redkale.util.*;
 import org.redkale.util.AnyValue.DefaultAnyValue;
-import org.redkale.util.ByteArray;
 
 /**
  * Http请求包 与javax.servlet.http.HttpServletRequest 基本类似。  <br>
@@ -34,6 +34,7 @@ public class HttpRequest extends Request<HttpContext> {
 
     protected static final String SESSIONID_NAME = "JSESSIONID";
 
+    @Comment("Method GET/POST/...")
     private String method;
 
     private String protocol;
@@ -48,7 +49,8 @@ public class HttpRequest extends Request<HttpContext> {
 
     private String connection;
 
-    protected String cookiestr;
+    @Comment("原始的cookie字符串，解析后值赋给HttpCookie[] cookies")
+    protected String cookie;
 
     private HttpCookie[] cookies;
 
@@ -72,7 +74,7 @@ public class HttpRequest extends Request<HttpContext> {
 
     private final String remoteAddrHeader;
 
-    Object attachment; //供 HttpBaseServlet传递Entry使用
+    Object attachment; //仅供HttpServlet传递Entry使用
 
     public HttpRequest(HttpContext context, String remoteAddrHeader) {
         super(context);
@@ -141,10 +143,10 @@ public class HttpRequest extends Request<HttpContext> {
                     this.host = value;
                     break;
                 case "Cookie":
-                    if (this.cookiestr == null || this.cookiestr.isEmpty()) {
-                        this.cookiestr = value;
+                    if (this.cookie == null || this.cookie.isEmpty()) {
+                        this.cookie = value;
                     } else {
-                        this.cookiestr += ";" + value;
+                        this.cookie += ";" + value;
                     }
                     break;
                 case "Connection":
@@ -384,7 +386,7 @@ public class HttpRequest extends Request<HttpContext> {
     public String toString() {
         parseBody();
         return this.getClass().getSimpleName() + "{\r\n    method: " + this.method + ", \r\n    requestURI: " + this.requestURI
-            + ", \r\n    remoteAddr: " + this.getRemoteAddr() + ", \r\n    cookies: " + this.cookiestr + ", \r\n    contentType: " + this.contentType
+            + ", \r\n    remoteAddr: " + this.getRemoteAddr() + ", \r\n    cookies: " + this.cookie + ", \r\n    contentType: " + this.contentType
             + ", \r\n    connection: " + this.connection + ", \r\n    protocol: " + this.protocol + ", \r\n    host: " + this.host
             + ", \r\n    contentLength: " + this.contentLength + ", \r\n    bodyLength: " + this.array.size() + (this.boundary || this.array.isEmpty() ? "" : (", \r\n    bodyContent: " + this.getBodyUTF8()))
             + ", \r\n    params: " + this.params.toString(4) + ", \r\n    header: " + this.header.toString(4) + "\r\n}";
@@ -418,7 +420,7 @@ public class HttpRequest extends Request<HttpContext> {
 
     @Override
     protected void recycle() {
-        this.cookiestr = null;
+        this.cookie = null;
         this.cookies = null;
         this.newsessionid = null;
         this.method = null;
@@ -493,7 +495,7 @@ public class HttpRequest extends Request<HttpContext> {
      * @return cookie对象数组
      */
     public HttpCookie[] getCookies() {
-        if (this.cookies == null) this.cookies = parseCookies(this.cookiestr);
+        if (this.cookies == null) this.cookies = parseCookies(this.cookie);
         return this.cookies;
     }
 
