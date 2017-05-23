@@ -104,6 +104,10 @@ public final class Rest {
         return (!controller.name().isEmpty()) ? controller.name() : serviceType.getSimpleName().replaceAll("Service.*$", "").toLowerCase();
     }
 
+    static <T extends HttpServlet> T createRestWebSocketServlet(final Class userType0, final Class<? extends WebSocket> webSocketType) {
+        return null; //待实现   
+    }
+
     static <T extends HttpServlet> T createRestServlet(final Class userType0, final Class<T> baseServletType, final Class<? extends Service> serviceType) {
         if (baseServletType == null || serviceType == null) throw new RuntimeException(" Servlet or Service is null Class on createRestServlet");
         if (!HttpServlet.class.isAssignableFrom(baseServletType)) throw new RuntimeException(baseServletType + " is not HttpServlet Class on createRestServlet");
