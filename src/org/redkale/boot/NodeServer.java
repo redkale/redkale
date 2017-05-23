@@ -274,13 +274,16 @@ public abstract class NodeServer {
                 List<Transport> diffGroupTransports = dts == null ? new ArrayList<>() : Arrays.asList(dts);
                 final InetSocketAddress sncpAddr = client == null ? null : client.getClientAddress();
                 final AnyValue sourceConf = cacheResource.get(resourceName);
-                Class sourceType = sourceConf == null ? CacheMemorySource.class : Class.forName(sourceConf.getValue("type"));
-                final CacheMemorySource source = Sncp.createLocalService(resourceName, getExecutor(), appResFactory, sourceType, sncpAddr, Sncp.getSncpGroup(srcService), Sncp.getGroups(srcService), Sncp.getConf(srcService), sameGroupTransport, diffGroupTransports);
+                final Class sourceType = sourceConf == null ? CacheMemorySource.class : Class.forName(sourceConf.getValue("type"));
+                final CacheSource source = Sncp.createLocalService(resourceName, getExecutor(), appResFactory, sourceType, sncpAddr, Sncp.getSncpGroup(srcService), Sncp.getGroups(srcService), Sncp.getConf(srcService), sameGroupTransport, diffGroupTransports);
                 Type genericType = field.getGenericType();
                 ParameterizedType pt = (genericType instanceof ParameterizedType) ? (ParameterizedType) genericType : null;
                 Type valType = pt == null ? null : pt.getActualTypeArguments()[1];
-                source.setStoreType(pt == null ? Serializable.class : (Class) pt.getActualTypeArguments()[0], valType instanceof Class ? (Class) valType : Object.class);
-                if (field.getAnnotation(Transient.class) != null) source.setNeedStore(false); //必须在setStoreType之后
+                if (sourceType == CacheMemorySource.class) {
+                    CacheMemorySource memorySource = (CacheMemorySource) source;
+                    memorySource.setStoreType(pt == null ? Serializable.class : (Class) pt.getActualTypeArguments()[0], valType instanceof Class ? (Class) valType : Object.class);
+                    if (field.getAnnotation(Transient.class) != null) memorySource.setNeedStore(false); //必须在setStoreType之后
+                }
                 application.cacheSources.add(source);
                 appResFactory.register(resourceName, genericType, source);
                 appResFactory.register(resourceName, CacheSource.class, source);
