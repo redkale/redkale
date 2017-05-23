@@ -142,6 +142,12 @@ public final class Rest {
 
         //------------------------------------------------------------------------------
         final String defmodulename = getWebModuleName(serviceType);
+        final String catalog = controller == null ? "" : controller.catalog();
+        for (char ch : catalog.toCharArray()) {
+            if (!((ch >= '0' && ch <= '9') || ch == '$' || ch == '_' || (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z'))) { //不能含特殊字符
+                throw new RuntimeException(serviceType.getName() + " have illeal " + RestService.class.getSimpleName() + ".catalog, only 0-9 a-z A-Z _ $");
+            }
+        }
         for (char ch : defmodulename.toCharArray()) {
             if (!((ch >= '0' && ch <= '9') || ch == '$' || ch == '_' || (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z'))) { //不能含特殊字符
                 throw new RuntimeException(serviceType.getName() + " have illeal " + RestService.class.getSimpleName() + ".value, only 0-9 a-z A-Z _ $");
@@ -162,7 +168,7 @@ public final class Rest {
         }
 
         { //注入 @WebServlet 注解
-            String urlpath = "/" + defmodulename + "/*";
+            String urlpath = (catalog.isEmpty() ? "/" : ("/" + catalog + "/")) + defmodulename + "/*";
             int moduleid = controller == null ? 0 : controller.moduleid();
             boolean repair = controller == null ? true : controller.repair();
             String comment = controller == null ? "" : controller.comment();

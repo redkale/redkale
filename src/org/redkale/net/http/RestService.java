@@ -30,6 +30,13 @@ public @interface RestService {
     String name() default "";
 
     /**
+     * 目录名, 不能含特殊字符， 只能小写字母+数字，且不能以数字开头
+     *
+     * @return 目录名
+     */
+    String catalog() default "";
+
+    /**
      * 模块ID值，鉴权时用到, 对应&#64;WebServlet.moduleid
      *
      * @return 模块ID值

@@ -30,6 +30,13 @@ public @interface RestWebSocket {
     String name() default "";
 
     /**
+     * 目录名, 不能含特殊字符， 只能小写字母+数字，且不能以数字开头
+     *
+     * @return 目录名
+     */
+    String catalog() default "";
+
+    /**
      * 是否屏蔽该类的转换
      *
      * @return 默认false
