@@ -289,7 +289,6 @@ public class NodeHttpServer extends NodeServer {
             for (AbstractMap.SimpleEntry<String, String[]> as : ss) {
                 if (as.getKey().length() > max) max = as.getKey().length();
             }
-            sb.append(threadName).append(" ").append(LINE_SEPARATOR);
             for (AbstractMap.SimpleEntry<String, String[]> as : ss) {
                 sb.append(threadName).append(" Load ").append(as.getKey());
                 for (int i = 0; i < max - as.getKey().length(); i++) {
