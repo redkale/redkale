@@ -307,13 +307,13 @@ public abstract class NodeServer {
     }
 
     @SuppressWarnings("unchecked")
-    protected void loadService(ClassFilter serviceFilter, ClassFilter otherFilter) throws Exception {
+    protected void loadService(ClassFilter<? extends Service> serviceFilter, ClassFilter otherFilter) throws Exception {
         if (serviceFilter == null) return;
         final String threadName = "[" + Thread.currentThread().getName() + "] ";
-        final Set<FilterEntry<Service>> entrys = serviceFilter.getAllFilterEntrys();
+        final Set<FilterEntry<? extends Service>> entrys = (Set) serviceFilter.getAllFilterEntrys();
         ResourceFactory regFactory = isSNCP() ? application.getResourceFactory() : resourceFactory;
 
-        for (FilterEntry<Service> entry : entrys) { //service实现类
+        for (FilterEntry<? extends Service> entry : entrys) { //service实现类
             final Class<? extends Service> serviceImplClass = entry.getType();
             if (Modifier.isFinal(serviceImplClass.getModifiers())) continue; //修饰final的类跳过
             if (!Modifier.isPublic(serviceImplClass.getModifiers())) continue;

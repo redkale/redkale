@@ -72,7 +72,7 @@ public class NodeHttpServer extends NodeServer {
     }
 
     @Override
-    protected void loadService(ClassFilter serviceFilter, ClassFilter otherFilter) throws Exception {
+    protected void loadService(ClassFilter<? extends Service> serviceFilter, ClassFilter otherFilter) throws Exception {
         super.loadService(serviceFilter, otherFilter);
         initWebSocketService();
     }
