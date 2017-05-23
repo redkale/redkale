@@ -81,7 +81,7 @@ public class NodeSncpServer extends NodeServer {
     }
 
     @Override
-    protected void loadFilter(ClassFilter<? extends Filter> filterFilter) throws Exception {
+    protected void loadFilter(ClassFilter<? extends Filter> filterFilter, ClassFilter otherFilter) throws Exception {
         if (sncpServer != null) loadSncpFilter(this.serverConf.getAnyValue("fliters"), filterFilter);
     }
 

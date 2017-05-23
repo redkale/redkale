@@ -170,14 +170,14 @@ public abstract class NodeServer {
         ClassFilter.Loader.load(application.getHome(), serverConf.getValue("excludelibs", "").split(";"), serviceFilter, filterFilter, servletFilter, otherFilter);
         long e = System.currentTimeMillis() - s;
         logger.info(this.getClass().getSimpleName() + " load filter class in " + e + " ms");
-        loadService(serviceFilter); //必须在servlet之前
-        loadFilter(filterFilter);
+        loadService(serviceFilter, otherFilter); //必须在servlet之前
+        loadFilter(filterFilter, otherFilter);
         loadServlet(servletFilter, otherFilter);
 
         if (this.interceptor != null) this.resourceFactory.inject(this.interceptor);
     }
 
-    protected abstract void loadFilter(ClassFilter<? extends Filter> filterFilter) throws Exception;
+    protected abstract void loadFilter(ClassFilter<? extends Filter> filterFilter, ClassFilter otherFilter) throws Exception;
 
     protected abstract void loadServlet(ClassFilter<? extends Servlet> servletFilter, ClassFilter otherFilter) throws Exception;
 
@@ -307,7 +307,7 @@ public abstract class NodeServer {
     }
 
     @SuppressWarnings("unchecked")
-    protected void loadService(ClassFilter serviceFilter) throws Exception {
+    protected void loadService(ClassFilter serviceFilter, ClassFilter otherFilter) throws Exception {
         if (serviceFilter == null) return;
         final String threadName = "[" + Thread.currentThread().getName() + "] ";
         final Set<FilterEntry<Service>> entrys = serviceFilter.getAllFilterEntrys();
