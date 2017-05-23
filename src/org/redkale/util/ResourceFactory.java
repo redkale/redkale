@@ -332,7 +332,7 @@ public final class ResourceFactory {
                                 logger.log(Level.SEVERE, src.getClass().getName() + " not found @Resource on Class or not implements Resourcable");
                             }
                         } else {
-                            tname = res.name();
+                            tname = tname.replace(RESOURCE_PARENT_NAME, res.name());
                         }
 
                     }
