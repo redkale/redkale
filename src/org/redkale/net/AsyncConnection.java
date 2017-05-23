@@ -11,6 +11,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  *
@@ -24,6 +25,12 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
     protected Map<String, Object> attributes; //用于存储绑定在Connection上的对象集合
 
     protected Object subobject; //用于存储绑定在Connection上的对象， 同attributes， 只绑定单个对象时尽量使用subobject而非attributes
+
+    //关闭数
+    AtomicLong closedCounter = new AtomicLong();
+
+    //在线数
+    AtomicLong livingCounter = new AtomicLong();
 
     public abstract boolean isTCP();
 
@@ -54,6 +61,14 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
 
     @Override
     public void close() throws IOException {
+        if (closedCounter != null) {
+            closedCounter.incrementAndGet();
+            closedCounter = null;
+        }
+        if (livingCounter != null) {
+            livingCounter.decrementAndGet();
+            livingCounter = null;
+        }
         if (attributes == null) return;
         try {
             for (Object obj : attributes.values()) {

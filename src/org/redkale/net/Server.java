@@ -185,6 +185,21 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         logger.info(this.getClass().getSimpleName() + " shutdown in " + e + " ms");
     }
 
+    //创建数
+    public long getCreateConnectionCount() {
+        return serverChannel == null ? -1 : serverChannel.getCreateCount();
+    }
+
+    //关闭数
+    public long getClosedConnectionCount() {
+        return serverChannel == null ? -1 : serverChannel.getClosedCount();
+    }
+
+    //在线数
+    public long getLivingConnectionCount() {
+        return serverChannel == null ? -1 : serverChannel.getLivingCount();
+    }
+
     protected Format createFormat() {
         String sf = "0";
         if (this.threads > 10) sf = "00";

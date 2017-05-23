@@ -11,14 +11,26 @@ import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * 协议底层Server
  *
- * <p> 详情见: https://redkale.org
+ * <p>
+ * 详情见: https://redkale.org
+ *
  * @author zhangjx
  */
 public abstract class ProtocolServer {
+
+    //创建数
+    protected final AtomicLong createCounter = new AtomicLong();
+
+    //关闭数
+    protected final AtomicLong closedCounter = new AtomicLong();
+
+    //在线数
+    protected final AtomicLong livingCounter = new AtomicLong();
 
     public abstract void open() throws IOException;
 
@@ -33,6 +45,18 @@ public abstract class ProtocolServer {
     public abstract void close() throws IOException;
 
     public abstract AsynchronousChannelGroup getChannelGroup();
+
+    public long getCreateCount() {
+        return createCounter.longValue();
+    }
+
+    public long getClosedCount() {
+        return closedCounter.longValue();
+    }
+
+    public long getLivingCount() {
+        return livingCounter.longValue();
+    }
 
     //---------------------------------------------------------------------
     public static ProtocolServer create(String protocol, Context context) {
@@ -117,6 +141,20 @@ public abstract class ProtocolServer {
             return null;
         }
 
+        @Override
+        public long getCreateCount() {
+            return -1;
+        }
+
+        @Override
+        public long getClosedCount() {
+            return -1;
+        }
+
+        @Override
+        public long getLivingCount() {
+            return -1;
+        }
     }
 
     private static final class ProtocolTCPServer extends ProtocolServer {
@@ -160,7 +198,12 @@ public abstract class ProtocolServer {
                 @Override
                 public void completed(final AsynchronousSocketChannel channel, Void attachment) {
                     serchannel.accept(null, this);
-                    context.submitAsync(new PrepareRunner(context, AsyncConnection.create(channel, null, context.readTimeoutSecond, context.writeTimeoutSecond), null));
+                    createCounter.incrementAndGet();
+                    livingCounter.incrementAndGet();
+                    AsyncConnection conn = AsyncConnection.create(channel, null, context.readTimeoutSecond, context.writeTimeoutSecond);
+                    conn.livingCounter = livingCounter;
+                    conn.closedCounter = closedCounter;
+                    context.submitAsync(new PrepareRunner(context, conn, null));
                 }
 
                 @Override
