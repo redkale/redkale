@@ -42,12 +42,11 @@ public @interface HttpMapping {
     int cacheseconds() default 0;
 
     /**
-     * 是否鉴权，默认不鉴权 <br>
-     * 如&#64;WebServlet.auth = false， 该值忽略
+     * 是否鉴权，默认需要鉴权 <br>
      *
      * @return boolean
      */
-    boolean auth() default false;
+    boolean auth() default true;
 
     /**
      * 允许方法(不区分大小写),如:GET/POST/PUT,为空表示允许所有方法

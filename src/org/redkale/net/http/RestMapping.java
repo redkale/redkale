@@ -47,11 +47,11 @@ public @interface RestMapping {
     String comment() default "";
 
     /**
-     * 是否鉴权，默认不鉴权, 对应&#64;HttpMapping.auth
+     * 是否鉴权，默认需要鉴权, 对应&#64;HttpMapping.auth
      *
      * @return boolean
      */
-    boolean auth() default false;
+    boolean auth() default true;
 
     /**
      * 操作ID值，鉴权时用到, 对应&#64;HttpMapping.actionid
