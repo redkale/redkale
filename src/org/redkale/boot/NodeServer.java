@@ -165,20 +165,21 @@ public abstract class NodeServer {
         ClassFilter<Service> serviceFilter = createServiceClassFilter();
         ClassFilter<Filter> filterFilter = createFilterClassFilter();
         ClassFilter<Servlet> servletFilter = createServletClassFilter();
+        ClassFilter otherFilter = createOtherClassFilter();
         long s = System.currentTimeMillis();
-        ClassFilter.Loader.load(application.getHome(), serverConf.getValue("excludelibs", "").split(";"), serviceFilter, filterFilter, servletFilter);
+        ClassFilter.Loader.load(application.getHome(), serverConf.getValue("excludelibs", "").split(";"), serviceFilter, filterFilter, servletFilter, otherFilter);
         long e = System.currentTimeMillis() - s;
         logger.info(this.getClass().getSimpleName() + " load filter class in " + e + " ms");
         loadService(serviceFilter); //必须在servlet之前
         loadFilter(filterFilter);
-        loadServlet(servletFilter);
+        loadServlet(servletFilter, otherFilter);
 
         if (this.interceptor != null) this.resourceFactory.inject(this.interceptor);
     }
 
     protected abstract void loadFilter(ClassFilter<? extends Filter> filterFilter) throws Exception;
 
-    protected abstract void loadServlet(ClassFilter<? extends Servlet> servletFilter) throws Exception;
+    protected abstract void loadServlet(ClassFilter<? extends Servlet> servletFilter, ClassFilter otherFilter) throws Exception;
 
     private void initResource() {
         final NodeServer self = this;
@@ -190,7 +191,7 @@ public abstract class NodeServer {
         if (resources != null) {
             for (AnyValue sourceConf : resources.getAnyValues("source")) {
                 try {
-                    Class type = Class.forName(sourceConf.getValue("type"));
+                    Class type = Class.forName(sourceConf.getValue("value"));
                     if (!Service.class.isAssignableFrom(type)) {
                         logger.log(Level.SEVERE, "load application source resource, but not Service error: " + sourceConf);
                     } else if (CacheSource.class.isAssignableFrom(type)) {
@@ -510,6 +511,10 @@ public abstract class NodeServer {
 
     protected abstract ClassFilter<Servlet> createServletClassFilter();
 
+    protected ClassFilter createOtherClassFilter() {
+        return null;
+    }
+
     protected ClassFilter<Service> createServiceClassFilter() {
         return createClassFilter(this.sncpGroup, null, Service.class, null, Annotation.class, "services", "service");
     }
@@ -544,19 +549,19 @@ public abstract class NodeServer {
                 prop.addValue("groups", sc);
             }
             ClassFilter filter = new ClassFilter(ref, inter, excludeSuperClasses, prop);
-            for (AnyValue av : list.getAnyValues(property)) { // <service> 或  <servlet> 节点
+            for (AnyValue av : list.getAnyValues(property)) { // <service>、<filter>、<servlet> 节点
                 final AnyValue[] items = av.getAnyValues("property");
                 if (av instanceof DefaultAnyValue && items.length > 0) { //存在 <property>节点
                     DefaultAnyValue dav = DefaultAnyValue.create();
                     final AnyValue.Entry<String>[] strings = av.getStringEntrys();
-                    if (strings != null) {  //将<service>或<servlet>节点的属性值传给dav
+                    if (strings != null) {  //将<service>、<filter>、<servlet>节点的属性值传给dav
                         for (AnyValue.Entry<String> en : strings) {
                             dav.addValue(en.name, en.getValue());
                         }
                     }
                     final AnyValue.Entry<AnyValue>[] anys = av.getAnyEntrys();
                     if (anys != null) {
-                        for (AnyValue.Entry<AnyValue> en : anys) { //将<service>或<servlet>节点的非property属性节点传给dav
+                        for (AnyValue.Entry<AnyValue> en : anys) { //将<service>、<filter>、<servlet>节点的非property属性节点传给dav
                             if (!"property".equals(en.name)) dav.addValue(en.name, en.getValue());
                         }
                     }

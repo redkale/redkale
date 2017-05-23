@@ -102,7 +102,7 @@ public class NodeSncpServer extends NodeServer {
     }
 
     @Override
-    protected void loadServlet(ClassFilter<? extends Servlet> servletFilter) throws Exception {
+    protected void loadServlet(ClassFilter<? extends Servlet> servletFilter, ClassFilter otherFilter) throws Exception {
     }
 
     @Override

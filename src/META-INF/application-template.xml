@@ -63,10 +63,10 @@
         <!--
             全局的数据源设置, 可以是CacheSource、DataSource， JDBC的DataSource通常通过persistence.xml配置，此处多用于CacheSource的配置
             name:  资源名，用于依赖注入。
-            type：类名，必须是CacheSource或DataSource的子类，且必须实现Service接口。
+            value：类名，必须是CacheSource或DataSource的子类，且必须实现Service接口。
             xxx: 其他属性与子节点通过Service.init方法传入的AnyValue获取。
         -->
-        <source name="redis" type="org.redkalex.cache.RedisCacheSource" xxx="16">
+        <source name="redis" value="org.redkalex.cache.RedisCacheSource" xxx="16">
             <node addr="127.0.0.1" port="7070"/>
         </source>
 
@@ -145,19 +145,45 @@
         </services>
         
         <!-- 
+           加载所有的Filter服务;
+           autoload="true"  默认值.  
+           autoload="false" 需要显著的指定Filter类
+           includes： 当autoload="true"， 拉取类名与includes中的正则表达式匹配的类, 多个正则表达式用分号;隔开
+           excludes： 当autoload="true"， 排除类名与excludes中的正则表达式匹配的类, 多个正则表达式用分号;隔开    
+        -->
+        <filters autoload="true" includes="" excludes="">
+
+            <!-- 显著加载指定的Filter类 -->
+            <filter value="com.xxx.XXX1Filter"/>
+            
+            <!--   给Filter增加配置属性 -->
+            <filter value="com.xxx.XXX12Filter"> 
+                <!-- property节点值在 public void init(AnyValue conf) 方法中可以通过 AnyValue properties =  conf.getAnyValue("properties");获取 -->
+                <property name="xxxxxx" value="XXXXXXXX"/>  
+                <property name="xxxxxx" value="XXXXXXXX"/>
+            </filter>
+        </filters>
+        
+        <!-- 
            REST的核心配置项
            当Server为HTTP协议时, rest节点才有效。存在[rest]节点则Server启动时会加载REST服务, 节点可以多个,(WATCH协议不需要设置，系统会自动生成)
+           path:     servlet的ContextPath前缀 默认为空
            base:     REST服务的BaseServlet，必须是 org.redkale.net.http.HttpServlet 的子类，且子类必须标记@HttpUserType。
            autoload：默认值"true"  默认值. 加载当前server所能使用的Servce对象;    
            includes：当autoload="true"， 拉取类名与includes中的正则表达式匹配的类, 多个正则表达式用分号;隔开
            excludes：当autoload="true"， 排除类名与excludes中的正则表达式匹配的类, 多个正则表达式用分号;隔开
         -->
-        <rest base="org.redkale.net.http.HttpServlet" autoload="true" includes="" excludes="">
+        <rest path="/pipes" base="org.redkale.net.http.HttpServlet" autoload="true" includes="" excludes="">
             <!-- 
                value:  Service类名，列出的表示必须被加载的Service对象
                ignore: 是否忽略，设置为true则不会加载该Service对象，默认值为false
             -->
             <service value="com.xxx.XXXXService"/>
+            <!-- 
+               value:  WebSocket类名，列出的表示必须被加载且标记为@RestWebSocket的WebSocket对象
+               ignore: 是否忽略，设置为true则不会加载该RestWebSocket对象，默认值为false
+            -->
+            <websocket value="com.xxx.XXXXRestWebSocket"/>
         </rest>
         
         <!--

@@ -67,6 +67,11 @@ public class NodeHttpServer extends NodeServer {
     }
 
     @Override
+    protected ClassFilter createOtherClassFilter() {
+        return createClassFilter(null, RestWebSocket.class, WebSocket.class, null, null, "rest", "websocket");
+    }
+
+    @Override
     protected void loadService(ClassFilter serviceFilter) throws Exception {
         super.loadService(serviceFilter);
         initWebSocketService();
@@ -74,12 +79,12 @@ public class NodeHttpServer extends NodeServer {
 
     @Override
     protected void loadFilter(ClassFilter<? extends Filter> filterFilter) throws Exception {
-        if (httpServer != null) loadHttpFilter(this.serverConf.getAnyValue("fliters"), filterFilter);
+        if (httpServer != null) loadHttpFilter(this.serverConf.getAnyValue("filters"), filterFilter);
     }
 
     @Override
-    protected void loadServlet(ClassFilter<? extends Servlet> servletFilter) throws Exception {
-        if (httpServer != null) loadHttpServlet(this.serverConf.getAnyValue("servlets"), servletFilter);
+    protected void loadServlet(ClassFilter<? extends Servlet> servletFilter, ClassFilter otherFilter) throws Exception {
+        if (httpServer != null) loadHttpServlet(servletFilter, otherFilter);
     }
 
     private void initWebSocketService() {
@@ -105,7 +110,7 @@ public class NodeHttpServer extends NodeServer {
         }, WebSocketNode.class);
     }
 
-    protected void loadHttpFilter(final AnyValue servletsConf, final ClassFilter<? extends Filter> classFilter) throws Exception {
+    protected void loadHttpFilter(final AnyValue filtersConf, final ClassFilter<? extends Filter> classFilter) throws Exception {
         final StringBuilder sb = logger.isLoggable(Level.INFO) ? new StringBuilder() : null;
         final String threadName = "[" + Thread.currentThread().getName() + "] ";
         List<FilterEntry<? extends Filter>> list = new ArrayList(classFilter.getFilterEntrys());
@@ -121,14 +126,15 @@ public class NodeHttpServer extends NodeServer {
         if (sb != null && sb.length() > 0) logger.log(Level.INFO, sb.toString());
     }
 
-    protected void loadHttpServlet(final AnyValue servletsConf, final ClassFilter<? extends Servlet> filter) throws Exception {
+    protected void loadHttpServlet(final ClassFilter<? extends Servlet> servletFilter, ClassFilter<? extends WebSocket> webSocketFilter) throws Exception {
+        final AnyValue servletsConf = this.serverConf.getAnyValue("servlets");
         final StringBuilder sb = logger.isLoggable(Level.INFO) ? new StringBuilder() : null;
         String prefix0 = servletsConf == null ? "" : servletsConf.getValue("path", "");
         if (!prefix0.isEmpty() && prefix0.charAt(prefix0.length() - 1) == '/') prefix0 = prefix0.substring(0, prefix0.length() - 1);
         if (!prefix0.isEmpty() && prefix0.charAt(0) != '/') prefix0 = '/' + prefix0;
         final String prefix = prefix0;
         final String threadName = "[" + Thread.currentThread().getName() + "] ";
-        List<FilterEntry<? extends Servlet>> list = new ArrayList(filter.getFilterEntrys());
+        List<FilterEntry<? extends Servlet>> list = new ArrayList(servletFilter.getFilterEntrys());
         list.sort((FilterEntry<? extends Servlet> o1, FilterEntry<? extends Servlet> o2) -> {  //必须保证WebSocketServlet优先加载， 因为要确保其他的HttpServlet可以注入本地模式的WebSocketNode
             boolean ws1 = WebSocketServlet.class.isAssignableFrom(o1.getType());
             boolean ws2 = WebSocketServlet.class.isAssignableFrom(o2.getType());
@@ -169,61 +175,115 @@ public class NodeHttpServer extends NodeServer {
             }
         }
         if (rest && serverConf != null) {
+            final List<Object> restedObjects = new ArrayList<>();
             for (AnyValue restConf : serverConf.getAnyValues("rest")) {
-                loadRestServlet(prefix, restConf, sb);
+                loadRestServlet(webSocketFilter, restConf, restedObjects, sb);
             }
         }
-        if (sb != null && sb.length() > 0) logger.log(Level.INFO, sb.toString());
+        if (sb != null && sb.length() > 0) logger.log(Level.INFO, sb.toString().trim());
     }
 
-    protected void loadRestServlet(final String prefix, final AnyValue restConf, final StringBuilder sb) throws Exception {
+    protected void loadRestServlet(final ClassFilter<? extends WebSocket> webSocketFilter, final AnyValue restConf, final List<Object> restedObjects, final StringBuilder sb) throws Exception {
         if (!rest) return;
         if (restConf == null) return; //不存在REST服务
+
+        String prefix0 = restConf.getValue("path", "");
+        if (!prefix0.isEmpty() && prefix0.charAt(prefix0.length() - 1) == '/') prefix0 = prefix0.substring(0, prefix0.length() - 1);
+        if (!prefix0.isEmpty() && prefix0.charAt(0) != '/') prefix0 = '/' + prefix0;
+        final String prefix = prefix0;
+
         final String threadName = "[" + Thread.currentThread().getName() + "] ";
         final List<AbstractMap.SimpleEntry<String, String[]>> ss = sb == null ? null : new ArrayList<>();
 
-        String userTypeStr = restConf.getValue("usertype");
-        final Class userType = userTypeStr == null ? null : Class.forName(userTypeStr);
-        final Class baseServletType = Class.forName(restConf.getValue("base", HttpServlet.class.getName()));
-
         final boolean autoload = restConf.getBoolValue("autoload", true);
+        {  //加载RestService
+            String userTypeStr = restConf.getValue("usertype");
+            final Class userType = userTypeStr == null ? null : Class.forName(userTypeStr);
+            final Class baseServletType = Class.forName(restConf.getValue("base", HttpServlet.class.getName()));
+            final Set<String> includeValues = new HashSet<>();
+            final Set<String> excludeValues = new HashSet<>();
+            for (AnyValue item : restConf.getAnyValues("service")) {
+                if (item.getBoolValue("ignore", false)) {
+                    excludeValues.add(item.getValue("value", ""));
+                } else {
+                    includeValues.add(item.getValue("value", ""));
+                }
+            }
 
-        final Set<String> includeValues = new HashSet<>();
-        final Set<String> excludeValues = new HashSet<>();
-        for (AnyValue item : restConf.getAnyValues("service")) {
-            if (item.getBoolValue("ignore", false)) {
-                excludeValues.add(item.getValue("value", ""));
-            } else {
-                includeValues.add(item.getValue("value", ""));
+            final ClassFilter restFilter = ClassFilter.create(null, restConf.getValue("includes", ""), restConf.getValue("excludes", ""), includeValues, excludeValues);
+            final boolean finest = logger.isLoggable(Level.FINEST);
+            super.interceptorServices.forEach((service) -> {
+                final Class stype = Sncp.getServiceType(service);
+                final String name = Sncp.getResourceName(service);
+                RestService rs = (RestService) stype.getAnnotation(RestService.class);
+                if (rs == null || rs.ignore()) return;
+
+                final String stypename = stype.getName();
+                if (!autoload && !includeValues.contains(stypename)) return;
+                if (!restFilter.accept(stypename)) return;
+                if (restedObjects.contains(service)) {
+                    logger.log(Level.WARNING, stype.getName() + " repeat create rest servlet, so ignore");
+                    return;
+                }
+                restedObjects.add(service); //避免重复创建Rest对象
+                HttpServlet servlet = httpServer.addRestServlet(name, stype, service, userType, baseServletType, prefix, (AnyValue) null);
+                if (servlet == null) return; //没有HttpMapping方法的HttpServlet调用Rest.createRestServlet就会返回null 
+                resourceFactory.inject(servlet, NodeHttpServer.this);
+                if (finest) logger.finest(threadName + " Create RestServlet(resource.name='" + name + "') = " + servlet);
+                if (ss != null) {
+                    String[] mappings = servlet.getClass().getAnnotation(WebServlet.class).value();
+                    for (int i = 0; i < mappings.length; i++) {
+                        mappings[i] = prefix + mappings[i];
+                    }
+                    ss.add(new AbstractMap.SimpleEntry<>(servlet.getClass().getName(), mappings));
+                }
+            });
+        }
+        if (webSocketFilter != null) {  //加载RestWebSocket
+            final Set<String> includeValues = new HashSet<>();
+            final Set<String> excludeValues = new HashSet<>();
+            for (AnyValue item : restConf.getAnyValues("websocket")) {
+                if (item.getBoolValue("ignore", false)) {
+                    excludeValues.add(item.getValue("value", ""));
+                } else {
+                    includeValues.add(item.getValue("value", ""));
+                }
+            }
+
+            final ClassFilter restFilter = ClassFilter.create(null, restConf.getValue("includes", ""), restConf.getValue("excludes", ""), includeValues, excludeValues);
+            final boolean finest = logger.isLoggable(Level.FINEST);
+
+            List<FilterEntry<? extends WebSocket>> list = new ArrayList(webSocketFilter.getFilterEntrys());
+            for (FilterEntry<? extends WebSocket> en : list) {
+                Class<WebSocket> clazz = (Class<WebSocket>) en.getType();
+                if (Modifier.isAbstract(clazz.getModifiers())) continue;
+                final Class<? extends WebSocket> stype = en.getType();
+                RestWebSocket rs = stype.getAnnotation(RestWebSocket.class);
+                if (rs == null || rs.ignore()) return;
+
+                final String stypename = stype.getName();
+                if (!autoload && !includeValues.contains(stypename)) return;
+                if (!restFilter.accept(stypename)) return;
+                if (restedObjects.contains(stype)) {
+                    logger.log(Level.WARNING, stype.getName() + " repeat create rest websocket, so ignore");
+                    return;
+                }
+                restedObjects.add(stype); //避免重复创建Rest对象
+                HttpServlet servlet = httpServer.addRestWebSocketServlet(stype, prefix, en.getProperty());
+                if (servlet == null) return; //没有RestOnMessage方法的HttpServlet调用Rest.createRestWebSocketServlet就会返回null 
+                resourceFactory.inject(servlet, NodeHttpServer.this);
+                if (finest) logger.finest(threadName + " " + stype.getName() + " create RestWebSocketServlet " + servlet);
+                if (ss != null) {
+                    String[] mappings = servlet.getClass().getAnnotation(WebServlet.class).value();
+                    for (int i = 0; i < mappings.length; i++) {
+                        mappings[i] = prefix + mappings[i];
+                    }
+                    ss.add(new AbstractMap.SimpleEntry<>(servlet.getClass().getName(), mappings));
+                }
             }
         }
-
-        final ClassFilter restFilter = ClassFilter.create(null, restConf.getValue("includes", ""), restConf.getValue("excludes", ""), includeValues, excludeValues);
-        final boolean finest = logger.isLoggable(Level.FINEST);
-        super.interceptorServices.forEach((service) -> {
-            final Class stype = Sncp.getServiceType(service);
-            final String name = Sncp.getResourceName(service);
-            RestService rs = (RestService) stype.getAnnotation(RestService.class);
-            if (rs == null || rs.ignore()) return;
-
-            final String stypename = stype.getName();
-            if (!autoload && !includeValues.contains(stypename)) return;
-            if (!restFilter.accept(stypename)) return;
-
-            HttpServlet servlet = httpServer.addRestServlet(name, stype, service, userType, baseServletType, prefix, (AnyValue) null);
-            if (servlet == null) return; //没有HttpMapping方法的HttpServlet调用Rest.createRestServlet就会返回null 
-            resourceFactory.inject(servlet, NodeHttpServer.this);
-            if (finest) logger.finest(threadName + " Create RestServlet(resource.name='" + name + "') = " + servlet);
-            if (ss != null) {
-                String[] mappings = servlet.getClass().getAnnotation(WebServlet.class).value();
-                for (int i = 0; i < mappings.length; i++) {
-                    mappings[i] = prefix + mappings[i];
-                }
-                ss.add(new AbstractMap.SimpleEntry<>(servlet.getClass().getName(), mappings));
-            }
-        });
         //输出信息
-        if (ss != null && sb != null) {
+        if (ss != null && !ss.isEmpty() && sb != null) {
             Collections.sort(ss, (AbstractMap.SimpleEntry<String, String[]> o1, AbstractMap.SimpleEntry<String, String[]> o2) -> o1.getKey().compareTo(o2.getKey()));
             int max = 0;
             for (AbstractMap.SimpleEntry<String, String[]> as : ss) {
