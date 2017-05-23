@@ -182,10 +182,27 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
     }
 
     /**
+     * 添加WebSocketServlet
+     *
+     * @param <S>           WebSocket
+     * @param <T>           HttpServlet
+     * @param webSocketType WebSocket的类型
+     * @param prefix        url前缀
+     * @param conf          配置信息
+     *
+     * @return RestServlet
+     */
+    public <S extends WebSocket, T extends HttpServlet> T addRestWebSocketServlet(final Class<S> webSocketType, final String prefix, final AnyValue conf) {
+        T servlet = Rest.createRestWebSocketServlet(webSocketType);
+        if (servlet != null) this.prepare.addServlet(servlet, prefix, conf);
+        return servlet;
+    }
+
+    /**
      * 添加RestServlet
      *
      * @param <S>             Service
-     * @param <T>             RestServlet
+     * @param <T>             HttpServlet
      * @param name            Service的资源名
      * @param serviceType     Service的类型
      * @param service         Service对象
