@@ -106,7 +106,7 @@ public abstract class WebSocketNode {
      *
      * @return 地址列表
      */
-    public CompletableFuture<Collection<InetSocketAddress>> getSncpNodeAddresses(final Serializable groupid) {
+    public CompletableFuture<Collection<InetSocketAddress>> getRpcNodeAddresses(final Serializable groupid) {
         if (this.sncpNodeAddresses != null) return this.sncpNodeAddresses.getCollectionAsync(groupid);
         List<InetSocketAddress> rs = new ArrayList<>();
         rs.add(this.localSncpAddress);
@@ -122,8 +122,8 @@ public abstract class WebSocketNode {
      *
      * @return 地址集合
      */
-    public CompletableFuture<Map<InetSocketAddress, List<String>>> getSncpNodeWebSocketAddresses(final Serializable groupid) {
-        CompletableFuture<Collection<InetSocketAddress>> sncpFuture = getSncpNodeAddresses(groupid);
+    public CompletableFuture<Map<InetSocketAddress, List<String>>> getRpcNodeWebSocketAddresses(final Serializable groupid) {
+        CompletableFuture<Collection<InetSocketAddress>> sncpFuture = getRpcNodeAddresses(groupid);
         return sncpFuture.thenCompose((Collection<InetSocketAddress> addrs) -> {
             if (finest) logger.finest("websocket found groupid:" + groupid + " on " + addrs);
             if (addrs == null || addrs.isEmpty()) return CompletableFuture.completedFuture(new HashMap<>());
