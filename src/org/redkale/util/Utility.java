@@ -880,6 +880,44 @@ public final class Utility {
         return buffer2;
     }
 
+    public static String getTypeDescriptor(java.lang.reflect.Type type) {
+        if (type == null) return null;
+        if (type instanceof Class) return jdk.internal.org.objectweb.asm.Type.getDescriptor((Class) type);
+        if (type instanceof ParameterizedType) {// e.g. Map<String, Serializable>
+            ParameterizedType pt = (ParameterizedType) type;
+            final StringBuilder sb = new StringBuilder();
+            String raw = getTypeDescriptor(pt.getRawType());
+            sb.append(raw.substring(0, raw.length() - 1)).append('<');
+            for (java.lang.reflect.Type item : pt.getActualTypeArguments()) {
+                sb.append(getTypeDescriptor(item));
+            }
+            return sb.append(">;").toString();
+        }
+        if (type instanceof WildcardType) { // e.g. <? extends Serializable>
+            final WildcardType wt = (WildcardType) type;
+            final StringBuilder sb = new StringBuilder();
+            java.lang.reflect.Type[] us = wt.getUpperBounds();
+            java.lang.reflect.Type[] ls = wt.getLowerBounds();
+            if (ls.length < 1) {
+                if (us.length == 1 && us[0] == Object.class) {
+                    sb.append('*');
+                } else {
+                    for (java.lang.reflect.Type f : us) {
+                        sb.append('+');
+                        sb.append(getTypeDescriptor(f));
+                    }
+                }
+            }
+            for (java.lang.reflect.Type f : ls) {
+                sb.append('-');
+                sb.append(getTypeDescriptor(f));
+            }
+            return sb.toString();
+        }
+        //TypeVariable 不支持
+        return null;
+    }
+
     //-----------------------------------------------------------------------------
     public static javax.net.ssl.SSLContext getDefaultSSLContext() {
         return DEFAULTSSL_CONTEXT;
