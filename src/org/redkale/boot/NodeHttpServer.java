@@ -256,7 +256,14 @@ public class NodeHttpServer extends NodeServer {
             List<FilterEntry<? extends WebSocket>> list = new ArrayList(webSocketFilter.getFilterEntrys());
             for (FilterEntry<? extends WebSocket> en : list) {
                 Class<WebSocket> clazz = (Class<WebSocket>) en.getType();
-                if (Modifier.isAbstract(clazz.getModifiers())) continue;
+                if (Modifier.isAbstract(clazz.getModifiers())) {
+                    logger.log(Level.FINE, clazz.getName() + " cannot abstract on rest websocket, so ignore");
+                    continue;
+                }
+                if (Modifier.isFinal(clazz.getModifiers())) {
+                    logger.log(Level.FINE, clazz.getName() + " cannot final on rest websocket, so ignore");
+                    continue;
+                }
                 final Class<? extends WebSocket> stype = en.getType();
                 RestWebSocket rs = stype.getAnnotation(RestWebSocket.class);
                 if (rs == null || rs.ignore()) return;

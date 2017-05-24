@@ -12,6 +12,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.lang.reflect.*;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import javax.annotation.Resource;
 import jdk.internal.org.objectweb.asm.*;
 import static jdk.internal.org.objectweb.asm.ClassWriter.COMPUTE_FRAMES;
 import static jdk.internal.org.objectweb.asm.Opcodes.*;
@@ -105,6 +106,34 @@ public final class Rest {
     }
 
     static <T extends HttpServlet> T createRestWebSocketServlet(final Class<? extends WebSocket> webSocketType) {
+        if (webSocketType == null) throw new RuntimeException("Rest WebSocket Class is null on createRestWebSocketServlet");
+        if (Modifier.isAbstract(webSocketType.getModifiers())) throw new RuntimeException("Rest WebSocket Class(" + webSocketType + ") cannot abstract on createRestWebSocketServlet");
+        if (Modifier.isFinal(webSocketType.getModifiers())) throw new RuntimeException("Rest WebSocket Class(" + webSocketType + ") cannot final on createRestWebSocketServlet");
+        boolean valid = false;
+        for (Constructor c : webSocketType.getDeclaredConstructors()) {
+            if (c.getParameterCount() == 0 && (Modifier.isPublic(c.getModifiers()) || Modifier.isProtected(c.getModifiers()))) {
+                valid = true;
+                break;
+            }
+        }
+        if (!valid) throw new RuntimeException("Rest WebSocket Class(" + webSocketType + ") must have public or protected Constructor on createRestWebSocketServlet");
+
+        final Set<Field> resourcesField = new HashSet<>();
+        Class clzz = webSocketType;
+        do {
+            for (Field field : webSocketType.getDeclaredFields()) {
+                if (field.getAnnotation(Resource.class) == null) continue;
+                if (Modifier.isStatic(webSocketType.getModifiers())) throw new RuntimeException(field + " cannot static on createRestWebSocketServlet");
+                if (Modifier.isFinal(webSocketType.getModifiers())) throw new RuntimeException(field + " cannot final on createRestWebSocketServlet");
+                if (!Modifier.isPublic(webSocketType.getModifiers()) && !Modifier.isProtected(webSocketType.getModifiers())) {
+                    throw new RuntimeException(field + " must be public or protected on createRestWebSocketServlet");
+                }
+                resourcesField.add(field);
+            }
+        } while ((clzz = clzz.getSuperclass()) != Object.class);
+        for (Method method : webSocketType.getMethods()) {
+
+        }
         return null; //待实现   
     }
 
@@ -147,17 +176,8 @@ public final class Rest {
         //------------------------------------------------------------------------------
         final String defmodulename = getWebModuleName(serviceType);
         final String catalog = controller == null ? "" : controller.catalog();
-        for (char ch : catalog.toCharArray()) {
-            if (!((ch >= '0' && ch <= '9') || ch == '$' || ch == '_' || (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z'))) { //不能含特殊字符
-                throw new RuntimeException(serviceType.getName() + " have illeal " + RestService.class.getSimpleName() + ".catalog, only 0-9 a-z A-Z _ $");
-            }
-        }
-        for (char ch : defmodulename.toCharArray()) {
-            if (!((ch >= '0' && ch <= '9') || ch == '$' || ch == '_' || (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z'))) { //不能含特殊字符
-                throw new RuntimeException(serviceType.getName() + " have illeal " + RestService.class.getSimpleName() + ".value, only 0-9 a-z A-Z _ $");
-            }
-        }
-
+        if (!checkName(catalog)) throw new RuntimeException(serviceType.getName() + " have illeal " + RestService.class.getSimpleName() + ".catalog, only 0-9 a-z A-Z _ cannot begin 0-9");
+        if (!checkName(defmodulename)) throw new RuntimeException(serviceType.getName() + " have illeal " + RestService.class.getSimpleName() + ".value, only 0-9 a-z A-Z _ cannot begin 0-9");
         ClassWriter cw = new ClassWriter(COMPUTE_FRAMES);
         FieldVisitor fv;
         AsmMethodVisitor mv;
@@ -1167,6 +1187,17 @@ public final class Rest {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private static boolean checkName(String name) {  //不能含特殊字符
+        if (name.isEmpty()) return true;
+        if (name.charAt(0) >= '0' && name.charAt(0) <= '9') return false;
+        for (char ch : name.toCharArray()) {
+            if (!((ch >= '0' && ch <= '9') || ch == '_' || (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z'))) { //不能含特殊字符
+                return false;
+            }
+        }
+        return true;
     }
 
     private static class MappingEntry {
