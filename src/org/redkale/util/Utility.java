@@ -882,8 +882,48 @@ public final class Utility {
 
     public static String getTypeDescriptor(java.lang.reflect.Type type) {
         if (type == null) return null;
-        if (type instanceof Class) return jdk.internal.org.objectweb.asm.Type.getDescriptor((Class) type);
-        if (type instanceof ParameterizedType) {// e.g. Map<String, Serializable>
+        if (type instanceof Class) {
+            Class d = (Class) type;
+            final StringBuilder sb = new StringBuilder();
+            while (true) {
+                if (d.isPrimitive()) {
+                    char car;
+                    if (d == Integer.TYPE) {
+                        car = 'I';
+                    } else if (d == Void.TYPE) {
+                        car = 'V';
+                    } else if (d == Boolean.TYPE) {
+                        car = 'Z';
+                    } else if (d == Byte.TYPE) {
+                        car = 'B';
+                    } else if (d == Character.TYPE) {
+                        car = 'C';
+                    } else if (d == Short.TYPE) {
+                        car = 'S';
+                    } else if (d == Double.TYPE) {
+                        car = 'D';
+                    } else if (d == Float.TYPE) {
+                        car = 'F';
+                    } else /* if (d == Long.TYPE) */ {
+                        car = 'J';
+                    }
+                    return sb.append(car).toString();
+                } else if (d.isArray()) {
+                    sb.append('[');
+                    d = d.getComponentType();
+                } else {
+                    sb.append('L');
+                    String name = d.getName();
+                    int len = name.length();
+                    for (int i = 0; i < len; ++i) {
+                        char car = name.charAt(i);
+                        sb.append(car == '.' ? '/' : car);
+                    }
+                    return sb.append(';').toString();
+                }
+            }
+        }
+        if (type instanceof ParameterizedType) {// 例如: Map<String, Serializable>
             ParameterizedType pt = (ParameterizedType) type;
             final StringBuilder sb = new StringBuilder();
             String raw = getTypeDescriptor(pt.getRawType());
@@ -893,7 +933,7 @@ public final class Utility {
             }
             return sb.append(">;").toString();
         }
-        if (type instanceof WildcardType) { // e.g. <? extends Serializable>
+        if (type instanceof WildcardType) { // 例如: <? extends Serializable>
             final WildcardType wt = (WildcardType) type;
             final StringBuilder sb = new StringBuilder();
             java.lang.reflect.Type[] us = wt.getUpperBounds();
