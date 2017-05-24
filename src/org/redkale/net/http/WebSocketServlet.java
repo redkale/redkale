@@ -60,7 +60,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
 
     private final BiConsumer<WebSocket, Object> restMessageConsumer = createRestOnMessageConsumer();
 
-    Type messageTextType;  //RestWebSocket时会被修改
+    protected Type messageTextType;  //RestWebSocket时会被修改
 
     @Resource
     protected JsonConvert jsonConvert;
@@ -167,9 +167,9 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
                         response.finish(true);
                         return;
                     }
-                    groupFuture.whenComplete((groupid, ex) -> {
-                        if (groupid == null || ex != null) {
-                            if (debug || ex != null) logger.log(ex == null ? Level.FINEST : Level.FINE, "WebSocket connect abort, Create groupid abort. request = " + request, ex);
+                    groupFuture.whenComplete((groupid, ex2) -> {
+                        if (groupid == null || ex2 != null) {
+                            if (debug || ex2 != null) logger.log(ex2 == null ? Level.FINEST : Level.FINE, "WebSocket connect abort, Create groupid abort. request = " + request, ex2);
                             response.finish(true);
                             return;
                         }
