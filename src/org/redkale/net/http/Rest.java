@@ -148,9 +148,16 @@ public final class Rest {
         final String resourceDescriptor = sb1.toString();
         final String resourceGenericDescriptor = sb1.length() == sb2.length() ? null : sb2.toString();
 
-        //----------------------------------------------------------------------------------------
+        //----------------------------------------------------------------------------------------        
+        final Map<String, List<String>> asmParamMap = MethodParamClassVisitor.getMethodParamNames(webSocketType);
+        final Set<String> messageNames = new HashSet<>();
         for (Method method : webSocketType.getMethods()) {
-
+            RestOnMessage rom = method.getAnnotation(RestOnMessage.class);
+            if (rom == null) continue;
+            String name = rom.name();
+            if (name.isEmpty()) throw new RuntimeException(method + " RestOnMessage.name is empty createRestWebSocketServlet");
+            if (messageNames.contains(name)) throw new RuntimeException(method + " repeat RestOnMessage.name(" + name + ") createRestWebSocketServlet");
+            messageNames.add(name);
         }
         //----------------------------------------------------------------------------------------
 
@@ -292,7 +299,7 @@ public final class Rest {
     }
 
     public static void main(String[] args) throws Throwable {
-        System.out.println(createRestWebSocketServlet((Class<WebSocket>)Class.forName("org.redkale.test.ws.ChatWebSocket"))); 
+        System.out.println(createRestWebSocketServlet((Class<WebSocket>) Class.forName("org.redkale.test.ws.ChatWebSocket")));
     }
 
     static <T extends HttpServlet> T createRestServlet(final Class userType0, final Class<T> baseServletType, final Class<? extends Service> serviceType) {

@@ -28,7 +28,7 @@ public @interface RestOnMessage {
      *
      * @return String
      */
-    String name() default "";
+    String name();
 
     /**
      * 备注描述
