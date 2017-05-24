@@ -198,9 +198,9 @@ public final class Rest {
         { //内部类
             cw.visitInnerClass(newDynName + "$RestOnMessageConsumer", newDynName, "RestOnMessageConsumer", ACC_PUBLIC + ACC_STATIC);
 
-            cw.visitInnerClass(newDynName + "$" + newWebSokcetSimpleName, newDynName, newWebSokcetSimpleName, ACC_PUBLIC + ACC_STATIC);
+            cw.visitInnerClass(newDynWebSokcetFullName, newDynName, newWebSokcetSimpleName, ACC_PUBLIC + ACC_STATIC);
 
-            cw.visitInnerClass(newDynName + "$" + newWebSokcetSimpleName + "Message", newDynName, newWebSokcetSimpleName + "Message", ACC_PUBLIC + ACC_STATIC);
+            cw.visitInnerClass(newMessageFullName, newDynName, newMessageSimpleName, ACC_PUBLIC + ACC_STATIC);
 
             //cw.visitInnerClass("org/redkale/test/wsdync/_DyncChatWebSocketServlet$_DyncChatWebSocketMessage_joinroom", newDynName, "_DyncChatWebSocketMessage_joinroom", ACC_PUBLIC + ACC_STATIC);
             //cw.visitInnerClass("org/redkale/test/wsdync/_DyncChatWebSocketServlet$_DyncChatWebSocketMessage_sendmessagee", newDynName, "_DyncChatWebSocketMessage_sendmessagee", ACC_PUBLIC + ACC_STATIC);
