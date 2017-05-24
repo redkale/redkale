@@ -18,7 +18,6 @@ import static jdk.internal.org.objectweb.asm.ClassWriter.COMPUTE_FRAMES;
 import static jdk.internal.org.objectweb.asm.Opcodes.*;
 import jdk.internal.org.objectweb.asm.Type;
 import org.redkale.convert.json.JsonConvert;
-import org.redkale.net.sncp.*;
 import org.redkale.service.*;
 import org.redkale.util.*;
 import org.redkale.source.Flipper;
@@ -109,6 +108,8 @@ public final class Rest {
         if (webSocketType == null) throw new RuntimeException("Rest WebSocket Class is null on createRestWebSocketServlet");
         if (Modifier.isAbstract(webSocketType.getModifiers())) throw new RuntimeException("Rest WebSocket Class(" + webSocketType + ") cannot abstract on createRestWebSocketServlet");
         if (Modifier.isFinal(webSocketType.getModifiers())) throw new RuntimeException("Rest WebSocket Class(" + webSocketType + ") cannot final on createRestWebSocketServlet");
+        final RestWebSocket rws = webSocketType.getAnnotation(RestWebSocket.class);
+        if (rws == null || rws.ignore()) throw new RuntimeException("Rest WebSocket Class(" + webSocketType + ") have not @RestWebSocket or @RestWebSocket.ignore=true on createRestWebSocketServlet");
         boolean valid = false;
         for (Constructor c : webSocketType.getDeclaredConstructors()) {
             if (c.getParameterCount() == 0 && (Modifier.isPublic(c.getModifiers()) || Modifier.isProtected(c.getModifiers()))) {
@@ -118,7 +119,11 @@ public final class Rest {
         }
         if (!valid) throw new RuntimeException("Rest WebSocket Class(" + webSocketType + ") must have public or protected Constructor on createRestWebSocketServlet");
 
-        final Set<Field> resourcesField = new HashSet<>();
+        if (!checkName(rws.catalog())) throw new RuntimeException(webSocketType.getName() + " have illeal " + RestWebSocket.class.getSimpleName() + ".catalog, only 0-9 a-z A-Z _ cannot begin 0-9");
+        if (!checkName(rws.name())) throw new RuntimeException(webSocketType.getName() + " have illeal " + RestWebSocket.class.getSimpleName() + ".name, only 0-9 a-z A-Z _ cannot begin 0-9");
+
+        //----------------------------------------------------------------------------------------
+        final Set<Field> resourcesFieldSet = new LinkedHashSet<>();
         Class clzz = webSocketType;
         do {
             for (Field field : webSocketType.getDeclaredFields()) {
@@ -128,13 +133,166 @@ public final class Rest {
                 if (!Modifier.isPublic(webSocketType.getModifiers()) && !Modifier.isProtected(webSocketType.getModifiers())) {
                     throw new RuntimeException(field + " must be public or protected on createRestWebSocketServlet");
                 }
-                resourcesField.add(field);
+                resourcesFieldSet.add(field);
             }
         } while ((clzz = clzz.getSuperclass()) != Object.class);
+        final List<Field> resourcesFields = new ArrayList<>(resourcesFieldSet);
+
+        StringBuilder sb1 = new StringBuilder();
+        StringBuilder sb2 = new StringBuilder();
+        for (int i = 0; i < resourcesFields.size(); i++) {
+            Field field = resourcesFields.get(i);
+            sb1.append(Type.getDescriptor(field.getType()));
+            sb2.append(Utility.getTypeDescriptor(field.getGenericType()));
+        }
+        final String resourceDescriptor = sb1.toString();
+        final String resourceGenericDescriptor = sb1.length() == sb2.length() ? null : sb2.toString();
+
+        //----------------------------------------------------------------------------------------
         for (Method method : webSocketType.getMethods()) {
 
         }
-        return null; //待实现   
+        //----------------------------------------------------------------------------------------
+
+        final String supDynName = WebSocketServlet.class.getName().replace('.', '/');
+        final String webServletDesc = Type.getDescriptor(WebServlet.class);
+        final String webSocketInternalName = Type.getInternalName(webSocketType);
+
+        final String newDynName = webSocketInternalName.substring(0, webSocketInternalName.lastIndexOf('/') + 1) + "_Dyn" + webSocketType.getSimpleName() + "Servlet";
+
+        final String newWebSokcetSimpleName = "_Dyn" + webSocketType.getSimpleName();
+        final String newDynWebSokcetFullName = newDynName + "$" + newWebSokcetSimpleName;
+
+        final String newMessageSimpleName = "_Dyn" + webSocketType.getSimpleName() + "Message";
+        final String newMessageFullName = newDynName + "$" + newMessageSimpleName;
+
+        //----------------------------------------------------------------------------------------
+        ClassLoader loader = Rest.class.getClassLoader();
+
+        ClassWriter cw = new ClassWriter(COMPUTE_FRAMES);
+        FieldVisitor fv;
+        AsmMethodVisitor mv;
+        AnnotationVisitor av0;
+        cw.visit(V1_8, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynName, null, supDynName, null);
+
+        { //注入 @WebServlet 注解
+            String urlpath = (rws.catalog().isEmpty() ? "/" : ("/" + rws.catalog() + "/")) + rws.name() + "/*";
+            av0 = cw.visitAnnotation(webServletDesc, true);
+            {
+                AnnotationVisitor av1 = av0.visitArray("value");
+                av1.visit(null, urlpath);
+                av1.visitEnd();
+            }
+            av0.visit("moduleid", 0);
+            av0.visit("repair", rws.repair());
+            av0.visit("comment", rws.comment());
+            av0.visitEnd();
+        }
+        { //内部类
+            cw.visitInnerClass(newDynName + "$RestOnMessageConsumer", newDynName, "RestOnMessageConsumer", ACC_PUBLIC + ACC_STATIC);
+
+            cw.visitInnerClass(newDynName + "$" + newWebSokcetSimpleName, newDynName, newWebSokcetSimpleName, ACC_PUBLIC + ACC_STATIC);
+
+            cw.visitInnerClass(newDynName + "$" + newWebSokcetSimpleName + "Message", newDynName, newWebSokcetSimpleName + "Message", ACC_PUBLIC + ACC_STATIC);
+
+            //cw.visitInnerClass("org/redkale/test/wsdync/_DyncChatWebSocketServlet$_DyncChatWebSocketMessage_joinroom", newDynName, "_DyncChatWebSocketMessage_joinroom", ACC_PUBLIC + ACC_STATIC);
+            //cw.visitInnerClass("org/redkale/test/wsdync/_DyncChatWebSocketServlet$_DyncChatWebSocketMessage_sendmessagee", newDynName, "_DyncChatWebSocketMessage_sendmessagee", ACC_PUBLIC + ACC_STATIC);
+        }
+        {//@Resource
+            for (int i = 0; i < resourcesFields.size(); i++) {
+                Field field = resourcesFields.get(i);
+                Resource res = field.getAnnotation(Resource.class);
+                java.lang.reflect.Type fieldType = field.getGenericType();
+                fv = cw.visitField(ACC_PRIVATE, "_redkale_resource_" + i, Type.getDescriptor(field.getType()), fieldType == field.getType() ? null : Utility.getTypeDescriptor(fieldType), null);
+                {
+                    av0 = fv.visitAnnotation("Ljavax/annotation/Resource;", true);
+                    av0.visit("name", res.name());
+                    av0.visitEnd();
+                }
+                fv.visitEnd();
+            }
+        }
+        { //构造函数 
+            mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null));
+            mv.visitVarInsn(ALOAD, 0);
+            mv.visitMethodInsn(INVOKESPECIAL, supDynName, "<init>", "()V", false);
+            mv.visitVarInsn(ALOAD, 0);
+            mv.visitLdcInsn(Type.getObjectType(newDynName + "$" + newWebSokcetSimpleName + "Message"));
+            mv.visitFieldInsn(PUTFIELD, newDynName, "messageTextType", "Ljava/lang/reflect/Type;");
+            mv.visitInsn(RETURN);
+            mv.visitMaxs(2, 1);
+            mv.visitEnd();
+        }
+        { //createWebSocket 方法
+            mv = new AsmMethodVisitor(cw.visitMethod(ACC_PROTECTED, "createWebSocket", "()Lorg/redkale/net/http/WebSocket;", "<G::Ljava/io/Serializable;T:Ljava/lang/Object;>()Lorg/redkale/net/http/WebSocket<TG;TT;>;", null));
+            mv.visitTypeInsn(NEW, newDynName + "$" + newWebSokcetSimpleName);
+            mv.visitInsn(DUP);
+            for (int i = 0; i < resourcesFields.size(); i++) {
+                mv.visitVarInsn(ALOAD, 0);
+                mv.visitFieldInsn(GETFIELD, newDynName, "_redkale_resource_" + i, Type.getDescriptor(resourcesFields.get(i).getType()));
+            }
+            mv.visitMethodInsn(INVOKESPECIAL, newDynName + "$" + newWebSokcetSimpleName, "<init>", "(" + resourceDescriptor + ")V", false);
+            mv.visitInsn(ARETURN);
+            mv.visitMaxs(2 + resourcesFields.size(), 1);
+            mv.visitEnd();
+        }
+        cw.visitEnd();
+        RestClassLoader newLoader = new RestClassLoader(loader);
+
+        { //_DyncXXXWebSocket class
+            ClassWriter cw2 = new ClassWriter(COMPUTE_FRAMES);
+            cw2.visit(V1_8, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynWebSokcetFullName, null, webSocketInternalName, null);
+
+            cw2.visitInnerClass(newDynWebSokcetFullName, newDynName, newWebSokcetSimpleName, ACC_PUBLIC + ACC_STATIC);
+
+            {
+                mv = new AsmMethodVisitor(cw2.visitMethod(ACC_PUBLIC, "<init>", "(" + resourceDescriptor + ")V", resourceGenericDescriptor == null ? null : ("(" + resourceGenericDescriptor + ")V"), null));
+                mv.visitVarInsn(ALOAD, 0);
+                mv.visitMethodInsn(INVOKESPECIAL, webSocketInternalName, "<init>", "()V", false);
+                for (int i = 0; i < resourcesFields.size(); i++) {
+                    Field field = resourcesFields.get(i);
+                    mv.visitVarInsn(ALOAD, 0);
+                    mv.visitVarInsn(ALOAD, i + 1);
+                    mv.visitFieldInsn(PUTFIELD, newDynWebSokcetFullName, "_redkale_resource_" + i, Type.getDescriptor(field.getType()));
+                }
+                mv.visitInsn(RETURN);
+                mv.visitMaxs(2, 1 + resourcesFields.size());
+                mv.visitEnd();
+            }
+            cw2.visitEnd();
+            newLoader.loadClass(newDynWebSokcetFullName.replace('/', '.'), cw2.toByteArray());
+        }
+
+        { //_DyncXXXWebSocketMessage class
+            ClassWriter cw2 = new ClassWriter(COMPUTE_FRAMES);
+            cw2.visit(V1_8, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newMessageFullName, null, "java/lang/Object", null);
+
+            cw2.visitInnerClass(newMessageFullName, newDynName, newMessageSimpleName, ACC_PUBLIC + ACC_STATIC);
+
+            {
+                mv = new AsmMethodVisitor(cw2.visitMethod(ACC_PUBLIC, "<init>", "(" + resourceDescriptor + ")V", resourceGenericDescriptor == null ? null : ("(" + resourceGenericDescriptor + ")V"), null));
+                mv.visitVarInsn(ALOAD, 0);
+                mv.visitMethodInsn(INVOKESPECIAL, webSocketInternalName, "<init>", "()V", false);
+                mv.visitVarInsn(ALOAD, 0);
+                mv.visitMethodInsn(INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false);
+                mv.visitInsn(RETURN);
+                mv.visitMaxs(1, 1);
+                mv.visitEnd();
+            }
+            cw2.visitEnd();
+            newLoader.loadClass(newMessageFullName.replace('/', '.'), cw2.toByteArray());
+        }
+
+        Class<?> newClazz = newLoader.loadClass(newDynName.replace('/', '.'), cw.toByteArray());
+        try {
+            return (T) newClazz.newInstance();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static void main(String[] args) throws Throwable {
+        System.out.println(createRestWebSocketServlet((Class<WebSocket>)Class.forName("org.redkale.test.ws.ChatWebSocket"))); 
     }
 
     static <T extends HttpServlet> T createRestServlet(final Class userType0, final Class<T> baseServletType, final Class<? extends Service> serviceType) {
@@ -170,7 +328,7 @@ public final class Rest {
         final String supDynName = baseServletType.getName().replace('.', '/');
         final RestService controller = serviceType.getAnnotation(RestService.class);
         if (controller != null && controller.ignore()) throw new RuntimeException(serviceType + " is ignore Rest Service Class"); //标记为ignore=true不创建Servlet
-        ClassLoader loader = Sncp.class.getClassLoader();
+        ClassLoader loader = Rest.class.getClassLoader();
         String newDynName = serviceTypeInternalName.substring(0, serviceTypeInternalName.lastIndexOf('/') + 1) + "_Dyn" + serviceType.getSimpleName().replaceAll("Service.*$", "") + "RestServlet";
 
         //------------------------------------------------------------------------------
@@ -1198,6 +1356,17 @@ public final class Rest {
             }
         }
         return true;
+    }
+
+    private static class RestClassLoader extends ClassLoader {
+
+        public RestClassLoader(ClassLoader parent) {
+            super(parent);
+        }
+
+        public final Class<?> loadClass(String name, byte[] b) {
+            return defineClass(name, b, 0, b.length);
+        }
     }
 
     private static class MappingEntry {

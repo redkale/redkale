@@ -63,10 +63,10 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
     protected Type messageTextType;  //RestWebSocket时会被修改
 
     @Resource
-    protected JsonConvert jsonConvert;
+    protected JsonConvert jsonConvert;  //Rest.createRestWebSocketServlet 需要过滤掉已有的@Resource
 
     @Resource(name = "$")
-    protected WebSocketNode node;
+    protected WebSocketNode node; //Rest.createRestWebSocketServlet 需要过滤掉已有的@Resource
 
     protected WebSocketServlet() {
         Type msgtype = String.class;
