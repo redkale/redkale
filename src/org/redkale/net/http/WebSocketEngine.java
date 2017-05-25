@@ -35,6 +35,9 @@ public final class WebSocketEngine {
     //当前WebSocket对应的Node
     protected final WebSocketNode node;
 
+    //HttpContext
+    protected final HttpContext context;
+
     //在线用户ID对应的WebSocket组，当WebSocketGroup内没有WebSocket会从containers删掉
     private final Map<Serializable, WebSocketGroup> containers = new ConcurrentHashMap<>();
 
@@ -47,8 +50,9 @@ public final class WebSocketEngine {
     //FINEST日志级别
     protected final boolean finest;
 
-    protected WebSocketEngine(String engineid, WebSocketNode node, Logger logger) {
+    protected WebSocketEngine(String engineid, HttpContext context, WebSocketNode node, Logger logger) {
         this.engineid = engineid;
+        this.context = context;
         this.node = node;
         this.logger = logger;
         this.index = sequence.getAndIncrement();
@@ -78,7 +82,7 @@ public final class WebSocketEngine {
     void add(WebSocket socket) {  //非线程安全， 在常规场景中无需锁
         WebSocketGroup group = containers.get(socket._groupid);
         if (group == null) {
-            group = new WebSocketGroup(socket._groupid);
+            group = new WebSocketGroup(context, socket._groupid);
             containers.putIfAbsent(socket._groupid, group);
             if (node != null) node.connect(socket._groupid);
         }

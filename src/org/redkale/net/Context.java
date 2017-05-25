@@ -127,6 +127,13 @@ public class Context {
         bufferPool.offer(buffer);
     }
 
+    public void offerBuffer(ByteBuffer... buffers) {
+        if (buffers == null) return;
+        for (ByteBuffer buffer : buffers) {
+            bufferPool.offer(buffer);
+        }
+    }
+
     public Logger getLogger() {
         return logger;
     }

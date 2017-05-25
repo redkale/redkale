@@ -21,13 +21,16 @@ public final class WebSocketGroup {
 
     private final Serializable groupid;
 
+    private final HttpContext context;
+
     private WebSocket recentWebSocket;
 
     private final List<WebSocket> list = new CopyOnWriteArrayList<>();
 
     private final Map<String, Object> attributes = new HashMap<>();
 
-    WebSocketGroup(Serializable groupid) {
+    WebSocketGroup(HttpContext context, Serializable groupid) {
+        this.context = context;
         this.groupid = groupid;
     }
 
@@ -91,12 +94,22 @@ public final class WebSocketGroup {
         }
     }
 
+    final CompletableFuture<Integer> send(boolean recent, final WebSocketPacket packet) {
+        if (recent) {
+            return recentWebSocket.send(packet);
+        } else {
+            return sendEach(packet);
+        }
+    }
+
     public final CompletableFuture<Integer> sendEach(Object message) {
         return sendEach(message, true);
     }
 
-    public final CompletableFuture<Integer> sendEach(WebSocketPacket packet) {
+    public final CompletableFuture<Integer> sendEach(final WebSocketPacket packet) {
         CompletableFuture<Integer> future = null;
+        final boolean more = packet.sendBuffers == null && list.size() > 1;
+        if (more) packet.setSendBuffers(packet.encode(context.getBufferSupplier()));
         for (WebSocket s : list) {
             if (future == null) {
                 future = s.sendPacket(packet);
@@ -104,6 +117,7 @@ public final class WebSocketGroup {
                 future = future.thenCombine(s.sendPacket(packet), (a, b) -> a | (Integer) b);
             }
         }
+        if (more && future != null) future = future.whenComplete((rs, ex) -> context.offerBuffer(packet.sendBuffers));
         return future == null ? CompletableFuture.completedFuture(0) : future;
     }
 
