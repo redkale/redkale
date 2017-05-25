@@ -134,6 +134,8 @@ public abstract class WebSocket<G extends Serializable, T> {
             return ((CompletableFuture) message).thenCompose((json) -> {
                 if (json == null || json instanceof CharSequence || json instanceof byte[]) {
                     return sendPacket(new WebSocketPacket((Serializable) json, last));
+                } else if (message instanceof WebSocketPacket) {
+                    return sendPacket((WebSocketPacket) message);
                 } else {
                     return sendPacket(new WebSocketPacket(_jsonConvert, json, last));
                 }
@@ -141,6 +143,8 @@ public abstract class WebSocket<G extends Serializable, T> {
         }
         if (message == null || message instanceof CharSequence || message instanceof byte[]) {
             return sendPacket(new WebSocketPacket((Serializable) message, last));
+        } else if (message instanceof WebSocketPacket) {
+            return sendPacket((WebSocketPacket) message);
         } else {
             return sendPacket(new WebSocketPacket(_jsonConvert, message, last));
         }

@@ -120,7 +120,9 @@ public final class WebSocketGroup {
     }
 
     public final CompletableFuture<Integer> sendEach(Object message, boolean last) {
-        if (message != null && !(message instanceof byte[]) && !(message instanceof CharSequence)) {
+        if (message instanceof WebSocketPacket) {
+            return sendEach((WebSocketPacket) message);
+        } else if (message != null && !(message instanceof byte[]) && !(message instanceof CharSequence)) {
             message = recentWebSocket._jsonConvert.convertTo(message);
         }
         return sendEach(new WebSocketPacket((Serializable) message, last));
