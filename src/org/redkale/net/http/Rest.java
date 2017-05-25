@@ -136,8 +136,8 @@ public final class Rest {
                 resourcesFieldSet.add(field);
             }
         } while ((clzz = clzz.getSuperclass()) != Object.class);
-        final List<Field> resourcesFields = new ArrayList<>(resourcesFieldSet);
 
+        final List<Field> resourcesFields = new ArrayList<>(resourcesFieldSet);
         StringBuilder sb1 = new StringBuilder();
         StringBuilder sb2 = new StringBuilder();
         for (int i = 0; i < resourcesFields.size(); i++) {
@@ -151,6 +151,7 @@ public final class Rest {
         //----------------------------------------------------------------------------------------        
         final Map<String, List<String>> asmParamMap = MethodParamClassVisitor.getMethodParamNames(webSocketType);
         final Set<String> messageNames = new HashSet<>();
+        final List<Method> messageMethods = new ArrayList<>();
         for (Method method : webSocketType.getMethods()) {
             RestOnMessage rom = method.getAnnotation(RestOnMessage.class);
             if (rom == null) continue;
@@ -158,6 +159,7 @@ public final class Rest {
             if (name.isEmpty()) throw new RuntimeException(method + " RestOnMessage.name is empty createRestWebSocketServlet");
             if (messageNames.contains(name)) throw new RuntimeException(method + " repeat RestOnMessage.name(" + name + ") createRestWebSocketServlet");
             messageNames.add(name);
+            messageMethods.add(method);
         }
         //----------------------------------------------------------------------------------------
 
@@ -167,12 +169,14 @@ public final class Rest {
 
         final String newDynName = webSocketInternalName.substring(0, webSocketInternalName.lastIndexOf('/') + 1) + "_Dyn" + webSocketType.getSimpleName() + "Servlet";
 
-        final String newWebSokcetSimpleName = "_Dyn" + webSocketType.getSimpleName();
-        final String newDynWebSokcetFullName = newDynName + "$" + newWebSokcetSimpleName;
+        final String newDynWebSokcetSimpleName = "_Dyn" + webSocketType.getSimpleName();
+        final String newDynWebSokcetFullName = newDynName + "$" + newDynWebSokcetSimpleName;
 
-        final String newMessageSimpleName = "_Dyn" + webSocketType.getSimpleName() + "Message";
-        final String newMessageFullName = newDynName + "$" + newMessageSimpleName;
+        final String newDynMessageSimpleName = "_Dyn" + webSocketType.getSimpleName() + "Message";
+        final String newDynMessageFullName = newDynName + "$" + newDynMessageSimpleName;
 
+        final String newDynConsumerSimpleName = "_DynRestOnMessageConsumer";
+        final String newDynConsumerFullName = newDynName + "$" + newDynConsumerSimpleName;
         //----------------------------------------------------------------------------------------
         ClassLoader loader = Rest.class.getClassLoader();
 
@@ -196,14 +200,17 @@ public final class Rest {
             av0.visitEnd();
         }
         { //内部类
-            cw.visitInnerClass(newDynName + "$RestOnMessageConsumer", newDynName, "RestOnMessageConsumer", ACC_PUBLIC + ACC_STATIC);
+            cw.visitInnerClass(newDynConsumerFullName, newDynName, newDynConsumerSimpleName, ACC_PUBLIC + ACC_STATIC);
 
-            cw.visitInnerClass(newDynWebSokcetFullName, newDynName, newWebSokcetSimpleName, ACC_PUBLIC + ACC_STATIC);
+            cw.visitInnerClass(newDynWebSokcetFullName, newDynName, newDynWebSokcetSimpleName, ACC_PUBLIC + ACC_STATIC);
 
-            cw.visitInnerClass(newMessageFullName, newDynName, newMessageSimpleName, ACC_PUBLIC + ACC_STATIC);
+            cw.visitInnerClass(newDynMessageFullName, newDynName, newDynMessageSimpleName, ACC_PUBLIC + ACC_STATIC);
 
-            //cw.visitInnerClass("org/redkale/test/wsdync/_DyncChatWebSocketServlet$_DyncChatWebSocketMessage_joinroom", newDynName, "_DyncChatWebSocketMessage_joinroom", ACC_PUBLIC + ACC_STATIC);
-            //cw.visitInnerClass("org/redkale/test/wsdync/_DyncChatWebSocketServlet$_DyncChatWebSocketMessage_sendmessagee", newDynName, "_DyncChatWebSocketMessage_sendmessagee", ACC_PUBLIC + ACC_STATIC);
+            for (int i = 0; i < messageMethods.size(); i++) {
+                Method method = messageMethods.get(i);
+                String endfix = "_" + method.getName() + "_" + (i > 9 ? i : ("0" + i));
+                cw.visitInnerClass(newDynMessageFullName + endfix, newDynName, newDynMessageSimpleName + endfix, ACC_PUBLIC + ACC_STATIC);
+            }
         }
         {//@Resource
             for (int i = 0; i < resourcesFields.size(); i++) {
@@ -224,7 +231,7 @@ public final class Rest {
             mv.visitVarInsn(ALOAD, 0);
             mv.visitMethodInsn(INVOKESPECIAL, supDynName, "<init>", "()V", false);
             mv.visitVarInsn(ALOAD, 0);
-            mv.visitLdcInsn(Type.getObjectType(newDynName + "$" + newWebSokcetSimpleName + "Message"));
+            mv.visitLdcInsn(Type.getObjectType(newDynName + "$" + newDynWebSokcetSimpleName + "Message"));
             mv.visitFieldInsn(PUTFIELD, newDynName, "messageTextType", "Ljava/lang/reflect/Type;");
             mv.visitInsn(RETURN);
             mv.visitMaxs(2, 1);
@@ -232,13 +239,13 @@ public final class Rest {
         }
         { //createWebSocket 方法
             mv = new AsmMethodVisitor(cw.visitMethod(ACC_PROTECTED, "createWebSocket", "()Lorg/redkale/net/http/WebSocket;", "<G::Ljava/io/Serializable;T:Ljava/lang/Object;>()Lorg/redkale/net/http/WebSocket<TG;TT;>;", null));
-            mv.visitTypeInsn(NEW, newDynName + "$" + newWebSokcetSimpleName);
+            mv.visitTypeInsn(NEW, newDynName + "$" + newDynWebSokcetSimpleName);
             mv.visitInsn(DUP);
             for (int i = 0; i < resourcesFields.size(); i++) {
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitFieldInsn(GETFIELD, newDynName, "_redkale_resource_" + i, Type.getDescriptor(resourcesFields.get(i).getType()));
             }
-            mv.visitMethodInsn(INVOKESPECIAL, newDynName + "$" + newWebSokcetSimpleName, "<init>", "(" + resourceDescriptor + ")V", false);
+            mv.visitMethodInsn(INVOKESPECIAL, newDynName + "$" + newDynWebSokcetSimpleName, "<init>", "(" + resourceDescriptor + ")V", false);
             mv.visitInsn(ARETURN);
             mv.visitMaxs(2 + resourcesFields.size(), 1);
             mv.visitEnd();
@@ -246,11 +253,76 @@ public final class Rest {
         cw.visitEnd();
         RestClassLoader newLoader = new RestClassLoader(loader);
 
-        { //_DyncXXXWebSocket class
+        for (int i = 0; i < messageMethods.size(); i++) {  // _DyncXXXWebSocketMessage List
+            Method method = messageMethods.get(i);
+            String endfix = "_" + method.getName() + "_" + (i > 9 ? i : ("0" + i));
+
+            ClassWriter cw2 = new ClassWriter(COMPUTE_FRAMES);
+            cw2.visit(V1_8, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynMessageFullName + endfix, null, "java/lang/Object", null);
+
+            cw2.visitInnerClass(newDynMessageFullName + endfix, newDynName, newDynMessageSimpleName + endfix, ACC_PUBLIC + ACC_STATIC);
+            Set<String> paramnames = new HashSet<>();
+            String methodesc = method.getName() + ":" + Type.getMethodDescriptor(method);
+            List<String> names = asmParamMap.get(methodesc);
+            Parameter[] params = method.getParameters();
+            for (int j = 0; j < params.length; j++) {
+                Parameter param = params[j];
+                String paramname = param.getName();
+                RestParam rp = param.getAnnotation(RestParam.class);
+                if (rp != null && !rp.name().isEmpty()) {
+                    paramname = rp.name();
+                } else if (names != null && names.size() > j) {
+                    paramname = names.get(j);
+                }
+                if (paramnames.contains(paramname)) throw new RuntimeException(method + " has same @RestParam.name");
+                paramnames.add(paramname);
+                fv = cw2.visitField(ACC_PUBLIC, paramname, Type.getDescriptor(param.getType()),
+                    param.getType() == param.getParameterizedType() ? null : Utility.getTypeDescriptor(param.getParameterizedType()), null);
+                fv.visitEnd();
+            }
+            { //构造函数
+                mv = new AsmMethodVisitor(cw2.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null));
+                mv.visitVarInsn(ALOAD, 0);
+                mv.visitMethodInsn(INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false);
+                mv.visitInsn(RETURN);
+                mv.visitMaxs(1, 1);
+                mv.visitEnd();
+            }
+            cw2.visitEnd();
+            newLoader.loadClass(newDynMessageFullName.replace('/', '.'), cw2.toByteArray());
+        }
+
+        { //_DynXXXWebSocketMessage class
+            ClassWriter cw2 = new ClassWriter(COMPUTE_FRAMES);
+            cw2.visit(V1_8, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynMessageFullName, null, "java/lang/Object", null);
+
+            cw2.visitInnerClass(newDynMessageFullName, newDynName, newDynMessageSimpleName, ACC_PUBLIC + ACC_STATIC);
+
+            for (int i = 0; i < messageMethods.size(); i++) {
+                Method method = messageMethods.get(i);
+                String endfix = "_" + method.getName() + "_" + (i > 9 ? i : ("0" + i));
+                cw2.visitInnerClass(newDynMessageFullName + endfix, newDynName, newDynMessageSimpleName + endfix, ACC_PUBLIC + ACC_STATIC);
+            }
+
+            {
+                mv = new AsmMethodVisitor(cw2.visitMethod(ACC_PUBLIC, "<init>", "(" + resourceDescriptor + ")V", resourceGenericDescriptor == null ? null : ("(" + resourceGenericDescriptor + ")V"), null));
+                mv.visitVarInsn(ALOAD, 0);
+                mv.visitMethodInsn(INVOKESPECIAL, webSocketInternalName, "<init>", "()V", false);
+                mv.visitVarInsn(ALOAD, 0);
+                mv.visitMethodInsn(INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false);
+                mv.visitInsn(RETURN);
+                mv.visitMaxs(1, 1);
+                mv.visitEnd();
+            }
+            cw2.visitEnd();
+            newLoader.loadClass(newDynMessageFullName.replace('/', '.'), cw2.toByteArray());
+        }
+
+        { //_DynXXXWebSocket class
             ClassWriter cw2 = new ClassWriter(COMPUTE_FRAMES);
             cw2.visit(V1_8, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynWebSokcetFullName, null, webSocketInternalName, null);
 
-            cw2.visitInnerClass(newDynWebSokcetFullName, newDynName, newWebSokcetSimpleName, ACC_PUBLIC + ACC_STATIC);
+            cw2.visitInnerClass(newDynWebSokcetFullName, newDynName, newDynWebSokcetSimpleName, ACC_PUBLIC + ACC_STATIC);
 
             {
                 mv = new AsmMethodVisitor(cw2.visitMethod(ACC_PUBLIC, "<init>", "(" + resourceDescriptor + ")V", resourceGenericDescriptor == null ? null : ("(" + resourceGenericDescriptor + ")V"), null));
@@ -270,24 +342,56 @@ public final class Rest {
             newLoader.loadClass(newDynWebSokcetFullName.replace('/', '.'), cw2.toByteArray());
         }
 
-        { //_DyncXXXWebSocketMessage class
+        { //_DynRestOnMessageConsumer class
             ClassWriter cw2 = new ClassWriter(COMPUTE_FRAMES);
-            cw2.visit(V1_8, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newMessageFullName, null, "java/lang/Object", null);
+            cw2.visit(V1_8, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynConsumerFullName, "Ljava/lang/Object;Ljava/util/function/BiConsumer<Lorg/redkale/net/http/WebSocket;Ljava/lang/Object;>;", "java/lang/Object", new String[]{"java/util/function/BiConsumer"});
 
-            cw2.visitInnerClass(newMessageFullName, newDynName, newMessageSimpleName, ACC_PUBLIC + ACC_STATIC);
+            cw2.visitInnerClass(newDynConsumerFullName, newDynName, newDynConsumerSimpleName, ACC_PUBLIC + ACC_STATIC);
+            cw2.visitInnerClass(newDynMessageFullName, newDynName, newDynMessageSimpleName, ACC_PUBLIC + ACC_STATIC);
+            for (int i = 0; i < messageMethods.size(); i++) {
+                Method method = messageMethods.get(i);
+                String endfix = "_" + method.getName() + "_" + (i > 9 ? i : ("0" + i));
+                cw2.visitInnerClass(newDynMessageFullName + endfix, newDynName, newDynMessageSimpleName + endfix, ACC_PUBLIC + ACC_STATIC);
+            }
 
-            {
-                mv = new AsmMethodVisitor(cw2.visitMethod(ACC_PUBLIC, "<init>", "(" + resourceDescriptor + ")V", resourceGenericDescriptor == null ? null : ("(" + resourceGenericDescriptor + ")V"), null));
-                mv.visitVarInsn(ALOAD, 0);
-                mv.visitMethodInsn(INVOKESPECIAL, webSocketInternalName, "<init>", "()V", false);
+            { //构造函数
+                mv = new AsmMethodVisitor(cw2.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null));
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitMethodInsn(INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false);
                 mv.visitInsn(RETURN);
                 mv.visitMaxs(1, 1);
                 mv.visitEnd();
             }
+
+            { //accept函数
+                mv = new AsmMethodVisitor(cw2.visitMethod(ACC_PUBLIC, "accept", "(Lorg/redkale/net/http/WebSocket;Ljava/lang/Object;)V", null, null));
+                mv.visitVarInsn(ALOAD, 1);
+                mv.visitTypeInsn(CHECKCAST, newDynWebSokcetFullName);
+                mv.visitVarInsn(ASTORE, 3);
+
+                mv.visitVarInsn(ALOAD, 2);
+                mv.visitTypeInsn(CHECKCAST, newDynMessageFullName);
+                mv.visitVarInsn(ASTORE, 4);
+
+                //待开发
+                
+                mv.visitMaxs(3, 5);
+                mv.visitEnd();
+            }
+            {//虚拟accept函数
+                mv = new AsmMethodVisitor(cw2.visitMethod(ACC_PUBLIC + ACC_BRIDGE + ACC_SYNTHETIC, "accept", "(Ljava/lang/Object;Ljava/lang/Object;)V", null, null));
+                mv.visitVarInsn(ALOAD, 0);
+                mv.visitVarInsn(ALOAD, 1);
+                mv.visitTypeInsn(CHECKCAST, "org/redkale/net/http/WebSocket");
+                mv.visitVarInsn(ALOAD, 2);
+                mv.visitTypeInsn(CHECKCAST, "java/lang/Object");
+                mv.visitMethodInsn(INVOKEVIRTUAL, newDynConsumerFullName, "accept", "(Lorg/redkale/net/http/WebSocket;Ljava/lang/Object;)V", false);
+                mv.visitInsn(RETURN);
+                mv.visitMaxs(3, 3);
+                mv.visitEnd();
+            }
             cw2.visitEnd();
-            newLoader.loadClass(newMessageFullName.replace('/', '.'), cw2.toByteArray());
+            newLoader.loadClass(newDynWebSokcetFullName.replace('/', '.'), cw2.toByteArray());
         }
 
         Class<?> newClazz = newLoader.loadClass(newDynName.replace('/', '.'), cw.toByteArray());
@@ -1324,12 +1428,7 @@ public final class Rest {
         }
 
         cw.visitEnd();
-        byte[] bytes = cw.toByteArray();
-        Class<?> newClazz = new ClassLoader(loader) {
-            public final Class<?> loadClass(String name, byte[] b) {
-                return defineClass(name, b, 0, b.length);
-            }
-        }.loadClass(newDynName.replace('/', '.'), bytes);
+        Class<?> newClazz = new RestClassLoader(loader).loadClass(newDynName.replace('/', '.'), cw.toByteArray());
         try {
             T obj = ((Class<T>) newClazz).newInstance();
             for (Map.Entry<String, org.redkale.util.Attribute> en : restAttributes.entrySet()) {

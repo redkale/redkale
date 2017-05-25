@@ -34,8 +34,9 @@ public final class _DyncChatWebSocketServlet extends WebSocketServlet {
         return (WebSocket) new _DyncChatWebSocket(service);
     }
 
+    @Override
     protected BiConsumer<WebSocket, Object> createRestOnMessageConsumer() {
-        return new RestOnMessageConsumer();
+        return new _DynRestOnMessageConsumer();
     }
 
     public static class _DyncChatWebSocket extends ChatWebSocket {
@@ -68,16 +69,19 @@ public final class _DyncChatWebSocketServlet extends WebSocketServlet {
 
     }
 
-    public static class RestOnMessageConsumer implements BiConsumer<WebSocket, Object> {
+    public static class _DynRestOnMessageConsumer implements BiConsumer<WebSocket, Object> {
 
         @Override
         public void accept(WebSocket websocket0, Object message0) {
-            ChatWebSocket websocket = (ChatWebSocket) websocket0;
+            _DyncChatWebSocket websocket = (_DyncChatWebSocket) websocket0;
             _DyncChatWebSocketMessage message = (_DyncChatWebSocketMessage) message0;
             if (message.sendmessage != null) {
                 websocket.onChatMessage(message.sendmessage.message, message.sendmessage.extmap);
-            } else if (message.sendmessage != null) {
+                return;
+            }
+            if (message.joinroom != null) {
                 websocket.onJoinRoom(message.joinroom.roomid);
+                return;
             }
         }
 
