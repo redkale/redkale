@@ -107,10 +107,15 @@ public final class WebSocketPacket {
     }
 
     void setSendBuffers(ByteBuffer[] sendBuffers) {
-        this.sendBuffers = new ByteBuffer[sendBuffers.length];
-        for (int i = 0; i < sendBuffers.length; i++) {
-            this.sendBuffers[i] = sendBuffers[i].duplicate();
+        this.sendBuffers = sendBuffers;
+    }
+
+    ByteBuffer[] duplicateSendBuffers() {
+        ByteBuffer[] rs = new ByteBuffer[this.sendBuffers.length];
+        for (int i = 0; i < this.sendBuffers.length; i++) {
+            rs[i] = this.sendBuffers[i].duplicate();
         }
+        return rs;
     }
 
     public WebSocketPacket(byte[] data) {
@@ -356,4 +361,24 @@ public final class WebSocketPacket {
         return this;
     }
 
+    byte[] getReceiveBytes() {
+        int count = 0;
+        for (ByteBuffer buf : this.receiveBuffers) {
+            count += buf.remaining();
+        }
+        byte[] bs = new byte[count];
+        int index = 0;
+        for (ByteBuffer buf : this.receiveBuffers) {
+            int r = buf.remaining();
+            buf.get(bs, index, r);
+            index += r;
+        }
+        ConvertMask mask = this.receiveMasker;
+        if (mask != null) {
+            for (int i = 0; i < bs.length; i++) {
+                bs[i] = mask.unmask(bs[i]);
+            }
+        }
+        return bs;
+    }
 }

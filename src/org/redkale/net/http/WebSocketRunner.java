@@ -136,7 +136,7 @@ class WebSocketRunner implements Runnable {
                                     context.getLogger().log(Level.SEVERE, "WebSocket onTextMessage error (" + packet + ")", e);
                                 }
                             } else if (packet.type == FrameType.BINARY) {
-                                byte[] message = convert.convertFrom(byte[].class, packet.receiveMasker, packet.receiveBuffers);
+                                byte[] message =packet.getReceiveBytes();
                                 if (readBuffer != null) {
                                     readBuffer.clear();
                                     channel.read(readBuffer, null, this);
@@ -147,7 +147,7 @@ class WebSocketRunner implements Runnable {
                                     context.getLogger().log(Level.SEVERE, "WebSocket onBinaryMessage error (" + packet + ")", e);
                                 }
                             } else if (packet.type == FrameType.PONG) {
-                                byte[] message = convert.convertFrom(byte[].class, packet.receiveMasker, packet.receiveBuffers);
+                                byte[] message = packet.getReceiveBytes();
                                 if (readBuffer != null) {
                                     readBuffer.clear();
                                     channel.read(readBuffer, null, this);
@@ -158,7 +158,7 @@ class WebSocketRunner implements Runnable {
                                     context.getLogger().log(Level.SEVERE, "WebSocket onPong error (" + packet + ")", e);
                                 }
                             } else if (packet.type == FrameType.PING) {
-                                byte[] message = convert.convertFrom(byte[].class, packet.receiveMasker, packet.receiveBuffers);
+                                byte[] message = packet.getReceiveBytes();
                                 if (readBuffer != null) {
                                     readBuffer.clear();
                                     channel.read(readBuffer, null, this);
@@ -217,7 +217,7 @@ class WebSocketRunner implements Runnable {
             queue.add(new QueueEntry(futureResult, packet));
             return futureResult;
         }
-        ByteBuffer[] buffers = packet.sendBuffers != null ? packet.sendBuffers : packet.encode(this.context.getBufferSupplier());
+        ByteBuffer[] buffers = packet.sendBuffers != null ? packet.duplicateSendBuffers() : packet.encode(this.context.getBufferSupplier());
         this.writeBuffers = buffers;
         try {
             channel.write(buffers, buffers, new CompletionHandler<Integer, ByteBuffer[]>() {
@@ -264,7 +264,7 @@ class WebSocketRunner implements Runnable {
                         QueueEntry entry = queue.poll();
                         if (entry != null) {
                             future = entry.future;
-                            ByteBuffer[] buffers = packet.sendBuffers != null ? packet.sendBuffers : packet.encode(context.getBufferSupplier());
+                            ByteBuffer[] buffers = packet.sendBuffers != null ? packet.duplicateSendBuffers() : packet.encode(context.getBufferSupplier());
                             writeBuffers = buffers;
                             channel.write(buffers, buffers, this);
                         }
