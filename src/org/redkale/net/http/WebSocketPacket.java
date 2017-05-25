@@ -102,11 +102,15 @@ public final class WebSocketPacket {
 
     WebSocketPacket(ByteBuffer[] sendBuffers, FrameType type, boolean fin) {
         this.type = type;
+        this.last = fin;
+        this.setSendBuffers(sendBuffers);
+    }
+
+    void setSendBuffers(ByteBuffer[] sendBuffers) {
         this.sendBuffers = new ByteBuffer[sendBuffers.length];
         for (int i = 0; i < sendBuffers.length; i++) {
             this.sendBuffers[i] = sendBuffers[i].duplicate();
         }
-        this.last = fin;
     }
 
     public WebSocketPacket(byte[] data) {
