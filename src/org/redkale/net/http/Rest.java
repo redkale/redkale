@@ -130,9 +130,6 @@ public final class Rest {
                 if (field.getAnnotation(Resource.class) == null) continue;
                 if (Modifier.isStatic(webSocketType.getModifiers())) throw new RuntimeException(field + " cannot static on createRestWebSocketServlet");
                 if (Modifier.isFinal(webSocketType.getModifiers())) throw new RuntimeException(field + " cannot final on createRestWebSocketServlet");
-                if (!Modifier.isPublic(webSocketType.getModifiers()) && !Modifier.isProtected(webSocketType.getModifiers())) {
-                    throw new RuntimeException(field + " must be public or protected on createRestWebSocketServlet");
-                }
                 resourcesFieldSet.add(field);
             }
         } while ((clzz = clzz.getSuperclass()) != Object.class);
