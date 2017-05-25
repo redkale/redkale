@@ -103,6 +103,9 @@ public final class WebSocketEngine {
     }
 
     CompletableFuture<Integer> sendMessage(final boolean recent, final Object message, final boolean last, final Serializable... groupids) {
+        if (message instanceof CompletableFuture) {
+            return ((CompletableFuture) message).thenCompose((json) -> sendMessage(recent, json, last, groupids));
+        }
         CompletableFuture<Integer> future = null;
         for (Serializable groupid : groupids) {
             WebSocketGroup group = getWebSocketGroup(groupid);
