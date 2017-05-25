@@ -62,6 +62,8 @@ public final class WebSocketPacket {
 
     JsonConvert sendConvert;
 
+    ByteBuffer[] sendBuffers;
+
     ConvertMask receiveMasker;
 
     ByteBuffer[] receiveBuffers;
@@ -95,6 +97,15 @@ public final class WebSocketPacket {
         this.type = FrameType.TEXT;
         this.sendConvert = convert;
         this.sendJson = json;
+        this.last = fin;
+    }
+
+    WebSocketPacket(ByteBuffer[] sendBuffers, FrameType type, boolean fin) {
+        this.type = type;
+        this.sendBuffers = new ByteBuffer[sendBuffers.length];
+        for (int i = 0; i < sendBuffers.length; i++) {
+            this.sendBuffers[i] = sendBuffers[i].duplicate();
+        }
         this.last = fin;
     }
 
@@ -247,7 +258,6 @@ public final class WebSocketPacket {
 //        String rs = JsonConvert.root().convertFrom(String.class, masker, buffer);
 //        System.out.println(rs);
 //    }
-
     /**
      * 消息解码  <br>
      *

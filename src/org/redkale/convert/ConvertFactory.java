@@ -9,6 +9,7 @@ import java.io.File;
 import java.lang.reflect.*;
 import java.math.BigInteger;
 import java.net.*;
+import java.nio.ByteBuffer;
 import java.nio.channels.CompletionHandler;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -98,6 +99,7 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
             this.register(URL.class, URLSimpledCoder.instance);
             this.register(URI.class, URISimpledCoder.instance);
             //---------------------------------------------------------
+            this.register(ByteBuffer.class, ByteBufferSimpledCoder.instance);
             this.register(boolean[].class, BoolArraySimpledCoder.instance);
             this.register(byte[].class, ByteArraySimpledCoder.instance);
             this.register(short[].class, ShortArraySimpledCoder.instance);
