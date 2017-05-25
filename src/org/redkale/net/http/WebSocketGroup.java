@@ -117,7 +117,7 @@ public final class WebSocketGroup {
                 future = future.thenCombine(s.sendPacket(packet), (a, b) -> a | (Integer) b);
             }
         }
-        if (more && future != null) future.whenComplete((rs, ex) -> context.offerBuffer(packet.sendBuffers));
+        if (more && future != null) future = future.whenComplete((rs, ex) -> context.offerBuffer(packet.sendBuffers));
         return future == null ? CompletableFuture.completedFuture(0) : future;
     }
 
