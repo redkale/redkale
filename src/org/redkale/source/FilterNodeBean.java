@@ -178,7 +178,13 @@ public final class FilterNodeBean<T extends FilterBean> implements Comparable<Fi
                 try {
                     getter = cltmp.getMethod(((t == boolean.class || t == Boolean.class) ? "is" : "get") + new String(chars));
                 } catch (Exception ex) {
-                    if (!pubmod) continue;
+                    if (t == Boolean.class) {
+                        try {
+                            getter = cltmp.getMethod("get" + new String(chars));
+                        } catch (Exception ex2) {
+                            if (!pubmod) continue;
+                        }
+                    } else if (!pubmod) continue;
                 }
                 fields.add(field.getName());
 
