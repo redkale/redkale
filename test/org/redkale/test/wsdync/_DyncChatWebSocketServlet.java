@@ -9,6 +9,7 @@ import java.io.Serializable;
 import java.util.Map;
 import java.util.function.BiConsumer;
 import javax.annotation.Resource;
+import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.http.*;
 import org.redkale.test.ws.ChatMessage;
 import org.redkale.test.ws.ChatService;
@@ -22,7 +23,7 @@ import org.redkale.test.ws.ChatWebSocket;
 public final class _DyncChatWebSocketServlet extends WebSocketServlet {
 
     @Resource
-    private ChatService service;
+    private ChatService _redkale_resource_0;
 
     public _DyncChatWebSocketServlet() {
         super();
@@ -31,7 +32,7 @@ public final class _DyncChatWebSocketServlet extends WebSocketServlet {
 
     @Override
     protected <G extends Serializable, T> WebSocket<G, T> createWebSocket() {
-        return (WebSocket) new _DyncChatWebSocket(service);
+        return (WebSocket) new _DyncChatWebSocket(_redkale_resource_0);
     }
 
     @Override
@@ -53,6 +54,10 @@ public final class _DyncChatWebSocketServlet extends WebSocketServlet {
 
         public _DyncChatWebSocketMessage_joinroom joinroom;
 
+        @Override
+        public String toString() {
+            return JsonConvert.root().convertTo(this);
+        }
     }
 
     public static class _DyncChatWebSocketMessage_sendmessagee {
@@ -61,12 +66,20 @@ public final class _DyncChatWebSocketServlet extends WebSocketServlet {
 
         public Map<String, String> extmap;
 
+        @Override
+        public String toString() {
+            return JsonConvert.root().convertTo(this);
+        }
     }
 
     public static class _DyncChatWebSocketMessage_joinroom {
 
         public int roomid;
 
+        @Override
+        public String toString() {
+            return JsonConvert.root().convertTo(this);
+        }
     }
 
     public static class _DynRestOnMessageConsumer implements BiConsumer<WebSocket, Object> {
