@@ -21,7 +21,6 @@ import static org.redkale.boot.Application.*;
 import org.redkale.boot.ClassFilter.FilterEntry;
 import org.redkale.net.Filter;
 import org.redkale.net.*;
-import org.redkale.net.http.WebSocketNode;
 import org.redkale.net.sncp.*;
 import org.redkale.service.*;
 import org.redkale.source.*;
@@ -329,7 +328,7 @@ public abstract class NodeServer {
                 if (DataSource.class.isAssignableFrom(serviceImplClass)) continue;
                 if (CacheSource.class.isAssignableFrom(serviceImplClass)) continue;
                 if (DataCacheListener.class.isAssignableFrom(serviceImplClass)) continue;
-                if (WebSocketNode.class.isAssignableFrom(serviceImplClass)) continue;
+                //if (WebSocketNode.class.isAssignableFrom(serviceImplClass)) continue;
             }
             if (entry.getName().contains("$")) throw new RuntimeException("<name> value cannot contains '$' in " + entry.getProperty());
             Service oldother = resourceFactory.find(entry.getName(), serviceImplClass);
