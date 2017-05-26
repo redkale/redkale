@@ -41,7 +41,7 @@ public abstract class WebSocketNode {
     //存放所有用户分布在节点上的队列信息,Set<InetSocketAddress> 为 sncpnode 的集合， key: groupid
     //集合包含 localSncpAddress
     //如果不是分布式(没有SNCP)，sncpNodeAddresses 将不会被用到
-    @Resource(name = "$")
+    @Resource(name = "$_nodes")
     protected CacheSource<Serializable, InetSocketAddress> sncpNodeAddresses;
 
     //当前节点的本地WebSocketEngine
@@ -57,11 +57,14 @@ public abstract class WebSocketNode {
         if (this.localEngine == null) return;
         //关掉所有本地本地WebSocket
         this.localEngine.getWebSocketGroups().forEach(g -> disconnect(g.getGroupid()));
+        if (sncpNodeAddresses != null && localSncpAddress != null) sncpNodeAddresses.removeSetItem("redkale_sncpnodes", localSncpAddress);
     }
 
     protected abstract CompletableFuture<List<String>> getWebSocketAddresses(@RpcTargetAddress InetSocketAddress targetAddress, Serializable groupid);
 
     protected abstract CompletableFuture<Integer> sendMessage(@RpcTargetAddress InetSocketAddress targetAddress, boolean recent, Object message, boolean last, Serializable groupid);
+
+    protected abstract CompletableFuture<Integer> broadcastMessage(@RpcTargetAddress InetSocketAddress targetAddress, boolean recent, Object message, boolean last);
 
     protected abstract CompletableFuture<Void> connect(Serializable groupid, InetSocketAddress addr);
 
@@ -167,7 +170,7 @@ public abstract class WebSocketNode {
      * @param message  消息内容
      * @param last     是否最后一条
      *
-     * @return 为0表示成功， 其他值表示异常
+     * @return 为0表示成功， 其他值表示部分发送异常
      */
     //最近连接发送逻辑还没有理清楚 
     public final CompletableFuture<Integer> sendMessage(final boolean recent, final Object message, final boolean last, final Serializable... groupids) {
@@ -181,6 +184,69 @@ public abstract class WebSocketNode {
                 : future.thenCombine(sendOneMessage(recent, message, last, groupid), (a, b) -> a | b);
         }
         return future == null ? CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY) : future;
+    }
+
+    /**
+     * 广播消息， 给所有人的所有接入的WebSocket节点发消息
+     *
+     * @param message 消息内容
+     *
+     * @return 为0表示成功， 其他值表示部分发送异常
+     */
+    public final CompletableFuture<Integer> broadcastEachMessage(final Object message) {
+        return broadcastMessage(false, message, true);
+    }
+
+    /**
+     * 广播消息， 给所有人最近接入的WebSocket节点发消息
+     *
+     * @param message 消息内容
+     *
+     * @return 为0表示成功， 其他值表示部分发送异常
+     */
+    public final CompletableFuture<Integer> broadcastRecentMessage(final Object message) {
+        return broadcastMessage(true, message, true);
+    }
+
+    /**
+     * 广播消息， 给所有人发消息
+     *
+     * @param recent  是否只发送给最近接入的WebSocket节点
+     * @param message 消息内容
+     *
+     * @return 为0表示成功， 其他值表示部分发送异常
+     */
+    public final CompletableFuture<Integer> broadcastMessage(final boolean recent, final Object message) {
+        return broadcastMessage(recent, message, true);
+    }
+
+    /**
+     * 广播消息， 给所有人发消息
+     *
+     * @param recent  是否只发送给最近接入的WebSocket节点
+     * @param message 消息内容
+     * @param last    是否最后一条
+     *
+     * @return 为0表示成功， 其他值表示部分发送异常
+     */
+    public final CompletableFuture<Integer> broadcastMessage(final boolean recent, final Object message, final boolean last) {
+        if (this.localEngine != null && this.sncpNodeAddresses == null) { //本地模式且没有分布式
+            return this.localEngine.broadcastMessage(recent, message, last);
+        }
+
+        CompletableFuture<Integer> localFuture = this.localEngine == null ? null : this.localEngine.broadcastMessage(recent, message, last);
+        CompletableFuture<Collection<InetSocketAddress>> addrsFuture = sncpNodeAddresses.getCollectionAsync("redkale_sncpnodes");
+        CompletableFuture<Integer> remoteFuture = addrsFuture.thenCompose((Collection<InetSocketAddress> addrs) -> {
+            if (finest) logger.finest("websocket broadcast message on " + addrs);
+            if (addrs == null || addrs.isEmpty()) return CompletableFuture.completedFuture(0);
+            CompletableFuture<Integer> future = null;
+            for (InetSocketAddress addr : addrs) {
+                future = future == null ? remoteNode.broadcastMessage(addr, recent, message, last)
+                    : future.thenCombine(remoteNode.broadcastMessage(addr, recent, message, last), (a, b) -> a | b);
+            }
+            return future == null ? CompletableFuture.completedFuture(0) : future;
+        });
+        return localFuture == null ? remoteFuture : localFuture.thenCombine(remoteFuture, (a, b) -> a | b);
     }
 
     private CompletableFuture<Integer> sendOneMessage(final boolean recent, final Object message, final boolean last, final Serializable groupid) {

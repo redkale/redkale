@@ -107,11 +107,39 @@ public final class WebSocketEngine {
         }
     }
 
+    public CompletableFuture<Integer> broadcastMessage(final boolean recent, final Object message, final boolean last) {
+        if (message instanceof CompletableFuture) {
+            return ((CompletableFuture) message).thenCompose((json) -> broadcastMessage(recent, json, last));
+        }
+        final Collection<WebSocketGroup> groups = getWebSocketGroups();
+        final boolean more = (!(message instanceof WebSocketPacket) || ((WebSocketPacket) message).sendBuffers == null) && groups.size() > 1;
+        if (more) {
+            final WebSocketPacket packet = (message instanceof WebSocketPacket) ? (WebSocketPacket) message
+                : ((message == null || message instanceof CharSequence || message instanceof byte[])
+                    ? new WebSocketPacket((Serializable) message, last) : new WebSocketPacket(this.convert, message, last));
+            packet.setSendBuffers(packet.encode(context.getBufferSupplier()));
+            CompletableFuture<Integer> future = null;
+            for (WebSocketGroup group : groups) {
+                if (group == null) continue;
+                future = future == null ? group.send(recent, message, last) : future.thenCombine(group.send(recent, message, last), (a, b) -> a | b);
+            }
+            if (future != null) future = future.whenComplete((rs, ex) -> context.offerBuffer(packet.sendBuffers));
+            return future == null ? CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY) : future;
+        } else {
+            CompletableFuture<Integer> future = null;
+            for (WebSocketGroup group : groups) {
+                if (group == null) continue;
+                future = future == null ? group.send(recent, message, last) : future.thenCombine(group.send(recent, message, last), (a, b) -> a | b);
+            }
+            return future == null ? CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY) : future;
+        }
+    }
+
     CompletableFuture<Integer> sendMessage(final boolean recent, final Object message, final boolean last, final Serializable... groupids) {
         if (message instanceof CompletableFuture) {
             return ((CompletableFuture) message).thenCompose((json) -> sendMessage(recent, json, last, groupids));
         }
-        final boolean more = !(message instanceof WebSocketPacket) || ((WebSocketPacket) message).sendBuffers == null || groupids.length > 1;
+        final boolean more = (!(message instanceof WebSocketPacket) || ((WebSocketPacket) message).sendBuffers == null) && groupids.length > 1;
         if (more) {
             final WebSocketPacket packet = (message instanceof WebSocketPacket) ? (WebSocketPacket) message
                 : ((message == null || message instanceof CharSequence || message instanceof byte[])

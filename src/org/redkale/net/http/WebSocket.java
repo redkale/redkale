@@ -263,6 +263,59 @@ public abstract class WebSocket<G extends Serializable, T> {
     }
 
     /**
+     * 广播消息， 给所有人的所有接入的WebSocket节点发消息
+     *
+     * @param message 消息内容
+     *
+     * @return 为0表示成功， 其他值表示部分发送异常
+     */
+    public final CompletableFuture<Integer> broadcastEachMessage(final Object message) {
+        return broadcastMessage(false, message, true);
+    }
+
+    /**
+     * 广播消息， 给所有人最近接入的WebSocket节点发消息
+     *
+     * @param message 消息内容
+     *
+     * @return 为0表示成功， 其他值表示部分发送异常
+     */
+    public final CompletableFuture<Integer> broadcastRecentMessage(final Object message) {
+        return broadcastMessage(true, message, true);
+    }
+
+    /**
+     * 广播消息， 给所有人发消息
+     *
+     * @param recent  是否只发送给最近接入的WebSocket节点
+     * @param message 消息内容
+     *
+     * @return 为0表示成功， 其他值表示部分发送异常
+     */
+    public final CompletableFuture<Integer> broadcastMessage(final boolean recent, final Object message) {
+        return broadcastMessage(recent, message, true);
+    }
+
+    /**
+     * 广播消息， 给所有人发消息
+     *
+     * @param recent  是否只发送给最近接入的WebSocket节点
+     * @param message 消息内容
+     * @param last    是否最后一条
+     *
+     * @return 为0表示成功， 其他值表示部分发送异常
+     */
+    public final CompletableFuture<Integer> broadcastMessage(final boolean recent, final Object message, final boolean last) {
+        if (_engine.node == null) return CompletableFuture.completedFuture(RETCODE_NODESERVICE_NULL);
+        if (message instanceof CompletableFuture) {
+            return ((CompletableFuture) message).thenCompose((json) -> _engine.node.broadcastMessage(recent, json, last));
+        }
+        CompletableFuture<Integer> rs = _engine.node.broadcastMessage(recent, message, last);
+        if (_engine.finest) _engine.logger.finest("broadcast " + (recent ? "recent " : "") + "send websocket result is " + rs + " on " + this + " by message(" + _jsonConvert.convertTo(message) + ")");
+        return rs;
+    }
+
+    /**
      * 获取当前WebSocket下的属性，非线程安全
      *
      * @param <T>  属性值的类型

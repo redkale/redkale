@@ -30,8 +30,8 @@ public class ChatWebSocket extends WebSocket<Integer, Object> {
 
     @RestOnMessage(name = "sendmessage")
     public void onChatMessage(ChatMessage message, Map<String, String> extmap) {
-        System.out.println("获取消息: message: " + message + ", map: " + extmap);
-        super.send(message);
+        System.out.println("获取消息: message: " + message + ", map: " + extmap);        
+        super.broadcastEachMessage(message); //给所有人广播
     }
 
     @RestOnMessage(name = "joinroom")

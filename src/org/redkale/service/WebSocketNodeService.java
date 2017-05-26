@@ -57,6 +57,12 @@ public class WebSocketNodeService extends WebSocketNode implements Service {
         return group.send(recent, message, last);
     }
 
+    @Override
+    public CompletableFuture<Integer> broadcastMessage(@RpcTargetAddress InetSocketAddress addr, boolean recent, Object message, boolean last) {
+        if (this.localEngine == null) return CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY);
+        return this.localEngine.broadcastMessage(recent, message, last);
+    }
+
     /**
      * 当用户连接到节点，需要更新到CacheSource
      *
@@ -68,6 +74,7 @@ public class WebSocketNodeService extends WebSocketNode implements Service {
     @Override
     public CompletableFuture<Void> connect(Serializable groupid, InetSocketAddress sncpAddr) {
         CompletableFuture<Void> future = sncpNodeAddresses.appendSetItemAsync(groupid, sncpAddr);
+        future = future.thenAccept((a) -> sncpNodeAddresses.appendSetItemAsync("redkale_sncpnodes", sncpAddr));
         if (finest) logger.finest(WebSocketNodeService.class.getSimpleName() + ".event: " + groupid + " connect from " + sncpAddr);
         return future;
     }
