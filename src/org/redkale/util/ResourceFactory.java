@@ -336,6 +336,7 @@ public final class ResourceFactory {
                         }
 
                     }
+                    boolean autoregnull = true;
                     final String rcname = tname;
                     ResourceEntry re = findEntry(rcname, genctype);
                     if (re == null) {
@@ -346,13 +347,30 @@ public final class ResourceFactory {
                         }
                     }
                     if (re == null) {
-                        ResourceLoader it = findLoader(field.getGenericType(), field);
+                        ResourceLoader it = findLoader(genctype, field);
                         if (it != null) {
-                            it.load(this, src, rcname, field, attachment);
+                            autoregnull = it.load(this, src, rcname, field, attachment);
                             re = findEntry(rcname, genctype);
                         }
                     }
-                    if (re == null) {
+                    if (re == null && genctype != classtype) {
+                        re = findEntry(rcname, classtype);
+                        if (re == null) {
+                            if (rcname.startsWith("property.")) {
+                                re = findEntry(rcname, String.class);
+                            } else {
+                                re = findEntry(rcname, classtype);
+                            }
+                        }
+                        if (re == null) {
+                            ResourceLoader it = findLoader(classtype, field);
+                            if (it != null) {
+                                autoregnull = it.load(this, src, rcname, field, attachment);
+                                re = findEntry(rcname, classtype);
+                            }
+                        }
+                    }
+                    if (re == null && autoregnull) {
                         register(rcname, genctype, null); //自动注入null的值
                         re = findEntry(rcname, genctype);
                     }
@@ -516,7 +534,8 @@ public final class ResourceFactory {
     @FunctionalInterface
     public static interface ResourceLoader {
 
-        public void load(ResourceFactory factory, Object src, String resourceName, Field field, Object attachment);
+        // 返回true 表示如果资源不存在会在ResourceFactory里注入默认值null，返回false表示资源不存在表示每次调用ResourceLoader自行处理
+        public boolean load(ResourceFactory factory, Object src, String resourceName, Field field, Object attachment);
     }
 
 }
