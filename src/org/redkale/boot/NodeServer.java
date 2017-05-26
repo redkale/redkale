@@ -8,7 +8,7 @@ package org.redkale.boot;
 import java.io.*;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
-import java.net.InetSocketAddress;
+import java.net.*;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.*;
@@ -25,8 +25,8 @@ import org.redkale.net.http.WebSocketNode;
 import org.redkale.net.sncp.*;
 import org.redkale.service.*;
 import org.redkale.source.*;
-import org.redkale.util.AnyValue.DefaultAnyValue;
 import org.redkale.util.*;
+import org.redkale.util.AnyValue.DefaultAnyValue;
 
 /**
  * Server节点的初始化配置类
@@ -134,7 +134,11 @@ public abstract class NodeServer {
             //if (this.sncpGroup == null) throw new RuntimeException("Server (" + String.valueOf(config).replaceAll("\\s+", " ") + ") not found <group> info");
         }
         //单点服务不会有 sncpAddress、sncpGroup
-        if (this.sncpAddress != null) this.resourceFactory.register(RESNAME_SNCP_ADDR, this.sncpAddress);
+        if (this.sncpAddress != null) {
+            this.resourceFactory.register(RESNAME_SNCP_ADDR, this.sncpAddress);
+            this.resourceFactory.register(RESNAME_SNCP_ADDR, SocketAddress.class, this.sncpAddress);
+            this.resourceFactory.register(RESNAME_SNCP_ADDR, String.class, this.sncpAddress.getHostString()+":" + this.sncpAddress.getPort());
+        }
         if (this.sncpGroup != null) this.resourceFactory.register(RESNAME_SNCP_GROUP, this.sncpGroup);
         {
             //设置root文件夹
