@@ -363,8 +363,8 @@ public final class Application {
         this.resourceFactory.register((ResourceFactory rf, final Object src, String resourceName, Field field, final Object attachment) -> {
             try {
                 Resource res = field.getAnnotation(Resource.class);
-                if (res == null || !res.name().isEmpty()) return;
-                if (!(src instanceof WatchService) || Sncp.isRemote((Service) src)) return; //远程模式不得注入 
+                if (res == null || !res.name().isEmpty()) return false;
+                if (!(src instanceof WatchService) || Sncp.isRemote((Service) src)) return false; //远程模式不得注入 
                 Class type = field.getType();
                 if (type == Application.class) {
                     field.set(src, application);
@@ -374,6 +374,7 @@ public final class Application {
             } catch (Exception e) {
                 logger.log(Level.SEVERE, "Resource inject error", e);
             }
+            return false;
         }, Application.class, WatchFactory.class);
         //--------------------------------------------------------------------------
         initResources();
