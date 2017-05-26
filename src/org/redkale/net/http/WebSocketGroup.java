@@ -111,11 +111,7 @@ public final class WebSocketGroup {
         final boolean more = packet.sendBuffers == null && list.size() > 1;
         if (more) packet.setSendBuffers(packet.encode(context.getBufferSupplier()));
         for (WebSocket s : list) {
-            if (future == null) {
-                future = s.sendPacket(packet);
-            } else {
-                future = future.thenCombine(s.sendPacket(packet), (a, b) -> a | (Integer) b);
-            }
+            future = future == null ? s.sendPacket(packet) : future.thenCombine(s.sendPacket(packet), (a, b) -> a | (Integer) b);
         }
         if (more && future != null) future = future.whenComplete((rs, ex) -> context.offerBuffer(packet.sendBuffers));
         return future == null ? CompletableFuture.completedFuture(0) : future;

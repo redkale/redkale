@@ -11,6 +11,7 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 import java.util.logging.*;
+import org.redkale.convert.json.JsonConvert;
 import static org.redkale.net.http.WebSocket.RETCODE_GROUP_EMPTY;
 import org.redkale.util.*;
 
@@ -38,6 +39,9 @@ public final class WebSocketEngine {
     //HttpContext
     protected final HttpContext context;
 
+    //JsonConvert
+    protected final JsonConvert convert;
+
     //在线用户ID对应的WebSocket组，当WebSocketGroup内没有WebSocket会从containers删掉
     private final Map<Serializable, WebSocketGroup> containers = new ConcurrentHashMap<>();
 
@@ -53,6 +57,7 @@ public final class WebSocketEngine {
     protected WebSocketEngine(String engineid, HttpContext context, WebSocketNode node, Logger logger) {
         this.engineid = engineid;
         this.context = context;
+        this.convert = context.getJsonConvert();
         this.node = node;
         this.logger = logger;
         this.index = sequence.getAndIncrement();
@@ -106,13 +111,29 @@ public final class WebSocketEngine {
         if (message instanceof CompletableFuture) {
             return ((CompletableFuture) message).thenCompose((json) -> sendMessage(recent, json, last, groupids));
         }
-        CompletableFuture<Integer> future = null;
-        for (Serializable groupid : groupids) {
-            WebSocketGroup group = getWebSocketGroup(groupid);
-            if (group == null) continue;
-            future = future == null ? group.send(recent, message, last) : future.thenCombine(group.send(recent, message, last), (a, b) -> a | b);
+        final boolean more = !(message instanceof WebSocketPacket) || ((WebSocketPacket) message).sendBuffers == null || groupids.length > 1;
+        if (more) {
+            final WebSocketPacket packet = (message instanceof WebSocketPacket) ? (WebSocketPacket) message
+                : ((message == null || message instanceof CharSequence || message instanceof byte[])
+                    ? new WebSocketPacket((Serializable) message, last) : new WebSocketPacket(this.convert, message, last));
+            packet.setSendBuffers(packet.encode(context.getBufferSupplier()));
+            CompletableFuture<Integer> future = null;
+            for (Serializable groupid : groupids) {
+                WebSocketGroup group = getWebSocketGroup(groupid);
+                if (group == null) continue;
+                future = future == null ? group.send(recent, message, last) : future.thenCombine(group.send(recent, message, last), (a, b) -> a | b);
+            }
+            if (future != null) future = future.whenComplete((rs, ex) -> context.offerBuffer(packet.sendBuffers));
+            return future == null ? CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY) : future;
+        } else {
+            CompletableFuture<Integer> future = null;
+            for (Serializable groupid : groupids) {
+                WebSocketGroup group = getWebSocketGroup(groupid);
+                if (group == null) continue;
+                future = future == null ? group.send(recent, message, last) : future.thenCombine(group.send(recent, message, last), (a, b) -> a | b);
+            }
+            return future == null ? CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY) : future;
         }
-        return future == null ? CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY) : future;
     }
 
     Collection<WebSocketGroup> getWebSocketGroups() {
