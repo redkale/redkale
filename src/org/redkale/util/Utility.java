@@ -11,6 +11,7 @@ import java.nio.ByteBuffer;
 import java.nio.charset.*;
 import java.time.*;
 import java.util.*;
+import java.util.function.Predicate;
 import java.util.zip.GZIPInputStream;
 import javax.net.ssl.*;
 
@@ -274,6 +275,30 @@ public final class Utility {
             news[array.length + (++index)] = t;
         }
         return news;
+    }
+
+    /**
+     * 将符合条件的元素从数组中删除
+     *
+     * @param <T>    泛型
+     * @param array  原数组
+     * @param filter Predicate
+     *
+     * @return 新数组
+     */
+    public static <T> T[] remove(final T[] array, final Predicate filter) {
+        if (array == null || array.length == 0 || filter == null) return array;
+        final T[] news = (T[]) Array.newInstance(array.getClass().getComponentType(), array.length);
+        int index = 0;
+        for (int i = 0; i < news.length; i++) {
+            if (!filter.test(array[i])) {
+                news[index++] = array[i];
+            }
+        }
+        if (index == news.length) return news;
+        final T[] rs = (T[]) Array.newInstance(array.getClass().getComponentType(), index);
+        System.arraycopy(news, 0, rs, 0, index);
+        return rs;
     }
 
     /**

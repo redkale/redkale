@@ -415,7 +415,7 @@ public final class Application {
                 return false;
             }
 
-        }, Application.class, WatchFactory.class, NodeSncpServer.class, NodeHttpServer.class, NodeWatchServer.class);
+        }, Application.class, NodeSncpServer.class, NodeHttpServer.class, NodeWatchServer.class);
         //--------------------------------------------------------------------------
         initResources();
     }

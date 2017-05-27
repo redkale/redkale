@@ -8,7 +8,6 @@ package org.redkale.net.http;
 import org.redkale.util.AnyValue.DefaultAnyValue;
 import java.io.*;
 import java.util.*;
-import java.util.AbstractMap.SimpleEntry;
 import java.util.function.*;
 import java.util.logging.*;
 import java.util.regex.*;
@@ -28,11 +27,11 @@ public class HttpPrepareServlet extends PrepareServlet<String, HttpContext, Http
 
     protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
 
-    protected SimpleEntry<Predicate<String>, HttpServlet>[] regArray = null; //regArray 包含 regWsArray
+    protected MappingEntry[] regArray = null; //regArray 包含 regWsArray
+
+    protected MappingEntry[] regWsArray = null;
 
     protected Map<String, WebSocketServlet> wsmappings = new HashMap<>(); //super.mappings 包含 wsmappings
-
-    protected SimpleEntry<Predicate<String>, WebSocketServlet>[] regWsArray = null;
 
     protected HttpServlet resourceHttpServlet = new HttpResourceServlet();
 
@@ -43,6 +42,30 @@ public class HttpPrepareServlet extends PrepareServlet<String, HttpContext, Http
     private Map<String, BiPredicate<String, String>> forbidURIMaps; //禁用的URL的正则表达式, 必须与 forbidURIPredicates 保持一致
 
     private BiPredicate<String, String>[] forbidURIPredicates; //禁用的URL的Predicate, 必须与 forbidURIMaps 保持一致
+
+    public HttpServlet removeHttpServlet(HttpServlet servlet) {
+        HttpServlet rs = null;
+        synchronized (allMapStrings) {
+            //待开发
+        }
+        return rs;
+    }
+
+    public <T extends HttpServlet> HttpServlet removeHttpServlet(Class<T> servletType) {
+        HttpServlet rs = null;
+        synchronized (allMapStrings) {
+            //待开发
+        }
+        return rs;
+    }
+
+    public HttpServlet removeHttpServlet(String mapping) {
+        HttpServlet rs = null;
+        synchronized (allMapStrings) {
+            //待开发
+        }
+        return rs;
+    }
 
     public boolean addForbidURIReg(final String urlreg) {
         if (urlreg == null || urlreg.isEmpty()) return false;
@@ -140,9 +163,9 @@ public class HttpPrepareServlet extends PrepareServlet<String, HttpContext, Http
             if (request.isWebSocket()) {
                 servlet = wsmappings.get(uri);
                 if (servlet == null && this.regWsArray != null) {
-                    for (SimpleEntry<Predicate<String>, WebSocketServlet> en : regWsArray) {
-                        if (en.getKey().test(uri)) {
-                            servlet = en.getValue();
+                    for (MappingEntry en : regWsArray) {
+                        if (en.predicate.test(uri)) {
+                            servlet = en.servlet;
                             break;
                         }
                     }
@@ -154,9 +177,9 @@ public class HttpPrepareServlet extends PrepareServlet<String, HttpContext, Http
             } else {
                 servlet = mappingServlet(uri);
                 if (servlet == null && this.regArray != null) {
-                    for (SimpleEntry<Predicate<String>, HttpServlet> en : regArray) {
-                        if (en.getKey().test(uri)) {
-                            servlet = en.getValue();
+                    for (MappingEntry en : regArray) {
+                        if (en.predicate.test(uri)) {
+                            servlet = en.servlet;
                             break;
                         }
                     }
@@ -216,19 +239,19 @@ public class HttpPrepareServlet extends PrepareServlet<String, HttpContext, Http
                         mapping = mapping + "$";
                     }
                     if (regArray == null) {
-                        regArray = new SimpleEntry[1];
-                        regArray[0] = new SimpleEntry<>(Pattern.compile(mapping).asPredicate(), servlet);
+                        regArray = new MappingEntry[1];
+                        regArray[0] = new MappingEntry(mapping, Pattern.compile(mapping).asPredicate(), servlet);
                     } else {
                         regArray = Arrays.copyOf(regArray, regArray.length + 1);
-                        regArray[regArray.length - 1] = new SimpleEntry<>(Pattern.compile(mapping).asPredicate(), servlet);
+                        regArray[regArray.length - 1] = new MappingEntry(mapping, Pattern.compile(mapping).asPredicate(), servlet);
                     }
                     if (servlet instanceof WebSocketServlet) {
                         if (regWsArray == null) {
-                            regWsArray = new SimpleEntry[1];
-                            regWsArray[0] = new SimpleEntry<>(Pattern.compile(mapping).asPredicate(), (WebSocketServlet) servlet);
+                            regWsArray = new MappingEntry[1];
+                            regWsArray[0] = new MappingEntry(mapping, Pattern.compile(mapping).asPredicate(), (WebSocketServlet) servlet);
                         } else {
                             regWsArray = Arrays.copyOf(regWsArray, regWsArray.length + 1);
-                            regWsArray[regWsArray.length - 1] = new SimpleEntry<>(Pattern.compile(mapping).asPredicate(), (WebSocketServlet) servlet);
+                            regWsArray[regWsArray.length - 1] = new MappingEntry(mapping, Pattern.compile(mapping).asPredicate(), (WebSocketServlet) servlet);
                         }
                     }
                 } else if (mapping != null && !mapping.isEmpty()) {
@@ -285,4 +308,19 @@ public class HttpPrepareServlet extends PrepareServlet<String, HttpContext, Http
         this.regWsArray = null;
     }
 
+    protected static class MappingEntry {
+
+        public final String mapping;
+
+        public final Predicate<String> predicate;
+
+        public final HttpServlet servlet;
+
+        public MappingEntry(String mapping, Predicate<String> predicate, HttpServlet servlet) {
+            this.mapping = mapping;
+            this.predicate = predicate;
+            this.servlet = servlet;
+        }
+
+    }
 }

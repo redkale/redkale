@@ -25,13 +25,28 @@ public class SncpPrepareServlet extends PrepareServlet<DLong, SncpContext, SncpR
 
     @Override
     public void addServlet(SncpServlet servlet, Object attachment, AnyValue conf, DLong... mappings) {
-        addServlet((SncpServlet) servlet, conf);
+        addSncpServlet((SncpServlet) servlet, conf);
     }
 
-    public void addServlet(SncpServlet servlet, AnyValue conf) {
+    public void addSncpServlet(SncpServlet servlet, AnyValue conf) {
         setServletConf(servlet, conf);
         putMapping(servlet.getServiceid(), servlet);
         putServlet(servlet);
+    }
+
+    public <T> SncpServlet removeSncpServlet(String name, Class<T> type) {
+        SncpServlet rs = null;
+        for (SncpServlet servlet : getServlets()) {
+            if (servlet.serviceName.equals(name) && servlet.type.equals(type)) {
+                rs = servlet;
+                break;
+            }
+        }
+        if (rs != null) {
+            removeMapping(rs);
+            removeServlet(rs);
+        }
+        return rs;
     }
 
     public List<SncpServlet> getSncpServlets() {

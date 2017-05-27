@@ -55,10 +55,40 @@ public abstract class PrepareServlet<K extends Serializable, C extends Context, 
         }
     }
 
+    protected void removeServlet(S servlet) {
+        synchronized (lock1) {
+            Set<S> newservlets = new HashSet<>(servlets);
+            newservlets.remove(servlet);
+            this.servlets = newservlets;
+        }
+    }
+
     protected void putMapping(K key, S servlet) {
         synchronized (lock2) {
             Map<K, S> newmappings = new HashMap<>(mappings);
             newmappings.put(key, servlet);
+            this.mappings = newmappings;
+        }
+    }
+
+    protected void removeMapping(K key) {
+        synchronized (lock2) {
+            Map<K, S> newmappings = new HashMap<>(mappings);
+            newmappings.remove(key);
+            this.mappings = newmappings;
+        }
+    }
+
+    protected void removeMapping(S servlet) {
+        synchronized (lock2) {
+            List<K> keys = new ArrayList<>();
+            Map<K, S> newmappings = new HashMap<>(mappings);
+            for (Map.Entry<K, S> en : newmappings.entrySet()) {
+                if (en.getValue().equals(servlet)) {
+                    keys.add(en.getKey());
+                }
+            }
+            for (K key : keys) newmappings.remove(key);
             this.mappings = newmappings;
         }
     }

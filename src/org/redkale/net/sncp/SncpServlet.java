@@ -8,6 +8,7 @@ package org.redkale.net.sncp;
 import java.util.Objects;
 import java.util.concurrent.*;
 import org.redkale.net.*;
+import org.redkale.service.Service;
 import org.redkale.util.*;
 
 /**
@@ -18,6 +19,26 @@ import org.redkale.util.*;
  * @author zhangjx
  */
 public abstract class SncpServlet extends Servlet<SncpContext, SncpRequest, SncpResponse> implements Comparable<SncpServlet> {
+
+    protected final Class<? extends Service> type;
+
+    protected final String serviceName;
+
+    protected final Service service;
+
+    protected SncpServlet(String serviceName, Class<? extends Service> type, Service service) {
+        this.type = type;
+        this.service = service;
+        this.serviceName = serviceName;
+    }
+
+    public Service getService() {
+        return service;
+    }
+
+    public String getServiceName() {
+        return serviceName;
+    }
 
     public abstract DLong getServiceid();
 

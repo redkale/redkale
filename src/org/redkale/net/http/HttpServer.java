@@ -58,6 +58,40 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
     }
 
     /**
+     * 删除HttpServlet
+     *
+     * @param servlet HttpServlet
+     *
+     * @return HttpServlet
+     */
+    public HttpServlet removeHttpServlet(HttpServlet servlet) {
+        return ((HttpPrepareServlet) this.prepare).removeHttpServlet(servlet);
+    }
+
+    /**
+     * 删除HttpServlet
+     *
+     * @param <T>         泛型
+     * @param servletType Class
+     *
+     * @return HttpServlet
+     */
+    public <T extends HttpServlet> HttpServlet removeHttpServlet(Class<T> servletType) {
+        return ((HttpPrepareServlet) this.prepare).removeHttpServlet(servletType);
+    }
+
+    /**
+     * 删除HttpServlet
+     *
+     * @param mapping String
+     *
+     * @return HttpServlet
+     */
+    public HttpServlet removeHttpServlet(String mapping) {
+        return ((HttpPrepareServlet) this.prepare).removeHttpServlet(mapping);
+    }
+
+    /**
      * 屏蔽请求URL的正则表达式
      *
      * @param urlreg 正则表达式

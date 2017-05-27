@@ -73,6 +73,35 @@ public class SncpServer extends Server<DLong, SncpContext, SncpRequest, SncpResp
         return this;
     }
 
+    /**
+     * 删除SncpServlet
+     *
+     * @param <T>     泛型
+     * @param resname String
+     * @param type    Class
+     *
+     * @return SncpServlet
+     */
+    public <T extends Service> SncpServlet removeSncpServlet(String resname, Class<T> type) {
+        return ((SncpPrepareServlet) this.prepare).removeSncpServlet(resname, type);
+    }
+
+    /**
+     * 删除SncpServlet
+     *
+     * @param sncpService Service
+     *
+     * @return SncpServlet
+     */
+    public SncpServlet removeSncpServlet(Service sncpService) {
+        SncpServlet servlet = null;
+        String resname = Sncp.getResourceName(sncpService);
+        for (Class type : Sncp.getResourceTypes(sncpService)) {
+            servlet = ((SncpPrepareServlet) this.prepare).removeSncpServlet(resname, type);
+        }
+        return servlet;
+    }
+
     public void addSncpServlet(Service sncpService) {
         for (Class type : Sncp.getResourceTypes(sncpService)) {
             SncpDynServlet sds = new SncpDynServlet(BsonFactory.root().getConvert(), Sncp.getResourceName(sncpService), type, sncpService);

@@ -42,10 +42,6 @@ public final class SncpDynServlet extends SncpServlet {
 
     private final boolean finest = logger.isLoggable(Level.FINEST);
 
-    private final Class<? extends Service> type;
-
-    private final String serviceName;
-
     private final DLong serviceid;
 
     private final HashMap<DLong, SncpServletAction> actions = new HashMap<>();
@@ -53,8 +49,7 @@ public final class SncpDynServlet extends SncpServlet {
     private Supplier<ByteBuffer> bufferSupplier;
 
     public SncpDynServlet(final BsonConvert convert, final String serviceName, final Class<? extends Service> type, final Service service) {
-        this.serviceName = serviceName;
-        this.type = type;
+        super(serviceName, type, service);
         this.serviceid = Sncp.hash(type.getName() + ':' + serviceName);
         Set<DLong> actionids = new HashSet<>();
         for (java.lang.reflect.Method method : service.getClass().getMethods()) {
