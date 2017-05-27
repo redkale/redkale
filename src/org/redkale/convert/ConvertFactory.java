@@ -14,6 +14,7 @@ import java.nio.channels.CompletionHandler;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 import org.redkale.convert.ext.InetAddressSimpledCoder.InetSocketAddressSimpledCoder;
 import org.redkale.convert.ext.*;
 import org.redkale.util.*;
@@ -397,6 +398,8 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
             decoder = new ArrayDecoder(this, type);
         } else if (Collection.class.isAssignableFrom(clazz)) {
             decoder = new CollectionDecoder(this, type);
+        } else if (Stream.class.isAssignableFrom(clazz)) {
+            decoder = new StreamDecoder(this, type);
         } else if (Map.class.isAssignableFrom(clazz)) {
             decoder = new MapDecoder(this, type);
         } else if (clazz == Object.class) {
@@ -480,6 +483,8 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
             encoder = new ArrayEncoder(this, type);
         } else if (Collection.class.isAssignableFrom(clazz)) {
             encoder = new CollectionEncoder(this, type);
+        } else if (Stream.class.isAssignableFrom(clazz)) {
+            encoder = new StreamEncoder(this, type);
         } else if (Map.class.isAssignableFrom(clazz)) {
             encoder = new MapEncoder(this, type);
         } else if (clazz == Object.class) {

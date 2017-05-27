@@ -38,8 +38,6 @@ class WebSocketRunner implements Runnable {
 
     private ByteBuffer readBuffer;
 
-    private ByteBuffer[] writeBuffers;
-
     protected volatile boolean closed = false;
 
     private AtomicBoolean writing = new AtomicBoolean();
@@ -136,7 +134,7 @@ class WebSocketRunner implements Runnable {
                                     context.getLogger().log(Level.SEVERE, "WebSocket onTextMessage error (" + packet + ")", e);
                                 }
                             } else if (packet.type == FrameType.BINARY) {
-                                byte[] message =packet.getReceiveBytes();
+                                byte[] message = packet.getReceiveBytes();
                                 if (readBuffer != null) {
                                     readBuffer.clear();
                                     channel.read(readBuffer, null, this);
@@ -218,7 +216,6 @@ class WebSocketRunner implements Runnable {
             return futureResult;
         }
         ByteBuffer[] buffers = packet.sendBuffers != null ? packet.duplicateSendBuffers() : packet.encode(this.context.getBufferSupplier());
-        this.writeBuffers = buffers;
         try {
             channel.write(buffers, buffers, new CompletionHandler<Integer, ByteBuffer[]>() {
 
@@ -230,11 +227,10 @@ class WebSocketRunner implements Runnable {
                         if (future != null) {
                             future.complete(RETCODE_WSOCKET_CLOSED);
                             future = null;
-                            if (writeBuffers != null) {
-                                for (ByteBuffer buf : writeBuffers) {
+                            if (attachments != null) {
+                                for (ByteBuffer buf : attachments) {
                                     context.offerBuffer(buf);
                                 }
-                                writeBuffers = null;
                             }
                         }
                         return;
@@ -254,18 +250,16 @@ class WebSocketRunner implements Runnable {
                         if (future != null) {
                             future.complete(0);
                             future = null;
-                            if (writeBuffers != null) {
-                                for (ByteBuffer buf : writeBuffers) {
+                            if (attachments != null) {
+                                for (ByteBuffer buf : attachments) {
                                     context.offerBuffer(buf);
                                 }
-                                writeBuffers = null;
                             }
                         }
                         QueueEntry entry = queue.poll();
                         if (entry != null) {
                             future = entry.future;
                             ByteBuffer[] buffers = packet.sendBuffers != null ? packet.duplicateSendBuffers() : packet.encode(context.getBufferSupplier());
-                            writeBuffers = buffers;
                             channel.write(buffers, buffers, this);
                         }
                     } catch (Exception e) {
@@ -304,12 +298,6 @@ class WebSocketRunner implements Runnable {
             }
             context.offerBuffer(readBuffer);
             readBuffer = null;
-            if (writeBuffers != null) {
-                for (ByteBuffer buf : writeBuffers) {
-                    context.offerBuffer(buf);
-                }
-                writeBuffers = null;
-            }
             engine.remove(webSocket);
             webSocket.onClose(0, null);
         }

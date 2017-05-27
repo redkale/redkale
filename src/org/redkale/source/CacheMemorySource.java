@@ -325,6 +325,17 @@ public class CacheMemorySource<K extends Serializable, V extends Object> extends
     }
 
     @Override
+    public long getCollectionSize(final K key) {
+        Collection<V> collection = (Collection<V>) get(key);
+        return collection == null ? 0 : collection.size();
+    }
+
+    @Override
+    public CompletableFuture<Long> getCollectionSizeAsync(final K key) {
+        return CompletableFuture.supplyAsync(() -> getCollectionSize(key), getExecutor());
+    }
+
+    @Override
     public Collection<V> getCollectionAndRefresh(final K key, final int expireSeconds) {
         return (Collection<V>) getAndRefresh(key, expireSeconds);
     }
