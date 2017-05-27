@@ -136,7 +136,7 @@ public abstract class NodeServer {
         if (this.sncpAddress != null) {
             this.resourceFactory.register(RESNAME_SNCP_ADDR, this.sncpAddress);
             this.resourceFactory.register(RESNAME_SNCP_ADDR, SocketAddress.class, this.sncpAddress);
-            this.resourceFactory.register(RESNAME_SNCP_ADDR, String.class, this.sncpAddress.getHostString()+":" + this.sncpAddress.getPort());
+            this.resourceFactory.register(RESNAME_SNCP_ADDR, String.class, this.sncpAddress.getHostString() + ":" + this.sncpAddress.getPort());
         }
         if (this.sncpGroup != null) this.resourceFactory.register(RESNAME_SNCP_GROUP, this.sncpGroup);
         {
@@ -215,10 +215,10 @@ public abstract class NodeServer {
         resourceFactory.register((ResourceFactory rf, final Object src, String resourceName, Field field, final Object attachment) -> {
             try {
                 Resource res = field.getAnnotation(Resource.class);
-                if (res == null || !res.name().startsWith("properties.")) return true;
-                if ((src instanceof Service) && Sncp.isRemote((Service) src)) return true; //远程模式不得注入 DataSource
+                if (res == null || !res.name().startsWith("properties.")) return;
+                if ((src instanceof Service) && Sncp.isRemote((Service) src)) return; //远程模式不得注入 DataSource
                 Class type = field.getType();
-                if (type != AnyValue.class && type != AnyValue[].class) return true;
+                if (type != AnyValue.class && type != AnyValue[].class) return;
                 Object resource = null;
                 final AnyValue properties = resources == null ? null : resources.getAnyValue("properties");
                 if (properties != null && type == AnyValue.class) {
@@ -232,14 +232,13 @@ public abstract class NodeServer {
             } catch (Exception e) {
                 logger.log(Level.SEVERE, "Resource inject error", e);
             }
-            return true;
         }, AnyValue.class, AnyValue[].class);
 
         //------------------------------------- 注册DataSource --------------------------------------------------------        
         resourceFactory.register((ResourceFactory rf, final Object src, String resourceName, Field field, final Object attachment) -> {
             try {
-                if (field.getAnnotation(Resource.class) == null) return true;
-                if ((src instanceof Service) && Sncp.isRemote((Service) src)) return true; //远程模式不得注入 DataSource
+                if (field.getAnnotation(Resource.class) == null) return;
+                if ((src instanceof Service) && Sncp.isRemote((Service) src)) return; //远程模式不得注入 DataSource
                 DataSource source = DataSources.createDataSource(resourceName);
                 application.dataSources.add(source);
                 appResFactory.register(resourceName, DataSource.class, source);
@@ -265,14 +264,13 @@ public abstract class NodeServer {
             } catch (Exception e) {
                 logger.log(Level.SEVERE, "DataSource inject error", e);
             }
-            return true;
         }, DataSource.class);
 
         //------------------------------------- 注册CacheSource --------------------------------------------------------
         resourceFactory.register((ResourceFactory rf, final Object src, final String resourceName, Field field, final Object attachment) -> {
             try {
-                if (field.getAnnotation(Resource.class) == null) return true;
-                if ((src instanceof Service) && Sncp.isRemote((Service) src)) return true; //远程模式不需要注入 CacheSource   
+                if (field.getAnnotation(Resource.class) == null) return;
+                if ((src instanceof Service) && Sncp.isRemote((Service) src)) return; //远程模式不需要注入 CacheSource   
                 final Service srcService = (Service) src;
                 SncpClient client = Sncp.getSncpClient(srcService);
                 Transport sameGroupTransport = Sncp.getSameGroupTransport(srcService);
@@ -308,7 +306,6 @@ public abstract class NodeServer {
             } catch (Exception e) {
                 logger.log(Level.SEVERE, "DataSource inject error", e);
             }
-            return true;
         }, CacheSource.class);
     }
 
@@ -379,7 +376,6 @@ public abstract class NodeServer {
             if (entry.isExpect()) {
                 ResourceFactory.ResourceLoader resourceLoader = (ResourceFactory rf, final Object src, final String resourceName, Field field, final Object attachment) -> {
                     runner.accept(rf, true);
-                    return true;
                 };
                 ResourceType rty = entry.getType().getAnnotation(ResourceType.class);
                 Class[] resTypes = rty == null ? new Class[]{} : rty.value();

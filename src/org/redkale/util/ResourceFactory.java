@@ -349,7 +349,8 @@ public final class ResourceFactory {
                     if (re == null) {
                         ResourceLoader it = findLoader(genctype, field);
                         if (it != null) {
-                            autoregnull = it.load(this, src, rcname, field, attachment);
+                            it.load(this, src, rcname, field, attachment);
+                            autoregnull = it.autoNone();
                             re = findEntry(rcname, genctype);
                         }
                     }
@@ -365,7 +366,8 @@ public final class ResourceFactory {
                         if (re == null) {
                             ResourceLoader it = findLoader(classtype, field);
                             if (it != null) {
-                                autoregnull = it.load(this, src, rcname, field, attachment);
+                                it.load(this, src, rcname, field, attachment);
+                                autoregnull = it.autoNone();
                                 re = findEntry(rcname, classtype);
                             }
                         }
@@ -534,8 +536,12 @@ public final class ResourceFactory {
     @FunctionalInterface
     public static interface ResourceLoader {
 
-        // 返回true 表示如果资源不存在会在ResourceFactory里注入默认值null，返回false表示资源不存在表示每次调用ResourceLoader自行处理
-        public boolean load(ResourceFactory factory, Object src, String resourceName, Field field, Object attachment);
+        public void load(ResourceFactory factory, Object src, String resourceName, Field field, Object attachment);
+
+        // 返回true 表示调用ResourceLoader之后资源仍不存在，则会在ResourceFactory里注入默认值null，返回false表示资源不存在下次仍会调用ResourceLoader自行处理
+        default boolean autoNone() {
+            return true;
+        }
     }
 
 }

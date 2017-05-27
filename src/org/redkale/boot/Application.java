@@ -360,21 +360,30 @@ public final class Application {
         this.resourceFactory.register(JsonFactory.root().getConvert());
         //只有WatchService才能加载Application、WatchFactory
         final Application application = this;
-        this.resourceFactory.register((ResourceFactory rf, final Object src, String resourceName, Field field, final Object attachment) -> {
-            try {
-                Resource res = field.getAnnotation(Resource.class);
-                if (res == null || !res.name().isEmpty()) return false;
-                if (!(src instanceof WatchService) || Sncp.isRemote((Service) src)) return false; //远程模式不得注入 
-                Class type = field.getType();
-                if (type == Application.class) {
-                    field.set(src, application);
+        this.resourceFactory.register(new ResourceFactory.ResourceLoader() {
+
+            @Override
+            public void load(ResourceFactory rf, final Object src, String resourceName, Field field, final Object attachment) {
+                try {
+                    Resource res = field.getAnnotation(Resource.class);
+                    if (res == null || !res.name().isEmpty()) return;
+                    if (!(src instanceof WatchService) || Sncp.isRemote((Service) src)) return; //远程模式不得注入 
+                    Class type = field.getType();
+                    if (type == Application.class) {
+                        field.set(src, application);
 //                } else if (type == WatchFactory.class) {
 //                    field.set(src, application.watchFactory);
+                    }
+                } catch (Exception e) {
+                    logger.log(Level.SEVERE, "Resource inject error", e);
                 }
-            } catch (Exception e) {
-                logger.log(Level.SEVERE, "Resource inject error", e);
             }
-            return false;
+
+            @Override
+            public boolean autoNone() {
+                return false;
+            }
+            
         }, Application.class, WatchFactory.class);
         //--------------------------------------------------------------------------
         initResources();
