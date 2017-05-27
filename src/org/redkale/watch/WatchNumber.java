@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.*;
  * <p> 详情见: https://redkale.org
  * @author zhangjx
  */
-public final class WatchNumber extends AtomicLong implements WatchNode {
+final class WatchNumber extends AtomicLong implements WatchNode {
 
     private final boolean interval;
 

@@ -604,6 +604,10 @@ public abstract class NodeServer {
         return false;
     }
 
+    public ResourceFactory getResourceFactory() {
+        return resourceFactory;
+    }
+
     public InetSocketAddress getSncpAddress() {
         return sncpAddress;
     }

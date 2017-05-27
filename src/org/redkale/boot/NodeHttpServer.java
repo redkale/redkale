@@ -46,6 +46,10 @@ public class NodeHttpServer extends NodeServer {
         return new HttpServer(application.getStartTime());
     }
 
+    public HttpServer getHttpServer() {
+        return httpServer;
+    }
+
     @Override
     public InetSocketAddress getSocketAddress() {
         return httpServer == null ? null : httpServer.getSocketAddress();

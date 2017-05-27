@@ -97,7 +97,7 @@
     </resources> 
     <!--
         protocol: required  server所启动的协议，Redkale内置的有HTTP、SNCP、WATCH，SNCP使用TCP实现; 
-        name: 服务的名称，用于监控识别，一个配置文件中的server.name不能重复,命名规则: 字母、数字、下划线、减号
+        name: 服务的名称，用于监控识别，一个配置文件中的server.name不能重复,命名规则: 字母、数字、下划线
         host:  服务所占address ， 默认: 0.0.0.0
         port:  required 服务所占端口 
         root:  如果是web类型服务，则包含页面  默认:{APP_HOME}/root

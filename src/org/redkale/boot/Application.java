@@ -366,14 +366,45 @@ public final class Application {
             public void load(ResourceFactory rf, final Object src, String resourceName, Field field, final Object attachment) {
                 try {
                     Resource res = field.getAnnotation(Resource.class);
-                    if (res == null || !res.name().isEmpty()) return;
+                    if (res == null) return;
                     if (!(src instanceof WatchService) || Sncp.isRemote((Service) src)) return; //远程模式不得注入 
                     Class type = field.getType();
                     if (type == Application.class) {
                         field.set(src, application);
-//                } else if (type == WatchFactory.class) {
-//                    field.set(src, application.watchFactory);
+                    } else if (type == NodeSncpServer.class) {
+                        NodeServer server = null;
+                        for (NodeServer ns : application.getNodeServers()) {
+                            if (ns.getClass() == NodeSncpServer.class) continue;
+                            if (res.name().equals(ns.server.getName())) {
+                                server = ns;
+                                break;
+                            }
+                        }
+                        field.set(src, server);
+                    } else if (type == NodeHttpServer.class) {
+                        NodeServer server = null;
+                        for (NodeServer ns : application.getNodeServers()) {
+                            if (ns.getClass() == NodeHttpServer.class) continue;
+                            if (res.name().equals(ns.server.getName())) {
+                                server = ns;
+                                break;
+                            }
+                        }
+                        field.set(src, server);
+                    } else if (type == NodeWatchServer.class) {
+                        NodeServer server = null;
+                        for (NodeServer ns : application.getNodeServers()) {
+                            if (ns.getClass() == NodeWatchServer.class) continue;
+                            if (res.name().equals(ns.server.getName())) {
+                                server = ns;
+                                break;
+                            }
+                        }
+                        field.set(src, server);
                     }
+//                    if (type == WatchFactory.class) {
+//                        field.set(src, application.watchFactory);
+//                    }
                 } catch (Exception e) {
                     logger.log(Level.SEVERE, "Resource inject error", e);
                 }
@@ -383,8 +414,8 @@ public final class Application {
             public boolean autoNone() {
                 return false;
             }
-            
-        }, Application.class, WatchFactory.class);
+
+        }, Application.class, WatchFactory.class, NodeSncpServer.class, NodeHttpServer.class, NodeWatchServer.class);
         //--------------------------------------------------------------------------
         initResources();
     }

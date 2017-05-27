@@ -10,7 +10,7 @@ package org.redkale.watch;
  * <p> 详情见: https://redkale.org
  * @author zhangjx
  */
-public interface WatchNode {
+interface WatchNode {
 
     public String getName();
 
