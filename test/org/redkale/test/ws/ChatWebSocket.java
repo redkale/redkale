@@ -25,13 +25,15 @@ public class ChatWebSocket extends WebSocket<Integer, Object> {
 
     @Override
     protected CompletableFuture<Integer> createGroupid() {
-        return CompletableFuture.completedFuture(idcreator.incrementAndGet());
+        return CompletableFuture.completedFuture(service.createGroupid());
     }
 
     @RestOnMessage(name = "sendmessage")
     public void onChatMessage(ChatMessage message, Map<String, String> extmap) {
-        System.out.println("获取消息: message: " + message + ", map: " + extmap);        
-        super.broadcastEachMessage(message); //给所有人广播
+        message.fromuserid = getGroupid();
+        message.fromusername = "用户" + getGroupid();
+        System.out.println("获取消息: message: " + message + ", map: " + extmap);
+        super.broadcastEachMessage(message);
     }
 
     @RestOnMessage(name = "joinroom")
@@ -39,4 +41,5 @@ public class ChatWebSocket extends WebSocket<Integer, Object> {
         service.joinRoom(getGroupid(), roomid);
         System.out.println("加入房间: roomid: " + roomid);
     }
+
 }
