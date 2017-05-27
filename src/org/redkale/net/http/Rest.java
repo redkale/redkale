@@ -233,6 +233,13 @@ public final class Rest {
             mv.visitVarInsn(ALOAD, 0);
             mv.visitLdcInsn(Type.getObjectType(newDynName + "$" + newDynWebSokcetSimpleName + "Message"));
             mv.visitFieldInsn(PUTFIELD, newDynName, "messageTextType", "Ljava/lang/reflect/Type;");
+            mv.visitVarInsn(ALOAD, 0);
+            if (rws.liveinterval() < 6) {
+                mv.visitInsn(ICONST_0 + rws.liveinterval());
+            } else {
+                mv.visitIntInsn(BIPUSH, rws.liveinterval());
+            }
+            mv.visitFieldInsn(PUTFIELD, newDynName, "liveinterval", "I");
             mv.visitInsn(RETURN);
             mv.visitMaxs(2, 1);
             mv.visitEnd();

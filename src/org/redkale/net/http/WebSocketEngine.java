@@ -54,30 +54,33 @@ public final class WebSocketEngine {
     //FINEST日志级别
     protected final boolean finest;
 
-    protected WebSocketEngine(String engineid, HttpContext context, WebSocketNode node, Logger logger) {
+    private int liveinterval;
+
+    protected WebSocketEngine(String engineid, HttpContext context, int liveinterval, WebSocketNode node, Logger logger) {
         this.engineid = engineid;
         this.context = context;
         this.convert = context.getJsonConvert();
         this.node = node;
+        this.liveinterval = liveinterval;
         this.logger = logger;
         this.index = sequence.getAndIncrement();
         this.finest = logger.isLoggable(Level.FINEST);
     }
 
     void init(AnyValue conf) {
-        final int liveinterval = conf == null ? DEFAILT_LIVEINTERVAL : conf.getIntValue("liveinterval", DEFAILT_LIVEINTERVAL);
-        if (liveinterval <= 0) return;
+        final int interval = conf == null ? (liveinterval < 0 ? DEFAILT_LIVEINTERVAL : liveinterval) : conf.getIntValue("liveinterval", (liveinterval < 0 ? DEFAILT_LIVEINTERVAL : liveinterval));
+        if (interval <= 0) return;
         if (scheduler != null) return;
         this.scheduler = new ScheduledThreadPoolExecutor(1, (Runnable r) -> {
             final Thread t = new Thread(r, engineid + "-WebSocket-LiveInterval-Thread");
             t.setDaemon(true);
             return t;
         });
-        long delay = (liveinterval - System.currentTimeMillis() / 1000 % liveinterval) + index * 5;
+        long delay = (interval - System.currentTimeMillis() / 1000 % interval) + index * 5;
         scheduler.scheduleWithFixedDelay(() -> {
             getWebSocketGroups().stream().forEach(x -> x.sendEachPing());
-        }, delay, liveinterval, TimeUnit.SECONDS);
-        if (finest) logger.finest(this.getClass().getSimpleName() + "(" + engineid + ")" + " start keeplive(delay:" + delay + ", interval:" + liveinterval + "s) scheduler executor");
+        }, delay, interval, TimeUnit.SECONDS);
+        if (finest) logger.finest(this.getClass().getSimpleName() + "(" + engineid + ")" + " start keeplive(delay:" + delay + ", interval:" + interval + "s) scheduler executor");
     }
 
     void destroy(AnyValue conf) {

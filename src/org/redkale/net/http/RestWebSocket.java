@@ -38,6 +38,13 @@ public @interface RestWebSocket {
     String catalog() default "";
 
     /**
+     * WebScoket服务器给客户端进行ping操作的间隔时间, 单位: 秒， 默认值：60秒
+     *
+     * @return int
+     */
+    int liveinterval() default 60;
+
+    /**
      * 是否屏蔽该类的转换
      *
      * @return 默认false
