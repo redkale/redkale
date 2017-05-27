@@ -316,6 +316,33 @@ public abstract class WebSocket<G extends Serializable, T> {
     }
 
     /**
+     * 获取用户在线的SNCP节点地址列表，不是分布式则返回元素数量为1，且元素值为null的列表<br>
+     * InetSocketAddress 为 SNCP节点地址
+     *
+     * @param groupid Serializable
+     *
+     * @return 地址列表
+     */
+    public CompletableFuture<Collection<InetSocketAddress>> getRpcNodeAddresses(final Serializable groupid) {
+        if (_engine.node == null) return CompletableFuture.completedFuture(null);
+        return _engine.node.getRpcNodeAddresses(groupid);
+    }
+
+    /**
+     * 获取在线用户的详细连接信息 <br>
+     * Map.key 为 SNCP节点地址, 含值为null的key表示没有分布式
+     * Map.value 为 用户客户端的IP
+     *
+     * @param groupid Serializable
+     *
+     * @return 地址集合
+     */
+    public CompletableFuture<Map<InetSocketAddress, List<String>>> getRpcNodeWebSocketAddresses(final Serializable groupid) {
+        if (_engine.node == null) return CompletableFuture.completedFuture(null);
+        return _engine.node.getRpcNodeWebSocketAddresses(groupid);
+    }
+
+    /**
      * 获取当前WebSocket下的属性，非线程安全
      *
      * @param <T>  属性值的类型
