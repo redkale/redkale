@@ -12,6 +12,7 @@ import java.util.function.*;
 import java.util.logging.*;
 import java.util.regex.*;
 import org.redkale.net.*;
+import org.redkale.net.http.Rest.RestDynSourceType;
 import org.redkale.util.*;
 
 /**
@@ -27,13 +28,13 @@ public class HttpPrepareServlet extends PrepareServlet<String, HttpContext, Http
 
     protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
 
+    protected HttpServlet resourceHttpServlet = new HttpResourceServlet();
+
     protected MappingEntry[] regArray = null; //regArray 包含 regWsArray
 
     protected MappingEntry[] regWsArray = null;
 
     protected Map<String, WebSocketServlet> wsmappings = new HashMap<>(); //super.mappings 包含 wsmappings
-
-    protected HttpServlet resourceHttpServlet = new HttpResourceServlet();
 
     protected final Map<String, Class> allMapStrings = new HashMap<>();
 
@@ -43,28 +44,78 @@ public class HttpPrepareServlet extends PrepareServlet<String, HttpContext, Http
 
     private BiPredicate<String, String>[] forbidURIPredicates; //禁用的URL的Predicate, 必须与 forbidURIMaps 保持一致
 
-    public HttpServlet removeHttpServlet(HttpServlet servlet) {
-        HttpServlet rs = null;
+    private List<HttpServlet> removeHttpServlet(final Predicate<MappingEntry> predicateEntry, final Predicate<Map.Entry<String, WebSocketServlet>> predicateFilter) {
+        List<HttpServlet> servlets = new ArrayList<>();
         synchronized (allMapStrings) {
-            //待开发
+            List<String> keys = new ArrayList<>();
+            if (regArray != null) {
+                for (MappingEntry me : regArray) {
+                    if (predicateEntry.test(me)) {
+                        servlets.add(me.servlet);
+                        keys.add(me.mapping);
+                    }
+                }
+            }
+            if (regWsArray != null) {
+                for (MappingEntry me : regWsArray) {
+                    if (predicateEntry.test(me)) {
+                        servlets.add(me.servlet);
+                        keys.add(me.mapping);
+                    }
+                }
+            }
+            Map<String, WebSocketServlet> newwsmappings = new HashMap<>();
+            for (Map.Entry<String, WebSocketServlet> en : wsmappings.entrySet()) {
+                if (predicateFilter.test(en)) {
+                    servlets.add(en.getValue());
+                    keys.add(en.getKey());
+                } else {
+                    newwsmappings.put(en.getKey(), en.getValue());
+                }
+            }
+            if (newwsmappings.size() != wsmappings.size()) this.wsmappings = newwsmappings;
+            if (!keys.isEmpty()) {
+                this.regArray = Utility.remove(this.regArray, predicateEntry);
+                this.regWsArray = Utility.remove(this.regWsArray, predicateEntry);
+                for (HttpServlet rs : servlets) {
+                    super.removeServlet(rs);
+                }
+                for (String key : keys) {
+                    super.removeMapping(key);
+                    allMapStrings.remove(key);
+                }
+            }
         }
-        return rs;
+        return servlets;
     }
 
-    public <T extends HttpServlet> HttpServlet removeHttpServlet(Class<T> servletType) {
-        HttpServlet rs = null;
-        synchronized (allMapStrings) {
-            //待开发
-        }
-        return rs;
+    public HttpServlet removeHttpServlet(final HttpServlet servlet) {
+        Predicate<MappingEntry> predicateEntry = (t) -> t.servlet == servlet;
+        Predicate<Map.Entry<String, WebSocketServlet>> predicateFilter = (t) -> t.getValue() == servlet;
+        removeHttpServlet(predicateEntry, predicateFilter);
+        return servlet;
     }
 
-    public HttpServlet removeHttpServlet(String mapping) {
-        HttpServlet rs = null;
-        synchronized (allMapStrings) {
-            //待开发
-        }
-        return rs;
+    public <T extends HttpServlet> List<HttpServlet> removeHttpServlet(final Class<T> servletOrServiceOrWsType) {
+        Predicate<MappingEntry> predicateEntry = (t) -> {
+            Class type = t.servlet.getClass();
+            if (type == servletOrServiceOrWsType) return true;
+            RestDynSourceType rdt = (RestDynSourceType) type.getAnnotation(RestDynSourceType.class);
+            return (rdt != null && rdt.value() == servletOrServiceOrWsType);
+        };
+        Predicate<Map.Entry<String, WebSocketServlet>> predicateFilter = (t) -> {
+            Class type = t.getValue().getClass();
+            if (type == servletOrServiceOrWsType) return true;
+            RestDynSourceType rdt = (RestDynSourceType) type.getAnnotation(RestDynSourceType.class);
+            return (rdt != null && rdt.value() == servletOrServiceOrWsType);
+        };
+        return removeHttpServlet(predicateEntry, predicateFilter);
+    }
+
+    public List<HttpServlet> removeHttpServlet(final String mapping) {
+        Predicate<MappingEntry> predicateEntry = (t) -> t.mapping.equals(mapping);
+        Predicate<Map.Entry<String, WebSocketServlet>> predicateFilter = (t) -> t.getKey().equals(mapping);
+        return removeHttpServlet(predicateEntry, predicateFilter);
     }
 
     public boolean addForbidURIReg(final String urlreg) {

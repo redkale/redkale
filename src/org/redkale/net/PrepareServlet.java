@@ -73,9 +73,11 @@ public abstract class PrepareServlet<K extends Serializable, C extends Context, 
 
     protected void removeMapping(K key) {
         synchronized (lock2) {
-            Map<K, S> newmappings = new HashMap<>(mappings);
-            newmappings.remove(key);
-            this.mappings = newmappings;
+            if (mappings.containsKey(key)) {
+                Map<K, S> newmappings = new HashMap<>(mappings);
+                newmappings.remove(key);
+                this.mappings = newmappings;
+            }
         }
     }
 

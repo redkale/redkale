@@ -58,6 +58,18 @@ public final class Rest {
 
     }
 
+    /**
+     * 用于标记由Rest.createRestServlet 方法创建的RestServlet
+     */
+    @Inherited
+    @Documented
+    @Target({TYPE})
+    @Retention(RUNTIME)
+    public static @interface RestDynSourceType {
+
+        Class value();
+    }
+
     private Rest() {
     }
 
@@ -186,6 +198,11 @@ public final class Rest {
         AnnotationVisitor av0;
         cw.visit(V1_8, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynName, null, supDynName, null);
 
+        { //RestDynSourceType
+            av0 = cw.visitAnnotation(Type.getDescriptor(RestDynSourceType.class), true);
+            av0.visit("value", Type.getType(Type.getDescriptor(webSocketType)));
+            av0.visitEnd();
+        }
         { //注入 @WebServlet 注解
             String urlpath = (rws.catalog().isEmpty() ? "/" : ("/" + rws.catalog() + "/")) + rws.name();
             av0 = cw.visitAnnotation(webServletDesc, true);
@@ -521,7 +538,11 @@ public final class Rest {
             av0 = cw.visitAnnotation(Type.getDescriptor(RestDynamic.class), true);
             av0.visitEnd();
         }
-
+        { //RestDynSourceType
+            av0 = cw.visitAnnotation(Type.getDescriptor(RestDynSourceType.class), true);
+            av0.visit("value", Type.getType(Type.getDescriptor(serviceType)));
+            av0.visitEnd();
+        }
         { //注入 @WebServlet 注解
             String urlpath = (catalog.isEmpty() ? "/" : ("/" + catalog + "/")) + defmodulename + "/*";
             int moduleid = controller == null ? 0 : controller.moduleid();

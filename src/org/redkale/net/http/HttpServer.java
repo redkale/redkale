@@ -71,13 +71,12 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
     /**
      * 删除HttpServlet
      *
-     * @param <T>         泛型
-     * @param servletType Class
+     * @param servletOrServiceOrWsType Class
      *
      * @return HttpServlet
      */
-    public <T extends HttpServlet> HttpServlet removeHttpServlet(Class<T> servletType) {
-        return ((HttpPrepareServlet) this.prepare).removeHttpServlet(servletType);
+    public List<HttpServlet> removeHttpServlet(Class servletOrServiceOrWsType) {
+        return ((HttpPrepareServlet) this.prepare).removeHttpServlet(servletOrServiceOrWsType);
     }
 
     /**
@@ -87,7 +86,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
      *
      * @return HttpServlet
      */
-    public HttpServlet removeHttpServlet(String mapping) {
+    public List<HttpServlet> removeHttpServlet(String mapping) {
         return ((HttpPrepareServlet) this.prepare).removeHttpServlet(mapping);
     }
 
