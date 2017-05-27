@@ -185,6 +185,15 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         logger.info(this.getClass().getSimpleName() + " shutdown in " + e + " ms");
     }
 
+    /**
+     * 销毁Servlet
+     *
+     * @param servlet Servlet
+     */
+    public void destroyServlet(S servlet) {
+        servlet.destroy(context, this.prepare.getServletConf(servlet));
+    }
+
     //创建数
     public long getCreateConnectionCount() {
         return serverChannel == null ? -1 : serverChannel.getCreateCount();
