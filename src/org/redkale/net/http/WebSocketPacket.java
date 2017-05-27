@@ -362,6 +362,9 @@ public final class WebSocketPacket {
     }
 
     byte[] getReceiveBytes() {
+        if (this.receiveBuffers.length == 0) return new byte[0];
+        if (this.receiveBuffers.length == 1 && this.receiveBuffers[0].remaining() == 0) return new byte[0];
+
         int count = 0;
         for (ByteBuffer buf : this.receiveBuffers) {
             count += buf.remaining();
