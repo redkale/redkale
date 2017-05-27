@@ -94,14 +94,23 @@ public class NodeHttpServer extends NodeServer {
             try {
                 if (field.getAnnotation(Resource.class) == null) return;
                 if (!(src instanceof WebSocketServlet)) return;
+                ResourceFactory.ResourceLoader loader = null;
+                ResourceFactory sncpResFactory = null;
+                for (NodeServer ns : application.servers) {
+                    if (!ns.isSNCP()) continue;
+                    sncpResFactory = ns.resourceFactory;
+                    loader = sncpResFactory.findLoader(WebSocketNode.class, field);
+                    if (loader != null) break;
+                }
+                if (loader != null) loader.load(sncpResFactory, src, resourceName, field, attachment);
                 synchronized (regFactory) {
                     Service nodeService = (Service) rf.find(resourceName, WebSocketNode.class);
                     if (nodeService == null) {
                         nodeService = Sncp.createLocalService(resourceName, getExecutor(), application.getResourceFactory(), WebSocketNodeService.class, (InetSocketAddress) null, (String) null, (Set<String>) null, (AnyValue) null, (Transport) null, (Collection<Transport>) null);
                         regFactory.register(resourceName, WebSocketNode.class, nodeService);
-                        resourceFactory.inject(nodeService, self);
-                        logger.fine("[" + Thread.currentThread().getName() + "] Load Service " + nodeService);
                     }
+                    resourceFactory.inject(nodeService, self);
+                    logger.fine("[" + Thread.currentThread().getName() + "] Load Service " + nodeService);
                     field.set(src, nodeService);
                 }
             } catch (Exception e) {

@@ -233,7 +233,6 @@ public abstract class WebSocketNode {
         if (this.localEngine != null && this.sncpNodeAddresses == null) { //本地模式且没有分布式
             return this.localEngine.broadcastMessage(recent, message, last);
         }
-
         CompletableFuture<Integer> localFuture = this.localEngine == null ? null : this.localEngine.broadcastMessage(recent, message, last);
         CompletableFuture<Collection<InetSocketAddress>> addrsFuture = sncpNodeAddresses.getCollectionAsync("redkale_sncpnodes");
         CompletableFuture<Integer> remoteFuture = addrsFuture.thenCompose((Collection<InetSocketAddress> addrs) -> {
@@ -241,6 +240,7 @@ public abstract class WebSocketNode {
             if (addrs == null || addrs.isEmpty()) return CompletableFuture.completedFuture(0);
             CompletableFuture<Integer> future = null;
             for (InetSocketAddress addr : addrs) {
+                if (addr == null || addr.equals(localSncpAddress)) continue;
                 future = future == null ? remoteNode.broadcastMessage(addr, recent, message, last)
                     : future.thenCombine(remoteNode.broadcastMessage(addr, recent, message, last), (a, b) -> a | b);
             }
