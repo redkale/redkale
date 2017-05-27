@@ -213,6 +213,11 @@ public final class ResourceFactory {
         return re == null ? null : (A) re.value;
     }
 
+    public <A> boolean contains(String name, Class<? extends A> clazz) {
+        Map<String, ResourceEntry> map = this.store.get(clazz);
+        return map == null ? false : map.containsKey(name);
+    }
+
     public <A> A find(Class<? extends A> clazz) {
         return find("", clazz);
     }
