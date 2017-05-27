@@ -295,7 +295,7 @@ public final class Utility {
                 news[index++] = array[i];
             }
         }
-        if (index == news.length) return news;
+        if (index == array.length) return array;
         final T[] rs = (T[]) Array.newInstance(array.getClass().getComponentType(), index);
         System.arraycopy(news, 0, rs, 0, index);
         return rs;
