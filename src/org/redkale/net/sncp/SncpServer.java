@@ -94,19 +94,13 @@ public class SncpServer extends Server<DLong, SncpContext, SncpRequest, SncpResp
      * @return SncpServlet
      */
     public SncpServlet removeSncpServlet(Service sncpService) {
-        SncpServlet servlet = null;
         String resname = Sncp.getResourceName(sncpService);
-        for (Class type : Sncp.getResourceTypes(sncpService)) {
-            servlet = ((SncpPrepareServlet) this.prepare).removeSncpServlet(resname, type);
-        }
-        return servlet;
+        return ((SncpPrepareServlet) this.prepare).removeSncpServlet(resname, Sncp.getResourceType(sncpService));
     }
 
     public void addSncpServlet(Service sncpService) {
-        for (Class type : Sncp.getResourceTypes(sncpService)) {
-            SncpDynServlet sds = new SncpDynServlet(BsonFactory.root().getConvert(), Sncp.getResourceName(sncpService), type, sncpService);
-            this.prepare.addServlet(sds, null, Sncp.getConf(sncpService));
-        }
+        SncpDynServlet sds = new SncpDynServlet(BsonFactory.root().getConvert(), Sncp.getResourceName(sncpService), Sncp.getResourceType(sncpService), sncpService);
+        this.prepare.addServlet(sds, null, Sncp.getConf(sncpService));
     }
 
     public <T extends Service> void addSncpServlet(Class<T> serviceTypeClass, String name, T service, AnyValue conf) {

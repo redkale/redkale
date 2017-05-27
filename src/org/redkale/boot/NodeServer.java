@@ -361,12 +361,11 @@ public abstract class NodeServer {
                     }
                     if (SncpClient.parseMethod(serviceImplClass).isEmpty()) return; //class没有可用的方法， 通常为BaseService
                     //final ServiceWrapper wrapper = new ServiceWrapper(serviceImplClass, service, resourceName, localed ? NodeServer.this.sncpGroup : null, groups, entry.getProperty());
-                    for (final Class restype : Sncp.getResourceTypes(service)) {
-                        if (rf.find(resourceName, restype) == null) {
-                            regFactory.register(resourceName, restype, service);
-                        } else if (isSNCP() && !entry.isAutoload()) {
-                            throw new RuntimeException(restype.getSimpleName() + "(class:" + serviceImplClass.getName() + ", name:" + resourceName + ", group:" + groups + ") is repeat.");
-                        }
+                    final Class restype = Sncp.getResourceType(service);
+                    if (rf.find(resourceName, restype) == null) {
+                        regFactory.register(resourceName, restype, service);
+                    } else if (isSNCP() && !entry.isAutoload()) {
+                        throw new RuntimeException(restype.getSimpleName() + "(class:" + serviceImplClass.getName() + ", name:" + resourceName + ", group:" + groups + ") is repeat.");
                     }
                     if (Sncp.isRemote(service)) {
                         remoteServices.add(service);
@@ -384,10 +383,7 @@ public abstract class NodeServer {
             };
             if (entry.isExpect()) {
                 ResourceType rty = entry.getType().getAnnotation(ResourceType.class);
-                Class[] resTypes = rty == null ? new Class[]{} : rty.value();
-                for (final Class restype : resTypes) {
-                    resourceFactory.register(resourceLoader, restype);
-                }
+                resourceFactory.register(resourceLoader, rty == null ? entry.getType() : rty.value());
             } else {
                 resourceLoader.load(resourceFactory, null, entry.getName(), null, false);
             }
@@ -416,7 +412,7 @@ public abstract class NodeServer {
         //----------------- init -----------------
         List<Service> swlist = new ArrayList<>(localServices);
         Collections.sort(swlist, (o1, o2) -> {
-            int rs = Sncp.getResourceTypes(o1)[0].getName().compareTo(Sncp.getResourceTypes(o2)[0].getName());
+            int rs = Sncp.getResourceType(o1).getName().compareTo(Sncp.getResourceType(o2).getName());
             if (rs == 0) rs = Sncp.getResourceName(o1).compareTo(Sncp.getResourceName(o2));
             return rs;
         });
@@ -448,16 +444,7 @@ public abstract class NodeServer {
 
     private void calcMaxLength(Service y) { //计算toString中的长度
         maxNameLength = Math.max(maxNameLength, Sncp.getResourceName(y).length());
-        StringBuilder s = new StringBuilder();
-        Class[] types = Sncp.getResourceTypes(y);
-        if (types.length == 1) {
-            s.append(types[0].getName());
-        } else {
-            s.append('[');
-            s.append(Arrays.asList(types).stream().map((Class t) -> t.getName()).collect(Collectors.joining(",")));
-            s.append(']');
-        }
-        maxClassNameLength = Math.max(maxClassNameLength, s.length() + 1);
+        maxClassNameLength = Math.max(maxClassNameLength, Sncp.getResourceType(y).getName().length() + 1);
     }
 
     protected List<Transport> loadTransports(final HashSet<String> groups) {

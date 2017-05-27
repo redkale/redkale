@@ -11,7 +11,6 @@ import java.net.InetSocketAddress;
 import java.security.*;
 import java.util.*;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 import javax.annotation.Resource;
 import static jdk.internal.org.objectweb.asm.ClassWriter.COMPUTE_FRAMES;
 import jdk.internal.org.objectweb.asm.*;
@@ -110,10 +109,10 @@ public abstract class Sncp {
         }
     }
 
-    public static Class[] getResourceTypes(Service service) {
+    public static Class getResourceType(Service service) {
         if (service == null) return null;
-        ResourceType types = service.getClass().getAnnotation(ResourceType.class);
-        return types == null ? new Class[]{getServiceType(service)} : types.value();
+        ResourceType type = service.getClass().getAnnotation(ResourceType.class);
+        return type == null ? getServiceType(service) : type.value();
     }
 
     public static String getSncpGroup(Service service) {
@@ -224,20 +223,10 @@ public abstract class Sncp {
         StringBuilder sb = new StringBuilder();
         sb.append(isRemote(service) ? "RemoteService" : "LocalService ");
         int len;
-        Class[] types = getResourceTypes(service);
+        Class type = getResourceType(service);
         String name = getResourceName(service);
-        if (types.length == 1) {
-            sb.append("(type= ").append(types[0].getName());
-            len = maxClassNameLength - types[0].getName().length();
-        } else {
-            StringBuilder s = new StringBuilder();
-            s.append('[');
-            s.append(Arrays.asList(types).stream().map((Class t) -> t.getName()).collect(Collectors.joining(",")));
-            s.append(']');
-            sb.append("(types=").append(s);
-            len = maxClassNameLength - s.length();
-        }
-
+        sb.append("(type= ").append(type.getName());
+        len = maxClassNameLength - type.getName().length();
         for (int i = 0; i < len; i++) {
             sb.append(' ');
         }
@@ -272,7 +261,7 @@ public abstract class Sncp {
      * <blockquote><pre>
      * &#64;Resource(name = "")
      * &#64;SncpDyn(remote = false)
-     * &#64;ResourceType({TestService.class})
+     * &#64;ResourceType(TestService.class)
      * public final class _DynLocalTestService extends TestService{
      *
      *      private static final Class _redkale_service_type = TestService.class;
@@ -396,18 +385,8 @@ public abstract class Sncp {
         }
         {
             av0 = cw.visitAnnotation(Type.getDescriptor(ResourceType.class), true);
-            {
-                AnnotationVisitor av1 = av0.visitArray("value");
-                ResourceType rty = serviceImplClass.getAnnotation(ResourceType.class);
-                if (rty == null) {
-                    av1.visit(null, Type.getType(Type.getDescriptor(serviceImplClass)));
-                } else {
-                    for (Class cl : rty.value()) {
-                        av1.visit(null, Type.getType(Type.getDescriptor(cl)));
-                    }
-                }
-                av1.visitEnd();
-            }
+            ResourceType rty = serviceImplClass.getAnnotation(ResourceType.class);
+            av0.visit("value", Type.getType(Type.getDescriptor(rty == null ? serviceImplClass : rty.value())));
             av0.visitEnd();
         }
         {
@@ -898,7 +877,7 @@ public abstract class Sncp {
      * @param executor            线程池
      * @param resourceFactory     资源容器
      * @param serviceImplClass    Service类
-     * @param clientSncpAddress       本地IP地址
+     * @param clientSncpAddress   本地IP地址
      * @param sncpGroup           自身的组节点名 可能为null
      * @param groups              所有的组节点，包含自身
      * @param conf                启动配置项
@@ -1043,7 +1022,7 @@ public abstract class Sncp {
      * <blockquote><pre>
      * &#64;Resource(name = "")
      * &#64;SncpDyn(remote = true)
-     * &#64;ResourceType({TestService.class})
+     * &#64;ResourceType(TestService.class)
      * public final class _DynRemoteTestService extends TestService{
      *
      *      private static final Class _redkale_service_type = TestService.class;
@@ -1178,18 +1157,8 @@ public abstract class Sncp {
         }
         {
             av0 = cw.visitAnnotation(Type.getDescriptor(ResourceType.class), true);
-            {
-                AnnotationVisitor av1 = av0.visitArray("value");
-                ResourceType rty = serviceTypeOrImplClass.getAnnotation(ResourceType.class);
-                if (rty == null) {
-                    av1.visit(null, Type.getType(Type.getDescriptor(serviceTypeOrImplClass)));
-                } else {
-                    for (Class cl : rty.value()) {
-                        av1.visit(null, Type.getType(Type.getDescriptor(cl)));
-                    }
-                }
-                av1.visitEnd();
-            }
+            ResourceType rty = serviceTypeOrImplClass.getAnnotation(ResourceType.class);
+            av0.visit("value", Type.getType(Type.getDescriptor(rty == null ? serviceTypeOrImplClass : rty.value())));
             av0.visitEnd();
         }
         {

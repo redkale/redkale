@@ -19,7 +19,7 @@ import org.redkale.util.*;
  * @author zhangjx
  */
 @AutoLoad(false)
-@ResourceType({DataCacheListenerService.class, DataCacheListener.class})
+@ResourceType(DataCacheListener.class)
 public class DataCacheListenerService implements DataCacheListener, Service {
 
     @Resource(name = "$")

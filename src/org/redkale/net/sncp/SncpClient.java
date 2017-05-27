@@ -172,7 +172,7 @@ public final class SncpClient {
         this.name = serviceName;
         Class tn = serviceTypeOrImplClass;
         ResourceType rt = (ResourceType) tn.getAnnotation(ResourceType.class);
-        if (rt != null && rt.value().length > 0) tn = rt.value()[0];
+        if (rt != null) tn = rt.value();
         this.serviceid = Sncp.hash(tn.getName() + ':' + serviceName);
         final List<SncpAction> methodens = new ArrayList<>();
         //------------------------------------------------------------------------------

@@ -176,10 +176,8 @@ public final class ResourceFactory {
             return (A) register(autoSync, name, claz, rs);
         } else {
             A old = null;
-            for (Class cl : rtype.value()) {
-                A t = (A) register(autoSync, name, cl, rs);
-                if (t != null) old = t;
-            }
+            A t = (A) register(autoSync, name, rtype.value(), rs);
+            if (t != null) old = t;
             return old;
         }
     }

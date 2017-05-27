@@ -18,7 +18,7 @@ import org.redkale.util.*;
  *
  * @author zhangjx
  */
-@ResourceType({SncpTestIService.class})
+@ResourceType(SncpTestIService.class)
 public class SncpTestServiceImpl implements SncpTestIService {
 
     @Override
@@ -107,7 +107,7 @@ public class SncpTestServiceImpl implements SncpTestIService {
             System.out.println(method);
         }
         System.out.println("-----------------------------------");
-        service = Sncp.createSimpleRemoteService("",  SncpTestServiceImpl.class, new InetSocketAddress("127.0.0.1", 7070), null);
+        service = Sncp.createSimpleRemoteService("", SncpTestServiceImpl.class, new InetSocketAddress("127.0.0.1", 7070), null);
         for (Method method : service.getClass().getDeclaredMethods()) {
             System.out.println(method);
         }
@@ -116,7 +116,7 @@ public class SncpTestServiceImpl implements SncpTestIService {
             System.out.println(method);
         }
         System.out.println("-----------------------------------");
-        service = Sncp.createSimpleRemoteService("",  SncpTestIService.class, new InetSocketAddress("127.0.0.1", 7070), null);
+        service = Sncp.createSimpleRemoteService("", SncpTestIService.class, new InetSocketAddress("127.0.0.1", 7070), null);
         for (Method method : service.getClass().getDeclaredMethods()) {
             System.out.println(method);
         }

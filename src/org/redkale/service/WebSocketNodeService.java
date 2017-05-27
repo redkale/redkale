@@ -21,7 +21,7 @@ import org.redkale.util.*;
  * @author zhangjx
  */
 @AutoLoad(false)
-@ResourceType({WebSocketNode.class, WebSocketNodeService.class})
+@ResourceType(WebSocketNode.class)
 public class WebSocketNodeService extends WebSocketNode implements Service {
 
     @Override

@@ -28,7 +28,7 @@ import org.redkale.util.*;
 @Local
 @AutoLoad(false)
 @SuppressWarnings("unchecked")
-@ResourceType({DataSource.class})
+@ResourceType(DataSource.class)
 public class DataJdbcSource extends AbstractService implements DataSource, Service, DataCacheListener, Function<Class, EntityInfo>, AutoCloseable, Resourcable {
 
     private static final Flipper FLIPPER_ONE = new Flipper(1);
