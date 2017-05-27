@@ -112,7 +112,16 @@ public class HttpPrepareServlet extends PrepareServlet<String, HttpContext, Http
         return removeHttpServlet(predicateEntry, predicateFilter);
     }
 
-    public List<HttpServlet> removeHttpServlet(final String mapping) {
+    public List<HttpServlet> removeHttpServlet(String mapping0) {
+        if (Utility.contains(mapping0, '.', '*', '{', '[', '(', '|', '^', '$', '+', '?', '\\')) { //是否是正则表达式))
+            if (mapping0.charAt(0) != '^') mapping0 = '^' + mapping0;
+            if (mapping0.endsWith("/*")) {
+                mapping0 = mapping0.substring(0, mapping0.length() - 1) + ".*";
+            } else {
+                mapping0 = mapping0 + "$";
+            }
+        }
+        final String mapping = mapping0;
         Predicate<MappingEntry> predicateEntry = (t) -> t.mapping.equals(mapping);
         Predicate<Map.Entry<String, WebSocketServlet>> predicateFilter = (t) -> t.getKey().equals(mapping);
         return removeHttpServlet(predicateEntry, predicateFilter);
