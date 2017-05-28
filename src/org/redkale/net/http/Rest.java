@@ -257,6 +257,9 @@ public final class Rest {
                 mv.visitIntInsn(BIPUSH, rws.liveinterval());
             }
             mv.visitFieldInsn(PUTFIELD, newDynName, "liveinterval", "I");
+            mv.visitVarInsn(ALOAD, 0);
+            mv.visitInsn(rws.single() ? ICONST_1 : ICONST_0);
+            mv.visitFieldInsn(PUTFIELD, newDynName, "single", "Z");
             mv.visitInsn(RETURN);
             mv.visitMaxs(2, 1);
             mv.visitEnd();

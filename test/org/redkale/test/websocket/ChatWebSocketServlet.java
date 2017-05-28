@@ -59,11 +59,11 @@ public class ChatWebSocketServlet extends WebSocketServlet {
                 icounter.incrementAndGet();
                 counter.incrementAndGet();
                 if (debug) System.out.println("收到消息: " + message);
-                super.getWebSocketGroup().getWebSockets().forEach(x -> x.send(message));
+                super.getWebSockets().forEach(x -> x.send(message));
             }
 
             @Override
-            protected CompletableFuture<String> createGroupid() {
+            protected CompletableFuture<String> createUserid() {
                 return CompletableFuture.completedFuture("2");
             }
 

@@ -40,57 +40,51 @@ public class WebSocketNodeService extends WebSocketNode implements Service {
         if (this.localEngine == null) return CompletableFuture.completedFuture(new ArrayList<>());
         return CompletableFuture.supplyAsync(() -> {
             final List<String> rs = new ArrayList<>();
-            final WebSocketGroup group = this.localEngine.getWebSocketGroup(groupid);
-            if (group != null) group.getWebSockets().forEach(x -> rs.add(x.getRemoteAddr()));
+            this.localEngine.getWebSockets(groupid).forEach(x -> rs.add(x.getRemoteAddr()));
             return rs;
         });
     }
 
     @Override
-    public CompletableFuture<Integer> sendMessage(@RpcTargetAddress InetSocketAddress addr, boolean recent, Object message, boolean last, Serializable groupid) {
+    public CompletableFuture<Integer> sendMessage(@RpcTargetAddress InetSocketAddress addr, Object message, boolean last, Serializable userid) {
         if (this.localEngine == null) return CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY);
-        final WebSocketGroup group = this.localEngine.getWebSocketGroup(groupid);
-        if (group == null || group.isEmpty()) {
-            if (finest) logger.finest("receive websocket message {engineid:'" + this.localEngine.getEngineid() + "', groupid:" + groupid + ", content:'" + message + "'} from " + addr + " but send result is " + RETCODE_GROUP_EMPTY);
-            return CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY);
-        }
-        return group.send(recent, message, last);
+        return this.localEngine.sendMessage(message, last, userid);
     }
 
     @Override
-    public CompletableFuture<Integer> broadcastMessage(@RpcTargetAddress InetSocketAddress addr, boolean recent, Object message, boolean last) {
+    public CompletableFuture<Integer> broadcastMessage(@RpcTargetAddress InetSocketAddress addr, Object message, boolean last) {
         if (this.localEngine == null) return CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY);
-        return this.localEngine.broadcastMessage(recent, message, last);
+        return this.localEngine.broadcastMessage(message, last);
     }
 
     /**
      * 当用户连接到节点，需要更新到CacheSource
      *
-     * @param groupid  String
+     * @param userid   String
      * @param sncpAddr InetSocketAddress
      *
      * @return 无返回值
      */
     @Override
-    public CompletableFuture<Void> connect(Serializable groupid, InetSocketAddress sncpAddr) {
-        CompletableFuture<Void> future = sncpNodeAddresses.appendSetItemAsync(groupid, sncpAddr);
+    public CompletableFuture<Void> connect(Serializable userid, InetSocketAddress sncpAddr) {
+        CompletableFuture<Void> future = sncpNodeAddresses.appendSetItemAsync(userid, sncpAddr);
         future = future.thenAccept((a) -> sncpNodeAddresses.appendSetItemAsync("redkale_sncpnodes", sncpAddr));
-        if (finest) logger.finest(WebSocketNodeService.class.getSimpleName() + ".event: " + groupid + " connect from " + sncpAddr);
+        if (finest) logger.finest(WebSocketNodeService.class.getSimpleName() + ".event: " + userid + " connect from " + sncpAddr);
         return future;
     }
 
     /**
      * 当用户从一个节点断掉了所有的连接，需要从CacheSource中删除
      *
-     * @param groupid  String
+     * @param userid   String
      * @param sncpAddr InetSocketAddress
      *
      * @return 无返回值
      */
     @Override
-    public CompletableFuture<Void> disconnect(Serializable groupid, InetSocketAddress sncpAddr) {
-        CompletableFuture<Void> future = sncpNodeAddresses.removeSetItemAsync(groupid, sncpAddr);
-        if (finest) logger.finest(WebSocketNodeService.class.getSimpleName() + ".event: " + groupid + " disconnect from " + sncpAddr);
+    public CompletableFuture<Void> disconnect(Serializable userid, InetSocketAddress sncpAddr) {
+        CompletableFuture<Void> future = sncpNodeAddresses.removeSetItemAsync(userid, sncpAddr);
+        if (finest) logger.finest(WebSocketNodeService.class.getSimpleName() + ".event: " + userid + " disconnect from " + sncpAddr);
         return future;
     }
 }

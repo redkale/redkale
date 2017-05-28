@@ -24,21 +24,21 @@ public class ChatWebSocket extends WebSocket<Integer, Object> {
     protected ChatService service;
 
     @Override
-    protected CompletableFuture<Integer> createGroupid() {
-        return CompletableFuture.completedFuture(service.createGroupid());
+    protected CompletableFuture<Integer> createUserid() {
+        return CompletableFuture.completedFuture(service.createUserid());
     }
 
     @RestOnMessage(name = "sendmessage")
     public void onChatMessage(ChatMessage message, Map<String, String> extmap) {
-        message.fromuserid = getGroupid();
-        message.fromusername = "用户" + getGroupid();
+        message.fromuserid = userid();
+        message.fromusername = "用户" + userid();
         System.out.println("获取消息: message: " + message + ", map: " + extmap);
-        super.broadcastEachMessage(message);
+        super.broadcastMessage(message);
     }
 
     @RestOnMessage(name = "joinroom")
     public void onJoinRoom(int roomid) {
-        service.joinRoom(getGroupid(), roomid);
+        service.joinRoom(userid(), roomid);
         System.out.println("加入房间: roomid: " + roomid);
     }
 

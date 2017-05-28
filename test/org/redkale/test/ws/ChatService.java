@@ -21,7 +21,7 @@ public class ChatService implements Service {
 
     protected final AtomicInteger idcreator = new AtomicInteger(10000);
 
-    public int createGroupid() {
+    public int createUserid() {
         int v = idcreator.incrementAndGet();
         setIdcreator(v);
         return v;

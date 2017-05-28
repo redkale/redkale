@@ -96,18 +96,6 @@ public interface WebSocketDesc {
     public void close();
 
 
-    //获取当前WebSocket所属的WebSocketGroup， 不会为null
-    /* protected */ WebSocketGroup getWebSocketGroup();
-
-
-    //获取指定groupid的WebSocketGroup, 没有返回null
-    /* protected */ WebSocketGroup getWebSocketGroup(Serializable groupid);
-
-
-    //获取当前进程节点所有在线的WebSocketGroup
-    /* protected */ Collection<WebSocketGroup> getWebSocketGroups();
-
-
     //获取在线用户的节点地址列表
     /* protected */ Collection<InetSocketAddress> getOnlineNodes(Serializable groupid);
 
@@ -138,7 +126,7 @@ public interface WebSocketDesc {
 
     default void onPong(byte[] bytes) {
     }
-    
+
     //接收二进制消息响应事件，可能会接收到二进制消息需要重写该方法
     default void onMessage(byte[] bytes) {
     }

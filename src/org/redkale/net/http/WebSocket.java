@@ -10,6 +10,7 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.stream.Stream;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.*;
 import org.redkale.util.Comment;
@@ -20,7 +21,7 @@ import org.redkale.util.Comment;
  * WebSocket 有两种模式:
  *  1) 普通模式: 协议上符合HTML5规范, 其流程顺序如下:
  *      1.1 onOpen 若返回null，视为WebSocket的连接不合法，强制关闭WebSocket连接；通常用于判断登录态。
- *      1.2 createGroupid 若返回null，视为WebSocket的连接不合法，强制关闭WebSocket连接；通常用于判断用户权限是否符合。
+ *      1.2 createUserid 若返回null，视为WebSocket的连接不合法，强制关闭WebSocket连接；通常用于判断用户权限是否符合。
  *      1.3 onConnected WebSocket成功连接后在准备接收数据前回调此方法。
  *      1.4 onMessage/onFragment+ WebSocket接收到消息后回调此消息类方法。
  *      1.5 onClose WebSocket被关闭后回调此方法。
@@ -28,7 +29,7 @@ import org.redkale.util.Comment;
  *
  *  2) 原始二进制模式: 此模式有别于HTML5规范，可以视为原始的TCP连接。通常用于音频视频通讯场景。其流程顺序如下:
  *      2.1 onOpen 若返回null，视为WebSocket的连接不合法，强制关闭WebSocket连接；通常用于判断登录态。
- *      2.2 createGroupid 若返回null，视为WebSocket的连接不合法，强制关闭WebSocket连接；通常用于判断用户权限是否符合。
+ *      2.2 createWebSocketid 若返回null，视为WebSocket的连接不合法，强制关闭WebSocket连接；通常用于判断用户权限是否符合。
  *      2.3 onRead WebSocket成功连接后回调此方法， 由此方法处理原始的TCP连接， 需要业务代码去控制WebSocket的关闭。
  *  二进制模式下 以上方法都应该被重载。
  * </pre></blockquote>
@@ -69,11 +70,9 @@ public abstract class WebSocket<G extends Serializable, T> {
 
     WebSocketEngine _engine; //不可能为空 
 
-    WebSocketGroup _group; //不可能为空 
-
     String _sessionid; //不可能为空 
 
-    G _groupid; //不可能为空 
+    G _userid; //不可能为空 
 
     SocketAddress _remoteAddress;//不可能为空 
 
@@ -86,8 +85,6 @@ public abstract class WebSocket<G extends Serializable, T> {
     private long createtime = System.currentTimeMillis();
 
     private Map<String, Object> attributes = new HashMap<>(); //非线程安全
-
-    protected long websocketid = Math.abs(System.nanoTime()); //唯一ID
 
     protected WebSocket() {
     }
@@ -187,131 +184,56 @@ public abstract class WebSocket<G extends Serializable, T> {
      */
     CompletableFuture<Integer> sendPacket(WebSocketPacket packet) {
         CompletableFuture<Integer> rs = this._runner.sendMessage(packet);
-        if (_engine.finest) _engine.logger.finest("wsgroupid:" + getGroupid() + " send websocket result is " + rs + " on " + this + " by message(" + packet + ")");
+        if (_engine.finest) _engine.logger.finest("userid:" + userid() + " send websocket result is " + rs + " on " + this + " by message(" + packet + ")");
         return rs == null ? CompletableFuture.completedFuture(RETCODE_WSOCKET_CLOSED) : rs;
     }
 
     //----------------------------------------------------------------
     /**
-     * 给指定groupid的WebSocketGroup下所有WebSocket节点发送 二进制消息/文本消息/JavaBean对象消息
+     * 给指定userid的WebSocket节点发送 二进制消息/文本消息/JavaBean对象消息
      *
-     * @param message  不可为空
-     * @param groupids Serializable[]
-     *
-     * @return 为0表示成功， 其他值表示异常
-     */
-    public final CompletableFuture<Integer> sendEachMessage(Object message, G... groupids) {
-        return sendEachMessage(message, true, groupids);
-    }
-
-    /**
-     * 给指定groupid的WebSocketGroup下所有WebSocket节点发送 二进制消息/文本消息/JavaBean对象消息
-     *
-     * @param message  不可为空
-     * @param last     是否最后一条
-     * @param groupids Serializable[]
+     * @param message 不可为空
+     * @param last    是否最后一条
+     * @param userids Serializable[]
      *
      * @return 为0表示成功， 其他值表示异常
      */
-    public final CompletableFuture<Integer> sendEachMessage(Object message, boolean last, G... groupids) {
-        return sendMessage(false, message, last, groupids);
-    }
-
-    /**
-     * 给指定groupid的WebSocketGroup下最近接入的WebSocket节点发送 二进制消息/文本消息/JavaBean对象消息
-     *
-     * @param message  不可为空
-     * @param groupids Serializable[]
-     *
-     * @return 为0表示成功， 其他值表示异常
-     */
-    public final CompletableFuture<Integer> sendRecentMessage(Object message, G... groupids) {
-        return sendMessage(true, message, true, groupids);
-    }
-
-    /**
-     * 给指定groupid的WebSocketGroup下最近接入的WebSocket节点发送 二进制消息/文本消息/JavaBean对象消息
-     *
-     * @param groupids Serializable[]
-     * @param message  不可为空
-     * @param last     是否最后一条
-     *
-     * @return 为0表示成功， 其他值表示异常
-     */
-    public final CompletableFuture<Integer> sendRecentMessage(Object message, boolean last, G... groupids) {
-        return sendMessage(true, message, last, groupids);
-    }
-
-    /**
-     * 给指定groupid的WebSocketGroup下WebSocket节点发送 二进制消息/文本消息/JavaBean对象消息
-     *
-     * @param recent   是否只发最近接入的WebSocket
-     * @param message  不可为空
-     * @param last     是否最后一条
-     * @param groupids Serializable[]
-     *
-     * @return 为0表示成功， 其他值表示异常
-     */
-    public final CompletableFuture<Integer> sendMessage(boolean recent, Object message, boolean last, G... groupids) {
+    public final CompletableFuture<Integer> sendMessage(Object message, boolean last, G... userids) {
         if (_engine.node == null) return CompletableFuture.completedFuture(RETCODE_NODESERVICE_NULL);
         if (message instanceof CompletableFuture) {
-            return ((CompletableFuture) message).thenCompose((json) -> _engine.node.sendMessage(recent, json, last, groupids));
+            return ((CompletableFuture) message).thenCompose((json) -> _engine.node.sendMessage(json, last, userids));
         }
-        CompletableFuture<Integer> rs = _engine.node.sendMessage(recent, message, last, groupids);
-        if (_engine.finest) _engine.logger.finest("wsgroupid:" + Arrays.toString(groupids) + " " + (recent ? "recent " : "") + "send websocket result is " + rs + " on " + this + " by message(" + _jsonConvert.convertTo(message) + ")");
+        CompletableFuture<Integer> rs = _engine.node.sendMessage(message, last, userids);
+        if (_engine.finest) _engine.logger.finest("userids:" + Arrays.toString(userids) + " send websocket result is " + rs + " on " + this + " by message(" + _jsonConvert.convertTo(message) + ")");
         return rs;
     }
 
     /**
-     * 广播消息， 给所有人的所有接入的WebSocket节点发消息
+     * 广播消息， 给所有人发消息
      *
      * @param message 消息内容
      *
      * @return 为0表示成功， 其他值表示部分发送异常
      */
-    public final CompletableFuture<Integer> broadcastEachMessage(final Object message) {
-        return broadcastMessage(false, message, true);
-    }
-
-    /**
-     * 广播消息， 给所有人最近接入的WebSocket节点发消息
-     *
-     * @param message 消息内容
-     *
-     * @return 为0表示成功， 其他值表示部分发送异常
-     */
-    public final CompletableFuture<Integer> broadcastRecentMessage(final Object message) {
-        return broadcastMessage(true, message, true);
+    public final CompletableFuture<Integer> broadcastMessage(final Object message) {
+        return broadcastMessage(message, true);
     }
 
     /**
      * 广播消息， 给所有人发消息
      *
-     * @param recent  是否只发送给最近接入的WebSocket节点
-     * @param message 消息内容
-     *
-     * @return 为0表示成功， 其他值表示部分发送异常
-     */
-    public final CompletableFuture<Integer> broadcastMessage(final boolean recent, final Object message) {
-        return broadcastMessage(recent, message, true);
-    }
-
-    /**
-     * 广播消息， 给所有人发消息
-     *
-     * @param recent  是否只发送给最近接入的WebSocket节点
      * @param message 消息内容
      * @param last    是否最后一条
      *
      * @return 为0表示成功， 其他值表示部分发送异常
      */
-    public final CompletableFuture<Integer> broadcastMessage(final boolean recent, final Object message, final boolean last) {
+    public final CompletableFuture<Integer> broadcastMessage(final Object message, final boolean last) {
         if (_engine.node == null) return CompletableFuture.completedFuture(RETCODE_NODESERVICE_NULL);
         if (message instanceof CompletableFuture) {
-            return ((CompletableFuture) message).thenCompose((json) -> _engine.node.broadcastMessage(recent, json, last));
+            return ((CompletableFuture) message).thenCompose((json) -> _engine.node.broadcastMessage(json, last));
         }
-        CompletableFuture<Integer> rs = _engine.node.broadcastMessage(recent, message, last);
-        if (_engine.finest) _engine.logger.finest("broadcast " + (recent ? "recent " : "") + "send websocket result is " + rs + " on " + this + " by message(" + _jsonConvert.convertTo(message) + ")");
+        CompletableFuture<Integer> rs = _engine.node.broadcastMessage(message, last);
+        if (_engine.finest) _engine.logger.finest("broadcast send websocket result is " + rs + " on " + this + " by message(" + _jsonConvert.convertTo(message) + ")");
         return rs;
     }
 
@@ -319,13 +241,13 @@ public abstract class WebSocket<G extends Serializable, T> {
      * 获取用户在线的SNCP节点地址列表，不是分布式则返回元素数量为1，且元素值为null的列表<br>
      * InetSocketAddress 为 SNCP节点地址
      *
-     * @param groupid Serializable
+     * @param userid Serializable
      *
      * @return 地址列表
      */
-    public CompletableFuture<Collection<InetSocketAddress>> getRpcNodeAddresses(final Serializable groupid) {
+    public CompletableFuture<Collection<InetSocketAddress>> getRpcNodeAddresses(final Serializable userid) {
         if (_engine.node == null) return CompletableFuture.completedFuture(null);
-        return _engine.node.getRpcNodeAddresses(groupid);
+        return _engine.node.getRpcNodeAddresses(userid);
     }
 
     /**
@@ -333,13 +255,13 @@ public abstract class WebSocket<G extends Serializable, T> {
      * Map.key 为 SNCP节点地址, 含值为null的key表示没有分布式
      * Map.value 为 用户客户端的IP
      *
-     * @param groupid Serializable
+     * @param userid Serializable
      *
      * @return 地址集合
      */
-    public CompletableFuture<Map<InetSocketAddress, List<String>>> getRpcNodeWebSocketAddresses(final Serializable groupid) {
+    public CompletableFuture<Map<InetSocketAddress, List<String>>> getRpcNodeWebSocketAddresses(final Serializable userid) {
         if (_engine.node == null) return CompletableFuture.completedFuture(null);
-        return _engine.node.getRpcNodeWebSocketAddresses(groupid);
+        return _engine.node.getRpcNodeWebSocketAddresses(userid);
     }
 
     /**
@@ -379,12 +301,12 @@ public abstract class WebSocket<G extends Serializable, T> {
     }
 
     /**
-     * 获取当前WebSocket所属的groupid
+     * 获取当前WebSocket所属的userid
      *
-     * @return groupid
+     * @return userid
      */
-    public final G getGroupid() {
-        return _groupid;
+    public final G userid() {
+        return _userid;
     }
 
     /**
@@ -416,37 +338,41 @@ public abstract class WebSocket<G extends Serializable, T> {
 
     //-------------------------------------------------------------------
     /**
-     * 获取当前WebSocket所属的WebSocketGroup， 不会为null
+     * 获取指定userid的WebSocket数组, 没有返回null <br>
+     * 此方法用于单用户多连接模式
      *
-     * @return WebSocketGroup
+     * @param userid Serializable
+     *
+     * @return WebSocket集合
      */
-    protected final WebSocketGroup getWebSocketGroup() {
-        return _group;
+    protected final Stream<WebSocket> getWebSockets(G userid) {
+        return _engine.getWebSockets(userid);
     }
-
+    
     /**
-     * 获取指定groupid的WebSocketGroup, 没有返回null
+     * 获取指定userid的WebSocket数组, 没有返回null<br>
+     * 此方法用于单用户单连接模式
      *
-     * @param groupid Serializable
+     * @param userid Serializable
      *
-     * @return WebSocketGroup
+     * @return WebSocket
      */
-    protected final WebSocketGroup getWebSocketGroup(G groupid) {
-        return _engine.getWebSocketGroup(groupid);
+    protected final WebSocket findWebSocket(G userid) {
+        return _engine.findWebSocket(userid);
     }
-
+    
     /**
-     * 获取当前进程节点所有在线的WebSocketGroup
+     * 获取当前进程节点所有在线的WebSocket
      *
      * @return WebSocketGroup列表
      */
-    protected final Collection<WebSocketGroup> getWebSocketGroups() {
-        return _engine.getWebSocketGroups();
+    protected final Collection<WebSocket> getWebSockets() {
+        return _engine.getWebSockets();
     }
 
     //-------------------------------------------------------------------
     /**
-     * 返回sessionid, null表示连接不合法或异常,默认实现是request.getSessionid(true)，通常需要重写该方法
+     * 返回sessionid, null表示连接不合法或异常,默认实现是request.sessionid(true)，通常需要重写该方法
      *
      * @param request HttpRequest
      *
@@ -457,11 +383,11 @@ public abstract class WebSocket<G extends Serializable, T> {
     }
 
     /**
-     * 创建groupid， null表示异常， 必须实现该方法， 通常为用户ID为groupid
+     * 创建userid， null表示异常， 必须实现该方法
      *
-     * @return groupid
+     * @return userid
      */
-    protected abstract CompletableFuture<G> createGroupid();
+    protected abstract CompletableFuture<G> createUserid();
 
     /**
      * 标记为WebSocketBinary才需要重写此方法
@@ -538,6 +464,6 @@ public abstract class WebSocket<G extends Serializable, T> {
 
     @Override
     public String toString() {
-        return this.websocketid + "@" + _remoteAddr;
+        return this.userid() + "@" + _remoteAddr;
     }
 }

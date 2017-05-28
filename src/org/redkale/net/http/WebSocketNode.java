@@ -56,29 +56,29 @@ public abstract class WebSocketNode {
     public final void postDestroy(AnyValue conf) {
         if (this.localEngine == null) return;
         //关掉所有本地本地WebSocket
-        this.localEngine.getWebSocketGroups().forEach(g -> disconnect(g.getGroupid()));
+        this.localEngine.getWebSockets().forEach(g -> disconnect(g.userid()));
         if (sncpNodeAddresses != null && localSncpAddress != null) sncpNodeAddresses.removeSetItem("redkale_sncpnodes", localSncpAddress);
     }
 
-    protected abstract CompletableFuture<List<String>> getWebSocketAddresses(@RpcTargetAddress InetSocketAddress targetAddress, Serializable groupid);
+    protected abstract CompletableFuture<List<String>> getWebSocketAddresses(@RpcTargetAddress InetSocketAddress targetAddress, Serializable userid);
 
-    protected abstract CompletableFuture<Integer> sendMessage(@RpcTargetAddress InetSocketAddress targetAddress, boolean recent, Object message, boolean last, Serializable groupid);
+    protected abstract CompletableFuture<Integer> sendMessage(@RpcTargetAddress InetSocketAddress targetAddress, Object message, boolean last, Serializable userid);
 
-    protected abstract CompletableFuture<Integer> broadcastMessage(@RpcTargetAddress InetSocketAddress targetAddress, boolean recent, Object message, boolean last);
+    protected abstract CompletableFuture<Integer> broadcastMessage(@RpcTargetAddress InetSocketAddress targetAddress, Object message, boolean last);
 
-    protected abstract CompletableFuture<Void> connect(Serializable groupid, InetSocketAddress addr);
+    protected abstract CompletableFuture<Void> connect(Serializable userid, InetSocketAddress addr);
 
-    protected abstract CompletableFuture<Void> disconnect(Serializable groupid, InetSocketAddress addr);
+    protected abstract CompletableFuture<Void> disconnect(Serializable userid, InetSocketAddress addr);
 
     //--------------------------------------------------------------------------------
-    final CompletableFuture<Void> connect(final Serializable groupid) {
-        if (finest) logger.finest(localSncpAddress + " receive websocket connect event (" + groupid + " on " + this.localEngine.getEngineid() + ").");
-        return connect(groupid, localSncpAddress);
+    final CompletableFuture<Void> connect(final Serializable userid) {
+        if (finest) logger.finest(localSncpAddress + " receive websocket connect event (" + userid + " on " + this.localEngine.getEngineid() + ").");
+        return connect(userid, localSncpAddress);
     }
 
-    final CompletableFuture<Void> disconnect(final Serializable groupid) {
-        if (finest) logger.finest(localSncpAddress + " receive websocket disconnect event (" + groupid + " on " + this.localEngine.getEngineid() + ").");
-        return disconnect(groupid, localSncpAddress);
+    final CompletableFuture<Void> disconnect(final Serializable userid) {
+        if (finest) logger.finest(localSncpAddress + " receive websocket disconnect event (" + userid + " on " + this.localEngine.getEngineid() + ").");
+        return disconnect(userid, localSncpAddress);
     }
 
     //--------------------------------------------------------------------------------
@@ -87,14 +87,14 @@ public abstract class WebSocketNode {
      * 该方法仅供内部调用
      *
      * @param targetAddress InetSocketAddress
-     * @param groupid       Serializable
+     * @param userid        Serializable
      *
      * @return 客户端地址列表
      */
-    protected CompletableFuture<List<String>> remoteWebSocketAddresses(@RpcTargetAddress InetSocketAddress targetAddress, Serializable groupid) {
+    protected CompletableFuture<List<String>> remoteWebSocketAddresses(@RpcTargetAddress InetSocketAddress targetAddress, Serializable userid) {
         if (remoteNode == null) return CompletableFuture.completedFuture(null);
         try {
-            return remoteNode.getWebSocketAddresses(targetAddress, groupid);
+            return remoteNode.getWebSocketAddresses(targetAddress, userid);
         } catch (Exception e) {
             logger.log(Level.WARNING, "remote " + targetAddress + " websocket getOnlineRemoteAddresses error", e);
             return CompletableFuture.completedFuture(null);
@@ -105,12 +105,12 @@ public abstract class WebSocketNode {
      * 获取用户在线的SNCP节点地址列表，不是分布式则返回元素数量为1，且元素值为null的列表<br>
      * InetSocketAddress 为 SNCP节点地址
      *
-     * @param groupid Serializable
+     * @param userid Serializable
      *
      * @return 地址列表
      */
-    public CompletableFuture<Collection<InetSocketAddress>> getRpcNodeAddresses(final Serializable groupid) {
-        if (this.sncpNodeAddresses != null) return this.sncpNodeAddresses.getCollectionAsync(groupid);
+    public CompletableFuture<Collection<InetSocketAddress>> getRpcNodeAddresses(final Serializable userid) {
+        if (this.sncpNodeAddresses != null) return this.sncpNodeAddresses.getCollectionAsync(userid);
         List<InetSocketAddress> rs = new ArrayList<>();
         rs.add(this.localSncpAddress);
         return CompletableFuture.completedFuture(rs);
@@ -121,18 +121,18 @@ public abstract class WebSocketNode {
      * Map.key 为 SNCP节点地址, 含值为null的key表示没有分布式
      * Map.value 为 用户客户端的IP
      *
-     * @param groupid Serializable
+     * @param userid Serializable
      *
      * @return 地址集合
      */
-    public CompletableFuture<Map<InetSocketAddress, List<String>>> getRpcNodeWebSocketAddresses(final Serializable groupid) {
-        CompletableFuture<Collection<InetSocketAddress>> sncpFuture = getRpcNodeAddresses(groupid);
+    public CompletableFuture<Map<InetSocketAddress, List<String>>> getRpcNodeWebSocketAddresses(final Serializable userid) {
+        CompletableFuture<Collection<InetSocketAddress>> sncpFuture = getRpcNodeAddresses(userid);
         return sncpFuture.thenCompose((Collection<InetSocketAddress> addrs) -> {
-            if (finest) logger.finest("websocket found groupid:" + groupid + " on " + addrs);
+            if (finest) logger.finest("websocket found userid:" + userid + " on " + addrs);
             if (addrs == null || addrs.isEmpty()) return CompletableFuture.completedFuture(new HashMap<>());
             CompletableFuture<Map<InetSocketAddress, List<String>>> future = null;
             for (final InetSocketAddress nodeAddress : addrs) {
-                CompletableFuture<Map<InetSocketAddress, List<String>>> mapFuture = getWebSocketAddresses(nodeAddress, groupid)
+                CompletableFuture<Map<InetSocketAddress, List<String>>> mapFuture = getWebSocketAddresses(nodeAddress, userid)
                     .thenCompose((List<String> list) -> CompletableFuture.completedFuture(Utility.ofMap(nodeAddress, list)));
                 future = future == null ? mapFuture : future.thenCombine(mapFuture, (a, b) -> Utility.merge(a, b));
             }
@@ -141,99 +141,58 @@ public abstract class WebSocketNode {
     }
 
     //--------------------------------------------------------------------------------
-    public final CompletableFuture<Integer> sendEachMessage(Serializable groupid, Object message, final Serializable... groupids) {
-        return sendMessage(false, message, true, groupids);
-    }
-
-    public final CompletableFuture<Integer> sendEachMessage(Serializable groupid, Object message, boolean last, final Serializable... groupids) {
-        return sendMessage(false, message, last, groupids);
-    }
-
-    public final CompletableFuture<Integer> sendRecentMessage(Serializable groupid, Object message, final Serializable... groupids) {
-        return sendMessage(true, message, true, groupids);
-    }
-
-    public final CompletableFuture<Integer> sendRecentMessage(Serializable groupid, Object message, boolean last, final Serializable... groupids) {
-        return sendMessage(true, message, last, groupids);
-    }
-
-    public final CompletableFuture<Integer> sendMessage(Serializable groupid, boolean recent, Object message, final Serializable... groupids) {
-        return sendMessage(recent, message, true, groupids);
+    public final CompletableFuture<Integer> sendMessage(Object message, final Serializable... userids) {
+        return sendMessage(message, true, userids);
     }
 
     /**
      * 向指定用户发送消息，先发送本地连接，再发送远程连接  <br>
      * 如果当前WebSocketNode是远程模式，此方法只发送远程连接
      *
-     * @param groupids Serializable[]
-     * @param recent   是否只发送给最近接入的WebSocket节点
-     * @param message  消息内容
-     * @param last     是否最后一条
+     * @param message 消息内容
+     * @param last    是否最后一条
+     * @param userids Serializable[]
      *
      * @return 为0表示成功， 其他值表示部分发送异常
      */
     //最近连接发送逻辑还没有理清楚 
-    public final CompletableFuture<Integer> sendMessage(final boolean recent, final Object message, final boolean last, final Serializable... groupids) {
-        if (groupids == null || groupids.length < 1) return CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY);
+    public final CompletableFuture<Integer> sendMessage(final Object message, final boolean last, final Serializable... userids) {
+        if (userids == null || userids.length < 1) return CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY);
         if (this.localEngine != null && this.sncpNodeAddresses == null) { //本地模式且没有分布式
-            return this.localEngine.sendMessage(recent, message, last, groupids);
+            return this.localEngine.sendMessage(message, last, userids);
         }
         CompletableFuture<Integer> future = null;
-        for (Serializable groupid : groupids) {
-            future = future == null ? sendOneMessage(recent, message, last, groupid)
-                : future.thenCombine(sendOneMessage(recent, message, last, groupid), (a, b) -> a | b);
+        for (Serializable userid : userids) {
+            future = future == null ? sendOneMessage(message, last, userid)
+                : future.thenCombine(sendOneMessage(message, last, userid), (a, b) -> a | b);
         }
         return future == null ? CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY) : future;
     }
 
     /**
-     * 广播消息， 给所有人的所有接入的WebSocket节点发消息
+     * 广播消息， 给所有人发消息
      *
      * @param message 消息内容
      *
      * @return 为0表示成功， 其他值表示部分发送异常
      */
-    public final CompletableFuture<Integer> broadcastEachMessage(final Object message) {
-        return broadcastMessage(false, message, true);
-    }
-
-    /**
-     * 广播消息， 给所有人最近接入的WebSocket节点发消息
-     *
-     * @param message 消息内容
-     *
-     * @return 为0表示成功， 其他值表示部分发送异常
-     */
-    public final CompletableFuture<Integer> broadcastRecentMessage(final Object message) {
-        return broadcastMessage(true, message, true);
+    public final CompletableFuture<Integer> broadcastMessage(final Object message) {
+        return broadcastMessage(message, true);
     }
 
     /**
      * 广播消息， 给所有人发消息
      *
-     * @param recent  是否只发送给最近接入的WebSocket节点
-     * @param message 消息内容
-     *
-     * @return 为0表示成功， 其他值表示部分发送异常
-     */
-    public final CompletableFuture<Integer> broadcastMessage(final boolean recent, final Object message) {
-        return broadcastMessage(recent, message, true);
-    }
-
-    /**
-     * 广播消息， 给所有人发消息
-     *
-     * @param recent  是否只发送给最近接入的WebSocket节点
      * @param message 消息内容
      * @param last    是否最后一条
      *
      * @return 为0表示成功， 其他值表示部分发送异常
      */
-    public final CompletableFuture<Integer> broadcastMessage(final boolean recent, final Object message, final boolean last) {
+    public final CompletableFuture<Integer> broadcastMessage(final Object message, final boolean last) {
         if (this.localEngine != null && this.sncpNodeAddresses == null) { //本地模式且没有分布式
-            return this.localEngine.broadcastMessage(recent, message, last);
+            return this.localEngine.broadcastMessage(message, last);
         }
-        CompletableFuture<Integer> localFuture = this.localEngine == null ? null : this.localEngine.broadcastMessage(recent, message, last);
+        CompletableFuture<Integer> localFuture = this.localEngine == null ? null : this.localEngine.broadcastMessage(message, last);
         CompletableFuture<Collection<InetSocketAddress>> addrsFuture = sncpNodeAddresses.getCollectionAsync("redkale_sncpnodes");
         CompletableFuture<Integer> remoteFuture = addrsFuture.thenCompose((Collection<InetSocketAddress> addrs) -> {
             if (finest) logger.finest("websocket broadcast message on " + addrs);
@@ -241,38 +200,33 @@ public abstract class WebSocketNode {
             CompletableFuture<Integer> future = null;
             for (InetSocketAddress addr : addrs) {
                 if (addr == null || addr.equals(localSncpAddress)) continue;
-                future = future == null ? remoteNode.broadcastMessage(addr, recent, message, last)
-                    : future.thenCombine(remoteNode.broadcastMessage(addr, recent, message, last), (a, b) -> a | b);
+                future = future == null ? remoteNode.broadcastMessage(addr, message, last)
+                    : future.thenCombine(remoteNode.broadcastMessage(addr, message, last), (a, b) -> a | b);
             }
             return future == null ? CompletableFuture.completedFuture(0) : future;
         });
         return localFuture == null ? remoteFuture : localFuture.thenCombine(remoteFuture, (a, b) -> a | b);
     }
 
-    private CompletableFuture<Integer> sendOneMessage(final boolean recent, final Object message, final boolean last, final Serializable groupid) {
-        if (finest) logger.finest("websocket want send message {groupid:" + groupid + ", content:'" + message + "'} from locale node to locale engine");
+    private CompletableFuture<Integer> sendOneMessage(final Object message, final boolean last, final Serializable userid) {
+        if (finest) logger.finest("websocket want send message {userid:" + userid + ", content:'" + message + "'} from locale node to locale engine");
         CompletableFuture<Integer> localFuture = null;
-        final WebSocketGroup group = this.localEngine == null ? null : this.localEngine.getWebSocketGroup(groupid);
-        if (group != null) localFuture = group.send(recent, message, last);
-        if (recent && localFuture != null) { //已经给最近连接发送的消息
-            if (finest) logger.finest("websocket want send recent message success");
-            return localFuture;
-        }
+        if (this.localEngine != null) localFuture = localEngine.sendMessage(message, last, userid);
         if (this.sncpNodeAddresses == null || this.remoteNode == null) {
             if (finest) logger.finest("websocket remote node is null");
             //没有CacheSource就不会有分布式节点
             return localFuture == null ? CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY) : localFuture;
         }
         //远程节点发送消息
-        CompletableFuture<Collection<InetSocketAddress>> addrsFuture = sncpNodeAddresses.getCollectionAsync(groupid);
+        CompletableFuture<Collection<InetSocketAddress>> addrsFuture = sncpNodeAddresses.getCollectionAsync(userid);
         CompletableFuture<Integer> remoteFuture = addrsFuture.thenCompose((Collection<InetSocketAddress> addrs) -> {
-            if (finest) logger.finest("websocket found groupid:" + groupid + " on " + addrs);
+            if (finest) logger.finest("websocket found userid:" + userid + " on " + addrs);
             if (addrs == null || addrs.isEmpty()) return CompletableFuture.completedFuture(0);
             CompletableFuture<Integer> future = null;
             for (InetSocketAddress addr : addrs) {
                 if (addr == null || addr.equals(localSncpAddress)) continue;
-                future = future == null ? remoteNode.sendMessage(addr, recent, message, last, groupid)
-                    : future.thenCombine(remoteNode.sendMessage(addr, recent, message, last, groupid), (a, b) -> a | b);
+                future = future == null ? remoteNode.sendMessage(addr, message, last, userid)
+                    : future.thenCombine(remoteNode.sendMessage(addr, message, last, userid), (a, b) -> a | b);
             }
             return future == null ? CompletableFuture.completedFuture(0) : future;
         });

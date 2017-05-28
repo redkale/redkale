@@ -31,10 +31,7 @@ import org.redkale.util.*;
  *                                   /             \
  *                                 /                \
  *                               /                   \
- *                     WebSocketGroup1          WebSocketGroup2
- *                        /        \                /        \
- *                      /           \             /           \
- *               WebSocket1     WebSocket2   WebSocket3    WebSocket4
+ *                     WebSocket1                 WebSocket2
  *
  * </pre></blockquote>
  *
@@ -61,6 +58,8 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
     private final BiConsumer<WebSocket, Object> restMessageConsumer = createRestOnMessageConsumer();
 
     protected Type messageTextType;  //RestWebSocket时会被修改
+
+    protected boolean single = true; //是否单用户单连接
 
     protected int liveinterval = DEFAILT_LIVEINTERVAL;
 
@@ -98,7 +97,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
             if (logger.isLoggable(Level.WARNING)) logger.warning("Not found WebSocketNode, create a default value for " + getClass().getName());
         }
         //存在WebSocketServlet，则此WebSocketNode必须是本地模式Service
-        this.node.localEngine = new WebSocketEngine("WebSocketEngine-" + addr.getHostString() + ":" + addr.getPort() + "-[" + resourceName() + "]", context, liveinterval, this.node, logger);
+        this.node.localEngine = new WebSocketEngine("WebSocketEngine-" + addr.getHostString() + ":" + addr.getPort() + "-[" + resourceName() + "]", this.single, context, liveinterval, this.node, logger);
         this.node.init(conf);
         this.node.localEngine.init(conf);
     }
@@ -163,19 +162,19 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
                 @Override
                 public void completed(Integer result, Void attachment) {
                     HttpContext context = response.getContext();
-                    CompletableFuture<Serializable> groupFuture = webSocket.createGroupid();
-                    if (groupFuture == null) {
-                        if (debug) logger.finest("WebSocket connect abort, Create groupid abort. request = " + request);
+                    CompletableFuture<Serializable> userFuture = webSocket.createUserid();
+                    if (userFuture == null) {
+                        if (debug) logger.finest("WebSocket connect abort, Create userid abort. request = " + request);
                         response.finish(true);
                         return;
                     }
-                    groupFuture.whenComplete((groupid, ex2) -> {
-                        if (groupid == null || ex2 != null) {
-                            if (debug || ex2 != null) logger.log(ex2 == null ? Level.FINEST : Level.FINE, "WebSocket connect abort, Create groupid abort. request = " + request, ex2);
+                    userFuture.whenComplete((userid, ex2) -> {
+                        if (userid == null || ex2 != null) {
+                            if (debug || ex2 != null) logger.log(ex2 == null ? Level.FINEST : Level.FINE, "WebSocket connect abort, Create userid abort. request = " + request, ex2);
                             response.finish(true);
                             return;
                         }
-                        webSocket._groupid = groupid;
+                        webSocket._userid = userid;
                         WebSocketServlet.this.node.localEngine.add(webSocket);
                         WebSocketRunner runner = new WebSocketRunner(context, webSocket, restMessageConsumer, response.removeChannel(), wsbinary);
                         webSocket._runner = runner;

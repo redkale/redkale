@@ -38,6 +38,13 @@ public @interface RestWebSocket {
     String catalog() default "";
 
     /**
+     * 是否单用户单连接, 默认单用户单连接
+     *
+     * @return 是否单用户单连接
+     */
+    boolean single() default true;
+
+    /**
      * WebScoket服务器给客户端进行ping操作的间隔时间, 单位: 秒， 默认值：60秒
      *
      * @return int

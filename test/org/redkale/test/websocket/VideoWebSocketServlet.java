@@ -80,31 +80,25 @@ public class VideoWebSocketServlet extends WebSocketServlet {
                     }
                     super.send(("{'type':'user_list','users':[" + sb + "]}").replace('\'', '"'));
                     String msg = ("{'type':'discover_user','user':{'userid':'" + this.getSessionid() + "','username':'" + users.get(this.getSessionid()) + "'}}").replace('\'', '"');
-                    super.getWebSocketGroup().getWebSockets().filter(x -> x != this).forEach(x -> {
-                        x.send(msg);
-                    });
+                    super.broadcastMessage(msg);
                 }
             }
 
             @Override
             public void onMessage(Object text, boolean last) {
                 //System.out.println("接收到消息: " + text);
-                super.getWebSocketGroup().getWebSockets().filter(x -> x != this).forEach(x -> {
-                    x.send(text);
-                });
+                super.broadcastMessage(text, last);
             }
 
             @Override
             public void onClose(int code, String reason) {
                 sessions.remove(this.getSessionid());
                 String msg = ("{'type':'remove_user','user':{'userid':'" + this.getSessionid() + "','username':'" + users.get(this.getSessionid()) + "'}}").replace('\'', '"');
-                super.getWebSocketGroup().getWebSockets().filter(x -> x != this).forEach(x -> {
-                    x.send(msg);
-                });
-            }
+                super.broadcastMessage(msg);
+            } 
 
             @Override
-            protected CompletableFuture<Serializable> createGroupid() {
+            protected CompletableFuture<Serializable> createUserid() {
                 return CompletableFuture.completedFuture("2");
             }
         };

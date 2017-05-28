@@ -116,7 +116,6 @@ class WebSocketRunner implements Runnable {
                                 if (debug) context.getLogger().log(Level.FINEST, "WebSocketRunner abort on decode WebSocketPacket, force to close channel, live " + (System.currentTimeMillis() - webSocket.getCreatetime()) / 1000 + " seconds");
                                 return;
                             }
-                            webSocket._group.setRecentWebSocket(webSocket);
 
                             if (packet.type == FrameType.TEXT) {
                                 Object message = convert.convertFrom(webSocket._messageTextType, packet.receiveMasker, packet.receiveBuffers);
