@@ -436,13 +436,23 @@ public class CacheMemorySource<K extends Serializable, V extends Object> extends
     }
 
     @Override
-    public List<CacheEntry<K, Object>> queryList() {
-        return new ArrayList<>(container.values());
+    public List<K> queryKeys() {
+        return new ArrayList<>(container.keySet());
     }
 
     @Override
     public CompletableFuture<List<CacheEntry<K, Object>>> queryListAsync() {
         return CompletableFuture.completedFuture(new ArrayList<>(container.values()));
+    }
+
+    @Override
+    public List<CacheEntry<K, Object>> queryList() {
+        return new ArrayList<>(container.values());
+    }
+
+    @Override
+    public CompletableFuture<List<K>> queryKeysAsync() {
+        return CompletableFuture.completedFuture(new ArrayList<>(container.keySet()));
     }
 
 }

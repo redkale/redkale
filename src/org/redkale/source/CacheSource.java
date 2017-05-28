@@ -57,6 +57,8 @@ public interface CacheSource<K extends Serializable, V extends Object> {
 
     public void removeSetItem(final K key, final V value);
 
+    public List<K> queryKeys();
+
     public List<CacheEntry<K, Object>> queryList();
 
     //---------------------- CompletableFuture 异步版 ---------------------------------
@@ -89,6 +91,8 @@ public interface CacheSource<K extends Serializable, V extends Object> {
     public CompletableFuture<Void> appendSetItemAsync(final K key, final V value);
 
     public CompletableFuture<Void> removeSetItemAsync(final K key, final V value);
+
+    public CompletableFuture<List<K>> queryKeysAsync();
 
     public CompletableFuture<List<CacheEntry<K, Object>>> queryListAsync();
 
