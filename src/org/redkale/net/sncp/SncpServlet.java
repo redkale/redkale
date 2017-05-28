@@ -20,14 +20,14 @@ import org.redkale.util.*;
  */
 public abstract class SncpServlet extends Servlet<SncpContext, SncpRequest, SncpResponse> implements Comparable<SncpServlet> {
 
-    protected final Class<? extends Service> type;
+    protected final Class type;
 
     protected final String serviceName;
 
     protected final Service service;
 
-    protected SncpServlet(String serviceName, Class<? extends Service> type, Service service) {
-        this.type = type;
+    protected SncpServlet(String serviceName, Class serviceOrSourceType, Service service) {
+        this.type = serviceOrSourceType;
         this.service = service;
         this.serviceName = serviceName;
     }

@@ -44,6 +44,11 @@ public final class CollectionDecoder<T> implements Decodeable<Reader, Collection
                 this.creator = factory.loadCreator((Class) pt.getRawType());
                 factory.register(type, this);
                 this.decoder = factory.loadDecoder(this.componentType);
+            } else if(factory.isReversible()){
+                this.componentType = Object.class;
+                this.creator = factory.loadCreator(Object.class);
+                factory.register(type, this);
+                this.decoder = factory.loadDecoder(this.componentType);
             } else {
                 throw new ConvertException("collectiondecoder not support the type (" + type + ")");
             }

@@ -48,8 +48,8 @@ public final class SncpDynServlet extends SncpServlet {
 
     private Supplier<ByteBuffer> bufferSupplier;
 
-    public SncpDynServlet(final BsonConvert convert, final String serviceName, final Class<? extends Service> type, final Service service) {
-        super(serviceName, type, service);
+    public SncpDynServlet(final BsonConvert convert, final String serviceName, final Class serviceOrSourceType, final Service service) {
+        super(serviceName, serviceOrSourceType, service);
         this.serviceid = Sncp.hash(type.getName() + ':' + serviceName);
         Set<DLong> actionids = new HashSet<>();
         for (java.lang.reflect.Method method : service.getClass().getMethods()) {

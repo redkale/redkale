@@ -5,9 +5,12 @@
  */
 package org.redkale.source;
 
+import java.beans.ConstructorProperties;
 import java.io.*;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.*;
+import org.redkale.convert.ConvertColumn;
+import org.redkale.convert.json.JsonFactory;
 
 /**
  *
@@ -54,6 +57,8 @@ public interface CacheSource<K extends Serializable, V extends Object> {
 
     public void removeSetItem(final K key, final V value);
 
+    public List<CacheEntry<K, Object>> queryList();
+
     //---------------------- CompletableFuture 异步版 ---------------------------------
     public CompletableFuture<Boolean> existsAsync(final K key);
 
@@ -85,8 +90,103 @@ public interface CacheSource<K extends Serializable, V extends Object> {
 
     public CompletableFuture<Void> removeSetItemAsync(final K key, final V value);
 
+    public CompletableFuture<List<CacheEntry<K, Object>>> queryListAsync();
+
     default CompletableFuture<Boolean> isOpenAsync() {
         return CompletableFuture.completedFuture(true);
     }
 
+    public static enum CacheEntryType {
+        OBJECT, SET, LIST;
+    }
+
+    public static final class CacheEntry<K extends Serializable, T> {
+
+        static final String JSON_SET_KEY = "{\"cacheType\":\"" + CacheEntryType.SET + "\"";
+
+        static final String JSON_LIST_KEY = "{\"cacheType\":\"" + CacheEntryType.LIST + "\"";
+
+        final CacheEntryType cacheType;
+
+        final K key;
+
+        //<=0表示永久保存
+        int expireSeconds;
+
+        volatile int lastAccessed; //最后刷新时间
+
+        T objectValue;
+
+        CopyOnWriteArraySet<T> setValue;
+
+        ConcurrentLinkedQueue<T> listValue;
+
+        public CacheEntry(CacheEntryType cacheType, K key, T objectValue, CopyOnWriteArraySet<T> setValue, ConcurrentLinkedQueue<T> listValue) {
+            this(cacheType, 0, key, objectValue, setValue, listValue);
+        }
+
+        public CacheEntry(CacheEntryType cacheType, int expireSeconds, K key, T objectValue, CopyOnWriteArraySet<T> setValue, ConcurrentLinkedQueue<T> listValue) {
+            this(cacheType, expireSeconds, (int) (System.currentTimeMillis() / 1000), key, objectValue, setValue, listValue);
+        }
+
+        @ConstructorProperties({"cacheType", "expireSeconds", "lastAccessed", "key", "objectValue", "setValue", "listValue"})
+        public CacheEntry(CacheEntryType cacheType, int expireSeconds, int lastAccessed, K key, T objectValue, CopyOnWriteArraySet<T> setValue, ConcurrentLinkedQueue<T> listValue) {
+            this.cacheType = cacheType;
+            this.expireSeconds = expireSeconds;
+            this.lastAccessed = lastAccessed;
+            this.key = key;
+            this.objectValue = objectValue;
+            this.setValue = setValue;
+            this.listValue = listValue;
+        }
+
+        @Override
+        public String toString() {
+            return JsonFactory.root().getConvert().convertTo(this);
+        }
+
+        @ConvertColumn(ignore = true)
+        public boolean isListCacheType() {
+            return cacheType == CacheEntryType.LIST;
+        }
+
+        @ConvertColumn(ignore = true)
+        public boolean isSetCacheType() {
+            return cacheType == CacheEntryType.SET;
+        }
+
+        @ConvertColumn(ignore = true)
+        public boolean isExpired() {
+            return (expireSeconds > 0 && lastAccessed + expireSeconds < (System.currentTimeMillis() / 1000));
+        }
+
+        public CacheEntryType getCacheType() {
+            return cacheType;
+        }
+
+        public int getExpireSeconds() {
+            return expireSeconds;
+        }
+
+        public int getLastAccessed() {
+            return lastAccessed;
+        }
+
+        public K getKey() {
+            return key;
+        }
+
+        public T getObjectValue() {
+            return objectValue;
+        }
+
+        public CopyOnWriteArraySet<T> getSetValue() {
+            return setValue;
+        }
+
+        public ConcurrentLinkedQueue<T> getListValue() {
+            return listValue;
+        }
+
+    }
 }

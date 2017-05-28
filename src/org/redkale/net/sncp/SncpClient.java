@@ -324,6 +324,8 @@ public final class SncpClient {
 
                         result.complete(rs);
                     }
+                } catch (Exception exp) {
+                    result.completeExceptionally(exp);
                 } finally {
                     bsonConvert.offerBsonReader(reader);
                 }
@@ -380,16 +382,23 @@ public final class SncpClient {
         final long seqid = System.nanoTime();
         final DLong actionid = action.actionid;
         final SocketAddress addr = addr0 == null ? (action.addressTargetParamIndex >= 0 ? (SocketAddress) params[action.addressTargetParamIndex] : null) : addr0;
-        final AsyncConnection conn = transport.pollConnection(addr);
-        if (conn == null || !conn.isOpen()) {
-            logger.log(Level.SEVERE, action.method + " sncp (params: " + convert.convertTo(params) + ") cannot connect " + (conn == null ? addr : conn.getRemoteAddress()));
-            throw new RuntimeException("sncp " + (conn == null ? addr : conn.getRemoteAddress()) + " cannot connect");
+        final CompletableFuture<byte[]> future = new CompletableFuture();
+        AsyncConnection conn0;
+        try {
+            conn0 = transport.pollConnection(addr);
+        } catch (Exception e) {
+            future.completeExceptionally(e);
+            return future;
         }
+        if (conn0 == null || !conn0.isOpen()) {
+            future.completeExceptionally(new RuntimeException("sncp " + (conn0 == null ? addr : conn0.getRemoteAddress()) + " cannot connect"));
+            return future;
+        }
+        final AsyncConnection conn = conn0;
         final ByteBuffer[] sendBuffers = writer.toBuffers();
         fillHeader(sendBuffers[0], seqid, actionid, reqBodyLength);
 
         final ByteBuffer buffer = transport.pollBuffer();
-        final CompletableFuture<byte[]> future = new CompletableFuture();
         conn.write(sendBuffers, sendBuffers, new CompletionHandler<Integer, ByteBuffer[]>() {
 
             @Override
