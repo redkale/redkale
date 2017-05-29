@@ -8,6 +8,7 @@ package org.redkale.net;
 import java.net.InetSocketAddress;
 import java.util.*;
 import org.redkale.convert.json.JsonConvert;
+import org.redkale.util.Utility;
 
 /**
  * 协议地址组合对象, 对应application.xml 中 resources-&#62;group 节点信息
@@ -30,13 +31,23 @@ public class TransportGroupInfo {
     public TransportGroupInfo() {
     }
 
+    public TransportGroupInfo(String name, InetSocketAddress... addrs) {
+        this(name, "TCP", "", Utility.ofSet(addrs));
+    }
+
+    public TransportGroupInfo(String name, Set<InetSocketAddress> addrs) {
+        this(name, "TCP", "", addrs);
+    }
+
+    public TransportGroupInfo(String name, String protocol, String subprotocol, InetSocketAddress... addrs) {
+        this(name, protocol, subprotocol, Utility.ofSet(addrs));
+    }
+
     public TransportGroupInfo(String name, String protocol, String subprotocol, Set<InetSocketAddress> addrs) {
         Objects.requireNonNull(name, "Transport.group.name can not null");
-        Objects.requireNonNull(protocol, "Transport.group.protocol can not null");
-        Objects.requireNonNull(subprotocol, "Transport.group.subprotocol can not null");
         this.name = name;
-        this.protocol = protocol;
-        this.subprotocol = subprotocol;
+        this.protocol = protocol == null ? "TCP" : protocol;
+        this.subprotocol = subprotocol == null ? "" : subprotocol;
         this.addresses = addrs;
     }
 
@@ -54,8 +65,7 @@ public class TransportGroupInfo {
     }
 
     public void setProtocol(String protocol) {
-        Objects.requireNonNull(protocol, "Transport.group.protocol can not null");
-        this.protocol = protocol;
+        this.protocol = protocol == null ? "TCP" : protocol;
     }
 
     public String getSubprotocol() {
@@ -63,7 +73,7 @@ public class TransportGroupInfo {
     }
 
     public void setSubprotocol(String subprotocol) {
-        Objects.requireNonNull(subprotocol, "Transport.group.subprotocol can not null");
+        this.subprotocol = subprotocol == null ? "" : subprotocol;
         this.subprotocol = subprotocol;
     }
 

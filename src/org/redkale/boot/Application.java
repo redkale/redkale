@@ -103,7 +103,7 @@ public final class Application {
     final List<NodeServer> servers = new CopyOnWriteArrayList<>();
 
     //传输端的TransportFactory
-    final TransportFactory transportFactory;
+    final SncpTransportFactory transportFactory;
 
     //全局根ResourceFactory
     final ResourceFactory resourceFactory = ResourceFactory.root();
@@ -260,21 +260,20 @@ public final class Application {
                 logger.log(Level.INFO, Transport.class.getSimpleName() + " configure bufferCapacity = " + bufferCapacity + "; bufferPoolSize = " + bufferPoolSize + "; threads = " + threads + ";");
             }
         }
-        this.transportFactory = new TransportFactory(transportExec, transportPool, transportGroup);
+        this.transportFactory = new SncpTransportFactory(transportExec, transportPool, transportGroup);
     }
 
     public ResourceFactory getResourceFactory() {
         return resourceFactory;
     }
 
-    public TransportFactory getTransportFactory() {
+    public SncpTransportFactory getTransportFactory() {
         return transportFactory;
     }
-    
+
 //    public WatchFactory getWatchFactory() {
 //        return watchFactory;
 //    }
-
     public List<NodeServer> getNodeServers() {
         return new ArrayList<>(servers);
     }
@@ -359,6 +358,8 @@ public final class Application {
                     Class type = field.getType();
                     if (type == Application.class) {
                         field.set(src, application);
+                    } else if (type == SncpTransportFactory.class) {
+                        field.set(src, application.transportFactory);
                     } else if (type == NodeSncpServer.class) {
                         NodeServer server = null;
                         for (NodeServer ns : application.getNodeServers()) {
@@ -403,7 +404,7 @@ public final class Application {
                 return false;
             }
 
-        }, Application.class, NodeSncpServer.class, NodeHttpServer.class, NodeWatchServer.class);
+        }, Application.class, SncpTransportFactory.class, NodeSncpServer.class, NodeHttpServer.class, NodeWatchServer.class);
         //--------------------------------------------------------------------------
         initResources();
     }

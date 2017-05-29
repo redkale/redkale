@@ -52,6 +52,16 @@ public class TransportFactory {
         return groupInfos.get(group);
     }
 
+    public TransportFactory addGroupInfo(String name, InetSocketAddress... addrs) {
+        addGroupInfo(new TransportGroupInfo(name, addrs));
+        return this;
+    }
+
+    public TransportFactory addGroupInfo(String name, Set<InetSocketAddress>  addrs) {
+        addGroupInfo(new TransportGroupInfo(name, addrs));
+        return this;
+    }
+    
     public boolean addGroupInfo(TransportGroupInfo info) {
         if (info == null) throw new RuntimeException("TransportGroupInfo can not null");
         if (info.addresses == null) throw new RuntimeException("TransportGroupInfo.addresses can not null");

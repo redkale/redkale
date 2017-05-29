@@ -188,7 +188,7 @@ public abstract class NodeServer {
         final NodeServer self = this;
         //---------------------------------------------------------------------------------------------
         final ResourceFactory appResFactory = application.getResourceFactory();
-        final TransportFactory appTranFactory = application.getTransportFactory();
+        final SncpTransportFactory appTranFactory = application.getTransportFactory();
         final AnyValue resources = application.config.getAnyValue("resources");
         final Map<String, AnyValue> cacheResource = new HashMap<>();
         //final Map<String, AnyValue> dataResources = new HashMap<>();
@@ -321,7 +321,7 @@ public abstract class NodeServer {
         final Set<FilterEntry<? extends Service>> entrys = (Set) serviceFilter.getAllFilterEntrys();
         ResourceFactory regFactory = isSNCP() ? application.getResourceFactory() : resourceFactory;
         final ResourceFactory appResourceFactory = application.getResourceFactory();
-        final TransportFactory appTransportFactory = application.getTransportFactory();
+        final SncpTransportFactory appTransportFactory = application.getTransportFactory();
         for (FilterEntry<? extends Service> entry : entrys) { //service实现类
             final Class<? extends Service> serviceImplClass = entry.getType();
             if (Modifier.isFinal(serviceImplClass.getModifiers())) continue; //修饰final的类跳过

@@ -14,7 +14,6 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 import java.util.logging.LogManager;
 import org.redkale.convert.bson.*;
-import org.redkale.net.Transport;
 import org.redkale.net.sncp.*;
 import org.redkale.service.Service;
 import org.redkale.util.*;
@@ -79,9 +78,9 @@ public class SncpTest {
         Set<InetSocketAddress> set = new LinkedHashSet<>();
         set.add(addr);
         if (port2 > 0) set.add(new InetSocketAddress(myhost, port2));
-        //String name, WatchFactory, ObjectPool<ByteBuffer>, AsynchronousChannelGroup, InetSocketAddress clientAddress, Collection<InetSocketAddress>
-        final Transport transport = new Transport("", "", newBufferPool(), newChannelGroup(), null, set);
-        final SncpTestIService service = Sncp.createSimpleRemoteService(serviceName, SncpTestIService.class, addr, transport);
+        final SncpTransportFactory transFactory = new SncpTransportFactory(Executors.newSingleThreadExecutor(), newBufferPool(), newChannelGroup());
+        transFactory.addGroupInfo("client", set);
+        final SncpTestIService service = Sncp.createSimpleRemoteService(SncpTestIService.class, transFactory, addr, "client");
         ResourceFactory.root().inject(service);
 
 //        SncpTestBean bean = new SncpTestBean();
@@ -156,9 +155,9 @@ public class SncpTest {
                     SncpServer server = new SncpServer();
                     Set<InetSocketAddress> set = new LinkedHashSet<>();
                     if (port2 > 0) set.add(new InetSocketAddress(myhost, port2));
-                    //String name, WatchFactory, ObjectPool<ByteBuffer>, AsynchronousChannelGroup, InetSocketAddress clientAddress, Collection<InetSocketAddress>
-                    final Transport transport = new Transport("", "", newBufferPool(), newChannelGroup(), null, set);
-                    SncpTestIService service = Sncp.createSimpleLocalService("", SncpTestServiceImpl.class, addr, transport);
+                    final SncpTransportFactory transFactory = new SncpTransportFactory(Executors.newSingleThreadExecutor(), newBufferPool(), newChannelGroup());
+                    transFactory.addGroupInfo("server", set);
+                    SncpTestIService service = Sncp.createSimpleLocalService(SncpTestServiceImpl.class, transFactory, addr, "server");
                     ResourceFactory.root().inject(service);
                     server.addSncpServlet(service);
                     System.out.println(service);
@@ -190,9 +189,10 @@ public class SncpTest {
                     SncpServer server = new SncpServer();
                     Set<InetSocketAddress> set = new LinkedHashSet<>();
                     set.add(new InetSocketAddress(myhost, port));
-                    //String name, WatchFactory, ObjectPool<ByteBuffer>, AsynchronousChannelGroup, InetSocketAddress clientAddress, Collection<InetSocketAddress>
-                    final Transport transport = new Transport("", "", newBufferPool(), newChannelGroup(), null, set);
-                    Service service = Sncp.createSimpleLocalService("", SncpTestServiceImpl.class, addr, transport);
+
+                    final SncpTransportFactory transFactory = new SncpTransportFactory(Executors.newSingleThreadExecutor(), newBufferPool(), newChannelGroup());
+                    transFactory.addGroupInfo("server", set);
+                    Service service = Sncp.createSimpleLocalService(SncpTestServiceImpl.class, transFactory, addr, "server");
                     server.addSncpServlet(service);
                     AnyValue.DefaultAnyValue conf = new AnyValue.DefaultAnyValue();
                     conf.addValue("host", "0.0.0.0");
@@ -207,4 +207,5 @@ public class SncpTest {
         }.start();
         cdl.await();
     }
+
 }

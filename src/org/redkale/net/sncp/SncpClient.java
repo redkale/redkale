@@ -81,7 +81,7 @@ public final class SncpClient {
     //本地模式
     protected Transport[] diffGroupTransports;
 
-    public <T extends Service> SncpClient(final String serviceName, final Class<T> serviceTypeOrImplClass, final T service, final TransportFactory factory,
+    public <T extends Service> SncpClient(final String serviceName, final Class<T> serviceTypeOrImplClass, final T service, final SncpTransportFactory factory,
         final boolean remote, final Class serviceClass, final InetSocketAddress clientAddress) {
         this.remote = remote;
         this.executor = factory.getExecutor();
@@ -101,6 +101,7 @@ public final class SncpClient {
         this.actions = methodens.toArray(new SncpAction[methodens.size()]);
         this.addrBytes = clientAddress == null ? new byte[4] : clientAddress.getAddress().getAddress();
         this.addrPort = clientAddress == null ? 0 : clientAddress.getPort();
+        factory.addSncpClient(this);
     }
 
     static List<SncpAction> getSncpActions(final Class serviceClass) {
@@ -337,18 +338,6 @@ public final class SncpClient {
     }
 
     private CompletableFuture<byte[]> remote0(final AsyncHandler handler, final Transport transport, final SocketAddress addr0, final SncpAction action, final Object... params) {
-        if ("rest".equalsIgnoreCase(transport.getSubprotocol())) {
-            return remoteRest0(handler, transport, addr0, action, params);
-        }
-        return remoteSncp0(handler, transport, addr0, action, params);
-    }
-
-    //尚未实现
-    private CompletableFuture<byte[]> remoteRest0(final AsyncHandler handler, final Transport transport, final SocketAddress addr0, final SncpAction action, final Object... params) {
-        return null;
-    }
-
-    private CompletableFuture<byte[]> remoteSncp0(final AsyncHandler handler, final Transport transport, final SocketAddress addr0, final SncpAction action, final Object... params) {
         final Type[] myparamtypes = action.paramTypes;
         final Class[] myparamclass = action.paramClass;
         if (action.addressSourceParamIndex >= 0) params[action.addressSourceParamIndex] = this.clientAddress;

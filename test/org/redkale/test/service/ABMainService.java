@@ -9,14 +9,12 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousChannelGroup;
-import java.util.HashSet;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 import java.util.logging.*;
 import javax.annotation.Resource;
 import org.redkale.convert.bson.BsonConvert;
 import org.redkale.convert.json.JsonConvert;
-import org.redkale.net.*;
 import org.redkale.net.http.*;
 import org.redkale.net.sncp.*;
 import org.redkale.service.Service;
@@ -36,11 +34,18 @@ public class ABMainService implements Service {
     public static void remotemain(String[] args) throws Throwable {
         System.out.println("------------------- 远程模式调用 -----------------------------------");
         final int abport = 8888;
-        ResourceFactory factory = ResourceFactory.root();
-        factory.register(JsonConvert.root());
-        factory.register(BsonConvert.root());
+        ResourceFactory resFactory = ResourceFactory.root();
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        final SncpTransportFactory transFactory = new SncpTransportFactory(executor, newBufferPool(), newChannelGroup());
+        transFactory.addGroupInfo("g77", new InetSocketAddress("127.0.0.1", 5577));
+        transFactory.addGroupInfo("g88", new InetSocketAddress("127.0.0.1", 5588));
+        transFactory.addGroupInfo("g99", new InetSocketAddress("127.0.0.1", 5599));
+
+        resFactory.register(JsonConvert.root());
+        resFactory.register(BsonConvert.root());
+
         //------------------------ 初始化 CService ------------------------------------
-        CService cservice = Sncp.createLocalService("", null, ResourceFactory.root(), CService.class, new InetSocketAddress("127.0.0.1", 5577), "", new HashSet<>(), (AnyValue) null, null, null);
+        CService cservice = Sncp.createSimpleLocalService(CService.class, transFactory, new InetSocketAddress("127.0.0.1", 5577), "g77");
         SncpServer cserver = new SncpServer();
         cserver.getLogger().setLevel(Level.WARNING);
         cserver.addSncpServlet(cservice);
@@ -48,11 +53,10 @@ public class ABMainService implements Service {
         cserver.start();
 
         //------------------------ 初始化 BCService ------------------------------------
-        final Transport bctransport = new Transport("", "", newBufferPool(), newChannelGroup(), null, Utility.ofSet(new InetSocketAddress("127.0.0.1", 5577)));
-        BCService bcservice = Sncp.createLocalService("", null, ResourceFactory.root(), BCService.class, new InetSocketAddress("127.0.0.1", 5588), "", new HashSet<>(), (AnyValue) null, bctransport, null);
-        CService remoteCService = Sncp.createRemoteService("", null, CService.class, new InetSocketAddress("127.0.0.1", 5588), "", new HashSet<>(), (AnyValue) null, bctransport);
-        factory.inject(remoteCService);
-        factory.register("", remoteCService);
+        BCService bcservice = Sncp.createSimpleLocalService(BCService.class, transFactory, new InetSocketAddress("127.0.0.1", 5588), "g88");
+        CService remoteCService = Sncp.createSimpleRemoteService(CService.class, transFactory, new InetSocketAddress("127.0.0.1", 5588), "g77");
+        resFactory.inject(remoteCService);
+        resFactory.register("", remoteCService);
         SncpServer bcserver = new SncpServer();
         bcserver.getLogger().setLevel(Level.WARNING);
         bcserver.addSncpServlet(bcservice);
@@ -60,20 +64,19 @@ public class ABMainService implements Service {
         bcserver.start();
 
         //------------------------ 初始化 ABMainService ------------------------------------
-        final Transport abtransport = new Transport("", "", newBufferPool(), newChannelGroup(), null, Utility.ofSet(new InetSocketAddress("127.0.0.1", 5588)));
-        ABMainService service = Sncp.createLocalService("", null, ResourceFactory.root(), ABMainService.class, new InetSocketAddress("127.0.0.1", 5599), "", new HashSet<>(), (AnyValue) null, bctransport, null);
-        BCService remoteBCService = Sncp.createRemoteService("", null, BCService.class, new InetSocketAddress("127.0.0.1", 5599), "", new HashSet<>(), (AnyValue) null, abtransport);
-        factory.inject(remoteBCService);
-        factory.register("", remoteBCService);
+        ABMainService service = Sncp.createSimpleLocalService(ABMainService.class, transFactory, new InetSocketAddress("127.0.0.1", 5599), "g99");
+        BCService remoteBCService = Sncp.createSimpleRemoteService(BCService.class, transFactory, new InetSocketAddress("127.0.0.1", 5599), "g88");
+        resFactory.inject(remoteBCService);
+        resFactory.register("", remoteBCService);
 
         HttpServer server = new HttpServer();
         server.getLogger().setLevel(Level.WARNING);
 
         server.addRestServlet("", ABMainService.class, service, HttpServlet.class, "/pipes");
 
-        factory.inject(cservice);
-        factory.inject(bcservice);
-        factory.inject(service);
+        resFactory.inject(cservice);
+        resFactory.inject(bcservice);
+        resFactory.inject(service);
 
         server.init(DefaultAnyValue.create("port", abport));
         server.start();

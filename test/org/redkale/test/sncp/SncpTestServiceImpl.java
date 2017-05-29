@@ -7,11 +7,11 @@ package org.redkale.test.sncp;
 
 import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
-import java.util.HashSet;
-import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.*;
 import org.redkale.net.sncp.*;
 import org.redkale.service.*;
 import org.redkale.source.DataCallArrayAttribute;
+import static org.redkale.test.sncp.SncpTest.*;
 import org.redkale.util.*;
 
 /**
@@ -98,7 +98,11 @@ public class SncpTestServiceImpl implements SncpTestIService {
     }
 
     public static void main(String[] args) throws Exception {
-        Service service = Sncp.createLocalService("", null, ResourceFactory.root(), SncpTestServiceImpl.class, new InetSocketAddress("127.0.0.1", 7070), "", new HashSet<>(), (AnyValue) null, null, null);
+
+        final SncpTransportFactory transFactory = new SncpTransportFactory(Executors.newSingleThreadExecutor(), newBufferPool(), newChannelGroup());
+
+        transFactory.addGroupInfo("g70", new InetSocketAddress("127.0.0.1", 7070));
+        Service service = Sncp.createSimpleLocalService(SncpTestServiceImpl.class, transFactory, new InetSocketAddress("127.0.0.1", 7070), "g70");
         for (Method method : service.getClass().getDeclaredMethods()) {
             System.out.println(method);
         }
@@ -107,7 +111,7 @@ public class SncpTestServiceImpl implements SncpTestIService {
             System.out.println(method);
         }
         System.out.println("-----------------------------------");
-        service = Sncp.createSimpleRemoteService("", SncpTestServiceImpl.class, new InetSocketAddress("127.0.0.1", 7070), null);
+        service = Sncp.createSimpleRemoteService(SncpTestServiceImpl.class, transFactory, new InetSocketAddress("127.0.0.1", 7070), "g70");
         for (Method method : service.getClass().getDeclaredMethods()) {
             System.out.println(method);
         }
@@ -116,7 +120,7 @@ public class SncpTestServiceImpl implements SncpTestIService {
             System.out.println(method);
         }
         System.out.println("-----------------------------------");
-        service = Sncp.createSimpleRemoteService("", SncpTestIService.class, new InetSocketAddress("127.0.0.1", 7070), null);
+        service = Sncp.createSimpleRemoteService(SncpTestIService.class, transFactory, new InetSocketAddress("127.0.0.1", 7070), "g70");
         for (Method method : service.getClass().getDeclaredMethods()) {
             System.out.println(method);
         }

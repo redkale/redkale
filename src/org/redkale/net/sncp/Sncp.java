@@ -15,7 +15,6 @@ import static jdk.internal.org.objectweb.asm.ClassWriter.COMPUTE_FRAMES;
 import jdk.internal.org.objectweb.asm.*;
 import static jdk.internal.org.objectweb.asm.Opcodes.*;
 import jdk.internal.org.objectweb.asm.Type;
-import org.redkale.net.*;
 import org.redkale.net.sncp.SncpClient.SncpAction;
 import org.redkale.service.*;
 import org.redkale.util.*;
@@ -750,6 +749,11 @@ public abstract class Sncp {
         }
     }
 
+    public static <T extends Service> T createSimpleLocalService(final Class<T> serviceImplClass,
+        final SncpTransportFactory transportFactory, final InetSocketAddress clientSncpAddress, final String... groups) {
+        return createLocalService("", serviceImplClass, ResourceFactory.root(), transportFactory, clientSncpAddress, Utility.ofSet(groups), null);
+    }
+
     /**
      *
      * 创建本地模式Service实例
@@ -758,7 +762,7 @@ public abstract class Sncp {
      * @param name              资源名
      * @param serviceImplClass  Service类
      * @param resourceFactory   ResourceFactory
-     * @param transportFactory  TransportFactory
+     * @param transportFactory  SncpTransportFactory
      * @param clientSncpAddress 本地IP地址
      * @param groups            所有的组节点，包含自身
      * @param conf              启动配置项
@@ -770,7 +774,7 @@ public abstract class Sncp {
         final String name,
         final Class<T> serviceImplClass,
         final ResourceFactory resourceFactory,
-        final TransportFactory transportFactory,
+        final SncpTransportFactory transportFactory,
         final InetSocketAddress clientSncpAddress,
         final Set<String> groups,
         final AnyValue conf) {
@@ -823,6 +827,11 @@ public abstract class Sncp {
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
+    }
+
+    public static <T extends Service> T createSimpleRemoteService(final Class<T> serviceImplClass,
+        final SncpTransportFactory transportFactory, final InetSocketAddress clientSncpAddress, final String... groups) {
+        return createRemoteService("", serviceImplClass, transportFactory, clientSncpAddress, Utility.ofSet(groups), null);
     }
 
     /**
@@ -889,7 +898,7 @@ public abstract class Sncp {
      * @param <T>                    Service泛型
      * @param name                   资源名
      * @param serviceTypeOrImplClass Service类
-     * @param transportFactory       TransportFactory
+     * @param transportFactory       SncpTransportFactory
      * @param clientAddress          本地IP地址
      * @param groups                 所有的组节点，包含自身
      * @param conf                   启动配置项
@@ -897,10 +906,11 @@ public abstract class Sncp {
      * @return Service的远程模式实例
      */
     @SuppressWarnings("unchecked")
+
     public static <T extends Service> T createRemoteService(
         final String name,
         final Class<T> serviceTypeOrImplClass,
-        final TransportFactory transportFactory,
+        final SncpTransportFactory transportFactory,
         final InetSocketAddress clientAddress,
         final Set<String> groups,
         final AnyValue conf) {
