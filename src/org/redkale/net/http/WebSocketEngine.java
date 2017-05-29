@@ -138,12 +138,12 @@ public final class WebSocketEngine {
             CompletableFuture<Integer> future = null;
             if (single) {
                 for (WebSocket websocket : websockets.values()) {
-                    future = future == null ? websocket.send(message, last) : future.thenCombine(websocket.send(message, last), (a, b) -> a | (Integer) b);
+                    future = future == null ? websocket.sendPacket(packet) : future.thenCombine(websocket.sendPacket(packet), (a, b) -> a | (Integer) b);
                 }
             } else {
                 for (List<WebSocket> list : websockets2.values()) {
                     for (WebSocket websocket : list) {
-                        future = future == null ? websocket.send(message, last) : future.thenCombine(websocket.send(message, last), (a, b) -> a | (Integer) b);
+                        future = future == null ? websocket.sendPacket(packet) : future.thenCombine(websocket.sendPacket(packet), (a, b) -> a | (Integer) b);
                     }
                 }
             }
@@ -181,14 +181,14 @@ public final class WebSocketEngine {
                 for (Serializable userid : userids) {
                     WebSocket websocket = websockets.get(userid);
                     if (websocket == null) continue;
-                    future = future == null ? websocket.send(message, last) : future.thenCombine(websocket.send(message, last), (a, b) -> a | (Integer) b);
+                    future = future == null ? websocket.sendPacket(packet) : future.thenCombine(websocket.sendPacket(packet), (a, b) -> a | (Integer) b);
                 }
             } else {
                 for (Serializable userid : userids) {
                     List<WebSocket> list = websockets2.get(userid);
                     if (list == null) continue;
                     for (WebSocket websocket : list) {
-                        future = future == null ? websocket.send(message, last) : future.thenCombine(websocket.send(message, last), (a, b) -> a | (Integer) b);
+                        future = future == null ? websocket.sendPacket(packet) : future.thenCombine(websocket.sendPacket(packet), (a, b) -> a | (Integer) b);
                     }
                 }
             }
