@@ -792,7 +792,9 @@ public abstract class Sncp {
                         if (field.getAnnotation(RpcRemote.class) == null) continue;
                         if (!field.getType().isAssignableFrom(newClazz)) continue;
                         field.setAccessible(true);
-                        if (remoteService == null) remoteService = createRemoteService(name, serviceImplClass, transportFactory, clientSncpAddress, groups, conf);
+                        if (remoteService == null && clientSncpAddress != null) {
+                            remoteService = createRemoteService(name, serviceImplClass, transportFactory, clientSncpAddress, groups, conf);
+                        }
                         if (remoteService != null) field.set(rs, remoteService);
                     }
                 } while ((loop = loop.getSuperclass()) != Object.class);
