@@ -184,7 +184,7 @@ public abstract class WebSocket<G extends Serializable, T> {
      */
     CompletableFuture<Integer> sendPacket(WebSocketPacket packet) {
         CompletableFuture<Integer> rs = this._runner.sendMessage(packet);
-        if (_engine.finest) _engine.logger.finest("userid:" + userid() + " send websocket result is " + rs + " on " + this + " by message(" + packet + ")");
+        if (_engine.finest) _engine.logger.finest("userid:" + userid() + " send websocket message(" + packet + ")" + " on " + this);
         return rs == null ? CompletableFuture.completedFuture(RETCODE_WSOCKET_CLOSED) : rs;
     }
 
@@ -204,7 +204,7 @@ public abstract class WebSocket<G extends Serializable, T> {
             return ((CompletableFuture) message).thenCompose((json) -> _engine.node.sendMessage(json, last, userids));
         }
         CompletableFuture<Integer> rs = _engine.node.sendMessage(message, last, userids);
-        if (_engine.finest) _engine.logger.finest("userids:" + Arrays.toString(userids) + " send websocket result is " + rs + " on " + this + " by message(" + _jsonConvert.convertTo(message) + ")");
+        if (_engine.finest) _engine.logger.finest("userids:" + Arrays.toString(userids) + " send websocket message(" + _jsonConvert.convertTo(message) + ")");
         return rs;
     }
 
@@ -233,7 +233,7 @@ public abstract class WebSocket<G extends Serializable, T> {
             return ((CompletableFuture) message).thenCompose((json) -> _engine.node.broadcastMessage(json, last));
         }
         CompletableFuture<Integer> rs = _engine.node.broadcastMessage(message, last);
-        if (_engine.finest) _engine.logger.finest("broadcast send websocket result is " + rs + " on " + this + " by message(" + _jsonConvert.convertTo(message) + ")");
+        if (_engine.finest) _engine.logger.finest("broadcast send websocket message(" + _jsonConvert.convertTo(message) + ")");
         return rs;
     }
 

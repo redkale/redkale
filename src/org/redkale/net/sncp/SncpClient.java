@@ -12,8 +12,8 @@ import java.nio.*;
 import java.nio.channels.*;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.function.*;
 import java.util.logging.*;
+import javax.annotation.Resource;
 import org.redkale.convert.bson.*;
 import org.redkale.convert.json.*;
 import org.redkale.net.*;
@@ -30,111 +30,6 @@ import org.redkale.service.RpcCall;
  * @author zhangjx
  */
 public final class SncpClient {
-
-    protected static final class SncpAction {
-
-        protected final DLong actionid;
-
-        protected final Method method;
-
-        protected final Type resultTypes;  //void 必须设为 null
-
-        protected final Type[] paramTypes;
-
-        protected final Class[] paramClass;
-
-        protected final Attribute[] paramAttrs; // 为null表示无RpcCall处理，index=0固定为null, 其他为参数标记的RpcCall回调方法
-
-        protected final int handlerFuncParamIndex;
-
-        protected final int handlerAttachParamIndex;
-
-        protected final int addressTargetParamIndex;
-
-        protected final int addressSourceParamIndex;
-
-        protected final boolean boolReturnTypeFuture; // 返回结果类型是否为 CompletableFuture
-
-        protected final Creator<? extends CompletableFuture> futureCreator;
-
-        public SncpAction(final Class clazz, Method method, DLong actionid) {
-            this.actionid = actionid == null ? Sncp.hash(method) : actionid;
-            Type rt = method.getGenericReturnType();
-            if (rt instanceof TypeVariable) {
-                TypeVariable tv = (TypeVariable) rt;
-                if (tv.getBounds().length == 1) rt = tv.getBounds()[0];
-            }
-            this.resultTypes = rt == void.class ? null : rt;
-            this.boolReturnTypeFuture = CompletableFuture.class.isAssignableFrom(method.getReturnType());
-            this.futureCreator = boolReturnTypeFuture ? Creator.create((Class<? extends CompletableFuture>) method.getReturnType()) : null;
-            this.paramTypes = method.getGenericParameterTypes();
-            this.paramClass = method.getParameterTypes();
-            this.method = method;
-            Annotation[][] anns = method.getParameterAnnotations();
-            int targetAddrIndex = -1;
-            int sourceAddrIndex = -1;
-            int handlerAttachIndex = -1;
-            int handlerFuncIndex = -1;
-            boolean hasattr = false;
-            Attribute[] atts = new Attribute[paramTypes.length + 1];
-            if (anns.length > 0) {
-                Class<?>[] params = method.getParameterTypes();
-                for (int i = 0; i < params.length; i++) {
-                    if (AsyncHandler.class.isAssignableFrom(params[i])) {
-                        if (boolReturnTypeFuture) {
-                            throw new RuntimeException(method + " have both AsyncHandler and CompletableFuture");
-                        }
-                        if (handlerFuncIndex >= 0) {
-                            throw new RuntimeException(method + " have more than one AsyncHandler type parameter");
-                        }
-                        Sncp.checkAsyncModifier(params[i], method);
-                        handlerFuncIndex = i;
-                        break;
-                    }
-                }
-                for (int i = 0; i < anns.length; i++) {
-                    if (anns[i].length > 0) {
-                        for (Annotation ann : anns[i]) {
-                            if (ann.annotationType() == RpcAttachment.class) {
-                                if (handlerAttachIndex >= 0) {
-                                    throw new RuntimeException(method + " have more than one @RpcAttachment parameter");
-                                }
-                                handlerAttachIndex = i;
-                            } else if (ann.annotationType() == RpcTargetAddress.class && SocketAddress.class.isAssignableFrom(params[i])) {
-                                targetAddrIndex = i;
-                            } else if (ann.annotationType() == RpcSourceAddress.class && SocketAddress.class.isAssignableFrom(params[i])) {
-                                sourceAddrIndex = i;
-                            }
-                        }
-                        for (Annotation ann : anns[i]) {
-                            if (ann.annotationType() == RpcCall.class) {
-                                try {
-                                    atts[i + 1] = ((RpcCall) ann).value().newInstance();
-                                    hasattr = true;
-                                } catch (Exception e) {
-                                    logger.log(Level.SEVERE, RpcCall.class.getSimpleName() + ".attribute cannot a newInstance for" + method, e);
-                                }
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-            this.addressTargetParamIndex = targetAddrIndex;
-            this.addressSourceParamIndex = sourceAddrIndex;
-            this.handlerFuncParamIndex = handlerFuncIndex;
-            this.handlerAttachParamIndex = handlerAttachIndex;
-            this.paramAttrs = hasattr ? atts : null;
-            if (this.handlerFuncParamIndex >= 0 && method.getReturnType() != void.class) {
-                throw new RuntimeException(method + " have AsyncHandler type parameter but return type is not void");
-            }
-        }
-
-        @Override
-        public String toString() {
-            return "{" + actionid + "," + (method == null ? "null" : method.getName()) + "}";
-        }
-    }
 
     protected static final Logger logger = Logger.getLogger(SncpClient.class.getSimpleName());
 
@@ -160,12 +55,36 @@ public final class SncpClient {
 
     protected final SncpAction[] actions;
 
-    protected final Consumer<Runnable> executor;
+    protected final ExecutorService executor;
 
-    public <T extends Service> SncpClient(final String serviceName, final Class<T> serviceTypeOrImplClass, final T service, final Consumer<Runnable> executor,
+    @Resource
+    protected JsonConvert jsonConvert;
+
+    @Resource
+    protected BsonConvert bsonConvert;
+
+    //远程模式
+    protected Set<String> remoteGroups;
+
+    //远程模式
+    protected Transport remoteGroupTransport;
+
+    //本地模式
+    protected String sameGroup;
+
+    //本地模式
+    protected Transport sameGroupTransport;
+
+    //本地模式
+    protected Set<String> diffGroups;
+
+    //本地模式
+    protected Transport[] diffGroupTransports;
+
+    public <T extends Service> SncpClient(final String serviceName, final Class<T> serviceTypeOrImplClass, final T service, final TransportFactory factory,
         final boolean remote, final Class serviceClass, final InetSocketAddress clientAddress) {
         this.remote = remote;
-        this.executor = executor;
+        this.executor = factory.getExecutor();
         this.serviceClass = serviceClass;
         this.serviceversion = 0;
         this.clientAddress = clientAddress;
@@ -209,12 +128,80 @@ public final class SncpClient {
         return actions.length;
     }
 
+    public Set<String> getRemoteGroups() {
+        return remoteGroups;
+    }
+
+    public void setRemoteGroups(Set<String> remoteGroups) {
+        this.remoteGroups = remoteGroups;
+    }
+
+    public Transport getRemoteGroupTransport() {
+        return remoteGroupTransport;
+    }
+
+    public void setRemoteGroupTransport(Transport remoteGroupTransport) {
+        this.remoteGroupTransport = remoteGroupTransport;
+    }
+
+    public String getSameGroup() {
+        return sameGroup;
+    }
+
+    public void setSameGroup(String sameGroup) {
+        this.sameGroup = sameGroup;
+    }
+
+    public Transport getSameGroupTransport() {
+        return sameGroupTransport;
+    }
+
+    public void setSameGroupTransport(Transport sameGroupTransport) {
+        this.sameGroupTransport = sameGroupTransport;
+    }
+
+    public Set<String> getDiffGroups() {
+        return diffGroups;
+    }
+
+    public void setDiffGroups(Set<String> diffGroups) {
+        this.diffGroups = diffGroups;
+    }
+
+    public Transport[] getDiffGroupTransports() {
+        return diffGroupTransports;
+    }
+
+    public void setDiffGroupTransports(Transport[] diffGroupTransports) {
+        this.diffGroupTransports = diffGroupTransports;
+    }
+
     @Override
     public String toString() {
         String service = serviceClass.getName();
         if (remote) service = service.replace(Sncp.LOCALPREFIX, Sncp.REMOTEPREFIX);
         return this.getClass().getSimpleName() + "(service = " + service + ", serviceid = " + serviceid + ", serviceversion = " + serviceversion + ", name = '" + name
             + "', address = " + (clientAddress == null ? "" : (clientAddress.getHostString() + ":" + clientAddress.getPort()))
+            + ", actions.size = " + actions.length + ")";
+    }
+
+    public String toSimpleString() { //给Sncp产生的Service用
+        String service = serviceClass.getName();
+        if (remote) service = service.replace(Sncp.LOCALPREFIX, Sncp.REMOTEPREFIX);
+        List<InetSocketAddress> diffaddrs = new ArrayList<>();
+        if (diffGroupTransports != null && diffGroupTransports.length > 1) {
+            for (Transport t : diffGroupTransports) {
+                diffaddrs.addAll(Utility.ofList(t.getRemoteAddresses()));
+            }
+        }
+        return service + "(name = '" + name + "', serviceid = " + serviceid + ", serviceversion = " + serviceversion
+            + ", clientaddr = " + (clientAddress == null ? "" : (clientAddress.getHostString() + ":" + clientAddress.getPort()))
+            + ((sameGroup == null || sameGroup.isEmpty()) ? "" : ", sameGroup = " + sameGroup)
+            + (sameGroupTransport == null ? "" : ", sameGroupTransport = " + Arrays.toString(sameGroupTransport.getRemoteAddresses()))
+            + ((diffGroups == null || diffGroups.isEmpty()) ? "" : ", diffGroups = " + diffGroups)
+            + ((diffGroupTransports == null || diffGroupTransports.length < 1) ? "" : ", diffGroupTransports = " + diffaddrs)
+            + ((remoteGroups == null || remoteGroups.isEmpty()) ? "" : ", remoteGroups = " + remoteGroups)
+            + (remoteGroupTransport == null ? "" : ", remoteGroupTransport = " + Arrays.toString(remoteGroupTransport.getRemoteAddresses()))
             + ", actions.size = " + actions.length + ")";
     }
 
@@ -260,53 +247,53 @@ public final class SncpClient {
         return multis;
     }
 
-    public void remoteSameGroup(final BsonConvert bsonConvert, final JsonConvert jsonConvert, Transport transport, final int index, final Object... params) {
-        if (transport == null) return;
+    public void remoteSameGroup(final int index, final Object... params) {
+        if (sameGroupTransport == null) return;
         final SncpAction action = actions[index];
         if (action.handlerFuncParamIndex >= 0) params[action.handlerFuncParamIndex] = null; //不能让远程调用handler，因为之前本地方法已经调用过了
-        for (InetSocketAddress addr : transport.getRemoteAddresses()) {
-            remote0(null, bsonConvert, jsonConvert, transport, addr, action, params);
+        for (InetSocketAddress addr : sameGroupTransport.getRemoteAddresses()) {
+            remote0(null, sameGroupTransport, addr, action, params);
         }
     }
 
-    public void asyncRemoteSameGroup(final BsonConvert bsonConvert, final JsonConvert jsonConvert, Transport transport, final int index, final Object... params) {
-        if (transport == null) return;
+    public void asyncRemoteSameGroup(final int index, final Object... params) {
+        if (sameGroupTransport == null) return;
         if (executor != null) {
-            executor.accept(() -> {
-                remoteSameGroup(bsonConvert, jsonConvert, transport, index, params);
+            executor.execute(() -> {
+                remoteSameGroup(index, params);
             });
         } else {
-            remoteSameGroup(bsonConvert, jsonConvert, transport, index, params);
+            remoteSameGroup(index, params);
         }
     }
 
-    public void remoteDiffGroup(final BsonConvert bsonConvert, final JsonConvert jsonConvert, Transport[] transports, final int index, final Object... params) {
-        if (transports == null || transports.length < 1) return;
+    public void remoteDiffGroup(final int index, final Object... params) {
+        if (diffGroupTransports == null || diffGroupTransports.length < 1) return;
         final SncpAction action = actions[index];
         if (action.handlerFuncParamIndex >= 0) params[action.handlerFuncParamIndex] = null; //不能让远程调用handler，因为之前本地方法已经调用过了
-        for (Transport transport : transports) {
-            remote0(null, bsonConvert, jsonConvert, transport, null, action, params);
+        for (Transport transport : diffGroupTransports) {
+            remote0(null, transport, null, action, params);
         }
     }
 
-    public void asyncRemoteDiffGroup(final BsonConvert bsonConvert, final JsonConvert jsonConvert, Transport[] transports, final int index, final Object... params) {
-        if (transports == null || transports.length < 1) return;
+    public void asyncRemoteDiffGroup(final int index, final Object... params) {
+        if (diffGroupTransports == null || diffGroupTransports.length < 1) return;
         if (executor != null) {
-            executor.accept(() -> {
-                remoteDiffGroup(bsonConvert, jsonConvert, transports, index, params);
+            executor.execute(() -> {
+                remoteDiffGroup(index, params);
             });
         } else {
-            remoteDiffGroup(bsonConvert, jsonConvert, transports, index, params);
+            remoteDiffGroup(index, params);
         }
     }
 
     //只给远程模式调用的
-    public <T> T remote(final BsonConvert bsonConvert, final JsonConvert jsonConvert, Transport transport, final int index, final Object... params) {
+    public <T> T remote(final int index, final Object... params) {
         final SncpAction action = actions[index];
         final AsyncHandler handlerFunc = action.handlerFuncParamIndex >= 0 ? (AsyncHandler) params[action.handlerFuncParamIndex] : null;
         if (action.handlerFuncParamIndex >= 0) params[action.handlerFuncParamIndex] = null;
         final BsonReader reader = bsonConvert.pollBsonReader();
-        CompletableFuture<byte[]> future = remote0(handlerFunc, bsonConvert, jsonConvert, transport, null, action, params);
+        CompletableFuture<byte[]> future = remote0(handlerFunc, remoteGroupTransport, null, action, params);
         if (action.boolReturnTypeFuture) {
             CompletableFuture result = action.futureCreator.create();
             future.whenComplete((v, e) -> {
@@ -349,27 +336,19 @@ public final class SncpClient {
         }
     }
 
-    public <T> void remote(final BsonConvert bsonConvert, final JsonConvert jsonConvert, Transport[] transports, final int index, final Object... params) {
-        if (transports == null || transports.length < 1) return;
-        remote(bsonConvert, jsonConvert, transports[0], index, params);
-        for (int i = 1; i < transports.length; i++) {
-            remote0(null, bsonConvert, jsonConvert, transports[i], null, actions[index], params);
-        }
-    }
-
-    private CompletableFuture<byte[]> remote0(final AsyncHandler handler, final BsonConvert bsonConvert, final JsonConvert jsonConvert, final Transport transport, final SocketAddress addr0, final SncpAction action, final Object... params) {
+    private CompletableFuture<byte[]> remote0(final AsyncHandler handler, final Transport transport, final SocketAddress addr0, final SncpAction action, final Object... params) {
         if ("rest".equalsIgnoreCase(transport.getSubprotocol())) {
-            return remoteRest0(handler, jsonConvert, transport, addr0, action, params);
+            return remoteRest0(handler, transport, addr0, action, params);
         }
-        return remoteSncp0(handler, bsonConvert, transport, addr0, action, params);
+        return remoteSncp0(handler, transport, addr0, action, params);
     }
 
     //尚未实现
-    private CompletableFuture<byte[]> remoteRest0(final AsyncHandler handler, final JsonConvert jsonConvert, final Transport transport, final SocketAddress addr0, final SncpAction action, final Object... params) {
+    private CompletableFuture<byte[]> remoteRest0(final AsyncHandler handler, final Transport transport, final SocketAddress addr0, final SncpAction action, final Object... params) {
         return null;
     }
 
-    private CompletableFuture<byte[]> remoteSncp0(final AsyncHandler handler, final BsonConvert bsonConvert, final Transport transport, final SocketAddress addr0, final SncpAction action, final Object... params) {
+    private CompletableFuture<byte[]> remoteSncp0(final AsyncHandler handler, final Transport transport, final SocketAddress addr0, final SncpAction action, final Object... params) {
         final Type[] myparamtypes = action.paramTypes;
         final Class[] myparamclass = action.paramClass;
         if (action.addressSourceParamIndex >= 0) params[action.addressSourceParamIndex] = this.clientAddress;
@@ -555,4 +534,108 @@ public final class SncpClient {
         buffer.position(currentpos);
     }
 
+    protected static final class SncpAction {
+
+        protected final DLong actionid;
+
+        protected final Method method;
+
+        protected final Type resultTypes;  //void 必须设为 null
+
+        protected final Type[] paramTypes;
+
+        protected final Class[] paramClass;
+
+        protected final Attribute[] paramAttrs; // 为null表示无RpcCall处理，index=0固定为null, 其他为参数标记的RpcCall回调方法
+
+        protected final int handlerFuncParamIndex;
+
+        protected final int handlerAttachParamIndex;
+
+        protected final int addressTargetParamIndex;
+
+        protected final int addressSourceParamIndex;
+
+        protected final boolean boolReturnTypeFuture; // 返回结果类型是否为 CompletableFuture
+
+        protected final Creator<? extends CompletableFuture> futureCreator;
+
+        public SncpAction(final Class clazz, Method method, DLong actionid) {
+            this.actionid = actionid == null ? Sncp.hash(method) : actionid;
+            Type rt = method.getGenericReturnType();
+            if (rt instanceof TypeVariable) {
+                TypeVariable tv = (TypeVariable) rt;
+                if (tv.getBounds().length == 1) rt = tv.getBounds()[0];
+            }
+            this.resultTypes = rt == void.class ? null : rt;
+            this.boolReturnTypeFuture = CompletableFuture.class.isAssignableFrom(method.getReturnType());
+            this.futureCreator = boolReturnTypeFuture ? Creator.create((Class<? extends CompletableFuture>) method.getReturnType()) : null;
+            this.paramTypes = method.getGenericParameterTypes();
+            this.paramClass = method.getParameterTypes();
+            this.method = method;
+            Annotation[][] anns = method.getParameterAnnotations();
+            int targetAddrIndex = -1;
+            int sourceAddrIndex = -1;
+            int handlerAttachIndex = -1;
+            int handlerFuncIndex = -1;
+            boolean hasattr = false;
+            Attribute[] atts = new Attribute[paramTypes.length + 1];
+            if (anns.length > 0) {
+                Class<?>[] params = method.getParameterTypes();
+                for (int i = 0; i < params.length; i++) {
+                    if (AsyncHandler.class.isAssignableFrom(params[i])) {
+                        if (boolReturnTypeFuture) {
+                            throw new RuntimeException(method + " have both AsyncHandler and CompletableFuture");
+                        }
+                        if (handlerFuncIndex >= 0) {
+                            throw new RuntimeException(method + " have more than one AsyncHandler type parameter");
+                        }
+                        Sncp.checkAsyncModifier(params[i], method);
+                        handlerFuncIndex = i;
+                        break;
+                    }
+                }
+                for (int i = 0; i < anns.length; i++) {
+                    if (anns[i].length > 0) {
+                        for (Annotation ann : anns[i]) {
+                            if (ann.annotationType() == RpcAttachment.class) {
+                                if (handlerAttachIndex >= 0) {
+                                    throw new RuntimeException(method + " have more than one @RpcAttachment parameter");
+                                }
+                                handlerAttachIndex = i;
+                            } else if (ann.annotationType() == RpcTargetAddress.class && SocketAddress.class.isAssignableFrom(params[i])) {
+                                targetAddrIndex = i;
+                            } else if (ann.annotationType() == RpcSourceAddress.class && SocketAddress.class.isAssignableFrom(params[i])) {
+                                sourceAddrIndex = i;
+                            }
+                        }
+                        for (Annotation ann : anns[i]) {
+                            if (ann.annotationType() == RpcCall.class) {
+                                try {
+                                    atts[i + 1] = ((RpcCall) ann).value().newInstance();
+                                    hasattr = true;
+                                } catch (Exception e) {
+                                    logger.log(Level.SEVERE, RpcCall.class.getSimpleName() + ".attribute cannot a newInstance for" + method, e);
+                                }
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            this.addressTargetParamIndex = targetAddrIndex;
+            this.addressSourceParamIndex = sourceAddrIndex;
+            this.handlerFuncParamIndex = handlerFuncIndex;
+            this.handlerAttachParamIndex = handlerAttachIndex;
+            this.paramAttrs = hasattr ? atts : null;
+            if (this.handlerFuncParamIndex >= 0 && method.getReturnType() != void.class) {
+                throw new RuntimeException(method + " have AsyncHandler type parameter but return type is not void");
+            }
+        }
+
+        @Override
+        public String toString() {
+            return "{" + actionid + "," + (method == null ? "null" : method.getName()) + "}";
+        }
+    }
 }

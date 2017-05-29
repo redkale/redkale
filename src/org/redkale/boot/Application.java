@@ -5,6 +5,7 @@
  */
 package org.redkale.boot;
 
+import org.redkale.net.TransportGroupInfo;
 import java.io.*;
 import java.lang.reflect.*;
 import java.net.*;
@@ -89,12 +90,6 @@ public final class Application {
      */
     public static final String RESNAME_SERVER_ROOT = Server.RESNAME_SERVER_ROOT;
 
-    //每个地址对应的Group名
-    final Map<InetSocketAddress, String> globalNodes = new HashMap<>();
-
-    //协议地址的Group集合
-    final Map<String, GroupInfo> globalGroups = new HashMap<>();
-
     //本地IP地址
     final InetAddress localAddress;
 
@@ -107,14 +102,8 @@ public final class Application {
     //NodeServer 资源
     final List<NodeServer> servers = new CopyOnWriteArrayList<>();
 
-    //传输端的ByteBuffer对象池
-    final ObjectPool<ByteBuffer> transportBufferPool;
-
-    //传输端的线程池
-    final ExecutorService transportExecutor;
-
-    //传输端的ChannelGroup
-    final AsynchronousChannelGroup transportChannelGroup;
+    //传输端的TransportFactory
+    final TransportFactory transportFactory;
 
     //全局根ResourceFactory
     final ResourceFactory resourceFactory = ResourceFactory.root();
@@ -271,18 +260,21 @@ public final class Application {
                 logger.log(Level.INFO, Transport.class.getSimpleName() + " configure bufferCapacity = " + bufferCapacity + "; bufferPoolSize = " + bufferPoolSize + "; threads = " + threads + ";");
             }
         }
-        this.transportBufferPool = transportPool;
-        this.transportExecutor = transportExec;
-        this.transportChannelGroup = transportGroup;
+        this.transportFactory = new TransportFactory(transportExec, transportPool, transportGroup);
     }
 
     public ResourceFactory getResourceFactory() {
         return resourceFactory;
     }
 
+    public TransportFactory getTransportFactory() {
+        return transportFactory;
+    }
+    
 //    public WatchFactory getWatchFactory() {
 //        return watchFactory;
 //    }
+
     public List<NodeServer> getNodeServers() {
         return new ArrayList<>(servers);
     }
@@ -421,25 +413,18 @@ public final class Application {
         final AnyValue resources = config.getAnyValue("resources");
         if (resources != null) {
             //------------------------------------------------------------------------
-
             for (AnyValue conf : resources.getAnyValues("group")) {
                 final String group = conf.getValue("name", "");
                 final String protocol = conf.getValue("protocol", Transport.DEFAULT_PROTOCOL).toUpperCase();
                 if (!"TCP".equalsIgnoreCase(protocol) && !"UDP".equalsIgnoreCase(protocol)) {
                     throw new RuntimeException("Not supported Transport Protocol " + conf.getValue("protocol"));
                 }
-                GroupInfo ginfo = globalGroups.get(group);
-                if (ginfo == null) {
-                    ginfo = new GroupInfo(group, protocol, conf.getValue("subprotocol", ""), new LinkedHashSet<>());
-                    globalGroups.put(group, ginfo);
-                }
+                TransportGroupInfo ginfo = new TransportGroupInfo(group, protocol, conf.getValue("subprotocol", ""), new LinkedHashSet<>());
                 for (AnyValue node : conf.getAnyValues("node")) {
                     final InetSocketAddress addr = new InetSocketAddress(node.getValue("addr"), node.getIntValue("port"));
-                    ginfo.addrs.add(addr);
-                    String oldgroup = globalNodes.get(addr);
-                    if (oldgroup != null) throw new RuntimeException(addr + " had one more group " + (globalNodes.get(addr)));
-                    globalNodes.put(addr, group);
+                    ginfo.putAddress(addr);
                 }
+                transportFactory.addGroupInfo(ginfo);
             }
         }
         //------------------------------------------------------------------------
@@ -696,17 +681,6 @@ public final class Application {
         System.exit(0);
     }
 
-    Set<String> findSncpGroups(Transport sameGroupTransport, Collection<Transport> diffGroupTransports) {
-        Set<String> gs = new HashSet<>();
-        if (sameGroupTransport != null) gs.add(sameGroupTransport.getName());
-        if (diffGroupTransports != null) {
-            for (Transport t : diffGroupTransports) {
-                gs.add(t.getName());
-            }
-        }
-        return gs;
-    }
-
     NodeSncpServer findNodeSncpServer(final InetSocketAddress sncpAddr) {
         for (NodeServer node : servers) {
             if (node.isSNCP() && sncpAddr.equals(node.getSncpAddress())) {
@@ -714,11 +688,6 @@ public final class Application {
             }
         }
         return null;
-    }
-
-    GroupInfo findGroupInfo(String group) {
-        if (group == null) return null;
-        return globalGroups.get(group);
     }
 
     private void shutdown() throws Exception {
@@ -748,13 +717,7 @@ public final class Application {
                 logger.log(Level.FINER, source.getClass() + " close CacheSource erroneous", e);
             }
         }
-        if (this.transportChannelGroup != null) {
-            try {
-                this.transportChannelGroup.shutdownNow();
-            } catch (Exception e) {
-                logger.log(Level.FINER, "close transportChannelGroup erroneous", e);
-            }
-        }
+        this.transportFactory.shutdownNow();
     }
 
     private static AnyValue load(final InputStream in0) {

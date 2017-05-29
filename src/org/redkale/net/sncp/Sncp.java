@@ -10,15 +10,12 @@ import java.lang.reflect.*;
 import java.net.InetSocketAddress;
 import java.security.*;
 import java.util.*;
-import java.util.function.Consumer;
 import javax.annotation.Resource;
 import static jdk.internal.org.objectweb.asm.ClassWriter.COMPUTE_FRAMES;
 import jdk.internal.org.objectweb.asm.*;
 import static jdk.internal.org.objectweb.asm.Opcodes.*;
 import jdk.internal.org.objectweb.asm.Type;
-import org.redkale.convert.bson.BsonConvert;
-import org.redkale.convert.json.JsonConvert;
-import org.redkale.net.Transport;
+import org.redkale.net.*;
 import org.redkale.net.sncp.SncpClient.SncpAction;
 import org.redkale.service.*;
 import org.redkale.util.*;
@@ -99,42 +96,14 @@ public abstract class Sncp {
     }
 
     public static Class getServiceType(Service service) {
-        if (service == null) return null;
-        try {
-            Field ts = service.getClass().getDeclaredField(FIELDPREFIX + "_service_type");
-            ts.setAccessible(true);
-            return (Class) ts.get(service);
-        } catch (Exception e) {
-            throw new RuntimeException(service + " not found " + FIELDPREFIX + "_service_type");
-        }
+        ResourceType rt = service.getClass().getAnnotation(ResourceType.class);
+        return rt == null ? service.getClass() : rt.value();
     }
 
     public static Class getResourceType(Service service) {
         if (service == null) return null;
         ResourceType type = service.getClass().getAnnotation(ResourceType.class);
         return type == null ? getServiceType(service) : type.value();
-    }
-
-    public static String getSncpGroup(Service service) {
-        if (service == null) return null;
-        try {
-            Field ts = service.getClass().getDeclaredField(FIELDPREFIX + "_sncpGroup");
-            ts.setAccessible(true);
-            return (String) ts.get(service);
-        } catch (Exception e) {
-            throw new RuntimeException(service + " not found " + FIELDPREFIX + "_sncpGroup");
-        }
-    }
-
-    public static Set<String> getGroups(Service service) {
-        if (service == null) return null;
-        try {
-            Field ts = service.getClass().getDeclaredField(FIELDPREFIX + "_groups");
-            ts.setAccessible(true);
-            return (Set) ts.get(service);
-        } catch (Exception e) {
-            throw new RuntimeException(service + " not found " + FIELDPREFIX + "_groups");
-        }
     }
 
     public static AnyValue getConf(Service service) {
@@ -156,28 +125,6 @@ public abstract class Sncp {
             return (SncpClient) ts.get(service);
         } catch (Exception e) {
             throw new RuntimeException(service + " not found " + FIELDPREFIX + "_client");
-        }
-    }
-
-    public static Transport getSameGroupTransport(Service service) {
-        if (service == null) return null;
-        try {
-            Field ts = service.getClass().getDeclaredField(FIELDPREFIX + "_sameGroupTransport");
-            ts.setAccessible(true);
-            return (Transport) ts.get(service);
-        } catch (Exception e) {
-            throw new RuntimeException(service + " not found " + FIELDPREFIX + "_sameGroupTransport");
-        }
-    }
-
-    public static Transport[] getDiffGroupTransports(Service service) {
-        if (service == null) return null;
-        try {
-            Field ts = service.getClass().getDeclaredField(FIELDPREFIX + "_diffGroupTransports");
-            ts.setAccessible(true);
-            return (Transport[]) ts.get(service);
-        } catch (Exception e) {
-            throw new RuntimeException(service + " not found " + FIELDPREFIX + "_diffGroupTransports");
         }
     }
 
@@ -339,13 +286,8 @@ public abstract class Sncp {
         final String supDynName = serviceImplClass.getName().replace('.', '/');
         final String clientName = SncpClient.class.getName().replace('.', '/');
         final String clientDesc = Type.getDescriptor(SncpClient.class);
-        final String bsonConvertDesc = Type.getDescriptor(BsonConvert.class);
-        final String jsonConvertDesc = Type.getDescriptor(JsonConvert.class);
-        final String stringDesc = Type.getDescriptor(String.class);
         final String anyValueDesc = Type.getDescriptor(AnyValue.class);
         final String sncpDynDesc = Type.getDescriptor(SncpDyn.class);
-        final String transportDesc = Type.getDescriptor(Transport.class);
-        final String transportsDesc = Type.getDescriptor(Transport[].class);
         ClassLoader loader = Sncp.class.getClassLoader();
         String newDynName = supDynName.substring(0, supDynName.lastIndexOf('/') + 1) + LOCALPREFIX + serviceImplClass.getSimpleName();
         if (!name.isEmpty()) {
@@ -390,57 +332,12 @@ public abstract class Sncp {
             av0.visitEnd();
         }
         {
-            fv = cw.visitField(ACC_PRIVATE + ACC_FINAL + ACC_STATIC, FIELDPREFIX + "_service_type", "Ljava/lang/Class;", null, null);
-            fv.visitEnd();
-        }
-        {
-            fv = cw.visitField(ACC_PRIVATE, FIELDPREFIX + "_bsonConvert", bsonConvertDesc, null, null);
-            av0 = fv.visitAnnotation("Ljavax/annotation/Resource;", true);
-            av0.visitEnd();
-            fv.visitEnd();
-        }
-        {
-            fv = cw.visitField(ACC_PRIVATE, FIELDPREFIX + "_jsonConvert", jsonConvertDesc, null, null);
-            av0 = fv.visitAnnotation("Ljavax/annotation/Resource;", true);
-            av0.visitEnd();
-            fv.visitEnd();
-        }
-        {
             fv = cw.visitField(ACC_PRIVATE, FIELDPREFIX + "_conf", anyValueDesc, null, null);
-            fv.visitEnd();
-        }
-        {
-            fv = cw.visitField(ACC_PRIVATE, FIELDPREFIX + "_sncpGroup", stringDesc, null, null);
-            fv.visitEnd();
-        }
-        {
-            fv = cw.visitField(ACC_PRIVATE, FIELDPREFIX + "_groups", "Ljava/util/Set;", "Ljava/util/Set<Ljava/lang/String;>;", null);
-            fv.visitEnd();
-        }
-        {
-            fv = cw.visitField(ACC_PRIVATE, FIELDPREFIX + "_sameGroupTransport", transportDesc, null, null);
-            fv.visitEnd();
-        }
-        {
-            fv = cw.visitField(ACC_PRIVATE, FIELDPREFIX + "_diffGroupTransports", transportsDesc, null, null);
             fv.visitEnd();
         }
         {
             fv = cw.visitField(ACC_PRIVATE, FIELDPREFIX + "_client", clientDesc, null, null);
             fv.visitEnd();
-        }
-
-        {
-            fv = cw.visitField(ACC_PRIVATE, FIELDPREFIX + "_selfstring", "Ljava/lang/String;", null, null);
-            fv.visitEnd();
-        }
-        {//静态构造函数
-            mv = new AsmMethodVisitor(cw.visitMethod(ACC_STATIC, "<clinit>", "()V", null, null));
-            mv.visitLdcInsn(Type.getType(Type.getDescriptor(serviceImplClass)));
-            mv.visitFieldInsn(PUTSTATIC, newDynName, FIELDPREFIX + "_service_type", "Ljava/lang/Class;");
-            mv.visitInsn(RETURN);
-            mv.visitMaxs(1, 0);
-            mv.visitEnd();
         }
         { //构造函数
             mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null));
@@ -454,16 +351,18 @@ public abstract class Sncp {
         { // toString()
             mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC, "toString", "()Ljava/lang/String;", null, null));
             mv.visitVarInsn(ALOAD, 0);
-            mv.visitFieldInsn(GETFIELD, newDynName, FIELDPREFIX + "_selfstring", "Ljava/lang/String;");
+            mv.visitFieldInsn(GETFIELD, newDynName, FIELDPREFIX + "_client", clientDesc);
             Label l1 = new Label();
             mv.visitJumpInsn(IFNONNULL, l1);
             mv.visitVarInsn(ALOAD, 0);
-            mv.visitMethodInsn(INVOKESPECIAL, "java/lang/Object", "toString", "()Ljava/lang/String;", false);
+            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Object", "getClass", "()Ljava/lang/Class;", false);
+            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Class", "getName", "()Ljava/lang/String;", false);
             Label l2 = new Label();
             mv.visitJumpInsn(GOTO, l2);
             mv.visitLabel(l1);
             mv.visitVarInsn(ALOAD, 0);
-            mv.visitFieldInsn(GETFIELD, newDynName, FIELDPREFIX + "_selfstring", "Ljava/lang/String;");
+            mv.visitFieldInsn(GETFIELD, newDynName, FIELDPREFIX + "_client", clientDesc);
+            mv.visitMethodInsn(INVOKEVIRTUAL, clientName, "toSimpleString", "()Ljava/lang/String;", false);
             mv.visitLabel(l2);
             mv.visitInsn(ARETURN);
             mv.visitMaxs(1, 1);
@@ -639,14 +538,7 @@ public abstract class Sncp {
 
                 mv.visitVarInsn(ALOAD, 0);//调用 _client
                 mv.visitFieldInsn(GETFIELD, newDynName, FIELDPREFIX + "_client", clientDesc);
-                mv.visitVarInsn(ALOAD, 0);  //传递 _bsonConvert
-                mv.visitFieldInsn(GETFIELD, newDynName, FIELDPREFIX + "_bsonConvert", bsonConvertDesc);
-                mv.visitVarInsn(ALOAD, 0);  //传递 _jsonConvert
-                mv.visitFieldInsn(GETFIELD, newDynName, FIELDPREFIX + "_jsonConvert", jsonConvertDesc);
-                mv.visitVarInsn(ALOAD, 0);  //传递 _sameGroupTransport
-                mv.visitFieldInsn(GETFIELD, newDynName, FIELDPREFIX + "_sameGroupTransport", transportDesc);
-
-                final int preparams = 3; //调用selfrunnable之前的参数个数;  _client/_bsonConvert/_jsonConvert/_sameGroupTransport
+                final int preparams = 3; //调用selfrunnable之前的参数个数;  _client
 
                 if (index <= 5) {  //第几个 SncpAction 
                     mv.visitInsn(ICONST_0 + index);
@@ -706,7 +598,7 @@ public abstract class Sncp {
                     }
                     mv.visitInsn(AASTORE);
                 }
-                mv.visitMethodInsn(INVOKEVIRTUAL, clientName, mrun.async() ? "asyncRemoteSameGroup" : "remoteSameGroup", "(" + bsonConvertDesc + jsonConvertDesc + transportDesc + "I[Ljava/lang/Object;)V", false);
+                mv.visitMethodInsn(INVOKEVIRTUAL, clientName, mrun.async() ? "asyncRemoteSameGroup" : "remoteSameGroup", "(I[Ljava/lang/Object;)V", false);
                 mv.visitLabel(sameLabel);
                 //---------------------------- 调用diffrun ---------------------------------
                 mv.visitVarInsn(ILOAD, 3); //读取 diffrunnable
@@ -715,12 +607,6 @@ public abstract class Sncp {
 
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitFieldInsn(GETFIELD, newDynName, FIELDPREFIX + "_client", clientDesc);
-                mv.visitVarInsn(ALOAD, 0);
-                mv.visitFieldInsn(GETFIELD, newDynName, FIELDPREFIX + "_bsonConvert", bsonConvertDesc);
-                mv.visitVarInsn(ALOAD, 0);
-                mv.visitFieldInsn(GETFIELD, newDynName, FIELDPREFIX + "_jsonConvert", jsonConvertDesc);
-                mv.visitVarInsn(ALOAD, 0);
-                mv.visitFieldInsn(GETFIELD, newDynName, FIELDPREFIX + "_diffGroupTransports", transportsDesc);
 
                 if (index <= 5) {  //第几个 SncpAction 
                     mv.visitInsn(ICONST_0 + index);
@@ -780,7 +666,7 @@ public abstract class Sncp {
                     }
                     mv.visitInsn(AASTORE);
                 }
-                mv.visitMethodInsn(INVOKEVIRTUAL, clientName, mrun.async() ? "asyncRemoteDiffGroup" : "remoteDiffGroup", "(" + bsonConvertDesc + jsonConvertDesc + transportsDesc + "I[Ljava/lang/Object;)V", false);
+                mv.visitMethodInsn(INVOKEVIRTUAL, clientName, mrun.async() ? "asyncRemoteDiffGroup" : "remoteDiffGroup", "(I[Ljava/lang/Object;)V", false);
                 mv.visitLabel(diffLabel);
 
                 if (returnType == void.class) {
@@ -864,46 +750,35 @@ public abstract class Sncp {
         }
     }
 
-    public static <T extends Service> T createSimpleLocalService(final String name, final Class<T> serviceImplClass, final InetSocketAddress clientSncpAddress, final Transport sameGroupTransport) {
-        return createLocalService(name, null, ResourceFactory.root(), serviceImplClass, clientSncpAddress, null, new HashSet<>(), null, sameGroupTransport, null);
-    }
-
     /**
      *
      * 创建本地模式Service实例
      *
-     * @param <T>                 Service泛型
-     * @param name                资源名
-     * @param executor            线程池
-     * @param resourceFactory     资源容器
-     * @param serviceImplClass    Service类
-     * @param clientSncpAddress   本地IP地址
-     * @param sncpGroup           自身的组节点名 可能为null
-     * @param groups              所有的组节点，包含自身
-     * @param conf                启动配置项
-     * @param sameGroupTransport  同组的通信组件
-     * @param diffGroupTransports 异组的通信组件列表
+     * @param <T>               Service泛型
+     * @param name              资源名
+     * @param serviceImplClass  Service类
+     * @param resourceFactory   ResourceFactory
+     * @param transportFactory  TransportFactory
+     * @param clientSncpAddress 本地IP地址
+     * @param groups            所有的组节点，包含自身
+     * @param conf              启动配置项
      *
      * @return Service的本地模式实例
      */
     @SuppressWarnings("unchecked")
     public static <T extends Service> T createLocalService(
         final String name,
-        final Consumer<Runnable> executor,
-        final ResourceFactory resourceFactory,
         final Class<T> serviceImplClass,
+        final ResourceFactory resourceFactory,
+        final TransportFactory transportFactory,
         final InetSocketAddress clientSncpAddress,
-        final String sncpGroup,
         final Set<String> groups,
-        final AnyValue conf,
-        final Transport sameGroupTransport,
-        final Collection<Transport> diffGroupTransports) {
+        final AnyValue conf) {
         try {
             final Class newClazz = createLocalServiceClass(name, serviceImplClass);
             T rs = (T) newClazz.newInstance();
             //--------------------------------------            
             Service remoteService = null;
-            Transport remoteTransport = null;
             {
                 Class loop = newClazz;
                 do {
@@ -913,26 +788,7 @@ public abstract class Sncp {
                         if (field.getAnnotation(RpcRemote.class) == null) continue;
                         if (!field.getType().isAssignableFrom(newClazz)) continue;
                         field.setAccessible(true);
-                        if (remoteTransport == null) {
-                            List<Transport> list = new ArrayList<>();
-                            if (sameGroupTransport != null) list.add(sameGroupTransport);
-                            if (diffGroupTransports != null) list.addAll(diffGroupTransports);
-                            if (!list.isEmpty()) {
-                                Transport tmp = new Transport(list);
-                                synchronized (resourceFactory) {
-                                    Transport old = resourceFactory.find(tmp.getName(), Transport.class);
-                                    if (old != null) {
-                                        remoteTransport = old;
-                                    } else {
-                                        remoteTransport = tmp;
-                                        resourceFactory.register(tmp.getName(), tmp);
-                                    }
-                                }
-                            }
-                        }
-                        if (remoteService == null && remoteTransport != null) {
-                            remoteService = createRemoteService(name, executor, serviceImplClass, clientSncpAddress, sncpGroup, groups, conf, remoteTransport);
-                        }
+                        if (remoteService == null) remoteService = createRemoteService(name, serviceImplClass, transportFactory, clientSncpAddress, groups, conf);
                         if (remoteService != null) field.set(rs, remoteService);
                     }
                 } while ((loop = loop.getSuperclass()) != Object.class);
@@ -942,68 +798,24 @@ public abstract class Sncp {
                 try {
                     Field e = newClazz.getDeclaredField(FIELDPREFIX + "_client");
                     e.setAccessible(true);
-                    client = new SncpClient(name, serviceImplClass, rs, executor, false, newClazz, clientSncpAddress);
+                    client = new SncpClient(name, serviceImplClass, rs, transportFactory, false, newClazz, clientSncpAddress);
+                    Set<String> diffGroups = groups == null ? new HashSet<>() : new HashSet<>(groups);
+                    String sameGroup = transportFactory.findGroupName(clientSncpAddress);
+                    if (sameGroup != null) diffGroups.remove(sameGroup);
+                    client.setSameGroup(sameGroup);
+                    client.setDiffGroups(diffGroups);
+                    client.setSameGroupTransport(transportFactory.loadSameGroupTransport(clientSncpAddress));
+                    client.setDiffGroupTransports(transportFactory.loadDiffGroupTransports(clientSncpAddress, diffGroups));
                     e.set(rs, client);
                 } catch (NoSuchFieldException ne) {
+                    ne.printStackTrace();
                 }
-            }
-            {
-                StringBuilder sb = new StringBuilder();
-                sb.append(newClazz.getName()).append("{name = '").append(name).append("'");
-                if (client != null) {
-                    sb.append(", serviceid = ").append(client.getServiceid());
-                    sb.append(", serviceversion = ").append(client.getServiceversion());
-                    sb.append(", action.size = ").append(client.getActionCount());
-//                    List<String> groups = new ArrayList<>();
-//                    if (sameGroupTransport != null) groups.add(sameGroupTransport.getName());
-//                    if (diffGroupTransports != null) {
-//                        for (Transport t : diffGroupTransports) {
-//                            groups.add(t.getName());
-//                        }
-//                    }
-                    sb.append(", address = ").append(clientSncpAddress).append(", groups = ").append(groups);
-                    sb.append(", sameaddrs = ").append(sameGroupTransport == null ? null : Arrays.asList(sameGroupTransport.getRemoteAddresses()));
-
-                    List<InetSocketAddress> addrs = new ArrayList<>();
-                    if (diffGroupTransports != null) {
-                        for (Transport t : diffGroupTransports) {
-                            addrs.addAll(Arrays.asList(t.getRemoteAddresses()));
-                        }
-                    }
-                    sb.append(", diffaddrs = ").append(addrs);
-                } else {
-                    sb.append(", ").append(RpcMultiRun.class.getSimpleName().toLowerCase()).append(" = false");
-                }
-                sb.append("}");
-                Field s = newClazz.getDeclaredField(FIELDPREFIX + "_selfstring");
-                s.setAccessible(true);
-                s.set(rs, sb.toString());
             }
             if (client == null) return rs;
-            {
-                Field c = newClazz.getDeclaredField(FIELDPREFIX + "_sncpGroup");
-                c.setAccessible(true);
-                c.set(rs, sncpGroup);
-            }
-            {
-                Field c = newClazz.getDeclaredField(FIELDPREFIX + "_groups");
-                c.setAccessible(true);
-                c.set(rs, groups);
-            }
             {
                 Field c = newClazz.getDeclaredField(FIELDPREFIX + "_conf");
                 c.setAccessible(true);
                 c.set(rs, conf);
-            }
-            {
-                Field c = newClazz.getDeclaredField(FIELDPREFIX + "_sameGroupTransport");
-                c.setAccessible(true);
-                c.set(rs, sameGroupTransport);
-            }
-            if (diffGroupTransports != null) {
-                Field t = newClazz.getDeclaredField(FIELDPREFIX + "_diffGroupTransports");
-                t.setAccessible(true);
-                t.set(rs, diffGroupTransports.toArray(new Transport[diffGroupTransports.size()]));
             }
             return rs;
         } catch (RuntimeException rex) {
@@ -1011,11 +823,6 @@ public abstract class Sncp {
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
-
-    }
-
-    public static <T extends Service> T createSimpleRemoteService(final String name, final Class<T> serviceTypeOrImplClass, final InetSocketAddress clientAddress, final Transport transport) {
-        return createRemoteService(name, null, serviceTypeOrImplClass, clientAddress, (String) null, new HashSet<>(), (AnyValue) null, transport);
     }
 
     /**
@@ -1081,26 +888,22 @@ public abstract class Sncp {
      *
      * @param <T>                    Service泛型
      * @param name                   资源名
-     * @param executor               线程池
      * @param serviceTypeOrImplClass Service类
+     * @param transportFactory       TransportFactory
      * @param clientAddress          本地IP地址
-     * @param sncpGroup              自身的组节点名 可能为null
      * @param groups                 所有的组节点，包含自身
      * @param conf                   启动配置项
-     * @param transport              通信组件
      *
      * @return Service的远程模式实例
      */
     @SuppressWarnings("unchecked")
     public static <T extends Service> T createRemoteService(
         final String name,
-        final Consumer<Runnable> executor,
         final Class<T> serviceTypeOrImplClass,
+        final TransportFactory transportFactory,
         final InetSocketAddress clientAddress,
-        final String sncpGroup,
         final Set<String> groups,
-        final AnyValue conf,
-        final Transport transport) {
+        final AnyValue conf) {
         if (serviceTypeOrImplClass == null) return null;
         if (!Service.class.isAssignableFrom(serviceTypeOrImplClass)) return null;
         int mod = serviceTypeOrImplClass.getModifiers();
@@ -1110,36 +913,18 @@ public abstract class Sncp {
         final String clientName = SncpClient.class.getName().replace('.', '/');
         final String clientDesc = Type.getDescriptor(SncpClient.class);
         final String sncpDynDesc = Type.getDescriptor(SncpDyn.class);
-        final String bsonConvertDesc = Type.getDescriptor(BsonConvert.class);
-        final String jsonConvertDesc = Type.getDescriptor(JsonConvert.class);
-        final String transportDesc = Type.getDescriptor(Transport.class);
-        final String stringDesc = Type.getDescriptor(String.class);
         final String anyValueDesc = Type.getDescriptor(AnyValue.class);
         ClassLoader loader = Sncp.class.getClassLoader();
         String newDynName = supDynName.substring(0, supDynName.lastIndexOf('/') + 1) + REMOTEPREFIX + serviceTypeOrImplClass.getSimpleName();
         try {
             Class newClazz = Class.forName(newDynName.replace('/', '.'));
             T rs = (T) newClazz.newInstance();
-            SncpClient client = new SncpClient(name, serviceTypeOrImplClass, rs, executor, true, realed ? createLocalServiceClass(name, serviceTypeOrImplClass) : serviceTypeOrImplClass, clientAddress);
+            SncpClient client = new SncpClient(name, serviceTypeOrImplClass, rs, transportFactory, true, realed ? createLocalServiceClass(name, serviceTypeOrImplClass) : serviceTypeOrImplClass, clientAddress);
+            client.setRemoteGroups(groups);
+            client.setRemoteGroupTransport(transportFactory.loadRemoteTransport(clientAddress, groups));
             Field c = newClazz.getDeclaredField(FIELDPREFIX + "_client");
             c.setAccessible(true);
             c.set(rs, client);
-            Field t = newClazz.getDeclaredField(FIELDPREFIX + "_transport");
-            t.setAccessible(true);
-            t.set(rs, transport);
-            {
-                StringBuilder sb = new StringBuilder();
-                sb.append(newClazz.getName()).append("{name = '").append(name);
-                sb.append("', serviceid = '").append(client.getServiceid());
-                sb.append("', serviceversion = ").append(client.getServiceversion());
-                sb.append(", action.size = ").append(client.getActionCount());
-                sb.append(", address = ").append(clientAddress).append(", groups = ").append(transport == null ? null : transport.getName());
-                sb.append(", remoteaddrs = ").append(transport == null ? null : Arrays.asList(transport.getRemoteAddresses()));
-                sb.append("}");
-                Field s = newClazz.getDeclaredField(FIELDPREFIX + "_selfstring");
-                s.setAccessible(true);
-                s.set(rs, sb.toString());
-            }
             return rs;
         } catch (Throwable ex) {
         }
@@ -1173,52 +958,12 @@ public abstract class Sncp {
             }
         }
         {
-            fv = cw.visitField(ACC_PRIVATE + ACC_FINAL + ACC_STATIC, FIELDPREFIX + "_service_type", "Ljava/lang/Class;", null, null);
-            fv.visitEnd();
-        }
-        {
-            fv = cw.visitField(ACC_PRIVATE, FIELDPREFIX + "_bsonConvert", bsonConvertDesc, null, null);
-            av0 = fv.visitAnnotation("Ljavax/annotation/Resource;", true);
-            av0.visitEnd();
-            fv.visitEnd();
-        }
-        {
-            fv = cw.visitField(ACC_PRIVATE, FIELDPREFIX + "_jsonConvert", jsonConvertDesc, null, null);
-            av0 = fv.visitAnnotation("Ljavax/annotation/Resource;", true);
-            av0.visitEnd();
-            fv.visitEnd();
-        }
-        {
-            fv = cw.visitField(ACC_PRIVATE, FIELDPREFIX + "_sncpGroup", stringDesc, null, null);
-            fv.visitEnd();
-        }
-        {
-            fv = cw.visitField(ACC_PRIVATE, FIELDPREFIX + "_groups", "Ljava/util/Set;", "Ljava/util/Set<Ljava/lang/String;>;", null);
-            fv.visitEnd();
-        }
-        {
             fv = cw.visitField(ACC_PRIVATE, FIELDPREFIX + "_conf", anyValueDesc, null, null);
-            fv.visitEnd();
-        }
-        {
-            fv = cw.visitField(ACC_PRIVATE, FIELDPREFIX + "_transport", transportDesc, null, null);
             fv.visitEnd();
         }
         {
             fv = cw.visitField(ACC_PRIVATE, FIELDPREFIX + "_client", clientDesc, null, null);
             fv.visitEnd();
-        }
-        {
-            fv = cw.visitField(ACC_PRIVATE, FIELDPREFIX + "_selfstring", "Ljava/lang/String;", null, null);
-            fv.visitEnd();
-        }
-        {//静态构造函数
-            mv = new AsmMethodVisitor(cw.visitMethod(ACC_STATIC, "<clinit>", "()V", null, null));
-            mv.visitLdcInsn(Type.getType(Type.getDescriptor(serviceTypeOrImplClass)));
-            mv.visitFieldInsn(PUTSTATIC, newDynName, FIELDPREFIX + "_service_type", "Ljava/lang/Class;");
-            mv.visitInsn(RETURN);
-            mv.visitMaxs(1, 0);
-            mv.visitEnd();
         }
         { //构造函数
             mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null));
@@ -1244,16 +989,18 @@ public abstract class Sncp {
         { // toString()
             mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC, "toString", "()Ljava/lang/String;", null, null));
             mv.visitVarInsn(ALOAD, 0);
-            mv.visitFieldInsn(GETFIELD, newDynName, FIELDPREFIX + "_selfstring", "Ljava/lang/String;");
+            mv.visitFieldInsn(GETFIELD, newDynName, FIELDPREFIX + "_client", clientDesc);
             Label l1 = new Label();
             mv.visitJumpInsn(IFNONNULL, l1);
             mv.visitVarInsn(ALOAD, 0);
-            mv.visitMethodInsn(INVOKESPECIAL, "java/lang/Object", "toString", "()Ljava/lang/String;", false);
+            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Object", "getClass", "()Ljava/lang/Class;", false);
+            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Class", "getName", "()Ljava/lang/String;", false);
             Label l2 = new Label();
             mv.visitJumpInsn(GOTO, l2);
             mv.visitLabel(l1);
             mv.visitVarInsn(ALOAD, 0);
-            mv.visitFieldInsn(GETFIELD, newDynName, FIELDPREFIX + "_selfstring", "Ljava/lang/String;");
+            mv.visitFieldInsn(GETFIELD, newDynName, FIELDPREFIX + "_client", clientDesc);
+            mv.visitMethodInsn(INVOKEVIRTUAL, clientName, "toSimpleString", "()Ljava/lang/String;", false);
             mv.visitLabel(l2);
             mv.visitInsn(ARETURN);
             mv.visitMaxs(1, 1);
@@ -1276,12 +1023,7 @@ public abstract class Sncp {
                 }
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitFieldInsn(GETFIELD, newDynName, FIELDPREFIX + "_client", clientDesc);
-                mv.visitVarInsn(ALOAD, 0);
-                mv.visitFieldInsn(GETFIELD, newDynName, FIELDPREFIX + "_bsonConvert", bsonConvertDesc);
-                mv.visitVarInsn(ALOAD, 0);
-                mv.visitFieldInsn(GETFIELD, newDynName, FIELDPREFIX + "_jsonConvert", jsonConvertDesc);
-                mv.visitVarInsn(ALOAD, 0);
-                mv.visitFieldInsn(GETFIELD, newDynName, FIELDPREFIX + "_transport", transportDesc);
+
                 if (index <= 5) {
                     mv.visitInsn(ICONST_0 + index);
                 } else {
@@ -1326,7 +1068,7 @@ public abstract class Sncp {
                     }
                 }
 
-                mv.visitMethodInsn(INVOKEVIRTUAL, clientName, "remote", "(" + bsonConvertDesc + jsonConvertDesc + transportDesc + "I[Ljava/lang/Object;)Ljava/lang/Object;", false);
+                mv.visitMethodInsn(INVOKEVIRTUAL, clientName, "remote", "(I[Ljava/lang/Object;)Ljava/lang/Object;", false);
                 //mv.visitMethodInsn(INVOKEVIRTUAL, convertName, "convertFrom", convertFromDesc, false);
                 if (method.getGenericReturnType() == void.class) {
                     mv.visitInsn(POP);
@@ -1369,7 +1111,9 @@ public abstract class Sncp {
         }.loadClass(newDynName.replace('/', '.'), bytes);
         try {
             T rs = (T) newClazz.newInstance();
-            SncpClient client = new SncpClient(name, serviceTypeOrImplClass, rs, executor, true, realed ? createLocalServiceClass(name, serviceTypeOrImplClass) : serviceTypeOrImplClass, clientAddress);
+            SncpClient client = new SncpClient(name, serviceTypeOrImplClass, rs, transportFactory, true, realed ? createLocalServiceClass(name, serviceTypeOrImplClass) : serviceTypeOrImplClass, clientAddress);
+            client.setRemoteGroups(groups);
+            client.setRemoteGroupTransport(transportFactory.loadRemoteTransport(clientAddress, groups));
             {
                 Field c = newClazz.getDeclaredField(FIELDPREFIX + "_client");
                 c.setAccessible(true);
@@ -1379,34 +1123,6 @@ public abstract class Sncp {
                 Field c = newClazz.getDeclaredField(FIELDPREFIX + "_conf");
                 c.setAccessible(true);
                 c.set(rs, conf);
-            }
-            {
-                Field c = newClazz.getDeclaredField(FIELDPREFIX + "_sncpGroup");
-                c.setAccessible(true);
-                c.set(rs, sncpGroup);
-            }
-            {
-                Field c = newClazz.getDeclaredField(FIELDPREFIX + "_groups");
-                c.setAccessible(true);
-                c.set(rs, groups);
-            }
-            {
-                Field t = newClazz.getDeclaredField(FIELDPREFIX + "_transport");
-                t.setAccessible(true);
-                t.set(rs, transport);
-            }
-            {
-                StringBuilder sb = new StringBuilder();
-                sb.append(newClazz.getName()).append("{name = '").append(name);
-                sb.append("', serviceid = ").append(client.getServiceid());
-                sb.append(", serviceversion = ").append(client.getServiceversion());
-                sb.append(", action.size = ").append(client.getActionCount());
-                sb.append(", address = ").append(clientAddress).append(", groups = ").append(transport == null ? null : transport.getName());
-                sb.append(", remotes = ").append(transport == null ? null : Arrays.asList(transport.getRemoteAddresses()));
-                sb.append("}");
-                Field s = newClazz.getDeclaredField(FIELDPREFIX + "_selfstring");
-                s.setAccessible(true);
-                s.set(rs, sb.toString());
             }
             return rs;
         } catch (Exception ex) {
