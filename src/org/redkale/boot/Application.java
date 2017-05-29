@@ -232,7 +232,7 @@ public final class Application {
         }
         this.logger = Logger.getLogger(this.getClass().getSimpleName());
         this.serversLatch = new CountDownLatch(config.getAnyValues("server").length + 1);
-        logger.log(Level.INFO, "------------------------------- Redkale -------------------------------");
+        logger.log(Level.INFO, "------------------------------- Redkale 1.8 -------------------------------");
         //------------------配置 <transport> 节点 ------------------
         ObjectPool<ByteBuffer> transportPool = null;
         ExecutorService transportExec = null;
@@ -295,10 +295,6 @@ public final class Application {
         return startTime;
     }
 
-    private void initLogging() {
-
-    }
-
     public void init() throws Exception {
         System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", "" + Runtime.getRuntime().availableProcessors() * 4);
         System.setProperty("convert.bson.tiny", "true");
@@ -315,7 +311,7 @@ public final class Application {
         String lib = config.getValue("lib", "").trim().replace("${APP_HOME}", homepath);
         lib = lib.isEmpty() ? (homepath + "/conf") : (lib + ";" + homepath + "/conf");
         Server.loadLib(logger, lib);
-        initLogging();
+
         //------------------------------------------------------------------------
         final AnyValue resources = config.getAnyValue("resources");
         if (resources != null) {
@@ -569,7 +565,7 @@ public final class Application {
         runServers(timecd, others);
         runServers(timecd, watchs); //必须在所有server都启动后再启动
         timecd.await();
-        logger.info(this.getClass().getSimpleName() + " started in " + (System.currentTimeMillis() - startTime) + " ms");
+        logger.info(this.getClass().getSimpleName() + " started in " + (System.currentTimeMillis() - startTime) + " ms\r\n");
         if (!singletonrun) this.serversLatch.await();
     }
 

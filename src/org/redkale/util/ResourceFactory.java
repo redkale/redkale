@@ -499,7 +499,7 @@ public final class ResourceFactory {
 
     private static class ResourceElement<T> {
 
-        private static final HashMap<Class, Method> listenerMethods = new HashMap<>(); //不使用ConcurrentHashMap是因为value不能存null
+        private static final HashMap<String, Method> listenerMethods = new HashMap<>(); //不使用ConcurrentHashMap是因为value不能存null
 
         public final WeakReference<T> dest;
 
@@ -515,24 +515,27 @@ public final class ResourceFactory {
             this.fieldType = field.getType();
             Class t = dest.getClass();
             String tn = t.getName();
-            this.listener = tn.startsWith("java.") || tn.startsWith("javax.") ? null : findListener(t);
+            this.listener = tn.startsWith("java.") || tn.startsWith("javax.") ? null : findListener(t, field.getType());
         }
 
-        private static synchronized Method findListener(Class clazz) {
+        private static synchronized Method findListener(Class clazz, Class fieldType) {
             Class loop = clazz;
-            Method m = null;
+            Method m = listenerMethods.get(clazz.getName() + "-" + fieldType.getName());
+            if (m != null) return m;
             do {
                 for (Method method : loop.getDeclaredMethods()) {
                     if (method.getAnnotation(ResourceListener.class) != null
                         && method.getParameterCount() == 3
-                        && String.class.isAssignableFrom(method.getParameterTypes()[0])) {
+                        && String.class.isAssignableFrom(method.getParameterTypes()[0])
+                        && method.getParameterTypes()[1] == method.getParameterTypes()[2]
+                        && method.getParameterTypes()[1].isAssignableFrom(fieldType)) {
                         m = method;
                         m.setAccessible(true);
                         break;
                     }
                 }
             } while ((loop = loop.getSuperclass()) != Object.class);
-            listenerMethods.put(clazz, m);
+            listenerMethods.put(clazz.getName() + "-" + fieldType.getName(), m);
             return m;
         }
     }
