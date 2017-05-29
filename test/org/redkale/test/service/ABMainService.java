@@ -15,6 +15,7 @@ import java.util.logging.*;
 import javax.annotation.Resource;
 import org.redkale.convert.bson.BsonConvert;
 import org.redkale.convert.json.JsonConvert;
+import org.redkale.net.TransportFactory;
 import org.redkale.net.http.*;
 import org.redkale.net.sncp.*;
 import org.redkale.service.Service;
@@ -36,7 +37,7 @@ public class ABMainService implements Service {
         final int abport = 8888;
         ResourceFactory resFactory = ResourceFactory.root();
         ExecutorService executor = Executors.newSingleThreadExecutor();
-        final SncpTransportFactory transFactory = new SncpTransportFactory(executor, newBufferPool(), newChannelGroup());
+        final TransportFactory transFactory = new TransportFactory(executor, newBufferPool(), newChannelGroup());
         transFactory.addGroupInfo("g77", new InetSocketAddress("127.0.0.1", 5577));
         transFactory.addGroupInfo("g88", new InetSocketAddress("127.0.0.1", 5588));
         transFactory.addGroupInfo("g99", new InetSocketAddress("127.0.0.1", 5599));

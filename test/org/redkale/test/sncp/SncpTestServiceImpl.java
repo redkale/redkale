@@ -8,6 +8,7 @@ package org.redkale.test.sncp;
 import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
 import java.util.concurrent.*;
+import org.redkale.net.TransportFactory;
 import org.redkale.net.sncp.*;
 import org.redkale.service.*;
 import org.redkale.source.DataCallArrayAttribute;
@@ -99,7 +100,7 @@ public class SncpTestServiceImpl implements SncpTestIService {
 
     public static void main(String[] args) throws Exception {
 
-        final SncpTransportFactory transFactory = new SncpTransportFactory(Executors.newSingleThreadExecutor(), newBufferPool(), newChannelGroup());
+        final TransportFactory transFactory = new TransportFactory(Executors.newSingleThreadExecutor(), newBufferPool(), newChannelGroup());
 
         transFactory.addGroupInfo("g70", new InetSocketAddress("127.0.0.1", 7070));
         Service service = Sncp.createSimpleLocalService(SncpTestServiceImpl.class, transFactory, new InetSocketAddress("127.0.0.1", 7070), "g70");

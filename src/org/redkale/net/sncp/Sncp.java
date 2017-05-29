@@ -15,6 +15,7 @@ import static jdk.internal.org.objectweb.asm.ClassWriter.COMPUTE_FRAMES;
 import jdk.internal.org.objectweb.asm.*;
 import static jdk.internal.org.objectweb.asm.Opcodes.*;
 import jdk.internal.org.objectweb.asm.Type;
+import org.redkale.net.TransportFactory;
 import org.redkale.net.sncp.SncpClient.SncpAction;
 import org.redkale.service.*;
 import org.redkale.util.*;
@@ -732,7 +733,7 @@ public abstract class Sncp {
     }
 
     public static <T extends Service> T createSimpleLocalService(final Class<T> serviceImplClass,
-        final SncpTransportFactory transportFactory, final InetSocketAddress clientSncpAddress, final String... groups) {
+        final TransportFactory transportFactory, final InetSocketAddress clientSncpAddress, final String... groups) {
         return createLocalService("", serviceImplClass, ResourceFactory.root(), transportFactory, clientSncpAddress, Utility.ofSet(groups), null);
     }
 
@@ -744,7 +745,7 @@ public abstract class Sncp {
      * @param name              资源名
      * @param serviceImplClass  Service类
      * @param resourceFactory   ResourceFactory
-     * @param transportFactory  SncpTransportFactory
+     * @param transportFactory  TransportFactory
      * @param clientSncpAddress 本地IP地址
      * @param groups            所有的组节点，包含自身
      * @param conf              启动配置项
@@ -756,7 +757,7 @@ public abstract class Sncp {
         final String name,
         final Class<T> serviceImplClass,
         final ResourceFactory resourceFactory,
-        final SncpTransportFactory transportFactory,
+        final TransportFactory transportFactory,
         final InetSocketAddress clientSncpAddress,
         final Set<String> groups,
         final AnyValue conf) {
@@ -795,6 +796,7 @@ public abstract class Sncp {
                     client.setSameGroupTransport(transportFactory.loadSameGroupTransport(clientSncpAddress));
                     client.setDiffGroupTransports(transportFactory.loadDiffGroupTransports(clientSncpAddress, diffGroups));
                     e.set(rs, client);
+                    transportFactory.addSncpService(rs);
                 } catch (NoSuchFieldException ne) {
                     ne.printStackTrace();
                 }
@@ -814,7 +816,7 @@ public abstract class Sncp {
     }
 
     public static <T extends Service> T createSimpleRemoteService(final Class<T> serviceImplClass,
-        final SncpTransportFactory transportFactory, final InetSocketAddress clientSncpAddress, final String... groups) {
+        final TransportFactory transportFactory, final InetSocketAddress clientSncpAddress, final String... groups) {
         return createRemoteService("", serviceImplClass, transportFactory, clientSncpAddress, Utility.ofSet(groups), null);
     }
 
@@ -861,7 +863,7 @@ public abstract class Sncp {
      * @param <T>                    Service泛型
      * @param name                   资源名
      * @param serviceTypeOrImplClass Service类
-     * @param transportFactory       SncpTransportFactory
+     * @param transportFactory       TransportFactory
      * @param clientAddress          本地IP地址
      * @param groups                 所有的组节点，包含自身
      * @param conf                   启动配置项
@@ -873,7 +875,7 @@ public abstract class Sncp {
     public static <T extends Service> T createRemoteService(
         final String name,
         final Class<T> serviceTypeOrImplClass,
-        final SncpTransportFactory transportFactory,
+        final TransportFactory transportFactory,
         final InetSocketAddress clientAddress,
         final Set<String> groups,
         final AnyValue conf) {
@@ -898,6 +900,7 @@ public abstract class Sncp {
             Field c = newClazz.getDeclaredField(FIELDPREFIX + "_client");
             c.setAccessible(true);
             c.set(rs, client);
+            transportFactory.addSncpService(rs);
             return rs;
         } catch (Throwable ex) {
         }
@@ -1097,6 +1100,7 @@ public abstract class Sncp {
                 c.setAccessible(true);
                 c.set(rs, conf);
             }
+            transportFactory.addSncpService(rs);
             return rs;
         } catch (Exception ex) {
             throw new RuntimeException(ex);

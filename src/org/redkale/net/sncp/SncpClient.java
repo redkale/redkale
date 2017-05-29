@@ -81,7 +81,7 @@ public final class SncpClient {
     //本地模式
     protected Transport[] diffGroupTransports;
 
-    public <T extends Service> SncpClient(final String serviceName, final Class<T> serviceTypeOrImplClass, final T service, final SncpTransportFactory factory,
+    public <T extends Service> SncpClient(final String serviceName, final Class<T> serviceTypeOrImplClass, final T service, final TransportFactory factory,
         final boolean remote, final Class serviceClass, final InetSocketAddress clientAddress) {
         this.remote = remote;
         this.executor = factory.getExecutor();
@@ -101,7 +101,6 @@ public final class SncpClient {
         this.actions = methodens.toArray(new SncpAction[methodens.size()]);
         this.addrBytes = clientAddress == null ? new byte[4] : clientAddress.getAddress().getAddress();
         this.addrPort = clientAddress == null ? 0 : clientAddress.getPort();
-        factory.addSncpClient(this);
     }
 
     static List<SncpAction> getSncpActions(final Class serviceClass) {

@@ -5,12 +5,14 @@
  */
 package org.redkale.net;
 
+import java.lang.ref.WeakReference;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousChannelGroup;
 import java.util.*;
-import java.util.concurrent.ExecutorService;
+import java.util.concurrent.*;
 import java.util.logging.*;
+import org.redkale.service.Service;
 import org.redkale.util.ObjectPool;
 
 /**
@@ -36,6 +38,8 @@ public class TransportFactory {
     //协议地址的Group集合
     protected final Map<String, TransportGroupInfo> groupInfos = new HashMap<>();
 
+    protected final List<WeakReference<Service>> services = new CopyOnWriteArrayList<>();
+
     public TransportFactory(ExecutorService executor, ObjectPool<ByteBuffer> bufferPool, AsynchronousChannelGroup channelGroup) {
         this.executor = executor;
         this.bufferPool = bufferPool;
@@ -57,11 +61,11 @@ public class TransportFactory {
         return this;
     }
 
-    public TransportFactory addGroupInfo(String name, Set<InetSocketAddress>  addrs) {
+    public TransportFactory addGroupInfo(String name, Set<InetSocketAddress> addrs) {
         addGroupInfo(new TransportGroupInfo(name, addrs));
         return this;
     }
-    
+
     public boolean addGroupInfo(TransportGroupInfo info) {
         if (info == null) throw new RuntimeException("TransportGroupInfo can not null");
         if (info.addresses == null) throw new RuntimeException("TransportGroupInfo.addresses can not null");
@@ -122,6 +126,20 @@ public class TransportFactory {
 
     public ExecutorService getExecutor() {
         return executor;
+    }
+
+    public void addSncpService(Service service) {
+        if (service == null) return;
+        services.add(new WeakReference<>(service));
+    }
+
+    public List<Service> getServices() {
+        List<Service> rs = new ArrayList<>();
+        for (WeakReference<Service> ref : services) {
+            Service service = ref.get();
+            if (service != null) rs.add(service);
+        }
+        return rs;
     }
 
     public void shutdownNow() {

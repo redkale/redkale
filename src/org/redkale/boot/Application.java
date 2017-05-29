@@ -103,7 +103,7 @@ public final class Application {
     final List<NodeServer> servers = new CopyOnWriteArrayList<>();
 
     //传输端的TransportFactory
-    final SncpTransportFactory transportFactory;
+    final TransportFactory transportFactory;
 
     //全局根ResourceFactory
     final ResourceFactory resourceFactory = ResourceFactory.root();
@@ -260,14 +260,14 @@ public final class Application {
                 logger.log(Level.INFO, Transport.class.getSimpleName() + " configure bufferCapacity = " + bufferCapacity + "; bufferPoolSize = " + bufferPoolSize + "; threads = " + threads + ";");
             }
         }
-        this.transportFactory = new SncpTransportFactory(transportExec, transportPool, transportGroup);
+        this.transportFactory = new TransportFactory(transportExec, transportPool, transportGroup);
     }
 
     public ResourceFactory getResourceFactory() {
         return resourceFactory;
     }
 
-    public SncpTransportFactory getTransportFactory() {
+    public TransportFactory getTransportFactory() {
         return transportFactory;
     }
 
@@ -358,7 +358,7 @@ public final class Application {
                     Class type = field.getType();
                     if (type == Application.class) {
                         field.set(src, application);
-                    } else if (type == SncpTransportFactory.class) {
+                    } else if (type == TransportFactory.class) {
                         field.set(src, application.transportFactory);
                     } else if (type == NodeSncpServer.class) {
                         NodeServer server = null;
@@ -404,7 +404,7 @@ public final class Application {
                 return false;
             }
 
-        }, Application.class, SncpTransportFactory.class, NodeSncpServer.class, NodeHttpServer.class, NodeWatchServer.class);
+        }, Application.class, TransportFactory.class, NodeSncpServer.class, NodeHttpServer.class, NodeWatchServer.class);
         //--------------------------------------------------------------------------
         initResources();
     }
