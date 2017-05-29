@@ -210,27 +210,9 @@ public abstract class Sncp {
      * &#64;ResourceType(TestService.class)
      * public final class _DynLocalTestService extends TestService{
      *
-     *      private static final Class _redkale_service_type = TestService.class;
-     *
-     *      &#64;Resource
-     *      private BsonConvert _redkale_bsonConvert;
-     *
-     *      &#64;Resource
-     *      private JsonConvert _redkale_jsonConvert;
-     *
      *      private AnyValue _redkale_conf;
      *
-     *      private String _redkale_sncpGroup; //自身的组节点名 可能为null
-     *
-     *      private Set&lt;String&gt; groups; //所有的组节点，包含自身
-     *
-     *      private Transport _redkale_sameGroupTransport;
-     *
-     *      private Transport[] _redkale_diffGroupTransports;
-     *
      *      private SncpClient _redkale_client;
-     *
-     *      private String _redkale_selfstring;
      *
      *      &#64;Override
      *      public String toString() {
@@ -246,8 +228,8 @@ public abstract class Sncp {
      *      public void _redkale_createSomeThing(boolean selfrunnable, boolean samerunnable, boolean diffrunnable, TestBean bean){
      *          if(selfrunnable) super.createSomeThing(bean);
      *          if (_redkale_client== null) return;
-     *          if (samerunnable) _redkale_client.remoteSameGroup(_redkale_bsonConvert, _redkale_jsonConvert, _redkale_sameGroupTransport, 0, true, false, false, bean);
-     *          if (diffrunnable) _redkale_client.remoteDiffGroup(_redkale_bsonConvert, _redkale_jsonConvert, _redkale_diffGroupTransports, 0, true, true, false, bean);
+     *          if (samerunnable) _redkale_client.remoteSameGroup(0, true, false, false, bean);
+     *          if (diffrunnable) _redkale_client.remoteDiffGroup(0, true, true, false, bean);
      *      }
      *
      *      &#64;Override
@@ -259,8 +241,8 @@ public abstract class Sncp {
      *      public String _redkale_updateSomeThing(boolean selfrunnable, boolean samerunnable, boolean diffrunnable, String id){
      *          String rs = super.updateSomeThing(id);
      *          if (_redkale_client== null) return rs;
-     *          if (samerunnable) _redkale_client.remoteSameGroup(_redkale_bsonConvert, _redkale_jsonConvert, _redkale_sameGroupTransport, 1, true, false, false, id);
-     *          if (diffrunnable) _redkale_client.remoteDiffGroup(_redkale_bsonConvert, _redkale_jsonConvert, _redkale_diffGroupTransports, 1, true, true, false, id);
+     *          if (samerunnable) _redkale_client.remoteSameGroup(1, true, false, false, id);
+     *          if (diffrunnable) _redkale_client.remoteDiffGroup(1, true, true, false, id);
      *          return rs;
      *      }
      * }
@@ -843,54 +825,33 @@ public abstract class Sncp {
      * &#64;ResourceType(TestService.class)
      * public final class _DynRemoteTestService extends TestService{
      *
-     *      private static final Class _redkale_service_type = TestService.class;
-     *
-     *      &#64;Resource
-     *      private BsonConvert _redkale_bsonConvert;
-     *
-     *      &#64;Resource
-     *      private JsonConvert _redkale_jsonConvert;
-     *
-     *      private String _redkale_sncpGroup; //自身的组节点名 可能为null
-     *
-     *      private Set&lt;String&gt; groups; //所有的组节点，包含自身
-     *
      *      private AnyValue _redkale_conf;
-     *
-     *      private Transport _redkale_transport;
      *
      *      private SncpClient _redkale_client;
      *
-     *      private String _redkale_selfstring;
-     *
-     *      &#64;Override
-     *      public String toString() {
-     *          return _redkale_selfstring == null ? super.toString() : _redkale_selfstring;
-     *      }
-     *
      *      &#64;SncpDyn(remote = false, index = 0)
      *      public void _redkale_createSomeThing(boolean selfrunnable, boolean samerunnable, boolean diffrunnable, TestBean bean){
-     *          _redkale_client.remote(_redkale_bsonConvert, _redkale_jsonConvert, _redkale_transport, 0, selfrunnable, samerunnable, diffrunnable, bean);
+     *          _redkale_client.remote(0, selfrunnable, samerunnable, diffrunnable, bean);
      *      }
      *
      *      &#64;SncpDyn(remote = false, index = 1)
      *      public String _redkale_updateSomeThing(boolean selfrunnable, boolean samerunnable, boolean diffrunnable, String id){
-     *          return _redkale_client.remote(_redkale_bsonConvert, _redkale_jsonConvert, _redkale_transport, 1, selfrunnable, samerunnable, diffrunnable, id);
+     *          return _redkale_client.remote(1, selfrunnable, samerunnable, diffrunnable, id);
      *      }
      *
      *      &#64;Override
      *      public void createSomeThing(TestBean bean){
-     *          _redkale_client.remote(_redkale_bsonConvert, _redkale_jsonConvert, _redkale_transport, 2, bean);
+     *          _redkale_client.remote(2, bean);
      *      }
      *
      *      &#64;Override
      *      public String findSomeThing(){
-     *          return _redkale_client.remote(_redkale_bsonConvert, _redkale_jsonConvert, _redkale_transport, 3);
+     *          return _redkale_client.remote(3);
      *      }
      *
      *      &#64;Override
      *      public String updateSomeThing(String id){
-     *          return  _redkale_client.remote(_redkale_bsonConvert, _redkale_jsonConvert, _redkale_transport, 4, id);
+     *          return  _redkale_client.remote(4, id);
      *      }
      * }
      * </pre></blockquote>
