@@ -105,7 +105,7 @@
                 </pre></div>
 
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;继承HttpServlet的子类可以使用其自带的鉴权、请求分支、缓存等功能， 一个典型的操作<span id="userservlet">用户HttpServlet</span>: </p> 
-            <div class="highlight"><pre><span class="nd">@WebServlet</span><span class="o">(</span><span class="n">value</span> <span class="o">=</span> <span class="o">{</span><span class="s">&quot;/user/*&quot;</span><span class="o">},</span> <span class="n">comment</span> <span class="o">=</span> <span class="s">&quot;用户模块服务&quot;</span><span class="o">)</span>  <span class="c1">//拦截所有 /user/ 开头的请求</span>
+            <div class="highlight"><pre><span></span><span class="nd">@WebServlet</span><span class="o">(</span><span class="n">value</span> <span class="o">=</span> <span class="o">{</span><span class="s">"/user/*"</span><span class="o">},</span> <span class="n">comment</span> <span class="o">=</span> <span class="s">"用户模块服务"</span><span class="o">)</span>  <span class="c1">//拦截所有 /user/ 开头的请求</span>
 <span class="kd">public</span> <span class="kd">class</span> <span class="nc">UserServlet</span> <span class="kd">extends</span> <span class="n">BaseSerlvet</span> <span class="o">{</span>
 
     <span class="nd">@Resource</span>
@@ -114,50 +114,51 @@
     <span class="c1">//登录操作 </span>
     <span class="c1">//因为HttpMapping的判断规则用的是String.startsWith，所以HttpMapping.url不能用正则表达式，只能是getRequestURI的前缀</span>
     <span class="c1">//且同一个HttpServlet类内的所有HttpMapping不能存在包含关系, 如 /user/myinfo 和 /user/myinforecord 不能存在同一HttpServlet中。</span>
-    <span class="nd">@HttpMapping</span><span class="o">(</span><span class="n">url</span> <span class="o">=</span> <span class="s">&quot;/user/login&quot;</span><span class="o">,</span> <span class="n">comment</span> <span class="o">=</span> <span class="s">&quot;用户登录&quot;</span><span class="o">)</span>
-    <span class="nd">@HttpParam</span><span class="o">(</span><span class="n">name</span> <span class="o">=</span> <span class="s">&quot;bean&quot;</span><span class="o">,</span> <span class="n">type</span> <span class="o">=</span> <span class="n">LoginBean</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="n">comment</span> <span class="o">=</span> <span class="s">&quot;登录参数对象&quot;</span><span class="o">)</span>
+    <span class="nd">@HttpMapping</span><span class="o">(</span><span class="n">url</span> <span class="o">=</span> <span class="s">"/user/login"</span><span class="o">,</span> <span class="n">auth</span> <span class="o">=</span> <span class="kc">false</span><span class="o">,</span> <span class="n">comment</span> <span class="o">=</span> <span class="s">"用户登录"</span><span class="o">)</span>
+    <span class="nd">@HttpParam</span><span class="o">(</span><span class="n">name</span> <span class="o">=</span> <span class="s">"bean"</span><span class="o">,</span> <span class="n">type</span> <span class="o">=</span> <span class="n">LoginBean</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="n">comment</span> <span class="o">=</span> <span class="s">"登录参数对象"</span><span class="o">)</span>
     <span class="kd">public</span> <span class="kt">void</span> <span class="nf">login</span><span class="o">(</span><span class="n">HttpRequest</span> <span class="n">req</span><span class="o">,</span> <span class="n">HttpResponse</span> <span class="n">resp</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
-        <span class="n">LoginBean</span> <span class="n">bean</span> <span class="o">=</span> <span class="n">req</span><span class="o">.</span><span class="na">getJsonParameter</span><span class="o">(</span><span class="n">LoginBean</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="s">&quot;bean&quot;</span><span class="o">);</span> <span class="c1">//获取参数</span>
+        <span class="n">LoginBean</span> <span class="n">bean</span> <span class="o">=</span> <span class="n">req</span><span class="o">.</span><span class="na">getJsonParameter</span><span class="o">(</span><span class="n">LoginBean</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="s">"bean"</span><span class="o">);</span> <span class="c1">//获取参数</span>
         <span class="n">RetResult</span><span class="o">&lt;</span><span class="n">UserInfo</span><span class="o">&gt;</span> <span class="n">result</span> <span class="o">=</span> <span class="n">service</span><span class="o">.</span><span class="na">login</span><span class="o">(</span><span class="n">bean</span><span class="o">);</span> <span class="c1">//登录操作， service内部判断bean的合法性</span>
         <span class="n">resp</span><span class="o">.</span><span class="na">finishJson</span><span class="o">(</span><span class="n">result</span><span class="o">);</span> <span class="c1">//输出结果</span>
     <span class="o">}</span>
 
     <span class="c1">//获取当前用户信息</span>
     <span class="c1">//未登录的请求会被BaseSerlvet.authenticate方法拦截，因此能进入该方法说明用户态存在</span>
-    <span class="nd">@HttpMapping</span><span class="o">(</span><span class="n">url</span> <span class="o">=</span> <span class="s">&quot;/user/myinfo&quot;</span><span class="o">,</span> <span class="n">comment</span> <span class="o">=</span> <span class="s">&quot;获取当前用户信息&quot;</span><span class="o">)</span>
+    <span class="nd">@HttpMapping</span><span class="o">(</span><span class="n">url</span> <span class="o">=</span> <span class="s">"/user/myinfo"</span><span class="o">,</span> <span class="n">comment</span> <span class="o">=</span> <span class="s">"获取当前用户信息"</span><span class="o">)</span>
     <span class="kd">public</span> <span class="kt">void</span> <span class="nf">myinfo</span><span class="o">(</span><span class="n">HttpRequest</span> <span class="n">req</span><span class="o">,</span> <span class="n">HttpResponse</span> <span class="n">resp</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
         <span class="n">UserInfo</span> <span class="n">user</span> <span class="o">=</span> <span class="n">service</span><span class="o">.</span><span class="na">current</span><span class="o">(</span><span class="n">req</span><span class="o">.</span><span class="na">getSessionid</span><span class="o">(</span><span class="kc">false</span><span class="o">));</span>
-        <span class="c1">//或者使用 user = req.getAttribute(&quot;_current_userinfo&quot;); 因为BaseSerlvet.authenticate方法已经将UserInfo注入到_current_userinfo属性中</span>
+        <span class="c1">//或者使用 user = req.getAttribute("_current_userinfo"); 因为BaseSerlvet.authenticate方法已经将UserInfo注入到_current_userinfo属性中</span>
         <span class="n">resp</span><span class="o">.</span><span class="na">finishJson</span><span class="o">(</span><span class="n">user</span><span class="o">);</span>  <span class="c1">//输出用户信息</span>
     <span class="o">}</span>
 
     <span class="c1">//获取指定用户ID的用户信息, 请求如: /user/username/43565443</span>
     <span class="c1">// 翻页查询想缓存就需要将翻页信息带进url: /user/query/page:2/size:50 。</span>
-    <span class="nd">@HttpMapping</span><span class="o">(</span><span class="n">url</span> <span class="o">=</span> <span class="s">&quot;/user/userinfo/&quot;</span><span class="o">,</span> <span class="n">comment</span> <span class="o">=</span> <span class="s">&quot;获取指定用户ID的用户信息&quot;</span><span class="o">)</span>
-    <span class="nd">@HttpParam</span><span class="o">(</span><span class="n">name</span> <span class="o">=</span> <span class="s">&quot;#&quot;</span><span class="o">,</span> <span class="n">type</span> <span class="o">=</span> <span class="kd">int</span><span class="o">.</span><span class="kd">class</span><span class="o">,</span> <span class="n">comment</span> <span class="o">=</span> <span class="s">&quot;用户ID&quot;</span><span class="o">)</span>
+    <span class="nd">@HttpMapping</span><span class="o">(</span><span class="n">url</span> <span class="o">=</span> <span class="s">"/user/userinfo/"</span><span class="o">,</span> <span class="n">comment</span> <span class="o">=</span> <span class="s">"获取指定用户ID的用户信息"</span><span class="o">)</span>
+    <span class="nd">@HttpParam</span><span class="o">(</span><span class="n">name</span> <span class="o">=</span> <span class="s">"#"</span><span class="o">,</span> <span class="n">type</span> <span class="o">=</span> <span class="kt">int</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="n">comment</span> <span class="o">=</span> <span class="s">"用户ID"</span><span class="o">)</span>
     <span class="kd">public</span> <span class="kt">void</span> <span class="nf">userinfo</span><span class="o">(</span><span class="n">HttpRequest</span> <span class="n">req</span><span class="o">,</span> <span class="n">HttpResponse</span> <span class="n">resp</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
         <span class="n">UserInfo</span> <span class="n">user</span> <span class="o">=</span> <span class="n">service</span><span class="o">.</span><span class="na">findUserInfo</span><span class="o">(</span><span class="n">Integer</span><span class="o">.</span><span class="na">parseInt</span><span class="o">(</span><span class="n">req</span><span class="o">.</span><span class="na">getRequstURILastPath</span><span class="o">()));</span>
         <span class="n">resp</span><span class="o">.</span><span class="na">finishJson</span><span class="o">(</span><span class="n">user</span><span class="o">);</span>  <span class="c1">//输出用户信息</span>
     <span class="o">}</span>
 
     <span class="c1">//更新个人头像</span>
-    <span class="nd">@HttpMapping</span><span class="o">(</span><span class="n">url</span> <span class="o">=</span> <span class="s">&quot;/user/updateface&quot;</span><span class="o">,</span> <span class="n">comment</span> <span class="o">=</span> <span class="s">&quot;更新用户头像&quot;</span><span class="o">)</span>
+    <span class="nd">@HttpMapping</span><span class="o">(</span><span class="n">url</span> <span class="o">=</span> <span class="s">"/user/updateface"</span><span class="o">,</span> <span class="n">comment</span> <span class="o">=</span> <span class="s">"更新用户头像"</span><span class="o">)</span>
     <span class="kd">public</span> <span class="kt">void</span> <span class="nf">updateface</span><span class="o">(</span><span class="n">HttpRequest</span> <span class="n">req</span><span class="o">,</span> <span class="n">HttpResponse</span> <span class="n">resp</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
         <span class="n">UserInfo</span> <span class="n">user</span> <span class="o">=</span> <span class="n">service</span><span class="o">.</span><span class="na">current</span><span class="o">(</span><span class="n">req</span><span class="o">.</span><span class="na">getSessionid</span><span class="o">(</span><span class="kc">false</span><span class="o">));</span>
         <span class="k">for</span> <span class="o">(</span><span class="n">MultiPart</span> <span class="n">part</span> <span class="o">:</span> <span class="n">req</span><span class="o">.</span><span class="na">multiParts</span><span class="o">())</span> <span class="o">{</span> <span class="c1">//遍历上传文件列表 </span>
             <span class="kt">byte</span><span class="o">[]</span> <span class="n">byts</span> <span class="o">=</span> <span class="n">part</span><span class="o">.</span><span class="na">getContentBytes</span><span class="o">(</span><span class="mi">5</span> <span class="o">*</span> <span class="mi">1024</span> <span class="o">*</span> <span class="mi">1024L</span><span class="o">);</span>  <span class="c1">//图片大小不能超过5M，超过5M返回null</span>
             <span class="k">if</span> <span class="o">(</span><span class="n">byts</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
-                <span class="n">resp</span><span class="o">.</span><span class="na">finishJson</span><span class="o">(</span><span class="k">new</span> <span class="nf">RetResult</span><span class="o">(</span><span class="mi">102</span><span class="o">,</span> <span class="s">&quot;上传的文件过大&quot;</span><span class="o">));</span>
+                <span class="n">resp</span><span class="o">.</span><span class="na">finishJson</span><span class="o">(</span><span class="k">new</span> <span class="n">RetResult</span><span class="o">(</span><span class="mi">102</span><span class="o">,</span> <span class="s">"上传的文件过大"</span><span class="o">));</span>
             <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
-                <span class="n">BufferedImage</span> <span class="n">img</span> <span class="o">=</span> <span class="n">ImageIO</span><span class="o">.</span><span class="na">read</span><span class="o">(</span><span class="k">new</span> <span class="nf">ByteArrayInputStream</span><span class="o">(</span><span class="n">byts</span><span class="o">));</span>
+                <span class="n">BufferedImage</span> <span class="n">img</span> <span class="o">=</span> <span class="n">ImageIO</span><span class="o">.</span><span class="na">read</span><span class="o">(</span><span class="k">new</span> <span class="n">ByteArrayInputStream</span><span class="o">(</span><span class="n">byts</span><span class="o">));</span>
                 <span class="c1">//... 此处处理并存储头像图片</span>
                 <span class="n">resp</span><span class="o">.</span><span class="na">finishJson</span><span class="o">(</span><span class="n">RetResult</span><span class="o">.</span><span class="na">SUCCESS</span><span class="o">);</span>  <span class="c1">//输出成功信息</span>
             <span class="o">}</span>
             <span class="k">return</span><span class="o">;</span> <span class="c1">//头像图片仅会传一个， 只需要读取一个即可返回</span>
         <span class="o">}</span>
-        <span class="n">resp</span><span class="o">.</span><span class="na">finishJson</span><span class="o">(</span><span class="k">new</span> <span class="nf">RetResult</span><span class="o">(</span><span class="mi">103</span><span class="o">,</span> <span class="s">&quot;没有上传图片&quot;</span><span class="o">));</span>
+        <span class="n">resp</span><span class="o">.</span><span class="na">finishJson</span><span class="o">(</span><span class="k">new</span> <span class="n">RetResult</span><span class="o">(</span><span class="mi">103</span><span class="o">,</span> <span class="s">"没有上传图片"</span><span class="o">));</span>
     <span class="o">}</span>
-<span class="o">}</span></pre></div>
+<span class="o">}</span>
+                </pre></div>
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如上，所有/user/前缀的请求都会进入UserServlet，若没匹配的则返回505错误，为了方便以后编写前方静动分离服务器转发规则，比较好的习惯是将项目中所有动态Servlet加一个固定前缀，在 <a href="redkale.html#redkale_confxml" target="_blank">application.xml</a> 里设置path即可。</p>
             <div class="highlight"><pre><span class="nt">&lt;server</span> <span class="na">protocol=</span><span class="s">&quot;HTTP&quot;</span> <span class="na">port=</span><span class="s">&quot;6060&quot;</span> <span class="na">root=</span><span class="s">&quot;root&quot;</span><span class="nt">&gt;</span> 
     <span class="nt">&lt;services</span> <span class="na">autoload=</span><span class="s">&quot;true&quot;</span> <span class="nt">/&gt;</span>  
@@ -176,7 +177,7 @@
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;一个WebSocket连接对应一个WebSocket实体，即一个WebSocket会绑定一个TCP连接。且有两种模式:<br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;  1) 普通模式: 协议上符合HTML5规范, 其流程顺序如下:<br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1.1 onOpen &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 若返回null，视为WebSocket的连接不合法，强制关闭WebSocket连接；通常用于判断登录态。<br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1.2 createGroupid &nbsp;&nbsp;&nbsp; 若返回null，视为WebSocket的连接不合法，强制关闭WebSocket连接；通常用于判断用户权限是否符合。<br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1.2 createUserid &nbsp;&nbsp;&nbsp; 若返回null，视为WebSocket的连接不合法，强制关闭WebSocket连接；通常用于判断用户权限是否符合。<br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1.3 onConnected &nbsp;&nbsp;&nbsp;&nbsp; WebSocket成功连接后在准备接收数据前回调此方法。<br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1.4 onMessage/onFragment+ &nbsp;&nbsp; WebSocket接收到消息后回调此消息类方法。<br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1.5 onClose &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; WebSocket被关闭后回调此方法。<br/>
@@ -184,56 +185,51 @@
                 <br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;  2) 原始二进制模式: 此模式有别于HTML5规范，可以视为原始的TCP连接。通常用于音频视频通讯场景。其流程顺序如下:<br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2.1 onOpen &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 如果方法返回null，视为WebSocket的连接不合法，强制关闭WebSocket连接；通常用于判断登录态。<br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2.2 createGroupid &nbsp;&nbsp;&nbsp; 若返回null，视为WebSocket的连接不合法，强制关闭WebSocket连接；通常用于判断用户权限是否符合。<br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2.2 createUserid &nbsp;&nbsp;&nbsp; 若返回null，视为WebSocket的连接不合法，强制关闭WebSocket连接；通常用于判断用户权限是否符合。<br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2.3 onRead &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; WebSocket成功连接后回调此方法， 由此方法处理原始的TCP连接， 同时业务代码去控制WebSocket的关闭。<br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;此模式下 以上方法都应该被重载。<br/>
             </p>
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;实现一个WebSocket服务需要继承 org.redkale.net.http.WebSocketServlet，以下是一个简单的聊天范例：</p>
-            <div class="highlight"><pre><span class="nd">@WebServlet</span><span class="o">(</span><span class="s">&quot;/ws/chat&quot;</span><span class="o">)</span>
+            <div class="highlight"><pre><span></span><span class="nd">@WebServlet</span><span class="o">(</span><span class="s">"/ws/chat"</span><span class="o">)</span>
 <span class="kd">public</span> <span class="kd">class</span> <span class="nc">ChatWebSocketServlet</span> <span class="kd">extends</span> <span class="n">WebSocketServlet</span> <span class="o">{</span>
-
-    <span class="nd">@Resource</span> <span class="c1">//[Redkale内置资源]</span>
-    <span class="kd">protected</span> <span class="n">JsonConvert</span> <span class="n">jsonConvert</span><span class="o">;</span>
 
     <span class="nd">@Resource</span>
     <span class="kd">private</span> <span class="n">UserService</span> <span class="n">userService</span><span class="o">;</span>
 
     <span class="nd">@Override</span>
     <span class="kd">public</span> <span class="kt">void</span> <span class="nf">init</span><span class="o">(</span><span class="n">HttpContext</span> <span class="n">context</span><span class="o">,</span> <span class="n">AnyValue</span> <span class="n">conf</span><span class="o">)</span> <span class="o">{</span>
-        <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">&quot;本实例的WebSocketEngine: &quot;</span> <span class="o">+</span> <span class="kd">super</span><span class="o">.</span><span class="na">engine</span><span class="o">);</span>
-        <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">&quot;本实例的WebSocketNode: &quot;</span> <span class="o">+</span> <span class="kd">super</span><span class="o">.</span><span class="na">node</span><span class="o">);</span>
+        <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"本实例的WebSocketNode: "</span> <span class="o">+</span> <span class="kd">super</span><span class="o">.</span><span class="na">node</span><span class="o">);</span>
     <span class="o">}</span>
 
     <span class="nd">@Override</span>
     <span class="kd">public</span> <span class="kt">void</span> <span class="nf">destroy</span><span class="o">(</span><span class="n">HttpContext</span> <span class="n">context</span><span class="o">,</span> <span class="n">AnyValue</span> <span class="n">conf</span><span class="o">)</span> <span class="o">{</span>
-        <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">&quot;关闭了ChatWebSocketServlet&quot;</span><span class="o">);</span>
+        <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"关闭了ChatWebSocketServlet"</span><span class="o">);</span>
     <span class="o">}</span>
 
     <span class="nd">@Override</span>
-    <span class="kd">protected</span> <span class="n">WebSocket</span> <span class="nf">createWebSocket</span><span class="o">()</span> <span class="o">{</span>
+    <span class="kd">protected</span> <span class="n">WebSocket</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">,</span> <span class="n">ChatMessage</span><span class="o">&gt;</span> <span class="nf">createWebSocket</span><span class="o">()</span> <span class="o">{</span>
 
-        <span class="k">return</span> <span class="k">new</span> <span class="nf">WebSocket</span><span class="o">()</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="k">new</span> <span class="n">WebSocket</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">,</span> <span class="n">ChatMessage</span><span class="o">&gt;()</span> <span class="o">{</span>
 
             <span class="kd">private</span> <span class="n">UserInfo</span> <span class="n">user</span><span class="o">;</span>
 
             <span class="nd">@Override</span>
-            <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onMessage</span><span class="o">(</span><span class="n">String</span> <span class="n">text</span><span class="o">)</span> <span class="o">{</span> <span class="c1">// text 接收的格式:  {&quot;receiveid&quot;:200000001, &quot;content&quot;:&quot;Hi Redkale!&quot;}</span>
-                <span class="kd">final</span> <span class="n">ChatMessage</span> <span class="n">message</span> <span class="o">=</span> <span class="n">jsonConvert</span><span class="o">.</span><span class="na">convertFrom</span><span class="o">(</span><span class="n">ChatMessage</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="n">text</span><span class="o">);</span> <span class="c1">//获取给对方的消息体信息</span>
+            <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onMessage</span><span class="o">(</span><span class="n">ChatMessage</span> <span class="n">message</span><span class="o">,</span> <span class="kt">boolean</span> <span class="n">last</span><span class="o">)</span> <span class="o">{</span> <span class="c1">// text 接收的格式:  {"receiveid":200000001, "content":"Hi Redkale!"}</span>
                 <span class="n">message</span><span class="o">.</span><span class="na">sendid</span> <span class="o">=</span> <span class="n">user</span><span class="o">.</span><span class="na">getUserid</span><span class="o">();</span> <span class="c1">//将当前用户设为消息的发送方</span>
                 <span class="n">message</span><span class="o">.</span><span class="na">sendtime</span> <span class="o">=</span> <span class="n">System</span><span class="o">.</span><span class="na">currentTimeMillis</span><span class="o">();</span> <span class="c1">//设置消息发送时间</span>
                 <span class="c1">//给接收方发送消息, 即使接收方在其他WebSocket进程节点上有链接，Redkale也会自动发送到其他链接进程节点上。</span>
-                <span class="kd">super</span><span class="o">.</span><span class="na">sendEachMessage</span><span class="o">(</span><span class="n">message</span><span class="o">.</span><span class="na">receiveid</span><span class="o">,</span> <span class="n">jsonConvert</span><span class="o">.</span><span class="na">convertTo</span><span class="o">(</span><span class="n">message</span><span class="o">));</span>
+                <span class="kd">super</span><span class="o">.</span><span class="na">sendMessage</span><span class="o">(</span><span class="n">message</span><span class="o">,</span> <span class="n">message</span><span class="o">.</span><span class="na">receiveid</span><span class="o">);</span>
             <span class="o">}</span>
 
             <span class="nd">@Override</span>
-            <span class="kd">protected</span> <span class="n">Serializable</span> <span class="nf">createGroupid</span><span class="o">()</span> <span class="o">{</span> <span class="c1">//以用户ID作为WebSocketGroup的groupid</span>
+            <span class="kd">protected</span> <span class="n">CompletableFuture</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">&gt;</span> <span class="nf">createUserid</span><span class="o">()</span> <span class="o">{</span> <span class="c1">//创建用户ID</span>
                 <span class="k">this</span><span class="o">.</span><span class="na">user</span> <span class="o">=</span> <span class="n">userService</span><span class="o">.</span><span class="na">current</span><span class="o">(</span><span class="n">String</span><span class="o">.</span><span class="na">valueOf</span><span class="o">(</span><span class="kd">super</span><span class="o">.</span><span class="na">getSessionid</span><span class="o">()));</span>
-                <span class="k">return</span> <span class="k">this</span><span class="o">.</span><span class="na">user</span> <span class="o">==</span> <span class="kc">null</span> <span class="o">?</span> <span class="kc">null</span> <span class="o">:</span> <span class="k">this</span><span class="o">.</span><span class="na">user</span><span class="o">.</span><span class="na">getUserid</span><span class="o">();</span>
+                <span class="k">return</span> <span class="n">CompletableFuture</span><span class="o">.</span><span class="na">completedFuture</span><span class="o">(</span><span class="k">this</span><span class="o">.</span><span class="na">user</span> <span class="o">==</span> <span class="kc">null</span> <span class="o">?</span> <span class="kc">null</span> <span class="o">:</span> <span class="k">this</span><span class="o">.</span><span class="na">user</span><span class="o">.</span><span class="na">getUserid</span><span class="o">());</span>
             <span class="o">}</span>
 
             <span class="nd">@Override</span>
-            <span class="kd">public</span> <span class="n">Serializable</span> <span class="nf">onOpen</span><span class="o">(</span><span class="n">HttpRequest</span> <span class="n">request</span><span class="o">)</span> <span class="o">{</span>
-                <span class="k">return</span> <span class="n">request</span><span class="o">.</span><span class="na">getSessionid</span><span class="o">(</span><span class="kc">false</span><span class="o">);</span> <span class="c1">//以request中的sessionid字符串作为WebSocket的sessionid</span>
+            <span class="kd">public</span> <span class="n">CompletableFuture</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span> <span class="nf">onOpen</span><span class="o">(</span><span class="n">HttpRequest</span> <span class="n">request</span><span class="o">)</span> <span class="o">{</span>
+                <span class="k">return</span> <span class="n">CompletableFuture</span><span class="o">.</span><span class="na">completedFuture</span><span class="o">(</span><span class="n">request</span><span class="o">.</span><span class="na">getSessionid</span><span class="o">(</span><span class="kc">false</span><span class="o">));</span> <span class="c1">//以request中的sessionid字符串作为WebSocket的sessionid</span>
             <span class="o">}</span>
 
         <span class="o">};</span>
@@ -249,7 +245,8 @@
 
         <span class="kd">public</span> <span class="kt">long</span> <span class="n">sendtime</span><span class="o">;</span>  <span class="c1">//消息发送时间</span>
     <span class="o">}</span>
-<span class="o">}</span></pre></div>
+<span class="o">}</span>
+                </pre></div>
 
             <p id="net_httprequest">&nbsp;&nbsp;<b>. HttpRequest 对象</b> </p>
             <div class="highlight"><pre><span></span><span class="kd">public</span> <span class="kd">class</span> <span class="nc">HttpRequest</span> <span class="o">{</span>
@@ -268,14 +265,29 @@
     <span class="kd">public</span> <span class="n">String</span> <span class="nf">getBodyUTF8</span><span class="o">();</span>
 
     <span class="c1">//获取请求内容的byte[]</span>
-    <span class="kd">public</span> <span class="kt">byte</span>[] <span class="nf">getBody</span><span class="o">();</span>
+    <span class="kd">public</span> <span class="kt">byte</span><span class="o">[]</span> <span class="nf">getBody</span><span class="o">();</span>
+    
+    <span class="c1">//获取请求内容的JavaBean对象</span>
+    <span class="kd">public</span> <span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">T</span> <span class="nf">getBodyJson</span><span class="o">(</span><span class="n">java</span><span class="o">.</span><span class="na">lang</span><span class="o">.</span><span class="na">reflect</span><span class="o">.</span><span class="na">Type</span> <span class="n">type</span><span class="o">);</span>
 
+    <span class="c1">//获取请求内容的JavaBean对象</span>
+    <span class="kd">public</span> <span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">T</span> <span class="nf">getBodyJson</span><span class="o">(</span><span class="n">JsonConvert</span> <span class="n">convert</span><span class="o">,</span> <span class="n">java</span><span class="o">.</span><span class="na">lang</span><span class="o">.</span><span class="na">reflect</span><span class="o">.</span><span class="na">Type</span> <span class="n">type</span><span class="o">);</span>
+    
     <span class="c1">//获取文件上传对象</span>
     <span class="kd">public</span> <span class="n">MultiContext</span> <span class="nf">getMultiContext</span><span class="o">();</span>
 
     <span class="c1">//获取文件上传信息列表 等价于 getMultiContext().parts();</span>
     <span class="kd">public</span> <span class="n">Iterable</span><span class="o">&lt;</span><span class="n">MultiPart</span><span class="o">&gt;</span> <span class="nf">multiParts</span><span class="o">()</span> <span class="kd">throws</span> <span class="n">IOException</span><span class="o">;</span>
 
+    <span class="c1">//获取当前用户信息 数据类型由@HttpUserType指定</span>
+    <span class="kd">public</span> <span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">T</span> <span class="nf">currentUser</span><span class="o">();</span>
+    
+    <span class="c1">//获取模块ID，来自@HttpServlet.moduleid()</span>
+    <span class="kd">public</span> <span class="kt">int</span> <span class="nf">getModuleid</span><span class="o">();</span>
+    
+    <span class="c1">//获取操作ID，来自@HttpMapping.actionid()</span>
+    <span class="kd">public</span> <span class="kt">int</span> <span class="nf">getActionid</span><span class="o">();</span>
+    
     <span class="c1">//获取sessionid</span>
     <span class="kd">public</span> <span class="n">String</span> <span class="nf">getSessionid</span><span class="o">(</span><span class="kt">boolean</span> <span class="n">autoCreate</span><span class="o">);</span>
 
@@ -361,54 +373,54 @@
     <span class="c1">// 获取type参数: double type = request.getRequstURILastPath(0.0); //type = 2.0</span>
     <span class="kd">public</span> <span class="kt">double</span> <span class="nf">getRequstURILastPath</span><span class="o">(</span><span class="kt">double</span> <span class="n">defvalue</span><span class="o">);</span>
 
-    <span class="c1">//从prefix之后截取getRequestURI再对&quot;/&quot;进行分隔</span>
+    <span class="c1">//从prefix之后截取getRequestURI再对"/"进行分隔</span>
     <span class="kd">public</span> <span class="n">String</span><span class="o">[]</span> <span class="nf">getRequstURIPaths</span><span class="o">(</span><span class="n">String</span> <span class="n">prefix</span><span class="o">);</span>
 
     <span class="c1">// 获取请求URL分段中含prefix段的值</span>
     <span class="c1">// 例如请求URL /pipes/record/query/name:hello</span>
-    <span class="c1">// 获取name参数: String name = request.getRequstURIPath(&quot;name:&quot;, &quot;none&quot;);</span>
+    <span class="c1">// 获取name参数: String name = request.getRequstURIPath("name:", "none");</span>
     <span class="kd">public</span> <span class="n">String</span> <span class="nf">getRequstURIPath</span><span class="o">(</span><span class="n">String</span> <span class="n">prefix</span><span class="o">,</span> <span class="n">String</span> <span class="n">defaultValue</span><span class="o">);</span>
 
     <span class="c1">// 获取请求URL分段中含prefix段的short值</span>
     <span class="c1">// 例如请求URL /pipes/record/query/type:10</span>
-    <span class="c1">// 获取type参数: short type = request.getRequstURIPath(&quot;type:&quot;, (short)0);</span>
+    <span class="c1">// 获取type参数: short type = request.getRequstURIPath("type:", (short)0);</span>
     <span class="kd">public</span> <span class="kt">short</span> <span class="nf">getRequstURIPath</span><span class="o">(</span><span class="n">String</span> <span class="n">prefix</span><span class="o">,</span> <span class="kt">short</span> <span class="n">defaultValue</span><span class="o">);</span>
 
     <span class="c1">// 获取请求URL分段中含prefix段的short值</span>
     <span class="c1">// 例如请求URL /pipes/record/query/type:a</span>
-    <span class="c1">// 获取type参数: short type = request.getRequstURIPath(16, &quot;type:&quot;, (short)0); type = 10</span>
+    <span class="c1">// 获取type参数: short type = request.getRequstURIPath(16, "type:", (short)0); type = 10</span>
     <span class="kd">public</span> <span class="kt">short</span> <span class="nf">getRequstURIPath</span><span class="o">(</span><span class="kt">int</span> <span class="n">radix</span><span class="o">,</span> <span class="n">String</span> <span class="n">prefix</span><span class="o">,</span> <span class="kt">short</span> <span class="n">defvalue</span><span class="o">);</span>
 
     <span class="c1">// 获取请求URL分段中含prefix段的int值</span>
     <span class="c1">// 例如请求URL /pipes/record/query/offset:2/limit:50</span>
-    <span class="c1">// 获取offset参数: int offset = request.getRequstURIPath(&quot;offset:&quot;, 1);</span>
-    <span class="c1">// 获取limit参数: int limit = request.getRequstURIPath(&quot;limit:&quot;, 20);</span>
+    <span class="c1">// 获取offset参数: int offset = request.getRequstURIPath("offset:", 1);</span>
+    <span class="c1">// 获取limit参数: int limit = request.getRequstURIPath("limit:", 20);</span>
     <span class="kd">public</span> <span class="kt">int</span> <span class="nf">getRequstURIPath</span><span class="o">(</span><span class="n">String</span> <span class="n">prefix</span><span class="o">,</span> <span class="kt">int</span> <span class="n">defaultValue</span><span class="o">);</span>
 
     <span class="c1">// 获取请求URL分段中含prefix段的int值</span>
     <span class="c1">// 例如请求URL /pipes/record/query/offset:2/limit:10</span>
-    <span class="c1">// 获取offset参数: int offset = request.getRequstURIPath(&quot;offset:&quot;, 1);</span>
-    <span class="c1">// 获取limit参数: int limit = request.getRequstURIPath(16, &quot;limit:&quot;, 20); // limit = 16</span>
+    <span class="c1">// 获取offset参数: int offset = request.getRequstURIPath("offset:", 1);</span>
+    <span class="c1">// 获取limit参数: int limit = request.getRequstURIPath(16, "limit:", 20); // limit = 16</span>
     <span class="kd">public</span> <span class="kt">int</span> <span class="nf">getRequstURIPath</span><span class="o">(</span><span class="kt">int</span> <span class="n">radix</span><span class="o">,</span> <span class="n">String</span> <span class="n">prefix</span><span class="o">,</span> <span class="kt">int</span> <span class="n">defaultValue</span><span class="o">);</span>
 
     <span class="c1">// 获取请求URL分段中含prefix段的float值   </span>
     <span class="c1">// 例如请求URL /pipes/record/query/point:40.0  </span>
-    <span class="c1">// 获取time参数: float point = request.getRequstURIPath(&quot;point:&quot;, 0.0f);</span>
+    <span class="c1">// 获取time参数: float point = request.getRequstURIPath("point:", 0.0f);</span>
     <span class="kd">public</span> <span class="kt">float</span> <span class="nf">getRequstURIPath</span><span class="o">(</span><span class="n">String</span> <span class="n">prefix</span><span class="o">,</span> <span class="kt">float</span> <span class="n">defvalue</span><span class="o">);</span>
 
     <span class="c1">// 获取请求URL分段中含prefix段的long值</span>
     <span class="c1">// 例如请求URL /pipes/record/query/time:1453104341363/id:40</span>
-    <span class="c1">// 获取time参数: long time = request.getRequstURIPath(&quot;time:&quot;, 0L);</span>
+    <span class="c1">// 获取time参数: long time = request.getRequstURIPath("time:", 0L);</span>
     <span class="kd">public</span> <span class="kt">long</span> <span class="nf">getRequstURIPath</span><span class="o">(</span><span class="n">String</span> <span class="n">prefix</span><span class="o">,</span> <span class="kt">long</span> <span class="n">defaultValue</span><span class="o">);</span>
 
     <span class="c1">// 获取请求URL分段中含prefix段的long值</span>
     <span class="c1">// 例如请求URL /pipes/record/query/time:1453104341363/id:40</span>
-    <span class="c1">// 获取time参数: long time = request.getRequstURIPath(&quot;time:&quot;, 0L);</span>
+    <span class="c1">// 获取time参数: long time = request.getRequstURIPath("time:", 0L);</span>
     <span class="kd">public</span> <span class="kt">long</span> <span class="nf">getRequstURIPath</span><span class="o">(</span><span class="kt">int</span> <span class="n">radix</span><span class="o">,</span> <span class="n">String</span> <span class="n">prefix</span><span class="o">,</span> <span class="kt">long</span> <span class="n">defvalue</span><span class="o">);</span>
 
     <span class="c1">// 获取请求URL分段中含prefix段的double值   &lt;br&gt;</span>
     <span class="c1">// 例如请求URL /pipes/record/query/point:40.0   &lt;br&gt;</span>
-    <span class="c1">// 获取time参数: double point = request.getRequstURIPath(&quot;point:&quot;, 0.0);</span>
+    <span class="c1">// 获取time参数: double point = request.getRequstURIPath("point:", 0.0);</span>
     <span class="kd">public</span> <span class="kt">double</span> <span class="nf">getRequstURIPath</span><span class="o">(</span><span class="n">String</span> <span class="n">prefix</span><span class="o">,</span> <span class="kt">double</span> <span class="n">defvalue</span><span class="o">);</span>
 
     <span class="c1">//获取所有的header名</span>
@@ -504,20 +516,20 @@
     <span class="c1">//获取指定的参数double值, 没有返回默认double值</span>
     <span class="kd">public</span> <span class="kt">double</span> <span class="nf">getDoubleParameter</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">,</span> <span class="kt">double</span> <span class="n">defaultValue</span><span class="o">);</span>
 
-    <span class="c1">//获取翻页对象 同 getFlipper(&quot;flipper&quot;, false, 0);</span>
+    <span class="c1">//获取翻页对象 同 getFlipper("flipper", false, 0);</span>
     <span class="kd">public</span> <span class="n">org</span><span class="o">.</span><span class="na">redkale</span><span class="o">.</span><span class="na">source</span><span class="o">.</span><span class="na">Flipper</span> <span class="nf">getFlipper</span><span class="o">();</span>
 
-    <span class="c1">//获取翻页对象 同 getFlipper(&quot;flipper&quot;, needcreate, 0);</span>
+    <span class="c1">//获取翻页对象 同 getFlipper("flipper", needcreate, 0);</span>
     <span class="kd">public</span> <span class="n">org</span><span class="o">.</span><span class="na">redkale</span><span class="o">.</span><span class="na">source</span><span class="o">.</span><span class="na">Flipper</span> <span class="nf">getFlipper</span><span class="o">(</span><span class="kt">boolean</span> <span class="n">needcreate</span><span class="o">);</span>
 
-    <span class="c1">//获取翻页对象 同 getFlipper(&quot;flipper&quot;, false, maxLimit);</span>
+    <span class="c1">//获取翻页对象 同 getFlipper("flipper", false, maxLimit);</span>
     <span class="kd">public</span> <span class="n">org</span><span class="o">.</span><span class="na">redkale</span><span class="o">.</span><span class="na">source</span><span class="o">.</span><span class="na">Flipper</span> <span class="nf">getFlipper</span><span class="o">(</span><span class="kt">int</span> <span class="n">maxLimit</span><span class="o">);</span>
 
-    <span class="c1">//获取翻页对象 同 getFlipper(&quot;flipper&quot;, needcreate, maxLimit)</span>
+    <span class="c1">//获取翻页对象 同 getFlipper("flipper", needcreate, maxLimit)</span>
     <span class="kd">public</span> <span class="n">org</span><span class="o">.</span><span class="na">redkale</span><span class="o">.</span><span class="na">source</span><span class="o">.</span><span class="na">Flipper</span> <span class="nf">getFlipper</span><span class="o">(</span><span class="kt">boolean</span> <span class="n">needcreate</span><span class="o">,</span> <span class="kt">int</span> <span class="n">maxLimit</span><span class="o">);</span>
 
     <span class="c1">//获取翻页对象 http://redkale.org/pipes/records/list/offset:0/limit:20/sort:createtime%20ASC</span>
-    <span class="c1">//http://redkale.org/pipes/records/list?flipper={&#39;offset&#39;:0,&#39;limit&#39;:20, &#39;sort&#39;:&#39;createtime ASC&#39;}</span>
+    <span class="c1">//http://redkale.org/pipes/records/list?flipper={'offset':0,'limit':20, 'sort':'createtime ASC'}</span>
     <span class="c1">//以上两种接口都可以获取到翻页对象</span>
     <span class="kd">public</span> <span class="n">org</span><span class="o">.</span><span class="na">redkale</span><span class="o">.</span><span class="na">source</span><span class="o">.</span><span class="na">Flipper</span> <span class="nf">getFlipper</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">,</span> <span class="kt">boolean</span> <span class="n">needcreate</span><span class="o">,</span> <span class="kt">int</span> <span class="n">maxLimit</span><span class="o">);</span>
 
@@ -527,13 +539,13 @@
     <span class="c1">//获取所有属性值, servlet执行完后会被清空</span>
     <span class="kd">public</span> <span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">Object</span><span class="o">&gt;</span> <span class="nf">getAttributes</span><span class="o">();</span>
 
-    <span class="c1">//获取指定属性值</span>
+    <span class="c1">//获取指定属性值, servlet执行完后会被清空</span>
     <span class="kd">public</span> <span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">T</span> <span class="nf">getAttribute</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">);</span>
 
     <span class="c1">//删除指定属性</span>
     <span class="kd">public</span> <span class="kt">void</span> <span class="nf">removeAttribute</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">);</span>
 
-    <span class="c1">//设置属性值</span>
+    <span class="c1">//设置属性值, servlet执行完后会被清空</span>
     <span class="kd">public</span> <span class="kt">void</span> <span class="nf">setAttribute</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">,</span> <span class="n">Object</span> <span class="n">value</span><span class="o">);</span>
 
     <span class="c1">//获取request创建时间</span>
@@ -551,6 +563,12 @@
     <span class="c1">//增加Cookie值</span>
     <span class="kd">public</span> <span class="n">HttpResponse</span> <span class="nf">addCookie</span><span class="o">(</span><span class="n">Collection</span><span class="o">&lt;</span><span class="n">HttpCookie</span><span class="o">&gt;</span> <span class="n">cookies</span><span class="o">);</span>
 
+    <span class="c1">//创建AsyncHandler实例，将非字符串对象以JSON格式输出，字符串以文本输出</span>
+    <span class="kd">public</span> <span class="n">AsyncHandler</span> <span class="nf">createAsyncHandler</span><span class="o">();</span>
+
+    <span class="c1">//传入的AsyncHandler子类必须是public，且保证其子类可被继承且completed、failed可被重载且包含空参数的构造函数</span>
+    <span class="kd">public</span> <span class="o">&lt;</span><span class="n">H</span> <span class="kd">extends</span> <span class="n">AsyncHandler</span><span class="o">&gt;</span> <span class="n">H</span> <span class="nf">createAsyncHandler</span><span class="o">(</span><span class="n">Class</span><span class="o">&lt;</span><span class="n">H</span><span class="o">&gt;</span> <span class="n">handlerClass</span><span class="o">);</span>
+    
     <span class="c1">//设置状态码</span>
     <span class="kd">public</span> <span class="kt">void</span> <span class="nf">setStatus</span><span class="o">(</span><span class="kt">int</span> <span class="n">status</span><span class="o">);</span>
 
@@ -585,9 +603,9 @@
     <span class="c1">//异步输出指定内容</span>
     <span class="kd">public</span> <span class="o">&lt;</span><span class="n">A</span><span class="o">&gt;</span> <span class="kt">void</span> <span class="nf">sendBody</span><span class="o">(</span><span class="n">ByteBuffer</span> <span class="n">buffer</span><span class="o">,</span> <span class="n">A</span> <span class="n">attachment</span><span class="o">,</span> <span class="n">AsyncHandler</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">,</span> <span class="n">A</span><span class="o">&gt;</span> <span class="n">handler</span><span class="o">);</span>
 
-    <span class="c1">//创建AsyncHandler实例，将非字符串对象以JSON格式输出，字符串以文本输出</span>
-    <span class="kd">public</span> <span class="n">AsyncHandler</span> <span class="nf">createAsyncHandler</span><span class="o">();</span>
-
+    <span class="c1">//异步输出指定内容</span>
+    <span class="kd">public</span> <span class="o">&lt;</span><span class="n">A</span><span class="o">&gt;</span> <span class="kt">void</span> <span class="nf">sendBody</span><span class="o">(</span><span class="n">ByteBuffer</span><span class="o">[]</span> <span class="n">buffers</span><span class="o">,</span> <span class="n">A</span> <span class="n">attachment</span><span class="o">,</span> <span class="n">AsyncHandler</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">,</span> <span class="n">A</span><span class="o">&gt;</span> <span class="n">handler</span><span class="o">);</span>
+    
     <span class="c1">//关闭HTTP连接，如果是keep-alive则不强制关闭</span>
     <span class="kd">public</span> <span class="kt">void</span> <span class="nf">finish</span><span class="o">();</span>
 
@@ -616,14 +634,20 @@
     <span class="kd">public</span> <span class="kt">void</span> <span class="nf">finishJson</span><span class="o">(</span><span class="kd">final</span> <span class="n">JsonConvert</span> <span class="n">convert</span><span class="o">,</span> <span class="kd">final</span> <span class="n">org</span><span class="o">.</span><span class="na">redkale</span><span class="o">.</span><span class="na">service</span><span class="o">.</span><span class="na">RetResult</span> <span class="n">ret</span><span class="o">);</span>
 
     <span class="c1">//将CompletableFuture的结果对象以JSON格式输出</span>
-    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">finishJson</span><span class="o">(</span><span class="n">CompletableFuture</span> <span class="n">future</span><span class="o">);</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">finishJson</span><span class="o">(</span><span class="kd">final</span> <span class="n">CompletableFuture</span> <span class="n">future</span><span class="o">);</span>
 
     <span class="c1">//将CompletableFuture的结果对象以JSON格式输出</span>
-    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">finishJson</span><span class="o">(</span><span class="n">JsonConvert</span> <span class="n">convert</span><span class="o">,</span> <span class="n">CompletableFuture</span> <span class="n">future</span><span class="o">);</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">finishJson</span><span class="o">(</span><span class="kd">final</span> <span class="n">JsonConvert</span> <span class="n">convert</span><span class="o">,</span> <span class="kd">final</span> <span class="n">CompletableFuture</span> <span class="n">future</span><span class="o">);</span>
 
     <span class="c1">//将CompletableFuture的结果对象以JSON格式输出</span>
     <span class="kd">public</span> <span class="kt">void</span> <span class="nf">finishJson</span><span class="o">(</span><span class="kd">final</span> <span class="n">JsonConvert</span> <span class="n">convert</span><span class="o">,</span> <span class="kd">final</span> <span class="n">Type</span> <span class="n">type</span><span class="o">,</span> <span class="kd">final</span> <span class="n">CompletableFuture</span> <span class="n">future</span><span class="o">);</span>
 
+    <span class="c1">//将HttpResult的结果对象以JSON格式输出</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">finishJson</span><span class="o">(</span><span class="kd">final</span> <span class="n">HttpResult</span> <span class="n">result</span><span class="o">);</span>
+    
+    <span class="c1">//将HttpResult的结果对象以JSON格式输出</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">finishJson</span><span class="o">(</span><span class="kd">final</span> <span class="n">JsonConvert</span> <span class="n">convert</span><span class="o">,</span> <span class="kd">final</span> <span class="n">HttpResult</span> <span class="n">result</span><span class="o">)</span> <span class="o">;</span>
+    
     <span class="c1">//将指定字符串以响应结果输出</span>
     <span class="kd">public</span> <span class="kt">void</span> <span class="nf">finish</span><span class="o">(</span><span class="n">String</span> <span class="n">obj</span><span class="o">);</span>
 
@@ -660,76 +684,106 @@
     <span class="kd">public</span> <span class="kt">void</span> <span class="nf">finish</span><span class="o">(</span><span class="kd">final</span> <span class="n">String</span> <span class="n">filename</span><span class="o">,</span> <span class="n">File</span> <span class="n">file</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span><span class="o">;</span>
 
     <span class="c1">//HttpResponse回收时回调的监听方法</span>
-    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">setRecycleListener</span><span class="o">(</span><span class="n">BiConsumer</span><span class="o">&lt;</span><span class="n">HttpRequest</span><span class="o">,</span> <span class="n">HttpResponse</span><span class="o">&gt;</span> <span class="n">recycleListener</span><span class="o">);</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">recycleListener</span><span class="o">(</span><span class="n">BiConsumer</span><span class="o">&lt;</span><span class="n">HttpRequest</span><span class="o">,</span> <span class="n">HttpResponse</span><span class="o">&gt;</span> <span class="n">recycleListener</span><span class="o">);</span>
+
 <span class="o">}</span>
                 </pre></div>
 
 
             <p id="net_websocket">&nbsp;&nbsp;<b>. WebSocket 对象</b> </p>
-            <div class="highlight"><pre><span class="kd">public</span> <span class="kd">abstract</span> <span class="kd">class</span> <span class="nc">WebSocket</span> <span class="o">{</span>
+            <div class="highlight"><pre><span></span><span class="kd">public</span> <span class="kd">abstract</span> <span class="kd">class</span> <span class="nc">WebSocket</span><span class="o">&lt;</span><span class="n">G</span><span class="o">,</span> <span class="n">T</span><span class="o">&gt;</span> <span class="o">{</span>
 
-    <span class="c1">//发送消息体, 包含二进制/文本  返回结果0表示成功，非0表示错误码</span>
-    <span class="kd">public</span> <span class="kt">int</span> <span class="nf">send</span><span class="o">(</span><span class="n">WebSocketPacket</span> <span class="n">packet</span><span class="o">);</span>
+    <span class="c1">//给自身发送消息, 消息类型是String或byte[]或可JavaBean对象  返回结果0表示成功，非0表示错误码</span>
+    <span class="kd">public</span> <span class="n">CompletableFuture</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">&gt;</span> <span class="nf">send</span><span class="o">(</span><span class="n">Object</span> <span class="n">message</span><span class="o">);</span>
 
-    <span class="c1">//发送单一的文本消息  返回结果0表示成功，非0表示错误码</span>
-    <span class="kd">public</span> <span class="kt">int</span> <span class="nf">send</span><span class="o">(</span><span class="n">String</span> <span class="n">text</span><span class="o">);</span>
+    <span class="c1">//给自身发送消息, 消息类型是String或byte[]或可JavaBean对象  返回结果0表示成功，非0表示错误码</span>
+    <span class="kd">public</span> <span class="n">CompletableFuture</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">&gt;</span> <span class="nf">send</span><span class="o">(</span><span class="n">Object</span> <span class="n">message</span><span class="o">,</span> <span class="kt">boolean</span> <span class="n">last</span><span class="o">);</span>
 
-    <span class="c1">//发送文本消息  返回结果0表示成功，非0表示错误码</span>
-    <span class="kd">public</span> <span class="kt">int</span> <span class="nf">send</span><span class="o">(</span><span class="n">String</span> <span class="n">text</span><span class="o">,</span> <span class="kt">boolean</span> <span class="n">last</span><span class="o">);</span>
+    <span class="c1">//给自身发送消息, 消息类型是JavaBean对象  返回结果0表示成功，非0表示错误码</span>
+    <span class="kd">public</span> <span class="n">CompletableFuture</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">&gt;</span> <span class="nf">send</span><span class="o">(</span><span class="n">JsonConvert</span> <span class="n">convert</span><span class="o">,</span> <span class="n">Object</span> <span class="n">message</span><span class="o">);</span>
 
-    <span class="c1">//发送单一的二进制消息  返回结果0表示成功，非0表示错误码</span>
-    <span class="kd">public</span> <span class="kt">int</span> <span class="nf">send</span><span class="o">(</span><span class="kt">byte</span><span class="o">[]</span> <span class="n">data</span><span class="o">);</span>
+    <span class="c1">//给自身发送消息, 消息类型是JavaBean对象  返回结果0表示成功，非0表示错误码</span>
+    <span class="kd">public</span> <span class="n">CompletableFuture</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">&gt;</span> <span class="nf">send</span><span class="o">(</span><span class="n">JsonConvert</span> <span class="n">convert</span><span class="o">,</span> <span class="n">Object</span> <span class="n">message</span><span class="o">,</span> <span class="kt">boolean</span> <span class="n">last</span><span class="o">);</span>
 
-    <span class="c1">//发送单一的二进制消息  返回结果0表示成功，非0表示错误码</span>
-    <span class="kd">public</span> <span class="kt">int</span> <span class="nf">send</span><span class="o">(</span><span class="kt">byte</span><span class="o">[]</span> <span class="n">data</span><span class="o">,</span> <span class="kt">boolean</span> <span class="n">last</span><span class="o">);</span>
+    <span class="c1">//给指定userid的WebSocket节点发送 二进制消息/文本消息/JavaBean对象消息  返回结果0表示成功，非0表示错误码</span>
+    <span class="kd">public</span> <span class="n">CompletableFuture</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">&gt;</span> <span class="nf">sendMessage</span><span class="o">(</span><span class="n">Object</span> <span class="n">message</span><span class="o">,</span> <span class="n">G</span><span class="o">...</span> <span class="n">userids</span><span class="o">);</span>
 
-    <span class="c1">//发送消息, 消息类型是String或byte[]  返回结果0表示成功，非0表示错误码</span>
-    <span class="kd">public</span> <span class="kt">int</span> <span class="nf">send</span><span class="o">(</span><span class="n">Serializable</span> <span class="n">message</span><span class="o">,</span> <span class="kt">boolean</span> <span class="n">last</span><span class="o">);</span>
+    <span class="c1">//给指定userid的WebSocket节点发送 二进制消息/文本消息/JavaBean对象消息  返回结果0表示成功，非0表示错误码</span>
+    <span class="kd">public</span> <span class="n">CompletableFuture</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">&gt;</span> <span class="nf">sendMessage</span><span class="o">(</span><span class="n">Object</span> <span class="n">message</span><span class="o">,</span> <span class="kt">boolean</span> <span class="n">last</span><span class="o">,</span> <span class="n">G</span><span class="o">...</span> <span class="n">userids</span><span class="o">);</span>
 
-    <span class="c1">//给指定groupid的WebSocketGroup下所有WebSocket节点发送文本消息</span>
-    <span class="kd">public</span> <span class="kt">int</span> <span class="nf">sendEachMessage</span><span class="o">(</span><span class="n">Serializable</span> <span class="n">groupid</span><span class="o">,</span> <span class="n">String</span> <span class="n">text</span><span class="o">);</span>
+    <span class="c1">//给所有人广播消息, 返回结果0表示成功，非0表示错误码</span>
+    <span class="kd">public</span> <span class="n">CompletableFuture</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">&gt;</span> <span class="nf">broadcastMessage</span><span class="o">(</span><span class="kd">final</span> <span class="n">Object</span> <span class="n">message</span><span class="o">);</span>
 
-    <span class="c1">//给指定groupid的WebSocketGroup下所有WebSocket节点发送文本消息</span>
-    <span class="kd">public</span> <span class="kt">int</span> <span class="nf">sendEachMessage</span><span class="o">(</span><span class="n">Serializable</span> <span class="n">groupid</span><span class="o">,</span> <span class="n">String</span> <span class="n">text</span><span class="o">,</span> <span class="kt">boolean</span> <span class="n">last</span><span class="o">);</span>
+    <span class="c1">//给所有人广播消息, 返回结果0表示成功，非0表示错误码</span>
+    <span class="kd">public</span> <span class="n">CompletableFuture</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">&gt;</span> <span class="nf">broadcastMessage</span><span class="o">(</span><span class="kd">final</span> <span class="n">Object</span> <span class="n">message</span><span class="o">,</span> <span class="kt">boolean</span> <span class="n">last</span><span class="o">);</span>
 
-    <span class="c1">//给指定groupid的WebSocketGroup下所有WebSocket节点发送二进制消息</span>
-    <span class="kd">public</span> <span class="kt">int</span> <span class="nf">sendEachMessage</span><span class="o">(</span><span class="n">Serializable</span> <span class="n">groupid</span><span class="o">,</span> <span class="kt">byte</span><span class="o">[]</span> <span class="n">data</span><span class="o">);</span>
+    <span class="c1">//获取用户在线的SNCP节点地址列表，不是分布式则返回元素数量为1，且元素值为null的列表</span>
+    <span class="kd">public</span> <span class="n">CompletableFuture</span><span class="o">&lt;</span><span class="n">Collection</span><span class="o">&lt;</span><span class="n">InetSocketAddress</span><span class="o">&gt;&gt;</span> <span class="nf">getRpcNodeAddresses</span><span class="o">(</span><span class="kd">final</span> <span class="n">Serializable</span> <span class="n">userid</span><span class="o">);</span>
 
-    <span class="c1">//给指定groupid的WebSocketGroup下所有WebSocket节点发送二进制消息</span>
-    <span class="kd">public</span> <span class="kt">int</span> <span class="nf">sendEachMessage</span><span class="o">(</span><span class="n">Serializable</span> <span class="n">groupid</span><span class="o">,</span> <span class="kt">byte</span><span class="o">[]</span> <span class="n">data</span><span class="o">,</span> <span class="kt">boolean</span> <span class="n">last</span><span class="o">);</span>
-
-    <span class="c1">//给指定groupid的WebSocketGroup下最近接入的WebSocket节点发送文本消息</span>
-    <span class="kd">public</span> <span class="kt">int</span> <span class="nf">sendRecentMessage</span><span class="o">(</span><span class="n">Serializable</span> <span class="n">groupid</span><span class="o">,</span> <span class="n">String</span> <span class="n">text</span><span class="o">);</span>
-
-    <span class="c1">//给指定groupid的WebSocketGroup下最近接入的WebSocket节点发送文本消息</span>
-    <span class="kd">public</span> <span class="kt">int</span> <span class="nf">sendRecentMessage</span><span class="o">(</span><span class="n">Serializable</span> <span class="n">groupid</span><span class="o">,</span> <span class="n">String</span> <span class="n">text</span><span class="o">,</span> <span class="kt">boolean</span> <span class="n">last</span><span class="o">);</span>
-
-    <span class="c1">//给指定groupid的WebSocketGroup下最近接入的WebSocket节点发送二进制消息</span>
-    <span class="kd">public</span> <span class="kt">int</span> <span class="nf">sendRecentMessage</span><span class="o">(</span><span class="n">Serializable</span> <span class="n">groupid</span><span class="o">,</span> <span class="kt">byte</span><span class="o">[]</span> <span class="n">data</span><span class="o">);</span>
-
-    <span class="c1">//给指定groupid的WebSocketGroup下最近接入的WebSocket节点发送二进制消息</span>
-    <span class="kd">public</span> <span class="kt">int</span> <span class="nf">sendRecentMessage</span><span class="o">(</span><span class="n">Serializable</span> <span class="n">groupid</span><span class="o">,</span> <span class="kt">byte</span><span class="o">[]</span> <span class="n">data</span><span class="o">,</span> <span class="kt">boolean</span> <span class="n">last</span><span class="o">);</span>
+    <span class="c1">//获取在线用户的详细连接信息</span>
+    <span class="kd">public</span> <span class="n">CompletableFuture</span><span class="o">&lt;</span><span class="n">Map</span><span class="o">&lt;</span><span class="n">InetSocketAddress</span><span class="o">,</span> <span class="n">List</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;&gt;&gt;</span> <span class="nf">getRpcNodeWebSocketAddresses</span><span class="o">(</span><span class="kd">final</span> <span class="n">Serializable</span> <span class="n">userid</span><span class="o">);</span>
 
     <span class="c1">//发送PING消息  返回结果0表示成功，非0表示错误码</span>
-    <span class="kd">public</span> <span class="kt">int</span> <span class="nf">sendPing</span><span class="o">();</span>
+    <span class="kd">public</span> <span class="n">CompletableFuture</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">&gt;</span> <span class="nf">sendPing</span><span class="o">();</span>
 
     <span class="c1">//发送PING消息，附带其他信息  返回结果0表示成功，非0表示错误码</span>
-    <span class="kd">public</span> <span class="kt">int</span> <span class="nf">sendPing</span><span class="o">(</span><span class="kt">byte</span><span class="o">[]</span> <span class="n">data</span><span class="o">);</span>
+    <span class="kd">public</span> <span class="n">CompletableFuture</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">&gt;</span> <span class="nf">sendPing</span><span class="o">(</span><span class="kt">byte</span><span class="o">[]</span> <span class="n">data</span><span class="o">);</span>
 
     <span class="c1">//发送PONG消息，附带其他信息  返回结果0表示成功，非0表示错误码</span>
-    <span class="kd">public</span> <span class="kt">int</span> <span class="nf">sendPong</span><span class="o">(</span><span class="kt">byte</span><span class="o">[]</span> <span class="n">data</span><span class="o">);</span>
+    <span class="kd">public</span> <span class="n">CompletableFuture</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">&gt;</span> <span class="nf">sendPong</span><span class="o">(</span><span class="kt">byte</span><span class="o">[]</span> <span class="n">data</span><span class="o">);</span>
+
+
+    <span class="c1">//获取指定userid的WebSocket数组, 没有返回null  此方法用于单用户多连接模式</span>
+    <span class="kd">protected</span> <span class="n">Stream</span><span class="o">&lt;</span><span class="n">WebSocket</span><span class="o">&gt;</span> <span class="nf">getLocalWebSockets</span><span class="o">(</span><span class="n">G</span> <span class="n">userid</span><span class="o">);</span>
+
+
+    <span class="c1">//获取指定userid的WebSocket数组, 没有返回null 此方法用于单用户单连接模式</span>
+    <span class="kd">protected</span> <span class="n">WebSocket</span> <span class="nf">findLocalWebSocket</span><span class="o">(</span><span class="n">G</span> <span class="n">userid</span><span class="o">);</span>
+
+
+    <span class="c1">//获取当前进程节点所有在线的WebSocket</span>
+    <span class="kd">protected</span> <span class="n">Collection</span><span class="o">&lt;</span><span class="n">WebSocket</span><span class="o">&gt;</span> <span class="nf">getLocalWebSockets</span><span class="o">();</span>
+
+
+    <span class="c1">//返回sessionid, null表示连接不合法或异常,默认实现是request.sessionid(true)，通常需要重写该方法</span>
+    <span class="kd">protected</span> <span class="n">CompletableFuture</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span> <span class="nf">onOpen</span><span class="o">(</span><span class="kd">final</span> <span class="n">HttpRequest</span> <span class="n">request</span><span class="o">);</span>
+
+
+    <span class="c1">//创建userid， null表示异常， 必须实现该方法</span>
+    <span class="kd">protected</span> <span class="kd">abstract</span> <span class="n">G</span> <span class="nf">createUserid</span><span class="o">();</span>
+
+    <span class="c1">//标记为@WebSocketBinary才需要重写此方法</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onRead</span><span class="o">(</span><span class="n">AsyncConnection</span> <span class="n">channel</span><span class="o">);</span>
+
+    <span class="c1">//WebSokcet连接成功后的回调方法</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onConnected</span><span class="o">();</span>
+
+    <span class="c1">//ping后的回调方法</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onPing</span><span class="o">(</span><span class="kt">byte</span><span class="o">[]</span> <span class="n">bytes</span><span class="o">);</span>
+
+    <span class="c1">//pong后的回调方法</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onPong</span><span class="o">(</span><span class="kt">byte</span><span class="o">[]</span> <span class="n">bytes</span><span class="o">);</span>
+
+    <span class="c1">//接收到消息的回调方法</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onMessage</span><span class="o">(</span><span class="n">T</span> <span class="n">message</span><span class="o">,</span> <span class="kt">boolean</span> <span class="n">last</span><span class="o">);</span>
+
+    <span class="c1">//接收到二进制消息的回调方法</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onMessage</span><span class="o">(</span><span class="kt">byte</span><span class="o">[]</span> <span class="n">bytes</span><span class="o">,</span> <span class="kt">boolean</span> <span class="n">last</span><span class="o">);</span>
+
+    <span class="c1">//关闭的回调方法，调用此方法时WebSocket已经被关闭</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onClose</span><span class="o">(</span><span class="kt">int</span> <span class="n">code</span><span class="o">,</span> <span class="n">String</span> <span class="n">reason</span><span class="o">);</span>
 
     <span class="c1">//获取当前WebSocket下的属性</span>
-    <span class="kd">public</span> <span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">T</span> <span class="nf">getAttribute</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">);</span>
+    <span class="kd">public</span> <span class="n">T</span> <span class="nf">getAttribute</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">);</span>
 
     <span class="c1">//移出当前WebSocket下的属性</span>
-    <span class="kd">public</span> <span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">T</span> <span class="nf">removeAttribute</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">);</span>
+    <span class="kd">public</span> <span class="n">T</span> <span class="nf">removeAttribute</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">);</span>
 
     <span class="c1">//给当前WebSocket下的增加属性</span>
     <span class="kd">public</span> <span class="kt">void</span> <span class="nf">setAttribute</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">,</span> <span class="n">Object</span> <span class="n">value</span><span class="o">);</span>
 
-    <span class="c1">//获取当前WebSocket所属的groupid</span>
-    <span class="kd">public</span> <span class="n">Serializable</span> <span class="nf">getGroupid</span><span class="o">();</span>
+    <span class="c1">//获取当前WebSocket所属的userid</span>
+    <span class="kd">public</span> <span class="n">G</span> <span class="nf">userid</span><span class="o">();</span>
 
     <span class="c1">//获取当前WebSocket的会话ID， 不会为null</span>
     <span class="kd">public</span> <span class="n">Serializable</span> <span class="nf">getSessionid</span><span class="o">();</span>
@@ -743,58 +797,13 @@
     <span class="c1">//获取WebSocket创建时间</span>
     <span class="kd">public</span> <span class="kt">long</span> <span class="nf">getCreatetime</span><span class="o">();</span>
 
+    <span class="c1">//获取最后一次发送消息的时间</span>
+    <span class="kd">public</span> <span class="kt">long</span> <span class="nf">getLastSendTime</span><span class="o">();</span>
+
     <span class="c1">//显式地关闭WebSocket</span>
     <span class="kd">public</span> <span class="kt">void</span> <span class="nf">close</span><span class="o">();</span>
-
-    <span class="c1">//获取当前WebSocket所属的WebSocketGroup， 不会为null</span>
-    <span class="kd">protected</span> <span class="n">WebSocketGroup</span> <span class="nf">getWebSocketGroup</span><span class="o">();</span>
-
-    <span class="c1">//获取指定groupid的WebSocketGroup, 没有返回null</span>
-    <span class="kd">protected</span> <span class="n">WebSocketGroup</span> <span class="nf">getWebSocketGroup</span><span class="o">(</span><span class="n">Serializable</span> <span class="n">groupid</span><span class="o">);</span>
-
-    <span class="c1">//获取当前进程节点所有在线的WebSocketGroup</span>
-    <span class="kd">protected</span> <span class="n">Collection</span><span class="o">&lt;</span><span class="n">WebSocketGroup</span><span class="o">&gt;</span> <span class="nf">getWebSocketGroups</span><span class="o">();</span>
-
-    <span class="c1">//获取在线用户的节点地址列表</span>
-    <span class="kd">protected</span> <span class="n">Collection</span><span class="o">&lt;</span><span class="n">InetSocketAddress</span><span class="o">&gt;</span> <span class="nf">getOnlineNodes</span><span class="o">(</span><span class="n">Serializable</span> <span class="n">groupid</span><span class="o">);</span>
-
-    <span class="c1">//获取在线用户的详细连接信息</span>
-    <span class="kd">protected</span> <span class="n">Map</span><span class="o">&lt;</span><span class="n">InetSocketAddress</span><span class="o">,</span> <span class="n">List</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;&gt;</span> <span class="nf">getOnlineRemoteAddress</span><span class="o">(</span><span class="n">Serializable</span> <span class="n">groupid</span><span class="o">);</span>
-
-    <span class="c1">//返回sessionid, null表示连接不合法或异常,默认实现是request.getSessionid(false)，通常需要重写该方法</span>
-    <span class="kd">public</span> <span class="n">Serializable</span> <span class="nf">onOpen</span><span class="o">(</span><span class="kd">final</span> <span class="n">HttpRequest</span> <span class="n">request</span><span class="o">);</span>
-
-    <span class="c1">//创建groupid， null表示异常， 必须实现该方法， 通常为用户ID为groupid</span>
-    <span class="kd">protected</span> <span class="kd">abstract</span> <span class="n">Serializable</span> <span class="nf">createGroupid</span><span class="o">();</span>
-
-    <span class="c1">//标记为@WebSocketBinary才需要重写此方法</span>
-    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onRead</span><span class="o">(</span><span class="n">AsyncConnection</span> <span class="n">channel</span><span class="o">)</span> <span class="o">{</span>
-    <span class="o">}</span>
-
-    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onConnected</span><span class="o">()</span> <span class="o">{</span>
-    <span class="o">}</span>
-
-    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onMessage</span><span class="o">(</span><span class="n">String</span> <span class="n">text</span><span class="o">)</span> <span class="o">{</span>
-    <span class="o">}</span>
-
-    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onPing</span><span class="o">(</span><span class="kt">byte</span><span class="o">[]</span> <span class="n">bytes</span><span class="o">)</span> <span class="o">{</span>
-    <span class="o">}</span>
-
-    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onPong</span><span class="o">(</span><span class="kt">byte</span><span class="o">[]</span> <span class="n">bytes</span><span class="o">)</span> <span class="o">{</span>
-    <span class="o">}</span>
-
-    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onMessage</span><span class="o">(</span><span class="kt">byte</span><span class="o">[]</span> <span class="n">bytes</span><span class="o">)</span> <span class="o">{</span>
-    <span class="o">}</span>
-
-    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onFragment</span><span class="o">(</span><span class="n">String</span> <span class="n">text</span><span class="o">,</span> <span class="kt">boolean</span> <span class="n">last</span><span class="o">)</span> <span class="o">{</span>
-    <span class="o">}</span>
-
-    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onFragment</span><span class="o">(</span><span class="kt">byte</span><span class="o">[]</span> <span class="n">bytes</span><span class="o">,</span> <span class="kt">boolean</span> <span class="n">last</span><span class="o">)</span> <span class="o">{</span>
-    <span class="o">}</span>
-
-    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onClose</span><span class="o">(</span><span class="kt">int</span> <span class="n">code</span><span class="o">,</span> <span class="n">String</span> <span class="n">reason</span><span class="o">)</span> <span class="o">{</span>
-    <span class="o">}</span>
-<span class="o">}</span></pre></div>
+<span class="o">}</span>
+                </pre></div>
 
             <h3><a id="net_sncp" class="anchor" href="#" aria-hidden="true"></a>SNCP 协议</h3>
             <p>
