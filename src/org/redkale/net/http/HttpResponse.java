@@ -48,6 +48,8 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
 
     protected static final byte[] LINE = new byte[]{'\r', '\n'};
 
+    protected static final byte[] serverNameBytes = ("Server: redkale/" + Redkale.getDotedVersion() + "\r\n").getBytes();
+
     private static final Set<OpenOption> options = new HashSet<>();
 
     private static final DateFormat GMT_DATE_FORMAT = new SimpleDateFormat("EEE, dd-MMM-yyyy HH:mm:ss z", Locale.ENGLISH);
@@ -758,6 +760,8 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         if (!this.request.isKeepAlive()) {
             buffer.put("Connection: close\r\n".getBytes());
         }
+        buffer.put(serverNameBytes);
+
         if (this.defaultAddHeaders != null) {
             for (String[] headers : this.defaultAddHeaders) {
                 if (headers.length > 3) {
