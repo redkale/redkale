@@ -94,13 +94,6 @@
 
     <span class="kd">private</span> <span class="n">SncpClient</span> <span class="n">_redkale_client</span><span class="o">;</span>
 
-    <span class="kd">private</span> <span class="n">String</span> <span class="n">_redkale_selfstring</span><span class="o">;</span>
-
-    <span class="nd">@Override</span>
-    <span class="kd">public</span> <span class="n">String</span> <span class="nf">toString</span><span class="o">()</span> <span class="o">{</span>
-        <span class="k">return</span> <span class="n">_redkale_selfstring</span> <span class="o">==</span> <span class="kc">null</span> <span class="o">?</span> <span class="kd">super</span><span class="o">.</span><span class="na">toString</span><span class="o">()</span> <span class="o">:</span> <span class="n">_redkale_selfstring</span><span class="o">;</span>
-    <span class="o">}</span>
-
     <span class="nd">@Override</span>
     <span class="kd">public</span> <span class="kt">void</span> <span class="nf">register</span><span class="o">(</span><span class="n">UserInfo</span> <span class="n">user</span><span class="o">)</span> <span class="o">{</span>
         <span class="k">this</span><span class="o">.</span><span class="na">_redkale_register</span><span class="o">(</span><span class="kc">true</span><span class="o">,</span> <span class="kc">true</span><span class="o">,</span> <span class="kc">true</span><span class="o">,</span> <span class="n">user</span><span class="o">);</span>
