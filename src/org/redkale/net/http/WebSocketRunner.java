@@ -208,7 +208,6 @@ class WebSocketRunner implements Runnable {
         boolean debug = true;
         //System.out.println("推送消息");
         if (debug) context.getLogger().log(Level.FINEST, "send web socket message:  " + packet);
-        this.lastSendTime = System.currentTimeMillis();
         final CompletableFuture<Integer> futureResult = new CompletableFuture<>();
         if (writing.getAndSet(true)) {
             queue.add(new QueueEntry(futureResult, packet));
@@ -216,6 +215,7 @@ class WebSocketRunner implements Runnable {
         }
         ByteBuffer[] buffers = packet.sendBuffers != null ? packet.duplicateSendBuffers() : packet.encode(this.context.getBufferSupplier());
         try {
+            this.lastSendTime = System.currentTimeMillis();
             channel.write(buffers, buffers, new CompletionHandler<Integer, ByteBuffer[]>() {
 
                 private CompletableFuture<Integer> future = futureResult;
@@ -259,6 +259,7 @@ class WebSocketRunner implements Runnable {
                         if (entry != null) {
                             future = entry.future;
                             ByteBuffer[] buffers = packet.sendBuffers != null ? packet.duplicateSendBuffers() : packet.encode(context.getBufferSupplier());
+                            lastSendTime = System.currentTimeMillis();
                             channel.write(buffers, buffers, this);
                         }
                     } catch (Exception e) {

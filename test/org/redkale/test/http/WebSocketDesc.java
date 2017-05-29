@@ -8,6 +8,9 @@ package org.redkale.test.http;
 import java.io.*;
 import java.net.*;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.stream.Stream;
+import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.*;
 import org.redkale.net.http.*;
 
@@ -15,70 +18,99 @@ import org.redkale.net.http.*;
  *
  * @author zhangjx
  */
-public interface WebSocketDesc {
+public interface WebSocketDesc<G, T> {
 
-    //发送消息体, 包含二进制/文本  返回结果0表示成功，非0表示错误码
-    public int send(WebSocketPacket packet);
+    //给自身发送消息, 消息类型是String或byte[]或可JavaBean对象  返回结果0表示成功，非0表示错误码
+    public CompletableFuture<Integer> send(Object message);
 
-    //发送单一的文本消息  返回结果0表示成功，非0表示错误码
-    public int send(String text);
+    //给自身发送消息, 消息类型是String或byte[]或可JavaBean对象  返回结果0表示成功，非0表示错误码
+    public CompletableFuture<Integer> send(Object message, boolean last);
 
-    //发送文本消息  返回结果0表示成功，非0表示错误码
-    public int send(String text, boolean last);
+    //给自身发送消息, 消息类型是JavaBean对象  返回结果0表示成功，非0表示错误码
+    public CompletableFuture<Integer> send(JsonConvert convert, Object message);
 
-    //发送单一的二进制消息  返回结果0表示成功，非0表示错误码
-    public int send(byte[] data);
+    //给自身发送消息, 消息类型是JavaBean对象  返回结果0表示成功，非0表示错误码
+    public CompletableFuture<Integer> send(JsonConvert convert, Object message, boolean last);
 
-    //发送单一的二进制消息  返回结果0表示成功，非0表示错误码
-    public int send(byte[] data, boolean last);
+    //给指定userid的WebSocket节点发送 二进制消息/文本消息/JavaBean对象消息  返回结果0表示成功，非0表示错误码
+    public CompletableFuture<Integer> sendMessage(Object message, G... userids);
 
-    //发送消息, 消息类型是String或byte[]  返回结果0表示成功，非0表示错误码
-    public int send(Serializable message, boolean last);
+    //给指定userid的WebSocket节点发送 二进制消息/文本消息/JavaBean对象消息  返回结果0表示成功，非0表示错误码
+    public CompletableFuture<Integer> sendMessage(Object message, boolean last, G... userids);
 
-    //给指定groupid的WebSocketGroup下所有WebSocket节点发送文本消息
-    public int sendEachMessage(Serializable groupid, String text);
+    //给所有人广播消息, 返回结果0表示成功，非0表示错误码
+    public CompletableFuture<Integer> broadcastMessage(final Object message);
 
-    //给指定groupid的WebSocketGroup下所有WebSocket节点发送文本消息
-    public int sendEachMessage(Serializable groupid, String text, boolean last);
+    //给所有人广播消息, 返回结果0表示成功，非0表示错误码
+    public CompletableFuture<Integer> broadcastMessage(final Object message, boolean last);
 
-    //给指定groupid的WebSocketGroup下所有WebSocket节点发送二进制消息
-    public int sendEachMessage(Serializable groupid, byte[] data);
+    //获取用户在线的SNCP节点地址列表，不是分布式则返回元素数量为1，且元素值为null的列表
+    public CompletableFuture<Collection<InetSocketAddress>> getRpcNodeAddresses(final Serializable userid);
 
-    //给指定groupid的WebSocketGroup下所有WebSocket节点发送二进制消息
-    public int sendEachMessage(Serializable groupid, byte[] data, boolean last);
-
-    //给指定groupid的WebSocketGroup下最近接入的WebSocket节点发送文本消息
-    public int sendRecentMessage(Serializable groupid, String text);
-
-    //给指定groupid的WebSocketGroup下最近接入的WebSocket节点发送文本消息
-    public int sendRecentMessage(Serializable groupid, String text, boolean last);
-
-    //给指定groupid的WebSocketGroup下最近接入的WebSocket节点发送二进制消息
-    public int sendRecentMessage(Serializable groupid, byte[] data);
-
-    //给指定groupid的WebSocketGroup下最近接入的WebSocket节点发送二进制消息
-    public int sendRecentMessage(Serializable groupid, byte[] data, boolean last);
+    //获取在线用户的详细连接信息
+    public CompletableFuture<Map<InetSocketAddress, List<String>>> getRpcNodeWebSocketAddresses(final Serializable userid);
 
     //发送PING消息  返回结果0表示成功，非0表示错误码
-    public int sendPing();
+    public CompletableFuture<Integer> sendPing();
 
     //发送PING消息，附带其他信息  返回结果0表示成功，非0表示错误码
-    public int sendPing(byte[] data);
+    public CompletableFuture<Integer> sendPing(byte[] data);
 
     //发送PONG消息，附带其他信息  返回结果0表示成功，非0表示错误码
-    public int sendPong(byte[] data);
+    public CompletableFuture<Integer> sendPong(byte[] data);
+
+
+    //获取指定userid的WebSocket数组, 没有返回null  此方法用于单用户多连接模式
+    /* protected */    Stream<WebSocket> getLocalWebSockets(G userid);
+
+
+    //获取指定userid的WebSocket数组, 没有返回null 此方法用于单用户单连接模式
+    /* protected */    WebSocket findLocalWebSocket(G userid);
+
+
+    //获取当前进程节点所有在线的WebSocket
+    /* protected */ Collection<WebSocket> getLocalWebSockets();
+
+
+    //返回sessionid, null表示连接不合法或异常,默认实现是request.sessionid(true)，通常需要重写该方法
+    /* protected */ CompletableFuture<String> onOpen(final HttpRequest request);
+
+
+    //创建userid， null表示异常， 必须实现该方法
+    /* protected abstract */    G createUserid();
+
+    //标记为@WebSocketBinary才需要重写此方法
+    public void onRead(AsyncConnection channel);
+
+    //WebSokcet连接成功后的回调方法
+    public void onConnected();
+
+    //ping后的回调方法
+    public void onPing(byte[] bytes);
+
+    //pong后的回调方法
+    public void onPong(byte[] bytes);
+
+    //接收到消息的回调方法
+    public void onMessage(T message, boolean last);
+
+    //接收到二进制消息的回调方法
+    public void onMessage(byte[] bytes, boolean last);
+
+    //关闭的回调方法，调用此方法时WebSocket已经被关闭
+    public void onClose(int code, String reason);
 
     //获取当前WebSocket下的属性
-    public <T> T getAttribute(String name);
+    public T getAttribute(String name);
 
     //移出当前WebSocket下的属性
-    public <T> T removeAttribute(String name);
+    public T removeAttribute(String name);
 
     //给当前WebSocket下的增加属性
     public void setAttribute(String name, Object value);
 
-    //获取当前WebSocket所属的groupid
-    public Serializable getGroupid();
+    //获取当前WebSocket所属的userid
+    public G userid();
 
     //获取当前WebSocket的会话ID， 不会为null
     public Serializable getSessionid();
@@ -92,51 +124,9 @@ public interface WebSocketDesc {
     //获取WebSocket创建时间
     public long getCreatetime();
 
+    //获取最后一次发送消息的时间
+    public long getLastSendTime();
+
     //显式地关闭WebSocket
     public void close();
-
-
-    //获取在线用户的节点地址列表
-    /* protected */ Collection<InetSocketAddress> getOnlineNodes(Serializable groupid);
-
-
-    //获取在线用户的详细连接信息
-    /* protected */ Map<InetSocketAddress, List<String>> getOnlineRemoteAddress(Serializable groupid);
-
-    //返回sessionid, null表示连接不合法或异常,默认实现是request.getSessionid(false)，通常需要重写该方法
-    public Serializable onOpen(final HttpRequest request);
-
-
-    //创建groupid， null表示异常， 必须实现该方法， 通常为用户ID为groupid
-    /* protected abstract */ Serializable createGroupid();
-
-    //标记为@WebSocketBinary才需要重写此方法
-    default void onRead(AsyncConnection channel) {
-    }
-
-    default void onConnected() {
-    }
-
-    //接收文本消息响应事件，可能会接收到文本消息需要重写该方法
-    default void onMessage(String text) {
-    }
-
-    default void onPing(byte[] bytes) {
-    }
-
-    default void onPong(byte[] bytes) {
-    }
-
-    //接收二进制消息响应事件，可能会接收到二进制消息需要重写该方法
-    default void onMessage(byte[] bytes) {
-    }
-
-    default void onFragment(String text, boolean last) {
-    }
-
-    default void onFragment(byte[] bytes, boolean last) {
-    }
-
-    default void onClose(int code, String reason) {
-    }
 }

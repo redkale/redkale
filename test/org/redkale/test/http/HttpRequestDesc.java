@@ -34,13 +34,28 @@ public interface HttpRequestDesc {
 
     //获取请求内容的byte[]
     public byte[] getBody();
+    
+    //获取请求内容的JavaBean对象
+    public <T> T getBodyJson(java.lang.reflect.Type type);
 
+    //获取请求内容的JavaBean对象
+    public <T> T getBodyJson(JsonConvert convert, java.lang.reflect.Type type);
+    
     //获取文件上传对象
     public MultiContext getMultiContext();
 
     //获取文件上传信息列表 等价于 getMultiContext().parts();
     public Iterable<MultiPart> multiParts() throws IOException;
 
+    //获取当前用户信息 数据类型由@HttpUserType指定
+    public <T> T currentUser();
+    
+    //获取模块ID，来自@HttpServlet.moduleid()
+    public int getModuleid();
+    
+    //获取操作ID，来自@HttpMapping.actionid()
+    public int getActionid();
+    
     //获取sessionid
     public String getSessionid(boolean autoCreate);
 
@@ -292,13 +307,13 @@ public interface HttpRequestDesc {
     //获取所有属性值, servlet执行完后会被清空
     public Map<String, Object> getAttributes();
 
-    //获取指定属性值
+    //获取指定属性值, servlet执行完后会被清空
     public <T> T getAttribute(String name);
 
     //删除指定属性
     public void removeAttribute(String name);
 
-    //设置属性值
+    //设置属性值, servlet执行完后会被清空
     public void setAttribute(String name, Object value);
 
     //获取request创建时间

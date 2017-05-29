@@ -28,6 +28,12 @@ public interface HttpResponseDesc {
     //增加Cookie值
     public HttpResponse addCookie(Collection<HttpCookie> cookies);
 
+    //创建AsyncHandler实例，将非字符串对象以JSON格式输出，字符串以文本输出
+    public AsyncHandler createAsyncHandler();
+
+    //传入的AsyncHandler子类必须是public，且保证其子类可被继承且completed、failed可被重载且包含空参数的构造函数
+    public <H extends AsyncHandler> H createAsyncHandler(Class<H> handlerClass);
+    
     //设置状态码
     public void setStatus(int status);
 
@@ -62,9 +68,9 @@ public interface HttpResponseDesc {
     //异步输出指定内容
     public <A> void sendBody(ByteBuffer buffer, A attachment, AsyncHandler<Integer, A> handler);
 
-    //创建AsyncHandler实例，将非字符串对象以JSON格式输出，字符串以文本输出
-    public AsyncHandler createAsyncHandler();
-
+    //异步输出指定内容
+    public <A> void sendBody(ByteBuffer[] buffers, A attachment, AsyncHandler<Integer, A> handler);
+    
     //关闭HTTP连接，如果是keep-alive则不强制关闭
     public void finish();
 
@@ -100,6 +106,12 @@ public interface HttpResponseDesc {
 
     //将CompletableFuture的结果对象以JSON格式输出
     public void finishJson(final JsonConvert convert, final Type type, final CompletableFuture future);
+
+    //将HttpResult的结果对象以JSON格式输出
+    public void finishJson(final HttpResult result);
+    
+    //将HttpResult的结果对象以JSON格式输出
+    public void finishJson(final JsonConvert convert, final HttpResult result) ;
     
     //将指定字符串以响应结果输出
     public void finish(String obj);
@@ -137,6 +149,6 @@ public interface HttpResponseDesc {
     public void finish(final String filename, File file) throws IOException;
 
     //HttpResponse回收时回调的监听方法
-    public void setRecycleListener(BiConsumer<HttpRequest, HttpResponse> recycleListener);
+    public void recycleListener(BiConsumer<HttpRequest, HttpResponse> recycleListener);
 
 }

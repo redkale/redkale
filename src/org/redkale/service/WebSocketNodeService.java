@@ -40,7 +40,7 @@ public class WebSocketNodeService extends WebSocketNode implements Service {
         if (this.localEngine == null) return CompletableFuture.completedFuture(new ArrayList<>());
         return CompletableFuture.supplyAsync(() -> {
             final List<String> rs = new ArrayList<>();
-            this.localEngine.getWebSockets(groupid).forEach(x -> rs.add(x.getRemoteAddr()));
+            this.localEngine.getLocalWebSockets(groupid).forEach(x -> rs.add(x.getRemoteAddr()));
             return rs;
         });
     }

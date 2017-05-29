@@ -193,6 +193,18 @@ public abstract class WebSocket<G extends Serializable, T> {
      * 给指定userid的WebSocket节点发送 二进制消息/文本消息/JavaBean对象消息
      *
      * @param message 不可为空
+     * @param userids Serializable[]
+     *
+     * @return 为0表示成功， 其他值表示异常
+     */
+    public final CompletableFuture<Integer> sendMessage(Object message, G... userids) {
+        return sendMessage(message, true, userids);
+    }
+
+    /**
+     * 给指定userid的WebSocket节点发送 二进制消息/文本消息/JavaBean对象消息
+     *
+     * @param message 不可为空
      * @param last    是否最后一条
      * @param userids Serializable[]
      *
@@ -345,10 +357,10 @@ public abstract class WebSocket<G extends Serializable, T> {
      *
      * @return WebSocket集合
      */
-    protected final Stream<WebSocket> getWebSockets(G userid) {
-        return _engine.getWebSockets(userid);
+    protected final Stream<WebSocket> getLocalWebSockets(G userid) {
+        return _engine.getLocalWebSockets(userid);
     }
-    
+
     /**
      * 获取指定userid的WebSocket数组, 没有返回null<br>
      * 此方法用于单用户单连接模式
@@ -357,17 +369,17 @@ public abstract class WebSocket<G extends Serializable, T> {
      *
      * @return WebSocket
      */
-    protected final WebSocket findWebSocket(G userid) {
-        return _engine.findWebSocket(userid);
+    protected final WebSocket findLocalWebSocket(G userid) {
+        return _engine.findLocalWebSocket(userid);
     }
-    
+
     /**
      * 获取当前进程节点所有在线的WebSocket
      *
      * @return WebSocketGroup列表
      */
-    protected final Collection<WebSocket> getWebSockets() {
-        return _engine.getWebSockets();
+    protected final Collection<WebSocket> getLocalWebSockets() {
+        return _engine.getLocalWebSockets();
     }
 
     //-------------------------------------------------------------------

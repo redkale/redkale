@@ -85,7 +85,7 @@ public final class WebSocketEngine {
         });
         long delay = (interval - System.currentTimeMillis() / 1000 % interval) + index * 5;
         scheduler.scheduleWithFixedDelay(() -> {
-            getWebSockets().forEach(x -> x.sendPing());
+            getLocalWebSockets().forEach(x -> x.sendPing());
         }, delay, interval, TimeUnit.SECONDS);
         if (finest) logger.finest(this.getClass().getSimpleName() + "(" + engineid + ")" + " start keeplive(delay:" + delay + ", interval:" + interval + "s) scheduler executor");
     }
@@ -215,7 +215,7 @@ public final class WebSocketEngine {
         }
     }
 
-    Collection<WebSocket> getWebSockets() {
+    Collection<WebSocket> getLocalWebSockets() {
         if (single) return websockets.values();
         List<WebSocket> list = new ArrayList<>();
         websockets2.values().forEach(x -> list.addAll(x));
@@ -223,14 +223,14 @@ public final class WebSocketEngine {
     }
 
     //适用于单用户单连接模式
-    public WebSocket findWebSocket(Serializable userid) {
+    public WebSocket findLocalWebSocket(Serializable userid) {
         if (single) return websockets.get(userid);
         List<WebSocket> list = websockets2.get(userid);
         return (list == null || list.isEmpty()) ? null : list.get(list.size() - 1);
     }
 
     //适用于单用户多连接模式
-    public Stream<WebSocket> getWebSockets(Serializable userid) {
+    public Stream<WebSocket> getLocalWebSockets(Serializable userid) {
         if (single) {
             WebSocket websocket = websockets.get(userid);
             return websocket == null ? Stream.empty() : Stream.of(websocket);
@@ -240,7 +240,7 @@ public final class WebSocketEngine {
         }
     }
 
-    public boolean existsWebSocket(Serializable userid) {
+    public boolean existsLocalWebSocket(Serializable userid) {
         return single ? websockets.containsKey(userid) : websockets2.containsKey(userid);
     }
 

@@ -9,9 +9,10 @@ import org.redkale.net.http.WebServlet;
 import org.redkale.net.http.WebSocketServlet;
 import org.redkale.net.http.WebSocket;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.atomic.*;
-import org.redkale.convert.json.JsonConvert;
-import org.redkale.util.Utility;
+import javax.annotation.Resource;
+import org.redkale.net.http.*;
+import org.redkale.test.rest.*;
+import org.redkale.util.*;
 
 /**
  *
@@ -20,51 +21,43 @@ import org.redkale.util.Utility;
 @WebServlet("/ws/chat")
 public class ChatWebSocketServlet extends WebSocketServlet {
 
-    private final AtomicLong counter = new AtomicLong();
+    @Resource
+    private UserService userService;
 
-    private final AtomicLong icounter = new AtomicLong();
-
-    private final boolean debug;
-
-    public ChatWebSocketServlet() {
-        debug = "true".equalsIgnoreCase(System.getProperty("debug", "true"));
-        Thread t = new Thread() {
-
-            {
-                setName("Debug-ChatWebSocket-ShowCount-Thread");
-            }
-
-            @Override
-            public void run() {
-                while (true) {
-                    try {
-                        sleep(300 * 1000);
-                    } catch (Exception e) {
-                        return;
-                    }
-                    System.out.println(Utility.now() + ": 消息总数: " + counter.get() + ",间隔消息数: " + icounter.getAndSet(0));
-                }
-            }
-        };
-        t.start();
+    @Override
+    public void init(HttpContext context, AnyValue conf) {
+        System.out.println("本实例的WebSocketNode: " + super.node);
     }
 
     @Override
-    protected WebSocket<String, ChatMessage> createWebSocket() {
+    public void destroy(HttpContext context, AnyValue conf) {
+        System.out.println("关闭了ChatWebSocketServlet");
+    }
 
-        return new WebSocket<String, ChatMessage>() {
+    @Override
+    protected WebSocket<Integer, ChatMessage> createWebSocket() {
+
+        return new WebSocket<Integer, ChatMessage>() {
+
+            private UserInfo user;
 
             @Override
-            public void onMessage(ChatMessage message, boolean last) {
-                icounter.incrementAndGet();
-                counter.incrementAndGet();
-                if (debug) System.out.println("收到消息: " + message);
-                super.getWebSockets().forEach(x -> x.send(message));
+            public void onMessage(ChatMessage message, boolean last) { // text 接收的格式:  {"receiveid":200000001, "content":"Hi Redkale!"}
+                message.sendid = user.getUserid(); //将当前用户设为消息的发送方
+                message.sendtime = System.currentTimeMillis(); //设置消息发送时间
+                //给接收方发送消息, 即使接收方在其他WebSocket进程节点上有链接，Redkale也会自动发送到其他链接进程节点上。
+                super.sendMessage(message, message.receiveid);
             }
 
             @Override
-            protected CompletableFuture<String> createUserid() {
-                return CompletableFuture.completedFuture("2");
+            protected CompletableFuture<Integer> createUserid() { //创建用户ID
+                this.user = userService.current(String.valueOf(super.getSessionid()));
+                return CompletableFuture.completedFuture(this.user == null ? null : this.user.getUserid());
+            }
+
+            @Override
+            public CompletableFuture<String> onOpen(HttpRequest request) {
+                return CompletableFuture.completedFuture(request.getSessionid(false)); //以request中的sessionid字符串作为WebSocket的sessionid
             }
 
         };
@@ -72,11 +65,12 @@ public class ChatWebSocketServlet extends WebSocketServlet {
 
     public static class ChatMessage {
 
-        public String message;
+        public int sendid; //发送方用户ID
 
-        @Override
-        public String toString() {
-            return JsonConvert.root().convertTo(this);
-        }
+        public int receiveid; //接收方用户ID        
+
+        public String content; //文本消息内容
+
+        public long sendtime;  //消息发送时间
     }
 }
