@@ -45,4 +45,11 @@ public @interface RestUploadFile {
      * @return String
      */
     String contentTypeReg() default "";
+
+    /**
+     * 备注描述, 对应&#64;HttpParam.comment
+     *
+     * @return String
+     */
+    String comment() default "";
 }

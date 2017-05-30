@@ -25,4 +25,10 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface RestAddress {
 
+    /**
+     * 备注描述, 对应&#64;HttpParam.comment
+     *
+     * @return String
+     */
+    String comment() default "";
 }

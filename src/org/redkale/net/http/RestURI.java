@@ -23,4 +23,11 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Target({PARAMETER, FIELD})
 @Retention(RUNTIME)
 public @interface RestURI {
+
+    /**
+     * 备注描述, 对应&#64;HttpParam.comment
+     *
+     * @return String
+     */
+    String comment() default "";
 }

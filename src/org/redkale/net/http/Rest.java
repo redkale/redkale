@@ -751,6 +751,7 @@ public final class Rest {
                     if (anncookie != null) throw new RuntimeException("@RestAddress and @RestCookie cannot on the same Parameter in " + method);
                     if (annsid != null) throw new RuntimeException("@RestAddress and @RestSessionid cannot on the same Parameter in " + method);
                     if (ptype != String.class) throw new RuntimeException("@RestAddress must on String Parameter in " + method);
+                    comment = annaddr.comment();
                 }
                 RestBody annbody = param.getAnnotation(RestBody.class);
                 if (annbody != null) {
@@ -759,6 +760,7 @@ public final class Rest {
                     if (annsid != null) throw new RuntimeException("@RestBody and @RestSessionid cannot on the same Parameter in " + method);
                     if (annaddr != null) throw new RuntimeException("@RestBody and @RestAddress cannot on the same Parameter in " + method);
                     if (ptype.isPrimitive()) throw new RuntimeException("@RestBody cannot on primitive type Parameter in " + method);
+                    comment = annbody.comment();
                 }
                 RestUploadFile annfile = param.getAnnotation(RestUploadFile.class);
                 if (annfile != null) {
@@ -771,6 +773,7 @@ public final class Rest {
                     if (annaddr != null) throw new RuntimeException("@RestUploadFile and @RestAddress cannot on the same Parameter in " + method);
                     if (annbody != null) throw new RuntimeException("@RestUploadFile and @RestBody cannot on the same Parameter in " + method);
                     if (ptype != byte[].class && ptype != File.class && ptype != File[].class) throw new RuntimeException("@RestUploadFile must on byte[] or File or File[] Parameter in " + method);
+                    comment = annfile.comment();
                 }
 
                 RestURI annuri = param.getAnnotation(RestURI.class);
@@ -782,6 +785,7 @@ public final class Rest {
                     if (annbody != null) throw new RuntimeException("@RestURI and @RestBody cannot on the same Parameter in " + method);
                     if (annfile != null) throw new RuntimeException("@RestURI and @RestUploadFile cannot on the same Parameter in " + method);
                     if (ptype != String.class) throw new RuntimeException("@RestURI must on String Parameter in " + method);
+                    comment = annuri.comment();
                 }
 
                 RestParam annpara = param.getAnnotation(RestParam.class);
