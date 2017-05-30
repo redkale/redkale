@@ -127,7 +127,7 @@ public final class Rest {
             ts.setAccessible(true);
             return (Service) ts.get(servlet);
         } catch (Exception e) {
-           return null;
+            return null;
         }
     }
 
@@ -673,10 +673,10 @@ public final class Rest {
         final Map<String, java.lang.reflect.Type> bodyTypes = new HashMap<>();
 
         for (final MappingEntry entry : entrys) {
-            boolean hasupload = false;
+            RestUploadFile mupload = null;
+            Class muploadType = null;
             final Method method = entry.mappingMethod;
             final Class returnType = method.getReturnType();
-            final java.lang.reflect.Type returnGenericType = method.getGenericReturnType();
             final String methodDesc = Type.getMethodDescriptor(method);
             final Parameter[] params = method.getParameters();
 
@@ -762,8 +762,9 @@ public final class Rest {
                 }
                 RestUploadFile annfile = param.getAnnotation(RestUploadFile.class);
                 if (annfile != null) {
-                    if (hasupload) throw new RuntimeException("@RestUploadFile repeat in " + method);
-                    hasupload = true;
+                    if (mupload != null) throw new RuntimeException("@RestUploadFile repeat in " + method);
+                    mupload = annfile;
+                    muploadType = ptype;
                     if (annhead != null) throw new RuntimeException("@RestUploadFile and @RestHeader cannot on the same Parameter in " + method);
                     if (anncookie != null) throw new RuntimeException("@RestUploadFile and @RestCookie cannot on the same Parameter in " + method);
                     if (annsid != null) throw new RuntimeException("@RestUploadFile and @RestSessionid cannot on the same Parameter in " + method);
@@ -802,6 +803,23 @@ public final class Rest {
                 if (annhead == null && anncookie == null && annaddr == null && annbody == null && annfile == null
                     && (entry.name.startsWith("find") || entry.name.startsWith("delete")) && params.length == 1) {
                     if (ptype.isPrimitive() || ptype == String.class) n = "#";
+                }
+                if (annhead == null && anncookie == null && annsid == null && annaddr == null && annbody == null && annfile == null
+                    && !ptype.isPrimitive() && ptype != String.class && ptype != Flipper.class && !AsyncHandler.class.isAssignableFrom(ptype)
+                    && !ptype.getName().startsWith("java") && n.charAt(0) != '#' && !"&".equals(n)) { //判断Json对象是否包含@RestUploadFile
+                    Class loop = ptype;
+                    do {
+                        if (loop == null || loop.isInterface()) break; //接口时getSuperclass可能会得到null
+                        for (Field field : loop.getDeclaredFields()) {
+                            if (Modifier.isStatic(field.getModifiers())) continue;
+                            if (Modifier.isFinal(field.getModifiers())) continue;
+                            RestUploadFile ruf = field.getAnnotation(RestUploadFile.class);
+                            if (ruf == null) continue;
+                            if (mupload != null) throw new RuntimeException("@RestUploadFile repeat in " + method + " or field " + field);
+                            mupload = ruf;
+                            muploadType = field.getType();
+                        }
+                    } while ((loop = loop.getSuperclass()) != Object.class);
                 }
                 paramlist.add(new Object[]{param, n, ptype, radix, comment, required, annpara, annsid, annaddr, annhead, anncookie, annbody, annfile, annuri, param.getParameterizedType()});
             }
@@ -864,6 +882,40 @@ public final class Rest {
                 av1.visitEnd();
                 av0.visitEnd();
             }
+
+            if (mupload != null) { //存在文件上传
+                if (muploadType == byte[].class) {
+                    mv.visitVarInsn(ALOAD, 1);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getMultiContext", "()Lorg/redkale/net/http/MultiContext;", false);
+                    mv.visitLdcInsn(mupload.maxLength());
+                    mv.visitLdcInsn(mupload.fileNameReg());
+                    mv.visitLdcInsn(mupload.contentTypeReg());
+                    mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/MultiContext", "partsFirstBytes", "(JLjava/lang/String;Ljava/lang/String;)[B", false);
+                    mv.visitVarInsn(ASTORE, maxLocals);
+                } else if (muploadType == File.class) {
+                    mv.visitVarInsn(ALOAD, 1);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getMultiContext", "()Lorg/redkale/net/http/MultiContext;", false);
+                    mv.visitVarInsn(ALOAD, 0);
+                    mv.visitFieldInsn(GETFIELD, newDynName, "_redkale_home", "Ljava/io/File;");
+                    mv.visitLdcInsn(mupload.maxLength());
+                    mv.visitLdcInsn(mupload.fileNameReg());
+                    mv.visitLdcInsn(mupload.contentTypeReg());
+                    mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/MultiContext", "partsFirstFile", "(Ljava/io/File;JLjava/lang/String;Ljava/lang/String;)Ljava/io/File;", false);
+                    mv.visitVarInsn(ASTORE, maxLocals);
+                } else if (muploadType == File[].class) { //File[]
+                    mv.visitVarInsn(ALOAD, 1);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getMultiContext", "()Lorg/redkale/net/http/MultiContext;", false);
+                    mv.visitVarInsn(ALOAD, 0);
+                    mv.visitFieldInsn(GETFIELD, newDynName, "_redkale_home", "Ljava/io/File;");
+                    mv.visitLdcInsn(mupload.maxLength());
+                    mv.visitLdcInsn(mupload.fileNameReg());
+                    mv.visitLdcInsn(mupload.contentTypeReg());
+                    mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/MultiContext", "partsFiles", "(Ljava/io/File;JLjava/lang/String;Ljava/lang/String;)[Ljava/io/File;", false);
+                    mv.visitVarInsn(ASTORE, maxLocals);
+                }
+                maxLocals++;
+            }
+
             List<Map<String, Object>> paramMaps = new ArrayList<>();
             //获取每个参数的值
             boolean hasAsyncHandler = false;
@@ -940,38 +992,9 @@ public final class Rest {
                         varInsns.add(new int[]{ALOAD, maxLocals});
                     }
                 } else if (annfile != null) { //MultiContext.partsFirstBytes / HttpRequest.partsFirstFile / HttpRequest.partsFiles
-                    if (ptype == byte[].class) {
-                        mv.visitVarInsn(ALOAD, 1);
-                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getMultiContext", "()Lorg/redkale/net/http/MultiContext;", false);
-                        mv.visitLdcInsn(annfile.maxLength());
-                        mv.visitLdcInsn(annfile.fileNameReg());
-                        mv.visitLdcInsn(annfile.contentTypeReg());
-                        mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/MultiContext", "partsFirstBytes", "(JLjava/lang/String;Ljava/lang/String;)[B", false);
-                        mv.visitVarInsn(ASTORE, maxLocals);
-                        varInsns.add(new int[]{ALOAD, maxLocals});
-                    } else if (ptype == File.class) {
-                        mv.visitVarInsn(ALOAD, 1);
-                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getMultiContext", "()Lorg/redkale/net/http/MultiContext;", false);
-                        mv.visitVarInsn(ALOAD, 0);
-                        mv.visitFieldInsn(GETFIELD, newDynName, "_redkale_home", "Ljava/io/File;");
-                        mv.visitLdcInsn(annfile.maxLength());
-                        mv.visitLdcInsn(annfile.fileNameReg());
-                        mv.visitLdcInsn(annfile.contentTypeReg());
-                        mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/MultiContext", "partsFirstFile", "(Ljava/io/File;JLjava/lang/String;Ljava/lang/String;)Ljava/io/File;", false);
-                        mv.visitVarInsn(ASTORE, maxLocals);
-                        varInsns.add(new int[]{ALOAD, maxLocals});
-                    } else if (ptype == File[].class) { //File[]
-                        mv.visitVarInsn(ALOAD, 1);
-                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getMultiContext", "()Lorg/redkale/net/http/MultiContext;", false);
-                        mv.visitVarInsn(ALOAD, 0);
-                        mv.visitFieldInsn(GETFIELD, newDynName, "_redkale_home", "Ljava/io/File;");
-                        mv.visitLdcInsn(annfile.maxLength());
-                        mv.visitLdcInsn(annfile.fileNameReg());
-                        mv.visitLdcInsn(annfile.contentTypeReg());
-                        mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/MultiContext", "partsFiles", "(Ljava/io/File;JLjava/lang/String;Ljava/lang/String;)[Ljava/io/File;", false);
-                        mv.visitVarInsn(ASTORE, maxLocals);
-                        varInsns.add(new int[]{ALOAD, maxLocals});
-                    }
+                    mv.visitVarInsn(ALOAD, 4);
+                    mv.visitVarInsn(ASTORE, maxLocals);
+                    varInsns.add(new int[]{ALOAD, maxLocals});
                 } else if (annuri != null) { //HttpRequest.getRequestURI
                     mv.visitVarInsn(ALOAD, 1);
                     mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getRequestURI", "()Ljava/lang/String;", false);
@@ -1265,10 +1288,7 @@ public final class Rest {
                             if (ru != null && field.getType() != byte[].class && field.getType() != File.class && field.getType() != File[].class) {
                                 throw new RuntimeException("@RestUploadFile must on byte[] or File or File[] Field in " + field);
                             }
-                            if (ru != null) {
-                                if (hasupload) throw new RuntimeException("@RestUploadFile repeat on Field(" + field + ") in " + method);
-                                hasupload = true;
-                            }
+                            
                             if (ri != null && field.getType() != String.class) throw new RuntimeException("@RestURI must on String Field in " + field);
                             org.redkale.util.Attribute attr = org.redkale.util.Attribute.create(loop, field);
                             String attrFieldName;
@@ -1324,7 +1344,8 @@ public final class Rest {
                             mv.visitVarInsn(ALOAD, 0);
                             mv.visitFieldInsn(GETFIELD, newDynName, en.getKey(), attrDesc);
                             mv.visitVarInsn(ALOAD, maxLocals);
-                            mv.visitVarInsn(ALOAD, 1);
+                            boolean upload = en.getKey().contains("_upload");
+                            mv.visitVarInsn(ALOAD, upload ? (maxLocals - 1) : 1);
                             if (en.getKey().contains("_header_")) {
                                 mv.visitLdcInsn(en.getValue()[0].toString());
                                 mv.visitLdcInsn("");
@@ -1352,27 +1373,11 @@ public final class Rest {
                                 mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getBodyJson", "(Ljava/lang/reflect/Type;)Ljava/lang/Object;", false);
                                 mv.visitTypeInsn(CHECKCAST, Type.getInternalName((Class) en.getValue()[1]));
                             } else if (en.getKey().contains("_uploadbytes_")) {
-                                mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getMultiContext", "()Lorg/redkale/net/http/MultiContext;", false);
-                                mv.visitLdcInsn(ru.maxLength());
-                                mv.visitLdcInsn(ru.fileNameReg());
-                                mv.visitLdcInsn(ru.contentTypeReg());
-                                mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/MultiContext", "partsFirstBytes", "(JLjava/lang/String;Ljava/lang/String;)[B", false);
+                                //只需mv.visitVarInsn(ALOAD, 4), 无需处理
                             } else if (en.getKey().contains("_uploadfile_")) {
-                                mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", "getMultiContext", "()Lorg/redkale/net/http/MultiContext;", false);
-                                mv.visitVarInsn(ALOAD, 0);
-                                mv.visitFieldInsn(GETFIELD, newDynName, "_redkale_home", "Ljava/io/File;");
-                                mv.visitLdcInsn(ru.maxLength());
-                                mv.visitLdcInsn(ru.fileNameReg());
-                                mv.visitLdcInsn(ru.contentTypeReg());
-                                mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/MultiContext", "partsFirstFile", "(Ljava/io/File;JLjava/lang/String;Ljava/lang/String;)Ljava/io/File;", false);
+                                //只需mv.visitVarInsn(ALOAD, 4), 无需处理                                
                             } else if (en.getKey().contains("_uploadfiles_")) {
-                                mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/HttpRequest", "getMultiContext", "()Lorg/redkale/net/http/MultiContext;", false);
-                                mv.visitVarInsn(ALOAD, 0);
-                                mv.visitFieldInsn(GETFIELD, newDynName, "_redkale_home", "Ljava/io/File;");
-                                mv.visitLdcInsn(ru.maxLength());
-                                mv.visitLdcInsn(ru.fileNameReg());
-                                mv.visitLdcInsn(ru.contentTypeReg());
-                                mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/MultiContext", "partsFiles", "(Ljava/io/File;JLjava/lang/String;Ljava/lang/String;)[Ljava/io/File;", false);
+                                //只需mv.visitVarInsn(ALOAD, 4), 无需处理                                
                             }
                             mv.visitMethodInsn(INVOKEINTERFACE, attrInternalName, "set", "(Ljava/lang/Object;Ljava/lang/Object;)V", true);
                         }
