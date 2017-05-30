@@ -113,7 +113,7 @@ public final class ApiDocsService {
                                     }
                                     fieldmap.put("primary", !filter && (field.getAnnotation(Id.class) != null));
                                     fieldmap.put("updatable", (filter || col == null || col.updatable()));
-                                    if (servlet.getClass().getAnnotation(Rest.RestDynamic.class) != null) {
+                                    if (servlet.getClass().getAnnotation(Rest.RestDyn.class) != null) {
                                         if (field.getAnnotation(RestAddress.class) != null) continue;
                                     }
 
@@ -162,7 +162,7 @@ public final class ApiDocsService {
                                     fieldmap.put("primary", !filter && (field.getAnnotation(Id.class) != null));
                                     fieldmap.put("updatable", (filter || col == null || col.updatable()));
 
-                                    if (servlet.getClass().getAnnotation(Rest.RestDynamic.class) != null) {
+                                    if (servlet.getClass().getAnnotation(Rest.RestDyn.class) != null) {
                                         if (field.getAnnotation(RestAddress.class) != null) continue;
                                     }
 

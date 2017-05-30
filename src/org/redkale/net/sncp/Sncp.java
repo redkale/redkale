@@ -89,6 +89,10 @@ public abstract class Sncp {
         return dyn != null && dyn.remote();
     }
 
+    public static boolean isSncpDyn(Service service) {
+        return service.getClass().getAnnotation(SncpDyn.class) != null;
+    }
+
     public static String getResourceName(Service service) {
         if (service == null) return null;
         Resource res = service.getClass().getAnnotation(Resource.class);

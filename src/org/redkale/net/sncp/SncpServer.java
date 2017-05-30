@@ -76,38 +76,19 @@ public class SncpServer extends Server<DLong, SncpContext, SncpRequest, SncpResp
     /**
      * 删除SncpServlet
      *
-     * @param <T>     泛型
-     * @param resname String
-     * @param type    Class
-     *
-     * @return SncpServlet
-     */
-    public <T extends Service> SncpServlet removeSncpServlet(String resname, Class<T> type) {
-        return ((SncpPrepareServlet) this.prepare).removeSncpServlet(resname, type);
-    }
-
-    /**
-     * 删除SncpServlet
-     *
      * @param sncpService Service
      *
      * @return SncpServlet
      */
     public SncpServlet removeSncpServlet(Service sncpService) {
-        String resname = Sncp.getResourceName(sncpService);
-        return ((SncpPrepareServlet) this.prepare).removeSncpServlet(resname, Sncp.getResourceType(sncpService));
+        return ((SncpPrepareServlet) this.prepare).removeSncpServlet(sncpService);
     }
 
     public void addSncpServlet(Service sncpService) {
         SncpDynServlet sds = new SncpDynServlet(BsonFactory.root().getConvert(), Sncp.getResourceName(sncpService), Sncp.getResourceType(sncpService), sncpService);
         this.prepare.addServlet(sds, null, Sncp.getConf(sncpService));
     }
-
-    public <T extends Service> void addSncpServlet(Class<T> serviceTypeClass, String name, T service, AnyValue conf) {
-        SncpDynServlet sds = new SncpDynServlet(BsonFactory.root().getConvert(), name, serviceTypeClass, service);
-        this.prepare.addServlet(sds, null, conf);
-    }
-
+    
     public List<SncpServlet> getSncpServlets() {
         return ((SncpPrepareServlet) this.prepare).getSncpServlets();
     }

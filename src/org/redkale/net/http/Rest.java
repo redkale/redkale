@@ -33,11 +33,11 @@ public final class Rest {
 
     public static final String REST_HEADER_RESOURCE_NAME = "rest-resource-name";
 
-    static final String REST_SERVICE_FIELD_NAME = "_service";
+    static final String REST_SERVICE_FIELD_NAME = "_redkale_service";
 
-    static final String REST_SERVICEMAP_FIELD_NAME = "_servicemap"; //如果只有name=""的Service资源，则实例中_servicemap必须为null
+    static final String REST_SERVICEMAP_FIELD_NAME = "_redkale_servicemap"; //如果只有name=""的Service资源，则实例中_servicemap必须为null
 
-    private static final String REST_PARAMTYPES_FIELD_NAME = "_paramtypes"; //存在泛型的参数数组 Type[][] 第1维度是方法的下标， 第二维度是参数的下标
+    private static final String REST_PARAMTYPES_FIELD_NAME = "_redkale_paramtypes"; //存在泛型的参数数组 Type[][] 第1维度是方法的下标， 第二维度是参数的下标
 
     private static final Set<String> EXCLUDERMETHODS = new HashSet<>();
 
@@ -54,7 +54,7 @@ public final class Rest {
     @Documented
     @Target({TYPE})
     @Retention(RUNTIME)
-    public static @interface RestDynamic {
+    public static @interface RestDyn {
 
     }
 
@@ -114,6 +114,32 @@ public final class Rest {
         if (controller == null) return serviceType.getSimpleName().replaceAll("Service.*$", "").toLowerCase();
         if (controller.ignore()) return null;
         return (!controller.name().isEmpty()) ? controller.name() : serviceType.getSimpleName().replaceAll("Service.*$", "").toLowerCase();
+    }
+
+    static boolean isRestDyn(HttpServlet servlet) {
+        return servlet.getClass().getAnnotation(RestDyn.class) != null;
+    }
+
+    static Service getService(HttpServlet servlet) {
+        if (servlet == null) return null;
+        try {
+            Field ts = servlet.getClass().getDeclaredField(REST_SERVICE_FIELD_NAME);
+            ts.setAccessible(true);
+            return (Service) ts.get(servlet);
+        } catch (Exception e) {
+           return null;
+        }
+    }
+
+    static Map<String, Service> getServiceMap(HttpServlet servlet) {
+        if (servlet == null) return null;
+        try {
+            Field ts = servlet.getClass().getDeclaredField(REST_SERVICEMAP_FIELD_NAME);
+            ts.setAccessible(true);
+            return (Map) ts.get(servlet);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     static <T extends HttpServlet> T createRestWebSocketServlet(final Class<? extends WebSocket> webSocketType) {
@@ -537,8 +563,8 @@ public final class Rest {
         List<Map<String, Object>> mappingMaps = new ArrayList<>();
         cw.visit(V1_8, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynName, null, supDynName, null);
 
-        { //RestDynamic
-            av0 = cw.visitAnnotation(Type.getDescriptor(RestDynamic.class), true);
+        { //RestDyn
+            av0 = cw.visitAnnotation(Type.getDescriptor(RestDyn.class), true);
             av0.visitEnd();
         }
         { //RestDynSourceType
@@ -565,7 +591,7 @@ public final class Rest {
             classMap.put("url", urlpath);
             classMap.put("moduleid", moduleid);
             classMap.put("repair", repair);
-            classMap.put("comment", comment);
+            //classMap.put("comment", comment); //不显示太多信息
         }
 
         {  //注入 @Resource  private XXXService _service;
@@ -1502,8 +1528,7 @@ public final class Rest {
             fv.visitEnd();
         }
 
-        classMap.put("mappings", mappingMaps);
-
+        //classMap.put("mappings", mappingMaps); //不显示太多信息
         { //toString函数
             mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC, "toString", "()Ljava/lang/String;", null, null));
             //mv.setDebug(true);

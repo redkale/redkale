@@ -13,6 +13,7 @@ import java.util.logging.*;
 import java.util.regex.*;
 import org.redkale.net.*;
 import org.redkale.net.http.Rest.RestDynSourceType;
+import org.redkale.service.Service;
 import org.redkale.util.*;
 
 /**
@@ -96,35 +97,49 @@ public class HttpPrepareServlet extends PrepareServlet<String, HttpContext, Http
         return servlet;
     }
 
-    public <T extends HttpServlet> List<HttpServlet> removeHttpServlet(final Class<T> servletOrServiceOrWsType) {
+    public <T extends HttpServlet> HttpServlet removeHttpServlet(Service service) {
+        Predicate<MappingEntry> predicateEntry = (t) -> {
+            if (!Rest.isRestDyn(t.servlet)) return false;
+            Service s = Rest.getService(t.servlet);
+            if (s == service) return true;
+            if (s != null) return false;
+            Map<String, Service> map = Rest.getServiceMap(t.servlet);
+            if (map == null) return false;
+            boolean rs = map.values().contains(service);
+            if (rs && map.size() == 1) return true;
+            if (rs && map.size() > 1) {
+                String key = null;
+                for (Map.Entry<String, Service> en : map.entrySet()) {
+                    if (en.getValue() == service) {
+                        key = en.getKey();
+                        break;
+                    }
+                }
+                if (key != null) map.remove(key);
+                return false; //还有其他Resouce.name 的Service
+            }
+            return rs;
+        };
+        Predicate<Map.Entry<String, WebSocketServlet>> predicateFilter = null;
+        List<HttpServlet> list = removeHttpServlet(predicateEntry, predicateFilter);
+        return list == null || list.isEmpty() ? null : list.get(0);
+    }
+
+    public <T extends WebSocket> HttpServlet removeHttpServlet(Class<T> websocketOrServletType) {
         Predicate<MappingEntry> predicateEntry = (t) -> {
             Class type = t.servlet.getClass();
-            if (type == servletOrServiceOrWsType) return true;
+            if (type == websocketOrServletType) return true;
             RestDynSourceType rdt = (RestDynSourceType) type.getAnnotation(RestDynSourceType.class);
-            return (rdt != null && rdt.value() == servletOrServiceOrWsType);
+            return (rdt != null && rdt.value() == websocketOrServletType);
         };
         Predicate<Map.Entry<String, WebSocketServlet>> predicateFilter = (t) -> {
             Class type = t.getValue().getClass();
-            if (type == servletOrServiceOrWsType) return true;
+            if (type == websocketOrServletType) return true;
             RestDynSourceType rdt = (RestDynSourceType) type.getAnnotation(RestDynSourceType.class);
-            return (rdt != null && rdt.value() == servletOrServiceOrWsType);
+            return (rdt != null && rdt.value() == websocketOrServletType);
         };
-        return removeHttpServlet(predicateEntry, predicateFilter);
-    }
-
-    public List<HttpServlet> removeHttpServlet(String mapping0) {
-        if (Utility.contains(mapping0, '.', '*', '{', '[', '(', '|', '^', '$', '+', '?', '\\')) { //是否是正则表达式))
-            if (mapping0.charAt(0) != '^') mapping0 = '^' + mapping0;
-            if (mapping0.endsWith("/*")) {
-                mapping0 = mapping0.substring(0, mapping0.length() - 1) + ".*";
-            } else {
-                mapping0 = mapping0 + "$";
-            }
-        }
-        final String mapping = mapping0;
-        Predicate<MappingEntry> predicateEntry = (t) -> t.mapping.equals(mapping);
-        Predicate<Map.Entry<String, WebSocketServlet>> predicateFilter = (t) -> t.getKey().equals(mapping);
-        return removeHttpServlet(predicateEntry, predicateFilter);
+        List<HttpServlet> list = removeHttpServlet(predicateEntry, predicateFilter);
+        return list == null || list.isEmpty() ? null : list.get(0);
     }
 
     public boolean addForbidURIReg(final String urlreg) {

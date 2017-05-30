@@ -11,6 +11,7 @@ import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import org.redkale.net.*;
+import org.redkale.net.sncp.Sncp;
 import org.redkale.service.Service;
 import org.redkale.util.*;
 
@@ -60,34 +61,23 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
     /**
      * 删除HttpServlet
      *
-     * @param servlet HttpServlet
+     * @param service Service
      *
      * @return HttpServlet
      */
-    public HttpServlet removeHttpServlet(HttpServlet servlet) {
-        return ((HttpPrepareServlet) this.prepare).removeHttpServlet(servlet);
+    public HttpServlet removeHttpServlet(Service service) {
+        return ((HttpPrepareServlet) this.prepare).removeHttpServlet(service);
     }
 
     /**
      * 删除HttpServlet
      *
-     * @param servletOrServiceOrWsType Class
+     * @param websocketOrServletType Class
      *
      * @return HttpServlet
      */
-    public List<HttpServlet> removeHttpServlet(Class servletOrServiceOrWsType) {
-        return ((HttpPrepareServlet) this.prepare).removeHttpServlet(servletOrServiceOrWsType);
-    }
-
-    /**
-     * 删除HttpServlet
-     *
-     * @param mapping String
-     *
-     * @return HttpServlet
-     */
-    public List<HttpServlet> removeHttpServlet(String mapping) {
-        return ((HttpPrepareServlet) this.prepare).removeHttpServlet(mapping);
+    public <T extends WebSocket> HttpServlet removeHttpServlet(Class<T> websocketOrServletType) {
+        return ((HttpPrepareServlet) this.prepare).removeHttpServlet(websocketOrServletType);
     }
 
     /**
@@ -180,41 +170,6 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
     }
 
     /**
-     * 添加RestServlet
-     *
-     * @param <S>              Service
-     * @param <T>              RestServlet
-     * @param name             Service的资源名
-     * @param serviceType      Service的类型
-     * @param service          Service对象
-     * @param baseServletClass RestServlet基类
-     * @param prefix           url前缀
-     *
-     * @return RestServlet
-     */
-    public <S extends Service, T extends HttpServlet> T addRestServlet(String name, Class<S> serviceType, S service, Class<T> baseServletClass, String prefix) {
-        return addRestServlet(name, serviceType, service, null, baseServletClass, prefix, null);
-    }
-
-    /**
-     * 添加RestServlet
-     *
-     * @param <S>              Service
-     * @param <T>              RestServlet
-     * @param name             Service的资源名
-     * @param serviceType      Service的类型
-     * @param service          Service对象
-     * @param userType         用户数据类型
-     * @param baseServletClass RestServlet基类
-     * @param prefix           url前缀
-     *
-     * @return RestServlet
-     */
-    public <S extends Service, T extends HttpServlet> T addRestServlet(String name, Class<S> serviceType, S service, final Class userType, Class<T> baseServletClass, String prefix) {
-        return addRestServlet(name, serviceType, service, userType, baseServletClass, prefix, null);
-    }
-
-    /**
      * 添加WebSocketServlet
      *
      * @param <S>           WebSocket
@@ -236,22 +191,38 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
      *
      * @param <S>             Service
      * @param <T>             HttpServlet
-     * @param name            Service的资源名
-     * @param serviceType     Service的类型
      * @param service         Service对象
      * @param userType        用户数据类型
      * @param baseServletType RestServlet基类
      * @param prefix          url前缀
-     * @param conf            配置信息
      *
      * @return RestServlet
      */
-    public <S extends Service, T extends HttpServlet> T addRestServlet(final String name, final Class<S> serviceType,
-        final S service, final Class userType, final Class<T> baseServletType, final String prefix, final AnyValue conf) {
+    public <S extends Service, T extends HttpServlet> T addRestServlet(final S service, final Class userType, final Class<T> baseServletType, final String prefix) {
+        return addRestServlet(null, service, userType, baseServletType, prefix);
+    }
+
+    /**
+     * 添加RestServlet
+     *
+     * @param <S>             Service
+     * @param <T>             HttpServlet
+     * @param name            资源名
+     * @param service         Service对象
+     * @param userType        用户数据类型
+     * @param baseServletType RestServlet基类
+     * @param prefix          url前缀
+     *
+     * @return RestServlet
+     */
+    public <S extends Service, T extends HttpServlet> T addRestServlet(final String name, final S service, final Class userType, final Class<T> baseServletType, final String prefix) {
         T servlet = null;
+        final boolean sncp = Sncp.isSncpDyn(service);
+        final String resname = name == null ? (sncp ? Sncp.getResourceName(service) : "") : name;
+        final Class<S> serviceType = Sncp.getServiceType(service);
         for (final HttpServlet item : ((HttpPrepareServlet) this.prepare).getServlets()) {
             if (!(item instanceof HttpServlet)) continue;
-            if (item.getClass().getAnnotation(Rest.RestDynamic.class) == null) continue;
+            if (item.getClass().getAnnotation(Rest.RestDyn.class) == null) continue;
             try {
                 Field field = item.getClass().getDeclaredField(Rest.REST_SERVICE_FIELD_NAME);
                 if (serviceType.equals(field.getType())) {
@@ -274,21 +245,21 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
             mapfield.setAccessible(true);
 
             Service firstService = (Service) field.get(servlet);
-            if (name.isEmpty()) {
+            if (resname.isEmpty()) {
                 field.set(servlet, service);
                 firstService = service;
             }
             Map map = (Map) mapfield.get(servlet);
-            if (map == null && !name.isEmpty()) map = new HashMap();
+            if (map == null && !resname.isEmpty()) map = new HashMap();
             if (map != null) {
-                map.put(name, service);
+                map.put(resname, service);
                 if (firstService != null) map.put("", firstService);
             }
             mapfield.set(servlet, map);
         } catch (Exception e) {
             throw new RuntimeException(serviceType + " generate rest servlet error", e);
         }
-        if (first) this.prepare.addServlet(servlet, prefix, conf);
+        if (first) this.prepare.addServlet(servlet, prefix, sncp ? Sncp.getConf(service) : null);
         return servlet;
     }
 

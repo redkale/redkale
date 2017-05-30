@@ -10,6 +10,7 @@ import org.redkale.util.AnyValue;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.*;
+import org.redkale.service.Service;
 import org.redkale.util.*;
 
 /**
@@ -21,30 +22,35 @@ import org.redkale.util.*;
  */
 public class SncpPrepareServlet extends PrepareServlet<DLong, SncpContext, SncpRequest, SncpResponse, SncpServlet> {
 
+    private final Object sncplock = new Object();
+
     private static final ByteBuffer pongBuffer = ByteBuffer.wrap("PONG".getBytes()).asReadOnlyBuffer();
 
     @Override
     public void addServlet(SncpServlet servlet, Object attachment, AnyValue conf, DLong... mappings) {
-        addSncpServlet((SncpServlet) servlet, conf);
-    }
-
-    public void addSncpServlet(SncpServlet servlet, AnyValue conf) {
-        setServletConf(servlet, conf);
-        putMapping(servlet.getServiceid(), servlet);
-        putServlet(servlet);
-    }
-
-    public <T> SncpServlet removeSncpServlet(String name, Class<T> type) {
-        SncpServlet rs = null;
-        for (SncpServlet servlet : getServlets()) {
-            if (servlet.serviceName.equals(name) && servlet.type.equals(type)) {
-                rs = servlet;
-                break;
+        synchronized (sncplock) {
+            for (SncpServlet s : getServlets()) {
+                if (s.service == servlet.service) throw new RuntimeException(s.service + " repeat addSncpServlet");
             }
+            setServletConf(servlet, conf);
+            putMapping(servlet.getServiceid(), servlet);
+            putServlet(servlet);
         }
-        if (rs != null) {
-            removeMapping(rs);
-            removeServlet(rs);
+    }
+
+    public <T> SncpServlet removeSncpServlet(Service service) {
+        SncpServlet rs = null;
+        synchronized (sncplock) {
+            for (SncpServlet servlet : getServlets()) {
+                if (servlet.service == service) {
+                    rs = servlet;
+                    break;
+                }
+            }
+            if (rs != null) {
+                removeMapping(rs);
+                removeServlet(rs);
+            }
         }
         return rs;
     }

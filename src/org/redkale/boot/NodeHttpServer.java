@@ -239,7 +239,7 @@ public class NodeHttpServer extends NodeServer {
                     return;
                 }
                 restedObjects.add(service); //避免重复创建Rest对象
-                HttpServlet servlet = httpServer.addRestServlet(name, stype, service, userType, baseServletType, prefix, (AnyValue) null);
+                HttpServlet servlet = httpServer.addRestServlet(service, userType, baseServletType, prefix);
                 if (servlet == null) return; //没有HttpMapping方法的HttpServlet调用Rest.createRestServlet就会返回null 
                 resourceFactory.inject(servlet, NodeHttpServer.this);
                 if (finest) logger.finest(threadName + " Create RestServlet(resource.name='" + name + "') = " + servlet);
