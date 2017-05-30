@@ -9,7 +9,7 @@ import java.io.*;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
 import java.net.*;
-import java.nio.file.Path;
+import java.nio.file.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.*;
@@ -509,7 +509,7 @@ public abstract class NodeServer {
     }
 
     protected ClassFilter<Service> createServiceClassFilter() {
-        return createClassFilter(this.sncpGroup, null, Service.class, null, Annotation.class, "services", "service");
+        return createClassFilter(this.sncpGroup, null, Service.class, (!isSNCP() || application.watching) ? null : new Class[]{org.redkale.watch.WatchService.class}, Annotation.class, "services", "service");
     }
 
     protected ClassFilter createClassFilter(final String localGroup, Class<? extends Annotation> ref,

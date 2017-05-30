@@ -8,7 +8,6 @@ package org.redkale.boot;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
 import java.net.InetSocketAddress;
-import java.nio.file.WatchService;
 import java.util.*;
 import java.util.logging.Level;
 import javax.annotation.Resource;
@@ -57,7 +56,7 @@ public class NodeHttpServer extends NodeServer {
 
     @Override
     protected ClassFilter<Service> createServiceClassFilter() {
-        return createClassFilter(this.sncpGroup, null, Service.class, new Class[]{WatchService.class}, Annotation.class, "services", "service");
+        return createClassFilter(this.sncpGroup, null, Service.class, new Class[]{org.redkale.watch.WatchService.class}, Annotation.class, "services", "service");
     }
 
     @Override

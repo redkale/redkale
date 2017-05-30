@@ -253,7 +253,7 @@ public final class ClassFilter<T> {
         boolean rs = superClass == null || (clazz != superClass && superClass.isAssignableFrom(clazz));
         if (rs && this.excludeSuperClasses != null && this.excludeSuperClasses.length > 0) {
             for (Class c : this.excludeSuperClasses) {
-                if (c != null && (clazz == c || clazz.isAssignableFrom(c))) return false;
+                if (c != null && (clazz == c || c.isAssignableFrom(clazz))) return false;
             }
         }
         return rs;

@@ -114,6 +114,9 @@ public final class Application {
     //临时计数器
     CountDownLatch servicecdl;  //会出现两次赋值
 
+    //是否启动了WATCH协议服务
+    boolean watching;
+
     //--------------------------------------------------------------------------------------------    
     //是否用于main方法运行
     private final boolean singletonrun;
@@ -544,6 +547,7 @@ public final class Application {
                 others.add(entry);
             }
         }
+        this.watching = !watchs.isEmpty();
         //单向SNCP服务不需要对等group
         //if (!sncps.isEmpty() && globalNodes.isEmpty()) throw new RuntimeException("found SNCP Server node but not found <group> node info.");
 
