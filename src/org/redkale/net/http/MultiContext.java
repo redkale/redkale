@@ -100,12 +100,16 @@ public final class MultiContext {
      */
     public byte[] partsFirstBytes(final long max, final String filenameReg, final String contentTypeReg) throws IOException {
         if (!isMultipart()) return null;
+        byte[] tmpfile = null;
+        boolean has = false;
         for (MultiPart part : parts()) {
-            if (filenameReg != null && !filenameReg.isEmpty() && !part.getFilename().matches(filenameReg)) return null;
-            if (contentTypeReg != null && !contentTypeReg.isEmpty() && !part.getContentType().matches(contentTypeReg)) return null;
-            return part.getContentBytes(max < 1 ? Long.MAX_VALUE : max);
+            if (has) continue;//不遍历完后面getParameter可能获取不到值
+            has = true;
+            if (filenameReg != null && !filenameReg.isEmpty() && !part.getFilename().matches(filenameReg)) continue;
+            if (contentTypeReg != null && !contentTypeReg.isEmpty() && !part.getContentType().matches(contentTypeReg)) continue;
+            tmpfile = part.getContentBytes(max < 1 ? Long.MAX_VALUE : max);
         }
-        return null;
+        return tmpfile;
     }
 
     //或被 REST 用到 
@@ -122,9 +126,13 @@ public final class MultiContext {
      */
     public File partsFirstFile(final File home, final long max, final String filenameReg, final String contentTypeReg) throws IOException {
         if (!isMultipart()) return null;
+        File tmpfile = null;
+        boolean has = false;
         for (MultiPart part : parts()) {
-            if (filenameReg != null && !filenameReg.isEmpty() && !part.getFilename().matches(filenameReg)) return null;
-            if (contentTypeReg != null && !contentTypeReg.isEmpty() && !part.getContentType().matches(contentTypeReg)) return null;
+            if (has) continue; //不遍历完后面getParameter可能获取不到值
+            has = true;
+            if (filenameReg != null && !filenameReg.isEmpty() && !part.getFilename().matches(filenameReg)) continue;
+            if (contentTypeReg != null && !contentTypeReg.isEmpty() && !part.getContentType().matches(contentTypeReg)) continue;
             String name = part.getFilename();
             int pos = name.lastIndexOf('.');
             if (pos > 0) {
@@ -136,11 +144,11 @@ public final class MultiContext {
             boolean rs = part.save(max < 1 ? Long.MAX_VALUE : max, file);
             if (!rs) {
                 file.delete();
-                return null;
+            } else {
+                tmpfile = file;
             }
-            return file;
         }
-        return null;
+        return tmpfile;
     }
 
     //或被 REST 用到 
