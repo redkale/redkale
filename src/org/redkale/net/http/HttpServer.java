@@ -72,6 +72,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
     /**
      * 删除HttpServlet
      *
+     * @param <T> 泛型
      * @param websocketOrServletType Class
      *
      * @return HttpServlet

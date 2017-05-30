@@ -9,7 +9,9 @@ import org.redkale.net.http.HttpServlet;
 
 /**
  *
- * <p> 详情见: https://redkale.org
+ * <p>
+ * 详情见: https://redkale.org
+ *
  * @author zhangjx
  */
 public class WatchServlet extends HttpServlet {

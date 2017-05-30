@@ -16,6 +16,8 @@ import org.redkale.service.Service;
 import org.redkale.util.ObjectPool;
 
 /**
+ * <p>
+ * 详情见: https://redkale.org
  *
  * @author zhangjx
  */
