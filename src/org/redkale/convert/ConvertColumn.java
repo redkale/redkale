@@ -21,7 +21,7 @@ import static java.lang.annotation.RetentionPolicy.*;
 @Documented
 @Target({METHOD, FIELD})
 @Retention(RUNTIME)
-@Repeatable(ConvertColumns.class)
+@Repeatable(ConvertColumn.ConvertColumns.class)
 public @interface ConvertColumn {
 
     /**
@@ -44,4 +44,21 @@ public @interface ConvertColumn {
      * @return JSON or BSON or ALL
      */
     ConvertType type() default ConvertType.ALL;
+
+    /**
+     * ConvertColumn 的多用类
+     *
+     * <p>
+     * 详情见: https://redkale.org
+     *
+     * @author zhangjx
+     */
+    @Inherited
+    @Documented
+    @Target({METHOD, FIELD})
+    @Retention(RUNTIME)
+    public static @interface ConvertColumns {
+
+        ConvertColumn[] value();
+    }
 }
