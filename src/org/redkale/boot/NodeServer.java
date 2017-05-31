@@ -53,6 +53,9 @@ public abstract class NodeServer {
     //当前Server对象
     protected final Server server;
 
+    //ClassLoader
+    protected final NodeClassLoader classLoader;
+
     //当前Server的SNCP协议的组
     protected String sncpGroup = null;
 
@@ -86,6 +89,8 @@ public abstract class NodeServer {
         this.resourceFactory = application.getResourceFactory().createChild();
         this.server = server;
         this.logger = Logger.getLogger(this.getClass().getSimpleName());
+        this.classLoader = new NodeClassLoader(Thread.currentThread().getContextClassLoader());
+        Thread.currentThread().setContextClassLoader(this.classLoader);
     }
 
     protected Consumer<Runnable> getExecutor() throws Exception {
@@ -590,6 +595,10 @@ public abstract class NodeServer {
 
     public ResourceFactory getResourceFactory() {
         return resourceFactory;
+    }
+
+    public NodeClassLoader getNodeClassLoader() {
+        return classLoader;
     }
 
     public InetSocketAddress getSncpAddress() {

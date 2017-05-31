@@ -135,6 +135,9 @@ public final class Application {
     //Server启动的计数器，用于确保所有Server都启动完后再进行下一步处理
     private final CountDownLatch serversLatch;
 
+    //根ClassLoader
+    private final NodeClassLoader classLoader;
+
     private Application(final AnyValue config) {
         this(false, config);
     }
@@ -264,6 +267,8 @@ public final class Application {
             }
         }
         this.transportFactory = new TransportFactory(transportExec, transportPool, transportGroup);
+        this.classLoader = new NodeClassLoader(Thread.currentThread().getContextClassLoader());
+        Thread.currentThread().setContextClassLoader(this.classLoader);
     }
 
     public ResourceFactory getResourceFactory() {
@@ -274,9 +279,10 @@ public final class Application {
         return transportFactory;
     }
 
-//    public WatchFactory getWatchFactory() {
-//        return watchFactory;
-//    }
+    public NodeClassLoader getNodeClassLoader() {
+        return classLoader;
+    }
+
     public List<NodeServer> getNodeServers() {
         return new ArrayList<>(servers);
     }
