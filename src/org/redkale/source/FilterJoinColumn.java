@@ -44,4 +44,11 @@ public @interface FilterJoinColumn {
      * @return 关联字段
      */
     String[] columns();
+
+    /**
+     * 备注描述
+     *
+     * @return 备注描述
+     */
+    String comment() default "";
 }
