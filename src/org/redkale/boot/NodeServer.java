@@ -89,7 +89,7 @@ public abstract class NodeServer {
         this.resourceFactory = application.getResourceFactory().createChild();
         this.server = server;
         this.logger = Logger.getLogger(this.getClass().getSimpleName());
-        this.classLoader = new NodeClassLoader(Thread.currentThread().getContextClassLoader());
+        this.classLoader = new NodeClassLoader((URLClassLoader)Thread.currentThread().getContextClassLoader());
         Thread.currentThread().setContextClassLoader(this.classLoader);
     }
 

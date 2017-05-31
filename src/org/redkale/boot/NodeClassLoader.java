@@ -5,6 +5,7 @@
  */
 package org.redkale.boot;
 
+import java.lang.reflect.Method;
 import java.net.*;
 
 /**
@@ -13,7 +14,20 @@ import java.net.*;
  */
 public class NodeClassLoader extends URLClassLoader {
 
-    public NodeClassLoader(ClassLoader parent) {
+    private static final Method addURLMethod;
+
+    static {
+        Method m = null;
+        try {
+            m = URLClassLoader.class.getDeclaredMethod("addURL", URL.class);
+            m.setAccessible(true);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        addURLMethod = m;
+    }
+
+    public NodeClassLoader(URLClassLoader parent) {
         super(new URL[0], parent);
     }
 
@@ -23,6 +37,18 @@ public class NodeClassLoader extends URLClassLoader {
 
     @Override
     public void addURL(URL url) {
-        super.addURL(url);
+        try {
+            addURLMethod.invoke(getParent(), url);
+        } catch (RuntimeException re) {
+            throw re;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
+
+    @Override
+    public URL[] getURLs() {
+        return ((URLClassLoader) getParent()).getURLs();
+    }
+
 }

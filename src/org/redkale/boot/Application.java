@@ -267,7 +267,7 @@ public final class Application {
             }
         }
         this.transportFactory = new TransportFactory(transportExec, transportPool, transportGroup);
-        this.classLoader = new NodeClassLoader(Thread.currentThread().getContextClassLoader());
+        this.classLoader = new NodeClassLoader((URLClassLoader)Thread.currentThread().getContextClassLoader());
         Thread.currentThread().setContextClassLoader(this.classLoader);
     }
 
