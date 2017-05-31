@@ -33,71 +33,101 @@
             <p>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;源码可以从 <a href="https://github.com/redkale" target="_blank" >https://github.com/redkale</a> 和 <a href="http://git.oschina.net/redkale/redkale" target="_blank" >http://git.oschina.net/redkale/redkale</a> 下载 。<br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;jar包可以从 <a href="http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.redkale%22%20AND%20a%3A%22redkale%22" target="_blank" >http://search.maven.org</a> 和 <a href="https://repo1.maven.org/maven2/org/redkale/redkale/" target="_blank" >https://repo1.maven.org/maven2/org/redkale/redkale/</a> 下载最新版本的包。<br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;当前最新版为 1.8， 下载 <a href="https://repo1.maven.org/maven2/org/redkale/redkale/1.8/redkale-1.8.tar.gz" target="_blank" >redkale-1.8.tar.gz</a> 放在本地。<br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;当前最新版为 1.8， 下载 redkale-1.8.0.tar.gz 放在本地。<br/>
             </p>
 
             <p>创建工程</p>
             <p>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;本人使用NetBeans很多年了，所以本教程以NetBeans来创建工程， 使用IntelliJ IDEA 或 Eclipse的同学请自行参考。
             </p>
+            <p>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;首先创建一个"<b>Java应用程序</b>"项目, 注意： 不管是否Web项目，都不要创建Web应用程序。
+            </p>
             <p style="text-align: center;"><img src="images/hello_01.png" alt=""/><img src="images/hello_02.png" alt=""/></p>
+            <p>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;创建完空项目后，将 redkale-1.8.0.tar.gz 解压覆盖到项目的目录下。
+            </p>
             <p style="text-align: center;"><img src="images/hello_03.png" alt=""/><img src="images/hello_04.png" alt=""/></p>
-            <p style="text-align: center;"><img src="images/hello_05.png" alt=""/><img src="images/hello_06.png" alt=""/></p>
-            <p style="text-align: center;"><img src="images/hello_07.png" alt=""/><img src="images/hello_08.png" alt=""/></p>
-            <p style="text-align: center;"><img src="images/hello_09.png" alt=""/><img src="images/hello_10.png" alt=""/></p>
-            <p style="text-align: center;"><img src="images/hello_11.png" alt=""/><img src="images/hello_12.png" alt=""/></p>
-            
-            <div class="highlight"><pre><span class="kd">public</span> <span class="kd">final</span> <span class="o">&lt;</span><span class="n">E</span><span class="o">&gt;</span> <span class="n">Encodeable</span><span class="o">&lt;</span><span class="n">W</span><span class="o">,</span> <span class="n">E</span><span class="o">&gt;</span> <span class="nf">findEncoder</span><span class="o">(</span><span class="kd">final</span> <span class="n">Type</span> <span class="n">type</span><span class="o">)</span> <span class="o">{</span>
-    <span class="n">Encodeable</span><span class="o">&lt;</span><span class="n">W</span><span class="o">,</span> <span class="n">E</span><span class="o">&gt;</span> <span class="n">rs</span> <span class="o">=</span> <span class="o">(</span><span class="n">Encodeable</span><span class="o">&lt;</span><span class="n">W</span><span class="o">,</span> <span class="n">E</span><span class="o">&gt;)</span> <span class="n">encoders</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="n">type</span><span class="o">);</span>
-    <span class="k">if</span> <span class="o">(</span><span class="n">rs</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="k">return</span> <span class="n">rs</span><span class="o">;</span>
-    <span class="k">return</span> <span class="k">this</span><span class="o">.</span><span class="na">parent</span> <span class="o">==</span> <span class="kc">null</span> <span class="o">?</span> <span class="kc">null</span> <span class="o">:</span> <span class="k">this</span><span class="o">.</span><span class="na">parent</span><span class="o">.</span><span class="na">findEncoder</span><span class="o">(</span><span class="n">type</span><span class="o">);</span>
-<span class="o">}</span></pre></div>
             <p>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;当搜索不到Encoder、Decoder时，自身的ConvertFactory会自动创建一个ObjectEncoder、ObjectDecoder。
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;点击项目右键进入“属性”-> “库”中，点击 “添加JAR/文件夹”找到项目lib目录下的redkale-1.8.0.jar 并导入。
             </p>
-            <div class="highlight"><pre><span class="kd">public</span> <span class="kd">final</span> <span class="o">&lt;</span><span class="n">E</span><span class="o">&gt;</span> <span class="n">Encodeable</span><span class="o">&lt;</span><span class="n">W</span><span class="o">,</span> <span class="n">E</span><span class="o">&gt;</span> <span class="nf">loadEncoder</span><span class="o">(</span><span class="kd">final</span> <span class="n">Type</span> <span class="n">type</span><span class="o">)</span> <span class="o">{</span>
-    <span class="n">Encodeable</span><span class="o">&lt;</span><span class="n">W</span><span class="o">,</span> <span class="n">E</span><span class="o">&gt;</span> <span class="n">encoder</span> <span class="o">=</span> <span class="n">findEncoder</span><span class="o">(</span><span class="n">type</span><span class="o">);</span>
-    <span class="k">if</span> <span class="o">(</span><span class="n">encoder</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="k">return</span> <span class="n">encoder</span><span class="o">;</span>
-    <span class="k">if</span> <span class="o">(</span><span class="n">type</span> <span class="k">instanceof</span> <span class="n">GenericArrayType</span><span class="o">)</span> <span class="k">return</span> <span class="k">new</span> <span class="nf">ArrayEncoder</span><span class="o">(</span><span class="k">this</span><span class="o">,</span> <span class="n">type</span><span class="o">);</span>
-    <span class="n">Class</span> <span class="n">clazz</span><span class="o">;</span>
-    <span class="k">if</span> <span class="o">(</span><span class="n">type</span> <span class="k">instanceof</span> <span class="n">ParameterizedType</span><span class="o">)</span> <span class="o">{</span>
-        <span class="kd">final</span> <span class="n">ParameterizedType</span> <span class="n">pts</span> <span class="o">=</span> <span class="o">(</span><span class="n">ParameterizedType</span><span class="o">)</span> <span class="n">type</span><span class="o">;</span>
-        <span class="n">clazz</span> <span class="o">=</span> <span class="o">(</span><span class="n">Class</span><span class="o">)</span> <span class="o">(</span><span class="n">pts</span><span class="o">).</span><span class="na">getRawType</span><span class="o">();</span>
-    <span class="o">}</span> <span class="k">else</span> <span class="nf">if</span> <span class="o">(</span><span class="n">type</span> <span class="k">instanceof</span> <span class="n">TypeVariable</span><span class="o">)</span> <span class="o">{</span>
-        <span class="n">TypeVariable</span> <span class="n">tv</span> <span class="o">=</span> <span class="o">(</span><span class="n">TypeVariable</span><span class="o">)</span> <span class="n">type</span><span class="o">;</span>
-        <span class="n">Type</span> <span class="n">t</span> <span class="o">=</span> <span class="n">Object</span><span class="o">.</span><span class="na">class</span><span class="o">;</span>
-        <span class="k">if</span> <span class="o">(</span><span class="n">tv</span><span class="o">.</span><span class="na">getBounds</span><span class="o">().</span><span class="na">length</span> <span class="o">==</span> <span class="mi">1</span><span class="o">)</span> <span class="o">{</span>
-            <span class="n">t</span> <span class="o">=</span> <span class="n">tv</span><span class="o">.</span><span class="na">getBounds</span><span class="o">()[</span><span class="mi">0</span><span class="o">];</span>
-        <span class="o">}</span>
-        <span class="k">if</span> <span class="o">(!(</span><span class="n">t</span> <span class="k">instanceof</span> <span class="n">Class</span><span class="o">))</span> <span class="n">t</span> <span class="o">=</span> <span class="n">Object</span><span class="o">.</span><span class="na">class</span><span class="o">;</span>
-        <span class="n">clazz</span> <span class="o">=</span> <span class="o">(</span><span class="n">Class</span><span class="o">)</span> <span class="n">t</span><span class="o">;</span>
-    <span class="o">}</span> <span class="k">else</span> <span class="nf">if</span> <span class="o">(</span><span class="n">type</span> <span class="k">instanceof</span> <span class="n">Class</span><span class="o">)</span> <span class="o">{</span>
-        <span class="n">clazz</span> <span class="o">=</span> <span class="o">(</span><span class="n">Class</span><span class="o">)</span> <span class="n">type</span><span class="o">;</span>
-    <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
-        <span class="k">throw</span> <span class="k">new</span> <span class="nf">ConvertException</span><span class="o">(</span><span class="s">&quot;not support the type (&quot;</span> <span class="o">+</span> <span class="n">type</span> <span class="o">+</span> <span class="s">&quot;)&quot;</span><span class="o">);</span>
+            <p style="text-align: center;"><img src="images/hello_05.png" alt=""/><img src="images/hello_06.png" alt=""/></p>            
+            <p>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;点击“源”，在下面测试包中导入项目目录下的conf目录，这样方便编辑conf下的配置文件(在上面src中导入会打包进jar中)。
+            </p>
+            <p style="text-align: center;"><img src="images/hello_07.png" alt=""/></p>         
+            <p>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;点击“运行”，在主类中输入 "<b>org.redkale.boot.Application</b>"，然后点击“确定”。
+            </p>
+            <p style="text-align: center;"><img src="images/hello_08.png" alt=""/></p>   
+            <p>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;编写HelloService类。
+            </p>
+            <div class="highlight"><pre><span></span><span class="kn">package</span> <span class="n">com.redkale.demo</span><span class="o">;</span>
+
+<span class="kn">import</span> <span class="n">org.redkale.net.http.*</span><span class="o">;</span>
+<span class="kn">import</span> <span class="n">org.redkale.service.Service</span><span class="o">;</span>
+
+<span class="nd">@RestService</span><span class="o">(</span><span class="n">automapping</span> <span class="o">=</span> <span class="kc">true</span><span class="o">)</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">HelloService</span> <span class="kd">implements</span> <span class="n">Service</span> <span class="o">{</span>
+
+    <span class="kd">public</span> <span class="n">String</span> <span class="nf">sayHello</span><span class="o">()</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="s">"Hello World！"</span><span class="o">;</span>
     <span class="o">}</span>
-    <span class="n">encoder</span> <span class="o">=</span> <span class="n">findEncoder</span><span class="o">(</span><span class="n">clazz</span><span class="o">);</span>
-    <span class="k">if</span> <span class="o">(</span><span class="n">encoder</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="k">return</span> <span class="n">encoder</span><span class="o">;</span>
-    <span class="k">return</span> <span class="nf">createEncoder</span><span class="o">(</span><span class="n">type</span><span class="o">,</span> <span class="n">clazz</span><span class="o">);</span>
-<span class="o">}</span></pre></div>
+
+    <span class="kd">public</span> <span class="n">String</span> <span class="nf">hi</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="s">"Hi, "</span> <span class="o">+</span> <span class="n">name</span> <span class="o">+</span> <span class="s">"！"</span><span class="o">;</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+                </pre></div>
+
             <p>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;大部分情况下Convert的处理对象会根据JavaBean类自定生成，而有些场景需要覆盖处理类，这样需要子ConvertFactory，如 <a href="convert.html#convert_base" target="_blank">Convert基本用法</a> 例子中使用JsonFactory.root().createChild()重定义。且与JsonFactory.root()中的定义可以并存，也不会产出冲突。
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;此类提供两个方法：say 和 hi。编写完后按"<b>F6</b>" 直接运行。
             </p>
+            <p style="text-align: center;"><img src="images/hello_09.png" alt=""/></p>
             <p>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Redkale可以启动多个协议Server服务(配置文件中含多个server节点)，为避免冲突，每个非SNCP的Server的ResourceFactory也是独立的。
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在浏览器输入: http://127.0.0.1:6060/pipes/hello/say 可以看到结果： 
             </p>
-            <div class="highlight"><pre><span class="kd">public</span> <span class="nf">NodeServer</span><span class="o">(</span><span class="n">Application</span> <span class="n">application</span><span class="o">,</span> <span class="n">Server</span> <span class="n">server</span><span class="o">)</span> <span class="o">{</span>
-    <span class="k">this</span><span class="o">.</span><span class="na">application</span> <span class="o">=</span> <span class="n">application</span><span class="o">;</span>
-    <b><span class="k">this</span><span class="o">.</span><span class="na">resourceFactory</span> <span class="o">=</span> <span class="n">application</span><span class="o">.</span><span class="na">getResourceFactory</span><span class="o">().</span><span class="na">createChild</span><span class="o">();</span></b>
-    <span class="k">this</span><span class="o">.</span><span class="na">server</span> <span class="o">=</span> <span class="n">server</span><span class="o">;</span>
-    <span class="k">this</span><span class="o">.</span><span class="na">logger</span> <span class="o">=</span> <span class="n">Logger</span><span class="o">.</span><span class="na">getLogger</span><span class="o">(</span><span class="k">this</span><span class="o">.</span><span class="na">getClass</span><span class="o">().</span><span class="na">getSimpleName</span><span class="o">());</span>
-<span class="o">}</span></pre></div>
+            <p style="text-align: center;"><img src="images/hello_10.png" alt=""/></p>
             <p>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;双亲委托模型既可让同级子Factory保持独立，也可重用父Factory内的配置，因此在Redkale这种支持多Server、多种配置的场景下很是适合。
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在浏览器输入: http://127.0.0.1:6060/pipes/hello/hi?name=Redkale 可以看到结果： 
             </p>
+            <p style="text-align: center;"><img src="images/hello_11.png" alt=""/></p>
+            <p>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;访问地址的端口6060和前缀pipes是通过conf/application.xml文件进行配置： 
+            </p>
+            <p style="text-align: center;"><img src="images/hello_12.png" alt=""/></p>
+
+            <p>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;至此，一个简单的Hello服务就开发和调试完成了。可以看出，代码简单很多，不需要太多配置、maven和其他依赖包。<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;可能有人会疑惑: HelloServie为什么能分配到hello前缀？ sayHello为什么会映射到/pipes/hello/say 请求？Redkale为了减少Annotation配置采取了一些默认值的策略， 如果标记@RestService没有指定name时，Redkale会采用去掉Service及后面部分的类名的小写作为模块名，如HelloService和HelloServiceImpl都会采用hello作为模块名。方法名的默认值策略则是去掉模块名字样及后面部分的方法名小写，如sayHello和sayHelloMe 都会用say作为默认值。参数名如果没有指定@RestParam.name会自动采用代码的变量名。 完全标记Rest注解的HelloService源码如下：
+            </p>
+            <div class="highlight"><pre><span></span><span class="kn">package</span> <span class="n">com.redkale.demo</span><span class="o">;</span>
+
+<span class="kn">import</span> <span class="n">org.redkale.net.http.*</span><span class="o">;</span>
+<span class="kn">import</span> <span class="n">org.redkale.service.Service</span><span class="o">;</span>
+
+<span class="nd">@RestService</span><span class="o">(</span><span class="n">name</span> <span class="o">=</span> <span class="s">"Hello"</span><span class="o">)</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">HelloService</span> <span class="kd">implements</span> <span class="n">Service</span> <span class="o">{</span>
+
+    <span class="nd">@RestMapping</span><span class="o">(</span><span class="n">name</span> <span class="o">=</span> <span class="s">"say"</span><span class="o">)</span>
+    <span class="kd">public</span> <span class="n">String</span> <span class="nf">sayHello</span><span class="o">()</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="s">"Hello World！"</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="nd">@RestMapping</span><span class="o">(</span><span class="n">name</span> <span class="o">=</span> <span class="s">"hi"</span><span class="o">)</span>
+    <span class="kd">public</span> <span class="n">String</span> <span class="nf">hi</span><span class="o">(</span><span class="nd">@RestParam</span><span class="o">(</span><span class="n">name</span> <span class="o">=</span> <span class="s">"name"</span><span class="o">)</span> <span class="n">String</span> <span class="n">name</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="s">"Hi, "</span> <span class="o">+</span> <span class="n">name</span> <span class="o">+</span> <span class="s">"！"</span><span class="o">;</span>
+    <span class="o">}</span>
+
+<span class="o">}</span>
+                </pre></div>
             <br/>
             <p>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;转载请注明出处：<a href="https://redkale.org/article_parents.html" target="_blank">https://redkale.org/article_parents.html</a>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这段代码与上面那段是等价的。部署也很简单， 将项目目录中dist目录下的redkale-demo.jar复制到lib下，运行bin/start.bat 即可启动HTTP服务。 
+            </p>
+            <p>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;转载请注明出处：<a href="https://redkale.org/course01_hello.html" target="_blank">https://redkale.org/course01_hello.html</a>
             </p>
 
             <footer class="site-footer">
