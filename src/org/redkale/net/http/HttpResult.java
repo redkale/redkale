@@ -47,6 +47,10 @@ public class HttpResult<T> {
         return this;
     }
 
+    public HttpResult<T> cookie(String name, Serializable value) {
+        return cookie(new HttpCookie(name, String.valueOf(value)));
+    }
+
     public HttpResult<T> cookie(HttpCookie cookie) {
         if (this.cookies == null) this.cookies = new ArrayList<>();
         this.cookies.add(cookie);
