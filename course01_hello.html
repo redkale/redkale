@@ -100,7 +100,7 @@
 
             <p>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;至此，一个简单的Hello服务就开发和调试完成了。可以看出，代码简单很多，不需要太多配置、maven和其他依赖包。<br>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;可能有人会疑惑: HelloServie为什么能分配到hello前缀？ sayHello为什么会映射到/pipes/hello/say 请求？Redkale为了减少Annotation配置采取了一些默认值的策略， 如果标记@RestService没有指定name时，Redkale会采用去掉Service及后面部分的类名的小写作为模块名，如HelloService和HelloServiceImpl都会采用hello作为模块名。方法名的默认值策略则是去掉模块名字样及后面部分的方法名小写，如sayHello和sayHelloMe 都会用say作为默认值。参数名如果没有指定@RestParam.name会自动采用代码的变量名。 完全标记Rest注解的HelloService源码如下：
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;可能有人会疑惑: HelloServie为什么能分配到hello前缀？ sayHello为什么会映射到/pipes/hello/say 请求？ Redkale为了减少Annotation配置采取了一些默认值的策略， 在Redkale里， 一个Service视为一个模块或服务，所以需要有模块(服务)名的概念，用于服务管理和鉴权，通常需要通过@RestServie.name来指定模块名，没有指定则默认将Service类名的Service字样之前的字符串视为模块名，如HelloService和HelloServiceImpl都会采用hello作为模块名。方法名的默认值策略也是类似，将模块名字样之前的字符串作为方法名，如sayHello和sayHelloMe 都会用say作为默认值。参数名如果没有指定@RestParam.name会自动采用代码的变量名。 完全标记Rest注解的HelloService源码如下：
             </p>
             <div class="highlight"><pre><span></span><span class="kn">package</span> <span class="n">com.redkale.demo</span><span class="o">;</span>
 
