@@ -725,6 +725,7 @@ public final class Rest {
 
                 RestHeader annhead = param.getAnnotation(RestHeader.class);
                 if (annhead != null) {
+                    if (ptype != String.class) throw new RuntimeException("@RestHeader must on String Parameter in " + method);
                     n = annhead.name();
                     radix = annhead.radix();
                     comment = annhead.comment();
