@@ -37,7 +37,7 @@
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;7、内置WebSocket的集群与组功能，且提供伪WebSocket连接功能。<br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;8、HttpResponse只能异步输出。<br/>
             </p> 
-            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;编写Redkale的HttpServlet与 JSR 340中的javax.servlet.http.HttpServlet 基本相同，只需继承 org.redkale.net.http.HttpServlet, 比较好的习惯是一个项目先定义一个项目级的BaseServlet类，这样方便以后加入类似javax.servlet.Filter的功能。 <br/> <br/>
+            <p id="baseservlet">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;编写Redkale的HttpServlet与 JSR 340中的javax.servlet.http.HttpServlet 基本相同，只需继承 org.redkale.net.http.HttpServlet, 比较好的习惯是一个项目先定义一个项目级的BaseServlet类，这样方便以后加入类似javax.servlet.Filter的功能。 <br/> <br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;一个典型的BaseSerlvet实现: 
             </p> 
             <div class="highlight"><pre><span></span><span class="nd">@HttpUserType</span><span class="o">(</span><span class="n">UserInfo</span><span class="o">.</span><span class="na">class</span><span class="o">)</span>
