@@ -17,7 +17,7 @@ import jdk.internal.org.objectweb.asm.*;
 import static jdk.internal.org.objectweb.asm.ClassWriter.COMPUTE_FRAMES;
 import static jdk.internal.org.objectweb.asm.Opcodes.*;
 import jdk.internal.org.objectweb.asm.Type;
-import org.redkale.convert.json.JsonConvert;
+import org.redkale.convert.json.*;
 import org.redkale.service.*;
 import org.redkale.util.*;
 import org.redkale.source.Flipper;
@@ -34,6 +34,8 @@ public final class Rest {
     public static final String REST_HEADER_RESOURCE_NAME = "rest-resource-name";
 
     static final String REST_SERVICE_FIELD_NAME = "_redkale_service";
+
+    static final String REST_JSONCONVERT_FIELD_PREFIX = "_redkale_jsonconvert_";
 
     static final String REST_SERVICEMAP_FIELD_NAME = "_redkale_servicemap"; //如果只有name=""的Service资源，则实例中_servicemap必须为null
 
@@ -107,6 +109,20 @@ public final class Rest {
             }
             return map;
         }
+    }
+
+    static JsonConvert createJsonConvert(RestConvert[] converts) {
+        if (converts == null || converts.length < 1) return JsonConvert.root();
+        final JsonFactory childFactory = JsonFactory.root().createChild();
+        List<Class> types = new ArrayList<>();
+        for (RestConvert rc : converts) {
+            if (types.contains(rc.type())) throw new RuntimeException("@RestConvert type(" + rc.type() + ") repeat");
+            childFactory.register(rc.type(), false, rc.convertColumns());
+            childFactory.register(rc.type(), true, rc.ignoreColumns());
+            childFactory.reloadCoder(rc.type());
+            types.add(rc.type());
+        }
+        return childFactory.getConvert();
     }
 
     static String getWebModuleName(Class<? extends Service> serviceType) {
@@ -525,6 +541,7 @@ public final class Rest {
         final String webServletDesc = Type.getDescriptor(WebServlet.class);
         final String reqDesc = Type.getDescriptor(HttpRequest.class);
         final String respDesc = Type.getDescriptor(HttpResponse.class);
+        final String convertDesc = Type.getDescriptor(JsonConvert.class);
         final String retDesc = Type.getDescriptor(RetResult.class);
         final String futureDesc = Type.getDescriptor(CompletableFuture.class);
         final String flipperDesc = Type.getDescriptor(Flipper.class);
@@ -672,6 +689,7 @@ public final class Rest {
         final Map<String, List<String>> asmParamMap = MethodParamClassVisitor.getMethodParamNames(serviceType);
         final Map<String, java.lang.reflect.Type> bodyTypes = new HashMap<>();
 
+        final List<RestConvert[]> restConverts = new ArrayList<>();
         for (final MappingEntry entry : entrys) {
             RestUploadFile mupload = null;
             Class muploadType = null;
@@ -679,6 +697,9 @@ public final class Rest {
             final Class returnType = method.getReturnType();
             final String methodDesc = Type.getMethodDescriptor(method);
             final Parameter[] params = method.getParameters();
+
+            final RestConvert[] rcs = method.getAnnotationsByType(RestConvert.class);
+            if (rcs != null && rcs.length > 0) restConverts.add(rcs);
 
             mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC, entry.name, "(" + reqDesc + respDesc + ")V", null, new String[]{"java/io/IOException"}));
             //mv.setDebug(true);
@@ -1293,7 +1314,7 @@ public final class Rest {
                             if (ru != null && field.getType() != byte[].class && field.getType() != File.class && field.getType() != File[].class) {
                                 throw new RuntimeException("@RestUploadFile must on byte[] or File or File[] Field in " + field);
                             }
-                            
+
                             if (ri != null && field.getType() != String.class) throw new RuntimeException("@RestURI must on String Field in " + field);
                             org.redkale.util.Attribute attr = org.redkale.util.Attribute.create(loop, field);
                             String attrFieldName;
@@ -1489,15 +1510,29 @@ public final class Rest {
             } else if (RetResult.class.isAssignableFrom(returnType)) {
                 mv.visitVarInsn(ASTORE, maxLocals);
                 mv.visitVarInsn(ALOAD, 2); //response
-                mv.visitVarInsn(ALOAD, maxLocals);
-                mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishJson", "(" + retDesc + ")V", false);
+                if (rcs != null && rcs.length > 0) {
+                    mv.visitVarInsn(ALOAD, 0);
+                    mv.visitFieldInsn(GETFIELD, newDynName, REST_JSONCONVERT_FIELD_PREFIX + restConverts.size(), convertDesc);
+                    mv.visitVarInsn(ALOAD, maxLocals);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishJson", "(" + convertDesc + retDesc + ")V", false);
+                } else {
+                    mv.visitVarInsn(ALOAD, maxLocals);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishJson", "(" + retDesc + ")V", false);
+                }
                 mv.visitInsn(RETURN);
                 maxLocals++;
             } else if (HttpResult.class.isAssignableFrom(returnType)) {
                 mv.visitVarInsn(ASTORE, maxLocals);
-                mv.visitVarInsn(ALOAD, 2); //response
-                mv.visitVarInsn(ALOAD, maxLocals);
-                mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishJson", "(" + httprsDesc + ")V", false);
+                mv.visitVarInsn(ALOAD, 2); //response                
+                if (rcs != null && rcs.length > 0) {
+                    mv.visitVarInsn(ALOAD, 0);
+                    mv.visitFieldInsn(GETFIELD, newDynName, REST_JSONCONVERT_FIELD_PREFIX + restConverts.size(), convertDesc);
+                    mv.visitVarInsn(ALOAD, maxLocals);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishJson", "(" + convertDesc + httprsDesc + ")V", false);
+                } else {
+                    mv.visitVarInsn(ALOAD, maxLocals);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishJson", "(" + httprsDesc + ")V", false);
+                }
                 mv.visitInsn(RETURN);
                 maxLocals++;
             } else if (Number.class.isAssignableFrom(returnType) || CharSequence.class.isAssignableFrom(returnType)) {   //returnType == String.class 必须放在前面
@@ -1511,15 +1546,29 @@ public final class Rest {
             } else if (CompletableFuture.class.isAssignableFrom(returnType)) {
                 mv.visitVarInsn(ASTORE, maxLocals);
                 mv.visitVarInsn(ALOAD, 2);//response
-                mv.visitVarInsn(ALOAD, maxLocals);
-                mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishJson", "(" + futureDesc + ")V", false);
+                if (rcs != null && rcs.length > 0) {
+                    mv.visitVarInsn(ALOAD, 0);
+                    mv.visitFieldInsn(GETFIELD, newDynName, REST_JSONCONVERT_FIELD_PREFIX + restConverts.size(), convertDesc);
+                    mv.visitVarInsn(ALOAD, maxLocals);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishJson", "(" + convertDesc + futureDesc + ")V", false);
+                } else {
+                    mv.visitVarInsn(ALOAD, maxLocals);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishJson", "(" + futureDesc + ")V", false);
+                }
                 mv.visitInsn(RETURN);
                 maxLocals++;
             } else {
                 mv.visitVarInsn(ASTORE, maxLocals);
                 mv.visitVarInsn(ALOAD, 2); //response
-                mv.visitVarInsn(ALOAD, maxLocals);
-                mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishJson", "(Ljava/lang/Object;)V", false);
+                if (rcs != null && rcs.length > 0) {
+                    mv.visitVarInsn(ALOAD, 0);
+                    mv.visitFieldInsn(GETFIELD, newDynName, REST_JSONCONVERT_FIELD_PREFIX + restConverts.size(), convertDesc);
+                    mv.visitVarInsn(ALOAD, maxLocals);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishJson", "(" + convertDesc + "Ljava/lang/Object;)V", false);
+                } else {
+                    mv.visitVarInsn(ALOAD, maxLocals);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishJson", "(Ljava/lang/Object;)V", false);
+                }
                 mv.visitInsn(RETURN);
                 maxLocals++;
             }
@@ -1535,6 +1584,11 @@ public final class Rest {
 
         for (String attrname : restAttributes.keySet()) {
             fv = cw.visitField(ACC_PRIVATE, attrname, attrDesc, null, null);
+            fv.visitEnd();
+        }
+
+        for (int i = 1; i <= restConverts.size(); i++) {
+            fv = cw.visitField(ACC_PRIVATE, REST_JSONCONVERT_FIELD_PREFIX + i, convertDesc, null, null);
             fv.visitEnd();
         }
 
@@ -1561,6 +1615,11 @@ public final class Rest {
                 Field genField = newClazz.getDeclaredField(en.getKey());
                 genField.setAccessible(true);
                 genField.set(obj, en.getValue());
+            }
+            for (int i = 0; i < restConverts.size(); i++) {
+                Field genField = newClazz.getDeclaredField(REST_JSONCONVERT_FIELD_PREFIX + (i + 1));
+                genField.setAccessible(true);
+                genField.set(obj, createJsonConvert(restConverts.get(i)));
             }
             Field typesfield = newClazz.getDeclaredField(REST_PARAMTYPES_FIELD_NAME);
             typesfield.setAccessible(true);
