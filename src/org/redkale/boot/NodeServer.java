@@ -5,6 +5,7 @@
  */
 package org.redkale.boot;
 
+import org.redkale.util.RedkaleClassLoader;
 import java.io.*;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
@@ -54,7 +55,7 @@ public abstract class NodeServer {
     protected final Server server;
 
     //ClassLoader
-    protected final NodeClassLoader classLoader;
+    protected final RedkaleClassLoader classLoader;
 
     //当前Server的SNCP协议的组
     protected String sncpGroup = null;
@@ -89,7 +90,7 @@ public abstract class NodeServer {
         this.resourceFactory = application.getResourceFactory().createChild();
         this.server = server;
         this.logger = Logger.getLogger(this.getClass().getSimpleName());
-        this.classLoader = new NodeClassLoader((URLClassLoader)Thread.currentThread().getContextClassLoader());
+        this.classLoader = new RedkaleClassLoader(Thread.currentThread().getContextClassLoader());
         Thread.currentThread().setContextClassLoader(this.classLoader);
     }
 
@@ -158,7 +159,7 @@ public abstract class NodeServer {
 
             final String homepath = myroot.getCanonicalPath();
             //加入指定的classpath
-            Server.loadLib(logger, this.serverConf.getValue("lib", "").replace("${APP_HOME}", homepath) + ";" + homepath + "/lib/*;" + homepath + "/classes");
+            Server.loadLib(classLoader, logger, this.serverConf.getValue("lib", "").replace("${APP_HOME}", homepath) + ";" + homepath + "/lib/*;" + homepath + "/classes");
         }
         //必须要进行初始化， 构建Service时需要使用Context中的ExecutorService
         server.init(this.serverConf);
@@ -597,7 +598,7 @@ public abstract class NodeServer {
         return resourceFactory;
     }
 
-    public NodeClassLoader getNodeClassLoader() {
+    public RedkaleClassLoader getClassLoader() {
         return classLoader;
     }
 

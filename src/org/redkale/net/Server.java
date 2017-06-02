@@ -6,7 +6,6 @@
 package org.redkale.net;
 
 import java.io.*;
-import java.lang.reflect.Method;
 import java.net.*;
 import java.nio.charset.Charset;
 import java.text.*;
@@ -14,7 +13,7 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
-import org.redkale.util.AnyValue;
+import org.redkale.util.*;
 
 /**
  *
@@ -217,7 +216,7 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         return new DecimalFormat(sf);
     }
 
-    public static URL[] loadLib(final Logger logger, final String lib) throws Exception {
+    public static URL[] loadLib(final RedkaleClassLoader classLoader, final Logger logger, final String lib) throws Exception {
         if (lib == null || lib.isEmpty()) return new URL[0];
         final Set<URL> set = new HashSet<>();
         for (String s : lib.split(";")) {
@@ -235,17 +234,8 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
             }
         }
         if (set.isEmpty()) return new URL[0];
-        ClassLoader cl = Thread.currentThread().getContextClassLoader();
-        if (cl instanceof URLClassLoader) {
-            URLClassLoader loader = (URLClassLoader) cl;
-            final Method method = URLClassLoader.class.getDeclaredMethod("addURL", URL.class);
-            method.setAccessible(true);
-            for (URL url : set) {
-                method.invoke(loader, url);
-                //if (logger != null) logger.log(Level.INFO, "Server found ClassPath({0})", url);
-            }
-        } else {
-            Thread.currentThread().setContextClassLoader(new URLClassLoader(set.toArray(new URL[set.size()]), cl));
+        for (URL url : set) {
+            classLoader.addURL(url);
         }
         List<URL> list = new ArrayList<>(set);
         Collections.sort(list, (URL o1, URL o2) -> o1.getFile().compareTo(o2.getFile()));

@@ -5,6 +5,7 @@
  */
 package org.redkale.boot;
 
+import org.redkale.util.RedkaleClassLoader;
 import org.redkale.net.TransportGroupInfo;
 import java.io.*;
 import java.lang.reflect.*;
@@ -136,7 +137,7 @@ public final class Application {
     private final CountDownLatch serversLatch;
 
     //根ClassLoader
-    private final NodeClassLoader classLoader;
+    private final RedkaleClassLoader classLoader;
 
     private Application(final AnyValue config) {
         this(false, config);
@@ -267,7 +268,7 @@ public final class Application {
             }
         }
         this.transportFactory = new TransportFactory(transportExec, transportPool, transportGroup);
-        this.classLoader = new NodeClassLoader((URLClassLoader)Thread.currentThread().getContextClassLoader());
+        this.classLoader = new RedkaleClassLoader(Thread.currentThread().getContextClassLoader());
         Thread.currentThread().setContextClassLoader(this.classLoader);
     }
 
@@ -279,7 +280,7 @@ public final class Application {
         return transportFactory;
     }
 
-    public NodeClassLoader getNodeClassLoader() {
+    public RedkaleClassLoader getClassLoader() {
         return classLoader;
     }
 
@@ -310,7 +311,7 @@ public final class Application {
         logger.log(Level.INFO, RESNAME_APP_HOME + "= " + homepath + "\r\n" + RESNAME_APP_ADDR + "= " + this.localAddress.getHostAddress());
         String lib = config.getValue("lib", "").trim().replace("${APP_HOME}", homepath);
         lib = lib.isEmpty() ? (homepath + "/conf") : (lib + ";" + homepath + "/conf");
-        Server.loadLib(logger, lib);
+        Server.loadLib(classLoader, logger, lib);
 
         //------------------------------------------------------------------------
         final AnyValue resources = config.getAnyValue("resources");
