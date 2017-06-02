@@ -16,6 +16,8 @@
               
         <services autoload="true"/>
         
+        <filters autoload="true"/>
+         
         <!-- base指定的自定义HttpServlet子类必须标记@HttpUserType, 不设置base则视为没有当前用户信息设置  -->
         <rest path="/pipes" base="org.redkale.net.http.HttpServlet"/>   
         
