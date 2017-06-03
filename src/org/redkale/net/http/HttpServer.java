@@ -48,17 +48,6 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
     }
 
     /**
-     * 删除HttpFilter
-     *
-     * @param filterName HttpFilter名称
-     *
-     * @return HttpFilter
-     */
-    public HttpFilter removeFilter(String filterName) {
-        return (HttpFilter) this.prepare.removeFilter(filterName);
-    }
-
-    /**
      * 删除HttpServlet
      *
      * @param service Service
@@ -72,7 +61,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
     /**
      * 删除HttpServlet
      *
-     * @param <T> 泛型
+     * @param <T>                    泛型
      * @param websocketOrServletType Class
      *
      * @return HttpServlet

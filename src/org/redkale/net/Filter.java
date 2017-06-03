@@ -19,7 +19,7 @@ import org.redkale.util.*;
  * @param <R> Request的子类型
  * @param <P> Response的子类型
  */
-public abstract class Filter<C extends Context, R extends Request<C>, P extends Response<C, R>> implements Comparable, Resourcable {
+public abstract class Filter<C extends Context, R extends Request<C>, P extends Response<C, R>> implements Comparable {
 
     AnyValue _conf; //当前Filter的配置
 
@@ -33,11 +33,6 @@ public abstract class Filter<C extends Context, R extends Request<C>, P extends 
     public void destroy(C context, AnyValue config) {
     }
 
-    @Override
-    public String resourceName() {
-        return "";
-    }
-
     /**
      * 值越小越靠前执行
      *
@@ -48,7 +43,7 @@ public abstract class Filter<C extends Context, R extends Request<C>, P extends 
     }
 
     @Override
-    public int compareTo(Object o) {
+    public final int compareTo(Object o) {
         if (!(o instanceof Filter)) return 1;
         return this.getIndex() - ((Filter) o).getIndex();
     }

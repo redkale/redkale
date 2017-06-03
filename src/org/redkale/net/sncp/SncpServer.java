@@ -40,17 +40,6 @@ public class SncpServer extends Server<DLong, SncpContext, SncpRequest, SncpResp
     /**
      * 删除SncpFilter
      *
-     * @param filterName SncpFilter名称
-     *
-     * @return SncpFilter
-     */
-    public SncpFilter removeFilter(String filterName) {
-        return (SncpFilter) this.prepare.removeFilter(filterName);
-    }
-
-    /**
-     * 删除SncpFilter
-     *
      * @param <T>         泛型
      * @param filterClass SncpFilter类
      *
@@ -88,7 +77,7 @@ public class SncpServer extends Server<DLong, SncpContext, SncpRequest, SncpResp
         SncpDynServlet sds = new SncpDynServlet(BsonFactory.root().getConvert(), Sncp.getResourceName(sncpService), Sncp.getResourceType(sncpService), sncpService);
         this.prepare.addServlet(sds, null, Sncp.getConf(sncpService));
     }
-    
+
     public List<SncpServlet> getSncpServlets() {
         return ((SncpPrepareServlet) this.prepare).getSncpServlets();
     }

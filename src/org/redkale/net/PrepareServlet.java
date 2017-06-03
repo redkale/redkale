@@ -139,10 +139,6 @@ public abstract class PrepareServlet<K extends Serializable, C extends Context, 
         return removeFilter(f -> filterClass.equals(f.getClass()));
     }
 
-    public Filter<C, R, P> removeFilter(String filterName) {
-        return removeFilter(f -> filterName.equals(f.resourceName()));
-    }
-
     public Filter<C, R, P> removeFilter(Predicate<Filter<C, R, P>> predicate) {
         if (this.headFilter == null || predicate == null) return null;
         synchronized (filters) {
