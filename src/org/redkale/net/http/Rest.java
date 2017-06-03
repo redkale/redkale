@@ -823,7 +823,7 @@ public final class Rest {
                     } else if (ptype == Flipper.class) {
                         n = "flipper";
                     } else {
-                        n = ("bean" + i);
+                        throw new RuntimeException("Parameter " + param.getName() + " not found name by @RestParam  in " + method);
                     }
                 }
                 if (annhead == null && anncookie == null && annaddr == null && annbody == null && annfile == null
