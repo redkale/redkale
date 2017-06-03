@@ -7,6 +7,7 @@ package org.redkale.boot.watch;
 
 import java.net.*;
 import java.nio.channels.AsynchronousSocketChannel;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.Resource;
 import org.redkale.boot.Application;
@@ -38,6 +39,11 @@ public class TransportWatchService implements WatchService {
 
     @Resource
     private TransportFactory transportFactory;
+
+    @RestMapping(name = "nodes", auth = false, comment = "获取所有Node节点")
+    public RetResult<List<TransportGroupInfo>> addNode() {
+        return new RetResult<>(transportFactory.getGroupInfos());
+    }
 
     @RestMapping(name = "addnode", auth = false, comment = "动态增加指定Group的Node节点")
     public RetResult addNode(
