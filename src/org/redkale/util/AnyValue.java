@@ -554,10 +554,11 @@ public abstract class AnyValue {
     }
 
     private static <T> boolean equals(Entry<? extends T>[] entry1, Entry<T>[] entry2) {
-        if ((entry1 == null || entry1.length == 0) || (entry2 == null || entry2.length == 0)) return false;
+        if ((entry1 == null || entry1.length == 0) && (entry2 == null || entry2.length == 0)) return true;
         if (entry1.length != entry2.length) return false;
         for (int i = 0; i < entry1.length; i++) {
-            if (!entry1[i].equals(entry2[i])) return false;
+            if (!entry1[i].name.equals(entry2[i].name)) return false;
+            if (!entry1[i].getValue().equals(entry2[i].getValue())) return false;
         }
         return true;
     }
