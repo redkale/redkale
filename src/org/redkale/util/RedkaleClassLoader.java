@@ -6,6 +6,7 @@
 package org.redkale.util;
 
 import java.net.*;
+import java.util.HashSet;
 
 /**
  *
@@ -14,7 +15,22 @@ import java.net.*;
 public class RedkaleClassLoader extends URLClassLoader {
 
     public RedkaleClassLoader(ClassLoader parent) {
-        super(new URL[0], parent);
+        super(parentURL(parent), parent);
+    }
+
+    private static URL[] parentURL(ClassLoader parent) {
+        ClassLoader loader = parent;
+        HashSet<URL> set = new HashSet<>();
+        do {
+            String loaderName = loader.getClass().getName();
+            if (loaderName.startsWith("sun.") && loaderName.contains("ExtClassLoader")) continue;
+            if (loader instanceof URLClassLoader) {
+                for (URL url : ((URLClassLoader) loader).getURLs()) {
+                    set.add(url);
+                }
+            }
+        } while ((loader = loader.getParent()) != null);
+        return set.toArray(new URL[set.size()]);
     }
 
     public Class<?> loadClass(String name, byte[] b) {

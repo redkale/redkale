@@ -445,7 +445,7 @@ public final class ClassFilter<T> {
          * @throws IOException 异常
          */
         public static void load(final File excludeFile, final String[] excludeRegs, final ClassFilter... filters) throws IOException {
-            URLClassLoader loader = (URLClassLoader) Thread.currentThread().getContextClassLoader();
+            RedkaleClassLoader loader = (RedkaleClassLoader) Thread.currentThread().getContextClassLoader();
             List<URL> urlfiles = new ArrayList<>(2);
             List<URL> urljares = new ArrayList<>(2);
             final URL exurl = excludeFile != null ? excludeFile.toURI().toURL() : null;
@@ -482,6 +482,12 @@ public final class ClassFilter<T> {
                             if (entryname.endsWith(".class") && entryname.indexOf('$') < 0) {
                                 String classname = entryname.substring(0, entryname.length() - 6);
                                 if (classname.startsWith("javax.") || classname.startsWith("com.sun.")) continue;
+                                //常见的jar跳过
+                                if (classname.startsWith("com.mysql.")) break;
+                                if (classname.startsWith("org.mariadb.")) break;
+                                if (classname.startsWith("oracle.jdbc.")) break;
+                                if (classname.startsWith("org.postgresql.")) break;
+                                if (classname.startsWith("com.microsoft.sqlserver.")) break;
                                 classes.add(classname);
                                 if (debug) debugstr.append(classname).append("\r\n");
                                 for (final ClassFilter filter : filters) {
