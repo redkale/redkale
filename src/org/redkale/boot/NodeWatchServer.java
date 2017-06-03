@@ -37,4 +37,9 @@ public class NodeWatchServer extends NodeHttpServer {
     protected ClassFilter<Servlet> createServletClassFilter() {
         return createClassFilter(null, WebServlet.class, WatchServlet.class, null, null, "servlets", "servlet");
     }
+
+    @Override
+    protected ClassFilter createOtherClassFilter() {
+        return null;
+    }
 }

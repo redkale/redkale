@@ -861,7 +861,7 @@ public final class Rest {
                     }
                 }
                 av0 = mv.visitAnnotation(mappingDesc, true);
-                String url = "/" + defmodulename.toLowerCase() + "/" + entry.name + (reqpath ? "/" : "");
+                String url = (catalog.isEmpty() ? "/" : ("/" + catalog + "/")) + defmodulename.toLowerCase() + "/" + entry.name + (reqpath ? "/" : "");
                 av0.visit("url", url);
                 av0.visit("auth", entry.auth);
                 av0.visit("cacheseconds", entry.cacheseconds);

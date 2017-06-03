@@ -11,8 +11,7 @@ import java.nio.channels.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
-import org.redkale.util.ObjectPool;
+import org.redkale.util.*;
 
 /**
  * 传输客户端
@@ -76,30 +75,6 @@ public final class Transport {
         updateRemoteAddresses(addresses);
     }
 
-    public Transport(final Collection<Transport> transports) {
-        Transport first = null;
-        List<String> tmpgroup = new ArrayList<>();
-        if (transports != null) {
-            for (Transport t : transports) {
-                if (first == null) first = t;
-                tmpgroup.add(t.name);
-            }
-        }
-        if (first == null) throw new NullPointerException("Collection<Transport> is null or empty");
-        //必须按字母排列顺序确保，相同内容的transport列表组合的name相同，而不会因为list的顺序不同产生不同的name
-        this.name = tmpgroup.stream().sorted().collect(Collectors.joining(";"));
-        //this.watch = first.watch;
-        this.subprotocol = first.subprotocol;
-        this.protocol = first.protocol;
-        this.tcp = "TCP".equalsIgnoreCase(first.protocol);
-        this.group = first.group;
-        this.bufferPool = first.bufferPool;
-        this.clientAddress = first.clientAddress;
-        Set<InetSocketAddress> addrs = new HashSet<>();
-        transports.forEach(t -> addrs.addAll(Arrays.asList(t.getRemoteAddresses())));
-        updateRemoteAddresses(addrs);
-    }
-
     public final InetSocketAddress[] updateRemoteAddresses(final Collection<InetSocketAddress> addresses) {
         InetSocketAddress[] oldAddresses = this.remoteAddres;
         List<InetSocketAddress> list = new ArrayList<>();
@@ -111,6 +86,30 @@ public final class Transport {
         }
         this.remoteAddres = list.toArray(new InetSocketAddress[list.size()]);
         return oldAddresses;
+    }
+
+    public final boolean addRemoteAddresses(final InetSocketAddress addr) {
+        if (addr == null) return false;
+        synchronized (this) {
+            if (this.remoteAddres == null) {
+                this.remoteAddres = new InetSocketAddress[]{addr};
+            } else {
+                for (InetSocketAddress i : this.remoteAddres) {
+                    if (addr.equals(i)) return false;
+                }
+                this.remoteAddres = Utility.append(remoteAddres, addr);
+            }
+            return true;
+        }
+    }
+
+    public final boolean removeRemoteAddresses(InetSocketAddress addr) {
+        if (addr == null) return false;
+        if (this.remoteAddres == null) return false;
+        synchronized (this) {
+            this.remoteAddres = Utility.remove(remoteAddres, addr);
+        }
+        return true;
     }
 
     public String getName() {

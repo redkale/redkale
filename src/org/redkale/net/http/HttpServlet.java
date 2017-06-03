@@ -27,9 +27,9 @@ import org.redkale.util.*;
  */
 public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse> {
 
-    public static final int RET_SERVER_ERROR = 1800_0001;
+    public static final int RET_SERVER_ERROR = 1200_0001;
 
-    public static final int RET_METHOD_ERROR = 1800_0002;
+    public static final int RET_METHOD_ERROR = 1200_0002;
 
     String _prefix = ""; //当前HttpServlet的path前缀
 

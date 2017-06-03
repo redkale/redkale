@@ -278,6 +278,19 @@ public final class Utility {
     }
 
     /**
+     * 将元素从数组中删除
+     *
+     * @param <T>   泛型
+     * @param array 原数组
+     * @param item  元素
+     *
+     * @return 新数组
+     */
+    public static <T> T[] remove(final T[] array, final T item) {
+        return remove(array, (i) -> item.equals(item));
+    }
+
+    /**
      * 将符合条件的元素从数组中删除
      *
      * @param <T>    泛型

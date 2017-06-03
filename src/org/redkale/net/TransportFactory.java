@@ -12,6 +12,7 @@ import java.nio.channels.AsynchronousChannelGroup;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.logging.*;
+import java.util.stream.Collectors;
 import org.redkale.service.Service;
 import org.redkale.util.ObjectPool;
 
@@ -53,14 +54,24 @@ public class TransportFactory {
         return groupAddrs.get(addr);
     }
 
-    public TransportGroupInfo findGroupInfo2(String group) {
+    public TransportGroupInfo findGroupInfo(String group) {
         if (group == null) return null;
         return groupInfos.get(group);
     }
 
-    public TransportFactory addGroupInfo(String name, InetSocketAddress... addrs) {
-        addGroupInfo(new TransportGroupInfo(name, addrs));
-        return this;
+    public boolean addGroupInfo(String groupName, InetSocketAddress... addrs) {
+        addGroupInfo(new TransportGroupInfo(groupName, addrs));
+        return true;
+    }
+
+    public boolean removeGroupInfo(String groupName, InetSocketAddress addr) {
+        if (groupName == null || groupName.isEmpty() || addr == null) return false;
+        if (!groupName.equals(groupAddrs.get(addr))) return false;
+        TransportGroupInfo group = groupInfos.get(groupName);
+        if (group == null) return false;
+        group.removeAddress(addr);
+        groupAddrs.remove(addr);
+        return true;
     }
 
     public TransportFactory addGroupInfo(String name, Set<InetSocketAddress> addrs) {
@@ -116,7 +127,7 @@ public class TransportFactory {
         }
         if (info == null) return null;
         if (sncpAddress != null) addresses.remove(sncpAddress);
-        return new Transport("remotes", info.protocol, info.subprotocol, this.bufferPool, this.channelGroup, sncpAddress, addresses);
+        return new Transport(groups.stream().sorted().collect(Collectors.joining(";")), info.protocol, info.subprotocol, this.bufferPool, this.channelGroup, sncpAddress, addresses);
     }
 
     private Transport loadTransport(final String groupName, InetSocketAddress sncpAddress) {
