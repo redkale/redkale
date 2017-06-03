@@ -5,6 +5,7 @@
  */
 package org.redkale.boot.watch;
 
+import java.io.IOException;
 import java.net.*;
 import java.nio.channels.AsynchronousSocketChannel;
 import java.util.List;
@@ -15,7 +16,8 @@ import org.redkale.net.*;
 import org.redkale.net.http.*;
 import org.redkale.net.sncp.*;
 import org.redkale.service.*;
-import org.redkale.util.Comment;
+import org.redkale.util.*;
+import org.redkale.util.AnyValue.DefaultAnyValue;
 import org.redkale.watch.WatchService;
 
 /**
@@ -49,7 +51,7 @@ public class TransportWatchService implements WatchService {
     public RetResult addNode(
         @RestParam(name = "group", comment = "Group节点名") final String group,
         @RestParam(name = "addr", comment = "节点IP") final String addr,
-        @RestParam(name = "port", comment = "节点端口") final int port) {
+        @RestParam(name = "port", comment = "节点端口") final int port) throws IOException {
         InetSocketAddress address;
         try {
             address = new InetSocketAddress(addr, port);
@@ -57,8 +59,7 @@ public class TransportWatchService implements WatchService {
             channel.connect(address).get(2, TimeUnit.SECONDS);  //连接超时2秒
             channel.close();
         } catch (Exception e) {
-            e.printStackTrace();
-            return new RetResult(RET_ADDR_ILLEGAL, "InetSocketAddress(addr=" + addr + ", port=" + port + ") is illegal");
+            return new RetResult(RET_ADDR_ILLEGAL, "InetSocketAddress(addr=" + addr + ", port=" + port + ") is illegal or cannot connect");
         }
         if (transportFactory.findGroupName(address) != null) return new RetResult(RET_ADDR_ILLEGAL, "InetSocketAddress(addr=" + addr + ", port=" + port + ") is exists");
         synchronized (this) {
@@ -84,6 +85,14 @@ public class TransportWatchService implements WatchService {
                     }
                 }
             }
+            DefaultAnyValue node = DefaultAnyValue.create("addr", addr).addValue("port", port);
+            for (AnyValue groupconf : application.getAppConfig().getAnyValue("resources").getAnyValues("group")) {
+                if (group.equals(groupconf.getValue("name"))) {
+                    ((DefaultAnyValue) groupconf).addValue("node", node);
+                    break;
+                }
+            }
+            application.restoreConfig();
         }
         return RetResult.success();
     }
@@ -92,7 +101,7 @@ public class TransportWatchService implements WatchService {
     public RetResult removeNode(
         @RestParam(name = "group", comment = "Group节点名") final String group,
         @RestParam(name = "addr", comment = "节点IP") final String addr,
-        @RestParam(name = "port", comment = "节点端口") final int port) {
+        @RestParam(name = "port", comment = "节点端口") final int port) throws IOException {
         if (group == null) return new RetResult(RET_NO_GROUP, "not found group (" + group + ")");
         final InetSocketAddress address = new InetSocketAddress(addr, port);
         if (!group.equals(transportFactory.findGroupName(address))) return new RetResult(RET_ADDR_ILLEGAL, "InetSocketAddress(addr=" + addr + ", port=" + port + ") not belong to group(" + group + ")");
@@ -119,6 +128,13 @@ public class TransportWatchService implements WatchService {
                     }
                 }
             }
+            for (AnyValue groupconf : application.getAppConfig().getAnyValue("resources").getAnyValues("group")) {
+                if (group.equals(groupconf.getValue("name"))) {
+                    ((DefaultAnyValue) groupconf).removeValue("node", DefaultAnyValue.create("addr", addr).addValue("port", port));
+                    break;
+                }
+            }
+            application.restoreConfig();
         }
         return RetResult.success();
     }

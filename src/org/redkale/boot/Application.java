@@ -296,6 +296,10 @@ public final class Application {
         return startTime;
     }
 
+    public AnyValue getAppConfig() {
+        return config;
+    }
+
     public void init() throws Exception {
         System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", "" + Runtime.getRuntime().availableProcessors() * 4);
         System.setProperty("convert.bson.tiny", "true");
@@ -439,6 +443,16 @@ public final class Application {
             }
         }
         //------------------------------------------------------------------------
+    }
+
+    public void restoreConfig() throws IOException {
+        synchronized (this) {
+            File confFile = new File(this.home, "conf/application.xml");
+            confFile.renameTo(new File(this.home, "conf/application_" + String.format("%1$tY%1$tm%1$td%1$tH%1$tM%1$tS", System.currentTimeMillis()) + ".xml"));
+            final PrintStream ps = new PrintStream(new FileOutputStream(confFile));
+            ps.append(config.toXML("application"));
+            ps.close();
+        }
     }
 
     private void startSelfServer() throws Exception {

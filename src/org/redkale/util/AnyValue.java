@@ -302,6 +302,18 @@ public abstract class AnyValue {
             return this;
         }
 
+        public DefaultAnyValue removeValue(String name, AnyValue value) {
+            if (name == null || value == null || this.anyEntrys == null) return this;
+            this.anyEntrys = Utility.remove(this.anyEntrys, (t) -> name.equals(((Entry) t).name) && ((Entry) t).getValue().equals(value));
+            return this;
+        }
+
+        public DefaultAnyValue removeValue(String name, String value) {
+            if (name == null || value == null || this.stringEntrys == null) return this;
+            this.stringEntrys = Utility.remove(this.stringEntrys, (t) -> name.equals(((Entry) t).name) && ((Entry) t).getValue().equals(value));
+            return this;
+        }
+
         @Override
         public AnyValue getAnyValue(String name) {
             for (Entry<DefaultAnyValue> en : this.anyEntrys) {
@@ -531,6 +543,53 @@ public abstract class AnyValue {
     public String getValue(String name, String defaultValue) {
         String value = getValue(name);
         return value == null ? defaultValue : value;
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (!(other instanceof AnyValue)) return false;
+        AnyValue conf = (AnyValue) other;
+        if (!equals(this.getStringEntrys(), conf.getStringEntrys())) return false;
+        return equals(this.getAnyEntrys(), conf.getAnyEntrys());
+    }
+
+    private static <T> boolean equals(Entry<? extends T>[] entry1, Entry<T>[] entry2) {
+        if ((entry1 == null || entry1.length == 0) || (entry2 == null || entry2.length == 0)) return false;
+        if (entry1.length != entry2.length) return false;
+        for (int i = 0; i < entry1.length; i++) {
+            if (!entry1[i].equals(entry2[i])) return false;
+        }
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 7;
+        hash = 19 * hash + Arrays.deepHashCode(this.getStringEntrys());
+        hash = 19 * hash + Arrays.deepHashCode(this.getAnyEntrys());
+        return hash;
+    }
+
+    public String toXML(String rootName) {
+        return toXMLString(new StringBuilder("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n\r\n"), rootName, this, 0).toString();
+    }
+
+    protected static StringBuilder toXMLString(StringBuilder sb, String nodeName, AnyValue conf, int indent) { //indent: 缩进长度
+        if (indent < 0) indent = 0;
+        char[] chars = new char[indent];
+        Arrays.fill(chars, ' ');
+        final String space = new String(chars);
+        Entry<AnyValue>[] anys = conf.getAnyEntrys();
+        sb.append(space).append('<').append(nodeName);
+        for (Entry<String> en : conf.getStringEntrys()) {
+            sb.append(' ').append(en.name).append("=\"").append(en.value).append("\"");
+        }
+        if (anys == null || anys.length == 0) return sb.append("/>\r\n\r\n");
+        sb.append(">\r\n\r\n");
+        for (Entry<AnyValue> en : conf.getAnyEntrys()) {
+            toXMLString(sb, en.name, en.getValue(), indent + 4);
+        }
+        return sb.append(space).append("</").append(nodeName).append(">\r\n\r\n");
     }
 
 }
