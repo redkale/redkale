@@ -18,23 +18,22 @@ import org.redkale.net.sncp.*;
 import org.redkale.service.*;
 import org.redkale.util.*;
 import org.redkale.util.AnyValue.DefaultAnyValue;
-import org.redkale.watch.WatchService;
 
 /**
  *
  * @author zhangjx
  */
 @RestService(name = "transport", catalog = "watch", repair = false)
-public class TransportWatchService implements WatchService {
+public class TransportWatchService extends AbstractWatchService {
 
     @Comment("不存在的Group节点")
-    public static final int RET_NO_GROUP = 1605_0001;
+    public static final int RET_NO_GROUP = 1606_0001;
 
     @Comment("非法的Node节点IP地址")
-    public static final int RET_ADDR_ILLEGAL = 1605_0002;
+    public static final int RET_ADDR_ILLEGAL = 1606_0002;
 
     @Comment("Node节点IP地址已存在")
-    public static final int RET_ADDR_EXISTS = 1605_0003;
+    public static final int RET_ADDR_EXISTS = 1606_0003;
 
     @Resource
     private Application application;

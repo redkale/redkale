@@ -63,6 +63,15 @@ public abstract class PrepareServlet<K extends Serializable, C extends Context, 
         }
     }
 
+    public boolean containsServlet(Class<? extends S> servletClass) {
+        synchronized (lock1) {
+            for (S servlet : new HashSet<>(servlets)) {
+                if (servlet.getClass().equals(servletClass)) return true;
+            }
+            return false;
+        }
+    }
+
     protected void putMapping(K key, S servlet) {
         synchronized (lock2) {
             Map<K, S> newmappings = new HashMap<>(mappings);
@@ -137,6 +146,15 @@ public abstract class PrepareServlet<K extends Serializable, C extends Context, 
 
     public Filter<C, R, P> removeFilter(Class<? extends Filter<C, R, P>> filterClass) {
         return removeFilter(f -> filterClass.equals(f.getClass()));
+    }
+
+    public boolean containsFilter(Class<? extends Filter<C, R, P>> filterClass) {
+        if (this.headFilter == null || filterClass == null) return false;
+        Filter filter = this.headFilter;
+        do {
+            if (filter.getClass().equals(filterClass)) return true;
+        } while ((filter = filter._next) != null);
+        return false;
     }
 
     public Filter<C, R, P> removeFilter(Predicate<Filter<C, R, P>> predicate) {

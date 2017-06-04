@@ -105,6 +105,18 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
     }
 
     /**
+     * 判断是否存在HttpFilter
+     *
+     * @param <T>         泛型
+     * @param filterClass HttpFilter类
+     *
+     * @return boolean
+     */
+    public <T extends HttpFilter> boolean containsHttpFilter(Class<T> filterClass) {
+        return this.prepare.containsFilter(filterClass);
+    }
+
+    /**
      * 添加HttpFilter
      *
      * @param filter HttpFilter
@@ -157,6 +169,18 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
     public HttpServer addHttpServlet(HttpServlet servlet, final String prefix, AnyValue conf, String... mappings) {
         this.prepare.addServlet(servlet, prefix, conf, mappings);
         return this;
+    }
+
+    /**
+     * 判断是否存在HttpServlet
+     *
+     * @param <T>          泛型
+     * @param servletClass HttpServlet类
+     *
+     * @return boolean
+     */
+    public <T extends HttpServlet> boolean containsHttpServlet(Class<T> servletClass) {
+        return this.prepare.containsServlet(servletClass);
     }
 
     /**

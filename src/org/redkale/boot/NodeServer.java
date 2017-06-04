@@ -450,62 +450,6 @@ public abstract class NodeServer {
         maxClassNameLength = Math.max(maxClassNameLength, Sncp.getResourceType(y).getName().length() + 1);
     }
 
-    /*
-     * protected List<Transport> loadTransports(final HashSet<String> groups) {
-     * if (groups == null) return null;
-     * final List<Transport> transports = new ArrayList<>();
-     * for (String group : groups) {
-     * if (this.sncpGroup == null || !this.sncpGroup.equals(group)) {
-     * transports.add(loadTransport(group));
-     * }
-     * }
-     * return transports;
-     * }
-     * protected Transport loadTransport(final HashSet<String> groups) {
-     * if (groups == null || groups.isEmpty()) return null;
-     * final String groupid = new ArrayList<>(groups).stream().sorted().collect(Collectors.joining(";")); //按字母排列顺序
-     * Transport transport = application.resourceFactory.find(groupid, Transport.class);
-     * if (transport != null) return transport;
-     * final List<Transport> transports = new ArrayList<>();
-     * for (String group : groups) {
-     * transports.add(loadTransport(group));
-     * }
-     * Set<InetSocketAddress> addrs = new HashSet();
-     * transports.forEach(t -> addrs.addAll(Arrays.asList(t.getRemoteAddresses())));
-     * Transport first = transports.get(0);
-     * TransportGroupInfo ginfo = application.transportFactory.findGroupInfo(first.getName());
-     * Transport newTransport = new Transport(groupid, ginfo.getProtocol(),
-     * ginfo.getSubprotocol(), application.transportBufferPool, application.transportChannelGroup, this.sncpAddress, addrs);
-     * synchronized (application.resourceFactory) {
-     * transport = application.resourceFactory.find(groupid, Transport.class);
-     * if (transport == null) {
-     * transport = newTransport;
-     * application.resourceFactory.register(groupid, transport);
-     * }
-     * }
-     * return transport;
-     * }
-     *
-     * protected Transport loadTransport(final String group) {
-     * if (group == null) return null;
-     * Transport transport;
-     * synchronized (application.resourceFactory) {
-     * transport = application.resourceFactory.find(group, Transport.class);
-     * if (transport != null) {
-     * if (this.sncpAddress != null && !this.sncpAddress.equals(transport.getClientAddress())) {
-     * throw new RuntimeException(transport + "repeat create on newClientAddress = " + this.sncpAddress + ", oldClientAddress = " + transport.getClientAddress());
-     * }
-     * return transport;
-     * }
-     * TransportGroupInfo ginfo = application.findGroupInfo(group);
-     * Set<InetSocketAddress> addrs = ginfo.copyAddresses();
-     * if (addrs == null) throw new RuntimeException("Not found <group> = " + group + " on <resources> ");
-     * transport = new Transport(group, ginfo.getProtocol(), ginfo.getSubprotocol(), application.transportBufferPool, application.transportChannelGroup, this.sncpAddress, addrs);
-     * application.resourceFactory.register(group, transport);
-     * }
-     * return transport;
-     * }
-     */
     protected abstract ClassFilter<Filter> createFilterClassFilter();
 
     protected abstract ClassFilter<Servlet> createServletClassFilter();
@@ -571,7 +515,9 @@ public abstract class NodeServer {
                     dav.addValue("properties", ps);
                     av = dav;
                 }
-                filter.filter(av, av.getValue("value"), false);
+                if (!av.getBoolValue("ignore", false)) {
+                    filter.filter(av, av.getValue("value"), false);
+                }
             }
             if (list.getBoolValue("autoload", true)) {
                 String includes = list.getValue("includes", "");

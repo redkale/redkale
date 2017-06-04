@@ -135,6 +135,7 @@
             <!-- 
                name:   显式指定name，覆盖默认的空字符串值。 注意: name不能包含$符号。
                groups: 显式指定groups，覆盖<services>节点的groups默认值。
+               ignore: 是否禁用， 默认为false。
             -->
             <service value="com.xxx.XXX2Service" name="" groups="xxx;yyy"/>
             <!--   给Service增加配置属性 -->
@@ -153,7 +154,12 @@
            excludes： 当autoload="true"， 排除类名与excludes中的正则表达式匹配的类, 多个正则表达式用分号;隔开    
         -->
         <filters autoload="true" includes="" excludes="">
-
+            
+            <!-- 
+               显著加载指定的Filter类
+               value=: Filter类名。必须与Server的协议层相同，HTTP必须是HttpFilter
+               ignore: 是否禁用， 默认为false。
+            -->
             <!-- 显著加载指定的Filter类 -->
             <filter value="com.xxx.XXX1Filter"/>
             
@@ -247,7 +253,11 @@
            excludes： 当autoload="true"， 排除类名与excludes中的正则表达式匹配的类, 多个正则表达式用分号;隔开
         -->
         <servlets path="/pipes" autoload="true" includes="" excludes="">
-            <!-- 显著加载指定的Servlet -->
+            <!-- 
+               显著加载指定的Servlet类
+               value=: Servlet类名。必须与Server的协议层相同，HTTP必须是HttpServlet
+               ignore: 是否禁用， 默认为false。
+            -->
             <servlet value="com.xxx.XXX1Servlet" />
             <servlet value="com.xxx.XXX2Servlet" />
             <servlet value="com.xxx.XXX3Servlet" >

@@ -5,13 +5,13 @@
  */
 package org.redkale.boot.watch;
 
-import org.redkale.net.http.RestService;
+import org.redkale.service.AbstractService;
+import org.redkale.watch.WatchService;
 
 /**
  *
  * @author zhangjx
  */
-@RestService(name = "server", catalog = "watch", repair = false)
-public class ServerWatchService extends AbstractWatchService {
+public abstract class AbstractWatchService extends AbstractService implements WatchService {
 
 }

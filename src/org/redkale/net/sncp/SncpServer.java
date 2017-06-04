@@ -63,6 +63,18 @@ public class SncpServer extends Server<DLong, SncpContext, SncpRequest, SncpResp
     }
 
     /**
+     * 判断是否存在SncpFilter
+     *
+     * @param <T>         泛型
+     * @param filterClass SncpFilter类
+     *
+     * @return SncpFilter
+     */
+    public <T extends SncpFilter> boolean containsSncpFilter(Class<T> filterClass) {
+        return this.prepare.containsFilter(filterClass);
+    }
+
+    /**
      * 删除SncpServlet
      *
      * @param sncpService Service
@@ -80,6 +92,18 @@ public class SncpServer extends Server<DLong, SncpContext, SncpRequest, SncpResp
 
     public List<SncpServlet> getSncpServlets() {
         return ((SncpPrepareServlet) this.prepare).getSncpServlets();
+    }
+
+    /**
+     * 判断是否存在SncpServlet
+     *
+     * @param <T>          泛型
+     * @param servletClass SncpServlet类
+     *
+     * @return boolean
+     */
+    public <T extends SncpServlet> boolean containsSncpServlet(Class<T> servletClass) {
+        return this.prepare.containsServlet(servletClass);
     }
 
     @Override

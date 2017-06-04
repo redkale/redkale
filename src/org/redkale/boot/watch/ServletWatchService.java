@@ -9,7 +9,6 @@ import javax.annotation.Resource;
 import org.redkale.boot.Application;
 import org.redkale.net.TransportFactory;
 import org.redkale.net.http.*;
-import org.redkale.watch.WatchService;
 
 /**
  * <p>
@@ -18,7 +17,7 @@ import org.redkale.watch.WatchService;
  * @author zhangjx
  */
 @RestService(name = "servlet", catalog = "watch", repair = false)
-public class ServletWatchService implements WatchService {
+public class ServletWatchService extends AbstractWatchService {
 
     @Resource
     private Application application;
