@@ -42,4 +42,9 @@ public class NodeWatchServer extends NodeHttpServer {
     protected ClassFilter createOtherClassFilter() {
         return null;
     }
+
+    @Override
+    public boolean isWATCH() {
+        return true;
+    }
 }

@@ -162,6 +162,24 @@ public class HttpResourceServlet extends HttpServlet {
         }
     }
 
+    public void serRoot(String rootstr) {
+        if (rootstr == null) return;
+        try {
+            this.root = new File(rootstr).getCanonicalFile();
+        } catch (IOException ioe) {
+            this.root = new File(rootstr);
+        }
+    }
+
+    public void serRoot(File file) {
+        if (file == null) return;
+        try {
+            this.root = file.getCanonicalFile();
+        } catch (IOException ioe) {
+            this.root = file;
+        }
+    }
+
     protected static long parseLenth(String value, long defValue) {
         if (value == null) return defValue;
         value = value.toUpperCase().replace("B", "");

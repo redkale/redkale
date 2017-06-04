@@ -7,7 +7,7 @@ package org.redkale.boot.watch;
 
 import java.io.IOException;
 import javax.annotation.Resource;
-import org.redkale.boot.Application;
+import org.redkale.boot.*;
 import org.redkale.net.TransportFactory;
 import org.redkale.net.http.*;
 import org.redkale.service.RetResult;
@@ -29,6 +29,9 @@ public class FilterWatchService extends AbstractWatchService {
     @Comment("Node节点IP地址已存在")
     public static final int RET_FILTER_EXISTS = 1601_0003;
 
+    @Comment("Node节点IP地址已存在")
+    public static final int RET_JAR_ILLEGAL = 1601_0004;
+
     @Resource
     private Application application;
 
@@ -36,9 +39,14 @@ public class FilterWatchService extends AbstractWatchService {
     private TransportFactory transportFactory;
 
     @RestMapping(name = "addfilter", auth = false, comment = "动态增加Filter")
-    public RetResult addFilter(@RestParam(name = "server", comment = "Server节点名, 不指定名称则所有符合条件的Server都会增加Filter") final String serverName,
+    public RetResult addFilter(@RestUploadFile(maxLength = 10 * 1024 * 1024, fileNameReg = "\\.jar$") byte[] jar,
+        @RestParam(name = "server", comment = "Server节点名, 不指定名称则所有符合条件的Server都会增加Filter") final String serverName,
         @RestParam(name = "type", comment = "Filter类名") final String filterType) throws IOException {
         if (filterType == null) return new RetResult(RET_FILTER_TYPE_ILLEGAL, "Filter Type (" + filterType + ") is illegal");
+        if (jar == null) return new RetResult(RET_JAR_ILLEGAL, "Not found jar file");
+        for (NodeServer node : application.getNodeServers()) {
+            if (node.getServer().containsFilter(filterType)) return new RetResult(RET_JAR_ILLEGAL, "Filter(" + filterType + ") exists");
+        }
         return RetResult.success();
     }
 }

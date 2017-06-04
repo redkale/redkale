@@ -72,6 +72,15 @@ public abstract class PrepareServlet<K extends Serializable, C extends Context, 
         }
     }
 
+    public boolean containsServlet(String servletClassName) {
+        synchronized (lock1) {
+            for (S servlet : new HashSet<>(servlets)) {
+                if (servlet.getClass().getName().equals(servletClassName)) return true;
+            }
+            return false;
+        }
+    }
+
     protected void putMapping(K key, S servlet) {
         synchronized (lock2) {
             Map<K, S> newmappings = new HashMap<>(mappings);
@@ -144,11 +153,11 @@ public abstract class PrepareServlet<K extends Serializable, C extends Context, 
         }
     }
 
-    public Filter<C, R, P> removeFilter(Class<? extends Filter<C, R, P>> filterClass) {
+    public <T extends Filter<C, R, P>> T removeFilter(Class<T> filterClass) {
         return removeFilter(f -> filterClass.equals(f.getClass()));
     }
 
-    public boolean containsFilter(Class<? extends Filter<C, R, P>> filterClass) {
+    public boolean containsFilter(Class<? extends Filter> filterClass) {
         if (this.headFilter == null || filterClass == null) return false;
         Filter filter = this.headFilter;
         do {
@@ -157,13 +166,22 @@ public abstract class PrepareServlet<K extends Serializable, C extends Context, 
         return false;
     }
 
-    public Filter<C, R, P> removeFilter(Predicate<Filter<C, R, P>> predicate) {
+    public boolean containsFilter(String filterClassName) {
+        if (this.headFilter == null || filterClassName == null) return false;
+        Filter filter = this.headFilter;
+        do {
+            if (filter.getClass().getName().equals(filterClassName)) return true;
+        } while ((filter = filter._next) != null);
+        return false;
+    }
+
+    public <T extends Filter<C, R, P>> T removeFilter(Predicate<T> predicate) {
         if (this.headFilter == null || predicate == null) return null;
         synchronized (filters) {
             Filter filter = this.headFilter;
             Filter prev = null;
             do {
-                if (predicate.test(filter)) break;
+                if (predicate.test((T) filter)) break;
                 prev = filter;
             } while ((filter = filter._next) != null);
             if (filter != null) {
@@ -175,7 +193,7 @@ public abstract class PrepareServlet<K extends Serializable, C extends Context, 
                 filter._next = null;
                 this.filters.remove(filter);
             }
-            return filter;
+            return (T) filter;
         }
     }
 

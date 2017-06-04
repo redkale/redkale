@@ -513,6 +513,10 @@ public abstract class NodeServer {
         return false;
     }
 
+    public boolean isWATCH() {
+        return false;
+    }
+
     public ResourceFactory getResourceFactory() {
         return resourceFactory;
     }

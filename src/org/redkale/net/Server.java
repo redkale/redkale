@@ -185,6 +185,52 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
     }
 
     /**
+     * 判断是否存在Filter
+     *
+     * @param <T>         泛型
+     * @param filterClass Filter类
+     *
+     * @return boolean
+     */
+    public <T extends Filter> boolean containsFilter(Class<T> filterClass) {
+        return this.prepare.containsFilter(filterClass);
+    }
+
+    /**
+     * 判断是否存在Filter
+     *
+     * @param <T>             泛型
+     * @param filterClassName Filter类
+     *
+     * @return boolean
+     */
+    public <T extends Filter> boolean containsFilter(String filterClassName) {
+        return this.prepare.containsFilter(filterClassName);
+    }
+
+    /**
+     * 判断是否存在Servlet
+     *
+     * @param servletClass Servlet类
+     *
+     * @return boolean
+     */
+    public boolean containsServlet(Class<? extends S> servletClass) {
+        return this.prepare.containsServlet(servletClass);
+    }
+
+    /**
+     * 判断是否存在Servlet
+     *
+     * @param servletClassName Servlet类
+     *
+     * @return boolean
+     */
+    public boolean containsServlet(String servletClassName) {
+        return this.prepare.containsServlet(servletClassName);
+    }
+
+    /**
      * 销毁Servlet
      *
      * @param servlet Servlet
