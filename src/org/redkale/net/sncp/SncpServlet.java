@@ -40,6 +40,10 @@ public abstract class SncpServlet extends Servlet<SncpContext, SncpRequest, Sncp
         return serviceName;
     }
 
+    public Class getServiceType() {
+        return type;
+    }
+
     public abstract DLong getServiceid();
 
     protected ExecutorService getExecutor() {

@@ -568,13 +568,12 @@ public final class Application {
                 others.add(entry);
             }
         }
+        if (watchs.size() > 1) throw new RuntimeException("Found one more WATCH Server");
         this.watching = !watchs.isEmpty();
-        //单向SNCP服务不需要对等group
-        //if (!sncps.isEmpty() && globalNodes.isEmpty()) throw new RuntimeException("found SNCP Server node but not found <group> node info.");
 
-        runServers(timecd, sncps);  //必须确保sncp都启动后再启动其他协议
+        runServers(timecd, sncps);  //必须确保SNCP服务都启动后再启动其他服务
         runServers(timecd, others);
-        runServers(timecd, watchs); //必须在所有server都启动后再启动
+        runServers(timecd, watchs); //必须在所有服务都启动后再启动WATCH服务
         timecd.await();
         logger.info(this.getClass().getSimpleName() + " started in " + (System.currentTimeMillis() - startTime) + " ms\r\n");
         if (!singletonrun) this.serversLatch.await();

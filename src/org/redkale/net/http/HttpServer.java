@@ -38,6 +38,14 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
         super.init(config);
     }
 
+    public List<HttpServlet> getHttpServlets() {
+        return this.prepare.getServlets();
+    }
+
+    public List<HttpFilter> getHttpFilters() {
+        return this.prepare.getFilters();
+    }
+
     /**
      * 获取静态资源HttpServlet
      *

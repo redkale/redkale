@@ -37,6 +37,14 @@ public class SncpServer extends Server<DLong, SncpContext, SncpRequest, SncpResp
         super.init(config);
     }
 
+    public List<SncpServlet> getSncpServlets() {
+        return this.prepare.getServlets();
+    }
+
+    public List<SncpFilter> getSncpFilters() {
+        return this.prepare.getFilters();
+    }
+
     /**
      * 删除SncpFilter
      *
@@ -76,10 +84,6 @@ public class SncpServer extends Server<DLong, SncpContext, SncpRequest, SncpResp
     public void addSncpServlet(Service sncpService) {
         SncpDynServlet sds = new SncpDynServlet(BsonFactory.root().getConvert(), Sncp.getResourceName(sncpService), Sncp.getResourceType(sncpService), sncpService);
         this.prepare.addServlet(sds, null, Sncp.getConf(sncpService));
-    }
-
-    public List<SncpServlet> getSncpServlets() {
-        return ((SncpPrepareServlet) this.prepare).getSncpServlets();
     }
 
     @Override

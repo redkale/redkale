@@ -9,7 +9,6 @@ import org.redkale.net.PrepareServlet;
 import org.redkale.util.AnyValue;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.*;
 import org.redkale.service.Service;
 import org.redkale.util.*;
 
@@ -53,10 +52,6 @@ public class SncpPrepareServlet extends PrepareServlet<DLong, SncpContext, SncpR
             }
         }
         return rs;
-    }
-
-    public List<SncpServlet> getSncpServlets() {
-        return new ArrayList<>(getServlets());
     }
 
     @Override

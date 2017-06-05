@@ -27,13 +27,13 @@ import org.redkale.util.AnyValue.DefaultAnyValue;
 public class TransportWatchService extends AbstractWatchService {
 
     @Comment("不存在的Group节点")
-    public static final int RET_NO_GROUP = 1606_0001;
+    public static final int RET_TRANSPORT_GROUP_NOT_EXISTS = 1606_0001;
 
     @Comment("非法的Node节点IP地址")
-    public static final int RET_ADDR_ILLEGAL = 1606_0002;
+    public static final int RET_TRANSPORT_ADDR_ILLEGAL = 1606_0002;
 
     @Comment("Node节点IP地址已存在")
-    public static final int RET_ADDR_EXISTS = 1606_0003;
+    public static final int RET_TRANSPORT_ADDR_EXISTS = 1606_0003;
 
     @Resource
     private Application application;
@@ -41,14 +41,13 @@ public class TransportWatchService extends AbstractWatchService {
     @Resource
     private TransportFactory transportFactory;
 
-    @RestMapping(name = "nodes", auth = false, comment = "获取所有Node节点")
-    public RetResult<List<TransportGroupInfo>> addNode() {
-        return new RetResult<>(transportFactory.getGroupInfos());
+    @RestMapping(name = "listnodes", auth = false, comment = "获取所有Node节点")
+    public List<TransportGroupInfo> listNodes() {
+        return transportFactory.getGroupInfos();
     }
 
     @RestMapping(name = "addnode", auth = false, comment = "动态增加指定Group的Node节点")
-    public RetResult addNode(
-        @RestParam(name = "group", comment = "Group节点名") final String group,
+    public RetResult addNode(@RestParam(name = "group", comment = "Group节点名") final String group,
         @RestParam(name = "addr", comment = "节点IP") final String addr,
         @RestParam(name = "port", comment = "节点端口") final int port) throws IOException {
         InetSocketAddress address;
@@ -58,12 +57,12 @@ public class TransportWatchService extends AbstractWatchService {
             channel.connect(address).get(2, TimeUnit.SECONDS);  //连接超时2秒
             channel.close();
         } catch (Exception e) {
-            return new RetResult(RET_ADDR_ILLEGAL, "InetSocketAddress(addr=" + addr + ", port=" + port + ") is illegal or cannot connect");
+            return new RetResult(RET_TRANSPORT_ADDR_ILLEGAL, "InetSocketAddress(addr=" + addr + ", port=" + port + ") is illegal or cannot connect");
         }
-        if (transportFactory.findGroupName(address) != null) return new RetResult(RET_ADDR_ILLEGAL, "InetSocketAddress(addr=" + addr + ", port=" + port + ") is exists");
+        if (transportFactory.findGroupName(address) != null) return new RetResult(RET_TRANSPORT_ADDR_ILLEGAL, "InetSocketAddress(addr=" + addr + ", port=" + port + ") is exists");
         synchronized (this) {
             if (transportFactory.findGroupInfo(group) == null) {
-                return new RetResult(RET_NO_GROUP, "not found group (" + group + ")");
+                return new RetResult(RET_TRANSPORT_GROUP_NOT_EXISTS, "not found group (" + group + ")");
             }
             transportFactory.addGroupInfo(group, address);
             for (Service service : transportFactory.getServices()) {
@@ -97,16 +96,15 @@ public class TransportWatchService extends AbstractWatchService {
     }
 
     @RestMapping(name = "removenode", auth = false, comment = "动态删除指定Group的Node节点")
-    public RetResult removeNode(
-        @RestParam(name = "group", comment = "Group节点名") final String group,
+    public RetResult removeNode(@RestParam(name = "group", comment = "Group节点名") final String group,
         @RestParam(name = "addr", comment = "节点IP") final String addr,
         @RestParam(name = "port", comment = "节点端口") final int port) throws IOException {
-        if (group == null) return new RetResult(RET_NO_GROUP, "not found group (" + group + ")");
+        if (group == null) return new RetResult(RET_TRANSPORT_GROUP_NOT_EXISTS, "not found group (" + group + ")");
         final InetSocketAddress address = new InetSocketAddress(addr, port);
-        if (!group.equals(transportFactory.findGroupName(address))) return new RetResult(RET_ADDR_ILLEGAL, "InetSocketAddress(addr=" + addr + ", port=" + port + ") not belong to group(" + group + ")");
+        if (!group.equals(transportFactory.findGroupName(address))) return new RetResult(RET_TRANSPORT_ADDR_ILLEGAL, "InetSocketAddress(addr=" + addr + ", port=" + port + ") not belong to group(" + group + ")");
         synchronized (this) {
             if (transportFactory.findGroupInfo(group) == null) {
-                return new RetResult(RET_NO_GROUP, "not found group (" + group + ")");
+                return new RetResult(RET_TRANSPORT_GROUP_NOT_EXISTS, "not found group (" + group + ")");
             }
             transportFactory.removeGroupInfo(group, address);
             for (Service service : transportFactory.getServices()) {

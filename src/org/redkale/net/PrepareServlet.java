@@ -150,6 +150,7 @@ public abstract class PrepareServlet<K extends Serializable, C extends Context, 
         filter._conf = conf;
         synchronized (filters) {
             this.filters.add(filter);
+            Collections.sort(this.filters);
         }
     }
 
@@ -195,6 +196,10 @@ public abstract class PrepareServlet<K extends Serializable, C extends Context, 
             }
             return (T) filter;
         }
+    }
+
+    public <T extends Filter<C, R, P>> List<T> getFilters() {
+        return (List) new ArrayList<>(filters);
     }
 
     public abstract void addServlet(S servlet, Object attachment, AnyValue conf, K... mappings);
@@ -258,7 +263,7 @@ public abstract class PrepareServlet<K extends Serializable, C extends Context, 
         servlet._conf = conf;
     }
 
-    public Set<S> getServlets() {
-        return new LinkedHashSet<>(servlets);
+    public List<S> getServlets() {
+        return new ArrayList<>(servlets);
     }
 }
