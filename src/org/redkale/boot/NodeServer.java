@@ -55,7 +55,9 @@ public abstract class NodeServer {
     protected final Server server;
 
     //ClassLoader
-    protected RedkaleClassLoader classLoader;
+    protected RedkaleClassLoader serverClassLoader;
+    
+    protected final Thread serverThread;
 
     //当前Server的SNCP协议的组
     protected String sncpGroup = null;
@@ -90,8 +92,9 @@ public abstract class NodeServer {
         this.resourceFactory = application.getResourceFactory().createChild();
         this.server = server;
         this.logger = Logger.getLogger(this.getClass().getSimpleName());
-        this.classLoader = new RedkaleClassLoader(application.getServerClassLoader());
-        Thread.currentThread().setContextClassLoader(this.classLoader);
+        this.serverClassLoader = new RedkaleClassLoader(application.getServerClassLoader());
+        Thread.currentThread().setContextClassLoader(this.serverClassLoader);
+        this.serverThread = Thread.currentThread();
     }
 
     public static <T extends NodeServer> NodeServer create(Class<T> clazz, Application application, AnyValue serconf) {
@@ -131,8 +134,8 @@ public abstract class NodeServer {
             resourceFactory.register(Server.RESNAME_SERVER_ROOT, Path.class, myroot.toPath());
 
             //加入指定的classpath
-            Server.loadLib(classLoader, logger, this.serverConf.getValue("lib", "${APP_HOME}/libs/*").replace("${APP_HOME}", application.getHome().getPath().replace('\\', '/')));
-            Thread.currentThread().setContextClassLoader(this.classLoader);
+            Server.loadLib(serverClassLoader, logger, this.serverConf.getValue("lib", "${APP_HOME}/libs/*").replace("${APP_HOME}", application.getHome().getPath().replace('\\', '/')));
+            this.serverThread.setContextClassLoader(this.serverClassLoader);
         }
         //必须要进行初始化， 构建Service时需要使用Context中的ExecutorService
         server.init(this.serverConf);
@@ -140,7 +143,7 @@ public abstract class NodeServer {
         initResource(); //给 DataSource、CacheSource 注册依赖注入时的监听回调事件。
         String interceptorClass = this.serverConf.getValue("interceptor", "");
         if (!interceptorClass.isEmpty()) {
-            Class clazz = classLoader.loadClass(interceptorClass);
+            Class clazz = serverClassLoader.loadClass(interceptorClass);
             this.interceptor = (NodeInterceptor) clazz.newInstance();
         }
 
@@ -174,7 +177,7 @@ public abstract class NodeServer {
         if (resources != null) {
             for (AnyValue sourceConf : resources.getAnyValues("source")) {
                 try {
-                    Class type = classLoader.loadClass(sourceConf.getValue("value"));
+                    Class type = serverClassLoader.loadClass(sourceConf.getValue("value"));
                     if (!Service.class.isAssignableFrom(type)) {
                         logger.log(Level.SEVERE, "load application source resource, but not Service error: " + sourceConf);
                     } else if (CacheSource.class.isAssignableFrom(type)) {
@@ -230,7 +233,7 @@ public abstract class NodeServer {
                     final Set<String> groups = new HashSet<>();
                     if (client != null && client.getSameGroup() != null) groups.add(client.getSameGroup());
                     if (client != null && client.getDiffGroups() != null) groups.addAll(client.getDiffGroups());
-                    Service cacheListenerService = Sncp.createLocalService(classLoader, resourceName, DataCacheListenerService.class, appResFactory, appTranFactory, sncpAddr, groups, Sncp.getConf((Service) src));
+                    Service cacheListenerService = Sncp.createLocalService(serverClassLoader, resourceName, DataCacheListenerService.class, appResFactory, appTranFactory, sncpAddr, groups, Sncp.getConf((Service) src));
                     appResFactory.register(resourceName, DataCacheListener.class, cacheListenerService);
                     localServices.add(cacheListenerService);
                     sncpServer.consumerAccept(cacheListenerService);
@@ -256,11 +259,11 @@ public abstract class NodeServer {
                     SncpClient client = Sncp.getSncpClient(srcService);
                     final InetSocketAddress sncpAddr = client == null ? null : client.getClientAddress();
                     final AnyValue sourceConf = cacheResource.get(resourceName);
-                    final Class sourceType = sourceConf == null ? CacheMemorySource.class : classLoader.loadClass(sourceConf.getValue("type"));
+                    final Class sourceType = sourceConf == null ? CacheMemorySource.class : serverClassLoader.loadClass(sourceConf.getValue("type"));
                     final Set<String> groups = new HashSet<>();
                     if (client != null && client.getSameGroup() != null) groups.add(client.getSameGroup());
                     if (client != null && client.getDiffGroups() != null) groups.addAll(client.getDiffGroups());
-                    final CacheSource source = (CacheSource) Sncp.createLocalService(classLoader, resourceName, sourceType, appResFactory, appTranFactory, sncpAddr, groups, Sncp.getConf(srcService));
+                    final CacheSource source = (CacheSource) Sncp.createLocalService(serverClassLoader, resourceName, sourceType, appResFactory, appTranFactory, sncpAddr, groups, Sncp.getConf(srcService));
                     Type genericType = field.getGenericType();
                     ParameterizedType pt = (genericType instanceof ParameterizedType) ? (ParameterizedType) genericType : null;
                     Type valType = pt == null ? null : pt.getActualTypeArguments()[1];
@@ -331,9 +334,9 @@ public abstract class NodeServer {
                     Service service;
                     boolean ws = src instanceof WebSocketServlet;
                     if (ws || localed) { //本地模式
-                        service = Sncp.createLocalService(classLoader, resourceName, serviceImplClass, appResourceFactory, appTransportFactory, NodeServer.this.sncpAddress, groups, entry.getProperty());
+                        service = Sncp.createLocalService(serverClassLoader, resourceName, serviceImplClass, appResourceFactory, appTransportFactory, NodeServer.this.sncpAddress, groups, entry.getProperty());
                     } else {
-                        service = Sncp.createRemoteService(classLoader, resourceName, serviceImplClass, appTransportFactory, NodeServer.this.sncpAddress, groups, entry.getProperty());
+                        service = Sncp.createRemoteService(serverClassLoader, resourceName, serviceImplClass, appTransportFactory, NodeServer.this.sncpAddress, groups, entry.getProperty());
                     }
                     if (SncpClient.parseMethod(serviceImplClass).isEmpty()) return; //class没有可用的方法， 通常为BaseService
 
@@ -437,7 +440,7 @@ public abstract class NodeServer {
 
     protected ClassFilter createClassFilter(final String localGroup, Class<? extends Annotation> ref,
         Class inter, Class[] excludeSuperClasses, Class<? extends Annotation> ref2, String properties, String property) {
-        ClassFilter cf = new ClassFilter(this.classLoader, ref, inter, excludeSuperClasses, null);
+        ClassFilter cf = new ClassFilter(this.serverClassLoader, ref, inter, excludeSuperClasses, null);
         if (properties == null && properties == null) {
             cf.setRefused(true);
             return cf;
@@ -464,7 +467,7 @@ public abstract class NodeServer {
                 prop = new AnyValue.DefaultAnyValue();
                 prop.addValue("groups", sc);
             }
-            ClassFilter filter = new ClassFilter(this.classLoader, ref, inter, excludeSuperClasses, prop);
+            ClassFilter filter = new ClassFilter(this.serverClassLoader, ref, inter, excludeSuperClasses, prop);
             for (AnyValue av : list.getAnyValues(property)) { // <service>、<filter>、<servlet> 节点
                 final AnyValue[] items = av.getAnyValues("property");
                 if (av instanceof DefaultAnyValue && items.length > 0) { //存在 <property>节点
@@ -521,13 +524,14 @@ public abstract class NodeServer {
         return resourceFactory;
     }
 
-    public RedkaleClassLoader getClassLoader() {
-        return classLoader;
+    public RedkaleClassLoader getServerClassLoader() {
+        return serverClassLoader;
     }
 
-    public void setClassLoader(RedkaleClassLoader classLoader) {
-        Objects.requireNonNull(this.classLoader);
-        this.classLoader = classLoader;
+    public void setServerClassLoader(RedkaleClassLoader serverClassLoader) {
+        Objects.requireNonNull(this.serverClassLoader);
+        this.serverClassLoader = serverClassLoader;
+        this.serverThread.setContextClassLoader(serverClassLoader); 
     }
 
     public InetSocketAddress getSncpAddress() {

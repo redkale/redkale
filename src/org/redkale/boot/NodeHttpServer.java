@@ -109,7 +109,7 @@ public class NodeHttpServer extends NodeServer {
                 synchronized (regFactory) {
                     Service nodeService = (Service) rf.find(resourceName, WebSocketNode.class);
                     if (nodeService == null) {
-                        nodeService = Sncp.createLocalService(classLoader, resourceName, WebSocketNodeService.class, application.getResourceFactory(), application.getTransportFactory(), (InetSocketAddress) null, (Set<String>) null, (AnyValue) null);
+                        nodeService = Sncp.createLocalService(serverClassLoader, resourceName, WebSocketNodeService.class, application.getResourceFactory(), application.getTransportFactory(), (InetSocketAddress) null, (Set<String>) null, (AnyValue) null);
                         regFactory.register(resourceName, WebSocketNode.class, nodeService);
                     }
                     resourceFactory.inject(nodeService, self);
@@ -210,9 +210,9 @@ public class NodeHttpServer extends NodeServer {
         final boolean autoload = restConf.getBoolValue("autoload", true);
         {  //加载RestService
             String userTypeStr = restConf.getValue("usertype");
-            final Class userType = userTypeStr == null ? null : this.classLoader.loadClass(userTypeStr);
+            final Class userType = userTypeStr == null ? null : this.serverClassLoader.loadClass(userTypeStr);
 
-            final Class baseServletType = this.classLoader.loadClass(restConf.getValue("base", HttpServlet.class.getName()));
+            final Class baseServletType = this.serverClassLoader.loadClass(restConf.getValue("base", HttpServlet.class.getName()));
             final Set<String> includeValues = new HashSet<>();
             final Set<String> excludeValues = new HashSet<>();
             for (AnyValue item : restConf.getAnyValues("service")) {
@@ -239,7 +239,7 @@ public class NodeHttpServer extends NodeServer {
                     return;
                 }
                 restedObjects.add(service); //避免重复创建Rest对象
-                HttpServlet servlet = httpServer.addRestServlet(classLoader, service, userType, baseServletType, prefix);
+                HttpServlet servlet = httpServer.addRestServlet(serverClassLoader, service, userType, baseServletType, prefix);
                 if (servlet == null) return; //没有HttpMapping方法的HttpServlet调用Rest.createRestServlet就会返回null 
                 resourceFactory.inject(servlet, NodeHttpServer.this);
                 if (finest) logger.finest(threadName + " Create RestServlet(resource.name='" + name + "') = " + servlet);
@@ -289,7 +289,7 @@ public class NodeHttpServer extends NodeServer {
                     return;
                 }
                 restedObjects.add(stype); //避免重复创建Rest对象
-                HttpServlet servlet = httpServer.addRestWebSocketServlet(classLoader, stype, prefix, en.getProperty());
+                HttpServlet servlet = httpServer.addRestWebSocketServlet(serverClassLoader, stype, prefix, en.getProperty());
                 if (servlet == null) return; //没有RestOnMessage方法的HttpServlet调用Rest.createRestWebSocketServlet就会返回null 
                 resourceFactory.inject(servlet, NodeHttpServer.this);
                 if (finest) logger.finest(threadName + " " + stype.getName() + " create RestWebSocketServlet " + servlet);
