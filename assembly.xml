@@ -17,6 +17,10 @@
             <outputDirectory>conf</outputDirectory>  
         </fileSet>  
         <fileSet>  
+            <directory>${project.basedir}/libs</directory>  
+            <outputDirectory>libs</outputDirectory>  
+        </fileSet>
+        <fileSet>  
             <directory>${project.basedir}/logs</directory>  
             <outputDirectory>logs</outputDirectory>  
         </fileSet> 
