@@ -55,7 +55,7 @@ public abstract class NodeServer {
     protected final Server server;
 
     //ClassLoader
-    protected final RedkaleClassLoader classLoader;
+    protected RedkaleClassLoader classLoader;
 
     //当前Server的SNCP协议的组
     protected String sncpGroup = null;
@@ -523,6 +523,11 @@ public abstract class NodeServer {
 
     public RedkaleClassLoader getClassLoader() {
         return classLoader;
+    }
+
+    public void setClassLoader(RedkaleClassLoader classLoader) {
+        Objects.requireNonNull(this.classLoader);
+        this.classLoader = classLoader;
     }
 
     public InetSocketAddress getSncpAddress() {
