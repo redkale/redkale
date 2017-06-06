@@ -101,7 +101,7 @@
         host:  服务所占address ， 默认: 0.0.0.0
         port:  required 服务所占端口 
         root:  如果是web类型服务，则包含页面  默认:{APP_HOME}/root
-        lib: server额外的class目录， 默认为空 
+        lib: server额外的class目录， 默认为${APP_HOME}/libs/*; 
         excludelibs: 排除lib.path与excludes中的正则表达式匹配的路径, 多个正则表达式用分号;隔开
         charset: 文本编码， 默认: UTF-8
         backlog:  默认10K
@@ -119,8 +119,7 @@
         <!-- 
            加载所有的Service服务;
            在同一个进程中同一个name同一类型的Service将共用同一个实例
-           autoload="true"  默认值. 自动加载以下目录（如果存在的话）下所有的Service类:
-                                 server.lib;    server.lib/*;    server.classes;    
+           autoload="true"  默认值. 自动加载classpath下所有的Service类  
            autoload="false" 需要显著的指定Service类
            includes： 当autoload="true"， 拉取类名与includes中的正则表达式匹配的类, 多个正则表达式用分号;隔开
            excludes： 当autoload="true"， 排除类名与excludes中的正则表达式匹配的类, 多个正则表达式用分号;隔开           
@@ -246,8 +245,7 @@
         <!-- 
            加载所有的Servlet服务;
            path:  servlet的ContextPath前缀 默认为空
-           autoload="true"  默认值. 自动加载以下目录（如果存在的话）下所有的Servlet类:
-                                 ${APP_HOME}/lib;    ${APP_HOME}/root/lib/*;    ${APP_HOME}/root/classes;   
+           autoload="true"  默认值. 自动加载classpath下所有的Servlet类 
            autoload="false" 需要显著的指定Service类
            includes： 当autoload="true"， 拉取类名与includes中的正则表达式匹配的类, 多个正则表达式用分号;隔开
            excludes： 当autoload="true"， 排除类名与excludes中的正则表达式匹配的类, 多个正则表达式用分号;隔开

@@ -132,7 +132,7 @@ public abstract class NodeServer {
 
             final String homepath = myroot.getCanonicalPath();
             //加入指定的classpath
-            Server.loadLib(classLoader, logger, this.serverConf.getValue("lib", "").replace("${APP_HOME}", homepath) + ";" + homepath + "/lib/*;" + homepath + "/classes");
+            Server.loadLib(classLoader, logger, (isWATCH() ? "${APP_HOME}/lib/*;" : "") + this.serverConf.getValue("lib", "${APP_HOME}/libs/*").replace("${APP_HOME}", homepath));
         }
         //必须要进行初始化， 构建Service时需要使用Context中的ExecutorService
         server.init(this.serverConf);
