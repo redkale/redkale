@@ -90,7 +90,7 @@ public abstract class NodeServer {
         this.resourceFactory = application.getResourceFactory().createChild();
         this.server = server;
         this.logger = Logger.getLogger(this.getClass().getSimpleName());
-        this.classLoader = new RedkaleClassLoader(Thread.currentThread().getContextClassLoader());
+        this.classLoader = new RedkaleClassLoader(application.getServerClassLoader());
         Thread.currentThread().setContextClassLoader(this.classLoader);
     }
 

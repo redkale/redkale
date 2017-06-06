@@ -139,6 +139,9 @@ public final class Application {
     //根ClassLoader
     private final RedkaleClassLoader classLoader;
 
+    //Server根ClassLoader
+    private final RedkaleClassLoader serverClassLoader;
+
     private Application(final AnyValue config) {
         this(false, config);
     }
@@ -270,6 +273,7 @@ public final class Application {
         this.transportFactory = new TransportFactory(transportExec, transportPool, transportGroup);
         this.classLoader = new RedkaleClassLoader(Thread.currentThread().getContextClassLoader());
         Thread.currentThread().setContextClassLoader(this.classLoader);
+        this.serverClassLoader = new RedkaleClassLoader(this.classLoader);
     }
 
     public ResourceFactory getResourceFactory() {
@@ -282,6 +286,10 @@ public final class Application {
 
     public RedkaleClassLoader getClassLoader() {
         return classLoader;
+    }
+
+    public RedkaleClassLoader getServerClassLoader() {
+        return serverClassLoader;
     }
 
     public List<NodeServer> getNodeServers() {

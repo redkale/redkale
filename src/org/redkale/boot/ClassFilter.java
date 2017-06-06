@@ -453,7 +453,7 @@ public final class ClassFilter<T> {
             List<URL> urljares = new ArrayList<>(2);
             final URL exurl = excludeFile != null ? excludeFile.toURI().toURL() : null;
             final Pattern[] excludePatterns = toPattern(excludeRegs);
-            for (URL url : loader.getURLs()) {
+            for (URL url : loader.getAllURLs()) {
                 if (exurl != null && exurl.sameFile(url)) continue;
                 if (excludePatterns != null) {
                     boolean skip = false;
