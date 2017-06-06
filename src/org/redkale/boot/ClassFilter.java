@@ -183,7 +183,7 @@ public final class ClassFilter<T> {
         } catch (Throwable cfe) {
             if (finer && !clazzname.startsWith("sun.") && !clazzname.startsWith("javax.")
                 && !clazzname.startsWith("com.sun.") && !clazzname.startsWith("jdk.")) {
-                logger.log(Level.FINEST, ClassFilter.class.getSimpleName() + " filter error", cfe);
+                //logger.log(Level.FINEST, ClassFilter.class.getSimpleName() + " filter error", cfe);
             }
         }
     }
