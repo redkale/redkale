@@ -130,9 +130,8 @@ public abstract class NodeServer {
             resourceFactory.register(Server.RESNAME_SERVER_ROOT, File.class, myroot.getCanonicalFile());
             resourceFactory.register(Server.RESNAME_SERVER_ROOT, Path.class, myroot.toPath());
 
-            final String homepath = myroot.getCanonicalPath();
             //加入指定的classpath
-            Server.loadLib(classLoader, logger, (isWATCH() ? "${APP_HOME}/lib/*;" : "") + this.serverConf.getValue("lib", "${APP_HOME}/libs/*").replace("${APP_HOME}", homepath));
+            Server.loadLib(classLoader, logger, (isWATCH() ? "${APP_HOME}/lib/*;" : "") + this.serverConf.getValue("lib", "${APP_HOME}/libs/*").replace("${APP_HOME}", application.getHome().getPath()));
         }
         //必须要进行初始化， 构建Service时需要使用Context中的ExecutorService
         server.init(this.serverConf);
