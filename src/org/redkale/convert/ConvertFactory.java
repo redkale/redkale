@@ -253,7 +253,7 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
 
         Class clazz = findEntityAlias(name);
         try {
-            return clazz == null ? Class.forName(name) : clazz;
+            return clazz == null ? Thread.currentThread().getContextClassLoader().loadClass(name) : clazz;
         } catch (Exception ex) {
             throw new ConvertException("convert entity is " + name, ex);
         }

@@ -177,11 +177,11 @@ public abstract class TypeToken<T> {
     }
 
     private static Type createParameterizedType(final Class rawType, final Type... actualTypeArguments) {
-        ClassLoader loader = TypeToken.class.getClassLoader();
+        ClassLoader loader = Thread.currentThread().getContextClassLoader();
         String newDynName = TypeToken.class.getName().replace('.', '/') + "_Dyn" + System.currentTimeMillis();
         for (;;) {
             try {
-                Class.forName(newDynName.replace('/', '.'));
+                loader.loadClass(newDynName.replace('/', '.'));
                 newDynName = TypeToken.class.getName().replace('.', '/') + "_Dyn" + Math.abs(System.nanoTime());
             } catch (Throwable ex) {  //异常说明类不存在
                 break;

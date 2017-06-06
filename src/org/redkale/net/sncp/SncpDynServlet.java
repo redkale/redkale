@@ -310,7 +310,7 @@ public final class SncpDynServlet extends SncpServlet {
                 + "DynAction" + serviceClass.getSimpleName() + "_" + method.getName() + "_" + actionid;
             while (true) {
                 try {
-                    Class.forName(newDynName.replace('/', '.'));
+                    Thread.currentThread().getContextClassLoader().loadClass(newDynName.replace('/', '.'));
                     newDynName += "_";
                 } catch (Throwable ex) {
                     break;

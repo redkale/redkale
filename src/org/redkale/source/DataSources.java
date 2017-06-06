@@ -85,7 +85,7 @@ public final class DataSources {
         String impl = readprop.getProperty(JDBC_DATASOURCE_CLASS, DataJdbcSource.class.getName());
         if (DataJdbcSource.class.getName().equals(impl)) return new DataJdbcSource(unitName, readprop, writeprop);
         try {
-            Class ds = Class.forName(impl);
+            Class ds = Thread.currentThread().getContextClassLoader().loadClass(impl);
             for (Constructor d : ds.getConstructors()) {
                 Class<?>[] paramtypes = d.getParameterTypes();
                 if (paramtypes.length == 1 && paramtypes[0] == Properties.class) {

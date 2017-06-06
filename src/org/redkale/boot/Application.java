@@ -617,7 +617,7 @@ public final class Application {
                             if (!inited.get()) {
                                 synchronized (nodeClasses) {
                                     if (!inited.getAndSet(true)) { //加载自定义的协议，如：SOCKS
-                                        ClassFilter profilter = new ClassFilter(NodeProtocol.class, NodeServer.class, (Class[]) null);
+                                        ClassFilter profilter = new ClassFilter(classLoader, NodeProtocol.class, NodeServer.class, (Class[]) null);
                                         ClassFilter.Loader.load(home, serconf.getValue("excludelibs", "").split(";"), profilter);
                                         final Set<FilterEntry<NodeServer>> entrys = profilter.getFilterEntrys();
                                         for (FilterEntry<NodeServer> entry : entrys) {

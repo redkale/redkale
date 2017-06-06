@@ -214,14 +214,14 @@ public interface Creator<T> {
         final String supDynName = Creator.class.getName().replace('.', '/');
         final String interName = clazz.getName().replace('.', '/');
         final String interDesc = Type.getDescriptor(clazz);
-        ClassLoader loader = Creator.class.getClassLoader();
+        ClassLoader loader = Thread.currentThread().getContextClassLoader();
         String newDynName = supDynName + "_" + clazz.getSimpleName() + "_" + (System.currentTimeMillis() % 10000);
         if (String.class.getClassLoader() != clazz.getClassLoader()) {
             loader = clazz.getClassLoader();
             newDynName = interName + "_Dyn" + Creator.class.getSimpleName();
         }
         try {
-            return (Creator) Class.forName(newDynName.replace('/', '.')).newInstance();
+            return (Creator) loader.loadClass(newDynName.replace('/', '.')).newInstance();
         } catch (Throwable ex) {
         }
 

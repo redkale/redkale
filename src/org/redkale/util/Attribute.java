@@ -431,7 +431,7 @@ public interface Attribute<T, F> {
         final String interDesc = Type.getDescriptor(clazz);
         final String columnDesc = Type.getDescriptor(column);
 
-        ClassLoader loader = Attribute.class.getClassLoader();
+        ClassLoader loader = Thread.currentThread().getContextClassLoader();
         String newDynName = supDynName + "_Dyn_" + clazz.getSimpleName() + "_"
             + fieldname.substring(fieldname.indexOf('.') + 1) + "_" + pcolumn.getSimpleName().replace("[]", "Array");
         if (String.class.getClassLoader() != clazz.getClassLoader()) {
@@ -440,7 +440,7 @@ public interface Attribute<T, F> {
                 + fieldname.substring(fieldname.indexOf('.') + 1) + "_" + pcolumn.getSimpleName().replace("[]", "Array");
         }
         try {
-            return (Attribute) Class.forName(newDynName.replace('/', '.')).newInstance();
+            return (Attribute) loader.loadClass(newDynName.replace('/', '.')).newInstance();
         } catch (Throwable ex) {
         }
         //---------------------------------------------------

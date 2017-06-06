@@ -158,7 +158,7 @@ public final class Rest {
         }
     }
 
-    static <T extends HttpServlet> T createRestWebSocketServlet(final Class<? extends WebSocket> webSocketType) {
+    static <T extends HttpServlet> T createRestWebSocketServlet(final ClassLoader classLoader, final Class<? extends WebSocket> webSocketType) {
         if (webSocketType == null) throw new RuntimeException("Rest WebSocket Class is null on createRestWebSocketServlet");
         if (Modifier.isAbstract(webSocketType.getModifiers())) throw new RuntimeException("Rest WebSocket Class(" + webSocketType + ") cannot abstract on createRestWebSocketServlet");
         if (Modifier.isFinal(webSocketType.getModifiers())) throw new RuntimeException("Rest WebSocket Class(" + webSocketType + ") cannot final on createRestWebSocketServlet");
@@ -178,6 +178,7 @@ public final class Rest {
 
         //----------------------------------------------------------------------------------------
         final Set<Field> resourcesFieldSet = new LinkedHashSet<>();
+        final ClassLoader loader = classLoader == null ? Thread.currentThread().getContextClassLoader() : classLoader;
         Class clzz = webSocketType;
         do {
             for (Field field : webSocketType.getDeclaredFields()) {
@@ -232,7 +233,6 @@ public final class Rest {
         final String newDynConsumerSimpleName = "_DynRestOnMessageConsumer";
         final String newDynConsumerFullName = newDynName + "$" + newDynConsumerSimpleName;
         //----------------------------------------------------------------------------------------
-        ClassLoader loader = Rest.class.getClassLoader();
 
         ClassWriter cw = new ClassWriter(COMPUTE_FRAMES);
         FieldVisitor fv;
@@ -530,7 +530,7 @@ public final class Rest {
         }
     }
 
-    static <T extends HttpServlet> T createRestServlet(final Class userType0, final Class<T> baseServletType, final Class<? extends Service> serviceType) {
+    static <T extends HttpServlet> T createRestServlet(final ClassLoader classLoader, final Class userType0, final Class<T> baseServletType, final Class<? extends Service> serviceType) {
         if (baseServletType == null || serviceType == null) throw new RuntimeException(" Servlet or Service is null Class on createRestServlet");
         if (!HttpServlet.class.isAssignableFrom(baseServletType)) throw new RuntimeException(baseServletType + " is not HttpServlet Class on createRestServlet");
         int mod = baseServletType.getModifiers();
@@ -564,7 +564,7 @@ public final class Rest {
         final String supDynName = baseServletType.getName().replace('.', '/');
         final RestService controller = serviceType.getAnnotation(RestService.class);
         if (controller != null && controller.ignore()) throw new RuntimeException(serviceType + " is ignore Rest Service Class"); //标记为ignore=true不创建Servlet
-        ClassLoader loader = Rest.class.getClassLoader();
+        ClassLoader loader = classLoader == null ? Thread.currentThread().getContextClassLoader() : classLoader;
         String newDynName = serviceTypeInternalName.substring(0, serviceTypeInternalName.lastIndexOf('/') + 1) + "_Dyn" + serviceType.getSimpleName().replaceAll("Service.*$", "") + "RestServlet";
 
         //------------------------------------------------------------------------------

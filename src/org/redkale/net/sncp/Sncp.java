@@ -256,13 +256,14 @@ public abstract class Sncp {
      * 创建Service的本地模式Class
      *
      * @param <T>              Service子类
+     * @param classLoader      ClassLoader
      * @param name             资源名
      * @param serviceImplClass Service类
      *
      * @return Service实例
      */
     @SuppressWarnings("unchecked")
-    protected static <T extends Service> Class<? extends T> createLocalServiceClass(final String name, final Class<T> serviceImplClass) {
+    protected static <T extends Service> Class<? extends T> createLocalServiceClass(ClassLoader classLoader, final String name, final Class<T> serviceImplClass) {
         if (serviceImplClass == null) return null;
         if (!Service.class.isAssignableFrom(serviceImplClass)) return serviceImplClass;
         int mod = serviceImplClass.getModifiers();
@@ -274,7 +275,7 @@ public abstract class Sncp {
         final String clientDesc = Type.getDescriptor(SncpClient.class);
         final String anyValueDesc = Type.getDescriptor(AnyValue.class);
         final String sncpDynDesc = Type.getDescriptor(SncpDyn.class);
-        ClassLoader loader = Sncp.class.getClassLoader();
+        ClassLoader loader = classLoader == null ? Thread.currentThread().getContextClassLoader() : classLoader;
         String newDynName = supDynName.substring(0, supDynName.lastIndexOf('/') + 1) + LOCALPREFIX + serviceImplClass.getSimpleName();
         if (!name.isEmpty()) {
             boolean normal = true;
@@ -285,7 +286,7 @@ public abstract class Sncp {
             newDynName += "_" + (normal ? name : hash(name));
         }
         try {
-            return (Class<T>) Class.forName(newDynName.replace('/', '.'));
+            return (Class<T>) loader.loadClass(newDynName.replace('/', '.'));
         } catch (Throwable ex) {
         }
         //------------------------------------------------------------------------------
@@ -738,7 +739,7 @@ public abstract class Sncp {
 
     public static <T extends Service> T createSimpleLocalService(final Class<T> serviceImplClass,
         final TransportFactory transportFactory, final InetSocketAddress clientSncpAddress, final String... groups) {
-        return createLocalService("", serviceImplClass, ResourceFactory.root(), transportFactory, clientSncpAddress, Utility.ofSet(groups), null);
+        return createLocalService(null, "", serviceImplClass, ResourceFactory.root(), transportFactory, clientSncpAddress, Utility.ofSet(groups), null);
     }
 
     /**
@@ -746,6 +747,7 @@ public abstract class Sncp {
      * 创建本地模式Service实例
      *
      * @param <T>               Service泛型
+     * @param classLoader       ClassLoader
      * @param name              资源名
      * @param serviceImplClass  Service类
      * @param resourceFactory   ResourceFactory
@@ -758,6 +760,7 @@ public abstract class Sncp {
      */
     @SuppressWarnings("unchecked")
     public static <T extends Service> T createLocalService(
+        final ClassLoader classLoader,
         final String name,
         final Class<T> serviceImplClass,
         final ResourceFactory resourceFactory,
@@ -766,7 +769,7 @@ public abstract class Sncp {
         final Set<String> groups,
         final AnyValue conf) {
         try {
-            final Class newClazz = createLocalServiceClass(name, serviceImplClass);
+            final Class newClazz = createLocalServiceClass(classLoader, name, serviceImplClass);
             T rs = (T) newClazz.newInstance();
             //--------------------------------------            
             Service remoteService = null;
@@ -780,7 +783,7 @@ public abstract class Sncp {
                         if (!field.getType().isAssignableFrom(newClazz)) continue;
                         field.setAccessible(true);
                         if (remoteService == null && clientSncpAddress != null) {
-                            remoteService = createRemoteService(name, serviceImplClass, transportFactory, clientSncpAddress, groups, conf);
+                            remoteService = createRemoteService(classLoader, name, serviceImplClass, transportFactory, clientSncpAddress, groups, conf);
                         }
                         if (remoteService != null) field.set(rs, remoteService);
                     }
@@ -821,7 +824,7 @@ public abstract class Sncp {
 
     public static <T extends Service> T createSimpleRemoteService(final Class<T> serviceImplClass,
         final TransportFactory transportFactory, final InetSocketAddress clientSncpAddress, final String... groups) {
-        return createRemoteService("", serviceImplClass, transportFactory, clientSncpAddress, Utility.ofSet(groups), null);
+        return createRemoteService(null, "", serviceImplClass, transportFactory, clientSncpAddress, Utility.ofSet(groups), null);
     }
 
     /**
@@ -865,6 +868,7 @@ public abstract class Sncp {
      * 创建远程模式的Service实例
      *
      * @param <T>                    Service泛型
+     * @param classLoader            ClassLoader
      * @param name                   资源名
      * @param serviceTypeOrImplClass Service类
      * @param transportFactory       TransportFactory
@@ -877,6 +881,7 @@ public abstract class Sncp {
     @SuppressWarnings("unchecked")
 
     public static <T extends Service> T createRemoteService(
+        final ClassLoader classLoader,
         final String name,
         final Class<T> serviceTypeOrImplClass,
         final TransportFactory transportFactory,
@@ -893,12 +898,12 @@ public abstract class Sncp {
         final String clientDesc = Type.getDescriptor(SncpClient.class);
         final String sncpDynDesc = Type.getDescriptor(SncpDyn.class);
         final String anyValueDesc = Type.getDescriptor(AnyValue.class);
-        ClassLoader loader = Sncp.class.getClassLoader();
+        ClassLoader loader = classLoader == null ? Thread.currentThread().getContextClassLoader() : classLoader;
         String newDynName = supDynName.substring(0, supDynName.lastIndexOf('/') + 1) + REMOTEPREFIX + serviceTypeOrImplClass.getSimpleName();
         try {
-            Class newClazz = Class.forName(newDynName.replace('/', '.'));
+            Class newClazz = loader.loadClass(newDynName.replace('/', '.'));
             T rs = (T) newClazz.newInstance();
-            SncpClient client = new SncpClient(name, serviceTypeOrImplClass, rs, transportFactory, true, realed ? createLocalServiceClass(name, serviceTypeOrImplClass) : serviceTypeOrImplClass, clientAddress);
+            SncpClient client = new SncpClient(name, serviceTypeOrImplClass, rs, transportFactory, true, realed ? createLocalServiceClass(loader, name, serviceTypeOrImplClass) : serviceTypeOrImplClass, clientAddress);
             client.setRemoteGroups(groups);
             client.setRemoteGroupTransport(transportFactory.loadRemoteTransport(clientAddress, groups));
             Field c = newClazz.getDeclaredField(FIELDPREFIX + "_client");
@@ -987,7 +992,7 @@ public abstract class Sncp {
             mv.visitEnd();
         }
         int i = -1;
-        for (final SncpAction entry : SncpClient.getSncpActions(realed ? createLocalServiceClass(name, serviceTypeOrImplClass) : serviceTypeOrImplClass)) {
+        for (final SncpAction entry : SncpClient.getSncpActions(realed ? createLocalServiceClass(loader, name, serviceTypeOrImplClass) : serviceTypeOrImplClass)) {
             final int index = ++i;
             final java.lang.reflect.Method method = entry.method;
             {
@@ -1091,7 +1096,7 @@ public abstract class Sncp {
         }.loadClass(newDynName.replace('/', '.'), bytes);
         try {
             T rs = (T) newClazz.newInstance();
-            SncpClient client = new SncpClient(name, serviceTypeOrImplClass, rs, transportFactory, true, realed ? createLocalServiceClass(name, serviceTypeOrImplClass) : serviceTypeOrImplClass, clientAddress);
+            SncpClient client = new SncpClient(name, serviceTypeOrImplClass, rs, transportFactory, true, realed ? createLocalServiceClass(loader, name, serviceTypeOrImplClass) : serviceTypeOrImplClass, clientAddress);
             client.setRemoteGroups(groups);
             client.setRemoteGroupTransport(transportFactory.loadRemoteTransport(clientAddress, groups));
             {

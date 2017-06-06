@@ -37,7 +37,7 @@ public class TypeSimpledCoder<R extends Reader, W extends Writer> extends Simple
         String str = in.readSmallString();
         if (str == null) return null;
         try {
-            return Class.forName(str);
+            return Thread.currentThread().getContextClassLoader().loadClass(str);
         } catch (Throwable e) {
             return null;
         }

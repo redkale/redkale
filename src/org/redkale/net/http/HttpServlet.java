@@ -214,7 +214,7 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
         int i = 0;
         for (;;) {
             try {
-                Class.forName(newDynName.replace('/', '.'));
+                Thread.currentThread().getContextClassLoader().loadClass(newDynName.replace('/', '.'));
                 newDynName += "_" + (++i);
             } catch (Throwable ex) {
                 break;

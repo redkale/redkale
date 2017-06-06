@@ -84,7 +84,7 @@ public class CacheMemorySource<K extends Serializable, V extends Object> extends
             String storeValueStr = prop.getValue("value-type");
             if (storeKeyStr != null && storeValueStr != null) {
                 try {
-                    this.setStoreType(Class.forName(storeKeyStr), Class.forName(storeValueStr));
+                    this.setStoreType(Thread.currentThread().getContextClassLoader().loadClass(storeKeyStr), Thread.currentThread().getContextClassLoader().loadClass(storeValueStr));
                 } catch (Throwable e) {
                     logger.log(Level.SEVERE, self.getClass().getSimpleName() + " load key & value store class (" + storeKeyStr + ", " + storeValueStr + ") error", e);
                 }
@@ -94,7 +94,7 @@ public class CacheMemorySource<K extends Serializable, V extends Object> extends
         String expireHandlerClass = prop == null ? null : prop.getValue("expirehandler");
         if (expireHandlerClass != null) {
             try {
-                this.expireHandler = (Consumer<CacheEntry>) Class.forName(expireHandlerClass).newInstance();
+                this.expireHandler = (Consumer<CacheEntry>) Thread.currentThread().getContextClassLoader().loadClass(expireHandlerClass).newInstance();
             } catch (Throwable e) {
                 logger.log(Level.SEVERE, self.getClass().getSimpleName() + " new expirehandler class (" + expireHandlerClass + ") instance error", e);
             }

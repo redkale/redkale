@@ -58,19 +58,22 @@ public final class ClassFilter<T> {
 
     private AnyValue conf; //基本配置信息, 当符合条件时将conf的属性赋值到FilterEntry中去。
 
-    public ClassFilter(Class<? extends Annotation> annotationClass, Class superClass, Class[] excludeSuperClasses) {
-        this(annotationClass, superClass, excludeSuperClasses, null);
+    private final ClassLoader classLoader;
+
+    public ClassFilter(ClassLoader classLoader, Class<? extends Annotation> annotationClass, Class superClass, Class[] excludeSuperClasses) {
+        this(classLoader, annotationClass, superClass, excludeSuperClasses, null);
     }
 
-    public ClassFilter(Class<? extends Annotation> annotationClass, Class superClass, Class[] excludeSuperClasses, AnyValue conf) {
+    public ClassFilter(ClassLoader classLoader, Class<? extends Annotation> annotationClass, Class superClass, Class[] excludeSuperClasses, AnyValue conf) {
         this.annotationClass = annotationClass;
         this.superClass = superClass;
         this.excludeSuperClasses = excludeSuperClasses;
         this.conf = conf;
+        this.classLoader = classLoader == null ? Thread.currentThread().getContextClassLoader() : classLoader;
     }
 
     public static ClassFilter create(Class[] excludeSuperClasses, String includeregs, String excluderegs, Set<String> includeValues, Set<String> excludeValues) {
-        ClassFilter filter = new ClassFilter(null, null, excludeSuperClasses);
+        ClassFilter filter = new ClassFilter(null, null, null, excludeSuperClasses);
         filter.setIncludePatterns(includeregs == null ? null : includeregs.split(";"));
         filter.setExcludePatterns(excluderegs == null ? null : excluderegs.split(";"));
         filter.setPrivilegeIncludes(includeValues);
@@ -156,7 +159,7 @@ public final class ClassFilter<T> {
         }
         if (cf == null || clazzname.startsWith("sun.")) return;
         try {
-            Class clazz = Class.forName(clazzname);
+            Class clazz = classLoader.loadClass(clazzname);
             if (!cf.accept(property, clazz, autoscan)) return;
             if (cf.conf != null) {
                 if (property == null) {
@@ -180,7 +183,7 @@ public final class ClassFilter<T> {
         } catch (Throwable cfe) {
             if (finer && !clazzname.startsWith("sun.") && !clazzname.startsWith("javax.")
                 && !clazzname.startsWith("com.sun.") && !clazzname.startsWith("jdk.")) {
-                //logger.log(Level.FINEST, ClassFilter.class.getSimpleName() + " filter error", cfe);
+                logger.log(Level.FINEST, ClassFilter.class.getSimpleName() + " filter error", cfe);
             }
         }
     }

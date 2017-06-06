@@ -172,14 +172,15 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
      *
      * @param <S>           WebSocket
      * @param <T>           HttpServlet
+     * @param classLoader   ClassLoader
      * @param webSocketType WebSocket的类型
      * @param prefix        url前缀
      * @param conf          配置信息
      *
      * @return RestServlet
      */
-    public <S extends WebSocket, T extends HttpServlet> T addRestWebSocketServlet(final Class<S> webSocketType, final String prefix, final AnyValue conf) {
-        T servlet = Rest.createRestWebSocketServlet(webSocketType);
+    public <S extends WebSocket, T extends HttpServlet> T addRestWebSocketServlet(final ClassLoader classLoader, final Class<S> webSocketType, final String prefix, final AnyValue conf) {
+        T servlet = Rest.createRestWebSocketServlet(classLoader, webSocketType);
         if (servlet != null) this.prepare.addServlet(servlet, prefix, conf);
         return servlet;
     }
@@ -189,6 +190,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
      *
      * @param <S>             Service
      * @param <T>             HttpServlet
+     * @param classLoader     ClassLoader
      * @param service         Service对象
      * @param userType        用户数据类型
      * @param baseServletType RestServlet基类
@@ -196,8 +198,8 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
      *
      * @return RestServlet
      */
-    public <S extends Service, T extends HttpServlet> T addRestServlet(final S service, final Class userType, final Class<T> baseServletType, final String prefix) {
-        return addRestServlet(null, service, userType, baseServletType, prefix);
+    public <S extends Service, T extends HttpServlet> T addRestServlet(final ClassLoader classLoader, final S service, final Class userType, final Class<T> baseServletType, final String prefix) {
+        return addRestServlet(classLoader, null, service, userType, baseServletType, prefix);
     }
 
     /**
@@ -205,6 +207,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
      *
      * @param <S>             Service
      * @param <T>             HttpServlet
+     * @param classLoader     ClassLoader
      * @param name            资源名
      * @param service         Service对象
      * @param userType        用户数据类型
@@ -213,7 +216,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
      *
      * @return RestServlet
      */
-    public <S extends Service, T extends HttpServlet> T addRestServlet(final String name, final S service, final Class userType, final Class<T> baseServletType, final String prefix) {
+    public <S extends Service, T extends HttpServlet> T addRestServlet(final ClassLoader classLoader, final String name, final S service, final Class userType, final Class<T> baseServletType, final String prefix) {
         T servlet = null;
         final boolean sncp = Sncp.isSncpDyn(service);
         final String resname = name == null ? (sncp ? Sncp.getResourceName(service) : "") : name;
@@ -233,7 +236,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
             }
         }
         final boolean first = servlet == null;
-        if (servlet == null) servlet = Rest.createRestServlet(userType, baseServletType, serviceType);
+        if (servlet == null) servlet = Rest.createRestServlet(classLoader, userType, baseServletType, serviceType);
         if (servlet == null) return null; //没有HttpMapping方法的HttpServlet调用Rest.createRestServlet就会返回null 
         try { //若提供动态变更Service服务功能，则改Rest服务无法做出相应更新
             Field field = servlet.getClass().getDeclaredField(Rest.REST_SERVICE_FIELD_NAME);

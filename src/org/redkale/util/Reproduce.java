@@ -35,13 +35,13 @@ public interface Reproduce<D, S> extends BiFunction<D, S, D> {
         final String destDesc = Type.getDescriptor(destClass);
         final String srcDesc = Type.getDescriptor(srcClass);
         String newDynName = supDynName + "Dyn_" + destClass.getSimpleName() + "_" + srcClass.getSimpleName();
-        ClassLoader loader = Reproduce.class.getClassLoader();
+        ClassLoader loader = Thread.currentThread().getContextClassLoader();
         if (String.class.getClassLoader() != destClass.getClassLoader()) {
             loader = destClass.getClassLoader();
             newDynName = destName + "_Dyn" + Reproduce.class.getSimpleName() + "_" + srcClass.getSimpleName();
         }
         try {
-            return (Reproduce) Class.forName(newDynName.replace('/', '.')).newInstance();
+            return (Reproduce) loader.loadClass(newDynName.replace('/', '.')).newInstance();
         } catch (Throwable ex) {
         }
         // ------------------------------------------------------------------------------

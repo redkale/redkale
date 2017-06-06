@@ -129,7 +129,7 @@ public class PoolJdbcSource {
                 case "com.mysql.cj.jdbc.Driver":
                 case "com.mysql.jdbc.Driver":
                     try {
-                        Class.forName("com.mysql.cj.jdbc.MysqlConnectionPoolDataSource");
+                        Thread.currentThread().getContextClassLoader().loadClass("com.mysql.cj.jdbc.MysqlConnectionPoolDataSource");
                         source = "com.mysql.cj.jdbc.MysqlConnectionPoolDataSource";
                     } catch (Throwable e) {
                         source = "com.mysql.jdbc.jdbc2.optional.MysqlConnectionPoolDataSource";
@@ -146,10 +146,10 @@ public class PoolJdbcSource {
                     break;
             }
         }
-        final Class clazz = Class.forName(source);
+        final Class clazz = Thread.currentThread().getContextClassLoader().loadClass(source);
         Object pdsource = clazz.newInstance();
         if (source.contains(".postgresql.")) {
-            Class driver = Class.forName("org.postgresql.Driver");
+            Class driver = Thread.currentThread().getContextClassLoader().loadClass("org.postgresql.Driver");
             Properties properties = (Properties) driver.getMethod("parseURL", String.class, Properties.class).invoke(null, url, new Properties());
             clazz.getMethod("setServerName", String.class).invoke(pdsource, properties.getProperty("PGHOST"));
             clazz.getMethod("setDatabaseName", String.class).invoke(pdsource, properties.getProperty("PGDBNAME"));
