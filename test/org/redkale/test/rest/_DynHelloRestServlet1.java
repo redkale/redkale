@@ -23,8 +23,8 @@ public class _DynHelloRestServlet1 extends SimpleRestServlet {
         HelloService service = new HelloService();
         HttpServer server = new HttpServer();
 
-        System.out.println(server.addRestServlet(service, null, SimpleRestServlet.class, "/pipes"));
-        System.out.println(server.addRestServlet(new HelloService(3), null, SimpleRestServlet.class, "/pipes"));
+        System.out.println(server.addRestServlet(null, service, null, SimpleRestServlet.class, "/pipes"));
+        System.out.println(server.addRestServlet(null, new HelloService(3), null, SimpleRestServlet.class, "/pipes"));
 
         DefaultAnyValue conf = DefaultAnyValue.create("port", "" + port);
         server.init(conf);
