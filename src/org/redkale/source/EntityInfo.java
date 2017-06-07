@@ -199,6 +199,7 @@ public final class EntityInfo<T> {
             this.fullloader = loader;
         } else {
             this.fullloader = fullloader;
+            if (t != null && !t.name().isEmpty() && t.name().indexOf('.') >= 0) throw new RuntimeException(type + " have illegal table.name on @Table");
             this.table = (t == null) ? type.getSimpleName().toLowerCase() : (t.catalog().isEmpty()) ? t.name() : (t.catalog() + '.' + (t.name().isEmpty() ? type.getSimpleName().toLowerCase() : t.name()));
         }
         DistributeTable dt = type.getAnnotation(DistributeTable.class);
