@@ -1671,10 +1671,10 @@ public final class Rest {
             if (mapping == null) mapping = DEFAULT__MAPPING;
             this.methodidx = methodidx;
             this.ignore = mapping.ignore();
-            String n = mapping.name().toLowerCase();
+            String n = mapping.name();
             if (n.isEmpty()) {
-                String t = method.getName().toLowerCase();
-                int pos = t.indexOf(defmodulename.toLowerCase());
+                String t = method.getName();
+                int pos = t.indexOf(defmodulename);
                 n = pos > 0 ? t.substring(0, pos) : t;
             }
             this.name = n;
