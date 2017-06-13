@@ -96,7 +96,31 @@
             <p>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;访问地址的端口6060和前缀pipes是通过conf/application.xml文件进行配置： 
             </p>
-            <p style="text-align: center;"><img src="images/hello_12.png" alt=""/></p>
+            <div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">application</span> <span class="na">port</span><span class="o">=</span><span class="s">"5050"</span><span class="p">&gt;</span>     
+    
+    <span class="c">&lt;!--  详细配置说明见： http://redkale.org/redkale.html#redkale_confxml  --&gt;</span>
+    
+    <span class="p">&lt;</span><span class="nt">resources</span><span class="p">&gt;</span>       
+        <span class="c">&lt;!-- </span>
+<span class="c">        &lt;properties&gt;</span>
+<span class="c">            &lt;property name="system.property.convert.json.tiny" value="true"/&gt;</span>
+<span class="c">        &lt;/properties&gt;</span>
+<span class="c">        --&gt;</span>
+    <span class="p">&lt;/</span><span class="nt">resources</span><span class="p">&gt;</span> 
+        
+    <span class="p">&lt;</span><span class="nt">server</span> <span class="na">protocol</span><span class="o">=</span><span class="s">"HTTP"</span> <span class="na">host</span><span class="o">=</span><span class="s">"0.0.0.0"</span> <span class="na">port</span><span class="o">=</span><span class="s">"6060"</span> <span class="na">root</span><span class="o">=</span><span class="s">"root"</span><span class="p">&gt;</span>      
+              
+        <span class="p">&lt;</span><span class="nt">services</span> <span class="na">autoload</span><span class="o">=</span><span class="s">"true"</span><span class="p">/&gt;</span>
+        
+        <span class="c">&lt;!-- base指定的自定义HttpServlet子类必须标记@HttpUserType, 不设置base则视为没有当前用户信息设置  --&gt;</span>
+        <span class="p">&lt;</span><span class="nt">rest</span> <span class="na">path</span><span class="o">=</span><span class="s">"/pipes"</span> <span class="na">autoload</span><span class="o">=</span><span class="s">"true"</span> <span class="p">/&gt;</span> 
+        
+        <span class="p">&lt;</span><span class="nt">servlets</span> <span class="na">path</span><span class="o">=</span><span class="s">"/pipes"</span> <span class="na">autoload</span><span class="o">=</span><span class="s">"true"</span> <span class="p">/&gt;</span>
+        
+    <span class="p">&lt;/</span><span class="nt">server</span><span class="p">&gt;</span>
+    
+<span class="p">&lt;/</span><span class="nt">application</span><span class="p">&gt;</span>
+                </pre></div>
 
             <p>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;至此，一个简单的Hello服务就开发和调试完成了。可以看出，代码简单很多，不需要太多配置、maven和其他依赖包。<br>
