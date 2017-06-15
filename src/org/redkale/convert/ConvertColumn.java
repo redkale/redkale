@@ -32,6 +32,13 @@ public @interface ConvertColumn {
     String name() default "";
 
     /**
+     * 给字段取个序号ID，值小靠前
+     *
+     * @return 字段排序ID
+     */
+    int index() default 0;
+
+    /**
      * 解析/序列化时是否屏蔽该字段
      *
      * @return 是否屏蔽该字段

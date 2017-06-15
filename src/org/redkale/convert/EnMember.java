@@ -31,6 +31,8 @@ public final class EnMember<W extends Writer, T, F> implements Comparable<EnMemb
     //final boolean isnumber;
     final boolean isbool;
 
+    protected int index;
+
     public EnMember(Attribute<T, F> attribute, Encodeable<W, F> encoder) {
         this.attribute = attribute;
         this.encoder = encoder;
@@ -61,9 +63,14 @@ public final class EnMember<W extends Writer, T, F> implements Comparable<EnMemb
         return attribute.field().equals(name);
     }
 
+    public int getIndex() {
+        return this.index;
+    }
+
     @Override
     public final int compareTo(EnMember<W, T, F> o) {
         if (o == null) return 1;
+        if (this.index != o.index) return this.index - o.index;
         return this.attribute.field().compareTo(o.attribute.field());
     }
 

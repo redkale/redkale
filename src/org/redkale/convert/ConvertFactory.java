@@ -129,11 +129,15 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
 
     public abstract ConvertType getConvertType();
 
-    public abstract boolean isReversible();
+    public abstract boolean isReversible(); //是否可逆的
 
     public abstract ConvertFactory createChild();
 
     public abstract ConvertFactory createChild(boolean tiny);
+
+    public boolean isIndexSort() { //是否使用@ConvertColumn.index排序
+        return false;
+    }
 
     public Convert getConvert() {
         return convert;

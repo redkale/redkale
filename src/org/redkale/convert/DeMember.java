@@ -22,6 +22,8 @@ import org.redkale.util.Attribute;
 @SuppressWarnings("unchecked")
 public final class DeMember<R extends Reader, T, F> implements Comparable<DeMember<R, T, F>> {
 
+    protected int index;
+
     protected final Attribute<T, F> attribute;
 
     protected Decodeable<R, F> decoder;
@@ -68,9 +70,14 @@ public final class DeMember<R extends Reader, T, F> implements Comparable<DeMemb
         return this.attribute;
     }
 
+    public int getIndex() {
+        return this.index;
+    }
+
     @Override
     public final int compareTo(DeMember<R, T, F> o) {
         if (o == null) return 1;
+        if (this.index != o.index) return this.index - o.index;
         return this.attribute.field().compareTo(o.attribute.field());
     }
 
