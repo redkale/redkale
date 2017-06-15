@@ -8,8 +8,10 @@ package org.redkale.net.http;
 import org.redkale.net.http.WebSocketPacket.FrameType;
 import java.io.*;
 import java.net.*;
+import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.*;
@@ -380,6 +382,15 @@ public abstract class WebSocket<G extends Serializable, T> {
      */
     protected final Collection<WebSocket> getLocalWebSockets() {
         return _engine.getLocalWebSockets();
+    }
+
+    /**
+     * 获取ByteBuffer资源池
+     *
+     * @return Supplier
+     */
+    protected Supplier<ByteBuffer> getByteBufferSupplier() {
+        return this._runner.context.getBufferSupplier();
     }
 
     //-------------------------------------------------------------------
