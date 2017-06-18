@@ -15,6 +15,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.BiConsumer;
 import java.util.logging.*;
 import javax.annotation.*;
+import org.redkale.convert.Convert;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.service.*;
 import org.redkale.util.*;
@@ -64,10 +65,14 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
     protected int liveinterval = DEFAILT_LIVEINTERVAL;
 
     @Resource
-    protected JsonConvert jsonConvert;  //Rest.createRestWebSocketServlet 需要过滤掉已有的@Resource
+    private JsonConvert jsonConvert;
+
+    protected Convert textConvert;
+
+    protected Convert binaryConvert;
 
     @Resource(name = "$")
-    protected WebSocketNode node; //Rest.createRestWebSocketServlet 需要过滤掉已有的@Resource
+    protected WebSocketNode node;
 
     protected WebSocketServlet() {
         Type msgtype = String.class;
@@ -96,6 +101,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
             this.node = new WebSocketNodeService();
             if (logger.isLoggable(Level.WARNING)) logger.warning("Not found WebSocketNode, create a default value for " + getClass().getName());
         }
+        if (this.textConvert == null) this.textConvert = jsonConvert;
         //存在WebSocketServlet，则此WebSocketNode必须是本地模式Service
         this.node.localEngine = new WebSocketEngine("WebSocketEngine-" + addr.getHostString() + ":" + addr.getPort() + "-[" + resourceName() + "]", this.single, context, liveinterval, this.node, logger);
         this.node.init(conf);
@@ -131,7 +137,8 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
         final WebSocket webSocket = this.createWebSocket();
         webSocket._engine = this.node.localEngine;
         webSocket._messageTextType = this.messageTextType;
-        webSocket._jsonConvert = jsonConvert;
+        webSocket._textConvert = textConvert;
+        webSocket._binaryConvert = binaryConvert;
         webSocket._remoteAddress = request.getRemoteAddress();
         webSocket._remoteAddr = request.getRemoteAddr();
         initRestWebSocket(webSocket);

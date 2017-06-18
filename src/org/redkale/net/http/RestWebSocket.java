@@ -38,6 +38,13 @@ public @interface RestWebSocket {
     String catalog() default "";
 
     /**
+     * 是否为二进制消息, 默认为文本消息
+     *
+     * @return boolean
+     */
+    boolean binary() default false;
+
+    /**
      * 是否单用户单连接, 默认单用户单连接
      *
      * @return 是否单用户单连接

@@ -16,7 +16,6 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
 import java.util.logging.*;
-import org.redkale.convert.json.JsonConvert;
 
 /**
  * WebSocket的消息接收发送器, 一个WebSocket对应一个WebSocketRunner
@@ -50,8 +49,6 @@ class WebSocketRunner implements Runnable {
 
     protected long lastSendTime;
 
-    protected final JsonConvert textConvert;
-
     WebSocketRunner(Context context, WebSocket webSocket, BiConsumer<WebSocket, Object> messageConsumer, AsyncConnection channel, final boolean wsbinary) {
         this.context = context;
         this.engine = webSocket._engine;
@@ -60,7 +57,6 @@ class WebSocketRunner implements Runnable {
         this.channel = channel;
         this.wsbinary = wsbinary;
         this.readBuffer = context.pollBuffer();
-        this.textConvert = context.getJsonConvert();
     }
 
     @Override
@@ -118,7 +114,7 @@ class WebSocketRunner implements Runnable {
                             }
 
                             if (packet.type == FrameType.TEXT) {
-                                Object message = textConvert.convertFrom(webSocket._messageTextType, packet.receiveMasker, packet.receiveBuffers);
+                                Object message = webSocket._textConvert.convertFrom(webSocket._messageTextType, packet.receiveMasker, packet.receiveBuffers);
                                 if (readBuffer != null) {
                                     readBuffer.clear();
                                     channel.read(readBuffer, null, this);

@@ -14,7 +14,6 @@ import java.util.concurrent.*;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 import org.redkale.convert.Convert;
-import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.*;
 import org.redkale.util.Comment;
 
@@ -81,7 +80,9 @@ public abstract class WebSocket<G extends Serializable, T> {
 
     String _remoteAddr;//不可能为空 
 
-    JsonConvert _jsonConvert; //不可能为空 
+    Convert _textConvert; //不可能为空 
+
+    Convert _binaryConvert; //可能为空 
 
     java.lang.reflect.Type _messageTextType; //不可能为空
 
@@ -137,7 +138,7 @@ public abstract class WebSocket<G extends Serializable, T> {
                 } else if (message instanceof WebSocketPacket) {
                     return sendPacket((WebSocketPacket) message);
                 } else {
-                    return sendPacket(new WebSocketPacket(_jsonConvert, json, last));
+                    return sendPacket(new WebSocketPacket(_textConvert, json, last));
                 }
             });
         }
@@ -146,7 +147,7 @@ public abstract class WebSocket<G extends Serializable, T> {
         } else if (message instanceof WebSocketPacket) {
             return sendPacket((WebSocketPacket) message);
         } else {
-            return sendPacket(new WebSocketPacket(_jsonConvert, message, last));
+            return sendPacket(new WebSocketPacket(_textConvert, message, last));
         }
     }
 
@@ -173,9 +174,9 @@ public abstract class WebSocket<G extends Serializable, T> {
      */
     public final CompletableFuture<Integer> send(Convert convert, Object message, boolean last) {
         if (message instanceof CompletableFuture) {
-            return ((CompletableFuture) message).thenCompose((json) -> sendPacket(new WebSocketPacket(convert == null ? _jsonConvert : convert, json, last)));
+            return ((CompletableFuture) message).thenCompose((json) -> sendPacket(new WebSocketPacket(convert == null ? _textConvert : convert, json, last)));
         }
-        return sendPacket(new WebSocketPacket(convert == null ? _jsonConvert : convert, message, last));
+        return sendPacket(new WebSocketPacket(convert == null ? _textConvert : convert, message, last));
     }
 
     /**
@@ -219,7 +220,7 @@ public abstract class WebSocket<G extends Serializable, T> {
             return ((CompletableFuture) message).thenCompose((json) -> _engine.node.sendMessage(json, last, userids));
         }
         CompletableFuture<Integer> rs = _engine.node.sendMessage(message, last, userids);
-        if (_engine.finest) _engine.logger.finest("userids:" + Arrays.toString(userids) + " send websocket message(" + _jsonConvert.convertTo(message) + ")");
+        if (_engine.finest) _engine.logger.finest("userids:" + Arrays.toString(userids) + " send websocket message(" + message + ")");
         return rs;
     }
 
@@ -248,7 +249,7 @@ public abstract class WebSocket<G extends Serializable, T> {
             return ((CompletableFuture) message).thenCompose((json) -> _engine.node.broadcastMessage(json, last));
         }
         CompletableFuture<Integer> rs = _engine.node.broadcastMessage(message, last);
-        if (_engine.finest) _engine.logger.finest("broadcast send websocket message(" + _jsonConvert.convertTo(message) + ")");
+        if (_engine.finest) _engine.logger.finest("broadcast send websocket message(" + message + ")");
         return rs;
     }
 
