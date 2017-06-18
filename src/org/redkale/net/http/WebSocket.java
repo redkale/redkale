@@ -13,6 +13,7 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
+import org.redkale.convert.Convert;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.*;
 import org.redkale.util.Comment;
@@ -152,25 +153,25 @@ public abstract class WebSocket<G extends Serializable, T> {
     /**
      * 给自身发送消息, 消息类型是JavaBean对象
      *
-     * @param convert JsonConvert
+     * @param convert Convert
      * @param message 不可为空, 只能是JSON对象
      *
      * @return 0表示成功， 非0表示错误码
      */
-    public final CompletableFuture<Integer> send(JsonConvert convert, Object message) {
+    public final CompletableFuture<Integer> send(Convert convert, Object message) {
         return send(convert, message, true);
     }
 
     /**
      * 给自身发送消息, 消息类型是JavaBean对象
      *
-     * @param convert JsonConvert
+     * @param convert Convert
      * @param message 不可为空, 只能是JavaBean对象
      * @param last    是否最后一条
      *
      * @return 0表示成功， 非0表示错误码
      */
-    public final CompletableFuture<Integer> send(JsonConvert convert, Object message, boolean last) {
+    public final CompletableFuture<Integer> send(Convert convert, Object message, boolean last) {
         if (message instanceof CompletableFuture) {
             return ((CompletableFuture) message).thenCompose((json) -> sendPacket(new WebSocketPacket(convert == null ? _jsonConvert : convert, json, last)));
         }

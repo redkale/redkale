@@ -46,6 +46,11 @@ public final class JsonConvert extends Convert<JsonReader, JsonWriter> {
         return JsonFactory.root().getConvert();
     }
 
+    @Override
+    public boolean isBinary() {
+        return false;
+    }
+
     //------------------------------ reader -----------------------------------------------------------
     public JsonReader pollJsonReader(final ByteBuffer... buffers) {
         return new JsonByteBufferReader((ConvertMask) null, buffers);
@@ -109,11 +114,13 @@ public final class JsonConvert extends Convert<JsonReader, JsonWriter> {
         return (T) factory.loadDecoder(type).convertFrom(new JsonStreamReader(in));
     }
 
+    @Override
     public <T> T convertFrom(final Type type, final ByteBuffer... buffers) {
         if (type == null || buffers == null || buffers.length == 0) return null;
         return (T) factory.loadDecoder(type).convertFrom(new JsonByteBufferReader((ConvertMask) null, buffers));
     }
 
+    @Override
     public <T> T convertFrom(final Type type, final ConvertMask mask, final ByteBuffer... buffers) {
         if (type == null || buffers == null || buffers.length == 0) return null;
         return (T) factory.loadDecoder(type).convertFrom(new JsonByteBufferReader(mask, buffers));
@@ -159,6 +166,7 @@ public final class JsonConvert extends Convert<JsonReader, JsonWriter> {
         }
     }
 
+    @Override
     public ByteBuffer[] convertTo(final Supplier<ByteBuffer> supplier, final Object value) {
         if (supplier == null) return null;
         JsonByteBufferWriter out = new JsonByteBufferWriter(tiny, null, supplier);
@@ -170,6 +178,7 @@ public final class JsonConvert extends Convert<JsonReader, JsonWriter> {
         return out.toBuffers();
     }
 
+    @Override
     public ByteBuffer[] convertTo(final Supplier<ByteBuffer> supplier, final Type type, final Object value) {
         if (supplier == null || type == null) return null;
         JsonByteBufferWriter out = new JsonByteBufferWriter(tiny, null, supplier);

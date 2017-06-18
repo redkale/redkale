@@ -10,8 +10,7 @@ import java.io.*;
 import java.nio.ByteBuffer;
 import java.util.function.Supplier;
 import java.util.logging.*;
-import org.redkale.convert.ConvertMask;
-import org.redkale.convert.json.JsonConvert;
+import org.redkale.convert.*;
 
 /**
  *
@@ -60,7 +59,7 @@ public final class WebSocketPacket {
 
     protected Object sendJson;
 
-    JsonConvert sendConvert;
+    Convert sendConvert;
 
     ByteBuffer[] sendBuffers;
 
@@ -93,8 +92,8 @@ public final class WebSocketPacket {
         this.last = fin;
     }
 
-    public WebSocketPacket(JsonConvert convert, Object json, boolean fin) {
-        this.type = FrameType.TEXT;
+    public WebSocketPacket(Convert convert, Object json, boolean fin) {
+        this.type = (convert == null || !convert.isBinary()) ? FrameType.TEXT : FrameType.BINARY;
         this.sendConvert = convert;
         this.sendJson = json;
         this.last = fin;

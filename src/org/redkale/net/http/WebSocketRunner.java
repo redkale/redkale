@@ -50,7 +50,7 @@ class WebSocketRunner implements Runnable {
 
     protected long lastSendTime;
 
-    protected final JsonConvert convert;
+    protected final JsonConvert textConvert;
 
     WebSocketRunner(Context context, WebSocket webSocket, BiConsumer<WebSocket, Object> messageConsumer, AsyncConnection channel, final boolean wsbinary) {
         this.context = context;
@@ -60,7 +60,7 @@ class WebSocketRunner implements Runnable {
         this.channel = channel;
         this.wsbinary = wsbinary;
         this.readBuffer = context.pollBuffer();
-        this.convert = context.getJsonConvert();
+        this.textConvert = context.getJsonConvert();
     }
 
     @Override
@@ -118,7 +118,7 @@ class WebSocketRunner implements Runnable {
                             }
 
                             if (packet.type == FrameType.TEXT) {
-                                Object message = convert.convertFrom(webSocket._messageTextType, packet.receiveMasker, packet.receiveBuffers);
+                                Object message = textConvert.convertFrom(webSocket._messageTextType, packet.receiveMasker, packet.receiveBuffers);
                                 if (readBuffer != null) {
                                     readBuffer.clear();
                                     channel.read(readBuffer, null, this);

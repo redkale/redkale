@@ -69,7 +69,9 @@ public final class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T
                     ref = factory.findRef(field);
                     if (ref != null && ref.ignore()) continue;
                     Type t = TypeToken.createClassType(field.getGenericType(), this.type);
-                    list.add(new EnMember(createAttribute(factory, clazz, field, null, null), factory.loadEncoder(t)));
+                    EnMember member = new EnMember(createAttribute(factory, clazz, field, null, null), factory.loadEncoder(t));
+                    if (factory.isIndexSort() && ref != null) member.index = ref.getIndex();
+                    list.add(member);
                 }
                 for (final Method method : clazz.getMethods()) {
                     if (Modifier.isStatic(method.getModifiers())) continue;
@@ -92,7 +94,9 @@ public final class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T
                     ref = factory.findRef(method);
                     if (ref != null && ref.ignore()) continue;
                     Type t = TypeToken.createClassType(method.getGenericReturnType(), this.type);
-                    list.add(new EnMember(createAttribute(factory, clazz, null, method, null), factory.loadEncoder(t)));
+                    EnMember member = new EnMember(createAttribute(factory, clazz, null, method, null), factory.loadEncoder(t));
+                    if (factory.isIndexSort() && ref != null) member.index = ref.getIndex();
+                    list.add(member);
                 }
                 this.members = list.toArray(new EnMember[list.size()]);
                 Arrays.sort(this.members);

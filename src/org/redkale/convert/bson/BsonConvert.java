@@ -59,6 +59,11 @@ public final class BsonConvert extends Convert<BsonReader, BsonWriter> {
         return BsonFactory.root().getConvert();
     }
 
+    @Override
+    public boolean isBinary() {
+        return true;
+    }
+
     //------------------------------ reader -----------------------------------------------------------
     public BsonReader pollBsonReader(final ByteBuffer... buffers) {
         return new BsonByteBufferReader((ConvertMask) null, buffers);
@@ -114,11 +119,13 @@ public final class BsonConvert extends Convert<BsonReader, BsonWriter> {
         return (T) factory.loadDecoder(type).convertFrom(new BsonStreamReader(in));
     }
 
+    @Override
     public <T> T convertFrom(final Type type, final ByteBuffer... buffers) {
         if (type == null || buffers.length < 1) return null;
         return (T) factory.loadDecoder(type).convertFrom(new BsonByteBufferReader((ConvertMask) null, buffers));
     }
 
+    @Override
     public <T> T convertFrom(final Type type, final ConvertMask mask, final ByteBuffer... buffers) {
         if (type == null || buffers.length < 1) return null;
         return (T) factory.loadDecoder(type).convertFrom(new BsonByteBufferReader(mask, buffers));
@@ -169,17 +176,7 @@ public final class BsonConvert extends Convert<BsonReader, BsonWriter> {
         }
     }
 
-    public ByteBuffer[] convertTo(final Supplier<ByteBuffer> supplier, final Type type, final Object value) {
-        if (supplier == null || type == null) return null;
-        BsonByteBufferWriter out = new BsonByteBufferWriter(tiny, supplier);
-        if (value == null) {
-            out.writeNull();
-        } else {
-            factory.loadEncoder(type).convertTo(out, value);
-        }
-        return out.toBuffers();
-    }
-
+    @Override
     public ByteBuffer[] convertTo(final Supplier<ByteBuffer> supplier, final Object value) {
         if (supplier == null) return null;
         BsonByteBufferWriter out = new BsonByteBufferWriter(tiny, supplier);
@@ -187,6 +184,18 @@ public final class BsonConvert extends Convert<BsonReader, BsonWriter> {
             out.writeNull();
         } else {
             factory.loadEncoder(value.getClass()).convertTo(out, value);
+        }
+        return out.toBuffers();
+    }
+
+    @Override
+    public ByteBuffer[] convertTo(final Supplier<ByteBuffer> supplier, final Type type, final Object value) {
+        if (supplier == null || type == null) return null;
+        BsonByteBufferWriter out = new BsonByteBufferWriter(tiny, supplier);
+        if (value == null) {
+            out.writeNull();
+        } else {
+            factory.loadEncoder(type).convertTo(out, value);
         }
         return out.toBuffers();
     }

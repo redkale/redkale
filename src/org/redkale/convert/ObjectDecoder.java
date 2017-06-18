@@ -68,7 +68,7 @@ public final class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T
             }
             this.creator = factory.loadCreator(clazz);
             if (this.creator == null) throw new ConvertException("Cannot create a creator for " + clazz);
-            
+
             final Set<DeMember> list = new HashSet();
             final String[] cps = ObjectEncoder.findConstructorProperties(this.creator);
             try {
@@ -78,7 +78,9 @@ public final class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T
                     ref = factory.findRef(field);
                     if (ref != null && ref.ignore()) continue;
                     Type t = TypeToken.createClassType(field.getGenericType(), this.type);
-                    list.add(new DeMember(ObjectEncoder.createAttribute(factory, clazz, field, null, null), factory.loadDecoder(t)));
+                    DeMember member = new DeMember(ObjectEncoder.createAttribute(factory, clazz, field, null, null), factory.loadDecoder(t));
+                    if (factory.isIndexSort() && ref != null) member.index = ref.getIndex();
+                    list.add(member);
                 }
                 final boolean reversible = factory.isReversible();
                 for (final Method method : clazz.getMethods()) {
@@ -101,7 +103,9 @@ public final class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T
                     ref = factory.findRef(method);
                     if (ref != null && ref.ignore()) continue;
                     Type t = TypeToken.createClassType(method.getGenericParameterTypes()[0], this.type);
-                    list.add(new DeMember(ObjectEncoder.createAttribute(factory, clazz, null, null, method), factory.loadDecoder(t)));
+                    DeMember member = new DeMember(ObjectEncoder.createAttribute(factory, clazz, null, null, method), factory.loadDecoder(t));
+                    if (factory.isIndexSort() && ref != null) member.index = ref.getIndex();
+                    list.add(member);
                 }
                 if (cps != null) { //可能存在某些构造函数中的字段名不存在setter方法
                     for (final String constructorField : cps) {

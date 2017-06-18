@@ -69,8 +69,8 @@ public final class EnMember<W extends Writer, T, F> implements Comparable<EnMemb
 
     @Override
     public final int compareTo(EnMember<W, T, F> o) {
-        if (o == null) return 1;
-        if (this.index != o.index) return this.index - o.index;
+        if (o == null) return -1;
+        if (this.index != o.index) return (this.index == 0 ? Integer.MAX_VALUE : this.index) - (o.index == 0 ? Integer.MAX_VALUE : o.index);
         return this.attribute.field().compareTo(o.attribute.field());
     }
 
