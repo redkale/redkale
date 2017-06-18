@@ -31,6 +31,13 @@ public @interface RestOnMessage {
     String name();
 
     /**
+     * 是否为二进制消息, 默认为文本消息
+     *
+     * @return boolean
+     */
+    boolean isBinary() default false;
+
+    /**
      * 备注描述
      *
      * @return String
