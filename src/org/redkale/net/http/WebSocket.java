@@ -352,6 +352,14 @@ public abstract class WebSocket<G extends Serializable, T> {
         return _remoteAddr;
     }
 
+    protected Convert getTextConvert() {
+        return _textConvert;
+    }
+
+    protected Convert getBinaryConvert() {
+        return _binaryConvert;
+    }
+
     //-------------------------------------------------------------------
     /**
      * 获取指定userid的WebSocket数组, 没有返回null <br>
