@@ -11,7 +11,6 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 import org.redkale.convert.json.JsonConvert;
-import org.redkale.net.*;
 import org.redkale.net.http.*;
 
 /**
@@ -79,9 +78,6 @@ public interface WebSocketDesc<G, T> {
     //创建userid， null表示异常， 必须实现该方法
     /* protected abstract */    G createUserid();
 
-    //标记为@WebSocketBinary才需要重写此方法
-    public void onRead(AsyncConnection channel);
-
     //WebSokcet连接成功后的回调方法
     public void onConnected();
 
@@ -93,6 +89,9 @@ public interface WebSocketDesc<G, T> {
 
     //接收到消息的回调方法
     public void onMessage(T message, boolean last);
+
+    //接收到文本消息的回调方法
+    public void onMessage(String message, boolean last);
 
     //接收到二进制消息的回调方法
     public void onMessage(byte[] bytes, boolean last);
