@@ -16,7 +16,6 @@ import java.util.function.BiConsumer;
 import java.util.logging.*;
 import javax.annotation.*;
 import org.redkale.convert.Convert;
-import org.redkale.convert.json.JsonConvert;
 import org.redkale.service.*;
 import org.redkale.util.*;
 
@@ -61,9 +60,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
 
     protected int liveinterval = DEFAILT_LIVEINTERVAL;
 
-    @Resource
-    private JsonConvert jsonConvert;
-
+    @Resource(name = "jsonconvert")
     protected Convert textConvert;
 
     protected Convert binaryConvert;
@@ -98,7 +95,6 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
             this.node = new WebSocketNodeService();
             if (logger.isLoggable(Level.WARNING)) logger.warning("Not found WebSocketNode, create a default value for " + getClass().getName());
         }
-        if (this.textConvert == null) this.textConvert = jsonConvert;
         //存在WebSocketServlet，则此WebSocketNode必须是本地模式Service
         this.node.localEngine = new WebSocketEngine("WebSocketEngine-" + addr.getHostString() + ":" + addr.getPort() + "-[" + resourceName() + "]", this.single, context, liveinterval, this.node, logger);
         this.node.init(conf);
