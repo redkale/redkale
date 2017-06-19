@@ -10,7 +10,7 @@ import java.net.*;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
-import org.redkale.convert.json.JsonConvert;
+import org.redkale.convert.Convert;
 import org.redkale.net.http.*;
 
 /**
@@ -26,10 +26,10 @@ public interface WebSocketDesc<G, T> {
     public CompletableFuture<Integer> send(Object message, boolean last);
 
     //给自身发送消息, 消息类型是JavaBean对象  返回结果0表示成功，非0表示错误码
-    public CompletableFuture<Integer> send(JsonConvert convert, Object message);
+    public CompletableFuture<Integer> send(Convert convert, Object message);
 
     //给自身发送消息, 消息类型是JavaBean对象  返回结果0表示成功，非0表示错误码
-    public CompletableFuture<Integer> send(JsonConvert convert, Object message, boolean last);
+    public CompletableFuture<Integer> send(Convert convert, Object message, boolean last);
 
     //给指定userid的WebSocket节点发送 二进制消息/文本消息/JavaBean对象消息  返回结果0表示成功，非0表示错误码
     public CompletableFuture<Integer> sendMessage(Object message, G... userids);
