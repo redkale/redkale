@@ -14,26 +14,18 @@ import java.util.concurrent.*;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 import org.redkale.convert.Convert;
-import org.redkale.net.*;
 import org.redkale.util.Comment;
 
 /**
  * <blockquote><pre>
  * 一个WebSocket连接对应一个WebSocket实体，即一个WebSocket会绑定一个TCP连接。
- * WebSocket 有两种模式:
- *  1) 普通模式: 协议上符合HTML5规范, 其流程顺序如下:
+ * 协议上符合HTML5规范, 其流程顺序如下:
  *      1.1 onOpen 若返回null，视为WebSocket的连接不合法，强制关闭WebSocket连接；通常用于判断登录态。
  *      1.2 createUserid 若返回null，视为WebSocket的连接不合法，强制关闭WebSocket连接；通常用于判断用户权限是否符合。
  *      1.3 onConnected WebSocket成功连接后在准备接收数据前回调此方法。
  *      1.4 onMessage/onFragment+ WebSocket接收到消息后回调此消息类方法。
  *      1.5 onClose WebSocket被关闭后回调此方法。
  *  普通模式下 以上方法都应该被重载。
- *
- *  2) 原始二进制模式: 此模式有别于HTML5规范，可以视为原始的TCP连接。通常用于音频视频通讯场景。其流程顺序如下:
- *      2.1 onOpen 若返回null，视为WebSocket的连接不合法，强制关闭WebSocket连接；通常用于判断登录态。
- *      2.2 createWebSocketid 若返回null，视为WebSocket的连接不合法，强制关闭WebSocket连接；通常用于判断用户权限是否符合。
- *      2.3 onRead WebSocket成功连接后回调此方法， 由此方法处理原始的TCP连接， 需要业务代码去控制WebSocket的关闭。
- *  二进制模式下 以上方法都应该被重载。
  * </pre></blockquote>
  * <p>
  * 详情见: https://redkale.org
@@ -423,14 +415,6 @@ public abstract class WebSocket<G extends Serializable, T> {
     protected abstract CompletableFuture<G> createUserid();
 
     /**
-     * 标记为WebSocketBinary才需要重写此方法
-     *
-     * @param channel 请求连接
-     */
-    public void onRead(AsyncConnection channel) {
-    }
-
-    /**
      * WebSokcet连接成功后的回调方法
      */
     public void onConnected() {
@@ -459,6 +443,15 @@ public abstract class WebSocket<G extends Serializable, T> {
      * @param last    是否最后一条
      */
     public void onMessage(T message, boolean last) {
+    }
+
+    /**
+     * 接收到文本消息的回调方法
+     *
+     * @param text 消息
+     * @param last 是否最后一条
+     */
+    public void onMessage(String text, boolean last) {
     }
 
     /**

@@ -53,9 +53,6 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
 
     private final MessageDigest digest = getMessageDigest();
 
-    @Comment("是否用于二进制流传输")
-    protected final boolean wsbinary = getClass().getAnnotation(WebSocketBinary.class) != null;
-
     private final BiConsumer<WebSocket, Object> restMessageConsumer = createRestOnMessageConsumer();
 
     protected Type messageTextType;  //RestWebSocket时会被修改
@@ -183,7 +180,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
                         }
                         webSocket._userid = userid;
                         WebSocketServlet.this.node.localEngine.add(webSocket);
-                        WebSocketRunner runner = new WebSocketRunner(context, webSocket, restMessageConsumer, response.removeChannel(), wsbinary);
+                        WebSocketRunner runner = new WebSocketRunner(context, webSocket, restMessageConsumer, response.removeChannel());
                         webSocket._runner = runner;
                         context.runAsync(runner);
                         response.finish(true);

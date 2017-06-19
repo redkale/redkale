@@ -44,19 +44,16 @@ class WebSocketRunner implements Runnable {
 
     private final BlockingQueue<QueueEntry> queue = new ArrayBlockingQueue(1024);
 
-    private final boolean wsbinary;
-
     private final BiConsumer<WebSocket, Object> restMessageConsumer;  //主要供RestWebSocket使用
 
     protected long lastSendTime;
 
-    WebSocketRunner(Context context, WebSocket webSocket, BiConsumer<WebSocket, Object> messageConsumer, AsyncConnection channel, final boolean wsbinary) {
+    WebSocketRunner(Context context, WebSocket webSocket, BiConsumer<WebSocket, Object> messageConsumer, AsyncConnection channel) {
         this.context = context;
         this.engine = webSocket._engine;
         this.webSocket = webSocket;
         this.restMessageConsumer = messageConsumer;
         this.channel = channel;
-        this.wsbinary = wsbinary;
         this.readBuffer = context.pollBuffer();
     }
 
@@ -67,10 +64,6 @@ class WebSocketRunner implements Runnable {
             webSocket.onConnected();
             channel.setReadTimeoutSecond(300); //读取超时5分钟
             if (channel.isOpen()) {
-                if (wsbinary) {
-                    webSocket.onRead(channel);
-                    return;
-                }
                 channel.read(readBuffer, null, new CompletionHandler<Integer, Void>() {
 
                     private ByteBuffer recentExBuffer;
