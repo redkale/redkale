@@ -109,19 +109,32 @@ class WebSocketRunner implements Runnable {
 
                             if (packet.type == FrameType.TEXT) {
                                 Convert textConvert = webSocket.getTextConvert();
-                                Object message = textConvert.convertFrom(webSocket._messageTextType, packet.receiveMasker, packet.receiveBuffers);
-                                if (readBuffer != null) {
-                                    readBuffer.clear();
-                                    channel.read(readBuffer, null, this);
-                                }
-                                try {
-                                    if (restMessageConsumer != null) { //主要供RestWebSocket使用
-                                        restMessageConsumer.accept(webSocket, message);
-                                    } else {
-                                        webSocket.onMessage(message, packet.last);
+                                if (textConvert == null) {
+                                    byte[] message = packet.getReceiveBytes();
+                                    if (readBuffer != null) {
+                                        readBuffer.clear();
+                                        channel.read(readBuffer, null, this);
                                     }
-                                } catch (Exception e) {
-                                    context.getLogger().log(Level.SEVERE, "WebSocket onTextMessage error (" + packet + ")", e);
+                                    try {
+                                        webSocket.onMessage(new String(message, "UTF-8"), packet.last);
+                                    } catch (Exception e) {
+                                        context.getLogger().log(Level.SEVERE, "WebSocket onBinaryMessage error (" + packet + ")", e);
+                                    }
+                                } else {
+                                    Object message = textConvert.convertFrom(webSocket._messageTextType, packet.receiveMasker, packet.receiveBuffers);
+                                    if (readBuffer != null) {
+                                        readBuffer.clear();
+                                        channel.read(readBuffer, null, this);
+                                    }
+                                    try {
+                                        if (restMessageConsumer != null) { //主要供RestWebSocket使用
+                                            restMessageConsumer.accept(webSocket, message);
+                                        } else {
+                                            webSocket.onMessage(message, packet.last);
+                                        }
+                                    } catch (Exception e) {
+                                        context.getLogger().log(Level.SEVERE, "WebSocket onTextMessage error (" + packet + ")", e);
+                                    }
                                 }
                             } else if (packet.type == FrameType.BINARY) {
                                 Convert binaryConvert = webSocket.getBinaryConvert();
