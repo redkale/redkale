@@ -46,7 +46,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
     public static final String WEBPARAM__LIVEINTERVAL = "liveinterval";
 
     @Comment("WebScoket服务器给客户端进行ping操作的默认间隔时间, 单位: 秒")
-    public static final int DEFAILT_LIVEINTERVAL = 60;
+    public static final int DEFAILT_LIVEINTERVAL = 15;
 
     protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
 
