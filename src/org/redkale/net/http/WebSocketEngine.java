@@ -84,8 +84,10 @@ public final class WebSocketEngine {
             return t;
         });
         long delay = (interval - System.currentTimeMillis() / 1000 % interval) + index * 5;
+        final int intervalms = interval * 1000;
         scheduler.scheduleWithFixedDelay(() -> {
-            getLocalWebSockets().forEach(x -> x.sendPing());
+            long now = System.currentTimeMillis();
+            getLocalWebSockets().stream().filter(x -> (now - x.getLastSendTime()) > intervalms).forEach(x -> x.sendPing());
         }, delay, interval, TimeUnit.SECONDS);
         if (finest) logger.finest(this.getClass().getSimpleName() + "(" + engineid + ")" + " start keeplive(delay:" + delay + ", interval:" + interval + "s) scheduler executor");
     }
