@@ -162,7 +162,7 @@ public class JsonByteBufferReader extends JsonReader {
     public final boolean hasNext() {
         char ch = nextGoodChar();
         if (ch == ',') return true;
-        if (ch == '}' || ch == ']') return false;
+        if (ch == '}' || ch == ']' || ch == 0) return false;
         backChar(ch); // { [ 交由 readObjectB 或 readMapB 或 readArrayB 读取
         return true;
     }
