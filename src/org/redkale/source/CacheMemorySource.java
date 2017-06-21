@@ -13,7 +13,7 @@ import java.util.function.Consumer;
 import java.util.logging.*;
 import javax.annotation.Resource;
 import org.redkale.convert.json.*;
-import org.redkale.net.sncp.Sncp;
+import org.redkale.net.sncp.*;
 import org.redkale.service.*;
 import org.redkale.util.*;
 
@@ -155,22 +155,25 @@ public class CacheMemorySource<K extends Serializable, V extends Object> extends
             }
         }
         if (remoteSource != null && !Sncp.isRemote(this)) {
-            super.runAsync(() -> {
-                try {
-                    CompletableFuture<List<CacheEntry<K, Object>>> listFuture = remoteSource.queryListAsync();
-                    listFuture.whenComplete((list, exp) -> {
-                        if (exp != null) {
-                            logger.log(Level.FINEST, CacheSource.class.getSimpleName() + "(" + resourceName() + ") queryListAsync error", exp);
-                        } else {
-                            for (CacheEntry<K, Object> entry : list) {
-                                container.put(entry.key, entry);
+            SncpClient client = Sncp.getSncpClient((Service) remoteSource);
+            if (client != null && client.getRemoteGroupTransport() != null) {
+                super.runAsync(() -> {
+                    try {
+                        CompletableFuture<List<CacheEntry<K, Object>>> listFuture = remoteSource.queryListAsync();
+                        listFuture.whenComplete((list, exp) -> {
+                            if (exp != null) {
+                                logger.log(Level.FINEST, CacheSource.class.getSimpleName() + "(" + resourceName() + ") queryListAsync error", exp);
+                            } else {
+                                for (CacheEntry<K, Object> entry : list) {
+                                    container.put(entry.key, entry);
+                                }
                             }
-                        }
-                    });
-                } catch (Exception e) {
-                    logger.log(Level.FINEST, CacheSource.class.getSimpleName() + "(" + resourceName() + ") queryListAsync error, maybe remote node connot connect ", e);
-                }
-            });
+                        });
+                    } catch (Exception e) {
+                        logger.log(Level.FINEST, CacheSource.class.getSimpleName() + "(" + resourceName() + ") queryListAsync error, maybe remote node connot connect ", e);
+                    }
+                });
+            }
         }
     }
 
