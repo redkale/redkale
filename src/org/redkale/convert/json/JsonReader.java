@@ -404,6 +404,7 @@ public class JsonReader extends Reader {
     @Override
     public final DeMember readFieldName(final DeMember[] members) {
         final String exceptedfield = this.readSmallString();
+        if(exceptedfield == null) return null;
         final int len = members.length;
         if (this.fieldIndex >= len) this.fieldIndex = 0;
         for (int k = this.fieldIndex; k < len; k++) {
