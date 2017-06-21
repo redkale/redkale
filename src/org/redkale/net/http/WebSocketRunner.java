@@ -229,7 +229,7 @@ class WebSocketRunner implements Runnable {
         if (closed) return CompletableFuture.completedFuture(RETCODE_WSOCKET_CLOSED);
         boolean debug = true;
         //System.out.println("推送消息");
-        if (debug) context.getLogger().log(Level.FINEST, "send web socket message:  " + packet);
+        //if (debug) context.getLogger().log(Level.FINEST, "send web socket message:  " + packet);
         final CompletableFuture<Integer> futureResult = new CompletableFuture<>();
         if (writing.getAndSet(true)) {
             queue.add(new QueueEntry(futureResult, packet));
