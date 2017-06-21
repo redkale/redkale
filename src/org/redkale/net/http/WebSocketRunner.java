@@ -280,7 +280,7 @@ class WebSocketRunner implements Runnable {
                         QueueEntry entry = queue.poll();
                         if (entry != null) {
                             future = entry.future;
-                            ByteBuffer[] buffers = packet.sendBuffers != null ? packet.duplicateSendBuffers() : packet.encode(context.getBufferSupplier());
+                            ByteBuffer[] buffers = entry.packet.sendBuffers != null ? entry.packet.duplicateSendBuffers() : entry.packet.encode(context.getBufferSupplier());
                             lastSendTime = System.currentTimeMillis();
                             channel.write(buffers, buffers, this);
                         }
