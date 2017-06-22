@@ -241,12 +241,15 @@ public class NodeHttpServer extends NodeServer {
                 restedObjects.add(service); //避免重复创建Rest对象
                 HttpServlet servlet = httpServer.addRestServlet(serverClassLoader, service, userType, baseServletType, prefix);
                 if (servlet == null) return; //没有HttpMapping方法的HttpServlet调用Rest.createRestServlet就会返回null 
+                String prefix2 = prefix;
+                WebServlet ws = servlet.getClass().getAnnotation(WebServlet.class);
+                if (ws != null && !ws.repair()) prefix2 = "";
                 resourceFactory.inject(servlet, NodeHttpServer.this);
                 if (finest) logger.finest(threadName + " Create RestServlet(resource.name='" + name + "') = " + servlet);
                 if (ss != null) {
                     String[] mappings = servlet.getClass().getAnnotation(WebServlet.class).value();
                     for (int i = 0; i < mappings.length; i++) {
-                        mappings[i] = prefix + mappings[i];
+                        mappings[i] = prefix2 + mappings[i];
                     }
                     ss.add(new AbstractMap.SimpleEntry<>(servlet.getClass().getName(), mappings));
                 }
@@ -291,12 +294,15 @@ public class NodeHttpServer extends NodeServer {
                 restedObjects.add(stype); //避免重复创建Rest对象
                 HttpServlet servlet = httpServer.addRestWebSocketServlet(serverClassLoader, stype, prefix, en.getProperty());
                 if (servlet == null) return; //没有RestOnMessage方法的HttpServlet调用Rest.createRestWebSocketServlet就会返回null 
+                String prefix2 = prefix;
+                WebServlet ws = servlet.getClass().getAnnotation(WebServlet.class);
+                if (ws != null && !ws.repair()) prefix2 = "";
                 resourceFactory.inject(servlet, NodeHttpServer.this);
                 if (finest) logger.finest(threadName + " " + stype.getName() + " create RestWebSocketServlet " + servlet);
                 if (ss != null) {
                     String[] mappings = servlet.getClass().getAnnotation(WebServlet.class).value();
                     for (int i = 0; i < mappings.length; i++) {
-                        mappings[i] = prefix + mappings[i];
+                        mappings[i] = prefix2 + mappings[i];
                     }
                     ss.add(new AbstractMap.SimpleEntry<>(servlet.getClass().getName(), mappings));
                 }
