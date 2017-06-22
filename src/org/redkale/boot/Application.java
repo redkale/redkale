@@ -367,6 +367,7 @@ public final class Application {
         this.resourceFactory.register(BsonFactory.root());
         this.resourceFactory.register(JsonFactory.root());
         this.resourceFactory.register(BsonFactory.root().getConvert());
+        this.resourceFactory.register(JsonFactory.root().getConvert());
         this.resourceFactory.register("bsonconvert", Convert.class, BsonFactory.root().getConvert());
         this.resourceFactory.register("jsonconvert", Convert.class, JsonFactory.root().getConvert());
         //只有WatchService才能加载Application、WatchFactory
