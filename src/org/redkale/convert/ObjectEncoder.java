@@ -70,7 +70,7 @@ public final class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T
                     if (ref != null && ref.ignore()) continue;
                     Type t = TypeToken.createClassType(field.getGenericType(), this.type);
                     EnMember member = new EnMember(createAttribute(factory, clazz, field, null, null), factory.loadEncoder(t));
-                    if (factory.isIndexSort() && ref != null) member.index = ref.getIndex();
+                    if (ref != null) member.index = ref.getIndex();
                     list.add(member);
                 }
                 for (final Method method : clazz.getMethods()) {
@@ -95,7 +95,7 @@ public final class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T
                     if (ref != null && ref.ignore()) continue;
                     Type t = TypeToken.createClassType(method.getGenericReturnType(), this.type);
                     EnMember member = new EnMember(createAttribute(factory, clazz, null, method, null), factory.loadEncoder(t));
-                    if (factory.isIndexSort() && ref != null) member.index = ref.getIndex();
+                    if (ref != null) member.index = ref.getIndex();
                     list.add(member);
                 }
                 this.members = list.toArray(new EnMember[list.size()]);
