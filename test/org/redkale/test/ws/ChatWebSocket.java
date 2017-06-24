@@ -30,15 +30,15 @@ public class ChatWebSocket extends WebSocket<Integer, Object> {
 
     @RestOnMessage(name = "sendmessage")
     public void onChatMessage(ChatMessage message, Map<String, String> extmap) {
-        message.fromuserid = userid();
-        message.fromusername = "用户" + userid();
+        message.fromuserid = getUserid();
+        message.fromusername = "用户" + getUserid();
         System.out.println("获取消息: message: " + message + ", map: " + extmap);
         super.broadcastMessage(message);
     }
 
     @RestOnMessage(name = "joinroom")
     public void onJoinRoom(int roomid) {
-        service.joinRoom(userid(), roomid);
+        service.joinRoom(getUserid(), roomid);
         System.out.println("加入房间: roomid: " + roomid);
     }
 

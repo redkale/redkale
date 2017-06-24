@@ -182,7 +182,7 @@ public abstract class WebSocket<G extends Serializable, T> {
      */
     CompletableFuture<Integer> sendPacket(WebSocketPacket packet) {
         CompletableFuture<Integer> rs = this._runner.sendMessage(packet);
-        if (_engine.finest) _engine.logger.finest("userid:" + userid() + " send websocket message(" + packet + ")" + " on " + this);
+        if (_engine.finest) _engine.logger.finest("userid:" + getUserid() + " send websocket message(" + packet + ")" + " on " + this);
         return rs == null ? CompletableFuture.completedFuture(RETCODE_WSOCKET_CLOSED) : rs;
     }
 
@@ -315,7 +315,7 @@ public abstract class WebSocket<G extends Serializable, T> {
      *
      * @return userid
      */
-    public final G userid() {
+    public final G getUserid() {
         return _userid;
     }
 
@@ -496,6 +496,6 @@ public abstract class WebSocket<G extends Serializable, T> {
 
     @Override
     public String toString() {
-        return this.userid() + "@" + _remoteAddr;
+        return this.getUserid() + "@" + _remoteAddr;
     }
 }
