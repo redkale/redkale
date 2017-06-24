@@ -29,35 +29,47 @@ public @interface RetLabel {
 
     String value();
 
-    public static abstract class AbstractRetCode {
+    public static class RetCode {
 
-        protected static final Map<Integer, String> rets = new HashMap();
+        protected final Map<Integer, String> rets = new HashMap();
 
-        protected static void load(Class clazz) {
-            rets.putAll(RetLoader.load(clazz));
+        protected final Class clazz;
+
+        protected boolean inited;
+
+        public RetCode(Class clazz) {
+            this.clazz = clazz;
         }
 
-        public static RetResult retResult(int retcode) {
+        public RetResult retResult(int retcode) {
             if (retcode == 0) return RetResult.success();
             return new RetResult(retcode, retInfo(retcode));
         }
 
-        public static RetResult retResult(int retcode, Object... args) {
+        public RetResult retResult(int retcode, Object... args) {
             if (retcode == 0) return RetResult.success();
             if (args == null || args.length < 1) return new RetResult(retcode, retInfo(retcode));
             String info = MessageFormat.format(retInfo(retcode), args);
             return new RetResult(retcode, info);
         }
 
-        public static RetResult set(RetResult result, int retcode, Object... args) {
+        public RetResult set(RetResult result, int retcode, Object... args) {
             if (retcode == 0) return result.retcode(0).retinfo("");
             if (args == null || args.length < 1) return result.retcode(retcode).retinfo(retInfo(retcode));
             String info = MessageFormat.format(retInfo(retcode), args);
             return result.retcode(retcode).retinfo(info);
         }
 
-        public static String retInfo(int retcode) {
+        public String retInfo(int retcode) {
             if (retcode == 0) return "成功";
+            if (!this.inited) {
+                synchronized (this) {
+                    if (!this.inited) {
+                        rets.putAll(RetLoader.load(clazz));
+                    }
+                    this.inited = true;
+                }
+            }
             return rets.getOrDefault(retcode, "未知错误");
         }
     }
