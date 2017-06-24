@@ -447,7 +447,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
                 }
                 String sql = "DELETE " + (this.readPool.isMysql() ? "a" : "") + " FROM " + info.getTable(node) + " a" + (join1 == null ? "" : (", " + join1))
                     + ((where == null || where.length() == 0) ? (join2 == null ? "" : (" WHERE " + join2))
-                        : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2)))) + info.createSQLOrderby(flipper)
+                    : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2)))) + info.createSQLOrderby(flipper)
                     + ((flipper == null || flipper.getLimit() < 1) ? "" : (" LIMIT " + flipper.getLimit()));
                 if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(info.getType().getSimpleName() + " delete sql=" + sql);
                 conn.setReadOnly(false);
@@ -613,7 +613,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
     }
 
     @Override
-    public <T> CompletableFuture<Integer> updateColumnupdateColumnAsync(final Class<T> clazz, final Serializable id, final String column, final Serializable value) {
+    public <T> CompletableFuture<Integer> updateColumnAsync(final Class<T> clazz, final Serializable id, final String column, final Serializable value) {
         return CompletableFuture.supplyAsync(() -> updateColumn(clazz, id, column, value), getExecutor());
     }
 
@@ -703,7 +703,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
                     String sql = "UPDATE " + info.getTable(node) + " a " + (join1 == null ? "" : (", " + join1))
                         + " SET " + info.getSQLColumn("a", column) + " = ?"
                         + ((where == null || where.length() == 0) ? (join2 == null ? "" : (" WHERE " + join2))
-                            : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))));
+                        : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))));
                     if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
                     conn.setReadOnly(false);
                     Blob blob = conn.createBlob();
@@ -716,7 +716,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
                     String sql = "UPDATE " + info.getTable(node) + " a " + (join1 == null ? "" : (", " + join1))
                         + " SET " + info.getSQLColumn("a", column) + " = " + info.formatToString(value)
                         + ((where == null || where.length() == 0) ? (join2 == null ? "" : (" WHERE " + join2))
-                            : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))));
+                        : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))));
                     if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
                     conn.setReadOnly(false);
                     final Statement stmt = conn.createStatement();
@@ -776,7 +776,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
             List<byte[]> blobs = null;
             for (ColumnValue col : values) {
                 Attribute<T, Serializable> attr = info.getUpdateAttribute(col.getColumn());
-                if (attr == null) continue;
+                if (attr == null) throw new RuntimeException(info.getType() + " cannot found column " + col.getColumn());
                 attrs.add(attr);
                 cols.add(col);
                 if (!virtual) {
@@ -921,7 +921,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
                 }
                 String sql = "UPDATE " + info.getTable(node) + " a " + (join1 == null ? "" : (", " + join1)) + " SET " + setsql
                     + ((where == null || where.length() == 0) ? (join2 == null ? "" : (" WHERE " + join2))
-                        : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))));
+                    : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))));
                 //注：LIMIT 仅支持MySQL 且在多表关联式会异常， 该BUG尚未解决
                 sql += info.createSQLOrderby(flipper) + ((flipper == null || flipper.getLimit() < 1) ? "" : (" LIMIT " + flipper.getLimit()));
                 if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
@@ -1107,7 +1107,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
                 }
                 String sql = "UPDATE " + info.getTable(node) + " a " + (join1 == null ? "" : (", " + join1)) + " SET " + setsql
                     + ((where == null || where.length() == 0) ? (join2 == null ? "" : (" WHERE " + join2))
-                        : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))));
+                    : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))));
                 if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
                 conn.setReadOnly(false);
                 if (blobs != null) {

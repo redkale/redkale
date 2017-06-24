@@ -198,7 +198,7 @@ public interface DataSource {
      *
      * @return 影响的记录条数CompletableFuture
      */
-    public <T> CompletableFuture<Integer> updateColumnupdateColumnAsync(final Class<T> clazz, final Serializable id, final String column, final Serializable value);
+    public <T> CompletableFuture<Integer> updateColumnAsync(final Class<T> clazz, final Serializable id, final String column, final Serializable value);
 
     /**
      * 更新符合过滤条件记录的单个字段   <br>
