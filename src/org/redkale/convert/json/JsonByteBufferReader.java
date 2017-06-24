@@ -253,7 +253,7 @@ public class JsonByteBufferReader extends JsonReader {
                             throw new ConvertException("illegal escape(" + c + ") (position = " + this.position + ")");
                     }
                 } else if (ch == ',' || ch == ']' || ch == '}' || ch <= ' ' || ch == ':') { //  ch <= ' ' 包含 0
-                    this.currentChar = ch;
+                    backChar(ch);
                     break;
                 } else {
                     sb.append(ch);
