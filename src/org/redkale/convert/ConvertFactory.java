@@ -135,6 +135,10 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
 
     public abstract ConvertFactory createChild(boolean tiny);
 
+    public boolean isIndexSort() { //是否使用@ConvertColumn.index排序
+        return false;
+    }
+
     public Convert getConvert() {
         return convert;
     }

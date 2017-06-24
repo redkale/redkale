@@ -79,7 +79,7 @@ public final class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T
                     if (ref != null && ref.ignore()) continue;
                     Type t = TypeToken.createClassType(field.getGenericType(), this.type);
                     DeMember member = new DeMember(ObjectEncoder.createAttribute(factory, clazz, field, null, null), factory.loadDecoder(t));
-                    if (ref != null) member.index = ref.getIndex();
+                    if (factory.isIndexSort() && ref != null) member.index = ref.getIndex();
                     list.add(member);
                 }
                 final boolean reversible = factory.isReversible();
@@ -104,7 +104,7 @@ public final class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T
                     if (ref != null && ref.ignore()) continue;
                     Type t = TypeToken.createClassType(method.getGenericParameterTypes()[0], this.type);
                     DeMember member = new DeMember(ObjectEncoder.createAttribute(factory, clazz, null, null, method), factory.loadDecoder(t));
-                    if (ref != null) member.index = ref.getIndex();
+                    if (factory.isIndexSort() && ref != null) member.index = ref.getIndex();
                     list.add(member);
                 }
                 if (cps != null) { //可能存在某些构造函数中的字段名不存在setter方法
