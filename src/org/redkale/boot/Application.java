@@ -383,6 +383,8 @@ public final class Application {
                     Class type = field.getType();
                     if (type == Application.class) {
                         field.set(src, application);
+                    } else if (type == ResourceFactory.class) {
+                        field.set(src, res.name().equalsIgnoreCase("server") ? rf : (res.name().isEmpty() ? application.resourceFactory : null));
                     } else if (type == TransportFactory.class) {
                         field.set(src, application.transportFactory);
                     } else if (type == NodeSncpServer.class) {
