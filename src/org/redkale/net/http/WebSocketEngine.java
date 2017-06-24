@@ -12,7 +12,7 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 import java.util.logging.*;
 import java.util.stream.*;
-import org.redkale.convert.json.JsonConvert;
+import org.redkale.convert.Convert;
 import static org.redkale.net.http.WebSocket.RETCODE_GROUP_EMPTY;
 import org.redkale.util.*;
 
@@ -40,8 +40,8 @@ public final class WebSocketEngine {
     //HttpContext
     protected final HttpContext context;
 
-    //JsonConvert
-    protected final JsonConvert convert;
+    //Convert
+    protected final Convert sendConvert;
 
     protected final boolean single; //是否单用户单连接
 
@@ -62,11 +62,11 @@ public final class WebSocketEngine {
 
     private int liveinterval;
 
-    protected WebSocketEngine(String engineid, boolean single, HttpContext context, int liveinterval, WebSocketNode node, Logger logger) {
+    protected WebSocketEngine(String engineid, boolean single, HttpContext context, int liveinterval, WebSocketNode node, Convert sendConvert, Logger logger) {
         this.engineid = engineid;
         this.single = single;
         this.context = context;
-        this.convert = context.getJsonConvert();
+        this.sendConvert = sendConvert;
         this.node = node;
         this.liveinterval = liveinterval;
         this.logger = logger;
@@ -135,7 +135,7 @@ public final class WebSocketEngine {
         if (more) {
             final WebSocketPacket packet = (message instanceof WebSocketPacket) ? (WebSocketPacket) message
                 : ((message == null || message instanceof CharSequence || message instanceof byte[])
-                    ? new WebSocketPacket((Serializable) message, last) : new WebSocketPacket(this.convert, message, last));
+                    ? new WebSocketPacket((Serializable) message, last) : new WebSocketPacket(this.sendConvert, message, last));
             packet.setSendBuffers(packet.encode(context.getBufferSupplier()));
             CompletableFuture<Integer> future = null;
             if (single) {
@@ -176,7 +176,7 @@ public final class WebSocketEngine {
         if (more) {
             final WebSocketPacket packet = (message instanceof WebSocketPacket) ? (WebSocketPacket) message
                 : ((message == null || message instanceof CharSequence || message instanceof byte[])
-                    ? new WebSocketPacket((Serializable) message, last) : new WebSocketPacket(this.convert, message, last));
+                    ? new WebSocketPacket((Serializable) message, last) : new WebSocketPacket(this.sendConvert, message, last));
             packet.setSendBuffers(packet.encode(context.getBufferSupplier()));
             CompletableFuture<Integer> future = null;
             if (single) {

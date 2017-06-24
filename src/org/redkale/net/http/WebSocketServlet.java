@@ -61,9 +61,16 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
     protected int liveinterval = DEFAILT_LIVEINTERVAL;
 
     @Resource(name = "jsonconvert")
+    protected Convert jsonConvert;
+
+    @Resource(name = "$_textconvert")
     protected Convert textConvert;
 
+    @Resource(name = "$_binaryconvert")
     protected Convert binaryConvert;
+
+    @Resource(name = "$_sendconvert")
+    protected Convert sendConvert;
 
     @Resource(name = "$")
     protected WebSocketNode node;
@@ -89,6 +96,9 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
 
     @Override
     final void preInit(HttpContext context, AnyValue conf) {
+        if (this.textConvert == null) this.textConvert = jsonConvert;
+        if (this.binaryConvert == null) this.binaryConvert = jsonConvert;
+        if (this.sendConvert == null) this.sendConvert = jsonConvert;
         InetSocketAddress addr = context.getServerAddress();
         if (this.node == null) this.node = createWebSocketNode();
         if (this.node == null) {  //没有部署SNCP，即不是分布式
@@ -96,7 +106,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
             if (logger.isLoggable(Level.WARNING)) logger.warning("Not found WebSocketNode, create a default value for " + getClass().getName());
         }
         //存在WebSocketServlet，则此WebSocketNode必须是本地模式Service
-        this.node.localEngine = new WebSocketEngine("WebSocketEngine-" + addr.getHostString() + ":" + addr.getPort() + "-[" + resourceName() + "]", this.single, context, liveinterval, this.node, logger);
+        this.node.localEngine = new WebSocketEngine("WebSocketEngine-" + addr.getHostString() + ":" + addr.getPort() + "-[" + resourceName() + "]", this.single, context, liveinterval, this.node, this.sendConvert, logger);
         this.node.init(conf);
         this.node.localEngine.init(conf);
     }
@@ -132,6 +142,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
         webSocket._messageTextType = this.messageTextType;
         webSocket._textConvert = textConvert;
         webSocket._binaryConvert = binaryConvert;
+        webSocket._sendConvert = sendConvert;
         webSocket._remoteAddress = request.getRemoteAddress();
         webSocket._remoteAddr = request.getRemoteAddr();
         initRestWebSocket(webSocket);

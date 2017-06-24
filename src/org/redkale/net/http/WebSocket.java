@@ -76,6 +76,8 @@ public abstract class WebSocket<G extends Serializable, T> {
 
     Convert _binaryConvert; //可能为空 
 
+    Convert _sendConvert; //不可能为空 
+
     java.lang.reflect.Type _messageTextType; //不可能为空
 
     private long createtime = System.currentTimeMillis();
@@ -130,7 +132,7 @@ public abstract class WebSocket<G extends Serializable, T> {
                 } else if (message instanceof WebSocketPacket) {
                     return sendPacket((WebSocketPacket) message);
                 } else {
-                    return sendPacket(new WebSocketPacket(_textConvert, json, last));
+                    return sendPacket(new WebSocketPacket(getSendConvert(), json, last));
                 }
             });
         }
@@ -139,7 +141,7 @@ public abstract class WebSocket<G extends Serializable, T> {
         } else if (message instanceof WebSocketPacket) {
             return sendPacket((WebSocketPacket) message);
         } else {
-            return sendPacket(new WebSocketPacket(_textConvert, message, last));
+            return sendPacket(new WebSocketPacket(getSendConvert(), message, last));
         }
     }
 
@@ -166,9 +168,9 @@ public abstract class WebSocket<G extends Serializable, T> {
      */
     public final CompletableFuture<Integer> send(Convert convert, Object message, boolean last) {
         if (message instanceof CompletableFuture) {
-            return ((CompletableFuture) message).thenCompose((json) -> sendPacket(new WebSocketPacket(convert == null ? _textConvert : convert, json, last)));
+            return ((CompletableFuture) message).thenCompose((json) -> sendPacket(new WebSocketPacket(convert == null ? getSendConvert() : convert, json, last)));
         }
-        return sendPacket(new WebSocketPacket(convert == null ? _textConvert : convert, message, last));
+        return sendPacket(new WebSocketPacket(convert == null ? getSendConvert() : convert, message, last));
     }
 
     /**
@@ -350,6 +352,10 @@ public abstract class WebSocket<G extends Serializable, T> {
 
     protected Convert getBinaryConvert() {
         return _binaryConvert;
+    }
+
+    protected Convert getSendConvert() {
+        return _sendConvert;
     }
 
     //-------------------------------------------------------------------
