@@ -379,7 +379,7 @@ public final class Application {
                 try {
                     Resource res = field.getAnnotation(Resource.class);
                     if (res == null) return;
-                    if (!(src instanceof WatchService) || Sncp.isRemote((Service) src)) return; //远程模式不得注入 
+                    if (Sncp.isRemote((Service) src)) return; //远程模式不得注入 
                     Class type = field.getType();
                     if (type == Application.class) {
                         field.set(src, application);
@@ -431,7 +431,7 @@ public final class Application {
                 return false;
             }
 
-        }, Application.class, TransportFactory.class, NodeSncpServer.class, NodeHttpServer.class, NodeWatchServer.class);
+        }, Application.class, ResourceFactory.class, TransportFactory.class, NodeSncpServer.class, NodeHttpServer.class, NodeWatchServer.class);
         //--------------------------------------------------------------------------
         initResources();
     }
