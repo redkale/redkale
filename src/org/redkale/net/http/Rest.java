@@ -328,6 +328,13 @@ public final class Rest {
             mv.visitMaxs(2, 1);
             mv.visitEnd();
         }
+        { //resourceName
+            mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC, "resourceName", "()Ljava/lang/String;", null, null));
+            mv.visitLdcInsn(rws.name());
+            mv.visitInsn(ARETURN);
+            mv.visitMaxs(1, 1);
+            mv.visitEnd();
+        }
 
         RestClassLoader newLoader = new RestClassLoader(loader);
 
