@@ -162,11 +162,13 @@ public final class WebSocketEngine {
             CompletableFuture<Integer> future = null;
             if (single) {
                 for (WebSocket websocket : websockets.values()) {
+                    if (predicate != null && !predicate.test(websocket)) continue;
                     future = future == null ? websocket.send(message, last) : future.thenCombine(websocket.send(message, last), (a, b) -> a | (Integer) b);
                 }
             } else {
                 for (List<WebSocket> list : websockets2.values()) {
                     for (WebSocket websocket : list) {
+                        if (predicate != null && !predicate.test(websocket)) continue;
                         future = future == null ? websocket.send(message, last) : future.thenCombine(websocket.send(message, last), (a, b) -> a | (Integer) b);
                     }
                 }
