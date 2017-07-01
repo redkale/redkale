@@ -141,6 +141,25 @@ public abstract class WebSocketNode {
     }
 
     //--------------------------------------------------------------------------------
+    /**
+     * 获取本地的WebSocketEngine，没有则返回null
+     *
+     *
+     * @return WebSocketEngine
+     */
+    public final WebSocketEngine getLocalWebSocketEngine() {
+        return this.localEngine;
+    }
+
+    /**
+     * 向指定用户发送消息，先发送本地连接，再发送远程连接  <br>
+     * 如果当前WebSocketNode是远程模式，此方法只发送远程连接
+     *
+     * @param message 消息内容
+     * @param userids Serializable[]
+     *
+     * @return 为0表示成功， 其他值表示部分发送异常
+     */
     public final CompletableFuture<Integer> sendMessage(Object message, final Serializable... userids) {
         return sendMessage(message, true, userids);
     }
@@ -155,7 +174,6 @@ public abstract class WebSocketNode {
      *
      * @return 为0表示成功， 其他值表示部分发送异常
      */
-    //最近连接发送逻辑还没有理清楚 
     public final CompletableFuture<Integer> sendMessage(final Object message, final boolean last, final Serializable... userids) {
         if (userids == null || userids.length < 1) return CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY);
         if (this.localEngine != null && this.sncpNodeAddresses == null) { //本地模式且没有分布式
