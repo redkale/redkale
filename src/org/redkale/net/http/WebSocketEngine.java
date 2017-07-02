@@ -134,7 +134,7 @@ public final class WebSocketEngine {
 
     public CompletableFuture<Integer> broadcastMessage(final Predicate<WebSocket> predicate, final Object message, final boolean last) {
         if (message instanceof CompletableFuture) {
-            return ((CompletableFuture) message).thenCompose((json) -> broadcastMessage(json, last));
+            return ((CompletableFuture) message).thenCompose((json) -> broadcastMessage(predicate, json, last));
         }
         final boolean more = (!(message instanceof WebSocketPacket) || ((WebSocketPacket) message).sendBuffers == null);
         if (more) {
