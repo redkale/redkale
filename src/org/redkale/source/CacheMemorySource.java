@@ -348,13 +348,13 @@ public class CacheMemorySource<K extends Serializable, V extends Object> extends
     }
 
     @Override
-    public long getCollectionSize(final K key) {
+    public int getCollectionSize(final K key) {
         Collection<V> collection = (Collection<V>) get(key);
         return collection == null ? 0 : collection.size();
     }
 
     @Override
-    public CompletableFuture<Long> getCollectionSizeAsync(final K key) {
+    public CompletableFuture<Integer> getCollectionSizeAsync(final K key) {
         return CompletableFuture.supplyAsync(() -> getCollectionSize(key), getExecutor());
     }
 
@@ -444,6 +444,11 @@ public class CacheMemorySource<K extends Serializable, V extends Object> extends
     }
 
     @Override
+    public int getKeySize() {
+        return container.size();
+    }
+
+    @Override
     public CompletableFuture<List<CacheEntry<K, Object>>> queryListAsync() {
         return CompletableFuture.completedFuture(new ArrayList<>(container.values()));
     }
@@ -458,4 +463,8 @@ public class CacheMemorySource<K extends Serializable, V extends Object> extends
         return CompletableFuture.completedFuture(new ArrayList<>(container.keySet()));
     }
 
+    @Override
+    public CompletableFuture<Integer> getKeySizeAsync() {
+        return CompletableFuture.completedFuture(container.size());
+    }
 }

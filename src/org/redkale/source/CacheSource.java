@@ -45,7 +45,7 @@ public interface CacheSource<K extends Serializable, V extends Object> {
 
     public Collection<V> getCollection(final K key);
 
-    public long getCollectionSize(final K key);
+    public int getCollectionSize(final K key);
 
     public Collection<V> getCollectionAndRefresh(final K key, final int expireSeconds);
 
@@ -58,6 +58,8 @@ public interface CacheSource<K extends Serializable, V extends Object> {
     public void removeSetItem(final K key, final V value);
 
     public List<K> queryKeys();
+
+    public int getKeySize();
 
     public List<CacheEntry<K, Object>> queryList();
 
@@ -80,7 +82,7 @@ public interface CacheSource<K extends Serializable, V extends Object> {
 
     public CompletableFuture<Collection<V>> getCollectionAsync(final K key);
 
-    public CompletableFuture<Long> getCollectionSizeAsync(final K key);
+    public CompletableFuture<Integer> getCollectionSizeAsync(final K key);
 
     public CompletableFuture<Collection<V>> getCollectionAndRefreshAsync(final K key, final int expireSeconds);
 
@@ -93,6 +95,8 @@ public interface CacheSource<K extends Serializable, V extends Object> {
     public CompletableFuture<Void> removeSetItemAsync(final K key, final V value);
 
     public CompletableFuture<List<K>> queryKeysAsync();
+
+    public CompletableFuture<Integer> getKeySizeAsync();
 
     public CompletableFuture<List<CacheEntry<K, Object>>> queryListAsync();
 
