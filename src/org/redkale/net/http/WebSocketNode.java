@@ -26,6 +26,12 @@ import org.redkale.util.*;
  */
 public abstract class WebSocketNode {
 
+    @Comment("存储当前SNCP节点列表的key")
+    public static final String SOURCE_SNCP_NODES_KEY = "redkale_sncpnodes";
+
+    @Comment("存储当前用户数量的key")
+    public static final String SOURCE_USER_COUNT_KEY = "redkale_usercount";
+
     protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
 
     protected final boolean finest = logger.isLoggable(Level.FINEST);
@@ -57,7 +63,9 @@ public abstract class WebSocketNode {
         if (this.localEngine == null) return;
         //关掉所有本地本地WebSocket
         this.localEngine.getLocalWebSockets().forEach(g -> disconnect(g.getUserid()));
-        if (sncpNodeAddresses != null && localSncpAddress != null) sncpNodeAddresses.removeSetItem("redkale_sncpnodes", localSncpAddress);
+        if (sncpNodeAddresses != null && localSncpAddress != null) {
+            sncpNodeAddresses.removeSetItem(SOURCE_SNCP_NODES_KEY, localSncpAddress);
+        }
     }
 
     protected abstract CompletableFuture<List<String>> getWebSocketAddresses(@RpcTargetAddress InetSocketAddress targetAddress, Serializable userid);
@@ -137,6 +145,35 @@ public abstract class WebSocketNode {
                 future = future == null ? mapFuture : future.thenCombine(mapFuture, (a, b) -> Utility.merge(a, b));
             }
             return future == null ? CompletableFuture.completedFuture(new HashMap<>()) : future;
+        });
+    }
+
+    /**
+     * 判断指定用户是否WebSocket在线
+     *
+     * @param userid
+     *
+     * @return boolean
+     */
+    public CompletableFuture<Boolean> existsWebSocket(final Serializable userid) {
+        if (this.localEngine != null && this.sncpNodeAddresses == null) {
+            return CompletableFuture.completedFuture(this.localEngine.existsLocalWebSocket(userid));
+        }
+        return this.sncpNodeAddresses.existsAsync(userid);
+    }
+
+    /**
+     * 获取在线用户总数
+     *
+     *
+     * @return boolean
+     */
+    public CompletableFuture<Integer> getUserSize() {
+        if (this.localEngine != null && this.sncpNodeAddresses == null) {
+            return CompletableFuture.completedFuture(this.localEngine.getLocalUserSize());
+        }
+        return this.sncpNodeAddresses.getKeySizeAsync().thenCompose(count -> {
+            return sncpNodeAddresses.existsAsync(SOURCE_SNCP_NODES_KEY).thenApply(exists -> exists ? (count - 1) : count);
         });
     }
 

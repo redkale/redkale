@@ -24,18 +24,18 @@ import org.redkale.util.*;
  *
  * @author zhangjx
  */
-public final class WebSocketEngine {
+public class WebSocketEngine {
 
-    //全局自增长ID
+    @Comment("全局自增长ID, 为了确保在一个进程里多个WebSocketEngine定时发送ping时不会同时进行")
     private static final AtomicInteger sequence = new AtomicInteger();
 
-    //Engine自增长序号ID
+    @Comment("Engine自增长序号ID")
     private final int index;
 
-    //当前WebSocket对应的Engine
+    @Comment("当前WebSocket对应的Engine")
     private final String engineid;
 
-    //当前WebSocket对应的Node
+    @Comment("当前WebSocket对应的Node")
     protected final WebSocketNode node;
 
     //HttpContext
@@ -44,23 +44,25 @@ public final class WebSocketEngine {
     //Convert
     protected final Convert sendConvert;
 
-    protected final boolean single; //是否单用户单连接
+    @Comment("是否单用户单连接")
+    protected final boolean single;
 
-    //在线用户ID对应的WebSocket组，用于单用户单连接模式
+    @Comment("在线用户ID对应的WebSocket组，用于单用户单连接模式")
     private final Map<Serializable, WebSocket> websockets = new ConcurrentHashMap<>();
 
-    //在线用户ID对应的WebSocket组，用于单用户多连接模式
+    @Comment("在线用户ID对应的WebSocket组，用于单用户多连接模式")
     private final Map<Serializable, List<WebSocket>> websockets2 = new ConcurrentHashMap<>();
 
-    //用于PING的定时器
+    @Comment("用于PING的定时器")
     private ScheduledThreadPoolExecutor scheduler;
 
-    //日志
+    @Comment("日志")
     protected final Logger logger;
 
-    //FINEST日志级别
+    @Comment("日志级别")
     protected final boolean finest;
 
+    @Comment("PING的间隔秒数")
     private int liveinterval;
 
     protected WebSocketEngine(String engineid, boolean single, HttpContext context, int liveinterval, WebSocketNode node, Convert sendConvert, Logger logger) {
@@ -71,8 +73,8 @@ public final class WebSocketEngine {
         this.node = node;
         this.liveinterval = liveinterval;
         this.logger = logger;
-        this.index = sequence.getAndIncrement();
         this.finest = logger.isLoggable(Level.FINEST);
+        this.index = sequence.getAndIncrement();
     }
 
     void init(AnyValue conf) {
@@ -97,6 +99,7 @@ public final class WebSocketEngine {
         if (scheduler != null) scheduler.shutdownNow();
     }
 
+    @Comment("添加WebSocket")
     void add(WebSocket socket) {
         if (single) {
             websockets.put(socket._userid, socket);
@@ -111,6 +114,7 @@ public final class WebSocketEngine {
         if (node != null) node.connect(socket._userid);
     }
 
+    @Comment("从WebSocketEngine删除指定WebSocket")
     void remove(WebSocket socket) {
         Serializable userid = socket._userid;
         if (single) {
@@ -128,10 +132,12 @@ public final class WebSocketEngine {
         }
     }
 
+    @Comment("给所有连接用户发送消息")
     public CompletableFuture<Integer> broadcastMessage(final Object message, final boolean last) {
         return broadcastMessage(null, message, last);
     }
 
+    @Comment("给指定WebSocket连接用户发送消息")
     public CompletableFuture<Integer> broadcastMessage(final Predicate<WebSocket> predicate, final Object message, final boolean last) {
         if (message instanceof CompletableFuture) {
             return ((CompletableFuture) message).thenCompose((json) -> broadcastMessage(predicate, json, last));
@@ -177,6 +183,7 @@ public final class WebSocketEngine {
         }
     }
 
+    @Comment("给指定用户组发送消息")
     public CompletableFuture<Integer> sendMessage(final Object message, final boolean last, final Serializable... userids) {
         if (message instanceof CompletableFuture) {
             return ((CompletableFuture) message).thenCompose((json) -> sendMessage(json, last, userids));
@@ -226,21 +233,33 @@ public final class WebSocketEngine {
         }
     }
 
-    Collection<WebSocket> getLocalWebSockets() {
+    @Comment("获取所有连接")
+    public Collection<WebSocket> getLocalWebSockets() {
         if (single) return websockets.values();
         List<WebSocket> list = new ArrayList<>();
         websockets2.values().forEach(x -> list.addAll(x));
         return list;
     }
 
-    //适用于单用户单连接模式
+    @Comment("获取当前连接总数")
+    public int getLocalWebSocketSize() {
+        if (single) return websockets.size();
+        return (int) websockets2.values().stream().mapToInt(sublist -> sublist.size()).count();
+    }
+
+    @Comment("获取当前用户总数")
+    public int getLocalUserSize() {
+        return single ? websockets.size() : websockets2.size();
+    }
+
+    @Comment("适用于单用户单连接模式")
     public WebSocket findLocalWebSocket(Serializable userid) {
         if (single) return websockets.get(userid);
         List<WebSocket> list = websockets2.get(userid);
         return (list == null || list.isEmpty()) ? null : list.get(list.size() - 1);
     }
 
-    //适用于单用户多连接模式
+    @Comment("适用于单用户多连接模式")
     public Stream<WebSocket> getLocalWebSockets(Serializable userid) {
         if (single) {
             WebSocket websocket = websockets.get(userid);
