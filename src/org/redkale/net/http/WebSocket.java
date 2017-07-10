@@ -82,6 +82,8 @@ public abstract class WebSocket<G extends Serializable, T> {
 
     private long createtime = System.currentTimeMillis();
 
+    private long pingtime;
+
     private Map<String, Object> attributes = new HashMap<>(); //非线程安全
 
     protected WebSocket() {
@@ -89,11 +91,13 @@ public abstract class WebSocket<G extends Serializable, T> {
 
     //----------------------------------------------------------------
     public final CompletableFuture<Integer> sendPing() {
+        this.pingtime = System.currentTimeMillis();
         //if (_engine.finest) _engine.logger.finest(this + " on "+_engine.getEngineid()+" ping...");
         return sendPacket(WebSocketPacket.DEFAULT_PING_PACKET);
     }
 
     public final CompletableFuture<Integer> sendPing(byte[] data) {
+        this.pingtime = System.currentTimeMillis();
         return sendPacket(new WebSocketPacket(FrameType.PING, data));
     }
 
@@ -485,6 +489,15 @@ public abstract class WebSocket<G extends Serializable, T> {
      */
     public long getLastSendTime() {
         return this._runner == null ? 0 : this._runner.lastSendTime;
+    }
+
+    /**
+     * 获取最后一次发送PING消息的时间
+     *
+     * @return long
+     */
+    public long getLastPingTime() {
+        return this.pingtime;
     }
 
     /**
