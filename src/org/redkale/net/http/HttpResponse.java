@@ -704,8 +704,8 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         final String match = request.getHeader("If-None-Match");
         final String etag = (file == null ? 0L : file.lastModified()) + "-" + length;
         if (match != null && etag.equals(match)) {
-            //finish304();
-            //return;
+            finish304();
+            return;
         }
         this.contentLength = length;
         if (filename != null && !filename.isEmpty() && file != null) {
@@ -744,7 +744,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
     }
 
     private void finishFile(ByteBuffer hbuffer, File file, long offset, long length) throws IOException {
-        this.channel.write(hbuffer, hbuffer, new TransferFileHandler(AsynchronousFileChannel.open(file.toPath(), options, ((HttpContext) context).getExecutor()), offset, length));
+        this.channel.write(hbuffer, hbuffer, new TransferFileHandler(file, offset, length));
     }
 
     private ByteBuffer createHeader() {
@@ -976,6 +976,8 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
 
     protected final class TransferFileHandler implements AsyncHandler<Integer, ByteBuffer> {
 
+        private final File file;
+
         private final AsynchronousFileChannel filechannel;
 
         private final long max; //需要读取的字节数， -1表示读到文件结尾
@@ -988,21 +990,34 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
 
         private boolean read = true;
 
-        public TransferFileHandler(AsynchronousFileChannel channel) {
-            this.filechannel = channel;
-            this.max = -1;
+        public TransferFileHandler(File file) throws IOException {
+            this.file = file;
+            this.filechannel = AsynchronousFileChannel.open(file.toPath(), options, ((HttpContext) context).getExecutor());
+            this.position = 0;
+            this.max = file.length();
         }
 
-        public TransferFileHandler(AsynchronousFileChannel channel, long offset, long len) {
-            this.filechannel = channel;
+        public TransferFileHandler(File file, long offset, long len) throws IOException {
+            this.file = file;
+            this.filechannel = AsynchronousFileChannel.open(file.toPath(), options, ((HttpContext) context).getExecutor());
             this.position = offset <= 0 ? 0 : offset;
-            this.max = len;
+            this.max = len <= 0 ? file.length() : len;
         }
 
         @Override
         public void completed(Integer result, ByteBuffer attachment) {
-            if (result < 0 || (max > 0 && count >= max)) {
+            //(file + "-------------------result: " + result + ", max = " + max + ", count = " + count);
+            if (result < 0 || count >= max) {
                 failed(null, attachment);
+                return;
+            }
+            if (!next && attachment.hasRemaining()) { //Header还没写完
+                channel.write(attachment, attachment, this);
+                return;
+            }
+
+            if (next && read && attachment.hasRemaining()) { //Buffer还没写完
+                channel.write(attachment, attachment, this);
                 return;
             }
             if (read) {
@@ -1016,11 +1031,9 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
                 filechannel.read(attachment, position, attachment, this);
             } else {
                 read = true;
-                if (max > 0) {
-                    count += result;
-                    if (count > max) {
-                        attachment.limit((int) (attachment.position() + max - count));
-                    }
+                count += result;
+                if (count > max) {
+                    attachment.limit((int) (attachment.position() + max - count));
                 }
                 attachment.flip();
                 channel.write(attachment, attachment, this);
