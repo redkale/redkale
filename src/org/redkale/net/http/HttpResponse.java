@@ -704,8 +704,8 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         final String match = request.getHeader("If-None-Match");
         final String etag = (file == null ? 0L : file.lastModified()) + "-" + length;
         if (match != null && etag.equals(match)) {
-            //finish304();
-            //return;
+            finish304();
+            return;
         }
         this.contentLength = length;
         if (filename != null && !filename.isEmpty() && file != null) {
