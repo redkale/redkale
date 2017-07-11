@@ -704,8 +704,8 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         final String match = request.getHeader("If-None-Match");
         final String etag = (file == null ? 0L : file.lastModified()) + "-" + length;
         if (match != null && etag.equals(match)) {
-            finish304();
-            return;
+            //finish304();
+            //return;
         }
         this.contentLength = length;
         if (filename != null && !filename.isEmpty() && file != null) {
@@ -1006,7 +1006,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
 
         @Override
         public void completed(Integer result, ByteBuffer attachment) {
-            //(file + "-------------------result: " + result + ", max = " + max + ", count = " + count);
+            //(Thread.currentThread().getName() + "-----------" + file + "-------------------result: " + result + ", max = " + max + ", count = " + count);
             if (result < 0 || count >= max) {
                 failed(null, attachment);
                 return;
@@ -1036,7 +1036,11 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
                     attachment.limit((int) (attachment.position() + max - count));
                 }
                 attachment.flip();
-                channel.write(attachment, attachment, this);
+                if (attachment.hasRemaining()) {
+                    channel.write(attachment, attachment, this);
+                } else {
+                    failed(null, attachment);
+                }
             }
         }
 
