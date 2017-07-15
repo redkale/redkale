@@ -5,14 +5,13 @@
  */
 package org.redkale.source;
 
-import com.sun.istack.internal.logging.Logger;
 import java.io.Serializable;
 import java.lang.reflect.*;
 import java.sql.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.*;
-import java.util.logging.Level;
+import java.util.logging.*;
 import javax.persistence.*;
 import org.redkale.util.*;
 
@@ -32,7 +31,7 @@ public final class EntityInfo<T> {
     private static final ConcurrentHashMap<Class, EntityInfo> entityInfos = new ConcurrentHashMap<>();
 
     //日志
-    private static final Logger logger = Logger.getLogger(EntityInfo.class);
+    private static final Logger logger = Logger.getLogger(EntityInfo.class.getSimpleName());
 
     //Entity类名
     private final Class<T> type;
@@ -194,7 +193,7 @@ public final class EntityInfo<T> {
             try {
                 loader = type.getAnnotation(VirtualEntity.class).loader().newInstance();
             } catch (Exception e) {
-                logger.severe(type + " init @VirtualEntity.loader error", e);
+                logger.log(Level.SEVERE, type + " init @VirtualEntity.loader error", e);
             }
             this.fullloader = loader;
         } else {
@@ -207,7 +206,7 @@ public final class EntityInfo<T> {
         try {
             dts = (dt == null) ? null : dt.strategy().newInstance();
         } catch (Exception e) {
-            logger.severe(type + " init DistributeTableStrategy error", e);
+            logger.log(Level.SEVERE, type + " init DistributeTableStrategy error", e);
         }
         this.tableStrategy = dts;
 
@@ -216,7 +215,7 @@ public final class EntityInfo<T> {
         try {
             cp = this.creator.getClass().getMethod("create", Object[].class).getAnnotation(Creator.ConstructorParameters.class);
         } catch (Exception e) {
-            logger.severe(type + " cannot find ConstructorParameters Creator", e);
+            logger.log(Level.SEVERE, type + " cannot find ConstructorParameters Creator", e);
         }
         this.constructorParameters = (cp == null || cp.value().length < 1) ? null : cp.value();
         Attribute idAttr0 = null;
