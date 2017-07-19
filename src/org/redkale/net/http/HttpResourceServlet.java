@@ -192,6 +192,11 @@ public class HttpResourceServlet extends HttpServlet {
     @Override
     public void execute(HttpRequest request, HttpResponse response) throws IOException {
         String uri = request.getRequestURI();
+        if (uri.contains("../")) {
+            if (finest) logger.log(Level.FINEST, "Not found resource (404) be " + uri + ", request = " + request);
+            response.finish404();
+            return;
+        }
         if (locationRewrites != null) {
             for (SimpleEntry<Pattern, String> entry : locationRewrites) {
                 Matcher matcher = entry.getKey().matcher(uri);

@@ -121,7 +121,6 @@ public class HttpRequest extends Request<HttpContext> {
         } else {
             this.requestURI = array.toDecodeString(index, offset - index, charset).trim();
         }
-        if (this.requestURI.contains("../")) return -1;
         index = ++offset;
         this.protocol = array.toString(index, array.size() - index, charset).trim();
         while (readLine(buffer, array)) {
