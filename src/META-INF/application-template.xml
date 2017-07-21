@@ -37,6 +37,7 @@
             threads： 线程总数， 默认: <group>节点数*CPU核数*8
             bufferCapacity: ByteBuffer的初始化大小， 默认: 8K; 
             bufferPoolSize： ByteBuffer池的大小，默认: <group>节点数*CPU核数*8
+            strategy: 远程请求的负载均衡策略， 必须是org.redkale.net.TransportStrategy的实现类
         -->
         <transport bufferCapacity="8K" bufferPoolSize="32" threads="32"/>
         

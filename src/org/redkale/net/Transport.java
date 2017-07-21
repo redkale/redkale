@@ -56,15 +56,20 @@ public final class Transport {
 
     protected final ObjectPool<ByteBuffer> bufferPool;
 
+    //负载均衡策略
+    protected final TransportStrategy strategy;
+
     protected final ConcurrentHashMap<SocketAddress, BlockingQueue<AsyncConnection>> connPool = new ConcurrentHashMap<>();
 
     public Transport(String name, String subprotocol, final ObjectPool<ByteBuffer> transportBufferPool,
-        final AsynchronousChannelGroup transportChannelGroup, final InetSocketAddress clientAddress, final Collection<InetSocketAddress> addresses) {
-        this(name, DEFAULT_PROTOCOL, subprotocol, transportBufferPool, transportChannelGroup, clientAddress, addresses);
+        final AsynchronousChannelGroup transportChannelGroup, final InetSocketAddress clientAddress,
+        final Collection<InetSocketAddress> addresses, final TransportStrategy strategy) {
+        this(name, DEFAULT_PROTOCOL, subprotocol, transportBufferPool, transportChannelGroup, clientAddress, addresses, strategy);
     }
 
     public Transport(String name, String protocol, String subprotocol, final ObjectPool<ByteBuffer> transportBufferPool,
-        final AsynchronousChannelGroup transportChannelGroup, final InetSocketAddress clientAddress, final Collection<InetSocketAddress> addresses) {
+        final AsynchronousChannelGroup transportChannelGroup, final InetSocketAddress clientAddress,
+        final Collection<InetSocketAddress> addresses, final TransportStrategy strategy) {
         this.name = name;
         this.subprotocol = subprotocol == null ? "" : subprotocol.trim();
         this.protocol = protocol;
@@ -72,6 +77,7 @@ public final class Transport {
         this.group = transportChannelGroup;
         this.bufferPool = transportBufferPool;
         this.clientAddress = clientAddress;
+        this.strategy = strategy;
         updateRemoteAddresses(addresses);
     }
 
@@ -132,6 +138,10 @@ public final class Transport {
         return remoteAddres;
     }
 
+    public ConcurrentHashMap<SocketAddress, BlockingQueue<AsyncConnection>> getAsyncConnectionPool() {
+        return connPool;
+    }
+
     @Override
     public String toString() {
         return Transport.class.getSimpleName() + "{name = " + name + ", protocol = " + protocol + ", clientAddress = " + clientAddress + ", remoteAddres = " + Arrays.toString(remoteAddres) + "}";
@@ -158,6 +168,7 @@ public final class Transport {
     }
 
     public AsyncConnection pollConnection(SocketAddress addr) {
+        if (this.strategy != null) return strategy.pollConnection(addr, this);
         if (addr == null && remoteAddres.length == 1) addr = remoteAddres[0];
         final boolean rand = addr == null;
         if (rand && remoteAddres.length < 1) throw new RuntimeException("Transport (" + this.name + ") have no remoteAddress list");

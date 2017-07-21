@@ -232,12 +232,14 @@ public final class Application {
         }
         this.logger = Logger.getLogger(this.getClass().getSimpleName());
         this.serversLatch = new CountDownLatch(config.getAnyValues("server").length + 1);
+        this.classLoader = new RedkaleClassLoader(Thread.currentThread().getContextClassLoader());
         logger.log(Level.INFO, "------------------------------- Redkale " + Redkale.getDotedVersion() + " -------------------------------");
         //------------------配置 <transport> 节点 ------------------
         ObjectPool<ByteBuffer> transportPool = null;
         ExecutorService transportExec = null;
         AsynchronousChannelGroup transportGroup = null;
         final AnyValue resources = config.getAnyValue("resources");
+        TransportStrategy strategy = null;
         if (resources != null) {
             AnyValue transportConf = resources.getAnyValue("transport");
             int groupsize = resources.getAnyValues("group").length;
@@ -257,6 +259,10 @@ public final class Application {
                     });
                 //-----------transportChannelGroup--------------
                 try {
+                    final String strategyClass = transportConf.getValue("strategy");
+                    if (strategyClass != null && !strategyClass.isEmpty()) {
+                        strategy = (TransportStrategy) classLoader.loadClass(strategyClass).newInstance();
+                    }
                     final AtomicInteger counter = new AtomicInteger();
                     transportExec = Executors.newFixedThreadPool(threads, (Runnable r) -> {
                         Thread t = new Thread(r);
@@ -271,8 +277,7 @@ public final class Application {
                 logger.log(Level.INFO, Transport.class.getSimpleName() + " configure bufferCapacity = " + bufferCapacity + "; bufferPoolSize = " + bufferPoolSize + "; threads = " + threads + ";");
             }
         }
-        this.transportFactory = new TransportFactory(transportExec, transportPool, transportGroup);
-        this.classLoader = new RedkaleClassLoader(Thread.currentThread().getContextClassLoader());
+        this.transportFactory = new TransportFactory(transportExec, transportPool, transportGroup, strategy);
         Thread.currentThread().setContextClassLoader(this.classLoader);
         this.serverClassLoader = new RedkaleClassLoader(this.classLoader);
     }
