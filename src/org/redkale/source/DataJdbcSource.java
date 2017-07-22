@@ -2979,5 +2979,45 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
             closeSQLConnection(conn);
         }
     }
+    
+    /**
+     * 直接执行SQL语句，并返回结果集
+     * @param sql
+     * @return
+     */
+    public final List<Map<String, Object>> directQuery(String sql) {
+        Connection conn = this.createReadSQLConnection();
+        ArrayList<Map<String, Object>> list = new ArrayList<Map<String, Object>>();
+
+        try {
+           if(this.debug.get()) {
+              this.logger.finest("direct query sql=" + sql);
+           }
+
+           conn.setReadOnly(true);
+           PreparedStatement ex = conn.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+           ResultSet set = ex.executeQuery();
+           ResultSetMetaData md = set.getMetaData();
+           int columnCount = md.getColumnCount();
+
+           Map<String, Object> rowData;
+           while(set.next()) {
+              rowData = new HashMap<String, Object>();
+              for(int i = 1; i <= columnCount; ++i) {
+                 rowData.put(md.getColumnName(i), set.getObject(i));
+              }
+
+              list.add(rowData);
+           }
+
+           set.close();
+           ex.close();
+           return list;
+        } catch (Exception ex) {
+           throw new RuntimeException(ex);
+        } finally {
+           this.closeSQLConnection(conn);
+        }
+     }
 
 }
