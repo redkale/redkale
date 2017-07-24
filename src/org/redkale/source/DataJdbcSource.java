@@ -328,7 +328,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, Servi
         return CompletableFuture.supplyAsync(() -> delete(values), getExecutor());
     }
 
-    private <T> int delete(final Connection conn, final EntityInfo<T> info, T... values) {
+    protected <T> int delete(final Connection conn, final EntityInfo<T> info, T... values) {
         if (values.length == 0) return -1;
         final Attribute primary = info.getPrimary();
         Serializable[] ids = new Serializable[values.length];
