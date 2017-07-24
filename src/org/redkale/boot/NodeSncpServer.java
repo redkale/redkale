@@ -107,7 +107,7 @@ public class NodeSncpServer extends NodeServer {
 
     @Override
     protected ClassFilter<Filter> createFilterClassFilter() {
-        return createClassFilter(null, null, SncpFilter.class, null, null, "filters", "filter");
+        return createClassFilter(null, null, SncpFilter.class, new Class[]{org.redkale.watch.WatchFilter.class}, null, "filters", "filter");
     }
 
     @Override
