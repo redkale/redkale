@@ -99,7 +99,11 @@ public final class ClassFilter<T> {
      * @return Set&lt;FilterEntry&lt;T&gt;&gt;
      */
     public final Set<FilterEntry<T>> getFilterEntrys() {
-        return entrys;
+        HashSet<FilterEntry<T>> set = new HashSet<>();
+        set.addAll(entrys);
+        if (ors != null) ors.forEach(f -> set.addAll(f.getFilterEntrys()));
+        if (ands != null) ands.forEach(f -> set.addAll(f.getFilterEntrys()));
+        return set;
     }
 
     /**
@@ -108,7 +112,11 @@ public final class ClassFilter<T> {
      * @return Set&lt;FilterEntry&lt;T&gt;&gt;
      */
     public final Set<FilterEntry<T>> getFilterExpectEntrys() {
-        return expectEntrys;
+        HashSet<FilterEntry<T>> set = new HashSet<>();
+        set.addAll(entrys);
+        if (ors != null) ors.forEach(f -> set.addAll(f.getFilterExpectEntrys()));
+        if (ands != null) ands.forEach(f -> set.addAll(f.getFilterExpectEntrys()));
+        return set;
     }
 
     /**
@@ -118,8 +126,8 @@ public final class ClassFilter<T> {
      */
     public final Set<FilterEntry<T>> getAllFilterEntrys() {
         HashSet<FilterEntry<T>> rs = new HashSet<>();
-        rs.addAll(entrys);
-        rs.addAll(expectEntrys);
+        rs.addAll(getFilterEntrys());
+        rs.addAll(getFilterExpectEntrys());
         return rs;
     }
 
