@@ -85,6 +85,13 @@ public class PoolJdbcSource {
         if (this.isOracle()) {
             this.props.setProperty(JDBC_CONTAIN_SQLTEMPLATE, "INSTR(${keystr}, ${column}) > 0");
             this.props.setProperty(JDBC_NOTCONTAIN_SQLTEMPLATE, "INSTR(${keystr}, ${column}) = 0");
+            if (!this.props.containsKey(JDBC_TABLENOTEXIST_SQLSTATES)) {
+                this.props.setProperty(JDBC_TABLENOTEXIST_SQLSTATES, "42000;42S02");
+            }
+            if (!this.props.containsKey(JDBC_TABLECOPY_SQLTEMPLATE)) {
+                //注意：此语句复制表结构会导致默认值和主键信息的丢失
+                this.props.setProperty(JDBC_TABLECOPY_SQLTEMPLATE, "CREATE TABLE ${newtable} AS SELECT * FROM ${oldtable} WHERE 1=2");
+            }
         } else if (this.isSqlserver()) {
             this.props.setProperty(JDBC_CONTAIN_SQLTEMPLATE, "CHARINDEX(${column}, ${keystr}) > 0");
             this.props.setProperty(JDBC_NOTCONTAIN_SQLTEMPLATE, "CHARINDEX(${column}, ${keystr}) = 0");
