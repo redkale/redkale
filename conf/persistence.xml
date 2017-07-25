@@ -16,9 +16,9 @@
     <persistence-unit name="user.read" transaction-type="RESOURCE_LOCAL">
         <shared-cache-mode>ALL</shared-cache-mode>
         <properties>
-            <property name="javax.persistence.jdbc.url" value="jdbc:mysql://localhost:3306/user?autoReconnect=true&amp;characterEncoding=utf8"/>
-            <property name="javax.persistence.jdbc.driver" value="com.mysql.jdbc.Driver"/>
-            <property name="javax.persistence.jdbc.user" value="root"/>
+            <property name="javax.persistence.jdbc.url" value="jdbc:oracle:thin:@localhost:1521:orcl"/>
+            <property name="javax.persistence.jdbc.driver" value="oracle.jdbc.driver.OracleDriver"/>
+            <property name="javax.persistence.jdbc.user" value="system"/>
             <property name="javax.persistence.jdbc.password" value="1234"/>
         </properties>
     </persistence-unit>
