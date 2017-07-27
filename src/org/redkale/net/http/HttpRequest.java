@@ -889,6 +889,15 @@ public class HttpRequest extends Request<HttpContext> {
 
     //------------------------------------------------------------------------------
     /**
+     * 获取请求Header总对象
+     *
+     * @return AnyValue
+     */
+    public AnyValue getHeaders() {
+        return header;
+    }
+
+    /**
      * 获取所有的header名
      *
      * @return header名数组
@@ -1086,6 +1095,15 @@ public class HttpRequest extends Request<HttpContext> {
     }
 
     //------------------------------------------------------------------------------
+    /**
+     * 获取请求参数总对象
+     *
+     * @return AnyValue
+     */
+    public AnyValue getParameters() {
+        return params;
+    }
+
     /**
      * 获取所有参数名
      *
