@@ -99,11 +99,11 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         this.config = config;
         this.address = new InetSocketAddress(config.getValue("host", "0.0.0.0"), config.getIntValue("port", 80));
         this.charset = Charset.forName(config.getValue("charset", "UTF-8"));
-        this.backlog = config.getIntValue("backlog", 8 * 1024);
         this.readTimeoutSecond = config.getIntValue("readTimeoutSecond", 0);
         this.writeTimeoutSecond = config.getIntValue("writeTimeoutSecond", 0);
-        this.maxbody = config.getIntValue("maxbody", 64 * 1024);
-        int bufCapacity = config.getIntValue("bufferCapacity", 8 * 1024);
+        this.backlog = parseLenth(config.getValue("backlog"), 8 * 1024);
+        this.maxbody = parseLenth(config.getValue("maxbody"), 64 * 1024);
+        int bufCapacity = parseLenth(config.getValue("bufferCapacity"), 8 * 1024);
         this.bufferCapacity = bufCapacity < 256 ? 256 : bufCapacity;
         this.threads = config.getIntValue("threads", Runtime.getRuntime().availableProcessors() * 16);
         this.bufferPoolSize = config.getIntValue("bufferPoolSize", Runtime.getRuntime().availableProcessors() * 512);
@@ -118,6 +118,24 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
             t.setName(n + "-ServletThread-" + f.format(counter.incrementAndGet()));
             return t;
         });
+    }
+
+    protected static int parseLenth(String value, int defValue) {
+        if (value == null) return defValue;
+        value = value.toUpperCase().replace("B", "");
+        if (value.endsWith("G")) return Integer.decode(value.replace("G", "")) * 1024 * 1024 * 1024;
+        if (value.endsWith("M")) return Integer.decode(value.replace("M", "")) * 1024 * 1024;
+        if (value.endsWith("K")) return Integer.decode(value.replace("K", "")) * 1024;
+        return Integer.decode(value);
+    }
+
+    protected static long parseLenth(String value, long defValue) {
+        if (value == null) return defValue;
+        value = value.toUpperCase().replace("B", "");
+        if (value.endsWith("G")) return Long.decode(value.replace("G", "")) * 1024 * 1024 * 1024;
+        if (value.endsWith("M")) return Long.decode(value.replace("M", "")) * 1024 * 1024;
+        if (value.endsWith("K")) return Long.decode(value.replace("K", "")) * 1024;
+        return Long.decode(value);
     }
 
     public void destroy(final AnyValue config) throws Exception {
