@@ -1101,6 +1101,7 @@ public class HttpRequest extends Request<HttpContext> {
      * @return AnyValue
      */
     public AnyValue getParameters() {
+        parseBody();
         return params;
     }
 
