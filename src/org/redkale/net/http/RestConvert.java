@@ -24,6 +24,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Repeatable(RestConvert.RestConverts.class)
 public @interface RestConvert {
 
+    boolean tiny() default true;
+
     Class type();
 
     String[] ignoreColumns() default {};

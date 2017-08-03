@@ -121,6 +121,7 @@ public final class Rest {
             childFactory.register(rc.type(), true, rc.ignoreColumns());
             childFactory.reloadCoder(rc.type());
             types.add(rc.type());
+            childFactory.tiny(rc.tiny());
         }
         return childFactory.getConvert();
     }
