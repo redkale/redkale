@@ -56,7 +56,7 @@ public abstract class NodeServer {
 
     //ClassLoader
     protected RedkaleClassLoader serverClassLoader;
-    
+
     protected final Thread serverThread;
 
     //当前Server的SNCP协议的组
@@ -173,7 +173,7 @@ public abstract class NodeServer {
         final TransportFactory appTranFactory = application.getTransportFactory();
         final AnyValue resources = application.config.getAnyValue("resources");
         final Map<String, AnyValue> cacheResource = new HashMap<>();
-        //final Map<String, AnyValue> dataResources = new HashMap<>();
+        final Map<String, AnyValue> dataResources = new HashMap<>();
         if (resources != null) {
             for (AnyValue sourceConf : resources.getAnyValues("source")) {
                 try {
@@ -183,9 +183,7 @@ public abstract class NodeServer {
                     } else if (CacheSource.class.isAssignableFrom(type)) {
                         cacheResource.put(sourceConf.getValue("name", ""), sourceConf);
                     } else if (DataSource.class.isAssignableFrom(type)) {
-                        //dataResources.put(sourceConf.getValue("name", ""), sourceConf);
-                        //暂时不支持DataSource通过<resources>设置
-                        logger.log(Level.SEVERE, "load application source resource, but not CacheSource error: " + sourceConf);
+                        dataResources.put(sourceConf.getValue("name", ""), sourceConf);
                     } else {
                         logger.log(Level.SEVERE, "load application source resource, but not CacheSource error: " + sourceConf);
                     }
@@ -258,23 +256,32 @@ public abstract class NodeServer {
                     final Service srcService = (Service) src;
                     SncpClient client = Sncp.getSncpClient(srcService);
                     final InetSocketAddress sncpAddr = client == null ? null : client.getClientAddress();
-                    final AnyValue sourceConf = cacheResource.get(resourceName);
-                    final Class sourceType = sourceConf == null ? CacheMemorySource.class : serverClassLoader.loadClass(sourceConf.getValue("type"));
                     final Set<String> groups = new HashSet<>();
                     if (client != null && client.getSameGroup() != null) groups.add(client.getSameGroup());
                     if (client != null && client.getDiffGroups() != null) groups.addAll(client.getDiffGroups());
-                    final CacheSource source = (CacheSource) Sncp.createLocalService(serverClassLoader, resourceName, sourceType, appResFactory, appTranFactory, sncpAddr, groups, Sncp.getConf(srcService));
-                    Type genericType = field.getGenericType();
-                    ParameterizedType pt = (genericType instanceof ParameterizedType) ? (ParameterizedType) genericType : null;
-                    Type valType = pt == null ? null : pt.getActualTypeArguments()[1];
-                    if (sourceType == CacheMemorySource.class) {
-                        CacheMemorySource memorySource = (CacheMemorySource) source;
-                        memorySource.setStoreType(pt == null ? Serializable.class : (Class) pt.getActualTypeArguments()[0], valType instanceof Class ? (Class) valType : Object.class);
-                        if (field.getAnnotation(Transient.class) != null) memorySource.setNeedStore(false); //必须在setStoreType之后
+
+                    AnyValue sourceConf = cacheResource.get(resourceName);
+                    if (sourceConf == null) sourceConf = dataResources.get(resourceName);
+                    final Class sourceType = sourceConf == null ? CacheMemorySource.class : serverClassLoader.loadClass(sourceConf.getValue("value"));
+                    Object source;
+                    if (DataSource.class.isAssignableFrom(sourceType)) { // DataSource
+                        source = (DataSource) Sncp.createLocalService(serverClassLoader, resourceName, sourceType, appResFactory, appTranFactory, sncpAddr, groups, Sncp.getConf(srcService));
+                        application.dataSources.add((DataSource) source);
+                        appResFactory.register(resourceName, DataSource.class, source);
+                    } else { // CacheSource
+                        source = (CacheSource) Sncp.createLocalService(serverClassLoader, resourceName, sourceType, appResFactory, appTranFactory, sncpAddr, groups, Sncp.getConf(srcService));
+                        Type genericType = field.getGenericType();
+                        ParameterizedType pt = (genericType instanceof ParameterizedType) ? (ParameterizedType) genericType : null;
+                        Type valType = pt == null ? null : pt.getActualTypeArguments()[1];
+                        if (sourceType == CacheMemorySource.class) {
+                            CacheMemorySource memorySource = (CacheMemorySource) source;
+                            memorySource.setStoreType(pt == null ? Serializable.class : (Class) pt.getActualTypeArguments()[0], valType instanceof Class ? (Class) valType : Object.class);
+                            if (field.getAnnotation(Transient.class) != null) memorySource.setNeedStore(false); //必须在setStoreType之后
+                        }
+                        application.cacheSources.add((CacheSource) source);
+                        appResFactory.register(resourceName, genericType, source);
+                        appResFactory.register(resourceName, CacheSource.class, source);
                     }
-                    application.cacheSources.add(source);
-                    appResFactory.register(resourceName, genericType, source);
-                    appResFactory.register(resourceName, CacheSource.class, source);
                     field.set(src, source);
                     rf.inject(source, self); //
                     if (source instanceof Service) ((Service) source).init(sourceConf);
@@ -531,7 +538,7 @@ public abstract class NodeServer {
     public void setServerClassLoader(RedkaleClassLoader serverClassLoader) {
         Objects.requireNonNull(this.serverClassLoader);
         this.serverClassLoader = serverClassLoader;
-        this.serverThread.setContextClassLoader(serverClassLoader); 
+        this.serverThread.setContextClassLoader(serverClassLoader);
     }
 
     public InetSocketAddress getSncpAddress() {

@@ -3,13 +3,15 @@
 <persistence>	
     <!-- 系统基本库 -->
     <persistence-unit name="demouser">
-        <!-- 为NONE表示不启动缓存，@Cacheable 失效； 非NONE值(通常用ALL)表示开启缓存。 -->
-        <shared-cache-mode>NONE</shared-cache-mode>
         <properties>
             <!-- 
                 DataSource的实现类，没有设置默认为org.redkale.source.DataJdbcSource的实现，使用常规基于JDBC的数据库驱动一般无需设置
             -->
             <property name="javax.persistence.datasource" value="org.redkale.source.DataJdbcSource"/>
+            <!-- 
+                是否开启缓存(标记为@Cacheable的Entity类)，值目前只支持两种： ALL: 所有开启缓存。 NONE: 关闭所有缓存
+            -->
+            <property name="javax.persistence.cachemode" value="ALL"/>
             
             <property name="javax.persistence.jdbc.url" value="jdbc:mysql://127.0.0.1:3306/dbuser?characterEncoding=utf8"/>
             <!-- 
@@ -42,7 +44,6 @@
     </persistence-unit>
     <!-- IM消息库 -->
     <persistence-unit name="demoim">
-        <shared-cache-mode>NONE</shared-cache-mode>
         <properties>
             <!-- jdbc:mysql://127.0.0.1:3306/dbim?autoReconnect=true&amp;autoReconnectForPools=true&amp;characterEncoding=utf8 -->
             <property name="javax.persistence.jdbc.url" value="jdbc:mysql://127.0.0.1:3306/dbim?characterEncoding=utf8"/>

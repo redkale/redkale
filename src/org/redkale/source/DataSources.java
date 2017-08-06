@@ -21,6 +21,8 @@ public final class DataSources {
 
     public static final String JDBC_DATASOURCE_CLASS = "javax.persistence.datasource";
 
+    public static final String JDBC_CACHE_MODE = "javax.persistence.cachemode";
+
     public static final String JDBC_CONNECTIONSMAX = "javax.persistence.connections.limit";
 
     public static final String JDBC_CONTAIN_SQLTEMPLATE = "javax.persistence.contain.sqltemplate";
@@ -122,8 +124,8 @@ public final class DataSources {
                         String value = reader.getAttributeValue(null, "value");
                         if (name == null) continue;
                         result.put(name, value);
-                    } else if (flag && "shared-cache-mode".equalsIgnoreCase(reader.getLocalName())) {
-                        result.put(reader.getLocalName(), reader.getElementText());
+                    } else if (flag && "shared-cache-mode".equalsIgnoreCase(reader.getLocalName())) { //兼容shared-cache-mode属性
+                        result.put(JDBC_CACHE_MODE, reader.getElementText());
                     }
                 }
             }
