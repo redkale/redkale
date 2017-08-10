@@ -235,6 +235,10 @@ public class HttpPrepareServlet extends PrepareServlet<String, HttpContext, Http
         try {
             final String uri = request.getRequestURI();
             HttpServlet servlet;
+            if (response.isAutoOptions() && "OPTIONS".equals(request.getMethod())) {
+                response.finish(200, null);
+                return;
+            }
             if (request.isWebSocket()) {
                 servlet = wsmappings.get(uri);
                 if (servlet == null && this.regWsArray != null) {

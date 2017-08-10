@@ -280,6 +280,8 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
             });
         final List<String[]> defaultAddHeaders = new ArrayList<>();
         final List<String[]> defaultSetHeaders = new ArrayList<>();
+        boolean autoOptions = false;
+
         HttpCookie defaultCookie = null;
         String remoteAddrHeader = null;
         if (config != null) {
@@ -342,10 +344,15 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
                         defaultCookie.setPath(path);
                     }
                 }
+                AnyValue options = resps == null ? null : resps.getAnyValue("options");
+                autoOptions = options != null && options.getBoolValue("auto", false);
             }
+
         }
         final String[][] addHeaders = defaultAddHeaders.isEmpty() ? null : defaultAddHeaders.toArray(new String[defaultAddHeaders.size()][]);
         final String[][] setHeaders = defaultSetHeaders.isEmpty() ? null : defaultSetHeaders.toArray(new String[defaultSetHeaders.size()][]);
+        final boolean options = autoOptions;
+
         final HttpCookie defCookie = defaultCookie;
         final String addrHeader = remoteAddrHeader;
         AtomicLong createResponseCounter = new AtomicLong();
@@ -353,7 +360,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
         ObjectPool<Response> responsePool = HttpResponse.createPool(createResponseCounter, cycleResponseCounter, this.responsePoolSize, null);
         HttpContext httpcontext = new HttpContext(this.serverStartTime, this.logger, executor, rcapacity, bufferPool, responsePool,
             this.maxbody, this.charset, this.address, this.prepare, this.readTimeoutSecond, this.writeTimeoutSecond);
-        responsePool.setCreator((Object... params) -> new HttpResponse(httpcontext, new HttpRequest(httpcontext, addrHeader), addHeaders, setHeaders, defCookie));
+        responsePool.setCreator((Object... params) -> new HttpResponse(httpcontext, new HttpRequest(httpcontext, addrHeader), addHeaders, setHeaders, defCookie, options));
         return httpcontext;
     }
 

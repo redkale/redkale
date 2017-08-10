@@ -125,17 +125,21 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
 
     private final String[][] defaultSetHeaders;
 
+    private final boolean autoOptions;
+
     private final HttpCookie defcookie;
 
     public static ObjectPool<Response> createPool(AtomicLong creatCounter, AtomicLong cycleCounter, int max, Creator<Response> creator) {
         return new ObjectPool<>(creatCounter, cycleCounter, max, creator, (x) -> ((HttpResponse) x).prepare(), (x) -> ((HttpResponse) x).recycle());
     }
 
-    public HttpResponse(HttpContext context, HttpRequest request, String[][] defaultAddHeaders, String[][] defaultSetHeaders, HttpCookie defcookie) {
+    public HttpResponse(HttpContext context, HttpRequest request, String[][] defaultAddHeaders, String[][] defaultSetHeaders,
+        HttpCookie defcookie, boolean autoOptions) {
         super(context, request);
         this.defaultAddHeaders = defaultAddHeaders;
         this.defaultSetHeaders = defaultSetHeaders;
         this.defcookie = defcookie;
+        this.autoOptions = autoOptions;
     }
 
     @Override
@@ -183,6 +187,10 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
     @Override
     protected void thenEvent(Servlet servlet) {
         this.servlet = servlet;
+    }
+
+    protected boolean isAutoOptions() {
+        return this.autoOptions;
     }
 
     /**
@@ -439,6 +447,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         if (isClosed()) return;
         if (this.recycleListener != null) this.output = obj;
         if (obj == null || obj.isEmpty()) {
+            this.contentLength = 0;
             final ByteBuffer headbuf = createHeader();
             headbuf.flip();
             super.finish(headbuf);
@@ -754,7 +763,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
 
         buffer.put(("Content-Type: " + (this.contentType == null ? "text/plain; charset=utf-8" : this.contentType) + "\r\n").getBytes());
 
-        if (this.contentLength > 0) {
+        if (this.contentLength >= 0) {
             buffer.put(("Content-Length: " + this.contentLength + "\r\n").getBytes());
         }
         if (!this.request.isKeepAlive()) {

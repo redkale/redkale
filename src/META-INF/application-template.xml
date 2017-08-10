@@ -211,12 +211,14 @@
            如果addheader、setheader 的value值以request.parameters.开头则表示从request.parameters中获取对应的parameter值
            如果addheader、setheader 的value值以request.headers.开头则表示从request.headers中获取对应的header值
            例如下面例子是在Response输出header时添加两个header（一个addHeader， 一个setHeader）。
+           options 节点: 设置了该节点却auto=true，当request的method=OPTIONS自动设置addheader、setheader并返回200状态码
         -->
         <response>
-            <defcookie domain="" path=""/>
+            <defcookie domain="" path=""/>  
             <addheader name="Access-Control-Allow-Origin" value="request.headers.Origin" /> 
             <setheader name="Access-Control-Allow-Headers" value="request.headers.Access-Control-Request-Headers"/>
-            <setheader name="Access-Control-Allow-Credentials" value="true"/>  
+            <setheader name="Access-Control-Allow-Credentials" value="true"/>
+            <options auto="true" />
         </response>
             
         <!-- 
