@@ -215,7 +215,8 @@
         <response>
             <defcookie domain="" path=""/>
             <addheader name="Access-Control-Allow-Origin" value="request.headers.Origin" /> 
-            <setheader name="Access-Control-Allow-Credentials" value="true"/> 
+            <setheader name="Access-Control-Allow-Headers" value="request.headers.Access-Control-Request-Headers"/>
+            <setheader name="Access-Control-Allow-Credentials" value="true"/>  
         </response>
             
         <!-- 
