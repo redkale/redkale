@@ -17,6 +17,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
 import java.util.logging.*;
 import org.redkale.convert.Convert;
+import org.redkale.util.Utility;
 
 /**
  * WebSocket的消息接收发送器, 一个WebSocket对应一个WebSocketRunner
@@ -99,8 +100,17 @@ class WebSocketRunner implements Runnable {
                         }
 
                         try {
-                            WebSocketPacket packet = new WebSocketPacket().decode(context.getLogger(), readBuffer, exBuffers);
-
+                            WebSocketPacket packet;
+                            try {
+                                packet = new WebSocketPacket().decode(context.getLogger(), readBuffer, exBuffers);
+                            } catch (Exception e) { //接收的消息体解析失败
+                                webSocket.onOccurException(e, Utility.append(new ByteBuffer[]{readBuffer}, exBuffers == null ? new ByteBuffer[0] : exBuffers));
+                                if (readBuffer != null) {
+                                    readBuffer.clear();
+                                    channel.read(readBuffer, null, this);
+                                }
+                                return;
+                            }
                             if (packet == null) {
                                 failed(null, attachment1);
                                 if (debug) context.getLogger().log(Level.FINEST, "WebSocketRunner abort on decode WebSocketPacket, force to close channel, live " + (System.currentTimeMillis() - webSocket.getCreatetime()) / 1000 + " seconds");
@@ -121,7 +131,17 @@ class WebSocketRunner implements Runnable {
                                         context.getLogger().log(Level.SEVERE, "WebSocket onBinaryMessage error (" + packet + ")", e);
                                     }
                                 } else {
-                                    Object message = textConvert.convertFrom(webSocket._messageTextType, packet.receiveMasker, packet.receiveBuffers);
+                                    Object message;
+                                    try {
+                                        message = textConvert.convertFrom(webSocket._messageTextType, packet.receiveMasker, packet.receiveBuffers);
+                                    } catch (Exception e) { //接收的消息体解析失败
+                                        webSocket.onOccurException(e, packet.receiveBuffers);
+                                        if (readBuffer != null) {
+                                            readBuffer.clear();
+                                            channel.read(readBuffer, null, this);
+                                        }
+                                        return;
+                                    }
                                     if (readBuffer != null) {
                                         readBuffer.clear();
                                         channel.read(readBuffer, null, this);
@@ -150,7 +170,17 @@ class WebSocketRunner implements Runnable {
                                         context.getLogger().log(Level.SEVERE, "WebSocket onBinaryMessage error (" + packet + ")", e);
                                     }
                                 } else {
-                                    Object message = binaryConvert.convertFrom(webSocket._messageTextType, packet.receiveMasker, packet.receiveBuffers);
+                                    Object message;
+                                    try {
+                                        message = binaryConvert.convertFrom(webSocket._messageTextType, packet.receiveMasker, packet.receiveBuffers);
+                                    } catch (Exception e) {  //接收的消息体解析失败
+                                        webSocket.onOccurException(e, packet.receiveBuffers);
+                                        if (readBuffer != null) {
+                                            readBuffer.clear();
+                                            channel.read(readBuffer, null, this);
+                                        }
+                                        return;
+                                    }
                                     if (readBuffer != null) {
                                         readBuffer.clear();
                                         channel.read(readBuffer, null, this);

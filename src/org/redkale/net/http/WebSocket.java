@@ -12,6 +12,7 @@ import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.Supplier;
+import java.util.logging.*;
 import java.util.stream.Stream;
 import org.redkale.convert.Convert;
 import org.redkale.util.Comment;
@@ -480,6 +481,25 @@ public abstract class WebSocket<G extends Serializable, T> {
      * @param reason 关闭原因
      */
     public void onClose(int code, String reason) {
+    }
+
+    /**
+     * 发生异常时调用
+     *
+     * @param t       异常
+     * @param buffers ByteBuffer[]
+     */
+    public void onOccurException(Throwable t, ByteBuffer[] buffers) {
+        this.getLogger().log(Level.SEVERE, "WebSocket receive or send Message error", t);
+    }
+
+    /**
+     * 获取Logger
+     *
+     * @return Logger Logger
+     */
+    public Logger getLogger() {
+        return this._engine.logger;
     }
 
     /**
