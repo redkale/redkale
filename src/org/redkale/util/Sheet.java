@@ -6,7 +6,7 @@
 package org.redkale.util;
 
 import java.util.*;
-import java.util.function.Consumer;
+import java.util.function.*;
 import java.util.stream.*;
 
 /**
@@ -106,6 +106,15 @@ public class Sheet<T> implements java.io.Serializable, Iterable<T> {
         if (consumer != null && this.rows != null && !this.rows.isEmpty()) {
             this.rows.forEach(consumer);
         }
+    }
+
+    public <R> Sheet<R> map(Function<T, R> mapper) {
+        if (this.isEmpty()) return (Sheet) this;
+        final List<R> list = new ArrayList<>();
+        for (T item : this.rows) {
+            list.add(mapper.apply(item));
+        }
+        return new Sheet<>(getTotal(), list);
     }
 
     public void forEachParallel(final Consumer<? super T> consumer) {
