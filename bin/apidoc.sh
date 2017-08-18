@@ -4,7 +4,7 @@ export LC_ALL="zh_CN.UTF-8"
 
 APP_HOME=`dirname "$0"`
 
-if [ ! -a "$APP_HOME"/conf/application.xml ]; then 
+if [ ! -f "$APP_HOME"/conf/application.xml ]; then 
      APP_HOME="$APP_HOME"/..  
 fi
 
