@@ -248,9 +248,9 @@ public final class Application {
                 //--------------transportBufferPool-----------
                 AtomicLong createBufferCounter = new AtomicLong();
                 AtomicLong cycleBufferCounter = new AtomicLong();
-                final int bufferCapacity = transportConf.getIntValue("bufferCapacity", 8 * 1024);
-                final int bufferPoolSize = transportConf.getIntValue("bufferPoolSize", groupsize * Runtime.getRuntime().availableProcessors() * 8);
-                final int threads = transportConf.getIntValue("threads", groupsize * Runtime.getRuntime().availableProcessors() * 8);
+                final int bufferCapacity = Math.max(parseLenth(transportConf.getValue("bufferCapacity"), 8 * 1024), 4 * 1024);
+                final int bufferPoolSize = parseLenth(transportConf.getValue("bufferPoolSize"), groupsize * Runtime.getRuntime().availableProcessors() * 8);
+                final int threads = parseLenth(transportConf.getValue("threads"), groupsize * Runtime.getRuntime().availableProcessors() * 8);
                 transportPool = new ObjectPool<>(createBufferCounter, cycleBufferCounter, bufferPoolSize,
                     (Object... params) -> ByteBuffer.allocateDirect(bufferCapacity), null, (e) -> {
                         if (e == null || e.isReadOnly() || e.capacity() != bufferCapacity) return false;
@@ -761,6 +761,15 @@ public final class Application {
             }
         }
         this.transportFactory.shutdownNow();
+    }
+
+    private static int parseLenth(String value, int defValue) {
+        if (value == null) return defValue;
+        value = value.toUpperCase().replace("B", "");
+        if (value.endsWith("G")) return Integer.decode(value.replace("G", "")) * 1024 * 1024 * 1024;
+        if (value.endsWith("M")) return Integer.decode(value.replace("M", "")) * 1024 * 1024;
+        if (value.endsWith("K")) return Integer.decode(value.replace("K", "")) * 1024;
+        return Integer.decode(value);
     }
 
     private static AnyValue load(final InputStream in0) {
