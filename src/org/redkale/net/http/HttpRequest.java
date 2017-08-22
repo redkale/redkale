@@ -32,7 +32,7 @@ public class HttpRequest extends Request<HttpContext> {
 
     protected static final Charset UTF8 = Charset.forName("UTF-8");
 
-    protected static final String SESSIONID_NAME = "JSESSIONID";
+    public static final String SESSIONID_NAME = "JSESSIONID";
 
     @Comment("Method GET/POST/...")
     private String method;
