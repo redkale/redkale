@@ -113,7 +113,7 @@ public final class ClassFilter<T> {
      */
     public final Set<FilterEntry<T>> getFilterExpectEntrys() {
         HashSet<FilterEntry<T>> set = new HashSet<>();
-        set.addAll(entrys);
+        set.addAll(expectEntrys);
         if (ors != null) ors.forEach(f -> set.addAll(f.getFilterExpectEntrys()));
         if (ands != null) ands.forEach(f -> set.addAll(f.getFilterExpectEntrys()));
         return set;
