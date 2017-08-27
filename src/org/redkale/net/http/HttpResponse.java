@@ -743,12 +743,14 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         ByteBuffer hbuffer = createHeader();
         hbuffer.flip();
         if (fileBody == null) {
+            if (this.recycleListener != null) this.output = file;
             finishFile(hbuffer, file, start, len);
         } else {
             if (start >= 0) {
                 fileBody.position((int) start);
                 if (len > 0) fileBody.limit((int) (fileBody.position() + len));
             }
+            if (this.recycleListener != null) this.output = fileBody;
             super.finish(hbuffer, fileBody);
         }
     }
