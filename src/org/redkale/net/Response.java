@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.CompletionHandler;
 import java.util.function.BiConsumer;
+import java.util.logging.Level;
 
 /**
  * 协议响应对象
@@ -113,8 +114,7 @@ public abstract class Response<C extends Context, R extends Request<C>> {
             try {
                 recycleListener.accept(request, this);
             } catch (Exception e) {
-                System.err.println(request);
-                e.printStackTrace();
+                context.logger.log(Level.WARNING, "Response.recycleListener error, request = " + request, e);
             }
             recycleListener = null;
         }

@@ -10,6 +10,7 @@ import java.net.HttpCookie;
 import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.logging.Level;
 import org.redkale.net.*;
 import org.redkale.net.sncp.Sncp;
 import org.redkale.service.Service;
@@ -231,8 +232,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
                     break;
                 }
             } catch (NoSuchFieldException | SecurityException e) {
-                System.err.println("serviceType = " + serviceType + ", servletClass = " + item.getClass());
-                e.printStackTrace();
+                logger.log(Level.SEVERE, "serviceType = " + serviceType + ", servletClass = " + item.getClass(), e);
             }
         }
         final boolean first = servlet == null;
