@@ -112,7 +112,7 @@ public final class WebSocketPacket {
     ByteBuffer[] duplicateSendBuffers() {
         ByteBuffer[] rs = new ByteBuffer[this.sendBuffers.length];
         for (int i = 0; i < this.sendBuffers.length; i++) {
-            rs[i] = this.sendBuffers[i].duplicate();
+            rs[i] = this.sendBuffers[i].duplicate().asReadOnlyBuffer();
         }
         return rs;
     }
