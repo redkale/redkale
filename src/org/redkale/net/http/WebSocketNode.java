@@ -151,7 +151,7 @@ public abstract class WebSocketNode {
     /**
      * 判断指定用户是否WebSocket在线
      *
-     * @param userid
+     * @param userid Serializable
      *
      * @return boolean
      */
