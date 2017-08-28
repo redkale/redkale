@@ -104,6 +104,7 @@ public final class BsonConvert extends Convert<BsonReader, BsonWriter> {
         return convertFrom(type, bytes, 0, bytes.length);
     }
 
+    @SuppressWarnings("unchecked")
     public <T> T convertFrom(final Type type, final byte[] bytes, final int start, final int len) {
         if (type == null) return null;
         final BsonReader in = readerPool.get();
@@ -114,23 +115,27 @@ public final class BsonConvert extends Convert<BsonReader, BsonWriter> {
         return rs;
     }
 
+    @SuppressWarnings("unchecked")
     public <T> T convertFrom(final Type type, final InputStream in) {
         if (type == null || in == null) return null;
         return (T) factory.loadDecoder(type).convertFrom(new BsonStreamReader(in));
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public <T> T convertFrom(final Type type, final ByteBuffer... buffers) {
         if (type == null || buffers.length < 1) return null;
         return (T) factory.loadDecoder(type).convertFrom(new BsonByteBufferReader((ConvertMask) null, buffers));
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public <T> T convertFrom(final Type type, final ConvertMask mask, final ByteBuffer... buffers) {
         if (type == null || buffers.length < 1) return null;
         return (T) factory.loadDecoder(type).convertFrom(new BsonByteBufferReader(mask, buffers));
     }
 
+    @SuppressWarnings("unchecked")
     public <T> T convertFrom(final Type type, final BsonReader reader) {
         if (type == null) return null;
         @SuppressWarnings("unchecked")

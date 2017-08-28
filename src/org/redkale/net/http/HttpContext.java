@@ -53,6 +53,7 @@ public class HttpContext extends Context {
         return responsePool;
     }
 
+    @SuppressWarnings("unchecked")
     protected <H extends AsyncHandler> Creator<H> loadAsyncHandlerCreator(Class<H> handlerClass) {
         Creator<H> creator = asyncHandlerCreators.get(handlerClass);
         if (creator == null) {
@@ -62,6 +63,7 @@ public class HttpContext extends Context {
         return creator;
     }
 
+    @SuppressWarnings("unchecked")
     private <H extends AsyncHandler> Creator<H> createAsyncHandlerCreator(Class<H> handlerClass) {
         //生成规则与SncpAsyncHandler.Factory 很类似
         //------------------------------------------------------------- 

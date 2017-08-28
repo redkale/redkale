@@ -118,6 +118,7 @@ public abstract class PrepareServlet<K extends Serializable, C extends Context, 
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public void init(C context, AnyValue config) {
         synchronized (filters) {
             if (!filters.isEmpty()) {
@@ -136,6 +137,7 @@ public abstract class PrepareServlet<K extends Serializable, C extends Context, 
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public void destroy(C context, AnyValue config) {
         synchronized (filters) {
             if (!filters.isEmpty()) {
@@ -146,6 +148,7 @@ public abstract class PrepareServlet<K extends Serializable, C extends Context, 
         }
     }
 
+    @SuppressWarnings("unchecked")
     public void addFilter(Filter<C, R, P> filter, AnyValue conf) {
         filter._conf = conf;
         synchronized (filters) {
@@ -176,6 +179,7 @@ public abstract class PrepareServlet<K extends Serializable, C extends Context, 
         return false;
     }
 
+    @SuppressWarnings("unchecked")
     public <T extends Filter<C, R, P>> T removeFilter(Predicate<T> predicate) {
         if (this.headFilter == null || predicate == null) return null;
         synchronized (filters) {
@@ -198,10 +202,12 @@ public abstract class PrepareServlet<K extends Serializable, C extends Context, 
         }
     }
 
+    @SuppressWarnings("unchecked")
     public <T extends Filter<C, R, P>> List<T> getFilters() {
         return (List) new ArrayList<>(filters);
     }
 
+    @SuppressWarnings("unchecked")
     public abstract void addServlet(S servlet, Object attachment, AnyValue conf, K... mappings);
 
     public final void prepare(final ByteBuffer buffer, final R request, final P response) throws IOException {

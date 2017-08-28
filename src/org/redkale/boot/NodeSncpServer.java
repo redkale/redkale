@@ -85,6 +85,7 @@ public class NodeSncpServer extends NodeServer {
         if (sncpServer != null) loadSncpFilter(this.serverConf.getAnyValue("fliters"), filterFilter);
     }
 
+    @SuppressWarnings("unchecked")
     protected void loadSncpFilter(final AnyValue servletsConf, final ClassFilter<? extends Filter> classFilter) throws Exception {
         final StringBuilder sb = logger.isLoggable(Level.INFO) ? new StringBuilder() : null;
         final String threadName = "[" + Thread.currentThread().getName() + "] ";
@@ -106,6 +107,7 @@ public class NodeSncpServer extends NodeServer {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     protected ClassFilter<Filter> createFilterClassFilter() {
         return createClassFilter(null, null, SncpFilter.class, new Class[]{org.redkale.watch.WatchFilter.class}, null, "filters", "filter");
     }

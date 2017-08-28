@@ -22,6 +22,7 @@ import java.util.logging.Formatter;
  *
  * @author zhangjx
  */
+@SuppressWarnings("unchecked")
 public class LogFileHandler extends Handler {
 
     /**

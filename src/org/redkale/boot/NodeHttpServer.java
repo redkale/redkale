@@ -122,6 +122,7 @@ public class NodeHttpServer extends NodeServer {
         }, WebSocketNode.class);
     }
 
+    @SuppressWarnings("unchecked")
     protected void loadHttpFilter(final AnyValue filtersConf, final ClassFilter<? extends Filter> classFilter) throws Exception {
         final StringBuilder sb = logger.isLoggable(Level.INFO) ? new StringBuilder() : null;
         final String threadName = "[" + Thread.currentThread().getName() + "] ";
@@ -138,6 +139,7 @@ public class NodeHttpServer extends NodeServer {
         if (sb != null && sb.length() > 0) logger.log(Level.INFO, sb.toString());
     }
 
+    @SuppressWarnings("unchecked")
     protected void loadHttpServlet(final ClassFilter<? extends Servlet> servletFilter, ClassFilter<? extends WebSocket> webSocketFilter) throws Exception {
         final AnyValue servletsConf = this.serverConf.getAnyValue("servlets");
         final StringBuilder sb = logger.isLoggable(Level.INFO) ? new StringBuilder() : null;
@@ -195,6 +197,7 @@ public class NodeHttpServer extends NodeServer {
         if (sb != null && sb.length() > 0) logger.log(Level.INFO, sb.toString().trim());
     }
 
+    @SuppressWarnings("unchecked")
     protected void loadRestServlet(final ClassFilter<? extends WebSocket> webSocketFilter, final AnyValue restConf, final List<Object> restedObjects, final StringBuilder sb) throws Exception {
         if (!rest) return;
         if (restConf == null) return; //不存在REST服务

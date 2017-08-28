@@ -20,6 +20,7 @@ import org.redkale.util.*;
  *
  * @author zhangjx
  */
+@SuppressWarnings("unchecked")
 public final class JsonFactory extends ConvertFactory<JsonReader, JsonWriter> {
 
     private static final JsonFactory instance = new JsonFactory(null, Boolean.getBoolean("convert.json.tiny"));

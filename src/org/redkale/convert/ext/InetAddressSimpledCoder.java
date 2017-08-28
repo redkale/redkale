@@ -20,6 +20,7 @@ import java.net.*;
  * @param <R> Reader输入的子类型
  * @param <W> Writer输出的子类型
  */
+@SuppressWarnings("unchecked")
 public final class InetAddressSimpledCoder<R extends Reader, W extends Writer> extends SimpledCoder<R, W, InetAddress> {
 
     public static final InetAddressSimpledCoder instance = new InetAddressSimpledCoder();
@@ -50,6 +51,7 @@ public final class InetAddressSimpledCoder<R extends Reader, W extends Writer> e
      * @param <R> Reader输入的子类型
      * @param <W> Writer输出的子类型
      */
+    @SuppressWarnings("unchecked")
     public final static class InetSocketAddressSimpledCoder<R extends Reader, W extends Writer> extends SimpledCoder<R, W, InetSocketAddress> {
 
         public static final InetSocketAddressSimpledCoder instance = new InetSocketAddressSimpledCoder();

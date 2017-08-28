@@ -82,6 +82,7 @@ public interface Creator<T> {
 
         String[] value();
 
+        @SuppressWarnings("unchecked")
         static class CreatorInner {
 
             static class SimpleClassVisitor extends ClassVisitor {

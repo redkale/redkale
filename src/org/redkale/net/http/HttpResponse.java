@@ -186,6 +186,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     protected void thenEvent(Servlet servlet) {
         this.servlet = servlet;
     }
@@ -248,6 +249,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      *
      * @return AsyncHandler AsyncHandler
      */
+    @SuppressWarnings("unchecked")
     public <H extends AsyncHandler> H createAsyncHandler(Class<H> handlerClass) {
         if (handlerClass == null || handlerClass == AsyncHandler.class) return (H) createAsyncHandler();
         return context.loadAsyncHandlerCreator(handlerClass).create(createAsyncHandler());
@@ -358,6 +360,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * @param convert 指定的JsonConvert
      * @param future  输出对象的句柄
      */
+    @SuppressWarnings("unchecked")
     public void finishJson(final JsonConvert convert, final CompletableFuture future) {
         future.whenComplete((v, e) -> {
             if (e != null) {
@@ -382,6 +385,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * @param type    指定的类型
      * @param future  输出对象的句柄
      */
+    @SuppressWarnings("unchecked")
     public void finishJson(final JsonConvert convert, final Type type, final CompletableFuture future) {
         future.whenComplete((v, e) -> {
             if (e != null) {
@@ -416,6 +420,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * @param convert 指定的JsonConvert
      * @param result  HttpResult对象
      */
+    @SuppressWarnings("unchecked")
     public void finishJson(final JsonConvert convert, final HttpResult result) {
         if (output == null) {
             finish("");

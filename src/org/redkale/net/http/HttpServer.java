@@ -217,6 +217,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
      *
      * @return RestServlet
      */
+    @SuppressWarnings("unchecked")
     public <S extends Service, T extends HttpServlet> T addRestServlet(final ClassLoader classLoader, final String name, final S service, final Class userType, final Class<T> baseServletType, final String prefix) {
         T servlet = null;
         final boolean sncp = Sncp.isSncpDyn(service);

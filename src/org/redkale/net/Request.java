@@ -51,6 +51,7 @@ public abstract class Request<C extends Context> {
      * 返回值：Integer.MIN_VALUE: 帧数据； -1：数据不合法； 0：解析完毕； &gt;0: 需再读取的字节数。
      *
      * @param buffer ByteBuffer对象
+     *
      * @return 缺少的字节数
      */
     protected abstract int readHeader(ByteBuffer buffer);
@@ -59,6 +60,7 @@ public abstract class Request<C extends Context> {
      * 读取buffer，并返回读取的有效数据长度
      *
      * @param buffer ByteBuffer对象
+     *
      * @return 有效数据长度
      */
     protected abstract int readBody(ByteBuffer buffer);
@@ -82,8 +84,9 @@ public abstract class Request<C extends Context> {
         return (T) properties.get(name);
     }
 
+    @SuppressWarnings("unchecked")
     protected <T> T removeProperty(String name) {
-        return (T)properties.remove(name);
+        return (T) properties.remove(name);
     }
 
     protected Map<String, Object> getProperties() {
@@ -100,8 +103,9 @@ public abstract class Request<C extends Context> {
         return (T) attributes.get(name);
     }
 
+    @SuppressWarnings("unchecked")
     public <T> T removeAttribute(String name) {
-        return (T)attributes.remove(name);
+        return (T) attributes.remove(name);
     }
 
     public Map<String, Object> getAttributes() {

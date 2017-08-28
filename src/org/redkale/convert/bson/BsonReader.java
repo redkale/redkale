@@ -87,6 +87,7 @@ public class BsonReader extends Reader {
      * 跳过属性的值
      */
     @Override
+    @SuppressWarnings("unchecked")
     public final void skipValue() {
         if (typeval == 0) return;
         final byte val = this.typeval;

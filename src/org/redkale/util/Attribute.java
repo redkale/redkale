@@ -74,6 +74,7 @@ import static jdk.internal.org.objectweb.asm.Opcodes.*;
  * @param <T> 字段依附的类
  * @param <F> 字段的数据类型
  */
+@SuppressWarnings("unchecked")
 public interface Attribute<T, F> {
 
     /**
