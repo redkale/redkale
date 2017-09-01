@@ -92,7 +92,16 @@ public final class Rest {
             return new MethodVisitor(Opcodes.ASM5) {
                 @Override
                 public void visitLocalVariable(String name, String description, String signature, Label start, Label end, int index) {
-                    if (index > 0) fieldnames.add(name);
+                    if (index < 1) return;
+                    int size = fieldnames.size();
+                    //index并不会按顺序执行的
+                    if (index > size) {
+                        for (int i = size; i < index; i++) {
+                            fieldnames.add(" ");
+                        }
+                        fieldnames.set(index - 1, name);
+                    }
+                    fieldnames.set(index - 1, name);
                 }
             };
         }
