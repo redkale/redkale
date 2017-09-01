@@ -106,7 +106,7 @@ public final class DataSources {
         }
     }
 
-    static Map<String, Properties> loadPersistenceXml(final InputStream in0) {
+    public static Map<String, Properties> loadPersistenceXml(final InputStream in0) {
         final Map<String, Properties> map = new LinkedHashMap();
         Properties result = new Properties();
         boolean flag = false;
