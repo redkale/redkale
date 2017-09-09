@@ -37,7 +37,7 @@ public final class AnyEncoder<T> implements Encodeable<Writer, T> {
 
     @SuppressWarnings("unchecked")
     public void convertMapTo(final Writer out, final Object... values) {
-        if (values == null || values.length < 2) {
+        if (values == null) {
             out.writeNull();
         } else {
             int count = values.length - values.length % 2;
