@@ -149,6 +149,15 @@ public final class JsonConvert extends Convert<JsonReader, JsonWriter> {
         return result;
     }
 
+    public String convertMapTo(final Object... values) {
+        if (values == null) return "null";
+        final JsonWriter out = writerPool.get().tiny(tiny);
+        ((AnyEncoder) factory.getAnyEncoder()).convertMapTo(out, values);
+        String result = out.toString();
+        writerPool.offer(out);
+        return result;
+    }
+
     public void convertTo(final OutputStream out, final Object value) {
         if (value == null) {
             new JsonStreamWriter(tiny, out).writeNull();
@@ -163,6 +172,14 @@ public final class JsonConvert extends Convert<JsonReader, JsonWriter> {
             new JsonStreamWriter(tiny, out).writeNull();
         } else {
             factory.loadEncoder(type).convertTo(new JsonStreamWriter(tiny, out), value);
+        }
+    }
+
+    public void convertMapTo(final OutputStream out, final Object... values) {
+        if (values == null) {
+            new JsonStreamWriter(tiny, out).writeNull();
+        } else {
+            ((AnyEncoder) factory.getAnyEncoder()).convertMapTo(new JsonStreamWriter(tiny, out), values);
         }
     }
 
@@ -190,6 +207,18 @@ public final class JsonConvert extends Convert<JsonReader, JsonWriter> {
         return out.toBuffers();
     }
 
+    @Override
+    public ByteBuffer[] convertMapTo(final Supplier<ByteBuffer> supplier, final Object... values) {
+        if (supplier == null) return null;
+        JsonByteBufferWriter out = new JsonByteBufferWriter(tiny, null, supplier);
+        if (values == null) {
+            out.writeNull();
+        } else {
+            ((AnyEncoder) factory.getAnyEncoder()).convertMapTo(out, values);
+        }
+        return out.toBuffers();
+    }
+
     public void convertTo(final JsonWriter writer, final Object value) {
         if (value == null) {
             writer.writeNull();
@@ -207,6 +236,14 @@ public final class JsonConvert extends Convert<JsonReader, JsonWriter> {
         }
     }
 
+    public void convertMapTo(final JsonWriter writer, final Object... values) {
+        if (values == null) {
+            writer.writeNull();
+        } else {
+            ((AnyEncoder) factory.getAnyEncoder()).convertMapTo(writer, values);
+        }
+    }
+
     public JsonWriter convertToWriter(final Object value) {
         if (value == null) return null;
         return convertToWriter(value.getClass(), value);
@@ -216,6 +253,12 @@ public final class JsonConvert extends Convert<JsonReader, JsonWriter> {
         if (type == null) return null;
         final JsonWriter out = writerPool.get().tiny(tiny);
         factory.loadEncoder(type).convertTo(out, value);
+        return out;
+    }
+
+    public JsonWriter convertMapToWriter(final Object... values) {
+        final JsonWriter out = writerPool.get().tiny(tiny);
+        ((AnyEncoder) factory.getAnyEncoder()).convertMapTo(out, values);
         return out;
     }
 }

@@ -40,4 +40,7 @@ public abstract class Convert<R extends Reader, W extends Writer> {
     public abstract ByteBuffer[] convertTo(final Supplier<ByteBuffer> supplier, final Object value);
 
     public abstract ByteBuffer[] convertTo(final Supplier<ByteBuffer> supplier, final Type type, final Object value);
+
+    public abstract ByteBuffer[] convertMapTo(final Supplier<ByteBuffer> supplier, final Object... values);
+
 }

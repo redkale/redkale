@@ -267,6 +267,18 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
     }
 
     /**
+     * 将对象数组用Map的形式以JSON格式输出 <br>
+     * 例如: finishMap("a",2,"b",3) 输出结果为 {"a":2,"b":3}
+     *
+     * @param objs 输出对象
+     */
+    public void finishMapJson(final Object... objs) {
+        this.contentType = "text/plain; charset=utf-8";
+        if (this.recycleListener != null) this.output = objs;
+        finish(request.getJsonConvert().convertMapTo(context.getBufferSupplier(), objs));
+    }
+
+    /**
      * 将对象以JSON格式输出
      *
      * @param convert 指定的JsonConvert
@@ -276,6 +288,19 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         this.contentType = "text/plain; charset=utf-8";
         if (this.recycleListener != null) this.output = obj;
         finish(convert.convertTo(context.getBufferSupplier(), obj));
+    }
+
+    /**
+     * 将对象数组用Map的形式以JSON格式输出 <br>
+     * 例如: finishMap("a",2,"b",3) 输出结果为 {"a":2,"b":3}
+     *
+     * @param convert 指定的JsonConvert
+     * @param objs    输出对象
+     */
+    public void finishMapJson(final JsonConvert convert, final Object... objs) {
+        this.contentType = "text/plain; charset=utf-8";
+        if (this.recycleListener != null) this.output = objs;
+        finish(convert.convertMapTo(context.getBufferSupplier(), objs));
     }
 
     /**
