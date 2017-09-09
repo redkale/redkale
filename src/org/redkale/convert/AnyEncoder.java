@@ -35,6 +35,23 @@ public final class AnyEncoder<T> implements Encodeable<Writer, T> {
         }
     }
 
+    @SuppressWarnings("unchecked")
+    public void convertMapTo(final Writer out, final Object... values) {
+        if (values == null || values.length < 2) {
+            out.writeNull();
+        } else {
+            int count = values.length - values.length % 2;
+            out.writeMapB(count / 2);
+            for (int i = 0; i < count; i += 2) {
+                if (i > 0) out.writeArrayMark();
+                this.convertTo(out, (T) values[i]);
+                out.writeMapMark();
+                this.convertTo(out, (T) values[i + 1]);
+            }
+            out.writeMapE();
+        }
+    }
+
     @Override
     public Type getType() {
         return Object.class;
