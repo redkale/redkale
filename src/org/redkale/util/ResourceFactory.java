@@ -9,7 +9,7 @@ import java.lang.ref.WeakReference;
 import java.lang.reflect.*;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.function.BiConsumer;
+import java.util.function.*;
 import java.util.logging.*;
 import javax.annotation.Resource;
 
@@ -99,7 +99,7 @@ public final class ResourceFactory {
      *    1: "$"有特殊含义, 不能表示"$"资源本身
      *    2: 只能是字母、数字、(短横)-、(下划线)_、点(.)的组合
      * </pre></blockquote>
-     * 
+     *
      * @param name String
      */
     public void checkName(String name) {
@@ -471,11 +471,11 @@ public final class ResourceFactory {
     }
 
     public <A> List<A> query(Class<? extends A> clazz) {
-        return query(new ArrayList<A>(), clazz);
+        return query(new ArrayList<>(), clazz);
     }
 
     public <A> List<A> query(Type clazz) {
-        return query(new ArrayList<A>(), clazz);
+        return query(new ArrayList<>(), clazz);
     }
 
     private <A> List<A> query(final List<A> list, Type clazz) {
@@ -486,6 +486,21 @@ public final class ResourceFactory {
             }
         }
         if (parent != null) query(list, clazz);
+        return list;
+    }
+
+    public <A> List<A> query(final BiPredicate<String, A> predicate) {
+        return query(new ArrayList<>(), predicate);
+    }
+
+    private <A> List<A> query(final List<A> list, final BiPredicate<String, A> predicate) {
+        if (predicate == null) return list;
+        for (ConcurrentHashMap<String, ResourceEntry> map : this.store.values()) {
+            for (Map.Entry<String, ResourceEntry> en : map.entrySet()) {
+                if (predicate.test(en.getKey(), (A) en.getValue().value)) list.add((A) en.getValue().value);
+            }
+        }
+        if (parent != null) query(list, predicate);
         return list;
     }
 
