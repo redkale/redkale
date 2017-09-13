@@ -489,15 +489,17 @@ public final class ResourceFactory {
         return list;
     }
 
-    public <A> List<A> query(final BiPredicate<String, A> predicate) {
+    public <A> List<A> query(final BiPredicate<String, Object> predicate) {
         return query(new ArrayList<>(), predicate);
     }
 
-    private <A> List<A> query(final List<A> list, final BiPredicate<String, A> predicate) {
+    private <A> List<A> query(final List<A> list, final BiPredicate<String, Object> predicate) {
         if (predicate == null) return list;
         for (ConcurrentHashMap<String, ResourceEntry> map : this.store.values()) {
             for (Map.Entry<String, ResourceEntry> en : map.entrySet()) {
-                if (predicate.test(en.getKey(), (A) en.getValue().value)) list.add((A) en.getValue().value);
+                if (predicate.test(en.getKey(), en.getValue().value)) {
+                    list.add((A) en.getValue().value);
+                }
             }
         }
         if (parent != null) query(list, predicate);
