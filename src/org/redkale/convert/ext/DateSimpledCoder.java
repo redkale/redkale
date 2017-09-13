@@ -32,7 +32,7 @@ public final class DateSimpledCoder<R extends Reader, W extends Writer> extends 
     @Override
     public Date convertFrom(R in) {
         long t = in.readLong();
-        return t == 0 ? null : new Date();
+        return t == 0 ? null : new Date(t);
     }
 
 }
