@@ -1026,54 +1026,59 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
 
         private long count;//读取文件的字节数
 
-        private long position = 0;
+        private long readpos = 0;
 
-        private boolean next = false;
+        private boolean hdwrite = true; //写入Header
 
-        private boolean read = true;
+        private boolean read = false;
 
         public TransferFileHandler(File file) throws IOException {
             this.file = file;
             this.filechannel = AsynchronousFileChannel.open(file.toPath(), options, ((HttpContext) context).getExecutor());
-            this.position = 0;
+            this.readpos = 0;
             this.max = file.length();
         }
 
         public TransferFileHandler(File file, long offset, long len) throws IOException {
             this.file = file;
             this.filechannel = AsynchronousFileChannel.open(file.toPath(), options, ((HttpContext) context).getExecutor());
-            this.position = offset <= 0 ? 0 : offset;
+            this.readpos = offset <= 0 ? 0 : offset;
             this.max = len <= 0 ? file.length() : len;
         }
 
         @Override
         public void completed(Integer result, ByteBuffer attachment) {
-            //(Thread.currentThread().getName() + "-----------" + file + "-------------------result: " + result + ", max = " + max + ", count = " + count);
+            //(Utility.now() + "---" + Thread.currentThread().getName() + "-----------" + file + "-------------------result: " + result + ", max = " + max + ", readpos = " + readpos + ", count = " + count + ", " + (hdwrite ? "正在写Header" : (read ? "准备读" : "准备写")));
             if (result < 0 || count >= max) {
                 failed(null, attachment);
                 return;
             }
-            if (!next && attachment.hasRemaining()) { //Header还没写完
+            if (hdwrite && attachment.hasRemaining()) { //Header还没写完
+                channel.write(attachment, attachment, this);
+                return;
+            }
+            if (hdwrite) {
+                //(Utility.now() + "---" + Thread.currentThread().getName() + "-----------" + file + "-------------------Header写入完毕， 准备读取文件.");
+                hdwrite = false;
+                read = true;
+                result = 0;
+            }
+            if (read) {
+                count += result;
+            } else {
+                readpos += result;
+            }
+            if (read && attachment.hasRemaining()) { //Buffer还没写完
                 channel.write(attachment, attachment, this);
                 return;
             }
 
-            if (next && read && attachment.hasRemaining()) { //Buffer还没写完
-                channel.write(attachment, attachment, this);
-                return;
-            }
             if (read) {
                 read = false;
-                if (next) {
-                    position += result;
-                } else {
-                    next = true;
-                }
                 attachment.clear();
-                filechannel.read(attachment, position, attachment, this);
+                filechannel.read(attachment, readpos, attachment, this);
             } else {
                 read = true;
-                count += result;
                 if (count > max) {
                     attachment.limit((int) (attachment.position() + max - count));
                 }
