@@ -57,7 +57,7 @@ public final class WebSocketPacket {
 
     protected boolean last = true;
 
-    protected Object sendJson;
+    Object sendJson;
 
     Convert sendConvert;
 
@@ -74,47 +74,10 @@ public final class WebSocketPacket {
         this(payload, true);
     }
 
-    public WebSocketPacket(Serializable message, boolean fin) {
-        boolean bin = message != null && message.getClass() == byte[].class;
-        if (bin) {
-            this.type = FrameType.BINARY;
-            this.bytes = (byte[]) message;
-        } else {
-            this.type = FrameType.TEXT;
-            this.payload = String.valueOf(message);
-        }
-        this.last = fin;
-    }
-
     public WebSocketPacket(String payload, boolean fin) {
         this.type = FrameType.TEXT;
         this.payload = payload;
         this.last = fin;
-    }
-
-    public WebSocketPacket(Convert convert, Object json, boolean fin) {
-        this.type = (convert == null || !convert.isBinary()) ? FrameType.TEXT : FrameType.BINARY;
-        this.sendConvert = convert;
-        this.sendJson = json;
-        this.last = fin;
-    }
-
-    WebSocketPacket(ByteBuffer[] sendBuffers, FrameType type, boolean fin) {
-        this.type = type;
-        this.last = fin;
-        this.setSendBuffers(sendBuffers);
-    }
-
-    void setSendBuffers(ByteBuffer[] sendBuffers) {
-        this.sendBuffers = sendBuffers;
-    }
-
-    ByteBuffer[] duplicateSendBuffers() {
-        ByteBuffer[] rs = new ByteBuffer[this.sendBuffers.length];
-        for (int i = 0; i < this.sendBuffers.length; i++) {
-            rs[i] = this.sendBuffers[i].duplicate().asReadOnlyBuffer(); //必须使用asReadOnlyBuffer， 否则会导致ByteBuffer对应的byte[]被ObjectPool回收两次
-        }
-        return rs;
     }
 
     public WebSocketPacket(byte[] data) {
@@ -139,7 +102,44 @@ public final class WebSocketPacket {
         this.last = fin;
     }
 
-    public byte[] getContent() {
+    public WebSocketPacket(Serializable message, boolean fin) {
+        boolean bin = message != null && message.getClass() == byte[].class;
+        if (bin) {
+            this.type = FrameType.BINARY;
+            this.bytes = (byte[]) message;
+        } else {
+            this.type = FrameType.TEXT;
+            this.payload = String.valueOf(message);
+        }
+        this.last = fin;
+    }
+
+    WebSocketPacket(Convert convert, Object json, boolean fin) {
+        this.type = (convert == null || !convert.isBinary()) ? FrameType.TEXT : FrameType.BINARY;
+        this.sendConvert = convert;
+        this.sendJson = json;
+        this.last = fin;
+    }
+
+    WebSocketPacket(ByteBuffer[] sendBuffers, FrameType type, boolean fin) {
+        this.type = type;
+        this.last = fin;
+        this.setSendBuffers(sendBuffers);
+    }
+
+    void setSendBuffers(ByteBuffer[] sendBuffers) {
+        this.sendBuffers = sendBuffers;
+    }
+
+    ByteBuffer[] duplicateSendBuffers() {
+        ByteBuffer[] rs = new ByteBuffer[this.sendBuffers.length];
+        for (int i = 0; i < this.sendBuffers.length; i++) {
+            rs[i] = this.sendBuffers[i].duplicate().asReadOnlyBuffer(); //必须使用asReadOnlyBuffer， 否则会导致ByteBuffer对应的byte[]被ObjectPool回收两次
+        }
+        return rs;
+    }
+
+    public byte[] content() {
         if (this.type == FrameType.TEXT) return Utility.encodeUTF8(getPayload());
         if (this.bytes == null) return new byte[0];
         return this.bytes;
@@ -155,6 +155,26 @@ public final class WebSocketPacket {
 
     public boolean isLast() {
         return last;
+    }
+
+    public FrameType getType() {
+        return type;
+    }
+
+    public void setType(FrameType type) {
+        this.type = type;
+    }
+
+    public void setPayload(String payload) {
+        this.payload = payload;
+    }
+
+    public void setBytes(byte[] bytes) {
+        this.bytes = bytes;
+    }
+
+    public void setLast(boolean last) {
+        this.last = last;
     }
 
     @Override
@@ -212,7 +232,7 @@ public final class WebSocketPacket {
         }
 
         ByteBuffer buffer = supplier.get();  //确保ByteBuffer的capacity不能小于128
-        final byte[] content = getContent();
+        final byte[] content = content();
         final int len = content.length;
         if (len <= 0x7D) { //125
             buffer.put(opcode);
