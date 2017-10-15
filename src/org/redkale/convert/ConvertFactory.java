@@ -7,7 +7,7 @@ package org.redkale.convert;
 
 import java.io.File;
 import java.lang.reflect.*;
-import java.math.BigInteger;
+import java.math.*;
 import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.CompletionHandler;
@@ -89,6 +89,7 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
             this.register(CharSequence.class, CharSequenceSimpledCoder.instance);
             this.register(java.util.Date.class, DateSimpledCoder.instance);
             this.register(BigInteger.class, BigIntegerSimpledCoder.instance);
+            this.register(BigDecimal.class, BigDecimalSimpledCoder.instance);
             this.register(InetAddress.class, InetAddressSimpledCoder.instance);
             this.register(DLong.class, DLongSimpledCoder.instance);
             this.register(Class.class, TypeSimpledCoder.instance);
