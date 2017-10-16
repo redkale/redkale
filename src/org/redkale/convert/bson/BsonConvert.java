@@ -37,7 +37,7 @@ import org.redkale.util.*;
  *
  * @author zhangjx
  */
-public final class BsonConvert extends Convert<BsonReader, BsonWriter> {
+public final class BsonConvert extends BinaryConvert<BsonReader, BsonWriter> {
 
     private static final ObjectPool<BsonReader> readerPool = BsonReader.createPool(Integer.getInteger("convert.bson.pool.size", 16));
 
@@ -57,11 +57,6 @@ public final class BsonConvert extends Convert<BsonReader, BsonWriter> {
 
     public static BsonConvert root() {
         return BsonFactory.root().getConvert();
-    }
-
-    @Override
-    public boolean isBinary() {
-        return true;
     }
 
     //------------------------------ reader -----------------------------------------------------------
@@ -144,6 +139,7 @@ public final class BsonConvert extends Convert<BsonReader, BsonWriter> {
     }
 
     //------------------------------ convertTo -----------------------------------------------------------
+    @Override
     public byte[] convertTo(final Object value) {
         if (value == null) {
             final BsonWriter out = writerPool.get().tiny(tiny);
@@ -155,6 +151,7 @@ public final class BsonConvert extends Convert<BsonReader, BsonWriter> {
         return convertTo(value.getClass(), value);
     }
 
+    @Override
     public byte[] convertTo(final Type type, final Object value) {
         if (type == null) return null;
         final BsonWriter out = writerPool.get().tiny(tiny);

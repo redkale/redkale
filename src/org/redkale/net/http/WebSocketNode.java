@@ -13,6 +13,7 @@ import java.util.concurrent.*;
 import java.util.logging.*;
 import javax.annotation.*;
 import org.redkale.boot.*;
+import org.redkale.convert.*;
 import org.redkale.service.*;
 import org.redkale.source.*;
 import org.redkale.util.*;
@@ -198,7 +199,21 @@ public abstract class WebSocketNode {
      * @return 为0表示成功， 其他值表示部分发送异常
      */
     public final CompletableFuture<Integer> sendMessage(Object message, final Serializable... userids) {
-        return sendMessage(message, true, userids);
+        return sendMessage((Convert) null, message, true, userids);
+    }
+
+    /**
+     * 向指定用户发送消息，先发送本地连接，再发送远程连接  <br>
+     * 如果当前WebSocketNode是远程模式，此方法只发送远程连接
+     *
+     * @param convert Convert
+     * @param message 消息内容
+     * @param userids Serializable[]
+     *
+     * @return 为0表示成功， 其他值表示部分发送异常
+     */
+    public final CompletableFuture<Integer> sendMessage(final Convert convert, Object message, final Serializable... userids) {
+        return sendMessage(convert, message, true, userids);
     }
 
     /**
@@ -212,7 +227,23 @@ public abstract class WebSocketNode {
      * @return 为0表示成功， 其他值表示部分发送异常
      */
     public final CompletableFuture<Integer> sendMessage(final Object message, final boolean last, final Serializable... userids) {
+        return sendMessage((Convert) null, message, last, userids);
+    }
+
+    /**
+     * 向指定用户发送消息，先发送本地连接，再发送远程连接  <br>
+     * 如果当前WebSocketNode是远程模式，此方法只发送远程连接
+     *
+     * @param convert  Convert
+     * @param message0 消息内容
+     * @param last     是否最后一条
+     * @param userids  Serializable[]
+     *
+     * @return 为0表示成功， 其他值表示部分发送异常
+     */
+    public final CompletableFuture<Integer> sendMessage(final Convert convert, final Object message0, final boolean last, final Serializable... userids) {
         if (userids == null || userids.length < 1) return CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY);
+        final Object message = (convert == null || message0 instanceof WebSocketPacket) ? message0 : ((convert instanceof TextConvert) ? new WebSocketPacket(((TextConvert) convert).convertTo(message0), last) : new WebSocketPacket(((BinaryConvert) convert).convertTo(message0), last));
         if (this.localEngine != null && this.sncpNodeAddresses == null) { //本地模式且没有分布式
             return this.localEngine.sendMessage(message, last, userids);
         }
@@ -232,7 +263,19 @@ public abstract class WebSocketNode {
      * @return 为0表示成功， 其他值表示部分发送异常
      */
     public final CompletableFuture<Integer> broadcastMessage(final Object message) {
-        return broadcastMessage(message, true);
+        return broadcastMessage((Convert) null, message, true);
+    }
+
+    /**
+     * 广播消息， 给所有人发消息
+     *
+     * @param convert Convert
+     * @param message 消息内容
+     *
+     * @return 为0表示成功， 其他值表示部分发送异常
+     */
+    public final CompletableFuture<Integer> broadcastMessage(final Convert convert, final Object message) {
+        return broadcastMessage(convert, message, true);
     }
 
     /**
@@ -244,6 +287,20 @@ public abstract class WebSocketNode {
      * @return 为0表示成功， 其他值表示部分发送异常
      */
     public final CompletableFuture<Integer> broadcastMessage(final Object message, final boolean last) {
+        return broadcastMessage((Convert) null, message, last);
+    }
+
+    /**
+     * 广播消息， 给所有人发消息
+     *
+     * @param convert  Convert
+     * @param message0 消息内容
+     * @param last     是否最后一条
+     *
+     * @return 为0表示成功， 其他值表示部分发送异常
+     */
+    public final CompletableFuture<Integer> broadcastMessage(final Convert convert, final Object message0, final boolean last) {
+        final Object message = (convert == null || message0 instanceof WebSocketPacket) ? message0 : ((convert instanceof TextConvert) ? new WebSocketPacket(((TextConvert) convert).convertTo(message0), last) : new WebSocketPacket(((BinaryConvert) convert).convertTo(message0), last));
         if (this.localEngine != null && this.sncpNodeAddresses == null) { //本地模式且没有分布式
             return this.localEngine.broadcastMessage(message, last);
         }

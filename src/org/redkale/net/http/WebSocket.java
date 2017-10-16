@@ -207,6 +207,19 @@ public abstract class WebSocket<G extends Serializable, T> {
     /**
      * 给指定userid的WebSocket节点发送 二进制消息/文本消息/JavaBean对象消息
      *
+     * @param convert Convert
+     * @param message 不可为空
+     * @param userids Serializable[]
+     *
+     * @return 为0表示成功， 其他值表示异常
+     */
+    public final CompletableFuture<Integer> sendMessage(final Convert convert, Object message, G... userids) {
+        return sendMessage(convert, message, true, userids);
+    }
+
+    /**
+     * 给指定userid的WebSocket节点发送 二进制消息/文本消息/JavaBean对象消息
+     *
      * @param message 不可为空
      * @param last    是否最后一条
      * @param userids Serializable[]
@@ -214,11 +227,25 @@ public abstract class WebSocket<G extends Serializable, T> {
      * @return 为0表示成功， 其他值表示异常
      */
     public final CompletableFuture<Integer> sendMessage(Object message, boolean last, G... userids) {
+        return sendMessage((Convert) null, message, last, userids);
+    }
+
+    /**
+     * 给指定userid的WebSocket节点发送 二进制消息/文本消息/JavaBean对象消息
+     *
+     * @param convert Convert
+     * @param message 不可为空
+     * @param last    是否最后一条
+     * @param userids Serializable[]
+     *
+     * @return 为0表示成功， 其他值表示异常
+     */
+    public final CompletableFuture<Integer> sendMessage(final Convert convert, Object message, boolean last, G... userids) {
         if (_engine.node == null) return CompletableFuture.completedFuture(RETCODE_NODESERVICE_NULL);
         if (message instanceof CompletableFuture) {
-            return ((CompletableFuture) message).thenCompose((json) -> _engine.node.sendMessage(json, last, userids));
+            return ((CompletableFuture) message).thenCompose((json) -> _engine.node.sendMessage(convert, json, last, userids));
         }
-        CompletableFuture<Integer> rs = _engine.node.sendMessage(message, last, userids);
+        CompletableFuture<Integer> rs = _engine.node.sendMessage(convert, message, last, userids);
         if (_engine.finest) _engine.logger.finest("userids:" + Arrays.toString(userids) + " send websocket message(" + message + ")");
         return rs;
     }
@@ -231,7 +258,19 @@ public abstract class WebSocket<G extends Serializable, T> {
      * @return 为0表示成功， 其他值表示部分发送异常
      */
     public final CompletableFuture<Integer> broadcastMessage(final Object message) {
-        return broadcastMessage(message, true);
+        return broadcastMessage((Convert) null, message, true);
+    }
+
+    /**
+     * 广播消息， 给所有人发消息
+     *
+     * @param convert Convert
+     * @param message 消息内容
+     *
+     * @return 为0表示成功， 其他值表示部分发送异常
+     */
+    public final CompletableFuture<Integer> broadcastMessage(final Convert convert, final Object message) {
+        return broadcastMessage(convert, message, true);
     }
 
     /**
@@ -243,11 +282,24 @@ public abstract class WebSocket<G extends Serializable, T> {
      * @return 为0表示成功， 其他值表示部分发送异常
      */
     public final CompletableFuture<Integer> broadcastMessage(final Object message, final boolean last) {
+        return broadcastMessage((Convert) null, message, last);
+    }
+
+    /**
+     * 广播消息， 给所有人发消息
+     *
+     * @param convert Convert
+     * @param message 消息内容
+     * @param last    是否最后一条
+     *
+     * @return 为0表示成功， 其他值表示部分发送异常
+     */
+    public final CompletableFuture<Integer> broadcastMessage(final Convert convert, final Object message, final boolean last) {
         if (_engine.node == null) return CompletableFuture.completedFuture(RETCODE_NODESERVICE_NULL);
         if (message instanceof CompletableFuture) {
-            return ((CompletableFuture) message).thenCompose((json) -> _engine.node.broadcastMessage(json, last));
+            return ((CompletableFuture) message).thenCompose((json) -> _engine.node.broadcastMessage(convert, json, last));
         }
-        CompletableFuture<Integer> rs = _engine.node.broadcastMessage(message, last);
+        CompletableFuture<Integer> rs = _engine.node.broadcastMessage(convert, message, last);
         if (_engine.finest) _engine.logger.finest("broadcast send websocket message(" + message + ")");
         return rs;
     }

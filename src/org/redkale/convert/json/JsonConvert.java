@@ -21,7 +21,7 @@ import org.redkale.util.*;
  * @author zhangjx
  */
 @SuppressWarnings("unchecked")
-public final class JsonConvert extends Convert<JsonReader, JsonWriter> {
+public final class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
 
     public static final Type TYPE_MAP_STRING_STRING = new TypeToken<java.util.LinkedHashMap<String, String>>() {
     }.getType();
@@ -44,11 +44,6 @@ public final class JsonConvert extends Convert<JsonReader, JsonWriter> {
 
     public static JsonConvert root() {
         return JsonFactory.root().getConvert();
-    }
-
-    @Override
-    public boolean isBinary() {
-        return false;
     }
 
     //------------------------------ reader -----------------------------------------------------------
@@ -134,11 +129,13 @@ public final class JsonConvert extends Convert<JsonReader, JsonWriter> {
     }
 
     //------------------------------ convertTo -----------------------------------------------------------
+    @Override
     public String convertTo(final Object value) {
         if (value == null) return "null";
         return convertTo(value.getClass(), value);
     }
 
+    @Override
     public String convertTo(final Type type, final Object value) {
         if (type == null) return null;
         if (value == null) return "null";
