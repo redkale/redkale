@@ -118,7 +118,18 @@ public abstract class WebSocket<G extends Serializable, T> {
      * @return 0表示成功， 非0表示错误码
      */
     public final CompletableFuture<Integer> send(Object message) {
-        return send(message, true);
+        return send(false, message, true);
+    }
+
+    /**
+     * 给自身发送消息, 消息类型是key-value键值对
+     *
+     * @param messages key-value键值对
+     *
+     * @return 0表示成功， 非0表示错误码
+     */
+    public final CompletableFuture<Integer> sendMap(Object... messages) {
+        return send(true, messages, true);
     }
 
     /**
@@ -130,6 +141,31 @@ public abstract class WebSocket<G extends Serializable, T> {
      * @return 0表示成功， 非0表示错误码
      */
     public final CompletableFuture<Integer> send(Object message, boolean last) {
+        return send(false, message, last);
+    }
+
+    /**
+     * 给自身发送消息, 消息类型是key-value键值对
+     *
+     * @param last     是否最后一条
+     * @param messages key-value键值对
+     *
+     * @return 0表示成功， 非0表示错误码
+     */
+    public final CompletableFuture<Integer> sendMap(boolean last, Object... messages) {
+        return send(true, messages, last);
+    }
+
+    /**
+     * 给自身发送消息, 消息类型是Object[]
+     *
+     * @param mapconvable 是否convertMapTo
+     * @param message     不可为空, 只能是String或byte[]或可JavaBean对象，或Object[]
+     * @param last        是否最后一条
+     *
+     * @return 0表示成功， 非0表示错误码
+     */
+    private CompletableFuture<Integer> send(boolean mapconvable, Object message, boolean last) {
         if (message instanceof CompletableFuture) {
             return ((CompletableFuture) message).thenCompose((json) -> {
                 if (json == null || json instanceof CharSequence || json instanceof byte[]) {
@@ -137,7 +173,7 @@ public abstract class WebSocket<G extends Serializable, T> {
                 } else if (message instanceof WebSocketPacket) {
                     return sendPacket((WebSocketPacket) message);
                 } else {
-                    return sendPacket(new WebSocketPacket(getSendConvert(), json, last));
+                    return sendPacket(new WebSocketPacket(getSendConvert(), mapconvable, json, last));
                 }
             });
         }
@@ -146,7 +182,7 @@ public abstract class WebSocket<G extends Serializable, T> {
         } else if (message instanceof WebSocketPacket) {
             return sendPacket((WebSocketPacket) message);
         } else {
-            return sendPacket(new WebSocketPacket(getSendConvert(), message, last));
+            return sendPacket(new WebSocketPacket(getSendConvert(), mapconvable, message, last));
         }
     }
 
@@ -173,9 +209,9 @@ public abstract class WebSocket<G extends Serializable, T> {
      */
     public final CompletableFuture<Integer> send(Convert convert, Object message, boolean last) {
         if (message instanceof CompletableFuture) {
-            return ((CompletableFuture) message).thenCompose((json) -> sendPacket(new WebSocketPacket(convert == null ? getSendConvert() : convert, json, last)));
+            return ((CompletableFuture) message).thenCompose((json) -> sendPacket(new WebSocketPacket(convert == null ? getSendConvert() : convert, false, json, last)));
         }
-        return sendPacket(new WebSocketPacket(convert == null ? getSendConvert() : convert, message, last));
+        return sendPacket(new WebSocketPacket(convert == null ? getSendConvert() : convert, false, message, last));
     }
 
     /**

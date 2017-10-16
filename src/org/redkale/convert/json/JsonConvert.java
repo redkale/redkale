@@ -146,6 +146,7 @@ public final class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
         return result;
     }
 
+    @Override
     public String convertMapTo(final Object... values) {
         if (values == null) return "null";
         final JsonWriter out = writerPool.get().tiny(tiny);

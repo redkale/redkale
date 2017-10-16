@@ -161,6 +161,7 @@ public final class BsonConvert extends BinaryConvert<BsonReader, BsonWriter> {
         return result;
     }
 
+    @Override
     public byte[] convertMapTo(final Object... values) {
         if (values == null) return null;
         final BsonWriter out = writerPool.get().tiny(tiny);

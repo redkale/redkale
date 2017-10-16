@@ -61,6 +61,8 @@ public final class WebSocketPacket {
 
     Convert sendConvert;
 
+    boolean mapconvable;
+
     ByteBuffer[] sendBuffers;
 
     ConvertMask receiveMasker;
@@ -114,11 +116,13 @@ public final class WebSocketPacket {
         this.last = fin;
     }
 
-    WebSocketPacket(Convert convert, Object json, boolean fin) {
+    WebSocketPacket(Convert convert, boolean mapconvable, Object json, boolean fin) {
         this.type = (convert == null || !convert.isBinary()) ? FrameType.TEXT : FrameType.BINARY;
         this.sendConvert = convert;
+        this.mapconvable = mapconvable;
         this.sendJson = json;
         this.last = fin;
+        if (mapconvable && !(json instanceof Object[])) throw new IllegalArgumentException();
     }
 
     WebSocketPacket(ByteBuffer[] sendBuffers, FrameType type, boolean fin) {
@@ -207,7 +211,7 @@ public final class WebSocketPacket {
                     return supplier.get();
                 }
             };
-            ByteBuffer[] buffers = this.sendConvert.convertTo(newsupplier, sendJson);
+            ByteBuffer[] buffers = this.mapconvable ? this.sendConvert.convertMapTo(supplier, (Object[]) sendJson) : this.sendConvert.convertTo(newsupplier, sendJson);
             int len = 0;
             for (ByteBuffer buf : buffers) {
                 len += buf.remaining();

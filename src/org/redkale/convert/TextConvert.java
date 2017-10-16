@@ -32,4 +32,5 @@ public abstract class TextConvert<R extends Reader, W extends Writer> extends Co
 
     public abstract String convertTo(final Type type, final Object value);
 
+    public abstract String convertMapTo(final Object... values);
 }
