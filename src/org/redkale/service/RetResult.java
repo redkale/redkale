@@ -5,6 +5,7 @@
  */
 package org.redkale.service;
 
+import java.util.*;
 import org.redkale.convert.json.*;
 
 /**
@@ -27,6 +28,8 @@ public class RetResult<T> {
     protected String retinfo;
 
     protected T result;
+
+    protected Map<String, String> attach;
 
     public RetResult() {
     }
@@ -100,6 +103,32 @@ public class RetResult<T> {
     }
 
     /**
+     * 同 setAttach
+     *
+     * @param attach attach
+     *
+     * @return RetResult
+     */
+    public RetResult<T> attach(Map<String, String> attach) {
+        this.attach = attach;
+        return this;
+    }
+
+    /**
+     * attach添加元素
+     *
+     * @param key   String
+     * @param value String
+     *
+     * @return RetResult
+     */
+    public RetResult<T> attach(String key, Object value) {
+        if (this.attach == null) this.attach = new HashMap<>();
+        this.attach.put(key, value == null ? null : String.valueOf(value));
+        return this;
+    }
+
+    /**
      * 结果码 0表示成功、 非0表示错误
      *
      * @return 结果码
@@ -146,6 +175,24 @@ public class RetResult<T> {
      */
     public void setResult(T result) {
         this.result = result;
+    }
+
+    /**
+     * 结果附件
+     *
+     * @return 结果附件
+     */
+    public Map<String, String> getAttach() {
+        return attach;
+    }
+
+    /**
+     * 设置结果附件
+     *
+     * @param attach Map
+     */
+    public void setAttach(Map<String, String> attach) {
+        this.attach = attach;
     }
 
     @Override
