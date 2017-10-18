@@ -132,6 +132,23 @@ public class WebSocketEngine {
         }
     }
 
+    @Comment("强制关闭本地用户的WebSocket")
+    public int forceCloseLocalWebSocket(Serializable userid) {
+        if (single) {
+            WebSocket ws = websockets.get(userid);
+            if (ws == null) return 0;
+            ws.close();
+            return 1;
+        }
+        List<WebSocket> list = websockets2.get(userid);
+        if (list == null || list.isEmpty()) return 0;
+        List<WebSocket> list2 = new ArrayList<>(list);
+        for (WebSocket ws : list2) {
+            ws.close();
+        }
+        return list2.size();
+    }
+
     @Comment("给所有连接用户发送消息")
     public CompletableFuture<Integer> broadcastMessage(final Object message, final boolean last) {
         return broadcastMessage(null, message, last);

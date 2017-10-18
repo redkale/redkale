@@ -87,4 +87,20 @@ public class WebSocketNodeService extends WebSocketNode implements Service {
         if (finest) logger.finest(WebSocketNodeService.class.getSimpleName() + ".event: " + userid + " disconnect from " + sncpAddr);
         return future;
     }
+
+    /**
+     * 强制关闭用户的WebSocket
+     *
+     * @param userid   String
+     * @param sncpAddr InetSocketAddress
+     *
+     * @return 无返回值
+     */
+    @Override
+    public CompletableFuture<Integer> forceCloseWebSocket(Serializable userid, InetSocketAddress sncpAddr) {
+        //不能从sncpNodeAddresses中移除，因为engine.forceCloseWebSocket 会调用到disconnect
+        if (finest) logger.finest(WebSocketNodeService.class.getSimpleName() + ".event: " + userid + " forceCloseWebSocket from " + sncpAddr);
+        if (localEngine == null) return CompletableFuture.completedFuture(0);
+        return CompletableFuture.completedFuture(localEngine.forceCloseLocalWebSocket(userid));
+    }
 }

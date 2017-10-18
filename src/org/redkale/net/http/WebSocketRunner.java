@@ -39,7 +39,7 @@ class WebSocketRunner implements Runnable {
 
     private ByteBuffer readBuffer;
 
-    protected volatile boolean closed = false;
+    volatile boolean closed = false;
 
     private AtomicBoolean writing = new AtomicBoolean();
 
@@ -75,7 +75,7 @@ class WebSocketRunner implements Runnable {
                     @Override
                     public void completed(Integer count, Void attachment1) {
                         if (count < 1 && readBuffers.isEmpty()) {
-                            closeRunner();
+                            closeRunner(0);
                             if (debug) context.getLogger().log(Level.FINEST, "WebSocketRunner abort on read buffer count, force to close channel, live " + (System.currentTimeMillis() - webSocket.getCreatetime()) / 1000 + " seconds");
                             return;
                         }
@@ -225,7 +225,7 @@ class WebSocketRunner implements Runnable {
                                 }
                             }
                         } catch (Throwable t) {
-                            closeRunner();
+                            closeRunner(0);
                             if (debug) context.getLogger().log(Level.FINEST, "WebSocketRunner abort on read WebSocketPacket, force to close channel, live " + (System.currentTimeMillis() - webSocket.getCreatetime()) / 1000 + " seconds", t);
                         } finally {
                             if (exBuffers != null) {
@@ -238,18 +238,18 @@ class WebSocketRunner implements Runnable {
 
                     @Override
                     public void failed(Throwable exc, Void attachment2) {
-                        closeRunner();
+                        closeRunner(0);
                         if (exc != null) {
                             context.getLogger().log(Level.FINEST, "WebSocketRunner read WebSocketPacket failed, force to close channel, live " + (System.currentTimeMillis() - webSocket.getCreatetime()) / 1000 + " seconds", exc);
                         }
                     }
                 });
             } else {
-                closeRunner();
+                closeRunner(0);
                 context.getLogger().log(Level.FINEST, "WebSocketRunner abort by AsyncConnection closed");
             }
         } catch (Exception e) {
-            closeRunner();
+            closeRunner(0);
             context.getLogger().log(Level.FINEST, "WebSocketRunner abort on read bytes from channel, force to close channel, live " + (System.currentTimeMillis() - webSocket.getCreatetime()) / 1000 + " seconds", e);
         }
     }
@@ -315,7 +315,7 @@ class WebSocketRunner implements Runnable {
                             channel.write(buffers, buffers, this);
                         }
                     } catch (Exception e) {
-                        closeRunner();
+                        closeRunner(0);
                         context.getLogger().log(Level.WARNING, "WebSocket sendMessage abort on rewrite, force to close channel, live " + (System.currentTimeMillis() - webSocket.getCreatetime()) / 1000 + " seconds", e);
                     }
                     writing.set(false);
@@ -324,7 +324,7 @@ class WebSocketRunner implements Runnable {
                 @Override
                 public void failed(Throwable exc, ByteBuffer[] attachments) {
                     writing.set(false);
-                    closeRunner();
+                    closeRunner(0);
                     if (exc != null) {
                         context.getLogger().log(Level.FINE, "WebSocket sendMessage on CompletionHandler failed, force to close channel, live " + (System.currentTimeMillis() - webSocket.getCreatetime()) / 1000 + " seconds", exc);
                     }
@@ -332,14 +332,14 @@ class WebSocketRunner implements Runnable {
             });
         } catch (Exception t) {
             writing.set(false);
-            closeRunner();
+            closeRunner(0);
             context.getLogger().log(Level.FINE, "WebSocket sendMessage abort, force to close channel, live " + (System.currentTimeMillis() - webSocket.getCreatetime()) / 1000 + " seconds", t);
             futureResult.complete(RETCODE_SENDEXCEPTION);
         }
         return futureResult;
     }
 
-    public void closeRunner() {
+    public void closeRunner(int code) {
         if (closed) return;
         synchronized (this) {
             if (closed) return;
@@ -351,7 +351,7 @@ class WebSocketRunner implements Runnable {
             context.offerBuffer(readBuffer);
             readBuffer = null;
             engine.remove(webSocket);
-            webSocket.onClose(0, null);
+            webSocket.onClose(code, null);
         }
     }
 

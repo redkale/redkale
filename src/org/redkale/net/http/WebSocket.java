@@ -37,6 +37,9 @@ import org.redkale.util.Comment;
  */
 public abstract class WebSocket<G extends Serializable, T> {
 
+    @Comment("强制关闭结果码")
+    public static final int CLOSECODE_FORCED = 1;
+
     @Comment("消息不合法")
     public static final int RETCODE_SEND_ILLPACKET = 1 << 1; //2
 
@@ -368,6 +371,18 @@ public abstract class WebSocket<G extends Serializable, T> {
     }
 
     /**
+     * 强制关闭用户的所有WebSocket
+     *
+     * @param userid Serializable
+     *
+     * @return int
+     */
+    @Comment("强制关闭用户的所有WebSocket")
+    public CompletableFuture<Integer> forceCloseWebSocket(Serializable userid) {
+        return _engine.node.forceCloseWebSocket(userid);
+    }
+
+    /**
      * 获取当前WebSocket下的属性，非线程安全
      *
      * @param <T>  属性值的类型
@@ -612,7 +627,16 @@ public abstract class WebSocket<G extends Serializable, T> {
      * 显式地关闭WebSocket
      */
     public final void close() {
-        if (this._runner != null) this._runner.closeRunner();
+        if (this._runner != null) this._runner.closeRunner(CLOSECODE_FORCED);
+    }
+
+    /**
+     * 是否关闭
+     *
+     * @return boolean
+     */
+    public final boolean isClosed() {
+        return this._runner != null ? this._runner.closed : true;
     }
 
     @Override

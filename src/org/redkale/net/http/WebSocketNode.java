@@ -79,6 +79,8 @@ public abstract class WebSocketNode {
 
     protected abstract CompletableFuture<Void> disconnect(Serializable userid, InetSocketAddress addr);
 
+    protected abstract CompletableFuture<Integer> forceCloseWebSocket(Serializable userid, InetSocketAddress addr);
+
     //--------------------------------------------------------------------------------
     final CompletableFuture<Void> connect(final Serializable userid) {
         if (finest) logger.finest(localSncpAddress + " receive websocket connect event (" + userid + " on " + this.localEngine.getEngineid() + ").");
@@ -176,6 +178,37 @@ public abstract class WebSocketNode {
         return this.sncpNodeAddresses.getKeySizeAsync().thenCompose(count -> {
             return sncpNodeAddresses.existsAsync(SOURCE_SNCP_NODES_KEY).thenApply(exists -> exists ? (count - 1) : count);
         });
+    }
+
+    /**
+     * 强制关闭用户WebSocket
+     *
+     * @param userid Serializable
+     *
+     * @return int
+     */
+    public final CompletableFuture<Integer> forceCloseWebSocket(final Serializable userid) {
+        CompletableFuture<Integer> localFuture = null;
+        if (this.localEngine != null) localFuture = CompletableFuture.completedFuture(localEngine.forceCloseLocalWebSocket(userid));
+        if (this.sncpNodeAddresses == null || this.remoteNode == null) {
+            if (finest) logger.finest("websocket remote node is null");
+            //没有CacheSource就不会有分布式节点
+            return localFuture;
+        }
+        //远程节点关闭
+        CompletableFuture<Collection<InetSocketAddress>> addrsFuture = sncpNodeAddresses.getCollectionAsync(userid);
+        CompletableFuture<Integer> remoteFuture = addrsFuture.thenCompose((Collection<InetSocketAddress> addrs) -> {
+            if (finest) logger.finest("websocket found userid:" + userid + " on " + addrs);
+            if (addrs == null || addrs.isEmpty()) return CompletableFuture.completedFuture(0);
+            CompletableFuture<Integer> future = null;
+            for (InetSocketAddress addr : addrs) {
+                if (addr == null || addr.equals(localSncpAddress)) continue;
+                future = future == null ? remoteNode.forceCloseWebSocket(userid, addr)
+                    : future.thenCombine(remoteNode.forceCloseWebSocket(userid, addr), (a, b) -> a + b);
+            }
+            return future == null ? CompletableFuture.completedFuture(0) : future;
+        });
+        return localFuture.thenCombine(remoteFuture, (a, b) -> a + b);
     }
 
     //--------------------------------------------------------------------------------
