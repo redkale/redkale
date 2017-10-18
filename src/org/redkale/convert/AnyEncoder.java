@@ -6,6 +6,7 @@
 package org.redkale.convert;
 
 import java.lang.reflect.Type;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * 对不明类型的对象进行序列化； BSON序列化时将对象的类名写入Writer，JSON则不写入。
@@ -46,7 +47,12 @@ public final class AnyEncoder<T> implements Encodeable<Writer, T> {
                 if (i > 0) out.writeArrayMark();
                 this.convertTo(out, (T) values[i]);
                 out.writeMapMark();
-                this.convertTo(out, (T) values[i + 1]);
+                Object val = values[i + 1];
+                if (val instanceof CompletableFuture) {
+                    this.convertTo(out, (T) ((CompletableFuture) val).join());
+                } else {
+                    this.convertTo(out, (T) val);
+                }
             }
             out.writeMapE();
         }
