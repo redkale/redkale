@@ -186,11 +186,22 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
                             return;
                         }
                         webSocket._userid = userid;
-                        WebSocketServlet.this.node.localEngine.add(webSocket);
-                        WebSocketRunner runner = new WebSocketRunner(context, webSocket, restMessageConsumer, response.removeChannel());
-                        webSocket._runner = runner;
-                        context.runAsync(runner);
-                        response.finish(true);
+                        if (single) {
+                            WebSocketServlet.this.node.existsWebSocket(userid).whenComplete((rs, ex) -> {
+                                if (rs) webSocket.onSingleRepeatConnect();
+                                WebSocketServlet.this.node.localEngine.add(webSocket);
+                                WebSocketRunner runner = new WebSocketRunner(context, webSocket, restMessageConsumer, response.removeChannel());
+                                webSocket._runner = runner;
+                                context.runAsync(runner);
+                                response.finish(true);
+                            });
+                        } else {
+                            WebSocketServlet.this.node.localEngine.add(webSocket);
+                            WebSocketRunner runner = new WebSocketRunner(context, webSocket, restMessageConsumer, response.removeChannel());
+                            webSocket._runner = runner;
+                            context.runAsync(runner);
+                            response.finish(true);
+                        }
                     });
                 }
 
