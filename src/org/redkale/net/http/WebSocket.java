@@ -235,12 +235,37 @@ public abstract class WebSocket<G extends Serializable, T> {
      * 给指定userid的WebSocket节点发送 二进制消息/文本消息/JavaBean对象消息
      *
      * @param message 不可为空
+     * @param userids Stream
+     *
+     * @return 为0表示成功， 其他值表示异常
+     */
+    public final CompletableFuture<Integer> sendMessage(Object message, Stream<G> userids) {
+        return sendMessage(message, true, userids);
+    }
+
+    /**
+     * 给指定userid的WebSocket节点发送 二进制消息/文本消息/JavaBean对象消息
+     *
+     * @param message 不可为空
      * @param userids Serializable[]
      *
      * @return 为0表示成功， 其他值表示异常
      */
     public final CompletableFuture<Integer> sendMessage(Object message, G... userids) {
         return sendMessage(message, true, userids);
+    }
+
+    /**
+     * 给指定userid的WebSocket节点发送 二进制消息/文本消息/JavaBean对象消息
+     *
+     * @param convert Convert
+     * @param message 不可为空
+     * @param userids Stream
+     *
+     * @return 为0表示成功， 其他值表示异常
+     */
+    public final CompletableFuture<Integer> sendMessage(final Convert convert, Object message, Stream<G> userids) {
+        return sendMessage(convert, message, true, userids);
     }
 
     /**
@@ -265,8 +290,40 @@ public abstract class WebSocket<G extends Serializable, T> {
      *
      * @return 为0表示成功， 其他值表示异常
      */
+    public final CompletableFuture<Integer> sendMessage(Object message, boolean last, Stream<G> userids) {
+        return sendMessage((Convert) null, message, last, userids);
+    }
+
+    /**
+     * 给指定userid的WebSocket节点发送 二进制消息/文本消息/JavaBean对象消息
+     *
+     * @param message 不可为空
+     * @param last    是否最后一条
+     * @param userids Serializable[]
+     *
+     * @return 为0表示成功， 其他值表示异常
+     */
     public final CompletableFuture<Integer> sendMessage(Object message, boolean last, G... userids) {
         return sendMessage((Convert) null, message, last, userids);
+    }
+
+    /**
+     * 给指定userid的WebSocket节点发送 二进制消息/文本消息/JavaBean对象消息
+     *
+     * @param convert Convert
+     * @param message 不可为空
+     * @param last    是否最后一条
+     * @param userids Stream
+     *
+     * @return 为0表示成功， 其他值表示异常
+     */
+    public final CompletableFuture<Integer> sendMessage(final Convert convert, Object message, boolean last, final Stream<G> userids) {
+        Object[] array = userids.toArray();
+        Serializable[] ss = new Serializable[array.length];
+        for (int i = 0; i < array.length; i++) {
+            ss[i] = (Serializable) array[i];
+        }
+        return sendMessage(convert, message, last, ss);
     }
 
     /**
@@ -279,7 +336,7 @@ public abstract class WebSocket<G extends Serializable, T> {
      *
      * @return 为0表示成功， 其他值表示异常
      */
-    public final CompletableFuture<Integer> sendMessage(final Convert convert, Object message, boolean last, G... userids) {
+    public final CompletableFuture<Integer> sendMessage(final Convert convert, Object message, boolean last, Serializable... userids) {
         if (_engine.node == null) return CompletableFuture.completedFuture(RETCODE_NODESERVICE_NULL);
         if (message instanceof CompletableFuture) {
             return ((CompletableFuture) message).thenCompose((json) -> _engine.node.sendMessage(convert, json, last, userids));
