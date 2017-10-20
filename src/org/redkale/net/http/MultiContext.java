@@ -133,17 +133,13 @@ public final class MultiContext {
             has = true;
             if (filenameReg != null && !filenameReg.isEmpty() && !part.getFilename().matches(filenameReg)) continue;
             if (contentTypeReg != null && !contentTypeReg.isEmpty() && !part.getContentType().matches(contentTypeReg)) continue;
-            String name = part.getFilename();
-            int pos = name.lastIndexOf('.');
-            if (pos > 0) {
-                int pos2 = name.lastIndexOf('.', pos - 1);
-                if (pos2 >= 0) pos = pos2;
-            }
-            File file = new File(home, "tmp/redkale_" + System.nanoTime() + (pos > 0 ? name.substring(pos) : name));
-            file.getParentFile().mkdirs();
+            File file = new File(home, "tmp/redkale_" + System.nanoTime() + "/" + part.getFilename());
+            File parent = file.getParentFile();
+            parent.mkdirs();
             boolean rs = part.save(max < 1 ? Long.MAX_VALUE : max, file);
             if (!rs) {
                 file.delete();
+                parent.delete();
             } else {
                 tmpfile = file;
             }
@@ -169,17 +165,13 @@ public final class MultiContext {
         for (MultiPart part : parts()) {
             if (filenameReg != null && !filenameReg.isEmpty() && !part.getFilename().matches(filenameReg)) continue;
             if (contentTypeReg != null && !contentTypeReg.isEmpty() && !part.getContentType().matches(contentTypeReg)) continue;
-            String name = part.getFilename();
-            int pos = name.lastIndexOf('.');
-            if (pos > 0) {
-                int pos2 = name.lastIndexOf('.', pos - 1);
-                if (pos2 >= 0) pos = pos2;
-            }
-            File file = new File(home, "tmp/redkale_" + System.nanoTime() + (pos > 0 ? name.substring(pos) : name));
-            file.getParentFile().mkdirs();
+            File file = new File(home, "tmp/redkale_" + System.nanoTime() + "/" + part.getFilename());
+            File parent = file.getParentFile();
+            parent.mkdirs();
             boolean rs = part.save(max < 1 ? Long.MAX_VALUE : max, file);
             if (!rs) {
                 file.delete();
+                parent.delete();
                 continue;
             }
             if (files == null) files = new ArrayList<>();
