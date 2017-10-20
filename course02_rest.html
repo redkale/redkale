@@ -184,6 +184,7 @@
             <span class="o">}</span>
         <span class="o">}</span> <span class="k">finally</span> <span class="o">{</span> <span class="c1">//如果发生异常，将临时文件从{APP_HOME}/tmp 目录下删除</span>
             <span class="n">tmpFile</span><span class="o">.</span><span class="na">delete</span><span class="o">();</span>
+            <span class="n">tmpFile</span><span class="o">.</span><span class="na">getParentFile</span><span class="o">().</span><span class="na">delete</span><span class="o">();</span>
         <span class="o">}</span>
         <span class="k">return</span> <span class="n">RetResult</span><span class="o">.</span><span class="na">success</span><span class="o">();</span>
     <span class="o">}</span>
