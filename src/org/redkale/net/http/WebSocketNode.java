@@ -232,7 +232,7 @@ public abstract class WebSocketNode {
      *
      * @return 为0表示成功， 其他值表示部分发送异常
      */
-    public final CompletableFuture<Integer> sendMessage(Object message, final Stream<Serializable> userids) {
+    public final CompletableFuture<Integer> sendMessage(Object message, final Stream<? extends Serializable> userids) {
         return sendMessage((Convert) null, message, true, userids);
     }
 
@@ -259,7 +259,7 @@ public abstract class WebSocketNode {
      *
      * @return 为0表示成功， 其他值表示部分发送异常
      */
-    public final CompletableFuture<Integer> sendMessage(final Convert convert, Object message, final Stream<Serializable> userids) {
+    public final CompletableFuture<Integer> sendMessage(final Convert convert, Object message, final Stream<? extends Serializable> userids) {
         return sendMessage(convert, message, true, userids);
     }
 
@@ -287,7 +287,7 @@ public abstract class WebSocketNode {
      *
      * @return 为0表示成功， 其他值表示部分发送异常
      */
-    public final CompletableFuture<Integer> sendMessage(final Object message, final boolean last, final Stream<Serializable> userids) {
+    public final CompletableFuture<Integer> sendMessage(final Object message, final boolean last, final Stream<? extends Serializable> userids) {
         return sendMessage((Convert) null, message, last, userids);
     }
 
@@ -316,7 +316,7 @@ public abstract class WebSocketNode {
      *
      * @return 为0表示成功， 其他值表示部分发送异常
      */
-    public final CompletableFuture<Integer> sendMessage(final Convert convert, final Object message0, final boolean last, final Stream<Serializable> userids) {
+    public final CompletableFuture<Integer> sendMessage(final Convert convert, final Object message0, final boolean last, final Stream<? extends Serializable> userids) {
         Object[] array = userids.toArray();
         Serializable[] ss = new Serializable[array.length];
         for (int i = 0; i < array.length; i++) {

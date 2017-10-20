@@ -202,7 +202,7 @@ public class WebSocketEngine {
     }
 
     @Comment("给指定用户组发送消息")
-    public CompletableFuture<Integer> sendMessage(final Object message, final boolean last, final Stream<Serializable> userids) {
+    public CompletableFuture<Integer> sendMessage(final Object message, final boolean last, final Stream<? extends Serializable> userids) {
         Object[] array = userids.toArray();
         Serializable[] ss = new Serializable[array.length];
         for (int i = 0; i < array.length; i++) {
