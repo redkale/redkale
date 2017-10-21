@@ -191,7 +191,7 @@ public final class Rest {
         final ClassLoader loader = classLoader == null ? Thread.currentThread().getContextClassLoader() : classLoader;
         Class clzz = webSocketType;
         do {
-            for (Field field : webSocketType.getDeclaredFields()) {
+            for (Field field : clzz.getDeclaredFields()) {
                 if (field.getAnnotation(Resource.class) == null) continue;
                 if (Modifier.isStatic(webSocketType.getModifiers())) throw new RuntimeException(field + " cannot static on createRestWebSocketServlet");
                 if (Modifier.isFinal(webSocketType.getModifiers())) throw new RuntimeException(field + " cannot final on createRestWebSocketServlet");
