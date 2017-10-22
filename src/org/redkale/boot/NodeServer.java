@@ -345,7 +345,7 @@ public abstract class NodeServer {
                     } else {
                         service = Sncp.createRemoteService(serverClassLoader, resourceName, serviceImplClass, appTransportFactory, NodeServer.this.sncpAddress, groups, entry.getProperty());
                     }
-                    if (SncpClient.parseMethod(serviceImplClass).isEmpty()) return; //class没有可用的方法， 通常为BaseService
+                    if (SncpClient.parseMethod(serviceImplClass).isEmpty() && serviceImplClass.getAnnotation(Priority.class) == null) return; //class没有可用的方法且没有标记启动优先级的， 通常为BaseService
 
                     final Class restype = Sncp.getResourceType(service);
                     if (rf.find(resourceName, restype) == null) {
@@ -398,6 +398,11 @@ public abstract class NodeServer {
         //----------------- init -----------------
         List<Service> swlist = new ArrayList<>(localServices);
         Collections.sort(swlist, (o1, o2) -> {
+            Priority p1 = o1.getClass().getAnnotation(Priority.class);
+            Priority p2 = o2.getClass().getAnnotation(Priority.class);
+            int v1 = p1 == null ? 0 : p1.value();
+            int v2 = p2 == null ? 0 : p2.value();
+            if (v1 != v2) return v1 - v2;
             int rs = Sncp.getResourceType(o1).getName().compareTo(Sncp.getResourceType(o2).getName());
             if (rs == 0) rs = Sncp.getResourceName(o1).compareTo(Sncp.getResourceName(o2));
             return rs;
@@ -406,7 +411,7 @@ public abstract class NodeServer {
         localServices.addAll(swlist);
         final List<String> slist = sb == null ? null : new CopyOnWriteArrayList<>();
         CountDownLatch clds = new CountDownLatch(localServices.size());
-        localServices.parallelStream().forEach(y -> {
+        localServices.stream().forEach(y -> {
             try {
                 long s = System.currentTimeMillis();
                 y.init(Sncp.getConf(y));
@@ -420,7 +425,6 @@ public abstract class NodeServer {
         clds.await();
         if (slist != null && sb != null) {
             List<String> wlist = new ArrayList<>(slist); //直接使用CopyOnWriteArrayList偶尔会出现莫名的异常(CopyOnWriteArrayList源码1185行)
-            Collections.sort(wlist);
             for (String s : wlist) {
                 sb.append(s);
             }

@@ -33,18 +33,11 @@ public abstract class Filter<C extends Context, R extends Request<C>, P extends 
     public void destroy(C context, AnyValue config) {
     }
 
-    /**
-     * 值越小越靠前执行
-     *
-     * @return int
-     */
-    public int getIndex() {
-        return 0;
-    }
-
     @Override
     public final int compareTo(Object o) {
         if (!(o instanceof Filter)) return 1;
-        return this.getIndex() - ((Filter) o).getIndex();
+        Priority p1 = this.getClass().getAnnotation(Priority.class);
+        Priority p2 = o.getClass().getAnnotation(Priority.class);
+        return (p1 == null ? 0 : p1.value()) - (p2 == null ? 0 : p2.value());
     }
 }

@@ -152,7 +152,12 @@ public class NodeHttpServer extends NodeServer {
         list.sort((FilterEntry<? extends Servlet> o1, FilterEntry<? extends Servlet> o2) -> {  //必须保证WebSocketServlet优先加载， 因为要确保其他的HttpServlet可以注入本地模式的WebSocketNode
             boolean ws1 = WebSocketServlet.class.isAssignableFrom(o1.getType());
             boolean ws2 = WebSocketServlet.class.isAssignableFrom(o2.getType());
-            if (ws1 == ws2) return o1.getType().getName().compareTo(o2.getType().getName());
+            if (ws1 == ws2) {
+                Priority p1 = o1.getType().getAnnotation(Priority.class);
+                Priority p2 = o2.getType().getAnnotation(Priority.class);
+                int v = (p1 == null ? 0 : p1.value()) - (p2 == null ? 0 : p2.value());
+                return v == 0 ? o1.getType().getName().compareTo(o2.getType().getName()) : 0;
+            }
             return ws1 ? -1 : 1;
         });
         final List<AbstractMap.SimpleEntry<String, String[]>> ss = sb == null ? null : new ArrayList<>();

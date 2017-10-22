@@ -29,6 +29,7 @@ import org.redkale.source.Flipper;
  *
  * @author zhangjx
  */
+@SuppressWarnings("unchecked")
 public final class Rest {
 
     public static final String REST_HEADER_RESOURCE_NAME = "rest-resource-name";
