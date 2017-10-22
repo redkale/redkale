@@ -108,7 +108,7 @@ public abstract class NodeServer {
     public void init(AnyValue config) throws Exception {
         this.serverConf = config == null ? AnyValue.create() : config;
         if (isSNCP()) { // SNCP协议
-            String host = this.serverConf.getValue("host", "0.0.0.0").replace("0.0.0.0", "");
+            String host = this.serverConf.getValue("host", isWATCH() ? "127.0.0.1" : "0.0.0.0").replace("0.0.0.0", "");
             this.sncpAddress = new InetSocketAddress(host.isEmpty() ? application.localAddress.getHostAddress() : host, this.serverConf.getIntValue("port"));
             this.sncpGroup = application.transportFactory.findGroupName(this.sncpAddress);
             //单向SNCP服务不需要对等group
