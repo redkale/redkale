@@ -32,6 +32,7 @@ import org.redkale.util.AnyValue.DefaultAnyValue;
 import org.redkale.util.*;
 import org.redkale.watch.*;
 import org.w3c.dom.*;
+import sun.misc.Signal;
 
 /**
  *
@@ -275,6 +276,20 @@ public final class Application {
                     throw new RuntimeException(e);
                 }
                 logger.log(Level.INFO, Transport.class.getSimpleName() + " configure bufferCapacity = " + bufferCapacity + "; bufferPoolSize = " + bufferPoolSize + "; threads = " + threads + ";");
+            }
+        }
+        if (transportGroup == null) {
+            final AtomicInteger counter = new AtomicInteger();
+            transportExec = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 8, (Runnable r) -> {
+                Thread t = new Thread(r);
+                t.setDaemon(true);
+                t.setName("Transport-Thread-" + counter.incrementAndGet());
+                return t;
+            });
+            try {
+                transportGroup = AsynchronousChannelGroup.withCachedThreadPool(transportExec, 1);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
             }
         }
         this.transportFactory = new TransportFactory(transportExec, transportPool, transportGroup, strategy);
@@ -593,8 +608,36 @@ public final class Application {
         runServers(timecd, others);
         runServers(timecd, watchs); //必须在所有服务都启动后再启动WATCH服务
         timecd.await();
+        if (!singletonrun) signalHandle();
         logger.info(this.getClass().getSimpleName() + " started in " + (System.currentTimeMillis() - startTime) + " ms\r\n");
         if (!singletonrun) this.serversLatch.await();
+    }
+
+    private void signalHandle() {
+        //http://www.comptechdoc.org/os/linux/programming/linux_pgsignals.html
+        String[] sigs = new String[]{"HUP", "TERM", "INT", "QUIT", "KILL", "TSTP", "USR1", "USR2", "STOP"};
+        List<sun.misc.Signal> list = new ArrayList<>();
+        for (String sig : sigs) {
+            try {
+                list.add(new sun.misc.Signal(sig));
+            } catch (Exception e) {
+            }
+        }
+        sun.misc.SignalHandler handler = new sun.misc.SignalHandler() {
+
+            private volatile boolean runed;
+
+            @Override
+            public void handle(Signal sig) {
+                if (runed) return;
+                runed = true;
+                logger.info(Application.this.getClass().getSimpleName() + " stoped\r\n");
+                System.exit(0);
+            }
+        };
+        for (Signal sig : list) {
+            Signal.handle(sig, handler);
+        }
     }
 
     @SuppressWarnings("unchecked")
