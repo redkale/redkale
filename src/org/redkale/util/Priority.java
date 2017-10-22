@@ -19,7 +19,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  */
 @Inherited
 @Documented
-@Target({TYPE, METHOD, FIELD})
+@Target({TYPE, METHOD})
 @Retention(RUNTIME)
 public @interface Priority {
 
