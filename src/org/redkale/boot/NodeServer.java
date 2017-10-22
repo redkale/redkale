@@ -15,7 +15,7 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.*;
 import java.util.logging.*;
-import javax.annotation.Resource;
+import javax.annotation.*;
 import javax.persistence.Transient;
 import static org.redkale.boot.Application.*;
 import org.redkale.boot.ClassFilter.FilterEntry;
