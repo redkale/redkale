@@ -71,7 +71,7 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
     protected int threads;
 
     //线程池
-    protected ExecutorService executor;
+    protected ThreadPoolExecutor executor;
 
     //ByteBuffer池大小
     protected int bufferPoolSize;
@@ -113,7 +113,7 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         final AtomicInteger counter = new AtomicInteger();
         final Format f = createFormat();
         final String n = name;
-        this.executor = Executors.newFixedThreadPool(threads, (Runnable r) -> {
+        this.executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(threads, (Runnable r) -> {
             Thread t = new WorkThread(executor, r);
             t.setName(n + "-ServletThread-" + f.format(counter.incrementAndGet()));
             return t;
@@ -164,6 +164,13 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
 
     public C getContext() {
         return this.context;
+    }
+
+    public void setThreads(int threads) {
+        int oldthreads = this.threads;
+        this.context.executor.setCorePoolSize(threads);
+        this.threads = threads;
+        logger.info("[" + Thread.currentThread().getName() + "] " + this.getClass().getSimpleName() + " change threads from " + oldthreads + " to " + threads);
     }
 
     @SuppressWarnings("unchecked")

@@ -31,7 +31,7 @@ public class Context {
     protected final long serverStartTime;
 
     //Server的线程池
-    protected final ExecutorService executor;
+    protected final ThreadPoolExecutor executor;
 
     //ByteBuffer的容量，默认8K
     protected final int bufferCapacity;
@@ -69,7 +69,7 @@ public class Context {
     //JSON操作工厂
     protected final JsonFactory jsonFactory;
 
-    public Context(long serverStartTime, Logger logger, ExecutorService executor, int bufferCapacity, ObjectPool<ByteBuffer> bufferPool, ObjectPool<Response> responsePool,
+    public Context(long serverStartTime, Logger logger, ThreadPoolExecutor executor, int bufferCapacity, ObjectPool<ByteBuffer> bufferPool, ObjectPool<Response> responsePool,
         final int maxbody, Charset charset, InetSocketAddress address, final PrepareServlet prepare, final int readTimeoutSecond, final int writeTimeoutSecond) {
         this.serverStartTime = serverStartTime;
         this.logger = logger;
