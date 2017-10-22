@@ -38,6 +38,6 @@ public abstract class Filter<C extends Context, R extends Request<C>, P extends 
         if (!(o instanceof Filter)) return 1;
         Priority p1 = this.getClass().getAnnotation(Priority.class);
         Priority p2 = o.getClass().getAnnotation(Priority.class);
-        return (p1 == null ? 0 : p1.value()) - (p2 == null ? 0 : p2.value());
+        return (p2 == null ? 0 : p2.value()) - (p1 == null ? 0 : p1.value());
     }
 }

@@ -10,7 +10,7 @@ import static java.lang.annotation.ElementType.*;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * 优先级， 值越小越靠前执行
+ * 优先级， 值越大优先级最高，越靠前执行
  *
  * <p>
  * 详情见: https://redkale.org
