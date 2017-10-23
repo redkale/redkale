@@ -96,15 +96,15 @@ public final class ResourceFactory {
      * 检查资源名是否合法
      * <blockquote><pre>
      * name规则:
-     *    1: "$"有特殊含义, 不能表示"$"资源本身
+     *    1: "$"有特殊含义, 表示资源本身，"$"不能单独使用
      *    2: 只能是字母、数字、(短横)-、(下划线)_、点(.)的组合
      * </pre></blockquote>
      *
      * @param name String
      */
-    public void checkName(String name) {
+    public static void checkName(String name) {
         if (name == null || (!name.isEmpty() && !name.matches("^[a-zA-Z0-9_;\\-\\.\\[\\]\\(\\)]+$"))) {
-            throw new IllegalArgumentException("Resource.name(" + name + ") contains illegal character, must be (a-z,A-Z,0-9,_,.,(,),-,[,])");
+            throw new IllegalArgumentException("name(" + name + ") contains illegal character, must be (a-z,A-Z,0-9,_,.,(,),-,[,])");
         }
     }
 
