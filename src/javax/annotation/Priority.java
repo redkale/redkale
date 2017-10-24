@@ -22,6 +22,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
+ * 值越大，优先级越高
+ * 
  * @since Common Annotations 1.2
  */
 @Target({ElementType.TYPE})
