@@ -266,7 +266,7 @@ public abstract class Sncp {
     protected static <T extends Service> Class<? extends T> createLocalServiceClass(ClassLoader classLoader, final String name, final Class<T> serviceImplClass) {
         if (serviceImplClass == null) return null;
         if (!Service.class.isAssignableFrom(serviceImplClass)) return serviceImplClass;
-        ResourceFactory.checkName(name); 
+        ResourceFactory.checkName(name);
         int mod = serviceImplClass.getModifiers();
         if (!java.lang.reflect.Modifier.isPublic(mod)) return serviceImplClass;
         if (java.lang.reflect.Modifier.isAbstract(mod)) return serviceImplClass;
@@ -891,7 +891,7 @@ public abstract class Sncp {
         final AnyValue conf) {
         if (serviceTypeOrImplClass == null) return null;
         if (!Service.class.isAssignableFrom(serviceTypeOrImplClass)) return null;
-        ResourceFactory.checkName(name); 
+        ResourceFactory.checkName(name);
         int mod = serviceTypeOrImplClass.getModifiers();
         boolean realed = !(java.lang.reflect.Modifier.isAbstract(mod) || serviceTypeOrImplClass.isInterface());
         if (!java.lang.reflect.Modifier.isPublic(mod)) return null;

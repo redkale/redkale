@@ -19,6 +19,7 @@ import javax.annotation.*;
 import javax.persistence.Transient;
 import static org.redkale.boot.Application.*;
 import org.redkale.boot.ClassFilter.FilterEntry;
+import org.redkale.convert.bson.*;
 import org.redkale.net.Filter;
 import org.redkale.net.*;
 import org.redkale.net.http.WebSocketServlet;
@@ -408,6 +409,7 @@ public abstract class NodeServer {
         });
         localServices.clear();
         localServices.addAll(swlist);
+        this.loadPersistData();
         final List<String> slist = sb == null ? null : new CopyOnWriteArrayList<>();
         CountDownLatch clds = new CountDownLatch(localServices.size());
         localServices.stream().forEach(y -> {
@@ -434,6 +436,117 @@ public abstract class NodeServer {
     private void calcMaxLength(Service y) { //计算toString中的长度
         maxNameLength = Math.max(maxNameLength, Sncp.getResourceName(y).length());
         maxClassNameLength = Math.max(maxClassNameLength, Sncp.getResourceType(y).getName().length() + 1);
+    }
+
+    @SuppressWarnings("unchecked")
+    protected void loadPersistData() throws Exception {
+        File home = application.getHome();
+        if (home == null || !home.isDirectory()) return;
+        File cachedir = new File(home, "cache");
+        if (!cachedir.isDirectory()) return;
+        int port = this.server.getSocketAddress().getPort();
+        final String prefix = "persist-" + port + "-";
+        final BsonConvert convert = BsonFactory.create().skipAllIgnore(true).getConvert();
+        for (final File file : cachedir.listFiles((dir, name) -> name.startsWith(prefix))) {
+            if (!file.getName().endsWith(".bat")) continue;
+            String classAndResname = file.getName().substring(prefix.length(), file.getName().length() - 4); //去掉尾部的.bat
+            int pos = classAndResname.indexOf('-');
+            String servtype = pos > 0 ? classAndResname.substring(0, pos) : classAndResname;
+            String resname = pos > 0 ? classAndResname.substring(pos + 1) : "";
+
+            FileInputStream in = new FileInputStream(file);
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            int b;
+            while ((b = in.read()) != '\n') out.write(b);
+            final String[] fieldNames = out.toString().split(",");
+            int timeout = (int) ((System.currentTimeMillis() - file.lastModified()) / 1000);
+            for (final Service service : this.localServices) {
+                if (!servtype.equals(Sncp.getResourceType(service).getName())) continue;
+                if (!resname.equals(Sncp.getResourceName(service))) continue;
+                for (final String fieldName : fieldNames) {
+                    Field field = null;
+                    Class clzz = service.getClass();
+                    do {
+                        try {
+                            field = clzz.getDeclaredField(fieldName);
+                            break;
+                        } catch (Exception e) {
+                        }
+                    } while ((clzz = clzz.getSuperclass()) != Object.class);
+                    field.setAccessible(true);
+                    Object val = convert.convertFrom(field.getGenericType(), in);
+                    Persist persist = field.getAnnotation(Persist.class);
+                    if (persist.timeout() == 0 || persist.timeout() >= timeout) {
+                        if (Modifier.isFinal(field.getModifiers())) {
+                            if (Map.class.isAssignableFrom(field.getType())) {
+                                ((Map) field.get(service)).putAll((Map) val);
+                            } else if (Collection.class.isAssignableFrom(field.getType())) {
+                                ((Collection) field.get(service)).addAll((Collection) val);
+                            }
+                        } else {
+                            field.set(service, val);
+                        }
+                    }
+                    if (in.read() != '\n') logger.log(Level.SEVERE, servtype + "'s [" + resname + "] load value error");
+                }
+            }
+            in.close();
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    protected void savePersistData() throws IOException {
+        File home = application.getHome();
+        if (home == null || !home.isDirectory()) return;
+        File cachedir = new File(home, "cache");
+        int port = this.server.getSocketAddress().getPort();
+        final String prefix = "persist-" + port + "-";
+        final BsonConvert convert = BsonFactory.create().skipAllIgnore(true).getConvert();
+        for (final Service service : this.localServices) {
+            Class clzz = service.getClass();
+            final Set<String> fieldNameSet = new HashSet<>();
+            final List<Field> fields = new ArrayList<>();
+            final StringBuilder sb = new StringBuilder();
+            do {
+                for (Field field : clzz.getDeclaredFields()) {
+                    if (field.getAnnotation(Persist.class) == null) continue;
+                    if (fieldNameSet.contains(field.getName())) continue;
+                    if (Modifier.isStatic(field.getModifiers())) throw new RuntimeException(field + " cannot static on @" + Persist.class.getName() + " in " + clzz.getName());
+                    if (Modifier.isFinal(field.getModifiers()) && !Map.class.isAssignableFrom(field.getType()) && !Collection.class.isAssignableFrom(field.getType())) {
+                        throw new RuntimeException(field + " cannot final on @" + Persist.class.getName() + " in " + clzz.getName());
+                    }
+                    fieldNameSet.add(field.getName());
+                    field.setAccessible(true);
+                    try {
+                        if (field.get(service) == null) continue;
+                    } catch (Exception e) {
+                        logger.log(Level.SEVERE, field + " get value error", e);
+                        continue;
+                    }
+                    fields.add(field);
+                    if (sb.length() > 0) sb.append(',');
+                    sb.append(field.getName());
+                }
+            } while ((clzz = clzz.getSuperclass()) != Object.class);
+
+            if (fields.isEmpty()) continue; //没有数据需要缓存
+            if (!cachedir.isDirectory()) cachedir.mkdirs();
+            String resname = Sncp.getResourceName(service);
+            FileOutputStream out = new FileOutputStream(new File(cachedir, prefix + Sncp.getResourceType(service).getName() + (resname.isEmpty() ? "" : ("-" + resname)) + ".bat"));
+            out.write(sb.toString().getBytes());
+            out.write('\n');
+            for (Field field : fields) {
+                Object val = null;
+                try {
+                    val = field.get(service);
+                } catch (Exception e) {
+                    logger.log(Level.SEVERE, field + " save value error", e);
+                }
+                out.write(convert.convertTo(field.getGenericType(), val));
+                out.write('\n');
+            }
+            out.close();
+        }
     }
 
     protected abstract ClassFilter<Filter> createFilterClassFilter();
@@ -577,6 +690,7 @@ public abstract class NodeServer {
             }
         });
         if (sb != null && sb.length() > 0) logger.log(Level.INFO, sb.toString());
+        this.savePersistData();
         server.shutdown();
     }
 

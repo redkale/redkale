@@ -609,8 +609,17 @@ public final class Application {
         runServers(timecd, watchs); //必须在所有服务都启动后再启动WATCH服务
         timecd.await();
         if (!singletonrun) signalHandle();
+        if (!singletonrun) clearPersistData();
         logger.info(this.getClass().getSimpleName() + " started in " + (System.currentTimeMillis() - startTime) + " ms\r\n");
         if (!singletonrun) this.serversLatch.await();
+    }
+
+    private void clearPersistData() {
+        File cachedir = new File(home, "cache");
+        if (!cachedir.isDirectory()) return;
+        for (File file : cachedir.listFiles()) {
+            if (file.getName().startsWith("persist-")) file.delete();
+        }
     }
 
     private void signalHandle() {

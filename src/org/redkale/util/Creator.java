@@ -13,6 +13,7 @@ import java.lang.reflect.*;
 import java.net.*;
 import java.util.*;
 import java.util.AbstractMap.SimpleEntry;
+import java.util.concurrent.*;
 import jdk.internal.org.objectweb.asm.*;
 import jdk.internal.org.objectweb.asm.Type;
 import static jdk.internal.org.objectweb.asm.Opcodes.*;
@@ -206,6 +207,8 @@ public interface Creator<T> {
             clazz = (Class<T>) HashMap.class;
         } else if (clazz.isAssignableFrom(HashSet.class)) {
             clazz = (Class<T>) HashSet.class;
+        } else if (clazz == ConcurrentMap.class) {
+            clazz = (Class<T>) ConcurrentHashMap.class;
         }
         if (clazz.isInterface() || Modifier.isAbstract(clazz.getModifiers())) {
             throw new RuntimeException("[" + clazz + "] is a interface or abstract class, cannot create it's Creator.");
