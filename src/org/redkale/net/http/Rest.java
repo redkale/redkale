@@ -190,15 +190,18 @@ public final class Rest {
         //----------------------------------------------------------------------------------------
         final Set<Field> resourcesFieldSet = new LinkedHashSet<>();
         final ClassLoader loader = classLoader == null ? Thread.currentThread().getContextClassLoader() : classLoader;
+        final Set<String> resourcesFieldNameSet = new HashSet<>();
         Class clzz = webSocketType;
         do {
             for (Field field : clzz.getDeclaredFields()) {
                 if (field.getAnnotation(Resource.class) == null) continue;
-                if (Modifier.isStatic(webSocketType.getModifiers())) throw new RuntimeException(field + " cannot static on createRestWebSocketServlet");
-                if (Modifier.isFinal(webSocketType.getModifiers())) throw new RuntimeException(field + " cannot final on createRestWebSocketServlet");
-                if (!Modifier.isPublic(webSocketType.getModifiers()) && !Modifier.isProtected(webSocketType.getModifiers())) {
+                if (resourcesFieldNameSet.contains(field.getName())) continue;
+                if (Modifier.isStatic(field.getModifiers())) throw new RuntimeException(field + " cannot static on createRestWebSocketServlet");
+                if (Modifier.isFinal(field.getModifiers())) throw new RuntimeException(field + " cannot final on createRestWebSocketServlet");
+                if (!Modifier.isPublic(field.getModifiers()) && !Modifier.isProtected(field.getModifiers())) {
                     throw new RuntimeException(field + " must be public or protected on createRestWebSocketServlet");
                 }
+                resourcesFieldNameSet.add(field.getName());
                 resourcesFieldSet.add(field);
             }
         } while ((clzz = clzz.getSuperclass()) != Object.class);
