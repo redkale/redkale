@@ -409,7 +409,7 @@ public abstract class NodeServer {
         });
         localServices.clear();
         localServices.addAll(swlist);
-        this.loadPersistData();
+        //this.loadPersistData();
         final List<String> slist = sb == null ? null : new CopyOnWriteArrayList<>();
         CountDownLatch clds = new CountDownLatch(localServices.size());
         localServices.stream().forEach(y -> {
@@ -438,8 +438,9 @@ public abstract class NodeServer {
         maxClassNameLength = Math.max(maxClassNameLength, Sncp.getResourceType(y).getName().length() + 1);
     }
 
+    //尚未完整实现， 先屏蔽
     @SuppressWarnings("unchecked")
-    protected void loadPersistData() throws Exception {
+    private void loadPersistData() throws Exception {
         File home = application.getHome();
         if (home == null || !home.isDirectory()) return;
         File cachedir = new File(home, "cache");
@@ -447,55 +448,58 @@ public abstract class NodeServer {
         int port = this.server.getSocketAddress().getPort();
         final String prefix = "persist-" + port + "-";
         final BsonConvert convert = BsonFactory.create().skipAllIgnore(true).getConvert();
-        for (final File file : cachedir.listFiles((dir, name) -> name.startsWith(prefix))) {
-            if (!file.getName().endsWith(".bat")) continue;
-            String classAndResname = file.getName().substring(prefix.length(), file.getName().length() - 4); //去掉尾部的.bat
-            int pos = classAndResname.indexOf('-');
-            String servtype = pos > 0 ? classAndResname.substring(0, pos) : classAndResname;
-            String resname = pos > 0 ? classAndResname.substring(pos + 1) : "";
+        synchronized (this.application) {
+            for (final File file : cachedir.listFiles((dir, name) -> name.startsWith(prefix))) {
+                if (!file.getName().endsWith(".bat")) continue;
+                String classAndResname = file.getName().substring(prefix.length(), file.getName().length() - 4); //去掉尾部的.bat
+                int pos = classAndResname.indexOf('-');
+                String servtype = pos > 0 ? classAndResname.substring(0, pos) : classAndResname;
+                String resname = pos > 0 ? classAndResname.substring(pos + 1) : "";
 
-            FileInputStream in = new FileInputStream(file);
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            int b;
-            while ((b = in.read()) != '\n') out.write(b);
-            final String[] fieldNames = out.toString().split(",");
-            int timeout = (int) ((System.currentTimeMillis() - file.lastModified()) / 1000);
-            for (final Service service : this.localServices) {
-                if (!servtype.equals(Sncp.getResourceType(service).getName())) continue;
-                if (!resname.equals(Sncp.getResourceName(service))) continue;
-                for (final String fieldName : fieldNames) {
-                    Field field = null;
-                    Class clzz = service.getClass();
-                    do {
-                        try {
-                            field = clzz.getDeclaredField(fieldName);
-                            break;
-                        } catch (Exception e) {
-                        }
-                    } while ((clzz = clzz.getSuperclass()) != Object.class);
-                    field.setAccessible(true);
-                    Object val = convert.convertFrom(field.getGenericType(), in);
-                    Persist persist = field.getAnnotation(Persist.class);
-                    if (persist.timeout() == 0 || persist.timeout() >= timeout) {
-                        if (Modifier.isFinal(field.getModifiers())) {
-                            if (Map.class.isAssignableFrom(field.getType())) {
-                                ((Map) field.get(service)).putAll((Map) val);
-                            } else if (Collection.class.isAssignableFrom(field.getType())) {
-                                ((Collection) field.get(service)).addAll((Collection) val);
+                FileInputStream in = new FileInputStream(file);
+                ByteArrayOutputStream out = new ByteArrayOutputStream();
+                int b;
+                while ((b = in.read()) != '\n') out.write(b);
+                final String[] fieldNames = out.toString().split(",");
+                int timeout = (int) ((System.currentTimeMillis() - file.lastModified()) / 1000);
+                for (final Service service : this.localServices) {
+                    if (!servtype.equals(Sncp.getResourceType(service).getName())) continue;
+                    if (!resname.equals(Sncp.getResourceName(service))) continue;
+                    for (final String fieldName : fieldNames) {
+                        Field field = null;
+                        Class clzz = service.getClass();
+                        do {
+                            try {
+                                field = clzz.getDeclaredField(fieldName);
+                                break;
+                            } catch (Exception e) {
                             }
-                        } else {
-                            field.set(service, val);
+                        } while ((clzz = clzz.getSuperclass()) != Object.class);
+                        field.setAccessible(true);
+                        Object val = convert.convertFrom(field.getGenericType(), in);
+                        Persist persist = field.getAnnotation(Persist.class);
+                        if (persist.timeout() == 0 || persist.timeout() >= timeout) {
+                            if (Modifier.isFinal(field.getModifiers())) {
+                                if (Map.class.isAssignableFrom(field.getType())) {
+                                    ((Map) field.get(service)).putAll((Map) val);
+                                } else if (Collection.class.isAssignableFrom(field.getType())) {
+                                    ((Collection) field.get(service)).addAll((Collection) val);
+                                }
+                            } else {
+                                field.set(service, val);
+                            }
                         }
+                        if (in.read() != '\n') logger.log(Level.SEVERE, servtype + "'s [" + resname + "] load value error");
                     }
-                    if (in.read() != '\n') logger.log(Level.SEVERE, servtype + "'s [" + resname + "] load value error");
                 }
+                in.close();
             }
-            in.close();
         }
     }
 
+    //尚未完整实现， 先屏蔽
     @SuppressWarnings("unchecked")
-    protected void savePersistData() throws IOException {
+    private void savePersistData() throws IOException {
         File home = application.getHome();
         if (home == null || !home.isDirectory()) return;
         File cachedir = new File(home, "cache");
@@ -530,6 +534,10 @@ public abstract class NodeServer {
             } while ((clzz = clzz.getSuperclass()) != Object.class);
 
             if (fields.isEmpty()) continue; //没有数据需要缓存
+//            synchronized (this.application.localServices) {
+//                if (this.application.localServices.contains(service)) continue;
+//                this.application.localServices.add(service);
+//            }
             if (!cachedir.isDirectory()) cachedir.mkdirs();
             String resname = Sncp.getResourceName(service);
             FileOutputStream out = new FileOutputStream(new File(cachedir, prefix + Sncp.getResourceType(service).getName() + (resname.isEmpty() ? "" : ("-" + resname)) + ".bat"));
@@ -542,7 +550,7 @@ public abstract class NodeServer {
                 } catch (Exception e) {
                     logger.log(Level.SEVERE, field + " save value error", e);
                 }
-                out.write(convert.convertTo(field.getGenericType(), val));
+                convert.convertTo(out, field.getGenericType(), val);
                 out.write('\n');
             }
             out.close();
@@ -690,7 +698,6 @@ public abstract class NodeServer {
             }
         });
         if (sb != null && sb.length() > 0) logger.log(Level.INFO, sb.toString());
-        this.savePersistData();
         server.shutdown();
     }
 

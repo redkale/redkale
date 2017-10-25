@@ -207,7 +207,7 @@ public interface Creator<T> {
             clazz = (Class<T>) HashMap.class;
         } else if (clazz.isAssignableFrom(HashSet.class)) {
             clazz = (Class<T>) HashSet.class;
-        } else if (clazz == ConcurrentMap.class) {
+        } else if (clazz.isAssignableFrom(ConcurrentHashMap.class)) {
             clazz = (Class<T>) ConcurrentHashMap.class;
         }
         if (clazz.isInterface() || Modifier.isAbstract(clazz.getModifiers())) {

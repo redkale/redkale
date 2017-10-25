@@ -102,7 +102,7 @@ public final class ResourceFactory {
      *
      * @param name String
      */
-    public static void checkName(String name) {
+    public static void checkResourceName(String name) {
         if (name == null || (!name.isEmpty() && !name.matches("^[a-zA-Z0-9_;\\-\\.\\[\\]\\(\\)]+$"))) {
             throw new IllegalArgumentException("name(" + name + ") contains illegal character, must be (a-z,A-Z,0-9,_,.,(,),-,[,])");
         }
@@ -346,7 +346,7 @@ public final class ResourceFactory {
      * @return 旧资源对象
      */
     public <A> A register(final boolean autoSync, final String name, final A rs) {
-        checkName(name);
+        checkResourceName(name);
         final Class<?> claz = rs.getClass();
         ResourceType rtype = claz.getAnnotation(ResourceType.class);
         if (rtype == null) {
@@ -399,7 +399,7 @@ public final class ResourceFactory {
      * @return 旧资源对象
      */
     public <A> A register(final boolean autoSync, final String name, final Type clazz, final A rs) {
-        checkName(name);
+        checkResourceName(name);
         ConcurrentHashMap<String, ResourceEntry> map = this.store.get(clazz);
         if (map == null) {
             synchronized (clazz) {
