@@ -438,7 +438,7 @@ public abstract class NodeServer {
         maxClassNameLength = Math.max(maxClassNameLength, Sncp.getResourceType(y).getName().length() + 1);
     }
 
-    //尚未完整实现， 先屏蔽
+    //尚未完整实现， 先屏蔽， 单个Service在多个Server中存在的情况下进行缓存的方案还未考虑清楚
     @SuppressWarnings("unchecked")
     private void loadPersistData() throws Exception {
         File home = application.getHome();
