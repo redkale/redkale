@@ -608,7 +608,7 @@ public final class Application {
         runServers(timecd, others);
         runServers(timecd, watchs); //必须在所有服务都启动后再启动WATCH服务
         timecd.await();
-        if (!singletonrun) signalHandle();
+        //if (!singletonrun) signalHandle();
         if (!singletonrun) clearPersistData();
         logger.info(this.getClass().getSimpleName() + " started in " + (System.currentTimeMillis() - startTime) + " ms\r\n");
         if (!singletonrun) this.serversLatch.await();
@@ -645,7 +645,10 @@ public final class Application {
             }
         };
         for (Signal sig : list) {
-            Signal.handle(sig, handler);
+            try {
+                Signal.handle(sig, handler);
+            } catch (Exception e) {
+            }
         }
     }
 
