@@ -55,9 +55,11 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                     }
                     if (subval instanceof Range) {
                         exp = FilterExpress.BETWEEN;
-                    } else if (subval instanceof Collection) {
-                        exp = FilterExpress.IN;
-                    } else if (subval != null && val.getClass().isArray()) {
+//                    } else if (subval instanceof Collection) {
+//                        exp = FilterExpress.IN;
+//                    } else if (subval != null && val.getClass().isArray()) {
+//                        exp = FilterExpress.IN;
+                    } else {
                         exp = FilterExpress.IN;
                     }
                 } else { //空集合
@@ -280,7 +282,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
     }
 
     private static boolean needSplit(final FilterExpress express, final Object val0) {
-        if(val0 == null) return false;
+        if (val0 == null) return false;
         boolean items = express != IN && express != NOTIN;  //是否数组集合的表达式
         if (!items) {
             if (val0.getClass().isArray()) {

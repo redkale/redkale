@@ -13,6 +13,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.*;
 import java.util.logging.*;
+import java.util.stream.Stream;
 import javax.annotation.Resource;
 import org.redkale.service.*;
 import static org.redkale.source.DataSources.*;
@@ -448,7 +449,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, DataC
                 }
                 String sql = "DELETE " + (this.readPool.isMysql() ? "a" : "") + " FROM " + info.getTable(node) + " a" + (join1 == null ? "" : (", " + join1))
                     + ((where == null || where.length() == 0) ? (join2 == null ? "" : (" WHERE " + join2))
-                        : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2)))) + info.createSQLOrderby(flipper)
+                    : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2)))) + info.createSQLOrderby(flipper)
                     + ((flipper == null || flipper.getLimit() < 1) ? "" : (" LIMIT " + flipper.getLimit()));
                 if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(info.getType().getSimpleName() + " delete sql=" + sql);
                 conn.setReadOnly(false);
@@ -704,7 +705,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, DataC
                     String sql = "UPDATE " + info.getTable(node) + " a " + (join1 == null ? "" : (", " + join1))
                         + " SET " + info.getSQLColumn("a", column) + " = ?"
                         + ((where == null || where.length() == 0) ? (join2 == null ? "" : (" WHERE " + join2))
-                            : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))));
+                        : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))));
                     if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
                     conn.setReadOnly(false);
                     Blob blob = conn.createBlob();
@@ -717,7 +718,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, DataC
                     String sql = "UPDATE " + info.getTable(node) + " a " + (join1 == null ? "" : (", " + join1))
                         + " SET " + info.getSQLColumn("a", column) + " = " + info.formatToString(value)
                         + ((where == null || where.length() == 0) ? (join2 == null ? "" : (" WHERE " + join2))
-                            : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))));
+                        : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))));
                     if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
                     conn.setReadOnly(false);
                     final Statement stmt = conn.createStatement();
@@ -922,7 +923,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, DataC
                 }
                 String sql = "UPDATE " + info.getTable(node) + " a " + (join1 == null ? "" : (", " + join1)) + " SET " + setsql
                     + ((where == null || where.length() == 0) ? (join2 == null ? "" : (" WHERE " + join2))
-                        : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))));
+                    : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))));
                 //注：LIMIT 仅支持MySQL 且在多表关联式会异常， 该BUG尚未解决
                 sql += info.createSQLOrderby(flipper) + ((flipper == null || flipper.getLimit() < 1) ? "" : (" LIMIT " + flipper.getLimit()));
                 if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
@@ -1108,7 +1109,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, DataC
                 }
                 String sql = "UPDATE " + info.getTable(node) + " a " + (join1 == null ? "" : (", " + join1)) + " SET " + setsql
                     + ((where == null || where.length() == 0) ? (join2 == null ? "" : (" WHERE " + join2))
-                        : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))));
+                    : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))));
                 if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
                 conn.setReadOnly(false);
                 if (blobs != null) {
@@ -1891,6 +1892,60 @@ public class DataJdbcSource extends AbstractService implements DataSource, DataC
         }
         rs.setRows(list);
         return rs;
+    }
+
+    /**
+     * 查询符合过滤条件记录的Map集合, 主键值为key   <br>
+     * 等价SQL: SELECT * FROM {table} WHERE {column} = {key} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
+     *
+     * @param <K>       主键泛型
+     * @param <T>       Entity泛型
+     * @param clazz     Entity类
+     * @param keyStream 主键Stream
+     *
+     * @return Entity的集合
+     */
+    @Override
+    public <K extends Serializable, T> Map<K, T> queryMap(final Class<T> clazz, final Stream<K> keyStream) {
+        return queryMap(clazz, null, keyStream);
+    }
+
+    @Override
+    public <K extends Serializable, T> CompletableFuture<Map<K, T>> queryMapAsync(final Class<T> clazz, final Stream<K> keyStream) {
+        return CompletableFuture.supplyAsync(() -> queryMap(clazz, null, keyStream), getExecutor());
+    }
+
+    /**
+     * 查询符合过滤条件记录的Map集合, 主键值为key   <br>
+     * 等价SQL: SELECT * FROM {table} WHERE {column} = {key} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
+     *
+     * @param <K>       主键泛型
+     * @param <T>       Entity泛型
+     * @param clazz     Entity类
+     * @param selects   指定字段
+     * @param keyStream 主键Stream
+     *
+     * @return Entity的集合
+     */
+    @Override
+    public <K extends Serializable, T> Map<K, T> queryMap(final Class<T> clazz, final SelectColumn selects, final Stream<K> keyStream) {
+        if (keyStream == null) return new LinkedHashMap<>();
+        final EntityInfo<T> info = loadEntityInfo(clazz);
+        final ArrayList<K> ids = new ArrayList<>();
+        keyStream.forEach(k -> ids.add(k));
+        final Attribute<T, Serializable> primary = info.primary;
+        List<T> rs = queryList(clazz, FilterNode.create(primary.field(), ids));
+        Map<K, T> map = new LinkedHashMap<>();
+        if (rs.isEmpty()) return new LinkedHashMap<>();
+        for (T item : rs) {
+            map.put((K) primary.get(item), item);
+        }
+        return map;
+    }
+
+    @Override
+    public <K extends Serializable, T> CompletableFuture<Map<K, T>> queryMapAsync(final Class<T> clazz, final SelectColumn selects, final Stream<K> keyStream) {
+        return CompletableFuture.supplyAsync(() -> queryMap(clazz, selects, keyStream), getExecutor());
     }
 
     /**
