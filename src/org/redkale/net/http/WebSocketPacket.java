@@ -183,7 +183,7 @@ public final class WebSocketPacket {
 
     @Override
     public String toString() {
-        return this.getClass().getSimpleName() + "[type=" + type + ", last=" + last + (payload != null ? (", payload=" + payload) : "") + (bytes != null ? (", bytes=[" + bytes.length + ']') : "") + (sendJson != null ? (", json=" + sendJson) : "") + "]";
+        return this.getClass().getSimpleName() + "[type=" + type + ", last=" + last + (payload != null ? (", payload=" + payload) : "") + (bytes != null ? (", bytes=[" + bytes.length + ']') : "") + (sendJson != null ? (", json=" + (mapconvable ? Utility.ofMap((Object[]) sendJson) : sendJson)) : "") + "]";
     }
 
     /**
@@ -211,7 +211,7 @@ public final class WebSocketPacket {
                     return supplier.get();
                 }
             };
-            ByteBuffer[] buffers = this.mapconvable ? this.sendConvert.convertMapTo(supplier, (Object[]) sendJson) : this.sendConvert.convertTo(newsupplier, sendJson);
+            ByteBuffer[] buffers = this.mapconvable ? this.sendConvert.convertMapTo(newsupplier, (Object[]) sendJson) : this.sendConvert.convertTo(newsupplier, sendJson);
             int len = 0;
             for (ByteBuffer buf : buffers) {
                 len += buf.remaining();
