@@ -10,8 +10,9 @@ import static java.lang.annotation.ElementType.*;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * 本地模式注解。
- * 声明为Local的Service只能以本地模式存在， 即使配置文件中配置成远程模式也将被忽略。
+ * 本地模式注解。<br>
+ * 声明为Local的Service只能以本地模式存在， 即使配置文件中配置成远程模式也将被忽略。 <br>
+ * Service里被标记为Local的public方法不会被重载。
  *
  * <p>
  * 详情见: https://redkale.org
