@@ -38,6 +38,8 @@ public abstract class WebSocketNode {
 
     protected final boolean finest = logger.isLoggable(Level.FINEST);
 
+    protected final boolean finer = logger.isLoggable(Level.FINER);
+
     //"SNCP_ADDR" 如果不是分布式(没有SNCP) 值为null
     @Resource(name = Application.RESNAME_SNCP_ADDR)
     protected InetSocketAddress localSncpAddress;  //为SncpServer的服务address
@@ -427,8 +429,11 @@ public abstract class WebSocketNode {
         //远程节点发送消息
         CompletableFuture<Collection<InetSocketAddress>> addrsFuture = sncpNodeAddresses.getCollectionAsync(userid);
         CompletableFuture<Integer> remoteFuture = addrsFuture.thenCompose((Collection<InetSocketAddress> addrs) -> {
+            if (addrs == null || addrs.isEmpty()) {
+                if (finer) logger.finer("websocket not found userid:" + userid + " on any node ");
+                return CompletableFuture.completedFuture(0);
+            }
             if (finest) logger.finest("websocket found userid:" + userid + " on " + addrs);
-            if (addrs == null || addrs.isEmpty()) return CompletableFuture.completedFuture(0);
             CompletableFuture<Integer> future = null;
             for (InetSocketAddress addr : addrs) {
                 if (addr == null || addr.equals(localSncpAddress)) continue;
