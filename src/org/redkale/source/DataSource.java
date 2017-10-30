@@ -1523,6 +1523,58 @@ public interface DataSource {
      * 查询符合过滤条件记录的Map集合, 主键值为key   <br>
      * 等价SQL: SELECT * FROM {table} WHERE {column} = {key} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
      *
+     * @param <K>   主键泛型
+     * @param <T>   Entity泛型
+     * @param clazz Entity类
+     * @param bean  FilterBean
+     *
+     * @return Entity的集合
+     */
+    public <K extends Serializable, T> Map<K, T> queryMap(final Class<T> clazz, final FilterBean bean);
+
+    /**
+     * 查询符合过滤条件记录的List集合   <br>
+     * 等价SQL: SELECT * FROM {table} WHERE {column} = {key} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
+     *
+     * @param <K>   主键泛型
+     * @param <T>   Entity泛型
+     * @param clazz Entity类
+     * @param bean  FilterBean
+     *
+     * @return Entity的集合CompletableFuture
+     */
+    public <K extends Serializable, T> CompletableFuture<Map<K, T>> queryMapAsync(final Class<T> clazz, final FilterBean bean);
+
+    /**
+     * 查询符合过滤条件记录的Map集合, 主键值为key   <br>
+     * 等价SQL: SELECT * FROM {table} WHERE {column} = {key} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
+     *
+     * @param <K>   主键泛型
+     * @param <T>   Entity泛型
+     * @param clazz Entity类
+     * @param node  FilterNode
+     *
+     * @return Entity的集合
+     */
+    public <K extends Serializable, T> Map<K, T> queryMap(final Class<T> clazz, final FilterNode node);
+
+    /**
+     * 查询符合过滤条件记录的List集合   <br>
+     * 等价SQL: SELECT * FROM {table} WHERE {column} = {key} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
+     *
+     * @param <K>   主键泛型
+     * @param <T>   Entity泛型
+     * @param clazz Entity类
+     * @param node  FilterNode
+     *
+     * @return Entity的集合CompletableFuture
+     */
+    public <K extends Serializable, T> CompletableFuture<Map<K, T>> queryMapAsync(final Class<T> clazz, final FilterNode node);
+
+    /**
+     * 查询符合过滤条件记录的Map集合, 主键值为key   <br>
+     * 等价SQL: SELECT * FROM {table} WHERE {column} = {key} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
+     *
      * @param <K>       主键泛型
      * @param <T>       Entity泛型
      * @param clazz     Entity类
@@ -1546,6 +1598,62 @@ public interface DataSource {
      * @return Entity的集合CompletableFuture
      */
     public <K extends Serializable, T> CompletableFuture<Map<K, T>> queryMapAsync(final Class<T> clazz, final SelectColumn selects, final Stream<K> keyStream);
+
+    /**
+     * 查询符合过滤条件记录的Map集合, 主键值为key   <br>
+     * 等价SQL: SELECT * FROM {table} WHERE {column} = {key} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
+     *
+     * @param <K>     主键泛型
+     * @param <T>     Entity泛型
+     * @param clazz   Entity类
+     * @param selects 指定字段
+     * @param bean    FilterBean
+     *
+     * @return Entity的集合
+     */
+    public <K extends Serializable, T> Map<K, T> queryMap(final Class<T> clazz, final SelectColumn selects, final FilterBean bean);
+
+    /**
+     * 查询符合过滤条件记录的List集合   <br>
+     * 等价SQL: SELECT * FROM {table} WHERE {column} = {key} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
+     *
+     * @param <K>     主键泛型
+     * @param <T>     Entity泛型
+     * @param clazz   Entity类
+     * @param selects 指定字段
+     * @param bean    FilterBean
+     *
+     * @return Entity的集合CompletableFuture
+     */
+    public <K extends Serializable, T> CompletableFuture<Map<K, T>> queryMapAsync(final Class<T> clazz, final SelectColumn selects, FilterBean bean);
+
+    /**
+     * 查询符合过滤条件记录的Map集合, 主键值为key   <br>
+     * 等价SQL: SELECT * FROM {table} WHERE {column} = {key} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
+     *
+     * @param <K>     主键泛型
+     * @param <T>     Entity泛型
+     * @param clazz   Entity类
+     * @param selects 指定字段
+     * @param node    FilterNode
+     *
+     * @return Entity的集合
+     */
+    public <K extends Serializable, T> Map<K, T> queryMap(final Class<T> clazz, final SelectColumn selects, final FilterNode node);
+
+    /**
+     * 查询符合过滤条件记录的List集合   <br>
+     * 等价SQL: SELECT * FROM {table} WHERE {column} = {key} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
+     *
+     * @param <K>     主键泛型
+     * @param <T>     Entity泛型
+     * @param clazz   Entity类
+     * @param selects 指定字段
+     * @param node    FilterNode
+     *
+     * @return Entity的集合CompletableFuture
+     */
+    public <K extends Serializable, T> CompletableFuture<Map<K, T>> queryMapAsync(final Class<T> clazz, final SelectColumn selects, final FilterNode node);
 
     /**
      * 查询符合过滤条件记录的List集合   <br>

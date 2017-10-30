@@ -1919,6 +1919,48 @@ public class DataJdbcSource extends AbstractService implements DataSource, DataC
      * 查询符合过滤条件记录的Map集合, 主键值为key   <br>
      * 等价SQL: SELECT * FROM {table} WHERE {column} = {key} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
      *
+     * @param <K>   主键泛型
+     * @param <T>   Entity泛型
+     * @param clazz Entity类
+     * @param bean  FilterBean
+     *
+     * @return Entity的集合
+     */
+    @Override
+    public <K extends Serializable, T> Map<K, T> queryMap(final Class<T> clazz, final FilterBean bean) {
+        return queryMap(clazz, null, bean);
+    }
+
+    @Override
+    public <K extends Serializable, T> CompletableFuture<Map<K, T>> queryMapAsync(final Class<T> clazz, final FilterBean bean) {
+        return CompletableFuture.supplyAsync(() -> queryMap(clazz, null, bean), getExecutor());
+    }
+
+    /**
+     * 查询符合过滤条件记录的Map集合, 主键值为key   <br>
+     * 等价SQL: SELECT * FROM {table} WHERE {column} = {key} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
+     *
+     * @param <K>   主键泛型
+     * @param <T>   Entity泛型
+     * @param clazz Entity类
+     * @param node  FilterNode
+     *
+     * @return Entity的集合
+     */
+    @Override
+    public <K extends Serializable, T> Map<K, T> queryMap(final Class<T> clazz, final FilterNode node) {
+        return queryMap(clazz, null, node);
+    }
+
+    @Override
+    public <K extends Serializable, T> CompletableFuture<Map<K, T>> queryMapAsync(final Class<T> clazz, final FilterNode node) {
+        return CompletableFuture.supplyAsync(() -> queryMap(clazz, null, node), getExecutor());
+    }
+
+    /**
+     * 查询符合过滤条件记录的Map集合, 主键值为key   <br>
+     * 等价SQL: SELECT * FROM {table} WHERE {column} = {key} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
+     *
      * @param <K>       主键泛型
      * @param <T>       Entity泛型
      * @param clazz     Entity类
@@ -1946,6 +1988,58 @@ public class DataJdbcSource extends AbstractService implements DataSource, DataC
     @Override
     public <K extends Serializable, T> CompletableFuture<Map<K, T>> queryMapAsync(final Class<T> clazz, final SelectColumn selects, final Stream<K> keyStream) {
         return CompletableFuture.supplyAsync(() -> queryMap(clazz, selects, keyStream), getExecutor());
+    }
+
+    /**
+     * 查询符合过滤条件记录的Map集合, 主键值为key   <br>
+     * 等价SQL: SELECT * FROM {table} WHERE {column} = {key} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
+     *
+     * @param <K>     主键泛型
+     * @param <T>     Entity泛型
+     * @param clazz   Entity类
+     * @param selects 指定字段
+     * @param bean    FilterBean
+     *
+     * @return Entity的集合
+     */
+    @Override
+    public <K extends Serializable, T> Map<K, T> queryMap(final Class<T> clazz, final SelectColumn selects, final FilterBean bean) {
+        return queryMap(clazz, selects, FilterNodeBean.createFilterNode(bean));
+    }
+
+    @Override
+    public <K extends Serializable, T> CompletableFuture<Map<K, T>> queryMapAsync(final Class<T> clazz, final SelectColumn selects, final FilterBean bean) {
+        return CompletableFuture.supplyAsync(() -> queryMap(clazz, selects, FilterNodeBean.createFilterNode(bean)), getExecutor());
+    }
+
+    /**
+     * 查询符合过滤条件记录的Map集合, 主键值为key   <br>
+     * 等价SQL: SELECT * FROM {table} WHERE {column} = {key} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
+     *
+     * @param <K>     主键泛型
+     * @param <T>     Entity泛型
+     * @param clazz   Entity类
+     * @param selects 指定字段
+     * @param node    FilterNode
+     *
+     * @return Entity的集合
+     */
+    @Override
+    public <K extends Serializable, T> Map<K, T> queryMap(final Class<T> clazz, final SelectColumn selects, final FilterNode node) {
+        final EntityInfo<T> info = loadEntityInfo(clazz);
+        final Attribute<T, Serializable> primary = info.primary;
+        List<T> rs = queryList(clazz, selects, node);
+        Map<K, T> map = new LinkedHashMap<>();
+        if (rs.isEmpty()) return new LinkedHashMap<>();
+        for (T item : rs) {
+            map.put((K) primary.get(item), item);
+        }
+        return map;
+    }
+
+    @Override
+    public <K extends Serializable, T> CompletableFuture<Map<K, T>> queryMapAsync(final Class<T> clazz, final SelectColumn selects, final FilterNode node) {
+        return CompletableFuture.supplyAsync(() -> queryMap(clazz, selects, node), getExecutor());
     }
 
     /**
