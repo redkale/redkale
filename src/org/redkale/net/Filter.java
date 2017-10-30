@@ -35,7 +35,7 @@ public abstract class Filter<C extends Context, R extends Request<C>, P extends 
     }
 
     @Override
-    public final int compareTo(Object o) {
+    public int compareTo(Object o) {
         if (!(o instanceof Filter)) return 1;
         Priority p1 = this.getClass().getAnnotation(Priority.class);
         Priority p2 = o.getClass().getAnnotation(Priority.class);

@@ -26,11 +26,23 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
 
     protected Object subobject; //用于存储绑定在Connection上的对象， 同attributes， 只绑定单个对象时尽量使用subobject而非attributes
 
+    protected volatile long readtime;
+
+    protected volatile long writetime;
+
     //关闭数
     AtomicLong closedCounter = new AtomicLong();
 
     //在线数
     AtomicLong livingCounter = new AtomicLong();
+
+    public final long getLastReadTime() {
+        return readtime;
+    }
+
+    public final long getLastWriteTime() {
+        return writetime;
+    }
 
     public abstract boolean isTCP();
 
@@ -209,6 +221,7 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
                     rs += channel.send(srcs[i], remoteAddress);
                     if (i != offset) Thread.sleep(10);
                 }
+                this.writetime = System.currentTimeMillis();
                 if (handler != null) handler.completed(rs, attachment);
             } catch (Exception e) {
                 if (handler != null) handler.failed(e, attachment);
@@ -219,6 +232,7 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
         public <A> void read(ByteBuffer dst, A attachment, CompletionHandler<Integer, ? super A> handler) {
             try {
                 int rs = channel.read(dst);
+                this.readtime = System.currentTimeMillis();
                 if (handler != null) handler.completed(rs, attachment);
             } catch (IOException e) {
                 if (handler != null) handler.failed(e, attachment);
@@ -229,6 +243,7 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
         public Future<Integer> read(ByteBuffer dst) {
             try {
                 int rs = channel.read(dst);
+                this.readtime = System.currentTimeMillis();
                 return CompletableFuture.completedFuture(rs);
             } catch (IOException e) {
                 throw new RuntimeException(e);
@@ -239,6 +254,7 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
         public <A> void write(ByteBuffer src, A attachment, CompletionHandler<Integer, ? super A> handler) {
             try {
                 int rs = channel.send(src, remoteAddress);
+                this.writetime = System.currentTimeMillis();
                 if (handler != null) handler.completed(rs, attachment);
             } catch (IOException e) {
                 if (handler != null) handler.failed(e, attachment);
@@ -249,6 +265,7 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
         public Future<Integer> write(ByteBuffer src) {
             try {
                 int rs = channel.send(src, remoteAddress);
+                this.writetime = System.currentTimeMillis();
                 return CompletableFuture.completedFuture(rs);
             } catch (IOException e) {
                 throw new RuntimeException(e);
@@ -359,6 +376,7 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
                 for (int i = offset; i < offset + length; i++) {
                     rs += writeChannel.write(srcs[i]);
                 }
+                this.writetime = System.currentTimeMillis();
                 if (handler != null) handler.completed(rs, attachment);
             } catch (IOException e) {
                 if (handler != null) handler.failed(e, attachment);
@@ -369,6 +387,7 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
         public <A> void read(ByteBuffer dst, A attachment, CompletionHandler<Integer, ? super A> handler) {
             try {
                 int rs = readChannel.read(dst);
+                this.readtime = System.currentTimeMillis();
                 if (handler != null) handler.completed(rs, attachment);
             } catch (IOException e) {
                 if (handler != null) handler.failed(e, attachment);
@@ -379,6 +398,7 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
         public Future<Integer> read(ByteBuffer dst) {
             try {
                 int rs = readChannel.read(dst);
+                this.readtime = System.currentTimeMillis();
                 return CompletableFuture.completedFuture(rs);
             } catch (IOException e) {
                 throw new RuntimeException(e);
@@ -389,6 +409,7 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
         public <A> void write(ByteBuffer src, A attachment, CompletionHandler<Integer, ? super A> handler) {
             try {
                 int rs = writeChannel.write(src);
+                this.writetime = System.currentTimeMillis();
                 if (handler != null) handler.completed(rs, attachment);
             } catch (IOException e) {
                 if (handler != null) handler.failed(e, attachment);
@@ -399,6 +420,7 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
         public Future<Integer> write(ByteBuffer src) {
             try {
                 int rs = writeChannel.write(src);
+                this.writetime = System.currentTimeMillis();
                 return CompletableFuture.completedFuture(rs);
             } catch (IOException e) {
                 throw new RuntimeException(e);
@@ -459,6 +481,7 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
 
         @Override
         public <A> void read(ByteBuffer dst, A attachment, CompletionHandler<Integer, ? super A> handler) {
+            this.readtime = System.currentTimeMillis();
             if (readTimeoutSecond > 0) {
                 channel.read(dst, readTimeoutSecond, TimeUnit.SECONDS, attachment, handler);
             } else {
@@ -468,6 +491,7 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
 
         @Override
         public <A> void write(ByteBuffer src, A attachment, CompletionHandler<Integer, ? super A> handler) {
+            this.writetime = System.currentTimeMillis();
             if (writeTimeoutSecond > 0) {
                 channel.write(src, writeTimeoutSecond, TimeUnit.SECONDS, attachment, handler);
             } else {
@@ -477,6 +501,7 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
 
         @Override
         public <A> void write(ByteBuffer[] srcs, int offset, int length, A attachment, final CompletionHandler<Integer, ? super A> handler) {
+            this.writetime = System.currentTimeMillis();
             channel.write(srcs, offset, length, writeTimeoutSecond > 0 ? writeTimeoutSecond : 60, TimeUnit.SECONDS,
                 attachment, new CompletionHandler<Long, A>() {
 
