@@ -217,6 +217,10 @@ class WebSocketRunner implements Runnable {
                                 } catch (Exception e) {
                                     context.getLogger().log(Level.SEVERE, "WebSocket onPing error (" + packet + ")", e);
                                 }
+                            } else if (packet.type == FrameType.CLOSE) {
+                                Logger logger = context.getLogger();
+                                if (logger.isLoggable(Level.FINEST)) logger.log(Level.FINEST, "WebSocketRunner onMessage by CLOSE FrameType : " + packet);
+                                closeRunner(0);
                             } else {
                                 context.getLogger().log(Level.WARNING, "WebSocketRunner onMessage by unknown FrameType : " + packet);
                                 if (readBuffer != null) {
