@@ -48,7 +48,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
 
     protected static final byte[] LINE = new byte[]{'\r', '\n'};
 
-    protected static final byte[] serverNameBytes = ("Server: redkale/" + Redkale.getDotedVersion() + "\r\n").getBytes();
+    protected static final byte[] serverNameBytes = ("Server: " + System.getProperty("http.response.header.server", "redkale" + "/" + Redkale.getDotedVersion()) + "\r\n").getBytes();
 
     private static final Set<OpenOption> options = new HashSet<>();
 
