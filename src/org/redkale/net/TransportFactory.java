@@ -46,7 +46,7 @@ public class TransportFactory {
     //负载均衡策略
     protected final TransportStrategy strategy;
 
-    public TransportFactory(ExecutorService executor, ObjectPool<ByteBuffer> bufferPool, AsynchronousChannelGroup channelGroup,
+    protected TransportFactory(ExecutorService executor, ObjectPool<ByteBuffer> bufferPool, AsynchronousChannelGroup channelGroup,
         final TransportStrategy strategy) {
         this.executor = executor;
         this.bufferPool = bufferPool;
@@ -54,8 +54,30 @@ public class TransportFactory {
         this.strategy = strategy;
     }
 
-    public TransportFactory(ExecutorService executor, ObjectPool<ByteBuffer> bufferPool, AsynchronousChannelGroup channelGroup) {
+    protected TransportFactory(ExecutorService executor, ObjectPool<ByteBuffer> bufferPool, AsynchronousChannelGroup channelGroup) {
         this(executor, bufferPool, channelGroup, null);
+    }
+
+    public static TransportFactory create(ExecutorService executor, ObjectPool<ByteBuffer> bufferPool, AsynchronousChannelGroup channelGroup) {
+        return new TransportFactory(executor, bufferPool, channelGroup, null);
+    }
+
+    public static TransportFactory create(ExecutorService executor, ObjectPool<ByteBuffer> bufferPool, AsynchronousChannelGroup channelGroup,
+        final TransportStrategy strategy) {
+        return new TransportFactory(executor, bufferPool, channelGroup, strategy);
+    }
+
+    public Transport createTransportTCP(String name, final InetSocketAddress clientAddress, final Collection<InetSocketAddress> addresses) {
+        return new Transport(name, "TCP", "", this, this.bufferPool, this.channelGroup, clientAddress, addresses, strategy);
+    }
+
+    public Transport createTransport(String name, String protocol, final InetSocketAddress clientAddress, final Collection<InetSocketAddress> addresses) {
+        return new Transport(name, protocol, "", this, this.bufferPool, this.channelGroup, clientAddress, addresses, strategy);
+    }
+
+    public Transport createTransport(String name, String protocol, String subprotocol,
+        final InetSocketAddress clientAddress, final Collection<InetSocketAddress> addresses) {
+        return new Transport(name, protocol, subprotocol, this, this.bufferPool, this.channelGroup, clientAddress, addresses, strategy);
     }
 
     public String findGroupName(InetSocketAddress addr) {
@@ -136,14 +158,14 @@ public class TransportFactory {
         }
         if (info == null) return null;
         if (sncpAddress != null) addresses.remove(sncpAddress);
-        return new Transport(groups.stream().sorted().collect(Collectors.joining(";")), info.protocol, info.subprotocol, this.bufferPool, this.channelGroup, sncpAddress, addresses, this.strategy);
+        return new Transport(groups.stream().sorted().collect(Collectors.joining(";")), info.protocol, info.subprotocol, this, this.bufferPool, this.channelGroup, sncpAddress, addresses, this.strategy);
     }
 
     private Transport loadTransport(final String groupName, InetSocketAddress sncpAddress) {
         if (groupName == null) return null;
         TransportGroupInfo info = groupInfos.get(groupName);
         if (info == null) return null;
-        return new Transport(groupName, info.protocol, info.subprotocol, this.bufferPool, this.channelGroup, sncpAddress, info.addresses, this.strategy);
+        return new Transport(groupName, info.protocol, info.subprotocol, this, this.bufferPool, this.channelGroup, sncpAddress, info.addresses, this.strategy);
     }
 
     public ExecutorService getExecutor() {

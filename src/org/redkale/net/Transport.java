@@ -42,6 +42,8 @@ public final class Transport {
         supportTcpNoDelay = tcpNoDelay;
     }
 
+    protected final TransportFactory factory;
+
     protected final String name; //即<group>的name属性
 
     protected final String subprotocol; //即<group>的subprotocol属性
@@ -63,18 +65,20 @@ public final class Transport {
 
     protected final ConcurrentHashMap<SocketAddress, BlockingQueue<AsyncConnection>> connPool = new ConcurrentHashMap<>();
 
-    public Transport(String name, String subprotocol, final ObjectPool<ByteBuffer> transportBufferPool,
+    protected Transport(String name, String subprotocol, TransportFactory factory, final ObjectPool<ByteBuffer> transportBufferPool,
         final AsynchronousChannelGroup transportChannelGroup, final InetSocketAddress clientAddress,
         final Collection<InetSocketAddress> addresses, final TransportStrategy strategy) {
-        this(name, DEFAULT_PROTOCOL, subprotocol, transportBufferPool, transportChannelGroup, clientAddress, addresses, strategy);
+        this(name, DEFAULT_PROTOCOL, subprotocol, factory, transportBufferPool, transportChannelGroup, clientAddress, addresses, strategy);
     }
 
-    public Transport(String name, String protocol, String subprotocol, final ObjectPool<ByteBuffer> transportBufferPool,
+    protected Transport(String name, String protocol, String subprotocol,
+        final TransportFactory factory, final ObjectPool<ByteBuffer> transportBufferPool,
         final AsynchronousChannelGroup transportChannelGroup, final InetSocketAddress clientAddress,
         final Collection<InetSocketAddress> addresses, final TransportStrategy strategy) {
         this.name = name;
         this.subprotocol = subprotocol == null ? "" : subprotocol.trim();
         this.protocol = protocol;
+        this.factory = factory;
         this.tcp = "TCP".equalsIgnoreCase(protocol);
         this.group = transportChannelGroup;
         this.bufferPool = transportBufferPool;

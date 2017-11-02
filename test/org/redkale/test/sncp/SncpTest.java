@@ -79,7 +79,7 @@ public class SncpTest {
         Set<InetSocketAddress> set = new LinkedHashSet<>();
         set.add(addr);
         if (port2 > 0) set.add(new InetSocketAddress(myhost, port2));
-        final TransportFactory transFactory = new TransportFactory(Executors.newSingleThreadExecutor(), newBufferPool(), newChannelGroup());
+        final TransportFactory transFactory = TransportFactory.create(Executors.newSingleThreadExecutor(), newBufferPool(), newChannelGroup());
         transFactory.addGroupInfo("client", set);
         final SncpTestIService service = Sncp.createSimpleRemoteService(SncpTestIService.class, transFactory, addr, "client");
         ResourceFactory.root().inject(service);
@@ -156,7 +156,7 @@ public class SncpTest {
                     SncpServer server = new SncpServer();
                     Set<InetSocketAddress> set = new LinkedHashSet<>();
                     if (port2 > 0) set.add(new InetSocketAddress(myhost, port2));
-                    final TransportFactory transFactory = new TransportFactory(Executors.newSingleThreadExecutor(), newBufferPool(), newChannelGroup());
+                    final TransportFactory transFactory = TransportFactory.create(Executors.newSingleThreadExecutor(), newBufferPool(), newChannelGroup());
                     transFactory.addGroupInfo("server", set);
                     SncpTestIService service = Sncp.createSimpleLocalService(SncpTestServiceImpl.class, transFactory, addr, "server");
                     ResourceFactory.root().inject(service);
@@ -191,7 +191,7 @@ public class SncpTest {
                     Set<InetSocketAddress> set = new LinkedHashSet<>();
                     set.add(new InetSocketAddress(myhost, port));
 
-                    final TransportFactory transFactory = new TransportFactory(Executors.newSingleThreadExecutor(), newBufferPool(), newChannelGroup());
+                    final TransportFactory transFactory = TransportFactory.create(Executors.newSingleThreadExecutor(), newBufferPool(), newChannelGroup());
                     transFactory.addGroupInfo("server", set);
                     Service service = Sncp.createSimpleLocalService(SncpTestServiceImpl.class, transFactory, addr, "server");
                     server.addSncpServlet(service);

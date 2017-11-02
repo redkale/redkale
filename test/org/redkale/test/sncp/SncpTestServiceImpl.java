@@ -100,7 +100,7 @@ public class SncpTestServiceImpl implements SncpTestIService {
 
     public static void main(String[] args) throws Exception {
 
-        final TransportFactory transFactory = new TransportFactory(Executors.newSingleThreadExecutor(), newBufferPool(), newChannelGroup());
+        final TransportFactory transFactory = TransportFactory.create(Executors.newSingleThreadExecutor(), newBufferPool(), newChannelGroup());
 
         transFactory.addGroupInfo("g70", new InetSocketAddress("127.0.0.1", 7070));
         Service service = Sncp.createSimpleLocalService(SncpTestServiceImpl.class, transFactory, new InetSocketAddress("127.0.0.1", 7070), "g70");

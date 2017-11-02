@@ -37,7 +37,7 @@ public class ABMainService implements Service {
         final int abport = 8888;
         ResourceFactory resFactory = ResourceFactory.root();
         ExecutorService executor = Executors.newSingleThreadExecutor();
-        final TransportFactory transFactory = new TransportFactory(executor, newBufferPool(), newChannelGroup());
+        final TransportFactory transFactory = TransportFactory.create(executor, newBufferPool(), newChannelGroup());
         transFactory.addGroupInfo("g77", new InetSocketAddress("127.0.0.1", 5577));
         transFactory.addGroupInfo("g88", new InetSocketAddress("127.0.0.1", 5588));
         transFactory.addGroupInfo("g99", new InetSocketAddress("127.0.0.1", 5599));

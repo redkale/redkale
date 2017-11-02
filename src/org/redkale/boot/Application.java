@@ -292,7 +292,7 @@ public final class Application {
                 throw new RuntimeException(e);
             }
         }
-        this.transportFactory = new TransportFactory(transportExec, transportPool, transportGroup, strategy);
+        this.transportFactory = TransportFactory.create(transportExec, transportPool, transportGroup, strategy);
         Thread.currentThread().setContextClassLoader(this.classLoader);
         this.serverClassLoader = new RedkaleClassLoader(this.classLoader);
     }
