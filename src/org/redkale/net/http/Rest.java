@@ -169,6 +169,19 @@ public final class Rest {
         }
     }
 
+    static String getRestWebSocketResourceName(String name) {
+        if (name == null) return null;
+        int pos = name.indexOf("{system.property.");
+        if (pos < 0) return name;
+        String prefix = name.substring(0, pos);
+        String subname = name.substring(pos + "{system.property.".length());
+        pos = subname.indexOf('}');
+        if (pos < 0) return name;
+        String postfix = subname.substring(pos + 1);
+        String property = subname.substring(0, pos);
+        return getRestWebSocketResourceName(prefix + System.getProperty(property, "") + postfix);
+    }
+
     static <T extends HttpServlet> T createRestWebSocketServlet(final ClassLoader classLoader, final Class<? extends WebSocket> webSocketType) {
         if (webSocketType == null) throw new RuntimeException("Rest WebSocket Class is null on createRestWebSocketServlet");
         if (Modifier.isAbstract(webSocketType.getModifiers())) throw new RuntimeException("Rest WebSocket Class(" + webSocketType + ") cannot abstract on createRestWebSocketServlet");
@@ -183,9 +196,9 @@ public final class Rest {
             }
         }
         if (!valid) throw new RuntimeException("Rest WebSocket Class(" + webSocketType + ") must have public or protected Constructor on createRestWebSocketServlet");
-
+        final String rwsname = getRestWebSocketResourceName(rws.name());
         if (!checkName(rws.catalog())) throw new RuntimeException(webSocketType.getName() + " have illeal " + RestWebSocket.class.getSimpleName() + ".catalog, only 0-9 a-z A-Z _ cannot begin 0-9");
-        if (!checkName(rws.name())) throw new RuntimeException(webSocketType.getName() + " have illeal " + RestWebSocket.class.getSimpleName() + ".name, only 0-9 a-z A-Z _ cannot begin 0-9");
+        if (!checkName(rwsname)) throw new RuntimeException(webSocketType.getName() + " have illeal " + RestWebSocket.class.getSimpleName() + ".name, only 0-9 a-z A-Z _ cannot begin 0-9");
 
         //----------------------------------------------------------------------------------------
         final Set<Field> resourcesFieldSet = new LinkedHashSet<>();
@@ -260,7 +273,7 @@ public final class Rest {
             av0.visitEnd();
         }
         { //注入 @WebServlet 注解
-            String urlpath = (rws.catalog().isEmpty() ? "/" : ("/" + rws.catalog() + "/")) + rws.name();
+            String urlpath = (rws.catalog().isEmpty() ? "/" : ("/" + rws.catalog() + "/")) + rwsname;
             av0 = cw.visitAnnotation(webServletDesc, true);
             {
                 AnnotationVisitor av1 = av0.visitArray("value");
@@ -344,7 +357,7 @@ public final class Rest {
         }
         { //resourceName
             mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC, "resourceName", "()Ljava/lang/String;", null, null));
-            mv.visitLdcInsn(rws.name());
+            mv.visitLdcInsn(rwsname);
             mv.visitInsn(ARETURN);
             mv.visitMaxs(1, 1);
             mv.visitEnd();
