@@ -576,24 +576,11 @@ public final class ResourceFactory {
                     }
                     boolean autoregnull = true;
                     final String rcname = tname;
-                    ResourceEntry re = findEntry(rcname, genctype);
-                    if (re == null) {
-                        if (rcname.startsWith("property.")) {
-                            re = findEntry(rcname, String.class);
-                        } else {
-                            re = findEntry(rcname, classtype);
-                        }
-                    }
-                    if (re == null) {
-                        ResourceLoader it = findLoader(genctype, field);
-                        if (it != null) {
-                            it.load(this, src, rcname, field, attachment);
-                            autoregnull = it.autoNone();
-                            re = findEntry(rcname, genctype);
-                        }
-                    }
-                    if (re == null && genctype != classtype) {
-                        re = findEntry(rcname, classtype);
+                    Object rs;
+                    if (rcname.startsWith("system.property.")) {
+                        rs = System.getProperty(rcname.substring("system.property.".length()));
+                    } else {
+                        ResourceEntry re = findEntry(rcname, genctype);
                         if (re == null) {
                             if (rcname.startsWith("property.")) {
                                 re = findEntry(rcname, String.class);
@@ -602,22 +589,39 @@ public final class ResourceFactory {
                             }
                         }
                         if (re == null) {
-                            ResourceLoader it = findLoader(classtype, field);
+                            ResourceLoader it = findLoader(genctype, field);
                             if (it != null) {
                                 it.load(this, src, rcname, field, attachment);
                                 autoregnull = it.autoNone();
-                                re = findEntry(rcname, classtype);
+                                re = findEntry(rcname, genctype);
                             }
                         }
+                        if (re == null && genctype != classtype) {
+                            re = findEntry(rcname, classtype);
+                            if (re == null) {
+                                if (rcname.startsWith("property.")) {
+                                    re = findEntry(rcname, String.class);
+                                } else {
+                                    re = findEntry(rcname, classtype);
+                                }
+                            }
+                            if (re == null) {
+                                ResourceLoader it = findLoader(classtype, field);
+                                if (it != null) {
+                                    it.load(this, src, rcname, field, attachment);
+                                    autoregnull = it.autoNone();
+                                    re = findEntry(rcname, classtype);
+                                }
+                            }
+                        }
+                        if (re == null && autoregnull) {
+                            register(rcname, genctype, null); //自动注入null的值
+                            re = findEntry(rcname, genctype);
+                        }
+                        if (re == null) continue;
+                        re.elements.add(new ResourceElement<>(src, field));
+                        rs = re.value;
                     }
-                    if (re == null && autoregnull) {
-                        register(rcname, genctype, null); //自动注入null的值
-                        re = findEntry(rcname, genctype);
-                    }
-                    if (re == null) continue;
-                    re.elements.add(new ResourceElement<>(src, field));
-
-                    Object rs = re.value;
                     if (rs != null && !rs.getClass().isPrimitive() && classtype.isPrimitive()) {
                         if (classtype == int.class) {
                             rs = Integer.decode(rs.toString());
