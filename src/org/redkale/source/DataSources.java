@@ -46,6 +46,14 @@ public final class DataSources {
     private DataSources() {
     }
 
+    public static DataSource createDataSource(final String unitName, Properties prop) throws IOException {
+        return new DataJdbcSource(unitName, prop, prop);
+    }
+
+    public static DataSource createDataSource(final String unitName, Properties readprop, Properties writeprop) throws IOException {
+        return new DataJdbcSource(unitName, readprop, writeprop);
+    }
+
     public static DataSource createDataSource(final String unitName) throws IOException {
         return createDataSource(unitName, System.getProperty(DATASOURCE_CONFPATH) == null
             ? DataJdbcSource.class.getResource("/META-INF/persistence.xml")
