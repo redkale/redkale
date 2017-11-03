@@ -7,7 +7,6 @@
 module org.redkale {
 
     requires java.se;
-    requires java.xml.ws.annotation;
     requires jdk.unsupported;
 
     exports javax.annotation;
