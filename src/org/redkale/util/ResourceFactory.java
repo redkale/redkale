@@ -532,6 +532,19 @@ public final class ResourceFactory {
         return inject(src, attachment, consumer, new ArrayList());
     }
 
+    public static String formatResourceName(String name) {
+        if (name == null) return null;
+        int pos = name.indexOf("{system.property.");
+        if (pos < 0) return name;
+        String prefix = name.substring(0, pos);
+        String subname = name.substring(pos + "{system.property.".length());
+        pos = subname.indexOf('}');
+        if (pos < 0) return name;
+        String postfix = subname.substring(pos + 1);
+        String property = subname.substring(0, pos);
+        return formatResourceName(prefix + System.getProperty(property, "") + postfix);
+    }
+
     private <T> boolean inject(final Object src, final T attachment, final BiConsumer<Object, Field> consumer, final List<Object> list) {
         if (src == null) return false;
         try {
@@ -575,7 +588,7 @@ public final class ResourceFactory {
 
                     }
                     boolean autoregnull = true;
-                    final String rcname = tname;
+                    final String rcname = formatResourceName(tname);
                     Object rs;
                     if (rcname.startsWith("system.property.")) {
                         rs = System.getProperty(rcname.substring("system.property.".length()));

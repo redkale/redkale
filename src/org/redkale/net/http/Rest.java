@@ -169,19 +169,6 @@ public final class Rest {
         }
     }
 
-    static String getRestWebSocketResourceName(String name) {
-        if (name == null) return null;
-        int pos = name.indexOf("{system.property.");
-        if (pos < 0) return name;
-        String prefix = name.substring(0, pos);
-        String subname = name.substring(pos + "{system.property.".length());
-        pos = subname.indexOf('}');
-        if (pos < 0) return name;
-        String postfix = subname.substring(pos + 1);
-        String property = subname.substring(0, pos);
-        return getRestWebSocketResourceName(prefix + System.getProperty(property, "") + postfix);
-    }
-
     static <T extends HttpServlet> T createRestWebSocketServlet(final ClassLoader classLoader, final Class<? extends WebSocket> webSocketType) {
         if (webSocketType == null) throw new RuntimeException("Rest WebSocket Class is null on createRestWebSocketServlet");
         if (Modifier.isAbstract(webSocketType.getModifiers())) throw new RuntimeException("Rest WebSocket Class(" + webSocketType + ") cannot abstract on createRestWebSocketServlet");
@@ -196,7 +183,7 @@ public final class Rest {
             }
         }
         if (!valid) throw new RuntimeException("Rest WebSocket Class(" + webSocketType + ") must have public or protected Constructor on createRestWebSocketServlet");
-        final String rwsname = getRestWebSocketResourceName(rws.name());
+        final String rwsname = ResourceFactory.formatResourceName(rws.name());
         if (!checkName(rws.catalog())) throw new RuntimeException(webSocketType.getName() + " have illeal " + RestWebSocket.class.getSimpleName() + ".catalog, only 0-9 a-z A-Z _ cannot begin 0-9");
         if (!checkName(rwsname)) throw new RuntimeException(webSocketType.getName() + " have illeal " + RestWebSocket.class.getSimpleName() + ".name, only 0-9 a-z A-Z _ cannot begin 0-9");
 

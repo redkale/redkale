@@ -12,6 +12,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 /**
  * 只能依附在WebSocket类上，name默认为Service的类名小写并去掉Service字样及后面的字符串 (如HelloWebSocket/HelloWebSocketImpl，的默认路径为 hello)。 <br>
  * <b>注意: </b> 被标记&#64;RestWebSocket的WebSocket不能被修饰为abstract或final，且其内部标记为&#64;Resource的字段只能是protected或public，且必须要有一个protected或public的空参数构造函数。 <br>
+ * name值支持含{system.property.xxx}模式
  * <p>
  * 详情见: https://redkale.org
  *
