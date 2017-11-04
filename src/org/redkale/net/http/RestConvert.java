@@ -26,6 +26,8 @@ public @interface RestConvert {
 
     boolean tiny() default true;
 
+    boolean skipIgnore() default false;
+
     Class type();
 
     String[] ignoreColumns() default {};

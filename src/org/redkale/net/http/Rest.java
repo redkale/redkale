@@ -127,9 +127,14 @@ public final class Rest {
         List<Class> types = new ArrayList<>();
         for (RestConvert rc : converts) {
             if (types.contains(rc.type())) throw new RuntimeException("@RestConvert type(" + rc.type() + ") repeat");
-            childFactory.register(rc.type(), false, rc.convertColumns());
-            childFactory.register(rc.type(), true, rc.ignoreColumns());
-            childFactory.reloadCoder(rc.type());
+            if (rc.skipIgnore()) {
+                childFactory.registerSkipIgnore(rc.type());
+                childFactory.reloadCoder(rc.type());
+            } else {
+                childFactory.register(rc.type(), false, rc.convertColumns());
+                childFactory.register(rc.type(), true, rc.ignoreColumns());
+                childFactory.reloadCoder(rc.type());
+            }
             types.add(rc.type());
             childFactory.tiny(rc.tiny());
         }
