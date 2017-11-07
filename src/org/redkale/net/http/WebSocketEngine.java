@@ -53,6 +53,9 @@ public class WebSocketEngine {
     @Comment("在线用户ID对应的WebSocket组，用于单用户多连接模式")
     private final Map<Serializable, List<WebSocket>> websockets2 = new ConcurrentHashMap<>();
 
+    @Comment("当前连接数")
+    private final AtomicInteger currconns = new AtomicInteger();
+
     @Comment("用于PING的定时器")
     private ScheduledThreadPoolExecutor scheduler;
 
@@ -65,13 +68,17 @@ public class WebSocketEngine {
     @Comment("PING的间隔秒数")
     private int liveinterval;
 
-    protected WebSocketEngine(String engineid, boolean single, HttpContext context, int liveinterval, WebSocketNode node, Convert sendConvert, Logger logger) {
+    @Comment("最大连接数, 为0表示无限制")
+    private int maxconns;
+
+    protected WebSocketEngine(String engineid, boolean single, HttpContext context, int liveinterval, int maxconns, WebSocketNode node, Convert sendConvert, Logger logger) {
         this.engineid = engineid;
         this.single = single;
         this.context = context;
         this.sendConvert = sendConvert;
         this.node = node;
         this.liveinterval = liveinterval;
+        this.maxconns = maxconns;
         this.logger = logger;
         this.finest = logger.isLoggable(Level.FINEST);
         this.index = sequence.getAndIncrement();
@@ -102,6 +109,7 @@ public class WebSocketEngine {
     @Comment("添加WebSocket")
     void add(WebSocket socket) {
         if (single) {
+            currconns.incrementAndGet();
             websockets.put(socket._userid, socket);
         } else { //非线程安全， 在常规场景中无需锁
             List<WebSocket> list = websockets2.get(socket._userid);
@@ -109,6 +117,7 @@ public class WebSocketEngine {
                 list = new CopyOnWriteArrayList<>();
                 websockets2.put(socket._userid, list);
             }
+            currconns.incrementAndGet();
             list.add(socket);
         }
         if (node != null) node.connect(socket._userid);
@@ -118,11 +127,13 @@ public class WebSocketEngine {
     void remove(WebSocket socket) {
         Serializable userid = socket._userid;
         if (single) {
+            currconns.decrementAndGet();
             websockets.remove(userid);
             if (node != null) node.disconnect(userid);
         } else { //非线程安全， 在常规场景中无需锁
             List<WebSocket> list = websockets2.get(userid);
             if (list != null) {
+                currconns.decrementAndGet();
                 list.remove(socket);
                 if (list.isEmpty()) {
                     websockets2.remove(userid);
@@ -260,6 +271,17 @@ public class WebSocketEngine {
             }
             return future == null ? CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY) : future;
         }
+    }
+
+    @Comment("获取最大连接数")
+    public int getLocalMaxconns() {
+        return this.maxconns;
+    }
+
+    @Comment("连接数是否达到上限")
+    public boolean isLocalConnLimited() {
+        if (this.maxconns < 1) return false;
+        return currconns.get() >= this.maxconns;
     }
 
     @Comment("获取所有连接")

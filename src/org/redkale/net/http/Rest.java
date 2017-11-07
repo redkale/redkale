@@ -319,6 +319,13 @@ public final class Rest {
             }
             mv.visitFieldInsn(PUTFIELD, newDynName, "liveinterval", "I");
             mv.visitVarInsn(ALOAD, 0);
+            if (rws.maxconns()< 6) {
+                mv.visitInsn(ICONST_0 + rws.maxconns());
+            } else {
+                mv.visitIntInsn(BIPUSH, rws.maxconns());
+            }
+            mv.visitFieldInsn(PUTFIELD, newDynName, "maxconns", "I");
+            mv.visitVarInsn(ALOAD, 0);
             mv.visitInsn(rws.single() ? ICONST_1 : ICONST_0);
             mv.visitFieldInsn(PUTFIELD, newDynName, "single", "Z");
             mv.visitInsn(RETURN);

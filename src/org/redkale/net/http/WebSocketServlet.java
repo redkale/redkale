@@ -60,6 +60,8 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
 
     protected int liveinterval = DEFAILT_LIVEINTERVAL;
 
+    protected int maxconns = 0;
+
     @Resource(name = "jsonconvert")
     protected Convert jsonConvert;
 
@@ -106,7 +108,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
             if (logger.isLoggable(Level.WARNING)) logger.warning("Not found WebSocketNode, create a default value for " + getClass().getName());
         }
         //存在WebSocketServlet，则此WebSocketNode必须是本地模式Service
-        this.node.localEngine = new WebSocketEngine("WebSocketEngine-" + addr.getHostString() + ":" + addr.getPort() + "-[" + resourceName() + "]", this.single, context, liveinterval, this.node, this.sendConvert, logger);
+        this.node.localEngine = new WebSocketEngine("WebSocketEngine-" + addr.getHostString() + ":" + addr.getPort() + "-[" + resourceName() + "]", this.single, context, liveinterval, maxconns, this.node, this.sendConvert, logger);
         this.node.init(conf);
         this.node.localEngine.init(conf);
     }
@@ -134,6 +136,11 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
         final String key = request.getHeader("Sec-WebSocket-Key");
         if (key == null) {
             if (debug) logger.finest("WebSocket connect abort, Not found Sec-WebSocket-Key header. request=" + request);
+            response.finish(true);
+            return;
+        }
+        if (this.node.localEngine.isLocalConnLimited()) {
+            if (debug) logger.finest("WebSocket connections limit, maxconns=" + this.node.localEngine.getLocalMaxconns());
             response.finish(true);
             return;
         }
