@@ -488,6 +488,7 @@ public class JsonReader extends Reader {
             } else {
                 final int start = currpos;
                 for (;;) {
+                    if(currpos >= text0.length) break;
                     char ch = text0[currpos];
                     if (ch == ',' || ch <= ' ' || ch == '}' || ch == ']' || ch == ':') break;
                     currpos++;

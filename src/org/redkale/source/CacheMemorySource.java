@@ -62,16 +62,17 @@ public class CacheMemorySource<V extends Object> extends AbstractService impleme
     public CacheMemorySource() {
     }
 
-    public final CacheMemorySource setStoreType(Class valueType) {
+    @Override
+    public final void initValueType(Type valueType) {
         this.objValueType = valueType;
         this.setValueType = TypeToken.createParameterizedType(null, CopyOnWriteArraySet.class, valueType);
         this.listValueType = TypeToken.createParameterizedType(null, ConcurrentLinkedQueue.class, valueType);
-        this.setNeedStore(this.objValueType != null);
-        return this;
+        this.initTransient(this.objValueType == null);
     }
 
-    public final void setNeedStore(boolean needStore) {
-        this.needStore = needStore;
+    @Override
+    public final void initTransient(boolean flag) {
+        this.needStore = !flag;
     }
 
     @Override
@@ -83,12 +84,12 @@ public class CacheMemorySource<V extends Object> extends AbstractService impleme
             String storeValueStr = prop.getValue("value-type");
             if (storeValueStr != null) {
                 try {
-                    this.setStoreType(Thread.currentThread().getContextClassLoader().loadClass(storeValueStr));
+                    this.initValueType(Thread.currentThread().getContextClassLoader().loadClass(storeValueStr));
                 } catch (Throwable e) {
                     logger.log(Level.SEVERE, self.getClass().getSimpleName() + " load key & value store class (" + storeValueStr + ") error", e);
                 }
             }
-            if (prop.getBoolValue("store-ignore", false)) setNeedStore(false);
+            this.initTransient(prop.getBoolValue("store-ignore", false));
         }
         String expireHandlerClass = prop == null ? null : prop.getValue("expirehandler");
         if (expireHandlerClass != null) {

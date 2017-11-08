@@ -274,10 +274,10 @@ public abstract class NodeServer {
                         Type genericType = field.getGenericType();
                         ParameterizedType pt = (genericType instanceof ParameterizedType) ? (ParameterizedType) genericType : null;
                         Type valType = pt == null ? null : pt.getActualTypeArguments()[0];
-                        if (sourceType == CacheMemorySource.class) {
-                            CacheMemorySource memorySource = (CacheMemorySource) source;
-                            memorySource.setStoreType(valType instanceof Class ? (Class) valType : Object.class);
-                            if (field.getAnnotation(Transient.class) != null) memorySource.setNeedStore(false); //必须在setStoreType之后
+                        if (CacheSource.class.isAssignableFrom(sourceType)) {
+                            CacheSource cacheSource = (CacheSource) source;
+                            cacheSource.initValueType(valType instanceof Class ? (Class) valType : Object.class);
+                            cacheSource.initTransient(field.getAnnotation(Transient.class) != null); //必须在initValueType之后
                         }
                         application.cacheSources.add((CacheSource) source);
                         appResFactory.register(resourceName, genericType, source);

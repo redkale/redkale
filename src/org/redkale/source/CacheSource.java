@@ -6,6 +6,7 @@
 package org.redkale.source;
 
 import java.beans.ConstructorProperties;
+import java.lang.reflect.Type;
 import java.util.*;
 import java.util.concurrent.*;
 import org.redkale.convert.ConvertColumn;
@@ -20,6 +21,10 @@ import org.redkale.convert.json.JsonFactory;
  * @author zhangjx
  */
 public interface CacheSource<V extends Object> {
+
+    public void initValueType(Type valueType);
+
+    public void initTransient(boolean flag);
 
     default boolean isOpen() {
         return true;
