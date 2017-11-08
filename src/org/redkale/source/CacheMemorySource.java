@@ -35,6 +35,9 @@ public class CacheMemorySource<V extends Object> extends AbstractService impleme
     private File home;
 
     @Resource
+    private JsonConvert defaultConvert;
+
+    @Resource(name = "$_convert")
     private JsonConvert convert;
 
     private boolean needStore;
@@ -73,6 +76,7 @@ public class CacheMemorySource<V extends Object> extends AbstractService impleme
 
     @Override
     public void init(AnyValue conf) {
+        if (this.convert == null) this.convert = this.defaultConvert;
         final CacheMemorySource self = this;
         AnyValue prop = conf == null ? null : conf.getAnyValue("property");
         if (prop != null) {
