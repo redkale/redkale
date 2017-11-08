@@ -34,9 +34,6 @@ public abstract class WebSocketNode {
     @Comment("存储当前SNCP节点列表的key")
     public static final String SOURCE_SNCP_NODES_KEY = "ws_sncpnodes";
 
-    @Comment("存储当前用户数量的key")
-    public static final String SOURCE_USER_COUNT_KEY = "ws_usercount";
-
     protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
 
     protected final boolean finest = logger.isLoggable(Level.FINEST);
