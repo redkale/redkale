@@ -379,7 +379,7 @@
 
     <span class="c1">//使用CacheSource必须要指明泛型</span>
     <span class="nd">@Resource</span><span class="o">(</span><span class="n">name</span> <span class="o">=</span> <span class="s">&quot;usersessions&quot;</span><span class="o">)</span>
-    <span class="kd">protected</span> <span class="n">CacheSource</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">Integer</span><span class="o">&gt;</span> <span class="n">sessions</span><span class="o">;</span>
+    <span class="kd">protected</span> <span class="n">CacheSource</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">&gt;</span> <span class="n">sessions</span><span class="o">;</span>
 
     <span class="c1">//登录</span>
     <span class="kd">public</span> <span class="n">RetResult</span><span class="o">&lt;</span><span class="n">UserInfo</span><span class="o">&gt;</span> <span class="nf">login</span><span class="o">(</span><span class="n">LoginBean</span> <span class="n">bean</span><span class="o">)</span> <span class="o">{</span> <span class="c1">//bean.sessionid 在接入层进行赋值</span>
