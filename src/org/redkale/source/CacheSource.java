@@ -6,7 +6,6 @@
 package org.redkale.source;
 
 import java.beans.ConstructorProperties;
-import java.io.*;
 import java.util.*;
 import java.util.concurrent.*;
 import org.redkale.convert.ConvertColumn;
@@ -14,91 +13,90 @@ import org.redkale.convert.json.JsonFactory;
 
 /**
  *
- * @param <K> key的类型
  * @param <V> value的类型
  * <p>
  * 详情见: https://redkale.org
  *
  * @author zhangjx
  */
-public interface CacheSource<K extends Serializable, V extends Object> {
+public interface CacheSource<V extends Object> {
 
     default boolean isOpen() {
         return true;
     }
 
-    public boolean exists(final K key);
+    public boolean exists(final String key);
 
-    public V get(final K key);
+    public V get(final String key);
 
-    public V getAndRefresh(final K key, final int expireSeconds);
+    public V getAndRefresh(final String key, final int expireSeconds);
 
-    public void refresh(final K key, final int expireSeconds);
+    public void refresh(final String key, final int expireSeconds);
 
-    public void set(final K key, final V value);
+    public void set(final String key, final V value);
 
-    public void set(final int expireSeconds, final K key, final V value);
+    public void set(final int expireSeconds, final String key, final V value);
 
-    public void setExpireSeconds(final K key, final int expireSeconds);
+    public void setExpireSeconds(final String key, final int expireSeconds);
 
-    public void remove(final K key);
+    public void remove(final String key);
 
-    public Collection<V> getCollection(final K key);
+    public Collection<V> getCollection(final String key);
 
-    public int getCollectionSize(final K key);
+    public int getCollectionSize(final String key);
 
-    public Collection<V> getCollectionAndRefresh(final K key, final int expireSeconds);
+    public Collection<V> getCollectionAndRefresh(final String key, final int expireSeconds);
 
-    public void appendListItem(final K key, final V value);
+    public void appendListItem(final String key, final V value);
 
-    public void removeListItem(final K key, final V value);
+    public void removeListItem(final String key, final V value);
 
-    public void appendSetItem(final K key, final V value);
+    public void appendSetItem(final String key, final V value);
 
-    public void removeSetItem(final K key, final V value);
+    public void removeSetItem(final String key, final V value);
 
-    public List<K> queryKeys();
+    public List<String> queryKeys();
 
     public int getKeySize();
 
-    public List<CacheEntry<K, Object>> queryList();
+    public List<CacheEntry<Object>> queryList();
 
     //---------------------- CompletableFuture 异步版 ---------------------------------
-    public CompletableFuture<Boolean> existsAsync(final K key);
+    public CompletableFuture<Boolean> existsAsync(final String key);
 
-    public CompletableFuture<V> getAsync(final K key);
+    public CompletableFuture<V> getAsync(final String key);
 
-    public CompletableFuture<V> getAndRefreshAsync(final K key, final int expireSeconds);
+    public CompletableFuture<V> getAndRefreshAsync(final String key, final int expireSeconds);
 
-    public CompletableFuture<Void> refreshAsync(final K key, final int expireSeconds);
+    public CompletableFuture<Void> refreshAsync(final String key, final int expireSeconds);
 
-    public CompletableFuture<Void> setAsync(final K key, final V value);
+    public CompletableFuture<Void> setAsync(final String key, final V value);
 
-    public CompletableFuture<Void> setAsync(final int expireSeconds, final K key, final V value);
+    public CompletableFuture<Void> setAsync(final int expireSeconds, final String key, final V value);
 
-    public CompletableFuture<Void> setExpireSecondsAsync(final K key, final int expireSeconds);
+    public CompletableFuture<Void> setExpireSecondsAsync(final String key, final int expireSeconds);
 
-    public CompletableFuture<Void> removeAsync(final K key);
+    public CompletableFuture<Void> removeAsync(final String key);
 
-    public CompletableFuture<Collection<V>> getCollectionAsync(final K key);
+    public CompletableFuture<Collection<V>> getCollectionAsync(final String key);
 
-    public CompletableFuture<Integer> getCollectionSizeAsync(final K key);
+    public CompletableFuture<Integer> getCollectionSizeAsync(final String key);
 
-    public CompletableFuture<Collection<V>> getCollectionAndRefreshAsync(final K key, final int expireSeconds);
+    public CompletableFuture<Collection<V>> getCollectionAndRefreshAsync(final String key, final int expireSeconds);
 
-    public CompletableFuture<Void> appendListItemAsync(final K key, final V value);
+    public CompletableFuture<Void> appendListItemAsync(final String key, final V value);
 
-    public CompletableFuture<Void> removeListItemAsync(final K key, final V value);
+    public CompletableFuture<Void> removeListItemAsync(final String key, final V value);
 
-    public CompletableFuture<Void> appendSetItemAsync(final K key, final V value);
+    public CompletableFuture<Void> appendSetItemAsync(final String key, final V value);
 
-    public CompletableFuture<Void> removeSetItemAsync(final K key, final V value);
+    public CompletableFuture<Void> removeSetItemAsync(final String key, final V value);
 
-    public CompletableFuture<List<K>> queryKeysAsync();
+    public CompletableFuture<List<String>> queryKeysAsync();
 
     public CompletableFuture<Integer> getKeySizeAsync();
 
-    public CompletableFuture<List<CacheEntry<K, Object>>> queryListAsync();
+    public CompletableFuture<List<CacheEntry< Object>>> queryListAsync();
 
     default CompletableFuture<Boolean> isOpenAsync() {
         return CompletableFuture.completedFuture(true);
@@ -108,7 +106,7 @@ public interface CacheSource<K extends Serializable, V extends Object> {
         OBJECT, SET, LIST;
     }
 
-    public static final class CacheEntry<K extends Serializable, T> {
+    public static final class CacheEntry<T> {
 
         static final String JSON_SET_KEY = "{\"cacheType\":\"" + CacheEntryType.SET + "\"";
 
@@ -116,7 +114,7 @@ public interface CacheSource<K extends Serializable, V extends Object> {
 
         final CacheEntryType cacheType;
 
-        final K key;
+        final String key;
 
         //<=0表示永久保存
         int expireSeconds;
@@ -129,16 +127,16 @@ public interface CacheSource<K extends Serializable, V extends Object> {
 
         ConcurrentLinkedQueue<T> listValue;
 
-        public CacheEntry(CacheEntryType cacheType, K key, T objectValue, CopyOnWriteArraySet<T> setValue, ConcurrentLinkedQueue<T> listValue) {
+        public CacheEntry(CacheEntryType cacheType, String key, T objectValue, CopyOnWriteArraySet<T> setValue, ConcurrentLinkedQueue<T> listValue) {
             this(cacheType, 0, key, objectValue, setValue, listValue);
         }
 
-        public CacheEntry(CacheEntryType cacheType, int expireSeconds, K key, T objectValue, CopyOnWriteArraySet<T> setValue, ConcurrentLinkedQueue<T> listValue) {
+        public CacheEntry(CacheEntryType cacheType, int expireSeconds, String key, T objectValue, CopyOnWriteArraySet<T> setValue, ConcurrentLinkedQueue<T> listValue) {
             this(cacheType, expireSeconds, (int) (System.currentTimeMillis() / 1000), key, objectValue, setValue, listValue);
         }
 
         @ConstructorProperties({"cacheType", "expireSeconds", "lastAccessed", "key", "objectValue", "setValue", "listValue"})
-        public CacheEntry(CacheEntryType cacheType, int expireSeconds, int lastAccessed, K key, T objectValue, CopyOnWriteArraySet<T> setValue, ConcurrentLinkedQueue<T> listValue) {
+        public CacheEntry(CacheEntryType cacheType, int expireSeconds, int lastAccessed, String key, T objectValue, CopyOnWriteArraySet<T> setValue, ConcurrentLinkedQueue<T> listValue) {
             this.cacheType = cacheType;
             this.expireSeconds = expireSeconds;
             this.lastAccessed = lastAccessed;
@@ -180,7 +178,7 @@ public interface CacheSource<K extends Serializable, V extends Object> {
             return lastAccessed;
         }
 
-        public K getKey() {
+        public String getKey() {
             return key;
         }
 

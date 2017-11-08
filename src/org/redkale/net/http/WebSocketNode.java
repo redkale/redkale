@@ -28,11 +28,14 @@ import org.redkale.util.*;
  */
 public abstract class WebSocketNode {
 
+    @Comment("存储用户ID的key前缀")
+    public static final String SOURCE_SNCP_USERID_PREFIX = "wsuid_";
+
     @Comment("存储当前SNCP节点列表的key")
-    public static final String SOURCE_SNCP_NODES_KEY = "redkale_sncpnodes";
+    public static final String SOURCE_SNCP_NODES_KEY = "ws_sncpnodes";
 
     @Comment("存储当前用户数量的key")
-    public static final String SOURCE_USER_COUNT_KEY = "redkale_usercount";
+    public static final String SOURCE_USER_COUNT_KEY = "ws_usercount";
 
     protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
 
@@ -52,7 +55,7 @@ public abstract class WebSocketNode {
     //集合包含 localSncpAddress
     //如果不是分布式(没有SNCP)，sncpNodeAddresses 将不会被用到
     @Resource(name = "$_nodes")
-    protected CacheSource<Serializable, InetSocketAddress> sncpNodeAddresses;
+    protected CacheSource<InetSocketAddress> sncpNodeAddresses;
 
     //当前节点的本地WebSocketEngine
     protected WebSocketEngine localEngine;
@@ -124,7 +127,7 @@ public abstract class WebSocketNode {
      * @return 地址列表
      */
     public CompletableFuture<Collection<InetSocketAddress>> getRpcNodeAddresses(final Serializable userid) {
-        if (this.sncpNodeAddresses != null) return this.sncpNodeAddresses.getCollectionAsync(userid);
+        if (this.sncpNodeAddresses != null) return this.sncpNodeAddresses.getCollectionAsync(SOURCE_SNCP_USERID_PREFIX + userid);
         List<InetSocketAddress> rs = new ArrayList<>();
         rs.add(this.localSncpAddress);
         return CompletableFuture.completedFuture(rs);
@@ -165,7 +168,7 @@ public abstract class WebSocketNode {
         if (this.localEngine != null && this.sncpNodeAddresses == null) {
             return CompletableFuture.completedFuture(this.localEngine.existsLocalWebSocket(userid));
         }
-        return this.sncpNodeAddresses.existsAsync(userid);
+        return this.sncpNodeAddresses.existsAsync(SOURCE_SNCP_USERID_PREFIX + userid);
     }
 
     /**
@@ -199,7 +202,7 @@ public abstract class WebSocketNode {
             return localFuture;
         }
         //远程节点关闭
-        CompletableFuture<Collection<InetSocketAddress>> addrsFuture = sncpNodeAddresses.getCollectionAsync(userid);
+        CompletableFuture<Collection<InetSocketAddress>> addrsFuture = sncpNodeAddresses.getCollectionAsync(SOURCE_SNCP_USERID_PREFIX + userid);
         CompletableFuture<Integer> remoteFuture = addrsFuture.thenCompose((Collection<InetSocketAddress> addrs) -> {
             if (finest) logger.finest("websocket found userid:" + userid + " on " + addrs);
             if (addrs == null || addrs.isEmpty()) return CompletableFuture.completedFuture(0);
@@ -402,7 +405,7 @@ public abstract class WebSocketNode {
             return this.localEngine.broadcastMessage(message, last);
         }
         CompletableFuture<Integer> localFuture = this.localEngine == null ? null : this.localEngine.broadcastMessage(message, last);
-        CompletableFuture<Collection<InetSocketAddress>> addrsFuture = sncpNodeAddresses.getCollectionAsync("redkale_sncpnodes");
+        CompletableFuture<Collection<InetSocketAddress>> addrsFuture = sncpNodeAddresses.getCollectionAsync(SOURCE_SNCP_NODES_KEY);
         CompletableFuture<Integer> remoteFuture = addrsFuture.thenCompose((Collection<InetSocketAddress> addrs) -> {
             if (finest) logger.finest("websocket broadcast message on " + addrs);
             if (addrs == null || addrs.isEmpty()) return CompletableFuture.completedFuture(0);
@@ -427,7 +430,7 @@ public abstract class WebSocketNode {
             return localFuture == null ? CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY) : localFuture;
         }
         //远程节点发送消息
-        CompletableFuture<Collection<InetSocketAddress>> addrsFuture = sncpNodeAddresses.getCollectionAsync(userid);
+        CompletableFuture<Collection<InetSocketAddress>> addrsFuture = sncpNodeAddresses.getCollectionAsync(SOURCE_SNCP_USERID_PREFIX + userid);
         CompletableFuture<Integer> remoteFuture = addrsFuture.thenCompose((Collection<InetSocketAddress> addrs) -> {
             if (addrs == null || addrs.isEmpty()) {
                 if (finer) logger.finer("websocket not found userid:" + userid + " on any node ");

@@ -20,7 +20,6 @@ import org.redkale.util.*;
 /**
  * CacheSource的默认实现--内存缓存
  *
- * @param <K> key类型
  * @param <V> value类型
  * <p>
  * 详情见: https://redkale.org
@@ -30,7 +29,7 @@ import org.redkale.util.*;
 @Local
 @AutoLoad(false)
 @ResourceType(CacheSource.class)
-public class CacheMemorySource<K extends Serializable, V extends Object> extends AbstractService implements CacheSource<K, V>, Service, AutoCloseable, Resourcable {
+public class CacheMemorySource<V extends Object> extends AbstractService implements CacheSource<V>, Service, AutoCloseable, Resourcable {
 
     @Resource(name = "APP_HOME")
     private File home;
@@ -39,8 +38,6 @@ public class CacheMemorySource<K extends Serializable, V extends Object> extends
     private JsonConvert convert;
 
     private boolean needStore;
-
-    private Class keyType;
 
     private Type objValueType;
 
@@ -54,20 +51,19 @@ public class CacheMemorySource<K extends Serializable, V extends Object> extends
 
     private final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
 
-    protected final ConcurrentHashMap<K, CacheEntry<K, Object>> container = new ConcurrentHashMap<>();
+    protected final ConcurrentHashMap<String, CacheEntry<Object>> container = new ConcurrentHashMap<>();
 
     @RpcRemote
-    protected CacheSource<K, V> remoteSource;
+    protected CacheSource<V> remoteSource;
 
     public CacheMemorySource() {
     }
 
-    public final CacheMemorySource setStoreType(Class keyType, Class valueType) {
-        this.keyType = keyType;
+    public final CacheMemorySource setStoreType(Class valueType) {
         this.objValueType = valueType;
         this.setValueType = TypeToken.createParameterizedType(null, CopyOnWriteArraySet.class, valueType);
         this.listValueType = TypeToken.createParameterizedType(null, ConcurrentLinkedQueue.class, valueType);
-        this.setNeedStore(this.keyType != null && this.keyType != Serializable.class && this.objValueType != null);
+        this.setNeedStore(this.objValueType != null);
         return this;
     }
 
@@ -79,14 +75,13 @@ public class CacheMemorySource<K extends Serializable, V extends Object> extends
     public void init(AnyValue conf) {
         final CacheMemorySource self = this;
         AnyValue prop = conf == null ? null : conf.getAnyValue("property");
-        if (keyType == null && prop != null) {
-            String storeKeyStr = prop.getValue("key-type");
+        if (prop != null) {
             String storeValueStr = prop.getValue("value-type");
-            if (storeKeyStr != null && storeValueStr != null) {
+            if (storeValueStr != null) {
                 try {
-                    this.setStoreType(Thread.currentThread().getContextClassLoader().loadClass(storeKeyStr), Thread.currentThread().getContextClassLoader().loadClass(storeValueStr));
+                    this.setStoreType(Thread.currentThread().getContextClassLoader().loadClass(storeValueStr));
                 } catch (Throwable e) {
-                    logger.log(Level.SEVERE, self.getClass().getSimpleName() + " load key & value store class (" + storeKeyStr + ", " + storeValueStr + ") error", e);
+                    logger.log(Level.SEVERE, self.getClass().getSimpleName() + " load key & value store class (" + storeValueStr + ") error", e);
                 }
             }
             if (prop.getBoolValue("store-ignore", false)) setNeedStore(false);
@@ -105,7 +100,7 @@ public class CacheMemorySource<K extends Serializable, V extends Object> extends
                 t.setDaemon(true);
                 return t;
             });
-            final List<K> keys = new ArrayList<>();
+            final List<String> keys = new ArrayList<>();
             scheduler.scheduleWithFixedDelay(() -> {
                 keys.clear();
                 int now = (int) (System.currentTimeMillis() / 1000);
@@ -114,7 +109,7 @@ public class CacheMemorySource<K extends Serializable, V extends Object> extends
                         keys.add(x.key);
                     }
                 });
-                for (K key : keys) {
+                for (String key : keys) {
                     CacheEntry entry = container.remove(key);
                     if (expireHandler != null && entry != null) expireHandler.accept(entry);
                 }
@@ -131,19 +126,18 @@ public class CacheMemorySource<K extends Serializable, V extends Object> extends
                 File store = new File(home, "cache/" + resourceName());
                 if (!store.isFile() || !store.canRead()) return;
                 LineNumberReader reader = new LineNumberReader(new FileReader(store));
-                if (this.keyType == null) this.keyType = Serializable.class;
                 if (this.objValueType == null) {
                     this.objValueType = Object.class;
                     this.setValueType = TypeToken.createParameterizedType(null, CopyOnWriteArraySet.class, this.objValueType);
                     this.listValueType = TypeToken.createParameterizedType(null, ConcurrentLinkedQueue.class, this.objValueType);
                 }
-                final Type storeObjType = TypeToken.createParameterizedType(null, CacheEntry.class, keyType, objValueType);
-                final Type storeSetType = TypeToken.createParameterizedType(null, CacheEntry.class, keyType, setValueType);
-                final Type storeListType = TypeToken.createParameterizedType(null, CacheEntry.class, keyType, listValueType);
+                final Type storeObjType = TypeToken.createParameterizedType(null, CacheEntry.class, objValueType);
+                final Type storeSetType = TypeToken.createParameterizedType(null, CacheEntry.class, setValueType);
+                final Type storeListType = TypeToken.createParameterizedType(null, CacheEntry.class, listValueType);
                 String line;
                 while ((line = reader.readLine()) != null) {
                     if (line.isEmpty()) continue;
-                    CacheEntry<K, Object> entry = convert.convertFrom(line.startsWith(CacheEntry.JSON_SET_KEY) ? storeSetType : (line.startsWith(CacheEntry.JSON_LIST_KEY) ? storeListType : storeObjType), line);
+                    CacheEntry<Object> entry = convert.convertFrom(line.startsWith(CacheEntry.JSON_SET_KEY) ? storeSetType : (line.startsWith(CacheEntry.JSON_LIST_KEY) ? storeListType : storeObjType), line);
                     if (entry.isExpired()) continue;
                     if (datasync && container.containsKey(entry.key)) continue; //已经同步了
                     container.put(entry.key, entry);
@@ -159,12 +153,12 @@ public class CacheMemorySource<K extends Serializable, V extends Object> extends
             if (client != null && client.getRemoteGroupTransport() != null) {
                 super.runAsync(() -> {
                     try {
-                        CompletableFuture<List<CacheEntry<K, Object>>> listFuture = remoteSource.queryListAsync();
+                        CompletableFuture<List<CacheEntry<Object>>> listFuture = remoteSource.queryListAsync();
                         listFuture.whenComplete((list, exp) -> {
                             if (exp != null) {
                                 logger.log(Level.FINEST, CacheSource.class.getSimpleName() + "(" + resourceName() + ") queryListAsync error", exp);
                             } else {
-                                for (CacheEntry<K, Object> entry : list) {
+                                for (CacheEntry<Object> entry : list) {
                                     container.put(entry.key, entry);
                                 }
                             }
@@ -196,10 +190,10 @@ public class CacheMemorySource<K extends Serializable, V extends Object> extends
             File store = new File(home, "cache/" + resourceName());
             store.getParentFile().mkdirs();
             PrintStream stream = new PrintStream(store, "UTF-8");
-            final Type storeObjType = TypeToken.createParameterizedType(null, CacheEntry.class, keyType, objValueType);
-            final Type storeSetType = TypeToken.createParameterizedType(null, CacheEntry.class, keyType, setValueType);
-            final Type storeListType = TypeToken.createParameterizedType(null, CacheEntry.class, keyType, listValueType);
-            Collection<CacheEntry<K, Object>> entrys = container.values();
+            final Type storeObjType = TypeToken.createParameterizedType(null, CacheEntry.class, objValueType);
+            final Type storeSetType = TypeToken.createParameterizedType(null, CacheEntry.class, setValueType);
+            final Type storeListType = TypeToken.createParameterizedType(null, CacheEntry.class, listValueType);
+            Collection<CacheEntry<Object>> entrys = container.values();
             for (CacheEntry entry : entrys) {
                 stream.println(convert.convertTo(entry.isSetCacheType() ? storeSetType : (entry.isListCacheType() ? storeListType : storeObjType), entry));
             }
@@ -211,7 +205,7 @@ public class CacheMemorySource<K extends Serializable, V extends Object> extends
     }
 
     @Override
-    public boolean exists(K key) {
+    public boolean exists(String key) {
         if (key == null) return false;
         CacheEntry entry = container.get(key);
         if (entry == null) return false;
@@ -219,12 +213,12 @@ public class CacheMemorySource<K extends Serializable, V extends Object> extends
     }
 
     @Override
-    public CompletableFuture<Boolean> existsAsync(final K key) {
+    public CompletableFuture<Boolean> existsAsync(final String key) {
         return CompletableFuture.supplyAsync(() -> exists(key), getExecutor());
     }
 
     @Override
-    public V get(K key) {
+    public V get(String key) {
         if (key == null) return null;
         CacheEntry entry = container.get(key);
         if (entry == null || entry.isExpired()) return null;
@@ -234,13 +228,13 @@ public class CacheMemorySource<K extends Serializable, V extends Object> extends
     }
 
     @Override
-    public CompletableFuture<V> getAsync(final K key) {
+    public CompletableFuture<V> getAsync(final String key) {
         return CompletableFuture.supplyAsync(() -> get(key), getExecutor());
     }
 
     @Override
     @RpcMultiRun
-    public V getAndRefresh(K key, final int expireSeconds) {
+    public V getAndRefresh(String key, final int expireSeconds) {
         if (key == null) return null;
         CacheEntry entry = container.get(key);
         if (entry == null || entry.isExpired()) return null;
@@ -252,13 +246,13 @@ public class CacheMemorySource<K extends Serializable, V extends Object> extends
     }
 
     @Override
-    public CompletableFuture<V> getAndRefreshAsync(final K key, final int expireSeconds) {
+    public CompletableFuture<V> getAndRefreshAsync(final String key, final int expireSeconds) {
         return CompletableFuture.supplyAsync(() -> getAndRefresh(key, expireSeconds), getExecutor());
     }
 
     @Override
     @RpcMultiRun
-    public void refresh(K key, final int expireSeconds) {
+    public void refresh(String key, final int expireSeconds) {
         if (key == null) return;
         CacheEntry entry = container.get(key);
         if (entry == null) return;
@@ -267,13 +261,13 @@ public class CacheMemorySource<K extends Serializable, V extends Object> extends
     }
 
     @Override
-    public CompletableFuture<Void> refreshAsync(final K key, final int expireSeconds) {
+    public CompletableFuture<Void> refreshAsync(final String key, final int expireSeconds) {
         return CompletableFuture.runAsync(() -> refresh(key, expireSeconds), getExecutor());
     }
 
     @Override
     @RpcMultiRun
-    public void set(K key, V value) {
+    public void set(String key, V value) {
         if (key == null) return;
         CacheEntry entry = container.get(key);
         if (entry == null) {
@@ -287,13 +281,13 @@ public class CacheMemorySource<K extends Serializable, V extends Object> extends
     }
 
     @Override
-    public CompletableFuture<Void> setAsync(K key, V value) {
+    public CompletableFuture<Void> setAsync(String key, V value) {
         return CompletableFuture.runAsync(() -> set(key, value), getExecutor());
     }
 
     @Override
     @RpcMultiRun
-    public void set(int expireSeconds, K key, V value) {
+    public void set(int expireSeconds, String key, V value) {
         if (key == null) return;
         CacheEntry entry = container.get(key);
         if (entry == null) {
@@ -307,13 +301,13 @@ public class CacheMemorySource<K extends Serializable, V extends Object> extends
     }
 
     @Override
-    public CompletableFuture<Void> setAsync(int expireSeconds, K key, V value) {
+    public CompletableFuture<Void> setAsync(int expireSeconds, String key, V value) {
         return CompletableFuture.runAsync(() -> set(expireSeconds, key, value), getExecutor());
     }
 
     @Override
     @RpcMultiRun
-    public void setExpireSeconds(K key, int expireSeconds) {
+    public void setExpireSeconds(String key, int expireSeconds) {
         if (key == null) return;
         CacheEntry entry = container.get(key);
         if (entry == null) return;
@@ -321,56 +315,56 @@ public class CacheMemorySource<K extends Serializable, V extends Object> extends
     }
 
     @Override
-    public CompletableFuture<Void> setExpireSecondsAsync(final K key, final int expireSeconds) {
+    public CompletableFuture<Void> setExpireSecondsAsync(final String key, final int expireSeconds) {
         return CompletableFuture.runAsync(() -> setExpireSeconds(key, expireSeconds), getExecutor());
     }
 
     @Override
     @RpcMultiRun
-    public void remove(K key) {
+    public void remove(String key) {
         if (key == null) return;
         container.remove(key);
     }
 
     @Override
-    public CompletableFuture<Void> removeAsync(final K key) {
+    public CompletableFuture<Void> removeAsync(final String key) {
         return CompletableFuture.runAsync(() -> remove(key), getExecutor());
     }
 
     @Override
-    public Collection<V> getCollection(final K key) {
+    public Collection<V> getCollection(final String key) {
         return (Collection<V>) get(key);
     }
 
     @Override
-    public CompletableFuture<Collection<V>> getCollectionAsync(final K key) {
+    public CompletableFuture<Collection<V>> getCollectionAsync(final String key) {
         return CompletableFuture.supplyAsync(() -> getCollection(key), getExecutor());
     }
 
     @Override
-    public int getCollectionSize(final K key) {
+    public int getCollectionSize(final String key) {
         Collection<V> collection = (Collection<V>) get(key);
         return collection == null ? 0 : collection.size();
     }
 
     @Override
-    public CompletableFuture<Integer> getCollectionSizeAsync(final K key) {
+    public CompletableFuture<Integer> getCollectionSizeAsync(final String key) {
         return CompletableFuture.supplyAsync(() -> getCollectionSize(key), getExecutor());
     }
 
     @Override
-    public Collection<V> getCollectionAndRefresh(final K key, final int expireSeconds) {
+    public Collection<V> getCollectionAndRefresh(final String key, final int expireSeconds) {
         return (Collection<V>) getAndRefresh(key, expireSeconds);
     }
 
     @Override
-    public CompletableFuture<Collection<V>> getCollectionAndRefreshAsync(final K key, final int expireSeconds) {
+    public CompletableFuture<Collection<V>> getCollectionAndRefreshAsync(final String key, final int expireSeconds) {
         return CompletableFuture.supplyAsync(() -> getCollectionAndRefresh(key, expireSeconds), getExecutor());
     }
 
     @Override
     @RpcMultiRun
-    public void appendListItem(K key, V value) {
+    public void appendListItem(String key, V value) {
         if (key == null) return;
         CacheEntry entry = container.get(key);
         if (entry == null || !entry.isListCacheType() || entry.listValue == null) {
@@ -385,13 +379,13 @@ public class CacheMemorySource<K extends Serializable, V extends Object> extends
     }
 
     @Override
-    public CompletableFuture<Void> appendListItemAsync(final K key, final V value) {
+    public CompletableFuture<Void> appendListItemAsync(final String key, final V value) {
         return CompletableFuture.runAsync(() -> appendListItem(key, value), getExecutor());
     }
 
     @Override
     @RpcMultiRun
-    public void removeListItem(K key, V value) {
+    public void removeListItem(String key, V value) {
         if (key == null) return;
         CacheEntry entry = container.get(key);
         if (entry == null || entry.listValue == null) return;
@@ -399,13 +393,13 @@ public class CacheMemorySource<K extends Serializable, V extends Object> extends
     }
 
     @Override
-    public CompletableFuture<Void> removeListItemAsync(final K key, final V value) {
+    public CompletableFuture<Void> removeListItemAsync(final String key, final V value) {
         return CompletableFuture.runAsync(() -> removeListItem(key, value), getExecutor());
     }
 
     @Override
     @RpcMultiRun
-    public void appendSetItem(K key, V value) {
+    public void appendSetItem(String key, V value) {
         if (key == null) return;
         CacheEntry entry = container.get(key);
         if (entry == null || !entry.isSetCacheType() || entry.setValue == null) {
@@ -420,13 +414,13 @@ public class CacheMemorySource<K extends Serializable, V extends Object> extends
     }
 
     @Override
-    public CompletableFuture<Void> appendSetItemAsync(final K key, final V value) {
+    public CompletableFuture<Void> appendSetItemAsync(final String key, final V value) {
         return CompletableFuture.runAsync(() -> appendSetItem(key, value), getExecutor());
     }
 
     @Override
     @RpcMultiRun
-    public void removeSetItem(K key, V value) {
+    public void removeSetItem(String key, V value) {
         if (key == null) return;
         CacheEntry entry = container.get(key);
         if (entry == null || entry.setValue == null) return;
@@ -434,12 +428,12 @@ public class CacheMemorySource<K extends Serializable, V extends Object> extends
     }
 
     @Override
-    public CompletableFuture<Void> removeSetItemAsync(final K key, final V value) {
+    public CompletableFuture<Void> removeSetItemAsync(final String key, final V value) {
         return CompletableFuture.runAsync(() -> removeSetItem(key, value), getExecutor());
     }
 
     @Override
-    public List<K> queryKeys() {
+    public List<String> queryKeys() {
         return new ArrayList<>(container.keySet());
     }
 
@@ -449,17 +443,17 @@ public class CacheMemorySource<K extends Serializable, V extends Object> extends
     }
 
     @Override
-    public CompletableFuture<List<CacheEntry<K, Object>>> queryListAsync() {
+    public CompletableFuture<List<CacheEntry<Object>>> queryListAsync() {
         return CompletableFuture.completedFuture(new ArrayList<>(container.values()));
     }
 
     @Override
-    public List<CacheEntry<K, Object>> queryList() {
+    public List<CacheEntry< Object>> queryList() {
         return new ArrayList<>(container.values());
     }
 
     @Override
-    public CompletableFuture<List<K>> queryKeysAsync() {
+    public CompletableFuture<List<String>> queryKeysAsync() {
         return CompletableFuture.completedFuture(new ArrayList<>(container.keySet()));
     }
 

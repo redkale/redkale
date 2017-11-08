@@ -273,10 +273,10 @@ public abstract class NodeServer {
                         source = (CacheSource) Sncp.createLocalService(serverClassLoader, resourceName, sourceType, appResFactory, appTranFactory, sncpAddr, groups, Sncp.getConf(srcService));
                         Type genericType = field.getGenericType();
                         ParameterizedType pt = (genericType instanceof ParameterizedType) ? (ParameterizedType) genericType : null;
-                        Type valType = pt == null ? null : pt.getActualTypeArguments()[1];
+                        Type valType = pt == null ? null : pt.getActualTypeArguments()[0];
                         if (sourceType == CacheMemorySource.class) {
                             CacheMemorySource memorySource = (CacheMemorySource) source;
-                            memorySource.setStoreType(pt == null ? Serializable.class : (Class) pt.getActualTypeArguments()[0], valType instanceof Class ? (Class) valType : Object.class);
+                            memorySource.setStoreType(valType instanceof Class ? (Class) valType : Object.class);
                             if (field.getAnnotation(Transient.class) != null) memorySource.setNeedStore(false); //必须在setStoreType之后
                         }
                         application.cacheSources.add((CacheSource) source);
