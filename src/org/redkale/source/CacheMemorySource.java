@@ -76,11 +76,6 @@ public class CacheMemorySource<V extends Object> extends AbstractService impleme
     }
 
     @Override
-    public boolean isSupportQueryList() {
-        return true;
-    }
-
-    @Override
     public void init(AnyValue conf) {
         if (this.convert == null) this.convert = this.defaultConvert;
         final CacheMemorySource self = this;
@@ -160,7 +155,7 @@ public class CacheMemorySource<V extends Object> extends AbstractService impleme
         }
         if (remoteSource != null && !Sncp.isRemote(this)) {
             SncpClient client = Sncp.getSncpClient((Service) remoteSource);
-            if (client != null && client.getRemoteGroupTransport() != null && remoteSource.isSupportQueryList()) {
+            if (client != null && client.getRemoteGroupTransport() != null) {
                 super.runAsync(() -> {
                     try {
                         CompletableFuture<List<CacheEntry<Object>>> listFuture = remoteSource.queryListAsync();

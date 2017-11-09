@@ -30,11 +30,6 @@ public interface CacheSource<V extends Object> {
         return true;
     }
 
-    //是否支持queryList 或  queryListAsync 方法
-    default boolean isSupportQueryList() {
-        return false;
-    }
-
     public boolean exists(final String key);
 
     public V get(final String key);
@@ -110,11 +105,6 @@ public interface CacheSource<V extends Object> {
 
     default CompletableFuture<Boolean> isOpenAsync() {
         return CompletableFuture.completedFuture(isOpen());
-    }
-
-    //是否支持queryList 或  queryListAsync 方法
-    default CompletableFuture<Boolean> isSupportQueryListAsync() {
-        return CompletableFuture.completedFuture(isSupportQueryList());
     }
 
     public static enum CacheEntryType {
