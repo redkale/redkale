@@ -76,6 +76,11 @@ public class CacheMemorySource<V extends Object> extends AbstractService impleme
     }
 
     @Override
+    public final String getType() {
+        return "memory";
+    }
+
+    @Override
     public void init(AnyValue conf) {
         if (this.convert == null) this.convert = this.defaultConvert;
         final CacheMemorySource self = this;

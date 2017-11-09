@@ -22,6 +22,8 @@ import org.redkale.convert.json.JsonFactory;
  */
 public interface CacheSource<V extends Object> {
 
+    public String getType();
+    
     public void initValueType(Type valueType);
 
     public void initTransient(boolean flag);
