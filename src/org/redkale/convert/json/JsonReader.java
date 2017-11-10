@@ -162,6 +162,7 @@ public class JsonReader extends Reader {
      * 判断下一个非空白字符是否为{
      *
      * @param clazz 类名
+     *
      * @return 返回 null 表示对象为null， 返回空字符串表示当前class与返回的class一致，返回非空字符串表示class是当前class的子类。
      */
     @Override
@@ -404,7 +405,7 @@ public class JsonReader extends Reader {
     @Override
     public final DeMember readFieldName(final DeMember[] members) {
         final String exceptedfield = this.readSmallString();
-        if(exceptedfield == null) return null;
+        if (exceptedfield == null) return null;
         final int len = members.length;
         if (this.fieldIndex >= len) this.fieldIndex = 0;
         for (int k = this.fieldIndex; k < len; k++) {
@@ -475,7 +476,7 @@ public class JsonReader extends Reader {
             }
         }
         if (expected != '"' && expected != '\'') {
-            if (expected == 'n' && text0.length > currpos + 3) {
+            if (expected == 'n' && text0.length > currpos + 3 && (text0[1 + currpos] == 'u' && text0[2 + currpos] == 'l' && text0[3 + currpos] == 'l')) {
                 if (text0[++currpos] == 'u' && text0[++currpos] == 'l' && text0[++currpos] == 'l') {
                     this.position = currpos;
                     if (text0.length > currpos + 4) {
@@ -488,7 +489,7 @@ public class JsonReader extends Reader {
             } else {
                 final int start = currpos;
                 for (;;) {
-                    if(currpos >= text0.length) break;
+                    if (currpos >= text0.length) break;
                     char ch = text0[currpos];
                     if (ch == ',' || ch <= ' ' || ch == '}' || ch == ']' || ch == ':') break;
                     currpos++;
