@@ -29,10 +29,10 @@ import org.redkale.util.*;
 public abstract class WebSocketNode {
 
     @Comment("存储用户ID的key前缀")
-    public static final String SOURCE_SNCP_USERID_PREFIX = "wsuid_";
+    public static final String SOURCE_SNCP_USERID_PREFIX = "sncpws_uid:";
 
     @Comment("存储当前SNCP节点列表的key")
-    public static final String SOURCE_SNCP_NODES_KEY = "ws_sncpnodes";
+    public static final String SOURCE_SNCP_NODES_KEY = "sncpws_nodes";
 
     protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
 
