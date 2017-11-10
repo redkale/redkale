@@ -9,6 +9,7 @@ import java.io.*;
 import java.lang.reflect.Type;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 import java.util.logging.*;
 import javax.annotation.Resource;
@@ -334,6 +335,56 @@ public class CacheMemorySource<V extends Object> extends AbstractService impleme
     public void remove(String key) {
         if (key == null) return;
         container.remove(key);
+    }
+
+    @Override
+    public long incr(final String key) {
+        return incr(key, 1);
+    }
+
+    @Override
+    public CompletableFuture<Long> incrAsync(final String key) {
+        return CompletableFuture.supplyAsync(() -> incr(key), getExecutor());
+    }
+
+    @Override
+    public long incr(final String key, long num) {
+        CacheEntry entry = container.get(key);
+        if (entry == null) {
+            synchronized (container) {
+                entry = container.get(key);
+                if (entry == null) {
+                    entry = new CacheEntry(CacheEntryType.OBJECT, key, new AtomicLong(), null, null);
+                    container.put(key, entry);
+                }
+            }
+        }
+        return ((AtomicLong) entry.objectValue).addAndGet(num);
+    }
+
+    @Override
+    public CompletableFuture<Long> incrAsync(final String key, long num) {
+        return CompletableFuture.supplyAsync(() -> incr(key, num), getExecutor());
+    }
+
+    @Override
+    public long decr(final String key) {
+        return incr(key, -1);
+    }
+
+    @Override
+    public CompletableFuture<Long> decrAsync(final String key) {
+        return CompletableFuture.supplyAsync(() -> decr(key), getExecutor());
+    }
+
+    @Override
+    public long decr(final String key, long num) {
+        return incr(key, -num);
+    }
+
+    @Override
+    public CompletableFuture<Long> decrAsync(final String key, long num) {
+        return CompletableFuture.supplyAsync(() -> decr(key, num), getExecutor());
     }
 
     @Override

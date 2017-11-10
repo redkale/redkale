@@ -23,7 +23,7 @@ import org.redkale.convert.json.JsonFactory;
 public interface CacheSource<V extends Object> {
 
     public String getType();
-    
+
     public void initValueType(Type valueType);
 
     public void initTransient(boolean flag);
@@ -47,6 +47,14 @@ public interface CacheSource<V extends Object> {
     public void setExpireSeconds(final String key, final int expireSeconds);
 
     public void remove(final String key);
+
+    public long incr(final String key);
+
+    public long incr(final String key, long num);
+
+    public long decr(final String key);
+
+    public long decr(final String key, long num);
 
     public Collection<V> getCollection(final String key);
 
@@ -84,6 +92,14 @@ public interface CacheSource<V extends Object> {
     public CompletableFuture<Void> setExpireSecondsAsync(final String key, final int expireSeconds);
 
     public CompletableFuture<Void> removeAsync(final String key);
+
+    public CompletableFuture<Long> incrAsync(final String key);
+
+    public CompletableFuture<Long> incrAsync(final String key, long num);
+
+    public CompletableFuture<Long> decrAsync(final String key);
+
+    public CompletableFuture<Long> decrAsync(final String key, long num);
 
     public CompletableFuture<Collection<V>> getCollectionAsync(final String key);
 
