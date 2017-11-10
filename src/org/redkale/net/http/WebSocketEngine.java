@@ -15,6 +15,7 @@ import java.util.logging.*;
 import java.util.stream.*;
 import org.redkale.convert.Convert;
 import static org.redkale.net.http.WebSocket.RETCODE_GROUP_EMPTY;
+import static org.redkale.net.http.WebSocketServlet.*;
 import org.redkale.util.*;
 
 /**
@@ -85,23 +86,24 @@ public class WebSocketEngine {
     }
 
     void init(AnyValue conf) {
-        final int interval = conf == null ? (liveinterval < 0 ? DEFAILT_LIVEINTERVAL : liveinterval) : conf.getIntValue("liveinterval", (liveinterval < 0 ? DEFAILT_LIVEINTERVAL : liveinterval));
-        if (interval <= 0) return;
+        AnyValue props = conf;
+        if (conf != null && conf.getAnyValue("properties") != null) props = conf.getAnyValue("properties");
+        this.liveinterval = props == null ? (liveinterval < 0 ? DEFAILT_LIVEINTERVAL : liveinterval) : props.getIntValue(WEBPARAM__LIVEINTERVAL, (liveinterval < 0 ? DEFAILT_LIVEINTERVAL : liveinterval));
+        if (liveinterval <= 0) return;
+        this.maxconns = props == null ? this.maxconns : props.getIntValue(WEBPARAM__MAXCONNS, this.maxconns);
         if (scheduler != null) return;
         this.scheduler = new ScheduledThreadPoolExecutor(1, (Runnable r) -> {
             final Thread t = new Thread(r, engineid + "-WebSocket-LiveInterval-Thread");
             t.setDaemon(true);
             return t;
         });
-        long delay = (interval - System.currentTimeMillis() / 1000 % interval) + index * 5;
-        final int intervalms = interval * 1000;
+        long delay = (liveinterval - System.currentTimeMillis() / 1000 % liveinterval) + index * 5;
+        final int intervalms = liveinterval * 1000;
         scheduler.scheduleWithFixedDelay(() -> {
             long now = System.currentTimeMillis();
             getLocalWebSockets().stream().filter(x -> (now - x.getLastSendTime()) > intervalms).forEach(x -> x.sendPing());
-        }, delay, interval, TimeUnit.SECONDS);
-        if (logger.isLoggable(Level.FINE)) {
-            logger.fine(this.getClass().getSimpleName() + "(" + engineid + ")" + " start keeplive(delay:" + delay + ", maxconns:" + maxconns + ", interval:" + interval + "s) scheduler executor");
-        }
+        }, delay, liveinterval, TimeUnit.SECONDS);
+        logger.finest(this.getClass().getSimpleName() + "(" + engineid + ")" + " start keeplive(delay:" + delay + ", maxconns:" + maxconns + ", interval:" + liveinterval + "s) scheduler executor");
     }
 
     void destroy(AnyValue conf) {

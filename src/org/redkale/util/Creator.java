@@ -351,8 +351,12 @@ public interface Creator<T> {
                     mv.visitVarInsn(ALOAD, 1);
                     if (i < 6) {
                         mv.visitInsn(iconsts[i]);
-                    } else {
+                    } else if (i <= Byte.MAX_VALUE) {
                         mv.visitIntInsn(BIPUSH, i);
+                    } else if (i <= Short.MAX_VALUE) {
+                        mv.visitIntInsn(SIPUSH, i);
+                    } else {
+                        mv.visitLdcInsn(i);
                     }
                     mv.visitInsn(AALOAD);
                     Label lab = new Label();
@@ -360,8 +364,12 @@ public interface Creator<T> {
                     mv.visitVarInsn(ALOAD, 1);
                     if (i < 6) {
                         mv.visitInsn(iconsts[i]);
-                    } else {
+                    } else if (i <= Byte.MAX_VALUE) {
                         mv.visitIntInsn(BIPUSH, i);
+                    } else if (i <= Short.MAX_VALUE) {
+                        mv.visitIntInsn(SIPUSH, i);
+                    } else {
+                        mv.visitLdcInsn(i);
                     }
                     if (pt == int.class) {
                         mv.visitInsn(ICONST_0);
@@ -399,8 +407,12 @@ public interface Creator<T> {
                     mv.visitVarInsn(ALOAD, 1);
                     if (i < 6) {
                         mv.visitInsn(iconsts[i]);
-                    } else {
+                    } else if (i <= Byte.MAX_VALUE) {
                         mv.visitIntInsn(BIPUSH, i);
+                    } else if (i <= Short.MAX_VALUE) {
+                        mv.visitIntInsn(SIPUSH, i);
+                    } else {
+                        mv.visitLdcInsn(i);
                     }
                     mv.visitInsn(AALOAD);
                     final Class ct = constructorParameters[i].getValue();

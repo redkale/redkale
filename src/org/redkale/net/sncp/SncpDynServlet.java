@@ -384,10 +384,15 @@ public final class SncpDynServlet extends SncpServlet {
                     mv.visitFieldInsn(GETFIELD, newDynName, "convert", Type.getDescriptor(BsonConvert.class));
                     mv.visitVarInsn(ALOAD, 0);
                     mv.visitFieldInsn(GETFIELD, newDynName, "paramTypes", "[Ljava/lang/reflect/Type;");
-                    if (iconst > ICONST_5) {
-                        mv.visitIntInsn(BIPUSH, intconst);
+
+                    if (iconst < 6) {
+                        mv.visitInsn(ICONST_0 + iconst);
+                    } else if (iconst <= Byte.MAX_VALUE) {
+                        mv.visitIntInsn(BIPUSH, iconst);
+                    } else if (iconst <= Short.MAX_VALUE) {
+                        mv.visitIntInsn(SIPUSH, iconst);
                     } else {
-                        mv.visitInsn(iconst);  //
+                        mv.visitLdcInsn(iconst);
                     }
                     mv.visitInsn(AALOAD);
                     mv.visitVarInsn(ALOAD, 1);
@@ -433,21 +438,30 @@ public final class SncpDynServlet extends SncpServlet {
                 }
                 if (boolReturnTypeFuture || handlerFuncIndex >= 0) {  //调用SncpAsyncHandler.setParams(Object... params)
                     mv.visitVarInsn(ALOAD, 3);
-                    if (paramClasses.length > 5) {
+                    if (paramClasses.length < 6) {
+                        mv.visitInsn(ICONST_0 + paramClasses.length);
+                    } else if (paramClasses.length <= Byte.MAX_VALUE) {
                         mv.visitIntInsn(BIPUSH, paramClasses.length);
+                    } else if (paramClasses.length <= Short.MAX_VALUE) {
+                        mv.visitIntInsn(SIPUSH, paramClasses.length);
                     } else {
-                        mv.visitInsn(paramClasses.length + ICONST_0);
+                        mv.visitLdcInsn(paramClasses.length);
                     }
+
                     mv.visitTypeInsn(ANEWARRAY, "java/lang/Object");
                     int insn = 3; //action的参数个数
                     for (int j = 0; j < paramClasses.length; j++) {
                         final Class pt = paramClasses[j];
                         mv.visitInsn(DUP);
                         insn++;
-                        if (j <= 5) {
+                        if (j < 6) {
                             mv.visitInsn(ICONST_0 + j);
-                        } else {
+                        } else if (j <= Byte.MAX_VALUE) {
                             mv.visitIntInsn(BIPUSH, j);
+                        } else if (j <= Short.MAX_VALUE) {
+                            mv.visitIntInsn(SIPUSH, j);
+                        } else {
+                            mv.visitLdcInsn(j);
                         }
                         if (pt.isPrimitive()) {
                             if (pt == long.class) {
@@ -499,10 +513,14 @@ public final class SncpDynServlet extends SncpServlet {
                     //------------------------- _callParameter 方法 --------------------------------
                     mv.visitVarInsn(ALOAD, 0);
                     mv.visitVarInsn(ALOAD, 2);
-                    if (paramClasses.length <= 5) {  //参数总数量
+                    if (paramClasses.length < 6) {  //参数总数量
                         mv.visitInsn(ICONST_0 + paramClasses.length);
-                    } else {
+                    } else if (paramClasses.length <= Byte.MAX_VALUE) {
                         mv.visitIntInsn(BIPUSH, paramClasses.length);
+                    } else if (paramClasses.length <= Short.MAX_VALUE) {
+                        mv.visitIntInsn(SIPUSH, paramClasses.length);
+                    } else {
+                        mv.visitLdcInsn(paramClasses.length);
                     }
                     mv.visitTypeInsn(ANEWARRAY, "java/lang/Object");
                     int insn = 3;//action的参数个数
@@ -510,10 +528,14 @@ public final class SncpDynServlet extends SncpServlet {
                         final Class pt = paramClasses[j];
                         mv.visitInsn(DUP);
                         insn++;
-                        if (j <= 5) {
+                        if (j < 6) {
                             mv.visitInsn(ICONST_0 + j);
-                        } else {
+                        } else if (j <= Byte.MAX_VALUE) {
                             mv.visitIntInsn(BIPUSH, j);
+                        } else if (j <= Short.MAX_VALUE) {
+                            mv.visitIntInsn(SIPUSH, j);
+                        } else {
+                            mv.visitLdcInsn(j);
                         }
                         if (pt.isPrimitive()) {
                             if (pt == long.class) {

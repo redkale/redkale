@@ -45,6 +45,9 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
     @Comment("WebScoket服务器给客户端进行ping操作的间隔时间, 单位: 秒")
     public static final String WEBPARAM__LIVEINTERVAL = "liveinterval";
 
+    @Comment("WebScoket服务器最大连接数，为0表示无限制")
+    public static final String WEBPARAM__MAXCONNS = "maxconns";
+
     @Comment("WebScoket服务器给客户端进行ping操作的默认间隔时间, 单位: 秒")
     public static final int DEFAILT_LIVEINTERVAL = 15;
 
@@ -107,6 +110,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
             this.node = new WebSocketNodeService();
             if (logger.isLoggable(Level.WARNING)) logger.warning("Not found WebSocketNode, create a default value for " + getClass().getName());
         }
+
         //存在WebSocketServlet，则此WebSocketNode必须是本地模式Service
         this.node.localEngine = new WebSocketEngine("WebSocketEngine-" + addr.getHostString() + ":" + addr.getPort() + "-[" + resourceName() + "]", this.single, context, liveinterval, maxconns, this.node, this.sendConvert, logger);
         this.node.init(conf);

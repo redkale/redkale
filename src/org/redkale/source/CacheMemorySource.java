@@ -84,7 +84,7 @@ public class CacheMemorySource<V extends Object> extends AbstractService impleme
     public void init(AnyValue conf) {
         if (this.convert == null) this.convert = this.defaultConvert;
         final CacheMemorySource self = this;
-        AnyValue prop = conf == null ? null : conf.getAnyValue("property");
+        AnyValue prop = conf == null ? null : conf.getAnyValue("properties");
         if (prop != null) {
             String storeValueStr = prop.getValue("value-type");
             if (storeValueStr != null) {

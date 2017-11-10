@@ -304,32 +304,28 @@ public final class Rest {
                 fv.visitEnd();
             }
         }
-        { //构造函数 
+        { //_DynWebSocketServlet构造函数 
             mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null));
             mv.visitVarInsn(ALOAD, 0);
             mv.visitMethodInsn(INVOKESPECIAL, supDynName, "<init>", "()V", false);
             mv.visitVarInsn(ALOAD, 0);
             mv.visitLdcInsn(Type.getObjectType(newDynName + "$" + newDynWebSokcetSimpleName + "Message"));
             mv.visitFieldInsn(PUTFIELD, newDynName, "messageTextType", "Ljava/lang/reflect/Type;");
+
             mv.visitVarInsn(ALOAD, 0);
-            if (rws.liveinterval() < 6) {
-                mv.visitInsn(ICONST_0 + rws.liveinterval());
-            } else {
-                mv.visitIntInsn(BIPUSH, rws.liveinterval());
-            }
+            pushInt(mv, rws.liveinterval());
             mv.visitFieldInsn(PUTFIELD, newDynName, "liveinterval", "I");
+
             mv.visitVarInsn(ALOAD, 0);
-            if (rws.maxconns()< 6) {
-                mv.visitInsn(ICONST_0 + rws.maxconns());
-            } else {
-                mv.visitIntInsn(BIPUSH, rws.maxconns());
-            }
+            pushInt(mv, rws.maxconns());
             mv.visitFieldInsn(PUTFIELD, newDynName, "maxconns", "I");
+
             mv.visitVarInsn(ALOAD, 0);
             mv.visitInsn(rws.single() ? ICONST_1 : ICONST_0);
             mv.visitFieldInsn(PUTFIELD, newDynName, "single", "Z");
+
             mv.visitInsn(RETURN);
-            mv.visitMaxs(2, 1);
+            mv.visitMaxs(3, 1);
             mv.visitEnd();
         }
         { //createWebSocket 方法
@@ -1295,11 +1291,7 @@ public final class Rest {
                     } else {
                         mv.visitVarInsn(ALOAD, 0);
                         mv.visitFieldInsn(GETFIELD, newDynName, REST_PARAMTYPES_FIELD_NAME, "[[Ljava/lang/reflect/Type;");
-                        if (entry.methodidx <= 5) {  //方法下标
-                            mv.visitInsn(ICONST_0 + entry.methodidx);
-                        } else {
-                            mv.visitIntInsn(BIPUSH, entry.methodidx);
-                        }
+                        pushInt(mv, entry.methodidx);//方法下标
                         mv.visitInsn(AALOAD);
                         int paramidx = 0;
                         for (int i = 0; i < params.length; i++) {
@@ -1308,11 +1300,7 @@ public final class Rest {
                                 break;
                             }
                         }
-                        if (paramidx <= 5) {  //参数下标
-                            mv.visitInsn(ICONST_0 + paramidx);
-                        } else {
-                            mv.visitIntInsn(BIPUSH, paramidx);
-                        }
+                        pushInt(mv, paramidx); //参数下标
                         mv.visitInsn(AALOAD);
                     }
                     mv.visitLdcInsn(pname);
@@ -1675,6 +1663,30 @@ public final class Rest {
             }
         }
         return true;
+    }
+
+    private static void pushInt(AsmMethodVisitor mv, int num) {
+        if (num < 6) {
+            mv.visitInsn(ICONST_0 + num);
+        } else if (num <= Byte.MAX_VALUE) {
+            mv.visitIntInsn(BIPUSH, num);
+        } else if (num <= Short.MAX_VALUE) {
+            mv.visitIntInsn(SIPUSH, num);
+        } else {
+            mv.visitLdcInsn(num);
+        }
+    }
+
+    private static void pushInt(MethodVisitor mv, int num) {
+        if (num < 6) {
+            mv.visitInsn(ICONST_0 + num);
+        } else if (num <= Byte.MAX_VALUE) {
+            mv.visitIntInsn(BIPUSH, num);
+        } else if (num <= Short.MAX_VALUE) {
+            mv.visitIntInsn(SIPUSH, num);
+        } else {
+            mv.visitLdcInsn(num);
+        }
     }
 
     private static class RestClassLoader extends ClassLoader {

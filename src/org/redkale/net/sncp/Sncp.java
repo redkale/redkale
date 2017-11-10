@@ -528,16 +528,8 @@ public abstract class Sncp {
                 mv.visitFieldInsn(GETFIELD, newDynName, FIELDPREFIX + "_client", clientDesc);
                 final int preparams = 3; //调用selfrunnable之前的参数个数;  _client
 
-                if (index <= 5) {  //第几个 SncpAction 
-                    mv.visitInsn(ICONST_0 + index);
-                } else {
-                    mv.visitIntInsn(BIPUSH, index);
-                }
-                if (paramtypes.length + preparams <= 5) {  //参数总数量
-                    mv.visitInsn(ICONST_0 + paramtypes.length + preparams);
-                } else {
-                    mv.visitIntInsn(BIPUSH, paramtypes.length + preparams);
-                }
+                pushInt(mv, index);   //第几个 SncpAction 
+                pushInt(mv, paramtypes.length + preparams);   //参数总数量
 
                 mv.visitTypeInsn(ANEWARRAY, "java/lang/Object");
 
@@ -564,11 +556,7 @@ public abstract class Sncp {
                     final Class pt = paramtypes[j];
                     mv.visitInsn(DUP);
                     insn++;
-                    if (j <= 2) {
-                        mv.visitInsn(ICONST_0 + j + 3);
-                    } else {
-                        mv.visitIntInsn(BIPUSH, j + 3);
-                    }
+                    pushInt(mv, j + 3);
                     if (pt.isPrimitive()) {
                         if (pt == long.class) {
                             mv.visitVarInsn(LLOAD, insn++);
@@ -596,16 +584,8 @@ public abstract class Sncp {
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitFieldInsn(GETFIELD, newDynName, FIELDPREFIX + "_client", clientDesc);
 
-                if (index <= 5) {  //第几个 SncpAction 
-                    mv.visitInsn(ICONST_0 + index);
-                } else {
-                    mv.visitIntInsn(BIPUSH, index);
-                }
-                if (paramtypes.length + preparams <= 5) {  //参数总数量
-                    mv.visitInsn(ICONST_0 + paramtypes.length + preparams);
-                } else {
-                    mv.visitIntInsn(BIPUSH, paramtypes.length + preparams);
-                }
+                pushInt(mv, index); //第几个 SncpAction 
+                pushInt(mv, paramtypes.length + preparams); //参数总数量
 
                 mv.visitTypeInsn(ANEWARRAY, "java/lang/Object");
 
@@ -632,11 +612,7 @@ public abstract class Sncp {
                     final Class pt = paramtypes[j];
                     mv.visitInsn(DUP);
                     insn++;
-                    if (j <= 2) {
-                        mv.visitInsn(ICONST_0 + j + 3);
-                    } else {
-                        mv.visitIntInsn(BIPUSH, j + 3);
-                    }
+                    pushInt(mv, j + 3);
                     if (pt.isPrimitive()) {
                         if (pt == long.class) {
                             mv.visitVarInsn(LLOAD, insn++);
@@ -1011,19 +987,11 @@ public abstract class Sncp {
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitFieldInsn(GETFIELD, newDynName, FIELDPREFIX + "_client", clientDesc);
 
-                if (index <= 5) {
-                    mv.visitInsn(ICONST_0 + index);
-                } else {
-                    mv.visitIntInsn(BIPUSH, index);
-                }
+                pushInt(mv, index);
 
                 {  //传参数
                     int paramlen = entry.paramTypes.length;
-                    if (paramlen <= 5) {
-                        mv.visitInsn(ICONST_0 + paramlen);
-                    } else {
-                        mv.visitIntInsn(BIPUSH, paramlen);
-                    }
+                    pushInt(mv, paramlen);
                     mv.visitTypeInsn(ANEWARRAY, "java/lang/Object");
                     java.lang.reflect.Type[] paramtypes = entry.paramTypes;
                     int insn = 0;
@@ -1031,11 +999,7 @@ public abstract class Sncp {
                         final java.lang.reflect.Type pt = paramtypes[j];
                         mv.visitInsn(DUP);
                         insn++;
-                        if (j <= 5) {
-                            mv.visitInsn(ICONST_0 + j);
-                        } else {
-                            mv.visitIntInsn(BIPUSH, j);
-                        }
+                        pushInt(mv, j);
                         if (pt instanceof Class && ((Class) pt).isPrimitive()) {
                             if (pt == long.class) {
                                 mv.visitVarInsn(LLOAD, insn++);
@@ -1117,5 +1081,29 @@ public abstract class Sncp {
             throw new RuntimeException(ex);
         }
 
+    }
+
+    private static void pushInt(AsmMethodVisitor mv, int num) {
+        if (num < 6) {
+            mv.visitInsn(ICONST_0 + num);
+        } else if (num <= Byte.MAX_VALUE) {
+            mv.visitIntInsn(BIPUSH, num);
+        } else if (num <= Short.MAX_VALUE) {
+            mv.visitIntInsn(SIPUSH, num);
+        } else {
+            mv.visitLdcInsn(num);
+        }
+    }
+
+    private static void pushInt(MethodVisitor mv, int num) {
+        if (num < 6) {
+            mv.visitInsn(ICONST_0 + num);
+        } else if (num <= Byte.MAX_VALUE) {
+            mv.visitIntInsn(BIPUSH, num);
+        } else if (num <= Short.MAX_VALUE) {
+            mv.visitIntInsn(SIPUSH, num);
+        } else {
+            mv.visitLdcInsn(num);
+        }
     }
 }
