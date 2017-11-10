@@ -383,14 +383,14 @@ public final class SncpDynServlet extends SncpServlet {
                     mv.visitVarInsn(ALOAD, 0);
                     mv.visitFieldInsn(GETFIELD, newDynName, "paramTypes", "[Ljava/lang/reflect/Type;");
 
-                    if (iconst < 6) {
-                        mv.visitInsn(ICONST_0 + iconst);
+                    if (intconst < 6) {
+                        mv.visitInsn(ICONST_0 + intconst);
                     } else if (iconst <= Byte.MAX_VALUE) {
-                        mv.visitIntInsn(BIPUSH, iconst);
+                        mv.visitIntInsn(BIPUSH, intconst);
                     } else if (iconst <= Short.MAX_VALUE) {
-                        mv.visitIntInsn(SIPUSH, iconst);
+                        mv.visitIntInsn(SIPUSH, intconst);
                     } else {
-                        mv.visitLdcInsn(iconst);
+                        mv.visitLdcInsn(intconst);
                     }
                     mv.visitInsn(AALOAD);
                     mv.visitVarInsn(ALOAD, 1);
