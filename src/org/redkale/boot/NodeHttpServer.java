@@ -109,7 +109,7 @@ public class NodeHttpServer extends NodeServer {
                 synchronized (regFactory) {
                     Service nodeService = (Service) rf.find(resourceName, WebSocketNode.class);
                     if (nodeService == null) {
-                        nodeService = Sncp.createLocalService(serverClassLoader, resourceName, WebSocketNodeService.class, application.getResourceFactory(), application.getTransportFactory(), (InetSocketAddress) null, (Set<String>) null, (AnyValue) null);
+                        nodeService = Sncp.createLocalService(serverClassLoader, resourceName, WebSocketNodeService.class, application.getResourceFactory(), application.getSncpTransportFactory(), (InetSocketAddress) null, (Set<String>) null, (AnyValue) null);
                         regFactory.register(resourceName, WebSocketNode.class, nodeService);
                     }
                     resourceFactory.inject(nodeService, self);

@@ -8,7 +8,6 @@ package org.redkale.net.sncp;
 import org.redkale.net.PrepareServlet;
 import org.redkale.util.AnyValue;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import org.redkale.service.Service;
 import org.redkale.util.*;
 
@@ -23,7 +22,6 @@ public class SncpPrepareServlet extends PrepareServlet<DLong, SncpContext, SncpR
 
     private final Object sncplock = new Object();
 
-    private static final ByteBuffer pongBuffer = ByteBuffer.wrap("PONG".getBytes()).asReadOnlyBuffer();
 
     @Override
     public void addServlet(SncpServlet servlet, Object attachment, AnyValue conf, DLong... mappings) {
@@ -69,7 +67,7 @@ public class SncpPrepareServlet extends PrepareServlet<DLong, SncpContext, SncpR
     @Override
     public void execute(SncpRequest request, SncpResponse response) throws IOException {
         if (request.isPing()) {
-            response.finish(pongBuffer.duplicate());
+            response.finish(Sncp.PONG_BUFFER.duplicate());
             return;
         }
         SncpServlet servlet = (SncpServlet) mappingServlet(request.getServiceid());

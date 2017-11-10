@@ -8,6 +8,7 @@ package org.redkale.net.sncp;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
 import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
 import java.security.*;
 import java.util.*;
 import javax.annotation.Resource;
@@ -30,6 +31,10 @@ import org.redkale.util.*;
  * @author zhangjx
  */
 public abstract class Sncp {
+
+    public static final ByteBuffer PING_BUFFER = ByteBuffer.wrap("PING".getBytes()).asReadOnlyBuffer();
+
+    public static final ByteBuffer PONG_BUFFER = ByteBuffer.wrap("PONG".getBytes()).asReadOnlyBuffer();
 
     static final String FIELDPREFIX = "_redkale";
 

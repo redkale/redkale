@@ -9,22 +9,26 @@ import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
-import java.nio.channels.AsynchronousChannelGroup;
+import java.nio.channels.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 import java.util.logging.*;
 import java.util.stream.Collectors;
 import org.redkale.service.Service;
-import org.redkale.util.ObjectPool;
+import org.redkale.util.*;
 
 /**
+ * System.getProperty("net.transport.pinginterval", "30") 心跳周期，默认30秒
+ *
  * <p>
  * 详情见: https://redkale.org
  *
  * @author zhangjx
  */
 public class TransportFactory {
+
+    public static final String NAME_PINGINTERVAL = "pinginterval";
 
     protected static final Logger logger = Logger.getLogger(TransportFactory.class.getSimpleName());
 
@@ -45,6 +49,20 @@ public class TransportFactory {
 
     protected final List<WeakReference<Service>> services = new CopyOnWriteArrayList<>();
 
+    protected final List<WeakReference<Transport>> transportReferences = new CopyOnWriteArrayList<>();
+
+    //心跳周期， 单位：秒
+    protected int pinginterval;
+
+    //ping的定时器
+    private ScheduledThreadPoolExecutor pingScheduler;
+
+    //ping的内容
+    private ByteBuffer pingBuffer;
+
+    //pong的数据长度, 小于0表示不进行判断
+    protected int pongLength;
+
     //负载均衡策略
     protected final TransportStrategy strategy;
 
@@ -58,6 +76,26 @@ public class TransportFactory {
 
     protected TransportFactory(ExecutorService executor, ObjectPool<ByteBuffer> bufferPool, AsynchronousChannelGroup channelGroup) {
         this(executor, bufferPool, channelGroup, null);
+    }
+
+    public void init(AnyValue conf, ByteBuffer pingBuffer, int pongLength) {
+        if (conf != null) {
+            this.pinginterval = conf.getIntValue(NAME_PINGINTERVAL, 0);
+        }
+        if (this.pinginterval > 0) {
+            if (this.pingScheduler == null && pingBuffer != null) {
+                this.pingBuffer = pingBuffer.asReadOnlyBuffer();
+                this.pongLength = pongLength;
+                this.pingScheduler = new ScheduledThreadPoolExecutor(1, (Runnable r) -> {
+                    final Thread t = new Thread(r, this.getClass().getSimpleName() + "-TransportFactoryPingTask-Thread");
+                    t.setDaemon(true);
+                    return t;
+                });
+                pingScheduler.scheduleAtFixedRate(() -> {
+                    pings();
+                }, pinginterval, pinginterval, TimeUnit.SECONDS);
+            }
+        }
     }
 
     public static TransportFactory create(int threads) {
@@ -220,10 +258,78 @@ public class TransportFactory {
     }
 
     public void shutdownNow() {
+        if (this.pingScheduler != null) this.pingScheduler.shutdownNow();
         try {
             this.channelGroup.shutdownNow();
         } catch (Exception e) {
             logger.log(Level.FINER, "close transportChannelGroup erroneous", e);
+        }
+    }
+
+    private void pings() {
+        long timex = System.currentTimeMillis() - (this.pinginterval < 15 ? this.pinginterval : (this.pinginterval - 3)) * 1000;
+        List<WeakReference> nulllist = new ArrayList<>();
+        for (WeakReference<Transport> ref : transportReferences) {
+            Transport transport = ref.get();
+            if (transport == null) {
+                nulllist.add(ref);
+                continue;
+            }
+            List<BlockingQueue<AsyncConnection>> list = new ArrayList<>(transport.getAsyncConnectionPool().values());
+            for (final BlockingQueue<AsyncConnection> queue : list) {
+                AsyncConnection conn;
+                while ((conn = queue.poll()) != null) {
+                    if (conn.getLastWriteTime() > timex && false) { //最近几秒内已经进行过IO操作
+                        queue.offer(conn);
+                    } else { //超过一定时间的连接需要进行ping处理
+                        ByteBuffer sendBuffer = pingBuffer.duplicate();
+                        final AsyncConnection localconn = conn;
+                        final BlockingQueue<AsyncConnection> localqueue = queue;
+                        localconn.write(sendBuffer, sendBuffer, new CompletionHandler<Integer, ByteBuffer>() {
+                            @Override
+                            public void completed(Integer result, ByteBuffer buffer) {
+                                if (buffer.hasRemaining()) {
+                                    localconn.write(buffer, buffer, this);
+                                    return;
+                                }
+                                ByteBuffer pongBuffer = bufferPool.get();
+                                localconn.read(pongBuffer, pongBuffer, new CompletionHandler<Integer, ByteBuffer>() {
+                                    int counter = 0;
+
+                                    @Override
+                                    public void completed(Integer result, ByteBuffer attachment) {
+                                        if (counter > 3) {
+                                            bufferPool.offer(attachment);
+                                            localconn.dispose();
+                                            return;
+                                        }
+                                        if (pongLength > 0 && attachment.position() < pongLength) {
+                                            counter++;
+                                            localconn.read(pongBuffer, pongBuffer, this);
+                                            return;
+                                        }
+                                        bufferPool.offer(attachment);
+                                        localqueue.offer(localconn);
+                                    }
+
+                                    @Override
+                                    public void failed(Throwable exc, ByteBuffer attachment) {
+                                        localconn.dispose();
+                                    }
+                                });
+                            }
+
+                            @Override
+                            public void failed(Throwable exc, ByteBuffer buffer) {
+                                localconn.dispose();
+                            }
+                        });
+                    }
+                }
+            }
+        }
+        for (WeakReference ref : nulllist) {
+            transportReferences.remove(ref);
         }
     }
 

@@ -5,6 +5,7 @@
  */
 package org.redkale.net;
 
+import java.lang.ref.WeakReference;
 import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
@@ -79,6 +80,7 @@ public final class Transport {
         this.subprotocol = subprotocol == null ? "" : subprotocol.trim();
         this.protocol = protocol;
         this.factory = factory;
+        factory.transportReferences.add(new WeakReference<>(this));
         this.tcp = "TCP".equalsIgnoreCase(protocol);
         this.group = transportChannelGroup;
         this.bufferPool = transportBufferPool;

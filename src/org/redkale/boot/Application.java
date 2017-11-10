@@ -105,8 +105,8 @@ public final class Application {
     //NodeServer 资源
     final List<NodeServer> servers = new CopyOnWriteArrayList<>();
 
-    //传输端的TransportFactory
-    final TransportFactory transportFactory;
+    //SNCP传输端的TransportFactory, 注意： 只给SNCP使用
+    final TransportFactory sncpTransportFactory;
 
     //全局根ResourceFactory
     final ResourceFactory resourceFactory = ResourceFactory.root();
@@ -292,7 +292,9 @@ public final class Application {
                 throw new RuntimeException(e);
             }
         }
-        this.transportFactory = TransportFactory.create(transportExec, transportPool, transportGroup, strategy);
+        this.sncpTransportFactory = TransportFactory.create(transportExec, transportPool, transportGroup, strategy);
+        DefaultAnyValue tarnsportConf = DefaultAnyValue.create(TransportFactory.NAME_PINGINTERVAL, System.getProperty("net.transport.pinginterval", "30"));
+        this.sncpTransportFactory.init(tarnsportConf, Sncp.PING_BUFFER, Sncp.PONG_BUFFER.remaining());
         Thread.currentThread().setContextClassLoader(this.classLoader);
         this.serverClassLoader = new RedkaleClassLoader(this.classLoader);
     }
@@ -301,8 +303,8 @@ public final class Application {
         return resourceFactory;
     }
 
-    public TransportFactory getTransportFactory() {
-        return transportFactory;
+    public TransportFactory getSncpTransportFactory() {
+        return sncpTransportFactory;
     }
 
     public RedkaleClassLoader getClassLoader() {
@@ -406,7 +408,7 @@ public final class Application {
                     } else if (type == ResourceFactory.class) {
                         field.set(src, res.name().equalsIgnoreCase("server") ? rf : (res.name().isEmpty() ? application.resourceFactory : null));
                     } else if (type == TransportFactory.class) {
-                        field.set(src, application.transportFactory);
+                        field.set(src, application.sncpTransportFactory);
                     } else if (type == NodeSncpServer.class) {
                         NodeServer server = null;
                         for (NodeServer ns : application.getNodeServers()) {
@@ -472,7 +474,7 @@ public final class Application {
                     final InetSocketAddress addr = new InetSocketAddress(node.getValue("addr"), node.getIntValue("port"));
                     ginfo.putAddress(addr);
                 }
-                transportFactory.addGroupInfo(ginfo);
+                sncpTransportFactory.addGroupInfo(ginfo);
             }
         }
         //------------------------------------------------------------------------
@@ -815,7 +817,7 @@ public final class Application {
                 logger.log(Level.FINER, source.getClass() + " close CacheSource erroneous", e);
             }
         }
-        this.transportFactory.shutdownNow();
+        this.sncpTransportFactory.shutdownNow();
     }
 
     private static int parseLenth(String value, int defValue) {

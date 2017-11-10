@@ -111,7 +111,7 @@ public abstract class NodeServer {
         if (isSNCP()) { // SNCP协议
             String host = this.serverConf.getValue("host", isWATCH() ? "127.0.0.1" : "0.0.0.0").replace("0.0.0.0", "");
             this.sncpAddress = new InetSocketAddress(host.isEmpty() ? application.localAddress.getHostAddress() : host, this.serverConf.getIntValue("port"));
-            this.sncpGroup = application.transportFactory.findGroupName(this.sncpAddress);
+            this.sncpGroup = application.sncpTransportFactory.findGroupName(this.sncpAddress);
             //单向SNCP服务不需要对等group
             //if (this.sncpGroup == null) throw new RuntimeException("Server (" + String.valueOf(config).replaceAll("\\s+", " ") + ") not found <group> info");
         }
@@ -171,7 +171,7 @@ public abstract class NodeServer {
         final NodeServer self = this;
         //---------------------------------------------------------------------------------------------
         final ResourceFactory appResFactory = application.getResourceFactory();
-        final TransportFactory appTranFactory = application.getTransportFactory();
+        final TransportFactory appSncpTranFactory = application.getSncpTransportFactory();
         final AnyValue resources = application.config.getAnyValue("resources");
         final Map<String, AnyValue> cacheResource = new HashMap<>();
         final Map<String, AnyValue> dataResources = new HashMap<>();
@@ -232,7 +232,7 @@ public abstract class NodeServer {
                     final Set<String> groups = new HashSet<>();
                     if (client != null && client.getSameGroup() != null) groups.add(client.getSameGroup());
                     if (client != null && client.getDiffGroups() != null) groups.addAll(client.getDiffGroups());
-                    Service cacheListenerService = Sncp.createLocalService(serverClassLoader, resourceName, DataCacheListenerService.class, appResFactory, appTranFactory, sncpAddr, groups, Sncp.getConf((Service) src));
+                    Service cacheListenerService = Sncp.createLocalService(serverClassLoader, resourceName, DataCacheListenerService.class, appResFactory, appSncpTranFactory, sncpAddr, groups, Sncp.getConf((Service) src));
                     appResFactory.register(resourceName, DataCacheListener.class, cacheListenerService);
                     localServices.add(cacheListenerService);
                     sncpServer.consumerAccept(cacheListenerService);
@@ -266,11 +266,11 @@ public abstract class NodeServer {
                     final Class sourceType = sourceConf == null ? CacheMemorySource.class : serverClassLoader.loadClass(sourceConf.getValue("value"));
                     Object source;
                     if (DataSource.class.isAssignableFrom(sourceType)) { // DataSource
-                        source = (DataSource) Sncp.createLocalService(serverClassLoader, resourceName, sourceType, appResFactory, appTranFactory, sncpAddr, groups, Sncp.getConf(srcService));
+                        source = (DataSource) Sncp.createLocalService(serverClassLoader, resourceName, sourceType, appResFactory, appSncpTranFactory, sncpAddr, groups, Sncp.getConf(srcService));
                         application.dataSources.add((DataSource) source);
                         appResFactory.register(resourceName, DataSource.class, source);
                     } else { // CacheSource
-                        source = (CacheSource) Sncp.createLocalService(serverClassLoader, resourceName, sourceType, appResFactory, appTranFactory, sncpAddr, groups, Sncp.getConf(srcService));
+                        source = (CacheSource) Sncp.createLocalService(serverClassLoader, resourceName, sourceType, appResFactory, appSncpTranFactory, sncpAddr, groups, Sncp.getConf(srcService));
                         Type genericType = field.getGenericType();
                         ParameterizedType pt = (genericType instanceof ParameterizedType) ? (ParameterizedType) genericType : null;
                         Type valType = pt == null ? null : pt.getActualTypeArguments()[0];
@@ -311,7 +311,7 @@ public abstract class NodeServer {
         final Set<FilterEntry<? extends Service>> entrys = (Set) serviceFilter.getAllFilterEntrys();
         ResourceFactory regFactory = isSNCP() ? application.getResourceFactory() : resourceFactory;
         final ResourceFactory appResourceFactory = application.getResourceFactory();
-        final TransportFactory appTransportFactory = application.getTransportFactory();
+        final TransportFactory appSncpTransFactory = application.getSncpTransportFactory();
         for (FilterEntry<? extends Service> entry : entrys) { //service实现类
             final Class<? extends Service> serviceImplClass = entry.getType();
             if (Modifier.isFinal(serviceImplClass.getModifiers())) continue; //修饰final的类跳过
@@ -342,9 +342,9 @@ public abstract class NodeServer {
                     Service service;
                     boolean ws = src instanceof WebSocketServlet;
                     if (ws || localed) { //本地模式
-                        service = Sncp.createLocalService(serverClassLoader, resourceName, serviceImplClass, appResourceFactory, appTransportFactory, NodeServer.this.sncpAddress, groups, entry.getProperty());
+                        service = Sncp.createLocalService(serverClassLoader, resourceName, serviceImplClass, appResourceFactory, appSncpTransFactory, NodeServer.this.sncpAddress, groups, entry.getProperty());
                     } else {
-                        service = Sncp.createRemoteService(serverClassLoader, resourceName, serviceImplClass, appTransportFactory, NodeServer.this.sncpAddress, groups, entry.getProperty());
+                        service = Sncp.createRemoteService(serverClassLoader, resourceName, serviceImplClass, appSncpTransFactory, NodeServer.this.sncpAddress, groups, entry.getProperty());
                     }
                     if (SncpClient.parseMethod(serviceImplClass).isEmpty() && serviceImplClass.getAnnotation(Priority.class) == null) return; //class没有可用的方法且没有标记启动优先级的， 通常为BaseService
 
