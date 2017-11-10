@@ -40,8 +40,6 @@ public final class SncpDynServlet extends SncpServlet {
 
     private static final Logger logger = Logger.getLogger(SncpDynServlet.class.getSimpleName());
 
-    private final boolean finest = logger.isLoggable(Level.FINEST);
-
     private final DLong serviceid;
 
     private final HashMap<DLong, SncpServletAction> actions = new HashMap<>();
@@ -110,7 +108,7 @@ public final class SncpDynServlet extends SncpServlet {
             bufferSupplier = request.getContext().getBufferSupplier();
         }
         final SncpServletAction action = actions.get(request.getActionid());
-        //if (finest) logger.log(Level.FINEST, "sncpdyn.execute: " + request + ", " + (action == null ? "null" : action.method));
+        //logger.log(Level.FINEST, "sncpdyn.execute: " + request + ", " + (action == null ? "null" : action.method));
         if (action == null) {
             response.finish(SncpResponse.RETCODE_ILLACTIONID, null);  //无效actionid
         } else {

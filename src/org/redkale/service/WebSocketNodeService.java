@@ -10,6 +10,7 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.logging.Level;
 import org.redkale.net.http.*;
 import org.redkale.util.*;
 
@@ -69,7 +70,7 @@ public class WebSocketNodeService extends WebSocketNode implements Service {
     public CompletableFuture<Void> connect(Serializable userid, InetSocketAddress sncpAddr) {
         CompletableFuture<Void> future = sncpNodeAddresses.appendSetItemAsync(SOURCE_SNCP_USERID_PREFIX + userid, sncpAddr);
         future = future.thenAccept((a) -> sncpNodeAddresses.appendSetItemAsync(SOURCE_SNCP_NODES_KEY, sncpAddr));
-        if (finest) logger.finest(WebSocketNodeService.class.getSimpleName() + ".event: " + userid + " connect from " + sncpAddr);
+        if (logger.isLoggable(Level.FINEST)) logger.finest(WebSocketNodeService.class.getSimpleName() + ".event: " + userid + " connect from " + sncpAddr);
         return future;
     }
 
@@ -84,7 +85,7 @@ public class WebSocketNodeService extends WebSocketNode implements Service {
     @Override
     public CompletableFuture<Void> disconnect(Serializable userid, InetSocketAddress sncpAddr) {
         CompletableFuture<Void> future = sncpNodeAddresses.removeSetItemAsync(SOURCE_SNCP_USERID_PREFIX + userid, sncpAddr);
-        if (finest) logger.finest(WebSocketNodeService.class.getSimpleName() + ".event: " + userid + " disconnect from " + sncpAddr);
+        if (logger.isLoggable(Level.FINEST)) logger.finest(WebSocketNodeService.class.getSimpleName() + ".event: " + userid + " disconnect from " + sncpAddr);
         return future;
     }
 
@@ -99,7 +100,7 @@ public class WebSocketNodeService extends WebSocketNode implements Service {
     @Override
     public CompletableFuture<Integer> forceCloseWebSocket(Serializable userid, InetSocketAddress sncpAddr) {
         //不能从sncpNodeAddresses中移除，因为engine.forceCloseWebSocket 会调用到disconnect
-        if (finest) logger.finest(WebSocketNodeService.class.getSimpleName() + ".event: " + userid + " forceCloseWebSocket from " + sncpAddr);
+        if (logger.isLoggable(Level.FINEST)) logger.finest(WebSocketNodeService.class.getSimpleName() + ".event: " + userid + " forceCloseWebSocket from " + sncpAddr);
         if (localEngine == null) return CompletableFuture.completedFuture(0);
         return CompletableFuture.completedFuture(localEngine.forceCloseLocalWebSocket(userid));
     }

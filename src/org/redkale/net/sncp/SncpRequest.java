@@ -7,6 +7,7 @@ package org.redkale.net.sncp;
 
 import java.net.*;
 import java.nio.*;
+import java.util.logging.Level;
 import org.redkale.convert.bson.*;
 import org.redkale.net.*;
 import org.redkale.util.*;
@@ -58,7 +59,7 @@ public final class SncpRequest extends Request<SncpContext> {
         //---------------------head----------------------------------
         this.seqid = buffer.getLong();
         if (buffer.getChar() != HEADER_SIZE) {
-            context.getLogger().finest("sncp buffer header.length not " + HEADER_SIZE);
+            if (context.getLogger().isLoggable(Level.FINEST)) context.getLogger().finest("sncp buffer header.length not " + HEADER_SIZE);
             return -1;
         }
         this.serviceid = DLong.read(buffer);
@@ -68,7 +69,7 @@ public final class SncpRequest extends Request<SncpContext> {
         this.bodylength = buffer.getInt();
 
         if (buffer.getInt() != 0) {
-            context.getLogger().finest("sncp buffer header.retcode not 0");
+            if (context.getLogger().isLoggable(Level.FINEST)) context.getLogger().finest("sncp buffer header.retcode not 0");
             return -1;
         }
         //---------------------body----------------------------------

@@ -83,8 +83,6 @@ public class HttpResourceServlet extends HttpServlet {
         }
     }
 
-    protected final boolean finest = logger.isLoggable(Level.FINEST);
-
     protected final LongAdder cachedLength = new LongAdder();
 
     //缓存总大小, 默认0
@@ -193,7 +191,7 @@ public class HttpResourceServlet extends HttpServlet {
     public void execute(HttpRequest request, HttpResponse response) throws IOException {
         String uri = request.getRequestURI();
         if (uri.contains("../")) {
-            if (finest) logger.log(Level.FINEST, "Not found resource (404) be " + uri + ", request = " + request);
+            if (logger.isLoggable(Level.FINEST)) logger.log(Level.FINEST, "Not found resource (404) be " + uri + ", request = " + request);
             response.finish404();
             return;
         }
@@ -220,7 +218,7 @@ public class HttpResourceServlet extends HttpServlet {
             entry = files.computeIfAbsent(uri, x -> createFileEntry(x));
         }
         if (entry == null) {
-            if (finest) logger.log(Level.FINEST, "Not found resource (404), request = " + request);
+            if (logger.isLoggable(Level.FINER)) logger.log(Level.FINER, "Not found resource (404), request = " + request);
             response.finish404();
         } else {
             //file = null 表示资源内容在内存而不是在File中

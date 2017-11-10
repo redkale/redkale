@@ -33,8 +33,6 @@ public final class SncpClient {
 
     protected static final Logger logger = Logger.getLogger(SncpClient.class.getSimpleName());
 
-    protected final boolean finest = logger.isLoggable(Level.FINEST);
-
     protected final JsonConvert convert = JsonFactory.root().getConvert();
 
     protected final String name;

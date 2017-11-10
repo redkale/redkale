@@ -124,7 +124,7 @@ public class CacheMemorySource<V extends Object> extends AbstractService impleme
                     if (expireHandler != null && entry != null) expireHandler.accept(entry);
                 }
             }, 10, 10, TimeUnit.SECONDS);
-            logger.finest(self.getClass().getSimpleName() + ":" + self.resourceName() + " start schedule expire executor");
+            if (logger.isLoggable(Level.FINEST)) logger.finest(self.getClass().getSimpleName() + ":" + self.resourceName() + " start schedule expire executor");
         }
         if (Sncp.isRemote(self)) return;
 
@@ -166,7 +166,7 @@ public class CacheMemorySource<V extends Object> extends AbstractService impleme
                         CompletableFuture<List<CacheEntry<Object>>> listFuture = remoteSource.queryListAsync();
                         listFuture.whenComplete((list, exp) -> {
                             if (exp != null) {
-                                logger.log(Level.FINEST, CacheSource.class.getSimpleName() + "(" + resourceName() + ") queryListAsync error", exp);
+                                if (logger.isLoggable(Level.FINEST)) logger.log(Level.FINEST, CacheSource.class.getSimpleName() + "(" + resourceName() + ") queryListAsync error", exp);
                             } else {
                                 for (CacheEntry<Object> entry : list) {
                                     container.put(entry.key, entry);
@@ -174,7 +174,7 @@ public class CacheMemorySource<V extends Object> extends AbstractService impleme
                             }
                         });
                     } catch (Exception e) {
-                        logger.log(Level.FINEST, CacheSource.class.getSimpleName() + "(" + resourceName() + ") queryListAsync error, maybe remote node connot connect ", e);
+                        if (logger.isLoggable(Level.FINEST)) logger.log(Level.FINEST, CacheSource.class.getSimpleName() + "(" + resourceName() + ") queryListAsync error, maybe remote node connot connect ", e);
                     }
                 });
             }

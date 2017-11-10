@@ -63,9 +63,6 @@ public class WebSocketEngine {
     @Comment("日志")
     protected final Logger logger;
 
-    @Comment("日志级别")
-    protected final boolean finest;
-
     @Comment("PING的间隔秒数")
     private int liveinterval;
 
@@ -81,7 +78,6 @@ public class WebSocketEngine {
         this.liveinterval = liveinterval;
         this.maxconns = maxconns;
         this.logger = logger;
-        this.finest = logger.isLoggable(Level.FINEST);
         this.index = sequence.getAndIncrement();
     }
 
@@ -103,7 +99,7 @@ public class WebSocketEngine {
             long now = System.currentTimeMillis();
             getLocalWebSockets().stream().filter(x -> (now - x.getLastSendTime()) > intervalms).forEach(x -> x.sendPing());
         }, delay, liveinterval, TimeUnit.SECONDS);
-        logger.finest(this.getClass().getSimpleName() + "(" + engineid + ")" + " start keeplive(delay:" + delay + ", maxconns:" + maxconns + ", interval:" + liveinterval + "s) scheduler executor");
+        if (logger.isLoggable(Level.FINEST)) logger.finest(this.getClass().getSimpleName() + "(" + engineid + ")" + " start keeplive(delay:" + delay + ", maxconns:" + maxconns + ", interval:" + liveinterval + "s) scheduler executor");
     }
 
     void destroy(AnyValue conf) {

@@ -36,10 +36,6 @@ public abstract class WebSocketNode {
 
     protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
 
-    protected final boolean finest = logger.isLoggable(Level.FINEST);
-
-    protected final boolean finer = logger.isLoggable(Level.FINER);
-
     //"SNCP_ADDR" 如果不是分布式(没有SNCP) 值为null
     @Resource(name = Application.RESNAME_SNCP_ADDR)
     protected InetSocketAddress localSncpAddress;  //为SncpServer的服务address
@@ -86,12 +82,12 @@ public abstract class WebSocketNode {
 
     //--------------------------------------------------------------------------------
     final CompletableFuture<Void> connect(final Serializable userid) {
-        if (finest) logger.finest(localSncpAddress + " receive websocket connect event (" + userid + " on " + this.localEngine.getEngineid() + ").");
+        if (logger.isLoggable(Level.FINEST)) logger.finest(localSncpAddress + " receive websocket connect event (" + userid + " on " + this.localEngine.getEngineid() + ").");
         return connect(userid, localSncpAddress);
     }
 
     final CompletableFuture<Void> disconnect(final Serializable userid) {
-        if (finest) logger.finest(localSncpAddress + " receive websocket disconnect event (" + userid + " on " + this.localEngine.getEngineid() + ").");
+        if (logger.isLoggable(Level.FINEST)) logger.finest(localSncpAddress + " receive websocket disconnect event (" + userid + " on " + this.localEngine.getEngineid() + ").");
         return disconnect(userid, localSncpAddress);
     }
 
@@ -142,7 +138,7 @@ public abstract class WebSocketNode {
     public CompletableFuture<Map<InetSocketAddress, List<String>>> getRpcNodeWebSocketAddresses(final Serializable userid) {
         CompletableFuture<Collection<InetSocketAddress>> sncpFuture = getRpcNodeAddresses(userid);
         return sncpFuture.thenCompose((Collection<InetSocketAddress> addrs) -> {
-            if (finest) logger.finest("websocket found userid:" + userid + " on " + addrs);
+            if (logger.isLoggable(Level.FINEST)) logger.finest("websocket found userid:" + userid + " on " + addrs);
             if (addrs == null || addrs.isEmpty()) return CompletableFuture.completedFuture(new HashMap<>());
             CompletableFuture<Map<InetSocketAddress, List<String>>> future = null;
             for (final InetSocketAddress nodeAddress : addrs) {
@@ -194,14 +190,14 @@ public abstract class WebSocketNode {
         CompletableFuture<Integer> localFuture = null;
         if (this.localEngine != null) localFuture = CompletableFuture.completedFuture(localEngine.forceCloseLocalWebSocket(userid));
         if (this.sncpNodeAddresses == null || this.remoteNode == null) {
-            if (finest) logger.finest("websocket remote node is null");
+            if (logger.isLoggable(Level.FINEST)) logger.finest("websocket remote node is null");
             //没有CacheSource就不会有分布式节点
             return localFuture;
         }
         //远程节点关闭
         CompletableFuture<Collection<InetSocketAddress>> addrsFuture = sncpNodeAddresses.getCollectionAsync(SOURCE_SNCP_USERID_PREFIX + userid);
         CompletableFuture<Integer> remoteFuture = addrsFuture.thenCompose((Collection<InetSocketAddress> addrs) -> {
-            if (finest) logger.finest("websocket found userid:" + userid + " on " + addrs);
+            if (logger.isLoggable(Level.FINEST)) logger.finest("websocket found userid:" + userid + " on " + addrs);
             if (addrs == null || addrs.isEmpty()) return CompletableFuture.completedFuture(0);
             CompletableFuture<Integer> future = null;
             for (InetSocketAddress addr : addrs) {
@@ -404,7 +400,7 @@ public abstract class WebSocketNode {
         CompletableFuture<Integer> localFuture = this.localEngine == null ? null : this.localEngine.broadcastMessage(message, last);
         CompletableFuture<Collection<InetSocketAddress>> addrsFuture = sncpNodeAddresses.getCollectionAsync(SOURCE_SNCP_NODES_KEY);
         CompletableFuture<Integer> remoteFuture = addrsFuture.thenCompose((Collection<InetSocketAddress> addrs) -> {
-            if (finest) logger.finest("websocket broadcast message on " + addrs);
+            if (logger.isLoggable(Level.FINEST)) logger.finest("websocket broadcast message on " + addrs);
             if (addrs == null || addrs.isEmpty()) return CompletableFuture.completedFuture(0);
             CompletableFuture<Integer> future = null;
             for (InetSocketAddress addr : addrs) {
@@ -418,11 +414,11 @@ public abstract class WebSocketNode {
     }
 
     private CompletableFuture<Integer> sendOneMessage(final Object message, final boolean last, final Serializable userid) {
-        if (finest) logger.finest("websocket want send message {userid:" + userid + ", content:'" + message + "'} from locale node to locale engine");
+        if (logger.isLoggable(Level.FINEST)) logger.finest("websocket want send message {userid:" + userid + ", content:'" + message + "'} from locale node to locale engine");
         CompletableFuture<Integer> localFuture = null;
         if (this.localEngine != null) localFuture = localEngine.sendMessage(message, last, userid);
         if (this.sncpNodeAddresses == null || this.remoteNode == null) {
-            if (finest) logger.finest("websocket remote node is null");
+            if (logger.isLoggable(Level.FINEST)) logger.finest("websocket remote node is null");
             //没有CacheSource就不会有分布式节点
             return localFuture == null ? CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY) : localFuture;
         }
@@ -430,10 +426,10 @@ public abstract class WebSocketNode {
         CompletableFuture<Collection<InetSocketAddress>> addrsFuture = sncpNodeAddresses.getCollectionAsync(SOURCE_SNCP_USERID_PREFIX + userid);
         CompletableFuture<Integer> remoteFuture = addrsFuture.thenCompose((Collection<InetSocketAddress> addrs) -> {
             if (addrs == null || addrs.isEmpty()) {
-                if (finer) logger.finer("websocket not found userid:" + userid + " on any node ");
+                if (logger.isLoggable(Level.FINER)) logger.finer("websocket not found userid:" + userid + " on any node ");
                 return CompletableFuture.completedFuture(0);
             }
-            if (finest) logger.finest("websocket found userid:" + userid + " on " + addrs);
+            if (logger.isLoggable(Level.FINEST)) logger.finest("websocket found userid:" + userid + " on " + addrs);
             CompletableFuture<Integer> future = null;
             for (InetSocketAddress addr : addrs) {
                 if (addr == null || addr.equals(localSncpAddress)) continue;

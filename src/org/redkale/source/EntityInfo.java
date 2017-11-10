@@ -629,12 +629,13 @@ public final class EntityInfo<T> {
     /**
      * 判断日志级别
      *
-     * @param l Level
+     * @param logger Logger
+     * @param l      Level
      *
      * @return boolean
      */
-    public boolean isLoggable(Level l) {
-        return l.intValue() >= this.logLevel;
+    public boolean isLoggable(Logger logger, Level l) {
+        return logger.isLoggable(l) && l.intValue() >= this.logLevel;
     }
 
     /**

@@ -10,7 +10,6 @@ import java.net.URL;
 import java.sql.*;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.*;
 import java.util.logging.*;
 import java.util.stream.Stream;
@@ -36,8 +35,6 @@ public class DataJdbcSource extends AbstractService implements DataSource, DataC
     protected static final Flipper FLIPPER_ONE = new Flipper(1);
 
     protected final Logger logger = Logger.getLogger(DataJdbcSource.class.getSimpleName());
-
-    protected final AtomicBoolean debug = new AtomicBoolean(logger.isLoggable(Level.FINEST));
 
     protected final String name;
 
@@ -219,7 +216,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, DataC
                 }
                 prestmt.close();
                 //------------------------------------------------------------
-                if (debug.get() && info.isLoggable(Level.FINEST)) {  //打印调试信息
+                if (info.isLoggable(logger, Level.FINEST)) {  //打印调试信息
                     char[] sqlchars = sql.toCharArray();
                     for (final T value : values) {
                         //-----------------------------
@@ -370,7 +367,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, DataC
                 final Statement stmt = conn.createStatement();
                 for (Serializable key : keys) {
                     String sql = "DELETE FROM " + info.getTable(key) + " WHERE " + info.getPrimarySQLColumn() + " = " + FilterNode.formatToString(key);
-                    if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(info.getType().getSimpleName() + " delete sql=" + sql);
+                    if (info.isLoggable(logger, Level.FINEST)) logger.finest(info.getType().getSimpleName() + " delete sql=" + sql);
                     stmt.addBatch(sql);
                 }
                 int[] pc = stmt.executeBatch();
@@ -451,7 +448,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, DataC
                     + ((where == null || where.length() == 0) ? (join2 == null ? "" : (" WHERE " + join2))
                     : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2)))) + info.createSQLOrderby(flipper)
                     + ((flipper == null || flipper.getLimit() < 1) ? "" : (" LIMIT " + flipper.getLimit()));
-                if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(info.getType().getSimpleName() + " delete sql=" + sql);
+                if (info.isLoggable(logger, Level.FINEST)) logger.finest(info.getType().getSimpleName() + " delete sql=" + sql);
                 conn.setReadOnly(false);
                 final Statement stmt = conn.createStatement();
                 c = stmt.executeUpdate(sql);
@@ -533,7 +530,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, DataC
                 conn.setReadOnly(false);
                 final PreparedStatement prestmt = conn.prepareStatement(updateSQL);
                 Attribute<T, Serializable>[] attrs = info.updateAttributes;
-                final boolean debugfinest = debug.get() && info.isLoggable(Level.FINEST);
+                final boolean debugfinest = info.isLoggable(logger, Level.FINEST);
                 char[] sqlchars = debugfinest ? updateSQL.toCharArray() : null;
                 for (final T value : values) {
                     int k = 0;
@@ -625,7 +622,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, DataC
             if (!info.isVirtualEntity()) {
                 if (value instanceof byte[]) {
                     String sql = "UPDATE " + info.getTable(id) + " SET " + info.getSQLColumn(null, column) + " = ? WHERE " + info.getPrimarySQLColumn() + " = " + FilterNode.formatToString(id);
-                    if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
+                    if (info.isLoggable(logger, Level.FINEST)) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
                     conn.setReadOnly(false);
                     final PreparedStatement stmt = conn.prepareStatement(sql);
                     Blob blob = conn.createBlob();
@@ -636,7 +633,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, DataC
                 } else {
                     String sql = "UPDATE " + info.getTable(id) + " SET " + info.getSQLColumn(null, column) + " = "
                         + info.formatToString(value) + " WHERE " + info.getPrimarySQLColumn() + " = " + FilterNode.formatToString(id);
-                    if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
+                    if (info.isLoggable(logger, Level.FINEST)) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
                     conn.setReadOnly(false);
                     final Statement stmt = conn.createStatement();
                     c = stmt.executeUpdate(sql);
@@ -706,7 +703,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, DataC
                         + " SET " + info.getSQLColumn("a", column) + " = ?"
                         + ((where == null || where.length() == 0) ? (join2 == null ? "" : (" WHERE " + join2))
                         : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))));
-                    if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
+                    if (info.isLoggable(logger, Level.FINEST)) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
                     conn.setReadOnly(false);
                     Blob blob = conn.createBlob();
                     blob.setBytes(1, (byte[]) value);
@@ -719,7 +716,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, DataC
                         + " SET " + info.getSQLColumn("a", column) + " = " + info.formatToString(value)
                         + ((where == null || where.length() == 0) ? (join2 == null ? "" : (" WHERE " + join2))
                         : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))));
-                    if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
+                    if (info.isLoggable(logger, Level.FINEST)) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
                     conn.setReadOnly(false);
                     final Statement stmt = conn.createStatement();
                     c = stmt.executeUpdate(sql);
@@ -796,7 +793,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, DataC
             int c = -1;
             if (!virtual) {
                 String sql = "UPDATE " + info.getTable(id) + " SET " + setsql + " WHERE " + info.getPrimarySQLColumn() + " = " + FilterNode.formatToString(id);
-                if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(info.getType().getSimpleName() + ": " + sql);
+                if (info.isLoggable(logger, Level.FINEST)) logger.finest(info.getType().getSimpleName() + ": " + sql);
                 conn.setReadOnly(false);
                 if (blobs != null) {
                     final PreparedStatement stmt = conn.prepareStatement(sql);
@@ -926,7 +923,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, DataC
                     : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))));
                 //注：LIMIT 仅支持MySQL 且在多表关联式会异常， 该BUG尚未解决
                 sql += info.createSQLOrderby(flipper) + ((flipper == null || flipper.getLimit() < 1) ? "" : (" LIMIT " + flipper.getLimit()));
-                if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
+                if (info.isLoggable(logger, Level.FINEST)) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
                 conn.setReadOnly(false);
                 if (blobs != null) {
                     final PreparedStatement stmt = conn.prepareStatement(sql);
@@ -1022,7 +1019,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, DataC
             int c = -1;
             if (!virtual) {
                 String sql = "UPDATE " + info.getTable(id) + " SET " + setsql + " WHERE " + info.getPrimarySQLColumn() + " = " + FilterNode.formatToString(id);
-                if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(bean.getClass().getSimpleName() + ": " + sql);
+                if (info.isLoggable(logger, Level.FINEST)) logger.finest(bean.getClass().getSimpleName() + ": " + sql);
                 conn.setReadOnly(false);
                 if (blobs != null) {
                     final PreparedStatement stmt = conn.prepareStatement(sql);
@@ -1110,7 +1107,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, DataC
                 String sql = "UPDATE " + info.getTable(node) + " a " + (join1 == null ? "" : (", " + join1)) + " SET " + setsql
                     + ((where == null || where.length() == 0) ? (join2 == null ? "" : (" WHERE " + join2))
                     : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))));
-                if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
+                if (info.isLoggable(logger, Level.FINEST)) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
                 conn.setReadOnly(false);
                 if (blobs != null) {
                     final PreparedStatement stmt = conn.prepareStatement(sql);
@@ -1273,7 +1270,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, DataC
             }
             final String sql = "SELECT " + sb + " FROM " + info.getTable(node) + " a"
                 + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
-            if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(entityClass.getSimpleName() + " single sql=" + sql);
+            if (info.isLoggable(logger, Level.FINEST)) logger.finest(entityClass.getSimpleName() + " single sql=" + sql);
             conn.setReadOnly(true);
             final PreparedStatement prestmt = conn.prepareStatement(sql);
 
@@ -1329,7 +1326,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, DataC
             final CharSequence where = node == null ? null : node.createSQLExpress(info, joinTabalis);
             final String sql = "SELECT " + func.getColumn((column == null || column.isEmpty() ? "*" : info.getSQLColumn("a", column))) + " FROM " + info.getTable(node) + " a"
                 + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
-            if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(entityClass.getSimpleName() + " single sql=" + sql);
+            if (info.isLoggable(logger, Level.FINEST)) logger.finest(entityClass.getSimpleName() + " single sql=" + sql);
             conn.setReadOnly(true);
             final PreparedStatement prestmt = conn.prepareStatement(sql);
             Number rs = defVal;
@@ -1388,7 +1385,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, DataC
             final CharSequence where = node == null ? null : node.createSQLExpress(info, joinTabalis);
             final String sql = "SELECT a." + sqlkey + ", " + func.getColumn((funcColumn == null || funcColumn.isEmpty() ? "*" : info.getSQLColumn("a", funcColumn)))
                 + " FROM " + info.getTable(node) + " a" + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where)) + " GROUP BY a." + sqlkey;
-            if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(entityClass.getSimpleName() + " single sql=" + sql);
+            if (info.isLoggable(logger, Level.FINEST)) logger.finest(entityClass.getSimpleName() + " single sql=" + sql);
             conn.setReadOnly(true);
             final PreparedStatement prestmt = conn.prepareStatement(sql);
             Map<K, N> rs = new LinkedHashMap<>();
@@ -1447,7 +1444,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, DataC
         try {
             final SelectColumn sels = selects;
             final String sql = "SELECT * FROM " + info.getTable(pk) + " WHERE " + info.getPrimarySQLColumn() + " = " + FilterNode.formatToString(pk);
-            if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(clazz.getSimpleName() + " find sql=" + sql);
+            if (info.isLoggable(logger, Level.FINEST)) logger.finest(clazz.getSimpleName() + " find sql=" + sql);
             conn.setReadOnly(true);
             final PreparedStatement ps = conn.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
             ps.setFetchSize(1);
@@ -1524,7 +1521,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, DataC
             final CharSequence join = node == null ? null : node.createSQLJoin(this, false, joinTabalis, new HashSet<>(), info);
             final CharSequence where = node == null ? null : node.createSQLExpress(info, joinTabalis);
             final String sql = "SELECT a.* FROM " + info.getTable(node) + " a" + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
-            if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(clazz.getSimpleName() + " find sql=" + sql);
+            if (info.isLoggable(logger, Level.FINEST)) logger.finest(clazz.getSimpleName() + " find sql=" + sql);
             conn.setReadOnly(true);
             final PreparedStatement ps = conn.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
             ps.setFetchSize(1);
@@ -1591,7 +1588,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, DataC
         try {
             final Attribute<T, Serializable> attr = info.getAttribute(column);
             final String sql = "SELECT " + info.getSQLColumn(null, column) + " FROM " + info.getTable(pk) + " WHERE " + info.getPrimarySQLColumn() + " = " + FilterNode.formatToString(pk);
-            if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(clazz.getSimpleName() + " find sql=" + sql);
+            if (info.isLoggable(logger, Level.FINEST)) logger.finest(clazz.getSimpleName() + " find sql=" + sql);
             conn.setReadOnly(true);
             final PreparedStatement ps = conn.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
             ps.setFetchSize(1);
@@ -1646,7 +1643,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, DataC
             final CharSequence join = node == null ? null : node.createSQLJoin(this, false, joinTabalis, new HashSet<>(), info);
             final CharSequence where = node == null ? null : node.createSQLExpress(info, joinTabalis);
             final String sql = "SELECT " + info.getSQLColumn("a", column) + " FROM " + info.getTable(node) + " a" + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
-            if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(clazz.getSimpleName() + " find sql=" + sql);
+            if (info.isLoggable(logger, Level.FINEST)) logger.finest(clazz.getSimpleName() + " find sql=" + sql);
             conn.setReadOnly(true);
             final PreparedStatement ps = conn.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
             ps.setFetchSize(1);
@@ -1688,7 +1685,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, DataC
         }
 
         final Connection conn = createReadSQLConnection();
-        final boolean log = debug.get() && info.isLoggable(Level.FINEST);
+        final boolean log = info.isLoggable(logger, Level.FINEST);
         String logstr = null;
         try {
             final String sql = "SELECT COUNT(*) FROM " + info.getTable(pk) + " WHERE " + info.getPrimarySQLColumn() + " = " + FilterNode.formatToString(pk);
@@ -1734,7 +1731,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, DataC
         if (cache != null && cache.isFullLoaded() && (node == null || node.isCacheUseable(this))) return cache.exists(node);
 
         final Connection conn = createReadSQLConnection();
-        final boolean log = debug.get() && info.isLoggable(Level.FINEST);
+        final boolean log = info.isLoggable(logger, Level.FINEST);
         String logstr = null;
         try {
             final Map<Class, String> joinTabalis = node == null ? null : node.getJoinTabalis();
@@ -2238,7 +2235,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, DataC
         final EntityCache<T> cache = info.getCache();
         if (readcache && cache != null && cache.isFullLoaded()) {
             if (node == null || node.isCacheUseable(this)) {
-                if (debug.get() && info.isLoggable(Level.FINEST)) logger.finest(clazz.getSimpleName() + " cache query predicate = " + (node == null ? null : node.createPredicate(cache)));
+                if (info.isLoggable(logger, Level.FINEST)) logger.finest(clazz.getSimpleName() + " cache query predicate = " + (node == null ? null : node.createPredicate(cache)));
                 return cache.querySheet(needtotal, selects, flipper, node);
             }
         }
@@ -2251,7 +2248,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, DataC
             final CharSequence where = node == null ? null : node.createSQLExpress(info, joinTabalis);
             final String sql = "SELECT a.* FROM " + info.getTable(node) + " a" + (join == null ? "" : join)
                 + ((where == null || where.length() == 0) ? "" : (" WHERE " + where)) + info.createSQLOrderby(flipper);
-            if (debug.get() && info.isLoggable(Level.FINEST)) {
+            if (info.isLoggable(logger, Level.FINEST)) {
                 logger.finest(clazz.getSimpleName() + " query sql=" + sql + (flipper == null || flipper.getLimit() < 1 ? "" : (" LIMIT " + flipper.getOffset() + "," + flipper.getLimit())));
             }
             conn.setReadOnly(true);
@@ -2339,7 +2336,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, DataC
     public final void directQuery(String sql, Consumer<ResultSet> consumer) {
         final Connection conn = createReadSQLConnection();
         try {
-            if (debug.get()) logger.finest("direct query sql=" + sql);
+            if (logger.isLoggable(Level.FINEST)) logger.finest("direct query sql=" + sql);
             conn.setReadOnly(true);
             final PreparedStatement ps = conn.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
             final ResultSet set = ps.executeQuery();
