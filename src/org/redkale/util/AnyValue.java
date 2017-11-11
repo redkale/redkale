@@ -7,7 +7,7 @@ package org.redkale.util;
 
 import java.lang.reflect.Array;
 import java.util.*;
-import java.util.function.BiPredicate;
+import java.util.function.*;
 
 /**
  * 该类提供类似JSONObject的数据结构，主要用于读取xml配置文件和http-header存储
@@ -188,6 +188,25 @@ public abstract class AnyValue {
                 }
             }
             return this;
+        }
+
+        @Override
+        public void forEach(BiConsumer<String, String> stringConsumer) {
+            forEach(stringConsumer, null);
+        }
+
+        @Override
+        public void forEach(BiConsumer<String, String> stringConsumer, BiConsumer<String, AnyValue> anyConsumer) {
+            if (stringConsumer != null) {
+                for (Entry<String> en : stringEntrys) {
+                    stringConsumer.accept(en.name, en.value);
+                }
+            }
+            if (anyConsumer != null) {
+                for (Entry<AnyValue> en : (Entry[]) anyEntrys) {
+                    anyConsumer.accept(en.name, en.value);
+                }
+            }
         }
 
         @Override
@@ -429,6 +448,10 @@ public abstract class AnyValue {
         sb.append(space).append('}');
         return sb.toString();
     }
+
+    public abstract void forEach(BiConsumer<String, String> stringConsumer);
+
+    public abstract void forEach(BiConsumer<String, String> stringConsumer, BiConsumer<String, AnyValue> anyConsumer);
 
     public abstract Entry<String>[] getStringEntrys();
 

@@ -32,7 +32,6 @@ import org.redkale.util.AnyValue.DefaultAnyValue;
 import org.redkale.util.*;
 import org.redkale.watch.*;
 import org.w3c.dom.*;
-import sun.misc.Signal;
 
 /**
  *
@@ -624,35 +623,35 @@ public final class Application {
         }
     }
 
-    private void signalHandle() {
-        //http://www.comptechdoc.org/os/linux/programming/linux_pgsignals.html
-        String[] sigs = new String[]{"HUP", "TERM", "INT", "QUIT", "KILL", "TSTP", "USR1", "USR2", "STOP"};
-        List<sun.misc.Signal> list = new ArrayList<>();
-        for (String sig : sigs) {
-            try {
-                list.add(new sun.misc.Signal(sig));
-            } catch (Exception e) {
-            }
-        }
-        sun.misc.SignalHandler handler = new sun.misc.SignalHandler() {
-
-            private volatile boolean runed;
-
-            @Override
-            public void handle(Signal sig) {
-                if (runed) return;
-                runed = true;
-                logger.info(Application.this.getClass().getSimpleName() + " stoped\r\n");
-                System.exit(0);
-            }
-        };
-        for (Signal sig : list) {
-            try {
-                Signal.handle(sig, handler);
-            } catch (Exception e) {
-            }
-        }
-    }
+//    private void signalHandle() {
+//        //http://www.comptechdoc.org/os/linux/programming/linux_pgsignals.html
+//        String[] sigs = new String[]{"HUP", "TERM", "INT", "QUIT", "KILL", "TSTP", "USR1", "USR2", "STOP"};
+//        List<sun.misc.Signal> list = new ArrayList<>();
+//        for (String sig : sigs) {
+//            try {
+//                list.add(new sun.misc.Signal(sig));
+//            } catch (Exception e) {
+//            }
+//        }
+//        sun.misc.SignalHandler handler = new sun.misc.SignalHandler() {
+//
+//            private volatile boolean runed;
+//
+//            @Override
+//            public void handle(Signal sig) {
+//                if (runed) return;
+//                runed = true;
+//                logger.info(Application.this.getClass().getSimpleName() + " stoped\r\n");
+//                System.exit(0);
+//            }
+//        };
+//        for (Signal sig : list) {
+//            try {
+//                Signal.handle(sig, handler);
+//            } catch (Exception e) {
+//            }
+//        }
+//    }
 
     @SuppressWarnings("unchecked")
     private void runServers(CountDownLatch timecd, final List<AnyValue> serconfs) throws Exception {

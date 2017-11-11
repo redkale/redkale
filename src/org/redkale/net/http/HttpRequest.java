@@ -10,6 +10,7 @@ import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.Channels;
 import java.nio.charset.Charset;
+import java.util.*;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.*;
 import org.redkale.util.*;
@@ -898,6 +899,20 @@ public class HttpRequest extends Request<HttpContext> {
     }
 
     /**
+     * 将请求Header转换成Map
+     *
+     * @param map Map
+     *
+     * @return Map
+     */
+    public Map<String, String> getHeadersToMap(Map<String, String> map) {
+        if (map == null) map = new LinkedHashMap<>();
+        final Map<String, String> map0 = map;
+        header.forEach((k, v) -> map0.put(k, v));
+        return map0;
+    }
+
+    /**
      * 获取所有的header名
      *
      * @return header名数组
@@ -1103,6 +1118,20 @@ public class HttpRequest extends Request<HttpContext> {
     public AnyValue getParameters() {
         parseBody();
         return params;
+    }
+
+    /**
+     * 将请求参数转换成Map
+     *
+     * @param map Map
+     *
+     * @return Map
+     */
+    public Map<String, String> getParametersToMap(Map<String, String> map) {
+        if (map == null) map = new LinkedHashMap<>();
+        final Map<String, String> map0 = map;
+        getParameters().forEach((k, v) -> map0.put(k, v));
+        return map0;
     }
 
     /**
