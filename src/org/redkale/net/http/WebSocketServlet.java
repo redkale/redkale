@@ -46,7 +46,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
     public static final String WEBPARAM__LIVEINTERVAL = "liveinterval";
 
     @Comment("WebScoket服务器最大连接数，为0表示无限制")
-    public static final String WEBPARAM__MAXCONNS = "maxconns";
+    public static final String WEBPARAM__WSMAXCONNS = "wsmaxconns";
 
     @Comment("WebScoket服务器给客户端进行ping操作的默认间隔时间, 单位: 秒")
     public static final int DEFAILT_LIVEINTERVAL = 15;
@@ -144,7 +144,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
             return;
         }
         if (this.node.localEngine.isLocalConnLimited()) {
-            if (debug) logger.finest("WebSocket connections limit, maxconns=" + this.node.localEngine.getLocalMaxconns());
+            if (debug) logger.finest("WebSocket connections limit, wsmaxconns=" + this.node.localEngine.getLocalWsmaxconns());
             response.finish(true);
             return;
         }

@@ -317,8 +317,8 @@ public final class Rest {
             mv.visitFieldInsn(PUTFIELD, newDynName, "liveinterval", "I");
 
             mv.visitVarInsn(ALOAD, 0);
-            pushInt(mv, rws.maxconns());
-            mv.visitFieldInsn(PUTFIELD, newDynName, "maxconns", "I");
+            pushInt(mv, rws.wsmaxconns());
+            mv.visitFieldInsn(PUTFIELD, newDynName, "wsmaxconns", "I");
 
             mv.visitVarInsn(ALOAD, 0);
             mv.visitInsn(rws.single() ? ICONST_1 : ICONST_0);

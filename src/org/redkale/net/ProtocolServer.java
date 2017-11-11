@@ -32,6 +32,9 @@ public abstract class ProtocolServer {
     //在线数
     protected final AtomicLong livingCounter = new AtomicLong();
 
+    //最大连接数，小于1表示无限制
+    protected int maxconns;
+
     public abstract void open() throws IOException;
 
     public abstract void bind(SocketAddress local, int backlog) throws IOException;
@@ -41,6 +44,10 @@ public abstract class ProtocolServer {
     public abstract <T> void setOption(SocketOption<T> name, T value) throws IOException;
 
     public abstract void accept();
+
+    public void setMaxconns(int maxconns) {
+        this.maxconns = maxconns;
+    }
 
     public abstract void close() throws IOException;
 
@@ -198,6 +205,13 @@ public abstract class ProtocolServer {
                 @Override
                 public void completed(final AsynchronousSocketChannel channel, Void attachment) {
                     serchannel.accept(null, this);
+                    if (maxconns > 0 && livingCounter.get() >= maxconns) {
+                        try {
+                            channel.close();
+                        } catch (Exception e) {
+                        }
+                        return;
+                    }
                     createCounter.incrementAndGet();
                     livingCounter.incrementAndGet();
                     AsyncConnection conn = AsyncConnection.create(channel, null, context.readTimeoutSecond, context.writeTimeoutSecond);

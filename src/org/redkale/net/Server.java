@@ -88,6 +88,9 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
     //IO写入 的超时秒数，小于1视为不设置
     protected int writeTimeoutSecond;
 
+    //最大连接数
+    protected int maxconns;
+    
     protected Server(long serverStartTime, String protocol, PrepareServlet<K, C, R, P, S> servlet) {
         this.serverStartTime = serverStartTime;
         this.protocol = protocol;
@@ -99,6 +102,7 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         this.config = config;
         this.address = new InetSocketAddress(config.getValue("host", "0.0.0.0"), config.getIntValue("port", 80));
         this.charset = Charset.forName(config.getValue("charset", "UTF-8"));
+        this.maxconns = config.getIntValue("maxconns", 0);
         this.readTimeoutSecond = config.getIntValue("readTimeoutSecond", 0);
         this.writeTimeoutSecond = config.getIntValue("writeTimeoutSecond", 0);
         this.backlog = parseLenth(config.getValue("backlog"), 8 * 1024);
@@ -187,7 +191,8 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
             this.serverChannel.setOption(StandardSocketOptions.TCP_NODELAY, true);
         }
         serverChannel.bind(address, backlog);
-        serverChannel.accept();
+        serverChannel.setMaxconns(this.maxconns);
+        serverChannel.accept(); 
         final String threadName = "[" + Thread.currentThread().getName() + "] ";
         logger.info(threadName + this.getClass().getSimpleName() + ("TCP".equalsIgnoreCase(protocol) ? "" : ("." + protocol)) + " listen: " + address
             + ", threads: " + threads + ", bufferCapacity: " + bufferCapacity + ", bufferPoolSize: " + bufferPoolSize + ", responsePoolSize: " + responsePoolSize

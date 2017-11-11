@@ -107,6 +107,7 @@
         charset: 文本编码， 默认: UTF-8
         backlog:  默认10K
         threads： 线程总数， 默认: CPU核数*16
+        maxconns：最大连接数, 小于1表示无限制， 默认: 0
         maxbody: request.body最大值， 默认: 64K
         bufferCapacity: ByteBuffer的初始化大小， 默认: 8K;  如果是HTTP协议则默认: 16K + 16B (兼容HTTP 2.0、WebSocket)
         bufferPoolSize： ByteBuffer池的大小，默认: CPU核数*512

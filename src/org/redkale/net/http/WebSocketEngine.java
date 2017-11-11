@@ -67,16 +67,16 @@ public class WebSocketEngine {
     private int liveinterval;
 
     @Comment("最大连接数, 为0表示无限制")
-    private int maxconns;
+    private int wsmaxconns;
 
-    protected WebSocketEngine(String engineid, boolean single, HttpContext context, int liveinterval, int maxconns, WebSocketNode node, Convert sendConvert, Logger logger) {
+    protected WebSocketEngine(String engineid, boolean single, HttpContext context, int liveinterval, int wsmaxconns, WebSocketNode node, Convert sendConvert, Logger logger) {
         this.engineid = engineid;
         this.single = single;
         this.context = context;
         this.sendConvert = sendConvert;
         this.node = node;
         this.liveinterval = liveinterval;
-        this.maxconns = maxconns;
+        this.wsmaxconns = wsmaxconns;
         this.logger = logger;
         this.index = sequence.getAndIncrement();
     }
@@ -86,7 +86,7 @@ public class WebSocketEngine {
         if (conf != null && conf.getAnyValue("properties") != null) props = conf.getAnyValue("properties");
         this.liveinterval = props == null ? (liveinterval < 0 ? DEFAILT_LIVEINTERVAL : liveinterval) : props.getIntValue(WEBPARAM__LIVEINTERVAL, (liveinterval < 0 ? DEFAILT_LIVEINTERVAL : liveinterval));
         if (liveinterval <= 0) return;
-        this.maxconns = props == null ? this.maxconns : props.getIntValue(WEBPARAM__MAXCONNS, this.maxconns);
+        this.wsmaxconns = props == null ? this.wsmaxconns : props.getIntValue(WEBPARAM__WSMAXCONNS, this.wsmaxconns);
         if (scheduler != null) return;
         this.scheduler = new ScheduledThreadPoolExecutor(1, (Runnable r) -> {
             final Thread t = new Thread(r, engineid + "-WebSocket-LiveInterval-Thread");
@@ -99,7 +99,7 @@ public class WebSocketEngine {
             long now = System.currentTimeMillis();
             getLocalWebSockets().stream().filter(x -> (now - x.getLastSendTime()) > intervalms).forEach(x -> x.sendPing());
         }, delay, liveinterval, TimeUnit.SECONDS);
-        if (logger.isLoggable(Level.FINEST)) logger.finest(this.getClass().getSimpleName() + "(" + engineid + ")" + " start keeplive(delay:" + delay + ", maxconns:" + maxconns + ", interval:" + liveinterval + "s) scheduler executor");
+        if (logger.isLoggable(Level.FINEST)) logger.finest(this.getClass().getSimpleName() + "(" + engineid + ")" + " start keeplive(delay:" + delay + ", wsmaxconns:" + wsmaxconns + ", interval:" + liveinterval + "s) scheduler executor");
     }
 
     void destroy(AnyValue conf) {
@@ -274,14 +274,14 @@ public class WebSocketEngine {
     }
 
     @Comment("获取最大连接数")
-    public int getLocalMaxconns() {
-        return this.maxconns;
+    public int getLocalWsmaxconns() {
+        return this.wsmaxconns;
     }
 
     @Comment("连接数是否达到上限")
     public boolean isLocalConnLimited() {
-        if (this.maxconns < 1) return false;
-        return currconns.get() >= this.maxconns;
+        if (this.wsmaxconns < 1) return false;
+        return currconns.get() >= this.wsmaxconns;
     }
 
     @Comment("获取所有连接")

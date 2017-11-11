@@ -60,11 +60,11 @@ public @interface RestWebSocket {
     int liveinterval() default WebSocketServlet.DEFAILT_LIVEINTERVAL;
 
     /**
-     * 最大连接数, 为0表示无限制
+     * 最大连接数, 小于1表示无限制
      *
      * @return 最大连接数
      */
-    int maxconns() default 0;
+    int wsmaxconns() default 0;
 
     /**
      * 是否屏蔽该类的转换
