@@ -122,42 +122,6 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
     }
 
     //------------------------------------------------------------------------------------------------------------------------------
-    public static AsyncConnection create(final String protocol, final AsynchronousChannelGroup group, final SocketAddress address) throws IOException {
-        return create(protocol, group, address, 0, 0);
-    }
-
-    /**
-     * 创建客户端连接
-     *
-     * @param protocol            连接类型 只能是TCP或UDP
-     * @param address             连接点子
-     * @param group               连接AsynchronousChannelGroup
-     * @param readTimeoutSecond0  读取超时秒数
-     * @param writeTimeoutSecond0 写入超时秒数
-     *
-     * @return 连接
-     * @throws java.io.IOException 异常
-     */
-    public static AsyncConnection create(final String protocol, final AsynchronousChannelGroup group, final SocketAddress address,
-        final int readTimeoutSecond0, final int writeTimeoutSecond0) throws IOException {
-        if ("TCP".equalsIgnoreCase(protocol)) {
-            AsynchronousSocketChannel channel = AsynchronousSocketChannel.open(group);
-            try {
-                channel.connect(address).get(3, TimeUnit.SECONDS);
-            } catch (Exception e) {
-                throw new IOException("AsyncConnection connect " + address, e);
-            }
-            return create(channel, address, readTimeoutSecond0, writeTimeoutSecond0);
-        } else if ("UDP".equalsIgnoreCase(protocol)) {
-            DatagramChannel channel = DatagramChannel.open();
-            channel.configureBlocking(true);
-            channel.connect(address);
-            return create(channel, address, true, readTimeoutSecond0, writeTimeoutSecond0);
-        } else {
-            throw new RuntimeException("AsyncConnection not support protocol " + protocol);
-        }
-    }
-
     /**
      * 创建TCP协议客户端连接
      *
