@@ -429,7 +429,7 @@ public abstract class WebSocketNode {
                 if (logger.isLoggable(Level.FINER)) logger.finer("websocket not found userid:" + userid + " on any node ");
                 return CompletableFuture.completedFuture(0);
             }
-            if (logger.isLoggable(Level.FINEST)) logger.finest("websocket found userid:" + userid + " on " + addrs);
+            if (logger.isLoggable(Level.FINEST)) logger.finest("websocket(localaddr=" + localSncpAddress + ") found userid:" + userid + " on " + addrs);
             CompletableFuture<Integer> future = null;
             for (InetSocketAddress addr : addrs) {
                 if (addr == null || addr.equals(localSncpAddress)) continue;
