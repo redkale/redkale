@@ -7,10 +7,11 @@ package org.redkale.boot;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
-import java.net.InetSocketAddress;
+import java.net.*;
 import java.util.*;
 import java.util.logging.Level;
 import javax.annotation.*;
+import static org.redkale.boot.Application.RESNAME_SNCP_ADDR;
 import org.redkale.boot.ClassFilter.FilterEntry;
 import org.redkale.net.*;
 import org.redkale.net.http.*;
@@ -108,6 +109,11 @@ public class NodeHttpServer extends NodeServer {
                 if (loader != null) loader.load(sncpResFactory, src, resourceName, field, attachment);
                 synchronized (regFactory) {
                     Service nodeService = (Service) rf.find(resourceName, WebSocketNode.class);
+                    if (resourceFactory.find(RESNAME_SNCP_ADDR, String.class) == null) {
+                        resourceFactory.register(RESNAME_SNCP_ADDR, InetSocketAddress.class, sncpResFactory.find(RESNAME_SNCP_ADDR, InetSocketAddress.class));
+                        resourceFactory.register(RESNAME_SNCP_ADDR, SocketAddress.class, sncpResFactory.find(RESNAME_SNCP_ADDR, SocketAddress.class));
+                        resourceFactory.register(RESNAME_SNCP_ADDR, String.class, sncpResFactory.find(RESNAME_SNCP_ADDR, String.class));
+                    }
                     if (nodeService == null) {
                         nodeService = Sncp.createLocalService(serverClassLoader, resourceName, WebSocketNodeService.class, application.getResourceFactory(), application.getSncpTransportFactory(), (InetSocketAddress) null, (Set<String>) null, (AnyValue) null);
                         regFactory.register(resourceName, WebSocketNode.class, nodeService);
