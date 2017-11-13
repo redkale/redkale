@@ -414,7 +414,7 @@ public abstract class WebSocketNode {
     }
 
     private CompletableFuture<Integer> sendOneMessage(final Object message, final boolean last, final Serializable userid) {
-        if (logger.isLoggable(Level.FINEST)) logger.finest("websocket want send message {userid:" + userid + ", content:'" + message + "'} from locale node to locale engine");
+        if (logger.isLoggable(Level.FINEST)) logger.finest("websocket want send message {userid:" + userid + ", content:'" + message + "'} from locale node to " + ((this.localEngine != null) ? "locale" : "remote") + " engine");
         CompletableFuture<Integer> localFuture = null;
         if (this.localEngine != null) localFuture = localEngine.sendMessage(message, last, userid);
         if (this.sncpNodeAddresses == null || this.remoteNode == null) {
