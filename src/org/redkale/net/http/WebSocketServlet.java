@@ -63,7 +63,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
 
     protected int liveinterval = DEFAILT_LIVEINTERVAL;
 
-    protected int maxconns = 0;
+    protected int wsmaxconns = 0;
 
     @Resource(name = "jsonconvert")
     protected Convert jsonConvert;
@@ -112,7 +112,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
         }
 
         //存在WebSocketServlet，则此WebSocketNode必须是本地模式Service
-        this.node.localEngine = new WebSocketEngine("WebSocketEngine-" + addr.getHostString() + ":" + addr.getPort() + "-[" + resourceName() + "]", this.single, context, liveinterval, maxconns, this.node, this.sendConvert, logger);
+        this.node.localEngine = new WebSocketEngine("WebSocketEngine-" + addr.getHostString() + ":" + addr.getPort() + "-[" + resourceName() + "]", this.single, context, liveinterval, wsmaxconns, this.node, this.sendConvert, logger);
         this.node.init(conf);
         this.node.localEngine.init(conf);
     }
