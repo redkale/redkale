@@ -135,11 +135,34 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
      */
     public static CompletableFuture<AsyncConnection> createTCP(final AsynchronousChannelGroup group, final SocketAddress address,
         final int readTimeoutSecond0, final int writeTimeoutSecond0) throws IOException {
+        return createTCP(group, address, false, readTimeoutSecond0, writeTimeoutSecond0);
+    }
+
+    /**
+     * 创建TCP协议客户端连接
+     *
+     * @param address             连接点子
+     * @param group               连接AsynchronousChannelGroup
+     * @param noDelay             TcpNoDelay
+     * @param readTimeoutSecond0  读取超时秒数
+     * @param writeTimeoutSecond0 写入超时秒数
+     *
+     * @return 连接CompletableFuture
+     * @throws java.io.IOException 异常
+     */
+    public static CompletableFuture<AsyncConnection> createTCP(final AsynchronousChannelGroup group, final SocketAddress address,
+        final boolean noDelay, final int readTimeoutSecond0, final int writeTimeoutSecond0) throws IOException {
         final CompletableFuture future = new CompletableFuture();
         final AsynchronousSocketChannel channel = AsynchronousSocketChannel.open(group);
         channel.connect(address, null, new CompletionHandler<Void, Void>() {
             @Override
             public void completed(Void result, Void attachment) {
+                if (noDelay) {
+                    try {
+                        channel.setOption(StandardSocketOptions.TCP_NODELAY, true);
+                    } catch (IOException e) {
+                    }
+                }
                 future.complete(create(channel, address, readTimeoutSecond0, writeTimeoutSecond0));
             }
 

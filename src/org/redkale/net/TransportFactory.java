@@ -248,6 +248,10 @@ public class TransportFactory {
         return new ArrayList<>(this.groupInfos.values());
     }
 
+    public Logger getLogger() {
+        return logger;
+    }
+
     public void addSncpService(Service service) {
         if (service == null) return;
         services.add(new WeakReference<>(service));

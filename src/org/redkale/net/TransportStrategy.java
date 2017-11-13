@@ -6,6 +6,7 @@
 package org.redkale.net;
 
 import java.net.SocketAddress;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * 远程请求的负载均衡策略
@@ -17,5 +18,5 @@ import java.net.SocketAddress;
  */
 public interface TransportStrategy {
 
-    public AsyncConnection pollConnection(SocketAddress addr, Transport transport);
+    public CompletableFuture<AsyncConnection> pollConnection(SocketAddress addr, Transport transport);
 }

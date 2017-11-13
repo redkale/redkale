@@ -342,7 +342,7 @@ public final class SncpClient {
         final Type[] myparamtypes = action.paramTypes;
         final Class[] myparamclass = action.paramClass;
         if (action.addressSourceParamIndex >= 0) params[action.addressSourceParamIndex] = this.clientAddress;
-        final BsonWriter writer = bsonConvert.pollBsonWriter(transport == null ? bufferSupplier : transport.getBufferSupplier()); // 将head写入
+        final BsonWriter writer = bsonConvert.pollBsonWriter(transport.getBufferSupplier()); // 将head写入
         writer.writeTo(DEFAULT_HEADER);
         for (int i = 0; i < params.length; i++) {  //params 可能包含: 3 个 boolean
             bsonConvert.convertTo(writer, AsyncHandler.class.isAssignableFrom(myparamclass[i]) ? AsyncHandler.class : myparamtypes[i], params[i]);
@@ -351,146 +351,142 @@ public final class SncpClient {
         final long seqid = System.nanoTime();
         final DLong actionid = action.actionid;
         final SocketAddress addr = addr0 == null ? (action.addressTargetParamIndex >= 0 ? (SocketAddress) params[action.addressTargetParamIndex] : null) : addr0;
-        final CompletableFuture<byte[]> future = new CompletableFuture();
-        AsyncConnection conn0;
-        try {
-            conn0 = transport.pollConnection(addr);
-        } catch (Exception e) {
-            future.completeExceptionally(e);
-            return future;
-        }
-        if (conn0 == null || !conn0.isOpen()) {
-            future.completeExceptionally(new RuntimeException("sncp " + (conn0 == null ? addr : conn0.getRemoteAddress()) + " cannot connect"));
-            return future;
-        }
-        final AsyncConnection conn = conn0;
-        final ByteBuffer[] sendBuffers = writer.toBuffers();
-        fillHeader(sendBuffers[0], seqid, actionid, reqBodyLength);
+        CompletableFuture<AsyncConnection> connFuture = transport.pollConnection(addr);
+        return connFuture.thenCompose(conn0 -> {
+            final CompletableFuture<byte[]> future = new CompletableFuture();
+            if (conn0 == null || !conn0.isOpen()) {
+                future.completeExceptionally(new RuntimeException("sncp " + (conn0 == null ? addr : conn0.getRemoteAddress()) + " cannot connect"));
+                return future;
+            }
+            final AsyncConnection conn = conn0;
+            final ByteBuffer[] sendBuffers = writer.toBuffers();
+            fillHeader(sendBuffers[0], seqid, actionid, reqBodyLength);
 
-        final ByteBuffer buffer = transport.pollBuffer();
-        conn.write(sendBuffers, sendBuffers, new CompletionHandler<Integer, ByteBuffer[]>() {
+            final ByteBuffer buffer = transport.pollBuffer();
+            conn.write(sendBuffers, sendBuffers, new CompletionHandler<Integer, ByteBuffer[]>() {
 
-            @Override
-            public void completed(Integer result, ByteBuffer[] attachments) {
-                int index = -1;
-                for (int i = 0; i < attachments.length; i++) {
-                    if (attachments[i].hasRemaining()) {
-                        index = i;
-                        break;
-                    } else {
-                        transport.offerBuffer(attachments[i]);
+                @Override
+                public void completed(Integer result, ByteBuffer[] attachments) {
+                    int index = -1;
+                    for (int i = 0; i < attachments.length; i++) {
+                        if (attachments[i].hasRemaining()) {
+                            index = i;
+                            break;
+                        } else {
+                            transport.offerBuffer(attachments[i]);
+                        }
                     }
-                }
-                if (index == 0) {
-                    conn.write(attachments, attachments, this);
-                    return;
-                } else if (index > 0) {
-                    ByteBuffer[] newattachs = new ByteBuffer[attachments.length - index];
-                    System.arraycopy(attachments, index, newattachs, 0, newattachs.length);
-                    conn.write(newattachs, newattachs, this);
-                    return;
-                }
-                //----------------------- 读取返回结果 -------------------------------------
-                buffer.clear();
-                conn.read(buffer, null, new CompletionHandler<Integer, Void>() {
+                    if (index == 0) {
+                        conn.write(attachments, attachments, this);
+                        return;
+                    } else if (index > 0) {
+                        ByteBuffer[] newattachs = new ByteBuffer[attachments.length - index];
+                        System.arraycopy(attachments, index, newattachs, 0, newattachs.length);
+                        conn.write(newattachs, newattachs, this);
+                        return;
+                    }
+                    //----------------------- 读取返回结果 -------------------------------------
+                    buffer.clear();
+                    conn.read(buffer, null, new CompletionHandler<Integer, Void>() {
 
-                    private byte[] body;
+                        private byte[] body;
 
-                    private int received;
+                        private int received;
 
-                    @Override
-                    public void completed(Integer count, Void attachment2) {
-                        if (count < 1 && buffer.remaining() == buffer.limit()) {   //没有数据可读
-                            future.completeExceptionally(new RuntimeException(action.method + " sncp[" + conn.getRemoteAddress() + "] remote no response data"));
-                            transport.offerBuffer(buffer);
-                            transport.offerConnection(true, conn);
-                            return;
-                        }
-                        if (received < 1 && buffer.limit() < buffer.remaining() + HEADER_SIZE) { //header都没读全
-                            conn.read(buffer, attachment2, this);
-                            return;
-                        }
-                        buffer.flip();
-                        if (received > 0) {
-                            int offset = this.received;
-                            this.received += buffer.remaining();
-                            buffer.get(body, offset, Math.min(buffer.remaining(), this.body.length - offset));
-                            if (this.received < this.body.length) {// 数据仍然不全，需要继续读取          
+                        @Override
+                        public void completed(Integer count, Void attachment2) {
+                            if (count < 1 && buffer.remaining() == buffer.limit()) {   //没有数据可读
+                                future.completeExceptionally(new RuntimeException(action.method + " sncp[" + conn.getRemoteAddress() + "] remote no response data"));
+                                transport.offerBuffer(buffer);
+                                transport.offerConnection(true, conn);
+                                return;
+                            }
+                            if (received < 1 && buffer.limit() < buffer.remaining() + HEADER_SIZE) { //header都没读全
+                                conn.read(buffer, attachment2, this);
+                                return;
+                            }
+                            buffer.flip();
+                            if (received > 0) {
+                                int offset = this.received;
+                                this.received += buffer.remaining();
+                                buffer.get(body, offset, Math.min(buffer.remaining(), this.body.length - offset));
+                                if (this.received < this.body.length) {// 数据仍然不全，需要继续读取          
+                                    buffer.clear();
+                                    conn.read(buffer, attachment2, this);
+                                } else {
+                                    success();
+                                }
+                                return;
+                            }
+                            checkResult(seqid, action, buffer);
+
+                            final int respBodyLength = buffer.getInt();
+                            final int retcode = buffer.getInt();
+                            if (retcode != 0) {
+                                logger.log(Level.SEVERE, action.method + " sncp (params: " + convert.convertTo(params) + ") deal error (retcode=" + retcode + ", retinfo=" + SncpResponse.getRetCodeInfo(retcode) + ")");
+                                throw new RuntimeException("remote service(" + action.method + ") deal error (retcode=" + retcode + ", retinfo=" + SncpResponse.getRetCodeInfo(retcode) + ")");
+                            }
+
+                            if (respBodyLength > buffer.remaining()) { // 数据不全，需要继续读取
+                                this.body = new byte[respBodyLength];
+                                this.received = buffer.remaining();
+                                buffer.get(body, 0, this.received);
                                 buffer.clear();
                                 conn.read(buffer, attachment2, this);
                             } else {
+                                this.body = new byte[respBodyLength];
+                                buffer.get(body, 0, respBodyLength);
                                 success();
                             }
-                            return;
-                        }
-                        checkResult(seqid, action, buffer);
-
-                        final int respBodyLength = buffer.getInt();
-                        final int retcode = buffer.getInt();
-                        if (retcode != 0) {
-                            logger.log(Level.SEVERE, action.method + " sncp (params: " + convert.convertTo(params) + ") deal error (retcode=" + retcode + ", retinfo=" + SncpResponse.getRetCodeInfo(retcode) + ")");
-                            throw new RuntimeException("remote service(" + action.method + ") deal error (retcode=" + retcode + ", retinfo=" + SncpResponse.getRetCodeInfo(retcode) + ")");
                         }
 
-                        if (respBodyLength > buffer.remaining()) { // 数据不全，需要继续读取
-                            this.body = new byte[respBodyLength];
-                            this.received = buffer.remaining();
-                            buffer.get(body, 0, this.received);
-                            buffer.clear();
-                            conn.read(buffer, attachment2, this);
-                        } else {
-                            this.body = new byte[respBodyLength];
-                            buffer.get(body, 0, respBodyLength);
-                            success();
-                        }
-                    }
-
-                    public void success() {
-                        future.complete(this.body);
-                        transport.offerBuffer(buffer);
-                        transport.offerConnection(false, conn);
-                        if (handler != null) {
-                            final Object handlerAttach = action.handlerAttachParamIndex >= 0 ? params[action.handlerAttachParamIndex] : null;
-                            final BsonReader reader = bsonConvert.pollBsonReader();
-                            try {
-                                reader.setBytes(this.body);
-                                int i;
-                                while ((i = (reader.readByte() & 0xff)) != 0) {
-                                    final Attribute attr = action.paramAttrs[i];
-                                    attr.set(params[i - 1], bsonConvert.convertFrom(attr.type(), reader));
+                        public void success() {
+                            future.complete(this.body);
+                            transport.offerBuffer(buffer);
+                            transport.offerConnection(false, conn);
+                            if (handler != null) {
+                                final Object handlerAttach = action.handlerAttachParamIndex >= 0 ? params[action.handlerAttachParamIndex] : null;
+                                final BsonReader reader = bsonConvert.pollBsonReader();
+                                try {
+                                    reader.setBytes(this.body);
+                                    int i;
+                                    while ((i = (reader.readByte() & 0xff)) != 0) {
+                                        final Attribute attr = action.paramAttrs[i];
+                                        attr.set(params[i - 1], bsonConvert.convertFrom(attr.type(), reader));
+                                    }
+                                    Object rs = bsonConvert.convertFrom(action.handlerFuncParamIndex >= 0 ? Object.class : action.resultTypes, reader);
+                                    handler.completed(rs, handlerAttach);
+                                } catch (Exception e) {
+                                    handler.failed(e, handlerAttach);
+                                } finally {
+                                    bsonConvert.offerBsonReader(reader);
                                 }
-                                Object rs = bsonConvert.convertFrom(action.handlerFuncParamIndex >= 0 ? Object.class : action.resultTypes, reader);
-                                handler.completed(rs, handlerAttach);
-                            } catch (Exception e) {
-                                handler.failed(e, handlerAttach);
-                            } finally {
-                                bsonConvert.offerBsonReader(reader);
                             }
                         }
-                    }
 
-                    @Override
-                    public void failed(Throwable exc, Void attachment2) {
-                        logger.log(Level.SEVERE, action.method + " sncp (params: " + convert.convertTo(params) + ") remote read exec failed", exc);
-                        future.completeExceptionally(new RuntimeException(action.method + " sncp remote exec failed"));
-                        transport.offerBuffer(buffer);
-                        transport.offerConnection(true, conn);
-                        if (handler != null) {
-                            final Object handlerAttach = action.handlerAttachParamIndex >= 0 ? params[action.handlerAttachParamIndex] : null;
-                            handler.failed(exc, handlerAttach);
+                        @Override
+                        public void failed(Throwable exc, Void attachment2) {
+                            logger.log(Level.SEVERE, action.method + " sncp (params: " + convert.convertTo(params) + ") remote read exec failed", exc);
+                            future.completeExceptionally(new RuntimeException(action.method + " sncp remote exec failed"));
+                            transport.offerBuffer(buffer);
+                            transport.offerConnection(true, conn);
+                            if (handler != null) {
+                                final Object handlerAttach = action.handlerAttachParamIndex >= 0 ? params[action.handlerAttachParamIndex] : null;
+                                handler.failed(exc, handlerAttach);
+                            }
                         }
-                    }
-                });
-            }
+                    });
+                }
 
-            @Override
-            public void failed(Throwable exc, ByteBuffer[] attachment) {
-                logger.log(Level.SEVERE, action.method + " sncp (params: " + convert.convertTo(params) + ") remote write exec failed", exc);
-                transport.offerBuffer(buffer);
-                transport.offerConnection(true, conn);
-            }
+                @Override
+                public void failed(Throwable exc, ByteBuffer[] attachment) {
+                    logger.log(Level.SEVERE, action.method + " sncp (params: " + convert.convertTo(params) + ") remote write exec failed", exc);
+                    transport.offerBuffer(buffer);
+                    transport.offerConnection(true, conn);
+                }
+            });
+            return future;
         });
-        return future;
     }
 
     private void checkResult(long seqid, final SncpAction action, ByteBuffer buffer) {

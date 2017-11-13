@@ -12,6 +12,7 @@ import java.nio.channels.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.Supplier;
+import java.util.logging.Level;
 import org.redkale.convert.*;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.util.*;
@@ -188,7 +189,7 @@ public final class Transport {
         return tcp;
     }
 
-    public AsyncConnection pollConnection(SocketAddress addr) {
+    public CompletableFuture<AsyncConnection> pollConnection(SocketAddress addr) {
         if (this.strategy != null) return strategy.pollConnection(addr, this);
         if (addr == null && this.transportAddres.length == 1) addr = this.transportAddres[0].address;
         final boolean rand = addr == null;
@@ -207,7 +208,7 @@ public final class Transport {
                         if (!queue.isEmpty()) {
                             AsyncConnection conn;
                             while ((conn = queue.poll()) != null) {
-                                if (conn.isOpen()) return conn;
+                                if (conn.isOpen()) return CompletableFuture.completedFuture(conn);
                             }
                         }
                         tryed = true;
@@ -247,14 +248,14 @@ public final class Transport {
                     if (supportTcpNoDelay) channel.setOption(StandardSocketOptions.TCP_NODELAY, true);
                     channel.connect(addr).get(2, TimeUnit.SECONDS);
                 }
-                if (channel == null) return null;
-                return AsyncConnection.create(channel, addr, 3000, 3000);
+                if (channel == null) return CompletableFuture.completedFuture(null);
+                return CompletableFuture.completedFuture(AsyncConnection.create(channel, addr, 3000, 3000));
             } else { // UDP
                 if (rand) addr = this.transportAddres[0].address;
                 DatagramChannel channel = DatagramChannel.open();
                 channel.configureBlocking(true);
                 channel.connect(addr);
-                return AsyncConnection.create(channel, addr, true, 3000, 3000);
+                return CompletableFuture.completedFuture(AsyncConnection.create(channel, addr, true, 3000, 3000));
 //                AsyncDatagramChannel channel = AsyncDatagramChannel.open(group);
 //                channel.connect(addr);
 //                return AsyncConnection.create(channel, addr, true, 3000, 3000);
@@ -280,35 +281,40 @@ public final class Transport {
     }
 
     public <A> void async(SocketAddress addr, final ByteBuffer buffer, A att, final CompletionHandler<Integer, A> handler) {
-        final AsyncConnection conn = pollConnection(addr);
-        conn.write(buffer, buffer, new CompletionHandler<Integer, ByteBuffer>() {
-
-            @Override
-            public void completed(Integer result, ByteBuffer attachment) {
-                buffer.clear();
-                conn.read(buffer, buffer, new CompletionHandler<Integer, ByteBuffer>() {
-
-                    @Override
-                    public void completed(Integer result, ByteBuffer attachment) {
-                        if (handler != null) handler.completed(result, att);
-                        offerBuffer(buffer);
-                        offerConnection(false, conn);
-                    }
-
-                    @Override
-                    public void failed(Throwable exc, ByteBuffer attachment) {
-                        offerBuffer(buffer);
-                        offerConnection(true, conn);
-                    }
-                });
-
+        pollConnection(addr).whenComplete((conn, ex) -> {
+            if (ex != null) {
+                factory.getLogger().log(Level.WARNING, Transport.class.getSimpleName() + " async error", ex);
+                return;
             }
+            conn.write(buffer, buffer, new CompletionHandler<Integer, ByteBuffer>() {
 
-            @Override
-            public void failed(Throwable exc, ByteBuffer attachment) {
-                offerBuffer(buffer);
-                offerConnection(true, conn);
-            }
+                @Override
+                public void completed(Integer result, ByteBuffer attachment) {
+                    buffer.clear();
+                    conn.read(buffer, buffer, new CompletionHandler<Integer, ByteBuffer>() {
+
+                        @Override
+                        public void completed(Integer result, ByteBuffer attachment) {
+                            if (handler != null) handler.completed(result, att);
+                            offerBuffer(buffer);
+                            offerConnection(false, conn);
+                        }
+
+                        @Override
+                        public void failed(Throwable exc, ByteBuffer attachment) {
+                            offerBuffer(buffer);
+                            offerConnection(true, conn);
+                        }
+                    });
+
+                }
+
+                @Override
+                public void failed(Throwable exc, ByteBuffer attachment) {
+                    offerBuffer(buffer);
+                    offerConnection(true, conn);
+                }
+            });
         });
     }
 
