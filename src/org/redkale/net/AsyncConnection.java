@@ -158,6 +158,35 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
         }
     }
 
+    /**
+     * 创建TCP协议客户端连接
+     *
+     * @param address             连接点子
+     * @param group               连接AsynchronousChannelGroup
+     * @param readTimeoutSecond0  读取超时秒数
+     * @param writeTimeoutSecond0 写入超时秒数
+     *
+     * @return 连接CompletableFuture
+     * @throws java.io.IOException 异常
+     */
+    public static CompletableFuture<AsyncConnection> createTCP(final AsynchronousChannelGroup group, final SocketAddress address,
+        final int readTimeoutSecond0, final int writeTimeoutSecond0) throws IOException {
+        final CompletableFuture future = new CompletableFuture();
+        final AsynchronousSocketChannel channel = AsynchronousSocketChannel.open(group);
+        channel.connect(address, null, new CompletionHandler<Void, Void>() {
+            @Override
+            public void completed(Void result, Void attachment) {
+                future.complete(create(channel, address, readTimeoutSecond0, writeTimeoutSecond0));
+            }
+
+            @Override
+            public void failed(Throwable exc, Void attachment) {
+                future.completeExceptionally(exc);
+            }
+        });
+        return future;
+    }
+
     private static class BIOUDPAsyncConnection extends AsyncConnection {
 
         private int readTimeoutSecond;
