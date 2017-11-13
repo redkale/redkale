@@ -50,6 +50,12 @@ public final class MapDecoder<K, V> implements Decodeable<Reader, Map<K, V>> {
                 factory.register(type, this);
                 this.keyDecoder = factory.loadDecoder(this.keyType);
                 this.valueDecoder = factory.loadDecoder(this.valueType);
+            } else if (factory.isReversible()) {
+                this.keyType = Object.class;
+                this.valueType = Object.class;
+                this.creator = factory.loadCreator((Class) type);
+                this.keyDecoder = factory.loadDecoder(this.keyType);
+                this.valueDecoder = factory.loadDecoder(this.valueType);
             } else {
                 throw new ConvertException("mapdecoder not support the type (" + type + ")");
             }

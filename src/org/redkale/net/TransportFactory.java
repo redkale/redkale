@@ -13,6 +13,7 @@ import java.nio.channels.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
+import java.util.function.Supplier;
 import java.util.logging.*;
 import java.util.stream.Collectors;
 import org.redkale.service.Service;
@@ -223,7 +224,7 @@ public class TransportFactory {
             if (info == null) continue;
             addresses.addAll(info.addresses);
         }
-        if (info == null) return null;
+        if (info == null) info = new TransportGroupInfo("TCP");
         if (sncpAddress != null) addresses.remove(sncpAddress);
         return new Transport(groups.stream().sorted().collect(Collectors.joining(";")), info.protocol, info.subprotocol, this, this.bufferPool, this.channelGroup, sncpAddress, addresses, this.strategy);
     }
@@ -237,6 +238,10 @@ public class TransportFactory {
 
     public ExecutorService getExecutor() {
         return executor;
+    }
+
+    public Supplier<ByteBuffer> getBufferSupplier() {
+        return bufferPool;
     }
 
     public List<TransportGroupInfo> getGroupInfos() {

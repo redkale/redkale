@@ -855,7 +855,7 @@ public abstract class Sncp {
      * @param serviceTypeOrImplClass Service类
      * @param transportFactory       TransportFactory
      * @param clientAddress          本地IP地址
-     * @param groups                 所有的组节点，包含自身
+     * @param groups0                 所有的组节点，包含自身
      * @param conf                   启动配置项
      *
      * @return Service的远程模式实例
@@ -868,10 +868,11 @@ public abstract class Sncp {
         final Class<T> serviceTypeOrImplClass,
         final TransportFactory transportFactory,
         final InetSocketAddress clientAddress,
-        final Set<String> groups,
+        final Set<String> groups0,
         final AnyValue conf) {
         if (serviceTypeOrImplClass == null) return null;
         if (!Service.class.isAssignableFrom(serviceTypeOrImplClass)) return null;
+        Set<String> groups = groups0 == null ? new HashSet<>() : groups0;
         ResourceFactory.checkResourceName(name);
         int mod = serviceTypeOrImplClass.getModifiers();
         boolean realed = !(java.lang.reflect.Modifier.isAbstract(mod) || serviceTypeOrImplClass.isInterface());

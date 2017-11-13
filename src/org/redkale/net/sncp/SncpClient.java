@@ -12,6 +12,7 @@ import java.nio.*;
 import java.nio.channels.*;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.function.Supplier;
 import java.util.logging.*;
 import javax.annotation.Resource;
 import org.redkale.convert.bson.*;
@@ -55,6 +56,8 @@ public final class SncpClient {
 
     protected final ExecutorService executor;
 
+    protected final Supplier<ByteBuffer> bufferSupplier;
+
     @Resource
     protected JsonConvert jsonConvert;
 
@@ -83,6 +86,7 @@ public final class SncpClient {
         final boolean remote, final Class serviceClass, final InetSocketAddress clientAddress) {
         this.remote = remote;
         this.executor = factory.getExecutor();
+        this.bufferSupplier = factory.getBufferSupplier();
         this.serviceClass = serviceClass;
         this.serviceversion = 0;
         this.clientAddress = clientAddress;
@@ -338,7 +342,7 @@ public final class SncpClient {
         final Type[] myparamtypes = action.paramTypes;
         final Class[] myparamclass = action.paramClass;
         if (action.addressSourceParamIndex >= 0) params[action.addressSourceParamIndex] = this.clientAddress;
-        final BsonWriter writer = bsonConvert.pollBsonWriter(transport.getBufferSupplier()); // 将head写入
+        final BsonWriter writer = bsonConvert.pollBsonWriter(transport == null ? bufferSupplier : transport.getBufferSupplier()); // 将head写入
         writer.writeTo(DEFAULT_HEADER);
         for (int i = 0; i < params.length; i++) {  //params 可能包含: 3 个 boolean
             bsonConvert.convertTo(writer, AsyncHandler.class.isAssignableFrom(myparamclass[i]) ? AsyncHandler.class : myparamtypes[i], params[i]);

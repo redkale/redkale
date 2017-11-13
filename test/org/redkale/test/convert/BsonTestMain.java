@@ -11,7 +11,7 @@ import org.redkale.convert.bson.BsonFactory;
 import org.redkale.util.Utility;
 import org.redkale.convert.bson.BsonConvert;
 import java.nio.*;
-import java.util.Arrays;
+import java.util.*;
 import org.redkale.convert.json.*;
 
 /**
@@ -24,12 +24,13 @@ public class BsonTestMain {
         Serializable[] sers = new Serializable[]{"aaa", 4};
         final BsonConvert convert = BsonFactory.root().getConvert();
         byte[] bytes = convert.convertTo(sers);
-        Utility.println("---", bytes); 
+        Utility.println("---", bytes);
         Serializable[] a = convert.convertFrom(Serializable[].class, bytes);
         System.out.println(Arrays.toString(a));
         main2(args);
         main3(args);
         main4(args);
+        main5(args);
     }
 
     public static void main2(String[] args) throws Exception {
@@ -85,5 +86,16 @@ public class BsonTestMain {
         SimpleEntity rs = convert.convertFrom(SimpleEntity.class, new ByteArrayInputStream(bytes));
         System.out.println(rs.toString());
 
+    }
+
+    public static void main5(String[] args) throws Exception {
+        final BsonConvert convert = BsonFactory.root().getConvert();
+
+        LinkedHashMap map = new LinkedHashMap();
+        map.put("1", 1);
+        map.put("2", "a2");
+        byte[] bs = convert.convertTo(Object.class, map);
+        Object mapobj = convert.convertFrom(Object.class, bs);
+        System.out.println(mapobj);
     }
 }

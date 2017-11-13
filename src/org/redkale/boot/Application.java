@@ -240,20 +240,23 @@ public final class Application {
         AsynchronousChannelGroup transportGroup = null;
         final AnyValue resources = config.getAnyValue("resources");
         TransportStrategy strategy = null;
+        int bufferCapacity = 8 * 1024;
+        int bufferPoolSize = Runtime.getRuntime().availableProcessors() * 16;
+        AtomicLong createBufferCounter = new AtomicLong();
+        AtomicLong cycleBufferCounter = new AtomicLong();
         if (resources != null) {
             AnyValue transportConf = resources.getAnyValue("transport");
             int groupsize = resources.getAnyValues("group").length;
             if (groupsize > 0 && transportConf == null) transportConf = new DefaultAnyValue();
             if (transportConf != null) {
                 //--------------transportBufferPool-----------
-                AtomicLong createBufferCounter = new AtomicLong();
-                AtomicLong cycleBufferCounter = new AtomicLong();
-                final int bufferCapacity = Math.max(parseLenth(transportConf.getValue("bufferCapacity"), 8 * 1024), 4 * 1024);
-                final int bufferPoolSize = parseLenth(transportConf.getValue("bufferPoolSize"), groupsize * Runtime.getRuntime().availableProcessors() * 8);
+                bufferCapacity = Math.max(parseLenth(transportConf.getValue("bufferCapacity"), bufferCapacity), 4 * 1024);
+                bufferPoolSize = parseLenth(transportConf.getValue("bufferPoolSize"), groupsize * Runtime.getRuntime().availableProcessors() * 8);
                 final int threads = parseLenth(transportConf.getValue("threads"), groupsize * Runtime.getRuntime().availableProcessors() * 8);
+                final int capacity = bufferCapacity;
                 transportPool = new ObjectPool<>(createBufferCounter, cycleBufferCounter, bufferPoolSize,
-                    (Object... params) -> ByteBuffer.allocateDirect(bufferCapacity), null, (e) -> {
-                        if (e == null || e.isReadOnly() || e.capacity() != bufferCapacity) return false;
+                    (Object... params) -> ByteBuffer.allocateDirect(capacity), null, (e) -> {
+                        if (e == null || e.isReadOnly() || e.capacity() != capacity) return false;
                         e.clear();
                         return true;
                     });
@@ -290,6 +293,15 @@ public final class Application {
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
+        }
+        if (transportPool == null) {
+            final int capacity = bufferCapacity;
+            transportPool = new ObjectPool<>(createBufferCounter, cycleBufferCounter, bufferPoolSize,
+                (Object... params) -> ByteBuffer.allocateDirect(capacity), null, (e) -> {
+                    if (e == null || e.isReadOnly() || e.capacity() != capacity) return false;
+                    e.clear();
+                    return true;
+                });
         }
         this.sncpTransportFactory = TransportFactory.create(transportExec, transportPool, transportGroup, strategy);
         DefaultAnyValue tarnsportConf = DefaultAnyValue.create(TransportFactory.NAME_PINGINTERVAL, System.getProperty("net.transport.pinginterval", "30"));
@@ -652,7 +664,6 @@ public final class Application {
 //            }
 //        }
 //    }
-
     @SuppressWarnings("unchecked")
     private void runServers(CountDownLatch timecd, final List<AnyValue> serconfs) throws Exception {
         this.servicecdl = new CountDownLatch(serconfs.size());
