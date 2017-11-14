@@ -125,8 +125,8 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
     /**
      * 创建TCP协议客户端连接
      *
-     * @param address             连接点子
-     * @param group               连接AsynchronousChannelGroup
+     * @param address            连接点子
+     * @param group              连接AsynchronousChannelGroup
      * @param readTimeoutSecond  读取超时秒数
      * @param writeTimeoutSecond 写入超时秒数
      *
@@ -134,43 +134,46 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
      * @throws java.io.IOException 异常
      */
     public static CompletableFuture<AsyncConnection> createTCP(final AsynchronousChannelGroup group, final SocketAddress address,
-        final int readTimeoutSecond, final int writeTimeoutSecond) throws IOException {
+        final int readTimeoutSecond, final int writeTimeoutSecond) {
         return createTCP(group, address, false, readTimeoutSecond, writeTimeoutSecond);
     }
 
     /**
      * 创建TCP协议客户端连接
      *
-     * @param address             连接点子
-     * @param group               连接AsynchronousChannelGroup
-     * @param noDelay             TcpNoDelay
+     * @param address            连接点子
+     * @param group              连接AsynchronousChannelGroup
+     * @param noDelay            TcpNoDelay
      * @param readTimeoutSecond  读取超时秒数
      * @param writeTimeoutSecond 写入超时秒数
      *
      * @return 连接CompletableFuture
-     * @throws java.io.IOException 异常
      */
     public static CompletableFuture<AsyncConnection> createTCP(final AsynchronousChannelGroup group, final SocketAddress address,
-        final boolean noDelay, final int readTimeoutSecond, final int writeTimeoutSecond) throws IOException {
+        final boolean noDelay, final int readTimeoutSecond, final int writeTimeoutSecond) {
         final CompletableFuture future = new CompletableFuture();
-        final AsynchronousSocketChannel channel = AsynchronousSocketChannel.open(group);
-        channel.connect(address, null, new CompletionHandler<Void, Void>() {
-            @Override
-            public void completed(Void result, Void attachment) {
-                if (noDelay) {
-                    try {
-                        channel.setOption(StandardSocketOptions.TCP_NODELAY, true);
-                    } catch (IOException e) {
+        try {
+            final AsynchronousSocketChannel channel = AsynchronousSocketChannel.open(group);
+            channel.connect(address, null, new CompletionHandler<Void, Void>() {
+                @Override
+                public void completed(Void result, Void attachment) {
+                    if (noDelay) {
+                        try {
+                            channel.setOption(StandardSocketOptions.TCP_NODELAY, true);
+                        } catch (IOException e) {
+                        }
                     }
+                    future.complete(create(channel, address, readTimeoutSecond, writeTimeoutSecond));
                 }
-                future.complete(create(channel, address, readTimeoutSecond, writeTimeoutSecond));
-            }
 
-            @Override
-            public void failed(Throwable exc, Void attachment) {
-                future.completeExceptionally(exc);
-            }
-        });
+                @Override
+                public void failed(Throwable exc, Void attachment) {
+                    future.completeExceptionally(exc);
+                }
+            });
+        } catch (IOException e) {
+            future.completeExceptionally(e);
+        }
         return future;
     }
 
