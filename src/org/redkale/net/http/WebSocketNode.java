@@ -51,7 +51,7 @@ public abstract class WebSocketNode {
     //存放所有用户分布在节点上的队列信息,Set<InetSocketAddress> 为 sncpnode 的集合， key: groupid
     //集合包含 localSncpAddress
     //如果不是分布式(没有SNCP)，sncpNodeAddresses 将不会被用到
-    @Resource(name = "$_nodes")
+    @Resource(name = "$")
     protected CacheSource<InetSocketAddress> sncpNodeAddresses;
 
     //当前节点的本地WebSocketEngine
