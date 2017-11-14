@@ -76,6 +76,46 @@ public interface CacheSource<V extends Object> {
 
     public List<CacheEntry<Object>> queryList();
 
+    public String getString(final String key);
+
+    public String getStringAndRefresh(final String key, final int expireSeconds);
+
+    public void setString(final String key, final String value);
+
+    public void setString(final int expireSeconds, final String key, final String value);
+
+    public Collection<String> getStringCollection(final String key);
+
+    public Collection<String> getStringCollectionAndRefresh(final String key, final int expireSeconds);
+
+    public void appendStringListItem(final String key, final String value);
+
+    public void removeStringListItem(final String key, final String value);
+
+    public void appendStringSetItem(final String key, final String value);
+
+    public void removeStringSetItem(final String key, final String value);
+
+    public long getLong(final String key, long defValue);
+
+    public long getLongAndRefresh(final String key, final int expireSeconds, long defValue);
+
+    public void setLong(final String key, final long value);
+
+    public void setLong(final int expireSeconds, final String key, final long value);
+
+    public Collection<Long> getLongCollection(final String key);
+
+    public Collection<Long> getLongCollectionAndRefresh(final String key, final int expireSeconds);
+
+    public void appendLongListItem(final String key, final long value);
+
+    public void removeLongListItem(final String key, final long value);
+
+    public void appendLongSetItem(final String key, final long value);
+
+    public void removeLongSetItem(final String key, final long value);
+
     //---------------------- CompletableFuture 异步版 ---------------------------------
     public CompletableFuture<Boolean> existsAsync(final String key);
 
@@ -121,19 +161,57 @@ public interface CacheSource<V extends Object> {
 
     public CompletableFuture<List<CacheEntry< Object>>> queryListAsync();
 
+    public CompletableFuture<String> getStringAsync(final String key);
+
+    public CompletableFuture<String> getStringAndRefreshAsync(final String key, final int expireSeconds);
+
+    public CompletableFuture<Void> setStringAsync(final String key, final String value);
+
+    public CompletableFuture<Void> setStringAsync(final int expireSeconds, final String key, final String value);
+
+    public CompletableFuture<Collection<String>> getStringCollectionAsync(final String key);
+
+    public CompletableFuture<Collection<String>> getStringCollectionAndRefreshAsync(final String key, final int expireSeconds);
+
+    public CompletableFuture<Void> appendStringListItemAsync(final String key, final String value);
+
+    public CompletableFuture<Void> removeStringListItemAsync(final String key, final String value);
+
+    public CompletableFuture<Void> appendStringSetItemAsync(final String key, final String value);
+
+    public CompletableFuture<Void> removeStringSetItemAsync(final String key, final String value);
+
+    public CompletableFuture<Long> getLongAsync(final String key, long defValue);
+
+    public CompletableFuture<Long> getLongAndRefreshAsync(final String key, final int expireSeconds, long defValue);
+
+    public CompletableFuture<Void> setLongAsync(final String key, long value);
+
+    public CompletableFuture<Void> setLongAsync(final int expireSeconds, final String key, final long value);
+
+    public CompletableFuture<Collection<Long>> getLongCollectionAsync(final String key);
+
+    public CompletableFuture<Collection<Long>> getLongCollectionAndRefreshAsync(final String key, final int expireSeconds);
+
+    public CompletableFuture<Void> appendLongListItemAsync(final String key, final long value);
+
+    public CompletableFuture<Void> removeLongListItemAsync(final String key, final long value);
+
+    public CompletableFuture<Void> appendLongSetItemAsync(final String key, final long value);
+
+    public CompletableFuture<Void> removeLongSetItemAsync(final String key, final long value);
+
     default CompletableFuture<Boolean> isOpenAsync() {
         return CompletableFuture.completedFuture(isOpen());
     }
 
     public static enum CacheEntryType {
-        OBJECT, SET, LIST;
+        LONG, STRING, OBJECT, ATOMIC,
+        LONG_SET, STRING_SET, OBJECT_SET,
+        LONG_LIST, STRING_LIST, OBJECT_LIST;
     }
 
     public static final class CacheEntry<T> {
-
-        static final String JSON_SET_KEY = "{\"cacheType\":\"" + CacheEntryType.SET + "\"";
-
-        static final String JSON_LIST_KEY = "{\"cacheType\":\"" + CacheEntryType.LIST + "\"";
 
         final CacheEntryType cacheType;
 
@@ -146,26 +224,26 @@ public interface CacheSource<V extends Object> {
 
         T objectValue;
 
-        CopyOnWriteArraySet<T> setValue;
+        CopyOnWriteArraySet<T> csetValue;
 
         ConcurrentLinkedQueue<T> listValue;
 
-        public CacheEntry(CacheEntryType cacheType, String key, T objectValue, CopyOnWriteArraySet<T> setValue, ConcurrentLinkedQueue<T> listValue) {
-            this(cacheType, 0, key, objectValue, setValue, listValue);
+        public CacheEntry(CacheEntryType cacheType, String key, T objectValue, CopyOnWriteArraySet<T> csetValue, ConcurrentLinkedQueue<T> listValue) {
+            this(cacheType, 0, key, objectValue, csetValue, listValue);
         }
 
-        public CacheEntry(CacheEntryType cacheType, int expireSeconds, String key, T objectValue, CopyOnWriteArraySet<T> setValue, ConcurrentLinkedQueue<T> listValue) {
-            this(cacheType, expireSeconds, (int) (System.currentTimeMillis() / 1000), key, objectValue, setValue, listValue);
+        public CacheEntry(CacheEntryType cacheType, int expireSeconds, String key, T objectValue, CopyOnWriteArraySet<T> csetValue, ConcurrentLinkedQueue<T> listValue) {
+            this(cacheType, expireSeconds, (int) (System.currentTimeMillis() / 1000), key, objectValue, csetValue, listValue);
         }
 
-        @ConstructorProperties({"cacheType", "expireSeconds", "lastAccessed", "key", "objectValue", "setValue", "listValue"})
-        public CacheEntry(CacheEntryType cacheType, int expireSeconds, int lastAccessed, String key, T objectValue, CopyOnWriteArraySet<T> setValue, ConcurrentLinkedQueue<T> listValue) {
+        @ConstructorProperties({"cacheType", "expireSeconds", "lastAccessed", "key", "objectValue", "csetValue", "listValue"})
+        public CacheEntry(CacheEntryType cacheType, int expireSeconds, int lastAccessed, String key, T objectValue, CopyOnWriteArraySet<T> csetValue, ConcurrentLinkedQueue<T> listValue) {
             this.cacheType = cacheType;
             this.expireSeconds = expireSeconds;
             this.lastAccessed = lastAccessed;
             this.key = key;
             this.objectValue = objectValue;
-            this.setValue = setValue;
+            this.csetValue = csetValue;
             this.listValue = listValue;
         }
 
@@ -176,12 +254,12 @@ public interface CacheSource<V extends Object> {
 
         @ConvertColumn(ignore = true)
         public boolean isListCacheType() {
-            return cacheType == CacheEntryType.LIST;
+            return cacheType == CacheEntryType.LONG_LIST || cacheType == CacheEntryType.STRING_LIST || cacheType == CacheEntryType.OBJECT_LIST;
         }
 
         @ConvertColumn(ignore = true)
         public boolean isSetCacheType() {
-            return cacheType == CacheEntryType.SET;
+            return cacheType == CacheEntryType.LONG_SET || cacheType == CacheEntryType.STRING_SET || cacheType == CacheEntryType.OBJECT_SET;
         }
 
         @ConvertColumn(ignore = true)
@@ -209,8 +287,8 @@ public interface CacheSource<V extends Object> {
             return objectValue;
         }
 
-        public CopyOnWriteArraySet<T> getSetValue() {
-            return setValue;
+        public CopyOnWriteArraySet<T> getCsetValue() {
+            return csetValue;
         }
 
         public ConcurrentLinkedQueue<T> getListValue() {
