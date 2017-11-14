@@ -244,21 +244,16 @@ public final class Transport {
                         }
                     }
                 } else {
-                    channel = AsynchronousSocketChannel.open(group);
-                    if (supportTcpNoDelay) channel.setOption(StandardSocketOptions.TCP_NODELAY, true);
-                    channel.connect(addr).get(2, TimeUnit.SECONDS);
+                    return AsyncConnection.createTCP(group, addr, supportTcpNoDelay, 6, 6);
                 }
                 if (channel == null) return CompletableFuture.completedFuture(null);
-                return CompletableFuture.completedFuture(AsyncConnection.create(channel, addr, 3000, 3000));
+                return CompletableFuture.completedFuture(AsyncConnection.create(channel, addr, 6, 6));
             } else { // UDP
                 if (rand) addr = this.transportAddres[0].address;
                 DatagramChannel channel = DatagramChannel.open();
                 channel.configureBlocking(true);
                 channel.connect(addr);
-                return CompletableFuture.completedFuture(AsyncConnection.create(channel, addr, true, 3000, 3000));
-//                AsyncDatagramChannel channel = AsyncDatagramChannel.open(group);
-//                channel.connect(addr);
-//                return AsyncConnection.create(channel, addr, true, 3000, 3000);
+                return CompletableFuture.completedFuture(AsyncConnection.create(channel, addr, true, 6, 6));
             }
         } catch (Exception ex) {
             throw new RuntimeException("transport address = " + addr, ex);

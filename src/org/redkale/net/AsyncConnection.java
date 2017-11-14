@@ -127,15 +127,15 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
      *
      * @param address             连接点子
      * @param group               连接AsynchronousChannelGroup
-     * @param readTimeoutSecond0  读取超时秒数
-     * @param writeTimeoutSecond0 写入超时秒数
+     * @param readTimeoutSecond  读取超时秒数
+     * @param writeTimeoutSecond 写入超时秒数
      *
      * @return 连接CompletableFuture
      * @throws java.io.IOException 异常
      */
     public static CompletableFuture<AsyncConnection> createTCP(final AsynchronousChannelGroup group, final SocketAddress address,
-        final int readTimeoutSecond0, final int writeTimeoutSecond0) throws IOException {
-        return createTCP(group, address, false, readTimeoutSecond0, writeTimeoutSecond0);
+        final int readTimeoutSecond, final int writeTimeoutSecond) throws IOException {
+        return createTCP(group, address, false, readTimeoutSecond, writeTimeoutSecond);
     }
 
     /**
@@ -144,14 +144,14 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
      * @param address             连接点子
      * @param group               连接AsynchronousChannelGroup
      * @param noDelay             TcpNoDelay
-     * @param readTimeoutSecond0  读取超时秒数
-     * @param writeTimeoutSecond0 写入超时秒数
+     * @param readTimeoutSecond  读取超时秒数
+     * @param writeTimeoutSecond 写入超时秒数
      *
      * @return 连接CompletableFuture
      * @throws java.io.IOException 异常
      */
     public static CompletableFuture<AsyncConnection> createTCP(final AsynchronousChannelGroup group, final SocketAddress address,
-        final boolean noDelay, final int readTimeoutSecond0, final int writeTimeoutSecond0) throws IOException {
+        final boolean noDelay, final int readTimeoutSecond, final int writeTimeoutSecond) throws IOException {
         final CompletableFuture future = new CompletableFuture();
         final AsynchronousSocketChannel channel = AsynchronousSocketChannel.open(group);
         channel.connect(address, null, new CompletionHandler<Void, Void>() {
@@ -163,7 +163,7 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
                     } catch (IOException e) {
                     }
                 }
-                future.complete(create(channel, address, readTimeoutSecond0, writeTimeoutSecond0));
+                future.complete(create(channel, address, readTimeoutSecond, writeTimeoutSecond));
             }
 
             @Override
@@ -600,8 +600,8 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
         return create(ch, null, 0, 0);
     }
 
-    public static AsyncConnection create(final AsynchronousSocketChannel ch, final SocketAddress addr0, final int readTimeoutSecond0, final int writeTimeoutSecond0) {
-        return new AIOTCPAsyncConnection(ch, addr0, readTimeoutSecond0, writeTimeoutSecond0);
+    public static AsyncConnection create(final AsynchronousSocketChannel ch, final SocketAddress addr0, final int readTimeoutSecond, final int writeTimeoutSecond) {
+        return new AIOTCPAsyncConnection(ch, addr0, readTimeoutSecond, writeTimeoutSecond);
     }
 
 }
