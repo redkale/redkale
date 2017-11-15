@@ -2338,11 +2338,12 @@ public class DataJdbcSource extends AbstractService implements DataSource, DataC
         try {
             if (logger.isLoggable(Level.FINEST)) logger.finest("direct query sql=" + sql);
             conn.setReadOnly(true);
-            final PreparedStatement ps = conn.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
-            final ResultSet set = ps.executeQuery();
-            consumer.accept(set);
+            final Statement statement = conn.createStatement();
+            //final PreparedStatement statement = conn.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+            final ResultSet set = statement.executeQuery(sql);// ps.executeQuery();
+            consumer.accept(set); 
             set.close();
-            ps.close();
+            statement.close();
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         } finally {
