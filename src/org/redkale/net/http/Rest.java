@@ -321,6 +321,10 @@ public final class Rest {
             mv.visitFieldInsn(PUTFIELD, newDynName, "wsmaxconns", "I");
 
             mv.visitVarInsn(ALOAD, 0);
+            pushInt(mv, rws.wsmaxbody());
+            mv.visitFieldInsn(PUTFIELD, newDynName, "wsmaxbody", "I");
+            
+            mv.visitVarInsn(ALOAD, 0);
             mv.visitInsn(rws.single() ? ICONST_1 : ICONST_0);
             mv.visitFieldInsn(PUTFIELD, newDynName, "single", "Z");
 

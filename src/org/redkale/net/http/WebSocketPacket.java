@@ -315,6 +315,109 @@ public final class WebSocketPacket {
      * @param buffer
      * @param exbuffers
      *
+     * @return 1:表示解析成功且能继续解析；0:表示解析成功; -1:表示解析失败
+     */
+    /*
+    static int decode(final Logger logger, final List<WebSocketPacket> packets,
+        final int wsmaxbody, final ByteBuffer buffer, ByteBuffer... exbuffers) {
+        final boolean debug = false; //调试开关
+        if (debug) {
+            int remain = buffer.remaining();
+            if (exbuffers != null) {
+                for (ByteBuffer b : exbuffers) {
+                    remain += b == null ? 0 : b.remaining();
+                }
+            }
+            logger.log(Level.FINEST, "read websocket message's length = " + remain);
+        }
+        if (buffer.remaining() < 2) return -1;
+        final byte opcode = buffer.get();
+        final WebSocketPacket packet = new WebSocketPacket();
+        packet.last = (opcode & 0b1000_0000) != 0;
+        packet.type = FrameType.valueOf(opcode & 0xF);
+        if (packet.type == FrameType.CLOSE) {
+            if (debug) logger.log(Level.FINEST, " receive close command from websocket client");
+            packets.add(packet);
+            return 0;
+        }
+        final boolean checkrsv = false;//暂时不校验
+        if (checkrsv && (opcode & 0b0111_0000) != 0) {
+            if (debug) logger.log(Level.FINE, "rsv1 rsv2 rsv3 must be 0, but not (" + opcode + ")");
+            return -1; //rsv1 rsv2 rsv3 must be 0     
+        }
+        //0x00 表示一个后续帧 
+        //0x01 表示一个文本帧 
+        //0x02 表示一个二进制帧 
+        //0x03-07 为以后的非控制帧保留
+        //0x8 表示一个连接关闭
+        //0x9 表示一个ping
+        //0xA 表示一个pong
+        //0x0B-0F 为以后的控制帧保留
+        final boolean control = (opcode & 0b0000_1000) != 0; //是否控制帧
+        byte lengthCode = buffer.get();
+        final boolean masked = (lengthCode & 0x80) == 0x80;
+        if (masked) lengthCode ^= 0x80; //mask
+        int length;
+        if (lengthCode <= 0x7D) { //125
+            length = lengthCode;
+        } else {
+            if (control) {
+                if (debug) logger.log(Level.FINE, " receive control command from websocket client");
+                return -1;
+            }
+            if (lengthCode == 0x7E) {//0x7E=126
+                length = (int) buffer.getChar();
+            } else {
+                length = buffer.getInt();
+            }
+        }
+        if (length > wsmaxbody && wsmaxbody > 0) {
+            if (debug) logger.log(Level.FINE, "message body(" + length + ") is too big, but must less " + wsmaxbody);
+            return -1;
+        }
+        ConvertMask masker = null;
+        if (masked) {
+            final byte[] masks = new byte[4];
+            buffer.get(masks);
+            masker = new ConvertMask() {
+
+                private int index = 0;
+
+                @Override
+                public byte unmask(byte value) {
+                    return (byte) (value ^ masks[index++ % 4]);
+                }
+            };
+        }
+        this.receiveBuffers = Utility.append(new ByteBuffer[]{buffer}, exbuffers);
+        return this;
+    }
+*/
+    /**
+     * 消息解码  <br>
+     *
+     * 0 1 2 3
+     * 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+     * +-+-+-+-+-------+-+-------------+-------------------------------+
+     * |F|R|R|R| opcode|M| Payload len | Extended payload length |
+     * |I|S|S|S| (4) |A| (7) | (16/64) |
+     * |N|V|V|V| |S| | (if payload len==126/127) |
+     * | |1|2|3| |K| | |
+     * +-+-+-+-+-------+-+-------------+ - - - - - - - - - - - - - - - +
+     * | Extended payload length continued, if payload len == 127 |
+     * + - - - - - - - - - - - - - - - +-------------------------------+
+     * | |Masking-key, if MASK set to 1 |
+     * +-------------------------------+-------------------------------+
+     * | Masking-key (continued) | Payload Data |
+     * +-------------------------------- - - - - - - - - - - - - - - - +
+     * : Payload Data continued :
+     * + - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - +
+     * | Payload Data continued |
+     * +-----------------------------------------------------------------------+
+     *
+     * @param buffer
+     * @param exbuffers
+     *
      * @return
      */
     WebSocketPacket decode(final Logger logger, final ByteBuffer buffer, ByteBuffer... exbuffers) {

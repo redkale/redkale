@@ -55,7 +55,7 @@ public class WebSocketEngine {
     private final Map<Serializable, List<WebSocket>> websockets2 = new ConcurrentHashMap<>();
 
     @Comment("当前连接数")
-    private final AtomicInteger currconns = new AtomicInteger();
+    protected final AtomicInteger currconns = new AtomicInteger();
 
     @Comment("用于PING的定时器")
     private ScheduledThreadPoolExecutor scheduler;
@@ -64,12 +64,16 @@ public class WebSocketEngine {
     protected final Logger logger;
 
     @Comment("PING的间隔秒数")
-    private int liveinterval;
+    protected int liveinterval;
 
     @Comment("最大连接数, 为0表示无限制")
-    private int wsmaxconns;
+    protected int wsmaxconns;
 
-    protected WebSocketEngine(String engineid, boolean single, HttpContext context, int liveinterval, int wsmaxconns, WebSocketNode node, Convert sendConvert, Logger logger) {
+    @Comment("最大消息体长度, 小于1表示无限制")
+    protected int wsmaxbody;
+
+    protected WebSocketEngine(String engineid, boolean single, HttpContext context, int liveinterval,
+        int wsmaxconns, int wsmaxbody, WebSocketNode node, Convert sendConvert, Logger logger) {
         this.engineid = engineid;
         this.single = single;
         this.context = context;
@@ -77,6 +81,7 @@ public class WebSocketEngine {
         this.node = node;
         this.liveinterval = liveinterval;
         this.wsmaxconns = wsmaxconns;
+        this.wsmaxbody = wsmaxbody;
         this.logger = logger;
         this.index = sequence.getAndIncrement();
     }
@@ -86,7 +91,8 @@ public class WebSocketEngine {
         if (conf != null && conf.getAnyValue("properties") != null) props = conf.getAnyValue("properties");
         this.liveinterval = props == null ? (liveinterval < 0 ? DEFAILT_LIVEINTERVAL : liveinterval) : props.getIntValue(WEBPARAM__LIVEINTERVAL, (liveinterval < 0 ? DEFAILT_LIVEINTERVAL : liveinterval));
         if (liveinterval <= 0) return;
-        this.wsmaxconns = props == null ? this.wsmaxconns : props.getIntValue(WEBPARAM__WSMAXCONNS, this.wsmaxconns);
+        if (props != null) this.wsmaxconns = props.getIntValue(WEBPARAM__WSMAXCONNS, this.wsmaxconns);
+        if (props != null) this.wsmaxbody = props.getIntValue(WEBPARAM__WSMAXBODY, this.wsmaxbody);
         if (scheduler != null) return;
         this.scheduler = new ScheduledThreadPoolExecutor(1, (Runnable r) -> {
             final Thread t = new Thread(r, engineid + "-WebSocket-LiveInterval-Thread");

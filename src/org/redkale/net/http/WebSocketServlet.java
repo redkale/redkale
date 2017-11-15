@@ -48,6 +48,9 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
     @Comment("WebScoket服务器最大连接数，为0表示无限制")
     public static final String WEBPARAM__WSMAXCONNS = "wsmaxconns";
 
+    @Comment("最大消息体长度, 小于1表示无限制")
+    public static final String WEBPARAM__WSMAXBODY = "wsmaxbody";
+
     @Comment("WebScoket服务器给客户端进行ping操作的默认间隔时间, 单位: 秒")
     public static final int DEFAILT_LIVEINTERVAL = 15;
 
@@ -64,6 +67,8 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
     protected int liveinterval = DEFAILT_LIVEINTERVAL;
 
     protected int wsmaxconns = 0;
+
+    protected int wsmaxbody = 0;
 
     @Resource(name = "jsonconvert")
     protected Convert jsonConvert;
@@ -112,7 +117,8 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
         }
 
         //存在WebSocketServlet，则此WebSocketNode必须是本地模式Service
-        this.node.localEngine = new WebSocketEngine("WebSocketEngine-" + addr.getHostString() + ":" + addr.getPort() + "-[" + resourceName() + "]", this.single, context, liveinterval, wsmaxconns, this.node, this.sendConvert, logger);
+        this.node.localEngine = new WebSocketEngine("WebSocketEngine-" + addr.getHostString() + ":" + addr.getPort() + "-[" + resourceName() + "]",
+            this.single, context, liveinterval, wsmaxconns, wsmaxbody, this.node, this.sendConvert, logger);
         this.node.init(conf);
         this.node.localEngine.init(conf);
     }

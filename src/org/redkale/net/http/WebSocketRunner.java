@@ -62,12 +62,15 @@ class WebSocketRunner implements Runnable {
     public void run() {
         final boolean debug = true;
         try {
+            final int wsmaxbody = webSocket._engine.wsmaxbody;
             webSocket.onConnected();
             channel.setReadTimeoutSecond(300); //读取超时5分钟
             if (channel.isOpen()) {
                 channel.read(readBuffer, null, new CompletionHandler<Integer, Void>() {
 
                     private ByteBuffer recentExBuffer;
+                    
+                    private final List<WebSocketPacket> packets  = new ArrayList<>();
 
                     //当接收的数据流长度大于ByteBuffer长度时， 则需要额外的ByteBuffer 辅助;
                     private final List<ByteBuffer> readBuffers = new ArrayList<>();
