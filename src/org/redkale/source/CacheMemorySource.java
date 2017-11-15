@@ -138,7 +138,7 @@ public class CacheMemorySource<V extends Object> extends AbstractService impleme
         // TODO
         if (this.needStore) {
             try {
-                File store = new File(home, "cache/" + resourceName());
+                File store = home == null ? new File("cache/" + resourceName()) : new File(home, "cache/" + resourceName());
                 if (!store.isFile() || !store.canRead()) return;
                 LineNumberReader reader = new LineNumberReader(new FileReader(store));
                 if (this.objValueType == null) this.objValueType = Object.class;
@@ -188,7 +188,8 @@ public class CacheMemorySource<V extends Object> extends AbstractService impleme
             }
         }
     }
-
+    
+    /*
     public static void main(String[] args) throws Exception {
         AnyValue.DefaultAnyValue conf = new AnyValue.DefaultAnyValue();
         conf.addValue("node", new AnyValue.DefaultAnyValue().addValue("addr", "127.0.0.1").addValue("port", "6379"));
@@ -196,6 +197,7 @@ public class CacheMemorySource<V extends Object> extends AbstractService impleme
         CacheMemorySource source = new CacheMemorySource();
         source.defaultConvert = JsonFactory.root().getConvert();
         source.initValueType(String.class); //value用String类型
+        source.initTransient(false);
         source.init(conf);
 
         System.out.println("------------------------------------");
@@ -235,8 +237,11 @@ public class CacheMemorySource<V extends Object> extends AbstractService impleme
         System.out.println("newnum 值 : " + source.decr("newnum"));
         System.out.println("------------------------------------");
         source.destroy(null);
+        source.init(null);
+        System.out.println("all keys: " + source.queryKeys());
     }
-
+    */
+    
     @Override
     public void close() throws Exception {  //给Application 关闭时调用
         destroy(null);
@@ -245,7 +250,7 @@ public class CacheMemorySource<V extends Object> extends AbstractService impleme
     @Override
     public String resourceName() {
         Resource res = this.getClass().getAnnotation(Resource.class);
-        return res == null ? null : res.name();
+        return res == null ? "cachememory" : res.name();
     }
 
     @Override
