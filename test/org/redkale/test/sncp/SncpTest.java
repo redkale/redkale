@@ -94,6 +94,7 @@ public class SncpTest {
         SncpTestBean callbean = new SncpTestBean();
         callbean.setId(1);
         callbean.setContent("数据X");
+        service.queryLongResult("f", 3,33L);
 
         service.insert(callbean);
         System.out.println("bean.id应该会被修改(id不会是1)： " + callbean);

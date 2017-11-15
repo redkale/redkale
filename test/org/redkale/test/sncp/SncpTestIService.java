@@ -17,8 +17,10 @@ public interface SncpTestIService extends Service {
 
     public String queryResult(SncpTestBean bean);
 
+    public long queryLongResult(String a, int b, long value);
+
     public CompletableFuture<String> queryResultAsync(SncpTestBean bean);
-    
+
     public void insert(@RpcCall(DataCallArrayAttribute.class) SncpTestBean... beans);
 
     public String updateBean(@RpcCall(SncpTestServiceImpl.CallAttribute.class) SncpTestBean bean);

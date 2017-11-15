@@ -32,6 +32,9 @@ public abstract class WebSocketNode {
     @Comment("存储用户ID的key前缀")
     public static final String SOURCE_SNCP_USERID_PREFIX = "sncpws_uid:";
 
+    @Comment("存储用户数的key")
+    public static final String SOURCE_SNCP_USERCOUNT_KEY = "sncpws_usercount";
+
     @Comment("存储当前SNCP节点列表的key")
     public static final String SOURCE_SNCP_ADDRS_KEY = "sncpws_addrs";
 
@@ -58,6 +61,7 @@ public abstract class WebSocketNode {
     protected WebSocketEngine localEngine;
 
     public void init(AnyValue conf) {
+        if(sncpNodeAddresses != null) sncpNodeAddresses.initValueType(InetSocketAddress.class);
     }
 
     public void destroy(AnyValue conf) {
@@ -178,9 +182,7 @@ public abstract class WebSocketNode {
         if (this.localEngine != null && this.sncpNodeAddresses == null) {
             return CompletableFuture.completedFuture(this.localEngine.getLocalUserSize());
         }
-        return this.sncpNodeAddresses.getKeySizeAsync().thenCompose(count -> {
-            return sncpNodeAddresses.existsAsync(SOURCE_SNCP_ADDRS_KEY).thenApply(exists -> exists ? (count - 1) : count);
-        });
+        return this.sncpNodeAddresses.getLongAsync(SOURCE_SNCP_USERCOUNT_KEY, 0L).thenApply(v -> v.intValue());
     }
 
     /**
