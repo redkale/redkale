@@ -342,6 +342,7 @@ public final class SncpClient {
         final Type[] myparamtypes = action.paramTypes;
         final Class[] myparamclass = action.paramClass;
         if (action.addressSourceParamIndex >= 0) params[action.addressSourceParamIndex] = this.clientAddress;
+        if(bsonConvert == null) bsonConvert = BsonConvert.root();
         final BsonWriter writer = bsonConvert.pollBsonWriter(transport.getBufferSupplier()); // 将head写入
         writer.writeTo(DEFAULT_HEADER);
         for (int i = 0; i < params.length; i++) {  //params 可能包含: 3 个 boolean

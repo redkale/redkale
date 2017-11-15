@@ -484,12 +484,12 @@ public abstract class Sncp {
                 } else if (returnType.isPrimitive()) {
                     if (returnType == long.class) {
                         mv.visitVarInsn(LSTORE, ++varindex);
-                        ++varindex; //多加1
+                        //++varindex; //多加1
                     } else if (returnType == float.class) {
                         mv.visitVarInsn(FSTORE, ++varindex);
                     } else if (returnType == double.class) {
                         mv.visitVarInsn(DSTORE, ++varindex);
-                        ++varindex; //多加1
+                        //++varindex; //多加1
                     } else {
                         mv.visitVarInsn(ISTORE, ++varindex);
                     }
