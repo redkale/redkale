@@ -355,7 +355,7 @@ public final class Application {
         final String homepath = this.home.getCanonicalPath();
         if (persist.isFile()) System.setProperty(DataSources.DATASOURCE_CONFPATH, persist.getCanonicalPath());
         logger.log(Level.INFO, RESNAME_APP_HOME + "= " + homepath + "\r\n" + RESNAME_APP_ADDR + "= " + this.localAddress.getHostAddress());
-        String lib = config.getValue("lib", "").trim().replace("${APP_HOME}", homepath);
+        String lib = config.getValue("lib", "${APP_HOME}/libs/*").trim().replace("${APP_HOME}", homepath);
         lib = lib.isEmpty() ? (homepath + "/conf") : (lib + ";" + homepath + "/conf");
         Server.loadLib(classLoader, logger, lib);
 

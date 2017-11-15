@@ -135,7 +135,7 @@ public abstract class NodeServer {
             resourceFactory.register(Server.RESNAME_SERVER_ROOT, Path.class, myroot.toPath());
 
             //加入指定的classpath
-            Server.loadLib(serverClassLoader, logger, this.serverConf.getValue("lib", "${APP_HOME}/libs/*").replace("${APP_HOME}", application.getHome().getPath().replace('\\', '/')));
+            Server.loadLib(serverClassLoader, logger, this.serverConf.getValue("lib", "").replace("${APP_HOME}", application.getHome().getPath().replace('\\', '/')));
             this.serverThread.setContextClassLoader(this.serverClassLoader);
         }
         //必须要进行初始化， 构建Service时需要使用Context中的ExecutorService
