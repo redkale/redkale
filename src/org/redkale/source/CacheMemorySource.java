@@ -189,7 +189,7 @@ public class CacheMemorySource<V extends Object> extends AbstractService impleme
         }
     }
     
-    /*
+    /**
     public static void main(String[] args) throws Exception {
         AnyValue.DefaultAnyValue conf = new AnyValue.DefaultAnyValue();
         conf.addValue("node", new AnyValue.DefaultAnyValue().addValue("addr", "127.0.0.1").addValue("port", "6379"));
@@ -205,11 +205,14 @@ public class CacheMemorySource<V extends Object> extends AbstractService impleme
         source.remove("key2");
         source.remove("300");
         source.set("key1", "value1");
+        source.setString("keystr1", "strvalue1");
+        source.setLong("keylong1", 333L);
         source.set("300", "4000");
         source.getAndRefresh("key1", 3500);
         System.out.println("[有值] 300 GET : " + source.get("300"));
         System.out.println("[有值] key1 GET : " + source.get("key1"));
         System.out.println("[无值] key2 GET : " + source.get("key2"));
+        System.out.println("[有值] keylong1 GET : " + source.getLong("keylong1", 0L));
         System.out.println("[有值] key1 EXISTS : " + source.exists("key1"));
         System.out.println("[无值] key2 EXISTS : " + source.exists("key2"));
 
@@ -239,8 +242,9 @@ public class CacheMemorySource<V extends Object> extends AbstractService impleme
         source.destroy(null);
         source.init(null);
         System.out.println("all keys: " + source.queryKeys());
+        System.out.println("[有值] keylong1 GET : " + source.getLong("keylong1", 0L)); 
     }
-    */
+   */
     
     @Override
     public void close() throws Exception {  //给Application 关闭时调用
