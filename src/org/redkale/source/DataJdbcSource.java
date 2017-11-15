@@ -70,15 +70,15 @@ public class DataJdbcSource extends AbstractService implements DataSource, DataC
         writePool.close();
     }
 
-    protected Connection createReadSQLConnection() {
+    public Connection createReadSQLConnection() {
         return readPool.poll();
     }
 
-    protected <T> Connection createWriteSQLConnection() {
+    public <T> Connection createWriteSQLConnection() {
         return writePool.poll();
     }
 
-    protected void closeSQLConnection(final Connection sqlconn) {
+    public void closeSQLConnection(final Connection sqlconn) {
         if (sqlconn == null) return;
         try {
             sqlconn.close();
