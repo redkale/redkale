@@ -47,6 +47,12 @@ public class SncpTestServiceImpl implements SncpTestIService {
         return value + 1;
     }
 
+    @Override
+    @RpcMultiRun
+    public double queryDoubleResult(String a, int b, double value) {
+        return value + 1;
+    }
+    
     public static class CallAttribute implements Attribute<SncpTestBean, Long> {
 
         @Override
