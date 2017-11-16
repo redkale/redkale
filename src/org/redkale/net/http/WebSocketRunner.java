@@ -12,12 +12,11 @@ import org.redkale.net.http.WebSocketPacket.FrameType;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.*;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
 import java.util.logging.*;
-import org.redkale.convert.Convert;
-import org.redkale.util.Utility;
 
 /**
  * WebSocket的消息接收发送器, 一个WebSocket对应一个WebSocketRunner
@@ -62,185 +61,273 @@ class WebSocketRunner implements Runnable {
     public void run() {
         final boolean debug = true;
         try {
-            final int wsmaxbody = webSocket._engine.wsmaxbody;
             webSocket.onConnected();
             channel.setReadTimeoutSecond(300); //读取超时5分钟
             if (channel.isOpen()) {
+                final int wsmaxbody = webSocket._engine.wsmaxbody;
                 channel.read(readBuffer, null, new CompletionHandler<Integer, Void>() {
 
-                    private ByteBuffer recentExBuffer;
-                    
-                    private final List<WebSocketPacket> packets  = new ArrayList<>();
+                    //尚未解析完的数据包
+                    private WebSocketPacket unfinishPacket;
 
                     //当接收的数据流长度大于ByteBuffer长度时， 则需要额外的ByteBuffer 辅助;
-                    private final List<ByteBuffer> readBuffers = new ArrayList<>();
+                    private final List<ByteBuffer> exBuffers = new ArrayList<>();
+
+                    private final SimpleEntry<String, byte[]> halfBytes = new SimpleEntry("", null);
 
                     @Override
                     public void completed(Integer count, Void attachment1) {
-                        if (count < 1 && readBuffers.isEmpty()) {
+                        if (count < 1) {
                             closeRunner(0);
                             if (debug) context.getLogger().log(Level.FINEST, "WebSocketRunner abort on read buffer count, force to close channel, live " + (System.currentTimeMillis() - webSocket.getCreatetime()) / 1000 + " seconds");
                             return;
                         }
                         if (readBuffer == null) return;
-                        if (!readBuffer.hasRemaining() && (recentExBuffer == null || !recentExBuffer.hasRemaining())) {
-                            final ByteBuffer buffer = context.pollBuffer();
-                            recentExBuffer = buffer;
-                            readBuffers.add(buffer);
-                            channel.read(buffer, null, this);
-                            return;
-                        }
                         readBuffer.flip();
 
-                        ByteBuffer[] exBuffers = null;
-                        if (!readBuffers.isEmpty()) {
-                            exBuffers = readBuffers.toArray(new ByteBuffer[readBuffers.size()]);
-                            readBuffers.clear();
-                            recentExBuffer = null;
-                            for (ByteBuffer b : exBuffers) {
-                                b.flip();
+                        WebSocketPacket onePacket = null;
+                        if (unfinishPacket != null) {
+                            if (unfinishPacket.receiveBody(webSocket, readBuffer)) { //已经接收完毕
+                                onePacket = unfinishPacket;
+                                unfinishPacket = null;
+                                for (ByteBuffer b : exBuffers) {
+                                    context.offerBuffer(b);
+                                }
+                                exBuffers.clear();
+                            } else { //需要继续接收
+                                readBuffer = context.pollBuffer();
+                                channel.read(readBuffer, null, this);
+                                return;
                             }
                         }
 
+                        final List<WebSocketPacket> packets = new ArrayList<>();
+                        if (onePacket != null) packets.add(onePacket);
                         try {
-                            WebSocketPacket packet;
-                            try {
-                                packet = new WebSocketPacket().decode(context.getLogger(), readBuffer, exBuffers);
-                            } catch (Exception e) { //接收的消息体解析失败
-                                webSocket.onOccurException(e, Utility.append(new ByteBuffer[]{readBuffer}, exBuffers == null ? new ByteBuffer[0] : exBuffers));
-                                if (readBuffer != null) {
-                                    readBuffer.clear();
-                                    channel.read(readBuffer, null, this);
+                            while (true) {
+                                WebSocketPacket packet = new WebSocketPacket().decode(context.getLogger(), webSocket, wsmaxbody, halfBytes, readBuffer);
+                                if (packet == WebSocketPacket.NONE) break; //解析完毕但是buffer有多余字节
+                                if (packet != null && !packet.isReceiveFinished()) {
+                                    unfinishPacket = packet;
+                                    if (readBuffer.hasRemaining()) {
+                                        exBuffers.add(readBuffer);
+                                        readBuffer = context.pollBuffer();
+                                    }
+                                    break;
                                 }
-                                return;
+                                packets.add(packet);
+                                if (packet == null || !readBuffer.hasRemaining()) break;
                             }
+                        } catch (Exception e) {
+                            context.getLogger().log(Level.SEVERE, "WebSocket parse message error", e);
+                            webSocket.onOccurException(e, null);
+                        }
+                        //继续监听消息
+                        readBuffer.clear();
+                        if (halfBytes.getValue() != null) {
+                            readBuffer.put(halfBytes.getValue());
+                            halfBytes.setValue(null);
+                        }
+                        channel.read(readBuffer, null, this);
+
+                        //消息处理
+                        for (final WebSocketPacket packet : packets) {
                             if (packet == null) {
                                 failed(null, attachment1);
                                 if (debug) context.getLogger().log(Level.FINEST, "WebSocketRunner abort on decode WebSocketPacket, force to close channel, live " + (System.currentTimeMillis() - webSocket.getCreatetime()) / 1000 + " seconds");
                                 return;
                             }
-
                             if (packet.type == FrameType.TEXT) {
-                                Convert textConvert = webSocket.getTextConvert();
-                                if (textConvert == null) {
-                                    byte[] message = packet.getReceiveBytes();
-                                    if (readBuffer != null) {
-                                        readBuffer.clear();
-                                        channel.read(readBuffer, null, this);
-                                    }
-                                    try {
-                                        webSocket.onMessage(new String(message, "UTF-8"), packet.last);
-                                    } catch (Exception e) {
-                                        context.getLogger().log(Level.SEVERE, "WebSocket onBinaryMessage error (" + packet + ")", e);
-                                    }
-                                } else {
-                                    Object message;
-                                    try {
-                                        message = textConvert.convertFrom(webSocket._messageTextType, packet.receiveMasker, packet.receiveBuffers);
-                                    } catch (Exception e) { //接收的消息体解析失败
-                                        webSocket.onOccurException(e, packet.receiveBuffers);
-                                        if (readBuffer != null) {
-                                            readBuffer.clear();
-                                            channel.read(readBuffer, null, this);
-                                        }
-                                        return;
-                                    }
-                                    if (readBuffer != null) {
-                                        readBuffer.clear();
-                                        channel.read(readBuffer, null, this);
-                                    }
-                                    try {
+                                try {
+                                    if (packet.receiveType == WebSocketPacket.MessageType.STRING) {
+                                        webSocket.onMessage((String) packet.receiveMessage, packet.last);
+                                    } else {
                                         if (restMessageConsumer != null) { //主要供RestWebSocket使用
-                                            restMessageConsumer.accept(webSocket, message);
+                                            restMessageConsumer.accept(webSocket, packet.receiveMessage);
                                         } else {
-                                            webSocket.onMessage(message, packet.last);
+                                            webSocket.onMessage(packet.receiveMessage, packet.last);
                                         }
-                                    } catch (Exception e) {
-                                        context.getLogger().log(Level.SEVERE, "WebSocket onTextMessage error (" + packet + ")", e);
                                     }
+                                } catch (Exception e) {
+                                    context.getLogger().log(Level.SEVERE, "WebSocket onTextMessage error (" + packet + ")", e);
                                 }
                             } else if (packet.type == FrameType.BINARY) {
-                                Convert binaryConvert = webSocket.getBinaryConvert();
-                                if (binaryConvert == null) {
-                                    byte[] message = packet.getReceiveBytes();
-                                    if (readBuffer != null) {
-                                        readBuffer.clear();
-                                        channel.read(readBuffer, null, this);
-                                    }
-                                    try {
-                                        webSocket.onMessage(message, packet.last);
-                                    } catch (Exception e) {
-                                        context.getLogger().log(Level.SEVERE, "WebSocket onBinaryMessage error (" + packet + ")", e);
-                                    }
-                                } else {
-                                    Object message;
-                                    try {
-                                        message = binaryConvert.convertFrom(webSocket._messageTextType, packet.receiveMasker, packet.receiveBuffers);
-                                    } catch (Exception e) {  //接收的消息体解析失败
-                                        webSocket.onOccurException(e, packet.receiveBuffers);
-                                        if (readBuffer != null) {
-                                            readBuffer.clear();
-                                            channel.read(readBuffer, null, this);
-                                        }
-                                        return;
-                                    }
-                                    if (readBuffer != null) {
-                                        readBuffer.clear();
-                                        channel.read(readBuffer, null, this);
-                                    }
-                                    try {
-                                        if (restMessageConsumer != null) { //主要供RestWebSocket使用
-                                            restMessageConsumer.accept(webSocket, message);
-                                        } else {
-                                            webSocket.onMessage(message, packet.last);
-                                        }
-                                    } catch (Exception e) {
-                                        context.getLogger().log(Level.SEVERE, "WebSocket onTextMessage error (" + packet + ")", e);
-                                    }
-                                }
-                            } else if (packet.type == FrameType.PONG) {
-                                byte[] message = packet.getReceiveBytes();
-                                if (readBuffer != null) {
-                                    readBuffer.clear();
-                                    channel.read(readBuffer, null, this);
-                                }
                                 try {
-                                    webSocket.onPong(message);
+                                    if (packet.receiveType == WebSocketPacket.MessageType.BYTES) {
+                                        webSocket.onMessage((byte[]) packet.receiveMessage, packet.last);
+                                    } else {
+                                        if (restMessageConsumer != null) { //主要供RestWebSocket使用
+                                            restMessageConsumer.accept(webSocket, packet.receiveMessage);
+                                        } else {
+                                            webSocket.onMessage(packet.receiveMessage, packet.last);
+                                        }
+                                    }
                                 } catch (Exception e) {
-                                    context.getLogger().log(Level.SEVERE, "WebSocket onPong error (" + packet + ")", e);
+                                    context.getLogger().log(Level.SEVERE, "WebSocket onBinaryMessage error (" + packet + ")", e);
                                 }
                             } else if (packet.type == FrameType.PING) {
-                                byte[] message = packet.getReceiveBytes();
-                                if (readBuffer != null) {
-                                    readBuffer.clear();
-                                    channel.read(readBuffer, null, this);
-                                }
                                 try {
-                                    webSocket.onPing(message);
+                                    webSocket.onPing((byte[]) packet.receiveMessage);
                                 } catch (Exception e) {
                                     context.getLogger().log(Level.SEVERE, "WebSocket onPing error (" + packet + ")", e);
+                                }
+                            } else if (packet.type == FrameType.PONG) {
+                                try {
+                                    webSocket.onPong((byte[]) packet.receiveMessage);
+                                } catch (Exception e) {
+                                    context.getLogger().log(Level.SEVERE, "WebSocket onPong error (" + packet + ")", e);
                                 }
                             } else if (packet.type == FrameType.CLOSE) {
                                 Logger logger = context.getLogger();
                                 if (logger.isLoggable(Level.FINEST)) logger.log(Level.FINEST, "WebSocketRunner onMessage by CLOSE FrameType : " + packet);
                                 closeRunner(0);
+                                return;
                             } else {
                                 context.getLogger().log(Level.WARNING, "WebSocketRunner onMessage by unknown FrameType : " + packet);
-                                if (readBuffer != null) {
-                                    readBuffer.clear();
-                                    channel.read(readBuffer, null, this);
-                                }
-                            }
-                        } catch (Throwable t) {
-                            closeRunner(0);
-                            if (debug) context.getLogger().log(Level.FINEST, "WebSocketRunner abort on read WebSocketPacket, force to close channel, live " + (System.currentTimeMillis() - webSocket.getCreatetime()) / 1000 + " seconds", t);
-                        } finally {
-                            if (exBuffers != null) {
-                                for (ByteBuffer b : exBuffers) {
-                                    context.offerBuffer(b);
-                                }
+                                closeRunner(0);
+                                return;
                             }
                         }
+//                        if (true) return; //以下代码废弃
+//                        try {
+//                            WebSocketPacket packet;
+//                            try {
+//                                packet = new WebSocketPacket().decode(context.getLogger(), readBuffer, exBuffers);
+//                            } catch (Exception e) { //接收的消息体解析失败
+//                                webSocket.onOccurException(e, Utility.append(new ByteBuffer[]{readBuffer}, exBuffers == null ? new ByteBuffer[0] : exBuffers));
+//                                if (readBuffer != null) {
+//                                    readBuffer.clear();
+//                                    channel.read(readBuffer, null, this);
+//                                }
+//                                return;
+//                            }
+//                            if (packet == null) {
+//                                failed(null, attachment1);
+//                                if (debug) context.getLogger().log(Level.FINEST, "WebSocketRunner abort on decode WebSocketPacket, force to close channel, live " + (System.currentTimeMillis() - webSocket.getCreatetime()) / 1000 + " seconds");
+//                                return;
+//                            }
+//
+//                            if (packet.type == FrameType.TEXT) {
+//                                Convert textConvert = webSocket.getTextConvert();
+//                                if (textConvert == null) {
+//                                    byte[] message = packet.getReceiveBytes();
+//                                    if (readBuffer != null) {
+//                                        readBuffer.clear();
+//                                        channel.read(readBuffer, null, this);
+//                                    }
+//                                    try {
+//                                        webSocket.onMessage(new String(message, "UTF-8"), packet.last);
+//                                    } catch (Exception e) {
+//                                        context.getLogger().log(Level.SEVERE, "WebSocket onBinaryMessage error (" + packet + ")", e);
+//                                    }
+//                                } else {
+//                                    Object message;
+//                                    try {
+//                                        message = textConvert.convertFrom(webSocket._messageTextType, packet.receiveMasker, packet.receiveBuffers);
+//                                    } catch (Exception e) { //接收的消息体解析失败
+//                                        webSocket.onOccurException(e, packet.receiveBuffers);
+//                                        if (readBuffer != null) {
+//                                            readBuffer.clear();
+//                                            channel.read(readBuffer, null, this);
+//                                        }
+//                                        return;
+//                                    }
+//                                    if (readBuffer != null) {
+//                                        readBuffer.clear();
+//                                        channel.read(readBuffer, null, this);
+//                                    }
+//                                    try {
+//                                        if (restMessageConsumer != null) { //主要供RestWebSocket使用
+//                                            restMessageConsumer.accept(webSocket, message);
+//                                        } else {
+//                                            webSocket.onMessage(message, packet.last);
+//                                        }
+//                                    } catch (Exception e) {
+//                                        context.getLogger().log(Level.SEVERE, "WebSocket onTextMessage error (" + packet + ")", e);
+//                                    }
+//                                }
+//                            } else if (packet.type == FrameType.BINARY) {
+//                                Convert binaryConvert = webSocket.getBinaryConvert();
+//                                if (binaryConvert == null) {
+//                                    byte[] message = packet.getReceiveBytes();
+//                                    if (readBuffer != null) {
+//                                        readBuffer.clear();
+//                                        channel.read(readBuffer, null, this);
+//                                    }
+//                                    try {
+//                                        webSocket.onMessage(message, packet.last);
+//                                    } catch (Exception e) {
+//                                        context.getLogger().log(Level.SEVERE, "WebSocket onBinaryMessage error (" + packet + ")", e);
+//                                    }
+//                                } else {
+//                                    Object message;
+//                                    try {
+//                                        message = binaryConvert.convertFrom(webSocket._messageTextType, packet.receiveMasker, packet.receiveBuffers);
+//                                    } catch (Exception e) {  //接收的消息体解析失败
+//                                        webSocket.onOccurException(e, packet.receiveBuffers);
+//                                        if (readBuffer != null) {
+//                                            readBuffer.clear();
+//                                            channel.read(readBuffer, null, this);
+//                                        }
+//                                        return;
+//                                    }
+//                                    if (readBuffer != null) {
+//                                        readBuffer.clear();
+//                                        channel.read(readBuffer, null, this);
+//                                    }
+//                                    try {
+//                                        if (restMessageConsumer != null) { //主要供RestWebSocket使用
+//                                            restMessageConsumer.accept(webSocket, message);
+//                                        } else {
+//                                            webSocket.onMessage(message, packet.last);
+//                                        }
+//                                    } catch (Exception e) {
+//                                        context.getLogger().log(Level.SEVERE, "WebSocket onTextMessage error (" + packet + ")", e);
+//                                    }
+//                                }
+//                            } else if (packet.type == FrameType.PONG) {
+//                                byte[] message = packet.getReceiveBytes();
+//                                if (readBuffer != null) {
+//                                    readBuffer.clear();
+//                                    channel.read(readBuffer, null, this);
+//                                }
+//                                try {
+//                                    webSocket.onPong(message);
+//                                } catch (Exception e) {
+//                                    context.getLogger().log(Level.SEVERE, "WebSocket onPong error (" + packet + ")", e);
+//                                }
+//                            } else if (packet.type == FrameType.PING) {
+//                                byte[] message = packet.getReceiveBytes();
+//                                if (readBuffer != null) {
+//                                    readBuffer.clear();
+//                                    channel.read(readBuffer, null, this);
+//                                }
+//                                try {
+//                                    webSocket.onPing(message);
+//                                } catch (Exception e) {
+//                                    context.getLogger().log(Level.SEVERE, "WebSocket onPing error (" + packet + ")", e);
+//                                }
+//                            } else if (packet.type == FrameType.CLOSE) {
+//                                Logger logger = context.getLogger();
+//                                if (logger.isLoggable(Level.FINEST)) logger.log(Level.FINEST, "WebSocketRunner onMessage by CLOSE FrameType : " + packet);
+//                                closeRunner(0);
+//                            } else {
+//                                context.getLogger().log(Level.WARNING, "WebSocketRunner onMessage by unknown FrameType : " + packet);
+//                                if (readBuffer != null) {
+//                                    readBuffer.clear();
+//                                    channel.read(readBuffer, null, this);
+//                                }
+//                            }
+//                        } catch (Throwable t) {
+//                            closeRunner(0);
+//                            if (debug) context.getLogger().log(Level.FINEST, "WebSocketRunner abort on read WebSocketPacket, force to close channel, live " + (System.currentTimeMillis() - webSocket.getCreatetime()) / 1000 + " seconds", t);
+//                        } finally {
+//                            if (exBuffers != null) {
+//                                for (ByteBuffer b : exBuffers) {
+//                                    context.offerBuffer(b);
+//                                }
+//                            }
+//                        }
                     }
 
                     @Override
