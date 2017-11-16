@@ -385,7 +385,7 @@ public class CacheMemorySource<V extends Object> extends AbstractService impleme
     }
 
     @Override
-    //@RpcMultiRun
+    @RpcMultiRun
     public long getLongAndRefresh(String key, final int expireSeconds, long defValue) {
         if (key == null) return defValue;
         CacheEntry entry = container.get(key);
@@ -551,7 +551,7 @@ public class CacheMemorySource<V extends Object> extends AbstractService impleme
     }
 
     @Override
-    //@RpcMultiRun
+    @RpcMultiRun
     public long incr(final String key) {
         return incr(key, 1);
     }
@@ -563,7 +563,7 @@ public class CacheMemorySource<V extends Object> extends AbstractService impleme
     }
 
     @Override
-    //@RpcMultiRun
+    @RpcMultiRun
     public long incr(final String key, long num) {
         CacheEntry entry = container.get(key);
         if (entry == null) {
@@ -585,7 +585,7 @@ public class CacheMemorySource<V extends Object> extends AbstractService impleme
     }
 
     @Override
-    //@RpcMultiRun
+    @RpcMultiRun
     public long decr(final String key) {
         return incr(key, -1);
     }
@@ -597,7 +597,7 @@ public class CacheMemorySource<V extends Object> extends AbstractService impleme
     }
 
     @Override
-    //@RpcMultiRun
+    @RpcMultiRun
     public long decr(final String key, long num) {
         return incr(key, -num);
     }
