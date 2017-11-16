@@ -131,7 +131,6 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
      * @param writeTimeoutSecond 写入超时秒数
      *
      * @return 连接CompletableFuture
-     * @throws java.io.IOException 异常
      */
     public static CompletableFuture<AsyncConnection> createTCP(final AsynchronousChannelGroup group, final SocketAddress address,
         final int readTimeoutSecond, final int writeTimeoutSecond) {
