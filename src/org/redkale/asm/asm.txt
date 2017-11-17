@@ -1,0 +1,39 @@
+need copy classes:
+
+AnnotationVisitor.java
+AnnotationWriter.java
+Attribute.java
+ByteVector.java
+ClassReader.java
+ClassVisitor.java
+ClassWriter.java
+Context.java
+Edge.java
+FieldVisitor.java
+FieldWriter.java
+Frame.java
+Handle.java
+Handler.java
+Item.java
+Label.java
+MethodVisitor.java
+MethodWriter.java
+Opcodes.java
+Type.java
+TypePath.java
+
+
+
+public static void main(String[] args) throws Throwable {
+    File srcasmroot = new File("D:/JAVA/JDK源码/JDK9源码/java.base/jdk/internal/org/objectweb/asm");
+    File destasmroot = new File("D:/Java-Projects/RedkaleProject/src/org/redkale/asm");
+    String line = null;
+    LineNumberReader txtin = new LineNumberReader(new FileReader(new File(destasmroot, "asm.txt")));
+    while ((line = txtin.readLine()) != null) {
+       line = line.trim();
+       if(!line.endsWith(".java")) continue;
+        File srcfile = new File(srcasmroot, line);
+        File destfile = new File(destasmroot, line);
+        Files.copy(srcfile.toPath(), destfile.toPath());
+    }
+}
