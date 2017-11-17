@@ -30,10 +30,13 @@ public static void main(String[] args) throws Throwable {
     String line = null;
     LineNumberReader txtin = new LineNumberReader(new FileReader(new File(destasmroot, "asm.txt")));
     while ((line = txtin.readLine()) != null) {
-       line = line.trim();
-       if(!line.endsWith(".java")) continue;
+        line = line.trim();
+        if (!line.endsWith(".java")) continue;
         File srcfile = new File(srcasmroot, line);
         File destfile = new File(destasmroot, line);
-        Files.copy(srcfile.toPath(), destfile.toPath());
+        String content = Utility.readThenClose(new FileInputStream(srcfile));
+        FileOutputStream out = new FileOutputStream(destfile);
+        out.write(content.replace("jdk.internal.org.objectweb", "org.redkale").getBytes());
+        out.close();
     }
 }
