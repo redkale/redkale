@@ -73,7 +73,7 @@ public final class FilterNodeBean<T extends FilterBean> implements Comparable<Fi
 
         FilterExpress exp = filterCol == null ? null : filterCol.express();
         if ((exp == null || exp == EQUAL) && (type.isArray() || Collection.class.isAssignableFrom(type))) {
-            if (Range.class.isAssignableFrom(type.getComponentType())) {
+            if (type.getComponentType() != null && Range.class.isAssignableFrom(type.getComponentType())) {
                 if (AND != exp) exp = OR;
             } else if (NOTIN != exp) {
                 exp = IN;
