@@ -63,7 +63,7 @@ public final class FilterNodeBean<T extends FilterBean> implements Comparable<Fi
         this.nodeBeans = bean == null ? null : bean.nodeBeans;
     }
 
-    private FilterNodeBean(final FilterJoinColumn joinCol, final FilterColumn filterCol, final Attribute<T, Serializable> attr) {
+    private FilterNodeBean(final FilterJoinColumn joinCol, final FilterColumn filterCol, final Attribute<T, Serializable> attr, final Type genericType) {
         this.beanAttr = attr;
         this.joinClass = joinCol == null ? null : joinCol.table();
         this.joinColumns = joinCol == null ? null : joinCol.columns();
@@ -72,8 +72,13 @@ public final class FilterNodeBean<T extends FilterBean> implements Comparable<Fi
         this.column = (filterCol != null && !filterCol.name().isEmpty()) ? filterCol.name() : attr.field();
 
         FilterExpress exp = filterCol == null ? null : filterCol.express();
+        Class compType = type.getComponentType();
+        if (Collection.class.isAssignableFrom(type) && genericType instanceof ParameterizedType) {
+            Type pt = ((ParameterizedType) genericType).getActualTypeArguments()[0];
+            if (pt instanceof Class) compType = (Class) pt;
+        }
         if ((exp == null || exp == EQUAL) && (type.isArray() || Collection.class.isAssignableFrom(type))) {
-            if (type.getComponentType() != null && Range.class.isAssignableFrom(type.getComponentType())) {
+            if (compType != null && Range.class.isAssignableFrom(compType)) {
                 if (AND != exp) exp = OR;
             } else if (NOTIN != exp) {
                 exp = IN;
@@ -189,7 +194,7 @@ public final class FilterNodeBean<T extends FilterBean> implements Comparable<Fi
                 fields.add(field.getName());
 
                 final Attribute<T, Serializable> beanAttr = pubmod ? Attribute.create(field) : Attribute.create(getter, null);
-                FilterNodeBean<T> nodeBean = new FilterNodeBean(field.getAnnotation(FilterJoinColumn.class), field.getAnnotation(FilterColumn.class), beanAttr);
+                FilterNodeBean<T> nodeBean = new FilterNodeBean(field.getAnnotation(FilterJoinColumn.class), field.getAnnotation(FilterColumn.class), beanAttr, field.getGenericType());
 
                 //------------------------------------
                 {
