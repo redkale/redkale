@@ -476,10 +476,16 @@ public class JsonReader extends Reader {
             }
         }
         if (expected != '"' && expected != '\'') {
-            if (expected == 'n' && ((text0.length == currpos + 4 && (text0[1 + currpos] == 'u' && text0[2 + currpos] == 'l' && text0[3 + currpos] == 'l'))
-                || (text0.length > currpos + 4 && (text0[1 + currpos] == 'u' && text0[2 + currpos] == 'l' && text0[3 + currpos] == 'l')
-                && (text0[4 + currpos] == ',' || text0[4 + currpos] <= ' ' || text0[4 + currpos] == '}' || text0[4 + currpos] == ']' || text0[4 + currpos] == ':')))) {
-                return null;
+            if (expected == 'n' && text0.length > currpos + 3 && (text0[1 + currpos] == 'u' && text0[2 + currpos] == 'l' && text0[3 + currpos] == 'l')) {
+                if (text0[++currpos] == 'u' && text0[++currpos] == 'l' && text0[++currpos] == 'l') {
+                    this.position = currpos;
+                    if (text0.length > currpos + 4) {
+                        char ch = text0[currpos + 1];
+                        if (ch == ',' || ch <= ' ' || ch == '}' || ch == ']' || ch == ':') return null;
+                    } else {
+                        return null;
+                    }
+                }
             } else {
                 final int start = currpos;
                 for (;;) {
@@ -492,8 +498,8 @@ public class JsonReader extends Reader {
                 this.position = currpos - 1;
                 return new String(text0, start, currpos - start);
             }
-            //this.position = currpos;
-            //throw new ConvertException("expected a ':' after a key but '" + text0[position] + "' (position = " + position + ") in (" + new String(this.text) + ")");
+            this.position = currpos;
+            throw new ConvertException("expected a ':' after a key but '" + text0[position] + "' (position = " + position + ") in (" + new String(this.text) + ")");
         }
         final int start = ++currpos;
         for (;;) {

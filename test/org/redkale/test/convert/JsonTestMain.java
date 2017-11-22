@@ -21,7 +21,7 @@ public class JsonTestMain {
     public static void main(String[] args) throws Exception {
         JsonFactory factory = JsonFactory.root().tiny(true);
         final JsonConvert convert = JsonConvert.root();
-        String json = "{\"access_token\":\"vVX2bIjN5P9TMOphDkStM96eNWapAehTuWAlVDO74aFaYxLwj2b-9-T9p_W2mfr9\",\"expires_in\":7200, \"aa\":\"\"}";
+        String json = "{\"access_token\":\"vVX2bIjN5P9TMOphDkStM96eNWapAehTuWAlVDO74aFaYxLwj2b-9-T9p_W2mfr9\",\"priv\":null,\"priv2\":\"nulla\",\"expires_in\":7200, \"aa\":\"\"}";
         Map<String, String> map = convert.convertFrom(JsonConvert.TYPE_MAP_STRING_STRING, json);
         System.out.println(map);
         System.out.println(convert.convertTo(map));
