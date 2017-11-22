@@ -482,6 +482,16 @@ public class JsonReader extends Reader {
                     if (text0.length > currpos + 4) {
                         char ch = text0[currpos + 1];
                         if (ch == ',' || ch <= ' ' || ch == '}' || ch == ']' || ch == ':') return null;
+                        final int start = currpos - 3;
+                        for (;;) {
+                            if (currpos >= text0.length) break;
+                            ch = text0[currpos];
+                            if (ch == ',' || ch <= ' ' || ch == '}' || ch == ']' || ch == ':') break;
+                            currpos++;
+                        }
+                        if (currpos == start) throw new ConvertException("expected a string after a key but '" + text0[position] + "' (position = " + position + ") in (" + new String(this.text) + ")");
+                        this.position = currpos - 1;
+                        return new String(text0, start, currpos - start);
                     } else {
                         return null;
                     }
