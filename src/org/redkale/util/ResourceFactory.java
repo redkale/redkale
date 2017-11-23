@@ -777,25 +777,27 @@ public final class ResourceFactory {
             this.listener = tn.startsWith("java.") || tn.startsWith("javax.") ? null : findListener(t, field.getType());
         }
 
-        private static synchronized Method findListener(Class clazz, Class fieldType) {
-            Class loop = clazz;
-            Method m = listenerMethods.get(clazz.getName() + "-" + fieldType.getName());
-            if (m != null) return m;
-            do {
-                for (Method method : loop.getDeclaredMethods()) {
-                    if (method.getAnnotation(ResourceListener.class) != null
-                        && method.getParameterCount() == 3
-                        && String.class.isAssignableFrom(method.getParameterTypes()[0])
-                        && method.getParameterTypes()[1] == method.getParameterTypes()[2]
-                        && method.getParameterTypes()[1].isAssignableFrom(fieldType)) {
-                        m = method;
-                        m.setAccessible(true);
-                        break;
+        private static Method findListener(Class clazz, Class fieldType) {
+            synchronized (listenerMethods) {
+                Class loop = clazz;
+                Method m = listenerMethods.get(clazz.getName() + "-" + fieldType.getName());
+                if (m != null) return m;
+                do {
+                    for (Method method : loop.getDeclaredMethods()) {
+                        if (method.getAnnotation(ResourceListener.class) != null
+                            && method.getParameterCount() == 3
+                            && String.class.isAssignableFrom(method.getParameterTypes()[0])
+                            && method.getParameterTypes()[1] == method.getParameterTypes()[2]
+                            && method.getParameterTypes()[1].isAssignableFrom(fieldType)) {
+                            m = method;
+                            m.setAccessible(true);
+                            break;
+                        }
                     }
-                }
-            } while ((loop = loop.getSuperclass()) != Object.class);
-            listenerMethods.put(clazz.getName() + "-" + fieldType.getName(), m);
-            return m;
+                } while ((loop = loop.getSuperclass()) != Object.class);
+                listenerMethods.put(clazz.getName() + "-" + fieldType.getName(), m);
+                return m;
+            }
         }
     }
 
