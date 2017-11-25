@@ -68,7 +68,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
 
     protected int wsmaxconns = 0;
 
-    protected int wsmaxbody = 0;
+    protected int wsmaxbody = 16 * 1024;
 
     @Resource(name = "jsonconvert")
     protected Convert jsonConvert;
