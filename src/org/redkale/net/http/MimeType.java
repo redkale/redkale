@@ -76,6 +76,7 @@ public class MimeType {
         contentTypes.put("m3u", "audio/x-mpegurl");
         contentTypes.put("mac", "image/x-macpaint");
         contentTypes.put("man", "application/x-troff-man");
+        contentTypes.put("manifest", "text/cache-manifest");
         contentTypes.put("mathml", "application/mathml+xml");
         contentTypes.put("me", "application/x-troff-me");
         contentTypes.put("mid", "audio/x-midi");
