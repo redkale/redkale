@@ -52,6 +52,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, DataC
     protected final BiFunction<DataSource, Class, List> fullloader = (s, t) -> querySheet(false, false, t, null, null, (FilterNode) null).list(true);
 
     public DataJdbcSource(String unitName, Properties readprop, Properties writeprop) {
+        this.preConstruct(unitName, readprop, writeprop);
         this.initByProperties(unitName, readprop, writeprop);
     }
 
@@ -83,8 +84,11 @@ public class DataJdbcSource extends AbstractService implements DataSource, DataC
         if (writeprop.isEmpty()) writeprop = readprop;
         this.initByProperties(unitName, readprop, writeprop);
     }
-
+    
     //构造前调用
+    protected void preConstruct(String unitName, Properties readprop, Properties writeprop) {
+    }
+
     protected void initByProperties(String unitName, Properties readprop, Properties writeprop) {
         this.name = unitName;
         this.conf = null;
