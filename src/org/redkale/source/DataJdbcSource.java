@@ -36,15 +36,15 @@ public class DataJdbcSource extends AbstractService implements DataSource, DataC
 
     protected final Logger logger = Logger.getLogger(DataJdbcSource.class.getSimpleName());
 
-    protected final String name;
+    protected String name;
 
-    protected final URL conf;
+    protected URL conf;
 
-    protected final boolean cacheForbidden;
+    protected boolean cacheForbidden;
 
-    protected final PoolJdbcSource readPool;
+    protected PoolJdbcSource readPool;
 
-    protected final PoolJdbcSource writePool;
+    protected PoolJdbcSource writePool;
 
     @Resource(name = "$")
     protected DataCacheListener cacheListener;
@@ -53,6 +53,39 @@ public class DataJdbcSource extends AbstractService implements DataSource, DataC
 
     public DataJdbcSource(String unitName, Properties readprop, Properties writeprop) {
         this.preConstruct(unitName, readprop, writeprop);
+        this.name = unitName;
+        this.conf = null;
+        this.readPool = new PoolJdbcSource(this, "read", readprop);
+        this.writePool = new PoolJdbcSource(this, "write", writeprop);
+        this.cacheForbidden = "NONE".equalsIgnoreCase(readprop.getProperty(JDBC_CACHE_MODE));
+    }
+
+    public DataJdbcSource() {
+    }
+
+    @Override
+    public void init(AnyValue config) { //通过空构造函数创建的对象需要调用init方法进行初始化
+        String unitName = config.getValue("name");
+        Properties readprop = new Properties();
+        Properties writeprop = new Properties();
+
+        for (AnyValue confs : config.getAnyValues("properties")) {
+            boolean write = confs.getValue("name", "").contains("write");
+            for (AnyValue conf : confs.getAnyValues("property")) {
+                String pn = conf.getValue("name");
+                String pv = conf.getValue("value");
+                if (pn == null || pv == null) continue;
+                (write ? writeprop : readprop).put(pn, pv);
+            }
+        }
+
+        for (AnyValue conf : config.getAnyValues("property")) {
+            String pn = conf.getValue("name");
+            String pv = conf.getValue("value");
+            if (pn == null || pv == null) continue;
+            readprop.put(pn, pv);
+        }
+        if (writeprop.isEmpty()) writeprop = readprop;
         this.name = unitName;
         this.conf = null;
         this.readPool = new PoolJdbcSource(this, "read", readprop);

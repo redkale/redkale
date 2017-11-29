@@ -221,7 +221,25 @@ public abstract class NodeServer {
             try {
                 if (field.getAnnotation(Resource.class) == null) return;
                 if ((src instanceof Service) && Sncp.isRemote((Service) src)) return; //远程模式不得注入 DataSource
-                DataSource source = DataSources.createDataSource(resourceName);
+                AnyValue sourceConf = dataResources.get(resourceName);
+                DataSource source = null;
+                boolean needinit = true;
+                if (sourceConf != null) {
+                    final Class sourceType = serverClassLoader.loadClass(sourceConf.getValue("value"));
+                    if (DataSource.class.isAssignableFrom(sourceType)) { // DataSource
+                        final Service srcService = (Service) src;
+                        SncpClient client = Sncp.getSncpClient(srcService);
+                        final InetSocketAddress sncpAddr = client == null ? null : client.getClientAddress();
+                        final Set<String> groups = new HashSet<>();
+                        if (client != null && client.getSameGroup() != null) groups.add(client.getSameGroup());
+                        if (client != null && client.getDiffGroups() != null) groups.addAll(client.getDiffGroups());
+                        source = (DataSource) Sncp.createLocalService(serverClassLoader, resourceName, sourceType, appResFactory, appSncpTranFactory, sncpAddr, groups, Sncp.getConf(srcService));
+                    }
+                }
+                if (source == null) {
+                    source = DataSources.createDataSource(resourceName); //从persistence.xml配置中创建
+                    needinit = false;
+                }
                 application.dataSources.add(source);
                 appResFactory.register(resourceName, DataSource.class, source);
 
@@ -242,7 +260,7 @@ public abstract class NodeServer {
                 field.set(src, source);
                 rf.inject(source, self); // 给其可能包含@Resource的字段赋值;
                 //NodeServer.this.watchFactory.inject(src);
-                if (source instanceof Service) ((Service) source).init(null);
+                if (source instanceof Service && needinit) ((Service) source).init(sourceConf);
             } catch (Exception e) {
                 logger.log(Level.SEVERE, "DataSource inject error", e);
             }
@@ -264,12 +282,8 @@ public abstract class NodeServer {
                     AnyValue sourceConf = cacheResource.get(resourceName);
                     if (sourceConf == null) sourceConf = dataResources.get(resourceName);
                     final Class sourceType = sourceConf == null ? CacheMemorySource.class : serverClassLoader.loadClass(sourceConf.getValue("value"));
-                    Object source;
-                    if (DataSource.class.isAssignableFrom(sourceType)) { // DataSource
-                        source = (DataSource) Sncp.createLocalService(serverClassLoader, resourceName, sourceType, appResFactory, appSncpTranFactory, sncpAddr, groups, Sncp.getConf(srcService));
-                        application.dataSources.add((DataSource) source);
-                        appResFactory.register(resourceName, DataSource.class, source);
-                    } else { // CacheSource
+                    Object source = null;
+                    if (CacheSource.class.isAssignableFrom(sourceType)) { // CacheSource
                         source = (CacheSource) Sncp.createLocalService(serverClassLoader, resourceName, sourceType, appResFactory, appSncpTranFactory, sncpAddr, groups, Sncp.getConf(srcService));
                         Type genericType = field.getGenericType();
                         ParameterizedType pt = (genericType instanceof ParameterizedType) ? (ParameterizedType) genericType : null;
