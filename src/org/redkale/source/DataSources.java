@@ -92,6 +92,7 @@ public final class DataSources {
             }
         }
         if (readprop == null) throw new IOException("Cannot find (resource.name = '" + unitName + "') DataSource");
+        if (writeprop == null) writeprop = readprop;
         String impl = readprop.getProperty(JDBC_DATASOURCE_CLASS, DataJdbcSource.class.getName());
         if (DataJdbcSource.class.getName().equals(impl)) return new DataJdbcSource(unitName, readprop, writeprop);
         try {
