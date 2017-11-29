@@ -24,6 +24,13 @@ import org.redkale.util.*;
 @SuppressWarnings("unchecked")
 public interface DataSource {
 
+    /**
+     * 获取数据源类型
+     *
+     * @return String
+     */
+    public String getType();
+
     //----------------------insertAsync-----------------------------
     /**
      * 新增记录， 多对象必须是同一个Entity类  <br>

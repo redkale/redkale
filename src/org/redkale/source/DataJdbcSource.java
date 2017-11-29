@@ -65,6 +65,11 @@ public class DataJdbcSource extends AbstractService implements DataSource, DataC
     }
 
     @Override
+    public String getType() {
+        return "jdbc";
+    }
+
+    @Override
     public final String resourceName() {
         return name;
     }
@@ -73,6 +78,14 @@ public class DataJdbcSource extends AbstractService implements DataSource, DataC
     public void close() throws Exception {
         readPool.close();
         writePool.close();
+    }
+
+    public PoolJdbcSource getReadPoolJdbcSource() {
+        return readPool;
+    }
+
+    public PoolJdbcSource getWritePoolJdbcSource() {
+        return writePool;
     }
 
     public Connection createReadSQLConnection() {
