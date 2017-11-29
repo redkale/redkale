@@ -52,11 +52,16 @@ public class DataJdbcSource extends AbstractService implements DataSource, DataC
     protected final BiFunction<DataSource, Class, List> fullloader = (s, t) -> querySheet(false, false, t, null, null, (FilterNode) null).list(true);
 
     public DataJdbcSource(String unitName, Properties readprop, Properties writeprop) {
+        this.preConstruct(unitName, readprop, writeprop);
         this.name = unitName;
         this.conf = null;
         this.readPool = new PoolJdbcSource(this, "read", readprop);
         this.writePool = new PoolJdbcSource(this, "write", writeprop);
         this.cacheForbidden = "NONE".equalsIgnoreCase(readprop.getProperty(JDBC_CACHE_MODE));
+    }
+
+    //构造前调用
+    protected void preConstruct(String unitName, Properties readprop, Properties writeprop) {
     }
 
     @Override
@@ -2341,7 +2346,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, DataC
             final Statement statement = conn.createStatement();
             //final PreparedStatement statement = conn.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
             final ResultSet set = statement.executeQuery(sql);// ps.executeQuery();
-            consumer.accept(set); 
+            consumer.accept(set);
             set.close();
             statement.close();
         } catch (Exception ex) {
