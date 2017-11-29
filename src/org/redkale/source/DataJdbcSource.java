@@ -64,6 +64,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, DataC
     protected void preConstruct(String unitName, Properties readprop, Properties writeprop) {
     }
 
+    @Local
     @Override
     public String getType() {
         return "jdbc";
