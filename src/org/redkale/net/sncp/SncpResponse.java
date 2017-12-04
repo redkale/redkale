@@ -49,6 +49,7 @@ public final class SncpResponse extends Response<SncpContext, SncpRequest> {
         super(context, request);
         this.addrBytes = context.getServerAddress().getAddress().getAddress();
         this.addrPort = context.getServerAddress().getPort();
+        if (this.addrBytes.length != 4) throw new RuntimeException("SNCP serverAddress only support IPv4");
     }
 
     public void finish(final int retcode, final BsonWriter out) {

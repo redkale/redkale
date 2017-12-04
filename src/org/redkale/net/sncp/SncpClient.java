@@ -103,6 +103,7 @@ public final class SncpClient {
         this.actions = methodens.toArray(new SncpAction[methodens.size()]);
         this.addrBytes = clientAddress == null ? new byte[4] : clientAddress.getAddress().getAddress();
         this.addrPort = clientAddress == null ? 0 : clientAddress.getPort();
+        if (this.addrBytes.length != 4) throw new RuntimeException("SNCP clientAddress only support IPv4");
     }
 
     static List<SncpAction> getSncpActions(final Class serviceClass) {
@@ -342,7 +343,7 @@ public final class SncpClient {
         final Type[] myparamtypes = action.paramTypes;
         final Class[] myparamclass = action.paramClass;
         if (action.addressSourceParamIndex >= 0) params[action.addressSourceParamIndex] = this.clientAddress;
-        if(bsonConvert == null) bsonConvert = BsonConvert.root();
+        if (bsonConvert == null) bsonConvert = BsonConvert.root();
         final BsonWriter writer = bsonConvert.pollBsonWriter(transport.getBufferSupplier()); // 将head写入
         writer.writeTo(DEFAULT_HEADER);
         for (int i = 0; i < params.length; i++) {  //params 可能包含: 3 个 boolean
