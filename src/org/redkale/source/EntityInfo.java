@@ -435,6 +435,26 @@ public final class EntityInfo<T> {
     }
 
     /**
+     * 获取查询字段列表
+     *
+     * @param tabalis 表别名
+     * @param selects 过滤字段
+     *
+     * @return String
+     */
+    public CharSequence getQueryColumns(String tabalis, SelectColumn selects) {
+        if (selects == null) return tabalis == null ? "*" : (tabalis + ".*");
+        StringBuilder sb = new StringBuilder();
+        for (Attribute attr : this.attributes) {
+            if (!selects.test(attr.field())) continue;
+            if (sb.length() > 0) sb.append(',');
+            sb.append(getSQLColumn(tabalis, attr.field()));
+        }
+        if (sb.length() == 0) sb.append('*');
+        return sb;
+    }
+
+    /**
      * 根据主键值获取Entity的表名
      *
      * @param primary Entity主键值

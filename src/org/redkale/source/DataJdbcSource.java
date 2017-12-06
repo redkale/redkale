@@ -84,7 +84,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, DataC
         if (writeprop.isEmpty()) writeprop = readprop;
         this.initByProperties(unitName, readprop, writeprop);
     }
-    
+
     //构造前调用
     protected void preConstruct(String unitName, Properties readprop, Properties writeprop) {
     }
@@ -1495,7 +1495,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, DataC
         final Connection conn = createReadSQLConnection();
         try {
             final SelectColumn sels = selects;
-            final String sql = "SELECT * FROM " + info.getTable(pk) + " WHERE " + info.getPrimarySQLColumn() + " = " + FilterNode.formatToString(pk);
+            final String sql = "SELECT " + info.getQueryColumns(null, selects) + " FROM " + info.getTable(pk) + " WHERE " + info.getPrimarySQLColumn() + " = " + FilterNode.formatToString(pk);
             if (info.isLoggable(logger, Level.FINEST)) logger.finest(clazz.getSimpleName() + " find sql=" + sql);
             conn.setReadOnly(true);
             final PreparedStatement ps = conn.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
@@ -1572,7 +1572,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, DataC
             final Map<Class, String> joinTabalis = node == null ? null : node.getJoinTabalis();
             final CharSequence join = node == null ? null : node.createSQLJoin(this, false, joinTabalis, new HashSet<>(), info);
             final CharSequence where = node == null ? null : node.createSQLExpress(info, joinTabalis);
-            final String sql = "SELECT a.* FROM " + info.getTable(node) + " a" + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
+            final String sql = "SELECT " + info.getQueryColumns("a", selects) + " FROM " + info.getTable(node) + " a" + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
             if (info.isLoggable(logger, Level.FINEST)) logger.finest(clazz.getSimpleName() + " find sql=" + sql);
             conn.setReadOnly(true);
             final PreparedStatement ps = conn.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
@@ -2298,7 +2298,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, DataC
             final Map<Class, String> joinTabalis = node == null ? null : node.getJoinTabalis();
             final CharSequence join = node == null ? null : node.createSQLJoin(this, false, joinTabalis, new HashSet<>(), info);
             final CharSequence where = node == null ? null : node.createSQLExpress(info, joinTabalis);
-            final String sql = "SELECT a.* FROM " + info.getTable(node) + " a" + (join == null ? "" : join)
+            final String sql = "SELECT " + info.getQueryColumns("a", selects) + " FROM " + info.getTable(node) + " a" + (join == null ? "" : join)
                 + ((where == null || where.length() == 0) ? "" : (" WHERE " + where)) + info.createSQLOrderby(flipper);
             if (info.isLoggable(logger, Level.FINEST)) {
                 logger.finest(clazz.getSimpleName() + " query sql=" + sql + (flipper == null || flipper.getLimit() < 1 ? "" : (" LIMIT " + flipper.getOffset() + "," + flipper.getLimit())));
