@@ -15,7 +15,7 @@ import org.redkale.net.http.*;
  *
  * @author zhangjx
  */
-@RestWebSocket(name = "chat", catalog = "ws", comment = "文字聊天")
+@RestWebSocket(name = "chat", catalog = "ws", comment = "文字聊天", anyuser = true)
 public class ChatWebSocket extends WebSocket<Integer, Object> {
 
     protected static final AtomicInteger idcreator = new AtomicInteger(10000);

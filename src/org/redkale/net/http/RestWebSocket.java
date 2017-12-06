@@ -53,6 +53,13 @@ public @interface RestWebSocket {
     boolean single() default true;
 
     /**
+     * WebSocket.createUserid返回的值是否不能表示户登录态
+     *
+     * @return 默认false
+     */
+    boolean anyuser() default false;
+
+    /**
      * WebScoket服务器给客户端进行ping操作的间隔时间, 单位: 秒， 默认值：15秒
      *
      * @return int

@@ -62,13 +62,20 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
 
     protected Type messageTextType;  //RestWebSocket时会被修改
 
+    //同RestWebSocket.single
     protected boolean single = true; //是否单用户单连接
 
+    //同RestWebSocket.liveinterval
     protected int liveinterval = DEFAILT_LIVEINTERVAL;
 
+    //同RestWebSocket.wsmaxconns
     protected int wsmaxconns = 0;
 
+    //同RestWebSocket.wsmaxbody
     protected int wsmaxbody = 16 * 1024;
+
+    //同RestWebSocket.anyuser
+    protected boolean anyuser = false;
 
     @Resource(name = "jsonconvert")
     protected Convert jsonConvert;
@@ -203,7 +210,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
                             return;
                         }
                         webSocket._userid = userid;
-                        if (single) {
+                        if (single && !anyuser) {
                             WebSocketServlet.this.node.existsWebSocket(userid).whenComplete((rs, ex) -> {
                                 if (rs) webSocket.onSingleRepeatConnect();
                                 WebSocketServlet.this.node.localEngine.add(webSocket);

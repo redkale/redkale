@@ -328,6 +328,10 @@ public final class Rest {
             mv.visitInsn(rws.single() ? ICONST_1 : ICONST_0);
             mv.visitFieldInsn(PUTFIELD, newDynName, "single", "Z");
 
+            mv.visitVarInsn(ALOAD, 0);
+            mv.visitInsn(rws.anyuser() ? ICONST_1 : ICONST_0);
+            mv.visitFieldInsn(PUTFIELD, newDynName, "anyuser", "Z");
+            
             mv.visitInsn(RETURN);
             mv.visitMaxs(3, 1);
             mv.visitEnd();
