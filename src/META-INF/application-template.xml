@@ -71,7 +71,13 @@
         <source name="redis" value="org.redkalex.cache.RedisCacheSource" xxx="16">
             <node addr="127.0.0.1" port="7070"/>
         </source>
-
+        
+        <!--
+           Application启动的监听事件,可配置多个节点
+           value: 类名，必须是ApplicationListener的子类
+        -->
+        <listener value="org.redkalex.xxx.XXXApplicationListener"/>
+        
         <!-- 
             【节点全局唯一】
             全局的参数配置, 可以通过@Resource(name="property.xxxxxx") 进行注入<property>的信息, 被注解的字段类型只能是String、primitive class

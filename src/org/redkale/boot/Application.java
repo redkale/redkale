@@ -131,6 +131,9 @@ public final class Application {
     //日志
     private final Logger logger;
 
+    //监听事件
+    private final List<ApplicationListener> listeners = new CopyOnWriteArrayList<>();
+
     //服务启动时间
     private final long startTime = System.currentTimeMillis();
 
@@ -487,6 +490,15 @@ public final class Application {
                 }
                 sncpTransportFactory.addGroupInfo(ginfo);
             }
+            for (AnyValue conf : resources.getAnyValues("listener")) {
+                final String listenClass = conf.getValue("value", "");
+                if (listenClass.isEmpty()) continue;
+                Class clazz = Class.forName(listenClass);
+                if (!ApplicationListener.class.isAssignableFrom(clazz)) continue;
+                ApplicationListener listener = (ApplicationListener) clazz.newInstance();
+                listener.init(config);
+                this.listeners.add(listener);
+            }
         }
         //------------------------------------------------------------------------
     }
@@ -783,6 +795,9 @@ public final class Application {
         application.init();
         application.startSelfServer();
         try {
+            for (ApplicationListener listener : application.listeners) {
+                listener.preStart(application);
+            }
             application.start();
         } catch (Exception e) {
             application.logger.log(Level.SEVERE, "Application start error", e);
@@ -801,6 +816,14 @@ public final class Application {
     }
 
     private void shutdown() throws Exception {
+        for (ApplicationListener listener : this.listeners) {
+            try {
+                listener.preShutdown(this);
+            } catch (Exception e) {
+                logger.log(Level.WARNING, listener.getClass() + " preShutdown erroneous", e);
+            }
+        }
+
         servers.stream().forEach((server) -> {
             try {
                 server.shutdown();
