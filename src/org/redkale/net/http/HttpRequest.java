@@ -519,8 +519,8 @@ public class HttpRequest extends Request<HttpContext> {
      * @return cookie值
      */
     public String getCookie(String name, String dfvalue) {
-        for (HttpCookie cookie : getCookies()) {
-            if (name.equals(cookie.getName())) return cookie.getValue();
+        for (HttpCookie c : getCookies()) {
+            if (name.equals(c.getName())) return c.getValue();
         }
         return dfvalue;
     }
@@ -1132,6 +1132,26 @@ public class HttpRequest extends Request<HttpContext> {
         final Map<String, String> map0 = map;
         getParameters().forEach((k, v) -> map0.put(k, v));
         return map0;
+    }
+
+    /**
+     * 将请求参数转换成String, 字符串格式为: bean1={}&id=13&name=xxx <br>
+     * 不会返回null，没有参数返回空字符串
+     *
+     *
+     * @return String
+     */
+    public String getParametersToString() {
+        final StringBuilder sb = new StringBuilder();
+        getParameters().forEach((k, v) -> {
+            if (sb.length() > 0) sb.append('&');
+            try {
+                sb.append(k).append('=').append(URLEncoder.encode(v, "UTF-8"));
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
+        });
+        return sb.toString();
     }
 
     /**
