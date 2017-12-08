@@ -447,7 +447,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      */
     @SuppressWarnings("unchecked")
     public void finishJson(final JsonConvert convert, final HttpResult result) {
-        if (output == null) {
+        if (result == null) {
             finish("");
             return;
         }
