@@ -16,6 +16,7 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
+import org.redkale.convert.Convert;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.*;
 import org.redkale.util.AnyValue.DefaultAnyValue;
@@ -421,7 +422,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
             if (v instanceof CharSequence) {
                 finish(v.toString());
             } else if (v instanceof HttpResult) {
-                finishJson(convert, (HttpResult) v);
+                finish(convert, (HttpResult) v);
             } else if (v instanceof org.redkale.service.RetResult) {
                 finishJson(convert, (org.redkale.service.RetResult) v);
             } else {
@@ -431,22 +432,23 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
     }
 
     /**
-     * 将HttpResult的结果对象以JSON格式输出
+     * 将HttpResult的结果对象输出
      *
      * @param result HttpResult对象
      */
-    public void finishJson(final HttpResult result) {
-        finishJson(request.getJsonConvert(), result);
+    public void finish(final HttpResult result) {
+        finish(request.getJsonConvert(), result);
     }
 
     /**
-     * 将HttpResult的结果对象以JSON格式输出
+     * 将HttpResult的结果对象输出 <br>
+     * 当result不为byte[]/String/ByteBuffer/ByteBuffer[]类型时按Convert 形式输出
      *
-     * @param convert 指定的JsonConvert
+     * @param convert 指定的Convert
      * @param result  HttpResult对象
      */
     @SuppressWarnings("unchecked")
-    public void finishJson(final JsonConvert convert, final HttpResult result) {
+    public void finish(final Convert convert, final HttpResult result) {
         if (result == null) {
             finish("");
             return;
@@ -457,7 +459,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
             try {
                 finish((File) result.getResult());
             } catch (IOException e) {
-                getContext().getLogger().log(Level.WARNING, "HttpServlet finishJson HttpResult File occur, forece to close channel. request = " + getRequest(), e);
+                getContext().getLogger().log(Level.WARNING, "HttpServlet finish HttpResult File occur, forece to close channel. request = " + getRequest(), e);
                 finish(500, null);
             }
         } else if (result.getResult() instanceof byte[]) {

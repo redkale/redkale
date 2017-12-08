@@ -17,6 +17,7 @@ import jdk.internal.org.objectweb.asm.*;
 import static jdk.internal.org.objectweb.asm.ClassWriter.COMPUTE_FRAMES;
 import static jdk.internal.org.objectweb.asm.Opcodes.*;
 import jdk.internal.org.objectweb.asm.Type;
+import org.redkale.convert.Convert;
 import org.redkale.convert.json.*;
 import org.redkale.service.*;
 import org.redkale.util.*;
@@ -578,7 +579,8 @@ public final class Rest {
         final String webServletDesc = Type.getDescriptor(WebServlet.class);
         final String reqDesc = Type.getDescriptor(HttpRequest.class);
         final String respDesc = Type.getDescriptor(HttpResponse.class);
-        final String convertDesc = Type.getDescriptor(JsonConvert.class);
+        final String convertDesc = Type.getDescriptor(Convert.class);
+        final String jsonConvertDesc = Type.getDescriptor(JsonConvert.class);
         final String retDesc = Type.getDescriptor(RetResult.class);
         final String futureDesc = Type.getDescriptor(CompletableFuture.class);
         final String flipperDesc = Type.getDescriptor(Flipper.class);
@@ -1541,9 +1543,9 @@ public final class Rest {
                 mv.visitVarInsn(ALOAD, 2); //response
                 if (rcs != null && rcs.length > 0) {
                     mv.visitVarInsn(ALOAD, 0);
-                    mv.visitFieldInsn(GETFIELD, newDynName, REST_JSONCONVERT_FIELD_PREFIX + restConverts.size(), convertDesc);
+                    mv.visitFieldInsn(GETFIELD, newDynName, REST_JSONCONVERT_FIELD_PREFIX + restConverts.size(), jsonConvertDesc);
                     mv.visitVarInsn(ALOAD, maxLocals);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishJson", "(" + convertDesc + retDesc + ")V", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishJson", "(" + jsonConvertDesc + retDesc + ")V", false);
                 } else {
                     mv.visitVarInsn(ALOAD, maxLocals);
                     mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishJson", "(" + retDesc + ")V", false);
@@ -1555,12 +1557,12 @@ public final class Rest {
                 mv.visitVarInsn(ALOAD, 2); //response                
                 if (rcs != null && rcs.length > 0) {
                     mv.visitVarInsn(ALOAD, 0);
-                    mv.visitFieldInsn(GETFIELD, newDynName, REST_JSONCONVERT_FIELD_PREFIX + restConverts.size(), convertDesc);
+                    mv.visitFieldInsn(GETFIELD, newDynName, REST_JSONCONVERT_FIELD_PREFIX + restConverts.size(), jsonConvertDesc);
                     mv.visitVarInsn(ALOAD, maxLocals);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishJson", "(" + convertDesc + httprsDesc + ")V", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finish", "(" + convertDesc + httprsDesc + ")V", false);
                 } else {
                     mv.visitVarInsn(ALOAD, maxLocals);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishJson", "(" + httprsDesc + ")V", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finish", "(" + httprsDesc + ")V", false);
                 }
                 mv.visitInsn(RETURN);
                 maxLocals++;
@@ -1577,9 +1579,9 @@ public final class Rest {
                 mv.visitVarInsn(ALOAD, 2);//response
                 if (rcs != null && rcs.length > 0) {
                     mv.visitVarInsn(ALOAD, 0);
-                    mv.visitFieldInsn(GETFIELD, newDynName, REST_JSONCONVERT_FIELD_PREFIX + restConverts.size(), convertDesc);
+                    mv.visitFieldInsn(GETFIELD, newDynName, REST_JSONCONVERT_FIELD_PREFIX + restConverts.size(), jsonConvertDesc);
                     mv.visitVarInsn(ALOAD, maxLocals);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishJson", "(" + convertDesc + futureDesc + ")V", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishJson", "(" + jsonConvertDesc + futureDesc + ")V", false);
                 } else {
                     mv.visitVarInsn(ALOAD, maxLocals);
                     mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishJson", "(" + futureDesc + ")V", false);
@@ -1591,9 +1593,9 @@ public final class Rest {
                 mv.visitVarInsn(ALOAD, 2); //response
                 if (rcs != null && rcs.length > 0) {
                     mv.visitVarInsn(ALOAD, 0);
-                    mv.visitFieldInsn(GETFIELD, newDynName, REST_JSONCONVERT_FIELD_PREFIX + restConverts.size(), convertDesc);
+                    mv.visitFieldInsn(GETFIELD, newDynName, REST_JSONCONVERT_FIELD_PREFIX + restConverts.size(), jsonConvertDesc);
                     mv.visitVarInsn(ALOAD, maxLocals);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishJson", "(" + convertDesc + "Ljava/lang/Object;)V", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishJson", "(" + jsonConvertDesc + "Ljava/lang/Object;)V", false);
                 } else {
                     mv.visitVarInsn(ALOAD, maxLocals);
                     mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishJson", "(Ljava/lang/Object;)V", false);
@@ -1617,7 +1619,7 @@ public final class Rest {
         }
 
         for (int i = 1; i <= restConverts.size(); i++) {
-            fv = cw.visitField(ACC_PRIVATE, REST_JSONCONVERT_FIELD_PREFIX + i, convertDesc, null, null);
+            fv = cw.visitField(ACC_PRIVATE, REST_JSONCONVERT_FIELD_PREFIX + i, jsonConvertDesc, null, null);
             fv.visitEnd();
         }
 
