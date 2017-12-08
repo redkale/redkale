@@ -1142,6 +1142,18 @@ public class HttpRequest extends Request<HttpContext> {
      * @return String
      */
     public String getParametersToString() {
+        return getParametersToString(null);
+    }
+
+    /**
+     * 将请求参数转换成String, 字符串格式为: bean1={}&id=13&name=xxx <br>
+     * 不会返回null，没有参数返回空字符串
+     *
+     * @param prefix 拼接前缀， 如果无参数，返回的字符串不会含有拼接前缀
+     *
+     * @return String
+     */
+    public String getParametersToString(String prefix) {
         final StringBuilder sb = new StringBuilder();
         getParameters().forEach((k, v) -> {
             if (sb.length() > 0) sb.append('&');
@@ -1151,7 +1163,7 @@ public class HttpRequest extends Request<HttpContext> {
                 throw new RuntimeException(ex);
             }
         });
-        return sb.toString();
+        return (sb.length() > 0 && prefix != null) ? (prefix + sb) : sb.toString();
     }
 
     /**
