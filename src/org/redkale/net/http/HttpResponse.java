@@ -460,6 +460,12 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
                 getContext().getLogger().log(Level.WARNING, "HttpServlet finishJson HttpResult File occur, forece to close channel. request = " + getRequest(), e);
                 finish(500, null);
             }
+        } else if (result.getResult() instanceof byte[]) {
+            finish((byte[]) result.getResult());
+        } else if (result.getResult() instanceof ByteBuffer) {
+            finish((ByteBuffer) result.getResult());
+        } else if (result.getResult() instanceof ByteBuffer[]) {
+            finish((ByteBuffer[]) result.getResult());
         } else if (result.getResult() instanceof String) {
             finish((String) result.getResult());
         } else if (result.getResult() == null) {
