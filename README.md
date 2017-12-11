@@ -25,5 +25,5 @@
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<h5>基本文档:&nbsp;&nbsp;&nbsp;&nbsp;<a href='https://redkale.org/articles.html' target='_blank'>https://redkale.org/articles.html</a></h5>
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<h5>欢迎加入Redkale QQ群: 527523235</h5>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<h5>欢迎加入Redkale QQ群:  527523235</h5>
 &nbsp;
