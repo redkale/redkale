@@ -236,7 +236,7 @@ public final class Application {
         this.logger = Logger.getLogger(this.getClass().getSimpleName());
         this.serversLatch = new CountDownLatch(config.getAnyValues("server").length + 1);
         this.classLoader = new RedkaleClassLoader(Thread.currentThread().getContextClassLoader());
-        logger.log(Level.INFO, "------------------------------- Redkale " + Redkale.getDotedVersion() + " -------------------------------");
+        logger.log(Level.INFO, "------------------------- Redkale " + Redkale.getDotedVersion() + " -------------------------");
         //------------------配置 <transport> 节点 ------------------
         ObjectPool<ByteBuffer> transportPool = null;
         ExecutorService transportExec = null;
@@ -357,7 +357,7 @@ public final class Application {
         File persist = new File(this.home, "conf/persistence.xml");
         final String homepath = this.home.getCanonicalPath();
         if (persist.isFile()) System.setProperty(DataSources.DATASOURCE_CONFPATH, persist.getCanonicalPath());
-        logger.log(Level.INFO, RESNAME_APP_HOME + "= " + homepath + "\r\n" + RESNAME_APP_ADDR + "= " + this.localAddress.getHostAddress());
+        logger.log(Level.INFO, "APP_JAVA = " + System.getProperty("java.version") + "\r\n" + RESNAME_APP_ADDR + " = " + this.localAddress.getHostAddress() + "\r\n" + RESNAME_APP_HOME + " = " + homepath);
         String lib = config.getValue("lib", "${APP_HOME}/libs/*").trim().replace("${APP_HOME}", homepath);
         lib = lib.isEmpty() ? (homepath + "/conf") : (lib + ";" + homepath + "/conf");
         Server.loadLib(classLoader, logger, lib);
