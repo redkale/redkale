@@ -430,6 +430,18 @@ public abstract class WebSocket<G extends Serializable, T> {
     }
 
     /**
+     * 更改本WebSocket的userid
+     *
+     * @param newuserid 新用户ID，不能为null
+     *
+     * @return CompletableFuture
+     */
+    public CompletableFuture<Void> changeUserid(final G newuserid) {
+        if (newuserid == null) throw new NullPointerException("newuserid is null");
+        return _engine.changeUserid(this, newuserid);
+    }
+
+    /**
      * 强制关闭用户的所有WebSocket
      *
      * @param userid Serializable

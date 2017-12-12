@@ -61,7 +61,7 @@ public abstract class WebSocketNode {
     protected WebSocketEngine localEngine;
 
     public void init(AnyValue conf) {
-        if(sncpNodeAddresses != null) sncpNodeAddresses.initValueType(InetSocketAddress.class);
+        if (sncpNodeAddresses != null) sncpNodeAddresses.initValueType(InetSocketAddress.class);
     }
 
     public void destroy(AnyValue conf) {
@@ -86,6 +86,8 @@ public abstract class WebSocketNode {
 
     protected abstract CompletableFuture<Void> disconnect(Serializable userid, InetSocketAddress addr);
 
+    protected abstract CompletableFuture<Void> changeUserid(Serializable fromuserid, Serializable touserid, InetSocketAddress addr);
+
     protected abstract CompletableFuture<Integer> forceCloseWebSocket(Serializable userid, InetSocketAddress addr);
 
     //--------------------------------------------------------------------------------
@@ -97,6 +99,11 @@ public abstract class WebSocketNode {
     final CompletableFuture<Void> disconnect(final Serializable userid) {
         if (logger.isLoggable(Level.FINEST)) logger.finest(localSncpAddress + " receive websocket disconnect event (" + userid + " on " + (this.localEngine == null ? null : this.localEngine.getEngineid()) + ").");
         return disconnect(userid, localSncpAddress);
+    }
+
+    final CompletableFuture<Void> changeUserid(Serializable olduserid, final Serializable newuserid) {
+        if (logger.isLoggable(Level.FINEST)) logger.finest(localSncpAddress + " receive websocket changeUserid event (from " + olduserid + " to " + newuserid + " on " + (this.localEngine == null ? null : this.localEngine.getEngineid()) + ").");
+        return changeUserid(olduserid, newuserid, localSncpAddress);
     }
 
     //--------------------------------------------------------------------------------

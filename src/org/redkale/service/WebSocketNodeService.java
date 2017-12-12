@@ -61,7 +61,7 @@ public class WebSocketNodeService extends WebSocketNode implements Service {
     /**
      * 当用户连接到节点，需要更新到CacheSource
      *
-     * @param userid   String
+     * @param userid   Serializable
      * @param sncpAddr InetSocketAddress
      *
      * @return 无返回值
@@ -78,7 +78,7 @@ public class WebSocketNodeService extends WebSocketNode implements Service {
     /**
      * 当用户从一个节点断掉了所有的连接，需要从CacheSource中删除
      *
-     * @param userid   String
+     * @param userid   Serializable
      * @param sncpAddr InetSocketAddress
      *
      * @return 无返回值
@@ -92,9 +92,26 @@ public class WebSocketNodeService extends WebSocketNode implements Service {
     }
 
     /**
+     * 更改用户ID，需要更新到CacheSource
+     *
+     * @param olduserid Serializable
+     * @param newuserid Serializable
+     * @param sncpAddr  InetSocketAddress
+     *
+     * @return 无返回值
+     */
+    @Override
+    public CompletableFuture<Void> changeUserid(Serializable olduserid, Serializable newuserid, InetSocketAddress sncpAddr) {
+        CompletableFuture<Void> future = sncpNodeAddresses.appendSetItemAsync(SOURCE_SNCP_USERID_PREFIX + newuserid, sncpAddr);
+        future = future.thenAccept((a) -> sncpNodeAddresses.removeSetItemAsync(SOURCE_SNCP_USERID_PREFIX + olduserid, sncpAddr));
+        if (logger.isLoggable(Level.FINEST)) logger.finest(WebSocketNodeService.class.getSimpleName() + ".event: " + olduserid + " changeUserid to " + newuserid + " from " + sncpAddr);
+        return future;
+    }
+
+    /**
      * 强制关闭用户的WebSocket
      *
-     * @param userid   String
+     * @param userid   Serializable
      * @param sncpAddr InetSocketAddress
      *
      * @return 无返回值

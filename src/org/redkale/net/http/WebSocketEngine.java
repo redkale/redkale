@@ -149,6 +149,31 @@ public class WebSocketEngine {
         }
     }
 
+    @Comment("更改WebSocket的userid")
+    CompletableFuture<Void> changeUserid(WebSocket socket, final Serializable newuserid) {
+        if (newuserid == null) throw new NullPointerException("newuserid is null");
+        final Serializable olduserid = socket._userid;
+        socket._userid = newuserid;
+        if (single) {
+            websockets.remove(olduserid);
+            websockets.put(newuserid, socket);
+        } else { //非线程安全， 在常规场景中无需锁
+            List<WebSocket> oldlist = websockets2.get(olduserid);
+            if (oldlist != null) {
+                oldlist.remove(socket);
+                if (oldlist.isEmpty()) websockets2.remove(olduserid);
+            }
+            List<WebSocket> newlist = websockets2.get(newuserid);
+            if (newlist == null) {
+                newlist = new CopyOnWriteArrayList<>();
+                websockets2.put(newuserid, newlist);
+            }
+            newlist.add(socket);
+        }
+        if (node != null) return node.changeUserid(olduserid, newuserid);
+        return CompletableFuture.completedFuture(null);
+    }
+
     @Comment("强制关闭本地用户的WebSocket")
     public int forceCloseLocalWebSocket(Serializable userid) {
         if (single) {
