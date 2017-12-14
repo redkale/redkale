@@ -10,7 +10,7 @@ import java.io.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
-import java.util.function.Predicate;
+import java.util.function.*;
 import java.util.logging.*;
 import java.util.stream.*;
 import org.redkale.convert.Convert;
@@ -321,6 +321,16 @@ public class WebSocketEngine {
         List<WebSocket> list = new ArrayList<>();
         websockets2.values().forEach(x -> list.addAll(x));
         return list;
+    }
+
+    @Comment("获取所有连接")
+    public void forEachLocalWebSocket(Consumer<WebSocket> consumer) {
+        if (consumer == null) return;
+        if (single) {
+            websockets.values().stream().forEach(consumer);
+        } else {
+            websockets2.values().forEach(x -> x.stream().forEach(consumer));
+        }
     }
 
     @Comment("获取当前连接总数")
