@@ -98,7 +98,7 @@
             </p>
             <p>&nbsp;&nbsp;<b>Service</b></p>
             <p>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://redkale.org" target="_blank">Redkale</a>所有API设计中最精简的当属RPC功能，RPC没有直接调用的API，其功能依附在Service。RPC或类似功能的框架在Java里一直是比较重量级的，从古老的Corba、RMI到后来的EJB、WebService，还有其他很多RPC开源框架，都有着复杂的配置和大量API学习成本，有些还需要区分客户端和服务端(如WebService)。 Service不仅只是个逻辑层的规范定义，还集成了很强大的RPC和异步调用功能，远程模式的Service就是RPC功能，系统在依赖注入过程中创建Service时通过基本的IP配置自动识别是创建本地模式的Service还是远程模式的Service，远程模式的Service使用的就是RPC，但在代码层Service的调用本地模式与远程模式完全一样。更神奇的是，带有异步回调函数AsyncHandler 或返回类型为CompletableFuture的Service方法同样能执行远程模式。这种RPC的简易性是其他框架都无可匹敌的。REST风格的Service在接口设计上尽量减少注解性的配置，同时保留灵活性,减少HttpServlet的编写。<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://redkale.org" target="_blank">Redkale</a>所有API设计中最精简的当属RPC功能，RPC没有直接调用的API，其功能依附在Service。RPC或类似功能的框架在Java里一直是比较重量级的，从古老的Corba、RMI到后来的EJB、WebService，还有其他很多RPC开源框架，都有着复杂的配置和大量API学习成本，有些还需要区分客户端和服务端(如WebService)。 Service不仅只是个逻辑层的规范定义，还集成了很强大的RPC和异步调用功能，远程模式的Service就是RPC功能，系统在依赖注入过程中创建Service时通过基本的IP配置自动识别是创建本地模式的Service还是远程模式的Service，远程模式的Service使用的就是RPC，但在代码层Service的调用本地模式与远程模式完全一样。更神奇的是，带有异步回调函数CompletionHandler 或返回类型为CompletableFuture的Service方法同样能执行远程模式。这种RPC的简易性是其他框架都无可匹敌的。REST风格的Service在接口设计上尽量减少注解性的配置，同时保留灵活性,减少HttpServlet的编写。<br>
             </p>
             <p>&nbsp;&nbsp;<b>Source</b></p>
             <p>

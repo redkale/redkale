@@ -34,7 +34,7 @@
                 <tr><td style="text-align: left;">@RestService</td><td>标记Service需要REST化。</td></tr>
                 <tr><td style="text-align: left;">@RestMapping</td><td>标记请求的方法名，同一方法上可重复标记(需确保name值在Service中是唯一的)。<br><b>其标记的Service方法只能throws IOException或不抛异常</b>。</td></tr>
                 <tr><td style="text-align: left;">@RestConvert</td><td>标记请求的方法名上，对返回值以JSON形式输出时进行字段的屏蔽或开启进行设置</b>。</td></tr>
-                <tr><td style="text-align: left;">@RestParam</td><td>获取常规参数值, 字段类型可以是 基础数据类型/Flipper/AsyncHandler/String/JavaBean<br>name='&#38;'&nbsp;&nbsp;&nbsp;&nbsp;表示当前用户(@HttpUserType)<br>name='#'&nbsp;&nbsp;&nbsp;&nbsp;表示截取uri最后一段<br>name='#xxx:'&nbsp;&nbsp;&nbsp;&nbsp;表示从uri中/pipes/xxx:v/截取xxx:的值</td></tr>
+                <tr><td style="text-align: left;">@RestParam</td><td>获取常规参数值, 字段类型可以是 基础数据类型/Flipper/CompletionHandler/String/JavaBean<br>name='&#38;'&nbsp;&nbsp;&nbsp;&nbsp;表示当前用户(@HttpUserType)<br>name='#'&nbsp;&nbsp;&nbsp;&nbsp;表示截取uri最后一段<br>name='#xxx:'&nbsp;&nbsp;&nbsp;&nbsp;表示从uri中/pipes/xxx:v/截取xxx:的值</td></tr>
                 <tr><td style="text-align: left;">@RestHeader</td><td>通过request.getHeader获取参数值, 字段类型只能是String</td></tr>
                 <tr><td style="text-align: left;">@RestCookie</td><td>通过request.getCookie获取Cookie值, 字段类型只能是String</td></tr>
                 <tr><td style="text-align: left;">@RestBody<td>通过request.getBody获取参数值, 字段类型只能是String/byte[]/JavaBean</td></tr>
