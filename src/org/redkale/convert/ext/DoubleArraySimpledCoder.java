@@ -5,6 +5,7 @@
  */
 package org.redkale.convert.ext;
 
+import java.util.stream.DoubleStream;
 import org.redkale.convert.Reader;
 import org.redkale.convert.SimpledCoder;
 import org.redkale.convert.Writer;
@@ -12,7 +13,9 @@ import org.redkale.convert.Writer;
 /**
  * double[] 的SimpledCoder实现
  *
- * <p> 详情见: https://redkale.org
+ * <p>
+ * 详情见: https://redkale.org
+ *
  * @author zhangjx
  * @param <R> Reader输入的子类型
  * @param <W> Writer输出的子类型
@@ -66,4 +69,24 @@ public final class DoubleArraySimpledCoder<R extends Reader, W extends Writer> e
         }
     }
 
+    public final static class DoubleStreamSimpledCoder<R extends Reader, W extends Writer> extends SimpledCoder<R, W, DoubleStream> {
+
+        public static final DoubleStreamSimpledCoder instance = new DoubleStreamSimpledCoder();
+
+        @Override
+        public void convertTo(W out, DoubleStream values) {
+            if (values == null) {
+                out.writeNull();
+                return;
+            }
+            DoubleArraySimpledCoder.instance.convertTo(out, values.toArray());
+        }
+
+        @Override
+        public DoubleStream convertFrom(R in) {
+            double[] value = DoubleArraySimpledCoder.instance.convertFrom(in);
+            return value == null ? null : DoubleStream.of(value);
+        }
+
+    }
 }

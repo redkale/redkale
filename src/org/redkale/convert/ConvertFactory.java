@@ -15,7 +15,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Pattern;
-import java.util.stream.Stream;
+import java.util.stream.*;
 import org.redkale.convert.ext.InetAddressSimpledCoder.InetSocketAddressSimpledCoder;
 import org.redkale.convert.ext.*;
 import org.redkale.util.*;
@@ -108,9 +108,12 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
             this.register(short[].class, ShortArraySimpledCoder.instance);
             this.register(char[].class, CharArraySimpledCoder.instance);
             this.register(int[].class, IntArraySimpledCoder.instance);
+            this.register(IntStream.class, IntArraySimpledCoder.IntStreamSimpledCoder.instance);
             this.register(long[].class, LongArraySimpledCoder.instance);
+            this.register(LongStream.class, LongArraySimpledCoder.LongStreamSimpledCoder.instance);
             this.register(float[].class, FloatArraySimpledCoder.instance);
             this.register(double[].class, DoubleArraySimpledCoder.instance);
+            this.register(DoubleStream.class, DoubleArraySimpledCoder.DoubleStreamSimpledCoder.instance);
             this.register(String[].class, StringArraySimpledCoder.instance);
             //---------------------------------------------------------
             this.register(AnyValue.class, Creator.create(AnyValue.DefaultAnyValue.class));

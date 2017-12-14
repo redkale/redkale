@@ -5,6 +5,7 @@
  */
 package org.redkale.convert.ext;
 
+import java.util.stream.LongStream;
 import org.redkale.convert.Reader;
 import org.redkale.convert.SimpledCoder;
 import org.redkale.convert.Writer;
@@ -68,4 +69,24 @@ public final class LongArraySimpledCoder<R extends Reader, W extends Writer> ext
         }
     }
 
+    public final static class LongStreamSimpledCoder<R extends Reader, W extends Writer> extends SimpledCoder<R, W, LongStream> {
+
+        public static final LongStreamSimpledCoder instance = new LongStreamSimpledCoder();
+
+        @Override
+        public void convertTo(W out, LongStream values) {
+            if (values == null) {
+                out.writeNull();
+                return;
+            }
+            LongArraySimpledCoder.instance.convertTo(out, values.toArray());
+        }
+
+        @Override
+        public LongStream convertFrom(R in) {
+            long[] value = LongArraySimpledCoder.instance.convertFrom(in);
+            return value == null ? null : LongStream.of(value);
+        }
+
+    }
 }

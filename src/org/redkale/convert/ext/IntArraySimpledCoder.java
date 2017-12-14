@@ -5,6 +5,7 @@
  */
 package org.redkale.convert.ext;
 
+import java.util.stream.IntStream;
 import org.redkale.convert.Reader;
 import org.redkale.convert.SimpledCoder;
 import org.redkale.convert.Writer;
@@ -12,7 +13,9 @@ import org.redkale.convert.Writer;
 /**
  * int[] 的SimpledCoder实现
  *
- * <p> 详情见: https://redkale.org
+ * <p>
+ * 详情见: https://redkale.org
+ *
  * @author zhangjx
  * @param <R> Reader输入的子类型
  * @param <W> Writer输出的子类型
@@ -66,4 +69,24 @@ public final class IntArraySimpledCoder<R extends Reader, W extends Writer> exte
         }
     }
 
+    public final static class IntStreamSimpledCoder<R extends Reader, W extends Writer> extends SimpledCoder<R, W, IntStream> {
+
+        public static final IntStreamSimpledCoder instance = new IntStreamSimpledCoder();
+
+        @Override
+        public void convertTo(W out, IntStream values) {
+            if (values == null) {
+                out.writeNull();
+                return;
+            }
+            IntArraySimpledCoder.instance.convertTo(out, values.toArray());
+        }
+
+        @Override
+        public IntStream convertFrom(R in) {
+            int[] value = IntArraySimpledCoder.instance.convertFrom(in);
+            return value == null ? null : IntStream.of(value);
+        }
+
+    }
 }
