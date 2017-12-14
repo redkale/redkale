@@ -229,7 +229,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         return Utility.createAsyncHandler((v, a) -> {
             finish(v);
         }, (t, a) -> {
-            request.getContext().getLogger().log(Level.WARNING, "Servlet occur, forece to close channel. request = " + request, t);
+            request.getContext().getLogger().log(Level.WARNING, "Servlet occur, forece to close channel. request = " + request + ", result is CompletionHandler", t);
             finish(500, null);
         });
     }
@@ -432,7 +432,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         } else if (obj instanceof CompletableFuture) {
             ((CompletableFuture) obj).whenComplete((v, e) -> {
                 if (e != null) {
-                    context.getLogger().log(Level.WARNING, "Servlet occur, forece to close channel. request = " + request, e);
+                    context.getLogger().log(Level.WARNING, "Servlet occur, forece to close channel. request = " + request + ", result is CompletableFuture", e);
                     finish(500, null);
                     return;
                 }
