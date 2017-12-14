@@ -5,6 +5,7 @@
  */
 package org.redkale.test.service;
 
+import java.nio.channels.CompletionHandler;
 import org.redkale.service.*;
 import org.redkale.util.*;
 
@@ -20,7 +21,7 @@ public class CService implements Service {
         return new RetResult(rs);
     }
 
-    public void ccCurrentTime(final AsyncHandler<RetResult<String>, Void> handler, final String name) {
+    public void ccCurrentTime(final CompletionHandler<RetResult<String>, Void> handler, final String name) {
         String rs = "异步ccCurrentTime: " + name + ": " + Utility.formatTime(System.currentTimeMillis());
         System.out.println("执行了 CService.ccCurrentTime----异步方法");
         if (handler != null) handler.completed(new RetResult(rs), null);

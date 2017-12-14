@@ -7,6 +7,7 @@ package org.redkale.net.http;
 
 import java.net.*;
 import java.nio.*;
+import java.nio.channels.CompletionHandler;
 import java.nio.charset.*;
 import java.security.*;
 import java.util.concurrent.*;
@@ -54,7 +55,7 @@ public class HttpContext extends Context {
     }
 
     @SuppressWarnings("unchecked")
-    protected <H extends AsyncHandler> Creator<H> loadAsyncHandlerCreator(Class<H> handlerClass) {
+    protected <H extends CompletionHandler> Creator<H> loadAsyncHandlerCreator(Class<H> handlerClass) {
         Creator<H> creator = asyncHandlerCreators.get(handlerClass);
         if (creator == null) {
             creator = createAsyncHandlerCreator(handlerClass);
@@ -64,14 +65,14 @@ public class HttpContext extends Context {
     }
 
     @SuppressWarnings("unchecked")
-    private <H extends AsyncHandler> Creator<H> createAsyncHandlerCreator(Class<H> handlerClass) {
+    private <H extends CompletionHandler> Creator<H> createAsyncHandlerCreator(Class<H> handlerClass) {
         //生成规则与SncpAsyncHandler.Factory 很类似
         //------------------------------------------------------------- 
         final boolean handlerinterface = handlerClass.isInterface();
         final String handlerClassName = handlerClass.getName().replace('.', '/');
-        final String handlerName = AsyncHandler.class.getName().replace('.', '/');
-        final String handlerDesc = Type.getDescriptor(AsyncHandler.class);
-        final String newDynName = handlerClass.getName().replace('.', '/') + "_Dync" + AsyncHandler.class.getSimpleName() + "_" + (System.currentTimeMillis() % 10000);
+        final String handlerName = CompletionHandler.class.getName().replace('.', '/');
+        final String handlerDesc = Type.getDescriptor(CompletionHandler.class);
+        final String newDynName = handlerClass.getName().replace('.', '/') + "_DyncAsyncHandler_" + (System.currentTimeMillis() % 10000);
 
         ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
         FieldVisitor fv;
@@ -157,7 +158,7 @@ public class HttpContext extends Context {
         }
         cw.visitEnd();
         byte[] bytes = cw.toByteArray();
-        Class<AsyncHandler> newHandlerClazz = (Class<AsyncHandler>) new ClassLoader(handlerClass.getClassLoader()) {
+        Class<CompletionHandler> newHandlerClazz = (Class<CompletionHandler>) new ClassLoader(handlerClass.getClassLoader()) {
             public final Class<?> loadClass(String name, byte[] b) {
                 return defineClass(name, b, 0, b.length);
             }

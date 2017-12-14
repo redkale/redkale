@@ -8,10 +8,11 @@ import java.io.*;
 import java.lang.reflect.*;
 import java.net.*;
 import java.nio.ByteBuffer;
+import java.nio.channels.CompletionHandler;
 import java.nio.charset.*;
 import java.time.*;
 import java.util.*;
-import java.util.function.Predicate;
+import java.util.function.*;
 import java.util.zip.GZIPInputStream;
 import javax.net.ssl.*;
 
@@ -456,6 +457,76 @@ public final class Utility {
             e.printStackTrace();
         }
         return back;
+    }
+
+    /**
+     * 创建 CompletionHandler 对象
+     *
+     * @param <V>     结果对象的泛型
+     * @param <A>     附件对象的泛型
+     * @param success 成功的回调函数
+     * @param fail    失败的回调函数
+     *
+     * @return CompletionHandler
+     */
+    public static <V, A> CompletionHandler<V, A> createAsyncHandler(final BiConsumer<V, A> success, final BiConsumer<Throwable, A> fail) {
+        return new CompletionHandler<V, A>() {
+            @Override
+            public void completed(V result, A attachment) {
+                if (success != null) success.accept(result, attachment);
+            }
+
+            @Override
+            public void failed(Throwable exc, A attachment) {
+                if (fail != null) fail.accept(exc, attachment);
+            }
+        };
+    }
+
+    /**
+     * 创建没有返回结果的 CompletionHandler 对象
+     *
+     * @param <A>     附件对象的泛型
+     * @param success 成功的回调函数
+     * @param fail    失败的回调函数
+     *
+     * @return CompletionHandler
+     */
+    public static <A> CompletionHandler<Void, A> createAsyncHandler(final Consumer<A> success, final BiConsumer<Throwable, A> fail) {
+        return new CompletionHandler<Void, A>() {
+            @Override
+            public void completed(Void result, A attachment) {
+                if (success != null) success.accept(attachment);
+            }
+
+            @Override
+            public void failed(Throwable exc, A attachment) {
+                if (fail != null) fail.accept(exc, attachment);
+            }
+        };
+    }
+
+    /**
+     * 创建没有附件对象的 CompletionHandler 对象
+     *
+     * @param <V>     结果对象的泛型
+     * @param success 成功的回调函数
+     * @param fail    失败的回调函数
+     *
+     * @return CompletionHandler
+     */
+    public static <V> CompletionHandler<V, Void> createAsyncHandler(final Consumer<V> success, final Consumer<Throwable> fail) {
+        return new CompletionHandler<V, Void>() {
+            @Override
+            public void completed(V result, Void attachment) {
+                if (success != null) success.accept(result);
+            }
+
+            @Override
+            public void failed(Throwable exc, Void attachment) {
+                if (fail != null) fail.accept(exc);
+            }
+        };
     }
 
     /**

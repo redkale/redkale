@@ -5,6 +5,7 @@
  */
 package org.redkale.test.service;
 
+import java.nio.channels.CompletionHandler;
 import org.redkale.net.sncp.*;
 import org.redkale.service.Service;
 import org.redkale.util.*;
@@ -19,7 +20,7 @@ public class TestService implements Service {
 //        return false;
 //    }
 
-    public void change(AsyncHandler<Boolean, TestBean> handler, TestBean bean, String name, int id) {
+    public void change(CompletionHandler<Boolean, TestBean> handler, TestBean bean, String name, int id) {
 
     }
     

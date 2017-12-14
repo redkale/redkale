@@ -9,6 +9,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
+import java.nio.channels.CompletionHandler;
 import java.security.*;
 import java.util.*;
 import javax.annotation.Resource;
@@ -138,12 +139,12 @@ public abstract class Sncp {
     }
 
     static void checkAsyncModifier(Class param, Method method) {
-        if (param == AsyncHandler.class) return;
+        if (param == CompletionHandler.class) return;
         if (Modifier.isFinal(param.getModifiers())) {
-            throw new RuntimeException("AsyncHandler Type Parameter on {" + method + "} cannot final modifier");
+            throw new RuntimeException("CompletionHandler Type Parameter on {" + method + "} cannot final modifier");
         }
         if (!Modifier.isPublic(param.getModifiers())) {
-            throw new RuntimeException("AsyncHandler Type Parameter on {" + method + "} must be public modifier");
+            throw new RuntimeException("CompletionHandler Type Parameter on {" + method + "} must be public modifier");
         }
         if (param.isInterface()) return;
         boolean constructorflag = false;
@@ -388,8 +389,8 @@ public abstract class Sncp {
                 int varindex = 0;
                 boolean handlerFuncFlag = false;
                 for (Class pt : paramtypes) {
-                    if (AsyncHandler.class.isAssignableFrom(pt)) {
-                        if (handlerFuncFlag) throw new RuntimeException(method + " have more than one AsyncHandler type parameter");
+                    if (CompletionHandler.class.isAssignableFrom(pt)) {
+                        if (handlerFuncFlag) throw new RuntimeException(method + " have more than one CompletionHandler type parameter");
                         checkAsyncModifier(pt, method);
                         handlerFuncFlag = true;
                     }

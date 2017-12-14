@@ -9,6 +9,7 @@ import java.io.*;
 import java.lang.reflect.*;
 import java.net.*;
 import java.nio.*;
+import java.nio.channels.CompletionHandler;
 import java.security.*;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -192,7 +193,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
             response.setHeader("Connection", "Upgrade");
             response.addHeader("Upgrade", "websocket");
             response.addHeader("Sec-WebSocket-Accept", Base64.getEncoder().encodeToString(bytes));
-            response.sendBody((ByteBuffer) null, null, new AsyncHandler<Integer, Void>() {
+            response.sendBody((ByteBuffer) null, null, new CompletionHandler<Integer, Void>() {
 
                 @Override
                 public void completed(Integer result, Void attachment) {

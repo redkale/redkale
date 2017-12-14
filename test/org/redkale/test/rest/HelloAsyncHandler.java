@@ -5,13 +5,13 @@
  */
 package org.redkale.test.rest;
 
-import org.redkale.util.AsyncHandler;
+import java.nio.channels.CompletionHandler;
 
 /**
  *
  * @author zhangjx
  */
-public class HelloAsyncHandler implements AsyncHandler {
+public class HelloAsyncHandler implements CompletionHandler {
 
     @Override
     public void completed(Object result, Object attachment) {

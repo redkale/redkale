@@ -8,7 +8,7 @@ package org.redkale.test.service;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
-import java.nio.channels.AsynchronousChannelGroup;
+import java.nio.channels.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 import java.util.logging.*;
@@ -165,8 +165,8 @@ public class ABMainService implements Service {
     }
 
     @RestMapping(name = "asyncabtime")
-    public void abCurrentTime(final AsyncHandler<String, Void> handler, @RestParam(name = "#") final String name) {
-        bcService.bcCurrentTime(AsyncHandler.create((v, a) -> {
+    public void abCurrentTime(final CompletionHandler<String, Void> handler, @RestParam(name = "#") final String name) {
+        bcService.bcCurrentTime(Utility.createAsyncHandler((v, a) -> {
             System.out.println("执行了 ABMainService.abCurrentTime----异步方法");
             String rs = "异步abCurrentTime: " + v;
             if (handler != null) handler.completed(rs, a);

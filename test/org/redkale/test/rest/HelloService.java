@@ -1,5 +1,6 @@
 package org.redkale.test.rest;
 
+import java.nio.channels.CompletionHandler;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import javax.annotation.Resource;
@@ -96,7 +97,7 @@ public class HelloService implements Service {
 
     //异步查询单个
     @RestMapping(name = "asyncfind2")
-    public void asyncFindHello(AsyncHandler hander, @RestParam(name = "#") int id) {  //通过 /pipes/hello/find/1234、/pipes/hello/jsfind/1234 查询对象
+    public void asyncFindHello(CompletionHandler hander, @RestParam(name = "#") int id) {  //通过 /pipes/hello/find/1234、/pipes/hello/jsfind/1234 查询对象
         if (source != null) source.findAsync(HelloEntity.class, id);
         System.out.println("-----------进入asyncfind2--------" + hander);
         hander.completed(new HelloEntity(id), id);

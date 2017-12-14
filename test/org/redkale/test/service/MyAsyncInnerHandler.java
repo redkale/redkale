@@ -5,13 +5,13 @@
  */
 package org.redkale.test.service;
 
-import org.redkale.util.AsyncHandler;
+import java.nio.channels.CompletionHandler;
 
 /**
  *
  * @author zhangjx
  */
-public abstract class MyAsyncInnerHandler<V, A> implements AsyncHandler<V, A> {
+public abstract class MyAsyncInnerHandler<V, A> implements CompletionHandler<V, A> {
 
     protected abstract int id2();
 

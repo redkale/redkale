@@ -10,6 +10,7 @@ import java.io.*;
 import java.lang.annotation.*;
 import java.lang.reflect.*;
 import java.nio.*;
+import java.nio.channels.CompletionHandler;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.*;
@@ -118,7 +119,7 @@ public final class SncpDynServlet extends SncpServlet {
             SncpAsyncHandler handler = null;
             try {
                 if (action.handlerFuncParamIndex >= 0) {
-                    if (action.handlerFuncParamClass == AsyncHandler.class) {
+                    if (action.handlerFuncParamClass == CompletionHandler.class) {
                         handler = new DefaultSncpAsyncHandler(action, in, out, request, response);
                     } else {
                         Creator<SncpAsyncHandler> creator = action.handlerCreator;
@@ -178,15 +179,15 @@ public final class SncpDynServlet extends SncpServlet {
 
         protected java.lang.reflect.Type[] paramTypes;  //index=0表示返回参数的type， void的返回参数类型为null
 
-        protected int handlerFuncParamIndex = -1;  //handlerFuncParamIndex>=0表示存在AsyncHandler参数
+        protected int handlerFuncParamIndex = -1;  //handlerFuncParamIndex>=0表示存在CompletionHandler参数
 
         protected boolean boolReturnTypeFuture = false; // 返回结果类型是否为 CompletableFuture
 
-        protected Class handlerFuncParamClass; //AsyncHandler参数的类型
+        protected Class handlerFuncParamClass; //CompletionHandler参数的类型
 
         public abstract void action(final BsonReader in, final BsonWriter out, final SncpAsyncHandler handler) throws Throwable;
 
-        //只有同步方法才调用 (没有AsyncHandler、CompletableFuture)
+        //只有同步方法才调用 (没有CompletionHandler、CompletableFuture)
         public final void _callParameter(final BsonWriter out, final Object... params) {
             if (paramAttrs != null) {
                 for (int i = 1; i < paramAttrs.length; i++) {
@@ -207,10 +208,10 @@ public final class SncpDynServlet extends SncpServlet {
          *          return false;
          *      }
          *
-         *      public void insert(AsyncHandler&#60;Boolean, TestBean&#62; handler, TestBean bean, String name, int id) {
+         *      public void insert(CompletionHandler&#60;Boolean, TestBean&#62; handler, TestBean bean, String name, int id) {
          *      }
          *
-         *      public void update(long show, short v2, AsyncHandler&#60;Boolean, TestBean&#62; handler, TestBean bean, String name, int id) {
+         *      public void update(long show, short v2, CompletionHandler&#60;Boolean, TestBean&#62; handler, TestBean bean, String name, int id) {
          *      }
          *
          *      public CompletableFuture&#60;String&#62; changeName(TestBean bean, String name, int id) {
@@ -241,7 +242,7 @@ public final class SncpDynServlet extends SncpServlet {
          *      &#064;Override
          *      public void action(BsonReader in, BsonWriter out, SncpAsyncHandler handler) throws Throwable {
          *          SncpAsyncHandler arg0 = handler;
-         *          convert.convertFrom(AsyncHandler.class, in);
+         *          convert.convertFrom(CompletionHandler.class, in);
          *          TestBean arg1 = convert.convertFrom(paramTypes[2], in);
          *          String arg2 = convert.convertFrom(paramTypes[3], in);
          *          int arg3 = convert.convertFrom(paramTypes[4], in);
@@ -259,7 +260,7 @@ public final class SncpDynServlet extends SncpServlet {
          *          long a1 = convert.convertFrom(paramTypes[1], in);
          *          short a2 = convert.convertFrom(paramTypes[2], in);
          *          SncpAsyncHandler a3 = handler;
-         *          convert.convertFrom(AsyncHandler.class, in);
+         *          convert.convertFrom(CompletionHandler.class, in);
          *          TestBean arg1 = convert.convertFrom(paramTypes[4], in);
          *          String arg2 = convert.convertFrom(paramTypes[5], in);
          *          int arg3 = convert.convertFrom(paramTypes[6], in);
@@ -353,12 +354,12 @@ public final class SncpDynServlet extends SncpServlet {
                 final Class[] paramClasses = method.getParameterTypes();
                 int[][] codes = new int[paramClasses.length][2];
                 for (int i = 0; i < paramClasses.length; i++) { //反序列化方法的每个参数
-                    if (AsyncHandler.class.isAssignableFrom(paramClasses[i])) {
+                    if (CompletionHandler.class.isAssignableFrom(paramClasses[i])) {
                         if (boolReturnTypeFuture) {
-                            throw new RuntimeException(method + " have both AsyncHandler and CompletableFuture");
+                            throw new RuntimeException(method + " have both CompletionHandler and CompletableFuture");
                         }
                         if (handlerFuncIndex >= 0) {
-                            throw new RuntimeException(method + " have more than one AsyncHandler type parameter");
+                            throw new RuntimeException(method + " have more than one CompletionHandler type parameter");
                         }
                         Sncp.checkAsyncModifier(paramClasses[i], method);
                         handlerFuncIndex = i;
@@ -372,7 +373,7 @@ public final class SncpDynServlet extends SncpServlet {
                         intconst++;
                         mv.visitVarInsn(ALOAD, 0);
                         mv.visitFieldInsn(GETFIELD, newDynName, "convert", Type.getDescriptor(BsonConvert.class));
-                        mv.visitLdcInsn(Type.getType(Type.getDescriptor(AsyncHandler.class)));
+                        mv.visitLdcInsn(Type.getType(Type.getDescriptor(CompletionHandler.class)));
                         mv.visitVarInsn(ALOAD, 1);
                         mv.visitMethodInsn(INVOKEVIRTUAL, convertName, "convertFrom", convertFromDesc, false);
                         mv.visitInsn(POP);

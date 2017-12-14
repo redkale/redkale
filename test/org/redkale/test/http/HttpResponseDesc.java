@@ -9,12 +9,12 @@ import java.io.*;
 import java.lang.reflect.*;
 import java.net.*;
 import java.nio.*;
+import java.nio.channels.CompletionHandler;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiConsumer;
 import org.redkale.convert.json.*;
 import org.redkale.net.http.*;
-import org.redkale.util.AsyncHandler;
 
 /**
  *
@@ -28,11 +28,11 @@ public interface HttpResponseDesc {
     //增加Cookie值
     public HttpResponse addCookie(Collection<HttpCookie> cookies);
 
-    //创建AsyncHandler实例，将非字符串对象以JSON格式输出，字符串以文本输出
-    public AsyncHandler createAsyncHandler();
+    //创建CompletionHandler实例，将非字符串对象以JSON格式输出，字符串以文本输出
+    public CompletionHandler createAsyncHandler();
 
-    //传入的AsyncHandler子类必须是public，且保证其子类可被继承且completed、failed可被重载且包含空参数的构造函数
-    public <H extends AsyncHandler> H createAsyncHandler(Class<H> handlerClass);
+    //传入的CompletionHandler子类必须是public，且保证其子类可被继承且completed、failed可被重载且包含空参数的构造函数
+    public <H extends CompletionHandler> H createAsyncHandler(Class<H> handlerClass);
     
     //设置状态码
     public void setStatus(int status);
@@ -66,10 +66,10 @@ public interface HttpResponseDesc {
     public HttpResponse skipHeader();
 
     //异步输出指定内容
-    public <A> void sendBody(ByteBuffer buffer, A attachment, AsyncHandler<Integer, A> handler);
+    public <A> void sendBody(ByteBuffer buffer, A attachment, CompletionHandler<Integer, A> handler);
 
     //异步输出指定内容
-    public <A> void sendBody(ByteBuffer[] buffers, A attachment, AsyncHandler<Integer, A> handler);
+    public <A> void sendBody(ByteBuffer[] buffers, A attachment, CompletionHandler<Integer, A> handler);
     
     //关闭HTTP连接，如果是keep-alive则不强制关闭
     public void finish();

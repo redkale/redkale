@@ -10,6 +10,7 @@ import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.*;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.lang.reflect.*;
+import java.nio.channels.CompletionHandler;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import javax.annotation.Resource;
@@ -142,11 +143,18 @@ public final class Rest {
         return childFactory.getConvert();
     }
 
-    static String getWebModuleName(Class<? extends Service> serviceType) {
+    static String getWebModuleNameLowerCase(Class<? extends Service> serviceType) {
         final RestService controller = serviceType.getAnnotation(RestService.class);
         if (controller == null) return serviceType.getSimpleName().replaceAll("Service.*$", "").toLowerCase();
         if (controller.ignore()) return null;
         return (!controller.name().isEmpty()) ? controller.name() : serviceType.getSimpleName().replaceAll("Service.*$", "").toLowerCase();
+    }
+
+    static String getWebModuleName(Class<? extends Service> serviceType) {
+        final RestService controller = serviceType.getAnnotation(RestService.class);
+        if (controller == null) return serviceType.getSimpleName().replaceAll("Service.*$", "");
+        if (controller.ignore()) return null;
+        return (!controller.name().isEmpty()) ? controller.name() : serviceType.getSimpleName().replaceAll("Service.*$", "");
     }
 
     static boolean isRestDyn(HttpServlet servlet) {
@@ -324,7 +332,7 @@ public final class Rest {
             mv.visitVarInsn(ALOAD, 0);
             pushInt(mv, rws.wsmaxbody());
             mv.visitFieldInsn(PUTFIELD, newDynName, "wsmaxbody", "I");
-            
+
             mv.visitVarInsn(ALOAD, 0);
             mv.visitInsn(rws.single() ? ICONST_1 : ICONST_0);
             mv.visitFieldInsn(PUTFIELD, newDynName, "single", "Z");
@@ -332,7 +340,7 @@ public final class Rest {
             mv.visitVarInsn(ALOAD, 0);
             mv.visitInsn(rws.anyuser() ? ICONST_1 : ICONST_0);
             mv.visitFieldInsn(PUTFIELD, newDynName, "anyuser", "Z");
-            
+
             mv.visitInsn(RETURN);
             mv.visitMaxs(3, 1);
             mv.visitEnd();
@@ -607,7 +615,8 @@ public final class Rest {
         String newDynName = serviceTypeInternalName.substring(0, serviceTypeInternalName.lastIndexOf('/') + 1) + "_Dyn" + serviceType.getSimpleName().replaceAll("Service.*$", "") + "RestServlet";
 
         //------------------------------------------------------------------------------
-        final String defmodulename = getWebModuleName(serviceType);
+        final String defmodulename = getWebModuleNameLowerCase(serviceType);
+        final String bigmodulename = getWebModuleName(serviceType);
         final String catalog = controller == null ? "" : controller.catalog();
         if (!checkName(catalog)) throw new RuntimeException(serviceType.getName() + " have illeal " + RestService.class.getSimpleName() + ".catalog, only 0-9 a-z A-Z _ cannot begin 0-9");
         if (!checkName(defmodulename)) throw new RuntimeException(serviceType.getName() + " have illeal " + RestService.class.getSimpleName() + ".value, only 0-9 a-z A-Z _ cannot begin 0-9");
@@ -710,7 +719,7 @@ public final class Rest {
             if (ignore) continue;
             paramtypes.add(method.getGenericParameterTypes());
             if (mappings.length == 0) { //没有Mapping，设置一个默认值
-                MappingEntry entry = new MappingEntry(methodidex, null, defmodulename, method);
+                MappingEntry entry = new MappingEntry(methodidex, null, bigmodulename, method);
                 if (entrys.contains(entry)) throw new RuntimeException(serviceType.getName() + " on " + method.getName() + " 's mapping(" + entry.name + ") is repeat");
                 entrys.add(entry);
             } else {
@@ -723,7 +732,6 @@ public final class Rest {
             methodidex++;
         }
         if (entrys.isEmpty()) return null; //没有可HttpMapping的方法
-
         //将每个Service可转换的方法生成HttpServlet对应的HttpMapping方法
         final Map<String, List<String>> asmParamMap = MethodParamClassVisitor.getMethodParamNames(serviceType);
         final Map<String, java.lang.reflect.Type> bodyTypes = new HashMap<>();
@@ -870,7 +878,7 @@ public final class Rest {
                     if (ptype.isPrimitive() || ptype == String.class) n = "#";
                 }
                 if (annhead == null && anncookie == null && annsid == null && annaddr == null && annbody == null && annfile == null
-                    && !ptype.isPrimitive() && ptype != String.class && ptype != Flipper.class && !AsyncHandler.class.isAssignableFrom(ptype)
+                    && !ptype.isPrimitive() && ptype != String.class && ptype != Flipper.class && !CompletionHandler.class.isAssignableFrom(ptype)
                     && !ptype.getName().startsWith("java") && n.charAt(0) != '#' && !"&".equals(n)) { //判断Json对象是否包含@RestUploadFile
                     Class loop = ptype;
                     do {
@@ -1007,17 +1015,17 @@ public final class Rest {
 
                 paramMap.put("name", pname);
                 paramMap.put("type", ptype.getName());
-                if (AsyncHandler.class.isAssignableFrom(ptype)) { //HttpResponse.createAsyncHandler() or HttpResponse.createAsyncHandler(Class)
-                    if (ptype == AsyncHandler.class) {
+                if (CompletionHandler.class.isAssignableFrom(ptype)) { //HttpResponse.createAsyncHandler() or HttpResponse.createAsyncHandler(Class)
+                    if (ptype == CompletionHandler.class) {
                         mv.visitVarInsn(ALOAD, 2);
-                        mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "createAsyncHandler", "()Lorg/redkale/util/AsyncHandler;", false);
+                        mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "createAsyncHandler", "()Ljava/nio/channels/CompletionHandler;", false);
                         mv.visitVarInsn(ASTORE, maxLocals);
                         varInsns.add(new int[]{ALOAD, maxLocals});
                     } else {
                         mv.visitVarInsn(ALOAD, 3);
                         mv.visitVarInsn(ALOAD, 2);
                         mv.visitLdcInsn(Type.getType(Type.getDescriptor(ptype)));
-                        mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "createAsyncHandler", "(Ljava/lang/Class;)Lorg/redkale/util/AsyncHandler;", false);
+                        mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "createAsyncHandler", "(Ljava/lang/Class;)Ljava/nio/channels/CompletionHandler;", false);
                         mv.visitTypeInsn(CHECKCAST, ptype.getName().replace('.', '/'));
                         mv.visitVarInsn(ASTORE, maxLocals);
                         varInsns.add(new int[]{ALOAD, maxLocals});

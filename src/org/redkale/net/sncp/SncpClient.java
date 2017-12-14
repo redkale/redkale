@@ -293,7 +293,7 @@ public final class SncpClient {
     //只给远程模式调用的
     public <T> T remote(final int index, final Object... params) {
         final SncpAction action = actions[index];
-        final AsyncHandler handlerFunc = action.handlerFuncParamIndex >= 0 ? (AsyncHandler) params[action.handlerFuncParamIndex] : null;
+        final CompletionHandler handlerFunc = action.handlerFuncParamIndex >= 0 ? (CompletionHandler) params[action.handlerFuncParamIndex] : null;
         if (action.handlerFuncParamIndex >= 0) params[action.handlerFuncParamIndex] = null;
         final BsonReader reader = bsonConvert.pollBsonReader();
         CompletableFuture<byte[]> future = remote0(handlerFunc, remoteGroupTransport, null, action, params);
@@ -339,7 +339,7 @@ public final class SncpClient {
         }
     }
 
-    private CompletableFuture<byte[]> remote0(final AsyncHandler handler, final Transport transport, final SocketAddress addr0, final SncpAction action, final Object... params) {
+    private CompletableFuture<byte[]> remote0(final CompletionHandler handler, final Transport transport, final SocketAddress addr0, final SncpAction action, final Object... params) {
         final Type[] myparamtypes = action.paramTypes;
         final Class[] myparamclass = action.paramClass;
         if (action.addressSourceParamIndex >= 0) params[action.addressSourceParamIndex] = this.clientAddress;
@@ -347,7 +347,7 @@ public final class SncpClient {
         final BsonWriter writer = bsonConvert.pollBsonWriter(transport.getBufferSupplier()); // 将head写入
         writer.writeTo(DEFAULT_HEADER);
         for (int i = 0; i < params.length; i++) {  //params 可能包含: 3 个 boolean
-            bsonConvert.convertTo(writer, AsyncHandler.class.isAssignableFrom(myparamclass[i]) ? AsyncHandler.class : myparamtypes[i], params[i]);
+            bsonConvert.convertTo(writer, CompletionHandler.class.isAssignableFrom(myparamclass[i]) ? CompletionHandler.class : myparamtypes[i], params[i]);
         }
         final int reqBodyLength = writer.count() - HEADER_SIZE; //body总长度
         final long seqid = System.nanoTime();
@@ -571,12 +571,12 @@ public final class SncpClient {
             if (anns.length > 0) {
                 Class<?>[] params = method.getParameterTypes();
                 for (int i = 0; i < params.length; i++) {
-                    if (AsyncHandler.class.isAssignableFrom(params[i])) {
+                    if (CompletionHandler.class.isAssignableFrom(params[i])) {
                         if (boolReturnTypeFuture) {
-                            throw new RuntimeException(method + " have both AsyncHandler and CompletableFuture");
+                            throw new RuntimeException(method + " have both CompletionHandler and CompletableFuture");
                         }
                         if (handlerFuncIndex >= 0) {
-                            throw new RuntimeException(method + " have more than one AsyncHandler type parameter");
+                            throw new RuntimeException(method + " have more than one CompletionHandler type parameter");
                         }
                         Sncp.checkAsyncModifier(params[i], method);
                         handlerFuncIndex = i;
@@ -617,7 +617,7 @@ public final class SncpClient {
             this.handlerAttachParamIndex = handlerAttachIndex;
             this.paramAttrs = hasattr ? atts : null;
             if (this.handlerFuncParamIndex >= 0 && method.getReturnType() != void.class) {
-                throw new RuntimeException(method + " have AsyncHandler type parameter but return type is not void");
+                throw new RuntimeException(method + " have CompletionHandler type parameter but return type is not void");
             }
         }
 

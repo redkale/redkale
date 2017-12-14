@@ -221,12 +221,12 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
     }
 
     /**
-     * 创建AsyncHandler实例
+     * 创建CompletionHandler实例
      *
-     * @return AsyncHandler
+     * @return CompletionHandler
      */
-    public AsyncHandler createAsyncHandler() {
-        return AsyncHandler.create((v, a) -> {
+    public CompletionHandler createAsyncHandler() {
+        return Utility.createAsyncHandler((v, a) -> {
             if (v instanceof org.redkale.service.RetResult) {
                 finishJson((org.redkale.service.RetResult) v);
             } else if (v instanceof CharSequence) {
@@ -241,18 +241,18 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
     }
 
     /**
-     * 创建AsyncHandler子类的实例 <br>
+     * 创建CompletionHandler子类的实例 <br>
      *
-     * 传入的AsyncHandler子类必须是public，且保证其子类可被继承且completed、failed可被重载且包含空参数的构造函数。
+     * 传入的CompletionHandler子类必须是public，且保证其子类可被继承且completed、failed可被重载且包含空参数的构造函数。
      *
      * @param <H>          泛型
-     * @param handlerClass AsyncHandler子类
+     * @param handlerClass CompletionHandler子类
      *
-     * @return AsyncHandler AsyncHandler
+     * @return CompletionHandler 
      */
     @SuppressWarnings("unchecked")
-    public <H extends AsyncHandler> H createAsyncHandler(Class<H> handlerClass) {
-        if (handlerClass == null || handlerClass == AsyncHandler.class) return (H) createAsyncHandler();
+    public <H extends CompletionHandler> H createAsyncHandler(Class<H> handlerClass) {
+        if (handlerClass == null || handlerClass == CompletionHandler.class) return (H) createAsyncHandler();
         return context.loadAsyncHandlerCreator(handlerClass).create(createAsyncHandler());
     }
 
@@ -650,7 +650,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * @param attachment 异步回调参数
      * @param handler    异步回调函数
      */
-    public <A> void sendBody(ByteBuffer buffer, A attachment, AsyncHandler<Integer, A> handler) {
+    public <A> void sendBody(ByteBuffer buffer, A attachment, CompletionHandler<Integer, A> handler) {
         if (!this.headsended) {
             if (this.contentLength < 0) this.contentLength = buffer == null ? 0 : buffer.remaining();
             ByteBuffer headbuf = createHeader();
@@ -673,7 +673,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * @param attachment 异步回调参数
      * @param handler    异步回调函数
      */
-    public <A> void sendBody(ByteBuffer[] buffers, A attachment, AsyncHandler<Integer, A> handler) {
+    public <A> void sendBody(ByteBuffer[] buffers, A attachment, CompletionHandler<Integer, A> handler) {
         if (!this.headsended) {
             if (this.contentLength < 0) {
                 int len = 0;
@@ -1024,7 +1024,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         this.bufferHandler = bufferHandler;
     }
 
-    protected final class TransferFileHandler implements AsyncHandler<Integer, ByteBuffer> {
+    protected final class TransferFileHandler implements CompletionHandler<Integer, ByteBuffer> {
 
         private final File file;
 

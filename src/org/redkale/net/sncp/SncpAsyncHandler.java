@@ -5,6 +5,7 @@
  */
 package org.redkale.net.sncp;
 
+import java.nio.channels.CompletionHandler;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
 import jdk.internal.org.objectweb.asm.*;
@@ -26,7 +27,7 @@ import org.redkale.util.*;
  * @param <V> 结果对象的泛型
  * @param <A> 附件对象的泛型
  */
-public interface SncpAsyncHandler<V, A> extends AsyncHandler<V, A> {
+public interface SncpAsyncHandler<V, A> extends CompletionHandler<V, A> {
 
     public Object[] sncp_getParams();
 
@@ -42,9 +43,9 @@ public interface SncpAsyncHandler<V, A> extends AsyncHandler<V, A> {
          * <blockquote><pre>
          *
          * 考虑点：
-         *      1、AsyncHandler子类是接口，且还有其他多个方法
-         *      2、AsyncHandler子类是类， 需要继承，且必须有空参数构造函数
-         *      3、AsyncHandler子类无论是接口还是类，都可能存在其他泛型
+         *      1、CompletionHandler子类是接口，且还有其他多个方法
+         *      2、CompletionHandler子类是类， 需要继承，且必须有空参数构造函数
+         *      3、CompletionHandler子类无论是接口还是类，都可能存在其他泛型
          *
          *  public class XXXAsyncHandler_DyncSncpAsyncHandler_4323 extends XXXAsyncHandler implements SncpAsyncHandler {
          *
@@ -91,11 +92,11 @@ public interface SncpAsyncHandler<V, A> extends AsyncHandler<V, A> {
          *
          * </pre></blockquote>
          *
-         * @param handlerClass AsyncHandler类型或子类
+         * @param handlerClass CompletionHandler类型或子类
          *
          * @return Creator
          */
-        public static Creator<SncpAsyncHandler> createCreator(Class<? extends AsyncHandler> handlerClass) {
+        public static Creator<SncpAsyncHandler> createCreator(Class<? extends CompletionHandler> handlerClass) {
             //------------------------------------------------------------- 
             final boolean handlerinterface = handlerClass.isInterface();
             final String handlerClassName = handlerClass.getName().replace('.', '/');

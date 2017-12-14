@@ -5,9 +5,10 @@
  */
 package org.redkale.test.service;
 
+import java.nio.channels.CompletionHandler;
 import javax.annotation.Resource;
 import org.redkale.service.*;
-import org.redkale.util.AsyncHandler;
+import org.redkale.util.*;
 
 /**
  *
@@ -24,8 +25,8 @@ public class BCService implements Service {
         return rs;
     }
 
-    public void bcCurrentTime(final AsyncHandler<String, Void> handler, final String name) {
-        cService.ccCurrentTime(AsyncHandler.create((v, a) -> {
+    public void bcCurrentTime(final CompletionHandler<String, Void> handler, final String name) {
+        cService.ccCurrentTime(Utility.createAsyncHandler((v, a) -> {
             System.out.println("执行了 BCService.bcCurrentTime----异步方法");
             String rs = "异步bcCurrentTime: " + (v == null ? null : v.getResult());
             if (handler != null) handler.completed(rs, null);

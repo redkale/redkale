@@ -7,6 +7,7 @@ package org.redkale.test.sncp;
 
 import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
+import java.nio.channels.CompletionHandler;
 import java.util.concurrent.*;
 import org.redkale.net.TransportFactory;
 import org.redkale.net.sncp.*;
@@ -97,7 +98,7 @@ public class SncpTestServiceImpl implements SncpTestIService {
         return "result: " + bean;
     }
 
-    public void queryResult(AsyncHandler<String, SncpTestBean> handler, @RpcAttachment SncpTestBean bean) {
+    public void queryResult(CompletionHandler<String, SncpTestBean> handler, @RpcAttachment SncpTestBean bean) {
         System.out.println(Thread.currentThread().getName() + " handler 运行了queryResult方法");
         if (handler != null) handler.completed("result: " + bean, bean);
     }
