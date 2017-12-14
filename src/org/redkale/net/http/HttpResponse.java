@@ -227,13 +227,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      */
     public CompletionHandler createAsyncHandler() {
         return Utility.createAsyncHandler((v, a) -> {
-            if (v instanceof org.redkale.service.RetResult) {
-                finishJson((org.redkale.service.RetResult) v);
-            } else if (v instanceof CharSequence) {
-                finish(String.valueOf(v));
-            } else {
-                finishJson(v);
-            }
+            finish(v);
         }, (t, a) -> {
             request.getContext().getLogger().log(Level.WARNING, "Servlet occur, forece to close channel. request = " + request, t);
             finish(500, null);
