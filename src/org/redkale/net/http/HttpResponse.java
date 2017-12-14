@@ -433,7 +433,9 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      */
     @SuppressWarnings("unchecked")
     public void finish(final Convert convert, final Type type, final Object obj) {
-        if (obj instanceof CompletableFuture) {
+        if (obj == null) {
+            finish("null");
+        } else if (obj instanceof CompletableFuture) {
             ((CompletableFuture) obj).whenComplete((v, e) -> {
                 if (e != null) {
                     context.getLogger().log(Level.WARNING, "Servlet occur, forece to close channel. request = " + request, e);
