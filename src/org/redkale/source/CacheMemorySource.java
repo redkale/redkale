@@ -168,7 +168,8 @@ public class CacheMemorySource<V extends Object> extends AbstractService impleme
         }
         if (remoteSource != null && !Sncp.isRemote(this)) {
             SncpClient client = Sncp.getSncpClient((Service) remoteSource);
-            if (client != null && client.getRemoteGroupTransport() != null) {
+            if (client != null && client.getRemoteGroupTransport() != null
+                && client.getRemoteGroupTransport().getRemoteAddresses().length > 0) {
                 super.runAsync(() -> {
                     try {
                         CompletableFuture<List<CacheEntry<Object>>> listFuture = remoteSource.queryListAsync();
@@ -188,64 +189,63 @@ public class CacheMemorySource<V extends Object> extends AbstractService impleme
             }
         }
     }
-    
+
     /**
-    public static void main(String[] args) throws Exception {
-        AnyValue.DefaultAnyValue conf = new AnyValue.DefaultAnyValue();
-        conf.addValue("node", new AnyValue.DefaultAnyValue().addValue("addr", "127.0.0.1").addValue("port", "6379"));
-
-        CacheMemorySource source = new CacheMemorySource();
-        source.defaultConvert = JsonFactory.root().getConvert();
-        source.initValueType(String.class); //value用String类型
-        source.initTransient(false);
-        source.init(conf);
-
-        System.out.println("------------------------------------");
-        source.remove("key1");
-        source.remove("key2");
-        source.remove("300");
-        source.set("key1", "value1");
-        source.setString("keystr1", "strvalue1");
-        source.setLong("keylong1", 333L);
-        source.set("300", "4000");
-        source.getAndRefresh("key1", 3500);
-        System.out.println("[有值] 300 GET : " + source.get("300"));
-        System.out.println("[有值] key1 GET : " + source.get("key1"));
-        System.out.println("[无值] key2 GET : " + source.get("key2"));
-        System.out.println("[有值] keylong1 GET : " + source.getLong("keylong1", 0L));
-        System.out.println("[有值] key1 EXISTS : " + source.exists("key1"));
-        System.out.println("[无值] key2 EXISTS : " + source.exists("key2"));
-
-        source.remove("keys3");
-        source.appendListItem("keys3", "vals1");
-        source.appendListItem("keys3", "vals2");
-        System.out.println("-------- keys3 追加了两个值 --------");
-        System.out.println("[两值] keys3 VALUES : " + source.getCollection("keys3"));
-        System.out.println("[有值] keys3 EXISTS : " + source.exists("keys3"));
-        source.removeListItem("keys3", "vals1");
-        System.out.println("[一值] keys3 VALUES : " + source.getCollection("keys3"));
-        source.getCollectionAndRefresh("keys3", 3000);
-
-        source.remove("sets3");
-        source.appendSetItem("sets3", "setvals1");
-        source.appendSetItem("sets3", "setvals2");
-        source.appendSetItem("sets3", "setvals1");
-        System.out.println("[两值] sets3 VALUES : " + source.getCollection("sets3"));
-        System.out.println("[有值] sets3 EXISTS : " + source.exists("sets3"));
-        source.removeSetItem("sets3", "setvals1");
-        System.out.println("[一值] sets3 VALUES : " + source.getCollection("sets3"));
-        System.out.println("sets3 大小 : " + source.getCollectionSize("sets3"));
-        System.out.println("all keys: " + source.queryKeys());
-        System.out.println("newnum 值 : " + source.incr("newnum"));
-        System.out.println("newnum 值 : " + source.decr("newnum"));
-        System.out.println("------------------------------------");
-        source.destroy(null);
-        source.init(null);
-        System.out.println("all keys: " + source.queryKeys());
-        System.out.println("[有值] keylong1 GET : " + source.getLong("keylong1", 0L)); 
-    }
-   */
-    
+     * public static void main(String[] args) throws Exception {
+     * AnyValue.DefaultAnyValue conf = new AnyValue.DefaultAnyValue();
+     * conf.addValue("node", new AnyValue.DefaultAnyValue().addValue("addr", "127.0.0.1").addValue("port", "6379"));
+     *
+     * CacheMemorySource source = new CacheMemorySource();
+     * source.defaultConvert = JsonFactory.root().getConvert();
+     * source.initValueType(String.class); //value用String类型
+     * source.initTransient(false);
+     * source.init(conf);
+     *
+     * System.out.println("------------------------------------");
+     * source.remove("key1");
+     * source.remove("key2");
+     * source.remove("300");
+     * source.set("key1", "value1");
+     * source.setString("keystr1", "strvalue1");
+     * source.setLong("keylong1", 333L);
+     * source.set("300", "4000");
+     * source.getAndRefresh("key1", 3500);
+     * System.out.println("[有值] 300 GET : " + source.get("300"));
+     * System.out.println("[有值] key1 GET : " + source.get("key1"));
+     * System.out.println("[无值] key2 GET : " + source.get("key2"));
+     * System.out.println("[有值] keylong1 GET : " + source.getLong("keylong1", 0L));
+     * System.out.println("[有值] key1 EXISTS : " + source.exists("key1"));
+     * System.out.println("[无值] key2 EXISTS : " + source.exists("key2"));
+     *
+     * source.remove("keys3");
+     * source.appendListItem("keys3", "vals1");
+     * source.appendListItem("keys3", "vals2");
+     * System.out.println("-------- keys3 追加了两个值 --------");
+     * System.out.println("[两值] keys3 VALUES : " + source.getCollection("keys3"));
+     * System.out.println("[有值] keys3 EXISTS : " + source.exists("keys3"));
+     * source.removeListItem("keys3", "vals1");
+     * System.out.println("[一值] keys3 VALUES : " + source.getCollection("keys3"));
+     * source.getCollectionAndRefresh("keys3", 3000);
+     *
+     * source.remove("sets3");
+     * source.appendSetItem("sets3", "setvals1");
+     * source.appendSetItem("sets3", "setvals2");
+     * source.appendSetItem("sets3", "setvals1");
+     * System.out.println("[两值] sets3 VALUES : " + source.getCollection("sets3"));
+     * System.out.println("[有值] sets3 EXISTS : " + source.exists("sets3"));
+     * source.removeSetItem("sets3", "setvals1");
+     * System.out.println("[一值] sets3 VALUES : " + source.getCollection("sets3"));
+     * System.out.println("sets3 大小 : " + source.getCollectionSize("sets3"));
+     * System.out.println("all keys: " + source.queryKeys());
+     * System.out.println("newnum 值 : " + source.incr("newnum"));
+     * System.out.println("newnum 值 : " + source.decr("newnum"));
+     * System.out.println("------------------------------------");
+     * source.destroy(null);
+     * source.init(null);
+     * System.out.println("all keys: " + source.queryKeys());
+     * System.out.println("[有值] keylong1 GET : " + source.getLong("keylong1", 0L));
+     * }
+     */
     @Override
     public void close() throws Exception {  //给Application 关闭时调用
         destroy(null);
