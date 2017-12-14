@@ -16,7 +16,7 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
-import org.redkale.convert.Convert;
+import org.redkale.convert.*;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.*;
 import org.redkale.util.AnyValue.DefaultAnyValue;
@@ -248,7 +248,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * @param <H>          泛型
      * @param handlerClass CompletionHandler子类
      *
-     * @return CompletionHandler 
+     * @return CompletionHandler
      */
     @SuppressWarnings("unchecked")
     public <H extends CompletionHandler> H createAsyncHandler(Class<H> handlerClass) {
@@ -377,7 +377,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * @param future 输出对象的句柄
      */
     public void finishJson(final CompletableFuture future) {
-        finishJson(request.getJsonConvert(), future);
+        finish(request.getJsonConvert(), (Type) null, future);
     }
 
     /**
@@ -388,20 +388,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      */
     @SuppressWarnings("unchecked")
     public void finishJson(final JsonConvert convert, final CompletableFuture future) {
-        future.whenComplete((v, e) -> {
-            if (e != null) {
-                context.getLogger().log(Level.WARNING, "Servlet occur, forece to close channel. request = " + request, e);
-                finish(500, null);
-                return;
-            }
-            if (v instanceof CharSequence) {
-                finish(v.toString());
-            } else if (v instanceof org.redkale.service.RetResult) {
-                finishJson(convert, (org.redkale.service.RetResult) v);
-            } else {
-                finishJson(convert, v);
-            }
-        });
+        finish(convert, (Type) null, future);
     }
 
     /**
@@ -413,67 +400,84 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      */
     @SuppressWarnings("unchecked")
     public void finishJson(final JsonConvert convert, final Type type, final CompletableFuture future) {
-        future.whenComplete((v, e) -> {
-            if (e != null) {
-                context.getLogger().log(Level.WARNING, "Servlet occur, forece to close channel. request = " + request, e);
-                finish(500, null);
-                return;
-            }
-            if (v instanceof CharSequence) {
-                finish(v.toString());
-            } else if (v instanceof HttpResult) {
-                finish(convert, (HttpResult) v);
-            } else if (v instanceof org.redkale.service.RetResult) {
-                finishJson(convert, (org.redkale.service.RetResult) v);
-            } else {
-                finishJson(convert, type, v);
-            }
-        });
+        finish(convert, type, future);
     }
 
     /**
-     * 将HttpResult的结果对象输出
+     * 将结果对象输出
      *
-     * @param result HttpResult对象
-     */
-    public void finish(final HttpResult result) {
-        finish(request.getJsonConvert(), result);
-    }
-
-    /**
-     * 将HttpResult的结果对象输出 <br>
-     * 当result不为byte[]/String/ByteBuffer/ByteBuffer[]类型时按Convert 形式输出
-     *
-     * @param convert 指定的Convert
-     * @param result  HttpResult对象
+     * @param obj 输出对象
      */
     @SuppressWarnings("unchecked")
-    public void finish(final Convert convert, final HttpResult result) {
-        if (result == null) {
-            finish("");
-            return;
-        }
-        if (result.getContentType() != null) setContentType(result.getContentType());
-        addHeader(result.getHeaders()).addCookie(result.getCookies()).setStatus(result.getStatus() < 1 ? 200 : result.getStatus());
-        if (result.getResult() instanceof File) {
+    public void finish(final Object obj) {
+        finish(request.getJsonConvert(), (Type) null, obj);
+    }
+
+    /**
+     * 将结果对象输出
+     *
+     * @param convert 指定的Convert
+     * @param obj     输出对象
+     */
+    @SuppressWarnings("unchecked")
+    public void finish(final Convert convert, final Object obj) {
+        finish(convert, (Type) null, obj);
+    }
+
+    /**
+     * 将结果对象输出
+     *
+     * @param convert 指定的Convert
+     * @param type    指定的类型
+     * @param obj     输出对象
+     */
+    @SuppressWarnings("unchecked")
+    public void finish(final Convert convert, final Type type, final Object obj) {
+        if (obj instanceof CompletableFuture) {
+            ((CompletableFuture) obj).whenComplete((v, e) -> {
+                if (e != null) {
+                    context.getLogger().log(Level.WARNING, "Servlet occur, forece to close channel. request = " + request, e);
+                    finish(500, null);
+                    return;
+                }
+                finish(convert, type, v);
+            });
+        } else if (obj instanceof CharSequence) {
+            finish((String) obj.toString());
+        } else if (obj instanceof byte[]) {
+            finish((byte[]) obj);
+        } else if (obj instanceof ByteBuffer) {
+            finish((ByteBuffer) obj);
+        } else if (obj instanceof ByteBuffer[]) {
+            finish((ByteBuffer[]) obj);
+        } else if (obj instanceof File) {
             try {
-                finish((File) result.getResult());
+                finish((File) obj);
             } catch (IOException e) {
-                getContext().getLogger().log(Level.WARNING, "HttpServlet finish HttpResult File occur, forece to close channel. request = " + getRequest(), e);
+                getContext().getLogger().log(Level.WARNING, "HttpServlet finish File occur, forece to close channel. request = " + getRequest(), e);
                 finish(500, null);
             }
-        } else if (result.getResult() instanceof byte[]) {
-            finish((byte[]) result.getResult());
-        } else if (result.getResult() instanceof ByteBuffer) {
-            finish((ByteBuffer) result.getResult());
-        } else if (result.getResult() instanceof ByteBuffer[]) {
-            finish((ByteBuffer[]) result.getResult());
-        } else if (result.getResult() instanceof String) {
-            finish((String) result.getResult());
-        } else if (result.getResult() == null) {
-            finish(result.getMessage());
+        } else if (obj instanceof HttpResult) {
+            HttpResult result = (HttpResult) obj;
+            if (result.getContentType() != null) setContentType(result.getContentType());
+            addHeader(result.getHeaders()).addCookie(result.getCookies()).setStatus(result.getStatus() < 1 ? 200 : result.getStatus());
+            if (result.getResult() == null) {
+                finish("");
+            } else {
+                finish(convert, result.getResult());
+            }
         } else {
-            finishJson(result.getResult());
+            if (convert instanceof TextConvert) this.contentType = "text/plain; charset=utf-8";
+            if (this.recycleListener != null) this.output = obj;
+            if (obj instanceof org.redkale.service.RetResult) {
+                org.redkale.service.RetResult ret = (org.redkale.service.RetResult) obj;
+                if (!ret.isSuccess()) {
+                    this.header.addValue("retcode", String.valueOf(ret.getRetcode())).addValue("retinfo", ret.getRetinfo());
+                }
+            }
+            ByteBuffer[] buffers = type == null ? convert.convertTo(context.getBufferSupplier(), obj)
+                : convert.convertTo(context.getBufferSupplier(), type, obj);
+            finish(buffers);
         }
     }
 

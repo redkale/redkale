@@ -43,6 +43,11 @@ public class HelloService implements Service {
         return new RetResult<>(entity);
     }
 
+    //
+    public HttpResult showHello(int id) {
+        return new HttpResult("a");
+    }
+
     //删除记录
     public void deleteHello(int id) { //通过 /pipes/hello/delete/1234 删除对象
         source.delete(HelloEntity.class, id);
