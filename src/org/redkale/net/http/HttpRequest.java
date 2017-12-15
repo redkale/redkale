@@ -1135,7 +1135,7 @@ public class HttpRequest extends Request<HttpContext> {
     }
 
     /**
-     * 将请求参数转换成String, 字符串格式为: bean1={}&id=13&name=xxx <br>
+     * 将请求参数转换成String, 字符串格式为: bean1={}&amp;id=13&amp;name=xxx <br>
      * 不会返回null，没有参数返回空字符串
      *
      *
@@ -1146,7 +1146,7 @@ public class HttpRequest extends Request<HttpContext> {
     }
 
     /**
-     * 将请求参数转换成String, 字符串格式为: bean1={}&id=13&name=xxx <br>
+     * 将请求参数转换成String, 字符串格式为: bean1={}&amp;id=13&amp;name=xxx <br>
      * 不会返回null，没有参数返回空字符串
      *
      * @param prefix 拼接前缀， 如果无参数，返回的字符串不会含有拼接前缀
