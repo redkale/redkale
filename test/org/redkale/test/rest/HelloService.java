@@ -74,6 +74,7 @@ public class HelloService implements Service {
 
     //查询List列表
     @RestMapping(name = "list")
+    @RestConvert(type = HelloEntity.class, ignoreColumns = {"createtime"})
     public List<HelloEntity> queryHello(HelloBean bean) { //通过 /pipes/hello/list?bean={...} 查询List列表
         return source.queryList(HelloEntity.class, bean);
     }

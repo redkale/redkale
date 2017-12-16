@@ -1562,7 +1562,7 @@ public final class Rest {
                     mv.visitVarInsn(ALOAD, 0);
                     mv.visitFieldInsn(GETFIELD, newDynName, REST_JSONCONVERT_FIELD_PREFIX + restConverts.size(), jsonConvertDesc);
                     mv.visitVarInsn(ALOAD, maxLocals);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finish", "(" + convertDesc + typeDesc + "Ljava/lang/Object;)V", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finish", "(" + convertDesc + "Ljava/lang/Object;)V", false);
                 } else {
                     mv.visitVarInsn(ALOAD, maxLocals);
                     mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finish", "(Ljava/lang/Object;)V", false);
