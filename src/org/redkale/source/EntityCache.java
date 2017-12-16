@@ -286,7 +286,7 @@ public final class EntityCache<T> {
             rs = rs2;
         } else if (func == DISTINCTCOUNT) {
             Map rs2 = new LinkedHashMap();
-            rs.forEach((x, y) -> rs2.put(x, ((Set) y).size()));
+            rs.forEach((x, y) -> rs2.put(x, ((Set) y).size() + 0L));
             rs = rs2;
         }
         return rs;
