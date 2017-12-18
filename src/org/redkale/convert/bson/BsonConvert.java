@@ -73,7 +73,7 @@ public final class BsonConvert extends BinaryConvert<BsonReader, BsonWriter> {
     }
 
     public void offerBsonReader(final BsonReader in) {
-        if (in != null) readerPool.offer(in);
+        if (in != null) readerPool.accept(in);
     }
 
     //------------------------------ writer -----------------------------------------------------------
@@ -90,7 +90,7 @@ public final class BsonConvert extends BinaryConvert<BsonReader, BsonWriter> {
     }
 
     public void offerBsonWriter(final BsonWriter out) {
-        if (out != null) writerPool.offer(out);
+        if (out != null) writerPool.accept(out);
     }
 
     //------------------------------ convertFrom -----------------------------------------------------------
@@ -106,7 +106,7 @@ public final class BsonConvert extends BinaryConvert<BsonReader, BsonWriter> {
         in.setBytes(bytes, start, len);
         @SuppressWarnings("unchecked")
         T rs = (T) factory.loadDecoder(type).convertFrom(in);
-        readerPool.offer(in);
+        readerPool.accept(in);
         return rs;
     }
 
@@ -145,7 +145,7 @@ public final class BsonConvert extends BinaryConvert<BsonReader, BsonWriter> {
             final BsonWriter out = writerPool.get().tiny(tiny);
             out.writeNull();
             byte[] result = out.toArray();
-            writerPool.offer(out);
+            writerPool.accept(out);
             return result;
         }
         return convertTo(value.getClass(), value);
@@ -157,7 +157,7 @@ public final class BsonConvert extends BinaryConvert<BsonReader, BsonWriter> {
         final BsonWriter out = writerPool.get().tiny(tiny);
         factory.loadEncoder(type).convertTo(out, value);
         byte[] result = out.toArray();
-        writerPool.offer(out);
+        writerPool.accept(out);
         return result;
     }
 
@@ -167,7 +167,7 @@ public final class BsonConvert extends BinaryConvert<BsonReader, BsonWriter> {
         final BsonWriter out = writerPool.get().tiny(tiny);
         ((AnyEncoder) factory.getAnyEncoder()).convertMapTo(out, values);
         byte[] result = out.toArray();
-        writerPool.offer(out);
+        writerPool.accept(out);
         return result;
     }
 

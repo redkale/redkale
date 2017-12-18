@@ -178,7 +178,7 @@ public final class Transport {
     }
 
     public void offerBuffer(ByteBuffer buffer) {
-        bufferPool.offer(buffer);
+        bufferPool.accept(buffer);
     }
 
     public void offerBuffer(ByteBuffer... buffers) {

@@ -195,7 +195,7 @@ public abstract class Response<C extends Context, R extends Request<C>> {
         if (!this.inited) return; //避免重复关闭
         //System.println("耗时: " + (System.currentTimeMillis() - request.createtime));
         if (kill) refuseAlive();
-        this.context.responsePool.offer(this);
+        this.context.responsePool.accept(this);
     }
 
     public void finish(final byte[] bs) {

@@ -19,7 +19,7 @@ import java.util.logging.*;
  * @author zhangjx
  * @param <T> 对象池元素的数据类型
  */
-public final class ObjectPool<T> implements Supplier<T> {
+public final class ObjectPool<T> implements Supplier<T>, Consumer<T> {
 
     private static final Logger logger = Logger.getLogger(ObjectPool.class.getSimpleName());
 
@@ -78,19 +78,25 @@ public final class ObjectPool<T> implements Supplier<T> {
         return result;
     }
 
-    public void offer(final T e) {
+    @Override
+    public void accept(final T e) {
         if (e != null && recycler.test(e)) {
             if (cycleCounter != null) cycleCounter.incrementAndGet();
-            if (debug) {
-                for (T t : queue) {
-                    if (t == e) {
-                        logger.log(Level.WARNING, "[" + Thread.currentThread().getName() + "] repeat offer the same object(" + e + ")", new Exception());
-                        return;
-                    }
-                }
-            }
+//            if (debug) {
+//                for (T t : queue) {
+//                    if (t == e) {
+//                        logger.log(Level.WARNING, "[" + Thread.currentThread().getName() + "] repeat offer the same object(" + e + ")", new Exception());
+//                        return;
+//                    }
+//                }
+//            }
             queue.offer(e);
         }
+    }
+
+    @Deprecated
+    public void offer(final T e) {
+        accept(e);
     }
 
     public long getCreatCount() {

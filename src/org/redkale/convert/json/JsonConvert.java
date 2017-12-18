@@ -60,7 +60,7 @@ public final class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
     }
 
     public void offerJsonReader(final JsonReader in) {
-        if (in != null) readerPool.offer(in);
+        if (in != null) readerPool.accept(in);
     }
 
     //------------------------------ writer -----------------------------------------------------------
@@ -81,7 +81,7 @@ public final class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
     }
 
     public void offerJsonWriter(final JsonWriter out) {
-        if (out != null) writerPool.offer(out);
+        if (out != null) writerPool.accept(out);
     }
 
     //------------------------------ convertFrom -----------------------------------------------------------
@@ -100,7 +100,7 @@ public final class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
         final JsonReader in = readerPool.get();
         in.setText(text, start, len);
         T rs = (T) factory.loadDecoder(type).convertFrom(in);
-        readerPool.offer(in);
+        readerPool.accept(in);
         return rs;
     }
 
@@ -142,7 +142,7 @@ public final class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
         final JsonWriter out = writerPool.get().tiny(tiny);
         factory.loadEncoder(type).convertTo(out, value);
         String result = out.toString();
-        writerPool.offer(out);
+        writerPool.accept(out);
         return result;
     }
 
@@ -152,7 +152,7 @@ public final class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
         final JsonWriter out = writerPool.get().tiny(tiny);
         ((AnyEncoder) factory.getAnyEncoder()).convertMapTo(out, values);
         String result = out.toString();
-        writerPool.offer(out);
+        writerPool.accept(out);
         return result;
     }
 

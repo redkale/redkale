@@ -308,7 +308,7 @@ public class TransportFactory {
                                     @Override
                                     public void completed(Integer result, ByteBuffer attachment) {
                                         if (counter > 3) {
-                                            bufferPool.offer(attachment);
+                                            bufferPool.accept(attachment);
                                             localconn.dispose();
                                             return;
                                         }
@@ -317,7 +317,7 @@ public class TransportFactory {
                                             localconn.read(pongBuffer, pongBuffer, this);
                                             return;
                                         }
-                                        bufferPool.offer(attachment);
+                                        bufferPool.accept(attachment);
                                         localqueue.offer(localconn);
                                     }
 

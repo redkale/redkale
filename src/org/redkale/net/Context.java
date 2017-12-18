@@ -130,13 +130,13 @@ public class Context {
     }
 
     public void offerBuffer(ByteBuffer buffer) {
-        bufferPool.offer(buffer);
+        bufferPool.accept(buffer);
     }
 
     public void offerBuffer(ByteBuffer... buffers) {
         if (buffers == null) return;
         for (ByteBuffer buffer : buffers) {
-            bufferPool.offer(buffer);
+            bufferPool.accept(buffer);
         }
     }
 
