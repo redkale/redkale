@@ -148,6 +148,10 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         return super.removeChannel();
     }
 
+    protected AsyncConnection getChannel() {
+        return channel;
+    }
+
     @Override
     protected boolean recycle() {
         boolean rs = super.recycle();
@@ -229,7 +233,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         return Utility.createAsyncHandler((v, a) -> {
             finish(v);
         }, (t, a) -> {
-            request.getContext().getLogger().log(Level.WARNING, "Servlet occur, forece to close channel. request = " + request + ", result is CompletionHandler", (Throwable)t);
+            request.getContext().getLogger().log(Level.WARNING, "Servlet occur, forece to close channel. request = " + request + ", result is CompletionHandler", (Throwable) t);
             finish(500, null);
         });
     }
@@ -432,7 +436,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         } else if (obj instanceof CompletableFuture) {
             ((CompletableFuture) obj).whenComplete((v, e) -> {
                 if (e != null) {
-                    context.getLogger().log(Level.WARNING, "Servlet occur, forece to close channel. request = " + request + ", result is CompletableFuture", (Throwable)e);
+                    context.getLogger().log(Level.WARNING, "Servlet occur, forece to close channel. request = " + request + ", result is CompletableFuture", (Throwable) e);
                     finish(500, null);
                     return;
                 }
