@@ -59,6 +59,7 @@ public class JsonWriter extends Writer {
      * 返回指定至少指定长度的缓冲区
      *
      * @param len
+     *
      * @return
      */
     private char[] expand(int len) {
@@ -106,6 +107,10 @@ public class JsonWriter extends Writer {
 
     public ByteBuffer[] toBuffers() {
         return new ByteBuffer[]{ByteBuffer.wrap(Utility.encodeUTF8(content, 0, count))};
+    }
+
+    public byte[] toBytes() {
+        return Utility.encodeUTF8(content, 0, count);
     }
 
     public int count() {

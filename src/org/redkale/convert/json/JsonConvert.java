@@ -160,7 +160,7 @@ public final class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
         if (value == null) {
             new JsonStreamWriter(tiny, out).writeNull();
         } else {
-            factory.loadEncoder(value.getClass()).convertTo(new JsonStreamWriter(tiny, out), value);
+            convertTo(out, value.getClass(), value);
         }
     }
 
@@ -169,7 +169,15 @@ public final class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
         if (value == null) {
             new JsonStreamWriter(tiny, out).writeNull();
         } else {
-            factory.loadEncoder(type).convertTo(new JsonStreamWriter(tiny, out), value);
+            final JsonWriter writer = writerPool.get().tiny(tiny);
+            factory.loadEncoder(type).convertTo(writer, value);
+            byte[] bs = writer.toBytes();
+            writerPool.accept(writer);
+            try {
+                out.write(bs);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 
@@ -177,7 +185,15 @@ public final class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
         if (values == null) {
             new JsonStreamWriter(tiny, out).writeNull();
         } else {
-            ((AnyEncoder) factory.getAnyEncoder()).convertMapTo(new JsonStreamWriter(tiny, out), values);
+            final JsonWriter writer = writerPool.get().tiny(tiny);
+            ((AnyEncoder) factory.getAnyEncoder()).convertMapTo(writer, values);
+            byte[] bs = writer.toBytes();
+            writerPool.accept(writer);
+            try {
+                out.write(bs);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 
