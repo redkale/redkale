@@ -28,6 +28,12 @@ public final class MapEncoder<K, V> implements Encodeable<Writer, Map<K, V>> {
 
     private final Encodeable<Writer, V> valencoder;
 
+    private final Encodeable stringencoder;
+
+    private final boolean keyany;
+
+    private final boolean valany;
+
     private boolean inited = false;
 
     private final Object lock = new Object();
@@ -43,6 +49,9 @@ public final class MapEncoder<K, V> implements Encodeable<Writer, Map<K, V>> {
                 this.keyencoder = factory.getAnyEncoder();
                 this.valencoder = factory.getAnyEncoder();
             }
+            this.keyany = this.keyencoder == factory.getAnyEncoder();
+            this.valany = this.valencoder == factory.getAnyEncoder();
+            this.stringencoder = factory.loadEncoder(String.class);
         } finally {
             inited = true;
             synchronized (lock) {
@@ -58,7 +67,6 @@ public final class MapEncoder<K, V> implements Encodeable<Writer, Map<K, V>> {
             out.writeNull();
             return;
         }
-
         if (this.keyencoder == null || this.valencoder == null) {
             if (!this.inited) {
                 synchronized (lock) {
@@ -74,9 +82,19 @@ public final class MapEncoder<K, V> implements Encodeable<Writer, Map<K, V>> {
         boolean first = true;
         for (Map.Entry<K, V> en : values.entrySet()) {
             if (!first) out.writeArrayMark();
-            this.keyencoder.convertTo(out, en.getKey());
+            K key = en.getKey();
+            V val = en.getValue();
+            if (keyany && key instanceof String) {
+                this.stringencoder.convertTo(out, key);
+            } else {
+                this.keyencoder.convertTo(out, key);
+            }
             out.writeMapMark();
-            this.valencoder.convertTo(out, en.getValue());
+            if (valany && val instanceof String) {
+                this.stringencoder.convertTo(out, val);
+            } else {
+                this.valencoder.convertTo(out, val);
+            }
             if (first) first = false;
         }
         out.writeMapE();

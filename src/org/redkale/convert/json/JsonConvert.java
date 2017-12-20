@@ -23,7 +23,7 @@ import org.redkale.util.*;
 @SuppressWarnings("unchecked")
 public final class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
 
-    public static final Type TYPE_MAP_STRING_STRING = new TypeToken<java.util.LinkedHashMap<String, String>>() {
+    public static final Type TYPE_MAP_STRING_STRING = new TypeToken<java.util.HashMap<String, String>>() {
     }.getType();
 
     private static final ObjectPool<JsonReader> readerPool = JsonReader.createPool(Integer.getInteger("convert.json.pool.size", 16));
