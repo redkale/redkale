@@ -178,7 +178,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
             return;
         }
         sessionFuture.whenComplete((sessionid, ex) -> {
-            if (sessionid == null || ex != null) {
+            if ((sessionid == null && webSocket.delayPackets == null) || ex != null) {
                 if (debug || ex != null) logger.log(ex == null ? Level.FINEST : Level.FINE, "WebSocket connect abort, Not found sessionid or occur error. request=" + request, ex);
                 response.finish(true);
                 return;
@@ -198,6 +198,21 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
                 @Override
                 public void completed(Integer result, Void attachment) {
                     HttpContext context = response.getContext();
+                    if (sessionid == null && webSocket.delayPackets != null) {
+                        WebSocketRunner temprunner = new WebSocketRunner(context, webSocket, restMessageConsumer, response.getChannel());
+                        List<WebSocketPacket> delayPackets = webSocket.delayPackets;
+                        webSocket.delayPackets = null;
+                        CompletableFuture<Integer> cf = null;
+                        for (WebSocketPacket packet : delayPackets) {
+                            if (cf == null) {
+                                cf = temprunner.sendMessage(packet);
+                            } else {
+                                cf = cf.thenCombine(temprunner.sendMessage(packet), (a, b) -> a | b);
+                            }
+                        }
+                        cf.whenComplete((v, t) -> response.finish(true));
+                        return;
+                    }
                     CompletableFuture<Serializable> userFuture = webSocket.createUserid();
                     if (userFuture == null) {
                         if (debug) logger.finest("WebSocket connect abort, Create userid abort. request = " + request);
@@ -205,9 +220,24 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
                         return;
                     }
                     userFuture.whenComplete((userid, ex2) -> {
-                        if (userid == null || ex2 != null) {
+                        if ((userid == null && webSocket.delayPackets == null) || ex2 != null) {
                             if (debug || ex2 != null) logger.log(ex2 == null ? Level.FINEST : Level.FINE, "WebSocket connect abort, Create userid abort. request = " + request, ex2);
                             response.finish(true);
+                            return;
+                        }
+                        if (userid == null && webSocket.delayPackets != null) {
+                            WebSocketRunner temprunner = new WebSocketRunner(context, webSocket, restMessageConsumer, response.getChannel());
+                            List<WebSocketPacket> delayPackets = webSocket.delayPackets;
+                            webSocket.delayPackets = null;
+                            CompletableFuture<Integer> cf = null;
+                            for (WebSocketPacket packet : delayPackets) {
+                                if (cf == null) {
+                                    cf = temprunner.sendMessage(packet);
+                                } else {
+                                    cf = cf.thenCombine(temprunner.sendMessage(packet), (a, b) -> a | b);
+                                }
+                            }
+                            cf.whenComplete((v, t) -> response.finish(true));
                             return;
                         }
                         webSocket._userid = userid;

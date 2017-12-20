@@ -64,6 +64,9 @@ public abstract class WebSocket<G extends Serializable, T> {
     @Comment("WebSocket已离线")
     public static final int RETCODE_WSOFFLINE = 1 << 8; //256
 
+    @Comment("WebSocket将延迟发送")
+    public static final int RETCODE_DEAYSEND = 1 << 9; //512
+
     WebSocketRunner _runner; //不可能为空 
 
     WebSocketEngine _engine; //不可能为空 
@@ -89,6 +92,8 @@ public abstract class WebSocket<G extends Serializable, T> {
     private long pingtime;
 
     private Map<String, Object> attributes = new HashMap<>(); //非线程安全
+
+    List<WebSocketPacket> delayPackets;
 
     protected WebSocket() {
     }
@@ -225,6 +230,11 @@ public abstract class WebSocket<G extends Serializable, T> {
      * @return 0表示成功， 非0表示错误码
      */
     CompletableFuture<Integer> sendPacket(WebSocketPacket packet) {
+        if (this._runner == null) {
+            if (delayPackets == null) delayPackets = new ArrayList<>();
+            delayPackets.add(packet);
+            return CompletableFuture.completedFuture(RETCODE_DEAYSEND);
+        }
         CompletableFuture<Integer> rs = this._runner.sendMessage(packet);
         if (_engine.logger.isLoggable(Level.FINEST) && packet != WebSocketPacket.DEFAULT_PING_PACKET) {
             _engine.logger.finest("userid:" + getUserid() + " send websocket message(" + packet + ")" + " on " + this);
