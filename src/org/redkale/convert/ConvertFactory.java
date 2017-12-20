@@ -13,7 +13,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.CompletionHandler;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.*;
 import java.util.regex.Pattern;
 import java.util.stream.*;
 import org.redkale.convert.ext.*;
@@ -88,6 +88,7 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
             this.register(String.class, StringSimpledCoder.instance);
             this.register(CharSequence.class, CharSequenceSimpledCoder.instance);
             this.register(java.util.Date.class, DateSimpledCoder.instance);
+            this.register(AtomicInteger.class, AtomicIntegerSimpledCoder.instance);
             this.register(AtomicLong.class, AtomicLongSimpledCoder.instance);
             this.register(BigInteger.class, BigIntegerSimpledCoder.instance);
             this.register(BigDecimal.class, BigDecimalSimpledCoder.instance);
