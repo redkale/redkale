@@ -377,12 +377,17 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
         encoders.put(clazz, coder);
     }
 
+    public final <E> void register(final Type clazz, final Decodeable<R, E> decoder, final Encodeable<W, E> encoder) {
+        decoders.put(clazz, decoder);
+        encoders.put(clazz, encoder);
+    }
+
     public final <E> void register(final Type clazz, final Decodeable<R, E> decoder) {
         decoders.put(clazz, decoder);
     }
 
-    public final <E> void register(final Type clazz, final Encodeable<W, E> printer) {
-        encoders.put(clazz, printer);
+    public final <E> void register(final Type clazz, final Encodeable<W, E> encoder) {
+        encoders.put(clazz, encoder);
     }
 
     public final <E> Decodeable<R, E> findDecoder(final Type type) {
