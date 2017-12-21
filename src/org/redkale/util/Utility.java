@@ -231,6 +231,70 @@ public final class Utility {
     }
 
     /**
+     * 获取int数组最大值
+     *
+     * @param array 数组
+     *
+     * @return int
+     */
+    public static int max(final int... array) {
+        if (array == null || array.length == 0) throw new NullPointerException("array is null or empty");
+        int max = array[0];
+        for (int i : array) {
+            if (i > max) i = max;
+        }
+        return max;
+    }
+
+    /**
+     * 获取long数组最大值
+     *
+     * @param array 数组
+     *
+     * @return long
+     */
+    public static long max(final long... array) {
+        if (array == null || array.length == 0) throw new NullPointerException("array is null or empty");
+        long max = array[0];
+        for (long i : array) {
+            if (i > max) i = max;
+        }
+        return max;
+    }
+
+    /**
+     * 获取int数组最小值
+     *
+     * @param array 数组
+     *
+     * @return int
+     */
+    public static long min(final int... array) {
+        if (array == null || array.length == 0) throw new NullPointerException("array is null or empty");
+        int min = array[0];
+        for (int i : array) {
+            if (i < min) i = min;
+        }
+        return min;
+    }
+
+    /**
+     * 获取long数组最小值
+     *
+     * @param array 数组
+     *
+     * @return long
+     */
+    public static long min(final long... array) {
+        if (array == null || array.length == 0) throw new NullPointerException("array is null or empty");
+        long min = array[0];
+        for (long i : array) {
+            if (i < min) i = min;
+        }
+        return min;
+    }
+
+    /**
      * 将int数组用分隔符拼接成字符串
      *
      * @param array     数组
