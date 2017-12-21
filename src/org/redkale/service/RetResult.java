@@ -124,7 +124,8 @@ public class RetResult<T> {
      */
     public RetResult<T> attach(String key, Object value) {
         if (this.attach == null) this.attach = new HashMap<>();
-        this.attach.put(key, value == null ? null : String.valueOf(value));
+        boolean canstr = value instanceof CharSequence || value.getClass().isPrimitive();
+        this.attach.put(key, value == null ? null : (canstr ? String.valueOf(value) : JsonConvert.root().convertTo(value)));
         return this;
     }
 
