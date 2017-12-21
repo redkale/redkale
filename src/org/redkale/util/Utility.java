@@ -231,6 +231,61 @@ public final class Utility {
     }
 
     /**
+     * 将int数组用分隔符拼接成字符串
+     *
+     * @param array     数组
+     * @param delimiter 分隔符
+     *
+     * @return String
+     */
+    public static String joining(final int[] array, final String delimiter) {
+        if (array == null || array.length == 0) return "";
+        StringBuilder sb = new StringBuilder();
+        for (int i : array) {
+            if (sb.length() > 0) sb.append(delimiter);
+            sb.append(i);
+        }
+        return sb.toString();
+    }
+
+    /**
+     * 将long数组用分隔符拼接成字符串
+     *
+     * @param array     数组
+     * @param delimiter 分隔符
+     *
+     * @return String
+     */
+    public static String joining(final long[] array, final String delimiter) {
+        if (array == null || array.length == 0) return "";
+        StringBuilder sb = new StringBuilder();
+        for (long i : array) {
+            if (sb.length() > 0) sb.append(delimiter);
+            sb.append(i);
+        }
+        return sb.toString();
+    }
+
+    /**
+     * 将对象数组用分隔符拼接成字符串
+     *
+     * @param <T>       泛型
+     * @param array     数组
+     * @param delimiter 分隔符
+     *
+     * @return String
+     */
+    public static <T> String joining(final T[] array, final String delimiter) {
+        if (array == null || array.length == 0) return "";
+        StringBuilder sb = new StringBuilder();
+        for (T i : array) {
+            if (sb.length() > 0) sb.append(delimiter);
+            sb.append(i);
+        }
+        return sb.toString();
+    }
+
+    /**
      * 将一个或多个int新元素添加到int数组结尾
      *
      * @param array 原数组
