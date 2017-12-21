@@ -231,6 +231,40 @@ public final class Utility {
     }
 
     /**
+     * 将一个或多个int新元素添加到int数组结尾
+     *
+     * @param array 原数组
+     * @param objs  待追加数据
+     *
+     * @return 新数组
+     */
+    public static int[] append(final int[] array, final int... objs) {
+        if (array == null || array.length == 0) return objs;
+        if (objs == null || objs.length == 0) return array;
+        final int[] news = new int[array.length + objs.length];
+        System.arraycopy(array, 0, news, 0, array.length);
+        System.arraycopy(objs, 0, news, array.length, objs.length);
+        return news;
+    }
+
+    /**
+     * 将一个或多个long新元素添加到long数组结尾
+     *
+     * @param array 原数组
+     * @param objs  待追加数据
+     *
+     * @return 新数组
+     */
+    public static long[] append(final long[] array, final long... objs) {
+        if (array == null || array.length == 0) return objs;
+        if (objs == null || objs.length == 0) return array;
+        final long[] news = new long[array.length + objs.length];
+        System.arraycopy(array, 0, news, 0, array.length);
+        System.arraycopy(objs, 0, news, array.length, objs.length);
+        return news;
+    }
+
+    /**
      * 将一个或多个新元素添加到数组结尾
      *
      * @param <T>   泛型
