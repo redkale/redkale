@@ -442,7 +442,7 @@ public abstract class WebSocketNode {
         CompletableFuture<Integer> remoteFuture = addrsFuture.thenCompose((Collection<InetSocketAddress> addrs) -> {
             if (addrs == null || addrs.isEmpty()) {
                 if (logger.isLoggable(Level.FINER)) logger.finer("websocket not found userid:" + userid + " on any node ");
-                return CompletableFuture.completedFuture(0);
+                return CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY);
             }
             if (logger.isLoggable(Level.FINEST)) logger.finest("websocket(localaddr=" + localSncpAddress + ") found userid:" + userid + " on " + addrs);
             CompletableFuture<Integer> future = null;
@@ -452,7 +452,7 @@ public abstract class WebSocketNode {
                 future = future == null ? remoteNode.sendMessage(addr, remoteMessage, last, userid)
                     : future.thenCombine(remoteNode.sendMessage(addr, remoteMessage, last, userid), (a, b) -> a | b);
             }
-            return future == null ? CompletableFuture.completedFuture(0) : future;
+            return future == null ? CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY) : future;
         });
         return localFuture == null ? remoteFuture : localFuture.thenCombine(remoteFuture, (a, b) -> a | b);
     }
