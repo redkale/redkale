@@ -198,7 +198,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
                 @Override
                 public void completed(Integer result, Void attachment) {
                     HttpContext context = response.getContext();
-                    if (sessionid == null && webSocket.delayPackets != null) {
+                    if (webSocket.delayPackets != null) {
                         WebSocketRunner temprunner = new WebSocketRunner(context, webSocket, restMessageConsumer, response.getChannel());
                         List<WebSocketPacket> delayPackets = webSocket.delayPackets;
                         webSocket.delayPackets = null;
@@ -211,7 +211,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
                             }
                         }
                         cf.whenComplete((v, t) -> response.finish(true));
-                        return;
+                        if (sessionid == null) return;
                     }
                     CompletableFuture<Serializable> userFuture = webSocket.createUserid();
                     if (userFuture == null) {
@@ -225,7 +225,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
                             response.finish(true);
                             return;
                         }
-                        if (userid == null && webSocket.delayPackets != null) {
+                        if (webSocket.delayPackets != null) {
                             WebSocketRunner temprunner = new WebSocketRunner(context, webSocket, restMessageConsumer, response.getChannel());
                             List<WebSocketPacket> delayPackets = webSocket.delayPackets;
                             webSocket.delayPackets = null;
@@ -238,7 +238,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
                                 }
                             }
                             cf.whenComplete((v, t) -> response.finish(true));
-                            return;
+                            if (userid == null) return;
                         }
                         webSocket._userid = userid;
                         if (single && !anyuser) {

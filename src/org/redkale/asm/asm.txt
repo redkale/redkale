@@ -8,6 +8,7 @@ ClassReader.java
 ClassVisitor.java
 ClassWriter.java
 Context.java
+CurrentFrame.java
 Edge.java
 FieldVisitor.java
 FieldWriter.java
@@ -18,6 +19,8 @@ Item.java
 Label.java
 MethodVisitor.java
 MethodWriter.java
+ModuleVisitor.java
+ModuleWriter.java
 Opcodes.java
 Type.java
 TypePath.java
