@@ -433,6 +433,10 @@ class WebSocketRunner implements Runnable {
         return futureResult;
     }
 
+    public boolean isClosed() {
+        return closed;
+    }
+
     public void closeRunner(int code) {
         if (closed) return;
         synchronized (this) {
