@@ -13,6 +13,7 @@ import org.redkale.convert.bson.BsonConvert;
 import java.nio.*;
 import java.util.*;
 import org.redkale.convert.json.*;
+import org.redkale.util.*;
 
 /**
  *
@@ -31,6 +32,7 @@ public class BsonTestMain {
         main3(args);
         main4(args);
         main5(args);
+        main6(args);
     }
 
     public static void main2(String[] args) throws Exception {
@@ -97,5 +99,21 @@ public class BsonTestMain {
         byte[] bs = convert.convertTo(Object.class, map);
         Object mapobj = convert.convertFrom(Object.class, bs);
         System.out.println(mapobj);
+    }
+
+    public static void main6(String[] args) throws Exception {
+        final BsonConvert convert = BsonFactory.root().getConvert();
+
+        Optional<String> val = Optional.ofNullable("haha");
+        byte[] bs = convert.convertTo(val);
+        Object obj = convert.convertFrom(Optional.class, bs);
+        System.out.println(obj);
+        bs = convert.convertTo(Object.class, val);
+        obj = convert.convertFrom(Object.class, bs);
+        System.out.println(obj);
+        bs = convert.convertTo(new TypeToken<Optional<String>>(){}.getType(), val);
+        obj = convert.convertFrom(new TypeToken<Optional<String>>(){}.getType(), bs);
+        System.out.println(obj);
+        System.out.println(JsonConvert.root().convertTo(val)); 
     }
 }

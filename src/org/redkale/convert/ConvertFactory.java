@@ -468,6 +468,8 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
             decoder = new StreamDecoder(this, type);
         } else if (Map.class.isAssignableFrom(clazz)) {
             decoder = new MapDecoder(this, type);
+        } else if (Optional.class == clazz) {
+            decoder = new OptionalCoder(this, type);
         } else if (clazz == Object.class) {
             od = new ObjectDecoder(type);
             decoder = od;
@@ -553,6 +555,8 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
             encoder = new StreamEncoder(this, type);
         } else if (Map.class.isAssignableFrom(clazz)) {
             encoder = new MapEncoder(this, type);
+        } else if (Optional.class == clazz) {
+            encoder = new OptionalCoder(this, type);
         } else if (clazz == Object.class) {
             return (Encodeable<W, E>) this.anyEncoder;
         } else if (!clazz.getName().startsWith("java.") || java.net.HttpCookie.class == clazz) {
