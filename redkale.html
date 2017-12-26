@@ -521,6 +521,19 @@
 <span class="c">        ${APP_HOME} 指当前程序的根目录APP_HOME</span>
 <span class="c">        没注明唯一的节点可多个存在</span>
 <span class="c">        required： 被声明required的属性值不能为空</span>
+<span class="c">        </span>
+<span class="c">                                            group</span>
+<span class="c">                                         /  /  \  \  </span>
+<span class="c">                                      /    /    \   \   </span>
+<span class="c">                                   /     /       \    \                      </span>
+<span class="c">                               node1   node2   node3  node4</span>
+<span class="c">                             /       \                             </span>
+<span class="c">                          /             \</span>
+<span class="c">                       /                   \</span>
+<span class="c">                    /                         \</span>
+<span class="c">             serviceid1                       serviceid2</span>
+<span class="c">            /       \                        /           \</span>
+<span class="c">  serviceid1_name1  serviceid1_name2   serviceid2_name1  serviceid2_name2    </span>
 <span class="c">--&gt;</span>
 <span class="c">&lt;!--     </span>
 <span class="c">    address:  本地局域网的IP地址， 默认值为默认网卡的ip，当不使用默认值需要指定值，如192.168.1.22</span>
@@ -541,6 +554,7 @@
 <span class="c">            threads： 线程总数， 默认: &lt;group&gt;节点数*CPU核数*8</span>
 <span class="c">            bufferCapacity: ByteBuffer的初始化大小， 默认: 8K; </span>
 <span class="c">            bufferPoolSize： ByteBuffer池的大小，默认: &lt;group&gt;节点数*CPU核数*8</span>
+<span class="c">            strategy: 远程请求的负载均衡策略， 必须是org.redkale.net.TransportStrategy的实现类</span>
 <span class="c">        --&gt;</span>
         <span class="p">&lt;</span><span class="nt">transport</span> <span class="na">bufferCapacity</span><span class="o">=</span><span class="s">"8K"</span> <span class="na">bufferPoolSize</span><span class="o">=</span><span class="s">"32"</span> <span class="na">threads</span><span class="o">=</span><span class="s">"32"</span><span class="p">/&gt;</span>
         
@@ -567,14 +581,20 @@
         <span class="c">&lt;!--</span>
 <span class="c">            全局的数据源设置, 可以是CacheSource、DataSource， JDBC的DataSource通常通过persistence.xml配置，此处多用于CacheSource的配置</span>
 <span class="c">            name:  资源名，用于依赖注入。</span>
-<span class="c">            value：类名，必须是CacheSource或DataSource的子类，且必须实现Service接口。</span>
+<span class="c">            value：类名，必须是CacheSource或DataSource的子类，且必须实现Service接口。如果是DataSource.class，系统自动映射成DataJdbcSource.class</span>
 <span class="c">            groups: 指定groups。</span>
 <span class="c">            xxx: 其他属性与子节点通过Service.init方法传入的AnyValue获取。</span>
 <span class="c">        --&gt;</span>
         <span class="p">&lt;</span><span class="nt">source</span> <span class="na">name</span><span class="o">=</span><span class="s">"redis"</span> <span class="na">value</span><span class="o">=</span><span class="s">"org.redkalex.cache.RedisCacheSource"</span> <span class="na">xxx</span><span class="o">=</span><span class="s">"16"</span><span class="p">&gt;</span>
             <span class="p">&lt;</span><span class="nt">node</span> <span class="na">addr</span><span class="o">=</span><span class="s">"127.0.0.1"</span> <span class="na">port</span><span class="o">=</span><span class="s">"7070"</span><span class="p">/&gt;</span>
         <span class="p">&lt;/</span><span class="nt">source</span><span class="p">&gt;</span>
-
+        
+        <span class="c">&lt;!--</span>
+<span class="c">           Application启动的监听事件,可配置多个节点</span>
+<span class="c">           value: 类名，必须是ApplicationListener的子类</span>
+<span class="c">        --&gt;</span>
+        <span class="p">&lt;</span><span class="nt">listener</span> <span class="na">value</span><span class="o">=</span><span class="s">"org.redkalex.xxx.XXXApplicationListener"</span><span class="p">/&gt;</span>
+        
         <span class="c">&lt;!-- </span>
 <span class="c">            【节点全局唯一】</span>
 <span class="c">            全局的参数配置, 可以通过@Resource(name="property.xxxxxx") 进行注入&lt;property&gt;的信息, 被注解的字段类型只能是String、primitive class</span>
@@ -589,7 +609,8 @@
 <span class="c">               System.setProperty("convert.json.writer.buffer.defsize", "4096");</span>
 <span class="c">               System.setProperty("convert.bson.writer.buffer.defsize", "4096");</span>
 <span class="c">               </span>
-<span class="c">            &lt;properties&gt;节点下也可包含非&lt;property&gt;节点，其节点可以通过@Resource(name="properties.xxxxxx")进行注入, 被注解的字段类型只能是AnyValue、AnyValue[]</span>
+<span class="c">            &lt;properties&gt;节点下也可包含非&lt;property&gt;节点.</span>
+<span class="c">            非&lt;property&gt;其节点可以通过@Resource(name="properties.xxxxxx")进行注入, 被注解的字段类型只能是AnyValue、AnyValue[]</span>
 <span class="c">        --&gt;</span>
         <span class="p">&lt;</span><span class="nt">properties</span> <span class="na">load</span><span class="o">=</span><span class="s">"config.properties"</span><span class="p">&gt;</span>
             <span class="p">&lt;</span><span class="nt">property</span> <span class="na">name</span><span class="o">=</span><span class="s">"system.property.yyyy"</span> <span class="na">value</span><span class="o">=</span><span class="s">"YYYYYY"</span><span class="p">/&gt;</span>
@@ -600,16 +621,17 @@
                 
     <span class="p">&lt;/</span><span class="nt">resources</span><span class="p">&gt;</span> 
     <span class="c">&lt;!--</span>
-<span class="c">        protocol: required  server所启动的协议，Redkale内置的有HTTP、SNCP、WATCH，SNCP使用TCP实现; </span>
+<span class="c">        protocol: required  server所启动的协议，Redkale内置的有HTTP、SNCP、WATCH。协议均使用TCP实现; WATCH服务只能存在一个。</span>
 <span class="c">        name: 服务的名称，用于监控识别，一个配置文件中的server.name不能重复,命名规则: 字母、数字、下划线</span>
 <span class="c">        host:  服务所占address ， 默认: 0.0.0.0</span>
 <span class="c">        port:  required 服务所占端口 </span>
 <span class="c">        root:  如果是web类型服务，则包含页面  默认:{APP_HOME}/root</span>
-<span class="c">        lib: server额外的class目录， 默认为空 </span>
+<span class="c">        lib: server额外的class目录， 默认为${APP_HOME}/libs/*; </span>
 <span class="c">        excludelibs: 排除lib.path与excludes中的正则表达式匹配的路径, 多个正则表达式用分号;隔开</span>
 <span class="c">        charset: 文本编码， 默认: UTF-8</span>
 <span class="c">        backlog:  默认10K</span>
 <span class="c">        threads： 线程总数， 默认: CPU核数*16</span>
+<span class="c">        maxconns：最大连接数, 小于1表示无限制， 默认: 0</span>
 <span class="c">        maxbody: request.body最大值， 默认: 64K</span>
 <span class="c">        bufferCapacity: ByteBuffer的初始化大小， 默认: 8K;  如果是HTTP协议则默认: 16K + 16B (兼容HTTP 2.0、WebSocket)</span>
 <span class="c">        bufferPoolSize： ByteBuffer池的大小，默认: CPU核数*512</span>
@@ -623,8 +645,7 @@
         <span class="c">&lt;!-- </span>
 <span class="c">           加载所有的Service服务;</span>
 <span class="c">           在同一个进程中同一个name同一类型的Service将共用同一个实例</span>
-<span class="c">           autoload="true"  默认值. 自动加载以下目录（如果存在的话）下所有的Service类:</span>
-<span class="c">                                 server.lib;    server.lib/*;    server.classes;    </span>
+<span class="c">           autoload="true"  默认值. 自动加载classpath下所有的Service类  </span>
 <span class="c">           autoload="false" 需要显著的指定Service类</span>
 <span class="c">           includes： 当autoload="true"， 拉取类名与includes中的正则表达式匹配的类, 多个正则表达式用分号;隔开</span>
 <span class="c">           excludes： 当autoload="true"， 排除类名与excludes中的正则表达式匹配的类, 多个正则表达式用分号;隔开           </span>
@@ -639,11 +660,12 @@
             <span class="c">&lt;!-- </span>
 <span class="c">               name:   显式指定name，覆盖默认的空字符串值。 注意: name不能包含$符号。</span>
 <span class="c">               groups: 显式指定groups，覆盖&lt;services&gt;节点的groups默认值。</span>
+<span class="c">               ignore: 是否禁用， 默认为false。</span>
 <span class="c">            --&gt;</span>
             <span class="p">&lt;</span><span class="nt">service</span> <span class="na">value</span><span class="o">=</span><span class="s">"com.xxx.XXX2Service"</span> <span class="na">name</span><span class="o">=</span><span class="s">""</span> <span class="na">groups</span><span class="o">=</span><span class="s">"xxx;yyy"</span><span class="p">/&gt;</span>
             <span class="c">&lt;!--   给Service增加配置属性 --&gt;</span>
             <span class="p">&lt;</span><span class="nt">service</span> <span class="na">value</span><span class="o">=</span><span class="s">"com.xxx.XXX1Service"</span><span class="p">&gt;</span> 
-                <span class="c">&lt;!-- property节点值在 public void init(AnyValue conf) 方法中可以通过 AnyValue properties =  conf.getAnyValue("properties");获取 --&gt;</span>
+                <span class="c">&lt;!-- property值在public void init(AnyValue conf)方法中可以通过AnyValue properties=conf.getAnyValue("properties")获取 --&gt;</span>
                 <span class="p">&lt;</span><span class="nt">property</span> <span class="na">name</span><span class="o">=</span><span class="s">"xxxxxx"</span> <span class="na">value</span><span class="o">=</span><span class="s">"XXXXXXXX"</span><span class="p">/&gt;</span>  
                 <span class="p">&lt;</span><span class="nt">property</span> <span class="na">name</span><span class="o">=</span><span class="s">"xxxxxx"</span> <span class="na">value</span><span class="o">=</span><span class="s">"XXXXXXXX"</span><span class="p">/&gt;</span>
             <span class="p">&lt;/</span><span class="nt">service</span><span class="p">&gt;</span>
@@ -657,13 +679,18 @@
 <span class="c">           excludes： 当autoload="true"， 排除类名与excludes中的正则表达式匹配的类, 多个正则表达式用分号;隔开    </span>
 <span class="c">        --&gt;</span>
         <span class="p">&lt;</span><span class="nt">filters</span> <span class="na">autoload</span><span class="o">=</span><span class="s">"true"</span> <span class="na">includes</span><span class="o">=</span><span class="s">""</span> <span class="na">excludes</span><span class="o">=</span><span class="s">""</span><span class="p">&gt;</span>
-
+            
+            <span class="c">&lt;!-- </span>
+<span class="c">               显著加载指定的Filter类</span>
+<span class="c">               value=: Filter类名。必须与Server的协议层相同，HTTP必须是HttpFilter</span>
+<span class="c">               ignore: 是否禁用， 默认为false。</span>
+<span class="c">            --&gt;</span>
             <span class="c">&lt;!-- 显著加载指定的Filter类 --&gt;</span>
             <span class="p">&lt;</span><span class="nt">filter</span> <span class="na">value</span><span class="o">=</span><span class="s">"com.xxx.XXX1Filter"</span><span class="p">/&gt;</span>
             
             <span class="c">&lt;!--   给Filter增加配置属性 --&gt;</span>
             <span class="p">&lt;</span><span class="nt">filter</span> <span class="na">value</span><span class="o">=</span><span class="s">"com.xxx.XXX12Filter"</span><span class="p">&gt;</span> 
-                <span class="c">&lt;!-- property节点值在 public void init(AnyValue conf) 方法中可以通过 AnyValue properties =  conf.getAnyValue("properties");获取 --&gt;</span>
+                <span class="c">&lt;!-- property值在public void init(AnyValue conf)方法中可以通过AnyValue properties=conf.getAnyValue("properties")获取 --&gt;</span>
                 <span class="p">&lt;</span><span class="nt">property</span> <span class="na">name</span><span class="o">=</span><span class="s">"xxxxxx"</span> <span class="na">value</span><span class="o">=</span><span class="s">"XXXXXXXX"</span><span class="p">/&gt;</span>  
                 <span class="p">&lt;</span><span class="nt">property</span> <span class="na">name</span><span class="o">=</span><span class="s">"xxxxxx"</span> <span class="na">value</span><span class="o">=</span><span class="s">"XXXXXXXX"</span><span class="p">/&gt;</span>
             <span class="p">&lt;/</span><span class="nt">filter</span><span class="p">&gt;</span>
@@ -709,11 +736,14 @@
 <span class="c">           如果addheader、setheader 的value值以request.parameters.开头则表示从request.parameters中获取对应的parameter值</span>
 <span class="c">           如果addheader、setheader 的value值以request.headers.开头则表示从request.headers中获取对应的header值</span>
 <span class="c">           例如下面例子是在Response输出header时添加两个header（一个addHeader， 一个setHeader）。</span>
+<span class="c">           options 节点: 设置了该节点却auto=true，当request的method=OPTIONS自动设置addheader、setheader并返回200状态码</span>
 <span class="c">        --&gt;</span>
         <span class="p">&lt;</span><span class="nt">response</span><span class="p">&gt;</span>
-            <span class="p">&lt;</span><span class="nt">defcookie</span> <span class="na">domain</span><span class="o">=</span><span class="s">""</span> <span class="na">path</span><span class="o">=</span><span class="s">""</span><span class="p">/&gt;</span>
+            <span class="p">&lt;</span><span class="nt">defcookie</span> <span class="na">domain</span><span class="o">=</span><span class="s">""</span> <span class="na">path</span><span class="o">=</span><span class="s">""</span><span class="p">/&gt;</span>  
             <span class="p">&lt;</span><span class="nt">addheader</span> <span class="na">name</span><span class="o">=</span><span class="s">"Access-Control-Allow-Origin"</span> <span class="na">value</span><span class="o">=</span><span class="s">"request.headers.Origin"</span> <span class="p">/&gt;</span> 
-            <span class="p">&lt;</span><span class="nt">setheader</span> <span class="na">name</span><span class="o">=</span><span class="s">"Access-Control-Allow-Credentials"</span> <span class="na">value</span><span class="o">=</span><span class="s">"true"</span><span class="p">/&gt;</span> 
+            <span class="p">&lt;</span><span class="nt">setheader</span> <span class="na">name</span><span class="o">=</span><span class="s">"Access-Control-Allow-Headers"</span> <span class="na">value</span><span class="o">=</span><span class="s">"request.headers.Access-Control-Request-Headers"</span><span class="p">/&gt;</span>
+            <span class="p">&lt;</span><span class="nt">setheader</span> <span class="na">name</span><span class="o">=</span><span class="s">"Access-Control-Allow-Credentials"</span> <span class="na">value</span><span class="o">=</span><span class="s">"true"</span><span class="p">/&gt;</span>
+            <span class="p">&lt;</span><span class="nt">options</span> <span class="na">auto</span><span class="o">=</span><span class="s">"true"</span> <span class="p">/&gt;</span>
         <span class="p">&lt;/</span><span class="nt">response</span><span class="p">&gt;</span>
             
         <span class="c">&lt;!-- </span>
@@ -744,14 +774,17 @@
         <span class="c">&lt;!-- </span>
 <span class="c">           加载所有的Servlet服务;</span>
 <span class="c">           path:  servlet的ContextPath前缀 默认为空</span>
-<span class="c">           autoload="true"  默认值. 自动加载以下目录（如果存在的话）下所有的Servlet类:</span>
-<span class="c">                                 ${APP_HOME}/lib;    ${APP_HOME}/root/lib/*;    ${APP_HOME}/root/classes;   </span>
+<span class="c">           autoload="true"  默认值. 自动加载classpath下所有的Servlet类 </span>
 <span class="c">           autoload="false" 需要显著的指定Service类</span>
 <span class="c">           includes： 当autoload="true"， 拉取类名与includes中的正则表达式匹配的类, 多个正则表达式用分号;隔开</span>
 <span class="c">           excludes： 当autoload="true"， 排除类名与excludes中的正则表达式匹配的类, 多个正则表达式用分号;隔开</span>
 <span class="c">        --&gt;</span>
         <span class="p">&lt;</span><span class="nt">servlets</span> <span class="na">path</span><span class="o">=</span><span class="s">"/pipes"</span> <span class="na">autoload</span><span class="o">=</span><span class="s">"true"</span> <span class="na">includes</span><span class="o">=</span><span class="s">""</span> <span class="na">excludes</span><span class="o">=</span><span class="s">""</span><span class="p">&gt;</span>
-            <span class="c">&lt;!-- 显著加载指定的Servlet --&gt;</span>
+            <span class="c">&lt;!-- </span>
+<span class="c">               显著加载指定的Servlet类</span>
+<span class="c">               value=: Servlet类名。必须与Server的协议层相同，HTTP必须是HttpServlet</span>
+<span class="c">               ignore: 是否禁用， 默认为false。</span>
+<span class="c">            --&gt;</span>
             <span class="p">&lt;</span><span class="nt">servlet</span> <span class="na">value</span><span class="o">=</span><span class="s">"com.xxx.XXX1Servlet"</span> <span class="p">/&gt;</span>
             <span class="p">&lt;</span><span class="nt">servlet</span> <span class="na">value</span><span class="o">=</span><span class="s">"com.xxx.XXX2Servlet"</span> <span class="p">/&gt;</span>
             <span class="p">&lt;</span><span class="nt">servlet</span> <span class="na">value</span><span class="o">=</span><span class="s">"com.xxx.XXX3Servlet"</span> <span class="p">&gt;</span>
@@ -766,7 +799,7 @@
         <span class="p">&lt;</span><span class="nt">services</span> <span class="na">autoload</span><span class="o">=</span><span class="s">"true"</span> <span class="na">includes</span><span class="o">=</span><span class="s">""</span> <span class="na">excludes</span><span class="o">=</span><span class="s">""</span> <span class="p">/&gt;</span>
     <span class="p">&lt;/</span><span class="nt">server</span><span class="p">&gt;</span>
 <span class="p">&lt;/</span><span class="nt">application</span><span class="p">&gt;</span>
-                </pre></div>
+</pre></div>
 
 
             <footer class="site-footer">
