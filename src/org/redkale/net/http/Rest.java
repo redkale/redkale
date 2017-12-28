@@ -1411,7 +1411,7 @@ public final class Rest {
                             mv.visitFieldInsn(GETFIELD, newDynName, en.getKey(), attrDesc);
                             mv.visitVarInsn(ALOAD, maxLocals);
                             boolean upload = en.getKey().contains("_upload");
-                            mv.visitVarInsn(ALOAD, upload ? (maxLocals - 1) : 1);
+                            mv.visitVarInsn(ALOAD, upload ? (maxLocals - 2) : 1);
                             if (en.getKey().contains("_header_")) {
                                 String headerkey = en.getValue()[0].toString();
                                 if ("Host".equalsIgnoreCase(headerkey)) {
