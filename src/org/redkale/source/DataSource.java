@@ -300,7 +300,7 @@ public interface DataSource {
      * 更新符合过滤条件的记录的指定字段   <br>
      * Flipper中offset字段将被忽略   <br>
      * <b>注意</b>：Entity类中标记为&#064;Column(updatable=false)不会被更新   <br>
-     * 等价SQL: UPDATE {table} SET {column1} = {value1}, {column2} += {value2}, {column3} *= {value3}, &#183;&#183;&#183; WHERE {filter node} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
+     * 等价SQL: UPDATE {table} SET {column1} = {value1}, {column2} += {value2}, {column3} *= {value3}, &#183;&#183;&#183; WHERE {filter node} ORDER BY {flipper.sort}  <br>
      *
      * @param <T>     Entity泛型
      * @param clazz   Entity类
@@ -316,7 +316,7 @@ public interface DataSource {
      * 更新符合过滤条件的记录的指定字段   <br>
      * Flipper中offset字段将被忽略   <br>
      * <b>注意</b>：Entity类中标记为&#064;Column(updatable=false)不会被更新   <br>
-     * 等价SQL: UPDATE {table} SET {column1} = {value1}, {column2} += {value2}, {column3} *= {value3}, &#183;&#183;&#183; WHERE {filter node} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
+     * 等价SQL: UPDATE {table} SET {column1} = {value1}, {column2} += {value2}, {column3} *= {value3}, &#183;&#183;&#183; WHERE {filter node} ORDER BY {flipper.sort}  <br>
      *
      * @param <T>     Entity泛型
      * @param clazz   Entity类

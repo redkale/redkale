@@ -109,27 +109,33 @@ public class DataJdbcSource extends AbstractService implements DataSource, DataC
     }
 
     @Override
+    @Local
     public void close() throws Exception {
         readPool.close();
         writePool.close();
     }
 
+    @Local
     public PoolJdbcSource getReadPoolJdbcSource() {
         return readPool;
     }
 
+    @Local
     public PoolJdbcSource getWritePoolJdbcSource() {
         return writePool;
     }
 
+    @Local
     public Connection createReadSQLConnection() {
         return readPool.poll();
     }
 
+    @Local
     public <T> Connection createWriteSQLConnection() {
         return writePool.poll();
     }
 
+    @Local
     public void closeSQLConnection(final Connection sqlconn) {
         if (sqlconn == null) return;
         try {
@@ -140,6 +146,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, DataC
     }
 
     @Override
+    @Local
     public EntityInfo apply(Class t) {
         return loadEntityInfo(t);
     }
@@ -972,9 +979,8 @@ public class DataJdbcSource extends AbstractService implements DataSource, DataC
                 }
                 String sql = "UPDATE " + info.getTable(node) + " a " + (join1 == null ? "" : (", " + join1)) + " SET " + setsql
                     + ((where == null || where.length() == 0) ? (join2 == null ? "" : (" WHERE " + join2))
-                    : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))));
-                //注：LIMIT 仅支持MySQL 且在多表关联式会异常， 该BUG尚未解决
-                sql += info.createSQLOrderby(flipper) + ((flipper == null || flipper.getLimit() < 1) ? "" : (" LIMIT " + flipper.getLimit()));
+                    : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))))
+                    + info.createSQLOrderby(flipper);
                 if (info.isLoggable(logger, Level.FINEST)) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
                 conn.setReadOnly(false);
                 if (blobs != null) {
@@ -2369,7 +2375,8 @@ public class DataJdbcSource extends AbstractService implements DataSource, DataC
      *
      * @return 结果数组
      */
-    public final int[] directExecute(String... sqls) {
+    @Local
+    public int[] directExecute(String... sqls) {
         Connection conn = createWriteSQLConnection();
         try {
             return directExecute(conn, sqls);
@@ -2385,7 +2392,8 @@ public class DataJdbcSource extends AbstractService implements DataSource, DataC
      * @param sql      SQL语句
      * @param consumer 回调函数
      */
-    public final void directQuery(String sql, Consumer<ResultSet> consumer) {
+    @Local
+    public void directQuery(String sql, Consumer<ResultSet> consumer) {
         final Connection conn = createReadSQLConnection();
         try {
             if (logger.isLoggable(Level.FINEST)) logger.finest("direct query sql=" + sql);
