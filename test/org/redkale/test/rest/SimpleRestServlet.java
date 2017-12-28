@@ -14,11 +14,11 @@ public class SimpleRestServlet extends HttpServlet {
     protected static final RetResult RET_AUTHILLEGAL = RetCodes.retResult(RetCodes.RET_USER_AUTH_ILLEGAL);
 
     @Resource
-    private UserService userService;
+    private UserService userService = new UserService();
 
     @Override
     public void preExecute(HttpRequest request, HttpResponse response) throws IOException {
-        final String sessionid = request.getSessionid(false);
+        final String sessionid = request.getSessionid(true);
         if (sessionid != null) request.setCurrentUser(userService.current(sessionid));
         response.nextEvent();
     }
