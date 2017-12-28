@@ -5,6 +5,7 @@
  */
 package org.redkale.service;
 
+import java.io.Serializable;
 import java.util.*;
 import org.redkale.convert.json.*;
 
@@ -29,7 +30,7 @@ public class RetResult<T> {
 
     protected T result;
 
-    protected Map<String, String> attach;
+    protected Map<String, Serializable> attach;
 
     public RetResult() {
     }
@@ -109,7 +110,7 @@ public class RetResult<T> {
      *
      * @return RetResult
      */
-    public RetResult<T> attach(Map<String, String> attach) {
+    public RetResult<T> attach(Map<String, Serializable> attach) {
         this.attach = attach;
         return this;
     }
@@ -118,14 +119,13 @@ public class RetResult<T> {
      * attach添加元素
      *
      * @param key   String
-     * @param value String
+     * @param value Serializable
      *
      * @return RetResult
      */
-    public RetResult<T> attach(String key, Object value) {
+    public RetResult<T> attach(String key, Serializable value) {
         if (this.attach == null) this.attach = new HashMap<>();
-        boolean canstr = value != null && (value instanceof CharSequence || value.getClass().isPrimitive());
-        this.attach.put(key, value == null ? null : (canstr ? String.valueOf(value) : JsonConvert.root().convertTo(value)));
+        this.attach.put(key, value);
         return this;
     }
 
@@ -183,7 +183,7 @@ public class RetResult<T> {
      *
      * @return 结果附件
      */
-    public Map<String, String> getAttach() {
+    public Map<String, Serializable> getAttach() {
         return attach;
     }
 
@@ -192,7 +192,7 @@ public class RetResult<T> {
      *
      * @param attach Map
      */
-    public void setAttach(Map<String, String> attach) {
+    public void setAttach(Map<String, Serializable> attach) {
         this.attach = attach;
     }
 
