@@ -187,6 +187,16 @@ public class RetResult<T> {
         return attach;
     }
 
+    public Serializable findAttachValue(String key) {
+        return attach == null ? null : attach.get(key);
+    }
+
+    public String findAttachStringValue(String key) {
+        if (attach == null) return null;
+        Serializable val = attach.get(key);
+        return val == null ? null : val.toString();
+    }
+
     /**
      * 设置结果附件
      *
