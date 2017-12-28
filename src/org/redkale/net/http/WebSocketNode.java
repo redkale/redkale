@@ -349,6 +349,7 @@ public abstract class WebSocketNode {
      */
     public final CompletableFuture<Integer> sendMessage(final Convert convert, final Object message0, final boolean last, final Serializable... userids) {
         if (userids == null || userids.length < 1) return CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY);
+        if (message0 instanceof CompletableFuture) return ((CompletableFuture) message0).thenApply(msg -> sendMessage(convert, msg, last, userids));
         final Object message = (convert == null || message0 instanceof WebSocketPacket) ? message0 : ((convert instanceof TextConvert) ? new WebSocketPacket(((TextConvert) convert).convertTo(message0), last) : new WebSocketPacket(((BinaryConvert) convert).convertTo(message0), last));
         if (this.localEngine != null && this.sncpNodeAddresses == null) { //本地模式且没有分布式
             return this.localEngine.sendMessage(message, last, userids);
@@ -406,6 +407,7 @@ public abstract class WebSocketNode {
      * @return 为0表示成功， 其他值表示部分发送异常
      */
     public final CompletableFuture<Integer> broadcastMessage(final Convert convert, final Object message0, final boolean last) {
+        if (message0 instanceof CompletableFuture) return ((CompletableFuture) message0).thenApply(msg -> broadcastMessage(convert, msg, last));
         final Object message = (convert == null || message0 instanceof WebSocketPacket) ? message0 : ((convert instanceof TextConvert) ? new WebSocketPacket(((TextConvert) convert).convertTo(message0), last) : new WebSocketPacket(((BinaryConvert) convert).convertTo(message0), last));
         if (this.localEngine != null && this.sncpNodeAddresses == null) { //本地模式且没有分布式
             return this.localEngine.broadcastMessage(message, last);
