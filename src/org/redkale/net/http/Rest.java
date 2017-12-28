@@ -1413,9 +1413,20 @@ public final class Rest {
                             boolean upload = en.getKey().contains("_upload");
                             mv.visitVarInsn(ALOAD, upload ? (maxLocals - 1) : 1);
                             if (en.getKey().contains("_header_")) {
-                                mv.visitLdcInsn(en.getValue()[0].toString());
-                                mv.visitLdcInsn("");
-                                mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getHeader", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
+                                String headerkey = en.getValue()[0].toString();
+                                if ("Host".equalsIgnoreCase(headerkey)) {
+                                    mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getHost", "()Ljava/lang/String;", false);
+                                } else if ("Content-Type".equalsIgnoreCase(headerkey)) {
+                                    mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getContentType", "()Ljava/lang/String;", false);
+                                } else if ("Connection".equalsIgnoreCase(headerkey)) {
+                                    mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getConnection", "()Ljava/lang/String;", false);
+                                } else if ("Method".equalsIgnoreCase(headerkey)) {
+                                    mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getMethod", "()Ljava/lang/String;", false);
+                                } else {
+                                    mv.visitLdcInsn(headerkey);
+                                    mv.visitLdcInsn("");
+                                    mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getHeader", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
+                                }
                             } else if (en.getKey().contains("_cookie_")) {
                                 mv.visitLdcInsn(en.getValue()[0].toString());
                                 mv.visitLdcInsn("");
