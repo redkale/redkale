@@ -37,9 +37,11 @@
             threads： 线程总数， 默认: <group>节点数*CPU核数*8
             bufferCapacity: ByteBuffer的初始化大小， 默认: 8K; 
             bufferPoolSize： ByteBuffer池的大小，默认: <group>节点数*CPU核数*8
+            readTimeoutSecond: TCP读取超时秒数, 默认为6秒， 为0表示无超时限制
+            writeTimeoutSecond: TCP写入超时秒数, 默认为6秒， 为0表示无超时限制
             strategy: 远程请求的负载均衡策略， 必须是org.redkale.net.TransportStrategy的实现类
         -->
-        <transport bufferCapacity="8K" bufferPoolSize="32" threads="32"/>
+        <transport bufferCapacity="8K" bufferPoolSize="32" threads="32" readTimeoutSecond="6" writeTimeoutSecond="6"/>
         
         <!--
             一个组包含多个node， 同一Service服务可以由多个进程提供，这些进程称为一个GROUP，且同一GROUP内的进程必须在同一机房或局域网内
@@ -64,7 +66,7 @@
         <!--
             全局的数据源设置, 可以是CacheSource、DataSource， JDBC的DataSource通常通过persistence.xml配置，此处多用于CacheSource的配置
             name:  资源名，用于依赖注入。
-            value：类名，必须是CacheSource或DataSource的子类，且必须实现Service接口。
+            value：类名，必须是CacheSource或DataSource的子类，且必须实现Service接口。如果是DataSource.class，系统自动映射成DataJdbcSource.class
             groups: 指定groups。
             xxx: 其他属性与子节点通过Service.init方法传入的AnyValue获取。
         -->
@@ -92,7 +94,8 @@
                System.setProperty("convert.json.writer.buffer.defsize", "4096");
                System.setProperty("convert.bson.writer.buffer.defsize", "4096");
                
-            <properties>节点下也可包含非<property>节点，其节点可以通过@Resource(name="properties.xxxxxx")进行注入, 被注解的字段类型只能是AnyValue、AnyValue[]
+            <properties>节点下也可包含非<property>节点.
+            非<property>其节点可以通过@Resource(name="properties.xxxxxx")进行注入, 被注解的字段类型只能是AnyValue、AnyValue[]
         -->
         <properties load="config.properties">
             <property name="system.property.yyyy" value="YYYYYY"/>
@@ -147,7 +150,7 @@
             <service value="com.xxx.XXX2Service" name="" groups="xxx;yyy"/>
             <!--   给Service增加配置属性 -->
             <service value="com.xxx.XXX1Service"> 
-                <!-- property节点值在 public void init(AnyValue conf) 方法中可以通过 AnyValue properties =  conf.getAnyValue("properties");获取 -->
+                <!-- property值在public void init(AnyValue conf)方法中可以通过AnyValue properties=conf.getAnyValue("properties")获取 -->
                 <property name="xxxxxx" value="XXXXXXXX"/>  
                 <property name="xxxxxx" value="XXXXXXXX"/>
             </service>
@@ -172,7 +175,7 @@
             
             <!--   给Filter增加配置属性 -->
             <filter value="com.xxx.XXX12Filter"> 
-                <!-- property节点值在 public void init(AnyValue conf) 方法中可以通过 AnyValue properties =  conf.getAnyValue("properties");获取 -->
+                <!-- property值在public void init(AnyValue conf)方法中可以通过AnyValue properties=conf.getAnyValue("properties")获取 -->
                 <property name="xxxxxx" value="XXXXXXXX"/>  
                 <property name="xxxxxx" value="XXXXXXXX"/>
             </filter>

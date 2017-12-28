@@ -29,6 +29,12 @@ import org.redkale.util.*;
  */
 public class TransportFactory {
 
+    @Comment("默认TCP读取超时秒数")
+    public static int DEFAULT_READTIMEOUTSECOND = 6;
+
+    @Comment("默认TCP写入超时秒数")
+    public static int DEFAULT_WRITETIMEOUTSECOND = 6;
+
     public static final String NAME_PINGINTERVAL = "pinginterval";
 
     protected static final Logger logger = Logger.getLogger(TransportFactory.class.getSimpleName());
@@ -55,6 +61,12 @@ public class TransportFactory {
     //心跳周期， 单位：秒
     protected int pinginterval;
 
+    //TCP读取超时秒数
+    protected int readTimeoutSecond;
+
+    //TCP写入超时秒数
+    protected int writeTimeoutSecond;
+
     //ping的定时器
     private ScheduledThreadPoolExecutor pingScheduler;
 
@@ -68,15 +80,18 @@ public class TransportFactory {
     protected final TransportStrategy strategy;
 
     protected TransportFactory(ExecutorService executor, ObjectPool<ByteBuffer> bufferPool, AsynchronousChannelGroup channelGroup,
-        final TransportStrategy strategy) {
+        int readTimeoutSecond, int writeTimeoutSecond, final TransportStrategy strategy) {
         this.executor = executor;
         this.bufferPool = bufferPool;
         this.channelGroup = channelGroup;
+        this.readTimeoutSecond = readTimeoutSecond;
+        this.writeTimeoutSecond = writeTimeoutSecond;
         this.strategy = strategy;
     }
 
-    protected TransportFactory(ExecutorService executor, ObjectPool<ByteBuffer> bufferPool, AsynchronousChannelGroup channelGroup) {
-        this(executor, bufferPool, channelGroup, null);
+    protected TransportFactory(ExecutorService executor, ObjectPool<ByteBuffer> bufferPool, AsynchronousChannelGroup channelGroup,
+        int readTimeoutSecond, int writeTimeoutSecond) {
+        this(executor, bufferPool, channelGroup, readTimeoutSecond, writeTimeoutSecond, null);
     }
 
     public void init(AnyValue conf, ByteBuffer pingBuffer, int pongLength) {
@@ -100,10 +115,14 @@ public class TransportFactory {
     }
 
     public static TransportFactory create(int threads) {
-        return create(threads, threads * 2, 8 * 1024);
+        return create(threads, threads * 2, 8 * 1024, DEFAULT_READTIMEOUTSECOND, DEFAULT_WRITETIMEOUTSECOND);
     }
 
     public static TransportFactory create(int threads, int bufferPoolSize, int bufferCapacity) {
+        return create(threads, bufferPoolSize, bufferCapacity, DEFAULT_READTIMEOUTSECOND, DEFAULT_WRITETIMEOUTSECOND);
+    }
+
+    public static TransportFactory create(int threads, int bufferPoolSize, int bufferCapacity, int readTimeoutSecond, int writeTimeoutSecond) {
         final ObjectPool<ByteBuffer> transportPool = new ObjectPool<>(new AtomicLong(), new AtomicLong(), bufferPoolSize,
             (Object... params) -> ByteBuffer.allocateDirect(bufferCapacity), null, (e) -> {
                 if (e == null || e.isReadOnly() || e.capacity() != bufferCapacity) return false;
@@ -123,16 +142,21 @@ public class TransportFactory {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        return create(transportExec, transportPool, transportGroup);
+        return create(transportExec, transportPool, transportGroup, readTimeoutSecond, writeTimeoutSecond);
     }
 
     public static TransportFactory create(ExecutorService executor, ObjectPool<ByteBuffer> bufferPool, AsynchronousChannelGroup channelGroup) {
-        return new TransportFactory(executor, bufferPool, channelGroup, null);
+        return new TransportFactory(executor, bufferPool, channelGroup, DEFAULT_READTIMEOUTSECOND, DEFAULT_WRITETIMEOUTSECOND, null);
     }
 
     public static TransportFactory create(ExecutorService executor, ObjectPool<ByteBuffer> bufferPool, AsynchronousChannelGroup channelGroup,
-        final TransportStrategy strategy) {
-        return new TransportFactory(executor, bufferPool, channelGroup, strategy);
+        int readTimeoutSecond, int writeTimeoutSecond) {
+        return new TransportFactory(executor, bufferPool, channelGroup, readTimeoutSecond, writeTimeoutSecond, null);
+    }
+
+    public static TransportFactory create(ExecutorService executor, ObjectPool<ByteBuffer> bufferPool, AsynchronousChannelGroup channelGroup,
+        int readTimeoutSecond, int writeTimeoutSecond, final TransportStrategy strategy) {
+        return new TransportFactory(executor, bufferPool, channelGroup, readTimeoutSecond, writeTimeoutSecond, strategy);
     }
 
     public Transport createTransportTCP(String name, final InetSocketAddress clientAddress, final Collection<InetSocketAddress> addresses) {

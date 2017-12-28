@@ -7,10 +7,11 @@
 module org.redkale {
 
     requires java.se;
-    requires jdk.unsupported;
+    requires jdk.unsupported;  //sun.misc.Unsafe
 
     exports javax.annotation;
     exports javax.persistence;
+    exports org.redkale.asm;
     exports org.redkale.boot;
     exports org.redkale.boot.watch;
     exports org.redkale.convert;

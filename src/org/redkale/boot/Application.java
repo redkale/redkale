@@ -245,6 +245,8 @@ public final class Application {
         TransportStrategy strategy = null;
         int bufferCapacity = 8 * 1024;
         int bufferPoolSize = Runtime.getRuntime().availableProcessors() * 16;
+        int readTimeoutSecond = TransportFactory.DEFAULT_READTIMEOUTSECOND;
+        int writeTimeoutSecond = TransportFactory.DEFAULT_WRITETIMEOUTSECOND;
         AtomicLong createBufferCounter = new AtomicLong();
         AtomicLong cycleBufferCounter = new AtomicLong();
         if (resources != null) {
@@ -255,6 +257,8 @@ public final class Application {
                 //--------------transportBufferPool-----------
                 bufferCapacity = Math.max(parseLenth(transportConf.getValue("bufferCapacity"), bufferCapacity), 4 * 1024);
                 bufferPoolSize = parseLenth(transportConf.getValue("bufferPoolSize"), groupsize * Runtime.getRuntime().availableProcessors() * 8);
+                readTimeoutSecond = transportConf.getIntValue("readTimeoutSecond", readTimeoutSecond);
+                writeTimeoutSecond = transportConf.getIntValue("writeTimeoutSecond", writeTimeoutSecond);
                 final int threads = parseLenth(transportConf.getValue("threads"), groupsize * Runtime.getRuntime().availableProcessors() * 8);
                 final int capacity = bufferCapacity;
                 transportPool = new ObjectPool<>(createBufferCounter, cycleBufferCounter, bufferPoolSize,
@@ -306,7 +310,7 @@ public final class Application {
                     return true;
                 });
         }
-        this.sncpTransportFactory = TransportFactory.create(transportExec, transportPool, transportGroup, strategy);
+        this.sncpTransportFactory = TransportFactory.create(transportExec, transportPool, transportGroup, readTimeoutSecond, writeTimeoutSecond, strategy);
         DefaultAnyValue tarnsportConf = DefaultAnyValue.create(TransportFactory.NAME_PINGINTERVAL, System.getProperty("net.transport.pinginterval", "30"));
         this.sncpTransportFactory.init(tarnsportConf, Sncp.PING_BUFFER, Sncp.PONG_BUFFER.remaining());
         Thread.currentThread().setContextClassLoader(this.classLoader);

@@ -217,7 +217,7 @@ public abstract class ProtocolServer {
                     AsyncConnection conn = AsyncConnection.create(channel, null, context.readTimeoutSecond, context.writeTimeoutSecond);
                     conn.livingCounter = livingCounter;
                     conn.closedCounter = closedCounter;
-                    context.submitAsync(new PrepareRunner(context, conn, null));
+                    context.runAsync(new PrepareRunner(context, conn, null));
                 }
 
                 @Override

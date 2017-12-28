@@ -15,6 +15,7 @@ import java.text.*;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.BiFunction;
 import java.util.logging.Level;
 import org.redkale.convert.*;
 import org.redkale.convert.json.JsonConvert;
@@ -33,15 +34,6 @@ import org.redkale.util.*;
  * @author zhangjx
  */
 public class HttpResponse extends Response<HttpContext, HttpRequest> {
-
-    /**
-     * HttpResponse.finish 方法内调用
-     * 主要给@HttpCacheable使用
-     */
-    protected static interface BufferHandler {
-
-        public ByteBuffer[] execute(final HttpResponse response, final ByteBuffer[] buffers);
-    }
 
     private static final ByteBuffer buffer304 = ByteBuffer.wrap("HTTP/1.1 304 Not Modified\r\nContent-Length:0\r\n\r\n".getBytes()).asReadOnlyBuffer();
 
@@ -117,7 +109,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
 
     private boolean headsended = false;
 
-    private BufferHandler bufferHandler;
+    private BiFunction<HttpResponse, ByteBuffer[], ByteBuffer[]> bufferHandler;
     //------------------------------------------------
 
     private final DefaultAnyValue header = new DefaultAnyValue();
@@ -498,7 +490,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         }
         if (context.getCharset() == null) {
             if (bufferHandler != null) {
-                bufferHandler.execute(this, new ByteBuffer[]{ByteBuffer.wrap(Utility.encodeUTF8(obj))});
+                bufferHandler.apply(this, new ByteBuffer[]{ByteBuffer.wrap(Utility.encodeUTF8(obj))});
             }
             final char[] chars = Utility.charArray(obj);
             this.contentLength = Utility.encodeUTF8Length(chars);
@@ -513,7 +505,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         } else {
             ByteBuffer buffer = context.getCharset().encode(obj);
             if (bufferHandler != null) {
-                ByteBuffer[] bufs = bufferHandler.execute(this, new ByteBuffer[]{buffer});
+                ByteBuffer[] bufs = bufferHandler.apply(this, new ByteBuffer[]{buffer});
                 if (bufs != null) buffer = bufs[0];
             }
             this.contentLength = buffer.remaining();
@@ -621,7 +613,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
     public void finish(boolean kill, ByteBuffer... buffers) {
         if (isClosed()) return; //避免重复关闭
         if (bufferHandler != null) {
-            ByteBuffer[] bufs = bufferHandler.execute(this, buffers);
+            ByteBuffer[] bufs = bufferHandler.apply(this, buffers);
             if (bufs != null) buffers = bufs;
         }
         if (kill) refuseAlive();
@@ -801,7 +793,8 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         this.channel.write(hbuffer, hbuffer, new TransferFileHandler(file, offset, length));
     }
 
-    private ByteBuffer createHeader() {
+    //Header大小不能超过一个ByteBuffer的容量
+    protected ByteBuffer createHeader() {
         this.headsended = true;
         ByteBuffer buffer = this.context.pollBuffer();
         buffer.put(("HTTP/1.1 " + this.status + " " + (this.status == 200 ? "OK" : httpCodes.get(this.status)) + "\r\n").getBytes());
@@ -1015,7 +1008,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      *
      * @return 拦截器
      */
-    protected BufferHandler getBufferHandler() {
+    protected BiFunction<HttpResponse, ByteBuffer[], ByteBuffer[]> getBufferHandler() {
         return bufferHandler;
     }
 
@@ -1024,7 +1017,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      *
      * @param bufferHandler 拦截器
      */
-    protected void setBufferHandler(BufferHandler bufferHandler) {
+    protected void setBufferHandler(BiFunction<HttpResponse, ByteBuffer[], ByteBuffer[]> bufferHandler) {
         this.bufferHandler = bufferHandler;
     }
 

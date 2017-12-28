@@ -31,10 +31,10 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
     protected volatile long writetime;
 
     //关闭数
-    AtomicLong closedCounter;
+    protected AtomicLong closedCounter;
 
     //在线数
-    AtomicLong livingCounter;
+    protected AtomicLong livingCounter;
 
     public final long getLastReadTime() {
         return readtime;

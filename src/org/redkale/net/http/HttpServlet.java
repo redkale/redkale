@@ -10,6 +10,7 @@ import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BiFunction;
 import jdk.internal.org.objectweb.asm.*;
 import static jdk.internal.org.objectweb.asm.ClassWriter.COMPUTE_FRAMES;
 import static jdk.internal.org.objectweb.asm.Opcodes.*;
@@ -315,7 +316,7 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
             return false;
         }
 
-        public final HttpResponse.BufferHandler cacheHandler;
+        public final BiFunction<HttpResponse, ByteBuffer[], ByteBuffer[]> cacheHandler;
 
         public final ConcurrentHashMap<String, CacheEntry> cache;
 

@@ -179,6 +179,7 @@ public abstract class NodeServer {
             for (AnyValue sourceConf : resources.getAnyValues("source")) {
                 try {
                     Class type = serverClassLoader.loadClass(sourceConf.getValue("value"));
+                    if (type == DataSource.class) type = DataJdbcSource.class;
                     if (!Service.class.isAssignableFrom(type)) {
                         logger.log(Level.SEVERE, "load application source resource, but not Service error: " + sourceConf);
                     } else if (CacheSource.class.isAssignableFrom(type)) {
