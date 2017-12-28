@@ -66,6 +66,8 @@ public interface CacheSource<V extends Object> {
 
     public void removeListItem(final String key, final V value);
 
+    public boolean existsSetItem(final String key, final V value);
+
     public void appendSetItem(final String key, final V value);
 
     public void removeSetItem(final String key, final V value);
@@ -92,6 +94,8 @@ public interface CacheSource<V extends Object> {
 
     public void removeStringListItem(final String key, final String value);
 
+    public boolean existsStringSetItem(final String key, final String value);
+
     public void appendStringSetItem(final String key, final String value);
 
     public void removeStringSetItem(final String key, final String value);
@@ -111,6 +115,8 @@ public interface CacheSource<V extends Object> {
     public void appendLongListItem(final String key, final long value);
 
     public void removeLongListItem(final String key, final long value);
+
+    public boolean existsLongSetItem(final String key, final long value);
 
     public void appendLongSetItem(final String key, final long value);
 
@@ -151,6 +157,8 @@ public interface CacheSource<V extends Object> {
 
     public CompletableFuture<Void> removeListItemAsync(final String key, final V value);
 
+    public CompletableFuture<Boolean> existsSetItemAsync(final String key, final V value);
+
     public CompletableFuture<Void> appendSetItemAsync(final String key, final V value);
 
     public CompletableFuture<Void> removeSetItemAsync(final String key, final V value);
@@ -177,6 +185,8 @@ public interface CacheSource<V extends Object> {
 
     public CompletableFuture<Void> removeStringListItemAsync(final String key, final String value);
 
+    public CompletableFuture<Boolean> existsStringSetItemAsync(final String key, final String value);
+
     public CompletableFuture<Void> appendStringSetItemAsync(final String key, final String value);
 
     public CompletableFuture<Void> removeStringSetItemAsync(final String key, final String value);
@@ -196,6 +206,8 @@ public interface CacheSource<V extends Object> {
     public CompletableFuture<Void> appendLongListItemAsync(final String key, final long value);
 
     public CompletableFuture<Void> removeLongListItemAsync(final String key, final long value);
+
+    public CompletableFuture<Boolean> existsLongSetItemAsync(final String key, final long value);
 
     public CompletableFuture<Void> appendLongSetItemAsync(final String key, final long value);
 

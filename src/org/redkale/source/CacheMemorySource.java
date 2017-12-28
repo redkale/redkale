@@ -668,6 +668,39 @@ public class CacheMemorySource<V extends Object> extends AbstractService impleme
     }
 
     @Override
+    public boolean existsSetItem(final String key, final V value) {
+        Collection<V> list = getCollection(key);
+        return list != null && list.contains(value);
+    }
+
+    @Override
+    public CompletableFuture<Boolean> existsSetItemAsync(final String key, final V value) {
+        return CompletableFuture.supplyAsync(() -> existsSetItem(key, value), getExecutor());
+    }
+
+    @Override
+    public boolean existsStringSetItem(final String key, final String value) {
+        Collection<String> list = getStringCollection(key);
+        return list != null && list.contains(value);
+    }
+
+    @Override
+    public CompletableFuture<Boolean> existsStringSetItemAsync(final String key, final String value) {
+        return CompletableFuture.supplyAsync(() -> existsStringSetItem(key, value), getExecutor());
+    }
+
+    @Override
+    public boolean existsLongSetItem(final String key, final long value) {
+        Collection<Long> list = getLongCollection(key);
+        return list != null && list.contains(value);
+    }
+
+    @Override
+    public CompletableFuture<Boolean> existsLongSetItemAsync(final String key, final long value) {
+        return CompletableFuture.supplyAsync(() -> existsLongSetItem(key, value), getExecutor());
+    }
+
+    @Override
     @RpcMultiRun
     public Collection<Long> getLongCollectionAndRefresh(final String key, final int expireSeconds) {
         return (Collection<Long>) getAndRefresh(key, expireSeconds);
