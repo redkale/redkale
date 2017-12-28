@@ -5,7 +5,6 @@
  */
 package org.redkale.service;
 
-import java.io.Serializable;
 import java.util.*;
 import org.redkale.convert.json.*;
 
@@ -30,7 +29,7 @@ public class RetResult<T> {
 
     protected T result;
 
-    protected Map<String, Serializable> attach;
+    protected Map<String, String> attach;
 
     public RetResult() {
     }
@@ -110,7 +109,7 @@ public class RetResult<T> {
      *
      * @return RetResult
      */
-    public RetResult<T> attach(Map<String, Serializable> attach) {
+    public RetResult<T> attach(Map<String, String> attach) {
         this.attach = attach;
         return this;
     }
@@ -119,13 +118,14 @@ public class RetResult<T> {
      * attach添加元素
      *
      * @param key   String
-     * @param value Serializable
+     * @param value String
      *
      * @return RetResult
      */
-    public RetResult<T> attach(String key, Serializable value) {
+    public RetResult<T> attach(String key, Object value) {
         if (this.attach == null) this.attach = new HashMap<>();
-        this.attach.put(key, value);
+        boolean canstr = value != null && (value instanceof CharSequence || value.getClass().isPrimitive());
+        this.attach.put(key, value == null ? null : (canstr ? String.valueOf(value) : JsonConvert.root().convertTo(value)));
         return this;
     }
 
@@ -183,18 +183,8 @@ public class RetResult<T> {
      *
      * @return 结果附件
      */
-    public Map<String, Serializable> getAttach() {
+    public Map<String, String> getAttach() {
         return attach;
-    }
-
-    public Serializable findAttachValue(String key) {
-        return attach == null ? null : attach.get(key);
-    }
-
-    public String findAttachStringValue(String key) {
-        if (attach == null) return null;
-        Serializable val = attach.get(key);
-        return val == null ? null : val.toString();
     }
 
     /**
@@ -202,7 +192,7 @@ public class RetResult<T> {
      *
      * @param attach Map
      */
-    public void setAttach(Map<String, Serializable> attach) {
+    public void setAttach(Map<String, String> attach) {
         this.attach = attach;
     }
 
