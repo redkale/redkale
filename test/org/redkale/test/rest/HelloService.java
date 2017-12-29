@@ -61,6 +61,11 @@ public class HelloService implements Service {
     }
 
     //修改记录
+    public void update2Hello(@RestAddress String clientAddr, @RestUploadFile byte[] fs) { //通过 /pipes/hello/update2?bean={...} 修改对象
+        System.out.println("修改记录2-" + nodeid + ": clientAddr = " + clientAddr + ", fs =" + fs);
+    }
+    
+    //修改记录
     @RestMapping(name = "partupdate")
     public void updateHello(HelloEntity entity, @RestParam(name = "cols") String[] columns) { //通过 /pipes/hello/partupdate?bean={...}&cols=... 修改对象
         entity.setUpdatetime(System.currentTimeMillis());
