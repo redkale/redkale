@@ -67,6 +67,10 @@ public final class ObjectPool<T> implements Supplier<T>, Consumer<T> {
         this.creator = creator;
     }
 
+    public Predicate<T> getRecyclerPredicate() {
+        return recycler;
+    }
+
     @Override
     public T get() {
         T result = queue.poll();

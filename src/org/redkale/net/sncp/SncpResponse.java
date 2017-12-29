@@ -54,7 +54,7 @@ public final class SncpResponse extends Response<SncpContext, SncpRequest> {
 
     public void finish(final int retcode, final BsonWriter out) {
         if (out == null) {
-            final ByteBuffer buffer = context.pollBuffer();
+            final ByteBuffer buffer = pollWriteReadBuffer();
             fillHeader(buffer, 0, retcode);
             finish(buffer);
             return;

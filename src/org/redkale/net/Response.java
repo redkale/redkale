@@ -8,7 +8,7 @@ package org.redkale.net;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.CompletionHandler;
-import java.util.function.BiConsumer;
+import java.util.function.*;
 import java.util.logging.Level;
 
 /**
@@ -30,6 +30,10 @@ public abstract class Response<C extends Context, R extends Request<C>> {
 
     protected AsyncConnection channel;
 
+    protected ByteBuffer writeHeadBuffer;
+
+    protected ByteBuffer writeBodyBuffer;
+
     private boolean inited = true;
 
     protected Object output; //输出的结果对象
@@ -40,6 +44,8 @@ public abstract class Response<C extends Context, R extends Request<C>> {
 
     protected Servlet<C, R, ? extends Response<C, R>> servlet;
 
+    private Supplier<ByteBuffer> bodyBufferSupplier;
+
     private final CompletionHandler finishHandler = new CompletionHandler<Integer, ByteBuffer>() {
 
         @Override
@@ -47,15 +53,29 @@ public abstract class Response<C extends Context, R extends Request<C>> {
             if (attachment.hasRemaining()) {
                 channel.write(attachment, attachment, this);
             } else {
-                context.offerBuffer(attachment);
+                offerResponseBuffer(attachment);
                 finish();
             }
         }
 
         @Override
         public void failed(Throwable exc, ByteBuffer attachment) {
-            context.offerBuffer(attachment);
+            offerResponseBuffer(attachment);
             finish(true);
+        }
+
+        private void offerResponseBuffer(ByteBuffer attachment) {
+            if (writeHeadBuffer == null) {
+                if (context.bufferPool.getRecyclerPredicate().test(attachment)) {
+                    writeHeadBuffer = attachment;
+                }
+            } else if (writeBodyBuffer == null) {
+                if (context.bufferPool.getRecyclerPredicate().test(attachment)) {
+                    writeBodyBuffer = attachment;
+                }
+            } else {
+                context.offerBuffer(attachment);
+            }
         }
 
     };
@@ -74,26 +94,66 @@ public abstract class Response<C extends Context, R extends Request<C>> {
             if (index >= 0) {
                 channel.write(attachments, index, attachments.length - index, attachments, this);
             } else {
-                for (ByteBuffer attachment : attachments) {
-                    context.offerBuffer(attachment);
-                }
+                offerResponseBuffer(attachments);
                 finish();
             }
         }
 
         @Override
         public void failed(Throwable exc, final ByteBuffer[] attachments) {
-            for (ByteBuffer attachment : attachments) {
-                context.offerBuffer(attachment);
-            }
+            offerResponseBuffer(attachments);
             finish(true);
         }
 
+        private void offerResponseBuffer(ByteBuffer[] attachments) {
+            int start = 0;
+            if (writeHeadBuffer == null && attachments.length > start) {
+                if (context.bufferPool.getRecyclerPredicate().test(attachments[start])) {
+                    writeHeadBuffer = attachments[start];
+                    start++;
+                }
+            }
+            if (writeBodyBuffer == null && attachments.length > start) {
+                if (context.bufferPool.getRecyclerPredicate().test(attachments[start])) {
+                    writeBodyBuffer = attachments[start];
+                    start++;
+                }
+            }
+            for (int i = start; i < attachments.length; i++) {
+                context.offerBuffer(attachments[i]);
+            }
+        }
     };
 
     protected Response(C context, final R request) {
         this.context = context;
         this.request = request;
+        this.writeHeadBuffer = context.pollBuffer();
+        this.writeBodyBuffer = context.pollBuffer();
+        this.bodyBufferSupplier = () -> {
+            ByteBuffer buffer = writeBodyBuffer;
+            if (buffer == null) return context.pollBuffer();
+            writeBodyBuffer = null;
+            return buffer;
+        };
+    }
+
+    protected ByteBuffer pollWriteReadBuffer() {
+        ByteBuffer buffer = this.writeHeadBuffer;
+        this.writeHeadBuffer = null;
+        if (buffer == null) buffer = context.pollBuffer();
+        return buffer;
+    }
+
+    protected ByteBuffer pollWriteBodyBuffer() {
+        ByteBuffer buffer = this.writeBodyBuffer;
+        this.writeBodyBuffer = null;
+        if (buffer == null) buffer = context.pollBuffer();
+        return buffer;
+    }
+
+    protected Supplier<ByteBuffer> getBodyBufferSupplier() {
+        return bodyBufferSupplier;
     }
 
     protected AsyncConnection removeChannel() {

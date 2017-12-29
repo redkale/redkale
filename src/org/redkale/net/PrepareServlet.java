@@ -214,11 +214,11 @@ public abstract class PrepareServlet<K extends Serializable, C extends Context, 
         executeCounter.incrementAndGet();
         final int rs = request.readHeader(buffer);
         if (rs < 0) {
-            response.context.offerBuffer(buffer);
+            request.offerReadBuffer(buffer);
             if (rs != Integer.MIN_VALUE) illRequestCounter.incrementAndGet();
             response.finish(true);
         } else if (rs == 0) {
-            response.context.offerBuffer(buffer);
+            request.offerReadBuffer(buffer);
             request.prepare();
             response.filter = this.headFilter;
             response.servlet = this;
@@ -236,7 +236,7 @@ public abstract class PrepareServlet<K extends Serializable, C extends Context, 
                         buffer.clear();
                         request.channel.read(buffer, buffer, this);
                     } else {
-                        response.context.offerBuffer(buffer);
+                        request.offerReadBuffer(buffer);
                         request.prepare();
                         try {
                             response.filter = PrepareServlet.this.headFilter;
@@ -253,7 +253,7 @@ public abstract class PrepareServlet<K extends Serializable, C extends Context, 
                 @Override
                 public void failed(Throwable exc, ByteBuffer attachment) {
                     illRequestCounter.incrementAndGet();
-                    response.context.offerBuffer(buffer);
+                    request.offerReadBuffer(buffer);
                     response.finish(true);
                     if (exc != null) request.context.logger.log(Level.FINER, "Servlet read channel erroneous, forece to close channel ", exc);
                 }

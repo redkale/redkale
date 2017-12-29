@@ -48,14 +48,16 @@ public final class PrepareRunner implements Runnable {
             }
             return;
         }
-        final ByteBuffer buffer = context.pollBuffer();
+        final Response response = responsePool.get();
+        final ByteBuffer buffer = response.request.pollReadBuffer();
         try {
             channel.read(buffer, null, new CompletionHandler<Integer, Void>() {
                 @Override
                 public void completed(Integer count, Void attachment1) {
                     if (count < 1 && buffer.remaining() == buffer.limit()) {
                         try {
-                            context.offerBuffer(buffer);
+                            response.request.offerReadBuffer(buffer);
+                            response.finish(true);
                             channel.close();
                         } catch (Exception e) {
                             context.logger.log(Level.FINEST, "PrepareRunner close channel erroneous on no read bytes", e);
@@ -69,7 +71,6 @@ public final class PrepareRunner implements Runnable {
 //                        System.println(new String(bs));
 //                    }
                     buffer.flip();
-                    final Response response = responsePool.get();
                     response.init(channel);
                     try {
                         prepare.prepare(buffer, response.request, response);
@@ -81,7 +82,8 @@ public final class PrepareRunner implements Runnable {
 
                 @Override
                 public void failed(Throwable exc, Void attachment2) {
-                    context.offerBuffer(buffer);
+                    response.request.offerReadBuffer(buffer);
+                    response.finish(true);
                     try {
                         channel.close();
                     } catch (Exception e) {
@@ -90,7 +92,8 @@ public final class PrepareRunner implements Runnable {
                 }
             });
         } catch (Exception te) {
-            context.offerBuffer(buffer);
+            response.request.offerReadBuffer(buffer);
+            response.finish(true);
             try {
                 channel.close();
             } catch (Exception e) {
