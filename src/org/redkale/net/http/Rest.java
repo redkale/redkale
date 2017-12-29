@@ -956,7 +956,7 @@ public final class Rest {
                 av1.visitEnd();
                 av0.visitEnd();
             }
-
+            int uploadLocal = 0;
             if (mupload != null) { //存在文件上传
                 if (muploadType == byte[].class) {
                     mv.visitVarInsn(ALOAD, 1);
@@ -966,6 +966,7 @@ public final class Rest {
                     mv.visitLdcInsn(mupload.contentTypeReg());
                     mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/MultiContext", "partsFirstBytes", "(JLjava/lang/String;Ljava/lang/String;)[B", false);
                     mv.visitVarInsn(ASTORE, maxLocals);
+                    uploadLocal = maxLocals;
                 } else if (muploadType == File.class) {
                     mv.visitVarInsn(ALOAD, 1);
                     mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getMultiContext", "()Lorg/redkale/net/http/MultiContext;", false);
@@ -976,6 +977,7 @@ public final class Rest {
                     mv.visitLdcInsn(mupload.contentTypeReg());
                     mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/MultiContext", "partsFirstFile", "(Ljava/io/File;JLjava/lang/String;Ljava/lang/String;)Ljava/io/File;", false);
                     mv.visitVarInsn(ASTORE, maxLocals);
+                    uploadLocal = maxLocals;
                 } else if (muploadType == File[].class) { //File[]
                     mv.visitVarInsn(ALOAD, 1);
                     mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getMultiContext", "()Lorg/redkale/net/http/MultiContext;", false);
@@ -986,6 +988,7 @@ public final class Rest {
                     mv.visitLdcInsn(mupload.contentTypeReg());
                     mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/MultiContext", "partsFiles", "(Ljava/io/File;JLjava/lang/String;Ljava/lang/String;)[Ljava/io/File;", false);
                     mv.visitVarInsn(ASTORE, maxLocals);
+                    uploadLocal = maxLocals;
                 }
                 maxLocals++;
             }
@@ -1402,7 +1405,7 @@ public final class Rest {
                     } while ((loop = loop.getSuperclass()) != Object.class);
 
                     if (!attrParaNames.isEmpty()) { //参数存在 RestHeader、RestCookie、RestSessionid、RestAddress、RestBody字段
-                        mv.visitVarInsn(ALOAD, maxLocals);
+                        mv.visitVarInsn(ALOAD, maxLocals); //加载JsonBean
                         Label lif = new Label();
                         mv.visitJumpInsn(IFNULL, lif);  //if(bean != null) {
                         for (Map.Entry<String, Object[]> en : attrParaNames.entrySet()) {
@@ -1410,8 +1413,7 @@ public final class Rest {
                             mv.visitVarInsn(ALOAD, 0);
                             mv.visitFieldInsn(GETFIELD, newDynName, en.getKey(), attrDesc);
                             mv.visitVarInsn(ALOAD, maxLocals);
-                            boolean upload = en.getKey().contains("_upload");
-                            mv.visitVarInsn(ALOAD, upload ? (maxLocals - 2) : 1);
+                            mv.visitVarInsn(ALOAD, en.getKey().contains("_upload") ? uploadLocal : 1);
                             if (en.getKey().contains("_header_")) {
                                 String headerkey = en.getValue()[0].toString();
                                 if ("Host".equalsIgnoreCase(headerkey)) {
