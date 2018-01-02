@@ -123,6 +123,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
             this.node = new WebSocketNodeService();
             if (logger.isLoggable(Level.WARNING)) logger.warning("Not found WebSocketNode, create a default value for " + getClass().getName());
         }
+        if (this.node.sendConvert == null) this.node.sendConvert = this.sendConvert;
 
         //存在WebSocketServlet，则此WebSocketNode必须是本地模式Service
         this.node.localEngine = new WebSocketEngine("WebSocketEngine-" + addr.getHostString() + ":" + addr.getPort() + "-[" + resourceName() + "]",
