@@ -15,7 +15,7 @@ import org.redkale.util.Utility;
 public class AsmCreator {
 
     public static void main(String[] args) throws Throwable {
-        boolean realasm = true; //从http://forge.ow2.org/projects/asm/ 下载最新asm的src放在 srcasmroot 目录下
+        boolean realasm = false; //从http://forge.ow2.org/projects/asm/ 下载最新asm的src放在 srcasmroot 目录下
         File srcasmroot = new File("D:/JAVA/JDK源码/JDK9源码/java.base/jdk/internal/org/objectweb/asm");
         if(realasm)  srcasmroot = new File("D:/JAVA/JDK源码/org/objectweb/asm");
         File destasmroot = new File("D:/Java-Projects/RedkaleProject/src/org/redkale/asm");
@@ -25,6 +25,7 @@ public class AsmCreator {
             line = line.trim();
             if (!line.endsWith(".java")) continue;
             File srcfile = new File(srcasmroot, line);
+            if (!srcfile.isFile()) continue;
             File destfile = new File(destasmroot, line);
             String content = Utility.readThenClose(new FileInputStream(srcfile));
             FileOutputStream out = new FileOutputStream(destfile);
