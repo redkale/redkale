@@ -372,6 +372,18 @@ public abstract class WebSocket<G extends Serializable, T> {
     /**
      * 广播消息， 给所有人发消息
      *
+     * @param wsrange 过滤条件
+     * @param message 消息内容
+     *
+     * @return 为0表示成功， 其他值表示部分发送异常
+     */
+    public final CompletableFuture<Integer> broadcastMessage(final WebSocketRange wsrange, final Object message) {
+        return broadcastMessage((WebSocketRange) null, (Convert) null, message, true);
+    }
+
+    /**
+     * 广播消息， 给所有人发消息
+     *
      * @param convert Convert
      * @param message 消息内容
      *
@@ -379,6 +391,19 @@ public abstract class WebSocket<G extends Serializable, T> {
      */
     public final CompletableFuture<Integer> broadcastMessage(final Convert convert, final Object message) {
         return broadcastMessage(convert, message, true);
+    }
+
+    /**
+     * 广播消息， 给所有人发消息
+     *
+     * @param wsrange 过滤条件
+     * @param convert Convert
+     * @param message 消息内容
+     *
+     * @return 为0表示成功， 其他值表示部分发送异常
+     */
+    public final CompletableFuture<Integer> broadcastMessage(final WebSocketRange wsrange, final Convert convert, final Object message) {
+        return broadcastMessage((WebSocketRange) null, convert, message, true);
     }
 
     /**
@@ -396,6 +421,19 @@ public abstract class WebSocket<G extends Serializable, T> {
     /**
      * 广播消息， 给所有人发消息
      *
+     * @param wsrange 过滤条件
+     * @param message 消息内容
+     * @param last    是否最后一条
+     *
+     * @return 为0表示成功， 其他值表示部分发送异常
+     */
+    public final CompletableFuture<Integer> broadcastMessage(final WebSocketRange wsrange, final Object message, final boolean last) {
+        return broadcastMessage(wsrange, (Convert) null, message, last);
+    }
+
+    /**
+     * 广播消息， 给所有人发消息
+     *
      * @param convert Convert
      * @param message 消息内容
      * @param last    是否最后一条
@@ -403,11 +441,25 @@ public abstract class WebSocket<G extends Serializable, T> {
      * @return 为0表示成功， 其他值表示部分发送异常
      */
     public final CompletableFuture<Integer> broadcastMessage(final Convert convert, final Object message, final boolean last) {
+        return broadcastMessage((WebSocketRange) null, convert, message, last);
+    }
+
+    /**
+     * 广播消息， 给所有人发消息
+     *
+     * @param wsrange 过滤条件
+     * @param convert Convert
+     * @param message 消息内容
+     * @param last    是否最后一条
+     *
+     * @return 为0表示成功， 其他值表示部分发送异常
+     */
+    public final CompletableFuture<Integer> broadcastMessage(final WebSocketRange wsrange, final Convert convert, final Object message, final boolean last) {
         if (_engine.node == null) return CompletableFuture.completedFuture(RETCODE_NODESERVICE_NULL);
         if (message instanceof CompletableFuture) {
-            return ((CompletableFuture) message).thenCompose((json) -> _engine.node.broadcastMessage(convert, json, last));
+            return ((CompletableFuture) message).thenCompose((json) -> _engine.node.broadcastMessage(wsrange, convert, json, last));
         }
-        CompletableFuture<Integer> rs = _engine.node.broadcastMessage(convert, message, last);
+        CompletableFuture<Integer> rs = _engine.node.broadcastMessage(wsrange, convert, message, last);
         if (_engine.logger.isLoggable(Level.FINEST)) _engine.logger.finest("broadcast send websocket message(" + message + ")");
         return rs;
     }
@@ -608,6 +660,17 @@ public abstract class WebSocket<G extends Serializable, T> {
      * @return userid
      */
     protected abstract CompletableFuture<G> createUserid();
+
+    /**
+     * WebSocket.broadcastMessage时的过滤条件
+     *
+     * @param wsrange 过滤条件
+     *
+     * @return boolean
+     */
+    protected boolean predicate(WebSocketRange wsrange) {
+        return true;
+    }
 
     /**
      * WebSokcet连接成功后的回调方法

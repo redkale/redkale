@@ -53,9 +53,9 @@ public class WebSocketNodeService extends WebSocketNode implements Service {
     }
 
     @Override
-    public CompletableFuture<Integer> broadcastMessage(@RpcTargetAddress InetSocketAddress addr, Object message, boolean last) {
+    public CompletableFuture<Integer> broadcastMessage(@RpcTargetAddress InetSocketAddress addr, final WebSocketRange wsrange, Object message, boolean last) {
         if (this.localEngine == null) return CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY);
-        return this.localEngine.broadcastMessage(message, last);
+        return this.localEngine.broadcastMessage(wsrange, message, last);
     }
 
     /**

@@ -193,7 +193,13 @@ public class WebSocketEngine {
 
     @Comment("给所有连接用户发送消息")
     public CompletableFuture<Integer> broadcastMessage(final Object message, final boolean last) {
-        return broadcastMessage(null, message, last);
+        return broadcastMessage((Predicate) null, message, last);
+    }
+
+    @Comment("给指定WebSocket连接用户发送消息")
+    public CompletableFuture<Integer> broadcastMessage(final WebSocketRange wsrange, final Object message, final boolean last) {
+        Predicate<WebSocket> predicate = wsrange == null ? null : (ws) -> ws.predicate(wsrange);
+        return broadcastMessage(predicate, message, last);
     }
 
     @Comment("给指定WebSocket连接用户发送消息")
