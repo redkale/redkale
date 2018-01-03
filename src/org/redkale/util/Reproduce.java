@@ -2,9 +2,9 @@ package org.redkale.util;
 
 import java.lang.reflect.Modifier;
 import java.util.function.*;
-import static jdk.internal.org.objectweb.asm.Opcodes.*;
-import jdk.internal.org.objectweb.asm.*;
-import static jdk.internal.org.objectweb.asm.ClassWriter.COMPUTE_FRAMES;
+import static org.redkale.asm.Opcodes.*;
+import org.redkale.asm.*;
+import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
 
 /**
  * JavaBean类对象的拷贝，相同的字段名会被拷贝 <br>

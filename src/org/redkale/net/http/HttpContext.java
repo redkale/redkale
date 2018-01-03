@@ -12,8 +12,8 @@ import java.nio.charset.*;
 import java.security.*;
 import java.util.concurrent.*;
 import java.util.logging.*;
-import jdk.internal.org.objectweb.asm.*;
-import static jdk.internal.org.objectweb.asm.Opcodes.*;
+import org.redkale.asm.*;
+import static org.redkale.asm.Opcodes.*;
 import org.redkale.net.*;
 import org.redkale.util.*;
 

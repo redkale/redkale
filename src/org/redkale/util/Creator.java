@@ -14,9 +14,9 @@ import java.net.*;
 import java.util.*;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.concurrent.*;
-import jdk.internal.org.objectweb.asm.*;
-import jdk.internal.org.objectweb.asm.Type;
-import static jdk.internal.org.objectweb.asm.Opcodes.*;
+import org.redkale.asm.*;
+import org.redkale.asm.Type;
+import static org.redkale.asm.Opcodes.*;
 
 /**
  * <p>

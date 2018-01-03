@@ -7,9 +7,9 @@ package org.redkale.util;
 import java.lang.reflect.Type;
 import java.lang.reflect.*;
 import java.util.*;
-import jdk.internal.org.objectweb.asm.*;
-import static jdk.internal.org.objectweb.asm.ClassWriter.COMPUTE_FRAMES;
-import static jdk.internal.org.objectweb.asm.Opcodes.*;
+import org.redkale.asm.*;
+import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
+import static org.redkale.asm.Opcodes.*;
 
 /**
  *
@@ -191,7 +191,7 @@ public abstract class TypeToken<T> {
         FieldVisitor fv;
         MethodVisitor mv;
         cw.visit(V1_8, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynName, null, "java/lang/Object", null);
-        String rawTypeDesc = jdk.internal.org.objectweb.asm.Type.getDescriptor(rawType);
+        String rawTypeDesc = org.redkale.asm.Type.getDescriptor(rawType);
         StringBuilder sb = new StringBuilder();
         sb.append(rawTypeDesc.substring(0, rawTypeDesc.length() - 1)).append('<');
         for (Type c : actualTypeArguments) {
@@ -226,7 +226,7 @@ public abstract class TypeToken<T> {
 
     private static CharSequence getClassTypeDescriptor(Type type) {
         if (!isClassType(type)) throw new IllegalArgumentException(type + " not a class type");
-        if (type instanceof Class) return jdk.internal.org.objectweb.asm.Type.getDescriptor((Class) type);
+        if (type instanceof Class) return org.redkale.asm.Type.getDescriptor((Class) type);
         final ParameterizedType pt = (ParameterizedType) type;
         CharSequence rawTypeDesc = getClassTypeDescriptor(pt.getRawType());
         StringBuilder sb = new StringBuilder();

@@ -7,9 +7,9 @@ package org.redkale.util;
 
 import java.util.*;
 import java.util.function.*;
-import jdk.internal.org.objectweb.asm.*;
-import static jdk.internal.org.objectweb.asm.ClassWriter.COMPUTE_FRAMES;
-import static jdk.internal.org.objectweb.asm.Opcodes.*;
+import org.redkale.asm.*;
+import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
+import static org.redkale.asm.Opcodes.*;
 
 /**
  * 该类实现动态映射一个JavaBean类中成员对应的getter、setter方法； 代替低效的反射实现方式。

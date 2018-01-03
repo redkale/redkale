@@ -6,7 +6,7 @@
 package org.redkale.util;
 
 import java.util.*;
-import jdk.internal.org.objectweb.asm.*;
+import org.redkale.asm.*;
 
 /**
  * MethodVisitor 的调试类
@@ -173,7 +173,7 @@ public class AsmMethodVisitor {
         if (debug) {
             if (o instanceof CharSequence) {
                 System.out.println("mv.visitLdcInsn(\"" + o + "\");");
-            } else if (o instanceof jdk.internal.org.objectweb.asm.Type) {
+            } else if (o instanceof org.redkale.asm.Type) {
                 System.out.println("mv.visitLdcInsn(Type.getType(\"" + o + "\"));");
             } else {
                 System.out.println("mv.visitLdcInsn(" + o + ");");

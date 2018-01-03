@@ -11,9 +11,9 @@ import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiFunction;
-import jdk.internal.org.objectweb.asm.*;
-import static jdk.internal.org.objectweb.asm.ClassWriter.COMPUTE_FRAMES;
-import static jdk.internal.org.objectweb.asm.Opcodes.*;
+import org.redkale.asm.*;
+import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
+import static org.redkale.asm.Opcodes.*;
 import org.redkale.net.*;
 import org.redkale.service.RetResult;
 import org.redkale.util.*;
@@ -207,11 +207,11 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
         //------------------------------------------------------------------------------
         final String supDynName = HttpServlet.class.getName().replace('.', '/');
         final String interName = this.getClass().getName().replace('.', '/');
-        final String interDesc = jdk.internal.org.objectweb.asm.Type.getDescriptor(this.getClass());
-        final String requestSupDesc = jdk.internal.org.objectweb.asm.Type.getDescriptor(Request.class);
-        final String responseSupDesc = jdk.internal.org.objectweb.asm.Type.getDescriptor(Response.class);
-        final String requestDesc = jdk.internal.org.objectweb.asm.Type.getDescriptor(HttpRequest.class);
-        final String responseDesc = jdk.internal.org.objectweb.asm.Type.getDescriptor(HttpResponse.class);
+        final String interDesc = org.redkale.asm.Type.getDescriptor(this.getClass());
+        final String requestSupDesc = org.redkale.asm.Type.getDescriptor(Request.class);
+        final String responseSupDesc = org.redkale.asm.Type.getDescriptor(Response.class);
+        final String requestDesc = org.redkale.asm.Type.getDescriptor(HttpRequest.class);
+        final String responseDesc = org.redkale.asm.Type.getDescriptor(HttpResponse.class);
         String newDynName = interName + "_Dyn_" + method.getName();
         int i = 0;
         for (;;) {
