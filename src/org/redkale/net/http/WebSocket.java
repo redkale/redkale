@@ -779,7 +779,7 @@ public abstract class WebSocket<G extends Serializable, T> {
      * 显式地关闭WebSocket
      */
     public final void close() {
-        if (this._runner != null) this._runner.closeRunner(CLOSECODE_FORCED);
+        if (this._runner != null) this._runner.closeRunner(CLOSECODE_FORCED, "user close");
     }
 
     /**
