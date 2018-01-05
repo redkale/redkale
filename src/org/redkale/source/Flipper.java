@@ -101,6 +101,11 @@ public final class Flipper implements Serializable, Cloneable {
         return this;
     }
 
+    public Flipper unlimit() {
+        this.limit = 0;
+        return this;
+    }
+
     public int getOffset() {
         return offset;
     }
