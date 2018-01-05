@@ -46,7 +46,7 @@ public @interface RestParam {
     int radix() default 10;
 
     /**
-     * 参数是否必传
+     * 参数是否必传, 仅供apidoc功能使用，框架运行中不作验证
      *
      * @return boolean
      */
