@@ -130,6 +130,17 @@ public class RetResult<T> {
     }
 
     /**
+     * 清空attach
+     *
+     *
+     * @return RetResult
+     */
+    public RetResult<T> clearAttach() {
+        this.attach = null;
+        return this;
+    }
+
+    /**
      * 结果码 0表示成功、 非0表示错误
      *
      * @return 结果码
