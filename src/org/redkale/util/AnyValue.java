@@ -8,6 +8,7 @@ package org.redkale.util;
 import java.lang.reflect.Array;
 import java.util.*;
 import java.util.function.*;
+import org.redkale.convert.ConvertDisabled;
 
 /**
  * 该类提供类似JSONObject的数据结构，主要用于读取xml配置文件和http-header存储
@@ -239,7 +240,7 @@ public abstract class AnyValue {
         }
 
         @Override
-        @java.beans.Transient
+        @ConvertDisabled
         public String[] getNames() {
             Set<String> set = new LinkedHashSet<>();
             for (Entry en : this.stringEntrys) {
