@@ -53,7 +53,7 @@ public @interface RestWebSocket {
     boolean single() default true;
 
     /**
-     * WebSocket.createUserid返回的值是否不能表示户登录态
+     * WebSocket.createUserid返回的值是否不能表示用户登录态， 比如createUserid返回随机的UUID那么anyuser应该为true
      *
      * @return 默认false
      */
