@@ -155,7 +155,7 @@ public class JsonByteBufferWriter extends JsonWriter {
         if (charset == null) { //UTF-8
             final int limit = start + len;
             for (int i = start; i < limit; i++) {
-                buffer = putChar(buffer, chs[i]);
+                buffer = putUTF8Char(buffer, chs[i]);
             }
         } else {
             while (bb.hasRemaining()) {
@@ -169,7 +169,7 @@ public class JsonByteBufferWriter extends JsonWriter {
         }
     }
 
-    private ByteBuffer putChar(ByteBuffer buffer, char c) {
+    private ByteBuffer putUTF8Char(ByteBuffer buffer, char c) {
         if (c < 0x80) {
             if (!buffer.hasRemaining()) buffer = nextByteBuffer();
             buffer.put((byte) c);
