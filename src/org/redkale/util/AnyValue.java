@@ -372,7 +372,7 @@ public abstract class AnyValue {
 
         T value;
 
-        @java.beans.ConstructorProperties({"name", "value"})
+        @ConstructorParameters({"name", "value"})
         public Entry(String name0, T value0) {
             this.name = name0;
             this.value = value0;

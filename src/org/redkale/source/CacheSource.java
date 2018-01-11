@@ -5,12 +5,12 @@
  */
 package org.redkale.source;
 
-import java.beans.ConstructorProperties;
 import java.lang.reflect.Type;
 import java.util.*;
 import java.util.concurrent.*;
 import org.redkale.convert.ConvertColumn;
 import org.redkale.convert.json.JsonFactory;
+import org.redkale.util.ConstructorParameters;
 
 /**
  *
@@ -248,7 +248,7 @@ public interface CacheSource<V extends Object> {
             this(cacheType, expireSeconds, (int) (System.currentTimeMillis() / 1000), key, objectValue, csetValue, listValue);
         }
 
-        @ConstructorProperties({"cacheType", "expireSeconds", "lastAccessed", "key", "objectValue", "csetValue", "listValue"})
+        @ConstructorParameters({"cacheType", "expireSeconds", "lastAccessed", "key", "objectValue", "csetValue", "listValue"})
         public CacheEntry(CacheEntryType cacheType, int expireSeconds, int lastAccessed, String key, T objectValue, CopyOnWriteArraySet<T> csetValue, ConcurrentLinkedQueue<T> listValue) {
             this.cacheType = cacheType;
             this.expireSeconds = expireSeconds;

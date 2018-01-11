@@ -326,7 +326,7 @@ public final class Transport {
             this.enable = true;
         }
 
-        @java.beans.ConstructorProperties({"address", "enable"})
+        @ConstructorParameters({"address", "enable"})
         public TransportAddress(InetSocketAddress address, boolean enable) {
             this.address = address;
             this.enable = enable;

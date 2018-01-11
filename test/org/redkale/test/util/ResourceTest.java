@@ -62,7 +62,7 @@ class BService {
         System.out.println("@Resource = " + name + " 资源变更:  newVal = " + newVal + ", oldVal = " + oldVal);
     }
 
-    @java.beans.ConstructorProperties({"name"})
+    @ConstructorParameters({"name"})
     public BService(String name) {
         this.name = name;
     }

@@ -53,7 +53,7 @@ public interface SncpAsyncHandler<V, A> extends CompletionHandler<V, A> {
          *
          *      private CompletableFuture sncpfuture;
          *
-         *      &#64;java.beans.ConstructorProperties({"sncphandler"})
+         *      &#64;ConstructorParameters({"sncphandler"})
          *      public XXXAsyncHandler_DyncSncpAsyncHandler_4323(SncpAsyncHandler sncphandler) {
          *          super();
          *          this.sncphandler = sncphandler;
@@ -123,7 +123,7 @@ public interface SncpAsyncHandler<V, A> extends CompletionHandler<V, A> {
                 mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC, "<init>", "(" + sncpHandlerDesc + ")V", null, null));
                 //mv.setDebug(true);
                 {
-                    av0 = mv.visitAnnotation("Ljava/beans/ConstructorProperties;", true);
+                    av0 = mv.visitAnnotation("org/redkale/util/ConstructorParameters;", true);
                     {
                         AnnotationVisitor av1 = av0.visitArray("value");
                         av1.visit(null, "sncphandler");

@@ -6,6 +6,7 @@
 package org.redkale.source;
 
 import java.util.Objects;
+import org.redkale.util.ConstructorParameters;
 
 /**
  * FilterKey主要用于自身字段间的表达式, 如： a.recordid = a.parentid , a.parentid就需要FilterKey来表示 new FilterKey("parentid")
@@ -21,7 +22,7 @@ public class FilterKey implements java.io.Serializable {
 
     private final String column;
 
-    @java.beans.ConstructorProperties({"column"})
+    @ConstructorParameters({"column"})
     public FilterKey(String column) {
         this.column = Objects.requireNonNull(column);
     }

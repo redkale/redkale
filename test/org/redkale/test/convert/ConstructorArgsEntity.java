@@ -5,9 +5,9 @@
  */
 package org.redkale.test.convert;
 
-import java.beans.*;
 import org.redkale.convert.bson.*;
 import org.redkale.convert.json.*;
+import org.redkale.util.ConstructorParameters;
 
 /**
  * 测试不存在无参数的构造函数的bean类解析
@@ -22,7 +22,7 @@ public class ConstructorArgsEntity {
 
     private long createtime;
 
-    @ConstructorProperties({"userid", "name"})
+    @ConstructorParameters({"userid", "name"})
     public ConstructorArgsEntity(int userid, String name) {
         this.userid = userid;
         this.name = name;

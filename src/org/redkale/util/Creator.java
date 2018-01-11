@@ -4,11 +4,7 @@
  */
 package org.redkale.util;
 
-import java.beans.*;
 import java.io.*;
-import java.lang.annotation.*;
-import static java.lang.annotation.ElementType.*;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.lang.reflect.*;
 import java.net.*;
 import java.util.*;
@@ -56,7 +52,7 @@ import static org.redkale.asm.Opcodes.*;
  *
  *    private String name;
  *
- *    &#64;java.beans.ConstructorProperties({"id", "name"})
+ *    &#64;ConstructorParameters({"id", "name"})
  *    public Record(int id, String name) {
  *        this.id = id;
  *        this.name = name;
@@ -72,113 +68,101 @@ import static org.redkale.asm.Opcodes.*;
  */
 public interface Creator<T> {
 
-    /**
-     * 该注解只用于Creator.create方法上， 与 java.beans.ConstructorProperties 类似。
-     *
-     */
-    @Documented
-    @Target({METHOD})
-    @Retention(RUNTIME)
-    public static @interface ConstructorParameters {
+    @SuppressWarnings("unchecked")
+    static class CreatorInner {
 
-        String[] value();
+        static class SimpleClassVisitor extends ClassVisitor {
 
-        @SuppressWarnings("unchecked")
-        static class CreatorInner {
+            private final String constructorDesc;
 
-            static class SimpleClassVisitor extends ClassVisitor {
+            private final List<String> fieldnames;
 
-                private final String constructorDesc;
+            private boolean started;
 
-                private final List<String> fieldnames;
+            public SimpleClassVisitor(int api, List<String> fieldnames, String constructorDesc) {
+                super(api);
+                this.fieldnames = fieldnames;
+                this.constructorDesc = constructorDesc;
+            }
 
-                private boolean started;
-
-                public SimpleClassVisitor(int api, List<String> fieldnames, String constructorDesc) {
-                    super(api);
-                    this.fieldnames = fieldnames;
-                    this.constructorDesc = constructorDesc;
-                }
-
-                @Override
-                public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
-                    if (java.lang.reflect.Modifier.isStatic(access) || !"<init>".equals(name)) return null;
-                    if (constructorDesc != null && !constructorDesc.equals(desc)) return null;
-                    if (this.started) return null;
-                    this.started = true;
-                    //返回的List中参数列表可能会比方法参数量多，因为方法内的临时变量也会存入list中， 所以需要list的元素集合比方法的参数多
-                    return new MethodVisitor(Opcodes.ASM5) {
-                        @Override
-                        public void visitLocalVariable(String name, String description, String signature, Label start, Label end, int index) {
-                            if (index < 1) return;
-                            int size = fieldnames.size();
-                            //index不会按顺序执行的
-                            if (index > size) {
-                                for (int i = size; i < index; i++) {
-                                    fieldnames.add(" ");
-                                }
-                                fieldnames.set(index - 1, name);
+            @Override
+            public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
+                if (java.lang.reflect.Modifier.isStatic(access) || !"<init>".equals(name)) return null;
+                if (constructorDesc != null && !constructorDesc.equals(desc)) return null;
+                if (this.started) return null;
+                this.started = true;
+                //返回的List中参数列表可能会比方法参数量多，因为方法内的临时变量也会存入list中， 所以需要list的元素集合比方法的参数多
+                return new MethodVisitor(Opcodes.ASM5) {
+                    @Override
+                    public void visitLocalVariable(String name, String description, String signature, Label start, Label end, int index) {
+                        if (index < 1) return;
+                        int size = fieldnames.size();
+                        //index不会按顺序执行的
+                        if (index > size) {
+                            for (int i = size; i < index; i++) {
+                                fieldnames.add(" ");
                             }
                             fieldnames.set(index - 1, name);
                         }
-                    };
-                }
-            }
-
-            public static SimpleEntry<String, Class>[] getConstructorField(Class clazz, int paramcount, String constructorDesc) {
-                String n = clazz.getName();
-                InputStream in = clazz.getResourceAsStream(n.substring(n.lastIndexOf('.') + 1) + ".class");
-                if (in == null) return null;
-                ByteArrayOutputStream out = new ByteArrayOutputStream(1024);
-                byte[] bytes = new byte[1024];
-                int pos;
-                try {
-                    while ((pos = in.read(bytes)) != -1) {
-                        out.write(bytes, 0, pos);
+                        fieldnames.set(index - 1, name);
                     }
-                    in.close();
-                } catch (IOException io) {
+                };
+            }
+        }
+
+        public static SimpleEntry<String, Class>[] getConstructorField(Class clazz, int paramcount, String constructorDesc) {
+            String n = clazz.getName();
+            InputStream in = clazz.getResourceAsStream(n.substring(n.lastIndexOf('.') + 1) + ".class");
+            if (in == null) return null;
+            ByteArrayOutputStream out = new ByteArrayOutputStream(1024);
+            byte[] bytes = new byte[1024];
+            int pos;
+            try {
+                while ((pos = in.read(bytes)) != -1) {
+                    out.write(bytes, 0, pos);
+                }
+                in.close();
+            } catch (IOException io) {
+                return null;
+            }
+            final List<String> fieldnames = new ArrayList<>();
+            new ClassReader(out.toByteArray()).accept(new SimpleClassVisitor(Opcodes.ASM5, fieldnames, constructorDesc), 0);
+            if (fieldnames.isEmpty()) return null;
+            if (paramcount == fieldnames.size()) {
+                return getConstructorField(clazz, paramcount, fieldnames.toArray(new String[fieldnames.size()]));
+            } else {
+                String[] fs = new String[paramcount];
+                for (int i = 0; i < fs.length; i++) {
+                    fs[i] = fieldnames.get(i);
+                }
+                return getConstructorField(clazz, paramcount, fs);
+            }
+        }
+
+        public static SimpleEntry<String, Class>[] getConstructorField(Class clazz, int paramcount, String[] names) {
+            SimpleEntry<String, Class>[] se = new SimpleEntry[names.length];
+            for (int i = 0; i < names.length; i++) { //查询参数名对应的Field
+                try {
+                    Field field = clazz.getDeclaredField(names[i]);
+                    se[i] = new SimpleEntry<>(field.getName(), field.getType());
+                } catch (Exception e) {
                     return null;
                 }
-                final List<String> fieldnames = new ArrayList<>();
-                new ClassReader(out.toByteArray()).accept(new SimpleClassVisitor(Opcodes.ASM5, fieldnames, constructorDesc), 0);
-                if (fieldnames.isEmpty()) return null;
-                if (paramcount == fieldnames.size()) {
-                    return getConstructorField(clazz, paramcount, fieldnames.toArray(new String[fieldnames.size()]));
-                } else {
-                    String[] fs = new String[paramcount];
-                    for (int i = 0; i < fs.length; i++) {
-                        fs[i] = fieldnames.get(i);
-                    }
-                    return getConstructorField(clazz, paramcount, fs);
-                }
             }
+            return se;
+        }
 
-            public static SimpleEntry<String, Class>[] getConstructorField(Class clazz, int paramcount, String[] names) {
-                SimpleEntry<String, Class>[] se = new SimpleEntry[names.length];
-                for (int i = 0; i < names.length; i++) { //查询参数名对应的Field
-                    try {
-                        Field field = clazz.getDeclaredField(names[i]);
-                        se[i] = new SimpleEntry<>(field.getName(), field.getType());
-                    } catch (Exception e) {
-                        return null;
-                    }
+        public static SimpleEntry<String, Class>[] getConstructorField(Class clazz, int paramcount, Parameter[] params) {
+            SimpleEntry<String, Class>[] se = new SimpleEntry[params.length];
+            for (int i = 0; i < params.length; i++) { //查询参数名对应的Field
+                try {
+                    Field field = clazz.getDeclaredField(params[i].getName());
+                    se[i] = new SimpleEntry<>(field.getName(), field.getType());
+                } catch (Exception e) {
+                    return null;
                 }
-                return se;
             }
-
-            public static SimpleEntry<String, Class>[] getConstructorField(Class clazz, int paramcount, Parameter[] params) {
-                SimpleEntry<String, Class>[] se = new SimpleEntry[params.length];
-                for (int i = 0; i < params.length; i++) { //查询参数名对应的Field
-                    try {
-                        Field field = clazz.getDeclaredField(params[i].getName());
-                        se[i] = new SimpleEntry<>(field.getName(), field.getType());
-                    } catch (Exception e) {
-                        return null;
-                    }
-                }
-                return se;
-            }
+            return se;
         }
     }
 
@@ -252,9 +236,9 @@ public interface Creator<T> {
         }
         if (constructor0 == null) {  // 2、查找public带ConstructorProperties注解的构造函数
             for (Constructor c : clazz.getConstructors()) {
-                ConstructorProperties cp = (ConstructorProperties) c.getAnnotation(ConstructorProperties.class);
+                ConstructorParameters cp = (ConstructorParameters) c.getAnnotation(ConstructorParameters.class);
                 if (cp == null) continue;
-                SimpleEntry<String, Class>[] fields = ConstructorParameters.CreatorInner.getConstructorField(clazz, c.getParameterCount(), cp.value());
+                SimpleEntry<String, Class>[] fields = CreatorInner.getConstructorField(clazz, c.getParameterCount(), cp.value());
                 if (fields != null) {
                     constructor0 = c;
                     constructorParameters0 = fields;
@@ -262,17 +246,17 @@ public interface Creator<T> {
                 }
             }
         }
-        if (constructor0 == null) {  // 3、查找public且不带ConstructorProperties注解的构造函数
+        if (constructor0 == null) {  // 3、查找public且不带ConstructorParameters注解的构造函数
             List<Constructor> cs = new ArrayList<>();
             for (Constructor c : clazz.getConstructors()) {
-                if (c.getAnnotation(ConstructorProperties.class) != null) continue;
+                if (c.getAnnotation(ConstructorParameters.class) != null) continue;
                 if (c.getParameterCount() < 1) continue;
                 cs.add(c);
             }
             //优先参数最多的构造函数
             cs.sort((o1, o2) -> o2.getParameterCount() - o1.getParameterCount());
             for (Constructor c : cs) {
-                SimpleEntry<String, Class>[] fields = ConstructorParameters.CreatorInner.getConstructorField(clazz, c.getParameterCount(), Type.getConstructorDescriptor(c));
+                SimpleEntry<String, Class>[] fields = CreatorInner.getConstructorField(clazz, c.getParameterCount(), Type.getConstructorDescriptor(c));
                 if (fields != null) {
                     constructor0 = c;
                     constructorParameters0 = fields;
@@ -283,9 +267,9 @@ public interface Creator<T> {
         if (constructor0 == null) {  // 4、查找非private带ConstructorProperties的构造函数
             for (Constructor c : clazz.getDeclaredConstructors()) {
                 if (Modifier.isPublic(c.getModifiers()) || Modifier.isPrivate(c.getModifiers())) continue;
-                ConstructorProperties cp = (ConstructorProperties) c.getAnnotation(ConstructorProperties.class);
+                ConstructorParameters cp = (ConstructorParameters) c.getAnnotation(ConstructorParameters.class);
                 if (cp == null) continue;
-                SimpleEntry<String, Class>[] fields = ConstructorParameters.CreatorInner.getConstructorField(clazz, c.getParameterCount(), cp.value());
+                SimpleEntry<String, Class>[] fields = CreatorInner.getConstructorField(clazz, c.getParameterCount(), cp.value());
                 if (fields != null) {
                     constructor0 = c;
                     constructorParameters0 = fields;
@@ -297,14 +281,14 @@ public interface Creator<T> {
             List<Constructor> cs = new ArrayList<>();
             for (Constructor c : clazz.getDeclaredConstructors()) {
                 if (Modifier.isPublic(c.getModifiers()) || Modifier.isPrivate(c.getModifiers())) continue;
-                if (c.getAnnotation(ConstructorProperties.class) != null) continue;
+                if (c.getAnnotation(ConstructorParameters.class) != null) continue;
                 if (c.getParameterCount() < 1) continue;
                 cs.add(c);
             }
             //优先参数最多的构造函数
             cs.sort((o1, o2) -> o2.getParameterCount() - o1.getParameterCount());
             for (Constructor c : cs) {
-                SimpleEntry<String, Class>[] fields = ConstructorParameters.CreatorInner.getConstructorField(clazz, c.getParameterCount(), Type.getConstructorDescriptor(c));
+                SimpleEntry<String, Class>[] fields = CreatorInner.getConstructorField(clazz, c.getParameterCount(), Type.getConstructorDescriptor(c));
                 if (fields != null) {
                     constructor0 = c;
                     constructorParameters0 = fields;
@@ -315,7 +299,7 @@ public interface Creator<T> {
         final Constructor<T> constructor = constructor0;
         final SimpleEntry<String, Class>[] constructorParameters = constructorParameters0;
         if (constructor == null || constructorParameters == null) {
-            throw new RuntimeException("[" + clazz + "] have no public or java.beans.ConstructorProperties-Annotation constructor.");
+            throw new RuntimeException("[" + clazz + "] have no public or ConstructorParameters-Annotation constructor.");
         }
         //-------------------------------------------------------------
         ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
@@ -475,7 +459,7 @@ public interface Creator<T> {
                 t.printStackTrace();
             }
         }
-        if (!ispub && resultClazz == null) throw new RuntimeException("[" + clazz + "] have no public or java.beans.ConstructorProperties-Annotation constructor.");
+        if (!ispub && resultClazz == null) throw new RuntimeException("[" + clazz + "] have no public or ConstructorParameters-Annotation constructor.");
         try {
             if (resultClazz == null) resultClazz = new ClassLoader(loader) {
                     public final Class<?> loadClass(String name, byte[] b) {

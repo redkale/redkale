@@ -88,7 +88,7 @@ public class HttpContext extends Context {
             mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC, "<init>", "(" + handlerDesc + ")V", null, null));
             //mv.setDebug(true);
             {
-                av0 = mv.visitAnnotation("Ljava/beans/ConstructorProperties;", true);
+                av0 = mv.visitAnnotation("Lorg/redkale/util/ConstructorParameters;", true);
                 {
                     AnnotationVisitor av1 = av0.visitArray("value");
                     av1.visit(null, "handler");

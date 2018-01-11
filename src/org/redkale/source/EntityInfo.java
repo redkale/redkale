@@ -211,9 +211,9 @@ public final class EntityInfo<T> {
         this.tableStrategy = dts;
 
         this.creator = Creator.create(type);
-        Creator.ConstructorParameters cp = null;
+        ConstructorParameters cp = null;
         try {
-            cp = this.creator.getClass().getMethod("create", Object[].class).getAnnotation(Creator.ConstructorParameters.class);
+            cp = this.creator.getClass().getMethod("create", Object[].class).getAnnotation(ConstructorParameters.class);
         } catch (Exception e) {
             logger.log(Level.SEVERE, type + " cannot find ConstructorParameters Creator", e);
         }

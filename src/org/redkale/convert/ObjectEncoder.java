@@ -207,7 +207,7 @@ public final class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T
 
     static String[] findConstructorProperties(Creator creator) {
         try {
-            Creator.ConstructorParameters cps = creator.getClass().getMethod("create", Object[].class).getAnnotation(Creator.ConstructorParameters.class);
+            ConstructorParameters cps = creator.getClass().getMethod("create", Object[].class).getAnnotation(ConstructorParameters.class);
             return cps == null ? null : cps.value();
         } catch (Exception e) {
             return null;

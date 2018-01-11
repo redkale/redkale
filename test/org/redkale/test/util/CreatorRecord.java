@@ -5,7 +5,6 @@
  */
 package org.redkale.test.util;
 
-import java.beans.*;
 import org.redkale.convert.json.*;
 import org.redkale.util.*;
 
@@ -33,7 +32,7 @@ public class CreatorRecord {
 
     private double dval;
 
-    @ConstructorProperties({"id", "name", "lval", "tval", "bval", "sval", "cval", "fval", "dval"})
+    @ConstructorParameters({"id", "name", "lval", "tval", "bval", "sval", "cval", "fval", "dval"})
     CreatorRecord(int id, String name, long lval, boolean tval, byte bval, short sval, char cval, float fval, double dval) {
         this.id = id;
         this.name = name;

@@ -6,7 +6,12 @@
  *
 module org.redkale {
 
-    requires java.se;
+    requires java.base;
+    requires java.logging;
+    requires java.xml;
+    requires java.sql;
+    requires java.sql.rowset;
+
     requires jdk.unsupported;  //sun.misc.Unsafe
 
     exports javax.annotation;

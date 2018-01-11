@@ -119,7 +119,7 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
             this.register(AnyValue.class, Creator.create(AnyValue.DefaultAnyValue.class));
             this.register(HttpCookie.class, new Creator<HttpCookie>() {
                 @Override
-                @Creator.ConstructorParameters({"name", "value"})
+                @ConstructorParameters({"name", "value"})
                 public HttpCookie create(Object... params) {
                     return new HttpCookie((String) params[0], (String) params[1]);
                 }
