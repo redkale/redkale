@@ -10,7 +10,7 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * 标记在RestWebSocket的接收消息方法上
+ * 标记在RestWebSocket的接收消息方法上，方法通常是void返回类型
  *
  * <br><p>
  * 详情见: https://redkale.org
