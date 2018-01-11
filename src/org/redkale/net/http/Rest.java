@@ -239,6 +239,10 @@ public final class Rest {
             RestOnMessage rom = method.getAnnotation(RestOnMessage.class);
             if (rom == null) continue;
             String name = rom.name();
+            if (Modifier.isFinal(method.getModifiers())) throw new RuntimeException("@RestOnMessage method can not final but (" + method + ")");
+            if (Modifier.isStatic(method.getModifiers())) throw new RuntimeException("@RestOnMessage method can not static but (" + method + ")");
+            if (method.getReturnType() != void.class) throw new RuntimeException("@RestOnMessage method must return void but (" + method + ")");
+            if (method.getExceptionTypes().length > 0) throw new RuntimeException("@RestOnMessage method can not throw exception but (" + method + ")");
             if (name.isEmpty()) throw new RuntimeException(method + " RestOnMessage.name is empty createRestWebSocketServlet");
             if (messageNames.contains(name)) throw new RuntimeException(method + " repeat RestOnMessage.name(" + name + ") createRestWebSocketServlet");
             messageNames.add(name);
