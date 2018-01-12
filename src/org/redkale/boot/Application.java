@@ -92,6 +92,11 @@ public final class Application {
      */
     public static final String RESNAME_SERVER_ROOT = Server.RESNAME_SERVER_ROOT;
 
+    /**
+     * 当前Server的线程池
+     */
+    public static final String RESNAME_SERVER_EXECUTOR = Server.RESNAME_SERVER_EXECUTOR;
+
     //本地IP地址
     final InetAddress localAddress;
 

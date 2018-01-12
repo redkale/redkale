@@ -140,6 +140,10 @@ public abstract class NodeServer {
         }
         //必须要进行初始化， 构建Service时需要使用Context中的ExecutorService
         server.init(this.serverConf);
+        //init之后才有Executor
+        resourceFactory.register(Server.RESNAME_SERVER_EXECUTOR, Executor.class, server.getExecutor());
+        resourceFactory.register(Server.RESNAME_SERVER_EXECUTOR, ExecutorService.class, server.getExecutor());
+        resourceFactory.register(Server.RESNAME_SERVER_EXECUTOR, ThreadPoolExecutor.class, server.getExecutor());
 
         initResource(); //给 DataSource、CacheSource 注册依赖注入时的监听回调事件。
         String interceptorClass = this.serverConf.getValue("interceptor", "");

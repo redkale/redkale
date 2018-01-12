@@ -31,6 +31,8 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
 
     public static final String RESNAME_SERVER_ROOT = "SERVER_ROOT";
 
+    public static final String RESNAME_SERVER_EXECUTOR = "SERVER_EXECUTOR";
+
     protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
 
     //-------------------------------------------------------------
@@ -90,7 +92,7 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
 
     //最大连接数
     protected int maxconns;
-    
+
     protected Server(long serverStartTime, String protocol, PrepareServlet<K, C, R, P, S> servlet) {
         this.serverStartTime = serverStartTime;
         this.protocol = protocol;
@@ -146,6 +148,10 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         this.prepare.destroy(context, config);
     }
 
+    public ThreadPoolExecutor getExecutor() {
+        return executor;
+    }
+
     public InetSocketAddress getSocketAddress() {
         return address;
     }
@@ -192,7 +198,7 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         }
         serverChannel.bind(address, backlog);
         serverChannel.setMaxconns(this.maxconns);
-        serverChannel.accept(); 
+        serverChannel.accept();
         final String threadName = "[" + Thread.currentThread().getName() + "] ";
         logger.info(threadName + this.getClass().getSimpleName() + ("TCP".equalsIgnoreCase(protocol) ? "" : ("." + protocol)) + " listen: " + address
             + ", threads: " + threads + ", bufferCapacity: " + bufferCapacity + ", bufferPoolSize: " + bufferPoolSize + ", responsePoolSize: " + responsePoolSize
