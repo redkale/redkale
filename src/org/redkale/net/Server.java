@@ -107,7 +107,7 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         this.maxconns = config.getIntValue("maxconns", 0);
         this.readTimeoutSecond = config.getIntValue("readTimeoutSecond", 0);
         this.writeTimeoutSecond = config.getIntValue("writeTimeoutSecond", 0);
-        this.backlog = parseLenth(config.getValue("backlog"), 8 * 1024);
+        this.backlog = parseLenth(config.getValue("backlog"), 16 * 1024);
         this.maxbody = parseLenth(config.getValue("maxbody"), 64 * 1024);
         int bufCapacity = parseLenth(config.getValue("bufferCapacity"), 32 * 1024);
         this.bufferCapacity = bufCapacity < 8 * 1024 ? 8 * 1024 : bufCapacity;

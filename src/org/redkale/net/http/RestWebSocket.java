@@ -78,7 +78,7 @@ public @interface RestWebSocket {
      *
      * @return 最大消息体长度
      */
-    int wsmaxbody() default 16 * 1024;
+    int wsmaxbody() default 32 * 1024;
 
     /**
      * 是否屏蔽该类的转换

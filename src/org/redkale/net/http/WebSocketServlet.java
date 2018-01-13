@@ -73,7 +73,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
     protected int wsmaxconns = 0;
 
     //同RestWebSocket.wsmaxbody
-    protected int wsmaxbody = 16 * 1024;
+    protected int wsmaxbody = 32 * 1024;
 
     //同RestWebSocket.anyuser
     protected boolean anyuser = false;
