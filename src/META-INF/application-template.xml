@@ -35,13 +35,13 @@
             【节点全局唯一】
             transport节点只能有一个，用于配置所有Transport的池参数，没配置该节点将自动创建一个。
             threads： 线程总数， 默认: <group>节点数*CPU核数*8
-            bufferCapacity: ByteBuffer的初始化大小， 默认: 8K; 
+            bufferCapacity: ByteBuffer的初始化大小， 默认: 32K; 
             bufferPoolSize： ByteBuffer池的大小，默认: <group>节点数*CPU核数*8
             readTimeoutSecond: TCP读取超时秒数, 默认为6秒， 为0表示无超时限制
             writeTimeoutSecond: TCP写入超时秒数, 默认为6秒， 为0表示无超时限制
             strategy: 远程请求的负载均衡策略， 必须是org.redkale.net.TransportStrategy的实现类
         -->
-        <transport bufferCapacity="8K" bufferPoolSize="32" threads="32" readTimeoutSecond="6" writeTimeoutSecond="6"/>
+        <transport bufferCapacity="32K" bufferPoolSize="32" threads="32" readTimeoutSecond="6" writeTimeoutSecond="6"/>
         
         <!--
             一个组包含多个node， 同一Service服务可以由多个进程提供，这些进程称为一个GROUP，且同一GROUP内的进程必须在同一机房或局域网内
@@ -118,7 +118,7 @@
         threads： 线程总数， 默认: CPU核数*16
         maxconns：最大连接数, 小于1表示无限制， 默认: 0
         maxbody: request.body最大值， 默认: 64K
-        bufferCapacity: ByteBuffer的初始化大小， 默认: 8K;  如果是HTTP协议则默认: 16K + 16B (兼容HTTP 2.0、WebSocket)
+        bufferCapacity: ByteBuffer的初始化大小， 默认: 32K;  (HTTP 2.0、WebSocket，必须要16k以上)
         bufferPoolSize： ByteBuffer池的大小，默认: CPU核数*512
         responsePoolSize： Response池的大小，默认: CPU核数*256
         readTimeoutSecond: 读操作超时秒数， 默认0， 表示永久不超时

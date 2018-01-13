@@ -109,8 +109,8 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         this.writeTimeoutSecond = config.getIntValue("writeTimeoutSecond", 0);
         this.backlog = parseLenth(config.getValue("backlog"), 8 * 1024);
         this.maxbody = parseLenth(config.getValue("maxbody"), 64 * 1024);
-        int bufCapacity = parseLenth(config.getValue("bufferCapacity"), 8 * 1024);
-        this.bufferCapacity = bufCapacity < 256 ? 256 : bufCapacity;
+        int bufCapacity = parseLenth(config.getValue("bufferCapacity"), 32 * 1024);
+        this.bufferCapacity = bufCapacity < 8 * 1024 ? 8 * 1024 : bufCapacity;
         this.threads = config.getIntValue("threads", Runtime.getRuntime().availableProcessors() * 16);
         this.bufferPoolSize = config.getIntValue("bufferPoolSize", Runtime.getRuntime().availableProcessors() * 512);
         this.responsePoolSize = config.getIntValue("responsePoolSize", Runtime.getRuntime().availableProcessors() * 256);
@@ -201,7 +201,7 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         serverChannel.accept();
         final String threadName = "[" + Thread.currentThread().getName() + "] ";
         logger.info(threadName + this.getClass().getSimpleName() + ("TCP".equalsIgnoreCase(protocol) ? "" : ("." + protocol)) + " listen: " + address
-            + ", threads: " + threads + ", bufferCapacity: " + bufferCapacity + ", bufferPoolSize: " + bufferPoolSize + ", responsePoolSize: " + responsePoolSize
+            + ", threads: " + threads + ", bufferCapacity: " + bufferCapacity / 1024 + "K, bufferPoolSize: " + bufferPoolSize + ", responsePoolSize: " + responsePoolSize
             + ", started in " + (System.currentTimeMillis() - context.getServerStartTime()) + " ms");
     }
 

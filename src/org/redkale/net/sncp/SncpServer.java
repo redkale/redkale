@@ -92,7 +92,7 @@ public class SncpServer extends Server<DLong, SncpContext, SncpRequest, SncpResp
         final int port = this.address.getPort();
         AtomicLong createBufferCounter = new AtomicLong();
         AtomicLong cycleBufferCounter = new AtomicLong();
-        final int rcapacity = Math.max(this.bufferCapacity, 4 * 1024);
+        final int rcapacity = Math.max(this.bufferCapacity, 8 * 1024);
         ObjectPool<ByteBuffer> bufferPool = new ObjectPool<>(createBufferCounter, cycleBufferCounter, this.bufferPoolSize,
             (Object... params) -> ByteBuffer.allocateDirect(rcapacity), null, (e) -> {
                 if (e == null || e.isReadOnly() || e.capacity() != rcapacity) return false;

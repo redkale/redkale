@@ -248,7 +248,7 @@ public final class Application {
         AsynchronousChannelGroup transportGroup = null;
         final AnyValue resources = config.getAnyValue("resources");
         TransportStrategy strategy = null;
-        int bufferCapacity = 8 * 1024;
+        int bufferCapacity = 32 * 1024;
         int bufferPoolSize = Runtime.getRuntime().availableProcessors() * 16;
         int readTimeoutSecond = TransportFactory.DEFAULT_READTIMEOUTSECOND;
         int writeTimeoutSecond = TransportFactory.DEFAULT_WRITETIMEOUTSECOND;
@@ -260,7 +260,7 @@ public final class Application {
             if (groupsize > 0 && transportConf == null) transportConf = new DefaultAnyValue();
             if (transportConf != null) {
                 //--------------transportBufferPool-----------
-                bufferCapacity = Math.max(parseLenth(transportConf.getValue("bufferCapacity"), bufferCapacity), 4 * 1024);
+                bufferCapacity = Math.max(parseLenth(transportConf.getValue("bufferCapacity"), bufferCapacity), 8 * 1024);
                 bufferPoolSize = parseLenth(transportConf.getValue("bufferPoolSize"), groupsize * Runtime.getRuntime().availableProcessors() * 8);
                 readTimeoutSecond = transportConf.getIntValue("readTimeoutSecond", readTimeoutSecond);
                 writeTimeoutSecond = transportConf.getIntValue("writeTimeoutSecond", writeTimeoutSecond);
@@ -289,7 +289,7 @@ public final class Application {
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
-                logger.log(Level.INFO, Transport.class.getSimpleName() + " configure bufferCapacity = " + bufferCapacity + "; bufferPoolSize = " + bufferPoolSize + "; threads = " + threads + ";");
+                logger.log(Level.INFO, Transport.class.getSimpleName() + " configure bufferCapacity = " + bufferCapacity/1024 + "K; bufferPoolSize = " + bufferPoolSize + "; threads = " + threads + ";");
             }
         }
         if (transportGroup == null) {
