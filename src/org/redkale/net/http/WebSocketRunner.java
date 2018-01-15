@@ -218,7 +218,12 @@ class WebSocketRunner implements Runnable {
         //if (debug) context.getLogger().log(Level.FINEST, "send web socket message:  " + packet);
         final CompletableFuture<Integer> futureResult = new CompletableFuture<>();
         if (writing.getAndSet(true)) {
-            queue.add(new QueueEntry(futureResult, packet));
+            QueueEntry qe = new QueueEntry(futureResult, packet);
+            queue.add(qe);
+            if (!writing.get()) { //防止刚好CompletionHandler进程在poll之后获取null正准备writing.set(false)时进入queue.add(qe)。导致本消息不能发送
+                queue.remove(qe);
+                return sendMessage(packet);
+            }
             return futureResult;
         }
         ByteBuffer[] buffers = packet.sendBuffers != null ? packet.duplicateSendBuffers() : packet.encode(this.context.getBufferSupplier());
