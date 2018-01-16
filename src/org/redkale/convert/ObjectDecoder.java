@@ -89,7 +89,7 @@ public final class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T
                     if (method.isSynthetic()) continue;
                     if (method.getName().length() < 4) continue;
                     if (!method.getName().startsWith("set")) continue;
-                    if (method.getAnnotation(ConvertDisabled.class) != null) continue;
+                    if (factory.isConvertDisabled(method)) continue;
                     if (method.getParameterTypes().length != 1) continue;
                     if (method.getReturnType() != void.class) continue;
                     if (reversible && (cps == null || !ObjectEncoder.contains(cps, ConvertFactory.readGetSetFieldName(method)))) {

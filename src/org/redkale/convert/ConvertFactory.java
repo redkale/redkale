@@ -149,6 +149,25 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
         return this;
     }
 
+    public boolean isConvertDisabled(AccessibleObject element) {
+        ConvertDisabled[] ccs = element.getAnnotationsByType(ConvertDisabled.class);
+        if (ccs.length == 0 && element instanceof Method) {
+            final Method method = (Method) element;
+            String fieldName = readGetSetFieldName(method);
+            if (fieldName != null) {
+                try {
+                    ccs = method.getDeclaringClass().getDeclaredField(fieldName).getAnnotationsByType(ConvertDisabled.class);
+                } catch (Exception e) { //说明没有该字段，忽略异常
+                }
+            }
+        }
+        final ConvertType ct = this.getConvertType();
+        for (ConvertDisabled ref : ccs) {
+            if (ref.type().contains(ct)) return true;
+        }
+        return false;
+    }
+
     public ConvertColumnEntry findRef(AccessibleObject element) {
         if (element == null) return null;
         ConvertColumnEntry en = this.columnEntrys.get(element);

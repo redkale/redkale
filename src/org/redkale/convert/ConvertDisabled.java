@@ -21,4 +21,27 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface ConvertDisabled {
 
+    /**
+     * 解析/序列化定制化的TYPE
+     *
+     * @return JSON or BSON or ALL
+     */
+    ConvertType type() default ConvertType.ALL;
+
+    /**
+     * ConvertDisabled 的多用类
+     *
+     * <p>
+     * 详情见: https://redkale.org
+     *
+     * @author zhangjx
+     */
+    @Inherited
+    @Documented
+    @Target({METHOD, FIELD})
+    @Retention(RUNTIME)
+    public static @interface ConvertDisableds {
+
+        ConvertDisabled[] value();
+    }
 }
