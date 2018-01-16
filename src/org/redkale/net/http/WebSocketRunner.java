@@ -276,6 +276,16 @@ class WebSocketRunner implements Runnable {
                             channel.write(buffers, buffers, this);
                         } else {
                             writing.set(false);
+                            if (writing.get()) { //刚好进入writing.getAndSet(true)后
+                                entry = queue.poll();
+                                if (entry != null) {
+                                    writing.set(true);
+                                    future = entry.future;
+                                    ByteBuffer[] buffers = entry.packet.sendBuffers != null ? entry.packet.duplicateSendBuffers() : entry.packet.encode(context.getBufferSupplier());
+                                    lastSendTime = System.currentTimeMillis();
+                                    channel.write(buffers, buffers, this);
+                                }
+                            }
                         }
                     } catch (Exception e) {
                         context.getLogger().log(Level.WARNING, "WebSocket sendMessage abort on rewrite, force to close channel, live " + (System.currentTimeMillis() - webSocket.getCreatetime()) / 1000 + " seconds", e);
