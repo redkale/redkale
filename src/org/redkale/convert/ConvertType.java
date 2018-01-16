@@ -17,6 +17,7 @@ public enum ConvertType {
 
     JSON(1),
     BSON(2),
+    DIY(4),
     ALL(127);
 
     private final int value;
