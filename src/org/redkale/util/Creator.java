@@ -145,6 +145,18 @@ public interface Creator<T> {
                 try {
                     Field field = clazz.getDeclaredField(names[i]);
                     se[i] = new SimpleEntry<>(field.getName(), field.getType());
+                } catch (NoSuchFieldException fe) {
+                    Class cz = clazz;
+                    Field field = null;
+                    while ((cz = cz.getSuperclass()) != Object.class) {
+                        try {
+                            field = cz.getDeclaredField(names[i]);
+                            break;
+                        } catch (NoSuchFieldException nsfe) {
+                        }
+                    }
+                    if (field == null) return null;
+                    se[i] = new SimpleEntry<>(field.getName(), field.getType());
                 } catch (Exception e) {
                     return null;
                 }
