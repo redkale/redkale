@@ -8,6 +8,7 @@ package org.redkale.source;
 import java.lang.reflect.Type;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.function.Function;
 import org.redkale.convert.ConvertColumn;
 import org.redkale.convert.json.JsonFactory;
 import org.redkale.util.ConstructorParameters;
@@ -36,7 +37,25 @@ public interface CacheSource<V extends Object> {
 
     public V get(final String key);
 
+    default V getIfAbsent(final String key, Function<String, ? extends V> mappingFunction) {
+        V rs = get(key);
+        if (rs == null) {
+            rs = mappingFunction.apply(key);
+            if (rs != null) set(key, rs);
+        }
+        return rs;
+    }
+
     public V getAndRefresh(final String key, final int expireSeconds);
+
+    default V getAndRefreshIfAbsent(final String key, final int expireSeconds, Function<String, ? extends V> mappingFunction) {
+        V rs = getAndRefresh(key, expireSeconds);
+        if (rs == null) {
+            rs = mappingFunction.apply(key);
+            if (rs != null) set(expireSeconds, key, rs);
+        }
+        return rs;
+    }
 
     public void refresh(final String key, final int expireSeconds);
 
@@ -127,7 +146,33 @@ public interface CacheSource<V extends Object> {
 
     public CompletableFuture<V> getAsync(final String key);
 
+    default CompletableFuture<V> getIfAbsentAsync(final String key, Function<String, ? extends V> mappingFunction) {
+        return getAsync(key).thenCompose((V rs) -> {
+            if (rs == null) {
+                rs = mappingFunction.apply(key);
+                if (rs != null) {
+                    final V v = rs;
+                    return setAsync(key, rs).thenApply((k) -> v);
+                }
+            }
+            return CompletableFuture.completedFuture(rs);
+        });
+    }
+
     public CompletableFuture<V> getAndRefreshAsync(final String key, final int expireSeconds);
+
+    default CompletableFuture<V> getAndRefreshIfAbsentAsync(final String key, final int expireSeconds, Function<String, ? extends V> mappingFunction) {
+        return getAndRefreshAsync(key, expireSeconds).thenCompose((V rs) -> {
+            if (rs == null) {
+                rs = mappingFunction.apply(key);
+                if (rs != null) {
+                    final V v = rs;
+                    return setAsync(expireSeconds, key, rs).thenApply((k) -> v);
+                }
+            }
+            return CompletableFuture.completedFuture(rs);
+        });
+    }
 
     public CompletableFuture<Void> refreshAsync(final String key, final int expireSeconds);
 
