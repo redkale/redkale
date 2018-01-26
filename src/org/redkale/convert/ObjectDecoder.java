@@ -75,6 +75,7 @@ public final class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T
                 ConvertColumnEntry ref;
                 for (final Field field : clazz.getFields()) {
                     if (Modifier.isStatic(field.getModifiers())) continue;
+                    if (factory.isConvertDisabled(field)) continue;
                     ref = factory.findRef(field);
                     if (ref != null && ref.ignore()) continue;
                     Type t = TypeToken.createClassType(field.getGenericType(), this.type);

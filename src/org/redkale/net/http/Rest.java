@@ -18,7 +18,7 @@ import org.redkale.asm.*;
 import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
 import static org.redkale.asm.Opcodes.*;
 import org.redkale.asm.Type;
-import org.redkale.convert.Convert;
+import org.redkale.convert.*;
 import org.redkale.convert.json.*;
 import org.redkale.service.*;
 import org.redkale.util.*;
@@ -249,7 +249,8 @@ public final class Rest {
             messageMethods.add(method);
         }
         //----------------------------------------------------------------------------------------
-
+        final String convertDisabledDesc = Type.getDescriptor(ConvertDisabled.class);
+        final String webSocketParamName = Type.getInternalName(WebSocketParam.class);
         final String supDynName = WebSocketServlet.class.getName().replace('.', '/');
         final String webServletDesc = Type.getDescriptor(WebServlet.class);
         final String webSocketInternalName = Type.getInternalName(webSocketType);
@@ -381,19 +382,19 @@ public final class Rest {
 
         RestClassLoader newLoader = new RestClassLoader(loader);
 
-        for (int i = 0; i < messageMethods.size(); i++) {  // _DyncXXXWebSocketMessage List
+        for (int i = 0; i < messageMethods.size(); i++) {  // _DyncXXXWebSocketMessage 子消息List
             Method method = messageMethods.get(i);
             String endfix = "_" + method.getName() + "_" + (i > 9 ? i : ("0" + i));
 
             ClassWriter cw2 = new ClassWriter(COMPUTE_FRAMES);
-            cw2.visit(V1_8, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynMessageFullName + endfix, null, "java/lang/Object", null);
-
+            cw2.visit(V1_8, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynMessageFullName + endfix, null, "java/lang/Object", new String[]{webSocketParamName, "java/lang/Runnable"});
             cw2.visitInnerClass(newDynMessageFullName + endfix, newDynName, newDynMessageSimpleName + endfix, ACC_PUBLIC + ACC_STATIC);
             Set<String> paramnames = new HashSet<>();
             String methodesc = method.getName() + ":" + Type.getMethodDescriptor(method);
             List<String> names = asmParamMap.get(methodesc);
             Parameter[] params = method.getParameters();
-            for (int j = 0; j < params.length; j++) {
+            final LinkedHashMap<String, Parameter> paramap = new LinkedHashMap(); //必须使用LinkedHashMap确保顺序
+            for (int j = 0; j < params.length; j++) { //字段列表
                 Parameter param = params[j];
                 String paramname = param.getName();
                 RestParam rp = param.getAnnotation(RestParam.class);
@@ -404,16 +405,76 @@ public final class Rest {
                 }
                 if (paramnames.contains(paramname)) throw new RuntimeException(method + " has same @RestParam.name");
                 paramnames.add(paramname);
+                paramap.put(paramname, param);
                 fv = cw2.visitField(ACC_PUBLIC, paramname, Type.getDescriptor(param.getType()),
                     param.getType() == param.getParameterizedType() ? null : Utility.getTypeDescriptor(param.getParameterizedType()), null);
                 fv.visitEnd();
             }
-            { //构造函数
+            { //_redkale_websocket
+                fv = cw2.visitField(ACC_PUBLIC, "_redkale_websocket", "L" + newDynWebSokcetFullName + ";", null, null);
+                av0 = fv.visitAnnotation(convertDisabledDesc, true);
+                av0.visitEnd();
+                fv.visitEnd();
+            }
+            { //空构造函数
                 mv = new AsmMethodVisitor(cw2.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null));
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitMethodInsn(INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false);
                 mv.visitInsn(RETURN);
                 mv.visitMaxs(1, 1);
+                mv.visitEnd();
+            }
+            { //getValue
+                mv = new AsmMethodVisitor(cw2.visitMethod(ACC_PUBLIC, "getValue", "(Ljava/lang/String;)Ljava/lang/Object;", "<T:Ljava/lang/Object;>(Ljava/lang/String;)TT;", null));
+                for (Map.Entry<String, Parameter> en : paramap.entrySet()) {
+                    Class paramType = en.getValue().getType();
+                    mv.visitLdcInsn(en.getKey());
+                    mv.visitVarInsn(ALOAD, 1);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/String", "equals", "(Ljava/lang/Object;)Z", false);
+                    Label l1 = new Label();
+                    mv.visitJumpInsn(IFEQ, l1);
+                    mv.visitVarInsn(ALOAD, 0);
+                    mv.visitFieldInsn(GETFIELD, newDynMessageFullName + endfix, en.getKey(), Type.getDescriptor(paramType));
+                    if (paramType.isPrimitive()) {
+                        Class bigclaz = java.lang.reflect.Array.get(java.lang.reflect.Array.newInstance(paramType, 1), 0).getClass();
+                        mv.visitMethodInsn(INVOKESTATIC, bigclaz.getName().replace('.', '/'), "valueOf", "(" + Type.getDescriptor(paramType) + ")" + Type.getDescriptor(bigclaz), false);
+                    }
+                    mv.visitInsn(ARETURN);
+                    mv.visitLabel(l1);
+                    mv.visitFrame(Opcodes.F_SAME, 0, null, 0, null);
+                }
+                mv.visitInsn(ACONST_NULL);
+                mv.visitInsn(ARETURN);
+                mv.visitMaxs(2, 2);
+                mv.visitEnd();
+            }
+            { //execute
+                mv = new AsmMethodVisitor(cw2.visitMethod(ACC_PUBLIC, "execute", "(L" + newDynWebSokcetFullName + ";)V", null, null));
+                mv.visitVarInsn(ALOAD, 0);
+                mv.visitVarInsn(ALOAD, 1);
+                mv.visitFieldInsn(PUTFIELD, newDynMessageFullName + endfix, "_redkale_websocket", "L" + newDynWebSokcetFullName + ";");
+                mv.visitVarInsn(ALOAD, 1);
+                mv.visitLdcInsn(method.getAnnotation(RestOnMessage.class).name());
+                mv.visitVarInsn(ALOAD, 0);
+                mv.visitVarInsn(ALOAD, 0);
+                mv.visitMethodInsn(INVOKEVIRTUAL, newDynWebSokcetFullName, "preOnMessage", "(Ljava/lang/String;Lorg/redkale/net/http/WebSocketParam;Ljava/lang/Runnable;)V", false);
+                mv.visitInsn(RETURN);
+                mv.visitMaxs(4, 2);
+                mv.visitEnd();
+            }
+            { //run
+                mv = new AsmMethodVisitor(cw2.visitMethod(ACC_PUBLIC, "run", "()V", null, null));
+                mv.visitVarInsn(ALOAD, 0);
+                mv.visitFieldInsn(GETFIELD, newDynMessageFullName + endfix, "_redkale_websocket", "L" + newDynWebSokcetFullName + ";");
+
+                for (Map.Entry<String, Parameter> en : paramap.entrySet()) {
+                    mv.visitVarInsn(ALOAD, 0);
+                    mv.visitFieldInsn(GETFIELD, (newDynMessageFullName + endfix), en.getKey(), Type.getDescriptor(en.getValue().getType()));
+                }
+                mv.visitMethodInsn(INVOKEVIRTUAL, newDynWebSokcetFullName, method.getName(), Type.getMethodDescriptor(method), false);
+
+                mv.visitInsn(RETURN);
+                mv.visitMaxs(3, 1);
                 mv.visitEnd();
             }
             { //toString
@@ -523,32 +584,16 @@ public final class Rest {
                     final Method method = messageMethods.get(i);
                     String endfix = "_" + method.getName() + "_" + (i > 9 ? i : ("0" + i));
                     final String messagename = method.getAnnotation(RestOnMessage.class).name();
-                    String methodesc = method.getName() + ":" + Type.getMethodDescriptor(method);
-                    List<String> names = asmParamMap.get(methodesc);
-                    Parameter[] params = method.getParameters();
 
                     mv.visitVarInsn(ALOAD, 4);
                     mv.visitFieldInsn(GETFIELD, newDynMessageFullName, messagename, "L" + (newDynMessageFullName + endfix) + ";");
                     Label ifLabel = new Label();
                     mv.visitJumpInsn(IFNULL, ifLabel);
 
+                    mv.visitVarInsn(ALOAD, 4);
+                    mv.visitFieldInsn(GETFIELD, newDynMessageFullName, messagename, "L" + (newDynMessageFullName + endfix) + ";");
                     mv.visitVarInsn(ALOAD, 3);
-
-                    for (int j = 0; j < params.length; j++) {
-                        Parameter param = params[j];
-                        String paramname = param.getName();
-                        RestParam rp = param.getAnnotation(RestParam.class);
-                        if (rp != null && !rp.name().isEmpty()) {
-                            paramname = rp.name();
-                        } else if (names != null && names.size() > j) {
-                            paramname = names.get(j);
-                        }
-
-                        mv.visitVarInsn(ALOAD, 4);
-                        mv.visitFieldInsn(GETFIELD, newDynMessageFullName, messagename, "L" + (newDynMessageFullName + endfix) + ";");
-                        mv.visitFieldInsn(GETFIELD, (newDynMessageFullName + endfix), paramname, Type.getDescriptor(param.getType()));
-                    }
-                    mv.visitMethodInsn(INVOKEVIRTUAL, newDynWebSokcetFullName, method.getName(), Type.getMethodDescriptor(method), false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, (newDynMessageFullName + endfix), "execute", "(L" + newDynWebSokcetFullName + ";)V", false);
                     mv.visitInsn(RETURN);
                     mv.visitLabel(ifLabel);
                 }

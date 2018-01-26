@@ -5,7 +5,8 @@
  */
 package org.redkale.test.ws;
 
-import java.util.Map;
+import java.lang.reflect.Method;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.annotation.Resource;
@@ -40,6 +41,15 @@ public class ChatWebSocket extends WebSocket<Integer, Object> {
     public void onJoinRoom(int roomid) {
         service.joinRoom(getUserid(), roomid);
         System.out.println("加入房间: roomid: " + roomid);
+    }
+
+    public static void main(String[] args) throws Throwable {
+
+        Method method = Arrays.asList(Rest.class.getDeclaredMethods())
+            .stream().filter(m -> "createRestWebSocketServlet".equals(m.getName()))
+            .findFirst().get();
+        method.setAccessible(true);
+        System.out.println(method.invoke(null, Thread.currentThread().getContextClassLoader(), ChatWebSocket.class));
     }
 
 }

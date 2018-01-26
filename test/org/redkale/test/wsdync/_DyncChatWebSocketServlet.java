@@ -9,6 +9,7 @@ import java.io.Serializable;
 import java.util.Map;
 import java.util.function.BiConsumer;
 import javax.annotation.Resource;
+import org.redkale.convert.ConvertDisabled;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.http.*;
 import org.redkale.test.ws.ChatMessage;
@@ -50,9 +51,9 @@ public final class _DyncChatWebSocketServlet extends WebSocketServlet {
 
     public static class _DyncChatWebSocketMessage {
 
-        public _DyncChatWebSocketMessage_sendmessagee sendmessage;
+        public _DyncChatWebSocketMessage_sendmessagee_00 sendmessage;
 
-        public _DyncChatWebSocketMessage_joinroom joinroom;
+        public _DyncChatWebSocketMessage_joinroom_01 joinroom;
 
         @Override
         public String toString() {
@@ -60,21 +61,60 @@ public final class _DyncChatWebSocketServlet extends WebSocketServlet {
         }
     }
 
-    public static class _DyncChatWebSocketMessage_sendmessagee {
+    public static class _DyncChatWebSocketMessage_sendmessagee_00 implements WebSocketParam, Runnable {
 
         public ChatMessage message;
 
         public Map<String, String> extmap;
 
+        @ConvertDisabled
+        public _DyncChatWebSocket _redkale_websocket;
+
+        @Override
+        public <T> T getValue(String name) {
+            if ("message".equals(name)) return (T) message;
+            if ("extmap".equals(name)) return (T) extmap;
+            return null;
+        }
+
+        public void execute(_DyncChatWebSocket websocket) {
+            this._redkale_websocket = websocket;
+            websocket.preOnMessage("sendmessage", this, this);
+        }
+
+        @Override
+        public void run() {
+            _redkale_websocket.onChatMessage(this.message, this.extmap);
+        }
+
         @Override
         public String toString() {
             return JsonConvert.root().convertTo(this);
         }
     }
 
-    public static class _DyncChatWebSocketMessage_joinroom {
+    public static class _DyncChatWebSocketMessage_joinroom_01 implements WebSocketParam, Runnable {
 
         public int roomid;
+
+        @ConvertDisabled
+        public _DyncChatWebSocket _redkale_websocket;
+
+        @Override
+        public <T> T getValue(String name) {
+            if ("roomid".equals(name)) return (T) (Integer) roomid;
+            return null;
+        }
+
+        public void execute(_DyncChatWebSocket websocket) {
+            this._redkale_websocket = websocket;
+            websocket.preOnMessage("joinroom", this, this);
+        }
+
+        @Override
+        public void run() {
+            _redkale_websocket.onJoinRoom(this.roomid);
+        }
 
         @Override
         public String toString() {
@@ -89,11 +129,11 @@ public final class _DyncChatWebSocketServlet extends WebSocketServlet {
             _DyncChatWebSocket websocket = (_DyncChatWebSocket) websocket0;
             _DyncChatWebSocketMessage message = (_DyncChatWebSocketMessage) message0;
             if (message.sendmessage != null) {
-                websocket.onChatMessage(message.sendmessage.message, message.sendmessage.extmap);
+                message.sendmessage.execute(websocket);
                 return;
             }
             if (message.joinroom != null) {
-                websocket.onJoinRoom(message.joinroom.roomid);
+                message.joinroom.execute(websocket);
                 return;
             }
         }

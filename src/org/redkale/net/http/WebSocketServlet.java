@@ -307,23 +307,6 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
         return null;
     }
 
-    //供Rest构建RestWebSocket时使用
-    protected static interface MessageEventRunner extends Runnable {
-
-        public void execute() throws Throwable;
-
-        @Override
-        default void run() {
-            try {
-                execute();
-            } catch (RuntimeException e) {
-                throw e;
-            } catch (Throwable t) {
-                throw new RuntimeException(t);
-            }
-        }
-    }
-
     private static MessageDigest getMessageDigest() {
         try {
             return MessageDigest.getInstance("SHA-1");
