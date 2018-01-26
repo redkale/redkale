@@ -16,4 +16,6 @@ package org.redkale.net.http;
 public interface WebSocketParam {
 
     public <T> T getValue(String name);
+    
+    public String[] getNames();
 }

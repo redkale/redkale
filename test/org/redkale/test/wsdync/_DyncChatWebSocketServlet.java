@@ -71,6 +71,11 @@ public final class _DyncChatWebSocketServlet extends WebSocketServlet {
         public _DyncChatWebSocket _redkale_websocket;
 
         @Override
+        public String[] getNames() {
+            return new String[]{"message", "extmap"};
+        }
+
+        @Override
         public <T> T getValue(String name) {
             if ("message".equals(name)) return (T) message;
             if ("extmap".equals(name)) return (T) extmap;
@@ -99,6 +104,11 @@ public final class _DyncChatWebSocketServlet extends WebSocketServlet {
 
         @ConvertDisabled
         public _DyncChatWebSocket _redkale_websocket;
+
+        @Override
+        public String[] getNames() {
+            return new String[]{"roomid"};
+        }
 
         @Override
         public <T> T getValue(String name) {

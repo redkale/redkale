@@ -219,7 +219,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
                                 temprunner = null;
                                 webSocket._userid = userid;
                                 if (single && !anyuser) {
-                                    WebSocketServlet.this.node.existsWebSocket(userid).whenComplete((rs, ex) -> {
+                                    WebSocketServlet.this.node.existsWebSocket(userid).whenComplete((rs, nex) -> {
                                         if (rs) webSocket.onSingleRepeatConnect();
                                         WebSocketServlet.this.node.localEngine.add(webSocket);
                                         WebSocketRunner runner = new WebSocketRunner(context, webSocket, restMessageConsumer, response.removeChannel());

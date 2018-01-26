@@ -424,6 +424,21 @@ public final class Rest {
                 mv.visitMaxs(1, 1);
                 mv.visitEnd();
             }
+            { //getNames
+                mv = new AsmMethodVisitor(cw2.visitMethod(ACC_PUBLIC, "getNames", "()[Ljava/lang/String;", null, null));
+                pushInt(mv, paramap.size());
+                mv.visitTypeInsn(ANEWARRAY, "java/lang/String");
+                int index = -1;
+                for (Map.Entry<String, Parameter> en : paramap.entrySet()) {
+                    mv.visitInsn(DUP);
+                    mv.visitInsn(++index);
+                    mv.visitLdcInsn(en.getKey());
+                    mv.visitInsn(AASTORE);
+                }
+                mv.visitInsn(ARETURN);
+                mv.visitMaxs(paramap.size() + 2, 1);
+                mv.visitEnd();
+            }
             { //getValue
                 mv = new AsmMethodVisitor(cw2.visitMethod(ACC_PUBLIC, "getValue", "(Ljava/lang/String;)Ljava/lang/Object;", "<T:Ljava/lang/Object;>(Ljava/lang/String;)TT;", null));
                 for (Map.Entry<String, Parameter> en : paramap.entrySet()) {
