@@ -29,6 +29,25 @@ public class ChatWebSocket extends WebSocket<Integer, Object> {
         return CompletableFuture.completedFuture(service.createUserid());
     }
 
+    /**
+     * 浏览器WebSocket请求：
+     * <pre>
+     * websocket.send(JSON.stringify({
+     *      sendmessage:{
+     *          message:{
+     *              content : "这是聊天内容"
+     *          },
+     *          extmap:{
+     *              "a":1,
+     *              "b", "haha"
+     *          }
+     *      }
+     * }));
+     * </pre>
+     *
+     * @param message 参数1
+     * @param extmap  参数2
+     */
     @RestOnMessage(name = "sendmessage")
     public void onChatMessage(ChatMessage message, Map<String, String> extmap) {
         message.fromuserid = getUserid();
@@ -37,6 +56,18 @@ public class ChatWebSocket extends WebSocket<Integer, Object> {
         super.broadcastMessage(message);
     }
 
+    /**
+     * 浏览器WebSocket请求：
+     * <pre>
+     * websocket.send(JSON.stringify({
+     *      joinroom:{
+     *          roomid: 10212
+     *      }
+     * }));
+     * </pre>
+     *
+     * @param roomid 参数1
+     */
     @RestOnMessage(name = "joinroom")
     public void onJoinRoom(int roomid) {
         service.joinRoom(getUserid(), roomid);
