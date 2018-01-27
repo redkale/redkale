@@ -39,7 +39,7 @@ public class ChatWebSocket extends WebSocket<Integer, Object> {
      *          },
      *          extmap:{
      *              "a":1,
-     *              "b", "haha"
+     *              "b":"haha"
      *          }
      *      }
      * }));
