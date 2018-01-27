@@ -44,8 +44,6 @@ import org.w3c.dom.*;
  *     4、最后进行Service、Servlet与其他资源之间的依赖注入
  * </pre>
  * <p>
- * 编译时需要加入: -XDignore.symbol.file=true
- * <p>
  * 详情见: https://redkale.org
  *
  * @author zhangjx
@@ -356,6 +354,7 @@ public final class Application {
 
     public void init() throws Exception {
         System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", "" + Runtime.getRuntime().availableProcessors() * 4);
+        System.setProperty("net.transport.pinginterval", "30");
         System.setProperty("convert.bson.tiny", "true");
         System.setProperty("convert.json.tiny", "true");
         System.setProperty("convert.bson.pool.size", "128");
