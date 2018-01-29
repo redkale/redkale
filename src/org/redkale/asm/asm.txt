@@ -24,3 +24,4 @@ ModuleWriter.java
 Opcodes.java
 Type.java
 TypePath.java
+TypeReference.java

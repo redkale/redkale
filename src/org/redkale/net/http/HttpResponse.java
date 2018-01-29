@@ -15,7 +15,7 @@ import java.text.*;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.BiFunction;
+import java.util.function.*;
 import java.util.logging.Level;
 import org.redkale.convert.*;
 import org.redkale.convert.json.JsonConvert;
@@ -225,7 +225,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         return Utility.createAsyncHandler((v, a) -> {
             finish(v);
         }, (t, a) -> {
-            request.getContext().getLogger().log(Level.WARNING, "Servlet occur, forece to close channel. request = " + request + ", result is CompletionHandler", (Throwable) t);
+            context.getLogger().log(Level.WARNING, "Servlet occur, forece to close channel. request = " + request + ", result is CompletionHandler", (Throwable) t);
             finish(500, null);
         });
     }
@@ -244,6 +244,15 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
     public <H extends CompletionHandler> H createAsyncHandler(Class<H> handlerClass) {
         if (handlerClass == null || handlerClass == CompletionHandler.class) return (H) createAsyncHandler();
         return context.loadAsyncHandlerCreator(handlerClass).create(createAsyncHandler());
+    }
+
+    /**
+     * 获取ByteBuffer生成器
+     *
+     * @return ByteBuffer生成器
+     */
+    public Supplier<ByteBuffer> getBufferSupplier() {
+        return getBodyBufferSupplier();
     }
 
     /**
@@ -446,7 +455,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
             try {
                 finish((File) obj);
             } catch (IOException e) {
-                getContext().getLogger().log(Level.WARNING, "HttpServlet finish File occur, forece to close channel. request = " + getRequest(), e);
+                context.getLogger().log(Level.WARNING, "HttpServlet finish File occur, forece to close channel. request = " + getRequest(), e);
                 finish(500, null);
             }
         } else if (obj instanceof HttpResult) {
@@ -457,6 +466,17 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
                 finish("");
             } else {
                 finish(convert, result.getResult());
+            }
+        } else if (obj instanceof HttpScope) {
+            HttpScope scope = (HttpScope) obj;
+            if (this.recycleListener != null) this.output = obj;
+            this.contentType = "text/html; charset=utf-8";
+            HttpTemplateEngine templateEngine = context.getTemplateEngine();
+            if (templateEngine == null) {
+                context.getLogger().log(Level.WARNING, "HttpServlet not found HttpTemplateEngine. request = " + getRequest() + ", scope = " + scope);
+                finish(500, null);
+            } else {
+                templateEngine.renderTo(this, scope);
             }
         } else {
             if (convert instanceof TextConvert) this.contentType = "text/plain; charset=utf-8";
@@ -1098,7 +1118,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
 
         @Override
         public void failed(Throwable exc, ByteBuffer attachment) {
-            getContext().offerBuffer(attachment);
+            context.offerBuffer(attachment);
             finish(true);
             try {
                 filechannel.close();

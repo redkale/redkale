@@ -31,6 +31,8 @@ public class HttpPrepareServlet extends PrepareServlet<String, HttpContext, Http
 
     protected HttpServlet resourceHttpServlet = new HttpResourceServlet();
 
+    protected HttpTemplateEngine templateEngine = null;
+
     protected MappingEntry[] regArray = null; //regArray 包含 regWsArray
 
     protected MappingEntry[] regWsArray = null;
@@ -203,31 +205,47 @@ public class HttpPrepareServlet extends PrepareServlet<String, HttpContext, Http
             s.preInit(context, getServletConf(s));
             s.init(context, getServletConf(s));
         });
-        AnyValue resConfig = config.getAnyValue("resource-servlet");
-        if ((resConfig instanceof DefaultAnyValue) && resConfig.getValue("webroot", "").isEmpty()) {
-            ((DefaultAnyValue) resConfig).addValue("webroot", config.getValue("root"));
+        { //设置ResourceServlet
+            AnyValue resConfig = config.getAnyValue("resource-servlet");
+            if ((resConfig instanceof DefaultAnyValue) && resConfig.getValue("webroot", "").isEmpty()) {
+                ((DefaultAnyValue) resConfig).addValue("webroot", config.getValue("root"));
+            }
+            if (resConfig == null) { //主要用于嵌入式的HttpServer初始化
+                DefaultAnyValue dresConfig = new DefaultAnyValue();
+                dresConfig.addValue("webroot", config.getValue("root"));
+                dresConfig.addValue("ranges", config.getValue("ranges"));
+                dresConfig.addValue("cache", config.getAnyValue("cache"));
+                AnyValue[] rewrites = config.getAnyValues("rewrite");
+                if (rewrites != null) {
+                    for (AnyValue rewrite : rewrites) {
+                        dresConfig.addValue("rewrite", rewrite);
+                    }
+                }
+                resConfig = dresConfig;
+            }
+            String resServlet = resConfig.getValue("servlet", HttpResourceServlet.class.getName());
+            try {
+                this.resourceHttpServlet = (HttpServlet) Thread.currentThread().getContextClassLoader().loadClass(resServlet).newInstance();
+            } catch (Throwable e) {
+                this.resourceHttpServlet = new HttpResourceServlet();
+                logger.log(Level.WARNING, "init HttpResourceSerlvet(" + resServlet + ") error", e);
+            }
+            this.resourceHttpServlet.init(context, resConfig);
         }
-        if (resConfig == null) { //主要用于嵌入式的HttpServer初始化
-            DefaultAnyValue dresConfig = new DefaultAnyValue();
-            dresConfig.addValue("webroot", config.getValue("root"));
-            dresConfig.addValue("ranges", config.getValue("ranges"));
-            dresConfig.addValue("cache", config.getAnyValue("cache"));
-            AnyValue[] rewrites = config.getAnyValues("rewrite");
-            if (rewrites != null) {
-                for (AnyValue rewrite : rewrites) {
-                    dresConfig.addValue("rewrite", rewrite);
+        { //设置TemplateEngine            
+            AnyValue engineConfig = config.getAnyValue("template-engine");
+            if (engineConfig != null) {
+                String engineType = engineConfig.getValue("value");
+                try {
+                    this.templateEngine = (HttpTemplateEngine) Thread.currentThread().getContextClassLoader().loadClass(engineType).newInstance();
+                    this.templateEngine.init(context, engineConfig);
+                } catch (Throwable e) {
+                    logger.log(Level.WARNING, "init HttpTemplateEngine(" + engineType + ") error", e);
                 }
             }
-            resConfig = dresConfig;
+            //设置给Context
+            context.setTemplateEngine(this.templateEngine);
         }
-        String resServlet = resConfig.getValue("servlet", HttpResourceServlet.class.getName());
-        try {
-            this.resourceHttpServlet = (HttpServlet) Thread.currentThread().getContextClassLoader().loadClass(resServlet).newInstance();
-        } catch (Throwable e) {
-            this.resourceHttpServlet = new HttpResourceServlet();
-            logger.log(Level.WARNING, "init HttpResourceSerlvet(" + resServlet + ") error", e);
-        }
-        this.resourceHttpServlet.init(context, resConfig);
     }
 
     @Override
@@ -371,6 +389,14 @@ public class HttpPrepareServlet extends PrepareServlet<String, HttpContext, Http
      */
     public HttpServlet getResourceServlet() {
         return this.resourceHttpServlet;
+    }
+
+    public void setTemplateEngine(final HttpTemplateEngine engine) {
+        this.templateEngine = engine;
+    }
+
+    public HttpTemplateEngine getTemplateEngine() {
+        return this.templateEngine;
     }
 
     @Override

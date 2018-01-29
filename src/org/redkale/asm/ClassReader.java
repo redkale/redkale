@@ -2493,7 +2493,7 @@ public class ClassReader {
     /**
      * Reads a CONSTANT_Module_info item in {@code b}. This method is intended
      * for {@link Attribute} sub classes, and is normally not needed by class
-     * generators or adapters.</i>
+     * generators or adapters.
      *
      * @param  index
      *         the start index of an unsigned short value in {@link #b b},
@@ -2510,7 +2510,7 @@ public class ClassReader {
     /**
      * Reads a CONSTANT_Package_info item in {@code b}.  This method is
      * intended for {@link Attribute} sub slasses, and is normally not needed
-     * by class generators or adapters.</i>
+     * by class generators or adapters.
      *
      * @param  index
      *         the start index of an unsigned short value in {@link #b b},
