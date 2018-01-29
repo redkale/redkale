@@ -122,17 +122,26 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
 
     private final HttpCookie defcookie;
 
+    private final List<HttpRender> renders;
+
+    private final boolean hasRender;
+
+    private final HttpRender onlyoneHttpRender;
+
     public static ObjectPool<Response> createPool(AtomicLong creatCounter, AtomicLong cycleCounter, int max, Creator<Response> creator) {
         return new ObjectPool<>(creatCounter, cycleCounter, max, creator, (x) -> ((HttpResponse) x).prepare(), (x) -> ((HttpResponse) x).recycle());
     }
 
     public HttpResponse(HttpContext context, HttpRequest request, String[][] defaultAddHeaders, String[][] defaultSetHeaders,
-        HttpCookie defcookie, boolean autoOptions) {
+        HttpCookie defcookie, boolean autoOptions, List< HttpRender> renders) {
         super(context, request);
         this.defaultAddHeaders = defaultAddHeaders;
         this.defaultSetHeaders = defaultSetHeaders;
         this.defcookie = defcookie;
         this.autoOptions = autoOptions;
+        this.renders = renders;
+        this.hasRender = renders != null && !renders.isEmpty();
+        this.onlyoneHttpRender = renders != null && renders.size() == 1 ? renders.get(0) : null;
     }
 
     @Override
@@ -467,18 +476,24 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
             } else {
                 finish(convert, result.getResult());
             }
-        } else if (obj instanceof HttpScope) {
-            HttpScope scope = (HttpScope) obj;
-            if (this.recycleListener != null) this.output = obj;
-            this.contentType = "text/html; charset=utf-8";
-            HttpTemplateEngine templateEngine = context.getTemplateEngine();
-            if (templateEngine == null) {
-                context.getLogger().log(Level.WARNING, "HttpServlet not found HttpTemplateEngine. request = " + getRequest() + ", scope = " + scope);
-                finish(500, null);
-            } else {
-                templateEngine.renderTo(this.request, this, scope);
-            }
         } else {
+            if (hasRender) {
+                if (onlyoneHttpRender != null) {
+                    if (onlyoneHttpRender.getType().isAssignableFrom(obj.getClass())) {
+                        onlyoneHttpRender.renderTo(this.request, this, obj);
+                        return;
+                    }
+                } else {
+                    Class objt = obj.getClass();
+                    for (HttpRender render : this.renders) {
+                        if (render.getType().isAssignableFrom(objt)) {
+                            render.renderTo(this.request, this, obj);
+                            return;
+                        }
+                    }
+                }
+            }
+
             if (convert instanceof TextConvert) this.contentType = "text/plain; charset=utf-8";
             if (this.recycleListener != null) this.output = obj;
             if (obj instanceof org.redkale.service.RetResult) {

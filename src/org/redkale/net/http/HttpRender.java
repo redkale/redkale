@@ -8,17 +8,20 @@ package org.redkale.net.http;
 import org.redkale.util.AnyValue;
 
 /**
- * HTTP模板引擎的基类
+ * HTTP输出引擎的基类
  *
  * <p>
  * 详情见: https://redkale.org
  *
  * @author zhangjx
+ * @param <T> 泛型
  */
-public interface HttpTemplateEngine {
+public interface HttpRender<T> {
 
     default void init(HttpContext context, AnyValue config) {
     }
 
-    public void renderTo(HttpRequest request, HttpResponse response, HttpScope scope);
+    public <V extends T> void renderTo(HttpRequest request, HttpResponse response, V scope);
+
+    public Class<T> getType();
 }

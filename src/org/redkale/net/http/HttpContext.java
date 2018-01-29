@@ -31,8 +31,6 @@ public class HttpContext extends Context {
 
     protected final ConcurrentHashMap<Class, Creator> asyncHandlerCreators = new ConcurrentHashMap<>();
 
-    protected HttpTemplateEngine templateEngine;
-
     public HttpContext(long serverStartTime, Logger logger, ThreadPoolExecutor executor, int bufferCapacity, ObjectPool<ByteBuffer> bufferPool,
         ObjectPool<Response> responsePool, int maxbody, Charset charset, InetSocketAddress address, PrepareServlet prepare,
         int readTimeoutSecond, int writeTimeoutSecond) {
@@ -40,14 +38,6 @@ public class HttpContext extends Context {
             address, prepare, readTimeoutSecond, writeTimeoutSecond);
 
         random.setSeed(Math.abs(System.nanoTime()));
-    }
-
-    protected void setTemplateEngine(HttpTemplateEngine engine) {
-        this.templateEngine = engine;
-    }
-
-    public HttpTemplateEngine getTemplateEngine() {
-        return templateEngine;
     }
 
     protected String createSessionid() {

@@ -1,7 +1,7 @@
 /*
  * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * To change this referid file, choose Tools | Templates
+ * and open the referid in the editor.
  */
 package org.redkale.net.http;
 
@@ -17,18 +17,18 @@ import org.redkale.convert.json.JsonConvert;
  * HttpServlet调用: <br>
  * <pre>
  *    &#064;HttpMapping(url = "/hello.html", auth = false)
- *    public void hello(HttpRequest req, HttpResponse resp) throws IOException {
- *        resp.finish(HttpScope.template("/hello.html").attr("content", "哈哈"));
- *    }
- * </pre>
+    public void hello(HttpRequest req, HttpResponse resp) throws IOException {
+        resp.finish(HttpScope.refer("/hello.html").attr("content", "哈哈"));
+    }
+ </pre>
  * <p>
  * RestService调用: <br>
  * <pre>
  *    &#064;RestMapping(name = "hello.html", auth = false)
- *    public HttpScope hello() {
- *       return HttpScope.template("hello.html").attr("content", "哈哈");
- *    }
- * </pre>
+    public HttpScope hello() {
+       return HttpScope.refer("hello.html").attr("content", "哈哈");
+    }
+ </pre>
  *
  * 详情见: https://redkale.org
  *
@@ -36,13 +36,13 @@ import org.redkale.convert.json.JsonConvert;
  */
 public class HttpScope {
 
-    protected String template;
+    protected String referid;
 
     protected Map<String, Object> attributes;
 
-    public static HttpScope template(String template) {
+    public static HttpScope refer(String template) {
         HttpScope rs = new HttpScope();
-        rs.setTemplate(template);
+        rs.setReferid(template);
         return rs;
     }
 
@@ -74,12 +74,12 @@ public class HttpScope {
         this.attributes.forEach(action);
     }
 
-    public String getTemplate() {
-        return template;
+    public String getReferid() {
+        return referid;
     }
 
-    public void setTemplate(String template) {
-        this.template = template;
+    public void setReferid(String referid) {
+        this.referid = referid;
     }
 
     public Map<String, Object> getAttributes() {

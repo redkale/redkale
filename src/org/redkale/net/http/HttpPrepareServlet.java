@@ -31,8 +31,6 @@ public class HttpPrepareServlet extends PrepareServlet<String, HttpContext, Http
 
     protected HttpServlet resourceHttpServlet = new HttpResourceServlet();
 
-    protected HttpTemplateEngine templateEngine = null;
-
     protected MappingEntry[] regArray = null; //regArray 包含 regWsArray
 
     protected MappingEntry[] regWsArray = null;
@@ -46,6 +44,8 @@ public class HttpPrepareServlet extends PrepareServlet<String, HttpContext, Http
     private Map<String, BiPredicate<String, String>> forbidURIMaps; //禁用的URL的正则表达式, 必须与 forbidURIPredicates 保持一致
 
     private BiPredicate<String, String>[] forbidURIPredicates; //禁用的URL的Predicate, 必须与 forbidURIMaps 保持一致
+
+    final List<HttpRender> renders = new ArrayList<>();
 
     private List<HttpServlet> removeHttpServlet(final Predicate<MappingEntry> predicateEntry, final Predicate<Map.Entry<String, WebSocketServlet>> predicateFilter) {
         List<HttpServlet> servlets = new ArrayList<>();
@@ -233,18 +233,22 @@ public class HttpPrepareServlet extends PrepareServlet<String, HttpContext, Http
             this.resourceHttpServlet.init(context, resConfig);
         }
         { //设置TemplateEngine            
-            AnyValue engineConfig = config.getAnyValue("template-engine");
-            if (engineConfig != null) {
-                String engineType = engineConfig.getValue("value");
-                try {
-                    this.templateEngine = (HttpTemplateEngine) Thread.currentThread().getContextClassLoader().loadClass(engineType).newInstance();
-                    this.templateEngine.init(context, engineConfig);
-                } catch (Throwable e) {
-                    logger.log(Level.WARNING, "init HttpTemplateEngine(" + engineType + ") error", e);
+            AnyValue[] renderConfigs = config.getAnyValues("render");
+            if (renderConfigs != null) {
+                for (AnyValue renderConfig : renderConfigs) {
+                    String renderType = renderConfig.getValue("value");
+                    try {
+                        HttpRender render = (HttpRender) Thread.currentThread().getContextClassLoader().loadClass(renderType).newInstance();
+                        for (HttpRender one : renders) {
+                            if (one.getType().equals(render.getType())) throw new RuntimeException("HttpRender(" + renderType + ") repeat");
+                        }
+                        renders.add(render);
+                    } catch (Throwable e) {
+                        logger.log(Level.WARNING, "init HttpRender(" + renderType + ") error", e);
+                    }
                 }
+                Collections.sort(renders, (o1, o2) -> o1.getType().isAssignableFrom(o2.getType()) ? 1 : -1);
             }
-            //设置给Context
-            context.setTemplateEngine(this.templateEngine);
         }
     }
 
@@ -389,14 +393,6 @@ public class HttpPrepareServlet extends PrepareServlet<String, HttpContext, Http
      */
     public HttpServlet getResourceServlet() {
         return this.resourceHttpServlet;
-    }
-
-    public void setTemplateEngine(final HttpTemplateEngine engine) {
-        this.templateEngine = engine;
-    }
-
-    public HttpTemplateEngine getTemplateEngine() {
-        return this.templateEngine;
     }
 
     @Override

@@ -205,8 +205,10 @@ public class NodeHttpServer extends NodeServer {
                 loadRestServlet(webSocketFilter, restConf, restedObjects, sb);
             }
         }
-        resourceFactory.inject(this.httpServer.getTemplateEngine(), this);
         resourceFactory.inject(this.httpServer.getPrepareServlet(), this);
+        for (HttpRender render : this.httpServer.getHttpRenders()) {
+            resourceFactory.inject(render, this);
+        }
         if (sb != null && sb.length() > 0) logger.log(Level.INFO, sb.toString().trim());
     }
 

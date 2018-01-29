@@ -48,12 +48,12 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
     }
 
     /**
-     * 获取HttpTemplateEngine
+     * 获取HttpRender列表
      *
-     * @return HttpTemplateEngine
+     * @return HttpRender列表
      */
-    public HttpTemplateEngine getTemplateEngine() {
-        return (HttpTemplateEngine) ((HttpPrepareServlet) this.prepare).templateEngine;
+    public List<HttpRender> getHttpRenders() {
+        return ((HttpPrepareServlet) this.prepare).renders;
     }
 
     /**
@@ -370,7 +370,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
         ObjectPool<Response> responsePool = HttpResponse.createPool(createResponseCounter, cycleResponseCounter, this.responsePoolSize, null);
         HttpContext httpcontext = new HttpContext(this.serverStartTime, this.logger, executor, rcapacity, bufferPool, responsePool,
             this.maxbody, this.charset, this.address, this.prepare, this.readTimeoutSecond, this.writeTimeoutSecond);
-        responsePool.setCreator((Object... params) -> new HttpResponse(httpcontext, new HttpRequest(httpcontext, addrHeader), addHeaders, setHeaders, defCookie, options));
+        responsePool.setCreator((Object... params) -> new HttpResponse(httpcontext, new HttpRequest(httpcontext, addrHeader), addHeaders, setHeaders, defCookie, options, ((HttpPrepareServlet) prepare).renders));
         return httpcontext;
     }
 

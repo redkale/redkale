@@ -233,11 +233,11 @@
         </response>
         <!-- 
            【节点在<server>中唯一】
-           当Server为HTTP协议时，template-engine才有效. 指定模板引擎的实现类, 没有配置则无法使用HttpTemplate功能
-           value: 模板引擎的实现类, 必须是org.redkale.net.http.HttpTemplateEngine的子类
+           当Server为HTTP协议时，render才有效. 指定输出引擎的实现类
+           value: 输出引擎的实现类, 必须是org.redkale.net.http.HttpRender的子类
         -->
-        <template-engine value="org.redkalex.htel.XXXHttpTemplateEngine">
-        </template-engine>
+        <render value="org.redkalex.htel.HttpTemplateRender">
+        </render>
         <!-- 
            【节点在<server>中唯一】
            当Server为HTTP协议时，ResourceServlet才有效. 默认存在一个有默认属性的resource-servlet节点
