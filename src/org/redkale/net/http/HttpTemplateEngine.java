@@ -20,5 +20,5 @@ public interface HttpTemplateEngine {
     default void init(HttpContext context, AnyValue config) {
     }
 
-    public void renderTo(HttpResponse response, HttpScope scope);
+    public void renderTo(HttpRequest request, HttpResponse response, HttpScope scope);
 }

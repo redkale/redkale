@@ -476,7 +476,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
                 context.getLogger().log(Level.WARNING, "HttpServlet not found HttpTemplateEngine. request = " + getRequest() + ", scope = " + scope);
                 finish(500, null);
             } else {
-                templateEngine.renderTo(this, scope);
+                templateEngine.renderTo(this.request, this, scope);
             }
         } else {
             if (convert instanceof TextConvert) this.contentType = "text/plain; charset=utf-8";
