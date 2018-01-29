@@ -6,6 +6,7 @@
 package org.redkale.net.http;
 
 import java.util.*;
+import java.util.function.BiConsumer;
 import org.redkale.convert.*;
 import org.redkale.convert.json.JsonConvert;
 
@@ -41,7 +42,15 @@ public class HttpScope {
 
     public static HttpScope template(String template) {
         HttpScope rs = new HttpScope();
-        return rs.template(template);
+        rs.setTemplate(template);
+        return rs;
+    }
+
+    public HttpScope attr(Map<String, Object> map) {
+        if (map == null) return this;
+        if (this.attributes == null) this.attributes = new LinkedHashMap<>();
+        this.attributes.putAll(map);
+        return this;
     }
 
     public HttpScope attr(String name, Object value) {
@@ -58,6 +67,11 @@ public class HttpScope {
         T rs = this.attributes == null ? null : (T) this.attributes.get(name);
         if (rs != null) return rs;
         return parent == null ? null : parent.find(name);
+    }
+
+    public void forEach(BiConsumer<String, Object> action) {
+        if (this.attributes == null) return;
+        this.attributes.forEach(action);
     }
 
     public String getTemplate() {
