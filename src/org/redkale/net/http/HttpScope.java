@@ -11,8 +11,8 @@ import org.redkale.convert.*;
 import org.redkale.convert.json.JsonConvert;
 
 /**
- * HTTP模板的对象域 <br>
- * 模板引擎的核心类, 业务开发人员只有通过本类对象才能调用到模板引擎功能。 <br>
+ * HTTP输出引擎的对象域 <br>
+ * 输出引擎的核心类, 业务开发人员只有通过本类对象才能调用到输出引擎功能。 <br>
  * <p>
  * HttpServlet调用: <br>
  * <pre>
