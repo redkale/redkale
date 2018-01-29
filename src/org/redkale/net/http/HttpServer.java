@@ -48,6 +48,15 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
     }
 
     /**
+     * 获取HttpTemplateEngine
+     *
+     * @return HttpTemplateEngine
+     */
+    public HttpTemplateEngine getTemplateEngine() {
+        return (HttpTemplateEngine) ((HttpPrepareServlet) this.prepare).templateEngine;
+    }
+
+    /**
      * 获取静态资源HttpServlet
      *
      * @return HttpServlet
