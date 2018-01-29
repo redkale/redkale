@@ -8,8 +8,17 @@ package org.redkale.net.http;
 import org.redkale.util.AnyValue;
 
 /**
- * HTTP输出引擎的基类
- *
+ * HTTP输出引擎的基类 <br>
+ * HttpRender主要是给HttpResponse.finish(Object obj)提供指定数据类型的输出策略。 <br>
+ * HttpResponse.finish(Object obj)内置对如下数据类型进行了特殊处理: <br>
+ * CharSequence/String <br>
+ * byte[] <br>
+ * ByteBuffer <br>
+ * ByteBuffer[] <br>
+ * File <br>
+ * HttpResult <br>
+ * <p>
+ * 如果对其他数据类型有特殊输出的需求，则需要自定义HttpRender。
  * <p>
  * 详情见: https://redkale.org
  *
