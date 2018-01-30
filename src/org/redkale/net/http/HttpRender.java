@@ -30,8 +30,7 @@ import org.redkale.util.AnyValue;
  */
 public interface HttpRender<T> {
 
-    default void init(HttpContext context, AnyValue config) {
-    }
+    public void init(HttpContext context, AnyValue config);
 
     public <V extends T> void renderTo(HttpRequest request, HttpResponse response, Convert convert, V scope);
 
