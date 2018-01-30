@@ -17,18 +17,18 @@ import org.redkale.convert.json.JsonConvert;
  * HttpServlet调用: <br>
  * <pre>
  *    &#064;HttpMapping(url = "/hello.html", auth = false)
-    public void hello(HttpRequest req, HttpResponse resp) throws IOException {
-        resp.finish(HttpScope.refer("/hello.html").attr("content", "哈哈"));
-    }
- </pre>
+ *    public void hello(HttpRequest req, HttpResponse resp) throws IOException {
+ *        resp.finish(HttpScope.refer("/hello.html").attr("content", "哈哈"));
+ *    }
+ * </pre>
  * <p>
  * RestService调用: <br>
  * <pre>
  *    &#064;RestMapping(name = "hello.html", auth = false)
-    public HttpScope hello() {
-       return HttpScope.refer("hello.html").attr("content", "哈哈");
-    }
- </pre>
+ *    public HttpScope hello() {
+ *       return HttpScope.refer("hello.html").attr("content", "哈哈");
+ *    }
+ * </pre>
  *
  * 详情见: https://redkale.org
  *
