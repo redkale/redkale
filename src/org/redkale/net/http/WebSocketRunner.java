@@ -47,6 +47,8 @@ class WebSocketRunner implements Runnable {
     private final BiConsumer<WebSocket, Object> restMessageConsumer;  //主要供RestWebSocket使用
 
     protected long lastSendTime;
+    
+    protected long lastReadTime;
 
     WebSocketRunner(Context context, WebSocket webSocket, BiConsumer<WebSocket, Object> messageConsumer, AsyncConnection channel) {
         this.context = context;
@@ -83,6 +85,7 @@ class WebSocketRunner implements Runnable {
                             return;
                         }
                         if (readBuffer == null) return;
+                        lastReadTime = System.currentTimeMillis();
                         readBuffer.flip();
 
                         WebSocketPacket onePacket = null;

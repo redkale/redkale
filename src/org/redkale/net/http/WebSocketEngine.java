@@ -103,7 +103,7 @@ public class WebSocketEngine {
         final int intervalms = liveinterval * 1000;
         scheduler.scheduleWithFixedDelay(() -> {
             long now = System.currentTimeMillis();
-            getLocalWebSockets().stream().filter(x -> (now - x.getLastSendTime()) > intervalms).forEach(x -> x.sendPing());
+            getLocalWebSockets().stream().filter(x -> (now - x.getLastReadTime()) > intervalms).forEach(x -> x.sendPing());
         }, delay, liveinterval, TimeUnit.SECONDS);
         if (logger.isLoggable(Level.FINEST)) logger.finest(this.getClass().getSimpleName() + "(" + engineid + ")" + " start keeplive(wsmaxconns:" + wsmaxconns + ", delay:" + delay + "s, interval:" + liveinterval + "s) scheduler executor");
     }

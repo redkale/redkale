@@ -780,6 +780,15 @@ public abstract class WebSocket<G extends Serializable, T> {
     }
 
     /**
+     * 获取最后一次读取消息的时间
+     *
+     * @return long
+     */
+    public long getLastReadTime() {
+        return this._runner == null ? 0 : this._runner.lastReadTime;
+    }
+
+    /**
      * 获取最后一次发送PING消息的时间
      *
      * @return long
