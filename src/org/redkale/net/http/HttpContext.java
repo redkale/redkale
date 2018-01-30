@@ -32,10 +32,10 @@ public class HttpContext extends Context {
     protected final ConcurrentHashMap<Class, Creator> asyncHandlerCreators = new ConcurrentHashMap<>();
 
     public HttpContext(long serverStartTime, Logger logger, ThreadPoolExecutor executor, int bufferCapacity, ObjectPool<ByteBuffer> bufferPool,
-        ObjectPool<Response> responsePool, int maxbody, Charset charset, InetSocketAddress address, PrepareServlet prepare,
+        ObjectPool<Response> responsePool, int maxbody, Charset charset, InetSocketAddress address, ResourceFactory resourceFactory, PrepareServlet prepare,
         int readTimeoutSecond, int writeTimeoutSecond) {
         super(serverStartTime, logger, executor, bufferCapacity, bufferPool, responsePool, maxbody, charset,
-            address, prepare, readTimeoutSecond, writeTimeoutSecond);
+            address, resourceFactory, prepare, readTimeoutSecond, writeTimeoutSecond);
 
         random.setSeed(Math.abs(System.nanoTime()));
     }

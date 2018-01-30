@@ -43,7 +43,7 @@ public class NodeHttpServer extends NodeServer {
     }
 
     private static Server createServer(Application application, AnyValue serconf) {
-        return new HttpServer(application.getStartTime());
+        return new HttpServer(application.getStartTime(), application.getResourceFactory().createChild());
     }
 
     public HttpServer getHttpServer() {
@@ -204,10 +204,6 @@ public class NodeHttpServer extends NodeServer {
             for (AnyValue restConf : serverConf.getAnyValues("rest")) {
                 loadRestServlet(webSocketFilter, restConf, restedObjects, sb);
             }
-        }
-        resourceFactory.inject(this.httpServer.getPrepareServlet(), this);
-        for (HttpRender render : this.httpServer.getHttpRenders()) {
-            resourceFactory.inject(render, this);
         }
         if (sb != null && sb.length() > 0) logger.log(Level.INFO, sb.toString().trim());
     }

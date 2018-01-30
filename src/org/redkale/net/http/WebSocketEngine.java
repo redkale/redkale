@@ -105,7 +105,7 @@ public class WebSocketEngine {
             long now = System.currentTimeMillis();
             getLocalWebSockets().stream().filter(x -> (now - x.getLastSendTime()) > intervalms).forEach(x -> x.sendPing());
         }, delay, liveinterval, TimeUnit.SECONDS);
-        if (logger.isLoggable(Level.FINEST)) logger.finest(this.getClass().getSimpleName() + "(" + engineid + ")" + " start keeplive(delay:" + delay + ", wsmaxconns:" + wsmaxconns + ", interval:" + liveinterval + "s) scheduler executor");
+        if (logger.isLoggable(Level.FINEST)) logger.finest(this.getClass().getSimpleName() + "(" + engineid + ")" + " start keeplive(wsmaxconns:" + wsmaxconns + ", delay:" + delay + "s, interval:" + liveinterval + "s) scheduler executor");
     }
 
     void destroy(AnyValue conf) {

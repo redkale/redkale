@@ -45,6 +45,9 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
     //应用层协议名
     protected final String protocol;
 
+    //依赖注入工厂类
+    protected final ResourceFactory resourceFactory;
+
     //服务的根Servlet
     protected final PrepareServlet<K, C, R, P, S> prepare;
 
@@ -93,9 +96,10 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
     //最大连接数
     protected int maxconns;
 
-    protected Server(long serverStartTime, String protocol, PrepareServlet<K, C, R, P, S> servlet) {
+    protected Server(long serverStartTime, String protocol, ResourceFactory resourceFactory, PrepareServlet<K, C, R, P, S> servlet) {
         this.serverStartTime = serverStartTime;
         this.protocol = protocol;
+        this.resourceFactory = resourceFactory;
         this.prepare = servlet;
     }
 
@@ -146,6 +150,10 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
 
     public void destroy(final AnyValue config) throws Exception {
         this.prepare.destroy(context, config);
+    }
+
+    public ResourceFactory getResourceFactory() {
+        return resourceFactory;
     }
 
     public ThreadPoolExecutor getExecutor() {

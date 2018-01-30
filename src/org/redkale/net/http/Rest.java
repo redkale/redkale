@@ -431,7 +431,7 @@ public final class Rest {
                 int index = -1;
                 for (Map.Entry<String, Parameter> en : paramap.entrySet()) {
                     mv.visitInsn(DUP);
-                    mv.visitInsn(++index);
+                    pushInt(mv, ++index);
                     mv.visitLdcInsn(en.getKey());
                     mv.visitInsn(AASTORE);
                 }
@@ -456,7 +456,6 @@ public final class Rest {
                     }
                     mv.visitInsn(ARETURN);
                     mv.visitLabel(l1);
-                    mv.visitFrame(Opcodes.F_SAME, 0, null, 0, null);
                 }
                 mv.visitInsn(ACONST_NULL);
                 mv.visitInsn(ARETURN);

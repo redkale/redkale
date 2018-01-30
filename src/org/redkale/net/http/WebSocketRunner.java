@@ -137,6 +137,7 @@ class WebSocketRunner implements Runnable {
                                 failed(null, attachment1);
                                 return;
                             }
+
                             if (packet.type == FrameType.TEXT) {
                                 try {
                                     if (packet.receiveType == WebSocketPacket.MessageType.STRING) {
@@ -148,7 +149,7 @@ class WebSocketRunner implements Runnable {
                                             webSocket.onMessage(packet.receiveMessage, packet.last);
                                         }
                                     }
-                                } catch (Exception e) {
+                                } catch (Throwable e) {
                                     context.getLogger().log(Level.SEVERE, "WebSocket onTextMessage error (" + packet + ")", e);
                                 }
                             } else if (packet.type == FrameType.BINARY) {
@@ -162,7 +163,7 @@ class WebSocketRunner implements Runnable {
                                             webSocket.onMessage(packet.receiveMessage, packet.last);
                                         }
                                     }
-                                } catch (Exception e) {
+                                } catch (Throwable e) {
                                     context.getLogger().log(Level.SEVERE, "WebSocket onBinaryMessage error (" + packet + ")", e);
                                 }
                             } else if (packet.type == FrameType.PING) {
@@ -173,13 +174,13 @@ class WebSocketRunner implements Runnable {
                                 }
                             } else if (packet.type == FrameType.PONG) {
                                 try {
+                                    if (debug) context.getLogger().log(Level.FINEST, "WebSocketRunner onMessage by PONG FrameType : " + packet);
                                     webSocket.onPong((byte[]) packet.receiveMessage);
                                 } catch (Exception e) {
                                     context.getLogger().log(Level.SEVERE, "WebSocket onPong error (" + packet + ")", e);
                                 }
                             } else if (packet.type == FrameType.CLOSE) {
-                                Logger logger = context.getLogger();
-                                if (debug) logger.log(Level.FINEST, "WebSocketRunner onMessage by CLOSE FrameType : " + packet);
+                                if (debug) context.getLogger().log(Level.FINEST, "WebSocketRunner onMessage by CLOSE FrameType : " + packet);
                                 closeRunner(0, "received CLOSE frame-type message");
                                 return;
                             } else {
@@ -204,7 +205,7 @@ class WebSocketRunner implements Runnable {
                 if (debug) context.getLogger().log(Level.FINEST, "WebSocketRunner abort by AsyncConnection closed");
                 closeRunner(RETCODE_WSOCKET_CLOSED, "webSocket channel is not opened");
             }
-        } catch (Exception e) {
+        } catch (Throwable e) {
             if (debug) context.getLogger().log(Level.FINEST, "WebSocketRunner abort on read bytes from channel, force to close channel, live " + (System.currentTimeMillis() - webSocket.getCreatetime()) / 1000 + " seconds", e);
             closeRunner(0, "read bytes from channel error");
         }

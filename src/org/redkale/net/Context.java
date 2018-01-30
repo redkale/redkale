@@ -71,8 +71,11 @@ public class Context {
     //JSON操作工厂
     protected final JsonFactory jsonFactory;
 
+    //依赖注入工厂类
+    protected final ResourceFactory resourceFactory;
+
     public Context(long serverStartTime, Logger logger, ThreadPoolExecutor executor, int bufferCapacity, ObjectPool<ByteBuffer> bufferPool, ObjectPool<Response> responsePool,
-        final int maxbody, Charset charset, InetSocketAddress address, final PrepareServlet prepare, final int readTimeoutSecond, final int writeTimeoutSecond) {
+        final int maxbody, Charset charset, InetSocketAddress address, ResourceFactory resourceFactory, final PrepareServlet prepare, final int readTimeoutSecond, final int writeTimeoutSecond) {
         this.serverStartTime = serverStartTime;
         this.logger = logger;
         this.executor = executor;
@@ -83,10 +86,15 @@ public class Context {
         this.charset = UTF8.equals(charset) ? null : charset;
         this.address = address;
         this.prepare = prepare;
+        this.resourceFactory = resourceFactory;
         this.readTimeoutSecond = readTimeoutSecond;
         this.writeTimeoutSecond = writeTimeoutSecond;
         this.jsonFactory = JsonFactory.root();
         this.bsonFactory = BsonFactory.root();
+    }
+
+    public ResourceFactory getResourceFactory() {
+        return resourceFactory;
     }
 
     public int getMaxbody() {

@@ -230,6 +230,7 @@ public class HttpPrepareServlet extends PrepareServlet<String, HttpContext, Http
                 this.resourceHttpServlet = new HttpResourceServlet();
                 logger.log(Level.WARNING, "init HttpResourceSerlvet(" + resServlet + ") error", e);
             }
+            context.getResourceFactory().inject(this.resourceHttpServlet);
             this.resourceHttpServlet.init(context, resConfig);
         }
         { //设置TemplateEngine            
@@ -242,6 +243,8 @@ public class HttpPrepareServlet extends PrepareServlet<String, HttpContext, Http
                         for (HttpRender one : renders) {
                             if (one.getType().equals(render.getType())) throw new RuntimeException("HttpRender(" + renderType + ") repeat");
                         }
+                        context.getResourceFactory().inject(render);
+                        render.init(context, renderConfig);
                         renders.add(render);
                     } catch (Throwable e) {
                         logger.log(Level.WARNING, "init HttpRender(" + renderType + ") error", e);

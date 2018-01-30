@@ -27,11 +27,15 @@ import org.redkale.util.*;
 public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpResponse, HttpServlet> {
 
     public HttpServer() {
-        this(System.currentTimeMillis());
+        this(System.currentTimeMillis(), ResourceFactory.root());
     }
 
-    public HttpServer(long serverStartTime) {
-        super(serverStartTime, "TCP", new HttpPrepareServlet());
+    public HttpServer(ResourceFactory resourceFactory) {
+        this(System.currentTimeMillis(), resourceFactory);
+    }
+
+    public HttpServer(long serverStartTime, ResourceFactory resourceFactory) {
+        super(serverStartTime, "TCP", resourceFactory, new HttpPrepareServlet());
     }
 
     @Override
@@ -369,7 +373,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
         AtomicLong cycleResponseCounter = new AtomicLong();
         ObjectPool<Response> responsePool = HttpResponse.createPool(createResponseCounter, cycleResponseCounter, this.responsePoolSize, null);
         HttpContext httpcontext = new HttpContext(this.serverStartTime, this.logger, executor, rcapacity, bufferPool, responsePool,
-            this.maxbody, this.charset, this.address, this.prepare, this.readTimeoutSecond, this.writeTimeoutSecond);
+            this.maxbody, this.charset, this.address, this.resourceFactory, this.prepare, this.readTimeoutSecond, this.writeTimeoutSecond);
         responsePool.setCreator((Object... params) -> new HttpResponse(httpcontext, new HttpRequest(httpcontext, addrHeader), addHeaders, setHeaders, defCookie, options, ((HttpPrepareServlet) prepare).renders));
         return httpcontext;
     }

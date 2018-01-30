@@ -25,11 +25,15 @@ import org.redkale.util.*;
 public class SncpServer extends Server<DLong, SncpContext, SncpRequest, SncpResponse, SncpServlet> {
 
     public SncpServer() {
-        this(System.currentTimeMillis());
+        this(System.currentTimeMillis(), ResourceFactory.root());
     }
 
-    public SncpServer(long serverStartTime) {
-        super(serverStartTime, "TCP", new SncpPrepareServlet());
+    public SncpServer(ResourceFactory resourceFactory) {
+        this(System.currentTimeMillis(), resourceFactory);
+    }
+
+    public SncpServer(long serverStartTime, ResourceFactory resourceFactory) {
+        super(serverStartTime, "TCP", resourceFactory, new SncpPrepareServlet());
     }
 
     @Override
@@ -103,7 +107,7 @@ public class SncpServer extends Server<DLong, SncpContext, SncpRequest, SncpResp
         AtomicLong cycleResponseCounter = new AtomicLong();
         ObjectPool<Response> responsePool = SncpResponse.createPool(createResponseCounter, cycleResponseCounter, this.responsePoolSize, null);
         SncpContext sncpcontext = new SncpContext(this.serverStartTime, this.logger, executor, rcapacity, bufferPool, responsePool,
-            this.maxbody, this.charset, this.address, this.prepare, this.readTimeoutSecond, this.writeTimeoutSecond);
+            this.maxbody, this.charset, this.address, this.resourceFactory, this.prepare, this.readTimeoutSecond, this.writeTimeoutSecond);
         responsePool.setCreator((Object... params) -> new SncpResponse(sncpcontext, new SncpRequest(sncpcontext)));
         return sncpcontext;
     }
