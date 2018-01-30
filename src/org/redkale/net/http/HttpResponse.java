@@ -480,14 +480,14 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
             if (hasRender) {
                 if (onlyoneHttpRender != null) {
                     if (onlyoneHttpRender.getType().isAssignableFrom(obj.getClass())) {
-                        onlyoneHttpRender.renderTo(this.request, this, obj);
+                        onlyoneHttpRender.renderTo(this.request, this, convert, obj);
                         return;
                     }
                 } else {
                     Class objt = obj.getClass();
                     for (HttpRender render : this.renders) {
                         if (render.getType().isAssignableFrom(objt)) {
-                            render.renderTo(this.request, this, obj);
+                            render.renderTo(this.request, this, convert, obj);
                             return;
                         }
                     }
