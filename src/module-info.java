@@ -16,7 +16,7 @@ module org.redkale {
 
     exports javax.annotation;
     exports javax.persistence;
-    exports org.redkale.asm;
+
     exports org.redkale.boot;
     exports org.redkale.boot.watch;
     exports org.redkale.convert;
