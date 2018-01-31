@@ -13,6 +13,7 @@ import java.nio.charset.*;
 import java.util.concurrent.*;
 import java.util.function.*;
 import java.util.logging.*;
+import javax.net.ssl.SSLContext;
 import org.redkale.convert.bson.*;
 import org.redkale.convert.json.*;
 import org.redkale.util.*;
@@ -34,6 +35,9 @@ public class Context {
 
     //Server的线程池
     protected final ThreadPoolExecutor executor;
+
+    //SSL
+    protected final SSLContext sslContext;
 
     //ByteBuffer的容量，默认8K
     protected final int bufferCapacity;
@@ -74,11 +78,14 @@ public class Context {
     //依赖注入工厂类
     protected final ResourceFactory resourceFactory;
 
-    public Context(long serverStartTime, Logger logger, ThreadPoolExecutor executor, int bufferCapacity, ObjectPool<ByteBuffer> bufferPool, ObjectPool<Response> responsePool,
-        final int maxbody, Charset charset, InetSocketAddress address, ResourceFactory resourceFactory, final PrepareServlet prepare, final int readTimeoutSecond, final int writeTimeoutSecond) {
+    public Context(long serverStartTime, Logger logger, ThreadPoolExecutor executor, SSLContext sslContext,
+        int bufferCapacity, ObjectPool<ByteBuffer> bufferPool, ObjectPool<Response> responsePool,
+        final int maxbody, Charset charset, InetSocketAddress address, ResourceFactory resourceFactory,
+        final PrepareServlet prepare, final int readTimeoutSecond, final int writeTimeoutSecond) {
         this.serverStartTime = serverStartTime;
         this.logger = logger;
         this.executor = executor;
+        this.sslContext = sslContext;
         this.bufferCapacity = bufferCapacity;
         this.bufferPool = bufferPool;
         this.responsePool = responsePool;
@@ -95,6 +102,10 @@ public class Context {
 
     public ResourceFactory getResourceFactory() {
         return resourceFactory;
+    }
+
+    public SSLContext getSSLContext() {
+        return sslContext;
     }
 
     public int getMaxbody() {

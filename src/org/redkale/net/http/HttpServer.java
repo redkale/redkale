@@ -372,7 +372,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
         AtomicLong createResponseCounter = new AtomicLong();
         AtomicLong cycleResponseCounter = new AtomicLong();
         ObjectPool<Response> responsePool = HttpResponse.createPool(createResponseCounter, cycleResponseCounter, this.responsePoolSize, null);
-        HttpContext httpcontext = new HttpContext(this.serverStartTime, this.logger, executor, rcapacity, bufferPool, responsePool,
+        HttpContext httpcontext = new HttpContext(this.serverStartTime, this.logger, executor, this.sslContext, rcapacity, bufferPool, responsePool,
             this.maxbody, this.charset, this.address, this.resourceFactory, this.prepare, this.readTimeoutSecond, this.writeTimeoutSecond);
         responsePool.setCreator((Object... params) -> new HttpResponse(httpcontext, new HttpRequest(httpcontext, addrHeader), addHeaders, setHeaders, defCookie, options, ((HttpPrepareServlet) prepare).renders));
         return httpcontext;

@@ -12,6 +12,7 @@ import java.nio.charset.*;
 import java.security.*;
 import java.util.concurrent.*;
 import java.util.logging.*;
+import javax.net.ssl.SSLContext;
 import org.redkale.asm.*;
 import static org.redkale.asm.Opcodes.*;
 import org.redkale.net.*;
@@ -31,11 +32,12 @@ public class HttpContext extends Context {
 
     protected final ConcurrentHashMap<Class, Creator> asyncHandlerCreators = new ConcurrentHashMap<>();
 
-    public HttpContext(long serverStartTime, Logger logger, ThreadPoolExecutor executor, int bufferCapacity, ObjectPool<ByteBuffer> bufferPool,
-        ObjectPool<Response> responsePool, int maxbody, Charset charset, InetSocketAddress address, ResourceFactory resourceFactory, PrepareServlet prepare,
-        int readTimeoutSecond, int writeTimeoutSecond) {
-        super(serverStartTime, logger, executor, bufferCapacity, bufferPool, responsePool, maxbody, charset,
-            address, resourceFactory, prepare, readTimeoutSecond, writeTimeoutSecond);
+    public HttpContext(long serverStartTime, Logger logger, ThreadPoolExecutor executor, SSLContext sslContext,
+        final int bufferCapacity, final ObjectPool<ByteBuffer> bufferPool, ObjectPool<Response> responsePool,
+        int maxbody, Charset charset, InetSocketAddress address, ResourceFactory resourceFactory,
+        PrepareServlet prepare, int readTimeoutSecond, int writeTimeoutSecond) {
+        super(serverStartTime, logger, executor, sslContext, bufferCapacity, bufferPool, responsePool,
+            maxbody, charset, address, resourceFactory, prepare, readTimeoutSecond, writeTimeoutSecond);
 
         random.setSeed(Math.abs(System.nanoTime()));
     }

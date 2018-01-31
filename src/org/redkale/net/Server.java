@@ -13,6 +13,7 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
+import javax.net.ssl.SSLContext;
 import org.redkale.util.*;
 
 /**
@@ -50,6 +51,9 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
 
     //服务的根Servlet
     protected final PrepareServlet<K, C, R, P, S> prepare;
+
+    //SSL
+    protected SSLContext sslContext;
 
     //服务的上下文对象
     protected C context;

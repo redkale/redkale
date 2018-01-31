@@ -106,7 +106,7 @@ public class SncpServer extends Server<DLong, SncpContext, SncpRequest, SncpResp
         AtomicLong createResponseCounter = new AtomicLong();
         AtomicLong cycleResponseCounter = new AtomicLong();
         ObjectPool<Response> responsePool = SncpResponse.createPool(createResponseCounter, cycleResponseCounter, this.responsePoolSize, null);
-        SncpContext sncpcontext = new SncpContext(this.serverStartTime, this.logger, executor, rcapacity, bufferPool, responsePool,
+        SncpContext sncpcontext = new SncpContext(this.serverStartTime, this.logger, executor, this.sslContext, rcapacity, bufferPool, responsePool,
             this.maxbody, this.charset, this.address, this.resourceFactory, this.prepare, this.readTimeoutSecond, this.writeTimeoutSecond);
         responsePool.setCreator((Object... params) -> new SncpResponse(sncpcontext, new SncpRequest(sncpcontext)));
         return sncpcontext;
