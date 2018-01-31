@@ -14,6 +14,7 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 import java.util.logging.*;
 import java.util.logging.Formatter;
+import java.util.regex.Pattern;
 
 /**
  * 自定义的日志输出类
@@ -98,6 +99,8 @@ public class LogFileHandler extends Handler {
     private long tomorrow;
 
     private boolean append;
+
+    private Pattern denyreg;
 
     private final AtomicLong loglength = new AtomicLong();
 
@@ -282,6 +285,14 @@ public class LogFileHandler extends Handler {
             if (encodingstr != null) setEncoding(encodingstr);
         } catch (Exception e) {
         }
+
+        String denyregstr = manager.getProperty(cname + ".denyreg");
+        try {
+            if (denyregstr != null && !denyregstr.trim().isEmpty()) {
+                denyreg = Pattern.compile(denyregstr);
+            }
+        } catch (Exception e) {
+        }
     }
 
     @Override
@@ -298,6 +309,7 @@ public class LogFileHandler extends Handler {
         } else {
             record.setSourceClassName('[' + Thread.currentThread().getName() + "] " + sourceClassName);
         }
+        if (denyreg != null && denyreg.matcher(record.getMessage()).find()) return;
         records.offer(record);
     }
 
