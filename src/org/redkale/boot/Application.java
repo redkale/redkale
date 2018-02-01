@@ -380,7 +380,6 @@ public final class Application {
                 if (dfloads != null) {
                     for (String dfload : dfloads.split(";")) {
                         if (dfload.trim().isEmpty()) continue;
-                        dfload = dfload.trim().replace("${APP_HOME}", home.getCanonicalPath()).replace('\\', '/');
                         final File df = (dfload.indexOf('/') < 0) ? new File(home, "conf/" + dfload) : new File(dfload);
                         if (df.isFile()) {
                             Properties ps = new Properties();
@@ -395,7 +394,6 @@ public final class Application {
                     String name = prop.getValue("name");
                     String value = prop.getValue("value");
                     if (name == null || value == null) continue;
-                    value = value.replace("${APP_HOME}", home.getCanonicalPath()).replace('\\', '/');
                     if (name.startsWith("system.property.")) {
                         System.setProperty(name.substring("system.property.".length()), value);
                     } else if (name.startsWith("mimetype.property.")) {
@@ -783,7 +781,7 @@ public final class Application {
     }
 
     public static Application create(final boolean singleton) throws IOException {
-        final String home = new File(System.getProperty(RESNAME_APP_HOME, "")).getCanonicalPath();
+        final String home = new File(System.getProperty(RESNAME_APP_HOME, "")).getCanonicalPath().replace('\\', '/'); 
         System.setProperty(RESNAME_APP_HOME, home);
         File appfile = new File(home, "conf/application.xml");
         return new Application(singleton, load(new FileInputStream(appfile)));
