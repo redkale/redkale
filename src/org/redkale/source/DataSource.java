@@ -1713,6 +1713,19 @@ public interface DataSource {
     public <T> CompletableFuture<List<T>> queryListAsync(final Class<T> clazz, final FilterBean bean);
 
     /**
+     * 查询记录的List集合   <br>
+     * 等价SQL: SELECT * FROM {table}  <br>
+     *
+     * @param <T>   Entity泛型
+     * @param clazz Entity类
+     *
+     * @return Entity的集合
+     */
+    default <T> List<T> queryList(final Class<T> clazz) {
+        return queryList(clazz, (FilterNode) null);
+    }
+
+    /**
      * 查询符合过滤条件记录的List集合   <br>
      * 等价SQL: SELECT * FROM {table} WHERE {filter node}  <br>
      *
@@ -1723,6 +1736,19 @@ public interface DataSource {
      * @return Entity的集合
      */
     public <T> List<T> queryList(final Class<T> clazz, final FilterNode node);
+
+    /**
+     * 查询记录的List集合   <br>
+     * 等价SQL: SELECT * FROM {table} <br>
+     *
+     * @param <T>   Entity泛型
+     * @param clazz Entity类
+     *
+     * @return Entity的集合CompletableFuture
+     */
+    default <T> CompletableFuture<List<T>> queryListAsync(final Class<T> clazz) {
+        return queryListAsync(clazz, (FilterNode) null);
+    }
 
     /**
      * 查询符合过滤条件记录的List集合   <br>
