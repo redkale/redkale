@@ -5,6 +5,7 @@
  */
 package org.redkale.net.http;
 
+import org.redkale.asm.MethodDebugVisitor;
 import java.io.*;
 import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.*;
@@ -269,7 +270,7 @@ public final class Rest {
 
         ClassWriter cw = new ClassWriter(COMPUTE_FRAMES);
         FieldVisitor fv;
-        AsmMethodVisitor mv;
+        MethodDebugVisitor mv;
         AnnotationVisitor av0;
         cw.visit(V1_8, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynName, null, supDynName, null);
 
@@ -319,7 +320,7 @@ public final class Rest {
             }
         }
         { //_DynWebSocketServlet构造函数 
-            mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null));
+            mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null));
             mv.visitVarInsn(ALOAD, 0);
             mv.visitMethodInsn(INVOKESPECIAL, supDynName, "<init>", "()V", false);
             mv.visitVarInsn(ALOAD, 0);
@@ -351,7 +352,7 @@ public final class Rest {
             mv.visitEnd();
         }
         { //createWebSocket 方法
-            mv = new AsmMethodVisitor(cw.visitMethod(ACC_PROTECTED, "createWebSocket", "()Lorg/redkale/net/http/WebSocket;", "<G::Ljava/io/Serializable;T:Ljava/lang/Object;>()Lorg/redkale/net/http/WebSocket<TG;TT;>;", null));
+            mv = new MethodDebugVisitor(cw.visitMethod(ACC_PROTECTED, "createWebSocket", "()Lorg/redkale/net/http/WebSocket;", "<G::Ljava/io/Serializable;T:Ljava/lang/Object;>()Lorg/redkale/net/http/WebSocket<TG;TT;>;", null));
             mv.visitTypeInsn(NEW, newDynName + "$" + newDynWebSokcetSimpleName);
             mv.visitInsn(DUP);
             for (int i = 0; i < resourcesFields.size(); i++) {
@@ -364,7 +365,7 @@ public final class Rest {
             mv.visitEnd();
         }
         { //createRestOnMessageConsumer
-            mv = new AsmMethodVisitor(cw.visitMethod(ACC_PROTECTED, "createRestOnMessageConsumer", "()Ljava/util/function/BiConsumer;", "()Ljava/util/function/BiConsumer<Lorg/redkale/net/http/WebSocket;Ljava/lang/Object;>;", null));
+            mv = new MethodDebugVisitor(cw.visitMethod(ACC_PROTECTED, "createRestOnMessageConsumer", "()Ljava/util/function/BiConsumer;", "()Ljava/util/function/BiConsumer<Lorg/redkale/net/http/WebSocket;Ljava/lang/Object;>;", null));
             mv.visitTypeInsn(NEW, newDynConsumerFullName);
             mv.visitInsn(DUP);
             mv.visitMethodInsn(INVOKESPECIAL, newDynConsumerFullName, "<init>", "()V", false);
@@ -373,7 +374,7 @@ public final class Rest {
             mv.visitEnd();
         }
         { //resourceName
-            mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC, "resourceName", "()Ljava/lang/String;", null, null));
+            mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC, "resourceName", "()Ljava/lang/String;", null, null));
             mv.visitLdcInsn(rwsname);
             mv.visitInsn(ARETURN);
             mv.visitMaxs(1, 1);
@@ -417,7 +418,7 @@ public final class Rest {
                 fv.visitEnd();
             }
             { //空构造函数
-                mv = new AsmMethodVisitor(cw2.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null));
+                mv = new MethodDebugVisitor(cw2.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null));
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitMethodInsn(INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false);
                 mv.visitInsn(RETURN);
@@ -425,7 +426,7 @@ public final class Rest {
                 mv.visitEnd();
             }
             { //getNames
-                mv = new AsmMethodVisitor(cw2.visitMethod(ACC_PUBLIC, "getNames", "()[Ljava/lang/String;", null, null));
+                mv = new MethodDebugVisitor(cw2.visitMethod(ACC_PUBLIC, "getNames", "()[Ljava/lang/String;", null, null));
                 pushInt(mv, paramap.size());
                 mv.visitTypeInsn(ANEWARRAY, "java/lang/String");
                 int index = -1;
@@ -440,7 +441,7 @@ public final class Rest {
                 mv.visitEnd();
             }
             { //getValue
-                mv = new AsmMethodVisitor(cw2.visitMethod(ACC_PUBLIC, "getValue", "(Ljava/lang/String;)Ljava/lang/Object;", "<T:Ljava/lang/Object;>(Ljava/lang/String;)TT;", null));
+                mv = new MethodDebugVisitor(cw2.visitMethod(ACC_PUBLIC, "getValue", "(Ljava/lang/String;)Ljava/lang/Object;", "<T:Ljava/lang/Object;>(Ljava/lang/String;)TT;", null));
                 for (Map.Entry<String, Parameter> en : paramap.entrySet()) {
                     Class paramType = en.getValue().getType();
                     mv.visitLdcInsn(en.getKey());
@@ -463,7 +464,7 @@ public final class Rest {
                 mv.visitEnd();
             }
             { //execute
-                mv = new AsmMethodVisitor(cw2.visitMethod(ACC_PUBLIC, "execute", "(L" + newDynWebSokcetFullName + ";)V", null, null));
+                mv = new MethodDebugVisitor(cw2.visitMethod(ACC_PUBLIC, "execute", "(L" + newDynWebSokcetFullName + ";)V", null, null));
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitVarInsn(ALOAD, 1);
                 mv.visitFieldInsn(PUTFIELD, newDynMessageFullName + endfix, "_redkale_websocket", "L" + newDynWebSokcetFullName + ";");
@@ -477,7 +478,7 @@ public final class Rest {
                 mv.visitEnd();
             }
             { //run
-                mv = new AsmMethodVisitor(cw2.visitMethod(ACC_PUBLIC, "run", "()V", null, null));
+                mv = new MethodDebugVisitor(cw2.visitMethod(ACC_PUBLIC, "run", "()V", null, null));
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitFieldInsn(GETFIELD, newDynMessageFullName + endfix, "_redkale_websocket", "L" + newDynWebSokcetFullName + ";");
 
@@ -492,7 +493,7 @@ public final class Rest {
                 mv.visitEnd();
             }
             { //toString
-                mv = new AsmMethodVisitor(cw2.visitMethod(ACC_PUBLIC, "toString", "()Ljava/lang/String;", null, null));
+                mv = new MethodDebugVisitor(cw2.visitMethod(ACC_PUBLIC, "toString", "()Ljava/lang/String;", null, null));
                 mv.visitMethodInsn(INVOKESTATIC, "org/redkale/convert/json/JsonConvert", "root", "()Lorg/redkale/convert/json/JsonConvert;", false);
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/convert/json/JsonConvert", "convertTo", "(Ljava/lang/Object;)Ljava/lang/String;", false);
@@ -519,7 +520,7 @@ public final class Rest {
                 fv.visitEnd();
             }
             { //构造函数
-                mv = new AsmMethodVisitor(cw2.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null));
+                mv = new MethodDebugVisitor(cw2.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null));
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitMethodInsn(INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false);
                 mv.visitInsn(RETURN);
@@ -527,7 +528,7 @@ public final class Rest {
                 mv.visitEnd();
             }
             { //toString
-                mv = new AsmMethodVisitor(cw2.visitMethod(ACC_PUBLIC, "toString", "()Ljava/lang/String;", null, null));
+                mv = new MethodDebugVisitor(cw2.visitMethod(ACC_PUBLIC, "toString", "()Ljava/lang/String;", null, null));
                 mv.visitMethodInsn(INVOKESTATIC, "org/redkale/convert/json/JsonConvert", "root", "()Lorg/redkale/convert/json/JsonConvert;", false);
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/convert/json/JsonConvert", "convertTo", "(Ljava/lang/Object;)Ljava/lang/String;", false);
@@ -546,7 +547,7 @@ public final class Rest {
             cw2.visitInnerClass(newDynWebSokcetFullName, newDynName, newDynWebSokcetSimpleName, ACC_PUBLIC + ACC_STATIC);
 
             {
-                mv = new AsmMethodVisitor(cw2.visitMethod(ACC_PUBLIC, "<init>", "(" + resourceDescriptor + ")V", resourceGenericDescriptor == null ? null : ("(" + resourceGenericDescriptor + ")V"), null));
+                mv = new MethodDebugVisitor(cw2.visitMethod(ACC_PUBLIC, "<init>", "(" + resourceDescriptor + ")V", resourceGenericDescriptor == null ? null : ("(" + resourceGenericDescriptor + ")V"), null));
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitMethodInsn(INVOKESPECIAL, webSocketInternalName, "<init>", "()V", false);
                 for (int i = 0; i < resourcesFields.size(); i++) {
@@ -576,7 +577,7 @@ public final class Rest {
             }
 
             { //构造函数
-                mv = new AsmMethodVisitor(cw2.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null));
+                mv = new MethodDebugVisitor(cw2.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null));
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitMethodInsn(INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false);
                 mv.visitInsn(RETURN);
@@ -585,7 +586,7 @@ public final class Rest {
             }
 
             { //accept函数
-                mv = new AsmMethodVisitor(cw2.visitMethod(ACC_PUBLIC, "accept", "(Lorg/redkale/net/http/WebSocket;Ljava/lang/Object;)V", null, null));
+                mv = new MethodDebugVisitor(cw2.visitMethod(ACC_PUBLIC, "accept", "(Lorg/redkale/net/http/WebSocket;Ljava/lang/Object;)V", null, null));
                 mv.visitVarInsn(ALOAD, 1);
                 mv.visitTypeInsn(CHECKCAST, newDynWebSokcetFullName);
                 mv.visitVarInsn(ASTORE, 3);
@@ -616,7 +617,7 @@ public final class Rest {
                 mv.visitEnd();
             }
             {//虚拟accept函数
-                mv = new AsmMethodVisitor(cw2.visitMethod(ACC_PUBLIC + ACC_BRIDGE + ACC_SYNTHETIC, "accept", "(Ljava/lang/Object;Ljava/lang/Object;)V", null, null));
+                mv = new MethodDebugVisitor(cw2.visitMethod(ACC_PUBLIC + ACC_BRIDGE + ACC_SYNTHETIC, "accept", "(Ljava/lang/Object;Ljava/lang/Object;)V", null, null));
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitVarInsn(ALOAD, 1);
                 mv.visitTypeInsn(CHECKCAST, "org/redkale/net/http/WebSocket");
@@ -686,7 +687,7 @@ public final class Rest {
         if (!checkName(defmodulename)) throw new RuntimeException(serviceType.getName() + " have illeal " + RestService.class.getSimpleName() + ".value, only 0-9 a-z A-Z _ cannot begin 0-9");
         ClassWriter cw = new ClassWriter(COMPUTE_FRAMES);
         FieldVisitor fv;
-        AsmMethodVisitor mv;
+        MethodDebugVisitor mv;
         AnnotationVisitor av0;
         Map<String, Object> classMap = new LinkedHashMap<>();
         List<Map<String, Object>> mappingMaps = new ArrayList<>();
@@ -746,7 +747,7 @@ public final class Rest {
             fv.visitEnd();
         }
         { //构造函数
-            mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null));
+            mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null));
             //mv.setDebug(true);
             mv.visitVarInsn(ALOAD, 0);
             mv.visitMethodInsn(INVOKESPECIAL, supDynName, "<init>", "()V", false);
@@ -812,7 +813,7 @@ public final class Rest {
             final RestConvert[] rcs = method.getAnnotationsByType(RestConvert.class);
             if (rcs != null && rcs.length > 0) restConverts.add(rcs);
 
-            mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC, entry.name, "(" + reqDesc + respDesc + ")V", null, new String[]{"java/io/IOException"}));
+            mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC, entry.name, "(" + reqDesc + respDesc + ")V", null, new String[]{"java/io/IOException"}));
             //mv.setDebug(true);
             mv.debugLine();
 
@@ -1668,7 +1669,7 @@ public final class Rest {
 
         //classMap.put("mappings", mappingMaps); //不显示太多信息
         { //toString函数
-            mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC, "toString", "()Ljava/lang/String;", null, null));
+            mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC, "toString", "()Ljava/lang/String;", null, null));
             //mv.setDebug(true);
             mv.visitLdcInsn(JsonConvert.root().convertTo(classMap));
             mv.visitInsn(ARETURN);
@@ -1718,7 +1719,7 @@ public final class Rest {
         return true;
     }
 
-    private static void pushInt(AsmMethodVisitor mv, int num) {
+    private static void pushInt(MethodDebugVisitor mv, int num) {
         if (num < 6) {
             mv.visitInsn(ICONST_0 + num);
         } else if (num <= Byte.MAX_VALUE) {

@@ -5,6 +5,7 @@
  */
 package org.redkale.net.sncp;
 
+import org.redkale.asm.MethodDebugVisitor;
 import static org.redkale.net.sncp.SncpRequest.DEFAULT_HEADER;
 import java.io.*;
 import java.lang.annotation.*;
@@ -318,7 +319,7 @@ public final class SncpDynServlet extends SncpServlet {
             //-------------------------------------------------------------
             ClassWriter cw = new ClassWriter(COMPUTE_FRAMES);
             FieldVisitor fv;
-            AsmMethodVisitor mv;
+            MethodDebugVisitor mv;
 
             cw.visit(V1_8, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynName, null, supDynName, null);
 
@@ -330,7 +331,7 @@ public final class SncpDynServlet extends SncpServlet {
                 fv.visitEnd();
             }
             {  // constructor方法
-                mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null));
+                mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null));
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitMethodInsn(INVOKESPECIAL, supDynName, "<init>", "()V", false);
                 mv.visitInsn(RETURN);
@@ -346,7 +347,7 @@ public final class SncpDynServlet extends SncpServlet {
             int handlerFuncIndex = -1;
             Class handlerFuncClass = null;
             { // action方法
-                mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC, "action", "(" + convertReaderDesc + convertWriterDesc + asyncHandlerDesc + ")V", null, new String[]{"java/lang/Throwable"}));
+                mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC, "action", "(" + convertReaderDesc + convertWriterDesc + asyncHandlerDesc + ")V", null, new String[]{"java/lang/Throwable"}));
                 //mv.setDebug(true);
                 int iconst = ICONST_1;
                 int intconst = 1;

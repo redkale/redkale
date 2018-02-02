@@ -3,10 +3,9 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.redkale.util;
+package org.redkale.asm;
 
 import java.util.*;
-import org.redkale.asm.*;
 
 /**
  * MethodVisitor 的调试类
@@ -15,13 +14,13 @@ import org.redkale.asm.*;
  *
  * @author zhangjx
  */
-public class AsmMethodVisitor {
+public class MethodDebugVisitor {
 
     private final MethodVisitor visitor;
 
     private boolean debug = false;
 
-    public AsmMethodVisitor setDebug(boolean d) {
+    public MethodDebugVisitor setDebug(boolean d) {
         debug = d;
         return this;
     }
@@ -55,7 +54,7 @@ public class AsmMethodVisitor {
         }
     }
 
-    public AsmMethodVisitor(MethodVisitor visitor) {
+    public MethodDebugVisitor(MethodVisitor visitor) {
         //super(Opcodes.ASM5, visitor);
         this.visitor = visitor;
     }

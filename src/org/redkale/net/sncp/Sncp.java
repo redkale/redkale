@@ -5,6 +5,7 @@
  */
 package org.redkale.net.sncp;
 
+import org.redkale.asm.MethodDebugVisitor;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
 import java.net.InetSocketAddress;
@@ -299,7 +300,7 @@ public abstract class Sncp {
         //------------------------------------------------------------------------------
         ClassWriter cw = new ClassWriter(COMPUTE_FRAMES);
         FieldVisitor fv;
-        AsmMethodVisitor mv;
+        MethodDebugVisitor mv;
         AnnotationVisitor av0;
 
         cw.visit(V1_8, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynName, null, supDynName, null);
@@ -334,7 +335,7 @@ public abstract class Sncp {
             fv.visitEnd();
         }
         { //构造函数
-            mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null));
+            mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null));
             //mv.setDebug(true);
             mv.visitVarInsn(ALOAD, 0);
             mv.visitMethodInsn(INVOKESPECIAL, supDynName, "<init>", "()V", false);
@@ -343,7 +344,7 @@ public abstract class Sncp {
             mv.visitEnd();
         }
         { // toString()
-            mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC, "toString", "()Ljava/lang/String;", null, null));
+            mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC, "toString", "()Ljava/lang/String;", null, null));
             mv.visitVarInsn(ALOAD, 0);
             mv.visitFieldInsn(GETFIELD, newDynName, FIELDPREFIX + "_client", clientDesc);
             Label l1 = new Label();
@@ -371,7 +372,7 @@ public abstract class Sncp {
             final Class[] paramtypes = method.getParameterTypes();
             final int index = ++i;
             {   //原始方法
-                mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC + (method.isVarArgs() ? ACC_VARARGS : 0), method.getName(), methodDesc, null, null));
+                mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC + (method.isVarArgs() ? ACC_VARARGS : 0), method.getName(), methodDesc, null, null));
                 //mv.setDebug(true);
                 { //给参数加上 Annotation
                     final Annotation[][] anns = method.getParameterAnnotations();
@@ -430,7 +431,7 @@ public abstract class Sncp {
                 mv.visitEnd();
             }
             {  // _方法   _方法比无_方法多了三个参数
-                mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC + (method.isVarArgs() ? ACC_VARARGS : 0), FIELDPREFIX + "_" + method.getName(), "(ZZZ" + methodDesc.substring(1), null, null));
+                mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC + (method.isVarArgs() ? ACC_VARARGS : 0), FIELDPREFIX + "_" + method.getName(), "(ZZZ" + methodDesc.substring(1), null, null));
                 //mv.setDebug(true);  
                 { //给参数加上 Annotation
                     final Annotation[][] anns = method.getParameterAnnotations();
@@ -901,7 +902,7 @@ public abstract class Sncp {
         //------------------------------------------------------------------------------
         ClassWriter cw = new ClassWriter(COMPUTE_FRAMES);
         FieldVisitor fv;
-        AsmMethodVisitor mv;
+        MethodDebugVisitor mv;
         AnnotationVisitor av0;
 
         cw.visit(V1_8, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynName, null, serviceTypeOrImplClass.isInterface() ? "java/lang/Object" : supDynName, serviceTypeOrImplClass.isInterface() ? new String[]{supDynName} : null);
@@ -936,7 +937,7 @@ public abstract class Sncp {
             fv.visitEnd();
         }
         { //构造函数
-            mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null));
+            mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null));
             //mv.setDebug(true);
             mv.visitVarInsn(ALOAD, 0);
             mv.visitMethodInsn(INVOKESPECIAL, serviceTypeOrImplClass.isInterface() ? "java/lang/Object" : supDynName, "<init>", "()V", false);
@@ -945,19 +946,19 @@ public abstract class Sncp {
             mv.visitEnd();
         }
         { //init
-            mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC, "init", "(" + anyValueDesc + ")V", null, null));
+            mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC, "init", "(" + anyValueDesc + ")V", null, null));
             mv.visitInsn(RETURN);
             mv.visitMaxs(0, 2);
             mv.visitEnd();
         }
         { //destroy
-            mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC, "destroy", "(" + anyValueDesc + ")V", null, null));
+            mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC, "destroy", "(" + anyValueDesc + ")V", null, null));
             mv.visitInsn(RETURN);
             mv.visitMaxs(0, 2);
             mv.visitEnd();
         }
         { // toString()
-            mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC, "toString", "()Ljava/lang/String;", null, null));
+            mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC, "toString", "()Ljava/lang/String;", null, null));
             mv.visitVarInsn(ALOAD, 0);
             mv.visitFieldInsn(GETFIELD, newDynName, FIELDPREFIX + "_client", clientDesc);
             Label l1 = new Label();
@@ -981,7 +982,7 @@ public abstract class Sncp {
             final int index = ++i;
             final java.lang.reflect.Method method = entry.method;
             {
-                mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC, method.getName(), Type.getMethodDescriptor(method), null, null));
+                mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC, method.getName(), Type.getMethodDescriptor(method), null, null));
                 //mv.setDebug(true);
                 { //给参数加上 Annotation
                     final Annotation[][] anns = method.getParameterAnnotations();
@@ -1090,7 +1091,7 @@ public abstract class Sncp {
 
     }
 
-    private static void pushInt(AsmMethodVisitor mv, int num) {
+    private static void pushInt(MethodDebugVisitor mv, int num) {
         if (num < 6) {
             mv.visitInsn(ICONST_0 + num);
         } else if (num <= Byte.MAX_VALUE) {

@@ -5,6 +5,7 @@
  */
 package org.redkale.net.sncp;
 
+import org.redkale.asm.MethodDebugVisitor;
 import java.nio.channels.CompletionHandler;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
@@ -107,7 +108,7 @@ public interface SncpAsyncHandler<V, A> extends CompletionHandler<V, A> {
 
             ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
             FieldVisitor fv;
-            AsmMethodVisitor mv;
+            MethodDebugVisitor mv;
             AnnotationVisitor av0;
             cw.visit(V1_8, ACC_PUBLIC + ACC_SUPER, newDynName, null, handlerinterface ? "java/lang/Object" : handlerClassName, handlerinterface ? new String[]{handlerClassName, sncpHandlerName} : new String[]{sncpHandlerName});
 
@@ -120,7 +121,7 @@ public interface SncpAsyncHandler<V, A> extends CompletionHandler<V, A> {
                 fv.visitEnd();
             }
             {//构造方法
-                mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC, "<init>", "(" + sncpHandlerDesc + ")V", null, null));
+                mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC, "<init>", "(" + sncpHandlerDesc + ")V", null, null));
                 //mv.setDebug(true);
                 {
                     av0 = mv.visitAnnotation("org/redkale/util/ConstructorParameters;", true);
@@ -143,7 +144,7 @@ public interface SncpAsyncHandler<V, A> extends CompletionHandler<V, A> {
 
             for (java.lang.reflect.Method method : handlerClass.getMethods()) { //
                 if ("completed".equals(method.getName()) && method.getParameterCount() == 2) {
-                    mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC, "completed", Type.getMethodDescriptor(method), null, null));
+                    mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC, "completed", Type.getMethodDescriptor(method), null, null));
                     mv.visitVarInsn(ALOAD, 0);
                     mv.visitFieldInsn(GETFIELD, newDynName, "sncphandler", sncpHandlerDesc);
                     mv.visitVarInsn(ALOAD, 1);
@@ -153,7 +154,7 @@ public interface SncpAsyncHandler<V, A> extends CompletionHandler<V, A> {
                     mv.visitMaxs(3, 3);
                     mv.visitEnd();
                 } else if ("failed".equals(method.getName()) && method.getParameterCount() == 2) {
-                    mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC, "failed", Type.getMethodDescriptor(method), null, null));
+                    mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC, "failed", Type.getMethodDescriptor(method), null, null));
                     mv.visitVarInsn(ALOAD, 0);
                     mv.visitFieldInsn(GETFIELD, newDynName, "sncphandler", sncpHandlerDesc);
                     mv.visitVarInsn(ALOAD, 1);
@@ -163,7 +164,7 @@ public interface SncpAsyncHandler<V, A> extends CompletionHandler<V, A> {
                     mv.visitMaxs(3, 3);
                     mv.visitEnd();
                 } else if (handlerinterface || java.lang.reflect.Modifier.isAbstract(method.getModifiers())) {
-                    mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC, method.getName(), Type.getMethodDescriptor(method), null, null));
+                    mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC, method.getName(), Type.getMethodDescriptor(method), null, null));
                     Class returnType = method.getReturnType();
                     if (returnType == void.class) {
                         mv.visitInsn(RETURN);
@@ -192,7 +193,7 @@ public interface SncpAsyncHandler<V, A> extends CompletionHandler<V, A> {
                 }
             }
             { // sncp_getParams
-                mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC, "sncp_getParams", "()[Ljava/lang/Object;", null, null));
+                mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC, "sncp_getParams", "()[Ljava/lang/Object;", null, null));
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitFieldInsn(GETFIELD, newDynName, "sncphandler", sncpHandlerDesc);
                 mv.visitMethodInsn(INVOKEINTERFACE, sncpHandlerName, "sncp_getParams", "()[Ljava/lang/Object;", true);
@@ -201,7 +202,7 @@ public interface SncpAsyncHandler<V, A> extends CompletionHandler<V, A> {
                 mv.visitEnd();
             }
             {  // sncp_setParams
-                mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC + ACC_VARARGS, "sncp_setParams", "([Ljava/lang/Object;)V", null, null));
+                mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC + ACC_VARARGS, "sncp_setParams", "([Ljava/lang/Object;)V", null, null));
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitFieldInsn(GETFIELD, newDynName, "sncphandler", sncpHandlerDesc);
                 mv.visitVarInsn(ALOAD, 1);
@@ -211,7 +212,7 @@ public interface SncpAsyncHandler<V, A> extends CompletionHandler<V, A> {
                 mv.visitEnd();
             }
             {  // sncp_setFuture
-                mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC, "sncp_setFuture", "(" + sncpFutureDesc + ")V", null, null));
+                mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC, "sncp_setFuture", "(" + sncpFutureDesc + ")V", null, null));
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitVarInsn(ALOAD, 1);
                 mv.visitFieldInsn(PUTFIELD, newDynName, "sncpfuture", sncpFutureDesc);
@@ -220,7 +221,7 @@ public interface SncpAsyncHandler<V, A> extends CompletionHandler<V, A> {
                 mv.visitEnd();
             }
             { // sncp_getFuture
-                mv = new AsmMethodVisitor(cw.visitMethod(ACC_PUBLIC, "sncp_getFuture", "()" + sncpFutureDesc, null, null));
+                mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC, "sncp_getFuture", "()" + sncpFutureDesc, null, null));
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitFieldInsn(GETFIELD, newDynName, "sncpfuture", sncpFutureDesc);
                 mv.visitInsn(ARETURN);
