@@ -10,6 +10,7 @@ import java.net.*;
 import java.util.*;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.concurrent.*;
+import java.util.logging.*;
 import org.redkale.asm.*;
 import org.redkale.asm.Type;
 import static org.redkale.asm.Opcodes.*;
@@ -70,6 +71,18 @@ public interface Creator<T> {
 
     @SuppressWarnings("unchecked")
     static class CreatorInner {
+
+        static final Logger logger = Logger.getLogger(Creator.class.getSimpleName());
+
+        static final Map<Class, Creator> creatorCacheMap = new HashMap<>();
+
+        static {
+            creatorCacheMap.put(ArrayList.class, (params) -> new ArrayList<>());
+            creatorCacheMap.put(HashMap.class, (params) -> new HashMap<>());
+            creatorCacheMap.put(HashSet.class, (params) -> new HashSet<>());
+            creatorCacheMap.put(ConcurrentHashMap.class, (params) -> new ConcurrentHashMap<>());
+            creatorCacheMap.put(CompletableFuture.class, (params) -> new CompletableFuture<>());
+        }
 
         static class SimpleClassVisitor extends ClassVisitor {
 
@@ -158,6 +171,7 @@ public interface Creator<T> {
                     if (field == null) return null;
                     se[i] = new SimpleEntry<>(field.getName(), field.getType());
                 } catch (Exception e) {
+                    if (logger.isLoggable(Level.FINE)) logger.log(Level.FINE, clazz + " getConstructorField error", e);
                     return null;
                 }
             }
@@ -206,6 +220,8 @@ public interface Creator<T> {
         } else if (clazz.isAssignableFrom(ConcurrentHashMap.class)) {
             clazz = (Class<T>) ConcurrentHashMap.class;
         }
+        Creator creator = CreatorInner.creatorCacheMap.get(clazz);
+        if (creator != null) return creator;
         if (clazz.isInterface() || Modifier.isAbstract(clazz.getModifiers())) {
             throw new RuntimeException("[" + clazz + "] is a interface or abstract class, cannot create it's Creator.");
         }
@@ -246,7 +262,7 @@ public interface Creator<T> {
                 }
             }
         }
-        if (constructor0 == null) {  // 2、查找public带ConstructorProperties注解的构造函数
+        if (constructor0 == null) {  // 2、查找public带ConstructorParameters注解的构造函数
             for (Constructor c : clazz.getConstructors()) {
                 ConstructorParameters cp = (ConstructorParameters) c.getAnnotation(ConstructorParameters.class);
                 if (cp == null) continue;
@@ -276,7 +292,7 @@ public interface Creator<T> {
                 }
             }
         }
-        if (constructor0 == null) {  // 4、查找非private带ConstructorProperties的构造函数
+        if (constructor0 == null) {  // 4、查找非private带ConstructorParameters的构造函数
             for (Constructor c : clazz.getDeclaredConstructors()) {
                 if (Modifier.isPublic(c.getModifiers()) || Modifier.isPrivate(c.getModifiers())) continue;
                 ConstructorParameters cp = (ConstructorParameters) c.getAnnotation(ConstructorParameters.class);
@@ -289,7 +305,7 @@ public interface Creator<T> {
                 }
             }
         }
-        if (constructor0 == null) {  // 5、查找非private且不带ConstructorProperties的构造函数
+        if (constructor0 == null) {  // 5、查找非private且不带ConstructorParameters的构造函数
             List<Constructor> cs = new ArrayList<>();
             for (Constructor c : clazz.getDeclaredConstructors()) {
                 if (Modifier.isPublic(c.getModifiers()) || Modifier.isPrivate(c.getModifiers())) continue;
