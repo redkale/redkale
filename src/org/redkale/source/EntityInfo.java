@@ -294,7 +294,13 @@ public final class EntityInfo<T> {
             this.constructorAttributes = new Attribute[this.constructorParameters.length];
             List<Attribute<T, Serializable>> unconstructorAttrs = new ArrayList<>();
             for (Attribute<T, Serializable> attr : queryAttributes) {
-                int pos = Arrays.binarySearch(this.constructorParameters, attr.field());
+                int pos = -1;
+                for (int i = 0; i < this.constructorParameters.length; i++) {
+                    if (attr.field().equals(this.constructorParameters[i])) {
+                        pos = i;
+                        break;
+                    }
+                }
                 if (pos >= 0) {
                     this.constructorAttributes[pos] = attr;
                 } else {
