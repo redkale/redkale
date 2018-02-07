@@ -499,7 +499,7 @@ public final class Application {
             for (AnyValue conf : resources.getAnyValues("listener")) {
                 final String listenClass = conf.getValue("value", "");
                 if (listenClass.isEmpty()) continue;
-                Class clazz = Class.forName(listenClass);
+                Class clazz = classLoader.loadClass(listenClass);
                 if (!ApplicationListener.class.isAssignableFrom(clazz)) continue;
                 ApplicationListener listener = (ApplicationListener) clazz.newInstance();
                 listener.init(config);
