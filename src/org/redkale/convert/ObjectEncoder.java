@@ -41,6 +41,14 @@ public final class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T
         if (type instanceof ParameterizedType) {
             final ParameterizedType pt = (ParameterizedType) type;
             this.typeClass = (Class) pt.getRawType();
+        } else if (type instanceof TypeVariable) {
+            TypeVariable tv = (TypeVariable) type;
+            Type[] ts = tv.getBounds();
+            if (ts.length == 1 && ts[0] instanceof Class) {
+                this.typeClass = (Class) ts[0];
+            } else {
+                throw new ConvertException("[" + type + "] is no a class or ParameterizedType");
+            }
         } else {
             this.typeClass = (Class) type;
         }
@@ -81,7 +89,7 @@ public final class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T
                     if (method.getName().length() < 3) continue;
                     if (method.getName().equals("getClass")) continue;
                     if (!method.getName().startsWith("is") && !method.getName().startsWith("get")) continue;
-                    if (factory.isConvertDisabled(method)) continue; 
+                    if (factory.isConvertDisabled(method)) continue;
                     if (method.getParameterTypes().length != 0) continue;
                     if (method.getReturnType() == void.class) continue;
                     if (reversible && (cps == null || !contains(cps, ConvertFactory.readGetSetFieldName(method)))) {

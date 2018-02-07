@@ -46,6 +46,14 @@ public final class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T
         if (type instanceof ParameterizedType) {
             final ParameterizedType pt = (ParameterizedType) type;
             this.typeClass = (Class) pt.getRawType();
+        } else if (type instanceof TypeVariable) {
+            TypeVariable tv = (TypeVariable) type;
+            Type[] ts = tv.getBounds();
+            if (ts.length == 1 && ts[0] instanceof Class) {
+                this.typeClass = (Class) ts[0];
+            } else {
+                throw new ConvertException("[" + type + "] is no a class or ParameterizedType");
+            }
         } else {
             this.typeClass = (Class) type;
         }
@@ -61,6 +69,14 @@ public final class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T
             if (type instanceof ParameterizedType) {
                 final ParameterizedType pts = (ParameterizedType) type;
                 clazz = (Class) (pts).getRawType();
+            } else if (type instanceof TypeVariable) {
+                TypeVariable tv = (TypeVariable) type;
+                Type[] ts = tv.getBounds();
+                if (ts.length == 1 && ts[0] instanceof Class) {
+                    clazz = (Class) ts[0];
+                } else {
+                    throw new ConvertException("[" + type + "] is no a class or TypeVariable");
+                }
             } else if (!(type instanceof Class)) {
                 throw new ConvertException("[" + type + "] is no a class");
             } else {
