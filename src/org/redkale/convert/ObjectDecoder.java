@@ -31,7 +31,7 @@ public final class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T
 
     protected Creator<T> creator;
 
-    protected DeMember<R, T, ?>[] creatorConstructorMembers;
+    protected DeMember<R, T, ?>[] creatorConstructorMembers = new DeMember[0];
 
     protected DeMember<R, T, ?>[] members;
 
@@ -82,9 +82,10 @@ public final class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T
             } else {
                 clazz = (Class) type;
             }
-            this.creator = factory.loadCreator(clazz);
-            if (this.creator == null) throw new ConvertException("Cannot create a creator for " + clazz);
-
+            if (!clazz.isInterface() && !Modifier.isAbstract(clazz.getModifiers())) {
+                this.creator = factory.loadCreator(clazz);
+                if (this.creator == null) throw new ConvertException("Cannot create a creator for " + clazz);
+            }
             final Set<DeMember> list = new HashSet();
             final String[] cps = ObjectEncoder.findConstructorProperties(this.creator);
             try {
@@ -199,6 +200,13 @@ public final class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T
                     lock.wait();
                 } catch (Exception e) {
                     e.printStackTrace();
+                }
+            }
+        }
+        if (this.creator == null) {
+            synchronized (lock) {
+                if (this.creator == null) {
+                    this.creator = factory.loadCreator(this.typeClass);
                 }
             }
         }
