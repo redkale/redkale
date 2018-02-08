@@ -94,7 +94,7 @@ public final class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T
                     if (factory.isConvertDisabled(field)) continue;
                     ref = factory.findRef(field);
                     if (ref != null && ref.ignore()) continue;
-                    Type t = TypeToken.createClassType(field.getGenericType(), this.type);
+                    Type t = TypeToken.createClassType(TypeToken.getGenericType(field.getGenericType(), clazz), this.type);
                     DeMember member = new DeMember(ObjectEncoder.createAttribute(factory, clazz, field, null, null), factory.loadDecoder(t));
                     if (ref != null) member.index = ref.getIndex();
                     list.add(member);
@@ -119,7 +119,7 @@ public final class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T
                     }
                     ref = factory.findRef(method);
                     if (ref != null && ref.ignore()) continue;
-                    Type t = TypeToken.createClassType(method.getGenericParameterTypes()[0], this.type);
+                    Type t = TypeToken.createClassType(TypeToken.getGenericType(method.getGenericParameterTypes()[0], clazz), this.type);
                     DeMember member = new DeMember(ObjectEncoder.createAttribute(factory, clazz, null, null, method), factory.loadDecoder(t));
                     if (ref != null) member.index = ref.getIndex();
                     list.add(member);
@@ -149,7 +149,7 @@ public final class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T
                             } catch (NoSuchMethodException ex) {
                                 getter = clazz.getMethod("is" + mn);
                             }
-                            Type t = TypeToken.createClassType(getter.getGenericParameterTypes()[0], this.type);
+                            Type t = TypeToken.createClassType(TypeToken.getGenericType(getter.getGenericParameterTypes()[0], clazz), this.type);
                             list.add(new DeMember(ObjectEncoder.createAttribute(factory, clazz, null, getter, null), factory.loadDecoder(t)));
                         }
                     }

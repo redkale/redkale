@@ -77,7 +77,7 @@ public final class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T
                     if (factory.isConvertDisabled(field)) continue;
                     ref = factory.findRef(field);
                     if (ref != null && ref.ignore()) continue;
-                    Type t = TypeToken.createClassType(field.getGenericType(), this.type);
+                    Type t = TypeToken.createClassType(TypeToken.getGenericType(field.getGenericType(), clazz), this.type);
                     EnMember member = new EnMember(createAttribute(factory, clazz, field, null, null), factory.loadEncoder(t));
                     if (ref != null) member.index = ref.getIndex();
                     list.add(member);
@@ -102,7 +102,7 @@ public final class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T
                     }
                     ref = factory.findRef(method);
                     if (ref != null && ref.ignore()) continue;
-                    Type t = TypeToken.createClassType(method.getGenericReturnType(), this.type);
+                    Type t = TypeToken.createClassType(TypeToken.getGenericType(method.getGenericReturnType(), clazz), this.type);
                     EnMember member = new EnMember(createAttribute(factory, clazz, null, method, null), factory.loadEncoder(t));
                     if (ref != null) member.index = ref.getIndex();
                     list.add(member);
