@@ -56,6 +56,35 @@ public abstract class TypeToken<T> {
         return true;
     }
 
+    public static Type[] getGenericType(final Type[] types, final Type declaringClass) {
+        Type[] newTypes = new Type[types.length];
+        for (int i = 0; i < newTypes.length; i++) {
+            newTypes[i] = getGenericType(types[i], declaringClass);
+        }
+        return newTypes;
+    }
+
+    public static Type getGenericType(final Type type, final Type declaringClass) {
+        if (declaringClass == null) return type;
+        if (type instanceof TypeVariable) {
+            if (declaringClass instanceof Class) {
+                final Class declaringClass0 = (Class) declaringClass;
+                final Type superType = declaringClass0.getGenericSuperclass();
+                if (superType instanceof ParameterizedType) {
+                    ParameterizedType superPT = (ParameterizedType) superType;
+                    Type[] atas = superPT.getActualTypeArguments();
+                    TypeVariable[] asts = declaringClass0.getSuperclass().getTypeParameters();
+                    if (atas.length == asts.length) {
+                        for (int i = 0; i < asts.length; i++) {
+                            if (asts[i] == type) return atas[i];
+                        }
+                    }
+                }
+            }
+        }
+        return type;
+    }
+
     /**
      * 动态创建类型为ParameterizedType或Class的Type
      *

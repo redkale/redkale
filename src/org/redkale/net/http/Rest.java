@@ -79,7 +79,7 @@ public final class Rest {
     private Rest() {
     }
 
-    public static class MethodParamClassVisitor extends ClassVisitor {
+    static class MethodParamClassVisitor extends ClassVisitor {
 
         private final Map<String, List<String>> fieldmap;
 
@@ -92,7 +92,9 @@ public final class Rest {
         public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
             if (java.lang.reflect.Modifier.isStatic(access)) return null;
             List<String> fieldnames = new ArrayList<>();
-            fieldmap.put(name + ":" + desc, fieldnames);
+            String key = name + ":" + desc;
+            if (fieldmap.containsKey(key)) return null;
+            fieldmap.put(key, fieldnames);
             return new MethodVisitor(Opcodes.ASM5) {
                 @Override
                 public void visitLocalVariable(String name, String description, String signature, Label start, Label end, int index) {
@@ -111,16 +113,17 @@ public final class Rest {
         }
 
         //返回的List中参数列表可能会比方法参数量多，因为方法内的临时变量也会存入list中， 所以需要list的元素集合比方法的参数多
-        public static Map<String, List<String>> getMethodParamNames(Class clazz) {
+        public static Map<String, List<String>> getMethodParamNames(Map<String, List<String>> map, Class clazz) {
             String n = clazz.getName();
             InputStream in = clazz.getResourceAsStream(n.substring(n.lastIndexOf('.') + 1) + ".class");
-            Map<String, List<String>> map = new HashMap<>();
             if (in == null) return map;
             try {
                 new ClassReader(Utility.readBytesThenClose(in)).accept(new MethodParamClassVisitor(Opcodes.ASM5, map), 0);
-            } catch (Exception e) { //无需理会                
+            } catch (Exception e) { //无需理会 
             }
-            return map;
+            Class superClass = clazz.getSuperclass();
+            if (superClass == Object.class) return map;
+            return getMethodParamNames(map, superClass);
         }
     }
 
@@ -184,7 +187,7 @@ public final class Rest {
         }
     }
 
-    static <T extends HttpServlet> T createRestWebSocketServlet(final ClassLoader classLoader, final Class<? extends WebSocket> webSocketType) {
+    public static <T extends HttpServlet> T createRestWebSocketServlet(final ClassLoader classLoader, final Class<? extends WebSocket> webSocketType) {
         if (webSocketType == null) throw new RuntimeException("Rest WebSocket Class is null on createRestWebSocketServlet");
         if (Modifier.isAbstract(webSocketType.getModifiers())) throw new RuntimeException("Rest WebSocket Class(" + webSocketType + ") cannot abstract on createRestWebSocketServlet");
         if (Modifier.isFinal(webSocketType.getModifiers())) throw new RuntimeException("Rest WebSocket Class(" + webSocketType + ") cannot final on createRestWebSocketServlet");
@@ -233,7 +236,7 @@ public final class Rest {
         final String resourceGenericDescriptor = sb1.length() == sb2.length() ? null : sb2.toString();
 
         //----------------------------------------------------------------------------------------        
-        final Map<String, List<String>> asmParamMap = MethodParamClassVisitor.getMethodParamNames(webSocketType);
+        final Map<String, List<String>> asmParamMap = MethodParamClassVisitor.getMethodParamNames(new HashMap<>(), webSocketType);
         final Set<String> messageNames = new HashSet<>();
         final List<Method> messageMethods = new ArrayList<>();
         for (Method method : webSocketType.getMethods()) {
@@ -640,7 +643,7 @@ public final class Rest {
         }
     }
 
-    static <T extends HttpServlet> T createRestServlet(final ClassLoader classLoader, final Class userType0, final Class<T> baseServletType, final Class<? extends Service> serviceType) {
+    public static <T extends HttpServlet> T createRestServlet(final ClassLoader classLoader, final Class userType0, final Class<T> baseServletType, final Class<? extends Service> serviceType) {
         if (baseServletType == null || serviceType == null) throw new RuntimeException(" Servlet or Service is null Class on createRestServlet");
         if (!HttpServlet.class.isAssignableFrom(baseServletType)) throw new RuntimeException(baseServletType + " is not HttpServlet Class on createRestServlet");
         int mod = baseServletType.getModifiers();
@@ -782,7 +785,7 @@ public final class Rest {
                 }
             }
             if (ignore) continue;
-            paramtypes.add(method.getGenericParameterTypes());
+            paramtypes.add(TypeToken.getGenericType(method.getGenericParameterTypes(), serviceType));
             if (mappings.length == 0) { //没有Mapping，设置一个默认值
                 MappingEntry entry = new MappingEntry(methodidex, null, bigmodulename, method);
                 if (entrys.contains(entry)) throw new RuntimeException(serviceType.getName() + " on " + method.getName() + " 's mapping(" + entry.name + ") is repeat");
@@ -798,7 +801,7 @@ public final class Rest {
         }
         if (entrys.isEmpty()) return null; //没有可HttpMapping的方法
         //将每个Service可转换的方法生成HttpServlet对应的HttpMapping方法
-        final Map<String, List<String>> asmParamMap = MethodParamClassVisitor.getMethodParamNames(serviceType);
+        final Map<String, List<String>> asmParamMap = MethodParamClassVisitor.getMethodParamNames(new HashMap<>(), serviceType);
         final Map<String, java.lang.reflect.Type> bodyTypes = new HashMap<>();
 
         final List<RestConvert[]> restConverts = new ArrayList<>();
@@ -986,7 +989,7 @@ public final class Rest {
                 }
                 av1.visitEnd();
 
-                java.lang.reflect.Type grt = method.getGenericReturnType();
+                java.lang.reflect.Type grt = TypeToken.getGenericType(method.getGenericReturnType(), serviceType);
                 av0.visit("result", grt == returnType ? returnType.getName() : String.valueOf(grt));
 
                 av0.visitEnd();

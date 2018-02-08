@@ -99,7 +99,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
             for (Method method : this.getClass().getDeclaredMethods()) {
                 if (!method.getName().equals("createWebSocket")) continue;
                 if (method.getParameterCount() > 0) continue;
-                Type rt = method.getGenericReturnType();
+                Type rt = TypeToken.getGenericType(method.getGenericReturnType(), this.getClass());
                 if (rt instanceof ParameterizedType) {
                     msgtype = ((ParameterizedType) rt).getActualTypeArguments()[1];
                 }

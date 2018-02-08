@@ -550,7 +550,7 @@ public final class SncpClient {
 
         public SncpAction(final Class clazz, Method method, DLong actionid) {
             this.actionid = actionid == null ? Sncp.hash(method) : actionid;
-            Type rt = method.getGenericReturnType();
+            Type rt = TypeToken.getGenericType(method.getGenericReturnType(), clazz);
             if (rt instanceof TypeVariable) {
                 TypeVariable tv = (TypeVariable) rt;
                 if (tv.getBounds().length == 1) rt = tv.getBounds()[0];
@@ -558,7 +558,7 @@ public final class SncpClient {
             this.resultTypes = rt == void.class ? null : rt;
             this.boolReturnTypeFuture = CompletableFuture.class.isAssignableFrom(method.getReturnType());
             this.futureCreator = boolReturnTypeFuture ? Creator.create((Class<? extends CompletableFuture>) method.getReturnType()) : null;
-            this.paramTypes = method.getGenericParameterTypes();
+            this.paramTypes = TypeToken.getGenericType(method.getGenericParameterTypes(), clazz);
             this.paramClass = method.getParameterTypes();
             this.method = method;
             Annotation[][] anns = method.getParameterAnnotations();
