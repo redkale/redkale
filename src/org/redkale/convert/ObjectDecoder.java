@@ -204,10 +204,8 @@ public final class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T
             }
         }
         if (this.creator == null) {
-            synchronized (lock) {
-                if (this.creator == null) {
-                    this.creator = factory.loadCreator(this.typeClass);
-                }
+            if (typeClass.isInterface() || Modifier.isAbstract(typeClass.getModifiers())) {
+                throw new ConvertException("[" + typeClass + "] is a interface or abstract class, cannot create it's Creator.");
             }
         }
         if (this.creatorConstructorMembers == null) {  //空构造函数
