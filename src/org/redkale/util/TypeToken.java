@@ -73,6 +73,7 @@ public abstract class TypeToken<T> {
      *  }
      *  public abstract class AService &lt;K extends Key, V extends Val&gt; {
      *       public abstract V findValue(K key);
+     *       public abstract Sheet&lt;V&gt; queryValue(K key);
      *  }
      *  public class Key2 extends Key {
      *  }
@@ -81,6 +82,9 @@ public abstract class TypeToken<T> {
      *  public class Service2 extends Service &lt;Key2, Val2&gt; {
      *       public Val2 findValue(Key2 key){
      *          return new Val2();
+     *       }
+     *       public Sheet&lt;Val2&gt; queryValue(Key2 key){
+     *          return new Sheet();
      *       }
      *  }
      * </pre>
@@ -92,7 +96,7 @@ public abstract class TypeToken<T> {
      * @return Type
      */
     public static Type getGenericType(final Type type, final Type declaringClass) {
-        if (declaringClass == null) return type;
+        if (type == null || declaringClass == null) return type;
         if (type instanceof TypeVariable) {
             if (declaringClass instanceof Class) {
                 final Class declaringClass0 = (Class) declaringClass;
@@ -116,6 +120,12 @@ public abstract class TypeToken<T> {
             }
             TypeVariable tv = (TypeVariable) type;
             if (tv.getBounds().length == 1) return tv.getBounds()[0];
+        }
+        if (type instanceof ParameterizedType) {
+            ParameterizedType pt = (ParameterizedType) type;
+            return createParameterizedType(getGenericType(pt.getOwnerType(), declaringClass),
+                getGenericType(pt.getRawType(), declaringClass),
+                getGenericType(pt.getActualTypeArguments(), declaringClass));
         }
         return type;
     }
