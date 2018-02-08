@@ -64,6 +64,33 @@ public abstract class TypeToken<T> {
         return newTypes;
     }
 
+    /**
+     * 获取TypeVariable对应的实际Type, 如果type不是TypeVariable 直接返回type。
+     * <pre>
+     *  public abstract class Key {
+     *  }
+     *  public abstract class Val {
+     *  }
+     *  public abstract class AService &lt;K extends Key, V extends Val&gt; {
+     *       public abstract V findValue(K key);
+     *  }
+     *  public class Key2 extends Key {
+     *  }
+     *  public class Val2 extends Val {
+     *  }
+     *  public class Service2 extends Service &lt;Key2, Val2&gt; {
+     *       public Val2 findValue(Key2 key){
+     *          return new Val2();
+     *       }
+     *  }
+     * </pre>
+     *
+     *
+     * @param type           泛型
+     * @param declaringClass 泛型依附类
+     *
+     * @return Type
+     */
     public static Type getGenericType(final Type type, final Type declaringClass) {
         if (declaringClass == null) return type;
         if (type instanceof TypeVariable) {
@@ -87,6 +114,8 @@ public abstract class TypeToken<T> {
                     }
                 }
             }
+            TypeVariable tv = (TypeVariable) type;
+            if (tv.getBounds().length == 1) return tv.getBounds()[0];
         }
         return type;
     }

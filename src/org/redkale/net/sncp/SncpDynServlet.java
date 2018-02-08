@@ -591,10 +591,6 @@ public final class SncpDynServlet extends SncpServlet {
                 java.lang.reflect.Type[] ptypes = TypeToken.getGenericType(method.getGenericParameterTypes(), newClazz);
                 java.lang.reflect.Type[] types = new java.lang.reflect.Type[ptypes.length + 1];
                 java.lang.reflect.Type rt = TypeToken.getGenericType(method.getGenericReturnType(), newClazz);
-                if (rt instanceof TypeVariable) {
-                    TypeVariable tv = (TypeVariable) rt;
-                    if (tv.getBounds().length == 1) rt = tv.getBounds()[0];
-                }
                 types[0] = rt;
                 System.arraycopy(ptypes, 0, types, 1, ptypes.length);
                 instance.paramTypes = types;

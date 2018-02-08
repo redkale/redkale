@@ -766,6 +766,7 @@ public final class Rest {
         final List<java.lang.reflect.Type[]> paramtypes = new ArrayList<>();
         for (final Method method : serviceType.getMethods()) {
             if (Modifier.isStatic(method.getModifiers())) continue;
+            if (method.isSynthetic()) continue;
             Class[] extypes = method.getExceptionTypes();
             if (extypes.length > 1) continue;
             if (extypes.length == 1 && extypes[0] != IOException.class) continue;
