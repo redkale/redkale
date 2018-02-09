@@ -168,15 +168,16 @@
         <div class="highlight"><pre><span></span><span class="nd">@RestService</span><span class="o">(</span><span class="n">name</span> <span class="o">=</span> <span class="s">"file"</span><span class="o">,</span> <span class="n">comment</span> <span class="o">=</span> <span class="s">"文件服务"</span><span class="o">)</span>
 <span class="kd">public</span> <span class="kd">class</span> <span class="nc">FileService</span> <span class="kd">extends</span> <span class="n">AbstractService</span> <span class="o">{</span>
 
+    <span class="kd">private</span> <span class="kd">static</span> <span class="kd">final</span> <span class="n">Logger</span> <span class="n">logger</span> <span class="o">=</span> <span class="n">Logger</span><span class="o">.</span><span class="na">getLogger</span><span class="o">(</span><span class="n">FileService</span><span class="o">.</span><span class="na">class</span><span class="o">.</span><span class="na">getSimpleName</span><span class="o">());</span>
+
     <span class="kd">private</span> <span class="kd">static</span> <span class="kd">final</span> <span class="n">String</span> <span class="n">format</span> <span class="o">=</span> <span class="s">"%1$tY%1$tm%1$td%1$tH%1$tM%1$tS"</span><span class="o">;</span>
 
     <span class="nd">@RestMapping</span><span class="o">(</span><span class="n">name</span> <span class="o">=</span> <span class="s">"upload"</span><span class="o">,</span> <span class="n">auth</span> <span class="o">=</span> <span class="kc">false</span><span class="o">,</span> <span class="n">comment</span> <span class="o">=</span> <span class="s">"文件上传，不鉴权"</span><span class="o">)</span>
     <span class="kd">public</span> <span class="n">RetResult</span> <span class="nf">upload</span><span class="o">(</span><span class="nd">@RestUploadFile</span><span class="o">(</span><span class="n">maxLength</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">*</span> <span class="mi">1024</span> <span class="o">*</span> <span class="mi">1024</span><span class="o">,</span> <span class="n">fileNameReg</span> <span class="o">=</span> <span class="s">".*\\.doc$"</span><span class="o">)</span> <span class="n">File</span> <span class="n">tmpFile</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
-        <span class="k">if</span> <span class="o">(</span><span class="n">tmpFile</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
-            <span class="k">return</span> <span class="k">new</span> <span class="n">RetResult</span><span class="o">(</span><span class="mi">1001</span><span class="o">,</span> <span class="s">"没有上传文件或文件大小超过1M或文件不是.doc后缀"</span><span class="o">);</span>
-        <span class="o">}</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">tmpFile</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="k">return</span> <span class="k">new</span> <span class="n">RetResult</span><span class="o">(</span><span class="mi">1001</span><span class="o">,</span> <span class="s">"没有上传文件或文件大小超过1M或文件不是.doc后缀"</span><span class="o">);</span>
         <span class="c1">//按日期命名 如 file-20170601133520.doc</span>
         <span class="k">try</span> <span class="o">{</span>
+            <span class="n">logger</span><span class="o">.</span><span class="na">finest</span><span class="o">(</span><span class="s">"用户上传的文件名为: "</span> <span class="o">+</span> <span class="n">MultiContext</span><span class="o">.</span><span class="na">getFileName</span><span class="o">(</span><span class="n">tmpFile</span><span class="o">));</span>
             <span class="n">File</span> <span class="n">destFile</span> <span class="o">=</span> <span class="k">new</span> <span class="n">File</span><span class="o">(</span><span class="s">"D:/docs/file-"</span> <span class="o">+</span> <span class="n">String</span><span class="o">.</span><span class="na">format</span><span class="o">(</span><span class="n">format</span><span class="o">,</span> <span class="n">System</span><span class="o">.</span><span class="na">currentTimeMillis</span><span class="o">())</span> <span class="o">+</span> <span class="s">".doc"</span><span class="o">);</span>
             <span class="n">destFile</span><span class="o">.</span><span class="na">getParentFile</span><span class="o">().</span><span class="na">mkdirs</span><span class="o">();</span>
             <span class="k">if</span> <span class="o">(!</span><span class="n">tmpFile</span><span class="o">.</span><span class="na">renameTo</span><span class="o">(</span><span class="n">destFile</span><span class="o">))</span> <span class="o">{</span> <span class="c1">//tmpFile与destFile不在同一盘符下会导致renameTo失败</span>
@@ -184,7 +185,6 @@
             <span class="o">}</span>
         <span class="o">}</span> <span class="k">finally</span> <span class="o">{</span> <span class="c1">//如果发生异常，将临时文件从{APP_HOME}/tmp 目录下删除</span>
             <span class="n">tmpFile</span><span class="o">.</span><span class="na">delete</span><span class="o">();</span>
-            <span class="n">tmpFile</span><span class="o">.</span><span class="na">getParentFile</span><span class="o">().</span><span class="na">delete</span><span class="o">();</span>
         <span class="o">}</span>
         <span class="k">return</span> <span class="n">RetResult</span><span class="o">.</span><span class="na">success</span><span class="o">();</span>
     <span class="o">}</span>
