@@ -112,6 +112,19 @@ public final class MultiContext {
         return tmpfile;
     }
 
+    /**
+     * 根据临时文件获取上传时的文件名
+     *
+     * @param file 临时文件
+     *
+     * @return 上传的文件名
+     */
+    public static String getFileName(File file) {
+        if (file == null) return null;
+        String name = file.getName();
+        return name.startsWith("redkale-") ? name.substring(name.indexOf('_') + 1) : name;
+    }
+
     //或被 REST 用到 
     /**
      * 获取第一个文件
@@ -133,9 +146,9 @@ public final class MultiContext {
             has = true;
             if (filenameReg != null && !filenameReg.isEmpty() && !part.getFilename().matches(filenameReg)) continue;
             if (contentTypeReg != null && !contentTypeReg.isEmpty() && !part.getContentType().matches(contentTypeReg)) continue;
-            File file = new File(home, "tmp/redkale_" + System.nanoTime() + "/" + part.getFilename());
+            File file = new File(home, "tmp/redkale-" + System.nanoTime() + "_" + part.getFilename());
             File parent = file.getParentFile();
-            parent.mkdirs();
+            if (!parent.isDirectory()) parent.mkdirs();
             boolean rs = part.save(max < 1 ? Long.MAX_VALUE : max, file);
             if (!rs) {
                 file.delete();
@@ -165,9 +178,9 @@ public final class MultiContext {
         for (MultiPart part : parts()) {
             if (filenameReg != null && !filenameReg.isEmpty() && !part.getFilename().matches(filenameReg)) continue;
             if (contentTypeReg != null && !contentTypeReg.isEmpty() && !part.getContentType().matches(contentTypeReg)) continue;
-            File file = new File(home, "tmp/redkale_" + System.nanoTime() + "/" + part.getFilename());
+            File file = new File(home, "tmp/redkale-" + System.nanoTime() + "_" + part.getFilename());
             File parent = file.getParentFile();
-            parent.mkdirs();
+            if (!parent.isDirectory()) parent.mkdirs();
             boolean rs = part.save(max < 1 ? Long.MAX_VALUE : max, file);
             if (!rs) {
                 file.delete();
