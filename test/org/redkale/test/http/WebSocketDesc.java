@@ -85,7 +85,7 @@ public interface WebSocketDesc<G, T> {
     public CompletableFuture<Integer> broadcastMessage(final WebSocketRange wsrange, final Object message, boolean last);
 
     //给符合条件的人群广播消息, 返回结果0表示成功，非0表示错误码
-    public CompletableFuture<Integer> broadcastMessage(final WebSocketRange wsrange, final Convert convert, final Object message, boolean last);
+    public CompletableFuture<Integer> broadcastMessage(WebSocketRange wsrange, Convert convert, final Object message, boolean last);
 
     //获取用户在线的SNCP节点地址列表，不是分布式则返回元素数量为1，且元素值为null的列表
     public CompletableFuture<Collection<InetSocketAddress>> getRpcNodeAddresses(final Serializable userid);

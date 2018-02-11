@@ -12,6 +12,7 @@ import java.nio.charset.*;
 import java.util.*;
 import org.redkale.convert.json.*;
 import org.redkale.net.http.*;
+import org.redkale.util.AnyValue;
 
 /**
  *
@@ -22,7 +23,8 @@ public interface HttpRequestDesc {
     //获取客户端地址IP
     public SocketAddress getRemoteAddress();
 
-    //获取客户端地址IP, 与getRemoteAddres() 的区别在于：本方法优先取header中指定为RemoteAddress名的值，没有则返回getRemoteAddres()的getHostAddress()。
+    //获取客户端地址IP, 与getRemoteAddres() 的区别在于：
+    //本方法优先取header中指定为RemoteAddress名的值，没有则返回getRemoteAddres()的getHostAddress()。
     //本方法适用于服务前端有如nginx的代理服务器进行中转，通过getRemoteAddres()是获取不到客户端的真实IP。
     public String getRemoteAddr();
 
@@ -47,6 +49,10 @@ public interface HttpRequestDesc {
     //获取文件上传信息列表 等价于 getMultiContext().parts();
     public Iterable<MultiPart> multiParts() throws IOException;
 
+    //设置当前用户信息, 通常在HttpServlet.preExecute方法里设置currentUser
+    //数据类型由@HttpUserType指定
+    public <T> HttpRequest setCurrentUser(T user);
+    
     //获取当前用户信息 数据类型由@HttpUserType指定
     public <T> T currentUser();
     
@@ -192,6 +198,12 @@ public interface HttpRequestDesc {
     public double getRequstURIPath(String prefix, double defvalue);
 
     //获取所有的header名
+    public AnyValue getHeaders();
+    
+    //将请求Header转换成Map
+    public Map<String, String> getHeadersToMap(Map<String, String> map);
+    
+    //获取所有的header名
     public String[] getHeaderNames();
 
     // 获取指定的header值
@@ -239,6 +251,21 @@ public interface HttpRequestDesc {
     //获取指定的header的double值, 没有返回默认double值
     public double getDoubleHeader(String name, double defaultValue);
 
+    //获取请求参数总对象
+    public AnyValue getParameters();
+    
+    //将请求参数转换成Map
+    public Map<String, String> getParametersToMap(Map<String, String> map);
+    
+    //将请求参数转换成String, 字符串格式为: bean1={}&amp;id=13&amp;name=xxx
+    //不会返回null，没有参数返回空字符串
+    public String getParametersToString();
+    
+    //将请求参数转换成String, 字符串格式为: prefix + bean1={}&amp;id=13&amp;name=xxx
+    //拼接前缀， 如果无参数，返回的字符串不会含有拼接前缀
+    //不会返回null，没有参数返回空字符串
+    public String getParametersToString(String prefix);
+    
     //获取所有参数名
     public String[] getParameterNames();
 
