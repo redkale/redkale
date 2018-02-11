@@ -8,7 +8,6 @@ package org.redkale.test.ws;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.atomic.AtomicInteger;
 import javax.annotation.Resource;
 import org.redkale.net.http.*;
 
@@ -16,13 +15,19 @@ import org.redkale.net.http.*;
  *
  * @author zhangjx
  */
+//anyuser = true 表示WebSocket.createUserid返回的值不表示用户登录态
 @RestWebSocket(name = "chat", catalog = "ws", comment = "文字聊天", anyuser = true)
 public class ChatWebSocket extends WebSocket<Integer, Object> {
 
-    protected static final AtomicInteger idcreator = new AtomicInteger(10000);
-
+    //@Resource标记的Field只能被修饰为public或protected
     @Resource
     protected ChatService service;
+
+    @Override
+    protected CompletableFuture<String> onOpen(final HttpRequest request) {
+        //随机创建一个sessionid
+        return CompletableFuture.completedFuture(request.getSessionid(true));
+    }
 
     @Override
     protected CompletableFuture<Integer> createUserid() {

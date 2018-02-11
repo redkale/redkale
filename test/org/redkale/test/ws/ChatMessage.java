@@ -14,6 +14,8 @@ import org.redkale.convert.json.JsonConvert;
 public class ChatMessage {
 
     public int fromuserid;
+    
+    public int touserid;
 
     public String fromusername;
 

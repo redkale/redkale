@@ -5,8 +5,8 @@
  */
 package org.redkale.test.ws;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.*;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.redkale.service.*;
 import org.redkale.util.Comment;
@@ -17,24 +17,23 @@ import org.redkale.util.Comment;
  */
 public class ChatService implements Service {
 
-    private final Map<Integer, Integer> rooms = new ConcurrentHashMap<>();
+    @Comment("key=用户ID，value=房间ID")
+    private final Map<Integer, Integer> userToRooms = new ConcurrentHashMap<>();
+
+    @Comment("key=房间ID，value=用户ID列表")
+    private final Map<Integer, List<Integer>> roomToUsers = new ConcurrentHashMap<>();
 
     protected final AtomicInteger idcreator = new AtomicInteger(10000);
 
+    @Comment("创建一个用户ID")
     public int createUserid() {
-        int v = idcreator.incrementAndGet();
-        setIdcreator(v);
-        return v;
+        return idcreator.incrementAndGet();
     }
 
-    @Comment("同步到其他服务的idcreator")
-    @RpcMultiRun
-    public void setIdcreator(int v) {
-        idcreator.set(v);
-    }
-
+    @Comment("用户加入指定房间")
     public boolean joinRoom(int userid, int roomid) {
-        rooms.put(userid, roomid);
+        userToRooms.put(userid, roomid);
+        roomToUsers.computeIfAbsent(roomid, (id) -> new CopyOnWriteArrayList()).add(userid);
         return true;
     }
 }
