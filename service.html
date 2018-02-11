@@ -29,7 +29,7 @@
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 为了能确保本地模式与远程模式自由切换，对Service的实现类有一定的约束: <br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1、Service实现类会被继承，不能修饰为 <b>final</b>  <br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2、带@RpcMultiRun注解的方法会被重载，不能修饰为 <b>final</b>  <br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Redkale进程启动时扫描可加载的Service实现类，根据配置文件配置的模式采用JDK 8内置的ASM技术动态生成相应的Service临时类进行实例化，并注册到ResourceFactory同其他Service、Servlet依赖注入。
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Redkale进程启动时扫描可加载的Service实现类，根据配置文件配置的模式采用ASM技术动态生成相应的Service临时类进行实例化，并注册到ResourceFactory同其他Service、Servlet依赖注入。
             </p>
 
             <h3><a id="service_local" class="anchor" href="#" aria-hidden="true"></a>Service 本地模式</h3>
