@@ -120,7 +120,7 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         int bufCapacity = parseLenth(config.getValue("bufferCapacity"), 32 * 1024);
         this.bufferCapacity = bufCapacity < 8 * 1024 ? 8 * 1024 : bufCapacity;
         this.threads = config.getIntValue("threads", Runtime.getRuntime().availableProcessors() * 8);
-        this.bufferPoolSize = config.getIntValue("bufferPoolSize", this.threads * 8);
+        this.bufferPoolSize = config.getIntValue("bufferPoolSize", this.threads * 4);
         this.responsePoolSize = config.getIntValue("responsePoolSize", this.threads * 2);
         this.name = config.getValue("name", "Server-" + protocol + "-" + this.address.getPort());
         if (!this.name.matches("^[a-zA-Z][\\w_-]{1,64}$")) throw new RuntimeException("server.name (" + this.name + ") is illegal");

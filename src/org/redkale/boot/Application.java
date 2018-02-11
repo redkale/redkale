@@ -247,7 +247,7 @@ public final class Application {
         final AnyValue resources = config.getAnyValue("resources");
         TransportStrategy strategy = null;
         int bufferCapacity = 32 * 1024;
-        int bufferPoolSize = Runtime.getRuntime().availableProcessors() * 16;
+        int bufferPoolSize = Runtime.getRuntime().availableProcessors() * 8;
         int readTimeoutSecond = TransportFactory.DEFAULT_READTIMEOUTSECOND;
         int writeTimeoutSecond = TransportFactory.DEFAULT_WRITETIMEOUTSECOND;
         AtomicLong createBufferCounter = new AtomicLong();
@@ -259,10 +259,10 @@ public final class Application {
             if (transportConf != null) {
                 //--------------transportBufferPool-----------
                 bufferCapacity = Math.max(parseLenth(transportConf.getValue("bufferCapacity"), bufferCapacity), 8 * 1024);
-                bufferPoolSize = parseLenth(transportConf.getValue("bufferPoolSize"), groupsize * Runtime.getRuntime().availableProcessors() * 8);
                 readTimeoutSecond = transportConf.getIntValue("readTimeoutSecond", readTimeoutSecond);
                 writeTimeoutSecond = transportConf.getIntValue("writeTimeoutSecond", writeTimeoutSecond);
-                final int threads = parseLenth(transportConf.getValue("threads"), groupsize * Runtime.getRuntime().availableProcessors() * 8);
+                final int threads = parseLenth(transportConf.getValue("threads"), groupsize * Runtime.getRuntime().availableProcessors() * 2);
+                bufferPoolSize = parseLenth(transportConf.getValue("bufferPoolSize"), threads * 4);
                 final int capacity = bufferCapacity;
                 transportPool = new ObjectPool<>(createBufferCounter, cycleBufferCounter, bufferPoolSize,
                     (Object... params) -> ByteBuffer.allocateDirect(capacity), null, (e) -> {
@@ -287,7 +287,7 @@ public final class Application {
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
-                logger.log(Level.INFO, Transport.class.getSimpleName() + " configure bufferCapacity = " + bufferCapacity/1024 + "K; bufferPoolSize = " + bufferPoolSize + "; threads = " + threads + ";");
+                logger.log(Level.INFO, Transport.class.getSimpleName() + " configure bufferCapacity = " + bufferCapacity / 1024 + "K; bufferPoolSize = " + bufferPoolSize + "; threads = " + threads + ";");
             }
         }
         if (transportGroup == null) {
@@ -781,7 +781,7 @@ public final class Application {
     }
 
     public static Application create(final boolean singleton) throws IOException {
-        final String home = new File(System.getProperty(RESNAME_APP_HOME, "")).getCanonicalPath().replace('\\', '/'); 
+        final String home = new File(System.getProperty(RESNAME_APP_HOME, "")).getCanonicalPath().replace('\\', '/');
         System.setProperty(RESNAME_APP_HOME, home);
         File appfile = new File(home, "conf/application.xml");
         return new Application(singleton, load(new FileInputStream(appfile)));
