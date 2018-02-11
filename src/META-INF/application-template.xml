@@ -57,8 +57,6 @@
                 同一个<node>节点值只能存在一个<group>节点内，即同一个addr+port只能属于一个group。
                 addr: required IP地址
                 port: required 端口
-                clients: 连接池数， 默认: CPU核数*4
-                buffers: ByteBuffer对象池的大小， 默认: CPU核数*8
             -->
             <node addr="127.0.0.1" port="7070"/>
         </group>
