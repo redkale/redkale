@@ -12,7 +12,8 @@ import java.nio.*;
 import java.nio.channels.CompletionHandler;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.BiConsumer;
+import java.util.function.*;
+import org.redkale.convert.Convert;
 import org.redkale.convert.json.*;
 import org.redkale.net.http.*;
 
@@ -33,7 +34,10 @@ public interface HttpResponseDesc {
 
     //传入的CompletionHandler子类必须是public，且保证其子类可被继承且completed、failed可被重载且包含空参数的构造函数
     public <H extends CompletionHandler> H createAsyncHandler(Class<H> handlerClass);
-    
+
+    //获取ByteBuffer生成器
+    public Supplier<ByteBuffer> getBufferSupplier();
+
     //设置状态码
     public void setStatus(int status);
 
@@ -70,7 +74,7 @@ public interface HttpResponseDesc {
 
     //异步输出指定内容
     public <A> void sendBody(ByteBuffer[] buffers, A attachment, CompletionHandler<Integer, A> handler);
-    
+
     //关闭HTTP连接，如果是keep-alive则不强制关闭
     public void finish();
 
@@ -80,8 +84,16 @@ public interface HttpResponseDesc {
     //将对象以JSON格式输出
     public void finishJson(Object obj);
 
+    //将对象数组用Map的形式以JSON格式输出
+    //例如: finishMap("a",2,"b",3) 输出结果为 {"a":2,"b":3}
+    public void finishMapJson(final Object... objs);
+
     //将对象以JSON格式输出
     public void finishJson(JsonConvert convert, Object obj);
+
+    //将对象数组用Map的形式以JSON格式输出
+    //例如: finishMap("a",2,"b",3) 输出结果为 {"a":2,"b":3}
+    public void finishMapJson(final JsonConvert convert, final Object... objs);
 
     //将对象以JSON格式输出
     public void finishJson(Type type, Object obj);
@@ -109,15 +121,24 @@ public interface HttpResponseDesc {
 
     //将HttpResult的结果对象以JSON格式输出
     public void finishJson(final HttpResult result);
-    
+
     //将HttpResult的结果对象以JSON格式输出
-    public void finishJson(final JsonConvert convert, final HttpResult result) ;
-    
+    public void finishJson(final JsonConvert convert, final HttpResult result);
+
     //将指定字符串以响应结果输出
     public void finish(String obj);
 
     //以指定响应码附带内容输出, message 可以为null
     public void finish(int status, String message);
+
+    //将结果对象输出
+    public void finish(final Object obj);
+
+    //将结果对象输出
+    public void finish(final Convert convert, final Object obj);
+
+    //将结果对象输出
+    public void finish(final Convert convert, final Type type, final Object obj);
 
     //以304状态码输出
     public void finish304();
