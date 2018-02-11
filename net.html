@@ -690,8 +690,14 @@
     <span class="c1">//给自身发送消息, 消息类型是String或byte[]或可JavaBean对象  返回结果0表示成功，非0表示错误码</span>
     <span class="kd">public</span> <span class="n">CompletableFuture</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">&gt;</span> <span class="nf">send</span><span class="o">(</span><span class="n">Object</span> <span class="n">message</span><span class="o">);</span>
 
+    <span class="c1">//给自身发送消息, 消息类型是key-value键值对  返回结果0表示成功，非0表示错误码</span>
+    <span class="kd">public</span> <span class="n">CompletableFuture</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">&gt;</span> <span class="nf">sendMap</span><span class="o">(</span><span class="n">Object</span><span class="o">...</span> <span class="n">messages</span><span class="o">);</span>
+
     <span class="c1">//给自身发送消息, 消息类型是String或byte[]或可JavaBean对象  返回结果0表示成功，非0表示错误码</span>
     <span class="kd">public</span> <span class="n">CompletableFuture</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">&gt;</span> <span class="nf">send</span><span class="o">(</span><span class="n">Object</span> <span class="n">message</span><span class="o">,</span> <span class="kt">boolean</span> <span class="n">last</span><span class="o">);</span>
+
+    <span class="c1">//给自身发送消息, 消息类型是key-value键值对  返回结果0表示成功，非0表示错误码</span>
+    <span class="kd">public</span> <span class="n">CompletableFuture</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">&gt;</span> <span class="nf">sendMap</span><span class="o">(</span><span class="kt">boolean</span> <span class="n">last</span><span class="o">,</span> <span class="n">Object</span><span class="o">...</span> <span class="n">messages</span><span class="o">);</span>
 
     <span class="c1">//给自身发送消息, 消息类型是JavaBean对象  返回结果0表示成功，非0表示错误码</span>
     <span class="kd">public</span> <span class="n">CompletableFuture</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">&gt;</span> <span class="nf">send</span><span class="o">(</span><span class="n">Convert</span> <span class="n">convert</span><span class="o">,</span> <span class="n">Object</span> <span class="n">message</span><span class="o">);</span>
@@ -703,13 +709,49 @@
     <span class="kd">public</span> <span class="n">CompletableFuture</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">&gt;</span> <span class="nf">sendMessage</span><span class="o">(</span><span class="n">Object</span> <span class="n">message</span><span class="o">,</span> <span class="n">G</span><span class="o">...</span> <span class="n">userids</span><span class="o">);</span>
 
     <span class="c1">//给指定userid的WebSocket节点发送 二进制消息/文本消息/JavaBean对象消息  返回结果0表示成功，非0表示错误码</span>
+    <span class="kd">public</span> <span class="n">CompletableFuture</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">&gt;</span> <span class="nf">sendMessage</span><span class="o">(</span><span class="n">Object</span> <span class="n">message</span><span class="o">,</span> <span class="n">Stream</span><span class="o">&lt;</span><span class="n">G</span><span class="o">&gt;</span> <span class="n">userids</span><span class="o">);</span>
+
+    <span class="c1">//给指定userid的WebSocket节点发送 二进制消息/文本消息/JavaBean对象消息  返回结果0表示成功，非0表示错误码</span>
+    <span class="kd">public</span> <span class="n">CompletableFuture</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">&gt;</span> <span class="nf">sendMessage</span><span class="o">(</span><span class="n">Convert</span> <span class="n">convert</span><span class="o">,</span> <span class="n">Object</span> <span class="n">message</span><span class="o">,</span> <span class="n">G</span><span class="o">...</span> <span class="n">userids</span><span class="o">);</span>
+
+    <span class="c1">//给指定userid的WebSocket节点发送 二进制消息/文本消息/JavaBean对象消息  返回结果0表示成功，非0表示错误码</span>
+    <span class="kd">public</span> <span class="n">CompletableFuture</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">&gt;</span> <span class="nf">sendMessage</span><span class="o">(</span><span class="n">Convert</span> <span class="n">convert</span><span class="o">,</span> <span class="n">Object</span> <span class="n">message</span><span class="o">,</span> <span class="n">Stream</span><span class="o">&lt;</span><span class="n">G</span><span class="o">&gt;</span> <span class="n">userids</span><span class="o">);</span>
+
+    <span class="c1">//给指定userid的WebSocket节点发送 二进制消息/文本消息/JavaBean对象消息  返回结果0表示成功，非0表示错误码</span>
     <span class="kd">public</span> <span class="n">CompletableFuture</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">&gt;</span> <span class="nf">sendMessage</span><span class="o">(</span><span class="n">Object</span> <span class="n">message</span><span class="o">,</span> <span class="kt">boolean</span> <span class="n">last</span><span class="o">,</span> <span class="n">G</span><span class="o">...</span> <span class="n">userids</span><span class="o">);</span>
+
+    <span class="c1">//给指定userid的WebSocket节点发送 二进制消息/文本消息/JavaBean对象消息  返回结果0表示成功，非0表示错误码</span>
+    <span class="kd">public</span> <span class="n">CompletableFuture</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">&gt;</span> <span class="nf">sendMessage</span><span class="o">(</span><span class="n">Object</span> <span class="n">message</span><span class="o">,</span> <span class="kt">boolean</span> <span class="n">last</span><span class="o">,</span> <span class="n">Stream</span><span class="o">&lt;</span><span class="n">G</span><span class="o">&gt;</span> <span class="n">userids</span><span class="o">);</span>
+
+    <span class="c1">//给指定userid的WebSocket节点发送 二进制消息/文本消息/JavaBean对象消息  返回结果0表示成功，非0表示错误码</span>
+    <span class="kd">public</span> <span class="n">CompletableFuture</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">&gt;</span> <span class="nf">sendMessage</span><span class="o">(</span><span class="n">Convert</span> <span class="n">convert</span><span class="o">,</span> <span class="n">Object</span> <span class="n">message</span><span class="o">,</span> <span class="kt">boolean</span> <span class="n">last</span><span class="o">,</span> <span class="n">G</span><span class="o">...</span> <span class="n">userids</span><span class="o">);</span>
+
+    <span class="c1">//给指定userid的WebSocket节点发送 二进制消息/文本消息/JavaBean对象消息  返回结果0表示成功，非0表示错误码</span>
+    <span class="kd">public</span> <span class="n">CompletableFuture</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">&gt;</span> <span class="nf">sendMessage</span><span class="o">(</span><span class="n">Convert</span> <span class="n">convert</span><span class="o">,</span> <span class="n">Object</span> <span class="n">message</span><span class="o">,</span> <span class="kt">boolean</span> <span class="n">last</span><span class="o">,</span> <span class="n">Stream</span><span class="o">&lt;</span><span class="n">G</span><span class="o">&gt;</span> <span class="n">userids</span><span class="o">);</span>
 
     <span class="c1">//给所有人广播消息, 返回结果0表示成功，非0表示错误码</span>
     <span class="kd">public</span> <span class="n">CompletableFuture</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">&gt;</span> <span class="nf">broadcastMessage</span><span class="o">(</span><span class="kd">final</span> <span class="n">Object</span> <span class="n">message</span><span class="o">);</span>
 
     <span class="c1">//给所有人广播消息, 返回结果0表示成功，非0表示错误码</span>
+    <span class="kd">public</span> <span class="n">CompletableFuture</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">&gt;</span> <span class="nf">broadcastMessage</span><span class="o">(</span><span class="kd">final</span> <span class="n">Convert</span> <span class="n">convert</span><span class="o">,</span> <span class="kd">final</span> <span class="n">Object</span> <span class="n">message</span><span class="o">);</span>
+
+    <span class="c1">//给符合条件的人群广播消息, 返回结果0表示成功，非0表示错误码</span>
+    <span class="kd">public</span> <span class="n">CompletableFuture</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">&gt;</span> <span class="nf">broadcastMessage</span><span class="o">(</span><span class="kd">final</span> <span class="n">WebSocketRange</span> <span class="n">wsrange</span><span class="o">,</span> <span class="kd">final</span> <span class="n">Object</span> <span class="n">message</span><span class="o">);</span>
+
+    <span class="c1">//给符合条件的人群广播消息, 返回结果0表示成功，非0表示错误码</span>
+    <span class="kd">public</span> <span class="n">CompletableFuture</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">&gt;</span> <span class="nf">broadcastMessage</span><span class="o">(</span><span class="kd">final</span> <span class="n">WebSocketRange</span> <span class="n">wsrange</span><span class="o">,</span> <span class="kd">final</span> <span class="n">Convert</span> <span class="n">convert</span><span class="o">,</span> <span class="kd">final</span> <span class="n">Object</span> <span class="n">message</span><span class="o">);</span>
+
+    <span class="c1">//给所有人广播消息, 返回结果0表示成功，非0表示错误码</span>
     <span class="kd">public</span> <span class="n">CompletableFuture</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">&gt;</span> <span class="nf">broadcastMessage</span><span class="o">(</span><span class="kd">final</span> <span class="n">Object</span> <span class="n">message</span><span class="o">,</span> <span class="kt">boolean</span> <span class="n">last</span><span class="o">);</span>
+
+    <span class="c1">//给所有人广播消息, 返回结果0表示成功，非0表示错误码</span>
+    <span class="kd">public</span> <span class="n">CompletableFuture</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">&gt;</span> <span class="nf">broadcastMessage</span><span class="o">(</span><span class="kd">final</span> <span class="n">Convert</span> <span class="n">convert</span><span class="o">,</span> <span class="kd">final</span> <span class="n">Object</span> <span class="n">message</span><span class="o">,</span> <span class="kt">boolean</span> <span class="n">last</span><span class="o">);</span>
+
+    <span class="c1">//给符合条件的人群广播消息, 返回结果0表示成功，非0表示错误码</span>
+    <span class="kd">public</span> <span class="n">CompletableFuture</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">&gt;</span> <span class="nf">broadcastMessage</span><span class="o">(</span><span class="kd">final</span> <span class="n">WebSocketRange</span> <span class="n">wsrange</span><span class="o">,</span> <span class="kd">final</span> <span class="n">Object</span> <span class="n">message</span><span class="o">,</span> <span class="kt">boolean</span> <span class="n">last</span><span class="o">);</span>
+
+    <span class="c1">//给符合条件的人群广播消息, 返回结果0表示成功，非0表示错误码</span>
+    <span class="kd">public</span> <span class="n">CompletableFuture</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">&gt;</span> <span class="nf">broadcastMessage</span><span class="o">(</span><span class="kd">final</span> <span class="n">WebSocketRange</span> <span class="n">wsrange</span><span class="o">,</span> <span class="kd">final</span> <span class="n">Convert</span> <span class="n">convert</span><span class="o">,</span> <span class="kd">final</span> <span class="n">Object</span> <span class="n">message</span><span class="o">,</span> <span class="kt">boolean</span> <span class="n">last</span><span class="o">);</span>
 
     <span class="c1">//获取用户在线的SNCP节点地址列表，不是分布式则返回元素数量为1，且元素值为null的列表</span>
     <span class="kd">public</span> <span class="n">CompletableFuture</span><span class="o">&lt;</span><span class="n">Collection</span><span class="o">&lt;</span><span class="n">InetSocketAddress</span><span class="o">&gt;&gt;</span> <span class="nf">getRpcNodeAddresses</span><span class="o">(</span><span class="kd">final</span> <span class="n">Serializable</span> <span class="n">userid</span><span class="o">);</span>
@@ -726,25 +768,33 @@
     <span class="c1">//发送PONG消息，附带其他信息  返回结果0表示成功，非0表示错误码</span>
     <span class="kd">public</span> <span class="n">CompletableFuture</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">&gt;</span> <span class="nf">sendPong</span><span class="o">(</span><span class="kt">byte</span><span class="o">[]</span> <span class="n">data</span><span class="o">);</span>
 
+    <span class="c1">//强制关闭用户的所有WebSocket</span>
+    <span class="kd">public</span> <span class="n">CompletableFuture</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">&gt;</span> <span class="nf">forceCloseWebSocket</span><span class="o">(</span><span class="n">Serializable</span> <span class="n">userid</span><span class="o">);</span>
+
+    <span class="c1">//更改本WebSocket的userid</span>
+    <span class="kd">public</span> <span class="n">CompletableFuture</span><span class="o">&lt;</span><span class="n">Void</span><span class="o">&gt;</span> <span class="nf">changeUserid</span><span class="o">(</span><span class="kd">final</span> <span class="n">G</span> <span class="n">newuserid</span><span class="o">);</span>
+
 
     <span class="c1">//获取指定userid的WebSocket数组, 没有返回null  此方法用于单用户多连接模式</span>
     <span class="kd">protected</span> <span class="n">Stream</span><span class="o">&lt;</span><span class="n">WebSocket</span><span class="o">&gt;</span> <span class="nf">getLocalWebSockets</span><span class="o">(</span><span class="n">G</span> <span class="n">userid</span><span class="o">);</span>
 
-
     <span class="c1">//获取指定userid的WebSocket数组, 没有返回null 此方法用于单用户单连接模式</span>
     <span class="kd">protected</span> <span class="n">WebSocket</span> <span class="nf">findLocalWebSocket</span><span class="o">(</span><span class="n">G</span> <span class="n">userid</span><span class="o">);</span>
-
 
     <span class="c1">//获取当前进程节点所有在线的WebSocket</span>
     <span class="kd">protected</span> <span class="n">Collection</span><span class="o">&lt;</span><span class="n">WebSocket</span><span class="o">&gt;</span> <span class="nf">getLocalWebSockets</span><span class="o">();</span>
 
+    <span class="c1">//获取ByteBuffer资源池</span>
+    <span class="kd">protected</span> <span class="n">Supplier</span><span class="o">&lt;</span><span class="n">ByteBuffer</span><span class="o">&gt;</span> <span class="nf">getByteBufferSupplier</span><span class="o">();</span>
 
     <span class="c1">//返回sessionid, null表示连接不合法或异常,默认实现是request.sessionid(true)，通常需要重写该方法</span>
     <span class="kd">protected</span> <span class="n">CompletableFuture</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span> <span class="nf">onOpen</span><span class="o">(</span><span class="kd">final</span> <span class="n">HttpRequest</span> <span class="n">request</span><span class="o">);</span>
 
-
     <span class="c1">//创建userid， null表示异常， 必须实现该方法</span>
-    <span class="kd">protected</span> <span class="kd">abstract</span> <span class="n">G</span> <span class="nf">createUserid</span><span class="o">();</span>
+    <span class="kd">protected</span> <span class="kd">abstract</span> <span class="n">CompletableFuture</span><span class="o">&lt;</span><span class="n">G</span><span class="o">&gt;</span> <span class="nf">createUserid</span><span class="o">();</span>
+    
+    <span class="c1">//WebSocket.broadcastMessage时的过滤条件</span>
+    <span class="kd">protected</span> <span class="kt">boolean</span> <span class="nf">predicate</span><span class="o">(</span><span class="n">WebSocketRange</span> <span class="n">wsrange</span><span class="o">);</span>
 
     <span class="c1">//WebSokcet连接成功后的回调方法</span>
     <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onConnected</span><span class="o">();</span>
@@ -777,7 +827,7 @@
     <span class="kd">public</span> <span class="kt">void</span> <span class="nf">setAttribute</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">,</span> <span class="n">Object</span> <span class="n">value</span><span class="o">);</span>
 
     <span class="c1">//获取当前WebSocket所属的userid</span>
-    <span class="kd">public</span> <span class="n">G</span> <span class="nf">userid</span><span class="o">();</span>
+    <span class="kd">public</span> <span class="n">G</span> <span class="nf">getUserid</span><span class="o">();</span>
 
     <span class="c1">//获取当前WebSocket的会话ID， 不会为null</span>
     <span class="kd">public</span> <span class="n">Serializable</span> <span class="nf">getSessionid</span><span class="o">();</span>
@@ -794,10 +844,19 @@
     <span class="c1">//获取最后一次发送消息的时间</span>
     <span class="kd">public</span> <span class="kt">long</span> <span class="nf">getLastSendTime</span><span class="o">();</span>
 
+    <span class="c1">//获取最后一次读取消息的时间</span>
+    <span class="kd">public</span> <span class="kt">long</span> <span class="nf">getLastReadTime</span><span class="o">();</span>
+
+    <span class="c1">//获取最后一次ping的时间</span>
+    <span class="kd">public</span> <span class="kt">long</span> <span class="nf">getLastPingTime</span><span class="o">();</span>
+
     <span class="c1">//显式地关闭WebSocket</span>
     <span class="kd">public</span> <span class="kt">void</span> <span class="nf">close</span><span class="o">();</span>
+
+    <span class="c1">//WebSocket是否已关闭</span>
+    <span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">isClosed</span><span class="o">();</span>
 <span class="o">}</span>
-                </pre></div>
+</pre></div>
 
             <h3><a id="net_sncp" class="anchor" href="#" aria-hidden="true"></a>SNCP 协议</h3>
             <p>
