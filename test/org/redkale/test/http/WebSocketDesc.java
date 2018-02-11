@@ -7,8 +7,10 @@ package org.redkale.test.http;
 
 import java.io.*;
 import java.net.*;
+import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 import org.redkale.convert.Convert;
 import org.redkale.net.http.*;
@@ -22,8 +24,14 @@ public interface WebSocketDesc<G, T> {
     //给自身发送消息, 消息类型是String或byte[]或可JavaBean对象  返回结果0表示成功，非0表示错误码
     public CompletableFuture<Integer> send(Object message);
 
+    //给自身发送消息, 消息类型是key-value键值对  返回结果0表示成功，非0表示错误码
+    public CompletableFuture<Integer> sendMap(Object... messages);
+
     //给自身发送消息, 消息类型是String或byte[]或可JavaBean对象  返回结果0表示成功，非0表示错误码
     public CompletableFuture<Integer> send(Object message, boolean last);
+
+    //给自身发送消息, 消息类型是key-value键值对  返回结果0表示成功，非0表示错误码
+    public CompletableFuture<Integer> sendMap(boolean last, Object... messages);
 
     //给自身发送消息, 消息类型是JavaBean对象  返回结果0表示成功，非0表示错误码
     public CompletableFuture<Integer> send(Convert convert, Object message);
@@ -35,13 +43,49 @@ public interface WebSocketDesc<G, T> {
     public CompletableFuture<Integer> sendMessage(Object message, G... userids);
 
     //给指定userid的WebSocket节点发送 二进制消息/文本消息/JavaBean对象消息  返回结果0表示成功，非0表示错误码
+    public CompletableFuture<Integer> sendMessage(Object message, Stream<G> userids);
+
+    //给指定userid的WebSocket节点发送 二进制消息/文本消息/JavaBean对象消息  返回结果0表示成功，非0表示错误码
+    public CompletableFuture<Integer> sendMessage(Convert convert, Object message, G... userids);
+
+    //给指定userid的WebSocket节点发送 二进制消息/文本消息/JavaBean对象消息  返回结果0表示成功，非0表示错误码
+    public CompletableFuture<Integer> sendMessage(Convert convert, Object message, Stream<G> userids);
+
+    //给指定userid的WebSocket节点发送 二进制消息/文本消息/JavaBean对象消息  返回结果0表示成功，非0表示错误码
     public CompletableFuture<Integer> sendMessage(Object message, boolean last, G... userids);
+
+    //给指定userid的WebSocket节点发送 二进制消息/文本消息/JavaBean对象消息  返回结果0表示成功，非0表示错误码
+    public CompletableFuture<Integer> sendMessage(Object message, boolean last, Stream<G> userids);
+
+    //给指定userid的WebSocket节点发送 二进制消息/文本消息/JavaBean对象消息  返回结果0表示成功，非0表示错误码
+    public CompletableFuture<Integer> sendMessage(Convert convert, Object message, boolean last, G... userids);
+
+    //给指定userid的WebSocket节点发送 二进制消息/文本消息/JavaBean对象消息  返回结果0表示成功，非0表示错误码
+    public CompletableFuture<Integer> sendMessage(Convert convert, Object message, boolean last, Stream<G> userids);
 
     //给所有人广播消息, 返回结果0表示成功，非0表示错误码
     public CompletableFuture<Integer> broadcastMessage(final Object message);
 
     //给所有人广播消息, 返回结果0表示成功，非0表示错误码
+    public CompletableFuture<Integer> broadcastMessage(final Convert convert, final Object message);
+
+    //给符合条件的人群广播消息, 返回结果0表示成功，非0表示错误码
+    public CompletableFuture<Integer> broadcastMessage(final WebSocketRange wsrange, final Object message);
+
+    //给符合条件的人群广播消息, 返回结果0表示成功，非0表示错误码
+    public CompletableFuture<Integer> broadcastMessage(final WebSocketRange wsrange, final Convert convert, final Object message);
+
+    //给所有人广播消息, 返回结果0表示成功，非0表示错误码
     public CompletableFuture<Integer> broadcastMessage(final Object message, boolean last);
+
+    //给所有人广播消息, 返回结果0表示成功，非0表示错误码
+    public CompletableFuture<Integer> broadcastMessage(final Convert convert, final Object message, boolean last);
+
+    //给符合条件的人群广播消息, 返回结果0表示成功，非0表示错误码
+    public CompletableFuture<Integer> broadcastMessage(final WebSocketRange wsrange, final Object message, boolean last);
+
+    //给符合条件的人群广播消息, 返回结果0表示成功，非0表示错误码
+    public CompletableFuture<Integer> broadcastMessage(final WebSocketRange wsrange, final Convert convert, final Object message, boolean last);
 
     //获取用户在线的SNCP节点地址列表，不是分布式则返回元素数量为1，且元素值为null的列表
     public CompletableFuture<Collection<InetSocketAddress>> getRpcNodeAddresses(final Serializable userid);
@@ -58,25 +102,36 @@ public interface WebSocketDesc<G, T> {
     //发送PONG消息，附带其他信息  返回结果0表示成功，非0表示错误码
     public CompletableFuture<Integer> sendPong(byte[] data);
 
+    //强制关闭用户的所有WebSocket
+    public CompletableFuture<Integer> forceCloseWebSocket(Serializable userid);
+
+    //更改本WebSocket的userid
+    public CompletableFuture<Void> changeUserid(final G newuserid);
+
 
     //获取指定userid的WebSocket数组, 没有返回null  此方法用于单用户多连接模式
     /* protected */    Stream<WebSocket> getLocalWebSockets(G userid);
 
 
     //获取指定userid的WebSocket数组, 没有返回null 此方法用于单用户单连接模式
-    /* protected */    WebSocket findLocalWebSocket(G userid);
+    /* protected */ WebSocket findLocalWebSocket(G userid);
 
 
     //获取当前进程节点所有在线的WebSocket
     /* protected */ Collection<WebSocket> getLocalWebSockets();
 
+    //获取ByteBuffer资源池
+    /* protected */ Supplier<ByteBuffer> getByteBufferSupplier();
 
     //返回sessionid, null表示连接不合法或异常,默认实现是request.sessionid(true)，通常需要重写该方法
     /* protected */ CompletableFuture<String> onOpen(final HttpRequest request);
 
 
     //创建userid， null表示异常， 必须实现该方法
-    /* protected abstract */    G createUserid();
+    /* protected abstract */    CompletableFuture<G> createUserid();
+    
+    //WebSocket.broadcastMessage时的过滤条件
+    /* protected */ boolean predicate(WebSocketRange wsrange);
 
     //WebSokcet连接成功后的回调方法
     public void onConnected();
@@ -109,7 +164,7 @@ public interface WebSocketDesc<G, T> {
     public void setAttribute(String name, Object value);
 
     //获取当前WebSocket所属的userid
-    public G userid();
+    public G getUserid();
 
     //获取当前WebSocket的会话ID， 不会为null
     public Serializable getSessionid();
@@ -126,6 +181,15 @@ public interface WebSocketDesc<G, T> {
     //获取最后一次发送消息的时间
     public long getLastSendTime();
 
+    //获取最后一次读取消息的时间
+    public long getLastReadTime();
+
+    //获取最后一次ping的时间
+    public long getLastPingTime();
+
     //显式地关闭WebSocket
     public void close();
+
+    //WebSocket是否已关闭
+    public boolean isClosed();
 }
