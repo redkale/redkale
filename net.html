@@ -37,7 +37,7 @@
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;7、内置WebSocket的集群与组功能，且提供伪WebSocket连接功能。<br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;8、HttpResponse只能异步输出。<br/>
             </p> 
-            <p id="baseservlet">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;编写Redkale的HttpServlet与 JSR 340中的javax.servlet.http.HttpServlet 基本相同，只需继承 org.redkale.net.http.HttpServlet, 比较好的习惯是一个项目先定义一个项目级的BaseServlet类，这样方便以后加入类似javax.servlet.Filter的功能。 <br/> <br/>
+            <p id="baseservlet">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;编写Redkale的HttpServlet与 JSR 340中的javax.servlet.http.HttpServlet 基本相同，只需继承 org.redkale.net.http.HttpServlet, 比较好的习惯是一个项目先定义一个项目级的BaseServlet类。 <br/> <br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;一个典型的BaseSerlvet实现: 
             </p> 
             <div class="highlight"><pre><span></span><span class="nd">@HttpUserType</span><span class="o">(</span><span class="n">UserInfo</span><span class="o">.</span><span class="na">class</span><span class="o">)</span>
@@ -169,7 +169,7 @@
 
             <p id="net_apidoc">&nbsp;&nbsp;<b> API Doc</b> </p>
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在小型互联网公司里，基本是追求敏捷开发，很少先花时间设计接口文档再进行开发，通常都是直接进行数据库设计和开发，开发完后需要开发人员需要编写接口文档提供给前端人员开发。为了减少文档的编写工作量和强制开发人员对接口进行注释，Redkale提供了apidoc命令，apidoc遍历当前进程中所有标记@WebServlet的可用HttpServlet，根据Servlet中@HttpMapping、@HttpParam生成json对象并输出文件。在<b>系统运行</b>时执行apidoc命令会在进程根目录下生成apidoc.json、apidoc.html文件。apidoc.html的模板可以定制， 只需在conf/目录下存放一个 <b>apidoc-template.html</b> 文件，且文件中必须包含关键字 <b>${content}</b> 即可实现接口文档的自定义。<br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;为了能正确显示接口文档，开发人员需要在编写HttpServlet时，在每个@HttpMapping方法上加上comment属性和@HttpParam注解, 一个方法上可以注解多个@HttpParam, 如上面的 <a href="#userservlet">UserServlet</a> 。RestServlet是由RestService自动生成，@HttpMapping、@HttpParam在REST组件中存在对应的注解@RestMapping、@RestParam，因此在编写RestService时需要加上@RestMapping、@RestParam且加上comment属性。如范例: <a href="service.html#helloservice" target="_blank">HelloService</a> 。<br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;为了能正确显示接口文档，开发人员需要在编写HttpServlet时，在每个@HttpMapping方法上添加comment属性和@HttpParam注解, 一个方法上可以注解多个@HttpParam, 如上面的 <a href="#userservlet">UserServlet</a> 。RestServlet是由RestService自动生成，@HttpMapping、@HttpParam在REST组件中存在对应的注解@RestMapping、@RestParam，因此在编写RestService时需要加上@RestMapping、@RestParam且加上comment属性。如范例: <a href="service.html#helloservice" target="_blank">HelloService</a> 。<br/>
             </p>
 
             <p id="net_ws">&nbsp;&nbsp;<b> WebSokcet 服务</b> </p>
@@ -208,7 +208,7 @@
             <span class="kd">private</span> <span class="n">UserInfo</span> <span class="n">user</span><span class="o">;</span>
 
             <span class="nd">@Override</span>
-            <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onMessage</span><span class="o">(</span><span class="n">ChatMessage</span> <span class="n">message</span><span class="o">,</span> <span class="kt">boolean</span> <span class="n">last</span><span class="o">)</span> <span class="o">{</span> <span class="c1">// text 接收的格式:  {"receiveid":200000001, "content":"Hi Redkale!"}</span>
+            <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onMessage</span><span class="o">(</span><span class="n">ChatMessage</span> <span class="n">message</span><span class="o">,</span> <span class="kt">boolean</span> <span class="n">last</span><span class="o">)</span> <span class="o">{</span> <span class="c1">// text 接收的格式: {"receiveid":200000001, "content":"Hi Redkale!"}</span>
                 <span class="n">message</span><span class="o">.</span><span class="na">sendid</span> <span class="o">=</span> <span class="n">user</span><span class="o">.</span><span class="na">getUserid</span><span class="o">();</span> <span class="c1">//将当前用户设为消息的发送方</span>
                 <span class="n">message</span><span class="o">.</span><span class="na">sendtime</span> <span class="o">=</span> <span class="n">System</span><span class="o">.</span><span class="na">currentTimeMillis</span><span class="o">();</span> <span class="c1">//设置消息发送时间</span>
                 <span class="c1">//给接收方发送消息, 即使接收方在其他WebSocket进程节点上有链接，Redkale也会自动发送到其他链接进程节点上。</span>
@@ -223,7 +223,8 @@
 
             <span class="nd">@Override</span>
             <span class="kd">public</span> <span class="n">CompletableFuture</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span> <span class="nf">onOpen</span><span class="o">(</span><span class="n">HttpRequest</span> <span class="n">request</span><span class="o">)</span> <span class="o">{</span>
-                <span class="k">return</span> <span class="n">CompletableFuture</span><span class="o">.</span><span class="na">completedFuture</span><span class="o">(</span><span class="n">request</span><span class="o">.</span><span class="na">getSessionid</span><span class="o">(</span><span class="kc">false</span><span class="o">));</span> <span class="c1">//以request中的sessionid字符串作为WebSocket的sessionid</span>
+                <span class="c1">//以request中的sessionid字符串作为WebSocket的sessionid</span>
+                <span class="k">return</span> <span class="n">CompletableFuture</span><span class="o">.</span><span class="na">completedFuture</span><span class="o">(</span><span class="n">request</span><span class="o">.</span><span class="na">getSessionid</span><span class="o">(</span><span class="kc">false</span><span class="o">));</span> 
             <span class="o">}</span>
 
         <span class="o">};</span>
