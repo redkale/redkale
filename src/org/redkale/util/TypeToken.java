@@ -98,23 +98,29 @@ public abstract class TypeToken<T> {
     public static Type getGenericType(final Type type, final Type declaringClass) {
         if (type == null || declaringClass == null) return type;
         if (type instanceof TypeVariable) {
+            Type superType = null;
+            Class declaringClass0 = null;
             if (declaringClass instanceof Class) {
-                final Class declaringClass0 = (Class) declaringClass;
-                Type superType = declaringClass0.getGenericSuperclass();
+                declaringClass0 = (Class) declaringClass;
+                superType = declaringClass0.getGenericSuperclass();
                 while (superType instanceof Class && superType != Object.class) superType = ((Class) superType).getGenericSuperclass();
-                if (superType instanceof ParameterizedType) {
-                    ParameterizedType superPT = (ParameterizedType) superType;
-                    Type[] atas = superPT.getActualTypeArguments();
-                    Class ss = declaringClass0;
-                    TypeVariable[] asts = ss.getTypeParameters();
-                    while (atas.length != asts.length && ss != Object.class) {
-                        ss = ss.getSuperclass();
-                        asts = ss.getTypeParameters();
-                    }
-                    if (atas.length == asts.length) {
-                        for (int i = 0; i < asts.length; i++) {
-                            if (asts[i] == type) return atas[i];
-                        }
+            } else if (declaringClass instanceof ParameterizedType) {
+                superType = declaringClass;
+                Type rawType = ((ParameterizedType) declaringClass).getRawType();
+                if (rawType instanceof Class) declaringClass0 = (Class) rawType;
+            }
+            if (declaringClass0 != null && superType instanceof ParameterizedType) {
+                ParameterizedType superPT = (ParameterizedType) superType;
+                Type[] atas = superPT.getActualTypeArguments();
+                Class ss = declaringClass0;
+                TypeVariable[] asts = ss.getTypeParameters();
+                while (atas.length != asts.length && ss != Object.class) {
+                    ss = ss.getSuperclass();
+                    asts = ss.getTypeParameters();
+                }
+                if (atas.length == asts.length) {
+                    for (int i = 0; i < asts.length; i++) {
+                        if (asts[i] == type) return atas[i];
                     }
                 }
             }
