@@ -199,7 +199,7 @@
             <br/>
 
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Convert 支持带参数构造函数。</p>
-            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1. <b>public</b> 带参数的构造函数加上 @java.beans.ConstructorProperties 注解：</p>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1. <b>public</b> 带参数的构造函数加上 @ConstructorParameters 注解：</p>
             <div class="highlight"><pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">UserRecord</span> <span class="o">{</span>
 
     <span class="kd">private</span> <span class="kt">int</span> <span class="n">userid</span><span class="o">;</span>
@@ -208,7 +208,7 @@
 
     <span class="kd">private</span> <span class="n">String</span> <span class="n">password</span> <span class="o">=</span> <span class="s">&quot;&quot;</span><span class="o">;</span>
 
-    <span class="nd">@java.beans.ConstructorProperties</span><span class="o">({</span><span class="s">&quot;userid&quot;</span><span class="o">,</span> <span class="s">&quot;username&quot;</span><span class="o">,</span> <span class="s">&quot;password&quot;</span><span class="o">})</span>
+    <span class="nd">@ConstructorParameters</span><span class="o">({</span><span class="s">&quot;userid&quot;</span><span class="o">,</span> <span class="s">&quot;username&quot;</span><span class="o">,</span> <span class="s">&quot;password&quot;</span><span class="o">})</span>
     <span class="kd">public</span> <span class="nf">UserRecord</span><span class="o">(</span><span class="kt">int</span> <span class="n">userid</span><span class="o">,</span> <span class="n">String</span> <span class="n">username</span><span class="o">,</span> <span class="n">String</span> <span class="n">password</span><span class="o">)</span> <span class="o">{</span>
         <span class="k">this</span><span class="o">.</span><span class="na">userid</span> <span class="o">=</span> <span class="n">userid</span><span class="o">;</span>
         <span class="k">this</span><span class="o">.</span><span class="na">username</span> <span class="o">=</span> <span class="n">username</span><span class="o">;</span>
@@ -266,7 +266,7 @@
     <span class="kd">private</span> <span class="kd">static</span> <span class="n">Creator</span><span class="o">&lt;</span><span class="n">UserRecord</span><span class="o">&gt;</span> <span class="nf">creator</span><span class="o">()</span> <span class="o">{</span>
         <span class="k">return</span> <span class="k">new</span> <span class="n">Creator</span><span class="o">&lt;</span><span class="n">UserRecord</span><span class="o">&gt;()</span> <span class="o">{</span>
             <span class="nd">@Override</span>
-            <span class="nd">@Creator.ConstructorParameters</span><span class="o">({</span><span class="s">&quot;userid&quot;</span><span class="o">,</span> <span class="s">&quot;username&quot;</span><span class="o">,</span> <span class="s">&quot;password&quot;</span><span class="o">})</span> <span class="c1">//带参数的构造函数必须有ConstructorParameters注解</span>
+            <span class="nd">@ConstructorParameters</span><span class="o">({</span><span class="s">&quot;userid&quot;</span><span class="o">,</span> <span class="s">&quot;username&quot;</span><span class="o">,</span> <span class="s">&quot;password&quot;</span><span class="o">})</span> <span class="c1">//带参数的构造函数必须有ConstructorParameters注解</span>
             <span class="kd">public</span> <span class="n">UserRecord</span> <span class="nf">create</span><span class="o">(</span><span class="n">Object</span><span class="o">...</span> <span class="n">params</span><span class="o">)</span> <span class="o">{</span>
                 <span class="k">return</span> <span class="k">new</span> <span class="nf">UserRecord</span><span class="o">((</span><span class="n">params</span><span class="o">[</span><span class="mi">0</span><span class="o">]</span> <span class="o">==</span> <span class="kc">null</span> <span class="o">?</span> <span class="mi">0</span> <span class="o">:</span> <span class="o">(</span><span class="n">Integer</span><span class="o">)</span> <span class="n">params</span><span class="o">[</span><span class="mi">0</span><span class="o">]),</span> <span class="o">(</span><span class="n">String</span><span class="o">)</span> <span class="n">params</span><span class="o">[</span><span class="mi">1</span><span class="o">],</span> <span class="o">(</span><span class="n">String</span><span class="o">)</span> <span class="n">params</span><span class="o">[</span><span class="mi">2</span><span class="o">]);</span>
             <span class="o">}</span>
@@ -274,7 +274,7 @@
     <span class="o">}</span>
 <span class="o">}</span>
                 </pre></div>
-            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;通常JavaBean类默认有个public空参数的构造函数，因此大部分情况下不要自定义Creator，其实只要不是private的空参数构造函数Convert都能自动支持(其他的框架都仅支持public的构造函数)，只有仅含private的构造函数才需要自定义Creator。带参数的构造函数就需要标记@java.beans.ConstructorProperties，常见于Immutable Object。<br/>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;通常JavaBean类默认有个public空参数的构造函数，因此大部分情况下不要自定义Creator，其实只要不是private的空参数构造函数Convert都能自动支持(其他的框架都仅支持public的构造函数)，只有仅含private的构造函数才需要自定义Creator。带参数的构造函数就需要标记@ConstructorParameters，常见于Immutable Object。<br/>
             <br/>
 
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Convert 支持自定义Decode、Encode。</p>
