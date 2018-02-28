@@ -18,6 +18,7 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 import java.util.logging.*;
 import javax.annotation.Resource;
+import javax.net.ssl.SSLContext;
 import javax.xml.parsers.*;
 import org.redkale.boot.ClassFilter.FilterEntry;
 import org.redkale.convert.Convert;
@@ -313,7 +314,7 @@ public final class Application {
                     return true;
                 });
         }
-        this.sncpTransportFactory = TransportFactory.create(transportExec, transportPool, transportGroup, readTimeoutSecond, writeTimeoutSecond, strategy);
+        this.sncpTransportFactory = TransportFactory.create(transportExec, transportPool, transportGroup, (SSLContext) null, readTimeoutSecond, writeTimeoutSecond, strategy);
         DefaultAnyValue tarnsportConf = DefaultAnyValue.create(TransportFactory.NAME_PINGINTERVAL, System.getProperty("net.transport.pinginterval", "30"));
         this.sncpTransportFactory.init(tarnsportConf, Sncp.PING_BUFFER, Sncp.PONG_BUFFER.remaining());
         Thread.currentThread().setContextClassLoader(this.classLoader);
