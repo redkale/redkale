@@ -16,6 +16,7 @@ import java.util.concurrent.atomic.*;
 import java.util.function.Supplier;
 import java.util.logging.*;
 import java.util.stream.Collectors;
+import javax.net.ssl.SSLContext;
 import org.redkale.service.Service;
 import org.redkale.util.*;
 
@@ -70,6 +71,8 @@ public class TransportFactory {
     //ping的定时器
     private ScheduledThreadPoolExecutor pingScheduler;
 
+    protected SSLContext sslContext;
+
     //ping的内容
     private ByteBuffer pingBuffer;
 
@@ -80,18 +83,19 @@ public class TransportFactory {
     protected final TransportStrategy strategy;
 
     protected TransportFactory(ExecutorService executor, ObjectPool<ByteBuffer> bufferPool, AsynchronousChannelGroup channelGroup,
-        int readTimeoutSecond, int writeTimeoutSecond, final TransportStrategy strategy) {
+        SSLContext sslContext, int readTimeoutSecond, int writeTimeoutSecond, final TransportStrategy strategy) {
         this.executor = executor;
         this.bufferPool = bufferPool;
         this.channelGroup = channelGroup;
+        this.sslContext = sslContext;
         this.readTimeoutSecond = readTimeoutSecond;
         this.writeTimeoutSecond = writeTimeoutSecond;
         this.strategy = strategy;
     }
 
     protected TransportFactory(ExecutorService executor, ObjectPool<ByteBuffer> bufferPool, AsynchronousChannelGroup channelGroup,
-        int readTimeoutSecond, int writeTimeoutSecond) {
-        this(executor, bufferPool, channelGroup, readTimeoutSecond, writeTimeoutSecond, null);
+        SSLContext sslContext, int readTimeoutSecond, int writeTimeoutSecond) {
+        this(executor, bufferPool, channelGroup, sslContext, readTimeoutSecond, writeTimeoutSecond, null);
     }
 
     public void init(AnyValue conf, ByteBuffer pingBuffer, int pongLength) {
@@ -146,30 +150,44 @@ public class TransportFactory {
     }
 
     public static TransportFactory create(ExecutorService executor, ObjectPool<ByteBuffer> bufferPool, AsynchronousChannelGroup channelGroup) {
-        return new TransportFactory(executor, bufferPool, channelGroup, DEFAULT_READTIMEOUTSECOND, DEFAULT_WRITETIMEOUTSECOND, null);
+        return new TransportFactory(executor, bufferPool, channelGroup, null, DEFAULT_READTIMEOUTSECOND, DEFAULT_WRITETIMEOUTSECOND, null);
     }
 
     public static TransportFactory create(ExecutorService executor, ObjectPool<ByteBuffer> bufferPool, AsynchronousChannelGroup channelGroup,
         int readTimeoutSecond, int writeTimeoutSecond) {
-        return new TransportFactory(executor, bufferPool, channelGroup, readTimeoutSecond, writeTimeoutSecond, null);
+        return new TransportFactory(executor, bufferPool, channelGroup, null, readTimeoutSecond, writeTimeoutSecond, null);
     }
 
     public static TransportFactory create(ExecutorService executor, ObjectPool<ByteBuffer> bufferPool, AsynchronousChannelGroup channelGroup,
         int readTimeoutSecond, int writeTimeoutSecond, final TransportStrategy strategy) {
-        return new TransportFactory(executor, bufferPool, channelGroup, readTimeoutSecond, writeTimeoutSecond, strategy);
+        return new TransportFactory(executor, bufferPool, channelGroup, null, readTimeoutSecond, writeTimeoutSecond, strategy);
+    }
+
+    public static TransportFactory create(ExecutorService executor, ObjectPool<ByteBuffer> bufferPool, AsynchronousChannelGroup channelGroup, SSLContext sslContext) {
+        return new TransportFactory(executor, bufferPool, channelGroup, sslContext, DEFAULT_READTIMEOUTSECOND, DEFAULT_WRITETIMEOUTSECOND, null);
+    }
+
+    public static TransportFactory create(ExecutorService executor, ObjectPool<ByteBuffer> bufferPool, AsynchronousChannelGroup channelGroup,
+        SSLContext sslContext, int readTimeoutSecond, int writeTimeoutSecond) {
+        return new TransportFactory(executor, bufferPool, channelGroup, sslContext, readTimeoutSecond, writeTimeoutSecond, null);
+    }
+
+    public static TransportFactory create(ExecutorService executor, ObjectPool<ByteBuffer> bufferPool, AsynchronousChannelGroup channelGroup,
+        SSLContext sslContext, int readTimeoutSecond, int writeTimeoutSecond, final TransportStrategy strategy) {
+        return new TransportFactory(executor, bufferPool, channelGroup, sslContext, readTimeoutSecond, writeTimeoutSecond, strategy);
     }
 
     public Transport createTransportTCP(String name, final InetSocketAddress clientAddress, final Collection<InetSocketAddress> addresses) {
-        return new Transport(name, "TCP", "", this, this.bufferPool, this.channelGroup, clientAddress, addresses, strategy);
+        return new Transport(name, "TCP", "", this, this.bufferPool, this.channelGroup, this.sslContext, clientAddress, addresses, strategy);
     }
 
     public Transport createTransport(String name, String protocol, final InetSocketAddress clientAddress, final Collection<InetSocketAddress> addresses) {
-        return new Transport(name, protocol, "", this, this.bufferPool, this.channelGroup, clientAddress, addresses, strategy);
+        return new Transport(name, protocol, "", this, this.bufferPool, this.channelGroup, this.sslContext, clientAddress, addresses, strategy);
     }
 
     public Transport createTransport(String name, String protocol, String subprotocol,
         final InetSocketAddress clientAddress, final Collection<InetSocketAddress> addresses) {
-        return new Transport(name, protocol, subprotocol, this, this.bufferPool, this.channelGroup, clientAddress, addresses, strategy);
+        return new Transport(name, protocol, subprotocol, this, this.bufferPool, this.channelGroup, this.sslContext, clientAddress, addresses, strategy);
     }
 
     public String findGroupName(InetSocketAddress addr) {
@@ -250,14 +268,14 @@ public class TransportFactory {
         }
         if (info == null) info = new TransportGroupInfo("TCP");
         if (sncpAddress != null) addresses.remove(sncpAddress);
-        return new Transport(groups.stream().sorted().collect(Collectors.joining(";")), info.protocol, info.subprotocol, this, this.bufferPool, this.channelGroup, sncpAddress, addresses, this.strategy);
+        return new Transport(groups.stream().sorted().collect(Collectors.joining(";")), info.protocol, info.subprotocol, this, this.bufferPool, this.channelGroup, this.sslContext, sncpAddress, addresses, this.strategy);
     }
 
     private Transport loadTransport(final String groupName, InetSocketAddress sncpAddress) {
         if (groupName == null) return null;
         TransportGroupInfo info = groupInfos.get(groupName);
         if (info == null) return null;
-        return new Transport(groupName, info.protocol, info.subprotocol, this, this.bufferPool, this.channelGroup, sncpAddress, info.addresses, this.strategy);
+        return new Transport(groupName, info.protocol, info.subprotocol, this, this.bufferPool, this.channelGroup, this.sslContext, sncpAddress, info.addresses, this.strategy);
     }
 
     public ExecutorService getExecutor() {

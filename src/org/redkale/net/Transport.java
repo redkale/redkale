@@ -13,6 +13,7 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.Supplier;
 import java.util.logging.Level;
+import javax.net.ssl.SSLContext;
 import org.redkale.convert.*;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.util.*;
@@ -62,20 +63,22 @@ public final class Transport {
 
     protected final ObjectPool<ByteBuffer> bufferPool;
 
+    protected final SSLContext sslContext;
+
     //负载均衡策略
     protected final TransportStrategy strategy;
 
     protected final ConcurrentHashMap<SocketAddress, BlockingQueue<AsyncConnection>> connPool = new ConcurrentHashMap<>();
 
     protected Transport(String name, String subprotocol, TransportFactory factory, final ObjectPool<ByteBuffer> transportBufferPool,
-        final AsynchronousChannelGroup transportChannelGroup, final InetSocketAddress clientAddress,
+        final AsynchronousChannelGroup transportChannelGroup, final SSLContext sslContext, final InetSocketAddress clientAddress,
         final Collection<InetSocketAddress> addresses, final TransportStrategy strategy) {
-        this(name, DEFAULT_PROTOCOL, subprotocol, factory, transportBufferPool, transportChannelGroup, clientAddress, addresses, strategy);
+        this(name, DEFAULT_PROTOCOL, subprotocol, factory, transportBufferPool, transportChannelGroup, sslContext, clientAddress, addresses, strategy);
     }
 
     protected Transport(String name, String protocol, String subprotocol,
         final TransportFactory factory, final ObjectPool<ByteBuffer> transportBufferPool,
-        final AsynchronousChannelGroup transportChannelGroup, final InetSocketAddress clientAddress,
+        final AsynchronousChannelGroup transportChannelGroup, final SSLContext sslContext, final InetSocketAddress clientAddress,
         final Collection<InetSocketAddress> addresses, final TransportStrategy strategy) {
         this.name = name;
         this.subprotocol = subprotocol == null ? "" : subprotocol.trim();
@@ -84,6 +87,7 @@ public final class Transport {
         factory.transportReferences.add(new WeakReference<>(this));
         this.tcp = "TCP".equalsIgnoreCase(protocol);
         this.group = transportChannelGroup;
+        this.sslContext = sslContext;
         this.bufferPool = transportBufferPool;
         this.clientAddress = clientAddress;
         this.strategy = strategy;
@@ -244,7 +248,7 @@ public final class Transport {
                         }
                     }
                 } else {
-                    return AsyncConnection.createTCP(group, addr, supportTcpNoDelay, 6, 6);
+                    return AsyncConnection.createTCP(group, sslContext, addr, supportTcpNoDelay, 6, 6);
                 }
                 if (channel == null) return CompletableFuture.completedFuture(null);
                 return CompletableFuture.completedFuture(AsyncConnection.create(channel, addr, 6, 6));

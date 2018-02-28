@@ -12,6 +12,7 @@ import java.nio.channels.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
+import javax.net.ssl.SSLContext;
 
 /**
  *
@@ -21,6 +22,8 @@ import java.util.concurrent.atomic.AtomicLong;
  * @author zhangjx
  */
 public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCloseable {
+
+    protected SSLContext sslContext;
 
     protected Map<String, Object> attributes; //用于存储绑定在Connection上的对象集合
 
@@ -134,13 +137,30 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
      */
     public static CompletableFuture<AsyncConnection> createTCP(final AsynchronousChannelGroup group, final SocketAddress address,
         final int readTimeoutSecond, final int writeTimeoutSecond) {
-        return createTCP(group, address, false, readTimeoutSecond, writeTimeoutSecond);
+        return createTCP(group, null, address, false, readTimeoutSecond, writeTimeoutSecond);
     }
 
     /**
      * 创建TCP协议客户端连接
      *
      * @param address            连接点子
+     * @param sslContext         SSLContext
+     * @param group              连接AsynchronousChannelGroup
+     * @param readTimeoutSecond  读取超时秒数
+     * @param writeTimeoutSecond 写入超时秒数
+     *
+     * @return 连接CompletableFuture
+     */
+    public static CompletableFuture<AsyncConnection> createTCP(final AsynchronousChannelGroup group, final SSLContext sslContext,
+        final SocketAddress address, final int readTimeoutSecond, final int writeTimeoutSecond) {
+        return createTCP(group, sslContext, address, false, readTimeoutSecond, writeTimeoutSecond);
+    }
+
+    /**
+     * 创建TCP协议客户端连接
+     *
+     * @param address            连接点子
+     * @param sslContext         SSLContext
      * @param group              连接AsynchronousChannelGroup
      * @param noDelay            TcpNoDelay
      * @param readTimeoutSecond  读取超时秒数
@@ -148,8 +168,8 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
      *
      * @return 连接CompletableFuture
      */
-    public static CompletableFuture<AsyncConnection> createTCP(final AsynchronousChannelGroup group, final SocketAddress address,
-        final boolean noDelay, final int readTimeoutSecond, final int writeTimeoutSecond) {
+    public static CompletableFuture<AsyncConnection> createTCP(final AsynchronousChannelGroup group, final SSLContext sslContext,
+        final SocketAddress address, final boolean noDelay, final int readTimeoutSecond, final int writeTimeoutSecond) {
         final CompletableFuture future = new CompletableFuture();
         try {
             final AsynchronousSocketChannel channel = AsynchronousSocketChannel.open(group);
@@ -162,7 +182,7 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
                         } catch (IOException e) {
                         }
                     }
-                    future.complete(create(channel, address, readTimeoutSecond, writeTimeoutSecond));
+                    future.complete(create(channel, sslContext, address, readTimeoutSecond, writeTimeoutSecond));
                 }
 
                 @Override
@@ -482,8 +502,10 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
 
         private final SocketAddress remoteAddress;
 
-        public AIOTCPAsyncConnection(final AsynchronousSocketChannel ch, final SocketAddress addr0, final int readTimeoutSecond0, final int writeTimeoutSecond0) {
+        public AIOTCPAsyncConnection(final AsynchronousSocketChannel ch, SSLContext sslContext,
+            final SocketAddress addr0, final int readTimeoutSecond0, final int writeTimeoutSecond0) {
             this.channel = ch;
+            this.sslContext = sslContext;
             this.readTimeoutSecond = readTimeoutSecond0;
             this.writeTimeoutSecond = writeTimeoutSecond0;
             SocketAddress addr = addr0;
@@ -603,7 +625,14 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
     }
 
     public static AsyncConnection create(final AsynchronousSocketChannel ch, final SocketAddress addr0, final int readTimeoutSecond, final int writeTimeoutSecond) {
-        return new AIOTCPAsyncConnection(ch, addr0, readTimeoutSecond, writeTimeoutSecond);
+        return new AIOTCPAsyncConnection(ch, null, addr0, readTimeoutSecond, writeTimeoutSecond);
     }
 
+    public static AsyncConnection create(final AsynchronousSocketChannel ch, SSLContext sslContext, final SocketAddress addr0, final int readTimeoutSecond, final int writeTimeoutSecond) {
+        return new AIOTCPAsyncConnection(ch, sslContext, addr0, readTimeoutSecond, writeTimeoutSecond);
+    }
+
+    public static AsyncConnection create(final AsynchronousSocketChannel ch, final SocketAddress addr0, final Context context) {
+        return new AIOTCPAsyncConnection(ch, context.sslContext, addr0, context.readTimeoutSecond, context.writeTimeoutSecond);
+    }
 }

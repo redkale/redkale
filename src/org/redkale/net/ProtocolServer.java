@@ -214,7 +214,7 @@ public abstract class ProtocolServer {
                     }
                     createCounter.incrementAndGet();
                     livingCounter.incrementAndGet();
-                    AsyncConnection conn = AsyncConnection.create(channel, null, context.readTimeoutSecond, context.writeTimeoutSecond);
+                    AsyncConnection conn = AsyncConnection.create(channel, null, context);
                     conn.livingCounter = livingCounter;
                     conn.closedCounter = closedCounter;
                     context.runAsync(new PrepareRunner(context, conn, null));
