@@ -35,11 +35,36 @@ public final class Utility {
 
     private static final char hex[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
 
+    private static final sun.misc.Unsafe UNSAFE;
+
+    private static final long strvaloffset;
+
+    private static final long sbvaloffset;
+
     private static final javax.net.ssl.SSLContext DEFAULTSSL_CONTEXT;
 
     private static final javax.net.ssl.HostnameVerifier defaultVerifier = (s, ss) -> true;
 
     static {
+        sun.misc.Unsafe usafe = null;
+        long fd1 = 0L;
+        long fd2 = 0L;
+        try {
+            Field f = String.class.getDeclaredField("value");
+            if (f.getType() == char[].class) { //JDK9及以上不再是char[]
+                Field safeField = sun.misc.Unsafe.class.getDeclaredField("theUnsafe");
+                safeField.setAccessible(true);
+                usafe = (sun.misc.Unsafe) safeField.get(null);
+                fd1 = usafe.objectFieldOffset(f);
+                fd2 = usafe.objectFieldOffset(StringBuilder.class.getSuperclass().getDeclaredField("value"));
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e); //不可能会发生
+        }
+        UNSAFE = usafe;
+        strvaloffset = fd1;
+        sbvaloffset = fd2;
+
         try {
             DEFAULTSSL_CONTEXT = javax.net.ssl.SSLContext.getInstance("SSL");
             DEFAULTSSL_CONTEXT.init(null, new javax.net.ssl.TrustManager[]{new javax.net.ssl.X509TrustManager() {
@@ -1023,7 +1048,8 @@ public final class Utility {
 
     public static byte[] encodeUTF8(final String value) {
         if (value == null) return new byte[0];
-        return encodeUTF8(value.toCharArray());
+        if (UNSAFE == null) return encodeUTF8(value.toCharArray());
+        return encodeUTF8((char[]) UNSAFE.getObject(value, strvaloffset));
     }
 
     public static byte[] encodeUTF8(final char[] array) {
@@ -1065,12 +1091,14 @@ public final class Utility {
 
     public static char[] charArray(String value) {
         if (value == null) return null;
-        return value.toCharArray();
+        if (UNSAFE == null) return value.toCharArray();
+        return (char[]) UNSAFE.getObject(value, strvaloffset);
     }
 
     public static char[] charArray(StringBuilder value) {
         if (value == null) return null;
-        return value.toString().toCharArray();
+        if (UNSAFE == null) return value.toString().toCharArray();
+        return (char[]) UNSAFE.getObject(value, sbvaloffset);
     }
 
     public static ByteBuffer encodeUTF8(final ByteBuffer buffer, final char[] array) {
@@ -1083,7 +1111,8 @@ public final class Utility {
 
     public static int encodeUTF8Length(String value) {
         if (value == null) return -1;
-        return encodeUTF8Length(value.toCharArray());
+        if (UNSAFE == null) return encodeUTF8Length(value.toCharArray());
+        return encodeUTF8Length((char[]) UNSAFE.getObject(value, strvaloffset));
     }
 
     public static int encodeUTF8Length(final char[] text) {
