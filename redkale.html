@@ -552,11 +552,13 @@
 <span class="c">            【节点全局唯一】</span>
 <span class="c">            transport节点只能有一个，用于配置所有Transport的池参数，没配置该节点将自动创建一个。</span>
 <span class="c">            threads： 线程总数， 默认: &lt;group&gt;节点数*CPU核数*2</span>
-<span class="c">            bufferCapacity: ByteBuffer的初始化大小， 默认: 8K; </span>
+<span class="c">            bufferCapacity: ByteBuffer的初始化大小， 默认: 32K; </span>
 <span class="c">            bufferPoolSize： ByteBuffer池的大小，默认: 线程总数*4</span>
+<span class="c">            readTimeoutSecond: TCP读取超时秒数, 默认为6秒， 为0表示无超时限制</span>
+<span class="c">            writeTimeoutSecond: TCP写入超时秒数, 默认为6秒， 为0表示无超时限制</span>
 <span class="c">            strategy: 远程请求的负载均衡策略， 必须是org.redkale.net.TransportStrategy的实现类</span>
 <span class="c">        --&gt;</span>
-        <span class="p">&lt;</span><span class="nt">transport</span> <span class="na">bufferCapacity</span><span class="o">=</span><span class="s">"8K"</span> <span class="na">bufferPoolSize</span><span class="o">=</span><span class="s">"32"</span> <span class="na">threads</span><span class="o">=</span><span class="s">"32"</span><span class="p">/&gt;</span>
+        <span class="p">&lt;</span><span class="nt">transport</span> <span class="na">bufferCapacity</span><span class="o">=</span><span class="s">"32K"</span> <span class="na">bufferPoolSize</span><span class="o">=</span><span class="s">"32"</span> <span class="na">threads</span><span class="o">=</span><span class="s">"32"</span> <span class="na">readTimeoutSecond</span><span class="o">=</span><span class="s">"6"</span> <span class="na">writeTimeoutSecond</span><span class="o">=</span><span class="s">"6"</span><span class="p">/&gt;</span>
         
         <span class="c">&lt;!--</span>
 <span class="c">            一个组包含多个node， 同一Service服务可以由多个进程提供，这些进程称为一个GROUP，且同一GROUP内的进程必须在同一机房或局域网内</span>
@@ -600,6 +602,7 @@
 <span class="c">            如果name是mimetype.property.开头的值将会在进程启动时进行MimeType.add("yyyy", "YYYYYY")操作。</span>
 <span class="c">            load:  加载文件，多个用;隔开。</span>
 <span class="c">            默认置入的system.property.的有：</span>
+<span class="c">               System.setProperty("net.transport.pinginterval", "30");</span>
 <span class="c">               System.setProperty("convert.json.tiny", "true");</span>
 <span class="c">               System.setProperty("convert.bson.tiny", "true");</span>
 <span class="c">               System.setProperty("convert.json.pool.size", "128");</span>
@@ -631,9 +634,9 @@
 <span class="c">        threads： 线程总数， 默认: CPU核数*8</span>
 <span class="c">        maxconns：最大连接数, 小于1表示无限制， 默认: 0</span>
 <span class="c">        maxbody: request.body最大值， 默认: 64K</span>
-<span class="c">        bufferCapacity: ByteBuffer的初始化大小， 默认: 8K;  如果是HTTP协议则默认: 16K + 16B (兼容HTTP 2.0、WebSocket)</span>
-<span class="c">        bufferPoolSize： ByteBuffer池的大小，线程总数*4</span>
-<span class="c">        responsePoolSize： Response池的大小，线程总数*2</span>
+<span class="c">        bufferCapacity: ByteBuffer的初始化大小， 默认: 32K;  (HTTP 2.0、WebSocket，必须要16k以上)</span>
+<span class="c">        bufferPoolSize： ByteBuffer池的大小，默认: 线程总数*4</span>
+<span class="c">        responsePoolSize： Response池的大小，默认: 线程总数*2</span>
 <span class="c">        readTimeoutSecond: 读操作超时秒数， 默认0， 表示永久不超时</span>
 <span class="c">        writeTimeoutSecond:  写操作超时秒数， 默认0， 表示永久不超时</span>
 <span class="c">        interceptor: 启动/关闭NodeServer时被调用的拦截器实现类，必须是org.redkale.boot.NodeInterceptor的子类，默认为null</span>
@@ -743,7 +746,12 @@
             <span class="p">&lt;</span><span class="nt">setheader</span> <span class="na">name</span><span class="o">=</span><span class="s">"Access-Control-Allow-Credentials"</span> <span class="na">value</span><span class="o">=</span><span class="s">"true"</span><span class="p">/&gt;</span>
             <span class="p">&lt;</span><span class="nt">options</span> <span class="na">auto</span><span class="o">=</span><span class="s">"true"</span> <span class="p">/&gt;</span>
         <span class="p">&lt;/</span><span class="nt">response</span><span class="p">&gt;</span>
-            
+        <span class="c">&lt;!-- </span>
+<span class="c">           【节点在&lt;server&gt;中唯一】</span>
+<span class="c">           当Server为HTTP协议时，render才有效. 指定输出引擎的实现类</span>
+<span class="c">           value: 输出引擎的实现类, 必须是org.redkale.net.http.HttpRender的子类</span>
+<span class="c">        --&gt;</span>
+        <span class="p">&lt;</span><span class="nt">render</span> <span class="na">value</span><span class="o">=</span><span class="s">"org.redkalex.htel.HttpTemplateRender"</span><span class="p">/&gt;</span>
         <span class="c">&lt;!-- </span>
 <span class="c">           【节点在&lt;server&gt;中唯一】</span>
 <span class="c">           当Server为HTTP协议时，ResourceServlet才有效. 默认存在一个有默认属性的resource-servlet节点</span>
