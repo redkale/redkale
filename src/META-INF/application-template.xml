@@ -234,8 +234,7 @@
            当Server为HTTP协议时，render才有效. 指定输出引擎的实现类
            value: 输出引擎的实现类, 必须是org.redkale.net.http.HttpRender的子类
         -->
-        <render value="org.redkalex.htel.HttpTemplateRender">
-        </render>
+        <render value="org.redkalex.htel.HttpTemplateRender"/>
         <!-- 
            【节点在<server>中唯一】
            当Server为HTTP协议时，ResourceServlet才有效. 默认存在一个有默认属性的resource-servlet节点
