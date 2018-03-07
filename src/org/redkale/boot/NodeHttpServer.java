@@ -136,7 +136,7 @@ public class NodeHttpServer extends NodeServer {
         for (FilterEntry<? extends Filter> en : list) {
             Class<HttpFilter> clazz = (Class<HttpFilter>) en.getType();
             if (Modifier.isAbstract(clazz.getModifiers())) continue;
-            final HttpFilter filter = clazz.newInstance();
+            final HttpFilter filter = clazz.getDeclaredConstructor().newInstance();
             resourceFactory.inject(filter, this);
             DefaultAnyValue filterConf = (DefaultAnyValue) en.getProperty();
             this.httpServer.addHttpFilter(filter, filterConf);
@@ -172,7 +172,7 @@ public class NodeHttpServer extends NodeServer {
             if (Modifier.isAbstract(clazz.getModifiers())) continue;
             WebServlet ws = clazz.getAnnotation(WebServlet.class);
             if (ws == null || ws.value().length == 0) continue;
-            final HttpServlet servlet = clazz.newInstance();
+            final HttpServlet servlet = clazz.getDeclaredConstructor().newInstance();
             resourceFactory.inject(servlet, this);
             final String[] mappings = ws.value();
             String pref = ws.repair() ? prefix : "";

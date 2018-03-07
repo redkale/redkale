@@ -275,7 +275,7 @@ public final class Application {
                 try {
                     final String strategyClass = transportConf.getValue("strategy");
                     if (strategyClass != null && !strategyClass.isEmpty()) {
-                        strategy = (TransportStrategy) classLoader.loadClass(strategyClass).newInstance();
+                        strategy = (TransportStrategy) classLoader.loadClass(strategyClass).getDeclaredConstructor().newInstance();
                     }
                     final AtomicInteger counter = new AtomicInteger();
                     transportExec = Executors.newFixedThreadPool(threads, (Runnable r) -> {
@@ -502,7 +502,7 @@ public final class Application {
                 if (listenClass.isEmpty()) continue;
                 Class clazz = classLoader.loadClass(listenClass);
                 if (!ApplicationListener.class.isAssignableFrom(clazz)) continue;
-                ApplicationListener listener = (ApplicationListener) clazz.newInstance();
+                ApplicationListener listener = (ApplicationListener) clazz.getDeclaredConstructor().newInstance();
                 listener.init(config);
                 this.listeners.add(listener);
             }

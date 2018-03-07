@@ -586,7 +586,7 @@ public final class SncpDynServlet extends SncpServlet {
                 }
             }.loadClass(newDynName.replace('/', '.'), bytes);
             try {
-                SncpServletAction instance = (SncpServletAction) newClazz.newInstance();
+                SncpServletAction instance = (SncpServletAction) newClazz.getDeclaredConstructor().newInstance();
                 instance.method = method;
                 java.lang.reflect.Type[] ptypes = TypeToken.getGenericType(method.getGenericParameterTypes(), serviceClass);
                 java.lang.reflect.Type[] types = new java.lang.reflect.Type[ptypes.length + 1];
@@ -606,7 +606,7 @@ public final class SncpDynServlet extends SncpServlet {
                         for (Annotation ann : anns[i]) {
                             if (ann.annotationType() == RpcCall.class) {
                                 try {
-                                    atts[i + 1] = ((RpcCall) ann).value().newInstance();
+                                    atts[i + 1] = ((RpcCall) ann).value().getDeclaredConstructor().newInstance();
                                     hasattr = true;
                                 } catch (Exception e) {
                                     logger.log(Level.SEVERE, RpcCall.class.getSimpleName() + ".attribute cannot a newInstance for" + method, e);

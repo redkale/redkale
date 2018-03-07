@@ -246,7 +246,7 @@ public interface Creator<T> {
             newDynName = interName + "_Dyn" + Creator.class.getSimpleName();
         }
         try {
-            return (Creator) loader.loadClass(newDynName.replace('/', '.')).newInstance();
+            return (Creator) loader.loadClass(newDynName.replace('/', '.')).getDeclaredConstructor().newInstance();
         } catch (Throwable ex) {
         }
 
@@ -494,7 +494,7 @@ public interface Creator<T> {
                         return defineClass(name, b, 0, b.length);
                     }
                 }.loadClass(newDynName.replace('/', '.'), bytes);
-            return (Creator) resultClazz.newInstance();
+            return (Creator) resultClazz.getDeclaredConstructor().newInstance();
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }

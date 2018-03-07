@@ -93,7 +93,7 @@ public class NodeSncpServer extends NodeServer {
         for (FilterEntry<? extends Filter> en : list) {
             Class<SncpFilter> clazz = (Class<SncpFilter>) en.getType();
             if (Modifier.isAbstract(clazz.getModifiers())) continue;
-            final SncpFilter filter = clazz.newInstance();
+            final SncpFilter filter = clazz.getDeclaredConstructor().newInstance();
             resourceFactory.inject(filter, this);
             DefaultAnyValue filterConf = (DefaultAnyValue) en.getProperty();
             this.sncpServer.addSncpFilter(filter, filterConf);

@@ -154,7 +154,7 @@ public class PoolJdbcSource {
             }
         }
         final Class clazz = Thread.currentThread().getContextClassLoader().loadClass(source);
-        Object pdsource = clazz.newInstance();
+        Object pdsource = clazz.getDeclaredConstructor().newInstance();
         if (source.contains(".postgresql.")) {
             Class driver = Thread.currentThread().getContextClassLoader().loadClass("org.postgresql.Driver");
             Properties properties = (Properties) driver.getMethod("parseURL", String.class, Properties.class).invoke(null, url, new Properties());

@@ -225,7 +225,7 @@ public class HttpPrepareServlet extends PrepareServlet<String, HttpContext, Http
             }
             String resServlet = resConfig.getValue("servlet", HttpResourceServlet.class.getName());
             try {
-                this.resourceHttpServlet = (HttpServlet) Thread.currentThread().getContextClassLoader().loadClass(resServlet).newInstance();
+                this.resourceHttpServlet = (HttpServlet) Thread.currentThread().getContextClassLoader().loadClass(resServlet).getDeclaredConstructor().newInstance();
             } catch (Throwable e) {
                 this.resourceHttpServlet = new HttpResourceServlet();
                 logger.log(Level.WARNING, "init HttpResourceSerlvet(" + resServlet + ") error", e);
@@ -239,7 +239,7 @@ public class HttpPrepareServlet extends PrepareServlet<String, HttpContext, Http
                 for (AnyValue renderConfig : renderConfigs) {
                     String renderType = renderConfig.getValue("value");
                     try {
-                        HttpRender render = (HttpRender) Thread.currentThread().getContextClassLoader().loadClass(renderType).newInstance();
+                        HttpRender render = (HttpRender) Thread.currentThread().getContextClassLoader().loadClass(renderType).getDeclaredConstructor().newInstance();
                         for (HttpRender one : renders) {
                             if (one.getType().equals(render.getType())) throw new RuntimeException("HttpRender(" + renderType + ") repeat");
                         }

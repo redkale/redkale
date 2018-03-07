@@ -637,7 +637,7 @@ public final class Rest {
         cw.visitEnd();
         Class<?> newClazz = newLoader.loadClass(newDynName.replace('/', '.'), cw.toByteArray());
         try {
-            return (T) newClazz.newInstance();
+            return (T) newClazz.getDeclaredConstructor().newInstance();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -1684,7 +1684,7 @@ public final class Rest {
         cw.visitEnd();
         Class<?> newClazz = new RestClassLoader(loader).loadClass(newDynName.replace('/', '.'), cw.toByteArray());
         try {
-            T obj = ((Class<T>) newClazz).newInstance();
+            T obj = ((Class<T>) newClazz).getDeclaredConstructor().newInstance();
             for (Map.Entry<String, org.redkale.util.Attribute> en : restAttributes.entrySet()) {
                 Field attrField = newClazz.getDeclaredField(en.getKey());
                 attrField.setAccessible(true);

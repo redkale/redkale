@@ -274,7 +274,7 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
             }
         }.loadClass(newDynName.replace('/', '.'), bytes);
         try {
-            HttpServlet instance = (HttpServlet) newClazz.newInstance();
+            HttpServlet instance = (HttpServlet) newClazz.getDeclaredConstructor().newInstance();
             instance.getClass().getField(factfield).set(instance, this);
             return instance;
         } catch (Exception ex) {

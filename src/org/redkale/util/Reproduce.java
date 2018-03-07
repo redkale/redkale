@@ -41,7 +41,7 @@ public interface Reproduce<D, S> extends BiFunction<D, S, D> {
             newDynName = destName + "_Dyn" + Reproduce.class.getSimpleName() + "_" + srcClass.getSimpleName();
         }
         try {
-            return (Reproduce) loader.loadClass(newDynName.replace('/', '.')).newInstance();
+            return (Reproduce) loader.loadClass(newDynName.replace('/', '.')).getDeclaredConstructor().newInstance();
         } catch (Throwable ex) {
         }
         // ------------------------------------------------------------------------------
@@ -136,7 +136,7 @@ public interface Reproduce<D, S> extends BiFunction<D, S, D> {
             }
         }.loadClass(newDynName.replace('/', '.'), bytes);
         try {
-            return (Reproduce) creatorClazz.newInstance();
+            return (Reproduce) creatorClazz.getDeclaredConstructor().newInstance();
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }

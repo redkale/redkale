@@ -59,7 +59,8 @@ public class HttpResourceServlet extends HttpServlet {
                             final String uri = path.toString().substring(rootstr.length()).replace('\\', '/');
                             //logger.log(Level.FINEST, "file(" + uri + ") happen " + event.kind() + " event");
                             if (event.kind() == ENTRY_DELETE) {
-                                files.remove(uri);
+                                FileEntry en = files.remove(uri);
+                                if (en != null) en.remove();
                             } else if (event.kind() == ENTRY_MODIFY) {
                                 FileEntry en = files.get(uri);
                                 if (en != null && en.file != null) {
@@ -317,10 +318,8 @@ public class HttpResourceServlet extends HttpServlet {
             }
         }
 
-        @Override
-        protected void finalize() throws Throwable {
+        public void remove() {
             if (this.content != null) this.servlet.cachedLength.add(0L - this.content.remaining());
-            super.finalize();
         }
 
         public long getCachedLength() {

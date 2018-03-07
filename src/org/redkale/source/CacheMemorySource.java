@@ -104,7 +104,7 @@ public class CacheMemorySource<V extends Object> extends AbstractService impleme
         String expireHandlerClass = prop == null ? null : prop.getValue("expirehandler");
         if (expireHandlerClass != null) {
             try {
-                this.expireHandler = (Consumer<CacheEntry>) Thread.currentThread().getContextClassLoader().loadClass(expireHandlerClass).newInstance();
+                this.expireHandler = (Consumer<CacheEntry>) Thread.currentThread().getContextClassLoader().loadClass(expireHandlerClass).getDeclaredConstructor().newInstance();
             } catch (Throwable e) {
                 logger.log(Level.SEVERE, self.getClass().getSimpleName() + " new expirehandler class (" + expireHandlerClass + ") instance error", e);
             }

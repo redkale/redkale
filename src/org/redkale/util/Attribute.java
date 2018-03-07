@@ -441,7 +441,7 @@ public interface Attribute<T, F> {
                 + fieldname.substring(fieldname.indexOf('.') + 1) + "_" + pcolumn.getSimpleName().replace("[]", "Array");
         }
         try {
-            return (Attribute) loader.loadClass(newDynName.replace('/', '.')).newInstance();
+            return (Attribute) loader.loadClass(newDynName.replace('/', '.')).getDeclaredConstructor().newInstance();
         } catch (Throwable ex) {
         }
         //---------------------------------------------------
@@ -593,7 +593,7 @@ public interface Attribute<T, F> {
             }
         }.loadClass(newDynName.replace('/', '.'), bytes);
         try {
-            return creatorClazz.newInstance();
+            return creatorClazz.getDeclaredConstructor().newInstance();
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }

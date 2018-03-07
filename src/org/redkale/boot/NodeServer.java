@@ -149,7 +149,7 @@ public abstract class NodeServer {
         String interceptorClass = this.serverConf.getValue("interceptor", "");
         if (!interceptorClass.isEmpty()) {
             Class clazz = serverClassLoader.loadClass(interceptorClass);
-            this.interceptor = (NodeInterceptor) clazz.newInstance();
+            this.interceptor = (NodeInterceptor) clazz.getDeclaredConstructor().newInstance();
         }
 
         ClassFilter<Service> serviceFilter = createServiceClassFilter();

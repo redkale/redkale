@@ -191,7 +191,7 @@ public final class EntityInfo<T> {
             this.table = null;
             BiFunction<DataSource, Class, List> loader = null;
             try {
-                loader = type.getAnnotation(VirtualEntity.class).loader().newInstance();
+                loader = type.getAnnotation(VirtualEntity.class).loader().getDeclaredConstructor().newInstance();
             } catch (Exception e) {
                 logger.log(Level.SEVERE, type + " init @VirtualEntity.loader error", e);
             }
@@ -204,7 +204,7 @@ public final class EntityInfo<T> {
         DistributeTable dt = type.getAnnotation(DistributeTable.class);
         DistributeTableStrategy dts = null;
         try {
-            dts = (dt == null) ? null : dt.strategy().newInstance();
+            dts = (dt == null) ? null : dt.strategy().getDeclaredConstructor().newInstance();
         } catch (Exception e) {
             logger.log(Level.SEVERE, type + " init DistributeTableStrategy error", e);
         }

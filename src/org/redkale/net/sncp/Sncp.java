@@ -754,7 +754,7 @@ public abstract class Sncp {
         final AnyValue conf) {
         try {
             final Class newClazz = createLocalServiceClass(classLoader, name, serviceImplClass);
-            T rs = (T) newClazz.newInstance();
+            T rs = (T) newClazz.getDeclaredConstructor().newInstance();
             //--------------------------------------            
             Service remoteService = null;
             {
@@ -888,7 +888,7 @@ public abstract class Sncp {
         String newDynName = supDynName.substring(0, supDynName.lastIndexOf('/') + 1) + REMOTEPREFIX + serviceTypeOrImplClass.getSimpleName();
         try {
             Class newClazz = loader.loadClass(newDynName.replace('/', '.'));
-            T rs = (T) newClazz.newInstance();
+            T rs = (T) newClazz.getDeclaredConstructor().newInstance();
             SncpClient client = new SncpClient(name, serviceTypeOrImplClass, rs, transportFactory, true, realed ? createLocalServiceClass(loader, name, serviceTypeOrImplClass) : serviceTypeOrImplClass, clientAddress);
             client.setRemoteGroups(groups);
             client.setRemoteGroupTransport(transportFactory.loadRemoteTransport(clientAddress, groups));
@@ -1069,7 +1069,7 @@ public abstract class Sncp {
             }
         }.loadClass(newDynName.replace('/', '.'), bytes);
         try {
-            T rs = (T) newClazz.newInstance();
+            T rs = (T) newClazz.getDeclaredConstructor().newInstance();
             SncpClient client = new SncpClient(name, serviceTypeOrImplClass, rs, transportFactory, true, realed ? createLocalServiceClass(loader, name, serviceTypeOrImplClass) : serviceTypeOrImplClass, clientAddress);
             client.setRemoteGroups(groups);
             client.setRemoteGroupTransport(transportFactory.loadRemoteTransport(clientAddress, groups));

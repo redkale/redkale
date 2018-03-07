@@ -595,7 +595,7 @@ public final class SncpClient {
                         for (Annotation ann : anns[i]) {
                             if (ann.annotationType() == RpcCall.class) {
                                 try {
-                                    atts[i + 1] = ((RpcCall) ann).value().newInstance();
+                                    atts[i + 1] = ((RpcCall) ann).value().getDeclaredConstructor().newInstance();
                                     hasattr = true;
                                 } catch (Exception e) {
                                     logger.log(Level.SEVERE, RpcCall.class.getSimpleName() + ".attribute cannot a newInstance for" + method, e);

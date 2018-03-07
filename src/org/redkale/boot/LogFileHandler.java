@@ -266,7 +266,7 @@ public class LogFileHandler extends Handler {
         try {
             if (filterstr != null) {
                 Class<?> clz = ClassLoader.getSystemClassLoader().loadClass(filterstr);
-                setFilter((Filter) clz.newInstance());
+                setFilter((Filter) clz.getDeclaredConstructor().newInstance());
             }
         } catch (Exception e) {
         }
@@ -274,7 +274,7 @@ public class LogFileHandler extends Handler {
         try {
             if (formatterstr != null) {
                 Class<?> clz = ClassLoader.getSystemClassLoader().loadClass(formatterstr);
-                setFormatter((Formatter) clz.newInstance());
+                setFormatter((Formatter) clz.getDeclaredConstructor().newInstance());
             }
         } catch (Exception e) {
         }

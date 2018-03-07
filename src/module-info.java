@@ -12,8 +12,6 @@ module org.redkale {
     requires java.sql;
     requires java.sql.rowset;
 
-    requires jdk.unsupported;  //sun.misc.Unsafe
-
     exports javax.annotation;
     exports javax.persistence;
 
