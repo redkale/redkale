@@ -567,7 +567,11 @@ public final class ResourceFactory {
                             }
                         }
                         if (ns == null) continue;
-                        if (ns.getClass().isPrimitive() || ns.getClass().isArray() || ns.getClass().getName().startsWith("java")) continue;
+                        if (ns.getClass().isPrimitive() || ns.getClass().isArray()
+                            || ns.getClass().getName().startsWith("java.")
+                            || ns.getClass().getName().startsWith("javax.")
+                            || ns.getClass().getName().startsWith("jdk.")
+                            || ns.getClass().getName().startsWith("sun.")) continue;
                         if (flag) this.inject(ns, attachment, consumer, list);
                         continue;
                     }
