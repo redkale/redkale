@@ -127,6 +127,12 @@
     <server protocol="HTTP" host="127.0.0.1" port="6060" root="root" lib=""> 
         
         <!-- 
+           【节点在<server>中唯一】
+           value: 创建SSLContext的实现类, 可自定义，必须是org.redkale.net.SSLCreator的子类
+        -->
+        <ssl creator="" p12="{APP_HOME}/conf/xxx.p12" jks="{APP_HOME}/conf/xxx.jks" pem="{APP_HOME}/conf/xxx.pem"/>
+        
+        <!-- 
            加载所有的Service服务;
            在同一个进程中同一个name同一类型的Service将共用同一个实例
            autoload="true"  默认值. 自动加载classpath下所有的Service类  

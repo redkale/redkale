@@ -127,15 +127,16 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         AnyValue sslConf = config.getAnyValue("ssl");
         if (sslConf != null) {
             String creatorClass = sslConf.getValue("creator", SSLCreator.class.getName());
+            SSLCreator creator = null;
             if (SSLCreator.class.getName().equals(creatorClass) || creatorClass.isEmpty()) {
-                this.sslContext = new SSLCreator() {
-                }.create(this, sslConf);
+                creator = new SSLCreator() {
+                };
             } else {
                 ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-                @SuppressWarnings("unchecked")
-                SSLCreator creator = ((SSLCreator) classLoader.loadClass(creatorClass).getDeclaredConstructor().newInstance());
-                this.sslContext = creator.create(this, sslConf);
+                creator = ((SSLCreator) classLoader.loadClass(creatorClass).getDeclaredConstructor().newInstance());
             }
+            this.resourceFactory.inject(creator);
+            this.sslContext = creator.create(this, sslConf);
         }
         final AtomicInteger counter = new AtomicInteger();
         final Format f = createFormat();
