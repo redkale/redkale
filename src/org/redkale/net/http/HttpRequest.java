@@ -134,12 +134,15 @@ public class HttpRequest extends Request<HttpContext> {
             String value = array.toString(index, array.size() - index, charset).trim();
             switch (name) {
                 case "Content-Type":
+                case "content-type":
                     this.contentType = value;
                     break;
                 case "Content-Length":
+                case "content-length":
                     this.contentLength = Long.decode(value);
                     break;
                 case "Host":
+                case "host":
                     this.host = value;
                     break;
                 case "Cookie":
@@ -151,8 +154,12 @@ public class HttpRequest extends Request<HttpContext> {
                     }
                     break;
                 case "Connection":
+                case "connection":
                     this.connection = value;
                     this.setKeepAlive(!"close".equalsIgnoreCase(value));
+                    break;
+                case "user-agent":
+                    header.addValue("User-Agent", value);
                     break;
                 default:
                     header.addValue(name, value);
