@@ -74,6 +74,7 @@ public final class DoubleArraySimpledCoder<R extends Reader, W extends Writer> e
         public static final DoubleStreamSimpledCoder instance = new DoubleStreamSimpledCoder();
 
         @Override
+        @SuppressWarnings("unchecked")
         public void convertTo(W out, DoubleStream values) {
             if (values == null) {
                 out.writeNull();
@@ -83,6 +84,7 @@ public final class DoubleArraySimpledCoder<R extends Reader, W extends Writer> e
         }
 
         @Override
+        @SuppressWarnings("unchecked")
         public DoubleStream convertFrom(R in) {
             double[] value = DoubleArraySimpledCoder.instance.convertFrom(in);
             return value == null ? null : DoubleStream.of(value);

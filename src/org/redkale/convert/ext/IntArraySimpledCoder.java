@@ -74,6 +74,7 @@ public final class IntArraySimpledCoder<R extends Reader, W extends Writer> exte
         public static final IntStreamSimpledCoder instance = new IntStreamSimpledCoder();
 
         @Override
+        @SuppressWarnings("unchecked")
         public void convertTo(W out, IntStream values) {
             if (values == null) {
                 out.writeNull();
@@ -83,6 +84,7 @@ public final class IntArraySimpledCoder<R extends Reader, W extends Writer> exte
         }
 
         @Override
+        @SuppressWarnings("unchecked")
         public IntStream convertFrom(R in) {
             int[] value = IntArraySimpledCoder.instance.convertFrom(in);
             return value == null ? null : IntStream.of(value);

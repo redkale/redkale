@@ -18,6 +18,7 @@ import org.redkale.util.*;
  * @param <T> Entity类的类型
  * @param <F> 字段的类型
  */
+@SuppressWarnings("unchecked")
 public final class DataCallArrayAttribute<T, F> implements Attribute<T[], F> {
 
     public static final DataCallArrayAttribute instance = new DataCallArrayAttribute();

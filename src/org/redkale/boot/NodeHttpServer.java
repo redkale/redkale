@@ -56,16 +56,19 @@ public class NodeHttpServer extends NodeServer {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     protected ClassFilter<Service> createServiceClassFilter() {
         return createClassFilter(this.sncpGroup, null, Service.class, new Class[]{org.redkale.watch.WatchService.class}, Annotation.class, "services", "service");
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     protected ClassFilter<Filter> createFilterClassFilter() {
         return createClassFilter(null, null, HttpFilter.class, new Class[]{WatchFilter.class}, null, "filters", "filter");
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     protected ClassFilter<Servlet> createServletClassFilter() {
         return createClassFilter(null, WebServlet.class, HttpServlet.class, new Class[]{WatchServlet.class}, null, "servlets", "servlet");
     }
@@ -87,6 +90,7 @@ public class NodeHttpServer extends NodeServer {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     protected void loadServlet(ClassFilter<? extends Servlet> servletFilter, ClassFilter otherFilter) throws Exception {
         if (httpServer != null) loadHttpServlet(servletFilter, otherFilter);
     }

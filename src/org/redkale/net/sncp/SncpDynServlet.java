@@ -105,6 +105,7 @@ public final class SncpDynServlet extends SncpServlet {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public void execute(SncpRequest request, SncpResponse response) throws IOException {
         if (bufferSupplier == null) {
             bufferSupplier = request.getContext().getBufferSupplier();

@@ -74,6 +74,7 @@ public final class LongArraySimpledCoder<R extends Reader, W extends Writer> ext
         public static final LongStreamSimpledCoder instance = new LongStreamSimpledCoder();
 
         @Override
+        @SuppressWarnings("unchecked")
         public void convertTo(W out, LongStream values) {
             if (values == null) {
                 out.writeNull();
@@ -83,6 +84,7 @@ public final class LongArraySimpledCoder<R extends Reader, W extends Writer> ext
         }
 
         @Override
+        @SuppressWarnings("unchecked")
         public LongStream convertFrom(R in) {
             long[] value = LongArraySimpledCoder.instance.convertFrom(in);
             return value == null ? null : LongStream.of(value);

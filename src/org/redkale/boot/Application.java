@@ -502,6 +502,7 @@ public final class Application {
                 if (listenClass.isEmpty()) continue;
                 Class clazz = classLoader.loadClass(listenClass);
                 if (!ApplicationListener.class.isAssignableFrom(clazz)) continue;
+                @SuppressWarnings("unchecked")
                 ApplicationListener listener = (ApplicationListener) clazz.getDeclaredConstructor().newInstance();
                 listener.init(config);
                 this.listeners.add(listener);

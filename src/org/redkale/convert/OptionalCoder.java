@@ -34,6 +34,7 @@ public class OptionalCoder<R extends Reader, W extends Writer, T> extends Simple
 
     private final Object lock = new Object();
 
+    @SuppressWarnings("unchecked")
     public OptionalCoder(final ConvertFactory factory, final Type type) {
         this.type = type;
         try {

@@ -124,6 +124,19 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         this.responsePoolSize = config.getIntValue("responsePoolSize", this.threads * 2);
         this.name = config.getValue("name", "Server-" + protocol + "-" + this.address.getPort());
         if (!this.name.matches("^[a-zA-Z][\\w_-]{1,64}$")) throw new RuntimeException("server.name (" + this.name + ") is illegal");
+        AnyValue sslConf = config.getAnyValue("ssl");
+        if (sslConf != null) {
+            String creatorClass = sslConf.getValue("creator", SSLCreator.class.getName());
+            if (SSLCreator.class.getName().equals(creatorClass) || creatorClass.isEmpty()) {
+                this.sslContext = new SSLCreator() {
+                }.create(this, sslConf);
+            } else {
+                ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+                @SuppressWarnings("unchecked")
+                SSLCreator creator = ((SSLCreator) classLoader.loadClass(creatorClass).getDeclaredConstructor().newInstance());
+                this.sslContext = creator.create(this, sslConf);
+            }
+        }
         final AtomicInteger counter = new AtomicInteger();
         final Format f = createFormat();
         final String n = name;

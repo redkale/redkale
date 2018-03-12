@@ -170,7 +170,7 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
      */
     public static CompletableFuture<AsyncConnection> createTCP(final AsynchronousChannelGroup group, final SSLContext sslContext,
         final SocketAddress address, final boolean noDelay, final int readTimeoutSecond, final int writeTimeoutSecond) {
-        final CompletableFuture future = new CompletableFuture();
+        final CompletableFuture<AsyncConnection> future = new CompletableFuture<>();
         try {
             final AsynchronousSocketChannel channel = AsynchronousSocketChannel.open(group);
             channel.connect(address, null, new CompletionHandler<Void, Void>() {

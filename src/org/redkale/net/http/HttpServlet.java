@@ -294,7 +294,7 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
             HttpMapping mapping = method.getAnnotation(HttpMapping.class);
             this.ignore = mapping == null || !mapping.auth();
             this.cacheseconds = mapping == null ? 0 : mapping.cacheseconds();
-            this.cache = cacheseconds > 0 ? new ConcurrentHashMap() : null;
+            this.cache = cacheseconds > 0 ? new ConcurrentHashMap<>() : null;
             this.cacheHandler = cacheseconds > 0 ? (HttpResponse response, ByteBuffer[] buffers) -> {
                 int status = response.getStatus();
                 if (status != 200) return null;

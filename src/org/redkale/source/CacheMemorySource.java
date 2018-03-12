@@ -27,6 +27,7 @@ import org.redkale.util.*;
  *
  * @author zhangjx
  */
+@SuppressWarnings("unchecked")
 @Local
 @AutoLoad(false)
 @ResourceType(CacheSource.class)
@@ -85,6 +86,7 @@ public class CacheMemorySource<V extends Object> extends AbstractService impleme
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public void init(AnyValue conf) {
         if (this.convert == null) this.convert = this.defaultConvert;
         if (this.convert == null) this.convert = JsonConvert.root();
@@ -320,6 +322,7 @@ public class CacheMemorySource<V extends Object> extends AbstractService impleme
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public V get(String key) {
         if (key == null) return null;
         CacheEntry entry = container.get(key);
@@ -362,6 +365,7 @@ public class CacheMemorySource<V extends Object> extends AbstractService impleme
 
     @Override
     @RpcMultiRun
+    @SuppressWarnings("unchecked")
     public V getAndRefresh(String key, final int expireSeconds) {
         if (key == null) return null;
         CacheEntry entry = container.get(key);
@@ -375,6 +379,7 @@ public class CacheMemorySource<V extends Object> extends AbstractService impleme
 
     @Override
     @RpcMultiRun
+    @SuppressWarnings("unchecked")
     public String getStringAndRefresh(String key, final int expireSeconds) {
         if (key == null) return null;
         CacheEntry entry = container.get(key);

@@ -126,7 +126,7 @@ public class HttpPrepareServlet extends PrepareServlet<String, HttpContext, Http
         List<HttpServlet> list = removeHttpServlet(predicateEntry, predicateFilter);
         return list == null || list.isEmpty() ? null : list.get(0);
     }
-
+@SuppressWarnings("unchecked")
     public <T extends WebSocket> HttpServlet removeHttpServlet(Class<T> websocketOrServletType) {
         Predicate<MappingEntry> predicateEntry = (t) -> {
             Class type = t.servlet.getClass();
@@ -144,6 +144,7 @@ public class HttpPrepareServlet extends PrepareServlet<String, HttpContext, Http
         return list == null || list.isEmpty() ? null : list.get(0);
     }
 
+    @SuppressWarnings("unchecked")
     public boolean addForbidURIReg(final String urlreg) {
         if (urlreg == null || urlreg.isEmpty()) return false;
         synchronized (excludeLock) {
@@ -169,6 +170,7 @@ public class HttpPrepareServlet extends PrepareServlet<String, HttpContext, Http
         }
     }
 
+    @SuppressWarnings("unchecked")
     public boolean removeForbidURIReg(final String urlreg) {
         if (urlreg == null || urlreg.isEmpty()) return false;
         synchronized (excludeLock) {
@@ -198,6 +200,7 @@ public class HttpPrepareServlet extends PrepareServlet<String, HttpContext, Http
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public void init(HttpContext context, AnyValue config) {
         super.init(context, config); //必须要执行
         Collection<HttpServlet> servlets = getServlets();

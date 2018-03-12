@@ -59,10 +59,12 @@ public class HttpScope {
         return this;
     }
 
+    @SuppressWarnings("unchecked")
     public <T> T find(String name) {
         return this.attributes == null ? null : (T) this.attributes.get(name);
     }
 
+    @SuppressWarnings("unchecked")
     public <T> T find(HttpScope parent, String name) {
         T rs = this.attributes == null ? null : (T) this.attributes.get(name);
         if (rs != null) return rs;

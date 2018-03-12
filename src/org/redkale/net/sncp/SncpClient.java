@@ -441,6 +441,7 @@ public final class SncpClient {
                             }
                         }
 
+                        @SuppressWarnings("unchecked")
                         public void success() {
                             future.complete(this.body);
                             transport.offerBuffer(buffer);
@@ -547,6 +548,7 @@ public final class SncpClient {
 
         protected final Creator<? extends CompletableFuture> futureCreator;
 
+        @SuppressWarnings("unchecked")
         public SncpAction(final Class clazz, Method method, DLong actionid) {
             this.actionid = actionid == null ? Sncp.hash(method) : actionid;
             Type rt = TypeToken.getGenericType(method.getGenericReturnType(), clazz);

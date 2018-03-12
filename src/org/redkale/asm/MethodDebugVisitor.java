@@ -32,7 +32,7 @@ public class MethodDebugVisitor {
         System.out.println();
     }
 
-    private final Map<Label, Integer> labels = new LinkedHashMap();
+    private final Map<Label, Integer> labels = new LinkedHashMap<>();
 
     private static final String[] opcodes = new String[200]; //0 -18
 
