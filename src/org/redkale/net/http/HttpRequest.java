@@ -143,6 +143,7 @@ public class HttpRequest extends Request<HttpContext> {
                     this.host = value;
                     break;
                 case "Cookie":
+                case "cookie":
                     if (this.cookie == null || this.cookie.isEmpty()) {
                         this.cookie = value;
                     } else {
