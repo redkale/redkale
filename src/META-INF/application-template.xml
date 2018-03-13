@@ -129,8 +129,13 @@
         <!-- 
            【节点在<server>中唯一】
            value: 创建SSLContext的实现类, 可自定义，必须是org.redkale.net.SSLCreator的子类
+           clientauth: true/false/want
+           keystorepass: KEY密码
+           keystorefile: KEY文件
+           truststorepass: TRUST密码
+           truststorefile: TRUST文件
         -->
-        <ssl creator="" p12="{APP_HOME}/conf/xxx.p12" jks="{APP_HOME}/conf/xxx.jks" pem="{APP_HOME}/conf/xxx.pem"/>
+        <ssl creator=""/>
         
         <!-- 
            加载所有的Service服务;
