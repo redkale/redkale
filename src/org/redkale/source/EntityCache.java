@@ -9,6 +9,7 @@ import java.io.Serializable;
 import java.lang.reflect.Array;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.*;
 import java.util.function.*;
 import java.util.logging.*;
 import java.util.stream.*;
@@ -226,6 +227,10 @@ public final class EntityCache<T> {
                 id = ((Number) id).byteValue();
             } else if (atype == double.class || atype == Double.class) {
                 id = ((Number) id).doubleValue();
+            } else if (atype == AtomicInteger.class) {
+                id = new AtomicInteger(((Number) id).intValue());
+            } else if (atype == AtomicLong.class) {
+                id = new AtomicLong(((Number) id).longValue());
             }
         }
         return this.map.containsKey(id);
@@ -299,11 +304,11 @@ public final class EntityCache<T> {
         if (filter != null) stream = stream.filter(filter);
         switch (func) {
             case AVG:
-                if (attr.type() == int.class || attr.type() == Integer.class) {
-                    OptionalDouble rs = stream.mapToInt(x -> (Integer) attr.get(x)).average();
+                if (attr.type() == int.class || attr.type() == Integer.class || attr.type() == AtomicInteger.class) {
+                    OptionalDouble rs = stream.mapToInt(x -> ((Number) attr.get(x)).intValue()).average();
                     return rs.isPresent() ? (int) rs.getAsDouble() : defResult;
-                } else if (attr.type() == long.class || attr.type() == Long.class) {
-                    OptionalDouble rs = stream.mapToLong(x -> (Long) attr.get(x)).average();
+                } else if (attr.type() == long.class || attr.type() == Long.class || attr.type() == AtomicLong.class) {
+                    OptionalDouble rs = stream.mapToLong(x -> ((Number) attr.get(x)).longValue()).average();
                     return rs.isPresent() ? (long) rs.getAsDouble() : defResult;
                 } else if (attr.type() == short.class || attr.type() == Short.class) {
                     OptionalDouble rs = stream.mapToInt(x -> ((Short) attr.get(x)).intValue()).average();
@@ -322,11 +327,11 @@ public final class EntityCache<T> {
                 return stream.map(x -> attr.get(x)).distinct().count();
 
             case MAX:
-                if (attr.type() == int.class || attr.type() == Integer.class) {
-                    OptionalInt rs = stream.mapToInt(x -> (Integer) attr.get(x)).max();
+                if (attr.type() == int.class || attr.type() == Integer.class || attr.type() == AtomicInteger.class) {
+                    OptionalInt rs = stream.mapToInt(x -> ((Number) attr.get(x)).intValue()).max();
                     return rs.isPresent() ? rs.getAsInt() : defResult;
-                } else if (attr.type() == long.class || attr.type() == Long.class) {
-                    OptionalLong rs = stream.mapToLong(x -> (Long) attr.get(x)).max();
+                } else if (attr.type() == long.class || attr.type() == Long.class || attr.type() == AtomicLong.class) {
+                    OptionalLong rs = stream.mapToLong(x -> ((Number) attr.get(x)).longValue()).max();
                     return rs.isPresent() ? rs.getAsLong() : defResult;
                 } else if (attr.type() == short.class || attr.type() == Short.class) {
                     OptionalInt rs = stream.mapToInt(x -> ((Short) attr.get(x)).intValue()).max();
@@ -341,11 +346,11 @@ public final class EntityCache<T> {
                 throw new RuntimeException("getNumberResult error(type:" + type + ", attr.declaringClass: " + attr.declaringClass() + ", attr.field: " + attr.field() + ", attr.type: " + attr.type());
 
             case MIN:
-                if (attr.type() == int.class || attr.type() == Integer.class) {
-                    OptionalInt rs = stream.mapToInt(x -> (Integer) attr.get(x)).min();
+                if (attr.type() == int.class || attr.type() == Integer.class || attr.type() == AtomicInteger.class) {
+                    OptionalInt rs = stream.mapToInt(x -> ((Number) attr.get(x)).intValue()).min();
                     return rs.isPresent() ? rs.getAsInt() : defResult;
-                } else if (attr.type() == long.class || attr.type() == Long.class) {
-                    OptionalLong rs = stream.mapToLong(x -> (Long) attr.get(x)).min();
+                } else if (attr.type() == long.class || attr.type() == Long.class || attr.type() == AtomicLong.class) {
+                    OptionalLong rs = stream.mapToLong(x -> ((Number) attr.get(x)).longValue()).min();
                     return rs.isPresent() ? rs.getAsLong() : defResult;
                 } else if (attr.type() == short.class || attr.type() == Short.class) {
                     OptionalInt rs = stream.mapToInt(x -> ((Short) attr.get(x)).intValue()).min();
@@ -360,10 +365,10 @@ public final class EntityCache<T> {
                 throw new RuntimeException("getNumberResult error(type:" + type + ", attr.declaringClass: " + attr.declaringClass() + ", attr.field: " + attr.field() + ", attr.type: " + attr.type());
 
             case SUM:
-                if (attr.type() == int.class || attr.type() == Integer.class) {
-                    return stream.mapToInt(x -> (Integer) attr.get(x)).sum();
-                } else if (attr.type() == long.class || attr.type() == Long.class) {
-                    return stream.mapToLong(x -> (Long) attr.get(x)).sum();
+                if (attr.type() == int.class || attr.type() == Integer.class || attr.type() == AtomicInteger.class) {
+                    return stream.mapToInt(x -> ((Number) attr.get(x)).intValue()).sum();
+                } else if (attr.type() == long.class || attr.type() == Long.class || attr.type() == AtomicLong.class) {
+                    return stream.mapToLong(x -> ((Number) attr.get(x)).longValue()).sum();
                 } else if (attr.type() == short.class || attr.type() == Short.class) {
                     return (short) stream.mapToInt(x -> ((Short) attr.get(x)).intValue()).sum();
                 } else if (attr.type() == float.class || attr.type() == Float.class) {
@@ -628,6 +633,10 @@ public final class EntityCache<T> {
                 newval = numb.doubleValue();
             } else if (ft == byte.class || ft == Byte.class) {
                 newval = numb.byteValue();
+            } else if (ft == AtomicInteger.class) {
+                newval = new AtomicInteger(numb.intValue());
+            } else if (ft == AtomicLong.class) {
+                newval = new AtomicLong(numb.longValue());
             }
         }
         attr.set(rs, (V) newval);
@@ -657,9 +666,9 @@ public final class EntityCache<T> {
                 final String func = sub[0].substring(0, pos);
                 if ("ABS".equalsIgnoreCase(func)) {
                     Function getter = null;
-                    if (pattr.type() == int.class || pattr.type() == Integer.class) {
+                    if (pattr.type() == int.class || pattr.type() == Integer.class || pattr.type() == AtomicInteger.class) {
                         getter = x -> Math.abs(((Number) pattr.get((T) x)).intValue());
-                    } else if (pattr.type() == long.class || pattr.type() == Long.class) {
+                    } else if (pattr.type() == long.class || pattr.type() == Long.class || pattr.type() == AtomicLong.class) {
                         getter = x -> Math.abs(((Number) pattr.get((T) x)).longValue());
                     } else if (pattr.type() == float.class || pattr.type() == Float.class) {
                         getter = x -> Math.abs(((Number) pattr.get((T) x)).floatValue());

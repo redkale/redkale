@@ -10,6 +10,7 @@ import java.net.URL;
 import java.sql.*;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.*;
 import java.util.function.*;
 import java.util.logging.*;
 import java.util.stream.Stream;
@@ -323,6 +324,10 @@ public class DataJdbcSource extends AbstractService implements DataSource, DataC
                     Blob blob = conn.createBlob();
                     blob.setBytes(1, (byte[]) val);
                     prestmt.setObject(++i, blob);
+                } else if (val instanceof AtomicInteger) {
+                    prestmt.setObject(++i, ((AtomicInteger) val).get());
+                } else if (val instanceof AtomicLong) {
+                    prestmt.setObject(++i, ((AtomicLong) val).get());
                 } else {
                     prestmt.setObject(++i, val);
                 }
@@ -599,6 +604,10 @@ public class DataJdbcSource extends AbstractService implements DataSource, DataC
                             Blob blob = conn.createBlob();
                             blob.setBytes(1, (byte[]) val);
                             prestmt.setObject(++k, blob);
+                        } else if (val instanceof AtomicInteger) {
+                            prestmt.setObject(++k, ((AtomicInteger) val).get());
+                        } else if (val instanceof AtomicLong) {
+                            prestmt.setObject(++k, ((AtomicLong) val).get());
                         } else {
                             prestmt.setObject(++k, val);
                         }

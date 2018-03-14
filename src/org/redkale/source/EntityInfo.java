@@ -10,6 +10,7 @@ import java.lang.reflect.*;
 import java.sql.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.*;
 import java.util.function.*;
 import java.util.logging.*;
 import javax.persistence.*;
@@ -759,6 +760,18 @@ public final class EntityInfo<T> {
                     o = false;
                 } else if (t == char.class) {
                     o = (char) 0;
+                }
+            } else if (t == AtomicInteger.class) {
+                if (o != null) {
+                    o = new AtomicInteger(((Number) o).intValue());
+                } else {
+                    o = new AtomicInteger();
+                }
+            } else if (t == AtomicLong.class) {
+                if (o != null) {
+                    o = new AtomicLong(((Number) o).longValue());
+                } else {
+                    o = new AtomicLong();
                 }
             }
         }

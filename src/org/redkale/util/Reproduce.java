@@ -23,11 +23,16 @@ public interface Reproduce<D, S> extends BiFunction<D, S, D> {
     public D apply(D dest, S src);
 
     public static <D, S> Reproduce<D, S> create(final Class<D> destClass, final Class<S> srcClass) {
-        return create(destClass, srcClass, null);
+        return create(destClass, srcClass, (BiPredicate) null);
     }
 
     @SuppressWarnings("unchecked")
     public static <D, S> Reproduce<D, S> create(final Class<D> destClass, final Class<S> srcClass, final Predicate<String> columnPredicate) {
+        return create(destClass, srcClass, (sc, m) -> columnPredicate.test(m));
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <D, S> Reproduce<D, S> create(final Class<D> destClass, final Class<S> srcClass, final BiPredicate<Class<S>, String> columnPredicate) {
         // ------------------------------------------------------------------------------
         final String supDynName = Reproduce.class.getName().replace('.', '/');
         final String destName = destClass.getName().replace('.', '/');
@@ -72,7 +77,7 @@ public interface Reproduce<D, S> extends BiFunction<D, S, D> {
                 final String fname = field.getName();
                 try {
                     if (!field.getType().equals(destClass.getField(fname).getType())) continue;
-                    if (!columnPredicate.test(fname)) continue;
+                    if (!columnPredicate.test(srcClass, fname)) continue;
                 } catch (Exception e) {
                     continue;
                 }
@@ -99,7 +104,7 @@ public interface Reproduce<D, S> extends BiFunction<D, S, D> {
                             cs[0] = Character.toLowerCase(cs[0]);
                             col = new String(cs);
                         }
-                        if (!columnPredicate.test(col)) continue;
+                        if (!columnPredicate.test(srcClass, col)) continue;
                     }
                 } catch (Exception e) {
                     continue;
