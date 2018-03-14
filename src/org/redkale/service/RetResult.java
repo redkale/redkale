@@ -6,6 +6,7 @@
 package org.redkale.service;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import org.redkale.convert.json.*;
 
 /**
@@ -55,6 +56,10 @@ public class RetResult<T> {
 
     public static RetResult success() {
         return new RetResult();
+    }
+
+    public static <T> CompletableFuture<RetResult<T>> successFuture() {
+        return CompletableFuture.completedFuture(new RetResult());
     }
 
     /**
