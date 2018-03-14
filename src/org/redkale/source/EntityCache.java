@@ -638,6 +638,12 @@ public final class EntityCache<T> {
             } else if (ft == AtomicLong.class) {
                 newval = new AtomicLong(numb.longValue());
             }
+        } else {
+            if (ft == AtomicInteger.class && newval != null && newval.getClass() != AtomicInteger.class) {
+                newval = new AtomicInteger(((Number) newval).intValue());
+            } else if (ft == AtomicLong.class && newval != null && newval.getClass() != AtomicLong.class) {
+                newval = new AtomicLong(((Number) newval).longValue());
+            }
         }
         attr.set(rs, (V) newval);
         return rs;
