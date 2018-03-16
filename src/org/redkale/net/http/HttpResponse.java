@@ -45,13 +45,10 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
 
     private static final Set<OpenOption> options = new HashSet<>();
 
-    private static final DateFormat GMT_DATE_FORMAT = new SimpleDateFormat("EEE, dd-MMM-yyyy HH:mm:ss z", Locale.ENGLISH);
-
     private static final Map<Integer, String> httpCodes = new HashMap<>();
 
     static {
         options.add(StandardOpenOption.READ);
-        GMT_DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("GMT"));
 
         httpCodes.put(100, "Continue");
         httpCodes.put(101, "Switching Protocols");
@@ -99,6 +96,8 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         httpCodes.put(505, "HTTP Version Not Supported");
     }
 
+    private final DateFormat gmtDateFormat = new SimpleDateFormat("EEE, dd-MMM-yyyy HH:mm:ss z", Locale.ENGLISH);
+
     private int status = 200;
 
     private String contentType = "text/plain; charset=utf-8";
@@ -142,6 +141,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         this.renders = renders;
         this.hasRender = renders != null && !renders.isEmpty();
         this.onlyoneHttpRender = renders != null && renders.size() == 1 ? renders.get(0) : null;
+        gmtDateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
     }
 
     @Override
@@ -270,7 +270,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * @param obj 输出对象
      */
     public void finishJson(final Object obj) {
-        this.contentType = "text/plain; charset=utf-8";
+        this.contentType = "application/json; charset=utf-8";
         if (this.recycleListener != null) this.output = obj;
         finish(request.getJsonConvert().convertTo(getBodyBufferSupplier(), obj));
     }
@@ -282,7 +282,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * @param objs 输出对象
      */
     public void finishMapJson(final Object... objs) {
-        this.contentType = "text/plain; charset=utf-8";
+        this.contentType = "application/json; charset=utf-8";
         if (this.recycleListener != null) this.output = objs;
         finish(request.getJsonConvert().convertMapTo(getBodyBufferSupplier(), objs));
     }
@@ -294,7 +294,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * @param obj     输出对象
      */
     public void finishJson(final JsonConvert convert, final Object obj) {
-        this.contentType = "text/plain; charset=utf-8";
+        this.contentType = "application/json; charset=utf-8";
         if (this.recycleListener != null) this.output = obj;
         finish(convert.convertTo(getBodyBufferSupplier(), obj));
     }
@@ -307,7 +307,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * @param objs    输出对象
      */
     public void finishMapJson(final JsonConvert convert, final Object... objs) {
-        this.contentType = "text/plain; charset=utf-8";
+        this.contentType = "application/json; charset=utf-8";
         if (this.recycleListener != null) this.output = objs;
         finish(convert.convertMapTo(getBodyBufferSupplier(), objs));
     }
@@ -319,7 +319,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * @param obj  输出对象
      */
     public void finishJson(final Type type, final Object obj) {
-        this.contentType = "text/plain; charset=utf-8";
+        this.contentType = "application/json; charset=utf-8";
         this.output = obj;
         finish(request.getJsonConvert().convertTo(getBodyBufferSupplier(), type, obj));
     }
@@ -332,7 +332,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * @param obj     输出对象
      */
     public void finishJson(final JsonConvert convert, final Type type, final Object obj) {
-        this.contentType = "text/plain; charset=utf-8";
+        this.contentType = "application/json; charset=utf-8";
         if (this.recycleListener != null) this.output = obj;
         finish(convert.convertTo(getBodyBufferSupplier(), type, obj));
     }
@@ -343,7 +343,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * @param objs 输出对象
      */
     public void finishJson(final Object... objs) {
-        this.contentType = "text/plain; charset=utf-8";
+        this.contentType = "application/json; charset=utf-8";
         if (this.recycleListener != null) this.output = objs;
         finish(request.getJsonConvert().convertTo(getBodyBufferSupplier(), objs));
     }
@@ -354,7 +354,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * @param ret RetResult输出对象
      */
     public void finishJson(final org.redkale.service.RetResult ret) {
-        this.contentType = "text/plain; charset=utf-8";
+        this.contentType = "application/json; charset=utf-8";
         if (this.recycleListener != null) this.output = ret;
         if (ret != null && !ret.isSuccess()) {
             this.header.addValue("retcode", String.valueOf(ret.getRetcode()));
@@ -370,7 +370,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * @param ret     RetResult输出对象
      */
     public void finishJson(final JsonConvert convert, final org.redkale.service.RetResult ret) {
-        this.contentType = "text/plain; charset=utf-8";
+        this.contentType = "application/json; charset=utf-8";
         if (this.recycleListener != null) this.output = ret;
         if (ret != null && !ret.isSuccess()) {
             this.header.addValue("retcode", String.valueOf(ret.getRetcode()));
@@ -493,8 +493,11 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
                     }
                 }
             }
-
-            if (convert instanceof TextConvert) this.contentType = "text/plain; charset=utf-8";
+            if (convert instanceof JsonConvert) {
+                this.contentType = "application/json; charset=utf-8";
+            } else if (convert instanceof TextConvert) {
+                this.contentType = "text/plain; charset=utf-8";
+            }
             if (this.recycleListener != null) this.output = obj;
             if (obj instanceof org.redkale.service.RetResult) {
                 org.redkale.service.RetResult ret = (org.redkale.service.RetResult) obj;
@@ -842,6 +845,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         if (!this.request.isKeepAlive()) {
             buffer.put("Connection: close\r\n".getBytes());
         }
+        buffer.put(("Date: " + gmtDateFormat.format(new Date()) + "\r\n").getBytes());
         buffer.put(serverNameBytes);
 
         if (this.defaultAddHeaders != null) {
@@ -910,9 +914,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         if (cookie.getPortlist() != null) sb.append("; Port=").append(cookie.getPortlist());
         if (cookie.getMaxAge() > 0) {
             sb.append("; Max-Age=").append(cookie.getMaxAge());
-            synchronized (GMT_DATE_FORMAT) {
-                sb.append("; Expires=").append(GMT_DATE_FORMAT.format(new Date(System.currentTimeMillis() + cookie.getMaxAge() * 1000)));
-            }
+            sb.append("; Expires=").append(gmtDateFormat.format(new Date(System.currentTimeMillis() + cookie.getMaxAge() * 1000)));
         }
         if (cookie.getSecure()) sb.append("; Secure");
         if (cookie.isHttpOnly()) sb.append("; HttpOnly");

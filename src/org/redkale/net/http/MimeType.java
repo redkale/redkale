@@ -70,6 +70,7 @@ public class MimeType {
         contentTypes.put("jpeg", "image/jpeg");
         contentTypes.put("jpg", "image/jpeg");
         contentTypes.put("js", "text/javascript");
+        contentTypes.put("json", "application/json");
         contentTypes.put("kar", "audio/x-midi");
         contentTypes.put("latex", "application/x-latex");
         contentTypes.put("log", "text/plain");
