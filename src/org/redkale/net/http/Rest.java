@@ -129,7 +129,7 @@ public final class Rest {
 
     static JsonConvert createJsonConvert(RestConvert[] converts) {
         if (converts == null || converts.length < 1) return JsonConvert.root();
-        final JsonFactory childFactory = JsonFactory.root().createChild();
+        final JsonFactory childFactory = JsonFactory.create();
         List<Class> types = new ArrayList<>();
         for (RestConvert rc : converts) {
             if (types.contains(rc.type())) throw new RuntimeException("@RestConvert type(" + rc.type() + ") repeat");
