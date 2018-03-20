@@ -17,7 +17,7 @@ public final class Redkale {
     }
 
     public static String getDotedVersion() {
-        return "1.9.1";
+        return "1.9.2";
     }
 
     public static int getMajorVersion() {
