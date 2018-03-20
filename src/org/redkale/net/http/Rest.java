@@ -202,8 +202,8 @@ public final class Rest {
         }
         if (!valid) throw new RuntimeException("Rest WebSocket Class(" + webSocketType + ") must have public or protected Constructor on createRestWebSocketServlet");
         final String rwsname = ResourceFactory.formatResourceName(rws.name());
-        if (!checkName(rws.catalog())) throw new RuntimeException(webSocketType.getName() + " have illeal " + RestWebSocket.class.getSimpleName() + ".catalog, only 0-9 a-z A-Z _ cannot begin 0-9");
-        if (!checkName(rwsname)) throw new RuntimeException(webSocketType.getName() + " have illeal " + RestWebSocket.class.getSimpleName() + ".name, only 0-9 a-z A-Z _ cannot begin 0-9");
+        if (!checkName(rws.catalog())) throw new RuntimeException(webSocketType.getName() + " have illegal " + RestWebSocket.class.getSimpleName() + ".catalog, only 0-9 a-z A-Z _ cannot begin 0-9");
+        if (!checkName(rwsname)) throw new RuntimeException(webSocketType.getName() + " have illegal " + RestWebSocket.class.getSimpleName() + ".name, only 0-9 a-z A-Z _ cannot begin 0-9");
 
         //----------------------------------------------------------------------------------------
         final Set<Field> resourcesFieldSet = new LinkedHashSet<>();
@@ -686,8 +686,8 @@ public final class Rest {
         final String defmodulename = getWebModuleNameLowerCase(serviceType);
         final String bigmodulename = getWebModuleName(serviceType);
         final String catalog = controller == null ? "" : controller.catalog();
-        if (!checkName(catalog)) throw new RuntimeException(serviceType.getName() + " have illeal " + RestService.class.getSimpleName() + ".catalog, only 0-9 a-z A-Z _ cannot begin 0-9");
-        if (!checkName(defmodulename)) throw new RuntimeException(serviceType.getName() + " have illeal " + RestService.class.getSimpleName() + ".value, only 0-9 a-z A-Z _ cannot begin 0-9");
+        if (!checkName(catalog)) throw new RuntimeException(serviceType.getName() + " have illegal " + RestService.class.getSimpleName() + ".catalog, only 0-9 a-z A-Z _ cannot begin 0-9");
+        if (!checkName(defmodulename)) throw new RuntimeException(serviceType.getName() + " have illegal " + RestService.class.getSimpleName() + ".value, only 0-9 a-z A-Z _ cannot begin 0-9");
         ClassWriter cw = new ClassWriter(COMPUTE_FRAMES);
         FieldVisitor fv;
         MethodDebugVisitor mv;
