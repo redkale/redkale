@@ -98,11 +98,6 @@ public final class ObjectPool<T> implements Supplier<T>, Consumer<T> {
         }
     }
 
-    @Deprecated
-    public void offer(final T e) {
-        accept(e);
-    }
-
     public long getCreatCount() {
         return creatCounter.longValue();
     }
