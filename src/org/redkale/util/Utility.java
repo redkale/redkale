@@ -35,35 +35,83 @@ public final class Utility {
 
     private static final char hex[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
 
-    private static final sun.misc.Unsafe UNSAFE;
+    /**
+     * <pre>
+     * public final class AnonymousArrayFunction implements java.util.function.Function<Object, char[]> {
+     *
+     * final sun.misc.Unsafe unsafe;
+     *
+     * final long fd;
+     *
+     * public AnonymousArrayFunction(Object obj, long fd) {
+     * this.unsafe = (sun.misc.Unsafe) obj;
+     * this.fd = fd;
+     * }
+     *
+     * @Override
+     * public char[] apply(Object t) {
+     * return (char[]) unsafe.getObject(t, fd);
+     * }
+     *
+     * }
+     * </pre>
+     */
+    private static final String functionClassBinary = "cafebabe00000034002f0a00090022070023090008002409000800250a000200260700"
+        + "270a0008002807002907002a07002b010006756e736166650100114c73756e2f6d6973632f556e736166653b01000266640100014a0100063c69"
+        + "6e69743e010016284c6a6176612f6c616e672f4f626a6563743b4a2956010004436f646501000f4c696e654e756d6265725461626c650100124c"
+        + "6f63616c5661726961626c655461626c65010004746869730100294c6f72672f7265646b616c652f7574696c2f416e6f6e796d6f757341727261"
+        + "7946756e6374696f6e3b0100036f626a0100124c6a6176612f6c616e672f4f626a6563743b0100056170706c79010016284c6a6176612f6c616e"
+        + "672f4f626a6563743b295b43010001740100236f72672e6e65746265616e732e536f757263654c6576656c416e6e6f746174696f6e730100144c"
+        + "6a6176612f6c616e672f4f766572726964653b010026284c6a6176612f6c616e672f4f626a6563743b294c6a6176612f6c616e672f4f626a6563"
+        + "743b0100095369676e61747572650100454c6a6176612f6c616e672f4f626a6563743b4c6a6176612f7574696c2f66756e6374696f6e2f46756e"
+        + "6374696f6e3c4c6a6176612f6c616e672f4f626a6563743b5b433e3b01000a536f7572636546696c6501001b416e6f6e796d6f75734172726179"
+        + "46756e6374696f6e2e6a6176610c000f002c01000f73756e2f6d6973632f556e736166650c000b000c0c000d000e0c002d002e0100025b430c00"
+        + "1800190100276f72672f7265646b616c652f7574696c2f416e6f6e796d6f7573417272617946756e6374696f6e0100106a6176612f6c616e672f"
+        + "4f626a65637401001b6a6176612f7574696c2f66756e6374696f6e2f46756e6374696f6e0100032829560100096765744f626a65637401002728"
+        + "4c6a6176612f6c616e672f4f626a6563743b4a294c6a6176612f6c616e672f4f626a6563743b0031000800090001000a00020010000b000c0000"
+        + "0010000d000e000000030001000f0010000100110000005c00030004000000122ab700012a2bc00002b500032a20b50004b10000000200120000"
+        + "001200040000000e0004000f000c0010001100110013000000200003000000120014001500000000001200160017000100000012000d000e0002"
+        + "000100180019000200110000004400040002000000102ab400032b2ab40004b60005c00006b00000000200120000000600010000001500130000"
+        + "001600020000001000140015000000000010001a00170001001b000000060001001c000010410018001d00020011000000300002000200000006"
+        + "2a2bb60007b00000000200120000000600010000000800130000000c000100000006001400150000001b000000060001001c00000002001e0000"
+        + "0002001f0020000000020021";
 
-    private static final long strvaloffset;
+    private static final Function<Object, char[]> strFunction;
 
-    private static final long sbvaloffset;
+    private static final Function<Object, char[]> sbFunction;
 
     private static final javax.net.ssl.SSLContext DEFAULTSSL_CONTEXT;
 
     private static final javax.net.ssl.HostnameVerifier defaultVerifier = (s, ss) -> true;
 
     static {
-        sun.misc.Unsafe usafe = null;
-        long fd1 = 0L;
-        long fd2 = 0L;
+        Function<Object, char[]> strFunction0 = null;
+        Function<Object, char[]> sbFunction0 = null;
         try {
             Field f = String.class.getDeclaredField("value");
             if (f.getType() == char[].class) { //JDK9及以上不再是char[]
-                Field safeField = sun.misc.Unsafe.class.getDeclaredField("theUnsafe");
+                Class unsafeClass = Class.forName("sun.misc.Unsafe");
+                Field safeField = unsafeClass.getDeclaredField("theUnsafe");
                 safeField.setAccessible(true);
-                usafe = (sun.misc.Unsafe) safeField.get(null);
-                fd1 = usafe.objectFieldOffset(f);
-                fd2 = usafe.objectFieldOffset(StringBuilder.class.getSuperclass().getDeclaredField("value"));
+                final Object usafe = safeField.get(null);
+                final Method fm = usafe.getClass().getMethod("objectFieldOffset", Field.class);
+                final long fd1 = (Long) fm.invoke(usafe, f);
+                final long fd2 = (Long) fm.invoke(usafe, StringBuilder.class.getSuperclass().getDeclaredField("value"));
+                byte[] bytes = hexToBin(functionClassBinary);
+                Class<Attribute> creatorClazz = (Class<Attribute>) new ClassLoader() {
+                    public final Class<?> loadClass(String name, byte[] b) {
+                        return defineClass(name, b, 0, b.length);
+                    }
+                }.loadClass("org.redkale.util.AnonymousArrayFunction", bytes);
+
+                strFunction0 = (Function<Object, char[]>) creatorClazz.getDeclaredConstructor(Object.class, long.class).newInstance(usafe, fd1);
+                sbFunction0 = (Function<Object, char[]>) creatorClazz.getDeclaredConstructor(Object.class, long.class).newInstance(usafe, fd2);
             }
-        } catch (Exception e) {
-            throw new RuntimeException(e); //不可能会发生
+        } catch (Throwable e) { //不会发生
+            e.printStackTrace();
         }
-        UNSAFE = usafe;
-        strvaloffset = fd1;
-        sbvaloffset = fd2;
+        strFunction = strFunction0;
+        sbFunction = sbFunction0;
 
         try {
             DEFAULTSSL_CONTEXT = javax.net.ssl.SSLContext.getInstance("SSL");
@@ -82,8 +130,13 @@ public final class Utility {
                 }
             }}, null);
         } catch (Exception e) {
-            throw new RuntimeException(e); //不可能会发生
+            throw new RuntimeException(e); //不会发生
         }
+    }
+
+    public static void main(String[] args) throws Throwable {
+        System.out.println(charArray("aaa").length);
+        System.out.println(charArray(new StringBuilder("bbbb")).length);
     }
 
     private Utility() {
@@ -1048,8 +1101,8 @@ public final class Utility {
 
     public static byte[] encodeUTF8(final String value) {
         if (value == null) return new byte[0];
-        if (UNSAFE == null) return encodeUTF8(value.toCharArray());
-        return encodeUTF8((char[]) UNSAFE.getObject(value, strvaloffset));
+        if (strFunction == null) return encodeUTF8(value.toCharArray());
+        return encodeUTF8((char[]) strFunction.apply(value));
     }
 
     public static byte[] encodeUTF8(final char[] array) {
@@ -1091,14 +1144,14 @@ public final class Utility {
 
     public static char[] charArray(String value) {
         if (value == null) return null;
-        if (UNSAFE == null) return value.toCharArray();
-        return (char[]) UNSAFE.getObject(value, strvaloffset);
+        if (strFunction == null) return value.toCharArray();
+        return strFunction.apply(value);
     }
 
     public static char[] charArray(StringBuilder value) {
         if (value == null) return null;
-        if (UNSAFE == null) return value.toString().toCharArray();
-        return (char[]) UNSAFE.getObject(value, sbvaloffset);
+        if (sbFunction == null) return value.toString().toCharArray();
+        return sbFunction.apply(value);
     }
 
     public static ByteBuffer encodeUTF8(final ByteBuffer buffer, final char[] array) {
@@ -1111,8 +1164,8 @@ public final class Utility {
 
     public static int encodeUTF8Length(String value) {
         if (value == null) return -1;
-        if (UNSAFE == null) return encodeUTF8Length(value.toCharArray());
-        return encodeUTF8Length((char[]) UNSAFE.getObject(value, strvaloffset));
+        if (strFunction == null) return encodeUTF8Length(value.toCharArray());
+        return encodeUTF8Length(strFunction.apply(value));
     }
 
     public static int encodeUTF8Length(final char[] text) {
