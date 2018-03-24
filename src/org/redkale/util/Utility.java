@@ -108,7 +108,7 @@ public final class Utility {
                 sbFunction0 = (Function<Object, char[]>) creatorClazz.getDeclaredConstructor(Object.class, long.class).newInstance(usafe, fd2);
             }
         } catch (Throwable e) { //不会发生
-            e.printStackTrace();
+            //e.printStackTrace();
         }
         strFunction = strFunction0;
         sbFunction = sbFunction0;
