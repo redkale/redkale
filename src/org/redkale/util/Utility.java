@@ -36,25 +36,25 @@ public final class Utility {
     private static final char hex[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
 
     /**
-     * <pre>
-     * public final class AnonymousArrayFunction implements java.util.function.Function<Object, char[]> {
+     * <blockquote><pre>
+     * public final class AnonymousArrayFunction implements java.util.function.Function&lt;Object, char[]&gt; {
      *
-     * final sun.misc.Unsafe unsafe;
+     *      final sun.misc.Unsafe unsafe;
      *
-     * final long fd;
+     *      final long fd;
      *
-     * public AnonymousArrayFunction(Object obj, long fd) {
-     * this.unsafe = (sun.misc.Unsafe) obj;
-     * this.fd = fd;
+     *      public AnonymousArrayFunction(Object obj, long fd) {
+     *          this.unsafe = (sun.misc.Unsafe) obj;
+     *          this.fd = fd;
+     *      }
+     *
+     *      &#64;Override
+     *      public char[] apply(Object t) {
+     *          return (char[]) unsafe.getObject(t, fd);
+     *      }
+     *
      * }
-     *
-     * @Override
-     * public char[] apply(Object t) {
-     * return (char[]) unsafe.getObject(t, fd);
-     * }
-     *
-     * }
-     * </pre>
+     * </pre></blockquote>
      */
     private static final String functionClassBinary = "cafebabe00000034002f0a00090022070023090008002409000800250a000200260700"
         + "270a0008002807002907002a07002b010006756e736166650100114c73756e2f6d6973632f556e736166653b01000266640100014a0100063c69"
