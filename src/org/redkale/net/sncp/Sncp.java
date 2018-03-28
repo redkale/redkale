@@ -280,6 +280,7 @@ public abstract class Sncp {
         final List<Method> methods = SncpClient.parseMethod(serviceImplClass);
         final String supDynName = serviceImplClass.getName().replace('.', '/');
         final String clientName = SncpClient.class.getName().replace('.', '/');
+        final String resDesc = Type.getDescriptor(Resource.class);
         final String clientDesc = Type.getDescriptor(SncpClient.class);
         final String anyValueDesc = Type.getDescriptor(AnyValue.class);
         final String sncpDynDesc = Type.getDescriptor(SncpDyn.class);
@@ -305,7 +306,7 @@ public abstract class Sncp {
 
         cw.visit(V1_8, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynName, null, supDynName, null);
         {
-            av0 = cw.visitAnnotation("Ljavax/annotation/Resource;", true);
+            av0 = cw.visitAnnotation(resDesc, true);
             av0.visit("name", name);
             av0.visitEnd();
         }
@@ -881,6 +882,7 @@ public abstract class Sncp {
         if (!java.lang.reflect.Modifier.isPublic(mod)) return null;
         final String supDynName = serviceTypeOrImplClass.getName().replace('.', '/');
         final String clientName = SncpClient.class.getName().replace('.', '/');
+        final String resDesc = Type.getDescriptor(Resource.class);
         final String clientDesc = Type.getDescriptor(SncpClient.class);
         final String sncpDynDesc = Type.getDescriptor(SncpDyn.class);
         final String anyValueDesc = Type.getDescriptor(AnyValue.class);
@@ -907,7 +909,7 @@ public abstract class Sncp {
 
         cw.visit(V1_8, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynName, null, serviceTypeOrImplClass.isInterface() ? "java/lang/Object" : supDynName, serviceTypeOrImplClass.isInterface() ? new String[]{supDynName} : null);
         {
-            av0 = cw.visitAnnotation("Ljavax/annotation/Resource;", true);
+            av0 = cw.visitAnnotation(resDesc, true);
             av0.visit("name", name);
             av0.visitEnd();
         }

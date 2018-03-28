@@ -253,6 +253,7 @@ public final class Rest {
             messageMethods.add(method);
         }
         //----------------------------------------------------------------------------------------
+        final String resDesc = Type.getDescriptor(Resource.class);
         final String convertDisabledDesc = Type.getDescriptor(ConvertDisabled.class);
         final String webSocketParamName = Type.getInternalName(WebSocketParam.class);
         final String supDynName = WebSocketServlet.class.getName().replace('.', '/');
@@ -315,7 +316,7 @@ public final class Rest {
                 java.lang.reflect.Type fieldType = field.getGenericType();
                 fv = cw.visitField(ACC_PRIVATE, "_redkale_resource_" + i, Type.getDescriptor(field.getType()), fieldType == field.getType() ? null : Utility.getTypeDescriptor(fieldType), null);
                 {
-                    av0 = fv.visitAnnotation("Ljavax/annotation/Resource;", true);
+                    av0 = fv.visitAnnotation(resDesc, true);
                     av0.visit("name", res.name());
                     av0.visitEnd();
                 }
@@ -652,6 +653,7 @@ public final class Rest {
 
         final String serviceDesc = Type.getDescriptor(serviceType);
         final String webServletDesc = Type.getDescriptor(WebServlet.class);
+        final String resDesc = Type.getDescriptor(Resource.class);
         final String reqDesc = Type.getDescriptor(HttpRequest.class);
         final String respDesc = Type.getDescriptor(HttpResponse.class);
         final String convertDesc = Type.getDescriptor(Convert.class);
@@ -729,14 +731,14 @@ public final class Rest {
 
         {  //注入 @Resource  private XXXService _service;
             fv = cw.visitField(ACC_PRIVATE, REST_SERVICE_FIELD_NAME, serviceDesc, null, null);
-            av0 = fv.visitAnnotation("Ljavax/annotation/Resource;", true);
+            av0 = fv.visitAnnotation(resDesc, true);
             av0.visit("name", "");
             av0.visitEnd();
             fv.visitEnd();
         }
         {  //注入 @Resource(name = "APP_HOME")  private File _redkale_home;
             fv = cw.visitField(ACC_PRIVATE, "_redkale_home", Type.getDescriptor(File.class), null, null);
-            av0 = fv.visitAnnotation("Ljavax/annotation/Resource;", true);
+            av0 = fv.visitAnnotation(resDesc, true);
             av0.visit("name", "APP_HOME");
             av0.visitEnd();
             fv.visitEnd();
