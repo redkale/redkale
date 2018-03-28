@@ -102,6 +102,7 @@ public interface SncpAsyncHandler<V, A> extends CompletionHandler<V, A> {
             final boolean handlerinterface = handlerClass.isInterface();
             final String handlerClassName = handlerClass.getName().replace('.', '/');
             final String sncpHandlerName = SncpAsyncHandler.class.getName().replace('.', '/');
+            final String cpDesc = Type.getDescriptor(ConstructorParameters.class);
             final String sncpHandlerDesc = Type.getDescriptor(SncpAsyncHandler.class);
             final String sncpFutureDesc = Type.getDescriptor(CompletableFuture.class);
             final String newDynName = handlerClass.getName().replace('.', '/') + "_Dync" + SncpAsyncHandler.class.getSimpleName() + "_" + (System.currentTimeMillis() % 10000);
@@ -124,7 +125,7 @@ public interface SncpAsyncHandler<V, A> extends CompletionHandler<V, A> {
                 mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC, "<init>", "(" + sncpHandlerDesc + ")V", null, null));
                 //mv.setDebug(true);
                 {
-                    av0 = mv.visitAnnotation("org/redkale/util/ConstructorParameters;", true);
+                    av0 = mv.visitAnnotation(cpDesc, true);
                     {
                         AnnotationVisitor av1 = av0.visitArray("value");
                         av1.visit(null, "sncphandler");

@@ -254,6 +254,9 @@ public final class Rest {
         }
         //----------------------------------------------------------------------------------------
         final String resDesc = Type.getDescriptor(Resource.class);
+        final String wsDesc = Type.getDescriptor(WebSocket.class);
+        final String wsParamDesc = Type.getDescriptor(WebSocketParam.class);
+        final String jsonConvertDesc = Type.getDescriptor(JsonConvert.class);
         final String convertDisabledDesc = Type.getDescriptor(ConvertDisabled.class);
         final String webSocketParamName = Type.getInternalName(WebSocketParam.class);
         final String supDynName = WebSocketServlet.class.getName().replace('.', '/');
@@ -356,7 +359,7 @@ public final class Rest {
             mv.visitEnd();
         }
         { //createWebSocket 方法
-            mv = new MethodDebugVisitor(cw.visitMethod(ACC_PROTECTED, "createWebSocket", "()Lorg/redkale/net/http/WebSocket;", "<G::Ljava/io/Serializable;T:Ljava/lang/Object;>()Lorg/redkale/net/http/WebSocket<TG;TT;>;", null));
+            mv = new MethodDebugVisitor(cw.visitMethod(ACC_PROTECTED, "createWebSocket", "()" + wsDesc, "<G::Ljava/io/Serializable;T:Ljava/lang/Object;>()L" + WebSocket.class.getName().replace('.', '/') + "<TG;TT;>;", null));
             mv.visitTypeInsn(NEW, newDynName + "$" + newDynWebSokcetSimpleName);
             mv.visitInsn(DUP);
             for (int i = 0; i < resourcesFields.size(); i++) {
@@ -369,7 +372,7 @@ public final class Rest {
             mv.visitEnd();
         }
         { //createRestOnMessageConsumer
-            mv = new MethodDebugVisitor(cw.visitMethod(ACC_PROTECTED, "createRestOnMessageConsumer", "()Ljava/util/function/BiConsumer;", "()Ljava/util/function/BiConsumer<Lorg/redkale/net/http/WebSocket;Ljava/lang/Object;>;", null));
+            mv = new MethodDebugVisitor(cw.visitMethod(ACC_PROTECTED, "createRestOnMessageConsumer", "()Ljava/util/function/BiConsumer;", "()Ljava/util/function/BiConsumer<" + wsDesc + "Ljava/lang/Object;>;", null));
             mv.visitTypeInsn(NEW, newDynConsumerFullName);
             mv.visitInsn(DUP);
             mv.visitMethodInsn(INVOKESPECIAL, newDynConsumerFullName, "<init>", "()V", false);
@@ -476,7 +479,7 @@ public final class Rest {
                 mv.visitLdcInsn(method.getAnnotation(RestOnMessage.class).name());
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitVarInsn(ALOAD, 0);
-                mv.visitMethodInsn(INVOKEVIRTUAL, newDynWebSokcetFullName, "preOnMessage", "(Ljava/lang/String;Lorg/redkale/net/http/WebSocketParam;Ljava/lang/Runnable;)V", false);
+                mv.visitMethodInsn(INVOKEVIRTUAL, newDynWebSokcetFullName, "preOnMessage", "(Ljava/lang/String;" + wsParamDesc + "Ljava/lang/Runnable;)V", false);
                 mv.visitInsn(RETURN);
                 mv.visitMaxs(4, 2);
                 mv.visitEnd();
@@ -498,9 +501,9 @@ public final class Rest {
             }
             { //toString
                 mv = new MethodDebugVisitor(cw2.visitMethod(ACC_PUBLIC, "toString", "()Ljava/lang/String;", null, null));
-                mv.visitMethodInsn(INVOKESTATIC, "org/redkale/convert/json/JsonConvert", "root", "()Lorg/redkale/convert/json/JsonConvert;", false);
+                mv.visitMethodInsn(INVOKESTATIC, JsonConvert.class.getName().replace('.', '/'), "root", "()" + jsonConvertDesc, false);
                 mv.visitVarInsn(ALOAD, 0);
-                mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/convert/json/JsonConvert", "convertTo", "(Ljava/lang/Object;)Ljava/lang/String;", false);
+                mv.visitMethodInsn(INVOKEVIRTUAL, JsonConvert.class.getName().replace('.', '/'), "convertTo", "(Ljava/lang/Object;)Ljava/lang/String;", false);
                 mv.visitInsn(ARETURN);
                 mv.visitMaxs(2, 1);
                 mv.visitEnd();
@@ -533,9 +536,9 @@ public final class Rest {
             }
             { //toString
                 mv = new MethodDebugVisitor(cw2.visitMethod(ACC_PUBLIC, "toString", "()Ljava/lang/String;", null, null));
-                mv.visitMethodInsn(INVOKESTATIC, "org/redkale/convert/json/JsonConvert", "root", "()Lorg/redkale/convert/json/JsonConvert;", false);
+                mv.visitMethodInsn(INVOKESTATIC, JsonConvert.class.getName().replace('.', '/'), "root", "()" + jsonConvertDesc, false);
                 mv.visitVarInsn(ALOAD, 0);
-                mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/convert/json/JsonConvert", "convertTo", "(Ljava/lang/Object;)Ljava/lang/String;", false);
+                mv.visitMethodInsn(INVOKEVIRTUAL, JsonConvert.class.getName().replace('.', '/'), "convertTo", "(Ljava/lang/Object;)Ljava/lang/String;", false);
                 mv.visitInsn(ARETURN);
                 mv.visitMaxs(2, 1);
                 mv.visitEnd();
@@ -570,7 +573,7 @@ public final class Rest {
 
         { //_DynRestOnMessageConsumer class
             ClassWriter cw2 = new ClassWriter(COMPUTE_FRAMES);
-            cw2.visit(V1_8, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynConsumerFullName, "Ljava/lang/Object;Ljava/util/function/BiConsumer<Lorg/redkale/net/http/WebSocket;Ljava/lang/Object;>;", "java/lang/Object", new String[]{"java/util/function/BiConsumer"});
+            cw2.visit(V1_8, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynConsumerFullName, "Ljava/lang/Object;Ljava/util/function/BiConsumer<" + wsDesc + "Ljava/lang/Object;>;", "java/lang/Object", new String[]{"java/util/function/BiConsumer"});
 
             cw2.visitInnerClass(newDynConsumerFullName, newDynName, newDynConsumerSimpleName, ACC_PUBLIC + ACC_STATIC);
             cw2.visitInnerClass(newDynMessageFullName, newDynName, newDynMessageSimpleName, ACC_PUBLIC + ACC_STATIC);
@@ -590,7 +593,7 @@ public final class Rest {
             }
 
             { //accept函数
-                mv = new MethodDebugVisitor(cw2.visitMethod(ACC_PUBLIC, "accept", "(Lorg/redkale/net/http/WebSocket;Ljava/lang/Object;)V", null, null));
+                mv = new MethodDebugVisitor(cw2.visitMethod(ACC_PUBLIC, "accept", "(" + wsDesc + "Ljava/lang/Object;)V", null, null));
                 mv.visitVarInsn(ALOAD, 1);
                 mv.visitTypeInsn(CHECKCAST, newDynWebSokcetFullName);
                 mv.visitVarInsn(ASTORE, 3);
@@ -624,10 +627,10 @@ public final class Rest {
                 mv = new MethodDebugVisitor(cw2.visitMethod(ACC_PUBLIC + ACC_BRIDGE + ACC_SYNTHETIC, "accept", "(Ljava/lang/Object;Ljava/lang/Object;)V", null, null));
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitVarInsn(ALOAD, 1);
-                mv.visitTypeInsn(CHECKCAST, "org/redkale/net/http/WebSocket");
+                mv.visitTypeInsn(CHECKCAST, WebSocket.class.getName().replace('.', '/'));
                 mv.visitVarInsn(ALOAD, 2);
                 mv.visitTypeInsn(CHECKCAST, "java/lang/Object");
-                mv.visitMethodInsn(INVOKEVIRTUAL, newDynConsumerFullName, "accept", "(Lorg/redkale/net/http/WebSocket;Ljava/lang/Object;)V", false);
+                mv.visitMethodInsn(INVOKEVIRTUAL, newDynConsumerFullName, "accept", "(" + wsDesc + "Ljava/lang/Object;)V", false);
                 mv.visitInsn(RETURN);
                 mv.visitMaxs(3, 3);
                 mv.visitEnd();
@@ -664,6 +667,8 @@ public final class Rest {
         final String flipperDesc = Type.getDescriptor(Flipper.class);
         final String httprsDesc = Type.getDescriptor(HttpResult.class);
         final String attrDesc = Type.getDescriptor(org.redkale.util.Attribute.class);
+        final String multiContextDesc = Type.getDescriptor(MultiContext.class);
+        final String multiContextName = MultiContext.class.getName().replace('.', '/');
         final String mappingDesc = Type.getDescriptor(HttpMapping.class);
         final String webparamDesc = Type.getDescriptor(HttpParam.class);
         final String webparamsDesc = Type.getDescriptor(HttpParam.HttpParams.class);
@@ -1030,33 +1035,33 @@ public final class Rest {
             if (mupload != null) { //存在文件上传
                 if (muploadType == byte[].class) {
                     mv.visitVarInsn(ALOAD, 1);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getMultiContext", "()Lorg/redkale/net/http/MultiContext;", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getMultiContext", "()" + multiContextDesc, false);
                     mv.visitLdcInsn(mupload.maxLength());
                     mv.visitLdcInsn(mupload.fileNameReg());
                     mv.visitLdcInsn(mupload.contentTypeReg());
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/MultiContext", "partsFirstBytes", "(JLjava/lang/String;Ljava/lang/String;)[B", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, multiContextName, "partsFirstBytes", "(JLjava/lang/String;Ljava/lang/String;)[B", false);
                     mv.visitVarInsn(ASTORE, maxLocals);
                     uploadLocal = maxLocals;
                 } else if (muploadType == File.class) {
                     mv.visitVarInsn(ALOAD, 1);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getMultiContext", "()Lorg/redkale/net/http/MultiContext;", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getMultiContext", "()" + multiContextDesc, false);
                     mv.visitVarInsn(ALOAD, 0);
                     mv.visitFieldInsn(GETFIELD, newDynName, "_redkale_home", "Ljava/io/File;");
                     mv.visitLdcInsn(mupload.maxLength());
                     mv.visitLdcInsn(mupload.fileNameReg());
                     mv.visitLdcInsn(mupload.contentTypeReg());
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/MultiContext", "partsFirstFile", "(Ljava/io/File;JLjava/lang/String;Ljava/lang/String;)Ljava/io/File;", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, multiContextName, "partsFirstFile", "(Ljava/io/File;JLjava/lang/String;Ljava/lang/String;)Ljava/io/File;", false);
                     mv.visitVarInsn(ASTORE, maxLocals);
                     uploadLocal = maxLocals;
                 } else if (muploadType == File[].class) { //File[]
                     mv.visitVarInsn(ALOAD, 1);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getMultiContext", "()Lorg/redkale/net/http/MultiContext;", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getMultiContext", "()" + multiContextDesc, false);
                     mv.visitVarInsn(ALOAD, 0);
                     mv.visitFieldInsn(GETFIELD, newDynName, "_redkale_home", "Ljava/io/File;");
                     mv.visitLdcInsn(mupload.maxLength());
                     mv.visitLdcInsn(mupload.fileNameReg());
                     mv.visitLdcInsn(mupload.contentTypeReg());
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/net/http/MultiContext", "partsFiles", "(Ljava/io/File;JLjava/lang/String;Ljava/lang/String;)[Ljava/io/File;", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, multiContextName, "partsFiles", "(Ljava/io/File;JLjava/lang/String;Ljava/lang/String;)[Ljava/io/File;", false);
                     mv.visitVarInsn(ASTORE, maxLocals);
                     uploadLocal = maxLocals;
                 }
