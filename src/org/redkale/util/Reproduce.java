@@ -1,6 +1,7 @@
 package org.redkale.util;
 
 import java.lang.reflect.Modifier;
+import java.util.Map;
 import java.util.function.*;
 import static org.redkale.asm.Opcodes.*;
 import org.redkale.asm.*;
@@ -23,27 +24,41 @@ public interface Reproduce<D, S> extends BiFunction<D, S, D> {
     public D apply(D dest, S src);
 
     public static <D, S> Reproduce<D, S> create(final Class<D> destClass, final Class<S> srcClass) {
-        return create(destClass, srcClass, (BiPredicate) null);
+        return create(destClass, srcClass, (BiPredicate) null, (Map<String, String>) null);
+    }
+
+    public static <D, S> Reproduce<D, S> create(final Class<D> destClass, final Class<S> srcClass, final Map<String, String> names) {
+        return create(destClass, srcClass, (BiPredicate) null, names);
     }
 
     @SuppressWarnings("unchecked")
-    public static <D, S> Reproduce<D, S> create(final Class<D> destClass, final Class<S> srcClass, final Predicate<String> columnPredicate) {
-        return create(destClass, srcClass, (sc, m) -> columnPredicate.test(m));
+    public static <D, S> Reproduce<D, S> create(final Class<D> destClass, final Class<S> srcClass, final Predicate<String> srcColumnPredicate) {
+        return create(destClass, srcClass, (sc, m) -> srcColumnPredicate.test(m), (Map<String, String>) null);
     }
 
     @SuppressWarnings("unchecked")
-    public static <D, S> Reproduce<D, S> create(final Class<D> destClass, final Class<S> srcClass, final BiPredicate<Class<S>, String> columnPredicate) {
+    public static <D, S> Reproduce<D, S> create(final Class<D> destClass, final Class<S> srcClass, final Predicate<String> srcColumnPredicate, final Map<String, String> names) {
+        return create(destClass, srcClass, (sc, m) -> srcColumnPredicate.test(m), names);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <D, S> Reproduce<D, S> create(final Class<D> destClass, final Class<S> srcClass, final BiPredicate<Class<S>, String> srcColumnPredicate) {
+        return create(destClass, srcClass, srcColumnPredicate, (Map<String, String>) null);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <D, S> Reproduce<D, S> create(final Class<D> destClass, final Class<S> srcClass, final BiPredicate<Class<S>, String> srcColumnPredicate, final Map<String, String> names) {
         // ------------------------------------------------------------------------------
         final String supDynName = Reproduce.class.getName().replace('.', '/');
-        final String destName = destClass.getName().replace('.', '/');
-        final String srcName = srcClass.getName().replace('.', '/');
+        final String destClassName = destClass.getName().replace('.', '/');
+        final String srcClassName = srcClass.getName().replace('.', '/');
         final String destDesc = Type.getDescriptor(destClass);
         final String srcDesc = Type.getDescriptor(srcClass);
         String newDynName = supDynName + "Dyn_" + destClass.getSimpleName() + "_" + srcClass.getSimpleName();
         ClassLoader loader = Thread.currentThread().getContextClassLoader();
         if (String.class.getClassLoader() != destClass.getClassLoader()) {
             loader = destClass.getClassLoader();
-            newDynName = destName + "_Dyn" + Reproduce.class.getSimpleName() + "_" + srcClass.getSimpleName();
+            newDynName = destClassName + "_Dyn" + Reproduce.class.getSimpleName() + "_" + srcClass.getSimpleName();
         }
         try {
             return (Reproduce) loader.loadClass(newDynName.replace('/', '.')).getDeclaredConstructor().newInstance();
@@ -74,45 +89,51 @@ public interface Reproduce<D, S> extends BiFunction<D, S, D> {
                 if (Modifier.isStatic(field.getModifiers())) continue;
                 if (Modifier.isFinal(field.getModifiers())) continue;
                 if (!Modifier.isPublic(field.getModifiers())) continue;
-                final String fname = field.getName();
+                final String sfname = field.getName();
+                final String dfname = names == null ? sfname : names.getOrDefault(sfname, sfname);
                 try {
-                    if (!field.getType().equals(destClass.getField(fname).getType())) continue;
-                    if (!columnPredicate.test(srcClass, fname)) continue;
+                    if (!srcColumnPredicate.test(srcClass, sfname)) continue;
+                    if (!field.getType().equals(destClass.getField(dfname).getType())) continue;
                 } catch (Exception e) {
                     continue;
                 }
                 mv.visitVarInsn(ALOAD, 1);
                 mv.visitVarInsn(ALOAD, 2);
                 String td = Type.getDescriptor(field.getType());
-                mv.visitFieldInsn(GETFIELD, srcName, fname, td);
-                mv.visitFieldInsn(PUTFIELD, destName, fname, td);
+                mv.visitFieldInsn(GETFIELD, srcClassName, sfname, td);
+                mv.visitFieldInsn(PUTFIELD, destClassName, dfname, td);
             }
 
             for (java.lang.reflect.Method getter : srcClass.getMethods()) {
                 if (Modifier.isStatic(getter.getModifiers())) continue;
-                if (getter.getParameterTypes().length > 0) continue;  //为了兼容android 而不使用 getParameterCount()
+                if (getter.getParameterTypes().length > 0) continue;
                 if ("getClass".equals(getter.getName())) continue;
                 if (!getter.getName().startsWith("get") && !getter.getName().startsWith("is")) continue;
                 java.lang.reflect.Method setter;
-                boolean is = getter.getName().startsWith("is");
+                final boolean is = getter.getName().startsWith("is");
+                String sfname = getter.getName().substring(is ? 2 : 3);
+                if (sfname.length() < 2 || Character.isLowerCase(sfname.charAt(1))) {
+                    char[] cs = sfname.toCharArray();
+                    cs[0] = Character.toLowerCase(cs[0]);
+                    sfname = new String(cs);
+                }
+                if (srcColumnPredicate != null && !srcColumnPredicate.test(srcClass, sfname)) continue;
+
+                String dfname = names == null ? sfname : names.getOrDefault(sfname, sfname);
+                {
+                    char[] cs = dfname.toCharArray();
+                    cs[0] = Character.toUpperCase(cs[0]);
+                    dfname = new String(cs);
+                }
                 try {
-                    setter = destClass.getMethod(getter.getName().replaceFirst(is ? "is" : "get", "set"), getter.getReturnType());
-                    if (columnPredicate != null) {
-                        String col = setter.getName().substring(3);
-                        if (col.length() < 2 || Character.isLowerCase(col.charAt(1))) {
-                            char[] cs = col.toCharArray();
-                            cs[0] = Character.toLowerCase(cs[0]);
-                            col = new String(cs);
-                        }
-                        if (!columnPredicate.test(srcClass, col)) continue;
-                    }
+                    setter = destClass.getMethod("set" + dfname, getter.getReturnType());
                 } catch (Exception e) {
                     continue;
                 }
                 mv.visitVarInsn(ALOAD, 1);
                 mv.visitVarInsn(ALOAD, 2);
-                mv.visitMethodInsn(INVOKEVIRTUAL, srcName, getter.getName(), Type.getMethodDescriptor(getter), false);
-                mv.visitMethodInsn(INVOKEVIRTUAL, destName, setter.getName(), Type.getMethodDescriptor(setter), false);
+                mv.visitMethodInsn(INVOKEVIRTUAL, srcClassName, getter.getName(), Type.getMethodDescriptor(getter), false);
+                mv.visitMethodInsn(INVOKEVIRTUAL, destClassName, setter.getName(), Type.getMethodDescriptor(setter), false);
             }
             mv.visitVarInsn(ALOAD, 1);
             mv.visitInsn(ARETURN);
@@ -124,9 +145,9 @@ public interface Reproduce<D, S> extends BiFunction<D, S, D> {
             //mv.setDebug(true);
             mv.visitVarInsn(ALOAD, 0);
             mv.visitVarInsn(ALOAD, 1);
-            mv.visitTypeInsn(CHECKCAST, destName);
+            mv.visitTypeInsn(CHECKCAST, destClassName);
             mv.visitVarInsn(ALOAD, 2);
-            mv.visitTypeInsn(CHECKCAST, srcName);
+            mv.visitTypeInsn(CHECKCAST, srcClassName);
             mv.visitMethodInsn(INVOKEVIRTUAL, newDynName, "apply", "(" + destDesc + srcDesc + ")" + destDesc, false);
             mv.visitInsn(ARETURN);
             mv.visitMaxs(3, 3);
