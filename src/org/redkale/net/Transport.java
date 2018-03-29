@@ -268,12 +268,7 @@ public final class Transport {
                         taddr.enable = true;
                         AsyncConnection asyncConn = AsyncConnection.create(channel, attachment.address, factory.readTimeoutSecond, factory.writeTimeoutSecond);
                         if (future.isDone()) {
-                            if (!attachment.conns.offer(asyncConn)) {
-                                try {
-                                    channel.close();
-                                } catch (Exception e) {
-                                }
-                            }
+                            if (!attachment.conns.offer(asyncConn)) asyncConn.dispose();
                         } else {
                             future.complete(asyncConn);
                         }
