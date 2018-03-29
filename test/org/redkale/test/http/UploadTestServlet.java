@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.redkale.test.net;
+package org.redkale.test.http;
 
 import org.redkale.net.http.HttpServlet;
 import org.redkale.net.http.MultiPart;

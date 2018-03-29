@@ -11,6 +11,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import javax.net.ssl.SSLContext;
@@ -30,7 +31,7 @@ public final class Transport {
 
     public static final String DEFAULT_PROTOCOL = "TCP";
 
-    protected static final int MAX_POOL_LIMIT = Runtime.getRuntime().availableProcessors() * 16;
+    protected static final int MAX_POOL_LIMIT = Runtime.getRuntime().availableProcessors() * 8;
 
     protected static final boolean supportTcpNoDelay;
 
@@ -59,7 +60,8 @@ public final class Transport {
 
     protected final InetSocketAddress clientAddress;
 
-    protected TransportAddress[] transportAddres = new TransportAddress[0];
+    //不可能为null
+    protected TransportAddress[] transportAddrs = new TransportAddress[0];
 
     protected final ObjectPool<ByteBuffer> bufferPool;
 
@@ -67,8 +69,6 @@ public final class Transport {
 
     //负载均衡策略
     protected final TransportStrategy strategy;
-
-    protected final ConcurrentHashMap<SocketAddress, BlockingQueue<AsyncConnection>> connPool = new ConcurrentHashMap<>();
 
     protected Transport(String name, String subprotocol, TransportFactory factory, final ObjectPool<ByteBuffer> transportBufferPool,
         final AsynchronousChannelGroup transportChannelGroup, final SSLContext sslContext, final InetSocketAddress clientAddress,
@@ -95,16 +95,26 @@ public final class Transport {
     }
 
     public final InetSocketAddress[] updateRemoteAddresses(final Collection<InetSocketAddress> addresses) {
-        TransportAddress[] oldAddresses = this.transportAddres;
-        List<TransportAddress> list = new ArrayList<>();
-        if (addresses != null) {
-            for (InetSocketAddress addr : addresses) {
-                if (clientAddress != null && clientAddress.equals(addr)) continue;
-                list.add(new TransportAddress(addr));
+        final TransportAddress[] oldAddresses = this.transportAddrs;
+        synchronized (this) {
+            List<TransportAddress> list = new ArrayList<>();
+            if (addresses != null) {
+                for (InetSocketAddress addr : addresses) {
+                    if (clientAddress != null && clientAddress.equals(addr)) continue;
+                    boolean hasold = false;
+                    for (TransportAddress oldAddr : oldAddresses) {
+                        if (oldAddr.getAddress().equals(addr)) {
+                            list.add(oldAddr);
+                            hasold = true;
+                            break;
+                        }
+                    }
+                    if (hasold) continue;
+                    list.add(new TransportAddress(addr));
+                }
             }
+            this.transportAddrs = list.toArray(new TransportAddress[list.size()]);
         }
-        this.transportAddres = list.toArray(new TransportAddress[list.size()]);
-
         InetSocketAddress[] rs = new InetSocketAddress[oldAddresses.length];
         for (int i = 0; i < rs.length; i++) {
             rs[i] = oldAddresses[i].getAddress();
@@ -114,14 +124,15 @@ public final class Transport {
 
     public final boolean addRemoteAddresses(final InetSocketAddress addr) {
         if (addr == null) return false;
+        if (clientAddress != null && clientAddress.equals(addr)) return false;
         synchronized (this) {
-            if (this.transportAddres == null) {
-                this.transportAddres = new TransportAddress[]{new TransportAddress(addr)};
+            if (this.transportAddrs.length == 0) {
+                this.transportAddrs = new TransportAddress[]{new TransportAddress(addr)};
             } else {
-                for (TransportAddress i : this.transportAddres) {
+                for (TransportAddress i : this.transportAddrs) {
                     if (addr.equals(i.address)) return false;
                 }
-                this.transportAddres = Utility.append(transportAddres, new TransportAddress(addr));
+                this.transportAddrs = Utility.append(transportAddrs, new TransportAddress(addr));
             }
             return true;
         }
@@ -129,9 +140,8 @@ public final class Transport {
 
     public final boolean removeRemoteAddresses(InetSocketAddress addr) {
         if (addr == null) return false;
-        if (this.transportAddres == null) return false;
         synchronized (this) {
-            this.transportAddres = Utility.remove(transportAddres, new TransportAddress(addr));
+            this.transportAddrs = Utility.remove(transportAddrs, new TransportAddress(addr));
         }
         return true;
     }
@@ -145,7 +155,11 @@ public final class Transport {
     }
 
     public void close() {
-        connPool.forEach((k, v) -> v.forEach(c -> c.dispose()));
+        TransportAddress[] taddrs = this.transportAddrs;
+        if (taddrs == null) return;
+        for (TransportAddress taddr : taddrs) {
+            if (taddr != null) taddr.dispose();
+        }
     }
 
     public InetSocketAddress getClientAddress() {
@@ -153,24 +167,27 @@ public final class Transport {
     }
 
     public TransportAddress[] getTransportAddresses() {
-        return transportAddres;
+        return transportAddrs;
+    }
+
+    public TransportAddress findTransportAddress(SocketAddress addr) {
+        for (TransportAddress taddr : this.transportAddrs) {
+            if (taddr.address.equals(addr)) return taddr;
+        }
+        return null;
     }
 
     public InetSocketAddress[] getRemoteAddresses() {
-        InetSocketAddress[] rs = new InetSocketAddress[transportAddres.length];
+        InetSocketAddress[] rs = new InetSocketAddress[transportAddrs.length];
         for (int i = 0; i < rs.length; i++) {
-            rs[i] = transportAddres[i].getAddress();
+            rs[i] = transportAddrs[i].getAddress();
         }
         return rs;
     }
 
-    public ConcurrentHashMap<SocketAddress, BlockingQueue<AsyncConnection>> getAsyncConnectionPool() {
-        return connPool;
-    }
-
     @Override
     public String toString() {
-        return Transport.class.getSimpleName() + "{name = " + name + ", protocol = " + protocol + ", clientAddress = " + clientAddress + ", remoteAddres = " + Arrays.toString(transportAddres) + "}";
+        return Transport.class.getSimpleName() + "{name = " + name + ", protocol = " + protocol + ", clientAddress = " + clientAddress + ", remoteAddres = " + Arrays.toString(transportAddrs) + "}";
     }
 
     public ByteBuffer pollBuffer() {
@@ -189,76 +206,93 @@ public final class Transport {
         for (ByteBuffer buffer : buffers) offerBuffer(buffer);
     }
 
+    public AsynchronousChannelGroup getTransportChannelGroup() {
+        return group;
+    }
+
     public boolean isTCP() {
         return tcp;
     }
 
-    public CompletableFuture<AsyncConnection> pollConnection(SocketAddress addr) {
-        if (this.strategy != null) return strategy.pollConnection(addr, this);
-        if (addr == null && this.transportAddres.length == 1) addr = this.transportAddres[0].address;
-        final boolean rand = addr == null;
-        if (rand && this.transportAddres.length < 1) throw new RuntimeException("Transport (" + this.name + ") have no remoteAddress list");
+    public CompletableFuture<AsyncConnection> pollConnection(SocketAddress addr0) {
+        if (this.strategy != null) return strategy.pollConnection(addr0, this);
+        if (addr0 == null && this.transportAddrs.length == 1) addr0 = this.transportAddrs[0].address;
+        final SocketAddress addr = addr0;
+        final boolean rand = addr == null; //是否随机取地址
+        if (rand && this.transportAddrs.length < 1) throw new RuntimeException("Transport (" + this.name + ") have no remoteAddress list");
         try {
-            if (tcp) {
-                AsynchronousSocketChannel channel = null;
-                if (rand) {   //取地址
-                    TransportAddress transportAddr;
-                    boolean tryed = false;
-                    for (int i = 0; i < transportAddres.length; i++) {
-                        transportAddr = transportAddres[i];
-                        addr = transportAddr.address;
-                        if (!transportAddr.enable) continue;
-                        final BlockingQueue<AsyncConnection> queue = transportAddr.conns;
-                        if (!queue.isEmpty()) {
-                            AsyncConnection conn;
-                            while ((conn = queue.poll()) != null) {
-                                if (conn.isOpen()) return CompletableFuture.completedFuture(conn);
-                            }
-                        }
-                        tryed = true;
-                        if (channel == null) {
-                            channel = AsynchronousSocketChannel.open(group);
-                            if (supportTcpNoDelay) channel.setOption(StandardSocketOptions.TCP_NODELAY, true);
-                        }
-                        try {
-                            channel.connect(addr).get(2, TimeUnit.SECONDS);
-                            transportAddr.enable = true;
-                            break;
-                        } catch (Exception iex) {
-                            transportAddr.enable = false;
-                            channel = null;
-                        }
-                    }
-                    if (channel == null && !tryed) {
-                        for (int i = 0; i < transportAddres.length; i++) {
-                            transportAddr = transportAddres[i];
-                            addr = transportAddr.address;
-                            if (channel == null) {
-                                channel = AsynchronousSocketChannel.open(group);
-                                if (supportTcpNoDelay) channel.setOption(StandardSocketOptions.TCP_NODELAY, true);
-                            }
-                            try {
-                                channel.connect(addr).get(2, TimeUnit.SECONDS);
-                                transportAddr.enable = true;
-                                break;
-                            } catch (Exception iex) {
-                                transportAddr.enable = false;
-                                channel = null;
-                            }
-                        }
-                    }
-                } else {
-                    return AsyncConnection.createTCP(group, sslContext, addr, supportTcpNoDelay, 6, 6);
-                }
-                if (channel == null) return CompletableFuture.completedFuture(null);
-                return CompletableFuture.completedFuture(AsyncConnection.create(channel, addr, 6, 6));
-            } else { // UDP
-                if (rand) addr = this.transportAddres[0].address;
+            if (!tcp) { // UDP
+                SocketAddress udpaddr = rand ? this.transportAddrs[0].address : addr;
                 DatagramChannel channel = DatagramChannel.open();
                 channel.configureBlocking(true);
-                channel.connect(addr);
-                return CompletableFuture.completedFuture(AsyncConnection.create(channel, addr, true, 6, 6));
+                channel.connect(udpaddr);
+                return CompletableFuture.completedFuture(AsyncConnection.create(channel, udpaddr, true, factory.readTimeoutSecond, factory.writeTimeoutSecond));
             }
+            if (!rand) { //指定地址
+                TransportAddress taddr = findTransportAddress(addr);
+                if (taddr == null) {
+                    return AsyncConnection.createTCP(group, sslContext, addr, supportTcpNoDelay, factory.readTimeoutSecond, factory.writeTimeoutSecond);
+                }
+                final BlockingQueue<AsyncConnection> queue = taddr.conns;
+                if (!queue.isEmpty()) {
+                    AsyncConnection conn;
+                    while ((conn = queue.poll()) != null) {
+                        if (conn.isOpen()) return CompletableFuture.completedFuture(conn);
+                    }
+                }
+                return AsyncConnection.createTCP(group, sslContext, addr, supportTcpNoDelay, factory.readTimeoutSecond, factory.writeTimeoutSecond);
+            }
+
+            //---------------------随机取地址------------------------
+            //从连接池里取
+            for (final TransportAddress taddr : this.transportAddrs) {
+                if (!taddr.enable) continue;
+                final BlockingQueue<AsyncConnection> queue = taddr.conns;
+                if (!queue.isEmpty()) {
+                    AsyncConnection conn;
+                    while ((conn = queue.poll()) != null) {
+                        if (conn.isOpen()) return CompletableFuture.completedFuture(conn);
+                    }
+                }
+            }
+            //从可用/不可用的地址列表中创建连接
+            AtomicInteger count = new AtomicInteger(this.transportAddrs.length);
+            CompletableFuture future = new CompletableFuture();
+            for (final TransportAddress taddr : this.transportAddrs) {
+                if (future.isDone()) return future;
+                final AsynchronousSocketChannel channel = AsynchronousSocketChannel.open(group);
+                if (supportTcpNoDelay) channel.setOption(StandardSocketOptions.TCP_NODELAY, true);
+                channel.connect(taddr.address, taddr, new CompletionHandler<Void, TransportAddress>() {
+                    @Override
+                    public void completed(Void result, TransportAddress attachment) {
+                        taddr.enable = true;
+                        AsyncConnection asyncConn = AsyncConnection.create(channel, attachment.address, factory.readTimeoutSecond, factory.writeTimeoutSecond);
+                        if (future.isDone()) {
+                            if (!attachment.conns.offer(asyncConn)) {
+                                try {
+                                    channel.close();
+                                } catch (Exception e) {
+                                }
+                            }
+                        } else {
+                            future.complete(asyncConn);
+                        }
+                    }
+
+                    @Override
+                    public void failed(Throwable exc, TransportAddress attachment) {
+                        taddr.enable = false;
+                        if (count.decrementAndGet() < 1) {
+                            future.completeExceptionally(exc);
+                        }
+                        try {
+                            channel.close();
+                        } catch (Exception e) {
+                        }
+                    }
+                });
+            }
+            return future;
         } catch (Exception ex) {
             throw new RuntimeException("transport address = " + addr, ex);
         }
@@ -267,12 +301,8 @@ public final class Transport {
     public void offerConnection(final boolean forceClose, AsyncConnection conn) {
         if (!forceClose && conn.isTCP()) {
             if (conn.isOpen()) {
-                BlockingQueue<AsyncConnection> queue = connPool.get(conn.getRemoteAddress());
-                if (queue == null) {
-                    queue = new ArrayBlockingQueue<>(MAX_POOL_LIMIT);
-                    connPool.put(conn.getRemoteAddress(), queue);
-                }
-                if (!queue.offer(conn)) conn.dispose();
+                TransportAddress taddr = findTransportAddress(conn.getRemoteAddress());
+                if (taddr == null || !taddr.conns.offer(conn)) conn.dispose();
             }
         } else {
             conn.dispose();
@@ -344,9 +374,16 @@ public final class Transport {
             return enable;
         }
 
-        @ConvertColumn(ignore = true)
+        @ConvertDisabled
         public BlockingQueue<AsyncConnection> getConns() {
             return conns;
+        }
+
+        public void dispose() {
+            AsyncConnection conn;
+            while ((conn = conns.poll()) != null) {
+                conn.dispose();
+            }
         }
 
         @Override
@@ -363,6 +400,7 @@ public final class Transport {
             return this.address.equals(other.address);
         }
 
+        @Override
         public String toString() {
             return JsonConvert.root().convertTo(this);
         }

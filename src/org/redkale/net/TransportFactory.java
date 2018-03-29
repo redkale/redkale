@@ -326,8 +326,9 @@ public class TransportFactory {
                 nulllist.add(ref);
                 continue;
             }
-            List<BlockingQueue<AsyncConnection>> list = new ArrayList<>(transport.getAsyncConnectionPool().values());
-            for (final BlockingQueue<AsyncConnection> queue : list) {
+            Transport.TransportAddress[] taddrs = transport.getTransportAddresses();
+            for (final Transport.TransportAddress taddr : taddrs) {
+                final BlockingQueue<AsyncConnection> queue = taddr.conns;
                 AsyncConnection conn;
                 while ((conn = queue.poll()) != null) {
                     if (conn.getLastWriteTime() > timex && false) { //最近几秒内已经进行过IO操作
