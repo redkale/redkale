@@ -9,7 +9,6 @@ import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
 
 /**
  * JavaBean类对象的拷贝，相同的字段名会被拷贝 <br>
- * <b>注意</b>: 拷贝类与被拷贝类的字段可见模式必须一致， 要么都是public field, 要么都是getter、setter模式。 <br>
  *
  * <p>
  * 详情见: https://redkale.org
@@ -90,18 +89,31 @@ public interface Reproduce<D, S> extends BiFunction<D, S, D> {
                 if (Modifier.isFinal(field.getModifiers())) continue;
                 if (!Modifier.isPublic(field.getModifiers())) continue;
                 final String sfname = field.getName();
+                if (srcColumnPredicate != null && !srcColumnPredicate.test(srcClass, sfname)) continue;
+
                 final String dfname = names == null ? sfname : names.getOrDefault(sfname, sfname);
+                java.lang.reflect.Method setter = null;
                 try {
-                    if (!srcColumnPredicate.test(srcClass, sfname)) continue;
                     if (!field.getType().equals(destClass.getField(dfname).getType())) continue;
                 } catch (Exception e) {
-                    continue;
+                    try {
+                        char[] cs = dfname.toCharArray();
+                        cs[0] = Character.toUpperCase(cs[0]);
+                        String dfname2 = new String(cs);
+                        setter = destClass.getMethod("set" + dfname2, field.getType());
+                    } catch (Exception e2) {
+                        continue;
+                    }
                 }
                 mv.visitVarInsn(ALOAD, 1);
                 mv.visitVarInsn(ALOAD, 2);
                 String td = Type.getDescriptor(field.getType());
                 mv.visitFieldInsn(GETFIELD, srcClassName, sfname, td);
-                mv.visitFieldInsn(PUTFIELD, destClassName, dfname, td);
+                if (setter == null) {
+                    mv.visitFieldInsn(PUTFIELD, destClassName, dfname, td);
+                } else {
+                    mv.visitMethodInsn(INVOKEVIRTUAL, destClassName, setter.getName(), Type.getMethodDescriptor(setter), false);
+                }
             }
 
             for (java.lang.reflect.Method getter : srcClass.getMethods()) {
@@ -109,7 +121,6 @@ public interface Reproduce<D, S> extends BiFunction<D, S, D> {
                 if (getter.getParameterTypes().length > 0) continue;
                 if ("getClass".equals(getter.getName())) continue;
                 if (!getter.getName().startsWith("get") && !getter.getName().startsWith("is")) continue;
-                java.lang.reflect.Method setter;
                 final boolean is = getter.getName().startsWith("is");
                 String sfname = getter.getName().substring(is ? 2 : 3);
                 if (sfname.length() < 2 || Character.isLowerCase(sfname.charAt(1))) {
@@ -119,21 +130,30 @@ public interface Reproduce<D, S> extends BiFunction<D, S, D> {
                 }
                 if (srcColumnPredicate != null && !srcColumnPredicate.test(srcClass, sfname)) continue;
 
-                String dfname = names == null ? sfname : names.getOrDefault(sfname, sfname);
-                {
-                    char[] cs = dfname.toCharArray();
-                    cs[0] = Character.toUpperCase(cs[0]);
-                    dfname = new String(cs);
-                }
+                final String dfname = names == null ? sfname : names.getOrDefault(sfname, sfname);
+                java.lang.reflect.Method setter = null;
+                java.lang.reflect.Field srcField = null;
+                char[] cs = dfname.toCharArray();
+                cs[0] = Character.toUpperCase(cs[0]);
+                String dfname2 = new String(cs);
                 try {
-                    setter = destClass.getMethod("set" + dfname, getter.getReturnType());
+                    setter = destClass.getMethod("set" + dfname2, getter.getReturnType());
                 } catch (Exception e) {
-                    continue;
+                    try {
+                        srcField = destClass.getField(dfname);
+                        if (!getter.getReturnType().equals(srcField.getType())) continue;
+                    } catch (Exception e2) {
+                        continue;
+                    }
                 }
                 mv.visitVarInsn(ALOAD, 1);
                 mv.visitVarInsn(ALOAD, 2);
                 mv.visitMethodInsn(INVOKEVIRTUAL, srcClassName, getter.getName(), Type.getMethodDescriptor(getter), false);
-                mv.visitMethodInsn(INVOKEVIRTUAL, destClassName, setter.getName(), Type.getMethodDescriptor(setter), false);
+                if (srcField == null) {
+                    mv.visitMethodInsn(INVOKEVIRTUAL, destClassName, setter.getName(), Type.getMethodDescriptor(setter), false);
+                } else {
+                    mv.visitFieldInsn(PUTFIELD, destClassName, dfname, Type.getDescriptor(getter.getReturnType()));
+                }
             }
             mv.visitVarInsn(ALOAD, 1);
             mv.visitInsn(ARETURN);
