@@ -216,13 +216,14 @@ public final class Transport {
 
     public CompletableFuture<AsyncConnection> pollConnection(SocketAddress addr0) {
         if (this.strategy != null) return strategy.pollConnection(addr0, this);
-        if (addr0 == null && this.transportAddrs.length == 1) addr0 = this.transportAddrs[0].address;
+        final TransportAddress[] taddrs = this.transportAddrs;
+        if (addr0 == null && taddrs.length == 1) addr0 = taddrs[0].address;
         final SocketAddress addr = addr0;
         final boolean rand = addr == null; //是否随机取地址
-        if (rand && this.transportAddrs.length < 1) throw new RuntimeException("Transport (" + this.name + ") have no remoteAddress list");
+        if (rand && taddrs.length < 1) throw new RuntimeException("Transport (" + this.name + ") have no remoteAddress list");
         try {
             if (!tcp) { // UDP
-                SocketAddress udpaddr = rand ? this.transportAddrs[0].address : addr;
+                SocketAddress udpaddr = rand ? taddrs[0].address : addr;
                 DatagramChannel channel = DatagramChannel.open();
                 channel.configureBlocking(true);
                 channel.connect(udpaddr);
@@ -245,7 +246,7 @@ public final class Transport {
 
             //---------------------随机取地址------------------------
             //从连接池里取
-            for (final TransportAddress taddr : this.transportAddrs) {
+            for (final TransportAddress taddr : taddrs) {
                 if (!taddr.enable) continue;
                 final BlockingQueue<AsyncConnection> queue = taddr.conns;
                 if (!queue.isEmpty()) {
@@ -256,9 +257,9 @@ public final class Transport {
                 }
             }
             //从可用/不可用的地址列表中创建连接
-            AtomicInteger count = new AtomicInteger(this.transportAddrs.length);
+            AtomicInteger count = new AtomicInteger(taddrs.length);
             CompletableFuture future = new CompletableFuture();
-            for (final TransportAddress taddr : this.transportAddrs) {
+            for (final TransportAddress taddr : taddrs) {
                 if (future.isDone()) return future;
                 final AsynchronousSocketChannel channel = AsynchronousSocketChannel.open(group);
                 if (supportTcpNoDelay) channel.setOption(StandardSocketOptions.TCP_NODELAY, true);
