@@ -7,6 +7,7 @@ package org.redkale.test.net;
 
 import java.net.InetSocketAddress;
 import java.util.*;
+import java.util.concurrent.CountDownLatch;
 import org.redkale.net.*;
 import org.redkale.net.http.HttpServer;
 import org.redkale.net.sncp.Sncp;
@@ -21,7 +22,7 @@ public class TransportTest {
     private static final String format = "%1$tY-%1$tm-%1$td %1$tH:%1$tM:%1$tS.%tL";
 
     public static void main(String[] args) throws Throwable {
-
+        System.setProperty("net.transport.checkinterval", "2");
         List<InetSocketAddress> addrs = new ArrayList<>();
         addrs.add(new InetSocketAddress("127.0.0.1", 22001));
         addrs.add(new InetSocketAddress("127.0.0.1", 22002));
@@ -42,13 +43,27 @@ public class TransportTest {
         Transport transport = factory.createTransportTCP("", null, addrs);
         System.out.println(String.format(format, System.currentTimeMillis()));
         try {
-            AsyncConnection firstconn = transport.pollConnection(null).join();
-            System.out.println(firstconn);
-            if (firstconn != null) transport.offerConnection(false, firstconn);
-            AsyncConnection conn = transport.pollConnection(null).join();
-            System.out.println(conn + "-------应该与前值相同");
-            conn = transport.pollConnection(null).join();
-            System.out.println(conn + "-------应该与前值不同");
+            CountDownLatch cdl = new CountDownLatch(20);
+            for (int i = 0; i < 20; i++) {
+                transport.pollConnection(null).whenComplete((r, t) -> {
+                    cdl.countDown();
+                    System.out.println("连接: " + r.getRemoteAddress());
+                });
+            }
+            cdl.await();
+            HttpServer server = new HttpServer();
+            DefaultAnyValue servconf = DefaultAnyValue.create("port", 22005);
+            server.init(servconf);
+            server.start();
+            Thread.sleep(4000);
+            CountDownLatch cdl2 = new CountDownLatch(20);
+            for (int i = 0; i < 20; i++) {
+                transport.pollConnection(null).whenComplete((r, t) -> {
+                    cdl2.countDown();
+                    System.out.println("连接: " + r.getRemoteAddress());
+                });
+            }
+            cdl2.await();
         } finally {
             System.out.println(String.format(format, System.currentTimeMillis()));
         }

@@ -7,7 +7,7 @@ package org.redkale.net;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
-import java.net.InetSocketAddress;
+import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.*;
@@ -22,6 +22,7 @@ import org.redkale.util.*;
 
 /**
  * System.getProperty("net.transport.pinginterval", "30") 心跳周期，默认30秒
+ * System.getProperty("net.transport.checkinterval", "30") 检查不可用地址周期，默认30秒
  *
  * <p>
  * 详情见: https://redkale.org
@@ -37,6 +38,8 @@ public class TransportFactory {
     public static int DEFAULT_WRITETIMEOUTSECOND = 6;
 
     public static final String NAME_PINGINTERVAL = "pinginterval";
+
+    public static final String NAME_CHECKINTERVAL = "checkinterval";
 
     protected static final Logger logger = Logger.getLogger(TransportFactory.class.getSimpleName());
 
@@ -62,14 +65,17 @@ public class TransportFactory {
     //心跳周期， 单位：秒
     protected int pinginterval;
 
+    //检查不可用地址周期， 单位：秒
+    protected int checkinterval = Integer.getInteger("net.transport.checkinterval", 30);
+
     //TCP读取超时秒数
     protected int readTimeoutSecond;
 
     //TCP写入超时秒数
     protected int writeTimeoutSecond;
 
-    //ping的定时器
-    private ScheduledThreadPoolExecutor pingScheduler;
+    //ping和检查的定时器
+    private ScheduledThreadPoolExecutor scheduler;
 
     protected SSLContext sslContext;
 
@@ -101,17 +107,23 @@ public class TransportFactory {
     public void init(AnyValue conf, ByteBuffer pingBuffer, int pongLength) {
         if (conf != null) {
             this.pinginterval = conf.getIntValue(NAME_PINGINTERVAL, 0);
+            this.checkinterval = conf.getIntValue(NAME_CHECKINTERVAL, this.checkinterval);
         }
+        this.scheduler = new ScheduledThreadPoolExecutor(1, (Runnable r) -> {
+            final Thread t = new Thread(r, this.getClass().getSimpleName() + "-TransportFactoryTask-Thread");
+            t.setDaemon(true);
+            return t;
+        });
+        this.scheduler.scheduleAtFixedRate(() -> {
+            checks();
+        }, checkinterval, checkinterval, TimeUnit.SECONDS);
+
         if (this.pinginterval > 0) {
-            if (this.pingScheduler == null && pingBuffer != null) {
+            if (pingBuffer != null) {
                 this.pingBuffer = pingBuffer.asReadOnlyBuffer();
                 this.pongLength = pongLength;
-                this.pingScheduler = new ScheduledThreadPoolExecutor(1, (Runnable r) -> {
-                    final Thread t = new Thread(r, this.getClass().getSimpleName() + "-TransportFactoryPingTask-Thread");
-                    t.setDaemon(true);
-                    return t;
-                });
-                pingScheduler.scheduleAtFixedRate(() -> {
+
+                scheduler.scheduleAtFixedRate(() -> {
                     pings();
                 }, pinginterval, pinginterval, TimeUnit.SECONDS);
             }
@@ -309,7 +321,7 @@ public class TransportFactory {
     }
 
     public void shutdownNow() {
-        if (this.pingScheduler != null) this.pingScheduler.shutdownNow();
+        if (this.scheduler != null) this.scheduler.shutdownNow();
         try {
             this.channelGroup.shutdownNow();
         } catch (Exception e) {
@@ -317,8 +329,7 @@ public class TransportFactory {
         }
     }
 
-    private void pings() {
-        long timex = System.currentTimeMillis() - (this.pinginterval < 15 ? this.pinginterval : (this.pinginterval - 3)) * 1000;
+    private void checks() {
         List<WeakReference> nulllist = new ArrayList<>();
         for (WeakReference<Transport> ref : transportReferences) {
             Transport transport = ref.get();
@@ -326,6 +337,36 @@ public class TransportFactory {
                 nulllist.add(ref);
                 continue;
             }
+            Transport.TransportAddress[] taddrs = transport.getTransportAddresses();
+            for (final Transport.TransportAddress taddr : taddrs) {
+                if (taddr.disabletime < 1) continue; //可用
+                try {
+                    final AsynchronousSocketChannel channel = AsynchronousSocketChannel.open(transport.group);
+                    channel.connect(taddr.address, taddr, new CompletionHandler<Void, Transport.TransportAddress>() {
+                        @Override
+                        public void completed(Void result, Transport.TransportAddress attachment) {
+                            attachment.disabletime = 0;
+                        }
+
+                        @Override
+                        public void failed(Throwable exc, Transport.TransportAddress attachment) {
+                            attachment.disabletime = System.currentTimeMillis();
+                        }
+                    });
+                } catch (Exception e) {
+                }
+            }
+        }
+        for (WeakReference ref : nulllist) {
+            transportReferences.remove(ref);
+        }
+    }
+
+    private void pings() {
+        long timex = System.currentTimeMillis() - (this.pinginterval < 15 ? this.pinginterval : (this.pinginterval - 3)) * 1000;
+        for (WeakReference<Transport> ref : transportReferences) {
+            Transport transport = ref.get();
+            if (transport == null) continue;
             Transport.TransportAddress[] taddrs = transport.getTransportAddresses();
             for (final Transport.TransportAddress taddr : taddrs) {
                 final BlockingQueue<AsyncConnection> queue = taddr.conns;
@@ -379,9 +420,6 @@ public class TransportFactory {
                     }
                 }
             }
-        }
-        for (WeakReference ref : nulllist) {
-            transportReferences.remove(ref);
         }
     }
 

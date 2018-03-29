@@ -5,13 +5,14 @@
  */
 package org.redkale.net;
 
+import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.*;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import javax.net.ssl.SSLContext;
@@ -45,6 +46,8 @@ public final class Transport {
         }
         supportTcpNoDelay = tcpNoDelay;
     }
+
+    protected final AtomicInteger seq = new AtomicInteger(-1);
 
     protected final TransportFactory factory;
 
@@ -245,29 +248,29 @@ public final class Transport {
             }
 
             //---------------------随机取地址------------------------
-            //从连接池里取
+            int enablecount = 0;
+            final TransportAddress[] newtaddrs = new TransportAddress[taddrs.length];
             for (final TransportAddress taddr : taddrs) {
                 if (taddr.disabletime > 0) continue;
-                final BlockingQueue<AsyncConnection> queue = taddr.conns;
+                newtaddrs[enablecount++] = taddr;
+            }
+            final long now = System.currentTimeMillis();
+            if (enablecount > 0) { //存在可用的地址
+                final TransportAddress one = newtaddrs[Math.abs(seq.incrementAndGet()) % enablecount];
+                final BlockingQueue<AsyncConnection> queue = one.conns;
                 if (!queue.isEmpty()) {
                     AsyncConnection conn;
                     while ((conn = queue.poll()) != null) {
                         if (conn.isOpen()) return CompletableFuture.completedFuture(conn);
                     }
                 }
-            }
-            //从可用/不可用的地址列表中创建连接
-            AtomicInteger count = new AtomicInteger(taddrs.length);
-            CompletableFuture future = new CompletableFuture();
-            final long now = System.currentTimeMillis();
-            for (final TransportAddress taddr : taddrs) {
-                if (future.isDone()) return future;
+                CompletableFuture future = new CompletableFuture();
                 final AsynchronousSocketChannel channel = AsynchronousSocketChannel.open(group);
                 if (supportTcpNoDelay) channel.setOption(StandardSocketOptions.TCP_NODELAY, true);
-                channel.connect(taddr.address, taddr, new CompletionHandler<Void, TransportAddress>() {
+                channel.connect(one.address, one, new CompletionHandler<Void, TransportAddress>() {
                     @Override
                     public void completed(Void result, TransportAddress attachment) {
-                        taddr.disabletime = 0;
+                        attachment.disabletime = 0;
                         AsyncConnection asyncConn = AsyncConnection.create(channel, attachment.address, factory.readTimeoutSecond, factory.writeTimeoutSecond);
                         if (future.isDone()) {
                             if (!attachment.conns.offer(asyncConn)) asyncConn.dispose();
@@ -278,21 +281,68 @@ public final class Transport {
 
                     @Override
                     public void failed(Throwable exc, TransportAddress attachment) {
-                        taddr.disabletime = now;
-                        if (count.decrementAndGet() < 1) {
-                            future.completeExceptionally(exc);
-                        }
+                        attachment.disabletime = now;
                         try {
                             channel.close();
                         } catch (Exception e) {
                         }
+                        try {
+                            pollConnection0(taddrs, one, now).whenComplete((r, t) -> {
+                                if (t != null) {
+                                    future.completeExceptionally(t);
+                                } else {
+                                    future.complete(r);
+                                }
+                            });
+
+                        } catch (Exception e) {
+                            future.completeExceptionally(e);
+                        }
                     }
                 });
+                return future;
             }
-            return future;
+            return pollConnection0(taddrs, null, now);
         } catch (Exception ex) {
             throw new RuntimeException("transport address = " + addr, ex);
         }
+    }
+
+    private CompletableFuture<AsyncConnection> pollConnection0(TransportAddress[] taddrs, TransportAddress exclude, long now) throws IOException {
+        //从可用/不可用的地址列表中创建连接
+        AtomicInteger count = new AtomicInteger(taddrs.length);
+        CompletableFuture future = new CompletableFuture();
+        for (final TransportAddress taddr : taddrs) {
+            if (taddr == exclude) continue;
+            if (future.isDone()) return future;
+            final AsynchronousSocketChannel channel = AsynchronousSocketChannel.open(group);
+            if (supportTcpNoDelay) channel.setOption(StandardSocketOptions.TCP_NODELAY, true);
+            channel.connect(taddr.address, taddr, new CompletionHandler<Void, TransportAddress>() {
+                @Override
+                public void completed(Void result, TransportAddress attachment) {
+                    attachment.disabletime = 0;
+                    AsyncConnection asyncConn = AsyncConnection.create(channel, attachment.address, factory.readTimeoutSecond, factory.writeTimeoutSecond);
+                    if (future.isDone()) {
+                        if (!attachment.conns.offer(asyncConn)) asyncConn.dispose();
+                    } else {
+                        future.complete(asyncConn);
+                    }
+                }
+
+                @Override
+                public void failed(Throwable exc, TransportAddress attachment) {
+                    attachment.disabletime = now;
+                    if (count.decrementAndGet() < 1) {
+                        future.completeExceptionally(exc);
+                    }
+                    try {
+                        channel.close();
+                    } catch (Exception e) {
+                    }
+                }
+            });
+        }
+        return future;
     }
 
     public void offerConnection(final boolean forceClose, AsyncConnection conn) {

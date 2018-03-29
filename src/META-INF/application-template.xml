@@ -86,6 +86,7 @@
             load:  加载文件，多个用;隔开。
             默认置入的system.property.的有：
                System.setProperty("net.transport.pinginterval", "30");
+               System.setProperty("net.transport.checkinterval", "30");
                System.setProperty("convert.json.tiny", "true");
                System.setProperty("convert.bson.tiny", "true");
                System.setProperty("convert.json.pool.size", "128");
