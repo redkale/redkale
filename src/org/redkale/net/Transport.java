@@ -294,6 +294,7 @@ public final class Transport {
     }
 
     public void offerConnection(final boolean forceClose, AsyncConnection conn) {
+        if (this.strategy != null && strategy.offerConnection(forceClose, conn)) return;
         if (!forceClose && conn.isTCP()) {
             if (conn.isOpen()) {
                 TransportAddress taddr = findTransportAddress(conn.getRemoteAddress());
@@ -350,6 +351,8 @@ public final class Transport {
 
         protected final BlockingQueue<AsyncConnection> conns = new ArrayBlockingQueue<>(MAX_POOL_LIMIT);
 
+        protected final ConcurrentHashMap<String, Object> attributes = new ConcurrentHashMap<>();
+
         public TransportAddress(InetSocketAddress address) {
             this.address = address;
             this.enable = true;
@@ -359,6 +362,35 @@ public final class Transport {
         public TransportAddress(InetSocketAddress address, boolean enable) {
             this.address = address;
             this.enable = enable;
+        }
+
+        public <T> T setAttribute(String name, T value) {
+            attributes.put(name, value);
+            return value;
+        }
+
+        @SuppressWarnings("unchecked")
+        public <T> T getAttribute(String name) {
+            return (T) attributes.get(name);
+        }
+
+        @SuppressWarnings("unchecked")
+        public <T> T removeAttribute(String name) {
+            return (T) attributes.remove(name);
+        }
+
+        public TransportAddress clearAttributes() {
+            attributes.clear();
+            return this;
+        }
+
+        public ConcurrentHashMap<String, Object> getAttributes() {
+            return attributes;
+        }
+
+        public void setAttributes(ConcurrentHashMap<String, Object> map) {
+            attributes.clear();
+            if (map != null) attributes.putAll(map);
         }
 
         public InetSocketAddress getAddress() {
