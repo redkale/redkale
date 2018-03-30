@@ -147,11 +147,11 @@ public final class EntityInfo<T> {
             rs = entityInfos.get(clazz);
             if (rs == null) {
                 rs = new EntityInfo(clazz, cacheForbidden, conf, source, fullloader);
-                entityInfos.put(clazz, rs);
                 if (rs.cache != null) {
                     if (fullloader == null) throw new IllegalArgumentException(clazz.getName() + " auto loader  is illegal");
                     rs.cache.fullLoad();
                 }
+                entityInfos.put(clazz, rs);
             }
             return rs;
         }
