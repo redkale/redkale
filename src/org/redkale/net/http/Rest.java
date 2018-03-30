@@ -21,6 +21,7 @@ import static org.redkale.asm.Opcodes.*;
 import org.redkale.asm.Type;
 import org.redkale.convert.*;
 import org.redkale.convert.json.*;
+import org.redkale.net.Cryptor;
 import org.redkale.service.*;
 import org.redkale.util.*;
 import org.redkale.source.Flipper;
@@ -641,7 +642,14 @@ public final class Rest {
         cw.visitEnd();
         Class<?> newClazz = newLoader.loadClass(newDynName.replace('/', '.'), cw.toByteArray());
         try {
-            return (T) newClazz.getDeclaredConstructor().newInstance();
+            T servlet = (T) newClazz.getDeclaredConstructor().newInstance();
+            if (rws.cryptor() != Cryptor.class) {
+                Cryptor cryptor = rws.cryptor().getDeclaredConstructor().newInstance();
+                Field cryptorField = newClazz.getDeclaredField("cryptor");
+                cryptorField.setAccessible(true);
+                cryptorField.set(servlet, cryptor);
+            }
+            return servlet;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

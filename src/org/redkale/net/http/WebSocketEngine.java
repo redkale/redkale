@@ -14,6 +14,7 @@ import java.util.function.*;
 import java.util.logging.*;
 import java.util.stream.*;
 import org.redkale.convert.Convert;
+import org.redkale.net.Cryptor;
 import static org.redkale.net.http.WebSocket.RETCODE_GROUP_EMPTY;
 import static org.redkale.net.http.WebSocketServlet.*;
 import org.redkale.util.*;
@@ -72,8 +73,11 @@ public class WebSocketEngine {
     @Comment("最大消息体长度, 小于1表示无限制")
     protected int wsmaxbody;
 
+    @Comment("加密解密器")
+    protected Cryptor cryptor;
+
     protected WebSocketEngine(String engineid, boolean single, HttpContext context, int liveinterval,
-        int wsmaxconns, int wsmaxbody, WebSocketNode node, Convert sendConvert, Logger logger) {
+        int wsmaxconns, int wsmaxbody, Cryptor cryptor, WebSocketNode node, Convert sendConvert, Logger logger) {
         this.engineid = engineid;
         this.single = single;
         this.context = context;
@@ -82,6 +86,7 @@ public class WebSocketEngine {
         this.liveinterval = liveinterval;
         this.wsmaxconns = wsmaxconns;
         this.wsmaxbody = wsmaxbody;
+        this.cryptor = cryptor;
         this.logger = logger;
         this.index = sequence.getAndIncrement();
     }
@@ -213,7 +218,7 @@ public class WebSocketEngine {
             final WebSocketPacket packet = (message instanceof WebSocketPacket) ? (WebSocketPacket) message
                 : ((message == null || message instanceof CharSequence || message instanceof byte[])
                     ? new WebSocketPacket((Serializable) message, last) : new WebSocketPacket(this.sendConvert, false, message, last));
-            packet.setSendBuffers(packet.encode(context.getBufferSupplier()));
+            packet.setSendBuffers(packet.encode(context.getBufferSupplier(), context.getBufferConsumer(), cryptor));
             CompletableFuture<Integer> future = null;
             if (single) {
                 for (WebSocket websocket : websockets.values()) {
@@ -270,7 +275,7 @@ public class WebSocketEngine {
             final WebSocketPacket packet = (message instanceof WebSocketPacket) ? (WebSocketPacket) message
                 : ((message == null || message instanceof CharSequence || message instanceof byte[])
                     ? new WebSocketPacket((Serializable) message, last) : new WebSocketPacket(this.sendConvert, false, message, last));
-            packet.setSendBuffers(packet.encode(context.getBufferSupplier()));
+            packet.setSendBuffers(packet.encode(context.getBufferSupplier(), context.getBufferConsumer(), cryptor));
             CompletableFuture<Integer> future = null;
             if (single) {
                 for (Serializable userid : userids) {

@@ -144,6 +144,10 @@ public class Context {
         return bufferPool;
     }
 
+    public Consumer<ByteBuffer> getBufferConsumer() {
+        return bufferPool;
+    }
+
     public ByteBuffer pollBuffer() {
         return bufferPool.get();
     }

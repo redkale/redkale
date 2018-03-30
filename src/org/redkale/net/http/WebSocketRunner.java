@@ -47,7 +47,7 @@ class WebSocketRunner implements Runnable {
     private final BiConsumer<WebSocket, Object> restMessageConsumer;  //主要供RestWebSocket使用
 
     protected long lastSendTime;
-    
+
     protected long lastReadTime;
 
     WebSocketRunner(Context context, WebSocket webSocket, BiConsumer<WebSocket, Object> messageConsumer, AsyncConnection channel) {
@@ -226,7 +226,7 @@ class WebSocketRunner implements Runnable {
                 return futureResult;
             }
         }
-        ByteBuffer[] buffers = packet.sendBuffers != null ? packet.duplicateSendBuffers() : packet.encode(this.context.getBufferSupplier());
+        ByteBuffer[] buffers = packet.sendBuffers != null ? packet.duplicateSendBuffers() : packet.encode(this.context.getBufferSupplier(), this.context.getBufferConsumer(), webSocket._engine.cryptor);
         if (debug) context.getLogger().log(Level.FINEST, "sending websocket message:  " + packet);
         try {
             this.lastSendTime = System.currentTimeMillis();
@@ -276,7 +276,7 @@ class WebSocketRunner implements Runnable {
                         }
                         if (entry != null) {
                             future = entry.future;
-                            ByteBuffer[] buffers = entry.packet.sendBuffers != null ? entry.packet.duplicateSendBuffers() : entry.packet.encode(context.getBufferSupplier());
+                            ByteBuffer[] buffers = entry.packet.sendBuffers != null ? entry.packet.duplicateSendBuffers() : entry.packet.encode(context.getBufferSupplier(), context.getBufferConsumer(), webSocket._engine.cryptor);
                             lastSendTime = System.currentTimeMillis();
                             if (debug) context.getLogger().log(Level.FINEST, "sending websocket message:  " + entry.packet);
                             channel.write(buffers, buffers, this);

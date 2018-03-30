@@ -8,6 +8,7 @@ package org.redkale.net.http;
 import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import org.redkale.net.Cryptor;
 
 /**
  * 只能依附在WebSocket类上，name默认为Service的类名小写并去掉Service字样及后面的字符串 (如HelloWebSocket/HelloWebSocketImpl，的默认路径为 hello)。 <br>
@@ -65,6 +66,13 @@ public @interface RestWebSocket {
      * @return int
      */
     int liveinterval() default WebSocketServlet.DEFAILT_LIVEINTERVAL;
+
+    /**
+     * 加密解密器
+     *
+     * @return Cryptor
+     */
+    Class<? extends Cryptor> cryptor() default Cryptor.class;
 
     /**
      * 最大连接数, 小于1表示无限制

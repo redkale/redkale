@@ -10,9 +10,10 @@ import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.AbstractMap;
-import java.util.function.Supplier;
+import java.util.function.*;
 import java.util.logging.*;
 import org.redkale.convert.*;
+import org.redkale.net.Cryptor;
 
 /**
  *
@@ -210,10 +211,11 @@ public final class WebSocketPacket {
      * 消息编码
      *
      * @param supplier Supplier
+     * @param cryptor  Cryptor
      *
      * @return ByteBuffer[]
      */
-    ByteBuffer[] encode(final Supplier<ByteBuffer> supplier) {
+    ByteBuffer[] encode(final Supplier<ByteBuffer> supplier, final Consumer<ByteBuffer> consumer, final Cryptor cryptor) {
         final byte opcode = (byte) (this.type.getValue() | 0x80);
         if (this.sendConvert != null) {
             Supplier<ByteBuffer> newsupplier = new Supplier<ByteBuffer>() {
@@ -232,6 +234,7 @@ public final class WebSocketPacket {
                 }
             };
             ByteBuffer[] buffers = this.sendMapconvable ? this.sendConvert.convertMapTo(newsupplier, (Object[]) sendJson) : this.sendConvert.convertTo(newsupplier, sendJson);
+            if (cryptor != null) buffers = cryptor.encrypt(buffers, supplier, consumer);
             int len = 0;
             for (ByteBuffer buf : buffers) {
                 len += buf.remaining();
@@ -256,7 +259,27 @@ public final class WebSocketPacket {
         }
 
         ByteBuffer buffer = supplier.get();  //确保ByteBuffer的capacity不能小于128
-        final byte[] content = content();
+        byte[] content = content();
+        if (cryptor != null) {
+            ByteBuffer[] ss = new ByteBuffer[]{ByteBuffer.wrap(content)};
+            ByteBuffer[] bs = cryptor.encrypt(ss, supplier, consumer);
+            if (bs != ss) {
+                int r = 0;
+                for (ByteBuffer bb : bs) {
+                    r += bb.remaining();
+                }
+                content = new byte[r];
+                int index = 0;
+                for (ByteBuffer bb : bs) {
+                    int re = bb.remaining();
+                    bb.get(content, index, re);
+                    index += re;
+                }
+                for (ByteBuffer bb : bs) {
+                    consumer.accept(bb);
+                }
+            }
+        }
         final int len = content.length;
         if (len <= 0x7D) { //125
             buffer.put(opcode);
@@ -444,6 +467,10 @@ public final class WebSocketPacket {
     }
 
     void parseReceiveMessage(WebSocket webSocket, ByteBuffer... buffers) {
+        if (webSocket._engine.cryptor != null) {
+            HttpContext context = webSocket._engine.context;
+            buffers = webSocket._engine.cryptor.decrypt(buffers, context.getBufferSupplier(), context.getBufferConsumer());
+        }
         if (this.type == FrameType.TEXT) {
             Convert textConvert = webSocket.getTextConvert();
             if (textConvert == null) {

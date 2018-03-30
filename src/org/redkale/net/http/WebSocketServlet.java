@@ -17,6 +17,7 @@ import java.util.function.BiConsumer;
 import java.util.logging.*;
 import javax.annotation.*;
 import org.redkale.convert.Convert;
+import org.redkale.net.Cryptor;
 import org.redkale.service.*;
 import org.redkale.util.*;
 
@@ -52,6 +53,9 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
     @Comment("最大消息体长度, 小于1表示无限制")
     public static final String WEBPARAM__WSMAXBODY = "wsmaxbody";
 
+    @Comment("加密解密器")
+    public static final String WEBPARAM__CRYPTOR = "cryptor";
+
     @Comment("WebScoket服务器给客户端进行ping操作的默认间隔时间, 单位: 秒")
     public static final int DEFAILT_LIVEINTERVAL = 15;
 
@@ -77,6 +81,9 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
 
     //同RestWebSocket.anyuser
     protected boolean anyuser = false;
+
+    //同RestWebSocket.cryptor, 变量名不可改， 被Rest.createRestWebSocketServlet用到
+    protected Cryptor cryptor;
 
     @Resource(name = "jsonconvert")
     protected Convert jsonConvert;
@@ -124,12 +131,26 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
             if (logger.isLoggable(Level.WARNING)) logger.warning("Not found WebSocketNode, create a default value for " + getClass().getName());
         }
         if (this.node.sendConvert == null) this.node.sendConvert = this.sendConvert;
-
+        {
+            AnyValue props = conf;
+            if (conf != null && conf.getAnyValue("properties") != null) props = conf.getAnyValue("properties");
+            if (props != null) {
+                String cryptorClass = props.getValue(WEBPARAM__CRYPTOR);
+                if (cryptorClass != null && !cryptorClass.isEmpty()) {
+                    try {
+                        this.cryptor = (Cryptor) Thread.currentThread().getContextClassLoader().loadClass(cryptorClass).getDeclaredConstructor().newInstance();
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }
+        }
         //存在WebSocketServlet，则此WebSocketNode必须是本地模式Service
         this.node.localEngine = new WebSocketEngine("WebSocketEngine-" + addr.getHostString() + ":" + addr.getPort() + "-[" + resourceName() + "]",
-            this.single, context, liveinterval, wsmaxconns, wsmaxbody, this.node, this.sendConvert, logger);
+            this.single, context, liveinterval, wsmaxconns, wsmaxbody, this.cryptor, this.node, this.sendConvert, logger);
         this.node.init(conf);
         this.node.localEngine.init(conf);
+
     }
 
     @Override
