@@ -567,6 +567,56 @@ public final class Utility {
     }
 
     /**
+     * 判断指定值是否包含指定的数组中，包含返回true
+     *
+     * @param values 集合
+     * @param value  单值
+     *
+     * @return boolean
+     */
+    public static boolean contains(int[] values, int value) {
+        if (values == null) return false;
+        for (int v : values) {
+            if (v == value) return true;
+        }
+        return false;
+    }
+
+    /**
+     * 判断指定值是否包含指定的数组中，包含返回true
+     *
+     * @param values 集合
+     * @param value  单值
+     *
+     * @return boolean
+     */
+    public static boolean contains(long[] values, long value) {
+        if (values == null) return false;
+        for (long v : values) {
+            if (v == value) return true;
+        }
+        return false;
+    }
+
+    /**
+     * 判断指定值是否包含指定的数组中，包含返回true
+     *
+     * @param <T>    泛型
+     * @param values 集合
+     * @param value  单值
+     *
+     * @return boolean
+     */
+    public static <T> boolean contains(T[] values, T value) {
+        if (values == null) return false;
+        for (T v : values) {
+            if (v == null && value == null) return true;
+            if (v != null && v.equals(value)) return true;
+        }
+        return false;
+    }
+
+    /**
      * 删除掉字符串数组中包含指定的字符串
      *
      * @param columns 待删除数组
