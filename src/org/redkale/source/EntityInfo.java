@@ -142,16 +142,16 @@ public final class EntityInfo<T> {
     static <T> EntityInfo<T> load(Class<T> clazz, final boolean cacheForbidden, final Properties conf,
         DataSource source, BiFunction<DataSource, Class, List> fullloader) {
         EntityInfo rs = entityInfos.get(clazz);
-        if (rs != null) return rs;
+        if (rs != null && (rs.cache == null || rs.cache.isFullLoaded())) return rs;
         synchronized (entityInfos) {
             rs = entityInfos.get(clazz);
             if (rs == null) {
                 rs = new EntityInfo(clazz, cacheForbidden, conf, source, fullloader);
+                entityInfos.put(clazz, rs);
                 if (rs.cache != null) {
                     if (fullloader == null) throw new IllegalArgumentException(clazz.getName() + " auto loader  is illegal");
                     rs.cache.fullLoad();
                 }
-                entityInfos.put(clazz, rs);
             }
             return rs;
         }
