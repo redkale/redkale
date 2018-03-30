@@ -346,19 +346,19 @@ public class TransportFactory {
                 nulllist.add(ref);
                 continue;
             }
-            Transport.TransportAddress[] taddrs = transport.getTransportAddresses();
-            for (final Transport.TransportAddress taddr : taddrs) {
-                if (taddr.disabletime < 1) continue; //可用
+            Transport.TransportNode[] nodes = transport.getTransportNodes();
+            for (final Transport.TransportNode node : nodes) {
+                if (node.disabletime < 1) continue; //可用
                 try {
                     final AsynchronousSocketChannel channel = AsynchronousSocketChannel.open(transport.group);
-                    channel.connect(taddr.address, taddr, new CompletionHandler<Void, Transport.TransportAddress>() {
+                    channel.connect(node.address, node, new CompletionHandler<Void, Transport.TransportNode>() {
                         @Override
-                        public void completed(Void result, Transport.TransportAddress attachment) {
+                        public void completed(Void result, Transport.TransportNode attachment) {
                             attachment.disabletime = 0;
                         }
 
                         @Override
-                        public void failed(Throwable exc, Transport.TransportAddress attachment) {
+                        public void failed(Throwable exc, Transport.TransportNode attachment) {
                             attachment.disabletime = System.currentTimeMillis();
                         }
                     });
@@ -376,9 +376,9 @@ public class TransportFactory {
         for (WeakReference<Transport> ref : transportReferences) {
             Transport transport = ref.get();
             if (transport == null) continue;
-            Transport.TransportAddress[] taddrs = transport.getTransportAddresses();
-            for (final Transport.TransportAddress taddr : taddrs) {
-                final BlockingQueue<AsyncConnection> queue = taddr.conns;
+            Transport.TransportNode[] nodes = transport.getTransportNodes();
+            for (final Transport.TransportNode node : nodes) {
+                final BlockingQueue<AsyncConnection> queue = node.conns;
                 AsyncConnection conn;
                 while ((conn = queue.poll()) != null) {
                     if (conn.getLastWriteTime() > timex && false) { //最近几秒内已经进行过IO操作
