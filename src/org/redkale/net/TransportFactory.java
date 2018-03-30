@@ -37,6 +37,8 @@ public class TransportFactory {
     @Comment("默认TCP写入超时秒数")
     public static int DEFAULT_WRITETIMEOUTSECOND = 6;
 
+    public static final String NAME_POOLMAXCONNS = "poolmaxconns";
+
     public static final String NAME_PINGINTERVAL = "pinginterval";
 
     public static final String NAME_CHECKINTERVAL = "checkinterval";
@@ -62,11 +64,14 @@ public class TransportFactory {
 
     protected final List<WeakReference<Transport>> transportReferences = new CopyOnWriteArrayList<>();
 
-    //心跳周期， 单位：秒
-    protected int pinginterval;
+    //连接池大小
+    protected int poolmaxconns = Integer.getInteger("net.transport.poolmaxconns", 100);
 
     //检查不可用地址周期， 单位：秒
     protected int checkinterval = Integer.getInteger("net.transport.checkinterval", 30);
+
+    //心跳周期， 单位：秒
+    protected int pinginterval;
 
     //TCP读取超时秒数
     protected int readTimeoutSecond;
@@ -106,8 +111,12 @@ public class TransportFactory {
 
     public void init(AnyValue conf, ByteBuffer pingBuffer, int pongLength) {
         if (conf != null) {
-            this.pinginterval = conf.getIntValue(NAME_PINGINTERVAL, 0);
+            this.poolmaxconns = conf.getIntValue(NAME_POOLMAXCONNS, this.poolmaxconns);
+            this.pinginterval = conf.getIntValue(NAME_PINGINTERVAL, this.pinginterval);
             this.checkinterval = conf.getIntValue(NAME_CHECKINTERVAL, this.checkinterval);
+            if (this.poolmaxconns < 2) this.poolmaxconns = 2;
+            if (this.pinginterval < 2) this.pinginterval = 2;
+            if (this.checkinterval < 2) this.checkinterval = 2;
         }
         this.scheduler = new ScheduledThreadPoolExecutor(1, (Runnable r) -> {
             final Thread t = new Thread(r, this.getClass().getSimpleName() + "-TransportFactoryTask-Thread");

@@ -32,8 +32,6 @@ public final class Transport {
 
     public static final String DEFAULT_PROTOCOL = "TCP";
 
-    protected static final int MAX_POOL_LIMIT = Runtime.getRuntime().availableProcessors() * 8;
-
     protected static final boolean supportTcpNoDelay;
 
     static {
@@ -395,13 +393,13 @@ public final class Transport {
         });
     }
 
-    public static class TransportAddress {
+    public class TransportAddress {
 
         protected InetSocketAddress address;
 
         protected volatile long disabletime; //不可用时的时间, 为0表示可用
 
-        protected final BlockingQueue<AsyncConnection> conns = new ArrayBlockingQueue<>(MAX_POOL_LIMIT);
+        protected final BlockingQueue<AsyncConnection> conns = new ArrayBlockingQueue<>(factory.poolmaxconns);
 
         protected final ConcurrentHashMap<String, Object> attributes = new ConcurrentHashMap<>();
 

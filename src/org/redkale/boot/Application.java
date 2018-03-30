@@ -315,7 +315,8 @@ public final class Application {
                 });
         }
         this.sncpTransportFactory = TransportFactory.create(transportExec, transportPool, transportGroup, (SSLContext) null, readTimeoutSecond, writeTimeoutSecond, strategy);
-        DefaultAnyValue tarnsportConf = DefaultAnyValue.create(TransportFactory.NAME_PINGINTERVAL, System.getProperty("net.transport.pinginterval", "30"))
+        DefaultAnyValue tarnsportConf = DefaultAnyValue.create(TransportFactory.NAME_POOLMAXCONNS, System.getProperty("net.transport.poolmaxconns", "100"))
+            .addValue(TransportFactory.NAME_PINGINTERVAL, System.getProperty("net.transport.pinginterval", "30"))
             .addValue(TransportFactory.NAME_CHECKINTERVAL, System.getProperty("net.transport.checkinterval", "30"));
         this.sncpTransportFactory.init(tarnsportConf, Sncp.PING_BUFFER, Sncp.PONG_BUFFER.remaining());
         Thread.currentThread().setContextClassLoader(this.classLoader);
@@ -356,7 +357,9 @@ public final class Application {
 
     public void init() throws Exception {
         System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", "" + Runtime.getRuntime().availableProcessors() * 4);
+        System.setProperty("net.transport.poolmaxconns", "100");
         System.setProperty("net.transport.pinginterval", "30");
+        System.setProperty("net.transport.checkinterval", "30");
         System.setProperty("convert.bson.tiny", "true");
         System.setProperty("convert.json.tiny", "true");
         System.setProperty("convert.bson.pool.size", "128");
