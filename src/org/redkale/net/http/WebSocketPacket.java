@@ -202,6 +202,12 @@ public final class WebSocketPacket {
         this.last = last;
     }
 
+    public String toSimpleString() {
+        if (payload != null) return payload;
+        if (bytes != null) return "byte[" + bytes.length + "]";
+        return this.toString();
+    }
+
     @Override
     public String toString() {
         return this.getClass().getSimpleName() + "[type=" + type + ", last=" + last + (payload != null ? (", payload=" + payload) : "") + (bytes != null ? (", bytes=[" + bytes.length + ']') : (receiveLength > 0 ? (", receivemsg=" + (receiveMessage instanceof byte[] ? ("byte[" + ((byte[]) receiveMessage).length + "]") : receiveMessage)) : "")) + (sendJson != null ? (", json=" + (sendMapconvable ? Utility.ofMap((Object[]) sendJson) : sendJson)) : "") + "]";

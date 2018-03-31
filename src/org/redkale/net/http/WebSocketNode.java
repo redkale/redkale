@@ -484,7 +484,9 @@ public abstract class WebSocketNode {
 
     private CompletableFuture<Integer> sendOneMessage(final Object message, final boolean last, final Serializable userid) {
         if (message instanceof CompletableFuture) return ((CompletableFuture) message).thenApply(msg -> sendOneMessage(msg, last, userid));
-        if (logger.isLoggable(Level.FINEST)) logger.finest("websocket want send message {userid:" + userid + ", content:'" + JsonConvert.root().convertTo(message) + "'} from locale node to " + ((this.localEngine != null) ? "locale" : "remote") + " engine");
+        if (logger.isLoggable(Level.FINEST)) {
+            logger.finest("websocket want send message {userid:" + userid + ", content:'" + (message instanceof WebSocketPacket ? ((WebSocketPacket) message).toSimpleString() : JsonConvert.root().convertTo(message)) + "'} from locale node to " + ((this.localEngine != null) ? "locale" : "remote") + " engine");
+        }
         CompletableFuture<Integer> localFuture = null;
         if (this.localEngine != null) localFuture = localEngine.sendMessage(message, last, userid);
         if (this.sncpNodeAddresses == null || this.remoteNode == null) {
