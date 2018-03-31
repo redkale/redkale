@@ -27,9 +27,7 @@ public interface Cryptor {
      *
      * @return 加密后数据
      */
-    default ByteBuffer[] encrypt(ByteBuffer[] buffers, final Supplier<ByteBuffer> supplier, final Consumer<ByteBuffer> consumer) {
-        return buffers;
-    }
+    public ByteBuffer[] encrypt(ByteBuffer[] buffers, final Supplier<ByteBuffer> supplier, final Consumer<ByteBuffer> consumer);
 
     /**
      * 解密
@@ -40,7 +38,5 @@ public interface Cryptor {
      *
      * @return 解密后数据
      */
-    default ByteBuffer[] decrypt(ByteBuffer[] buffers, final Supplier<ByteBuffer> supplier, final Consumer<ByteBuffer> consumer) {
-        return buffers;
-    }
+    public ByteBuffer[] decrypt(ByteBuffer[] buffers, final Supplier<ByteBuffer> supplier, final Consumer<ByteBuffer> consumer);
 }

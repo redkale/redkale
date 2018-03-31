@@ -645,7 +645,7 @@ public final class Rest {
             T servlet = (T) newClazz.getDeclaredConstructor().newInstance();
             if (rws.cryptor() != Cryptor.class) {
                 Cryptor cryptor = rws.cryptor().getDeclaredConstructor().newInstance();
-                Field cryptorField = newClazz.getDeclaredField("cryptor");
+                Field cryptorField = newClazz.getSuperclass().getDeclaredField("cryptor"); //WebSocketServlet
                 cryptorField.setAccessible(true);
                 cryptorField.set(servlet, cryptor);
             }
