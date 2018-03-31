@@ -354,7 +354,7 @@ public abstract class WebSocketNode {
         if (this.localEngine != null && this.sncpNodeAddresses == null) { //本地模式且没有分布式
             return this.localEngine.sendMessage(message, last, userids);
         }
-        final Object remoteMessage = formatRemoteMessage(message0);
+        final Object remoteMessage = formatRemoteMessage(message);
         CompletableFuture<Integer> future = null;
         for (Serializable userid : userids) {
             future = future == null ? sendOneMessage(remoteMessage, last, userid)
