@@ -53,6 +53,9 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
 
     private final Set<Class> skipIgnores = new HashSet();
 
+    //key:需要屏蔽的字段；value：排除的字段名
+    private final ConcurrentHashMap<Class, Set<String>> ignoreAlls = new ConcurrentHashMap();
+
     private boolean skipAllIgnore = false;
 
     protected ConvertFactory(ConvertFactory<R, W> parent, boolean tiny) {
@@ -171,12 +174,19 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
     public ConvertColumnEntry findRef(AccessibleObject element) {
         if (element == null) return null;
         ConvertColumnEntry en = this.columnEntrys.get(element);
-        if (en != null) return en;
+        Set<String> onlyColumns = null;
+        if (element instanceof Method) {
+            onlyColumns = ignoreAlls.get(((Method) element).getDeclaringClass());
+        } else if (element instanceof Field) {
+            onlyColumns = ignoreAlls.get(((Field) element).getDeclaringClass());
+        }
+        if (en != null && onlyColumns == null) return en;
         final ConvertType ct = this.getConvertType();
         ConvertColumn[] ccs = element.getAnnotationsByType(ConvertColumn.class);
+        String fieldName = null;
         if (ccs.length == 0 && element instanceof Method) {
             final Method method = (Method) element;
-            String fieldName = readGetSetFieldName(method);
+            fieldName = readGetSetFieldName(method);
             if (fieldName != null) {
                 try {
                     ccs = method.getDeclaringClass().getDeclaredField(fieldName).getAnnotationsByType(ConvertColumn.class);
@@ -184,8 +194,22 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
                 }
             }
         }
+        if (onlyColumns != null && fieldName == null) {
+            if (element instanceof Method) {
+                fieldName = readGetSetFieldName((Method) element);
+            } else if (element instanceof Field) {
+                fieldName = ((Field) element).getName();
+            }
+        }
+        if (ccs.length == 0 && onlyColumns != null && fieldName != null) {
+            if (!onlyColumns.contains(fieldName)) return new ConvertColumnEntry(fieldName, true);
+        }
         for (ConvertColumn ref : ccs) {
             if (ref.type().contains(ct)) {
+                if (onlyColumns != null && fieldName != null) {
+                    String realName = ref.name().isEmpty() ? fieldName : ref.name();
+                    if (!onlyColumns.contains(realName)) return new ConvertColumnEntry(realName, true);
+                }
                 ConvertColumnEntry entry = new ConvertColumnEntry(ref);
                 if (skipAllIgnore) {
                     entry.setIgnore(false);
@@ -316,6 +340,22 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
      */
     public final void registerSkipIgnore(final Class type) {
         skipIgnores.add(type);
+    }
+
+    /**
+     * 屏蔽指定类所有字段，仅仅保留指定字段 <br>
+     * <b>注意: 该配置优先级高于skipAllIgnore和ConvertColumnEntry配置</b>
+     *
+     * @param type           指定的类
+     * @param excludeColumns 需要排除的字段名
+     */
+    public final void registerIgnoreAll(final Class type, String... excludeColumns) {
+        Set<String> set = ignoreAlls.get(type);
+        if (set == null) {
+            ignoreAlls.put(type, new HashSet<>(Arrays.asList(excludeColumns)));
+        } else {
+            set.addAll(Arrays.asList(excludeColumns));
+        }
     }
 
     public final void register(final Class type, boolean ignore, String... columns) {
