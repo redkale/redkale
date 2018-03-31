@@ -316,7 +316,7 @@ public class NodeHttpServer extends NodeServer {
                 WebServlet ws = servlet.getClass().getAnnotation(WebServlet.class);
                 if (ws != null && !ws.repair()) prefix2 = "";
                 resourceFactory.inject(servlet, NodeHttpServer.this);
-                if (finest) logger.finest(threadName + " " + stype.getName() + " create RestWebSocketServlet " + servlet);
+                if (finest) logger.finest(threadName + " " + stype.getName() + " create a RestWebSocketServlet");
                 if (ss != null) {
                     String[] mappings = servlet.getClass().getAnnotation(WebServlet.class).value();
                     for (int i = 0; i < mappings.length; i++) {
