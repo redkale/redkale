@@ -89,6 +89,9 @@ public class DataJdbcSource extends AbstractService implements DataSource, DataC
 
         final AtomicInteger counter = new AtomicInteger();
         this.threads = Integer.decode(readprop.getProperty(JDBC_CONNECTIONSMAX, "" + Runtime.getRuntime().availableProcessors() * 16));
+        final Thread.UncaughtExceptionHandler ueh = (t, e) -> {
+            logger.log(Level.SEVERE, "DataJdbcSource error", e);
+        };
         this.executor = Executors.newFixedThreadPool(threads, (Runnable r) -> {
             Thread t = new Thread(r);
             t.setDaemon(true);
@@ -99,6 +102,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, DataC
                 s = "0" + s;
             }
             t.setName("DataJdbcSource-Thread-" + s);
+            t.setUncaughtExceptionHandler(ueh);
             return t;
         });
         if (writeprop.isEmpty()) writeprop = readprop;
