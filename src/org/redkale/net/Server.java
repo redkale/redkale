@@ -162,9 +162,10 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
     }
 
     protected static String formatLenth(long value) {
-        if (value > 1024 * 1024 * 1024) return value / (1024 * 1024 * 1024) + "G";
-        if (value > 1024 * 1024) return value / (1024 * 1024) + "M";
-        if (value > 1024) return value / (1024) + "K";
+        if (value < 1) return "" + value;
+        if (value % (1024 * 1024 * 1024) == 0) return value / (1024 * 1024 * 1024) + "G";
+        if (value % (1024 * 1024) == 0) return value / (1024 * 1024) + "M";
+        if (value % 1024 == 0) return value / (1024) + "K";
         return value + "B";
     }
 
