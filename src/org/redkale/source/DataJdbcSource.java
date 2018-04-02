@@ -59,6 +59,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, DataC
     public DataJdbcSource(String unitName, Properties readprop, Properties writeprop) {
         this.preConstruct(unitName, readprop, writeprop);
         this.initByProperties(unitName, readprop, writeprop);
+
     }
 
     public DataJdbcSource() {
@@ -86,7 +87,22 @@ public class DataJdbcSource extends AbstractService implements DataSource, DataC
             if (pn == null || pv == null) continue;
             readprop.put(pn, pv);
         }
+        if (writeprop.isEmpty()) writeprop = readprop;
+        this.initByProperties(unitName, readprop, writeprop);
+    }
 
+    @Override
+    protected ExecutorService getExecutor() {
+        return executor;
+    }
+
+    @Override
+    public void destroy(AnyValue config) {
+        if (this.executor != null) this.executor.shutdownNow();
+    }
+
+    //构造前调用
+    protected void preConstruct(String unitName, Properties readprop, Properties writeprop) {
         final AtomicInteger counter = new AtomicInteger();
         this.threads = Integer.decode(readprop.getProperty(JDBC_CONNECTIONSMAX, "" + Runtime.getRuntime().availableProcessors() * 16));
         final Thread.UncaughtExceptionHandler ueh = (t, e) -> {
@@ -105,22 +121,6 @@ public class DataJdbcSource extends AbstractService implements DataSource, DataC
             t.setUncaughtExceptionHandler(ueh);
             return t;
         });
-        if (writeprop.isEmpty()) writeprop = readprop;
-        this.initByProperties(unitName, readprop, writeprop);
-    }
-
-    @Override
-    protected ExecutorService getExecutor() {
-        return executor;
-    }
-
-    @Override
-    public void destroy(AnyValue config) {
-        if (this.executor != null) this.executor.shutdownNow();
-    }
-
-    //构造前调用
-    protected void preConstruct(String unitName, Properties readprop, Properties writeprop) {
     }
 
     protected void initByProperties(String unitName, Properties readprop, Properties writeprop) {
