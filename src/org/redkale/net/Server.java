@@ -149,12 +149,7 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
     }
 
     protected static int parseLenth(String value, int defValue) {
-        if (value == null) return defValue;
-        value = value.toUpperCase().replace("B", "");
-        if (value.endsWith("G")) return Integer.decode(value.replace("G", "")) * 1024 * 1024 * 1024;
-        if (value.endsWith("M")) return Integer.decode(value.replace("M", "")) * 1024 * 1024;
-        if (value.endsWith("K")) return Integer.decode(value.replace("K", "")) * 1024;
-        return Integer.decode(value);
+        return (int) parseLenth(value, defValue + 0L);
     }
 
     protected static long parseLenth(String value, long defValue) {
