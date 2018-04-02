@@ -9,8 +9,9 @@ import static org.redkale.net.http.WebSocket.*;
 import java.io.*;
 import java.net.*;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.*;
 import java.util.logging.Level;
+import org.redkale.net.WorkThread;
 import org.redkale.net.http.*;
 import org.redkale.util.*;
 
@@ -39,11 +40,17 @@ public class WebSocketNodeService extends WebSocketNode implements Service {
     public CompletableFuture<List<String>> getWebSocketAddresses(final @RpcTargetAddress InetSocketAddress targetAddress, final Serializable groupid) {
         if (localSncpAddress == null || !localSncpAddress.equals(targetAddress)) return remoteWebSocketAddresses(targetAddress, groupid);
         if (this.localEngine == null) return CompletableFuture.completedFuture(new ArrayList<>());
+
+        ExecutorService executor = ForkJoinPool.commonPool();
+        Thread thread = Thread.currentThread();
+        if (thread instanceof WorkThread) {
+            executor = ((WorkThread) thread).getExecutor();
+        }
         return CompletableFuture.supplyAsync(() -> {
             final List<String> rs = new ArrayList<>();
             this.localEngine.getLocalWebSockets(groupid).forEach(x -> rs.add(x.getRemoteAddr()));
             return rs;
-        });
+        }, executor);
     }
 
     @Override
