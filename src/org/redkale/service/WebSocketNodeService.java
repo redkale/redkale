@@ -41,11 +41,13 @@ public class WebSocketNodeService extends WebSocketNode implements Service {
         if (localSncpAddress == null || !localSncpAddress.equals(targetAddress)) return remoteWebSocketAddresses(targetAddress, groupid);
         if (this.localEngine == null) return CompletableFuture.completedFuture(new ArrayList<>());
 
-        ExecutorService executor = ForkJoinPool.commonPool();
+        ExecutorService executor = null;
         Thread thread = Thread.currentThread();
         if (thread instanceof WorkThread) {
             executor = ((WorkThread) thread).getExecutor();
         }
+        if (executor == null) executor = ForkJoinPool.commonPool();
+        
         return CompletableFuture.supplyAsync(() -> {
             final List<String> rs = new ArrayList<>();
             this.localEngine.getLocalWebSockets(groupid).forEach(x -> rs.add(x.getRemoteAddr()));
