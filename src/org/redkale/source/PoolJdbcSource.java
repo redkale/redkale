@@ -47,7 +47,7 @@ public class PoolJdbcSource {
 
     private final String stype; // "" 或 "read"  或 "write"
 
-    private final int max;
+    private final int maxconns;
 
     private String url;
 
@@ -65,8 +65,8 @@ public class PoolJdbcSource {
         this.url = prop.getProperty(JDBC_URL);
         this.user = prop.getProperty(JDBC_USER);
         this.password = prop.getProperty(JDBC_PWD);
-        this.max = Integer.decode(prop.getProperty(JDBC_CONNECTIONSMAX, "" + Runtime.getRuntime().availableProcessors() * 16));
-        this.queue = new ArrayBlockingQueue<>(this.max);
+        this.maxconns = Integer.decode(prop.getProperty(JDBC_CONNECTIONSMAX, "" + Runtime.getRuntime().availableProcessors() * 16));
+        this.queue = new ArrayBlockingQueue<>(this.maxconns);
         this.listener = new ConnectionEventListener() {
 
             @Override
@@ -287,7 +287,7 @@ public class PoolJdbcSource {
         }
         PooledConnection result = queue.poll();
         if (result == null) {
-            if (usingCounter.get() >= max) {
+            if (usingCounter.get() >= maxconns) {
                 try {
                     result = queue.poll(6, TimeUnit.SECONDS);
                 } catch (Exception t) {

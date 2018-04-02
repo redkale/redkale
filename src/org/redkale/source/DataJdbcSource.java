@@ -9,7 +9,7 @@ import java.io.*;
 import java.net.URL;
 import java.sql.*;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 import java.util.function.*;
 import java.util.logging.*;
@@ -40,6 +40,10 @@ public class DataJdbcSource extends AbstractService implements DataSource, DataC
     protected String name;
 
     protected URL conf;
+
+    protected int threads;
+
+    protected ExecutorService executor;
 
     protected boolean cacheForbidden;
 
@@ -82,8 +86,33 @@ public class DataJdbcSource extends AbstractService implements DataSource, DataC
             if (pn == null || pv == null) continue;
             readprop.put(pn, pv);
         }
+
+        final AtomicInteger counter = new AtomicInteger();
+        this.threads = Integer.decode(readprop.getProperty(JDBC_CONNECTIONSMAX, "" + Runtime.getRuntime().availableProcessors() * 16));
+        this.executor = Executors.newFixedThreadPool(threads, (Runnable r) -> {
+            Thread t = new Thread(r);
+            t.setDaemon(true);
+            String s = "" + counter.incrementAndGet();
+            if (s.length() == 1) {
+                s = "00" + s;
+            } else if (s.length() == 2) {
+                s = "0" + s;
+            }
+            t.setName("DataJdbcSource-Thread-" + s);
+            return t;
+        });
         if (writeprop.isEmpty()) writeprop = readprop;
         this.initByProperties(unitName, readprop, writeprop);
+    }
+
+    @Override
+    protected ExecutorService getExecutor() {
+        return executor;
+    }
+
+    @Override
+    public void destroy(AnyValue config) {
+        if (this.executor != null) this.executor.shutdownNow();
     }
 
     //构造前调用
