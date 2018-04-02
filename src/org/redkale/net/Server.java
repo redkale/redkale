@@ -166,6 +166,13 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         return Long.decode(value);
     }
 
+    protected static String formatLenth(long value) {
+        if (value > 1024 * 1024 * 1024) return value / (1024 * 1024 * 1024) + "G";
+        if (value > 1024 * 1024) return value / (1024 * 1024) + "M";
+        if (value > 1024) return value / (1024) + "K";
+        return value + "B";
+    }
+
     public void destroy(final AnyValue config) throws Exception {
         this.prepare.destroy(context, config);
     }
@@ -227,7 +234,7 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         serverChannel.accept();
         final String threadName = "[" + Thread.currentThread().getName() + "] ";
         logger.info(threadName + this.getClass().getSimpleName() + ("TCP".equalsIgnoreCase(protocol) ? "" : ("." + protocol)) + " listen: " + address
-            + ", threads: " + threads + ", bufferCapacity: " + bufferCapacity / 1024 + "K, bufferPoolSize: " + bufferPoolSize + ", responsePoolSize: " + responsePoolSize
+            + ", threads: " + threads + ", maxbody: " + formatLenth(context.maxbody) + ", bufferCapacity: " + bufferCapacity / 1024 + "K, bufferPoolSize: " + bufferPoolSize + ", responsePoolSize: " + responsePoolSize
             + ", started in " + (System.currentTimeMillis() - context.getServerStartTime()) + " ms");
     }
 
