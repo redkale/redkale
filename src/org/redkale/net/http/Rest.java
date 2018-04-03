@@ -782,15 +782,21 @@ public final class Rest {
         for (final Method method : serviceType.getMethods()) {
             if (Modifier.isStatic(method.getModifiers())) continue;
             if (method.isSynthetic()) continue;
-            Class[] extypes = method.getExceptionTypes();
-            if (extypes.length > 1) continue;
-            if (extypes.length == 1 && extypes[0] != IOException.class) continue;
             if (EXCLUDERMETHODS.contains(method.getName())) continue;
             if ("init".equals(method.getName())) continue;
             if ("destroy".equals(method.getName())) continue;
             if ("version".equals(method.getName())) continue;
 
             RestMapping[] mappings = method.getAnnotationsByType(RestMapping.class);
+            Class[] extypes = method.getExceptionTypes();
+            if (extypes.length > 1) {
+                if (mappings != null && mappings.length > 0) throw new RuntimeException("@" + RestMapping.class.getSimpleName() + " only for method with throws IOException");
+                continue;
+            }
+            if (extypes.length == 1 && extypes[0] != IOException.class) {
+                if (mappings != null && mappings.length > 0) throw new RuntimeException("@" + RestMapping.class.getSimpleName() + " only for method with throws IOException");
+                continue;
+            }
             if (controller == null) continue;
             if (!controller.automapping() && mappings.length < 1) continue;
             boolean ignore = false;
