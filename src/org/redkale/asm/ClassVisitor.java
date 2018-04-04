@@ -104,9 +104,6 @@ public abstract class ClassVisitor {
      *            calls. May be null.
      */
     public ClassVisitor(final int api, final ClassVisitor cv) {
-        if (api < Opcodes.ASM4 || api > Opcodes.ASM6) {
-            throw new IllegalArgumentException();
-        }
         this.api = api;
         this.cv = cv;
     }
@@ -244,9 +241,6 @@ public abstract class ClassVisitor {
      */
     public AnnotationVisitor visitTypeAnnotation(int typeRef,
             TypePath typePath, String desc, boolean visible) {
-        if (api < Opcodes.ASM5) {
-            throw new RuntimeException();
-        }
         if (cv != null) {
             return cv.visitTypeAnnotation(typeRef, typePath, desc, visible);
         }

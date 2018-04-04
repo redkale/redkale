@@ -105,7 +105,7 @@ public interface Creator<T> {
                 if (this.started) return null;
                 this.started = true;
                 //返回的List中参数列表可能会比方法参数量多，因为方法内的临时变量也会存入list中， 所以需要list的元素集合比方法的参数多
-                return new MethodVisitor(Opcodes.ASM5) {
+                return new MethodVisitor(Opcodes.ASM6) {
                     @Override
                     public void visitLocalVariable(String name, String description, String signature, Label start, Label end, int index) {
                         if (index < 1) return;
@@ -139,7 +139,7 @@ public interface Creator<T> {
                 return null;
             }
             final List<String> fieldnames = new ArrayList<>();
-            new ClassReader(out.toByteArray()).accept(new SimpleClassVisitor(Opcodes.ASM5, fieldnames, constructorDesc), 0);
+            new ClassReader(out.toByteArray()).accept(new SimpleClassVisitor(Opcodes.ASM6, fieldnames, constructorDesc), 0);
             if (fieldnames.isEmpty()) return null;
             if (paramcount == fieldnames.size()) {
                 return getConstructorField(clazz, paramcount, fieldnames.toArray(new String[fieldnames.size()]));

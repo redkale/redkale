@@ -1317,38 +1317,6 @@ public class ClassWriter extends ClassVisitor {
      *            the name of the field or method.
      * @param desc
      *            the descriptor of the field or method.
-     * @return the index of a new or already existing method type reference
-     *         item.
-     *
-     * @deprecated this method is superseded by
-     *             {@link #newHandle(int, String, String, String, boolean)}.
-     */
-    @Deprecated
-    public int newHandle(final int tag, final String owner, final String name,
-            final String desc) {
-        return newHandle(tag, owner, name, desc, tag == Opcodes.H_INVOKEINTERFACE);
-    }
-
-    /**
-     * Adds a handle to the constant pool of the class being build. Does nothing
-     * if the constant pool already contains a similar item. <i>This method is
-     * intended for {@link Attribute} sub classes, and is normally not needed by
-     * class generators or adapters.</i>
-     *
-     * @param tag
-     *            the kind of this handle. Must be {@link Opcodes#H_GETFIELD},
-     *            {@link Opcodes#H_GETSTATIC}, {@link Opcodes#H_PUTFIELD},
-     *            {@link Opcodes#H_PUTSTATIC}, {@link Opcodes#H_INVOKEVIRTUAL},
-     *            {@link Opcodes#H_INVOKESTATIC},
-     *            {@link Opcodes#H_INVOKESPECIAL},
-     *            {@link Opcodes#H_NEWINVOKESPECIAL} or
-     *            {@link Opcodes#H_INVOKEINTERFACE}.
-     * @param owner
-     *            the internal name of the field or method owner class.
-     * @param name
-     *            the name of the field or method.
-     * @param desc
-     *            the descriptor of the field or method.
      * @param itf
      *            true if the owner is an interface.
      * @return the index of a new or already existing method type reference

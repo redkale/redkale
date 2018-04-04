@@ -102,9 +102,6 @@ public abstract class AnnotationVisitor {
      *            method calls. May be null.
      */
     public AnnotationVisitor(final int api, final AnnotationVisitor av) {
-        if (api < Opcodes.ASM4 || api > Opcodes.ASM6) {
-            throw new IllegalArgumentException();
-        }
         this.api = api;
         this.av = av;
     }

@@ -96,7 +96,7 @@ public final class Rest {
             String key = name + ":" + desc;
             if (fieldmap.containsKey(key)) return null;
             fieldmap.put(key, fieldnames);
-            return new MethodVisitor(Opcodes.ASM5) {
+            return new MethodVisitor(Opcodes.ASM6) {
                 @Override
                 public void visitLocalVariable(String name, String description, String signature, Label start, Label end, int index) {
                     if (index < 1) return;
@@ -119,7 +119,7 @@ public final class Rest {
             InputStream in = clazz.getResourceAsStream(n.substring(n.lastIndexOf('.') + 1) + ".class");
             if (in == null) return map;
             try {
-                new ClassReader(Utility.readBytesThenClose(in)).accept(new MethodParamClassVisitor(Opcodes.ASM5, map), 0);
+                new ClassReader(Utility.readBytesThenClose(in)).accept(new MethodParamClassVisitor(Opcodes.ASM6, map), 0);
             } catch (Exception e) { //无需理会 
             }
             Class superClass = clazz.getSuperclass();

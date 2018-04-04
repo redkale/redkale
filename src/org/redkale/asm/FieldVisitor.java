@@ -101,9 +101,6 @@ public abstract class FieldVisitor {
      *            calls. May be null.
      */
     public FieldVisitor(final int api, final FieldVisitor fv) {
-        if (api < Opcodes.ASM4 || api > Opcodes.ASM6) {
-            throw new IllegalArgumentException();
-        }
         this.api = api;
         this.fv = fv;
     }
@@ -145,9 +142,6 @@ public abstract class FieldVisitor {
      */
     public AnnotationVisitor visitTypeAnnotation(int typeRef,
             TypePath typePath, String desc, boolean visible) {
-        if (api < Opcodes.ASM5) {
-            throw new RuntimeException();
-        }
         if (fv != null) {
             return fv.visitTypeAnnotation(typeRef, typePath, desc, visible);
         }
