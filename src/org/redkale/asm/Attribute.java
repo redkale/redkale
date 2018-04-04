@@ -64,7 +64,7 @@ package org.redkale.asm;
  * @author Eric Bruneton
  * @author Eugene Kuleshov
  */
-public class Attribute {
+class Attribute {
 
     /**
      * The type of this attribute.
