@@ -35,7 +35,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, DataC
 
     protected static final Flipper FLIPPER_ONE = new Flipper(1);
 
-    protected final Logger logger = Logger.getLogger(DataJdbcSource.class.getSimpleName());
+    protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
 
     protected String name;
 
@@ -105,8 +105,9 @@ public class DataJdbcSource extends AbstractService implements DataSource, DataC
     protected void preConstruct(String unitName, Properties readprop, Properties writeprop) {
         final AtomicInteger counter = new AtomicInteger();
         this.threads = Integer.decode(readprop.getProperty(JDBC_CONNECTIONSMAX, "" + Runtime.getRuntime().availableProcessors() * 16));
+        final String cname = this.getClass().getSimpleName();
         final Thread.UncaughtExceptionHandler ueh = (t, e) -> {
-            logger.log(Level.SEVERE, "DataJdbcSource error", e);
+            logger.log(Level.SEVERE, cname + " error", e);
         };
         this.executor = Executors.newFixedThreadPool(threads, (Runnable r) -> {
             Thread t = new Thread(r);
@@ -117,7 +118,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, DataC
             } else if (s.length() == 2) {
                 s = "0" + s;
             }
-            t.setName("DataJdbcSource-Thread-" + s);
+            t.setName(cname + "-Thread-" + s);
             t.setUncaughtExceptionHandler(ueh);
             return t;
         });
@@ -126,9 +127,9 @@ public class DataJdbcSource extends AbstractService implements DataSource, DataC
     protected void initByProperties(String unitName, Properties readprop, Properties writeprop) {
         this.name = unitName;
         this.conf = null;
+        this.cacheForbidden = "NONE".equalsIgnoreCase(readprop.getProperty(JDBC_CACHE_MODE));
         this.readPool = new PoolJdbcSource(this, "read", readprop);
         this.writePool = new PoolJdbcSource(this, "write", writeprop);
-        this.cacheForbidden = "NONE".equalsIgnoreCase(readprop.getProperty(JDBC_CACHE_MODE));
     }
 
     @Local
