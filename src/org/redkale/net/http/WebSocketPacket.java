@@ -8,7 +8,7 @@ package org.redkale.net.http;
 import org.redkale.util.Utility;
 import java.io.*;
 import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.AbstractMap;
 import java.util.function.*;
 import java.util.logging.*;
@@ -23,8 +23,6 @@ import org.redkale.net.Cryptor;
  * @author zhangjx
  */
 public final class WebSocketPacket {
-
-    private static final Charset UTF_8 = Charset.forName("UTF-8");
 
     static final WebSocketPacket NONE = new WebSocketPacket();
 
@@ -480,7 +478,7 @@ public final class WebSocketPacket {
         if (this.type == FrameType.TEXT) {
             Convert textConvert = webSocket.getTextConvert();
             if (textConvert == null) {
-                this.receiveMessage = new String(this.getReceiveBytes(buffers), UTF_8);
+                this.receiveMessage = new String(this.getReceiveBytes(buffers), StandardCharsets.UTF_8);
                 this.receiveType = MessageType.STRING;
             } else {
                 this.receiveMessage = textConvert.convertFrom(webSocket._messageTextType, this.receiveMasker, buffers);

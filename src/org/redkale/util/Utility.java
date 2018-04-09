@@ -10,6 +10,7 @@ import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.CompletionHandler;
 import java.nio.charset.*;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import java.time.*;
 import java.util.*;
 import java.util.function.*;
@@ -30,8 +31,6 @@ public final class Utility {
     private static final int zoneRawOffset = TimeZone.getDefault().getRawOffset();
 
     private static final String format = "%1$tY-%1$tm-%1$td %1$tH:%1$tM:%1$tS";
-
-    private static final Charset UTF_8 = Charset.forName("UTF-8");
 
     private static final char hex[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
 

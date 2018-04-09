@@ -28,8 +28,6 @@ import org.redkale.util.*;
  */
 public class Context {
 
-    private static final Charset UTF8 = Charset.forName("UTF-8");
-
     //服务启动时间
     protected final long serverStartTime;
 
@@ -90,7 +88,7 @@ public class Context {
         this.bufferPool = bufferPool;
         this.responsePool = responsePool;
         this.maxbody = maxbody;
-        this.charset = UTF8.equals(charset) ? null : charset;
+        this.charset = StandardCharsets.UTF_8.equals(charset) ? null : charset;
         this.address = address;
         this.prepare = prepare;
         this.resourceFactory = resourceFactory;

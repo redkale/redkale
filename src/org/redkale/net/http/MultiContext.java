@@ -26,8 +26,6 @@ public final class MultiContext {
 
     private static final Logger logger = Logger.getLogger(MultiContext.class.getSimpleName());
 
-    private static final Charset UTF8 = Charset.forName("UTF-8");
-
     private final String contentType;
 
     private final InputStream in;
@@ -58,7 +56,7 @@ public final class MultiContext {
     };
 
     public MultiContext(final Charset charsetName, final String contentType, final DefaultAnyValue params, final InputStream in, String fielnameRegex) {
-        this.charset = charsetName == null ? UTF8 : charsetName;
+        this.charset = charsetName == null ? StandardCharsets.UTF_8 : charsetName;
         this.contentType = contentType == null ? "" : contentType.trim();
         this.parameters = params;
         this.boundary = parseBoundary(this.contentType);

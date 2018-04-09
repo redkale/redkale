@@ -9,7 +9,7 @@ import java.io.*;
 import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.Channels;
-import java.nio.charset.Charset;
+import java.nio.charset.*;
 import java.util.*;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.*;
@@ -30,8 +30,6 @@ import org.redkale.util.AnyValue.DefaultAnyValue;
  * @author zhangjx
  */
 public class HttpRequest extends Request<HttpContext> {
-
-    protected static final Charset UTF8 = Charset.forName("UTF-8");
 
     public static final String SESSIONID_NAME = "JSESSIONID";
 
@@ -340,7 +338,7 @@ public class HttpRequest extends Request<HttpContext> {
      * @return 内容
      */
     public String getBodyUTF8() {
-        return array.toString(UTF8);
+        return array.toString(StandardCharsets.UTF_8);
     }
 
     /**
@@ -352,7 +350,7 @@ public class HttpRequest extends Request<HttpContext> {
      * @return 内容
      */
     public <T> T getBodyJson(java.lang.reflect.Type type) {
-        String str = array.toString(UTF8);
+        String str = array.toString(StandardCharsets.UTF_8);
         if (str == null || str.isEmpty()) return null;
         return context.getJsonConvert().convertFrom(type, str);
     }
@@ -367,7 +365,7 @@ public class HttpRequest extends Request<HttpContext> {
      * @return 内容
      */
     public <T> T getBodyJson(JsonConvert convert, java.lang.reflect.Type type) {
-        String str = array.toString(UTF8);
+        String str = array.toString(StandardCharsets.UTF_8);
         if (str == null || str.isEmpty()) return null;
         return convert.convertFrom(type, str);
     }

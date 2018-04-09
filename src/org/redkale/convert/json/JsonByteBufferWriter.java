@@ -22,8 +22,6 @@ import org.redkale.util.*;
  */
 public class JsonByteBufferWriter extends JsonWriter {
 
-    protected static final Charset UTF8 = Charset.forName("UTF-8");
-
     protected Charset charset;
 
     private final Supplier<ByteBuffer> supplier;
@@ -38,7 +36,7 @@ public class JsonByteBufferWriter extends JsonWriter {
 
     protected JsonByteBufferWriter(boolean tiny, Charset charset, Supplier<ByteBuffer> supplier) {
         this.tiny = tiny;
-        this.charset = UTF8.equals(charset) ? null : charset;
+        this.charset = StandardCharsets.UTF_8.equals(charset) ? null : charset;
         this.supplier = supplier;
     }
 
