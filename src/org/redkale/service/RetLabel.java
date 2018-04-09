@@ -6,8 +6,9 @@
 package org.redkale.service;
 
 import java.lang.annotation.*;
+import static java.lang.annotation.ElementType.*;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.lang.reflect.*;
-import java.text.MessageFormat;
 import java.util.*;
 
 /**
@@ -23,59 +24,46 @@ import java.util.*;
  */
 @Inherited
 @Documented
-@Target(value = {ElementType.FIELD})
-@Retention(value = RetentionPolicy.RUNTIME)
+@Target({FIELD})
+@Retention(RUNTIME)
+@Repeatable(RetLabel.RetLabels.class)
 public @interface RetLabel {
 
     String value();
 
-    public static class RetCode {
+    String locale() default "";
 
-        protected final Map<Integer, String> rets = new HashMap();
+    @Inherited
+    @Documented
+    @Target({FIELD})
+    @Retention(RUNTIME)
+    @interface RetLabels {
 
-        protected final Class clazz;
-
-        protected boolean inited;
-
-        public RetCode(Class clazz) {
-            this.clazz = clazz;
-        }
-
-        public RetResult retResult(int retcode) {
-            if (retcode == 0) return RetResult.success();
-            return new RetResult(retcode, retInfo(retcode));
-        }
-
-        public RetResult retResult(int retcode, Object... args) {
-            if (retcode == 0) return RetResult.success();
-            if (args == null || args.length < 1) return new RetResult(retcode, retInfo(retcode));
-            String info = MessageFormat.format(retInfo(retcode), args);
-            return new RetResult(retcode, info);
-        }
-
-        public RetResult set(RetResult result, int retcode, Object... args) {
-            if (retcode == 0) return result.retcode(0).retinfo("");
-            if (args == null || args.length < 1) return result.retcode(retcode).retinfo(retInfo(retcode));
-            String info = MessageFormat.format(retInfo(retcode), args);
-            return result.retcode(retcode).retinfo(info);
-        }
-
-        public String retInfo(int retcode) {
-            if (retcode == 0) return "成功";
-            if (!this.inited) {
-                synchronized (this) {
-                    if (!this.inited) {
-                        rets.putAll(RetLoader.load(clazz));
-                    }
-                    this.inited = true;
-                }
-            }
-            return rets.getOrDefault(retcode, "未知错误");
-        }
+        RetLabel[] value();
     }
 
     public static abstract class RetLoader {
 
+        public static Map<String, Map<Integer, String>> loadMap(Class clazz) {
+            final Map<String, Map<Integer, String>> rets = new HashMap<>();
+            for (Field field : clazz.getFields()) {
+                if (!Modifier.isStatic(field.getModifiers())) continue;
+                if (field.getType() != int.class) continue;
+                RetLabel info = field.getAnnotation(RetLabel.class);
+                if (info == null) continue;
+                int value;
+                try {
+                    value = field.getInt(null);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    continue;
+                }
+                rets.computeIfAbsent(info.locale(), (k) -> new HashMap<>()).put(value, info.value());
+            }
+            return rets;
+        }
+
+        @Deprecated
         public static Map<Integer, String> load(Class clazz) {
             final Map<Integer, String> rets = new HashMap<>();
             for (Field field : clazz.getFields()) {
