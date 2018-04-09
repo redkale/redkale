@@ -65,22 +65,7 @@ public @interface RetLabel {
 
         @Deprecated
         public static Map<Integer, String> load(Class clazz) {
-            final Map<Integer, String> rets = new HashMap<>();
-            for (Field field : clazz.getFields()) {
-                if (!Modifier.isStatic(field.getModifiers())) continue;
-                if (field.getType() != int.class) continue;
-                RetLabel info = field.getAnnotation(RetLabel.class);
-                if (info == null) continue;
-                int value;
-                try {
-                    value = field.getInt(null);
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                    continue;
-                }
-                rets.put(value, info.value());
-            }
-            return rets;
+            return loadMap(clazz).computeIfAbsent("", (k) -> new HashMap<>());
         }
     }
 }
