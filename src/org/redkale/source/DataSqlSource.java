@@ -10,7 +10,7 @@ import org.redkale.service.*;
 import org.redkale.util.*;
 
 /**
- * DataSource的异步抽象实现类
+ * DataSource的SQL抽象实现类
  *
  * <p>
  * 详情见: https://redkale.org
@@ -21,6 +21,6 @@ import org.redkale.util.*;
 @AutoLoad(false)
 @SuppressWarnings("unchecked")
 @ResourceType(DataSource.class)
-public abstract class DataAsyncSource extends AbstractService implements DataSource, DataCacheListener, Function<Class, EntityInfo>, AutoCloseable, Resourcable {
-
+public abstract class DataSqlSource extends AbstractService implements DataSource, DataCacheListener, Function<Class, EntityInfo>, AutoCloseable, Resourcable {
+ 
 }
