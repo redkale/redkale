@@ -573,6 +573,22 @@ public final class Utility {
      *
      * @return boolean
      */
+    public static boolean contains(short[] values, short value) {
+        if (values == null) return false;
+        for (short v : values) {
+            if (v == value) return true;
+        }
+        return false;
+    }
+    
+    /**
+     * 判断指定值是否包含指定的数组中，包含返回true
+     *
+     * @param values 集合
+     * @param value  单值
+     *
+     * @return boolean
+     */
     public static boolean contains(int[] values, int value) {
         if (values == null) return false;
         for (int v : values) {
