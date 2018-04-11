@@ -11,7 +11,8 @@ import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.nio.file.*;
-import java.text.*;
+import java.time.ZoneId;
+import static java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicLong;
@@ -96,7 +97,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         httpCodes.put(505, "HTTP Version Not Supported");
     }
 
-    private final DateFormat gmtDateFormat = new SimpleDateFormat("EEE, dd-MMM-yyyy HH:mm:ss z", Locale.ENGLISH);
+    private static final ZoneId ZONE_GMT = ZoneId.of("GMT");
 
     private int status = 200;
 
@@ -141,7 +142,6 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         this.renders = renders;
         this.hasRender = renders != null && !renders.isEmpty();
         this.onlyoneHttpRender = renders != null && renders.size() == 1 ? renders.get(0) : null;
-        gmtDateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
     }
 
     @Override
@@ -845,7 +845,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         if (!this.request.isKeepAlive()) {
             buffer.put("Connection: close\r\n".getBytes());
         }
-        buffer.put(("Date: " + gmtDateFormat.format(new Date()) + "\r\n").getBytes());
+        buffer.put(("Date: " + RFC_1123_DATE_TIME.format(java.time.ZonedDateTime.now(ZONE_GMT)) + "\r\n").getBytes());
         buffer.put(serverNameBytes);
 
         if (this.defaultAddHeaders != null) {
@@ -914,7 +914,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         if (cookie.getPortlist() != null) sb.append("; Port=").append(cookie.getPortlist());
         if (cookie.getMaxAge() > 0) {
             sb.append("; Max-Age=").append(cookie.getMaxAge());
-            sb.append("; Expires=").append(gmtDateFormat.format(new Date(System.currentTimeMillis() + cookie.getMaxAge() * 1000)));
+            sb.append("; Expires=").append(RFC_1123_DATE_TIME.format(java.time.ZonedDateTime.now(ZONE_GMT).plusSeconds(cookie.getMaxAge())));
         }
         if (cookie.getSecure()) sb.append("; Secure");
         if (cookie.isHttpOnly()) sb.append("; HttpOnly");
