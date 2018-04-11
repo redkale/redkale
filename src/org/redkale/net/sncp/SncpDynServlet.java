@@ -149,7 +149,7 @@ public final class SncpDynServlet extends SncpServlet {
                         Object[] sncpParams = handler.sncp_getParams();
                         future.whenComplete((v, e) -> {
                             if (e != null) {
-                                response.getContext().getLogger().log(Level.INFO, "sncp CompleteAsync error(" + request + ")", e);
+                                response.getContext().getLogger().log(Level.SEVERE, "sncp CompleteAsync error(" + request + ")", e);
                                 response.finish(SncpResponse.RETCODE_THROWEXCEPTION, null);
                                 return;
                             }
@@ -162,7 +162,7 @@ public final class SncpDynServlet extends SncpServlet {
                     }
                 }
             } catch (Throwable t) {
-                response.getContext().getLogger().log(Level.INFO, "sncp execute error(" + request + ")", t);
+                response.getContext().getLogger().log(Level.SEVERE, "sncp execute error(" + request + ")", t);
                 response.finish(SncpResponse.RETCODE_THROWEXCEPTION, null);
             }
         }
