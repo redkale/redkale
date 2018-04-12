@@ -295,7 +295,8 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
         final List<String[]> defaultAddHeaders = new ArrayList<>();
         final List<String[]> defaultSetHeaders = new ArrayList<>();
         boolean autoOptions = false;
-
+        String plainContentType = null;
+        String jsonContentType = null;
         HttpCookie defaultCookie = null;
         String remoteAddrHeader = null;
         if (config != null) {
@@ -314,6 +315,11 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
 
             AnyValue resps = config == null ? null : config.getAnyValue("response");
             if (resps != null) {
+                AnyValue contenttypes = resps.getAnyValue("contenttype");
+                if (contenttypes != null) {
+                    plainContentType = contenttypes.getValue("plain");
+                    jsonContentType = contenttypes.getValue("json");
+                }
                 AnyValue[] addHeaders = resps.getAnyValues("addheader");
                 if (addHeaders.length > 0) {
                     for (AnyValue addHeader : addHeaders) {
@@ -363,6 +369,8 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
             }
 
         }
+        final String plainType = plainContentType;
+        final String jsonType = jsonContentType;
         final String[][] addHeaders = defaultAddHeaders.isEmpty() ? null : defaultAddHeaders.toArray(new String[defaultAddHeaders.size()][]);
         final String[][] setHeaders = defaultSetHeaders.isEmpty() ? null : defaultSetHeaders.toArray(new String[defaultSetHeaders.size()][]);
         final boolean options = autoOptions;
@@ -374,7 +382,8 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
         ObjectPool<Response> responsePool = HttpResponse.createPool(createResponseCounter, cycleResponseCounter, this.responsePoolSize, null);
         HttpContext httpcontext = new HttpContext(this.serverStartTime, this.logger, executor, this.sslContext, rcapacity, bufferPool, responsePool,
             this.maxbody, this.charset, this.address, this.resourceFactory, this.prepare, this.readTimeoutSecond, this.writeTimeoutSecond);
-        responsePool.setCreator((Object... params) -> new HttpResponse(httpcontext, new HttpRequest(httpcontext, addrHeader), addHeaders, setHeaders, defCookie, options, ((HttpPrepareServlet) prepare).renders));
+        responsePool.setCreator((Object... params) -> new HttpResponse(httpcontext, new HttpRequest(httpcontext, addrHeader),
+            plainType, jsonType, addHeaders, setHeaders, defCookie, options, ((HttpPrepareServlet) prepare).renders));
         return httpcontext;
     }
 

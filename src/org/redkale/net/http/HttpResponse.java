@@ -101,7 +101,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
 
     private int status = 200;
 
-    private String contentType = "text/plain; charset=utf-8";
+    private String contentType = "";
 
     private long contentLength = -1;
 
@@ -111,6 +111,10 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
 
     private BiFunction<HttpResponse, ByteBuffer[], ByteBuffer[]> bufferHandler;
     //------------------------------------------------
+
+    private final String plainContentType;
+
+    private final String jsonContentType;
 
     private final DefaultAnyValue header = new DefaultAnyValue();
 
@@ -132,9 +136,13 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         return new ObjectPool<>(creatCounter, cycleCounter, max, creator, (x) -> ((HttpResponse) x).prepare(), (x) -> ((HttpResponse) x).recycle());
     }
 
-    public HttpResponse(HttpContext context, HttpRequest request, String[][] defaultAddHeaders, String[][] defaultSetHeaders,
+    public HttpResponse(HttpContext context, HttpRequest request,
+        String plainContentType, String jsonContentType,
+        String[][] defaultAddHeaders, String[][] defaultSetHeaders,
         HttpCookie defcookie, boolean autoOptions, List< HttpRender> renders) {
         super(context, request);
+        this.plainContentType = plainContentType == null || plainContentType.isEmpty() ? "text/plain; charset=utf-8" : plainContentType;
+        this.jsonContentType = jsonContentType == null || jsonContentType.isEmpty() ? "application/json; charset=utf-8" : jsonContentType;
         this.defaultAddHeaders = defaultAddHeaders;
         this.defaultSetHeaders = defaultSetHeaders;
         this.defcookie = defcookie;
@@ -142,6 +150,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         this.renders = renders;
         this.hasRender = renders != null && !renders.isEmpty();
         this.onlyoneHttpRender = renders != null && renders.size() == 1 ? renders.get(0) : null;
+        this.contentType = this.plainContentType;
     }
 
     @Override
@@ -270,7 +279,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * @param obj 输出对象
      */
     public void finishJson(final Object obj) {
-        this.contentType = "application/json; charset=utf-8";
+        this.contentType = this.jsonContentType;
         if (this.recycleListener != null) this.output = obj;
         finish(request.getJsonConvert().convertTo(getBodyBufferSupplier(), obj));
     }
@@ -282,7 +291,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * @param objs 输出对象
      */
     public void finishMapJson(final Object... objs) {
-        this.contentType = "application/json; charset=utf-8";
+        this.contentType = this.jsonContentType;
         if (this.recycleListener != null) this.output = objs;
         finish(request.getJsonConvert().convertMapTo(getBodyBufferSupplier(), objs));
     }
@@ -294,7 +303,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * @param obj     输出对象
      */
     public void finishJson(final JsonConvert convert, final Object obj) {
-        this.contentType = "application/json; charset=utf-8";
+        this.contentType = this.jsonContentType;
         if (this.recycleListener != null) this.output = obj;
         finish(convert.convertTo(getBodyBufferSupplier(), obj));
     }
@@ -307,7 +316,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * @param objs    输出对象
      */
     public void finishMapJson(final JsonConvert convert, final Object... objs) {
-        this.contentType = "application/json; charset=utf-8";
+        this.contentType = this.jsonContentType;
         if (this.recycleListener != null) this.output = objs;
         finish(convert.convertMapTo(getBodyBufferSupplier(), objs));
     }
@@ -319,7 +328,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * @param obj  输出对象
      */
     public void finishJson(final Type type, final Object obj) {
-        this.contentType = "application/json; charset=utf-8";
+        this.contentType = this.jsonContentType;
         this.output = obj;
         finish(request.getJsonConvert().convertTo(getBodyBufferSupplier(), type, obj));
     }
@@ -332,7 +341,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * @param obj     输出对象
      */
     public void finishJson(final JsonConvert convert, final Type type, final Object obj) {
-        this.contentType = "application/json; charset=utf-8";
+        this.contentType = this.jsonContentType;
         if (this.recycleListener != null) this.output = obj;
         finish(convert.convertTo(getBodyBufferSupplier(), type, obj));
     }
@@ -343,7 +352,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * @param objs 输出对象
      */
     public void finishJson(final Object... objs) {
-        this.contentType = "application/json; charset=utf-8";
+        this.contentType = this.jsonContentType;
         if (this.recycleListener != null) this.output = objs;
         finish(request.getJsonConvert().convertTo(getBodyBufferSupplier(), objs));
     }
@@ -354,7 +363,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * @param ret RetResult输出对象
      */
     public void finishJson(final org.redkale.service.RetResult ret) {
-        this.contentType = "application/json; charset=utf-8";
+        this.contentType = this.jsonContentType;
         if (this.recycleListener != null) this.output = ret;
         if (ret != null && !ret.isSuccess()) {
             this.header.addValue("retcode", String.valueOf(ret.getRetcode()));
@@ -370,7 +379,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * @param ret     RetResult输出对象
      */
     public void finishJson(final JsonConvert convert, final org.redkale.service.RetResult ret) {
-        this.contentType = "application/json; charset=utf-8";
+        this.contentType = this.jsonContentType;
         if (this.recycleListener != null) this.output = ret;
         if (ret != null && !ret.isSuccess()) {
             this.header.addValue("retcode", String.valueOf(ret.getRetcode()));
@@ -494,9 +503,9 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
                 }
             }
             if (convert instanceof JsonConvert) {
-                this.contentType = "application/json; charset=utf-8";
+                this.contentType = this.jsonContentType;
             } else if (convert instanceof TextConvert) {
-                this.contentType = "text/plain; charset=utf-8";
+                this.contentType = this.plainContentType;
             }
             if (this.recycleListener != null) this.output = obj;
             if (obj instanceof org.redkale.service.RetResult) {
@@ -837,7 +846,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         ByteBuffer buffer = this.pollWriteReadBuffer();
         buffer.put(("HTTP/1.1 " + this.status + " " + (this.status == 200 ? "OK" : httpCodes.get(this.status)) + "\r\n").getBytes());
 
-        buffer.put(("Content-Type: " + (this.contentType == null ? "text/plain; charset=utf-8" : this.contentType) + "\r\n").getBytes());
+        buffer.put(("Content-Type: " + (this.contentType == null ? this.plainContentType : this.contentType) + "\r\n").getBytes());
 
         if (this.contentLength >= 0) {
             buffer.put(("Content-Length: " + this.contentLength + "\r\n").getBytes());
