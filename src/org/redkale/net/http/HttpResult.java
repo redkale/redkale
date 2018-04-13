@@ -41,6 +41,11 @@ public class HttpResult<T> {
         this.result = result;
     }
 
+    public HttpResult(String contentType, T result) {
+        this.contentType = contentType;
+        this.result = result;
+    }
+
     public HttpResult<T> header(String name, Serializable value) {
         if (this.headers == null) this.headers = new HashMap<>();
         this.headers.put(name, String.valueOf(value));

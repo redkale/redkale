@@ -152,14 +152,14 @@ public final class Rest {
         final RestService controller = serviceType.getAnnotation(RestService.class);
         if (controller == null) return serviceType.getSimpleName().replaceAll("Service.*$", "").toLowerCase();
         if (controller.ignore()) return null;
-        return (!controller.name().isEmpty()) ? controller.name() : serviceType.getSimpleName().replaceAll("Service.*$", "").toLowerCase();
+        return (!controller.name().isEmpty()) ? controller.name().trim() : serviceType.getSimpleName().replaceAll("Service.*$", "").toLowerCase();
     }
 
     static String getWebModuleName(Class<? extends Service> serviceType) {
         final RestService controller = serviceType.getAnnotation(RestService.class);
         if (controller == null) return serviceType.getSimpleName().replaceAll("Service.*$", "");
         if (controller.ignore()) return null;
-        return (!controller.name().isEmpty()) ? controller.name() : serviceType.getSimpleName().replaceAll("Service.*$", "");
+        return (!controller.name().isEmpty()) ? controller.name().trim() : serviceType.getSimpleName().replaceAll("Service.*$", "");
     }
 
     static boolean isRestDyn(HttpServlet servlet) {
@@ -720,59 +720,6 @@ public final class Rest {
             av0.visit("value", Type.getType(Type.getDescriptor(serviceType)));
             av0.visitEnd();
         }
-        { //注入 @WebServlet 注解
-            String urlpath = (catalog.isEmpty() ? "/" : ("/" + catalog + "/")) + defmodulename + "/*";
-            int moduleid = controller == null ? 0 : controller.moduleid();
-            boolean repair = controller == null ? true : controller.repair();
-            String comment = controller == null ? "" : controller.comment();
-            av0 = cw.visitAnnotation(webServletDesc, true);
-            {
-                AnnotationVisitor av1 = av0.visitArray("value");
-                av1.visit(null, urlpath);
-                av1.visitEnd();
-            }
-            av0.visit("moduleid", moduleid);
-            av0.visit("repair", repair);
-            av0.visit("comment", comment);
-            av0.visitEnd();
-            classMap.put("type", serviceType.getName());
-            classMap.put("url", urlpath);
-            classMap.put("moduleid", moduleid);
-            classMap.put("repair", repair);
-            //classMap.put("comment", comment); //不显示太多信息
-        }
-
-        {  //注入 @Resource  private XXXService _service;
-            fv = cw.visitField(ACC_PRIVATE, REST_SERVICE_FIELD_NAME, serviceDesc, null, null);
-            av0 = fv.visitAnnotation(resDesc, true);
-            av0.visit("name", "");
-            av0.visitEnd();
-            fv.visitEnd();
-        }
-        {  //注入 @Resource(name = "APP_HOME")  private File _redkale_home;
-            fv = cw.visitField(ACC_PRIVATE, "_redkale_home", Type.getDescriptor(File.class), null, null);
-            av0 = fv.visitAnnotation(resDesc, true);
-            av0.visit("name", "APP_HOME");
-            av0.visitEnd();
-            fv.visitEnd();
-        }
-        { //_servicemap字段 Map<String, XXXService>
-            fv = cw.visitField(ACC_PRIVATE, REST_SERVICEMAP_FIELD_NAME, "Ljava/util/Map;", "Ljava/util/Map<Ljava/lang/String;" + serviceDesc + ">;", null);
-            fv.visitEnd();
-        }
-        { //_paramtypes字段 java.lang.reflect.Type[][]
-            fv = cw.visitField(ACC_PRIVATE, REST_PARAMTYPES_FIELD_NAME, "[[Ljava/lang/reflect/Type;", null, null);
-            fv.visitEnd();
-        }
-        { //构造函数
-            mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null));
-            //mv.setDebug(true);
-            mv.visitVarInsn(ALOAD, 0);
-            mv.visitMethodInsn(INVOKESPECIAL, supDynName, "<init>", "()V", false);
-            mv.visitInsn(RETURN);
-            mv.visitMaxs(1, 1);
-            mv.visitEnd();
-        }
 
         final List<MappingEntry> entrys = new ArrayList<>();
         final Map<String, org.redkale.util.Attribute> restAttributes = new LinkedHashMap<>();
@@ -823,6 +770,71 @@ public final class Rest {
             methodidex++;
         }
         if (entrys.isEmpty()) return null; //没有可HttpMapping的方法
+
+        { //注入 @WebServlet 注解
+            String urlpath = "";
+            int moduleid = controller == null ? 0 : controller.moduleid();
+            boolean repair = controller == null ? true : controller.repair();
+            String comment = controller == null ? "" : controller.comment();
+            av0 = cw.visitAnnotation(webServletDesc, true);
+            {
+                AnnotationVisitor av1 = av0.visitArray("value");
+                if (defmodulename.isEmpty()) {
+                    for (MappingEntry entry : entrys) {
+                        String suburl = (catalog.isEmpty() ? "/" : ("/" + catalog + "/")) + (defmodulename.isEmpty() ? "" : (defmodulename + "/")) + entry.name;
+                        urlpath += "," + suburl;
+                        av1.visit(null, suburl);
+                    }
+                    if (urlpath.length() > 0) urlpath = urlpath.substring(1);
+                } else {
+                    urlpath = (catalog.isEmpty() ? "/" : ("/" + catalog + "/")) + defmodulename + "/*";
+                    av1.visit(null, urlpath);
+                }
+                av1.visitEnd();
+            }
+            av0.visit("moduleid", moduleid);
+            av0.visit("repair", repair);
+            av0.visit("comment", comment);
+            av0.visitEnd();
+            classMap.put("type", serviceType.getName());
+            classMap.put("url", urlpath);
+            classMap.put("moduleid", moduleid);
+            classMap.put("repair", repair);
+            //classMap.put("comment", comment); //不显示太多信息
+        }
+
+        {  //注入 @Resource  private XXXService _service;
+            fv = cw.visitField(ACC_PRIVATE, REST_SERVICE_FIELD_NAME, serviceDesc, null, null);
+            av0 = fv.visitAnnotation(resDesc, true);
+            av0.visit("name", "");
+            av0.visitEnd();
+            fv.visitEnd();
+        }
+        {  //注入 @Resource(name = "APP_HOME")  private File _redkale_home;
+            fv = cw.visitField(ACC_PRIVATE, "_redkale_home", Type.getDescriptor(File.class), null, null);
+            av0 = fv.visitAnnotation(resDesc, true);
+            av0.visit("name", "APP_HOME");
+            av0.visitEnd();
+            fv.visitEnd();
+        }
+        { //_servicemap字段 Map<String, XXXService>
+            fv = cw.visitField(ACC_PRIVATE, REST_SERVICEMAP_FIELD_NAME, "Ljava/util/Map;", "Ljava/util/Map<Ljava/lang/String;" + serviceDesc + ">;", null);
+            fv.visitEnd();
+        }
+        { //_paramtypes字段 java.lang.reflect.Type[][]
+            fv = cw.visitField(ACC_PRIVATE, REST_PARAMTYPES_FIELD_NAME, "[[Ljava/lang/reflect/Type;", null, null);
+            fv.visitEnd();
+        }
+        { //构造函数
+            mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null));
+            //mv.setDebug(true);
+            mv.visitVarInsn(ALOAD, 0);
+            mv.visitMethodInsn(INVOKESPECIAL, supDynName, "<init>", "()V", false);
+            mv.visitInsn(RETURN);
+            mv.visitMaxs(1, 1);
+            mv.visitEnd();
+        }
+
         //将每个Service可转换的方法生成HttpServlet对应的HttpMapping方法
         final Map<String, List<String>> asmParamMap = MethodParamClassVisitor.getMethodParamNames(new HashMap<>(), serviceType);
         final Map<String, java.lang.reflect.Type> bodyTypes = new HashMap<>();
@@ -999,7 +1011,7 @@ public final class Rest {
                     }
                 }
                 av0 = mv.visitAnnotation(mappingDesc, true);
-                String url = (catalog.isEmpty() ? "/" : ("/" + catalog + "/")) + defmodulename + "/" + entry.name + (reqpath ? "/" : "");
+                String url = (catalog.isEmpty() ? "/" : ("/" + catalog + "/")) + (defmodulename.isEmpty() ? "" : (defmodulename + "/")) + entry.name + (reqpath ? "/" : "");
                 av0.visit("url", url);
                 av0.visit("auth", entry.auth);
                 av0.visit("cacheseconds", entry.cacheseconds);

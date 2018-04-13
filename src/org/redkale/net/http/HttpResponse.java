@@ -482,6 +482,8 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
             addHeader(result.getHeaders()).addCookie(result.getCookies()).setStatus(result.getStatus() < 1 ? 200 : result.getStatus());
             if (result.getResult() == null) {
                 finish("");
+            } else if (result.getResult() instanceof CharSequence) {
+                finish(result.getResult().toString());
             } else {
                 finish(convert, result.getResult());
             }
