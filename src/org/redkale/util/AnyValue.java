@@ -487,12 +487,22 @@ public abstract class AnyValue {
 
     public byte getByteValue(String name, byte defaultValue) {
         String value = getValue(name);
-        return value == null || value.length() == 0 ? defaultValue : Byte.decode(value);
+        if (value == null || value.length() == 0) return defaultValue;
+        try {
+            return Byte.decode(value);
+        } catch (NumberFormatException e) {
+            return defaultValue;
+        }
     }
 
     public byte getByteValue(int radix, String name, byte defaultValue) {
         String value = getValue(name);
-        return value == null || value.length() == 0 ? defaultValue : (radix == 10 ? Byte.decode(value) : Byte.parseByte(value, radix));
+        if (value == null || value.length() == 0) return defaultValue;
+        try {
+            return (radix == 10 ? Byte.decode(value) : Byte.parseByte(value, radix));
+        } catch (NumberFormatException e) {
+            return defaultValue;
+        }
     }
 
     public char getCharValue(String name) {
@@ -510,12 +520,22 @@ public abstract class AnyValue {
 
     public short getShortValue(String name, short defaultValue) {
         String value = getValue(name);
-        return value == null || value.length() == 0 ? defaultValue : Short.decode(value);
+        if (value == null || value.length() == 0) return defaultValue;
+        try {
+            return Short.decode(value);
+        } catch (NumberFormatException e) {
+            return defaultValue;
+        }
     }
 
     public short getShortValue(int radix, String name, short defaultValue) {
         String value = getValue(name);
-        return value == null || value.length() == 0 ? defaultValue : (radix == 10 ? Short.decode(value) : Short.parseShort(value, radix));
+        if (value == null || value.length() == 0) return defaultValue;
+        try {
+            return (radix == 10 ? Short.decode(value) : Short.parseShort(value, radix));
+        } catch (NumberFormatException e) {
+            return defaultValue;
+        }
     }
 
     public int getIntValue(String name) {
@@ -524,12 +544,22 @@ public abstract class AnyValue {
 
     public int getIntValue(String name, int defaultValue) {
         String value = getValue(name);
-        return value == null || value.length() == 0 ? defaultValue : Integer.decode(value);
+        if (value == null || value.length() == 0) return defaultValue;
+        try {
+            return Integer.decode(value);
+        } catch (NumberFormatException e) {
+            return defaultValue;
+        }
     }
 
     public int getIntValue(int radix, String name, int defaultValue) {
         String value = getValue(name);
-        return value == null || value.length() == 0 ? defaultValue : (radix == 10 ? Integer.decode(value) : Integer.parseInt(value, radix));
+        if (value == null || value.length() == 0) return defaultValue;
+        try {
+            return (radix == 10 ? Integer.decode(value) : Integer.parseInt(value, radix));
+        } catch (NumberFormatException e) {
+            return defaultValue;
+        }
     }
 
     public long getLongValue(String name) {
@@ -538,12 +568,22 @@ public abstract class AnyValue {
 
     public long getLongValue(String name, long defaultValue) {
         String value = getValue(name);
-        return value == null || value.length() == 0 ? defaultValue : Long.decode(value);
+        if (value == null || value.length() == 0) return defaultValue;
+        try {
+            return Long.decode(value);
+        } catch (NumberFormatException e) {
+            return defaultValue;
+        }
     }
 
     public long getLongValue(int radix, String name, long defaultValue) {
         String value = getValue(name);
-        return value == null || value.length() == 0 ? defaultValue : (radix == 10 ? Long.decode(value) : Long.parseLong(value, radix));
+        if (value == null || value.length() == 0) return defaultValue;
+        try {
+            return (radix == 10 ? Long.decode(value) : Long.parseLong(value, radix));
+        } catch (NumberFormatException e) {
+            return defaultValue;
+        }
     }
 
     public float getFloatValue(String name) {
@@ -552,7 +592,12 @@ public abstract class AnyValue {
 
     public float getFloatValue(String name, float defaultValue) {
         String value = getValue(name);
-        return value == null || value.length() == 0 ? defaultValue : Float.parseFloat(value);
+        if (value == null || value.length() == 0) return defaultValue;
+        try {
+            return Float.parseFloat(value);
+        } catch (NumberFormatException e) {
+            return defaultValue;
+        }
     }
 
     public double getDoubleValue(String name) {
@@ -561,7 +606,12 @@ public abstract class AnyValue {
 
     public double getDoubleValue(String name, double defaultValue) {
         String value = getValue(name);
-        return value == null || value.length() == 0 ? defaultValue : Double.parseDouble(value);
+        if (value == null || value.length() == 0) return defaultValue;
+        try {
+            return Double.parseDouble(value);
+        } catch (NumberFormatException e) {
+            return defaultValue;
+        }
     }
 
     public String getValue(String name, String defaultValue) {

@@ -632,7 +632,11 @@ public class HttpRequest extends Request<HttpContext> {
     public short getRequstURILastPath(short defvalue) {
         String val = getRequstURILastPath();
         if (val.isEmpty()) return defvalue;
-        return val.isEmpty() ? defvalue : Short.parseShort(val);
+        try {
+            return Short.parseShort(val);
+        } catch (NumberFormatException e) {
+            return defvalue;
+        }
     }
 
     /**
@@ -648,7 +652,11 @@ public class HttpRequest extends Request<HttpContext> {
     public short getRequstURILastPath(int radix, short defvalue) {
         String val = getRequstURILastPath();
         if (val.isEmpty()) return defvalue;
-        return val.isEmpty() ? defvalue : Short.parseShort(val, radix);
+        try {
+            return Short.parseShort(val, radix);
+        } catch (NumberFormatException e) {
+            return defvalue;
+        }
     }
 
     /**
@@ -662,7 +670,11 @@ public class HttpRequest extends Request<HttpContext> {
      */
     public int getRequstURILastPath(int defvalue) {
         String val = getRequstURILastPath();
-        return val.isEmpty() ? defvalue : Integer.parseInt(val);
+        try {
+            return val.isEmpty() ? defvalue : Integer.parseInt(val);
+        } catch (NumberFormatException e) {
+            return defvalue;
+        }
     }
 
     /**
@@ -677,7 +689,11 @@ public class HttpRequest extends Request<HttpContext> {
      */
     public int getRequstURILastPath(int radix, int defvalue) {
         String val = getRequstURILastPath();
-        return val.isEmpty() ? defvalue : Integer.parseInt(val, radix);
+        try {
+            return val.isEmpty() ? defvalue : Integer.parseInt(val, radix);
+        } catch (NumberFormatException e) {
+            return defvalue;
+        }
     }
 
     /**
@@ -691,7 +707,11 @@ public class HttpRequest extends Request<HttpContext> {
      */
     public float getRequstURILastPath(float defvalue) {
         String val = getRequstURILastPath();
-        return val.isEmpty() ? defvalue : Float.parseFloat(val);
+        try {
+            return val.isEmpty() ? defvalue : Float.parseFloat(val);
+        } catch (NumberFormatException e) {
+            return defvalue;
+        }
     }
 
     /**
@@ -705,7 +725,11 @@ public class HttpRequest extends Request<HttpContext> {
      */
     public long getRequstURILastPath(long defvalue) {
         String val = getRequstURILastPath();
-        return val.isEmpty() ? defvalue : Long.parseLong(val);
+        try {
+            return val.isEmpty() ? defvalue : Long.parseLong(val);
+        } catch (NumberFormatException e) {
+            return defvalue;
+        }
     }
 
     /**
@@ -720,7 +744,11 @@ public class HttpRequest extends Request<HttpContext> {
      */
     public long getRequstURILastPath(int radix, long defvalue) {
         String val = getRequstURILastPath();
-        return val.isEmpty() ? defvalue : Long.parseLong(val, radix);
+        try {
+            return val.isEmpty() ? defvalue : Long.parseLong(val, radix);
+        } catch (NumberFormatException e) {
+            return defvalue;
+        }
     }
 
     /**
@@ -734,7 +762,11 @@ public class HttpRequest extends Request<HttpContext> {
      */
     public double getRequstURILastPath(double defvalue) {
         String val = getRequstURILastPath();
-        return val.isEmpty() ? defvalue : Double.parseDouble(val);
+        try {
+            return val.isEmpty() ? defvalue : Double.parseDouble(val);
+        } catch (NumberFormatException e) {
+            return defvalue;
+        }
     }
 
     /**
@@ -781,7 +813,11 @@ public class HttpRequest extends Request<HttpContext> {
      */
     public short getRequstURIPath(String prefix, short defvalue) {
         String val = getRequstURIPath(prefix, null);
-        return val == null ? defvalue : Short.parseShort(val);
+        try {
+            return val == null ? defvalue : Short.parseShort(val);
+        } catch (NumberFormatException e) {
+            return defvalue;
+        }
     }
 
     /**
@@ -797,7 +833,11 @@ public class HttpRequest extends Request<HttpContext> {
      */
     public short getRequstURIPath(int radix, String prefix, short defvalue) {
         String val = getRequstURIPath(prefix, null);
-        return val == null ? defvalue : Short.parseShort(val, radix);
+        try {
+            return val == null ? defvalue : Short.parseShort(val, radix);
+        } catch (NumberFormatException e) {
+            return defvalue;
+        }
     }
 
     /**
@@ -813,7 +853,11 @@ public class HttpRequest extends Request<HttpContext> {
      */
     public int getRequstURIPath(String prefix, int defvalue) {
         String val = getRequstURIPath(prefix, null);
-        return val == null ? defvalue : Integer.parseInt(val);
+        try {
+            return val == null ? defvalue : Integer.parseInt(val);
+        } catch (NumberFormatException e) {
+            return defvalue;
+        }
     }
 
     /**
@@ -830,7 +874,11 @@ public class HttpRequest extends Request<HttpContext> {
      */
     public int getRequstURIPath(int radix, String prefix, int defvalue) {
         String val = getRequstURIPath(prefix, null);
-        return val == null ? defvalue : Integer.parseInt(val, radix);
+        try {
+            return val == null ? defvalue : Integer.parseInt(val, radix);
+        } catch (NumberFormatException e) {
+            return defvalue;
+        }
     }
 
     /**
@@ -845,7 +893,11 @@ public class HttpRequest extends Request<HttpContext> {
      */
     public float getRequstURIPath(String prefix, float defvalue) {
         String val = getRequstURIPath(prefix, null);
-        return val == null ? defvalue : Float.parseFloat(val);
+        try {
+            return val == null ? defvalue : Float.parseFloat(val);
+        } catch (NumberFormatException e) {
+            return defvalue;
+        }
     }
 
     /**
@@ -860,7 +912,11 @@ public class HttpRequest extends Request<HttpContext> {
      */
     public long getRequstURIPath(String prefix, long defvalue) {
         String val = getRequstURIPath(prefix, null);
-        return val == null ? defvalue : Long.parseLong(val);
+        try {
+            return val == null ? defvalue : Long.parseLong(val);
+        } catch (NumberFormatException e) {
+            return defvalue;
+        }
     }
 
     /**
@@ -876,7 +932,11 @@ public class HttpRequest extends Request<HttpContext> {
      */
     public long getRequstURIPath(int radix, String prefix, long defvalue) {
         String val = getRequstURIPath(prefix, null);
-        return val == null ? defvalue : Long.parseLong(val, radix);
+        try {
+            return val == null ? defvalue : Long.parseLong(val, radix);
+        } catch (NumberFormatException e) {
+            return defvalue;
+        }
     }
 
     /**
@@ -891,7 +951,11 @@ public class HttpRequest extends Request<HttpContext> {
      */
     public double getRequstURIPath(String prefix, double defvalue) {
         String val = getRequstURIPath(prefix, null);
-        return val == null ? defvalue : Double.parseDouble(val);
+        try {
+            return val == null ? defvalue : Double.parseDouble(val);
+        } catch (NumberFormatException e) {
+            return defvalue;
+        }
     }
 
     //------------------------------------------------------------------------------
