@@ -140,7 +140,7 @@ public class Label {
      * Field used to associate user information to a label. Warning: this field
      * is used by the ASM tree package. In order to use it with the ASM tree
      * package you must override the
-     * {@link org.redkale.asm.tree.MethodNode#getLabelNode} method.
+     * 
      */
     public Object info;
 
