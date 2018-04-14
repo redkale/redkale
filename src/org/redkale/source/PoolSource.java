@@ -6,7 +6,7 @@
 package org.redkale.source;
 
 import java.net.InetSocketAddress;
-import java.util.Properties;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Logger;
@@ -57,14 +57,16 @@ public abstract class PoolSource<T> {
 
     protected Properties props;
 
+    protected Properties attributes = new Properties();
+
     @SuppressWarnings("OverridableMethodCallInConstructor")
-    public PoolSource(String stype, Properties prop, Logger logger) {
+    public PoolSource(String rwtype, Properties prop, Logger logger) {
         this.logger = logger;
-        this.rwtype = stype;
+        this.rwtype = rwtype;
         this.props = prop;
         this.url = prop.getProperty(JDBC_URL);
-        this.user = prop.getProperty(JDBC_USER);
-        this.password = prop.getProperty(JDBC_PWD);
+        this.user = prop.getProperty(JDBC_USER, "");
+        this.password = prop.getProperty(JDBC_PWD, "");
         this.connectTimeoutSeconds = Integer.decode(prop.getProperty(JDBC_CONNECTTIMEOUT_SECONDS, "6"));
         this.readTimeoutSeconds = Integer.decode(prop.getProperty(JDBC_READTIMEOUT_SECONDS, "6"));
         this.writeTimeoutSeconds = Integer.decode(prop.getProperty(JDBC_WRITETIMEOUT_SECONDS, "6"));
@@ -79,7 +81,7 @@ public abstract class PoolSource<T> {
             }
         }
         this.dbtype = dbtype0.toLowerCase();
-        parseAddressAndDbname();
+        parseAddressAndDbnameAndAttrs();
 
         if ("oracle".equals(this.dbtype)) {
             this.props.setProperty(JDBC_CONTAIN_SQLTEMPLATE, "INSTR(${keystr}, ${column}) > 0");
@@ -97,10 +99,18 @@ public abstract class PoolSource<T> {
         }
     }
 
-    protected void parseAddressAndDbname() {
+    protected void parseAddressAndDbnameAndAttrs() {
         String url0 = this.url.substring(this.url.indexOf("://") + 3);
         int pos = url0.indexOf('?'); //127.0.0.1:5432/db?charset=utr8&xxx=yy
-        if (pos > 0) url0 = url0.substring(0, pos);
+        if (pos > 0) {
+            String params = url0.substring(pos + 1).replace("&amp;", "&");
+            for (String param : params.split("&")) {
+                int p = param.indexOf('=');
+                if (p < 1) continue;
+                this.attributes.put(param.substring(0, p), param.substring(p + 1));
+            }
+            url0 = url0.substring(0, pos);
+        }
         pos = url0.indexOf('/'); //127.0.0.1:5432/db
         if (pos > 0) {
             this.defdb = url0.substring(pos + 1);
