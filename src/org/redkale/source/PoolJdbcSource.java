@@ -13,7 +13,6 @@ import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
 import java.sql.*;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import javax.sql.*;
 import static org.redkale.source.DataSources.*;
@@ -25,17 +24,9 @@ import static org.redkale.source.DataSources.*;
  *
  * @author zhangjx
  */
-public class PoolJdbcSource {
+public class PoolJdbcSource extends PoolSource<Connection> {
 
     private static final Map<String, AbstractMap.SimpleEntry<WatchService, List<WeakReference<PoolJdbcSource>>>> maps = new HashMap<>();
-
-    private final AtomicLong usingCounter = new AtomicLong();
-
-    private final AtomicLong creatCounter = new AtomicLong();
-
-    private final AtomicLong cycleCounter = new AtomicLong();
-
-    private final AtomicLong saveCounter = new AtomicLong();
 
     private final ConnectionPoolDataSource source;
 
@@ -45,27 +36,10 @@ public class PoolJdbcSource {
 
     private final DataJdbcSource dataSource;
 
-    private final String stype; // "" 或 "read"  或 "write"
-
-    private final int maxconns;
-
-    private String url;
-
-    private String user;
-
-    private String password;
-
-    final Properties props;
-
     public PoolJdbcSource(DataJdbcSource source, String stype, Properties prop) {
+        super(stype, prop, source.logger);
         this.dataSource = source;
-        this.stype = stype;
-        this.props = prop;
         this.source = createDataSource(prop);
-        this.url = prop.getProperty(JDBC_URL);
-        this.user = prop.getProperty(JDBC_USER);
-        this.password = prop.getProperty(JDBC_PWD);
-        this.maxconns = Integer.decode(prop.getProperty(JDBC_CONNECTIONSMAX, "" + Runtime.getRuntime().availableProcessors() * 16));
         this.queue = new ArrayBlockingQueue<>(this.maxconns);
         this.listener = new ConnectionEventListener() {
 
@@ -251,6 +225,7 @@ public class PoolJdbcSource {
         }
     }
 
+    @Override
     public void change(Properties property) {
         Method seturlm;
         Class clazz = source.getClass();
@@ -276,8 +251,19 @@ public class PoolJdbcSource {
         }
     }
 
+    @Override
+    public boolean isAysnc() {
+        return false;
+    }
+
+    @Override
     public Connection poll() {
         return poll(0, null);
+    }
+
+    @Override
+    public CompletableFuture<Connection> pollAsync() {
+        return CompletableFuture.completedFuture(poll());
     }
 
     private Connection poll(final int count, SQLException e) {
@@ -324,18 +310,7 @@ public class PoolJdbcSource {
         return conn;
     }
 
-    public long getCreatCount() {
-        return creatCounter.longValue();
-    }
-
-    public long getCycleCount() {
-        return cycleCounter.longValue();
-    }
-
-    public long getSaveCount() {
-        return saveCounter.longValue();
-    }
-
+    @Override
     public void close() {
         queue.stream().forEach(x -> {
             try {
@@ -344,4 +319,5 @@ public class PoolJdbcSource {
             }
         });
     }
+
 }
