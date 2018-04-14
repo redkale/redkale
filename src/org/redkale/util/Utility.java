@@ -11,6 +11,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.CompletionHandler;
 import java.nio.charset.*;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import java.security.*;
 import java.time.*;
 import java.util.*;
 import java.util.function.*;
@@ -580,7 +581,7 @@ public final class Utility {
         }
         return false;
     }
-    
+
     /**
      * 判断指定值是否包含指定的数组中，包含返回true
      *
@@ -970,6 +971,64 @@ public final class Utility {
         LocalDate ld = instant.atZone(zid).toLocalDate();
         ld = ld.withDayOfMonth(ld.lengthOfMonth());
         return ld.atStartOfDay(zid).toInstant().toEpochMilli();
+    }
+
+    /**
+     * MD5加密
+     *
+     * @param bs 待加密数据
+     *
+     * @return md5值
+     */
+    public static String md5Hex(byte[] bs) {
+        return binToHexString(md5Bytes(bs));
+    }
+
+    /**
+     * MD5加密
+     *
+     * @param bs 待加密数据
+     *
+     * @return md5值
+     */
+    public static byte[] md5Bytes(byte[] bs) {
+        if (bs == null) return null;
+        MessageDigest md5;
+        try {
+            md5 = MessageDigest.getInstance("MD5");
+        } catch (NoSuchAlgorithmException ex) {
+            throw new RuntimeException(ex);
+        }
+        return md5.digest(bs);
+    }
+
+    /**
+     * MD5加密
+     *
+     * @param str 待加密数据
+     *
+     * @return md5值
+     */
+    public static String md5Hex(String str) {
+        return binToHexString(md5Bytes(str));
+    }
+
+    /**
+     * MD5加密
+     *
+     * @param str 待加密数据
+     *
+     * @return md5值
+     */
+    public static byte[] md5Bytes(String str) {
+        if (str == null) return null;
+        MessageDigest md5;
+        try {
+            md5 = MessageDigest.getInstance("MD5");
+        } catch (NoSuchAlgorithmException ex) {
+            throw new RuntimeException(ex);
+        }
+        return md5.digest(str.getBytes());
     }
 
     /**
