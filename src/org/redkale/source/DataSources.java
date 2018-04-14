@@ -33,6 +33,12 @@ public final class DataSources {
 
     public static final String JDBC_TABLECOPY_SQLTEMPLATE = "javax.persistence.tablecopy.sqltemplate";
 
+    public static final String JDBC_CONNECTTIMEOUT_SECONDS = "javax.persistence.connecttimeout";
+
+    public static final String JDBC_READTIMEOUT_SECONDS = "javax.persistence.readtimeout";
+
+    public static final String JDBC_WRITETIMEOUT_SECONDS = "javax.persistence.writetimeout";
+
     public static final String JDBC_URL = "javax.persistence.jdbc.url";
 
     public static final String JDBC_USER = "javax.persistence.jdbc.user";

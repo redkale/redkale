@@ -56,20 +56,6 @@ public class PoolJdbcSource extends PoolSource<Connection> {
                 dataSource.logger.log(Level.WARNING, "connectionErronOccurred  [" + event.getSQLException().getSQLState() + "]", event.getSQLException());
             }
         };
-        if (this.isOracle()) {
-            this.props.setProperty(JDBC_CONTAIN_SQLTEMPLATE, "INSTR(${keystr}, ${column}) > 0");
-            this.props.setProperty(JDBC_NOTCONTAIN_SQLTEMPLATE, "INSTR(${keystr}, ${column}) = 0");
-            if (!this.props.containsKey(JDBC_TABLENOTEXIST_SQLSTATES)) {
-                this.props.setProperty(JDBC_TABLENOTEXIST_SQLSTATES, "42000;42S02");
-            }
-            if (!this.props.containsKey(JDBC_TABLECOPY_SQLTEMPLATE)) {
-                //注意：此语句复制表结构会导致默认值和主键信息的丢失
-                this.props.setProperty(JDBC_TABLECOPY_SQLTEMPLATE, "CREATE TABLE ${newtable} AS SELECT * FROM ${oldtable} WHERE 1=2");
-            }
-        } else if (this.isSqlserver()) {
-            this.props.setProperty(JDBC_CONTAIN_SQLTEMPLATE, "CHARINDEX(${column}, ${keystr}) > 0");
-            this.props.setProperty(JDBC_NOTCONTAIN_SQLTEMPLATE, "CHARINDEX(${column}, ${keystr}) = 0");
-        }
 
         try {
             this.watch();
@@ -149,19 +135,24 @@ public class PoolJdbcSource extends PoolSource<Connection> {
         return (ConnectionPoolDataSource) pdsource;
     }
 
-    final boolean isMysql() {
+    @Override
+    protected int getDefaultPort() {
+        return 0;
+    }
+
+    final boolean isMysql2() {
         return source != null && source.getClass().getName().contains(".mysql.");
     }
 
-    final boolean isOracle() {
+    final boolean isOracle2() {
         return source != null && source.getClass().getName().contains("oracle.");
     }
 
-    final boolean isSqlserver() {
+    final boolean isSqlserver2() {
         return source != null && source.getClass().getName().contains(".sqlserver.");
     }
 
-    final boolean isPostgresql() {
+    final boolean isPostgresql2() {
         return source != null && source.getClass().getName().contains(".postgresql.");
     }
 
@@ -200,7 +191,7 @@ public class PoolJdbcSource extends PoolSource<Connection> {
                                     if (pool == null) continue;
                                     try {
                                         Properties property = m.get(pool.dataSource.name);
-                                        if (property == null) property = m.get(pool.dataSource.name + "." + pool.stype);
+                                        if (property == null) property = m.get(pool.dataSource.name + "." + pool.rwtype);
                                         if (property != null) pool.change(property);
                                     } catch (Exception ex) {
                                         dataSource.logger.log(Level.INFO, event.context() + " occur error", ex);
@@ -245,7 +236,7 @@ public class PoolJdbcSource extends PoolSource<Connection> {
             this.url = newurl;
             this.user = newuser;
             this.password = newpassword;
-            dataSource.logger.log(Level.INFO, DataSource.class.getSimpleName() + "(" + dataSource.name + "." + stype + ") change  (" + property + ")");
+            dataSource.logger.log(Level.INFO, DataSource.class.getSimpleName() + "(" + dataSource.name + "." + rwtype + ") change  (" + property + ")");
         } catch (Exception e) {
             dataSource.logger.log(Level.SEVERE, DataSource.class.getSimpleName() + " dynamic change JDBC (url userName password) error", e);
         }

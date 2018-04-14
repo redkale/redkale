@@ -542,7 +542,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, DataC
                     join1 = multisplit('[', ']', ",", new StringBuilder(), joinstr, 0);
                     join2 = multisplit('{', '}', " AND ", new StringBuilder(), joinstr, 0);
                 }
-                String sql = "DELETE " + (this.readPool.isMysql() ? "a" : "") + " FROM " + info.getTable(node) + " a" + (join1 == null ? "" : (", " + join1))
+                String sql = "DELETE " + ("mysql".equals(this.readPool.getDbtype()) ? "a" : "") + " FROM " + info.getTable(node) + " a" + (join1 == null ? "" : (", " + join1))
                     + ((where == null || where.length() == 0) ? (join2 == null ? "" : (" WHERE " + join2))
                     : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2)))) + info.createSQLOrderby(flipper)
                     + ((flipper == null || flipper.getLimit() < 1) ? "" : (" LIMIT " + flipper.getLimit()));
