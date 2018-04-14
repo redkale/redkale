@@ -193,4 +193,8 @@ public abstract class PoolSource<T> {
         return password;
     }
 
+    public final String getDefdb() {
+        return defdb;
+    }
+
 }
