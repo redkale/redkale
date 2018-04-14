@@ -47,7 +47,7 @@ public abstract class PoolSource<T> {
 
     protected String url;
 
-    protected InetSocketAddress addr;
+    protected InetSocketAddress servaddr;
 
     protected String user;
 
@@ -118,9 +118,9 @@ public abstract class PoolSource<T> {
         }
         pos = url0.indexOf(':');
         if (pos > 0) {
-            this.addr = new InetSocketAddress(url0.substring(0, pos), Integer.parseInt(url0.substring(pos + 1)));
+            this.servaddr = new InetSocketAddress(url0.substring(0, pos), Integer.parseInt(url0.substring(pos + 1)));
         } else {
-            this.addr = new InetSocketAddress(url0, getDefaultPort());
+            this.servaddr = new InetSocketAddress(url0, getDefaultPort());
         }
     }
 
@@ -160,4 +160,37 @@ public abstract class PoolSource<T> {
     public final long getSaveCount() {
         return saveCounter.longValue();
     }
+
+    public final int getMaxconns() {
+        return maxconns;
+    }
+
+    public final int getConnectTimeoutSeconds() {
+        return connectTimeoutSeconds;
+    }
+
+    public final int getReadTimeoutSeconds() {
+        return readTimeoutSeconds;
+    }
+
+    public final int getWriteTimeoutSeconds() {
+        return writeTimeoutSeconds;
+    }
+
+    public final String getUrl() {
+        return url;
+    }
+
+    public final InetSocketAddress getServaddr() {
+        return servaddr;
+    }
+
+    public final String getUser() {
+        return user;
+    }
+
+    public final String getPassword() {
+        return password;
+    }
+
 }
