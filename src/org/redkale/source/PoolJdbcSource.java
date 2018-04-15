@@ -223,7 +223,7 @@ public class PoolJdbcSource extends PoolSource<Connection> {
         String newurl = property.getProperty(JDBC_URL);
         String newuser = property.getProperty(JDBC_USER);
         String newpassword = property.getProperty(JDBC_PWD);
-        if (this.url.equals(newurl) && this.user.equals(newuser) && this.password.equals(newpassword)) return;
+        if (this.url.equals(newurl) && this.username.equals(newuser) && this.password.equals(newpassword)) return;
         try {
             try {
                 seturlm = clazz.getMethod("setUrl", String.class);
@@ -234,7 +234,7 @@ public class PoolJdbcSource extends PoolSource<Connection> {
             clazz.getMethod("setUser", String.class).invoke(source, newuser);
             clazz.getMethod("setPassword", String.class).invoke(source, newpassword);
             this.url = newurl;
-            this.user = newuser;
+            this.username = newuser;
             this.password = newpassword;
             dataSource.logger.log(Level.INFO, DataSource.class.getSimpleName() + "(" + dataSource.name + "." + rwtype + ") change  (" + property + ")");
         } catch (Exception e) {

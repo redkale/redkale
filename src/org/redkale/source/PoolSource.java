@@ -49,11 +49,11 @@ public abstract class PoolSource<T> {
 
     protected InetSocketAddress servaddr;
 
-    protected String user;
+    protected String username;
 
     protected String password;
 
-    protected String defdb;
+    protected String database;
 
     protected Properties props;
 
@@ -65,7 +65,7 @@ public abstract class PoolSource<T> {
         this.rwtype = rwtype;
         this.props = prop;
         this.url = prop.getProperty(JDBC_URL);
-        this.user = prop.getProperty(JDBC_USER, "");
+        this.username = prop.getProperty(JDBC_USER, "");
         this.password = prop.getProperty(JDBC_PWD, "");
         this.connectTimeoutSeconds = Integer.decode(prop.getProperty(JDBC_CONNECTTIMEOUT_SECONDS, "6"));
         this.readTimeoutSeconds = Integer.decode(prop.getProperty(JDBC_READTIMEOUT_SECONDS, "6"));
@@ -113,7 +113,7 @@ public abstract class PoolSource<T> {
         }
         pos = url0.indexOf('/'); //127.0.0.1:5432/db
         if (pos > 0) {
-            this.defdb = url0.substring(pos + 1);
+            this.database = url0.substring(pos + 1);
             url0 = url0.substring(0, pos);
         }
         pos = url0.indexOf(':');
@@ -185,16 +185,16 @@ public abstract class PoolSource<T> {
         return servaddr;
     }
 
-    public final String getUser() {
-        return user;
+    public final String getUsername() {
+        return username;
     }
 
     public final String getPassword() {
         return password;
     }
 
-    public final String getDefdb() {
-        return defdb;
+    public final String getDatabase() {
+        return database;
     }
 
 }
