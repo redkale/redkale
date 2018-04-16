@@ -247,7 +247,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, DataC
         if (values.length == 0) return;
         try {
             if (!info.isVirtualEntity()) {
-                final String sql = info.getInsertSQL(values[0]);
+                final String sql = info.getInsertPrepareSQL(values[0]);
                 final Class primaryType = info.getPrimary().type();
                 final Attribute primary = info.getPrimary();
                 Attribute<T, Serializable>[] attrs = info.insertAttributes;
@@ -623,7 +623,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, DataC
             Class clazz = info.getType();
             int c = -1;
             if (!info.isVirtualEntity()) {
-                final String updateSQL = info.getUpdateSQL(values[0]);
+                final String updateSQL = info.getUpdatePrepareSQL(values[0]);
                 final Attribute<T, Serializable> primary = info.getPrimary();
                 conn.setReadOnly(false);
                 final PreparedStatement prestmt = conn.prepareStatement(updateSQL);
