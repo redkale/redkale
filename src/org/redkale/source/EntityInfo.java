@@ -91,7 +91,13 @@ public final class EntityInfo<T> {
     final DistributeTableStrategy<T> tableStrategy;
 
     //根据主键查找单个对象的SQL， 含 ？
-    final String queryPrepareSQL;
+    private final String queryPrepareSQL;
+
+    //根据主键查找单个对象的SQL， 含 $
+    private final String queryDollarPrepareSQL;
+
+    //根据主键查找单个对象的SQL， 含 :name
+    private final String queryNamesPrepareSQL;
 
     //数据库中所有字段
     private final Attribute<T, Serializable>[] queryAttributes;
@@ -99,17 +105,35 @@ public final class EntityInfo<T> {
     //新增SQL， 含 ？，即排除了自增长主键和标记为&#064;Column(insertable=false)的字段
     private final String insertPrepareSQL;
 
+    //新增SQL， 含 $，即排除了自增长主键和标记为&#064;Column(insertable=false)的字段    
+    private final String insertDollarPrepareSQL;
+
+    //新增SQL， 含 :name，即排除了自增长主键和标记为&#064;Column(insertable=false)的字段
+    private final String insertNamesPrepareSQL;
+
     //数据库中所有可新增字段
     final Attribute<T, Serializable>[] insertAttributes;
 
     //根据主键更新所有可更新字段的SQL，含 ？
     private final String updatePrepareSQL;
 
+    //根据主键更新所有可更新字段的SQL，含 $
+    private final String updateDollarPrepareSQL;
+
+    //根据主键更新所有可更新字段的SQL，含 :name
+    private final String updateNamesPrepareSQL;
+
     //数据库中所有可更新字段
     final Attribute<T, Serializable>[] updateAttributes;
 
     //根据主键删除记录的SQL，含 ？
     private final String deletePrepareSQL;
+
+    //根据主键删除记录的SQL，含 $
+    private final String deleteDollarPrepareSQL;
+
+    //根据主键删除记录的SQL，含 :name
+    private final String deleteNamesPrepareSQL;
 
     //日志级别，从LogLevel获取
     private final int logLevel;
@@ -312,27 +336,63 @@ public final class EntityInfo<T> {
         }
         if (table != null) {
             StringBuilder insertsb = new StringBuilder();
-            StringBuilder insertsb2 = new StringBuilder();
+            StringBuilder insertsbjdbc = new StringBuilder();
+            StringBuilder insertsbdollar = new StringBuilder();
+            StringBuilder insertsbnames = new StringBuilder();
+            int index = 0;
             for (String col : insertcols) {
                 if (insertsb.length() > 0) insertsb.append(',');
                 insertsb.append(col);
-                if (insertsb2.length() > 0) insertsb2.append(',');
-                insertsb2.append('?');
+                if (index > 0) {
+                    insertsbjdbc.append(',');
+                    insertsbdollar.append(',');
+                    insertsbnames.append(',');
+                }
+                insertsbjdbc.append('?');
+                insertsbdollar.append("$").append(++index);
+                insertsbnames.append(":").append(col);
             }
-            this.insertPrepareSQL = "INSERT INTO " + (this.tableStrategy == null ? table : "${newtable}") + "(" + insertsb + ") VALUES(" + insertsb2 + ")";
+            this.insertPrepareSQL = "INSERT INTO " + (this.tableStrategy == null ? table : "${newtable}") + "(" + insertsb + ") VALUES(" + insertsbjdbc + ")";
+            this.insertDollarPrepareSQL = "INSERT INTO " + (this.tableStrategy == null ? table : "${newtable}") + "(" + insertsb + ") VALUES(" + insertsbdollar + ")";
+            this.insertNamesPrepareSQL = "INSERT INTO " + (this.tableStrategy == null ? table : "${newtable}") + "(" + insertsb + ") VALUES(" + insertsbnames + ")";
             StringBuilder updatesb = new StringBuilder();
+            StringBuilder updatesbdollar = new StringBuilder();
+            StringBuilder updatesbnames = new StringBuilder();
+            index = 0;
             for (String col : updatecols) {
-                if (updatesb.length() > 0) updatesb.append(", ");
-                updatesb.append(col).append(" = ?");
+                if (updatesb.length() > 0) {
+                    updatesb.append(',');
+                    updatesbdollar.append(',');
+                    updatesbnames.append(',');
+                }
+                updatesb.append(col).append("=?");
+                updatesbdollar.append(col).append("=").append("$").append(++index);
+                updatesbnames.append(col).append("=:").append(col);
             }
-            this.updatePrepareSQL = "UPDATE " + (this.tableStrategy == null ? table : "${newtable}") + " SET " + updatesb + " WHERE " + getPrimarySQLColumn(null) + " = ?";
-            this.deletePrepareSQL = "DELETE FROM " + (this.tableStrategy == null ? table : "${newtable}") + " WHERE " + getPrimarySQLColumn(null) + " = ?";
-            this.queryPrepareSQL = "SELECT * FROM " + table + " WHERE " + getPrimarySQLColumn(null) + " = ?";
+            this.updatePrepareSQL = "UPDATE " + (this.tableStrategy == null ? table : "${newtable}") + " SET " + updatesb + " WHERE " + getPrimarySQLColumn(null) + "=?";
+            this.updateDollarPrepareSQL = "UPDATE " + (this.tableStrategy == null ? table : "${newtable}") + " SET " + updatesbdollar + " WHERE " + getPrimarySQLColumn(null) + "=$" + (++index);
+            this.updateNamesPrepareSQL = "UPDATE " + (this.tableStrategy == null ? table : "${newtable}") + " SET " + updatesbnames + " WHERE " + getPrimarySQLColumn(null) + "=:" + getPrimarySQLColumn(null);
+            this.deletePrepareSQL = "DELETE FROM " + (this.tableStrategy == null ? table : "${newtable}") + " WHERE " + getPrimarySQLColumn(null) + "=?";
+            this.deleteDollarPrepareSQL = "DELETE FROM " + (this.tableStrategy == null ? table : "${newtable}") + " WHERE " + getPrimarySQLColumn(null) + "=$1";
+            this.deleteNamesPrepareSQL = "DELETE FROM " + (this.tableStrategy == null ? table : "${newtable}") + " WHERE " + getPrimarySQLColumn(null) + "=:" + getPrimarySQLColumn(null);
+            this.queryPrepareSQL = "SELECT * FROM " + table + " WHERE " + getPrimarySQLColumn(null) + "=?";
+            this.queryDollarPrepareSQL = "SELECT * FROM " + table + " WHERE " + getPrimarySQLColumn(null) + "=$1";
+            this.queryNamesPrepareSQL = "SELECT * FROM " + table + " WHERE " + getPrimarySQLColumn(null) + "=:" + getPrimarySQLColumn(null);
         } else {
             this.insertPrepareSQL = null;
             this.updatePrepareSQL = null;
             this.deletePrepareSQL = null;
             this.queryPrepareSQL = null;
+
+            this.insertDollarPrepareSQL = null;
+            this.updateDollarPrepareSQL = null;
+            this.deleteDollarPrepareSQL = null;
+            this.queryDollarPrepareSQL = null;
+
+            this.insertNamesPrepareSQL = null;
+            this.updateNamesPrepareSQL = null;
+            this.deleteNamesPrepareSQL = null;
+            this.queryNamesPrepareSQL = null;
         }
         this.autoGenerated = auto;
         this.autouuid = uuid;
@@ -406,6 +466,42 @@ public final class EntityInfo<T> {
     }
 
     /**
+     * 获取Entity的QUERY SQL
+     *
+     * @param bean Entity对象
+     *
+     * @return String
+     */
+    public String getQueryPrepareSQL(T bean) {
+        if (this.tableStrategy == null) return queryPrepareSQL;
+        return queryPrepareSQL.replace("${newtable}", getTable(bean));
+    }
+
+    /**
+     * 获取Entity的QUERY SQL
+     *
+     * @param bean Entity对象
+     *
+     * @return String
+     */
+    public String getQueryDollarPrepareSQL(T bean) {
+        if (this.tableStrategy == null) return queryDollarPrepareSQL;
+        return queryDollarPrepareSQL.replace("${newtable}", getTable(bean));
+    }
+
+    /**
+     * 获取Entity的QUERY SQL
+     *
+     * @param bean Entity对象
+     *
+     * @return String
+     */
+    public String getQueryNamesPrepareSQL(T bean) {
+        if (this.tableStrategy == null) return queryNamesPrepareSQL;
+        return queryNamesPrepareSQL.replace("${newtable}", getTable(bean));
+    }
+
+    /**
      * 获取Entity的INSERT SQL
      *
      * @param bean Entity对象
@@ -415,6 +511,30 @@ public final class EntityInfo<T> {
     public String getInsertPrepareSQL(T bean) {
         if (this.tableStrategy == null) return insertPrepareSQL;
         return insertPrepareSQL.replace("${newtable}", getTable(bean));
+    }
+
+    /**
+     * 获取Entity的INSERT SQL
+     *
+     * @param bean Entity对象
+     *
+     * @return String
+     */
+    public String getInsertDollarPrepareSQL(T bean) {
+        if (this.tableStrategy == null) return insertDollarPrepareSQL;
+        return insertDollarPrepareSQL.replace("${newtable}", getTable(bean));
+    }
+
+    /**
+     * 获取Entity的INSERT SQL
+     *
+     * @param bean Entity对象
+     *
+     * @return String
+     */
+    public String getInsertNamesPrepareSQL(T bean) {
+        if (this.tableStrategy == null) return insertNamesPrepareSQL;
+        return insertNamesPrepareSQL.replace("${newtable}", getTable(bean));
     }
 
     /**
@@ -430,6 +550,30 @@ public final class EntityInfo<T> {
     }
 
     /**
+     * 获取Entity的UPDATE SQL
+     *
+     * @param bean Entity对象
+     *
+     * @return String
+     */
+    public String getUpdateDollarPrepareSQL(T bean) {
+        if (this.tableStrategy == null) return updateDollarPrepareSQL;
+        return updateDollarPrepareSQL.replace("${newtable}", getTable(bean));
+    }
+
+    /**
+     * 获取Entity的UPDATE SQL
+     *
+     * @param bean Entity对象
+     *
+     * @return String
+     */
+    public String getUpdateNamesPrepareSQL(T bean) {
+        if (this.tableStrategy == null) return updateNamesPrepareSQL;
+        return updateNamesPrepareSQL.replace("${newtable}", getTable(bean));
+    }
+
+    /**
      * 获取Entity的DELETE SQL
      *
      * @param bean Entity对象
@@ -439,6 +583,30 @@ public final class EntityInfo<T> {
     public String getDeletePrepareSQL(T bean) {
         if (this.tableStrategy == null) return deletePrepareSQL;
         return deletePrepareSQL.replace("${newtable}", getTable(bean));
+    }
+
+    /**
+     * 获取Entity的DELETE SQL
+     *
+     * @param bean Entity对象
+     *
+     * @return String
+     */
+    public String getDeleteDollarPrepareSQL(T bean) {
+        if (this.tableStrategy == null) return deleteDollarPrepareSQL;
+        return deleteDollarPrepareSQL.replace("${newtable}", getTable(bean));
+    }
+
+    /**
+     * 获取Entity的DELETE SQL
+     *
+     * @param bean Entity对象
+     *
+     * @return String
+     */
+    public String getDeleteNamesPrepareSQL(T bean) {
+        if (this.tableStrategy == null) return deleteNamesPrepareSQL;
+        return deleteNamesPrepareSQL.replace("${newtable}", getTable(bean));
     }
 
     /**
