@@ -157,7 +157,7 @@ public final class EntityInfo<T> {
     /**
      * 加载EntityInfo
      *
-     * @param type           Entity类
+     * @param clazz          Entity类
      * @param cacheForbidden 是否禁用EntityCache
      * @param conf           配置信息, persistence.xml中的property节点值
      * @param source         DataSource,可为null
@@ -341,7 +341,7 @@ public final class EntityInfo<T> {
             StringBuilder insertsbnames = new StringBuilder();
             int index = 0;
             for (String col : insertcols) {
-                if (insertsb.length() > 0) insertsb.append(',');
+                if (index > 0) insertsb.append(',');
                 insertsb.append(col);
                 if (index > 0) {
                     insertsbjdbc.append(',');
@@ -360,24 +360,24 @@ public final class EntityInfo<T> {
             StringBuilder updatesbnames = new StringBuilder();
             index = 0;
             for (String col : updatecols) {
-                if (updatesb.length() > 0) {
-                    updatesb.append(',');
-                    updatesbdollar.append(',');
-                    updatesbnames.append(',');
+                if (index > 0) {
+                    updatesb.append(", ");
+                    updatesbdollar.append(", ");
+                    updatesbnames.append(", ");
                 }
-                updatesb.append(col).append("=?");
-                updatesbdollar.append(col).append("=").append("$").append(++index);
-                updatesbnames.append(col).append("=:").append(col);
+                updatesb.append(col).append(" = ?");
+                updatesbdollar.append(col).append(" = ").append("$").append(++index);
+                updatesbnames.append(col).append(" = :").append(col);
             }
-            this.updatePrepareSQL = "UPDATE " + (this.tableStrategy == null ? table : "${newtable}") + " SET " + updatesb + " WHERE " + getPrimarySQLColumn(null) + "=?";
-            this.updateDollarPrepareSQL = "UPDATE " + (this.tableStrategy == null ? table : "${newtable}") + " SET " + updatesbdollar + " WHERE " + getPrimarySQLColumn(null) + "=$" + (++index);
-            this.updateNamesPrepareSQL = "UPDATE " + (this.tableStrategy == null ? table : "${newtable}") + " SET " + updatesbnames + " WHERE " + getPrimarySQLColumn(null) + "=:" + getPrimarySQLColumn(null);
-            this.deletePrepareSQL = "DELETE FROM " + (this.tableStrategy == null ? table : "${newtable}") + " WHERE " + getPrimarySQLColumn(null) + "=?";
-            this.deleteDollarPrepareSQL = "DELETE FROM " + (this.tableStrategy == null ? table : "${newtable}") + " WHERE " + getPrimarySQLColumn(null) + "=$1";
-            this.deleteNamesPrepareSQL = "DELETE FROM " + (this.tableStrategy == null ? table : "${newtable}") + " WHERE " + getPrimarySQLColumn(null) + "=:" + getPrimarySQLColumn(null);
-            this.queryPrepareSQL = "SELECT * FROM " + table + " WHERE " + getPrimarySQLColumn(null) + "=?";
-            this.queryDollarPrepareSQL = "SELECT * FROM " + table + " WHERE " + getPrimarySQLColumn(null) + "=$1";
-            this.queryNamesPrepareSQL = "SELECT * FROM " + table + " WHERE " + getPrimarySQLColumn(null) + "=:" + getPrimarySQLColumn(null);
+            this.updatePrepareSQL = "UPDATE " + (this.tableStrategy == null ? table : "${newtable}") + " SET " + updatesb + " WHERE " + getPrimarySQLColumn(null) + " = ?";
+            this.updateDollarPrepareSQL = "UPDATE " + (this.tableStrategy == null ? table : "${newtable}") + " SET " + updatesbdollar + " WHERE " + getPrimarySQLColumn(null) + " = $" + (++index);
+            this.updateNamesPrepareSQL = "UPDATE " + (this.tableStrategy == null ? table : "${newtable}") + " SET " + updatesbnames + " WHERE " + getPrimarySQLColumn(null) + " = :" + getPrimarySQLColumn(null);
+            this.deletePrepareSQL = "DELETE FROM " + (this.tableStrategy == null ? table : "${newtable}") + " WHERE " + getPrimarySQLColumn(null) + " = ?";
+            this.deleteDollarPrepareSQL = "DELETE FROM " + (this.tableStrategy == null ? table : "${newtable}") + " WHERE " + getPrimarySQLColumn(null) + " = $1";
+            this.deleteNamesPrepareSQL = "DELETE FROM " + (this.tableStrategy == null ? table : "${newtable}") + " WHERE " + getPrimarySQLColumn(null) + " = :" + getPrimarySQLColumn(null);
+            this.queryPrepareSQL = "SELECT * FROM " + table + " WHERE " + getPrimarySQLColumn(null) + " = ?";
+            this.queryDollarPrepareSQL = "SELECT * FROM " + table + " WHERE " + getPrimarySQLColumn(null) + " = $1";
+            this.queryNamesPrepareSQL = "SELECT * FROM " + table + " WHERE " + getPrimarySQLColumn(null) + " = :" + getPrimarySQLColumn(null);
         } else {
             this.insertPrepareSQL = null;
             this.updatePrepareSQL = null;
