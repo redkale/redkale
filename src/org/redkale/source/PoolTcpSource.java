@@ -51,7 +51,7 @@ public abstract class PoolTcpSource extends PoolSource<AsyncConnection> {
         return pollAsync().join();
     }
 
-    protected abstract ByteBuffer reqConnectBuffer();
+    protected abstract ByteBuffer reqConnectBuffer(AsyncConnection conn);
 
     protected abstract void respConnectBuffer(final ByteBuffer buffer, CompletableFuture<AsyncConnection> future, AsyncConnection conn);
 
@@ -59,7 +59,7 @@ public abstract class PoolTcpSource extends PoolSource<AsyncConnection> {
     public CompletableFuture<AsyncConnection> pollAsync() {
         return AsyncConnection.createTCP(group, this.servaddr, this.readTimeoutSeconds, this.writeTimeoutSeconds).thenCompose(conn -> {
             CompletableFuture<AsyncConnection> future = new CompletableFuture();
-            final ByteBuffer buffer = reqConnectBuffer();
+            final ByteBuffer buffer = reqConnectBuffer(conn);
             conn.write(buffer, null, new CompletionHandler<Integer, Void>() {
                 @Override
                 public void completed(Integer result, Void attachment1) {
