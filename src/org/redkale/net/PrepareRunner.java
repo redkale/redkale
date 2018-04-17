@@ -91,7 +91,9 @@ public final class PrepareRunner implements Runnable {
                         channel.close();
                     } catch (Exception e) {
                     }
-                    if (exc != null) context.logger.log(Level.FINEST, "Servlet Handler read channel erroneous, forece to close channel ", exc);
+                    if (exc != null && context.logger.isLoggable(Level.FINEST)) {
+                        context.logger.log(Level.FINEST, "Servlet Handler read channel erroneous, forece to close channel ", exc);
+                    }
                 }
             });
         } catch (Exception te) {
@@ -101,7 +103,9 @@ public final class PrepareRunner implements Runnable {
                 channel.close();
             } catch (Exception e) {
             }
-            if (te != null) context.logger.log(Level.FINEST, "Servlet read channel erroneous, forece to close channel ", te);
+            if (te != null && context.logger.isLoggable(Level.FINEST)) {
+                context.logger.log(Level.FINEST, "Servlet read channel erroneous, forece to close channel ", te);
+            }
         }
     }
 
