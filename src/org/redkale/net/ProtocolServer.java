@@ -123,7 +123,7 @@ public abstract class ProtocolServer {
                             SocketAddress address = serchannel.receive(buffer);
                             buffer.flip();
                             AsyncConnection conn = AsyncConnection.create(serchannel, address, false, readTimeoutSecond, writeTimeoutSecond);
-                            context.runAsync(new PrepareRunner(context, conn, buffer));
+                            context.runAsync(new PrepareRunner(context, conn, buffer, null));
                         } catch (Exception e) {
                             context.offerBuffer(buffer);
                         }
@@ -217,7 +217,7 @@ public abstract class ProtocolServer {
                     AsyncConnection conn = AsyncConnection.create(channel, null, context);
                     conn.livingCounter = livingCounter;
                     conn.closedCounter = closedCounter;
-                    context.runAsync(new PrepareRunner(context, conn, null));
+                    context.runAsync(new PrepareRunner(context, conn, null, null));
                 }
 
                 @Override

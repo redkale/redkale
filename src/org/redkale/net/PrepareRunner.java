@@ -27,10 +27,13 @@ public final class PrepareRunner implements Runnable {
 
     private ByteBuffer data;
 
-    public PrepareRunner(Context context, AsyncConnection channel, ByteBuffer data) {
+    private Response response;
+
+    public PrepareRunner(Context context, AsyncConnection channel, ByteBuffer data, Response response) {
         this.context = context;
         this.channel = channel;
         this.data = data;
+        this.response = response;
     }
 
     @Override
@@ -38,7 +41,7 @@ public final class PrepareRunner implements Runnable {
         final PrepareServlet prepare = context.prepare;
         final ObjectPool<? extends Response> responsePool = context.responsePool;
         if (data != null) { //BIO模式的UDP连接创建AsyncConnection时已经获取到ByteBuffer数据了
-            final Response response = responsePool.get();
+            if (response == null) response = responsePool.get();
             response.init(channel);
             try {
                 prepare.prepare(data, response.request, response);
@@ -48,7 +51,7 @@ public final class PrepareRunner implements Runnable {
             }
             return;
         }
-        final Response response = responsePool.get();
+        if (response == null) response = responsePool.get();
         final ByteBuffer buffer = response.request.pollReadBuffer();
         try {
             channel.read(buffer, null, new CompletionHandler<Integer, Void>() {

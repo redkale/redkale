@@ -184,7 +184,9 @@ public abstract class Response<C extends Context, R extends Request<C>> {
         request.recycle();
         if (channel != null) {
             if (keepAlive) {
-                this.context.runAsync(new PrepareRunner(context, channel, null));
+                this.inited = false;
+                this.context.runAsync(new PrepareRunner(context, removeChannel(), null, this));
+                return false;
             } else {
                 try {
                     if (channel.isOpen()) channel.close();
