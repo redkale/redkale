@@ -61,6 +61,20 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
 
     public abstract void setWriteTimeoutSecond(int writeTimeoutSecond);
 
+    @Override
+    public abstract Future<Integer> read(ByteBuffer dst);
+
+    @Override
+    public abstract <A> void read(ByteBuffer dst, A attachment, CompletionHandler<Integer, ? super A> handler);
+
+    public abstract <A> void read(ByteBuffer dst, long timeout, TimeUnit unit, A attachment, CompletionHandler<Integer, ? super A> handler);
+
+    @Override
+    public abstract Future<Integer> write(ByteBuffer src);
+
+    @Override
+    public abstract <A> void write(ByteBuffer src, A attachment, CompletionHandler<Integer, ? super A> handler);
+
     public final <A> void write(ByteBuffer[] srcs, A attachment, CompletionHandler<Integer, ? super A> handler) {
         write(srcs, 0, srcs.length, attachment, handler);
     }
@@ -278,6 +292,11 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
         }
 
         @Override
+        public <A> void read(ByteBuffer dst, long timeout, TimeUnit unit, A attachment, CompletionHandler<Integer, ? super A> handler) {
+            read(dst, attachment, handler);
+        }
+
+        @Override
         public Future<Integer> read(ByteBuffer dst) {
             try {
                 int rs = channel.read(dst);
@@ -433,6 +452,11 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
         }
 
         @Override
+        public <A> void read(ByteBuffer dst, long timeout, TimeUnit unit, A attachment, CompletionHandler<Integer, ? super A> handler) {
+            read(dst, attachment, handler);
+        }
+
+        @Override
         public Future<Integer> read(ByteBuffer dst) {
             try {
                 int rs = readChannel.read(dst);
@@ -527,6 +551,12 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
             } else {
                 channel.read(dst, attachment, handler);
             }
+        }
+
+        @Override
+        public <A> void read(ByteBuffer dst, long timeout, TimeUnit unit, A attachment, CompletionHandler<Integer, ? super A> handler) {
+            this.readtime = System.currentTimeMillis();
+            channel.read(dst, timeout < 0 ? 0 : timeout, unit, attachment, handler);
         }
 
         @Override

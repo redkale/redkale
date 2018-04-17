@@ -91,6 +91,9 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
     //请求包大小的上限，单位:字节
     protected int maxbody;
 
+    //Keep-Alive IO读取的超时秒数，小于1视为不设置
+    protected int aliveTimeoutSecond;
+    
     //IO读取的超时秒数，小于1视为不设置
     protected int readTimeoutSecond;
 
@@ -113,6 +116,7 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         this.address = new InetSocketAddress(config.getValue("host", "0.0.0.0"), config.getIntValue("port", 80));
         this.charset = Charset.forName(config.getValue("charset", "UTF-8"));
         this.maxconns = config.getIntValue("maxconns", 0);
+        this.aliveTimeoutSecond = config.getIntValue("aliveTimeoutSecond", 0);
         this.readTimeoutSecond = config.getIntValue("readTimeoutSecond", 0);
         this.writeTimeoutSecond = config.getIntValue("writeTimeoutSecond", 0);
         this.backlog = parseLenth(config.getValue("backlog"), 16 * 1024);

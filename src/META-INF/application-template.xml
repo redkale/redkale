@@ -122,6 +122,7 @@
         bufferCapacity: ByteBuffer的初始化大小， 默认: 32K;  (HTTP 2.0、WebSocket，必须要16k以上)
         bufferPoolSize： ByteBuffer池的大小，默认: 线程总数*4
         responsePoolSize： Response池的大小，默认: 线程总数*2
+        aliveTimeoutSecond: KeepAlive读操作超时秒数， 默认0， 表示永久不超时,-1表示禁止KeepAlive
         readTimeoutSecond: 读操作超时秒数， 默认0， 表示永久不超时
         writeTimeoutSecond:  写操作超时秒数， 默认0， 表示永久不超时
         interceptor: 启动/关闭NodeServer时被调用的拦截器实现类，必须是org.redkale.boot.NodeInterceptor的子类，默认为null

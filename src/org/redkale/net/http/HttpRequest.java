@@ -154,7 +154,9 @@ public class HttpRequest extends Request<HttpContext> {
                 case "Connection":
                 case "connection":
                     this.connection = value;
-                    this.setKeepAlive(!"close".equalsIgnoreCase(value));
+                    if (context.getAliveTimeoutSecond() >= 0) {
+                        this.setKeepAlive(!"close".equalsIgnoreCase(value));
+                    }
                     break;
                 case "user-agent":
                     header.addValue("User-Agent", value);

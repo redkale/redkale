@@ -7,6 +7,7 @@ package org.redkale.net;
 
 import java.nio.*;
 import java.nio.channels.*;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.*;
 import org.redkale.util.*;
 
@@ -38,6 +39,7 @@ public final class PrepareRunner implements Runnable {
 
     @Override
     public void run() {
+        final boolean keepalive = response != null;
         final PrepareServlet prepare = context.prepare;
         final ObjectPool<? extends Response> responsePool = context.responsePool;
         if (data != null) { //BIO模式的UDP连接创建AsyncConnection时已经获取到ByteBuffer数据了
@@ -54,16 +56,18 @@ public final class PrepareRunner implements Runnable {
         if (response == null) response = responsePool.get();
         final ByteBuffer buffer = response.request.pollReadBuffer();
         try {
-            channel.read(buffer, null, new CompletionHandler<Integer, Void>() {
+            channel.read(buffer, keepalive ? context.getAliveTimeoutSecond() : 0, TimeUnit.SECONDS, null,
+                new CompletionHandler<Integer, Void>() {
                 @Override
                 public void completed(Integer count, Void attachment1) {
                     if (count < 1 && buffer.remaining() == buffer.limit()) {
                         try {
                             response.request.offerReadBuffer(buffer);
                             response.finish(true);
-                            channel.close();
                         } catch (Exception e) {
-                            context.logger.log(Level.FINEST, "PrepareRunner close channel erroneous on no read bytes", e);
+                            if (context.logger.isLoggable(Level.FINEST)) {
+                                context.logger.log(Level.FINEST, "PrepareRunner close channel erroneous on no read bytes", e);
+                            }
                         }
                         return;
                     }

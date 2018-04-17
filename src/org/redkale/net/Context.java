@@ -58,6 +58,9 @@ public class Context {
     //请求内容的大小上限, 默认64K
     protected final int maxbody;
 
+    //keep alive IO读取的超时时间
+    protected final int aliveTimeoutSecond;
+
     //IO读取的超时时间
     protected final int readTimeoutSecond;
 
@@ -79,7 +82,7 @@ public class Context {
     public Context(long serverStartTime, Logger logger, ThreadPoolExecutor executor, SSLContext sslContext,
         int bufferCapacity, ObjectPool<ByteBuffer> bufferPool, ObjectPool<Response> responsePool,
         final int maxbody, Charset charset, InetSocketAddress address, ResourceFactory resourceFactory,
-        final PrepareServlet prepare, final int readTimeoutSecond, final int writeTimeoutSecond) {
+        final PrepareServlet prepare, final int aliveTimeoutSecond, final int readTimeoutSecond, final int writeTimeoutSecond) {
         this.serverStartTime = serverStartTime;
         this.logger = logger;
         this.executor = executor;
@@ -92,6 +95,7 @@ public class Context {
         this.address = address;
         this.prepare = prepare;
         this.resourceFactory = resourceFactory;
+        this.aliveTimeoutSecond = aliveTimeoutSecond;
         this.readTimeoutSecond = readTimeoutSecond;
         this.writeTimeoutSecond = writeTimeoutSecond;
         this.jsonFactory = JsonFactory.root();
@@ -163,6 +167,10 @@ public class Context {
 
     public Logger getLogger() {
         return logger;
+    }
+
+    public int getAliveTimeoutSecond() {
+        return aliveTimeoutSecond;
     }
 
     public int getReadTimeoutSecond() {
