@@ -185,7 +185,7 @@ public abstract class Response<C extends Context, R extends Request<C>> {
         if (channel != null) {
             if (keepAlive) {
                 this.inited = false;
-                this.context.runAsync(new PrepareRunner(context, removeChannel(), null, this));
+                new PrepareRunner(context, removeChannel(), null, this).run();
                 return false;
             } else {
                 try {

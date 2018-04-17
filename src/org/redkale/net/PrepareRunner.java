@@ -44,8 +44,8 @@ public final class PrepareRunner implements Runnable {
         final ObjectPool<? extends Response> responsePool = context.responsePool;
         if (data != null) { //BIO模式的UDP连接创建AsyncConnection时已经获取到ByteBuffer数据了
             if (response == null) response = responsePool.get();
-            response.init(channel);
             try {
+                response.init(channel);
                 prepare.prepare(data, response.request, response);
             } catch (Throwable t) {
                 context.logger.log(Level.WARNING, "prepare servlet abort, forece to close channel ", t);
@@ -91,10 +91,6 @@ public final class PrepareRunner implements Runnable {
                 public void failed(Throwable exc, Void attachment2) {
                     response.request.offerReadBuffer(buffer);
                     response.finish(true);
-                    try {
-                        channel.close();
-                    } catch (Exception e) {
-                    }
                     if (exc != null && context.logger.isLoggable(Level.FINEST)) {
                         context.logger.log(Level.FINEST, "Servlet Handler read channel erroneous, forece to close channel ", exc);
                     }
@@ -103,10 +99,6 @@ public final class PrepareRunner implements Runnable {
         } catch (Exception te) {
             response.request.offerReadBuffer(buffer);
             response.finish(true);
-            try {
-                channel.close();
-            } catch (Exception e) {
-            }
             if (te != null && context.logger.isLoggable(Level.FINEST)) {
                 context.logger.log(Level.FINEST, "Servlet read channel erroneous, forece to close channel ", te);
             }
