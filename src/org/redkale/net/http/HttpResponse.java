@@ -40,6 +40,8 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
 
     private static final ByteBuffer buffer404 = ByteBuffer.wrap("HTTP/1.1 404 Not Found\r\nContent-Length:0\r\n\r\n".getBytes()).asReadOnlyBuffer();
 
+    protected static final byte[] status200Bytes = "HTTP/1.1 200 OK\r\n".getBytes();
+
     protected static final byte[] LINE = new byte[]{'\r', '\n'};
 
     protected static final byte[] serverNameBytes = ("Server: " + System.getProperty("http.response.header.server", "redkale" + "/" + Redkale.getDotedVersion()) + "\r\n").getBytes();
@@ -116,7 +118,11 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
 
     private final String plainContentType;
 
+    private final byte[] plainContentTypeBytes;
+
     private final String jsonContentType;
+
+    private final byte[] jsonContentTypeBytes;
 
     private final DefaultAnyValue header = new DefaultAnyValue();
 
@@ -145,6 +151,8 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         super(context, request);
         this.plainContentType = plainContentType == null || plainContentType.isEmpty() ? "text/plain; charset=utf-8" : plainContentType;
         this.jsonContentType = jsonContentType == null || jsonContentType.isEmpty() ? "application/json; charset=utf-8" : jsonContentType;
+        this.plainContentTypeBytes = ("Content-Type: " + this.plainContentType + "\r\n").getBytes();
+        this.jsonContentTypeBytes = ("Content-Type: " + this.jsonContentType + "\r\n").getBytes();
         this.defaultAddHeaders = defaultAddHeaders;
         this.defaultSetHeaders = defaultSetHeaders;
         this.defcookie = defcookie;
@@ -848,12 +856,19 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
     protected ByteBuffer createHeader() {
         this.headsended = true;
         ByteBuffer buffer = this.pollWriteReadBuffer();
-        buffer.put(("HTTP/1.1 " + this.status + " " + (this.status == 200 ? "OK" : httpCodes.get(this.status)) + "\r\n").getBytes());
-
-        if (this.contentLength >= 0) {
-            buffer.put(("Content-Length: " + this.contentLength + "\r\n").getBytes());
+        if (this.status == 200) {
+            buffer.put(status200Bytes);
+        } else {
+            buffer.put(("HTTP/1.1 " + this.status + " " + httpCodes.get(this.status) + "\r\n").getBytes());
         }
-        buffer.put(("Content-Type: " + (this.contentType == null ? this.plainContentType : this.contentType) + "\r\n").getBytes());
+        if (this.contentLength >= 0) buffer.put(("Content-Length: " + this.contentLength + "\r\n").getBytes());
+        if (this.contentType == this.jsonContentType) {
+            buffer.put(this.jsonContentTypeBytes);
+        } else if (this.contentType == null || this.contentType == this.plainContentType) {
+            buffer.put(this.plainContentTypeBytes);
+        } else {
+            buffer.put(("Content-Type: " + (this.contentType == null ? this.plainContentType : this.contentType) + "\r\n").getBytes());
+        }
         buffer.put(serverNameBytes);
         buffer.put(("Date: " + RFC_1123_DATE_TIME.format(java.time.ZonedDateTime.now(ZONE_GMT)) + "\r\n").getBytes());
         if (!this.request.isKeepAlive()) buffer.put(connectCloseBytes);
