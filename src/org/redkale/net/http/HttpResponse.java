@@ -44,6 +44,8 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
 
     protected static final byte[] serverNameBytes = ("Server: " + System.getProperty("http.response.header.server", "redkale" + "/" + Redkale.getDotedVersion()) + "\r\n").getBytes();
 
+    protected static final byte[] connectCloseBytes = "Connection: close\r\n".getBytes();
+
     private static final Set<OpenOption> options = new HashSet<>();
 
     private static final Map<Integer, String> httpCodes = new HashMap<>();
@@ -848,16 +850,13 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         ByteBuffer buffer = this.pollWriteReadBuffer();
         buffer.put(("HTTP/1.1 " + this.status + " " + (this.status == 200 ? "OK" : httpCodes.get(this.status)) + "\r\n").getBytes());
 
-        buffer.put(("Content-Type: " + (this.contentType == null ? this.plainContentType : this.contentType) + "\r\n").getBytes());
-
         if (this.contentLength >= 0) {
             buffer.put(("Content-Length: " + this.contentLength + "\r\n").getBytes());
         }
-        if (!this.request.isKeepAlive()) {
-            buffer.put("Connection: close\r\n".getBytes());
-        }
-        buffer.put(("Date: " + RFC_1123_DATE_TIME.format(java.time.ZonedDateTime.now(ZONE_GMT)) + "\r\n").getBytes());
+        buffer.put(("Content-Type: " + (this.contentType == null ? this.plainContentType : this.contentType) + "\r\n").getBytes());
         buffer.put(serverNameBytes);
+        buffer.put(("Date: " + RFC_1123_DATE_TIME.format(java.time.ZonedDateTime.now(ZONE_GMT)) + "\r\n").getBytes());
+        if (!this.request.isKeepAlive()) buffer.put(connectCloseBytes);
 
         if (this.defaultAddHeaders != null) {
             for (String[] headers : this.defaultAddHeaders) {
