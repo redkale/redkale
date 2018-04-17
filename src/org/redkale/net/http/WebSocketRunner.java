@@ -64,7 +64,7 @@ class WebSocketRunner implements Runnable {
         final boolean debug = context.getLogger().isLoggable(Level.FINEST);
         try {
             webSocket.onConnected();
-            channel.setReadTimeoutSecond(300); //读取超时5分钟
+            channel.setReadTimeoutSeconds(300); //读取超时5分钟
             if (channel.isOpen()) {
                 final int wsmaxbody = webSocket._engine.wsmaxbody;
                 channel.read(readBuffer, null, new CompletionHandler<Integer, Void>() {

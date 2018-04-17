@@ -32,10 +32,10 @@ import org.redkale.util.*;
 public class TransportFactory {
 
     @Comment("默认TCP读取超时秒数")
-    public static int DEFAULT_READTIMEOUTSECOND = 6;
+    public static int DEFAULT_READTIMEOUTSECONDS = 6;
 
     @Comment("默认TCP写入超时秒数")
-    public static int DEFAULT_WRITETIMEOUTSECOND = 6;
+    public static int DEFAULT_WRITETIMEOUTSECONDS = 6;
 
     public static final String NAME_POOLMAXCONNS = "poolmaxconns";
 
@@ -74,10 +74,10 @@ public class TransportFactory {
     protected int pinginterval;
 
     //TCP读取超时秒数
-    protected int readTimeoutSecond;
+    protected int readTimeoutSeconds;
 
     //TCP写入超时秒数
-    protected int writeTimeoutSecond;
+    protected int writeTimeoutSeconds;
 
     //ping和检查的定时器
     private ScheduledThreadPoolExecutor scheduler;
@@ -94,19 +94,19 @@ public class TransportFactory {
     protected final TransportStrategy strategy;
 
     protected TransportFactory(ExecutorService executor, ObjectPool<ByteBuffer> bufferPool, AsynchronousChannelGroup channelGroup,
-        SSLContext sslContext, int readTimeoutSecond, int writeTimeoutSecond, final TransportStrategy strategy) {
+        SSLContext sslContext, int readTimeoutSeconds, int writeTimeoutSeconds, final TransportStrategy strategy) {
         this.executor = executor;
         this.bufferPool = bufferPool;
         this.channelGroup = channelGroup;
         this.sslContext = sslContext;
-        this.readTimeoutSecond = readTimeoutSecond;
-        this.writeTimeoutSecond = writeTimeoutSecond;
+        this.readTimeoutSeconds = readTimeoutSeconds;
+        this.writeTimeoutSeconds = writeTimeoutSeconds;
         this.strategy = strategy;
     }
 
     protected TransportFactory(ExecutorService executor, ObjectPool<ByteBuffer> bufferPool, AsynchronousChannelGroup channelGroup,
-        SSLContext sslContext, int readTimeoutSecond, int writeTimeoutSecond) {
-        this(executor, bufferPool, channelGroup, sslContext, readTimeoutSecond, writeTimeoutSecond, null);
+        SSLContext sslContext, int readTimeoutSeconds, int writeTimeoutSeconds) {
+        this(executor, bufferPool, channelGroup, sslContext, readTimeoutSeconds, writeTimeoutSeconds, null);
     }
 
     public void init(AnyValue conf, ByteBuffer pingBuffer, int pongLength) {
@@ -140,14 +140,14 @@ public class TransportFactory {
     }
 
     public static TransportFactory create(int threads) {
-        return create(threads, threads * 2, 8 * 1024, DEFAULT_READTIMEOUTSECOND, DEFAULT_WRITETIMEOUTSECOND);
+        return create(threads, threads * 2, 8 * 1024, DEFAULT_READTIMEOUTSECONDS, DEFAULT_WRITETIMEOUTSECONDS);
     }
 
     public static TransportFactory create(int threads, int bufferPoolSize, int bufferCapacity) {
-        return create(threads, bufferPoolSize, bufferCapacity, DEFAULT_READTIMEOUTSECOND, DEFAULT_WRITETIMEOUTSECOND);
+        return create(threads, bufferPoolSize, bufferCapacity, DEFAULT_READTIMEOUTSECONDS, DEFAULT_WRITETIMEOUTSECONDS);
     }
 
-    public static TransportFactory create(int threads, int bufferPoolSize, int bufferCapacity, int readTimeoutSecond, int writeTimeoutSecond) {
+    public static TransportFactory create(int threads, int bufferPoolSize, int bufferCapacity, int readTimeoutSeconds, int writeTimeoutSeconds) {
         final ObjectPool<ByteBuffer> transportPool = new ObjectPool<>(new AtomicLong(), new AtomicLong(), bufferPoolSize,
             (Object... params) -> ByteBuffer.allocateDirect(bufferCapacity), null, (e) -> {
                 if (e == null || e.isReadOnly() || e.capacity() != bufferCapacity) return false;
@@ -167,35 +167,35 @@ public class TransportFactory {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        return create(transportExec, transportPool, transportGroup, readTimeoutSecond, writeTimeoutSecond);
+        return create(transportExec, transportPool, transportGroup, readTimeoutSeconds, writeTimeoutSeconds);
     }
 
     public static TransportFactory create(ExecutorService executor, ObjectPool<ByteBuffer> bufferPool, AsynchronousChannelGroup channelGroup) {
-        return new TransportFactory(executor, bufferPool, channelGroup, null, DEFAULT_READTIMEOUTSECOND, DEFAULT_WRITETIMEOUTSECOND, null);
+        return new TransportFactory(executor, bufferPool, channelGroup, null, DEFAULT_READTIMEOUTSECONDS, DEFAULT_WRITETIMEOUTSECONDS, null);
     }
 
     public static TransportFactory create(ExecutorService executor, ObjectPool<ByteBuffer> bufferPool, AsynchronousChannelGroup channelGroup,
-        int readTimeoutSecond, int writeTimeoutSecond) {
-        return new TransportFactory(executor, bufferPool, channelGroup, null, readTimeoutSecond, writeTimeoutSecond, null);
+        int readTimeoutSeconds, int writeTimeoutSeconds) {
+        return new TransportFactory(executor, bufferPool, channelGroup, null, readTimeoutSeconds, writeTimeoutSeconds, null);
     }
 
     public static TransportFactory create(ExecutorService executor, ObjectPool<ByteBuffer> bufferPool, AsynchronousChannelGroup channelGroup,
-        int readTimeoutSecond, int writeTimeoutSecond, final TransportStrategy strategy) {
-        return new TransportFactory(executor, bufferPool, channelGroup, null, readTimeoutSecond, writeTimeoutSecond, strategy);
+        int readTimeoutSeconds, int writeTimeoutSeconds, final TransportStrategy strategy) {
+        return new TransportFactory(executor, bufferPool, channelGroup, null, readTimeoutSeconds, writeTimeoutSeconds, strategy);
     }
 
     public static TransportFactory create(ExecutorService executor, ObjectPool<ByteBuffer> bufferPool, AsynchronousChannelGroup channelGroup, SSLContext sslContext) {
-        return new TransportFactory(executor, bufferPool, channelGroup, sslContext, DEFAULT_READTIMEOUTSECOND, DEFAULT_WRITETIMEOUTSECOND, null);
+        return new TransportFactory(executor, bufferPool, channelGroup, sslContext, DEFAULT_READTIMEOUTSECONDS, DEFAULT_WRITETIMEOUTSECONDS, null);
     }
 
     public static TransportFactory create(ExecutorService executor, ObjectPool<ByteBuffer> bufferPool, AsynchronousChannelGroup channelGroup,
-        SSLContext sslContext, int readTimeoutSecond, int writeTimeoutSecond) {
-        return new TransportFactory(executor, bufferPool, channelGroup, sslContext, readTimeoutSecond, writeTimeoutSecond, null);
+        SSLContext sslContext, int readTimeoutSeconds, int writeTimeoutSeconds) {
+        return new TransportFactory(executor, bufferPool, channelGroup, sslContext, readTimeoutSeconds, writeTimeoutSeconds, null);
     }
 
     public static TransportFactory create(ExecutorService executor, ObjectPool<ByteBuffer> bufferPool, AsynchronousChannelGroup channelGroup,
-        SSLContext sslContext, int readTimeoutSecond, int writeTimeoutSecond, final TransportStrategy strategy) {
-        return new TransportFactory(executor, bufferPool, channelGroup, sslContext, readTimeoutSecond, writeTimeoutSecond, strategy);
+        SSLContext sslContext, int readTimeoutSeconds, int writeTimeoutSeconds, final TransportStrategy strategy) {
+        return new TransportFactory(executor, bufferPool, channelGroup, sslContext, readTimeoutSeconds, writeTimeoutSeconds, strategy);
     }
 
     public Transport createTransportTCP(String name, final InetSocketAddress clientAddress, final Collection<InetSocketAddress> addresses) {

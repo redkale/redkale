@@ -154,7 +154,7 @@ public class HttpRequest extends Request<HttpContext> {
                 case "Connection":
                 case "connection":
                     this.connection = value;
-                    if (context.getAliveTimeoutSecond() >= 0) {
+                    if (context.getAliveTimeoutSeconds() >= 0) {
                         this.setKeepAlive(!"close".equalsIgnoreCase(value));
                     }
                     break;

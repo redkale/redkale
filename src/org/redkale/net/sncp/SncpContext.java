@@ -25,8 +25,8 @@ public class SncpContext extends Context {
     public SncpContext(long serverStartTime, Logger logger, ThreadPoolExecutor executor, SSLContext sslContext,
         int bufferCapacity, ObjectPool<ByteBuffer> bufferPool, ObjectPool<Response> responsePool,
         int maxbody, Charset charset, InetSocketAddress address, ResourceFactory resourceFactory,
-        PrepareServlet prepare, int aliveTimeoutSecond, int readTimeoutSecond, int writeTimeoutSecond) {
+        PrepareServlet prepare, int aliveTimeoutSeconds, int readTimeoutSeconds, int writeTimeoutSeconds) {
         super(serverStartTime, logger, executor, sslContext, bufferCapacity, bufferPool, responsePool,
-            maxbody, charset, address, resourceFactory, prepare, aliveTimeoutSecond, readTimeoutSecond, writeTimeoutSecond);
+            maxbody, charset, address, resourceFactory, prepare, aliveTimeoutSeconds, readTimeoutSeconds, writeTimeoutSeconds);
     }
 }

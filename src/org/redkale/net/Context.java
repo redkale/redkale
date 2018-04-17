@@ -59,13 +59,13 @@ public class Context {
     protected final int maxbody;
 
     //keep alive IO读取的超时时间
-    protected final int aliveTimeoutSecond;
+    protected final int aliveTimeoutSeconds;
 
     //IO读取的超时时间
-    protected final int readTimeoutSecond;
+    protected final int readTimeoutSeconds;
 
     //IO写入的超时时间
-    protected final int writeTimeoutSecond;
+    protected final int writeTimeoutSeconds;
 
     //日志Logger
     protected final Logger logger;
@@ -82,7 +82,7 @@ public class Context {
     public Context(long serverStartTime, Logger logger, ThreadPoolExecutor executor, SSLContext sslContext,
         int bufferCapacity, ObjectPool<ByteBuffer> bufferPool, ObjectPool<Response> responsePool,
         final int maxbody, Charset charset, InetSocketAddress address, ResourceFactory resourceFactory,
-        final PrepareServlet prepare, final int aliveTimeoutSecond, final int readTimeoutSecond, final int writeTimeoutSecond) {
+        final PrepareServlet prepare, final int aliveTimeoutSeconds, final int readTimeoutSeconds, final int writeTimeoutSeconds) {
         this.serverStartTime = serverStartTime;
         this.logger = logger;
         this.executor = executor;
@@ -95,9 +95,9 @@ public class Context {
         this.address = address;
         this.prepare = prepare;
         this.resourceFactory = resourceFactory;
-        this.aliveTimeoutSecond = aliveTimeoutSecond;
-        this.readTimeoutSecond = readTimeoutSecond;
-        this.writeTimeoutSecond = writeTimeoutSecond;
+        this.aliveTimeoutSeconds = aliveTimeoutSeconds;
+        this.readTimeoutSeconds = readTimeoutSeconds;
+        this.writeTimeoutSeconds = writeTimeoutSeconds;
         this.jsonFactory = JsonFactory.root();
         this.bsonFactory = BsonFactory.root();
     }
@@ -169,16 +169,16 @@ public class Context {
         return logger;
     }
 
-    public int getAliveTimeoutSecond() {
-        return aliveTimeoutSecond;
+    public int getAliveTimeoutSeconds() {
+        return aliveTimeoutSeconds;
     }
 
-    public int getReadTimeoutSecond() {
-        return readTimeoutSecond;
+    public int getReadTimeoutSeconds() {
+        return readTimeoutSeconds;
     }
 
-    public int getWriteTimeoutSecond() {
-        return writeTimeoutSecond;
+    public int getWriteTimeoutSeconds() {
+        return writeTimeoutSeconds;
     }
 
     public JsonConvert getJsonConvert() {

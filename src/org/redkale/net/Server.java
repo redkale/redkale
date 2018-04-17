@@ -92,13 +92,13 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
     protected int maxbody;
 
     //Keep-Alive IO读取的超时秒数，小于1视为不设置
-    protected int aliveTimeoutSecond;
+    protected int aliveTimeoutSeconds;
     
     //IO读取的超时秒数，小于1视为不设置
-    protected int readTimeoutSecond;
+    protected int readTimeoutSeconds;
 
     //IO写入 的超时秒数，小于1视为不设置
-    protected int writeTimeoutSecond;
+    protected int writeTimeoutSeconds;
 
     //最大连接数
     protected int maxconns;
@@ -116,9 +116,9 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         this.address = new InetSocketAddress(config.getValue("host", "0.0.0.0"), config.getIntValue("port", 80));
         this.charset = Charset.forName(config.getValue("charset", "UTF-8"));
         this.maxconns = config.getIntValue("maxconns", 0);
-        this.aliveTimeoutSecond = config.getIntValue("aliveTimeoutSecond", 0);
-        this.readTimeoutSecond = config.getIntValue("readTimeoutSecond", 0);
-        this.writeTimeoutSecond = config.getIntValue("writeTimeoutSecond", 0);
+        this.aliveTimeoutSeconds = config.getIntValue("aliveTimeoutSeconds", 0);
+        this.readTimeoutSeconds = config.getIntValue("readTimeoutSeconds", 0);
+        this.writeTimeoutSeconds = config.getIntValue("writeTimeoutSeconds", 0);
         this.backlog = parseLenth(config.getValue("backlog"), 16 * 1024);
         this.maxbody = parseLenth(config.getValue("maxbody"), 64 * 1024);
         int bufCapacity = parseLenth(config.getValue("bufferCapacity"), 32 * 1024);

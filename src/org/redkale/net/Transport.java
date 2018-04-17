@@ -228,12 +228,12 @@ public final class Transport {
                 DatagramChannel channel = DatagramChannel.open();
                 channel.configureBlocking(true);
                 channel.connect(udpaddr);
-                return CompletableFuture.completedFuture(AsyncConnection.create(channel, udpaddr, true, factory.readTimeoutSecond, factory.writeTimeoutSecond));
+                return CompletableFuture.completedFuture(AsyncConnection.create(channel, udpaddr, true, factory.readTimeoutSeconds, factory.writeTimeoutSeconds));
             }
             if (!rand) { //指定地址
                 TransportNode node = findTransportNode(addr);
                 if (node == null) {
-                    return AsyncConnection.createTCP(group, sslContext, addr, supportTcpNoDelay, factory.readTimeoutSecond, factory.writeTimeoutSecond);
+                    return AsyncConnection.createTCP(group, sslContext, addr, supportTcpNoDelay, factory.readTimeoutSeconds, factory.writeTimeoutSeconds);
                 }
                 final BlockingQueue<AsyncConnection> queue = node.conns;
                 if (!queue.isEmpty()) {
@@ -242,7 +242,7 @@ public final class Transport {
                         if (conn.isOpen()) return CompletableFuture.completedFuture(conn);
                     }
                 }
-                return AsyncConnection.createTCP(group, sslContext, addr, supportTcpNoDelay, factory.readTimeoutSecond, factory.writeTimeoutSecond);
+                return AsyncConnection.createTCP(group, sslContext, addr, supportTcpNoDelay, factory.readTimeoutSeconds, factory.writeTimeoutSeconds);
             }
 
             //---------------------随机取地址------------------------
@@ -269,7 +269,7 @@ public final class Transport {
                     @Override
                     public void completed(Void result, TransportNode attachment) {
                         attachment.disabletime = 0;
-                        AsyncConnection asyncConn = AsyncConnection.create(channel, attachment.address, factory.readTimeoutSecond, factory.writeTimeoutSecond);
+                        AsyncConnection asyncConn = AsyncConnection.create(channel, attachment.address, factory.readTimeoutSeconds, factory.writeTimeoutSeconds);
                         if (future.isDone()) {
                             if (!attachment.conns.offer(asyncConn)) asyncConn.dispose();
                         } else {
@@ -319,7 +319,7 @@ public final class Transport {
                 @Override
                 public void completed(Void result, TransportNode attachment) {
                     attachment.disabletime = 0;
-                    AsyncConnection asyncConn = AsyncConnection.create(channel, attachment.address, factory.readTimeoutSecond, factory.writeTimeoutSecond);
+                    AsyncConnection asyncConn = AsyncConnection.create(channel, attachment.address, factory.readTimeoutSeconds, factory.writeTimeoutSeconds);
                     if (future.isDone()) {
                         if (!attachment.conns.offer(asyncConn)) asyncConn.dispose();
                     } else {

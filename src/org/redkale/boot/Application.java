@@ -249,8 +249,8 @@ public final class Application {
         TransportStrategy strategy = null;
         int bufferCapacity = 32 * 1024;
         int bufferPoolSize = Runtime.getRuntime().availableProcessors() * 8;
-        int readTimeoutSecond = TransportFactory.DEFAULT_READTIMEOUTSECOND;
-        int writeTimeoutSecond = TransportFactory.DEFAULT_WRITETIMEOUTSECOND;
+        int readTimeoutSeconds = TransportFactory.DEFAULT_READTIMEOUTSECONDS;
+        int writeTimeoutSeconds = TransportFactory.DEFAULT_WRITETIMEOUTSECONDS;
         AtomicLong createBufferCounter = new AtomicLong();
         AtomicLong cycleBufferCounter = new AtomicLong();
         if (resources != null) {
@@ -260,8 +260,8 @@ public final class Application {
             if (transportConf != null) {
                 //--------------transportBufferPool-----------
                 bufferCapacity = Math.max(parseLenth(transportConf.getValue("bufferCapacity"), bufferCapacity), 8 * 1024);
-                readTimeoutSecond = transportConf.getIntValue("readTimeoutSecond", readTimeoutSecond);
-                writeTimeoutSecond = transportConf.getIntValue("writeTimeoutSecond", writeTimeoutSecond);
+                readTimeoutSeconds = transportConf.getIntValue("readTimeoutSeconds", readTimeoutSeconds);
+                writeTimeoutSeconds = transportConf.getIntValue("writeTimeoutSeconds", writeTimeoutSeconds);
                 final int threads = parseLenth(transportConf.getValue("threads"), groupsize * Runtime.getRuntime().availableProcessors() * 2);
                 bufferPoolSize = parseLenth(transportConf.getValue("bufferPoolSize"), threads * 4);
                 final int capacity = bufferCapacity;
@@ -314,7 +314,7 @@ public final class Application {
                     return true;
                 });
         }
-        this.sncpTransportFactory = TransportFactory.create(transportExec, transportPool, transportGroup, (SSLContext) null, readTimeoutSecond, writeTimeoutSecond, strategy);
+        this.sncpTransportFactory = TransportFactory.create(transportExec, transportPool, transportGroup, (SSLContext) null, readTimeoutSeconds, writeTimeoutSeconds, strategy);
         DefaultAnyValue tarnsportConf = DefaultAnyValue.create(TransportFactory.NAME_POOLMAXCONNS, System.getProperty("net.transport.poolmaxconns", "100"))
             .addValue(TransportFactory.NAME_PINGINTERVAL, System.getProperty("net.transport.pinginterval", "30"))
             .addValue(TransportFactory.NAME_CHECKINTERVAL, System.getProperty("net.transport.checkinterval", "30"));

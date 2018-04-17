@@ -37,11 +37,11 @@
             threads： 线程总数， 默认: <group>节点数*CPU核数*2
             bufferCapacity: ByteBuffer的初始化大小， 默认: 32K; 
             bufferPoolSize： ByteBuffer池的大小，默认: 线程总数*4
-            readTimeoutSecond: TCP读取超时秒数, 默认为6秒， 为0表示无超时限制
-            writeTimeoutSecond: TCP写入超时秒数, 默认为6秒， 为0表示无超时限制
+            readTimeoutSeconds: TCP读取超时秒数, 默认为6秒， 为0表示无超时限制
+            writeTimeoutSeconds: TCP写入超时秒数, 默认为6秒， 为0表示无超时限制
             strategy: 远程请求的负载均衡策略， 必须是org.redkale.net.TransportStrategy的实现类
         -->
-        <transport bufferCapacity="32K" bufferPoolSize="32" threads="32" readTimeoutSecond="6" writeTimeoutSecond="6"/>
+        <transport bufferCapacity="32K" bufferPoolSize="32" threads="32" readTimeoutSeconds="6" writeTimeoutSeconds="6"/>
         
         <!--
             一个组包含多个node， 同一Service服务可以由多个进程提供，这些进程称为一个GROUP，且同一GROUP内的进程必须在同一机房或局域网内
@@ -122,9 +122,9 @@
         bufferCapacity: ByteBuffer的初始化大小， 默认: 32K;  (HTTP 2.0、WebSocket，必须要16k以上)
         bufferPoolSize： ByteBuffer池的大小，默认: 线程总数*4
         responsePoolSize： Response池的大小，默认: 线程总数*2
-        aliveTimeoutSecond: KeepAlive读操作超时秒数， 默认0， 表示永久不超时,-1表示禁止KeepAlive
-        readTimeoutSecond: 读操作超时秒数， 默认0， 表示永久不超时
-        writeTimeoutSecond:  写操作超时秒数， 默认0， 表示永久不超时
+        aliveTimeoutSeconds: KeepAlive读操作超时秒数， 默认0， 表示永久不超时,-1表示禁止KeepAlive
+        readTimeoutSeconds: 读操作超时秒数， 默认0， 表示永久不超时
+        writeTimeoutSeconds:  写操作超时秒数， 默认0， 表示永久不超时
         interceptor: 启动/关闭NodeServer时被调用的拦截器实现类，必须是org.redkale.boot.NodeInterceptor的子类，默认为null
     -->
     <server protocol="HTTP" host="127.0.0.1" port="6060" root="root" lib=""> 

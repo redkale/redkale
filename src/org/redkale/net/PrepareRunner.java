@@ -56,7 +56,7 @@ public final class PrepareRunner implements Runnable {
         if (response == null) response = responsePool.get();
         final ByteBuffer buffer = response.request.pollReadBuffer();
         try {
-            channel.read(buffer, keepalive ? context.getAliveTimeoutSecond() : 0, TimeUnit.SECONDS, null,
+            channel.read(buffer, keepalive ? context.getAliveTimeoutSeconds() : 0, TimeUnit.SECONDS, null,
                 new CompletionHandler<Integer, Void>() {
                 @Override
                 public void completed(Integer count, Void attachment1) {

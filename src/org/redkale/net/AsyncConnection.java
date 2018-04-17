@@ -53,13 +53,13 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
 
     public abstract SocketAddress getLocalAddress();
 
-    public abstract int getReadTimeoutSecond();
+    public abstract int getReadTimeoutSeconds();
 
-    public abstract int getWriteTimeoutSecond();
+    public abstract int getWriteTimeoutSeconds();
 
-    public abstract void setReadTimeoutSecond(int readTimeoutSecond);
+    public abstract void setReadTimeoutSeconds(int readTimeoutSeconds);
 
-    public abstract void setWriteTimeoutSecond(int writeTimeoutSecond);
+    public abstract void setWriteTimeoutSeconds(int writeTimeoutSeconds);
 
     @Override
     public abstract Future<Integer> read(ByteBuffer dst);
@@ -144,14 +144,14 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
      *
      * @param address            连接点子
      * @param group              连接AsynchronousChannelGroup
-     * @param readTimeoutSecond  读取超时秒数
-     * @param writeTimeoutSecond 写入超时秒数
+     * @param readTimeoutSeconds  读取超时秒数
+     * @param writeTimeoutSeconds 写入超时秒数
      *
      * @return 连接CompletableFuture
      */
     public static CompletableFuture<AsyncConnection> createTCP(final AsynchronousChannelGroup group, final SocketAddress address,
-        final int readTimeoutSecond, final int writeTimeoutSecond) {
-        return createTCP(group, null, address, false, readTimeoutSecond, writeTimeoutSecond);
+        final int readTimeoutSeconds, final int writeTimeoutSeconds) {
+        return createTCP(group, null, address, false, readTimeoutSeconds, writeTimeoutSeconds);
     }
 
     /**
@@ -160,14 +160,14 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
      * @param address            连接点子
      * @param sslContext         SSLContext
      * @param group              连接AsynchronousChannelGroup
-     * @param readTimeoutSecond  读取超时秒数
-     * @param writeTimeoutSecond 写入超时秒数
+     * @param readTimeoutSeconds  读取超时秒数
+     * @param writeTimeoutSeconds 写入超时秒数
      *
      * @return 连接CompletableFuture
      */
     public static CompletableFuture<AsyncConnection> createTCP(final AsynchronousChannelGroup group, final SSLContext sslContext,
-        final SocketAddress address, final int readTimeoutSecond, final int writeTimeoutSecond) {
-        return createTCP(group, sslContext, address, false, readTimeoutSecond, writeTimeoutSecond);
+        final SocketAddress address, final int readTimeoutSeconds, final int writeTimeoutSeconds) {
+        return createTCP(group, sslContext, address, false, readTimeoutSeconds, writeTimeoutSeconds);
     }
 
     /**
@@ -177,13 +177,13 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
      * @param sslContext         SSLContext
      * @param group              连接AsynchronousChannelGroup
      * @param noDelay            TcpNoDelay
-     * @param readTimeoutSecond  读取超时秒数
-     * @param writeTimeoutSecond 写入超时秒数
+     * @param readTimeoutSeconds  读取超时秒数
+     * @param writeTimeoutSeconds 写入超时秒数
      *
      * @return 连接CompletableFuture
      */
     public static CompletableFuture<AsyncConnection> createTCP(final AsynchronousChannelGroup group, final SSLContext sslContext,
-        final SocketAddress address, final boolean noDelay, final int readTimeoutSecond, final int writeTimeoutSecond) {
+        final SocketAddress address, final boolean noDelay, final int readTimeoutSeconds, final int writeTimeoutSeconds) {
         final CompletableFuture<AsyncConnection> future = new CompletableFuture<>();
         try {
             final AsynchronousSocketChannel channel = AsynchronousSocketChannel.open(group);
@@ -196,7 +196,7 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
                         } catch (IOException e) {
                         }
                     }
-                    future.complete(create(channel, sslContext, address, readTimeoutSecond, writeTimeoutSecond));
+                    future.complete(create(channel, sslContext, address, readTimeoutSeconds, writeTimeoutSeconds));
                 }
 
                 @Override
@@ -212,9 +212,9 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
 
     private static class BIOUDPAsyncConnection extends AsyncConnection {
 
-        private int readTimeoutSecond;
+        private int readTimeoutSeconds;
 
-        private int writeTimeoutSecond;
+        private int writeTimeoutSeconds;
 
         private final DatagramChannel channel;
 
@@ -223,32 +223,32 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
         private final boolean client;
 
         public BIOUDPAsyncConnection(final DatagramChannel ch, SocketAddress addr,
-            final boolean client0, final int readTimeoutSecond0, final int writeTimeoutSecond0) {
+            final boolean client0, final int readTimeoutSeconds0, final int writeTimeoutSeconds0) {
             this.channel = ch;
             this.client = client0;
-            this.readTimeoutSecond = readTimeoutSecond0;
-            this.writeTimeoutSecond = writeTimeoutSecond0;
+            this.readTimeoutSeconds = readTimeoutSeconds0;
+            this.writeTimeoutSeconds = writeTimeoutSeconds0;
             this.remoteAddress = addr;
         }
 
         @Override
-        public void setReadTimeoutSecond(int readTimeoutSecond) {
-            this.readTimeoutSecond = readTimeoutSecond;
+        public void setReadTimeoutSeconds(int readTimeoutSeconds) {
+            this.readTimeoutSeconds = readTimeoutSeconds;
         }
 
         @Override
-        public void setWriteTimeoutSecond(int writeTimeoutSecond) {
-            this.writeTimeoutSecond = writeTimeoutSecond;
+        public void setWriteTimeoutSeconds(int writeTimeoutSeconds) {
+            this.writeTimeoutSeconds = writeTimeoutSeconds;
         }
 
         @Override
-        public int getReadTimeoutSecond() {
-            return this.readTimeoutSecond;
+        public int getReadTimeoutSeconds() {
+            return this.readTimeoutSeconds;
         }
 
         @Override
-        public int getWriteTimeoutSecond() {
-            return this.writeTimeoutSecond;
+        public int getWriteTimeoutSeconds() {
+            return this.writeTimeoutSeconds;
         }
 
         @Override
@@ -347,15 +347,15 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
     }
 
     public static AsyncConnection create(final DatagramChannel ch, SocketAddress addr,
-        final boolean client0, final int readTimeoutSecond0, final int writeTimeoutSecond0) {
-        return new BIOUDPAsyncConnection(ch, addr, client0, readTimeoutSecond0, writeTimeoutSecond0);
+        final boolean client0, final int readTimeoutSeconds0, final int writeTimeoutSeconds0) {
+        return new BIOUDPAsyncConnection(ch, addr, client0, readTimeoutSeconds0, writeTimeoutSeconds0);
     }
 
     private static class BIOTCPAsyncConnection extends AsyncConnection {
 
-        private int readTimeoutSecond;
+        private int readTimeoutSeconds;
 
-        private int writeTimeoutSecond;
+        private int writeTimeoutSeconds;
 
         private final Socket socket;
 
@@ -365,12 +365,12 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
 
         private final SocketAddress remoteAddress;
 
-        public BIOTCPAsyncConnection(final Socket socket, final SocketAddress addr0, final int readTimeoutSecond0, final int writeTimeoutSecond0) {
+        public BIOTCPAsyncConnection(final Socket socket, final SocketAddress addr0, final int readTimeoutSeconds0, final int writeTimeoutSeconds0) {
             this.socket = socket;
             ReadableByteChannel rc = null;
             WritableByteChannel wc = null;
             try {
-                socket.setSoTimeout(Math.max(readTimeoutSecond0, writeTimeoutSecond0));
+                socket.setSoTimeout(Math.max(readTimeoutSeconds0, writeTimeoutSeconds0));
                 rc = Channels.newChannel(socket.getInputStream());
                 wc = Channels.newChannel(socket.getOutputStream());
             } catch (IOException e) {
@@ -378,8 +378,8 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
             }
             this.readChannel = rc;
             this.writeChannel = wc;
-            this.readTimeoutSecond = readTimeoutSecond0;
-            this.writeTimeoutSecond = writeTimeoutSecond0;
+            this.readTimeoutSeconds = readTimeoutSeconds0;
+            this.writeTimeoutSeconds = writeTimeoutSeconds0;
             SocketAddress addr = addr0;
             if (addr == null) {
                 try {
@@ -407,23 +407,23 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
         }
 
         @Override
-        public int getReadTimeoutSecond() {
-            return readTimeoutSecond;
+        public int getReadTimeoutSeconds() {
+            return readTimeoutSeconds;
         }
 
         @Override
-        public int getWriteTimeoutSecond() {
-            return writeTimeoutSecond;
+        public int getWriteTimeoutSeconds() {
+            return writeTimeoutSeconds;
         }
 
         @Override
-        public void setReadTimeoutSecond(int readTimeoutSecond) {
-            this.readTimeoutSecond = readTimeoutSecond;
+        public void setReadTimeoutSeconds(int readTimeoutSeconds) {
+            this.readTimeoutSeconds = readTimeoutSeconds;
         }
 
         @Override
-        public void setWriteTimeoutSecond(int writeTimeoutSecond) {
-            this.writeTimeoutSecond = writeTimeoutSecond;
+        public void setWriteTimeoutSeconds(int writeTimeoutSeconds) {
+            this.writeTimeoutSeconds = writeTimeoutSeconds;
         }
 
         @Override
@@ -518,20 +518,20 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
 
     private static class AIOTCPAsyncConnection extends AsyncConnection {
 
-        private int readTimeoutSecond;
+        private int readTimeoutSeconds;
 
-        private int writeTimeoutSecond;
+        private int writeTimeoutSeconds;
 
         private final AsynchronousSocketChannel channel;
 
         private final SocketAddress remoteAddress;
 
         public AIOTCPAsyncConnection(final AsynchronousSocketChannel ch, SSLContext sslContext,
-            final SocketAddress addr0, final int readTimeoutSecond0, final int writeTimeoutSecond0) {
+            final SocketAddress addr0, final int readTimeoutSeconds, final int writeTimeoutSeconds) {
             this.channel = ch;
             this.sslContext = sslContext;
-            this.readTimeoutSecond = readTimeoutSecond0;
-            this.writeTimeoutSecond = writeTimeoutSecond0;
+            this.readTimeoutSeconds = readTimeoutSeconds;
+            this.writeTimeoutSeconds = writeTimeoutSeconds;
             SocketAddress addr = addr0;
             if (addr == null) {
                 try {
@@ -546,8 +546,8 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
         @Override
         public <A> void read(ByteBuffer dst, A attachment, CompletionHandler<Integer, ? super A> handler) {
             this.readtime = System.currentTimeMillis();
-            if (readTimeoutSecond > 0) {
-                channel.read(dst, readTimeoutSecond, TimeUnit.SECONDS, attachment, handler);
+            if (readTimeoutSeconds > 0) {
+                channel.read(dst, readTimeoutSeconds, TimeUnit.SECONDS, attachment, handler);
             } else {
                 channel.read(dst, attachment, handler);
             }
@@ -562,8 +562,8 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
         @Override
         public <A> void write(ByteBuffer src, A attachment, CompletionHandler<Integer, ? super A> handler) {
             this.writetime = System.currentTimeMillis();
-            if (writeTimeoutSecond > 0) {
-                channel.write(src, writeTimeoutSecond, TimeUnit.SECONDS, attachment, handler);
+            if (writeTimeoutSeconds > 0) {
+                channel.write(src, writeTimeoutSeconds, TimeUnit.SECONDS, attachment, handler);
             } else {
                 channel.write(src, attachment, handler);
             }
@@ -572,7 +572,7 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
         @Override
         public <A> void write(ByteBuffer[] srcs, int offset, int length, A attachment, final CompletionHandler<Integer, ? super A> handler) {
             this.writetime = System.currentTimeMillis();
-            channel.write(srcs, offset, length, writeTimeoutSecond > 0 ? writeTimeoutSecond : 60, TimeUnit.SECONDS,
+            channel.write(srcs, offset, length, writeTimeoutSeconds > 0 ? writeTimeoutSeconds : 60, TimeUnit.SECONDS,
                 attachment, new CompletionHandler<Long, A>() {
 
                 @Override
@@ -589,23 +589,23 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
         }
 
         @Override
-        public void setReadTimeoutSecond(int readTimeoutSecond) {
-            this.readTimeoutSecond = readTimeoutSecond;
+        public void setReadTimeoutSeconds(int readTimeoutSeconds) {
+            this.readTimeoutSeconds = readTimeoutSeconds;
         }
 
         @Override
-        public void setWriteTimeoutSecond(int writeTimeoutSecond) {
-            this.writeTimeoutSecond = writeTimeoutSecond;
+        public void setWriteTimeoutSeconds(int writeTimeoutSeconds) {
+            this.writeTimeoutSeconds = writeTimeoutSeconds;
         }
 
         @Override
-        public int getReadTimeoutSecond() {
-            return this.readTimeoutSecond;
+        public int getReadTimeoutSeconds() {
+            return this.readTimeoutSeconds;
         }
 
         @Override
-        public int getWriteTimeoutSecond() {
-            return this.writeTimeoutSecond;
+        public int getWriteTimeoutSeconds() {
+            return this.writeTimeoutSeconds;
         }
 
         @Override
@@ -654,15 +654,15 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
         return create(ch, null, 0, 0);
     }
 
-    public static AsyncConnection create(final AsynchronousSocketChannel ch, final SocketAddress addr0, final int readTimeoutSecond, final int writeTimeoutSecond) {
-        return new AIOTCPAsyncConnection(ch, null, addr0, readTimeoutSecond, writeTimeoutSecond);
+    public static AsyncConnection create(final AsynchronousSocketChannel ch, final SocketAddress addr0, final int readTimeoutSeconds, final int writeTimeoutSeconds) {
+        return new AIOTCPAsyncConnection(ch, null, addr0, readTimeoutSeconds, writeTimeoutSeconds);
     }
 
-    public static AsyncConnection create(final AsynchronousSocketChannel ch, SSLContext sslContext, final SocketAddress addr0, final int readTimeoutSecond, final int writeTimeoutSecond) {
-        return new AIOTCPAsyncConnection(ch, sslContext, addr0, readTimeoutSecond, writeTimeoutSecond);
+    public static AsyncConnection create(final AsynchronousSocketChannel ch, SSLContext sslContext, final SocketAddress addr0, final int readTimeoutSeconds, final int writeTimeoutSeconds) {
+        return new AIOTCPAsyncConnection(ch, sslContext, addr0, readTimeoutSeconds, writeTimeoutSeconds);
     }
 
     public static AsyncConnection create(final AsynchronousSocketChannel ch, final SocketAddress addr0, final Context context) {
-        return new AIOTCPAsyncConnection(ch, context.sslContext, addr0, context.readTimeoutSecond, context.writeTimeoutSecond);
+        return new AIOTCPAsyncConnection(ch, context.sslContext, addr0, context.readTimeoutSeconds, context.writeTimeoutSeconds);
     }
 }

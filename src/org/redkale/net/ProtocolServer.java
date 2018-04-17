@@ -109,8 +109,8 @@ public abstract class ProtocolServer {
         @Override
         public void accept() {
             final DatagramChannel serchannel = this.serverChannel;
-            final int readTimeoutSecond = this.context.readTimeoutSecond;
-            final int writeTimeoutSecond = this.context.writeTimeoutSecond;
+            final int readTimeoutSeconds = this.context.readTimeoutSeconds;
+            final int writeTimeoutSeconds = this.context.writeTimeoutSeconds;
             final CountDownLatch cdl = new CountDownLatch(1);
             this.running = true;
             new Thread() {
@@ -122,7 +122,7 @@ public abstract class ProtocolServer {
                         try {
                             SocketAddress address = serchannel.receive(buffer);
                             buffer.flip();
-                            AsyncConnection conn = AsyncConnection.create(serchannel, address, false, readTimeoutSecond, writeTimeoutSecond);
+                            AsyncConnection conn = AsyncConnection.create(serchannel, address, false, readTimeoutSeconds, writeTimeoutSeconds);
                             context.runAsync(new PrepareRunner(context, conn, buffer, null));
                         } catch (Exception e) {
                             context.offerBuffer(buffer);
