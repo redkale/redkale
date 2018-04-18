@@ -67,6 +67,7 @@ public abstract class WebSocketNode {
     public void destroy(AnyValue conf) {
     }
 
+    @Local
     public final void postDestroy(AnyValue conf) {
         if (this.localEngine == null) return;
         //关掉所有本地本地WebSocket
@@ -199,6 +200,7 @@ public abstract class WebSocketNode {
      *
      * @return int
      */
+    @Local
     public final CompletableFuture<Integer> forceCloseWebSocket(final Serializable userid) {
         CompletableFuture<Integer> localFuture = null;
         if (this.localEngine != null) localFuture = CompletableFuture.completedFuture(localEngine.forceCloseLocalWebSocket(userid));
@@ -230,6 +232,7 @@ public abstract class WebSocketNode {
      *
      * @return WebSocketEngine
      */
+    @Local
     public final WebSocketEngine getLocalWebSocketEngine() {
         return this.localEngine;
     }
@@ -243,6 +246,7 @@ public abstract class WebSocketNode {
      *
      * @return 为0表示成功， 其他值表示部分发送异常
      */
+    @Local
     public final CompletableFuture<Integer> sendMessage(Object message, final Stream<? extends Serializable> userids) {
         return sendMessage((Convert) null, message, true, userids);
     }
@@ -256,6 +260,7 @@ public abstract class WebSocketNode {
      *
      * @return 为0表示成功， 其他值表示部分发送异常
      */
+    @Local
     public final CompletableFuture<Integer> sendMessage(Object message, final Serializable... userids) {
         return sendMessage((Convert) null, message, true, userids);
     }
@@ -270,6 +275,7 @@ public abstract class WebSocketNode {
      *
      * @return 为0表示成功， 其他值表示部分发送异常
      */
+    @Local
     public final CompletableFuture<Integer> sendMessage(final Convert convert, Object message, final Stream<? extends Serializable> userids) {
         return sendMessage(convert, message, true, userids);
     }
@@ -284,6 +290,7 @@ public abstract class WebSocketNode {
      *
      * @return 为0表示成功， 其他值表示部分发送异常
      */
+    @Local
     public final CompletableFuture<Integer> sendMessage(final Convert convert, Object message, final Serializable... userids) {
         return sendMessage(convert, message, true, userids);
     }
@@ -298,6 +305,7 @@ public abstract class WebSocketNode {
      *
      * @return 为0表示成功， 其他值表示部分发送异常
      */
+    @Local
     public final CompletableFuture<Integer> sendMessage(final Object message, final boolean last, final Stream<? extends Serializable> userids) {
         return sendMessage((Convert) null, message, last, userids);
     }
@@ -312,6 +320,7 @@ public abstract class WebSocketNode {
      *
      * @return 为0表示成功， 其他值表示部分发送异常
      */
+    @Local
     public final CompletableFuture<Integer> sendMessage(final Object message, final boolean last, final Serializable... userids) {
         return sendMessage((Convert) null, message, last, userids);
     }
@@ -327,6 +336,7 @@ public abstract class WebSocketNode {
      *
      * @return 为0表示成功， 其他值表示部分发送异常
      */
+    @Local
     public final CompletableFuture<Integer> sendMessage(final Convert convert, final Object message0, final boolean last, final Stream<? extends Serializable> userids) {
         Object[] array = userids.toArray();
         Serializable[] ss = new Serializable[array.length];
@@ -347,6 +357,7 @@ public abstract class WebSocketNode {
      *
      * @return 为0表示成功， 其他值表示部分发送异常
      */
+    @Local
     public final CompletableFuture<Integer> sendMessage(final Convert convert, final Object message0, final boolean last, final Serializable... userids) {
         if (userids == null || userids.length < 1) return CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY);
         if (message0 instanceof CompletableFuture) return ((CompletableFuture) message0).thenApply(msg -> sendMessage(convert, msg, last, userids));
@@ -370,6 +381,7 @@ public abstract class WebSocketNode {
      *
      * @return 为0表示成功， 其他值表示部分发送异常
      */
+    @Local
     public final CompletableFuture<Integer> broadcastMessage(final Object message) {
         return broadcastMessage((Convert) null, message, true);
     }
@@ -382,6 +394,7 @@ public abstract class WebSocketNode {
      *
      * @return 为0表示成功， 其他值表示部分发送异常
      */
+    @Local
     public final CompletableFuture<Integer> broadcastMessage(final WebSocketRange wsrange, final Object message) {
         return broadcastMessage(wsrange, (Convert) null, message, true);
     }
@@ -394,6 +407,7 @@ public abstract class WebSocketNode {
      *
      * @return 为0表示成功， 其他值表示部分发送异常
      */
+    @Local
     public final CompletableFuture<Integer> broadcastMessage(final Convert convert, final Object message) {
         return broadcastMessage(convert, message, true);
     }
@@ -407,6 +421,7 @@ public abstract class WebSocketNode {
      *
      * @return 为0表示成功， 其他值表示部分发送异常
      */
+    @Local
     public final CompletableFuture<Integer> broadcastMessage(final WebSocketRange wsrange, final Convert convert, final Object message) {
         return broadcastMessage(wsrange, convert, message, true);
     }
@@ -419,6 +434,7 @@ public abstract class WebSocketNode {
      *
      * @return 为0表示成功， 其他值表示部分发送异常
      */
+    @Local
     public final CompletableFuture<Integer> broadcastMessage(final Object message, final boolean last) {
         return broadcastMessage((Convert) null, message, last);
     }
@@ -432,6 +448,7 @@ public abstract class WebSocketNode {
      *
      * @return 为0表示成功， 其他值表示部分发送异常
      */
+    @Local
     public final CompletableFuture<Integer> broadcastMessage(final WebSocketRange wsrange, final Object message, final boolean last) {
         return broadcastMessage(wsrange, (Convert) null, message, last);
     }
@@ -445,6 +462,7 @@ public abstract class WebSocketNode {
      *
      * @return 为0表示成功， 其他值表示部分发送异常
      */
+    @Local
     public final CompletableFuture<Integer> broadcastMessage(final Convert convert, final Object message0, final boolean last) {
         return broadcastMessage((WebSocketRange) null, convert, message0, last);
     }
@@ -459,6 +477,7 @@ public abstract class WebSocketNode {
      *
      * @return 为0表示成功， 其他值表示部分发送异常
      */
+    @Local
     public final CompletableFuture<Integer> broadcastMessage(final WebSocketRange wsrange, final Convert convert, final Object message0, final boolean last) {
         if (message0 instanceof CompletableFuture) return ((CompletableFuture) message0).thenApply(msg -> broadcastMessage(wsrange, convert, msg, last));
         final Object message = (convert == null || message0 instanceof WebSocketPacket) ? message0 : ((convert instanceof TextConvert) ? new WebSocketPacket(((TextConvert) convert).convertTo(message0), last) : new WebSocketPacket(((BinaryConvert) convert).convertTo(message0), last));
