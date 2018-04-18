@@ -91,7 +91,7 @@ public abstract class Request<C extends Context> {
         createtime = 0;
         keepAlive = false;
         attributes.clear();
-        channel = null; //   close it by  response
+        channel = null; // close it by response
     }
 
     protected <T> T setProperty(String name, T value) {
