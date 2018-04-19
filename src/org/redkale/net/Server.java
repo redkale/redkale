@@ -116,7 +116,7 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         this.address = new InetSocketAddress(config.getValue("host", "0.0.0.0"), config.getIntValue("port", 80));
         this.charset = Charset.forName(config.getValue("charset", "UTF-8"));
         this.maxconns = config.getIntValue("maxconns", 0);
-        this.aliveTimeoutSeconds = config.getIntValue("aliveTimeoutSeconds", 0);
+        this.aliveTimeoutSeconds = config.getIntValue("aliveTimeoutSeconds", 30);
         this.readTimeoutSeconds = config.getIntValue("readTimeoutSeconds", 0);
         this.writeTimeoutSeconds = config.getIntValue("writeTimeoutSeconds", 0);
         this.backlog = parseLenth(config.getValue("backlog"), 16 * 1024);
