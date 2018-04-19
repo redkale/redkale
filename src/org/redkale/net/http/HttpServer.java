@@ -295,6 +295,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
         final List<String[]> defaultAddHeaders = new ArrayList<>();
         final List<String[]> defaultSetHeaders = new ArrayList<>();
         boolean autoOptions = false;
+        boolean autoDate = true;
         String plainContentType = null;
         String jsonContentType = null;
         HttpCookie defaultCookie = null;
@@ -366,6 +367,9 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
                 }
                 AnyValue options = resps == null ? null : resps.getAnyValue("options");
                 autoOptions = options != null && options.getBoolValue("auto", false);
+
+                AnyValue dates = resps == null ? null : resps.getAnyValue("date");
+                autoDate = dates != null && dates.getBoolValue("auto", true);
             }
 
         }
@@ -374,6 +378,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
         final String[][] addHeaders = defaultAddHeaders.isEmpty() ? null : defaultAddHeaders.toArray(new String[defaultAddHeaders.size()][]);
         final String[][] setHeaders = defaultSetHeaders.isEmpty() ? null : defaultSetHeaders.toArray(new String[defaultSetHeaders.size()][]);
         final boolean options = autoOptions;
+        final boolean adate = autoDate;
 
         final HttpCookie defCookie = defaultCookie;
         final String addrHeader = remoteAddrHeader;
@@ -384,7 +389,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
             rcapacity, bufferPool, responsePool, this.maxbody, this.charset, this.address, this.resourceFactory,
             this.prepare, this.aliveTimeoutSeconds, this.readTimeoutSeconds, this.writeTimeoutSeconds);
         responsePool.setCreator((Object... params) -> new HttpResponse(httpcontext, new HttpRequest(httpcontext, addrHeader),
-            plainType, jsonType, addHeaders, setHeaders, defCookie, options, ((HttpPrepareServlet) prepare).renders));
+            plainType, jsonType, addHeaders, setHeaders, defCookie, options, adate, ((HttpPrepareServlet) prepare).renders));
         return httpcontext;
     }
 

@@ -132,6 +132,8 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
 
     private final boolean autoOptions;
 
+    private final boolean autoDate;
+
     private final HttpCookie defcookie;
 
     private final List<HttpRender> renders;
@@ -147,7 +149,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
     public HttpResponse(HttpContext context, HttpRequest request,
         String plainContentType, String jsonContentType,
         String[][] defaultAddHeaders, String[][] defaultSetHeaders,
-        HttpCookie defcookie, boolean autoOptions, List< HttpRender> renders) {
+        HttpCookie defcookie, boolean autoOptions, boolean autoDate, List< HttpRender> renders) {
         super(context, request);
         this.plainContentType = plainContentType == null || plainContentType.isEmpty() ? "text/plain; charset=utf-8" : plainContentType;
         this.jsonContentType = jsonContentType == null || jsonContentType.isEmpty() ? "application/json; charset=utf-8" : jsonContentType;
@@ -157,6 +159,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         this.defaultSetHeaders = defaultSetHeaders;
         this.defcookie = defcookie;
         this.autoOptions = autoOptions;
+        this.autoDate = autoDate;
         this.renders = renders;
         this.hasRender = renders != null && !renders.isEmpty();
         this.onlyoneHttpRender = renders != null && renders.size() == 1 ? renders.get(0) : null;
@@ -870,7 +873,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
             buffer.put(("Content-Type: " + (this.contentType == null ? this.plainContentType : this.contentType) + "\r\n").getBytes());
         }
         buffer.put(serverNameBytes);
-        buffer.put(("Date: " + RFC_1123_DATE_TIME.format(java.time.ZonedDateTime.now(ZONE_GMT)) + "\r\n").getBytes());
+        if (autoDate) buffer.put(("Date: " + RFC_1123_DATE_TIME.format(java.time.ZonedDateTime.now(ZONE_GMT)) + "\r\n").getBytes());
         if (!this.request.isKeepAlive()) buffer.put(connectCloseBytes);
 
         if (this.defaultAddHeaders != null) {
