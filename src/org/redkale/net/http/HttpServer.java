@@ -369,7 +369,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
                 autoOptions = options != null && options.getBoolValue("auto", false);
 
                 AnyValue dates = resps == null ? null : resps.getAnyValue("date");
-                autoDate = dates != null && dates.getBoolValue("auto", true);
+                autoDate = dates == null || dates.getBoolValue("auto", true);
             }
 
         }
