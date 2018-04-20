@@ -96,6 +96,14 @@ public abstract class PoolSource<T> {
         } else if ("sqlserver".equals(this.dbtype)) {
             this.props.setProperty(JDBC_CONTAIN_SQLTEMPLATE, "CHARINDEX(${column}, ${keystr}) > 0");
             this.props.setProperty(JDBC_NOTCONTAIN_SQLTEMPLATE, "CHARINDEX(${column}, ${keystr}) = 0");
+        } else 
+        if ("postgresql".equals(this.dbtype)) {
+            if (!this.props.containsKey(JDBC_TABLECOPY_SQLTEMPLATE)) {
+                this.props.setProperty(JDBC_TABLECOPY_SQLTEMPLATE, "CREATE TABLE ${newtable} AS (SELECT * FROM ${oldtable} LIMIT 0)");
+            }
+            if (!this.props.containsKey(JDBC_TABLENOTEXIST_SQLSTATES)) {
+                this.props.setProperty(JDBC_TABLENOTEXIST_SQLSTATES, "42P01");
+            }
         }
     }
 
