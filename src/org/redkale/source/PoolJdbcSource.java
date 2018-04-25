@@ -46,7 +46,15 @@ public class PoolJdbcSource extends PoolSource<Connection> {
             @Override
             public void connectionClosed(ConnectionEvent event) {
                 PooledConnection pc = (PooledConnection) event.getSource();
-                if (queue.offer(pc)) saveCounter.incrementAndGet();
+                if (queue.offer(pc)) {
+                    saveCounter.incrementAndGet();
+                } else {
+                    try {
+                        pc.close();
+                    } catch (Exception e) {
+                        dataSource.logger.log(Level.INFO, DataSource.class.getSimpleName() + " " + pc + " close error", e);
+                    }
+                }
             }
 
             @Override
