@@ -22,7 +22,7 @@ import org.redkale.boot.ClassFilter.FilterEntry;
 import org.redkale.convert.bson.*;
 import org.redkale.net.Filter;
 import org.redkale.net.*;
-import org.redkale.net.http.WebSocketServlet;
+import org.redkale.net.http.*;
 import org.redkale.net.sncp.*;
 import org.redkale.service.*;
 import org.redkale.source.*;
@@ -198,7 +198,7 @@ public abstract class NodeServer {
                 }
             }
         }
-        //------------------------------------- 注册Resource --------------------------------------------------------
+        //------------------------------------- 注册 Resource --------------------------------------------------------
         resourceFactory.register((ResourceFactory rf, final Object src, String resourceName, Field field, final Object attachment) -> {
             try {
                 Resource res = field.getAnnotation(Resource.class);
@@ -221,7 +221,7 @@ public abstract class NodeServer {
             }
         }, AnyValue.class, AnyValue[].class);
 
-        //------------------------------------- 注册DataSource --------------------------------------------------------        
+        //------------------------------------- 注册 DataSource --------------------------------------------------------        
         resourceFactory.register((ResourceFactory rf, final Object src, String resourceName, Field field, final Object attachment) -> {
             try {
                 if (field.getAnnotation(Resource.class) == null) return;
@@ -271,8 +271,9 @@ public abstract class NodeServer {
             }
         }, DataSource.class);
 
-        //------------------------------------- 注册CacheSource --------------------------------------------------------
+        //------------------------------------- 注册 CacheSource --------------------------------------------------------
         resourceFactory.register(new ResourceFactory.ResourceLoader() {
+            @Override
             public void load(ResourceFactory rf, final Object src, final String resourceName, Field field, final Object attachment) {
                 try {
                     if (field.getAnnotation(Resource.class) == null) return;
@@ -317,10 +318,46 @@ public abstract class NodeServer {
                 }
             }
 
+            @Override
             public boolean autoNone() {
                 return false;
             }
         }, CacheSource.class);
+
+        //------------------------------------- 注册 WebSocketNode --------------------------------------------------------
+        resourceFactory.register(new ResourceFactory.ResourceLoader() {
+            @Override
+            public void load(ResourceFactory rf, final Object src, final String resourceName, Field field, final Object attachment) {
+                try {
+                    if (field.getAnnotation(Resource.class) == null) return;
+                    if ((src instanceof Service) && Sncp.isRemote((Service) src)) return; //远程模式不需要注入 WebSocketNode 
+                    Service nodeService = (Service) rf.find(resourceName, WebSocketNode.class);
+                    if (nodeService == null) {
+                        final HashSet<String> groups = new HashSet<>();
+                        if (groups.isEmpty() && isSNCP() && NodeServer.this.sncpGroup != null) groups.add(NodeServer.this.sncpGroup);
+                        nodeService = Sncp.createLocalService(serverClassLoader, resourceName, WebSocketNodeService.class, application.getResourceFactory(), application.getSncpTransportFactory(), NodeServer.this.sncpAddress, groups, (AnyValue) null);
+                        (isSNCP() ? appResFactory : resourceFactory).register(resourceName, WebSocketNode.class, nodeService);
+                    }
+                    resourceFactory.inject(nodeService, self);
+                    field.set(src, nodeService);
+                    if (Sncp.isRemote(nodeService)) {
+                        remoteServices.add(nodeService);
+                    } else {
+                        if (field != null) rf.inject(nodeService); //动态加载的Service也存在按需加载的注入资源
+                        localServices.add(nodeService);
+                        interceptorServices.add(nodeService);
+                        if (consumer != null) consumer.accept(nodeService);
+                    }
+                } catch (Exception e) {
+                    logger.log(Level.SEVERE, "WebSocketNode inject error", e);
+                }
+            }
+
+            @Override
+            public boolean autoNone() {
+                return false;
+            }
+        }, WebSocketNode.class);
     }
 
     @SuppressWarnings("unchecked")
@@ -340,7 +377,6 @@ public abstract class NodeServer {
                 if (DataSource.class.isAssignableFrom(serviceImplClass)) continue;
                 if (CacheSource.class.isAssignableFrom(serviceImplClass)) continue;
                 if (DataCacheListener.class.isAssignableFrom(serviceImplClass)) continue;
-                //if (WebSocketNode.class.isAssignableFrom(serviceImplClass)) continue;
             }
             if (entry.getName().contains("$")) throw new RuntimeException("<name> value cannot contains '$' in " + entry.getProperty());
             Service oldother = resourceFactory.find(entry.getName(), serviceImplClass);

@@ -123,8 +123,8 @@ public class NodeHttpServer extends NodeServer {
                         regFactory.register(resourceName, WebSocketNode.class, nodeService);
                     }
                     resourceFactory.inject(nodeService, self);
-                    logger.fine("[" + Thread.currentThread().getName() + "] Load Service " + nodeService);
                     field.set(src, nodeService);
+                    logger.fine("[" + Thread.currentThread().getName() + "] Load Service " + nodeService);
                 }
             } catch (Exception e) {
                 logger.log(Level.SEVERE, "WebSocketNode inject error", e);
