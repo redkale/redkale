@@ -12,6 +12,7 @@ import java.nio.channels.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
+import org.redkale.util.AnyValue;
 
 /**
  * 协议底层Server
@@ -53,7 +54,7 @@ public abstract class ProtocolServer {
     //最大连接数，小于1表示无限制
     protected int maxconns;
 
-    public abstract void open() throws IOException;
+    public abstract void open(AnyValue config) throws IOException;
 
     public abstract void bind(SocketAddress local, int backlog) throws IOException;
 
@@ -111,7 +112,7 @@ public abstract class ProtocolServer {
         }
 
         @Override
-        public void open() throws IOException {
+        public void open(AnyValue config) throws IOException {
             DatagramChannel ch = DatagramChannel.open();
             ch.configureBlocking(true);
             this.serverChannel = ch;
@@ -203,14 +204,9 @@ public abstract class ProtocolServer {
         }
 
         @Override
-        public void open() throws IOException {
+        public void open(AnyValue config) throws IOException {
             group = AsynchronousChannelGroup.withCachedThreadPool(context.executor, 1);
             this.serverChannel = AsynchronousServerSocketChannel.open(group);
-            try {
-                if (supportTcpNoDelay()) this.serverChannel.setOption(StandardSocketOptions.TCP_NODELAY, true);
-                if (supportTcpKeepAlive()) this.serverChannel.setOption(StandardSocketOptions.SO_KEEPALIVE, true);
-            } catch (IOException e) {
-            }
         }
 
         @Override

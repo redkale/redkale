@@ -225,9 +225,12 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         this.context = this.createContext();
         this.prepare.init(this.context, config);
         this.serverChannel = ProtocolServer.create(this.protocol, context);
-        this.serverChannel.open();
+        this.serverChannel.open(config);
         if (this.serverChannel.supportedOptions().contains(StandardSocketOptions.TCP_NODELAY)) {
             this.serverChannel.setOption(StandardSocketOptions.TCP_NODELAY, true);
+        }
+        if (this.serverChannel.supportedOptions().contains(StandardSocketOptions.SO_KEEPALIVE)) {
+            this.serverChannel.setOption(StandardSocketOptions.SO_KEEPALIVE, true);
         }
         serverChannel.bind(address, backlog);
         serverChannel.setMaxconns(this.maxconns);
