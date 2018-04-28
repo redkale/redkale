@@ -34,15 +34,20 @@ public final class Transport {
 
     protected static final boolean supportTcpNoDelay;
 
+    protected static final boolean supportKeepAlive;
+
     static {
         boolean tcpNoDelay = false;
+        boolean keepAlive = false;
         try {
             AsynchronousSocketChannel channel = AsynchronousSocketChannel.open();
             tcpNoDelay = channel.supportedOptions().contains(StandardSocketOptions.TCP_NODELAY);
+            keepAlive = channel.supportedOptions().contains(StandardSocketOptions.SO_KEEPALIVE);
             channel.close();
         } catch (Exception e) {
         }
         supportTcpNoDelay = tcpNoDelay;
+        supportKeepAlive = keepAlive;
     }
 
     protected final AtomicInteger seq = new AtomicInteger(-1);
@@ -265,6 +270,7 @@ public final class Transport {
                 CompletableFuture future = new CompletableFuture();
                 final AsynchronousSocketChannel channel = AsynchronousSocketChannel.open(group);
                 if (supportTcpNoDelay) channel.setOption(StandardSocketOptions.TCP_NODELAY, true);
+                if (supportKeepAlive) channel.setOption(StandardSocketOptions.SO_KEEPALIVE, true);
                 channel.connect(one.address, one, new CompletionHandler<Void, TransportNode>() {
                     @Override
                     public void completed(Void result, TransportNode attachment) {
