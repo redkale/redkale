@@ -13,6 +13,7 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 import javax.net.ssl.SSLContext;
+import static org.redkale.net.ProtocolServer.*;
 
 /**
  *
@@ -142,8 +143,8 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
     /**
      * 创建TCP协议客户端连接
      *
-     * @param address            连接点子
-     * @param group              连接AsynchronousChannelGroup
+     * @param address             连接点子
+     * @param group               连接AsynchronousChannelGroup
      * @param readTimeoutSeconds  读取超时秒数
      * @param writeTimeoutSeconds 写入超时秒数
      *
@@ -151,15 +152,15 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
      */
     public static CompletableFuture<AsyncConnection> createTCP(final AsynchronousChannelGroup group, final SocketAddress address,
         final int readTimeoutSeconds, final int writeTimeoutSeconds) {
-        return createTCP(group, null, address, false, readTimeoutSeconds, writeTimeoutSeconds);
+        return createTCP(group, null, address, supportTcpNoDelay(), readTimeoutSeconds, writeTimeoutSeconds);
     }
 
     /**
      * 创建TCP协议客户端连接
      *
-     * @param address            连接点子
-     * @param sslContext         SSLContext
-     * @param group              连接AsynchronousChannelGroup
+     * @param address             连接点子
+     * @param sslContext          SSLContext
+     * @param group               连接AsynchronousChannelGroup
      * @param readTimeoutSeconds  读取超时秒数
      * @param writeTimeoutSeconds 写入超时秒数
      *
@@ -173,10 +174,10 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
     /**
      * 创建TCP协议客户端连接
      *
-     * @param address            连接点子
-     * @param sslContext         SSLContext
-     * @param group              连接AsynchronousChannelGroup
-     * @param noDelay            TcpNoDelay
+     * @param address             连接点子
+     * @param sslContext          SSLContext
+     * @param group               连接AsynchronousChannelGroup
+     * @param noDelay             TcpNoDelay
      * @param readTimeoutSeconds  读取超时秒数
      * @param writeTimeoutSeconds 写入超时秒数
      *
@@ -190,11 +191,10 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
             channel.connect(address, null, new CompletionHandler<Void, Void>() {
                 @Override
                 public void completed(Void result, Void attachment) {
-                    if (noDelay) {
-                        try {
-                            channel.setOption(StandardSocketOptions.TCP_NODELAY, true);
-                        } catch (IOException e) {
-                        }
+                    try {
+                        if (noDelay) channel.setOption(StandardSocketOptions.TCP_NODELAY, true);
+                        if (supportTcpKeepAlive()) channel.setOption(StandardSocketOptions.SO_KEEPALIVE, true);
+                    } catch (IOException e) {
                     }
                     future.complete(create(channel, sslContext, address, readTimeoutSeconds, writeTimeoutSeconds));
                 }
