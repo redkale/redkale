@@ -93,7 +93,7 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
 
     //Keep-Alive IO读取的超时秒数，小于1视为不设置
     protected int aliveTimeoutSeconds;
-    
+
     //IO读取的超时秒数，小于1视为不设置
     protected int readTimeoutSeconds;
 
@@ -234,6 +234,12 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         }
         if (this.serverChannel.supportedOptions().contains(StandardSocketOptions.SO_REUSEADDR)) {
             this.serverChannel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
+        }
+        if (this.serverChannel.supportedOptions().contains(StandardSocketOptions.SO_RCVBUF)) {
+            this.serverChannel.setOption(StandardSocketOptions.SO_RCVBUF, 16 * 1024);
+        }
+        if (this.serverChannel.supportedOptions().contains(StandardSocketOptions.SO_SNDBUF)) {
+            this.serverChannel.setOption(StandardSocketOptions.SO_SNDBUF, 16 * 1024);
         }
         serverChannel.bind(address, backlog);
         serverChannel.setMaxconns(this.maxconns);
