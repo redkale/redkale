@@ -206,6 +206,11 @@ public abstract class ProtocolServer {
         public void open() throws IOException {
             group = AsynchronousChannelGroup.withCachedThreadPool(context.executor, 1);
             this.serverChannel = AsynchronousServerSocketChannel.open(group);
+            try {
+                if (supportTcpNoDelay()) this.serverChannel.setOption(StandardSocketOptions.TCP_NODELAY, true);
+                if (supportTcpKeepAlive()) this.serverChannel.setOption(StandardSocketOptions.SO_KEEPALIVE, true);
+            } catch (IOException e) {
+            }
         }
 
         @Override
@@ -240,11 +245,6 @@ public abstract class ProtocolServer {
                     }
                     createCounter.incrementAndGet();
                     livingCounter.incrementAndGet();
-                    try {
-                        if (supportTcpNoDelay()) channel.setOption(StandardSocketOptions.TCP_NODELAY, true);
-                        if (supportTcpKeepAlive()) channel.setOption(StandardSocketOptions.SO_KEEPALIVE, true);
-                    } catch (IOException e) {
-                    }
                     AsyncConnection conn = AsyncConnection.create(channel, null, context);
                     conn.livingCounter = livingCounter;
                     conn.closedCounter = closedCounter;

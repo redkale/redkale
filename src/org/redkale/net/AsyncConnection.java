@@ -188,14 +188,14 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
         final CompletableFuture<AsyncConnection> future = new CompletableFuture<>();
         try {
             final AsynchronousSocketChannel channel = AsynchronousSocketChannel.open(group);
+            try {
+                if (noDelay) channel.setOption(StandardSocketOptions.TCP_NODELAY, true);
+                if (supportTcpKeepAlive()) channel.setOption(StandardSocketOptions.SO_KEEPALIVE, true);
+            } catch (IOException e) {
+            }
             channel.connect(address, null, new CompletionHandler<Void, Void>() {
                 @Override
                 public void completed(Void result, Void attachment) {
-                    try {
-                        if (noDelay) channel.setOption(StandardSocketOptions.TCP_NODELAY, true);
-                        if (supportTcpKeepAlive()) channel.setOption(StandardSocketOptions.SO_KEEPALIVE, true);
-                    } catch (IOException e) {
-                    }
                     future.complete(create(channel, sslContext, address, readTimeoutSeconds, writeTimeoutSeconds));
                 }
 
