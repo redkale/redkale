@@ -23,6 +23,24 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public abstract class ProtocolServer {
 
+    protected static final boolean supportTcpNoDelay;
+
+    protected static final boolean supportTcpKeepAlive;
+
+    static {
+        boolean tcpNoDelay = false;
+        boolean keepAlive = false;
+        try {
+            AsynchronousSocketChannel channel = AsynchronousSocketChannel.open();
+            tcpNoDelay = channel.supportedOptions().contains(StandardSocketOptions.TCP_NODELAY);
+            keepAlive = channel.supportedOptions().contains(StandardSocketOptions.SO_KEEPALIVE);
+            channel.close();
+        } catch (Exception e) {
+        }
+        supportTcpNoDelay = tcpNoDelay;
+        supportTcpKeepAlive = keepAlive;
+    }
+
     //创建数
     protected final AtomicLong createCounter = new AtomicLong();
 
@@ -70,6 +88,14 @@ public abstract class ProtocolServer {
         if ("TCP".equalsIgnoreCase(protocol)) return new ProtocolTCPServer(context);
         if ("UDP".equalsIgnoreCase(protocol)) return new ProtocolUDPServer(context);
         throw new RuntimeException("ProtocolServer not support protocol " + protocol);
+    }
+
+    public static boolean supportTcpNoDelay() {
+        return supportTcpNoDelay;
+    }
+
+    public static boolean supportTcpKeepAlive() {
+        return supportTcpKeepAlive;
     }
 
     private static final class ProtocolUDPServer extends ProtocolServer {
@@ -214,6 +240,11 @@ public abstract class ProtocolServer {
                     }
                     createCounter.incrementAndGet();
                     livingCounter.incrementAndGet();
+                    try {
+                        if (supportTcpNoDelay()) channel.setOption(StandardSocketOptions.TCP_NODELAY, true);
+                        if (supportTcpKeepAlive()) channel.setOption(StandardSocketOptions.SO_KEEPALIVE, true);
+                    } catch (IOException e) {
+                    }
                     AsyncConnection conn = AsyncConnection.create(channel, null, context);
                     conn.livingCounter = livingCounter;
                     conn.closedCounter = closedCounter;
