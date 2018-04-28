@@ -232,6 +232,9 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         if (this.serverChannel.supportedOptions().contains(StandardSocketOptions.SO_KEEPALIVE)) {
             this.serverChannel.setOption(StandardSocketOptions.SO_KEEPALIVE, true);
         }
+        if (this.serverChannel.supportedOptions().contains(StandardSocketOptions.SO_REUSEADDR)) {
+            this.serverChannel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
+        }
         serverChannel.bind(address, backlog);
         serverChannel.setMaxconns(this.maxconns);
         serverChannel.accept();
