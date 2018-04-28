@@ -779,7 +779,14 @@ public final class Rest {
             av0 = cw.visitAnnotation(webServletDesc, true);
             {
                 AnnotationVisitor av1 = av0.visitArray("value");
-                if (defmodulename.isEmpty()) {
+                boolean pound = false;
+                for (MappingEntry entry : entrys) {
+                    if (entry.existsPound) {
+                        pound = true;
+                        break;
+                    }
+                }
+                if (defmodulename.isEmpty() || (!pound && entrys.size() <= 6)) {
                     for (MappingEntry entry : entrys) {
                         String suburl = (catalog.isEmpty() ? "/" : ("/" + catalog + "/")) + (defmodulename.isEmpty() ? "" : (defmodulename + "/")) + entry.name;
                         urlpath += "," + suburl;
@@ -1821,6 +1828,22 @@ public final class Rest {
             this.actionid = mapping.actionid();
             this.cacheseconds = mapping.cacheseconds();
             this.comment = mapping.comment();
+            boolean pound = false;
+            Parameter[] params = method.getParameters();
+            for (Parameter param : params) {
+                RestParam rp = param.getAnnotation(RestParam.class);
+                if (rp != null && !rp.name().isEmpty() && rp.name().charAt(0) == '#') {
+                    pound = true;
+                    break;
+                }
+            }
+            if (!pound && params.length == 1) {
+                Class ptype = method.getParameterTypes()[0];
+                if (this.name.startsWith("find") || this.name.startsWith("delete")) {
+                    if (ptype.isPrimitive() || ptype == String.class) pound = true;
+                }
+            }
+            this.existsPound = pound;
         }
 
         public final int methodidx; // _paramtypes 的下标，从0开始
@@ -1840,6 +1863,8 @@ public final class Rest {
         public final int actionid;
 
         public final int cacheseconds;
+
+        public final boolean existsPound;  //是否包含#的参数
 
         @RestMapping()
         void mapping() { //用于获取Mapping 默认值
