@@ -169,19 +169,14 @@ public abstract class Response<C extends Context, R extends Request<C>> {
 
     protected boolean recycle() {
         if (!inited) return false;
-        boolean keepAlive = request.keepAlive;
         this.output = null;
         this.filter = null;
         this.servlet = null;
         request.recycle();
         if (channel != null) {
-            if (keepAlive) {
-                this.context.runAsync(new PrepareRunner(context, channel, null, keepAlive));
-            } else {
-                try {
-                    if (channel.isOpen()) channel.close();
-                } catch (Exception e) {
-                }
+            try {
+                if (channel.isOpen()) channel.close();
+            } catch (Exception e) {
             }
             channel = null;
         }
@@ -255,7 +250,14 @@ public abstract class Response<C extends Context, R extends Request<C>> {
             }
             this.recycleListener = null;
         }
-        this.context.responsePool.accept(this);
+        if (request.keepAlive) {
+            AsyncConnection conn = removeChannel();
+            this.recycle();
+            this.prepare();
+            new PrepareRunner(context, conn, null, this).run();
+        } else {
+            this.context.responsePool.accept(this);
+        }
     }
 
     public void finish(final byte[] bs) {

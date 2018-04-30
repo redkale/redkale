@@ -26,23 +26,24 @@ public final class PrepareRunner implements Runnable {
 
     private final Context context;
 
-    private final boolean keepAlive;
-
     private ByteBuffer data;
 
-    public PrepareRunner(Context context, AsyncConnection channel, ByteBuffer data, boolean keepAlive) {
+    private Response response;
+
+    public PrepareRunner(Context context, AsyncConnection channel, ByteBuffer data, Response response) {
         this.context = context;
         this.channel = channel;
         this.data = data;
-        this.keepAlive = keepAlive;
+        this.response = response;
     }
 
     @Override
     public void run() {
+        final boolean keepalive = response != null;
         final PrepareServlet prepare = context.prepare;
         final ObjectPool<? extends Response> responsePool = context.responsePool;
-        final Response response = responsePool.get();
         if (data != null) { //BIO模式的UDP连接创建AsyncConnection时已经获取到ByteBuffer数据了
+            if (response == null) response = responsePool.get();
             try {
                 response.init(channel);
                 prepare.prepare(data, response.request, response);
@@ -52,9 +53,10 @@ public final class PrepareRunner implements Runnable {
             }
             return;
         }
+        if (response == null) response = responsePool.get();
         final ByteBuffer buffer = response.request.pollReadBuffer();
         try {
-            channel.read(buffer, keepAlive ? context.getAliveTimeoutSeconds() : 0, TimeUnit.SECONDS, null,
+            channel.read(buffer, keepalive ? context.getAliveTimeoutSeconds() : 0, TimeUnit.SECONDS, null,
                 new CompletionHandler<Integer, Void>() {
                 @Override
                 public void completed(Integer count, Void attachment1) {
