@@ -170,21 +170,13 @@ public abstract class Response<C extends Context, R extends Request<C>> {
     protected boolean recycle() {
         if (!inited) return false;
         boolean keepAlive = request.keepAlive;
-        if (recycleListener != null) {
-            try {
-                recycleListener.accept(request, this);
-            } catch (Exception e) {
-                context.logger.log(Level.WARNING, "Response.recycleListener error, request = " + request, e);
-            }
-            recycleListener = null;
-        }
         this.output = null;
         this.filter = null;
         this.servlet = null;
         request.recycle();
         if (channel != null) {
             if (keepAlive) {
-                this.context.runAsync(new PrepareRunner(context, channel, null, null));
+                this.context.runAsync(new PrepareRunner(context, channel, null, keepAlive));
             } else {
                 try {
                     if (channel.isOpen()) channel.close();
@@ -255,6 +247,14 @@ public abstract class Response<C extends Context, R extends Request<C>> {
         if (!this.inited) return; //避免重复关闭
         //System.println("耗时: " + (System.currentTimeMillis() - request.createtime));
         if (kill) refuseAlive();
+        if (this.recycleListener != null) {
+            try {
+                this.recycleListener.accept(request, this);
+            } catch (Exception e) {
+                context.logger.log(Level.WARNING, "Response.recycleListener error, request = " + request, e);
+            }
+            this.recycleListener = null;
+        }
         this.context.responsePool.accept(this);
     }
 

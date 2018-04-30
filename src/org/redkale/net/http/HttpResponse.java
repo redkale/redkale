@@ -179,7 +179,6 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
 
     @Override
     protected boolean recycle() {
-        boolean rs = super.recycle();
         this.status = 200;
         this.contentLength = -1;
         this.contentType = null;
@@ -187,7 +186,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         this.headsended = false;
         this.header.clear();
         this.bufferHandler = null;
-        return rs;
+        return super.recycle();
     }
 
     @Override
