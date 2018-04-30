@@ -48,6 +48,8 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
 
     protected static final byte[] connectCloseBytes = "Connection: close\r\n".getBytes();
 
+    protected static final byte[] connectAliveBytes = "Connection: keep-alive\r\n".getBytes();
+
     private static final Set<OpenOption> options = new HashSet<>();
 
     private static final Map<Integer, String> httpCodes = new HashMap<>();
@@ -874,7 +876,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         }
         buffer.put(serverNameBytes);
         if (autoDate) buffer.put(("Date: " + RFC_1123_DATE_TIME.format(java.time.ZonedDateTime.now(ZONE_GMT)) + "\r\n").getBytes());
-        if (!this.request.isKeepAlive()) buffer.put(connectCloseBytes);
+        buffer.put(this.request.isKeepAlive() ? connectAliveBytes : connectCloseBytes);
 
         if (this.defaultAddHeaders != null) {
             for (String[] headers : this.defaultAddHeaders) {
