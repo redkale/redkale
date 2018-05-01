@@ -34,11 +34,11 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
 
     protected volatile long writetime;
 
-    //关闭数
-    protected AtomicLong closedCounter;
-
     //在线数
     protected AtomicLong livingCounter;
+
+    //关闭数
+    protected AtomicLong closedCounter;
 
     public final long getLastReadTime() {
         return readtime;
@@ -223,12 +223,15 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
         private final boolean client;
 
         public BIOUDPAsyncConnection(final DatagramChannel ch, SocketAddress addr,
-            final boolean client0, final int readTimeoutSeconds0, final int writeTimeoutSeconds0) {
+            final boolean client0, final int readTimeoutSeconds0, final int writeTimeoutSeconds0,
+            final AtomicLong livingCounter, final AtomicLong closedCounter) {
             this.channel = ch;
             this.client = client0;
             this.readTimeoutSeconds = readTimeoutSeconds0;
             this.writeTimeoutSeconds = writeTimeoutSeconds0;
             this.remoteAddress = addr;
+            this.livingCounter = livingCounter;
+            this.closedCounter = this.closedCounter;
         }
 
         @Override
@@ -348,7 +351,13 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
 
     public static AsyncConnection create(final DatagramChannel ch, SocketAddress addr,
         final boolean client0, final int readTimeoutSeconds0, final int writeTimeoutSeconds0) {
-        return new BIOUDPAsyncConnection(ch, addr, client0, readTimeoutSeconds0, writeTimeoutSeconds0);
+        return new BIOUDPAsyncConnection(ch, addr, client0, readTimeoutSeconds0, writeTimeoutSeconds0, null, null);
+    }
+
+    public static AsyncConnection create(final DatagramChannel ch, SocketAddress addr,
+        final boolean client0, final int readTimeoutSeconds0, final int writeTimeoutSeconds0,
+        final AtomicLong livingCounter, final AtomicLong closedCounter) {
+        return new BIOUDPAsyncConnection(ch, addr, client0, readTimeoutSeconds0, writeTimeoutSeconds0, livingCounter, closedCounter);
     }
 
     private static class BIOTCPAsyncConnection extends AsyncConnection {
@@ -365,7 +374,8 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
 
         private final SocketAddress remoteAddress;
 
-        public BIOTCPAsyncConnection(final Socket socket, final SocketAddress addr0, final int readTimeoutSeconds0, final int writeTimeoutSeconds0) {
+        public BIOTCPAsyncConnection(final Socket socket, final SocketAddress addr0, final int readTimeoutSeconds0, final int writeTimeoutSeconds0,
+            final AtomicLong livingCounter, final AtomicLong closedCounter) {
             this.socket = socket;
             ReadableByteChannel rc = null;
             WritableByteChannel wc = null;
@@ -389,6 +399,8 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
                 }
             }
             this.remoteAddress = addr;
+            this.livingCounter = livingCounter;
+            this.closedCounter = closedCounter;
         }
 
         @Override
@@ -513,7 +525,12 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
     }
 
     public static AsyncConnection create(final Socket socket, final SocketAddress addr0, final int readTimeoutSecond0, final int writeTimeoutSecond0) {
-        return new BIOTCPAsyncConnection(socket, addr0, readTimeoutSecond0, writeTimeoutSecond0);
+        return new BIOTCPAsyncConnection(socket, addr0, readTimeoutSecond0, writeTimeoutSecond0, null, null);
+    }
+
+    public static AsyncConnection create(final Socket socket, final SocketAddress addr0, final int readTimeoutSecond0,
+        final int writeTimeoutSecond0, final AtomicLong livingCounter, final AtomicLong closedCounter) {
+        return new BIOTCPAsyncConnection(socket, addr0, readTimeoutSecond0, writeTimeoutSecond0, livingCounter, closedCounter);
     }
 
     private static class AIOTCPAsyncConnection extends AsyncConnection {
@@ -527,7 +544,8 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
         private final SocketAddress remoteAddress;
 
         public AIOTCPAsyncConnection(final AsynchronousSocketChannel ch, SSLContext sslContext,
-            final SocketAddress addr0, final int readTimeoutSeconds, final int writeTimeoutSeconds) {
+            final SocketAddress addr0, final int readTimeoutSeconds, final int writeTimeoutSeconds,
+            final AtomicLong livingCounter, final AtomicLong closedCounter) {
             this.channel = ch;
             this.sslContext = sslContext;
             this.readTimeoutSeconds = readTimeoutSeconds;
@@ -541,6 +559,8 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
                 }
             }
             this.remoteAddress = addr;
+            this.livingCounter = livingCounter;
+            this.closedCounter = closedCounter;
         }
 
         @Override
@@ -655,14 +675,29 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
     }
 
     public static AsyncConnection create(final AsynchronousSocketChannel ch, final SocketAddress addr0, final int readTimeoutSeconds, final int writeTimeoutSeconds) {
-        return new AIOTCPAsyncConnection(ch, null, addr0, readTimeoutSeconds, writeTimeoutSeconds);
+        return new AIOTCPAsyncConnection(ch, null, addr0, readTimeoutSeconds, writeTimeoutSeconds, null, null);
     }
 
     public static AsyncConnection create(final AsynchronousSocketChannel ch, SSLContext sslContext, final SocketAddress addr0, final int readTimeoutSeconds, final int writeTimeoutSeconds) {
-        return new AIOTCPAsyncConnection(ch, sslContext, addr0, readTimeoutSeconds, writeTimeoutSeconds);
+        return new AIOTCPAsyncConnection(ch, sslContext, addr0, readTimeoutSeconds, writeTimeoutSeconds, null, null);
     }
 
     public static AsyncConnection create(final AsynchronousSocketChannel ch, final SocketAddress addr0, final Context context) {
-        return new AIOTCPAsyncConnection(ch, context.sslContext, addr0, context.readTimeoutSeconds, context.writeTimeoutSeconds);
+        return new AIOTCPAsyncConnection(ch, context.sslContext, addr0, context.readTimeoutSeconds, context.writeTimeoutSeconds, null, null);
+    }
+
+    public static AsyncConnection create(final AsynchronousSocketChannel ch, final SocketAddress addr0, final int readTimeoutSeconds,
+        final int writeTimeoutSeconds, final AtomicLong livingCounter, final AtomicLong closedCounter) {
+        return new AIOTCPAsyncConnection(ch, null, addr0, readTimeoutSeconds, writeTimeoutSeconds, livingCounter, closedCounter);
+    }
+
+    public static AsyncConnection create(final AsynchronousSocketChannel ch, SSLContext sslContext, final SocketAddress addr0, final int readTimeoutSeconds,
+        final int writeTimeoutSeconds, final AtomicLong livingCounter, final AtomicLong closedCounter) {
+        return new AIOTCPAsyncConnection(ch, sslContext, addr0, readTimeoutSeconds, writeTimeoutSeconds, livingCounter, closedCounter);
+    }
+
+    public static AsyncConnection create(final AsynchronousSocketChannel ch, final SocketAddress addr0,
+        final Context context, final AtomicLong livingCounter, final AtomicLong closedCounter) {
+        return new AIOTCPAsyncConnection(ch, context.sslContext, addr0, context.readTimeoutSeconds, context.writeTimeoutSeconds, livingCounter, closedCounter);
     }
 }
