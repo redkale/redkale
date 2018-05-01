@@ -251,6 +251,16 @@ public class PoolJdbcSource extends PoolSource<Connection> {
     }
 
     @Override
+    public void closeConnection(final Connection conn) {
+        if (conn == null) return;
+        try {
+            conn.close();
+        } catch (Exception e) {
+            logger.log(Level.WARNING, "closeSQLConnection abort", e);
+        }
+    }
+
+    @Override
     public Connection poll() {
         return poll(0, null);
     }

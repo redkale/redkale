@@ -95,12 +95,6 @@ public abstract class DataSqlSource<Conn> extends AbstractService implements Dat
 
     protected abstract PoolSource<Conn> createWritePoolSource(DataSource source, String stype, Properties prop);
 
-    @Local
-    protected abstract void closeReadConnection(final Conn conn);
-
-    @Local
-    protected abstract void closeWriteConnection(final Conn conn);
-
     @Override
     protected ExecutorService getExecutor() {
         return executor;

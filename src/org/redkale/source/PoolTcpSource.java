@@ -8,10 +8,10 @@ package org.redkale.source;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.Properties;
 import java.util.concurrent.*;
-import java.util.logging.Logger;
+import java.util.logging.*;
 import org.redkale.net.AsyncConnection;
 import org.redkale.util.ObjectPool;
 
@@ -30,6 +30,8 @@ public abstract class PoolTcpSource extends PoolSource<AsyncConnection> {
     //TCP Channel组
     protected AsynchronousChannelGroup group;
 
+    protected final ArrayBlockingQueue<AsyncConnection> connQueue;
+
     public PoolTcpSource(String rwtype, Properties prop, Logger logger, ObjectPool<ByteBuffer> bufferPool, ThreadPoolExecutor executor) {
         super(rwtype, prop, logger);
         this.bufferPool = bufferPool;
@@ -38,6 +40,19 @@ public abstract class PoolTcpSource extends PoolSource<AsyncConnection> {
             this.group = AsynchronousChannelGroup.withThreadPool(executor);
         } catch (IOException e) {
             throw new RuntimeException(e);
+        }
+        this.connQueue = new ArrayBlockingQueue<>(this.maxconns);
+    }
+
+    @Override
+    public void closeConnection(final AsyncConnection conn) {
+        if (conn == null) return;
+        if (connQueue.offer(conn)) {
+            saveCounter.incrementAndGet();
+            usingCounter.decrementAndGet();
+        } else {
+            //usingCounter 会在close方法中执行
+            conn.dispose();
         }
     }
 
@@ -52,7 +67,40 @@ public abstract class PoolTcpSource extends PoolSource<AsyncConnection> {
 
     @Override
     public CompletableFuture<AsyncConnection> pollAsync() {
+        return pollAsync(0);
+    }
+
+    protected CompletableFuture<AsyncConnection> pollAsync(final int count) {
+        if (count >= 3) {
+            logger.log(Level.WARNING, "create datasource connection error");
+            CompletableFuture<AsyncConnection> future = new CompletableFuture<>();
+            future.completeExceptionally(new SQLException("create datasource connection error"));
+            return future;
+        }
+        AsyncConnection conn0 = connQueue.poll();
+        if (conn0 != null) {
+            cycleCounter.incrementAndGet();
+            usingCounter.incrementAndGet();
+            return CompletableFuture.completedFuture(conn0);
+        }
+        if (usingCounter.get() >= maxconns && count < 2) {
+            return CompletableFuture.supplyAsync(() -> {
+                try {
+                    return connQueue.poll(3, TimeUnit.SECONDS);
+                } catch (Exception t) {
+                    return null;
+                }
+            }, executor).thenCompose((conn2) -> {
+                if (conn2 != null) {
+                    cycleCounter.incrementAndGet();
+                    return CompletableFuture.completedFuture(conn2);
+                }
+                return pollAsync(count + 1);
+            });
+        }
+
         return AsyncConnection.createTCP(group, this.servaddr, this.readTimeoutSeconds, this.writeTimeoutSeconds).thenCompose(conn -> {
+            conn.beforeCloseListener((c) -> usingCounter.decrementAndGet());
             CompletableFuture<AsyncConnection> future = new CompletableFuture();
             final ByteBuffer buffer = reqConnectBuffer(conn);
             conn.write(buffer, null, new CompletionHandler<Integer, Void>() {
@@ -95,6 +143,21 @@ public abstract class PoolTcpSource extends PoolSource<AsyncConnection> {
                 }
             });
             return future;
+        }).whenComplete((c, t) -> {
+            if (t == null) {
+                creatCounter.incrementAndGet();
+                usingCounter.incrementAndGet();
+            }
+        });
+    }
+
+    @Override
+    public void close() {
+        connQueue.stream().forEach(x -> {
+            try {
+                x.close();
+            } catch (Exception e) {
+            }
         });
     }
 }

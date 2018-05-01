@@ -70,7 +70,7 @@ public abstract class PoolSource<T> {
         this.connectTimeoutSeconds = Integer.decode(prop.getProperty(JDBC_CONNECTTIMEOUT_SECONDS, "3"));
         this.readTimeoutSeconds = Integer.decode(prop.getProperty(JDBC_READTIMEOUT_SECONDS, "3"));
         this.writeTimeoutSeconds = Integer.decode(prop.getProperty(JDBC_WRITETIMEOUT_SECONDS, "3"));
-        this.maxconns = Integer.decode(prop.getProperty(JDBC_CONNECTIONSMAX, "" + Runtime.getRuntime().availableProcessors() * 16));
+        this.maxconns = Math.max(8, Integer.decode(prop.getProperty(JDBC_CONNECTIONSMAX, "" + Runtime.getRuntime().availableProcessors() * 16)));
         String dbtype0 = "";
         { //jdbc:mysql:// jdbc:microsoft:sqlserver:// 取://之前的到最后一个:之间的字符串
             int pos = this.url.indexOf("://");
@@ -140,6 +140,8 @@ public abstract class PoolSource<T> {
     public abstract CompletableFuture<T> pollAsync();
 
     public abstract void close();
+
+    public abstract void closeConnection(final T conn);
 
     public final String getDbtype() {
         return dbtype;

@@ -12,6 +12,7 @@ import java.nio.channels.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Consumer;
 import javax.net.ssl.SSLContext;
 import static org.redkale.net.ProtocolServer.*;
 
@@ -39,6 +40,8 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
 
     //关闭数
     protected AtomicLong closedCounter;
+
+    protected Consumer<AsyncConnection> beforeCloseListener;
 
     public final long getLastReadTime() {
         return readtime;
@@ -89,6 +92,11 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
         }
     }
 
+    public AsyncConnection beforeCloseListener(Consumer<AsyncConnection> beforeCloseListener) {
+        this.beforeCloseListener = beforeCloseListener;
+        return this;
+    }
+
     @Override
     public void close() throws IOException {
         if (closedCounter != null) {
@@ -99,6 +107,7 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
             livingCounter.decrementAndGet();
             livingCounter = null;
         }
+        if (beforeCloseListener != null) beforeCloseListener.accept(this);
         if (attributes == null) return;
         try {
             for (Object obj : attributes.values()) {
