@@ -251,11 +251,6 @@ public class PoolJdbcSource extends PoolSource<Connection> {
     }
 
     @Override
-    public boolean isAysnc() {
-        return false;
-    }
-
-    @Override
     public Connection poll() {
         return poll(0, null);
     }

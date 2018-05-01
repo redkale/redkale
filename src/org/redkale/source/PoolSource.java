@@ -96,8 +96,7 @@ public abstract class PoolSource<T> {
         } else if ("sqlserver".equals(this.dbtype)) {
             this.props.setProperty(JDBC_CONTAIN_SQLTEMPLATE, "CHARINDEX(${column}, ${keystr}) > 0");
             this.props.setProperty(JDBC_NOTCONTAIN_SQLTEMPLATE, "CHARINDEX(${column}, ${keystr}) = 0");
-        } else 
-        if ("postgresql".equals(this.dbtype)) {
+        } else if ("postgresql".equals(this.dbtype)) {
             if (!this.props.containsKey(JDBC_TABLECOPY_SQLTEMPLATE)) {
                 this.props.setProperty(JDBC_TABLECOPY_SQLTEMPLATE, "CREATE TABLE ${newtable} AS (SELECT * FROM ${oldtable} LIMIT 0)");
             }
@@ -133,13 +132,6 @@ public abstract class PoolSource<T> {
     }
 
     protected abstract int getDefaultPort();
-
-    /**
-     * 是否异步， 为true则只能调用pollAsync方法，为false则只能调用poll方法
-     *
-     * @return 是否异步
-     */
-    public abstract boolean isAysnc();
 
     public abstract void change(Properties property);
 

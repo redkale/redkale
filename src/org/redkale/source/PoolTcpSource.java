@@ -42,11 +42,6 @@ public abstract class PoolTcpSource extends PoolSource<AsyncConnection> {
     }
 
     @Override
-    public final boolean isAysnc() {
-        return true;
-    }
-
-    @Override
     public final AsyncConnection poll() {
         return pollAsync().join();
     }
