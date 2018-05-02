@@ -39,7 +39,7 @@ public class DataJdbcSource extends AbstractService implements DataSource, DataC
 
     protected String name;
 
-    protected URL conf;
+    protected URL persistxml;
 
     protected int threads;
 
@@ -60,10 +60,10 @@ public class DataJdbcSource extends AbstractService implements DataSource, DataC
 
     protected final BiFunction<DataSource, Class, List> fullloader = (s, t) -> querySheet(false, false, t, null, null, (FilterNode) null).list(true);
 
-    public DataJdbcSource(String unitName, Properties readprop, Properties writeprop) {
+    public DataJdbcSource(String unitName, URL persistxml, Properties readprop, Properties writeprop) {
+        this.persistxml = persistxml;
         this.preConstruct(unitName, readprop, writeprop);
         this.initByProperties(unitName, readprop, writeprop);
-
     }
 
     public DataJdbcSource() {
@@ -130,10 +130,9 @@ public class DataJdbcSource extends AbstractService implements DataSource, DataC
 
     protected void initByProperties(String unitName, Properties readprop, Properties writeprop) {
         this.name = unitName;
-        this.conf = null;
         this.cacheForbidden = "NONE".equalsIgnoreCase(readprop.getProperty(JDBC_CACHE_MODE));
-        this.readPool = new PoolJdbcSource(this, "read", readprop);
-        this.writePool = new PoolJdbcSource(this, "write", writeprop);
+        this.readPool = new PoolJdbcSource(unitName, persistxml, "read", readprop, logger);
+        this.writePool = new PoolJdbcSource(unitName, persistxml, "write", writeprop, logger);
     }
 
     @Local

@@ -7,9 +7,10 @@ package org.redkale.source;
 
 import java.io.Serializable;
 import java.net.URL;
+import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.*;
 import java.util.function.*;
 import java.util.logging.*;
 import javax.annotation.Resource;
@@ -38,11 +39,13 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
 
     protected String name;
 
-    protected URL confxml;
+    protected URL persistxml;
 
     protected int threads;
 
-    protected ExecutorService executor;
+    protected ObjectPool<ByteBuffer> bufferPool;
+
+    protected ThreadPoolExecutor executor;
 
     protected boolean cacheForbidden;
 
@@ -60,7 +63,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
     protected final BiFunction<DataSource, Class, List> fullloader = (s, t) -> querySheet(false, false, t, null, null, (FilterNode) null).list(true);
 
     @SuppressWarnings({"OverridableMethodCallInConstructor", "LeakingThisInConstructor"})
-    public DataSqlSource(String unitName, URL confxml, Properties readprop, Properties writeprop) {
+    public DataSqlSource(String unitName, URL persistxml, Properties readprop, Properties writeprop) {
         final AtomicInteger counter = new AtomicInteger();
         this.threads = Integer.decode(readprop.getProperty(JDBC_CONNECTIONSMAX, "" + Runtime.getRuntime().availableProcessors() * 16));
         if (readprop != writeprop) {
@@ -70,7 +73,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
         final Thread.UncaughtExceptionHandler ueh = (t, e) -> {
             logger.log(Level.SEVERE, cname + " error", e);
         };
-        this.executor = Executors.newFixedThreadPool(threads, (Runnable r) -> {
+        this.executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(threads, (Runnable r) -> {
             Thread t = new Thread(r);
             t.setDaemon(true);
             String s = "" + counter.incrementAndGet();
@@ -83,19 +86,28 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
             t.setUncaughtExceptionHandler(ueh);
             return t;
         });
+        final int bufferCapacity = Integer.decode(readprop.getProperty(JDBC_CONNECTIONSCAPACITY, "" + 16 * 1024));
+        this.bufferPool = new ObjectPool<>(new AtomicLong(), new AtomicLong(), this.threads,
+            (Object... params) -> ByteBuffer.allocateDirect(bufferCapacity), null, (e) -> {
+                if (e == null || e.isReadOnly() || e.capacity() != bufferCapacity) return false;
+                e.clear();
+                return true;
+            });
         this.name = unitName;
-        this.confxml = confxml;
+        this.persistxml = persistxml;
         this.cacheForbidden = "NONE".equalsIgnoreCase(readprop.getProperty(JDBC_CACHE_MODE));
-        this.readPool = createReadPoolSource(this, "read", readprop);
-        this.writePool = createWritePoolSource(this, "write", writeprop);
+        this.readPool = createPoolSource(this, "read", readprop);
+        this.writePool = createPoolSource(this, "write", writeprop);
     }
 
     //是否异步， 为true则只能调用pollAsync方法，为false则只能调用poll方法
     protected abstract boolean isAysnc();
 
-    protected abstract PoolSource<DBChannel> createReadPoolSource(DataSource source, String stype, Properties prop);
+    //index从1开始
+    protected abstract String getPrepareParamSign(int index);
 
-    protected abstract PoolSource<DBChannel> createWritePoolSource(DataSource source, String stype, Properties prop);
+    //创建连接池
+    protected abstract PoolSource<DBChannel> createPoolSource(DataSource source, String rwtype, Properties prop);
 
     @Override
     protected ExecutorService getExecutor() {
@@ -279,12 +291,83 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
             if (cacheListener != null) cacheListener.deleteCache(info.getType(), keys);
             return CompletableFuture.completedFuture(c);
         }
+        //待实现
         if (isAysnc()) { //异步模式
 
         } else {
 
         }
         return CompletableFuture.completedFuture(-1);
+    }
+
+    //----------------------------- find -----------------------------
+    /**
+     * 根据主键获取对象
+     *
+     * @param <T>   Entity类的泛型
+     * @param clazz Entity类
+     * @param pk    主键值
+     *
+     * @return Entity对象
+     */
+    @Override
+    public <T> T find(Class<T> clazz, Serializable pk) {
+        return find(clazz, (SelectColumn) null, pk);
+    }
+
+    @Override
+    public <T> CompletableFuture<T> findAsync(final Class<T> clazz, final Serializable pk) {
+        return findAsync(clazz, (SelectColumn) null, pk);
+    }
+
+    @Override
+    public <T> T find(Class<T> clazz, final SelectColumn selects, Serializable pk) {
+        final EntityInfo<T> info = loadEntityInfo(clazz);
+        final EntityCache<T> cache = info.getCache();
+        if (cache != null) {
+            T rs = cache.find(selects, pk);
+            if (cache.isFullLoaded() || rs != null) return rs;
+        }
+        if (info.isVirtualEntity()) {
+            return find(null, info, selects, pk).join();
+        } else {
+            if (isAysnc()) {
+                return readPool.pollAsync().thenCompose(conn -> find(conn, info, selects, pk)).join();
+            } else {
+                return find(readPool.poll(), info, selects, pk).join();
+            }
+        }
+    }
+
+    @Override
+    public <T> CompletableFuture<T> findAsync(final Class<T> clazz, final SelectColumn selects, final Serializable pk) {
+        final EntityInfo<T> info = loadEntityInfo(clazz);
+        final EntityCache<T> cache = info.getCache();
+        if (cache != null) {
+            T rs = cache.find(selects, pk);
+            if (cache.isFullLoaded() || rs != null) return CompletableFuture.completedFuture(rs);
+        }
+        if (info.isVirtualEntity()) {
+            if (isAysnc()) {
+                return find(null, info, selects, pk);
+            } else {
+                return CompletableFuture.supplyAsync(() -> find(null, info, selects, pk).join(), getExecutor());
+            }
+        } else {
+            if (isAysnc()) {
+                return readPool.pollAsync().thenCompose(conn -> find(conn, info, selects, pk));
+            } else {
+                return CompletableFuture.supplyAsync(() -> find(readPool.poll(), info, selects, pk).join(), getExecutor());
+            }
+        }
+    }
+
+    protected <T> CompletableFuture<T> find(final DBChannel conn, final EntityInfo<T> info, final SelectColumn selects, Serializable pk) {
+        final SelectColumn sels = selects;
+        final String sql = "SELECT " + info.getQueryColumns(null, sels) + " FROM " + info.getTable(pk) + " WHERE " + info.getPrimarySQLColumn() + " = " + FilterNode.formatToString(pk);
+        if (info.isLoggable(logger, Level.FINEST)) logger.finest(info.getType().getSimpleName() + " find sql=" + sql);
+        //待实现
+        return null;
     }
 
     protected <T> Sheet<T> querySheet(final boolean readcache, final boolean needtotal, final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterNode node) {

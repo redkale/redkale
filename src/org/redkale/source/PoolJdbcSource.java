@@ -8,12 +8,13 @@ package org.redkale.source;
 import java.io.*;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Method;
+import java.net.URL;
 import java.nio.file.*;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
 import java.sql.*;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.logging.Level;
+import java.util.logging.*;
 import javax.sql.*;
 import static org.redkale.source.DataSources.*;
 
@@ -34,11 +35,14 @@ public class PoolJdbcSource extends PoolSource<Connection> {
 
     private final ConnectionEventListener listener;
 
-    private final DataJdbcSource dataSource;
+    private final String unitName;
 
-    public PoolJdbcSource(DataJdbcSource source, String stype, Properties prop) {
-        super(stype, prop, source.logger);
-        this.dataSource = source;
+    private final URL persistxml;
+
+    public PoolJdbcSource(String unitName, URL persistxml, String rwtype, Properties prop, Logger logger) {
+        super(rwtype, prop, logger);
+        this.unitName = unitName;
+        this.persistxml = persistxml;
         this.source = createDataSource(prop);
         this.queue = new ArrayBlockingQueue<>(this.maxconns);
         this.listener = new ConnectionEventListener() {
@@ -68,7 +72,7 @@ public class PoolJdbcSource extends PoolSource<Connection> {
         try {
             this.watch();
         } catch (Exception e) {
-            logger.log(Level.WARNING, DataSource.class.getSimpleName() + " watch " + dataSource.conf + " error", e);
+            logger.log(Level.WARNING, DataSource.class.getSimpleName() + " watch " + persistxml + " error", e);
         }
     }
 
@@ -165,8 +169,8 @@ public class PoolJdbcSource extends PoolSource<Connection> {
     }
 
     private void watch() throws IOException {
-        if (dataSource.conf == null || dataSource.name == null) return;
-        final String file = dataSource.conf.getFile();
+        if (persistxml == null || unitName == null) return;
+        final String file = persistxml.getFile();
         final File f = new File(file);
         if (!f.isFile() || !f.canRead()) return;
         synchronized (maps) {
@@ -198,8 +202,8 @@ public class PoolJdbcSource extends PoolSource<Connection> {
                                     PoolJdbcSource pool = ref.get();
                                     if (pool == null) continue;
                                     try {
-                                        Properties property = m.get(pool.dataSource.name);
-                                        if (property == null) property = m.get(pool.dataSource.name + "." + pool.rwtype);
+                                        Properties property = m.get(unitName);
+                                        if (property == null) property = m.get(unitName + "." + pool.rwtype);
                                         if (property != null) pool.change(property);
                                     } catch (Exception ex) {
                                         logger.log(Level.INFO, event.context() + " occur error", ex);
@@ -244,7 +248,7 @@ public class PoolJdbcSource extends PoolSource<Connection> {
             this.url = newurl;
             this.username = newuser;
             this.password = newpassword;
-            logger.log(Level.INFO, DataSource.class.getSimpleName() + "(" + dataSource.name + "." + rwtype + ") change  (" + property + ")");
+            logger.log(Level.INFO, DataSource.class.getSimpleName() + "(" + unitName + "." + rwtype + ") change  (" + property + ")");
         } catch (Exception e) {
             logger.log(Level.SEVERE, DataSource.class.getSimpleName() + " dynamic change JDBC (url userName password) error", e);
         }

@@ -25,6 +25,8 @@ public final class DataSources {
 
     public static final String JDBC_CONNECTIONSMAX = "javax.persistence.connections.limit";
 
+    public static final String JDBC_CONNECTIONSCAPACITY = "javax.persistence.connections.bufcapacity";
+
     public static final String JDBC_CONTAIN_SQLTEMPLATE = "javax.persistence.contain.sqltemplate";
 
     public static final String JDBC_NOTCONTAIN_SQLTEMPLATE = "javax.persistence.notcontain.sqltemplate";
@@ -53,11 +55,11 @@ public final class DataSources {
     }
 
     public static DataSource createDataSource(final String unitName, Properties prop) throws IOException {
-        return new DataJdbcSource(unitName, prop, prop);
+        return new DataJdbcSource(unitName, null, prop, prop);
     }
 
     public static DataSource createDataSource(final String unitName, Properties readprop, Properties writeprop) throws IOException {
-        return new DataJdbcSource(unitName, readprop, writeprop);
+        return new DataJdbcSource(unitName, null, readprop, writeprop);
     }
 
     public static DataSource createDataSource(final String unitName) throws IOException {
@@ -66,9 +68,9 @@ public final class DataSources {
             : new File(System.getProperty(DATASOURCE_CONFPATH)).toURI().toURL());
     }
 
-    public static DataSource createDataSource(final String unitName, URL url) throws IOException {
-        if (url == null) url = DataSources.class.getResource("/persistence.xml");
-        InputStream in = url.openStream();
+    public static DataSource createDataSource(final String unitName, URL persistxml) throws IOException {
+        if (persistxml == null) persistxml = DataSources.class.getResource("/persistence.xml");
+        InputStream in = persistxml.openStream();
         if (in == null) return null;
         Map<String, Properties> map = loadPersistenceXml(in);
         Properties readprop = null;
@@ -100,7 +102,7 @@ public final class DataSources {
         if (readprop == null) throw new IOException("Cannot find (resource.name = '" + unitName + "') DataSource");
         if (writeprop == null) writeprop = readprop;
         String impl = readprop.getProperty(JDBC_DATASOURCE_CLASS, DataJdbcSource.class.getName());
-        if (DataJdbcSource.class.getName().equals(impl)) return new DataJdbcSource(unitName, readprop, writeprop);
+        if (DataJdbcSource.class.getName().equals(impl)) return new DataJdbcSource(unitName, persistxml, readprop, writeprop);
         try {
             Class ds = Thread.currentThread().getContextClassLoader().loadClass(impl);
             for (Constructor d : ds.getConstructors()) {
@@ -111,6 +113,8 @@ public final class DataSources {
                     return (DataSource) d.newInstance(unitName, readprop);
                 } else if (paramtypes.length == 3 && paramtypes[0] == String.class && paramtypes[1] == Properties.class && paramtypes[2] == Properties.class) {
                     return (DataSource) d.newInstance(unitName, readprop, writeprop);
+                } else if (paramtypes.length == 4 && paramtypes[0] == String.class && paramtypes[1] == URL.class && paramtypes[2] == Properties.class && paramtypes[3] == Properties.class) {
+                    return (DataSource) d.newInstance(unitName, persistxml, readprop, writeprop);
                 }
             }
             throw new IOException("DataSource impl class (" + impl + ") have no Constructor by (Properties prop) or  (String name, Properties prop) or  (String name, Properties readprop, Propertieswriteprop)");
