@@ -230,7 +230,9 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
                     continue;
                 }
                 if (clazz != val.getClass()) {
-                    throw new RuntimeException("DataSource.insert must the same Class Entity, but diff is " + clazz + " and " + val.getClass());
+                    CompletableFuture<Void> future = new CompletableFuture<>();
+                    future.completeExceptionally(new SQLException("DataSource.insert must the same Class Entity, but diff is " + clazz + " and " + val.getClass()));
+                    return future;
                 }
             }
         }
@@ -305,13 +307,13 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
         if (values.length == 0) return CompletableFuture.completedFuture(-1);
         if (values.length > 1) { //检查对象是否都是同一个Entity类
             Class clazz = null;
-            CompletableFuture<Integer> future = new CompletableFuture<>();
             for (T val : values) {
                 if (clazz == null) {
                     clazz = val.getClass();
                     continue;
                 }
                 if (clazz != val.getClass()) {
+                    CompletableFuture<Integer> future = new CompletableFuture<>();
                     future.completeExceptionally(new SQLException("DataSource.delete must the same Class Entity, but diff is " + clazz + " and " + val.getClass()));
                     return future;
                 }
@@ -450,7 +452,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
         return c;
     }
     //----------------------------- update -----------------------------
-    
+
     //----------------------------- find -----------------------------
     /**
      * 根据主键获取对象
