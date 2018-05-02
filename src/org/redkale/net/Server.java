@@ -226,19 +226,20 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         this.prepare.init(this.context, config);
         this.serverChannel = ProtocolServer.create(this.protocol, context);
         this.serverChannel.open(config);
-        if (this.serverChannel.supportedOptions().contains(StandardSocketOptions.TCP_NODELAY)) {
+        final Set<SocketOption<?>> options = this.serverChannel.supportedOptions();
+        if (options.contains(StandardSocketOptions.TCP_NODELAY)) {
             this.serverChannel.setOption(StandardSocketOptions.TCP_NODELAY, true);
         }
-        if (this.serverChannel.supportedOptions().contains(StandardSocketOptions.SO_KEEPALIVE)) {
+        if (options.contains(StandardSocketOptions.SO_KEEPALIVE)) {
             this.serverChannel.setOption(StandardSocketOptions.SO_KEEPALIVE, true);
         }
-        if (this.serverChannel.supportedOptions().contains(StandardSocketOptions.SO_REUSEADDR)) {
+        if (options.contains(StandardSocketOptions.SO_REUSEADDR)) {
             this.serverChannel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
         }
-        if (this.serverChannel.supportedOptions().contains(StandardSocketOptions.SO_RCVBUF)) {
+        if (options.contains(StandardSocketOptions.SO_RCVBUF)) {
             this.serverChannel.setOption(StandardSocketOptions.SO_RCVBUF, 16 * 1024);
         }
-        if (this.serverChannel.supportedOptions().contains(StandardSocketOptions.SO_SNDBUF)) {
+        if (options.contains(StandardSocketOptions.SO_SNDBUF)) {
             this.serverChannel.setOption(StandardSocketOptions.SO_SNDBUF, 16 * 1024);
         }
         serverChannel.bind(address, backlog);
