@@ -139,9 +139,9 @@ public abstract class PoolSource<T> {
 
     public abstract CompletableFuture<T> pollAsync();
 
-    public abstract void close();
-
     public abstract void closeConnection(final T conn);
+
+    public abstract void close();
 
     public final String getDbtype() {
         return dbtype;

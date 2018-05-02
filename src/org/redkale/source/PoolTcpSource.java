@@ -13,6 +13,7 @@ import java.util.Properties;
 import java.util.concurrent.*;
 import java.util.logging.*;
 import org.redkale.net.AsyncConnection;
+import static org.redkale.source.DataSources.*;
 import org.redkale.util.ObjectPool;
 
 /**
@@ -54,6 +55,18 @@ public abstract class PoolTcpSource extends PoolSource<AsyncConnection> {
             //usingCounter 会在close方法中执行
             conn.dispose();
         }
+    }
+
+    @Override
+    public void change(Properties prop) {
+        String newurl = prop.getProperty(JDBC_URL);
+        String newuser = prop.getProperty(JDBC_USER, "");
+        String newpassword = prop.getProperty(JDBC_PWD, "");
+        if (this.url.equals(newurl) && this.username.equals(newuser) && this.password.equals(newpassword)) return;
+        this.url = newurl;
+        this.username = newuser;
+        this.password = newpassword;
+        parseAddressAndDbnameAndAttrs();
     }
 
     @Override

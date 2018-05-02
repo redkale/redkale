@@ -52,7 +52,7 @@ public class PoolJdbcSource extends PoolSource<Connection> {
                     try {
                         pc.close();
                     } catch (Exception e) {
-                        dataSource.logger.log(Level.INFO, DataSource.class.getSimpleName() + " " + pc + " close error", e);
+                        logger.log(Level.INFO, DataSource.class.getSimpleName() + " " + pc + " close error", e);
                     }
                 }
             }
@@ -61,14 +61,14 @@ public class PoolJdbcSource extends PoolSource<Connection> {
             public void connectionErrorOccurred(ConnectionEvent event) {
                 usingCounter.decrementAndGet();
                 if ("08S01".equals(event.getSQLException().getSQLState())) return; //MySQL特性， 长时间连接没使用会抛出com.mysql.jdbc.exceptions.jdbc4.CommunicationsException
-                dataSource.logger.log(Level.WARNING, "connectionErronOccurred  [" + event.getSQLException().getSQLState() + "]", event.getSQLException());
+                logger.log(Level.WARNING, "connectionErronOccurred  [" + event.getSQLException().getSQLState() + "]", event.getSQLException());
             }
         };
 
         try {
             this.watch();
         } catch (Exception e) {
-            dataSource.logger.log(Level.WARNING, DataSource.class.getSimpleName() + " watch " + dataSource.conf + " error", e);
+            logger.log(Level.WARNING, DataSource.class.getSimpleName() + " watch " + dataSource.conf + " error", e);
         }
     }
 
@@ -202,14 +202,14 @@ public class PoolJdbcSource extends PoolSource<Connection> {
                                         if (property == null) property = m.get(pool.dataSource.name + "." + pool.rwtype);
                                         if (property != null) pool.change(property);
                                     } catch (Exception ex) {
-                                        dataSource.logger.log(Level.INFO, event.context() + " occur error", ex);
+                                        logger.log(Level.INFO, event.context() + " occur error", ex);
                                     }
                                 }
                             });
                             key.reset();
                         }
                     } catch (Exception e) {
-                        dataSource.logger.log(Level.WARNING, "DataSource watch " + file + " occur error", e);
+                        logger.log(Level.WARNING, "DataSource watch " + file + " occur error", e);
                     }
                 }
             };
@@ -217,7 +217,7 @@ public class PoolJdbcSource extends PoolSource<Connection> {
             watchThread.setName("DataSource-Watch-" + maps.size() + "-Thread");
             watchThread.setDaemon(true);
             watchThread.start();
-            dataSource.logger.log(Level.INFO, watchThread.getName() + " start watching " + file);
+            logger.log(Level.INFO, watchThread.getName() + " start watching " + file);
             //-----------------------------------------------------------            
             list.add(new WeakReference<>(this));
             maps.put(file, new AbstractMap.SimpleEntry<>(watcher, list));
@@ -244,9 +244,9 @@ public class PoolJdbcSource extends PoolSource<Connection> {
             this.url = newurl;
             this.username = newuser;
             this.password = newpassword;
-            dataSource.logger.log(Level.INFO, DataSource.class.getSimpleName() + "(" + dataSource.name + "." + rwtype + ") change  (" + property + ")");
+            logger.log(Level.INFO, DataSource.class.getSimpleName() + "(" + dataSource.name + "." + rwtype + ") change  (" + property + ")");
         } catch (Exception e) {
-            dataSource.logger.log(Level.SEVERE, DataSource.class.getSimpleName() + " dynamic change JDBC (url userName password) error", e);
+            logger.log(Level.SEVERE, DataSource.class.getSimpleName() + " dynamic change JDBC (url userName password) error", e);
         }
     }
 
@@ -272,7 +272,7 @@ public class PoolJdbcSource extends PoolSource<Connection> {
 
     private Connection poll(final int count, SQLException e) {
         if (count >= 3) {
-            dataSource.logger.log(Level.WARNING, "create pooled connection error", e);
+            logger.log(Level.WARNING, "create pooled connection error", e);
             throw new RuntimeException(e);
         }
         PooledConnection result = queue.poll();
@@ -281,7 +281,7 @@ public class PoolJdbcSource extends PoolSource<Connection> {
                 try {
                     result = queue.poll(6, TimeUnit.SECONDS);
                 } catch (Exception t) {
-                    dataSource.logger.log(Level.WARNING, "take pooled connection error", t);
+                    logger.log(Level.WARNING, "take pooled connection error", t);
                 }
             }
             if (result == null) {
@@ -301,13 +301,13 @@ public class PoolJdbcSource extends PoolSource<Connection> {
         try {
             conn = result.getConnection();
             if (!conn.isValid(1)) {
-                dataSource.logger.info("sql connection is not vaild");
+                logger.info("sql connection is not vaild");
                 usingCounter.decrementAndGet();
                 return poll(0, null);
             }
         } catch (SQLException ex) {
             if (!"08S01".equals(ex.getSQLState())) {//MySQL特性， 长时间连接没使用会抛出com.mysql.jdbc.exceptions.jdbc4.CommunicationsException
-                dataSource.logger.log(Level.FINER, "result.getConnection from pooled connection abort [" + ex.getSQLState() + "]", ex);
+                logger.log(Level.FINER, "result.getConnection from pooled connection abort [" + ex.getSQLState() + "]", ex);
             }
             return poll(0, null);
         }
