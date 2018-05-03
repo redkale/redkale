@@ -6,6 +6,7 @@
 package org.redkale.source;
 
 import java.util.function.*;
+import org.redkale.util.Utility;
 
 /**
  *
@@ -193,6 +194,16 @@ public interface Range<E extends Comparable> extends java.io.Serializable, Predi
         public LongRange(Long min, Long max) {
             if (min != null) this.min = min;
             if (max != null) this.max = max;
+        }
+
+        public static LongRange todayRange() {
+            long min = Utility.midnight();
+            return new LongRange(min, min + 24 * 60 * 60 * 1000 - 1);
+        }
+
+        public static LongRange yesterdayRange() {
+            long min = Utility.midnight(System.currentTimeMillis() - 24 * 60 * 60 * 1000);
+            return new LongRange(min, min + 24 * 60 * 60 * 1000 - 1);
         }
 
         @Override
