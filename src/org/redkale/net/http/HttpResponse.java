@@ -134,7 +134,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
 
     private final boolean autoOptions;
 
-    private final Supplier<String> dateSupplier;
+    private final Supplier<byte[]> dateSupplier;
 
     private final HttpCookie defcookie;
 
@@ -151,7 +151,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
     public HttpResponse(HttpContext context, HttpRequest request,
         String plainContentType, String jsonContentType,
         String[][] defaultAddHeaders, String[][] defaultSetHeaders,
-        HttpCookie defcookie, boolean autoOptions, Supplier<String> dateSupplier, List< HttpRender> renders) {
+        HttpCookie defcookie, boolean autoOptions, Supplier<byte[]> dateSupplier, List< HttpRender> renders) {
         super(context, request);
         this.plainContentType = plainContentType == null || plainContentType.isEmpty() ? "text/plain; charset=utf-8" : plainContentType;
         this.jsonContentType = jsonContentType == null || jsonContentType.isEmpty() ? "application/json; charset=utf-8" : jsonContentType;
@@ -874,7 +874,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
             buffer.put(("Content-Type: " + (this.contentType == null ? this.plainContentType : this.contentType) + "\r\n").getBytes());
         }
         buffer.put(serverNameBytes);
-        if (dateSupplier != null) buffer.put(("Date: " + dateSupplier.get() + "\r\n").getBytes());
+        if (dateSupplier != null) buffer.put(dateSupplier.get());
         buffer.put(this.request.isKeepAlive() ? connectAliveBytes : connectCloseBytes);
 
         if (this.defaultAddHeaders != null) {

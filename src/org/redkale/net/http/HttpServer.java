@@ -33,7 +33,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
 
     private ScheduledThreadPoolExecutor dateScheduler;
 
-    private String currDateString;
+    private byte[] currDateBytes;
 
     public HttpServer() {
         this(System.currentTimeMillis(), ResourceFactory.root());
@@ -396,10 +396,10 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
         final String[][] addHeaders = defaultAddHeaders.isEmpty() ? null : defaultAddHeaders.toArray(new String[defaultAddHeaders.size()][]);
         final String[][] setHeaders = defaultSetHeaders.isEmpty() ? null : defaultSetHeaders.toArray(new String[defaultSetHeaders.size()][]);
         final boolean options = autoOptions;
-        Supplier<String> dateSupplier0 = null;
+        Supplier<byte[]> dateSupplier0 = null;
         if (datePeriod == 0) {
             final ZoneId gmtZone = ZoneId.of("GMT");
-            dateSupplier0 = () -> RFC_1123_DATE_TIME.format(java.time.ZonedDateTime.now(gmtZone));
+            dateSupplier0 = () -> ("Date: " + RFC_1123_DATE_TIME.format(java.time.ZonedDateTime.now(gmtZone)) + "\r\n").getBytes();
         } else if (datePeriod > 0) {
             if (this.dateScheduler == null) {
                 this.dateScheduler = new ScheduledThreadPoolExecutor(1, (Runnable r) -> {
@@ -409,17 +409,17 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
                 });
                 final DateFormat gmtDateFormat = new SimpleDateFormat("EEE, dd-MMM-yyyy HH:mm:ss z", Locale.ENGLISH);
                 gmtDateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
-                currDateString = gmtDateFormat.format(new Date());
+                currDateBytes = ("Date: " + gmtDateFormat.format(new Date()) + "\r\n").getBytes();
                 this.dateScheduler.scheduleAtFixedRate(() -> {
-                    currDateString = gmtDateFormat.format(new Date());
+                    currDateBytes = ("Date: " + gmtDateFormat.format(new Date()) + "\r\n").getBytes();
                 }, 1000 - System.currentTimeMillis() % 1000, datePeriod, TimeUnit.MILLISECONDS);
-                dateSupplier0 = () -> currDateString;
+                dateSupplier0 = () -> currDateBytes;
             }
         }
 
         final HttpCookie defCookie = defaultCookie;
         final String addrHeader = remoteAddrHeader;
-        final Supplier<String> dateSupplier = dateSupplier0;
+        final Supplier<byte[]> dateSupplier = dateSupplier0;
         AtomicLong createResponseCounter = new AtomicLong();
         AtomicLong cycleResponseCounter = new AtomicLong();
         ObjectPool<Response> responsePool = HttpResponse.createPool(createResponseCounter, cycleResponseCounter, this.responsePoolSize, null);
@@ -430,5 +430,4 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
             plainType, jsonType, addHeaders, setHeaders, defCookie, options, dateSupplier, ((HttpPrepareServlet) prepare).renders));
         return httpcontext;
     }
-
 }
