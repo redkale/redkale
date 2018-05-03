@@ -407,7 +407,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
                     t.setDaemon(true);
                     return t;
                 });
-                final DateFormat gmtDateFormat = new SimpleDateFormat("EEE, dd-MMM-yyyy HH:mm:ss z", Locale.ENGLISH);
+                final DateFormat gmtDateFormat = new SimpleDateFormat("EEE, d MMM y HH:mm:ss z", Locale.ENGLISH);
                 gmtDateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
                 currDateBytes = ("Date: " + gmtDateFormat.format(new Date()) + "\r\n").getBytes();
                 this.dateScheduler.scheduleAtFixedRate(() -> {
