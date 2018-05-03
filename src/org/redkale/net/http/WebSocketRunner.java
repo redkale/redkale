@@ -227,7 +227,7 @@ class WebSocketRunner implements Runnable {
             }
         }
         ByteBuffer[] buffers = packet.sendBuffers != null ? packet.duplicateSendBuffers() : packet.encode(this.context.getBufferSupplier(), this.context.getBufferConsumer(), webSocket._engine.cryptor);
-        if (debug) context.getLogger().log(Level.FINEST, "sending websocket message:  " + packet);
+        //if (debug) context.getLogger().log(Level.FINEST, "wsrunner.sending websocket message:  " + packet);
         try {
             this.lastSendTime = System.currentTimeMillis();
             channel.write(buffers, buffers, new CompletionHandler<Integer, ByteBuffer[]>() {
@@ -278,7 +278,7 @@ class WebSocketRunner implements Runnable {
                             future = entry.future;
                             ByteBuffer[] buffers = entry.packet.sendBuffers != null ? entry.packet.duplicateSendBuffers() : entry.packet.encode(context.getBufferSupplier(), context.getBufferConsumer(), webSocket._engine.cryptor);
                             lastSendTime = System.currentTimeMillis();
-                            if (debug) context.getLogger().log(Level.FINEST, "sending websocket message:  " + entry.packet);
+                            //if (debug) context.getLogger().log(Level.FINEST, "wsrunner.sending websocket message:  " + entry.packet);
                             channel.write(buffers, buffers, this);
                         }
                     } catch (Exception e) {
