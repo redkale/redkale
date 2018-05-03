@@ -8,8 +8,13 @@ package org.redkale.net.http;
 import java.lang.reflect.Field;
 import java.net.HttpCookie;
 import java.nio.ByteBuffer;
+import java.text.*;
+import java.time.ZoneId;
+import static java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME;
 import java.util.*;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Supplier;
 import java.util.logging.Level;
 import org.redkale.net.*;
 import org.redkale.net.sncp.Sncp;
@@ -26,6 +31,10 @@ import org.redkale.util.*;
  */
 public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpResponse, HttpServlet> {
 
+    private ScheduledThreadPoolExecutor dateScheduler;
+
+    private String currDateString;
+
     public HttpServer() {
         this(System.currentTimeMillis(), ResourceFactory.root());
     }
@@ -41,6 +50,15 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
     @Override
     public void init(AnyValue config) throws Exception {
         super.init(config);
+    }
+
+    @Override
+    public void destroy(final AnyValue config) throws Exception {
+        super.destroy(config);
+        if (this.dateScheduler != null) {
+            this.dateScheduler.shutdownNow();
+            this.dateScheduler = null;
+        }
     }
 
     public List<HttpServlet> getHttpServlets() {
@@ -295,7 +313,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
         final List<String[]> defaultAddHeaders = new ArrayList<>();
         final List<String[]> defaultSetHeaders = new ArrayList<>();
         boolean autoOptions = false;
-        boolean autoDate = true;
+        int datePeriod = 0;
         String plainContentType = null;
         String jsonContentType = null;
         HttpCookie defaultCookie = null;
@@ -369,7 +387,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
                 autoOptions = options != null && options.getBoolValue("auto", false);
 
                 AnyValue dates = resps == null ? null : resps.getAnyValue("date");
-                autoDate = dates == null || dates.getBoolValue("auto", true);
+                datePeriod = dates == null ? 0 : dates.getIntValue("period", 0);
             }
 
         }
@@ -378,10 +396,30 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
         final String[][] addHeaders = defaultAddHeaders.isEmpty() ? null : defaultAddHeaders.toArray(new String[defaultAddHeaders.size()][]);
         final String[][] setHeaders = defaultSetHeaders.isEmpty() ? null : defaultSetHeaders.toArray(new String[defaultSetHeaders.size()][]);
         final boolean options = autoOptions;
-        final boolean adate = autoDate;
+        Supplier<String> dateSupplier0 = null;
+        if (datePeriod == 0) {
+            final ZoneId gmtZone = ZoneId.of("GMT");
+            dateSupplier0 = () -> RFC_1123_DATE_TIME.format(java.time.ZonedDateTime.now(gmtZone));
+        } else if (datePeriod > 0) {
+            if (this.dateScheduler == null) {
+                this.dateScheduler = new ScheduledThreadPoolExecutor(1, (Runnable r) -> {
+                    final Thread t = new Thread(r, "HTTP:" + port + "-DateSchedule-Thread");
+                    t.setDaemon(true);
+                    return t;
+                });
+                final DateFormat gmtDateFormat = new SimpleDateFormat("EEE, dd-MMM-yyyy HH:mm:ss z", Locale.ENGLISH);
+                gmtDateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
+                currDateString = gmtDateFormat.format(new Date());
+                this.dateScheduler.scheduleAtFixedRate(() -> {
+                    currDateString = gmtDateFormat.format(new Date());
+                }, 1000 - System.currentTimeMillis() % 1000, datePeriod, TimeUnit.MILLISECONDS);
+                dateSupplier0 = () -> currDateString;
+            }
+        }
 
         final HttpCookie defCookie = defaultCookie;
         final String addrHeader = remoteAddrHeader;
+        final Supplier<String> dateSupplier = dateSupplier0;
         AtomicLong createResponseCounter = new AtomicLong();
         AtomicLong cycleResponseCounter = new AtomicLong();
         ObjectPool<Response> responsePool = HttpResponse.createPool(createResponseCounter, cycleResponseCounter, this.responsePoolSize, null);
@@ -389,7 +427,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
             rcapacity, bufferPool, responsePool, this.maxbody, this.charset, this.address, this.resourceFactory,
             this.prepare, this.aliveTimeoutSeconds, this.readTimeoutSeconds, this.writeTimeoutSeconds);
         responsePool.setCreator((Object... params) -> new HttpResponse(httpcontext, new HttpRequest(httpcontext, addrHeader),
-            plainType, jsonType, addHeaders, setHeaders, defCookie, options, adate, ((HttpPrepareServlet) prepare).renders));
+            plainType, jsonType, addHeaders, setHeaders, defCookie, options, dateSupplier, ((HttpPrepareServlet) prepare).renders));
         return httpcontext;
     }
 
