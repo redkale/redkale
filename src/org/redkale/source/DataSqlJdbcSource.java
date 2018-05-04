@@ -34,7 +34,7 @@ public class DataSqlJdbcSource extends DataSqlSource<Connection> {
     }
 
     @Override
-    protected final String getPrepareParamSign(int index) {
+    protected final String prepareParamSign(int index) {
         return "?";
     }
 

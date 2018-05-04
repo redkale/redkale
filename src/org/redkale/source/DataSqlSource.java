@@ -107,7 +107,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
     protected abstract boolean isAsync();
 
     //index从1开始
-    protected abstract String getPrepareParamSign(int index);
+    protected abstract String prepareParamSign(int index);
 
     //创建连接池
     protected abstract PoolSource<DBChannel> createPoolSource(DataSource source, String rwtype, Properties prop);
@@ -604,7 +604,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
 
     protected <T> CompletableFuture<Integer> updateColumnCompose(final EntityInfo<T> info, Serializable id, String column, final Serializable value) {
         if (value instanceof byte[]) {
-            String sql = "UPDATE " + info.getTable(id) + " SET " + info.getSQLColumn(null, column) + " = " + getPrepareParamSign(1) + " WHERE " + info.getPrimarySQLColumn() + " = " + FilterNode.formatToString(id);
+            String sql = "UPDATE " + info.getTable(id) + " SET " + info.getSQLColumn(null, column) + " = " + prepareParamSign(1) + " WHERE " + info.getPrimarySQLColumn() + " = " + FilterNode.formatToString(id);
             return updateDB(info, null, sql, true, value);
         } else {
             String sql = "UPDATE " + info.getTable(id) + " SET " + info.getSQLColumn(null, column) + " = "
@@ -673,7 +673,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
         }
         if (value instanceof byte[]) {
             String sql = "UPDATE " + info.getTable(node) + " a " + (join1 == null ? "" : (", " + join1))
-                + " SET " + info.getSQLColumn("a", column) + " = " + getPrepareParamSign(1)
+                + " SET " + info.getSQLColumn("a", column) + " = " + prepareParamSign(1)
                 + ((where == null || where.length() == 0) ? (join2 == null ? "" : (" WHERE " + join2))
                 : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))));
             return updateDB(info, null, sql, true, value);
@@ -745,7 +745,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
             if (col.getValue() instanceof byte[]) {
                 if (blobs == null) blobs = new ArrayList<>();
                 blobs.add((byte[]) col.getValue());
-                setsql.append(c).append(" = ").append(getPrepareParamSign(++index));
+                setsql.append(c).append(" = ").append(prepareParamSign(++index));
             } else {
                 setsql.append(c).append(" = ").append(info.formatSQLValue(c, col));
             }
@@ -824,7 +824,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
             if (col.getValue() instanceof byte[]) {
                 if (blobs == null) blobs = new ArrayList<>();
                 blobs.add((byte[]) col.getValue());
-                setsql.append(c).append(" = ").append(getPrepareParamSign(++index));
+                setsql.append(c).append(" = ").append(prepareParamSign(++index));
             } else {
                 setsql.append(c).append(" = ").append(info.formatSQLValue(c, col));
             }
@@ -957,7 +957,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
             if (val instanceof byte[]) {
                 if (blobs == null) blobs = new ArrayList<>();
                 blobs.add((byte[]) val);
-                setsql.append(" = ").append(getPrepareParamSign(++index));
+                setsql.append(" = ").append(prepareParamSign(++index));
             } else {
                 setsql.append(" = ").append(info.formatToString(val));
             }
