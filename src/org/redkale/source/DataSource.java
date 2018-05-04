@@ -33,7 +33,7 @@ public interface DataSource {
 
     //----------------------insertAsync-----------------------------
     /**
-     * 新增记录， 多对象必须是同一个Entity类  <br>
+     * 新增记录， 多对象必须是同一个Entity类且必须在同一张表中  <br>
      *
      * @param <T>    泛型
      * @param values Entity对象
@@ -41,7 +41,7 @@ public interface DataSource {
     public <T> void insert(final T... values);
 
     /**
-     * 新增记录， 多对象必须是同一个Entity类  <br>
+     * 新增记录， 多对象必须是同一个Entity类且必须在同一张表中  <br>
      *
      * @param <T>    泛型
      * @param values Entity对象
@@ -52,7 +52,7 @@ public interface DataSource {
 
     //-------------------------deleteAsync--------------------------
     /**
-     * 删除指定主键值的记录， 多对象必须是同一个Entity类  <br>
+     * 删除指定主键值的记录， 多对象必须是同一个Entity类且必须在同一张表中  <br>
      * 等价SQL: DELETE FROM {table} WHERE {primary} IN {values.id}  <br>
      *
      * @param <T>    泛型
@@ -63,7 +63,7 @@ public interface DataSource {
     public <T> int delete(final T... values);
 
     /**
-     * 删除指定主键值的记录， 多对象必须是同一个Entity类  <br>
+     * 删除指定主键值的记录， 多对象必须是同一个Entity类且必须在同一张表中  <br>
      * 等价SQL: DELETE FROM {table} WHERE {primary} IN {values.id}  <br>
      *
      * @param <T>    泛型
@@ -74,7 +74,7 @@ public interface DataSource {
     public <T> CompletableFuture<Integer> deleteAsync(final T... values);
 
     /**
-     * 删除指定主键值的记录  <br>
+     * 删除指定主键值的记录,多主键值必须在同一张表中  <br>
      * 等价SQL: DELETE FROM {table} WHERE {primary} IN {ids}  <br>
      *
      * @param <T>   Entity泛型
@@ -86,7 +86,7 @@ public interface DataSource {
     public <T> int delete(final Class<T> clazz, final Serializable... ids);
 
     /**
-     * 删除指定主键值的记录  <br>
+     * 删除指定主键值的记录,多主键值必须在同一张表中  <br>
      * 等价SQL: DELETE FROM {table} WHERE {primary} IN {ids}  <br>
      *
      * @param <T>   Entity泛型
@@ -151,7 +151,7 @@ public interface DataSource {
 
     //------------------------updateAsync---------------------------
     /**
-     * 更新记录， 多对象必须是同一个Entity类  <br>
+     * 更新记录， 多对象必须是同一个Entity类且必须在同一张表中  <br>
      * 等价SQL:  <br>
      * UPDATE {table} SET column1 = value1, column2 = value2, &#183;&#183;&#183; WHERE {primary} = {id1}  <br>
      * UPDATE {table} SET column1 = value1, column2 = value2, &#183;&#183;&#183; WHERE {primary} = {id2}  <br>
@@ -165,7 +165,7 @@ public interface DataSource {
     public <T> int update(final T... values);
 
     /**
-     * 更新记录， 多对象必须是同一个Entity类  <br>
+     * 更新记录， 多对象必须是同一个Entity类且必须在同一张表中  <br>
      * 等价SQL:  <br>
      * UPDATE {table} SET column1 = value1, column2 = value2, &#183;&#183;&#183; WHERE {primary} = {id1}  <br>
      * UPDATE {table} SET column1 = value1, column2 = value2, &#183;&#183;&#183; WHERE {primary} = {id2}  <br>

@@ -434,6 +434,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
             sql += FilterNode.formatToString(ids[i]);
         }
         sql += ")";
+        if (info.isLoggable(logger, Level.FINEST)) logger.finest(info.getType().getSimpleName() + " delete sql=" + sql);
         return deleteDB(info, null, sql);
     }
 
@@ -501,6 +502,33 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
     }
 
     //---------------------------- update ----------------------------
+    @Override
+    public <T> int updateCache(Class<T> clazz, T... values) {
+        if (values.length == 0) return 0;
+        final EntityInfo<T> info = loadEntityInfo(clazz);
+        final EntityCache<T> cache = info.getCache();
+        if (cache == null) return -1;
+        int c = 0;
+        for (T value : values) {
+            c += cache.update(value);
+        }
+        return c;
+    }
+
+    public <T> int reloadCache(Class<T> clazz, Serializable... ids) {
+        final EntityInfo<T> info = loadEntityInfo(clazz);
+        final EntityCache<T> cache = info.getCache();
+        if (cache == null) return -1;
+        String column = info.getPrimary().field();
+        int c = 0;
+        for (Serializable id : ids) {
+            Sheet<T> sheet = querySheet(false, true, clazz, null, FLIPPER_ONE, FilterNode.create(column, id)).join();
+            T value = sheet.isEmpty() ? null : sheet.list().get(0);
+            if (value != null) c += cache.update(value);
+        }
+        return c;
+    }
+
     //------------------------- getNumberMap -------------------------
     @Override
     public <N extends Number> Map<String, N> getNumberMap(final Class entityClass, final FilterFuncColumn... columns) {
