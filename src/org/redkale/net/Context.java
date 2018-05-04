@@ -79,6 +79,13 @@ public class Context {
     //依赖注入工厂类
     protected final ResourceFactory resourceFactory;
 
+    public Context(ContextConfig config) {
+        this(config.serverStartTime, config.logger, config.executor, config.sslContext,
+            config.bufferCapacity, config.bufferPool, config.responsePool, config.maxbody,
+            config.charset, config.address, config.resourceFactory, config.prepare,
+            config.aliveTimeoutSeconds, config.readTimeoutSeconds, config.writeTimeoutSeconds);
+    }
+
     public Context(long serverStartTime, Logger logger, ThreadPoolExecutor executor, SSLContext sslContext,
         int bufferCapacity, ObjectPool<ByteBuffer> bufferPool, ObjectPool<Response> responsePool,
         final int maxbody, Charset charset, InetSocketAddress address, ResourceFactory resourceFactory,
@@ -187,5 +194,58 @@ public class Context {
 
     public BsonConvert getBsonConvert() {
         return bsonFactory.getConvert();
+    }
+
+    public static class ContextConfig {
+
+        //服务启动时间
+        public long serverStartTime;
+
+        //Server的线程池
+        public ThreadPoolExecutor executor;
+
+        //SSL
+        public SSLContext sslContext;
+
+        //ByteBuffer的容量，默认8K
+        public int bufferCapacity;
+
+        //ByteBuffer对象池
+        public ObjectPool<ByteBuffer> bufferPool;
+
+        //Response对象池
+        public ObjectPool<Response> responsePool;
+
+        //服务的根Servlet
+        public PrepareServlet prepare;
+
+        //服务的监听地址
+        public InetSocketAddress address;
+
+        //字符集
+        public Charset charset;
+
+        //请求内容的大小上限, 默认64K
+        public int maxbody;
+
+        //keep alive IO读取的超时时间
+        public int aliveTimeoutSeconds;
+
+        //IO读取的超时时间
+        public int readTimeoutSeconds;
+
+        //IO写入的超时时间
+        public int writeTimeoutSeconds;
+
+        //日志Logger
+        public Logger logger;
+
+        //依赖注入工厂类
+        public ResourceFactory resourceFactory;
+
+        @Override
+        public String toString() {
+            return JsonConvert.root().convertTo(this);
+        }
     }
 }

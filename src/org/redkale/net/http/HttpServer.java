@@ -17,6 +17,8 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import org.redkale.net.*;
+import org.redkale.net.http.HttpContext.HttpContextConfig;
+import org.redkale.net.http.HttpResponse.HttpResponseConfig;
 import org.redkale.net.sncp.Sncp;
 import org.redkale.service.Service;
 import org.redkale.util.*;
@@ -391,15 +393,10 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
             }
 
         }
-        final String plainType = plainContentType;
-        final String jsonType = jsonContentType;
-        final String[][] addHeaders = defaultAddHeaders.isEmpty() ? null : defaultAddHeaders.toArray(new String[defaultAddHeaders.size()][]);
-        final String[][] setHeaders = defaultSetHeaders.isEmpty() ? null : defaultSetHeaders.toArray(new String[defaultSetHeaders.size()][]);
-        final boolean options = autoOptions;
-        Supplier<byte[]> dateSupplier0 = null;
+        Supplier<byte[]> dateSupplier = null;
         if (datePeriod == 0) {
             final ZoneId gmtZone = ZoneId.of("GMT");
-            dateSupplier0 = () -> ("Date: " + RFC_1123_DATE_TIME.format(java.time.ZonedDateTime.now(gmtZone)) + "\r\n").getBytes();
+            dateSupplier = () -> ("Date: " + RFC_1123_DATE_TIME.format(java.time.ZonedDateTime.now(gmtZone)) + "\r\n").getBytes();
         } else if (datePeriod > 0) {
             if (this.dateScheduler == null) {
                 this.dateScheduler = new ScheduledThreadPoolExecutor(1, (Runnable r) -> {
@@ -413,21 +410,45 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
                 this.dateScheduler.scheduleAtFixedRate(() -> {
                     currDateBytes = ("Date: " + gmtDateFormat.format(new Date()) + "\r\n").getBytes();
                 }, 1000 - System.currentTimeMillis() % 1000, datePeriod, TimeUnit.MILLISECONDS);
-                dateSupplier0 = () -> currDateBytes;
+                dateSupplier = () -> currDateBytes;
             }
         }
 
-        final HttpCookie defCookie = defaultCookie;
         final String addrHeader = remoteAddrHeader;
-        final Supplier<byte[]> dateSupplier = dateSupplier0;
+
+        final HttpResponseConfig respConfig = new HttpResponseConfig();
+        respConfig.plainContentType = plainContentType;
+        respConfig.jsonContentType = jsonContentType;
+        respConfig.defaultAddHeaders = defaultAddHeaders.isEmpty() ? null : defaultAddHeaders.toArray(new String[defaultAddHeaders.size()][]);
+        respConfig.defaultSetHeaders = defaultSetHeaders.isEmpty() ? null : defaultSetHeaders.toArray(new String[defaultSetHeaders.size()][]);
+        respConfig.defaultCookie = defaultCookie;
+        respConfig.autoOptions = autoOptions;
+        respConfig.dateSupplier = dateSupplier;
+        respConfig.renders = ((HttpPrepareServlet) prepare).renders;
+
         AtomicLong createResponseCounter = new AtomicLong();
         AtomicLong cycleResponseCounter = new AtomicLong();
         ObjectPool<Response> responsePool = HttpResponse.createPool(createResponseCounter, cycleResponseCounter, this.responsePoolSize, null);
-        HttpContext httpcontext = new HttpContext(this.serverStartTime, this.logger, executor, this.sslContext,
-            rcapacity, bufferPool, responsePool, this.maxbody, this.charset, this.address, this.resourceFactory,
-            this.prepare, this.aliveTimeoutSeconds, this.readTimeoutSeconds, this.writeTimeoutSeconds);
-        responsePool.setCreator((Object... params) -> new HttpResponse(httpcontext, new HttpRequest(httpcontext, addrHeader),
-            plainType, jsonType, addHeaders, setHeaders, defCookie, options, dateSupplier, ((HttpPrepareServlet) prepare).renders));
+
+        final HttpContextConfig contextConfig = new HttpContextConfig();
+        contextConfig.serverStartTime = this.serverStartTime;
+        contextConfig.logger = this.logger;
+        contextConfig.executor = this.executor;
+        contextConfig.sslContext = this.sslContext;
+        contextConfig.bufferCapacity = rcapacity;
+        contextConfig.bufferPool = bufferPool;
+        contextConfig.responsePool = responsePool;
+        contextConfig.maxbody = this.maxbody;
+        contextConfig.charset = this.charset;
+        contextConfig.address = this.address;
+        contextConfig.prepare = this.prepare;
+        contextConfig.resourceFactory = this.resourceFactory;
+        contextConfig.aliveTimeoutSeconds = this.aliveTimeoutSeconds;
+        contextConfig.readTimeoutSeconds = this.readTimeoutSeconds;
+        contextConfig.writeTimeoutSeconds = this.writeTimeoutSeconds;
+
+        HttpContext httpcontext = new HttpContext(contextConfig);
+        responsePool.setCreator((Object... params) -> new HttpResponse(httpcontext, new HttpRequest(httpcontext, addrHeader), respConfig));
         return httpcontext;
     }
 }

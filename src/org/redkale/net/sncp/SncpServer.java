@@ -10,6 +10,7 @@ import java.util.*;
 import java.util.concurrent.atomic.*;
 import org.redkale.convert.bson.*;
 import org.redkale.net.*;
+import org.redkale.net.sncp.SncpContext.SncpContextConfig;
 import org.redkale.service.Service;
 import org.redkale.util.*;
 
@@ -106,9 +107,25 @@ public class SncpServer extends Server<DLong, SncpContext, SncpRequest, SncpResp
         AtomicLong createResponseCounter = new AtomicLong();
         AtomicLong cycleResponseCounter = new AtomicLong();
         ObjectPool<Response> responsePool = SncpResponse.createPool(createResponseCounter, cycleResponseCounter, this.responsePoolSize, null);
-        SncpContext sncpcontext = new SncpContext(this.serverStartTime, this.logger, executor, this.sslContext,
-            rcapacity, bufferPool, responsePool, this.maxbody, this.charset, this.address, this.resourceFactory, 
-            this.prepare, this.aliveTimeoutSeconds, this.readTimeoutSeconds, this.writeTimeoutSeconds);
+
+        final SncpContextConfig contextConfig = new SncpContextConfig();
+        contextConfig.serverStartTime = this.serverStartTime;
+        contextConfig.logger = this.logger;
+        contextConfig.executor = this.executor;
+        contextConfig.sslContext = this.sslContext;
+        contextConfig.bufferCapacity = rcapacity;
+        contextConfig.bufferPool = bufferPool;
+        contextConfig.responsePool = responsePool;
+        contextConfig.maxbody = this.maxbody;
+        contextConfig.charset = this.charset;
+        contextConfig.address = this.address;
+        contextConfig.prepare = this.prepare;
+        contextConfig.resourceFactory = this.resourceFactory;
+        contextConfig.aliveTimeoutSeconds = this.aliveTimeoutSeconds;
+        contextConfig.readTimeoutSeconds = this.readTimeoutSeconds;
+        contextConfig.writeTimeoutSeconds = this.writeTimeoutSeconds;
+
+        SncpContext sncpcontext = new SncpContext(contextConfig);
         responsePool.setCreator((Object... params) -> new SncpResponse(sncpcontext, new SncpRequest(sncpcontext)));
         return sncpcontext;
     }

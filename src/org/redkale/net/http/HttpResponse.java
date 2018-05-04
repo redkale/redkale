@@ -136,7 +136,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
 
     private final Supplier<byte[]> dateSupplier;
 
-    private final HttpCookie defcookie;
+    private final HttpCookie defaultCookie;
 
     private final List<HttpRender> renders;
 
@@ -148,21 +148,18 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         return new ObjectPool<>(creatCounter, cycleCounter, max, creator, (x) -> ((HttpResponse) x).prepare(), (x) -> ((HttpResponse) x).recycle());
     }
 
-    public HttpResponse(HttpContext context, HttpRequest request,
-        String plainContentType, String jsonContentType,
-        String[][] defaultAddHeaders, String[][] defaultSetHeaders,
-        HttpCookie defcookie, boolean autoOptions, Supplier<byte[]> dateSupplier, List< HttpRender> renders) {
+    public HttpResponse(HttpContext context, HttpRequest request, HttpResponseConfig config) {
         super(context, request);
-        this.plainContentType = plainContentType == null || plainContentType.isEmpty() ? "text/plain; charset=utf-8" : plainContentType;
-        this.jsonContentType = jsonContentType == null || jsonContentType.isEmpty() ? "application/json; charset=utf-8" : jsonContentType;
+        this.plainContentType = config.plainContentType == null || config.plainContentType.isEmpty() ? "text/plain; charset=utf-8" : config.plainContentType;
+        this.jsonContentType = config.jsonContentType == null || config.jsonContentType.isEmpty() ? "application/json; charset=utf-8" : config.jsonContentType;
         this.plainContentTypeBytes = ("Content-Type: " + this.plainContentType + "\r\n").getBytes();
         this.jsonContentTypeBytes = ("Content-Type: " + this.jsonContentType + "\r\n").getBytes();
-        this.defaultAddHeaders = defaultAddHeaders;
-        this.defaultSetHeaders = defaultSetHeaders;
-        this.defcookie = defcookie;
-        this.autoOptions = autoOptions;
-        this.dateSupplier = dateSupplier;
-        this.renders = renders;
+        this.defaultAddHeaders = config.defaultAddHeaders;
+        this.defaultSetHeaders = config.defaultSetHeaders;
+        this.defaultCookie = config.defaultCookie;
+        this.autoOptions = config.autoOptions;
+        this.dateSupplier = config.dateSupplier;
+        this.renders = config.renders;
         this.hasRender = renders != null && !renders.isEmpty();
         this.onlyoneHttpRender = renders != null && renders.size() == 1 ? renders.get(0) : null;
         this.contentType = this.plainContentType;
@@ -907,13 +904,13 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
             buffer.put((en.name + ": " + en.getValue() + "\r\n").getBytes());
         }
         if (request.newsessionid != null) {
-            String domain = defcookie == null ? null : defcookie.getDomain();
+            String domain = defaultCookie == null ? null : defaultCookie.getDomain();
             if (domain == null) {
                 domain = "";
             } else {
                 domain = "Domain=" + domain + "; ";
             }
-            String path = defcookie == null ? null : defcookie.getPath();
+            String path = defaultCookie == null ? null : defaultCookie.getPath();
             if (path == null || path.isEmpty()) path = "/";
             if (request.newsessionid.isEmpty()) {
                 buffer.put(("Set-Cookie: " + HttpRequest.SESSIONID_NAME + "=; " + domain + "Path=" + path + "; Max-Age=0; HttpOnly\r\n").getBytes());
@@ -924,9 +921,9 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         if (this.cookies != null) {
             for (HttpCookie cookie : this.cookies) {
                 if (cookie == null) continue;
-                if (defcookie != null) {
-                    if (defcookie.getDomain() != null && cookie.getDomain() == null) cookie.setDomain(defcookie.getDomain());
-                    if (defcookie.getPath() != null && cookie.getPath() == null) cookie.setPath(defcookie.getPath());
+                if (defaultCookie != null) {
+                    if (defaultCookie.getDomain() != null && cookie.getDomain() == null) cookie.setDomain(defaultCookie.getDomain());
+                    if (defaultCookie.getPath() != null && cookie.getPath() == null) cookie.setPath(defaultCookie.getPath());
                 }
                 buffer.put(("Set-Cookie: " + genString(cookie) + "\r\n").getBytes());
             }
@@ -1172,5 +1169,29 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
             }
         }
 
+    }
+
+    public static class HttpResponseConfig {
+
+        public String plainContentType;
+
+        public String jsonContentType;
+
+        public String[][] defaultAddHeaders;
+
+        public String[][] defaultSetHeaders;
+
+        public HttpCookie defaultCookie;
+
+        public boolean autoOptions;
+
+        public Supplier<byte[]> dateSupplier;
+
+        public List< HttpRender> renders;
+
+        @Override
+        public String toString() {
+            return JsonConvert.root().convertTo(this);
+        }
     }
 }

@@ -6,14 +6,9 @@
 package org.redkale.net.http;
 
 import org.redkale.asm.MethodDebugVisitor;
-import java.net.*;
-import java.nio.*;
 import java.nio.channels.CompletionHandler;
-import java.nio.charset.*;
 import java.security.*;
 import java.util.concurrent.*;
-import java.util.logging.*;
-import javax.net.ssl.SSLContext;
 import org.redkale.asm.*;
 import static org.redkale.asm.Opcodes.*;
 import org.redkale.net.*;
@@ -33,13 +28,8 @@ public class HttpContext extends Context {
 
     protected final ConcurrentHashMap<Class, Creator> asyncHandlerCreators = new ConcurrentHashMap<>();
 
-    public HttpContext(long serverStartTime, Logger logger, ThreadPoolExecutor executor, SSLContext sslContext,
-        final int bufferCapacity, final ObjectPool<ByteBuffer> bufferPool, ObjectPool<Response> responsePool,
-        int maxbody, Charset charset, InetSocketAddress address, ResourceFactory resourceFactory,
-        PrepareServlet prepare, int aliveTimeoutSeconds, int readTimeoutSeconds, int writeTimeoutSeconds) {
-        super(serverStartTime, logger, executor, sslContext, bufferCapacity, bufferPool, responsePool,
-            maxbody, charset, address, resourceFactory, prepare, aliveTimeoutSeconds, readTimeoutSeconds, writeTimeoutSeconds);
-
+    public HttpContext(HttpContextConfig config) {
+        super(config);
         random.setSeed(Math.abs(System.nanoTime()));
     }
 
@@ -168,5 +158,9 @@ public class HttpContext extends Context {
             }
         }.loadClass(newDynName.replace('/', '.'), bytes);
         return (Creator<H>) Creator.create(newHandlerClazz);
+    }
+
+    public static class HttpContextConfig extends ContextConfig {
+
     }
 }
