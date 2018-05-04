@@ -117,6 +117,15 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
     //查询单条记录的单个字段
     protected abstract <T> CompletableFuture<Serializable> findColumnDB(final EntityInfo<T> info, final String sql, final boolean onlypk, final String column, final Serializable defValue);
 
+    //查询Number数据
+    protected abstract <T> CompletableFuture<Number> getNumberResultDB(final EntityInfo<T> info, final String sql, final Number defVal, final String column);
+
+    //查询Number Map数据
+    protected abstract <T, N extends Number> CompletableFuture<Map<String, N>> getNumberMapDB(final EntityInfo<T> info, final String sql, final FilterFuncColumn... columns);
+
+    //查询Map数据
+    protected abstract <T, K extends Serializable, N extends Number> CompletableFuture<Map<K, N>> queryColumnMapDB(final EntityInfo<T> info, final String sql, final String keyColumn);
+
     //判断记录是否存在
     protected abstract <T> CompletableFuture<Boolean> existsDB(final EntityInfo<T> info, final String sql, final boolean onlypk);
 
@@ -126,6 +135,10 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
     @Override
     protected ExecutorService getExecutor() {
         return executor;
+    }
+
+    @Override
+    public void init(AnyValue config) {
     }
 
     @Override
@@ -464,7 +477,228 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
         }
         return c;
     }
-    //----------------------------- update -----------------------------
+
+    //---------------------------- update ----------------------------
+    //------------------------- getNumberMap -------------------------
+    @Override
+    public <N extends Number> Map<String, N> getNumberMap(final Class entityClass, final FilterFuncColumn... columns) {
+        return getNumberMap(entityClass, (FilterNode) null, columns);
+    }
+
+    @Override
+    public <N extends Number> CompletableFuture<Map<String, N>> getNumberMapAsync(final Class entityClass, final FilterFuncColumn... columns) {
+        return getNumberMapAsync(entityClass, (FilterNode) null, columns);
+    }
+
+    @Override
+    public <N extends Number> Map<String, N> getNumberMap(final Class entityClass, final FilterBean bean, final FilterFuncColumn... columns) {
+        return getNumberMap(entityClass, FilterNodeBean.createFilterNode(bean), columns);
+    }
+
+    @Override
+    public <N extends Number> CompletableFuture<Map<String, N>> getNumberMapAsync(final Class entityClass, final FilterBean bean, final FilterFuncColumn... columns) {
+        return getNumberMapAsync(entityClass, FilterNodeBean.createFilterNode(bean), columns);
+    }
+
+    @Override
+    public <N extends Number> Map<String, N> getNumberMap(final Class entityClass, final FilterNode node, final FilterFuncColumn... columns) {
+        final EntityInfo info = loadEntityInfo(entityClass);
+        final EntityCache cache = info.getCache();
+        if (cache != null && (info.isVirtualEntity() || cache.isFullLoaded())) {
+            final Map map = new HashMap<>();
+            if (node == null || node.isCacheUseable(this)) {
+                for (FilterFuncColumn ffc : columns) {
+                    for (String col : ffc.cols()) {
+                        map.put(ffc.col(col), cache.getNumberResult(ffc.func, ffc.defvalue, col, node));
+                    }
+                }
+                return map;
+            }
+        }
+        return (Map) getNumberMap(info, node, columns).join();
+    }
+
+    @Override
+    public <N extends Number> CompletableFuture<Map<String, N>> getNumberMapAsync(final Class entityClass, final FilterNode node, final FilterFuncColumn... columns) {
+        final EntityInfo info = loadEntityInfo(entityClass);
+        final EntityCache cache = info.getCache();
+        if (cache != null && (info.isVirtualEntity() || cache.isFullLoaded())) {
+            final Map map = new HashMap<>();
+            if (node == null || node.isCacheUseable(this)) {
+                for (FilterFuncColumn ffc : columns) {
+                    for (String col : ffc.cols()) {
+                        map.put(ffc.col(col), cache.getNumberResult(ffc.func, ffc.defvalue, col, node));
+                    }
+                }
+                return CompletableFuture.completedFuture(map);
+            }
+        }
+        if (isAysnc()) return getNumberMap(info, node, columns);
+        return CompletableFuture.supplyAsync(() -> (Map) getNumberMap(info, node, columns).join(), getExecutor());
+    }
+
+    protected <N extends Number> CompletableFuture<Map<String, N>> getNumberMap(final EntityInfo info, final FilterNode node, final FilterFuncColumn... columns) {
+        final Map<Class, String> joinTabalis = node == null ? null : node.getJoinTabalis();
+        final Set<String> haset = new HashSet<>();
+        final CharSequence join = node == null ? null : node.createSQLJoin(this, false, joinTabalis, haset, info);
+        final CharSequence where = node == null ? null : node.createSQLExpress(info, joinTabalis);
+        StringBuilder sb = new StringBuilder();
+        for (FilterFuncColumn ffc : columns) {
+            for (String col : ffc.cols()) {
+                if (sb.length() > 0) sb.append(", ");
+                sb.append(ffc.func.getColumn((col == null || col.isEmpty() ? "*" : info.getSQLColumn("a", col))));
+            }
+        }
+        final String sql = "SELECT " + sb + " FROM " + info.getTable(node) + " a"
+            + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
+        if (info.isLoggable(logger, Level.FINEST)) logger.finest(info.getType().getSimpleName() + " getnumbermap sql=" + sql);
+        return getNumberMapDB(info, sql, columns);
+    }
+
+    //------------------------ getNumberResult -----------------------
+    @Override
+    public Number getNumberResult(final Class entityClass, final FilterFunc func, final String column) {
+        return getNumberResult(entityClass, func, null, column, (FilterNode) null);
+    }
+
+    @Override
+    public CompletableFuture<Number> getNumberResultAsync(final Class entityClass, final FilterFunc func, final String column) {
+        return getNumberResultAsync(entityClass, func, null, column, (FilterNode) null);
+    }
+
+    @Override
+    public Number getNumberResult(final Class entityClass, final FilterFunc func, final String column, FilterBean bean) {
+        return getNumberResult(entityClass, func, null, column, FilterNodeBean.createFilterNode(bean));
+    }
+
+    @Override
+    public CompletableFuture<Number> getNumberResultAsync(final Class entityClass, final FilterFunc func, final String column, final FilterBean bean) {
+        return getNumberResultAsync(entityClass, func, null, column, FilterNodeBean.createFilterNode(bean));
+    }
+
+    @Override
+    public Number getNumberResult(final Class entityClass, final FilterFunc func, final String column, final FilterNode node) {
+        return getNumberResult(entityClass, func, null, column, node);
+    }
+
+    @Override
+    public CompletableFuture<Number> getNumberResultAsync(final Class entityClass, final FilterFunc func, final String column, final FilterNode node) {
+        return getNumberResultAsync(entityClass, func, null, column, node);
+    }
+
+    @Override
+    public Number getNumberResult(final Class entityClass, final FilterFunc func, final Number defVal, final String column) {
+        return getNumberResult(entityClass, func, defVal, column, (FilterNode) null);
+    }
+
+    @Override
+    public CompletableFuture<Number> getNumberResultAsync(final Class entityClass, final FilterFunc func, final Number defVal, final String column) {
+        return getNumberResultAsync(entityClass, func, defVal, column, (FilterNode) null);
+    }
+
+    @Override
+    public Number getNumberResult(final Class entityClass, final FilterFunc func, final Number defVal, final String column, FilterBean bean) {
+        return getNumberResult(entityClass, func, defVal, column, FilterNodeBean.createFilterNode(bean));
+    }
+
+    @Override
+    public CompletableFuture<Number> getNumberResultAsync(final Class entityClass, final FilterFunc func, final Number defVal, final String column, FilterBean bean) {
+        return getNumberResultAsync(entityClass, func, defVal, column, FilterNodeBean.createFilterNode(bean));
+    }
+
+    @Override
+    public Number getNumberResult(final Class entityClass, final FilterFunc func, final Number defVal, final String column, final FilterNode node) {
+        final EntityInfo info = loadEntityInfo(entityClass);
+        final EntityCache cache = info.getCache();
+        if (cache != null && (info.isVirtualEntity() || cache.isFullLoaded())) {
+            if (node == null || node.isCacheUseable(this)) {
+                return cache.getNumberResult(func, defVal, column, node);
+            }
+        }
+        return getNumberResult(info, entityClass, func, defVal, column, node).join();
+    }
+
+    @Override
+    public CompletableFuture<Number> getNumberResultAsync(final Class entityClass, final FilterFunc func, final Number defVal, final String column, final FilterNode node) {
+        final EntityInfo info = loadEntityInfo(entityClass);
+        final EntityCache cache = info.getCache();
+        if (cache != null && (info.isVirtualEntity() || cache.isFullLoaded())) {
+            if (node == null || node.isCacheUseable(this)) {
+                return CompletableFuture.completedFuture(cache.getNumberResult(func, defVal, column, node));
+            }
+        }
+        if (isAysnc()) return getNumberResult(info, entityClass, func, defVal, column, node);
+        return CompletableFuture.supplyAsync(() -> getNumberResult(info, entityClass, func, defVal, column, node).join(), getExecutor());
+    }
+
+    protected CompletableFuture<Number> getNumberResult(final EntityInfo info, final Class entityClass, final FilterFunc func, final Number defVal, final String column, final FilterNode node) {
+        final Map<Class, String> joinTabalis = node == null ? null : node.getJoinTabalis();
+        final Set<String> haset = new HashSet<>();
+        final CharSequence join = node == null ? null : node.createSQLJoin(this, false, joinTabalis, haset, info);
+        final CharSequence where = node == null ? null : node.createSQLExpress(info, joinTabalis);
+        final String sql = "SELECT " + func.getColumn((column == null || column.isEmpty() ? "*" : info.getSQLColumn("a", column))) + " FROM " + info.getTable(node) + " a"
+            + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
+        if (info.isLoggable(logger, Level.FINEST)) logger.finest(entityClass.getSimpleName() + " getnumberresult sql=" + sql);
+        return getNumberResultDB(info, sql, defVal, column);
+    }
+
+    //------------------------ queryColumnMap ------------------------
+    @Override
+    public <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMap(final Class<T> entityClass, final String keyColumn, final FilterFunc func, final String funcColumn) {
+        return queryColumnMap(entityClass, keyColumn, func, funcColumn, (FilterNode) null);
+    }
+
+    @Override
+    public <T, K extends Serializable, N extends Number> CompletableFuture<Map<K, N>> queryColumnMapAsync(final Class<T> entityClass, final String keyColumn, final FilterFunc func, final String funcColumn) {
+        return queryColumnMapAsync(entityClass, keyColumn, func, funcColumn, (FilterNode) null);
+    }
+
+    @Override
+    public <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMap(final Class<T> entityClass, final String keyColumn, final FilterFunc func, final String funcColumn, final FilterBean bean) {
+        return queryColumnMap(entityClass, keyColumn, func, funcColumn, FilterNodeBean.createFilterNode(bean));
+    }
+
+    @Override
+    public <T, K extends Serializable, N extends Number> CompletableFuture<Map<K, N>> queryColumnMapAsync(final Class<T> entityClass, final String keyColumn, final FilterFunc func, final String funcColumn, final FilterBean bean) {
+        return queryColumnMapAsync(entityClass, keyColumn, func, funcColumn, FilterNodeBean.createFilterNode(bean));
+    }
+
+    @Override
+    public <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMap(final Class<T> entityClass, final String keyColumn, final FilterFunc func, final String funcColumn, FilterNode node) {
+        final EntityInfo info = loadEntityInfo(entityClass);
+        final EntityCache cache = info.getCache();
+        if (cache != null && (info.isVirtualEntity() || cache.isFullLoaded())) {
+            if (node == null || node.isCacheUseable(this)) {
+                return cache.queryColumnMap(keyColumn, func, funcColumn, node);
+            }
+        }
+        return (Map) queryColumnMap(info, keyColumn, func, funcColumn, node).join();
+    }
+
+    @Override
+    public <T, K extends Serializable, N extends Number> CompletableFuture<Map<K, N>> queryColumnMapAsync(final Class<T> entityClass, final String keyColumn, final FilterFunc func, final String funcColumn, FilterNode node) {
+        final EntityInfo info = loadEntityInfo(entityClass);
+        final EntityCache cache = info.getCache();
+        if (cache != null && (info.isVirtualEntity() || cache.isFullLoaded())) {
+            if (node == null || node.isCacheUseable(this)) {
+                return CompletableFuture.completedFuture(cache.queryColumnMap(keyColumn, func, funcColumn, node));
+            }
+        }
+        if (isAysnc()) return queryColumnMap(info, keyColumn, func, funcColumn, node);
+        return CompletableFuture.supplyAsync(() -> (Map) queryColumnMap(info, keyColumn, func, funcColumn, node).join(), getExecutor());
+    }
+
+    protected <T, K extends Serializable, N extends Number> CompletableFuture<Map<K, N>> queryColumnMap(final EntityInfo<T> info, final String keyColumn, final FilterFunc func, final String funcColumn, FilterNode node) {
+        final String sqlkey = info.getSQLColumn(null, keyColumn);
+        final Map<Class, String> joinTabalis = node == null ? null : node.getJoinTabalis();
+        final Set<String> haset = new HashSet<>();
+        final CharSequence join = node == null ? null : node.createSQLJoin(this, false, joinTabalis, haset, info);
+        final CharSequence where = node == null ? null : node.createSQLExpress(info, joinTabalis);
+        final String sql = "SELECT a." + sqlkey + ", " + func.getColumn((funcColumn == null || funcColumn.isEmpty() ? "*" : info.getSQLColumn("a", funcColumn)))
+            + " FROM " + info.getTable(node) + " a" + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where)) + " GROUP BY a." + sqlkey;
+        if (info.isLoggable(logger, Level.FINEST)) logger.finest(info.getType().getSimpleName() + " querycolumnmap sql=" + sql);
+        return queryColumnMapDB(info, sql, keyColumn);
+    }
 
     //----------------------------- find -----------------------------
     /**
@@ -614,6 +848,16 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
     }
 
     @Override
+    public <T> Serializable findColumn(final Class<T> clazz, final String column, final Serializable defValue, final FilterBean bean) {
+        return findColumn(clazz, column, defValue, FilterNodeBean.createFilterNode(bean));
+    }
+
+    @Override
+    public <T> CompletableFuture<Serializable> findColumnAsync(final Class<T> clazz, final String column, final Serializable defValue, final FilterBean bean) {
+        return findColumnAsync(clazz, column, defValue, FilterNodeBean.createFilterNode(bean));
+    }
+
+    @Override
     public <T> Serializable findColumn(final Class<T> clazz, final String column, final Serializable defValue, final Serializable pk) {
         final EntityInfo<T> info = loadEntityInfo(clazz);
         final EntityCache<T> cache = info.getCache();
@@ -674,6 +918,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
         return findColumnDB(info, sql, false, column, defValue);
     }
 
+    //---------------------------- exists ----------------------------
     @Override
     public <T> boolean exists(Class<T> clazz, Serializable pk) {
         final EntityInfo<T> info = loadEntityInfo(clazz);
@@ -1085,6 +1330,16 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
     @Override
     public <T> CompletableFuture<List<T>> queryListAsync(final Class<T> clazz, final String column, final Serializable key) {
         return queryListAsync(clazz, (SelectColumn) null, null, FilterNode.create(column, key));
+    }
+
+    @Override
+    public <T> List<T> queryList(final Class<T> clazz) {
+        return queryList(clazz, (SelectColumn) null, null, (FilterNode) null);
+    }
+
+    @Override
+    public <T> CompletableFuture<List<T>> queryListAsync(final Class<T> clazz) {
+        return queryListAsync(clazz, (SelectColumn) null, null, (FilterNode) null);
     }
 
     /**
