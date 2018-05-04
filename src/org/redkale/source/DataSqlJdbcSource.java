@@ -321,7 +321,7 @@ public class DataSqlJdbcSource extends DataSqlSource<Connection> {
             future.completeExceptionally(e);
             return future;
         } finally {
-            if (conn != null) writePool.closeConnection(conn);
+            if (conn != null) readPool.closeConnection(conn);
         }
     }
 
@@ -346,7 +346,7 @@ public class DataSqlJdbcSource extends DataSqlSource<Connection> {
             future.completeExceptionally(e);
             return future;
         } finally {
-            if (conn != null) writePool.closeConnection(conn);
+            if (conn != null) readPool.closeConnection(conn);
         }
     }
 
@@ -372,7 +372,7 @@ public class DataSqlJdbcSource extends DataSqlSource<Connection> {
             future.completeExceptionally(e);
             return future;
         } finally {
-            if (conn != null) writePool.closeConnection(conn);
+            if (conn != null) readPool.closeConnection(conn);
         }
     }
 
@@ -395,7 +395,7 @@ public class DataSqlJdbcSource extends DataSqlSource<Connection> {
             future.completeExceptionally(e);
             return future;
         } finally {
-            if (conn != null) writePool.closeConnection(conn);
+            if (conn != null) readPool.closeConnection(conn);
         }
     }
 
@@ -427,7 +427,7 @@ public class DataSqlJdbcSource extends DataSqlSource<Connection> {
             future.completeExceptionally(e);
             return future;
         } finally {
-            if (conn != null) writePool.closeConnection(conn);
+            if (conn != null) readPool.closeConnection(conn);
         }
     }
 
@@ -450,7 +450,7 @@ public class DataSqlJdbcSource extends DataSqlSource<Connection> {
             future.completeExceptionally(e);
             return future;
         } finally {
-            if (conn != null) writePool.closeConnection(conn);
+            if (conn != null) readPool.closeConnection(conn);
         }
     }
 
@@ -496,7 +496,7 @@ public class DataSqlJdbcSource extends DataSqlSource<Connection> {
             future.completeExceptionally(e);
             return future;
         } finally {
-            if (conn != null) writePool.closeConnection(conn);
+            if (conn != null) readPool.closeConnection(conn);
         }
     }
 }
