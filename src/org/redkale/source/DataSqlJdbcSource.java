@@ -180,6 +180,7 @@ public class DataSqlJdbcSource extends DataSqlSource<Connection> {
         try {
             conn = writePool.poll();
             conn.setReadOnly(false);
+            sql += ((flipper == null || flipper.getLimit() < 1) ? "" : (" LIMIT " + flipper.getLimit()));
             if (info.isLoggable(logger, Level.FINEST)) logger.finest(info.getType().getSimpleName() + " delete sql=" + sql);
             final Statement stmt = conn.createStatement();
             int c = stmt.executeUpdate(sql);
