@@ -671,15 +671,16 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
             join1 = multisplit('[', ']', ",", new StringBuilder(), joinstr, 0);
             join2 = multisplit('{', '}', " AND ", new StringBuilder(), joinstr, 0);
         }
+        String alias = "postgresql".equals(writePool.dbtype) ? null : "a"; //postgresql的BUG， UPDATE的SET中不能含别名
         if (value instanceof byte[]) {
             String sql = "UPDATE " + info.getTable(node) + " a " + (join1 == null ? "" : (", " + join1))
-                + " SET " + info.getSQLColumn("a", column) + " = " + prepareParamSign(1)
+                + " SET " + info.getSQLColumn(alias, column) + " = " + prepareParamSign(1)
                 + ((where == null || where.length() == 0) ? (join2 == null ? "" : (" WHERE " + join2))
                 : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))));
             return updateDB(info, null, sql, true, value);
         } else {
             String sql = "UPDATE " + info.getTable(node) + " a " + (join1 == null ? "" : (", " + join1))
-                + " SET " + info.getSQLColumn("a", column) + " = " + info.formatToString(value)
+                + " SET " + info.getSQLColumn(alias, column) + " = " + info.formatToString(value)
                 + ((where == null || where.length() == 0) ? (join2 == null ? "" : (" WHERE " + join2))
                 : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))));
             return updateDB(info, null, sql, false);
@@ -816,11 +817,12 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
         StringBuilder setsql = new StringBuilder();
         List<byte[]> blobs = null;
         int index = 0;
+        String alias = "postgresql".equals(writePool.dbtype) ? null : "a"; //postgresql的BUG， UPDATE的SET中不能含别名
         for (ColumnValue col : values) {
             Attribute<T, Serializable> attr = info.getUpdateAttribute(col.getColumn());
             if (attr == null) continue;
             if (setsql.length() > 0) setsql.append(", ");
-            String c = info.getSQLColumn("a", col.getColumn());
+            String c = info.getSQLColumn(alias, col.getColumn());
             if (col.getValue() instanceof byte[]) {
                 if (blobs == null) blobs = new ArrayList<>();
                 blobs.add((byte[]) col.getValue());
@@ -949,10 +951,11 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
         StringBuilder setsql = new StringBuilder();
         List<byte[]> blobs = null;
         int index = 0;
+        String alias = "postgresql".equals(writePool.dbtype) ? null : "a"; //postgresql的BUG， UPDATE的SET中不能含别名
         for (Attribute<T, Serializable> attr : info.updateAttributes) {
             if (!selects.test(attr.field())) continue;
             if (setsql.length() > 0) setsql.append(", ");
-            setsql.append(info.getSQLColumn("a", attr.field()));
+            setsql.append(info.getSQLColumn(alias, attr.field()));
             Serializable val = attr.get(bean);
             if (val instanceof byte[]) {
                 if (blobs == null) blobs = new ArrayList<>();
@@ -980,7 +983,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
             return updateDB(info, null, sql, true, blobs.toArray());
         } else {
             final Serializable id = info.getPrimary().get(bean);
-            String sql = "UPDATE " + info.getTable(id) + " SET " + setsql + " WHERE " + info.getPrimarySQLColumn() + " = " + FilterNode.formatToString(id);
+            String sql = "UPDATE " + info.getTable(id) + " a SET " + setsql + " WHERE " + info.getPrimarySQLColumn() + " = " + FilterNode.formatToString(id);
             if (blobs == null) return updateDB(info, null, sql, false);
             return updateDB(info, null, sql, true, blobs.toArray());
         }
