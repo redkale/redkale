@@ -143,7 +143,7 @@ public class DataSqlJdbcSource extends DataSqlSource<Connection> {
             future.completeExceptionally(e);
             return future;
         } finally {
-            if (conn != null) writePool.closeConnection(conn);
+            if (conn != null) writePool.offerConnection(conn);
         }
     }
 
@@ -191,7 +191,7 @@ public class DataSqlJdbcSource extends DataSqlSource<Connection> {
             future.completeExceptionally(e);
             return future;
         } finally {
-            if (conn != null) writePool.closeConnection(conn);
+            if (conn != null) writePool.offerConnection(conn);
         }
     }
 
@@ -256,7 +256,7 @@ public class DataSqlJdbcSource extends DataSqlSource<Connection> {
             future.completeExceptionally(e);
             return future;
         } finally {
-            if (conn != null) writePool.closeConnection(conn);
+            if (conn != null) writePool.offerConnection(conn);
         }
     }
 
@@ -289,7 +289,7 @@ public class DataSqlJdbcSource extends DataSqlSource<Connection> {
             future.completeExceptionally(e);
             return future;
         } finally {
-            if (conn != null) writePool.closeConnection(conn);
+            if (conn != null) writePool.offerConnection(conn);
         }
     }
 
@@ -321,7 +321,7 @@ public class DataSqlJdbcSource extends DataSqlSource<Connection> {
             future.completeExceptionally(e);
             return future;
         } finally {
-            if (conn != null) readPool.closeConnection(conn);
+            if (conn != null) readPool.offerConnection(conn);
         }
     }
 
@@ -346,7 +346,7 @@ public class DataSqlJdbcSource extends DataSqlSource<Connection> {
             future.completeExceptionally(e);
             return future;
         } finally {
-            if (conn != null) readPool.closeConnection(conn);
+            if (conn != null) readPool.offerConnection(conn);
         }
     }
 
@@ -372,7 +372,7 @@ public class DataSqlJdbcSource extends DataSqlSource<Connection> {
             future.completeExceptionally(e);
             return future;
         } finally {
-            if (conn != null) readPool.closeConnection(conn);
+            if (conn != null) readPool.offerConnection(conn);
         }
     }
 
@@ -395,7 +395,7 @@ public class DataSqlJdbcSource extends DataSqlSource<Connection> {
             future.completeExceptionally(e);
             return future;
         } finally {
-            if (conn != null) readPool.closeConnection(conn);
+            if (conn != null) readPool.offerConnection(conn);
         }
     }
 
@@ -427,7 +427,7 @@ public class DataSqlJdbcSource extends DataSqlSource<Connection> {
             future.completeExceptionally(e);
             return future;
         } finally {
-            if (conn != null) readPool.closeConnection(conn);
+            if (conn != null) readPool.offerConnection(conn);
         }
     }
 
@@ -450,7 +450,7 @@ public class DataSqlJdbcSource extends DataSqlSource<Connection> {
             future.completeExceptionally(e);
             return future;
         } finally {
-            if (conn != null) readPool.closeConnection(conn);
+            if (conn != null) readPool.offerConnection(conn);
         }
     }
 
@@ -496,7 +496,7 @@ public class DataSqlJdbcSource extends DataSqlSource<Connection> {
             future.completeExceptionally(e);
             return future;
         } finally {
-            if (conn != null) readPool.closeConnection(conn);
+            if (conn != null) readPool.offerConnection(conn);
         }
     }
 }

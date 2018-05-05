@@ -139,7 +139,7 @@ public abstract class PoolSource<DBChannel> {
 
     public abstract CompletableFuture<DBChannel> pollAsync();
 
-    public abstract void closeConnection(final DBChannel conn);
+    public abstract void offerConnection(final DBChannel conn);
 
     public abstract void close();
 

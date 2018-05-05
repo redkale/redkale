@@ -46,7 +46,7 @@ public abstract class PoolTcpSource extends PoolSource<AsyncConnection> {
     }
 
     @Override
-    public void closeConnection(final AsyncConnection conn) {
+    public void offerConnection(final AsyncConnection conn) {
         if (conn == null) return;
         if (connQueue.offer(conn)) {
             saveCounter.incrementAndGet();
@@ -168,9 +168,15 @@ public abstract class PoolTcpSource extends PoolSource<AsyncConnection> {
     public void close() {
         connQueue.stream().forEach(x -> {
             try {
+                sendCloseCommand(x);
+            } catch (Exception e) {
+            }
+            try {
                 x.close();
             } catch (Exception e) {
             }
         });
     }
+
+    protected abstract void sendCloseCommand(final AsyncConnection conn);
 }

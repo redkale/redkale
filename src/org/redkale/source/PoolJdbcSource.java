@@ -255,7 +255,7 @@ public class PoolJdbcSource extends PoolSource<Connection> {
     }
 
     @Override
-    public void closeConnection(final Connection conn) {
+    public void offerConnection(final Connection conn) {
         if (conn == null) return;
         try {
             conn.close();
