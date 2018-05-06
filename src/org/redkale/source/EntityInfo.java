@@ -473,6 +473,14 @@ public final class EntityInfo<T> {
         return autouuid;
     }
 
+    public DistributeTableStrategy<T> getTableStrategy() {
+        return tableStrategy;
+    }
+
+    public String getTableNotExistSqlStates() {
+        return tablenotexistSqlstates;
+    }
+
     public Attribute<T, Serializable>[] getInsertAttributes() {
         return insertAttributes;
     }
