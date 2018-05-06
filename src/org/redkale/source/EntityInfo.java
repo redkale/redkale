@@ -657,6 +657,10 @@ public final class EntityInfo<T> {
         return sb;
     }
 
+    public String getTableCopySQL(String newTable) {
+        return tablecopySQL.replace("${newtable}", newTable).replace("${oldtable}", table);
+    }
+
     /**
      * 根据主键值获取Entity的表名
      *

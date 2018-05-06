@@ -97,11 +97,12 @@ public abstract class PoolSource<DBChannel> {
             this.props.setProperty(JDBC_CONTAIN_SQLTEMPLATE, "CHARINDEX(${column}, ${keystr}) > 0");
             this.props.setProperty(JDBC_NOTCONTAIN_SQLTEMPLATE, "CHARINDEX(${column}, ${keystr}) = 0");
         } else if ("postgresql".equals(this.dbtype)) {
-            if (!this.props.containsKey(JDBC_TABLECOPY_SQLTEMPLATE)) {
+            if (!this.props.containsKey(JDBC_TABLECOPY_SQLTEMPLATE)) { //注意：此语句复制表结构会导致默认值和主键信息的丢失
+                //注意：postgresql不支持跨库复制表结构
                 this.props.setProperty(JDBC_TABLECOPY_SQLTEMPLATE, "CREATE TABLE ${newtable} AS (SELECT * FROM ${oldtable} LIMIT 0)");
             }
             if (!this.props.containsKey(JDBC_TABLENOTEXIST_SQLSTATES)) {
-                this.props.setProperty(JDBC_TABLENOTEXIST_SQLSTATES, "42P01");
+                this.props.setProperty(JDBC_TABLENOTEXIST_SQLSTATES, "42P01;3F000");
             }
         }
     }
