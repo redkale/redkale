@@ -243,8 +243,13 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
     @Override
     public <T> int insert(@RpcCall(DataCallArrayAttribute.class) T... values) {
         if (values.length == 0) return 0;
-        final EntityInfo<T> info = loadEntityInfo((Class<T>) values[0].getClass());
         checkEntity("insert", false, values);
+        final EntityInfo<T> info = loadEntityInfo((Class<T>) values[0].getClass());
+        if (info.autouuid) {
+            for (T value : values) {
+                info.createPrimaryValue(value);
+            }
+        }
         if (info.isVirtualEntity()) return insertCache(info, values);
         return insertDB(info, values).whenComplete((rs, t) -> {
             if (t != null) {
@@ -261,6 +266,11 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
         CompletableFuture future = checkEntity("insert", true, values);
         if (future != null) return future;
         final EntityInfo<T> info = loadEntityInfo((Class<T>) values[0].getClass());
+        if (info.autouuid) {
+            for (T value : values) {
+                info.createPrimaryValue(value);
+            }
+        }
         if (info.isVirtualEntity()) {
             return CompletableFuture.supplyAsync(() -> insertCache(info, values), getExecutor());
         }
