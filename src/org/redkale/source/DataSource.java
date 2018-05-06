@@ -37,8 +37,10 @@ public interface DataSource {
      *
      * @param <T>    泛型
      * @param values Entity对象
+     * 
+     * @return 影响的记录条数
      */
-    public <T> void insert(final T... values);
+    public <T> int insert(final T... values);
 
     /**
      * 新增记录， 多对象必须是同一个Entity类且必须在同一张表中  <br>
@@ -48,7 +50,7 @@ public interface DataSource {
      *
      * @return CompletableFuture
      */
-    public <T> CompletableFuture<Void> insertAsync(final T... values);
+    public <T> CompletableFuture<Integer> insertAsync(final T... values);
 
     //-------------------------deleteAsync--------------------------
     /**

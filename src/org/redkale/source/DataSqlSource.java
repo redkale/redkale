@@ -113,7 +113,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
     protected abstract PoolSource<DBChannel> createPoolSource(DataSource source, String rwtype, Properties prop);
 
     //插入纪录
-    protected abstract <T> CompletableFuture<Void> insertDB(final EntityInfo<T> info, T... values);
+    protected abstract <T> CompletableFuture<Integer> insertDB(final EntityInfo<T> info, T... values);
 
     //删除记录
     protected abstract <T> CompletableFuture<Integer> deleteDB(final EntityInfo<T> info, Flipper flipper, final String sql);
@@ -197,10 +197,6 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
         return EntityInfo.load(clazz, this.cacheForbidden, this.readPool.props, this, fullloader);
     }
 
-    protected CompletableFuture<Void> completeVoidFuture() {
-        return isAsync() ? CompletableFuture.completedFuture(null) : null;
-    }
-
     /**
      * 将entity的对象全部加载到Cache中去，如果clazz没有被@javax.persistence.Cacheable注解则不做任何事
      *
@@ -241,17 +237,16 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
      *
      * @param <T>    Entity类泛型
      * @param values Entity对象
+     *
+     * @return 影响的记录条数
      */
     @Override
-    public <T> void insert(@RpcCall(DataCallArrayAttribute.class) T... values) {
-        if (values.length == 0) return;
+    public <T> int insert(@RpcCall(DataCallArrayAttribute.class) T... values) {
+        if (values.length == 0) return 0;
         final EntityInfo<T> info = loadEntityInfo((Class<T>) values[0].getClass());
         checkEntity("insert", false, values);
-        if (info.isVirtualEntity()) {
-            insertCache(info, values);
-            return;
-        }
-        insertDB(info, values).whenComplete((rs, t) -> {
+        if (info.isVirtualEntity()) return insertCache(info, values);
+        return insertDB(info, values).whenComplete((rs, t) -> {
             if (t != null) {
                 futureCompleteConsumer.accept(rs, t);
             } else {
@@ -261,13 +256,13 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
     }
 
     @Override
-    public <T> CompletableFuture<Void> insertAsync(@RpcCall(DataCallArrayAttribute.class) T... values) {
-        if (values.length == 0) return completeVoidFuture();
+    public <T> CompletableFuture<Integer> insertAsync(@RpcCall(DataCallArrayAttribute.class) T... values) {
+        if (values.length == 0) return CompletableFuture.completedFuture(0);
         CompletableFuture future = checkEntity("insert", true, values);
         if (future != null) return future;
         final EntityInfo<T> info = loadEntityInfo((Class<T>) values[0].getClass());
         if (info.isVirtualEntity()) {
-            return CompletableFuture.runAsync(() -> insertCache(info, values), getExecutor());
+            return CompletableFuture.supplyAsync(() -> insertCache(info, values), getExecutor());
         }
         if (isAsync()) return insertDB(info, values).whenComplete((rs, t) -> {
                 if (t != null) {
@@ -276,22 +271,24 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
                     insertCache(info, values);
                 }
             });
-        return CompletableFuture.runAsync(() -> insertDB(info, values).whenComplete((rs, t) -> {
+        return CompletableFuture.supplyAsync(() -> insertDB(info, values).join(), getExecutor()).whenComplete((rs, t) -> {
             if (t != null) {
                 futureCompleteConsumer.accept(rs, t);
             } else {
                 insertCache(info, values);
             }
-        }), getExecutor());
+        });
     }
 
-    protected <T> void insertCache(final EntityInfo<T> info, T... values) {
+    protected <T> int insertCache(final EntityInfo<T> info, T... values) {
         final EntityCache<T> cache = info.getCache();
-        if (cache == null) return;
+        if (cache == null) return 0;
+        int c = 0;
         for (final T value : values) {
-            cache.insert(value);
+            c += cache.insert(value);
         }
         if (cacheListener != null) cacheListener.insertCache(info.getType(), values);
+        return c;
     }
 
     @Override
