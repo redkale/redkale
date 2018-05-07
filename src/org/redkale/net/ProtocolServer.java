@@ -228,6 +228,17 @@ public abstract class ProtocolServer {
         public void accept() {
             final AsynchronousServerSocketChannel serchannel = this.serverChannel;
             serchannel.accept(null, new CompletionHandler<AsynchronousSocketChannel, Void>() {
+                private boolean supportInited;
+
+                private boolean supportTcpLay;
+
+                private boolean supportAlive;
+
+                private boolean supportReuse;
+
+                private boolean supportRcv;
+
+                private boolean supportSnd;
 
                 @Override
                 public void completed(final AsynchronousSocketChannel channel, Void attachment) {
@@ -244,6 +255,27 @@ public abstract class ProtocolServer {
                     AsyncConnection conn = AsyncConnection.create(channel, null, context);
                     conn.livingCounter = livingCounter;
                     conn.closedCounter = closedCounter;
+                    try {
+                        if (!supportInited) {
+                            synchronized (this) {
+                                if (!supportInited) {
+                                    supportInited = true;
+                                    final Set<SocketOption<?>> options = channel.supportedOptions();
+                                    supportTcpLay = options.contains(StandardSocketOptions.TCP_NODELAY);
+                                    supportAlive = options.contains(StandardSocketOptions.SO_KEEPALIVE);
+                                    supportReuse = options.contains(StandardSocketOptions.SO_REUSEADDR);
+                                    supportRcv = options.contains(StandardSocketOptions.SO_RCVBUF);
+                                    supportSnd = options.contains(StandardSocketOptions.SO_SNDBUF);
+                                }
+                            }
+                        }
+                        if (supportTcpLay) channel.setOption(StandardSocketOptions.TCP_NODELAY, true);
+                        if (supportAlive) channel.setOption(StandardSocketOptions.SO_KEEPALIVE, true);
+                        if (supportReuse) channel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
+                        if (supportRcv) channel.setOption(StandardSocketOptions.SO_RCVBUF, 16 * 1024);
+                        if (supportSnd) channel.setOption(StandardSocketOptions.SO_SNDBUF, 16 * 1024);
+                    } catch (IOException e) {
+                    }
                     context.runAsync(new PrepareRunner(context, conn, null, null));
                 }
 

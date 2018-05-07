@@ -291,7 +291,7 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
                 int rs = channel.read(dst);
                 this.readtime = System.currentTimeMillis();
                 if (handler != null) handler.completed(rs, attachment);
-            } catch (IOException e) {
+            } catch (Exception e) {
                 if (handler != null) handler.failed(e, attachment);
             }
         }
@@ -307,7 +307,7 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
                 int rs = channel.read(dst);
                 this.readtime = System.currentTimeMillis();
                 return CompletableFuture.completedFuture(rs);
-            } catch (IOException e) {
+            } catch (Exception e) {
                 throw new RuntimeException(e);
             }
         }
@@ -318,7 +318,7 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
                 int rs = channel.write(src);
                 this.writetime = System.currentTimeMillis();
                 if (handler != null) handler.completed(rs, attachment);
-            } catch (IOException e) {
+            } catch (Exception e) {
                 if (handler != null) handler.failed(e, attachment);
             }
         }
@@ -329,7 +329,7 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
                 int rs = channel.read(src);
                 this.writetime = System.currentTimeMillis();
                 return CompletableFuture.completedFuture(rs);
-            } catch (IOException e) {
+            } catch (Exception e) {
                 throw new RuntimeException(e);
             }
         }
