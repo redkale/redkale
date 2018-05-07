@@ -256,7 +256,7 @@ class WebSocketRunner implements Runnable {
                                 break;
                             }
                         }
-                        if (index >= 0) {
+                        if (index >= 0) { //ByteBuffer[]统一回收的可以采用此写法
                             channel.write(attachments, index, attachments.length - index, attachments, this);
                             return;
                         }

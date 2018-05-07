@@ -377,7 +377,7 @@ public final class SncpClient {
                             transport.offerBuffer(attachments[i]);
                         }
                     }
-                    if (index == 0) {
+                    if (index == 0) { //ByteBuffer[]不统一回收的必须采用此写法分开
                         conn.write(attachments, attachments, this);
                         return;
                     } else if (index > 0) {
