@@ -229,12 +229,20 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
 
         private final SocketAddress remoteAddress;
 
-        public NIOTCPAsyncConnection(final SocketChannel ch, SocketAddress addr,
+        public NIOTCPAsyncConnection(final SocketChannel ch, SocketAddress addr0,
             final int readTimeoutSeconds0, final int writeTimeoutSeconds0,
             final AtomicLong livingCounter, final AtomicLong closedCounter) {
             this.channel = ch;
             this.readTimeoutSeconds = readTimeoutSeconds0;
             this.writeTimeoutSeconds = writeTimeoutSeconds0;
+            SocketAddress addr = addr0;
+            if (addr == null) {
+                try {
+                    addr = ch.getRemoteAddress();
+                } catch (Exception e) {
+                    //do nothing
+                }
+            }
             this.remoteAddress = addr;
             this.livingCounter = livingCounter;
             this.closedCounter = closedCounter;
@@ -374,13 +382,21 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
 
         private final boolean client;
 
-        public BIOUDPAsyncConnection(final DatagramChannel ch, SocketAddress addr,
+        public BIOUDPAsyncConnection(final DatagramChannel ch, SocketAddress addr0,
             final boolean client0, final int readTimeoutSeconds0, final int writeTimeoutSeconds0,
             final AtomicLong livingCounter, final AtomicLong closedCounter) {
             this.channel = ch;
             this.client = client0;
             this.readTimeoutSeconds = readTimeoutSeconds0;
             this.writeTimeoutSeconds = writeTimeoutSeconds0;
+            SocketAddress addr = addr0;
+            if (addr == null) {
+                try {
+                    addr = ch.getRemoteAddress();
+                } catch (Exception e) {
+                    //do nothing
+                }
+            }
             this.remoteAddress = addr;
             this.livingCounter = livingCounter;
             this.closedCounter = closedCounter;
