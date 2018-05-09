@@ -219,20 +219,44 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
         return future;
     }
 
-    private static class NIOTCPAsyncConnection extends AsyncConnection {
+    static class NIOTCPAsyncConnection extends AsyncConnection {
 
         private int readTimeoutSeconds;
 
         private int writeTimeoutSeconds;
 
+        private final Selector selector;
+
+        private SelectionKey key;
+
         private final SocketChannel channel;
 
         private final SocketAddress remoteAddress;
 
+        ByteBuffer readBuffer;
+
+        Object readAttachment;
+
+        CompletionHandler readHandler;
+
+        ByteBuffer writeOneBuffer;
+
+        ByteBuffer[] writeBuffers;
+
+        int writeOffset;
+
+        int writeLength;
+
+        Object writeAttachment;
+
+        CompletionHandler writeHandler;
+
         public NIOTCPAsyncConnection(final SocketChannel ch, SocketAddress addr0,
+            final Selector selector,
             final int readTimeoutSeconds0, final int writeTimeoutSeconds0,
             final AtomicLong livingCounter, final AtomicLong closedCounter) {
             this.channel = ch;
+            this.selector = selector;
             this.readTimeoutSeconds = readTimeoutSeconds0;
             this.writeTimeoutSeconds = writeTimeoutSeconds0;
             SocketAddress addr = addr0;
@@ -282,25 +306,64 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
             }
         }
 
-        @Override
-        public <A> void write(ByteBuffer[] srcs, int offset, int length, A attachment, CompletionHandler<Integer, ? super A> handler) {
-            try {
-                int rs = (int) channel.write(srcs, offset, length);
-                this.writetime = System.currentTimeMillis();
-                if (handler != null) handler.completed(rs, attachment);
-            } catch (Exception e) {
-                if (handler != null) handler.failed(e, attachment);
-            }
+        void completeRead(int rs) {
+            Object attach = this.readAttachment;
+            CompletionHandler handler = this.readHandler;
+            this.readBuffer = null;
+            this.readAttachment = null;
+            this.readHandler = null;
+            handler.completed(rs, attach);
+        }
+
+        void faileRead(Throwable t) {
+            Object attach = this.readAttachment;
+            CompletionHandler handler = this.readHandler;
+            this.readBuffer = null;
+            this.readAttachment = null;
+            this.readHandler = null;
+            handler.failed(t, attach);
+        }
+
+        void completeWrite(int rs) {
+            Object attach = this.writeAttachment;
+            CompletionHandler handler = this.writeHandler;
+            this.writeOneBuffer = null;
+            this.writeBuffers = null;
+            this.writeOffset = 0;
+            this.writeLength = 0;
+            this.writeAttachment = null;
+            this.writeHandler = null;
+            handler.completed(rs, attach);
+        }
+
+        void faileWrite(Throwable t) {
+            Object attach = this.writeAttachment;
+            CompletionHandler handler = this.writeHandler;
+            this.writeOneBuffer = null;
+            this.writeBuffers = null;
+            this.writeOffset = 0;
+            this.writeLength = 0;
+            this.writeAttachment = null;
+            this.writeHandler = null;
+            handler.failed(t, attach);
         }
 
         @Override
         public <A> void read(ByteBuffer dst, A attachment, CompletionHandler<Integer, ? super A> handler) {
+            if (this.readHandler != null) throw new RuntimeException("pending read");
             try {
-                int rs = channel.read(dst);
-                this.readtime = System.currentTimeMillis();
-                if (handler != null) handler.completed(rs, attachment);
+                this.readBuffer = dst;
+                this.readAttachment = attachment;
+                this.readHandler = handler;
+                if (key == null) {
+                    key = channel.register(selector, SelectionKey.OP_READ);
+                    key.attach(this);
+                } else {
+                    key.interestOps(SelectionKey.OP_READ);
+                }
+                selector.wakeup();
             } catch (Exception e) {
-                if (handler != null) handler.failed(e, attachment);
+                faileRead(e);
             }
         }
 
@@ -311,41 +374,83 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
 
         @Override
         public Future<Integer> read(ByteBuffer dst) {
+            CompletableFuture future = new CompletableFuture();
+            read(dst, null, new CompletionHandler<Integer, Void>() {
+                @Override
+                public void completed(Integer result, Void attachment) {
+                    future.complete(result);
+                }
+
+                @Override
+                public void failed(Throwable exc, Void attachment) {
+                    future.completeExceptionally(exc);
+                }
+            });
+            return future;
+        }
+
+        @Override
+        public <A> void write(ByteBuffer[] srcs, int offset, int length, A attachment, CompletionHandler<Integer, ? super A> handler) {
+            if (this.writeHandler != null) throw new RuntimeException("pending write");
             try {
-                int rs = channel.read(dst);
-                this.readtime = System.currentTimeMillis();
-                return CompletableFuture.completedFuture(rs);
+                this.writeBuffers = srcs;
+                this.writeOffset = offset;
+                this.writeLength = length;
+                this.writeAttachment = attachment;
+                this.writeHandler = handler;
+                if (key == null) {
+                    key = channel.register(selector, SelectionKey.OP_WRITE);
+                    key.attach(this);
+                } else {
+                    key.interestOps(SelectionKey.OP_WRITE);
+                }
+                selector.wakeup();
             } catch (Exception e) {
-                throw new RuntimeException(e);
+                faileWrite(e);
             }
         }
 
         @Override
         public <A> void write(ByteBuffer src, A attachment, CompletionHandler<Integer, ? super A> handler) {
+            if (this.writeHandler != null) throw new RuntimeException("pending write");
             try {
-                int rs = channel.write(src);
-                this.writetime = System.currentTimeMillis();
-                if (handler != null) handler.completed(rs, attachment);
+                this.writeOneBuffer = src;
+                this.writeAttachment = attachment;
+                this.writeHandler = handler;
+                if (key == null) {
+                    key = channel.register(selector, SelectionKey.OP_WRITE);
+                    key.attach(this);
+                } else {
+                    key.interestOps(SelectionKey.OP_WRITE);
+                }
+                selector.wakeup();
             } catch (Exception e) {
-                if (handler != null) handler.failed(e, attachment);
+                faileWrite(e);
             }
         }
 
         @Override
         public Future<Integer> write(ByteBuffer src) {
-            try {
-                int rs = channel.read(src);
-                this.writetime = System.currentTimeMillis();
-                return CompletableFuture.completedFuture(rs);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
+            CompletableFuture future = new CompletableFuture();
+            write(src, null, new CompletionHandler<Integer, Void>() {
+                @Override
+                public void completed(Integer result, Void attachment) {
+                    future.complete(result);
+                }
+
+                @Override
+                public void failed(Throwable exc, Void attachment) {
+                    future.completeExceptionally(exc);
+                }
+            });
+            return future;
         }
 
         @Override
         public final void close() throws IOException {
             super.close();
             channel.close();
+            key.cancel();
         }
 
         @Override
@@ -359,15 +464,15 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
         }
     }
 
-    public static AsyncConnection create(final SocketChannel ch, SocketAddress addr,
+    public static AsyncConnection create(final SocketChannel ch, SocketAddress addr, final Selector selector,
         final int readTimeoutSeconds0, final int writeTimeoutSeconds0) {
-        return new NIOTCPAsyncConnection(ch, addr, readTimeoutSeconds0, writeTimeoutSeconds0, null, null);
+        return new NIOTCPAsyncConnection(ch, addr, selector, readTimeoutSeconds0, writeTimeoutSeconds0, null, null);
     }
 
-    public static AsyncConnection create(final SocketChannel ch, SocketAddress addr,
+    public static AsyncConnection create(final SocketChannel ch, SocketAddress addr, final Selector selector,
         final int readTimeoutSeconds0, final int writeTimeoutSeconds0,
         final AtomicLong livingCounter, final AtomicLong closedCounter) {
-        return new NIOTCPAsyncConnection(ch, addr, readTimeoutSeconds0, writeTimeoutSeconds0, livingCounter, closedCounter);
+        return new NIOTCPAsyncConnection(ch, addr, selector, readTimeoutSeconds0, writeTimeoutSeconds0, livingCounter, closedCounter);
     }
 
     private static class BIOUDPAsyncConnection extends AsyncConnection {
