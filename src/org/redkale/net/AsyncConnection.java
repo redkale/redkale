@@ -469,6 +469,10 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
         return new NIOTCPAsyncConnection(ch, addr, selector, readTimeoutSeconds0, writeTimeoutSeconds0, null, null);
     }
 
+    public static AsyncConnection create(final SocketChannel ch, final SocketAddress addr0, final Selector selector, final Context context) {
+        return new NIOTCPAsyncConnection(ch, addr0, selector, context.readTimeoutSeconds, context.writeTimeoutSeconds, null, null);
+    }
+
     public static AsyncConnection create(final SocketChannel ch, SocketAddress addr, final Selector selector,
         final int readTimeoutSeconds0, final int writeTimeoutSeconds0,
         final AtomicLong livingCounter, final AtomicLong closedCounter) {

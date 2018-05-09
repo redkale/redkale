@@ -420,7 +420,7 @@ public abstract class ProtocolServer {
             }
 
             public void addChannel(SocketChannel channel) throws IOException {
-                AsyncConnection conn = AsyncConnection.create(channel, null, this.selector, 0, 0);
+                AsyncConnection conn = AsyncConnection.create(channel, null, this.selector, context);
                 context.runAsync(new PrepareRunner(context, conn, null, null));
             }
 
@@ -463,7 +463,8 @@ public abstract class ProtocolServer {
                 try {
                     final int rs = socket.read(conn.readBuffer);
                     key.interestOps(SelectionKey.OP_CONNECT);
-                    if (rs <= 0) return;
+                    //System.out.println(conn + "------readbuf:" + conn.readBuffer + "-------handler:" + conn.readHandler + "-------read: " + rs);
+                    if(conn.readHandler == null) return;
                     context.runAsync(() -> conn.completeRead(rs));
                 } catch (Throwable t) {
                     context.runAsync(() -> conn.faileRead(t));
@@ -478,7 +479,8 @@ public abstract class ProtocolServer {
                         int offset = conn.writeOffset;
                         int length = conn.writeLength;
                         for (;;) {
-                            rs += socket.write(buffers, offset, length);
+                            long sr = socket.write(buffers, offset, length);
+                            if (sr > 0) rs += sr;
                             boolean over = true;
                             int end = offset + length;
                             for (int i = offset; i < end; i++) {
@@ -496,6 +498,7 @@ public abstract class ProtocolServer {
                     }
                     key.interestOps(SelectionKey.OP_CONNECT);
                     final int rs0 = rs;
+                    //System.out.println(conn + "------buffers:" + conn.writeBuffers + "---onebuf:" + conn.writeOneBuffer + "-------handler:" + conn.writeHandler + "-------write: " + rs);
                     context.runAsync(() -> conn.completeWrite(rs0));
                 } catch (Throwable t) {
                     context.runAsync(() -> conn.faileWrite(t));
