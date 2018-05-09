@@ -611,7 +611,26 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
     public void finish(final byte[] bs) {
         if (isClosed()) return; //避免重复关闭
         if (this.context.getBufferCapacity() >= bs.length) {
-            ByteBuffer buffer = this.context.pollBuffer();
+            ByteBuffer buffer = getBodyBufferSupplier().get();
+            buffer.put(bs);
+            buffer.flip();
+            this.finish(false, buffer);
+        } else {
+            this.finish(false, ByteBuffer.wrap(bs));
+        }
+    }
+
+    /**
+     * 将指定byte[]按响应结果输出
+     *
+     * @param contentType ContentType
+     * @param bs          输出内容
+     */
+    public void finish(final String contentType, final byte[] bs) {
+        if (isClosed()) return; //避免重复关闭
+        this.contentType = contentType;
+        if (this.context.getBufferCapacity() >= bs.length) {
+            ByteBuffer buffer = getBodyBufferSupplier().get();
             buffer.put(bs);
             buffer.flip();
             this.finish(false, buffer);
