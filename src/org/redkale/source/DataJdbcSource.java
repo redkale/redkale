@@ -11,6 +11,7 @@ import java.sql.*;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.*;
+import java.util.function.Consumer;
 import java.util.logging.Level;
 import org.redkale.service.Local;
 import org.redkale.util.*;
@@ -59,7 +60,7 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
             final Attribute primary = info.getPrimary();
             Attribute<T, Serializable>[] attrs = info.insertAttributes;
             conn.setReadOnly(false);
-            conn.setAutoCommit(true); 
+            conn.setAutoCommit(true);
             PreparedStatement prestmt = createInsertPreparedStatement(conn, sql, info, values);
             try {
                 prestmt.executeBatch();
@@ -187,7 +188,7 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
         try {
             conn = writePool.poll();
             conn.setReadOnly(false);
-            conn.setAutoCommit(true); 
+            conn.setAutoCommit(true);
             sql += ((flipper == null || flipper.getLimit() < 1) ? "" : (" LIMIT " + flipper.getLimit()));
             if (info.isLoggable(logger, Level.FINEST)) logger.finest(info.getType().getSimpleName() + " delete sql=" + sql);
             final Statement stmt = conn.createStatement();
@@ -209,7 +210,7 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
         try {
             conn = writePool.poll();
             conn.setReadOnly(false);
-            conn.setAutoCommit(true); 
+            conn.setAutoCommit(true);
             final String updateSQL = info.getUpdatePrepareSQL(values[0]);
             final PreparedStatement prestmt = conn.prepareStatement(updateSQL);
             Attribute<T, Serializable>[] attrs = info.updateAttributes;
@@ -275,7 +276,7 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
         try {
             conn = writePool.poll();
             conn.setReadOnly(false);
-            conn.setAutoCommit(true); 
+            conn.setAutoCommit(true);
             if (prepared) {
                 final PreparedStatement prestmt = conn.prepareStatement(sql);
                 int index = 0;
@@ -505,6 +506,67 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
             CompletableFuture future = new CompletableFuture();
             future.completeExceptionally(e);
             return future;
+        } finally {
+            if (conn != null) readPool.offerConnection(conn);
+        }
+    }
+
+    protected int[] directExecute(final Connection conn, String... sqls) {
+        if (sqls.length == 0) return new int[0];
+        try {
+            conn.setReadOnly(false);
+            final Statement stmt = conn.createStatement();
+            final int[] rs = new int[sqls.length];
+            int i = -1;
+            for (String sql : sqls) {
+                rs[++i] = stmt.execute(sql) ? 1 : 0;
+            }
+            stmt.close();
+            return rs;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * 直接本地执行SQL语句进行增删改操作，远程模式不可用   <br>
+     * 通常用于复杂的更新操作   <br>
+     *
+     * @param sqls SQL语句
+     *
+     * @return 结果数组
+     */
+    @Local
+    public int[] directExecute(String... sqls) {
+        Connection conn = writePool.poll();
+        try {
+            return directExecute(conn, sqls);
+        } finally {
+            if (conn != null) writePool.offerConnection(conn);
+        }
+    }
+
+    /**
+     * 直接本地执行SQL语句进行查询，远程模式不可用   <br>
+     * 通常用于复杂的关联查询   <br>
+     *
+     * @param sql      SQL语句
+     * @param consumer 回调函数
+     */
+    @Local
+    public void directQuery(String sql, Consumer<ResultSet> consumer) {
+        final Connection conn = readPool.poll();
+        try {
+            if (logger.isLoggable(Level.FINEST)) logger.finest("direct query sql=" + sql);
+            conn.setReadOnly(true);
+            final Statement statement = conn.createStatement();
+            //final PreparedStatement statement = conn.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+            final ResultSet set = statement.executeQuery(sql);// ps.executeQuery();
+            consumer.accept(set);
+            set.close();
+            statement.close();
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
         } finally {
             if (conn != null) readPool.offerConnection(conn);
         }
