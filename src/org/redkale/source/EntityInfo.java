@@ -477,8 +477,17 @@ public final class EntityInfo<T> {
         return tableStrategy;
     }
 
-    public String getTableNotExistSqlStates() {
+    public String getTableNotExistSqlStates2() {
         return tablenotexistSqlstates;
+    }
+
+    public boolean isTableNotExist(String code) {
+        return tablenotexistSqlstates.contains(';' + code + ';');
+    }
+
+    public boolean isTableNotExist(SQLException e) {
+        if (e == null) return false;
+        return tablenotexistSqlstates.contains(';' + e.getSQLState() + ';');
     }
 
     public Attribute<T, Serializable>[] getInsertAttributes() {
