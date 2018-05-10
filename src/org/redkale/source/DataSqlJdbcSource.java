@@ -59,6 +59,7 @@ public class DataSqlJdbcSource extends DataSqlSource<Connection> {
             final Attribute primary = info.getPrimary();
             Attribute<T, Serializable>[] attrs = info.insertAttributes;
             conn.setReadOnly(false);
+            conn.setAutoCommit(true); 
             PreparedStatement prestmt = createInsertPreparedStatement(conn, sql, info, values);
             try {
                 prestmt.executeBatch();
@@ -186,6 +187,7 @@ public class DataSqlJdbcSource extends DataSqlSource<Connection> {
         try {
             conn = writePool.poll();
             conn.setReadOnly(false);
+            conn.setAutoCommit(true); 
             sql += ((flipper == null || flipper.getLimit() < 1) ? "" : (" LIMIT " + flipper.getLimit()));
             if (info.isLoggable(logger, Level.FINEST)) logger.finest(info.getType().getSimpleName() + " delete sql=" + sql);
             final Statement stmt = conn.createStatement();
@@ -207,6 +209,7 @@ public class DataSqlJdbcSource extends DataSqlSource<Connection> {
         try {
             conn = writePool.poll();
             conn.setReadOnly(false);
+            conn.setAutoCommit(true); 
             final String updateSQL = info.getUpdatePrepareSQL(values[0]);
             final PreparedStatement prestmt = conn.prepareStatement(updateSQL);
             Attribute<T, Serializable>[] attrs = info.updateAttributes;
@@ -272,6 +275,7 @@ public class DataSqlJdbcSource extends DataSqlSource<Connection> {
         try {
             conn = writePool.poll();
             conn.setReadOnly(false);
+            conn.setAutoCommit(true); 
             if (prepared) {
                 final PreparedStatement prestmt = conn.prepareStatement(sql);
                 int index = 0;
