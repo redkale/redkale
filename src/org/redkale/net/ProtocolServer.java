@@ -452,6 +452,7 @@ public abstract class ProtocolServer {
                 if (key == null || !key.isValid()) return;
                 SocketChannel socket = (SocketChannel) key.channel();
                 NIOTCPAsyncConnection conn = (NIOTCPAsyncConnection) key.attachment();
+                if(conn == null) return;
                 if (key.isReadable()) {
                     if (conn.readHandler != null) readOP(key, socket, conn);
                 } else if (key.isWritable()) {
@@ -462,9 +463,7 @@ public abstract class ProtocolServer {
             private void readOP(SelectionKey key, SocketChannel socket, NIOTCPAsyncConnection conn) {
                 try {
                     final int rs = socket.read(conn.readBuffer);
-                    key.interestOps(SelectionKey.OP_CONNECT);
                     //System.out.println(conn + "------readbuf:" + conn.readBuffer + "-------handler:" + conn.readHandler + "-------read: " + rs);
-                    if(conn.readHandler == null) return;
                     context.runAsync(() -> conn.completeRead(rs));
                 } catch (Throwable t) {
                     context.runAsync(() -> conn.faileRead(t));
@@ -496,7 +495,7 @@ public abstract class ProtocolServer {
                         final ByteBuffer buffer = conn.writeOneBuffer;
                         while (buffer.hasRemaining()) rs += socket.write(buffer);
                     }
-                    key.interestOps(SelectionKey.OP_CONNECT);
+                    key.interestOps(SelectionKey.OP_READ);
                     final int rs0 = rs;
                     //System.out.println(conn + "------buffers:" + conn.writeBuffers + "---onebuf:" + conn.writeOneBuffer + "-------handler:" + conn.writeHandler + "-------write: " + rs);
                     context.runAsync(() -> conn.completeWrite(rs0));
