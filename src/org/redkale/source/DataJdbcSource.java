@@ -511,8 +511,18 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
         }
     }
 
-    protected int[] directExecute(final Connection conn, String... sqls) {
+    /**
+     * 直接本地执行SQL语句进行增删改操作，远程模式不可用   <br>
+     * 通常用于复杂的更新操作   <br>
+     *
+     * @param sqls SQL语句
+     *
+     * @return 结果数组
+     */
+    @Local
+    public int[] directExecute(String... sqls) {
         if (sqls.length == 0) return new int[0];
+        Connection conn = writePool.poll();
         try {
             conn.setReadOnly(false);
             final Statement stmt = conn.createStatement();
@@ -525,22 +535,6 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
             return rs;
         } catch (SQLException e) {
             throw new RuntimeException(e);
-        }
-    }
-
-    /**
-     * 直接本地执行SQL语句进行增删改操作，远程模式不可用   <br>
-     * 通常用于复杂的更新操作   <br>
-     *
-     * @param sqls SQL语句
-     *
-     * @return 结果数组
-     */
-    @Local
-    public int[] directExecute(String... sqls) {
-        Connection conn = writePool.poll();
-        try {
-            return directExecute(conn, sqls);
         } finally {
             if (conn != null) writePool.offerConnection(conn);
         }
