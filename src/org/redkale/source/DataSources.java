@@ -117,7 +117,7 @@ public final class DataSources {
                     return (DataSource) d.newInstance(unitName, persistxml, readprop, writeprop);
                 }
             }
-            throw new IOException("DataSource impl class (" + impl + ") have no Constructor by (Properties prop) or  (String name, Properties prop) or  (String name, Properties readprop, Propertieswriteprop)");
+            throw new IOException("DataSource impl class (" + impl + ") have no Constructor by (Properties prop) or (String name, Properties prop) or (String name, Properties readprop, Propertieswriteprop) or (String name, URL persistxml, Properties readprop, Propertieswriteprop)");
         } catch (IOException ex) {
             throw ex;
         } catch (Exception e) {
