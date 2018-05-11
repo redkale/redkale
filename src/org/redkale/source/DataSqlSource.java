@@ -8,7 +8,7 @@ package org.redkale.source;
 import java.io.Serializable;
 import java.net.URL;
 import java.nio.ByteBuffer;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
@@ -144,6 +144,26 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
 
     //查询一页数据
     protected abstract <T> CompletableFuture<Sheet<T>> querySheetDB(final EntityInfo<T> info, final boolean needtotal, final SelectColumn selects, final Flipper flipper, final FilterNode node);
+
+    protected <T> T infoGetValue(EntityInfo<T> info, final SelectColumn sels, final ResultSet set) throws SQLException {
+        return info.getValue(sels, set);
+    }
+
+    protected <T> String createSQLOrderby(EntityInfo<T> info, Flipper flipper) {
+        return info.createSQLOrderby(flipper);
+    }
+
+    protected Map<Class, String> getJoinTabalis(FilterNode node) {
+        return node == null ? null : node.getJoinTabalis();
+    }
+
+    protected <T> CharSequence createSQLJoin(FilterNode node, final Function<Class, EntityInfo> func, final boolean update, final Map<Class, String> joinTabalis, final Set<String> haset, final EntityInfo<T> info) {
+        return node == null ? null : node.createSQLJoin(func, update, joinTabalis, haset, info);
+    }
+
+    protected <T> CharSequence createSQLExpress(FilterNode node, final EntityInfo<T> info, final Map<Class, String> joinTabalis) {
+        return node == null ? null : node.createSQLExpress(info, joinTabalis);
+    }
 
     @Override
     protected ExecutorService getExecutor() {

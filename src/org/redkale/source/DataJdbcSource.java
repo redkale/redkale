@@ -318,7 +318,7 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
                 for (FilterFuncColumn ffc : columns) {
                     for (String col : ffc.cols()) {
                         Object o = set.getObject(++index);
-                        Number rs = ffc.defvalue;
+                        Number rs = ffc.getDefvalue();
                         if (o != null) rs = (Number) o;
                         map.put(ffc.col(col), rs);
                     }
@@ -371,7 +371,7 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
             Map<K, N> rs = new LinkedHashMap<>();
             ResultSet set = stmt.executeQuery(sql);
             ResultSetMetaData rsd = set.getMetaData();
-            boolean smallint = rsd.getColumnType(1) == Types.SMALLINT;
+            boolean smallint = rsd == null ? false : rsd.getColumnType(1) == Types.SMALLINT;
             while (set.next()) {
                 rs.put((K) (smallint ? set.getShort(1) : set.getObject(1)), (N) set.getObject(2));
             }

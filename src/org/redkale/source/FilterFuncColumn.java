@@ -40,11 +40,11 @@ public class FilterFuncColumn implements java.io.Serializable {
         return new FilterFuncColumn(func, defvalue, columns);
     }
 
-    String[] cols() {
+    public String[] cols() {
         return columns == null || columns.length == 0 ? new String[]{COLUMN_NULL} : columns;
     }
 
-    String col(String column) {
+    public String col(String column) {
         return column == null || column.isEmpty() ? COLUMN_NULL : column;
     }
 

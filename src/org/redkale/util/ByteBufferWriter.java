@@ -48,7 +48,7 @@ public class ByteBufferWriter {
     public ByteBuffer[] toBuffers() {
         if (buffers == null) return new ByteBuffer[0];
         for (ByteBuffer buf : this.buffers) {
-            if (buf.position() != 0) buf.flip();
+            buf.flip();
         }
         return this.buffers;
     }
@@ -130,7 +130,6 @@ public class ByteBufferWriter {
 //        System.out.println(Arrays.toString(b4));
 //        System.out.println(Arrays.toString(toBytes(writer.toBuffers())));
 //    }
-
     public ByteBufferWriter putFloat(float value) {
         getLastBuffer(4).putFloat(value);
         position += 4;
