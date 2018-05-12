@@ -69,8 +69,10 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
     public DataSqlSource(String unitName, URL persistxml, Properties readprop, Properties writeprop) {
         final AtomicInteger counter = new AtomicInteger();
         this.threads = Integer.decode(readprop.getProperty(JDBC_CONNECTIONSMAX, "" + Runtime.getRuntime().availableProcessors() * 16));
+        int maxconns = Math.max(8, Integer.decode(readprop.getProperty(JDBC_CONNECTIONSMAX, "" + Runtime.getRuntime().availableProcessors() * 16)));
         if (readprop != writeprop) {
             this.threads += Integer.decode(writeprop.getProperty(JDBC_CONNECTIONSMAX, "" + Runtime.getRuntime().availableProcessors() * 16));
+            maxconns = 0;
         }
         final String cname = this.getClass().getSimpleName();
         final Thread.UncaughtExceptionHandler ueh = (t, e) -> {
@@ -99,8 +101,9 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
         this.name = unitName;
         this.persistxml = persistxml;
         this.cacheForbidden = "NONE".equalsIgnoreCase(readprop.getProperty(JDBC_CACHE_MODE));
-        this.readPool = createPoolSource(this, "read", readprop);
-        this.writePool = createPoolSource(this, "write", writeprop);
+        ArrayBlockingQueue<DBChannel> queue = maxconns > 0 ? new ArrayBlockingQueue(maxconns) : null;
+        this.readPool = createPoolSource(this, "read", queue, readprop);
+        this.writePool = createPoolSource(this, "write", queue, writeprop);
     }
 
     //是否异步， 为true则只能调用pollAsync方法，为false则只能调用poll方法
@@ -110,7 +113,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
     protected abstract String prepareParamSign(int index);
 
     //创建连接池
-    protected abstract PoolSource<DBChannel> createPoolSource(DataSource source, String rwtype, Properties prop);
+    protected abstract PoolSource<DBChannel> createPoolSource(DataSource source, String rwtype, ArrayBlockingQueue queue, Properties prop);
 
     //插入纪录
     protected abstract <T> CompletableFuture<Integer> insertDB(final EntityInfo<T> info, T... values);

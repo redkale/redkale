@@ -131,8 +131,8 @@ public class DataJdbcOldSource extends AbstractService implements DataSource, Da
     protected void initByProperties(String unitName, Properties readprop, Properties writeprop) {
         this.name = unitName;
         this.cacheForbidden = "NONE".equalsIgnoreCase(readprop.getProperty(JDBC_CACHE_MODE));
-        this.readPool = new PoolJdbcSource(unitName, persistxml, "read", readprop, logger);
-        this.writePool = new PoolJdbcSource(unitName, persistxml, "write", writeprop, logger);
+        this.readPool = new PoolJdbcSource(unitName, persistxml, "read", null, readprop, logger);
+        this.writePool = new PoolJdbcSource(unitName, persistxml, "write", null, writeprop, logger);
     }
 
     @Local

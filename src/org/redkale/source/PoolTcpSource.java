@@ -33,7 +33,7 @@ public abstract class PoolTcpSource extends PoolSource<AsyncConnection> {
 
     protected final ArrayBlockingQueue<AsyncConnection> connQueue;
 
-    public PoolTcpSource(String rwtype, Properties prop, Logger logger, ObjectPool<ByteBuffer> bufferPool, ThreadPoolExecutor executor) {
+    public PoolTcpSource(String rwtype, ArrayBlockingQueue queue, Properties prop, Logger logger, ObjectPool<ByteBuffer> bufferPool, ThreadPoolExecutor executor) {
         super(rwtype, prop, logger);
         this.bufferPool = bufferPool;
         this.executor = executor;
@@ -42,7 +42,7 @@ public abstract class PoolTcpSource extends PoolSource<AsyncConnection> {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        this.connQueue = new ArrayBlockingQueue<>(this.maxconns);
+        this.connQueue = queue == null ? new ArrayBlockingQueue<>(this.maxconns) : queue;
     }
 
     @Override
@@ -53,7 +53,18 @@ public abstract class PoolTcpSource extends PoolSource<AsyncConnection> {
             usingCounter.decrementAndGet();
         } else {
             //usingCounter 会在close方法中执行
-            conn.dispose();
+            CompletableFuture<AsyncConnection> future = null;
+            try {
+                future = sendCloseCommand(conn);
+            } catch (Exception e) {
+            }
+            if (future == null) {
+                conn.dispose();
+            } else {
+                future.whenComplete((c, t) -> {
+                    if (c != null) c.dispose();
+                });
+            }
         }
     }
 
@@ -167,16 +178,20 @@ public abstract class PoolTcpSource extends PoolSource<AsyncConnection> {
     @Override
     public void close() {
         connQueue.stream().forEach(x -> {
+            CompletableFuture<AsyncConnection> future = null;
             try {
-                sendCloseCommand(x);
+                future = sendCloseCommand(x);
             } catch (Exception e) {
             }
-            try {
-                x.close();
-            } catch (Exception e) {
+            if (future == null) {
+                x.dispose();
+            } else {
+                future.whenComplete((c, t) -> {
+                    if (c != null) c.dispose();
+                });
             }
         });
     }
 
-    protected abstract void sendCloseCommand(final AsyncConnection conn);
+    protected abstract CompletableFuture<AsyncConnection> sendCloseCommand(final AsyncConnection conn);
 }

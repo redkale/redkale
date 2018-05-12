@@ -9,7 +9,7 @@ import java.io.Serializable;
 import java.net.URL;
 import java.sql.*;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 import java.util.function.Consumer;
 import java.util.logging.Level;
@@ -45,8 +45,8 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
     }
 
     @Override
-    protected PoolSource<Connection> createPoolSource(DataSource source, String rwtype, Properties prop) {
-        return new PoolJdbcSource(this.name, this.persistxml, rwtype, prop, this.logger);
+    protected PoolSource<Connection> createPoolSource(DataSource source, String rwtype, ArrayBlockingQueue queue, Properties prop) {
+        return new PoolJdbcSource(this.name, this.persistxml, rwtype, queue, prop, this.logger);
     }
 
     @Override

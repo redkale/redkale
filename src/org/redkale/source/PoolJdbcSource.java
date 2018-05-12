@@ -39,12 +39,12 @@ public class PoolJdbcSource extends PoolSource<Connection> {
 
     private final URL persistxml;
 
-    public PoolJdbcSource(String unitName, URL persistxml, String rwtype, Properties prop, Logger logger) {
+    public PoolJdbcSource(String unitName, URL persistxml, String rwtype, ArrayBlockingQueue aqueue, Properties prop, Logger logger) {
         super(rwtype, prop, logger);
         this.unitName = unitName;
         this.persistxml = persistxml;
         this.source = createDataSource(prop);
-        this.queue = new ArrayBlockingQueue<>(this.maxconns);
+        this.queue = aqueue == null ? new ArrayBlockingQueue<>(this.maxconns) : aqueue;
         this.listener = new ConnectionEventListener() {
 
             @Override
