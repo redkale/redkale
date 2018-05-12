@@ -102,7 +102,7 @@ public abstract class PoolTcpSource extends PoolSource<AsyncConnection> {
             return future;
         }
         AsyncConnection conn0 = connQueue.poll();
-        if (conn0 != null) {
+        if (conn0 != null && conn0.isOpen()) {
             cycleCounter.incrementAndGet();
             usingCounter.incrementAndGet();
             return CompletableFuture.completedFuture(conn0);
@@ -115,7 +115,7 @@ public abstract class PoolTcpSource extends PoolSource<AsyncConnection> {
                     return null;
                 }
             }, executor).thenCompose((conn2) -> {
-                if (conn2 != null) {
+                if (conn2 != null && conn2.isOpen()) {
                     cycleCounter.incrementAndGet();
                     return CompletableFuture.completedFuture(conn2);
                 }
