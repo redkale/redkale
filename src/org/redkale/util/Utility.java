@@ -149,7 +149,7 @@ public final class Utility {
         } catch (Exception e) {
             random = new SecureRandom();
         }
-        byte[] bs = new byte[32];
+        byte[] bs = new byte[16];
         random.nextBytes(bs);
         random.setSeed(bs);
         return random;
