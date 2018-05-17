@@ -143,7 +143,12 @@ public final class Utility {
      * @return SecureRandom
      */
     public static SecureRandom createRandom() {
-        SecureRandom random = new SecureRandom();
+        SecureRandom random;
+        try {
+            random = SecureRandom.getInstance("SHA1PRNG");
+        } catch (Exception e) {
+            random = new SecureRandom();
+        }
         byte[] bs = new byte[32];
         random.nextBytes(bs);
         random.setSeed(bs);
