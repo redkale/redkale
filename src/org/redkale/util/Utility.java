@@ -171,9 +171,23 @@ public final class Utility {
      *
      * @return 随机元素
      */
-    public static long random(Random random, long[] array) { 
+    public static long random(Random random, long[] array) {
         int rs = random.nextInt();
         return rs < 0 ? array[-rs % array.length] : array[rs % array.length];
+    }
+
+    /**
+     * 随机取array元素
+     *
+     * @param <T>    泛型
+     * @param random SecureRandom
+     * @param array  List
+     *
+     * @return 随机元素
+     */
+    public static <T> T random(Random random, List<T> array) {
+        int rs = random.nextInt();
+        return rs < 0 ? array.get(-rs % array.size()) : array.get(rs % array.size());
     }
 
     /**
