@@ -144,7 +144,7 @@ public final class Utility {
      */
     public static SecureRandom createRandom() {
         SecureRandom random = new SecureRandom();
-        random.setSeed(System.nanoTime());
+        random.setSeed(SecureRandom.getSeed(32));
         return random;
     }
 
