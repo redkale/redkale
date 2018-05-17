@@ -138,6 +138,17 @@ public final class Utility {
     }
 
     /**
+     * 创建随机源
+     *
+     * @return SecureRandom
+     */
+    public static SecureRandom createRandom() {
+        SecureRandom random = new SecureRandom();
+        random.setSeed(System.nanoTime());
+        return random;
+    }
+
+    /**
      * 将多个key:value的字符串键值对组合成一个Map，items长度必须是偶数, 参数个数若是奇数的话，最后一个会被忽略
      * 类似 JDK9中的 Map.of 方法
      *
