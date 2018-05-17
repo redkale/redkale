@@ -158,7 +158,7 @@ public final class Utility {
      *
      * @return 随机元素
      */
-    public static int random(SecureRandom random, int[] array) {
+    public static int random(Random random, int[] array) {
         int rs = random.nextInt();
         return rs < 0 ? array[-rs % array.length] : array[rs % array.length];
     }
@@ -171,7 +171,7 @@ public final class Utility {
      *
      * @return 随机元素
      */
-    public static long random(SecureRandom random, long[] array) {
+    public static long random(Random random, long[] array) { 
         int rs = random.nextInt();
         return rs < 0 ? array[-rs % array.length] : array[rs % array.length];
     }
