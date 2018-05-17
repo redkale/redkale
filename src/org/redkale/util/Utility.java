@@ -151,6 +151,32 @@ public final class Utility {
     }
 
     /**
+     * 随机取array元素
+     *
+     * @param random SecureRandom
+     * @param array  数组
+     *
+     * @return 随机元素
+     */
+    public static int random(SecureRandom random, int[] array) {
+        int rs = random.nextInt();
+        return rs < 0 ? array[-rs % array.length] : array[rs % array.length];
+    }
+
+    /**
+     * 随机取array元素
+     *
+     * @param random SecureRandom
+     * @param array  数组
+     *
+     * @return 随机元素
+     */
+    public static long random(SecureRandom random, long[] array) {
+        int rs = random.nextInt();
+        return rs < 0 ? array[-rs % array.length] : array[rs % array.length];
+    }
+
+    /**
      * 将多个key:value的字符串键值对组合成一个Map，items长度必须是偶数, 参数个数若是奇数的话，最后一个会被忽略
      * 类似 JDK9中的 Map.of 方法
      *
