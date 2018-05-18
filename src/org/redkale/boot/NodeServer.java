@@ -231,7 +231,14 @@ public abstract class NodeServer {
                 boolean needinit = true;
                 if (sourceConf != null) {
                     final Class sourceType = serverClassLoader.loadClass(sourceConf.getValue("value"));
-                    if (DataSource.class.isAssignableFrom(sourceType) && !DataSqlSource.class.isAssignableFrom(sourceType)) { // DataSqlSource没有空构造函数
+                    boolean can = false;
+                    for (Constructor cr : sourceType.getConstructors()) {
+                        if (cr.getParameterCount() == 0) {
+                            can = true;
+                            break;
+                        }
+                    }
+                    if (DataSource.class.isAssignableFrom(sourceType) && can) { // 必须有空构造函数
                         final Service srcService = (Service) src;
                         SncpClient client = Sncp.getSncpClient(srcService);
                         final InetSocketAddress sncpAddr = client == null ? null : client.getClientAddress();
