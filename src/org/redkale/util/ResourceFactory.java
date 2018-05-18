@@ -485,7 +485,7 @@ public final class ResourceFactory {
                 if (re.value != null) list.add((A) re.value);
             }
         }
-        if (parent != null) query(list, clazz);
+        if (parent != null) parent.query(list, clazz);
         return list;
     }
 
@@ -502,7 +502,7 @@ public final class ResourceFactory {
                 }
             }
         }
-        if (parent != null) query(list, predicate);
+        if (parent != null) parent.query(list, predicate);
         return list;
     }
 
