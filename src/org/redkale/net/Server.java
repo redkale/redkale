@@ -34,6 +34,8 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
 
     public static final String RESNAME_SERVER_EXECUTOR = "SERVER_EXECUTOR";
 
+    public static final String RESNAME_SERVER_RESFACTORY = "SERVER_RESFACTORY";
+
     protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
 
     //-------------------------------------------------------------

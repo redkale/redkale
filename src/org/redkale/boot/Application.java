@@ -96,6 +96,11 @@ public final class Application {
      */
     public static final String RESNAME_SERVER_EXECUTOR = Server.RESNAME_SERVER_EXECUTOR;
 
+    /**
+     * 当前Server的ResourceFactory
+     */
+    public static final String RESNAME_SERVER_RESFACTORY = Server.RESNAME_SERVER_RESFACTORY;
+
     //本地IP地址
     final InetAddress localAddress;
 
@@ -431,7 +436,8 @@ public final class Application {
                     if (type == Application.class) {
                         field.set(src, application);
                     } else if (type == ResourceFactory.class) {
-                        field.set(src, res.name().equalsIgnoreCase("server") ? rf : (res.name().isEmpty() ? application.resourceFactory : null));
+                        boolean serv = RESNAME_SERVER_RESFACTORY.equals(res.name()) || res.name().equalsIgnoreCase("server");
+                        field.set(src, serv ? rf : (res.name().isEmpty() ? application.resourceFactory : null));
                     } else if (type == TransportFactory.class) {
                         field.set(src, application.sncpTransportFactory);
                     } else if (type == NodeSncpServer.class) {
