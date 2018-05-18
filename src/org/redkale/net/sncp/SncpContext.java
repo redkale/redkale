@@ -5,6 +5,8 @@
  */
 package org.redkale.net.sncp;
 
+import java.nio.ByteBuffer;
+import java.util.function.*;
 import org.redkale.net.*;
 
 /**
@@ -17,6 +19,21 @@ public class SncpContext extends Context {
 
     public SncpContext(SncpContextConfig config) {
         super(config);
+    }
+
+    @Override
+    protected Consumer<ByteBuffer> getBufferConsumer() {
+        return super.getBufferConsumer();
+    }
+
+    @Override
+    protected void offerBuffer(ByteBuffer buffer) {
+        super.offerBuffer(buffer);
+    }
+
+    @Override
+    protected void offerBuffer(ByteBuffer... buffers) {
+        super.offerBuffer(buffers);
     }
 
     public static class SncpContextConfig extends ContextConfig {

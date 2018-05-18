@@ -156,6 +156,10 @@ public abstract class Response<C extends Context, R extends Request<C>> {
         return bodyBufferSupplier;
     }
 
+    protected void offerBuffer(ByteBuffer... buffers) {
+        context.offerBuffer(buffers);
+    }
+
     protected AsyncConnection removeChannel() {
         AsyncConnection ch = this.channel;
         this.channel = null;

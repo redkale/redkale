@@ -221,6 +221,11 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         return this.autoOptions;
     }
 
+    @Override
+    protected void offerBuffer(ByteBuffer... buffers) {
+        super.offerBuffer(buffers);
+    }
+
     /**
      * 增加Cookie值
      *

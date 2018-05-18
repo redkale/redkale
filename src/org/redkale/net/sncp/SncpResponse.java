@@ -52,6 +52,11 @@ public final class SncpResponse extends Response<SncpContext, SncpRequest> {
         if (this.addrBytes.length != 4) throw new RuntimeException("SNCP serverAddress only support IPv4");
     }
 
+    @Override
+    protected void offerBuffer(ByteBuffer... buffers) {
+        super.offerBuffer(buffers);
+    }
+    
     public void finish(final int retcode, final BsonWriter out) {
         if (out == null) {
             final ByteBuffer buffer = pollWriteReadBuffer();

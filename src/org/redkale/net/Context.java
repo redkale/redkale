@@ -153,7 +153,7 @@ public class Context {
         return bufferPool;
     }
 
-    public Consumer<ByteBuffer> getBufferConsumer() {
+    protected Consumer<ByteBuffer> getBufferConsumer() {
         return bufferPool;
     }
 
@@ -161,11 +161,11 @@ public class Context {
         return bufferPool.get();
     }
 
-    public void offerBuffer(ByteBuffer buffer) {
+    protected void offerBuffer(ByteBuffer buffer) {
         bufferPool.accept(buffer);
     }
 
-    public void offerBuffer(ByteBuffer... buffers) {
+    protected void offerBuffer(ByteBuffer... buffers) {
         if (buffers == null) return;
         for (ByteBuffer buffer : buffers) {
             bufferPool.accept(buffer);

@@ -6,7 +6,6 @@
 package org.redkale.net.http;
 
 import org.redkale.net.AsyncConnection;
-import org.redkale.net.Context;
 import static org.redkale.net.http.WebSocket.*;
 import org.redkale.net.http.WebSocketPacket.FrameType;
 import java.nio.ByteBuffer;
@@ -34,7 +33,7 @@ class WebSocketRunner implements Runnable {
 
     private final WebSocket webSocket;
 
-    protected final Context context;
+    protected final HttpContext context;
 
     private ByteBuffer readBuffer;
 
@@ -50,7 +49,7 @@ class WebSocketRunner implements Runnable {
 
     protected long lastReadTime;
 
-    WebSocketRunner(Context context, WebSocket webSocket, BiConsumer<WebSocket, Object> messageConsumer, AsyncConnection channel) {
+    WebSocketRunner(HttpContext context, WebSocket webSocket, BiConsumer<WebSocket, Object> messageConsumer, AsyncConnection channel) {
         this.context = context;
         this.engine = webSocket._engine;
         this.webSocket = webSocket;
