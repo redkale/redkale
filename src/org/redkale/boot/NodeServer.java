@@ -231,7 +231,7 @@ public abstract class NodeServer {
                 boolean needinit = true;
                 if (sourceConf != null) {
                     final Class sourceType = serverClassLoader.loadClass(sourceConf.getValue("value"));
-                    if (DataSource.class.isAssignableFrom(sourceType)) { // DataSource
+                    if (DataSource.class.isAssignableFrom(sourceType) && !DataSqlSource.class.isAssignableFrom(sourceType)) { // DataSqlSource没有空构造函数
                         final Service srcService = (Service) src;
                         SncpClient client = Sncp.getSncpClient(srcService);
                         final InetSocketAddress sncpAddr = client == null ? null : client.getClientAddress();
