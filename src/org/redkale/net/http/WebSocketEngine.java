@@ -107,8 +107,12 @@ public class WebSocketEngine {
         long delay = (liveinterval - System.currentTimeMillis() / 1000 % liveinterval) + index * 5;
         final int intervalms = liveinterval * 1000;
         scheduler.scheduleWithFixedDelay(() -> {
-            long now = System.currentTimeMillis();
-            getLocalWebSockets().stream().filter(x -> (now - x.getLastReadTime()) > intervalms).forEach(x -> x.sendPing());
+            try {
+                long now = System.currentTimeMillis();
+                getLocalWebSockets().stream().filter(x -> (now - x.getLastReadTime()) > intervalms).forEach(x -> x.sendPing());
+            } catch (Throwable t) {
+                logger.log(Level.SEVERE, "WebSocketEngine schedule(interval=" + liveinterval + "s) ping error", t);
+            }
         }, delay, liveinterval, TimeUnit.SECONDS);
         if (logger.isLoggable(Level.FINEST)) logger.finest(this.getClass().getSimpleName() + "(" + engineid + ")" + " start keeplive(wsmaxconns:" + wsmaxconns + ", delay:" + delay + "s, interval:" + liveinterval + "s) scheduler executor");
     }

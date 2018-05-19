@@ -118,15 +118,19 @@ public final class EntityCache<T> {
                 return t;
             });
             this.scheduler.scheduleAtFixedRate(() -> {
-                ConcurrentHashMap newmap2 = new ConcurrentHashMap();
-                List<T> all2 = info.fullloader.apply(info.source, type);
-                if (all2 != null) {
-                    all2.stream().filter(x -> x != null).forEach(x -> {
-                        newmap2.put(this.primary.get(x), x);
-                    });
+                try {
+                    ConcurrentHashMap newmap2 = new ConcurrentHashMap();
+                    List<T> all2 = info.fullloader.apply(info.source, type);
+                    if (all2 != null) {
+                        all2.stream().filter(x -> x != null).forEach(x -> {
+                            newmap2.put(this.primary.get(x), x);
+                        });
+                    }
+                    this.list = all2 == null ? new ConcurrentLinkedQueue() : new ConcurrentLinkedQueue(all2);
+                    this.map = newmap2;
+                } catch (Throwable t) {
+                    logger.log(Level.SEVERE, type + " schedule(interval=" + interval + "s) Cacheable error", t);
                 }
-                this.list = all2 == null ? new ConcurrentLinkedQueue() : new ConcurrentLinkedQueue(all2);
-                this.map = newmap2;
             }, interval - System.currentTimeMillis() / 1000 % interval, interval, TimeUnit.SECONDS);
         }
     }

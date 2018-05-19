@@ -123,16 +123,20 @@ public class CacheMemorySource<V extends Object> extends AbstractService impleme
             });
             final List<String> keys = new ArrayList<>();
             scheduler.scheduleWithFixedDelay(() -> {
-                keys.clear();
-                int now = (int) (System.currentTimeMillis() / 1000);
-                container.forEach((k, x) -> {
-                    if (x.expireSeconds > 0 && (now > (x.lastAccessed + x.expireSeconds))) {
-                        keys.add(x.key);
+                try {
+                    keys.clear();
+                    int now = (int) (System.currentTimeMillis() / 1000);
+                    container.forEach((k, x) -> {
+                        if (x.expireSeconds > 0 && (now > (x.lastAccessed + x.expireSeconds))) {
+                            keys.add(x.key);
+                        }
+                    });
+                    for (String key : keys) {
+                        CacheEntry entry = container.remove(key);
+                        if (expireHandler != null && entry != null) expireHandler.accept(entry);
                     }
-                });
-                for (String key : keys) {
-                    CacheEntry entry = container.remove(key);
-                    if (expireHandler != null && entry != null) expireHandler.accept(entry);
+                } catch (Throwable t) {
+                    logger.log(Level.SEVERE, "CacheMemorySource schedule(interval=" + 10 + "s) error", t);
                 }
             }, 10, 10, TimeUnit.SECONDS);
             if (logger.isLoggable(Level.FINEST)) logger.finest(self.getClass().getSimpleName() + ":" + self.resourceName() + " start schedule expire executor");

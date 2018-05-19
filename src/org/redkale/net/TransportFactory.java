@@ -124,7 +124,11 @@ public class TransportFactory {
             return t;
         });
         this.scheduler.scheduleAtFixedRate(() -> {
-            checks();
+            try {
+                checks();
+            } catch (Throwable t) {
+                logger.log(Level.SEVERE, "TransportFactory schedule(interval=" + checkinterval + "s) check error", t);
+            }
         }, checkinterval, checkinterval, TimeUnit.SECONDS);
 
         if (this.pinginterval > 0) {
