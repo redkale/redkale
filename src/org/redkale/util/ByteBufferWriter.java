@@ -5,7 +5,7 @@
  */
 package org.redkale.util;
 
-import java.nio.ByteBuffer;
+import java.nio.*;
 import java.util.function.Supplier;
 
 /**
@@ -24,6 +24,8 @@ public class ByteBufferWriter {
 
     private int position;
 
+    private boolean bigEndian = true;
+
     protected ByteBufferWriter(Supplier<ByteBuffer> supplier) {
         this.supplier = supplier;
     }
@@ -35,6 +37,7 @@ public class ByteBufferWriter {
     private ByteBuffer getLastBuffer(int size) {
         if (this.buffers == null) {
             ByteBuffer buf = supplier.get();
+            this.bigEndian = buf.order() == ByteOrder.BIG_ENDIAN;
             this.buffers = Utility.append(this.buffers, buf);
             return buf;
         } else if (this.buffers[this.buffers.length - 1].remaining() < size) {
@@ -86,23 +89,27 @@ public class ByteBufferWriter {
                 if (r >= 4) {
                     buffs[i].putInt(index - start, value);
                     return this;
-                } else if (r == 3) {
-                    buffs[i].put(index - start, (byte) ((value >> 24) & 0xFF));
-                    buffs[i].put(index - start + 1, (byte) ((value >> 16) & 0xFF));
-                    buffs[i].put(index - start + 2, (byte) ((value >> 8) & 0xFF));
-                    buffs[i + 1].put(0, (byte) (value & 0xFF));
-                    return this;
-                } else if (r == 2) {
-                    buffs[i].put(index - start, (byte) ((value >> 24) & 0xFF));
-                    buffs[i].put(index - start + 1, (byte) ((value >> 16) & 0xFF));
-                    buffs[i + 1].put(0, (byte) ((value >> 8) & 0xFF));
-                    buffs[i + 1].put(1, (byte) (value & 0xFF));
-                    return this;
-                } else if (r == 1) {
-                    buffs[i].put(index - start, (byte) ((value >> 24) & 0xFF));
-                    buffs[i + 1].put(0, (byte) ((value >> 16) & 0xFF));
-                    buffs[i + 1].put(1, (byte) ((value >> 8) & 0xFF));
-                    buffs[i + 1].put(2, (byte) (value & 0xFF));
+                } else {
+                    byte b1 = bigEndian ? (byte) ((value >> 24) & 0xFF) : (byte) (value & 0xFF);
+                    byte b2 = bigEndian ? (byte) ((value >> 16) & 0xFF) : (byte) ((value >> 8) & 0xFF);
+                    byte b3 = bigEndian ? (byte) ((value >> 8) & 0xFF) : (byte) ((value >> 16) & 0xFF);
+                    byte b4 = bigEndian ? (byte) (value & 0xFF) : (byte) ((value >> 24) & 0xFF);
+                    if (r == 3) {
+                        buffs[i].put(index - start, b1);
+                        buffs[i].put(index - start + 1, b2);
+                        buffs[i].put(index - start + 2, b3);
+                        buffs[i + 1].put(0, b4);
+                    } else if (r == 2) {
+                        buffs[i].put(index - start, b1);
+                        buffs[i].put(index - start + 1, b2);
+                        buffs[i + 1].put(0, b3);
+                        buffs[i + 1].put(1, b4);
+                    } else if (r == 1) {
+                        buffs[i].put(index - start, b1);
+                        buffs[i + 1].put(0, b2);
+                        buffs[i + 1].put(1, b3);
+                        buffs[i + 1].put(2, b4);
+                    }
                     return this;
                 }
             } else {
