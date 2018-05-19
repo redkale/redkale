@@ -106,6 +106,15 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
         this.writePool = createPoolSource(this, "write", queue, writeprop);
     }
 
+    @Local
+    public abstract int directExecute(String sql);
+
+    @Local
+    public abstract int[] directExecute(String... sqls);
+
+    @Local
+    public abstract void directQuery(String sql, Consumer<ResultSet> consumer);
+
     //是否异步， 为true则只能调用pollAsync方法，为false则只能调用poll方法
     protected abstract boolean isAsync();
 

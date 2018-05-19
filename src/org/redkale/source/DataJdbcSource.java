@@ -515,11 +515,26 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
      * 直接本地执行SQL语句进行增删改操作，远程模式不可用   <br>
      * 通常用于复杂的更新操作   <br>
      *
+     * @param sql SQL语句
+     *
+     * @return 结果数组
+     */
+    @Local
+    @Override
+    public int directExecute(String sql) {
+        return directExecute(new String[]{sql})[0];
+    }
+
+    /**
+     * 直接本地执行SQL语句进行增删改操作，远程模式不可用   <br>
+     * 通常用于复杂的更新操作   <br>
+     *
      * @param sqls SQL语句
      *
      * @return 结果数组
      */
     @Local
+    @Override
     public int[] directExecute(String... sqls) {
         if (sqls.length == 0) return new int[0];
         Connection conn = writePool.poll();
@@ -548,6 +563,7 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
      * @param consumer 回调函数
      */
     @Local
+    @Override
     public void directQuery(String sql, Consumer<ResultSet> consumer) {
         final Connection conn = readPool.poll();
         try {
