@@ -102,7 +102,36 @@ public final class DataSources {
         if (readprop == null) throw new IOException("Cannot find (resource.name = '" + unitName + "') DataSource");
         if (writeprop == null) writeprop = readprop;
         String impl = readprop.getProperty(JDBC_DATASOURCE_CLASS, DataJdbcSource.class.getName());
-        if (DataJdbcSource.class.getName().equals(impl)) return new DataJdbcSource(unitName, persistxml, readprop, writeprop);
+        if (DataJdbcSource.class.getName().equals(impl)) {
+            try {
+                return new DataJdbcSource(unitName, persistxml, readprop, writeprop);
+            } catch (RuntimeException re) {
+                if (!(re.getCause() instanceof ClassNotFoundException)) throw re;
+                String dbtype = null;
+                {
+                    /* jdbc:mysql:// jdbc:microsoft:sqlserver:// 取://之前的到最后一个:之间的字符串 */
+                    String url = readprop.getProperty(JDBC_URL);
+                    int pos = url.indexOf("://");
+                    if (pos > 0) {
+                        String url0 = url.substring(0, pos);
+                        pos = url0.lastIndexOf(':');
+                        if (pos > 0) dbtype = url0.substring(pos + 1);
+                    }
+                }
+                if (dbtype == null) throw re;
+                Iterator<SourceLoader> it = ServiceLoader.load(SourceLoader.class).iterator();
+                Class dsClass = null;
+                while (it.hasNext()) {
+                    SourceLoader loader = it.next();
+                    if (dbtype.equalsIgnoreCase(loader.dbtype())) {
+                        dsClass = loader.dataSourceClass();
+                        if (dsClass != null) break;
+                    }
+                }
+                if (dsClass == null) throw re;
+                impl = dsClass.getName();
+            }
+        }
         try {
             Class ds = Thread.currentThread().getContextClassLoader().loadClass(impl);
             for (Constructor d : ds.getConstructors()) {

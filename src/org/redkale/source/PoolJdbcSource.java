@@ -76,7 +76,7 @@ public class PoolJdbcSource extends PoolSource<Connection> {
         }
     }
 
-    static ConnectionPoolDataSource createDataSource(Properties property) {
+    private static ConnectionPoolDataSource createDataSource(Properties property) {
         try {
             return createDataSource(property.getProperty(JDBC_SOURCE, property.getProperty(JDBC_DRIVER)),
                 property.getProperty(JDBC_URL), property.getProperty(JDBC_USER), property.getProperty(JDBC_PWD));
@@ -85,7 +85,7 @@ public class PoolJdbcSource extends PoolSource<Connection> {
         }
     }
 
-    static ConnectionPoolDataSource createDataSource(String source0, String url, String user, String password) throws Exception {
+    private static ConnectionPoolDataSource createDataSource(String source0, String url, String user, String password) throws Exception {
         String source = source0;
         if (source0 == null || source0.isEmpty()) {
             if (url.startsWith("jdbc:mysql:")) {
