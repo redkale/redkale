@@ -152,22 +152,6 @@ public class PoolJdbcSource extends PoolSource<Connection> {
         return 0;
     }
 
-    final boolean isMysql2() {
-        return source != null && source.getClass().getName().contains(".mysql.");
-    }
-
-    final boolean isOracle2() {
-        return source != null && source.getClass().getName().contains("oracle.");
-    }
-
-    final boolean isSqlserver2() {
-        return source != null && source.getClass().getName().contains(".sqlserver.");
-    }
-
-    final boolean isPostgresql2() {
-        return source != null && source.getClass().getName().contains(".postgresql.");
-    }
-
     private void watch() throws IOException {
         if (persistxml == null || unitName == null) return;
         final String file = persistxml.getFile();

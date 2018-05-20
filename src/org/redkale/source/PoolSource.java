@@ -78,6 +78,10 @@ public abstract class PoolSource<DBChannel> {
                 String url0 = this.url.substring(0, pos);
                 pos = url0.lastIndexOf(':');
                 if (pos > 0) dbtype0 = url0.substring(pos + 1);
+            } else { //jdbc:oracle:thin:@localhost:1521
+                String url0 = url.substring(url.indexOf(":") + 1);
+                pos = url0.indexOf(':');
+                if (pos > 0) dbtype0 = url0.substring(0, pos);
             }
         }
         this.dbtype = dbtype0.toLowerCase();
