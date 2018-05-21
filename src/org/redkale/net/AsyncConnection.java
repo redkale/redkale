@@ -107,7 +107,11 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
             livingCounter.decrementAndGet();
             livingCounter = null;
         }
-        if (beforeCloseListener != null) beforeCloseListener.accept(this);
+        if (beforeCloseListener != null)
+            try {
+                beforeCloseListener.accept(this);
+            } catch (Exception io) {
+            }
         if (attributes == null) return;
         try {
             for (Object obj : attributes.values()) {
