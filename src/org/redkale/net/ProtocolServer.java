@@ -85,7 +85,7 @@ public abstract class ProtocolServer {
 
     //---------------------------------------------------------------------
     public static ProtocolServer create(String protocol, Context context) {
-        if ("TCP".equalsIgnoreCase(protocol)) return new ProtocolNIOTCPServer(context);
+        if ("TCP".equalsIgnoreCase(protocol)) return new ProtocolAIOTCPServer(context);
         if ("UDP".equalsIgnoreCase(protocol)) return new ProtocolBIOUDPServer(context);
         throw new RuntimeException("ProtocolServer not support protocol " + protocol);
     }
