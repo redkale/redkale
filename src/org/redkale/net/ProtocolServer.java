@@ -12,7 +12,7 @@ import java.nio.channels.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
-import org.redkale.net.AsyncConnection.NIOTCPAsyncConnection;
+import org.redkale.net.AsyncConnection.AsyncNIOTCPConnection;
 import org.redkale.util.AnyValue;
 
 /**
@@ -85,8 +85,8 @@ public abstract class ProtocolServer {
 
     //---------------------------------------------------------------------
     public static ProtocolServer create(String protocol, Context context) {
-        if ("TCP".equalsIgnoreCase(protocol)) return new ProtocolAIOTCPServer(context);
-        if ("UDP".equalsIgnoreCase(protocol)) return new ProtocolUDPServer(context);
+        if ("TCP".equalsIgnoreCase(protocol)) return new ProtocolNIOTCPServer(context);
+        if ("UDP".equalsIgnoreCase(protocol)) return new ProtocolBIOUDPServer(context);
         throw new RuntimeException("ProtocolServer not support protocol " + protocol);
     }
 
@@ -98,7 +98,7 @@ public abstract class ProtocolServer {
         return supportTcpKeepAlive;
     }
 
-    static final class ProtocolUDPServer extends ProtocolServer {
+    static final class ProtocolBIOUDPServer extends ProtocolServer {
 
         private boolean running;
 
@@ -106,7 +106,7 @@ public abstract class ProtocolServer {
 
         private DatagramChannel serverChannel;
 
-        public ProtocolUDPServer(Context context) {
+        public ProtocolBIOUDPServer(Context context) {
             this.context = context;
         }
 
@@ -451,8 +451,16 @@ public abstract class ProtocolServer {
             private void processKey(SelectionKey key) {
                 if (key == null || !key.isValid()) return;
                 SocketChannel socket = (SocketChannel) key.channel();
-                NIOTCPAsyncConnection conn = (NIOTCPAsyncConnection) key.attachment();
-                if(conn == null) return;
+                AsyncNIOTCPConnection conn = (AsyncNIOTCPConnection) key.attachment();
+                if (!socket.isOpen()) {
+                    if (conn == null) {
+                        key.cancel();
+                    } else {
+                        conn.dispose();
+                    }
+                    return;
+                }
+                if (conn == null) return;
                 if (key.isReadable()) {
                     if (conn.readHandler != null) readOP(key, socket, conn);
                 } else if (key.isWritable()) {
@@ -460,23 +468,47 @@ public abstract class ProtocolServer {
                 }
             }
 
-            private void readOP(SelectionKey key, SocketChannel socket, NIOTCPAsyncConnection conn) {
+            private void readOP(SelectionKey key, SocketChannel socket, AsyncNIOTCPConnection conn) {
+                final CompletionHandler handler = conn.removeReadHandler();
+                final ByteBuffer buffer = conn.removeReadBuffer();
+                final Object attach = conn.removeReadAttachment();
+                //System.out.println(conn + "------readbuf:" + buffer + "-------handler:" + handler);
+                if (handler == null || buffer == null) return;
                 try {
-                    final int rs = socket.read(conn.readBuffer);
-                    //System.out.println(conn + "------readbuf:" + conn.readBuffer + "-------handler:" + conn.readHandler + "-------read: " + rs);
-                    context.runAsync(() -> conn.completeRead(rs));
+                    final int rs = socket.read(buffer);
+                    {  //测试
+                        buffer.flip();
+                        byte[] bs = new byte[buffer.remaining()];
+                        buffer.get(bs);
+                        //System.out.println(conn + "------readbuf:" + buffer + "-------handler:" + handler + "-------读内容: " + new String(bs));
+                    }
+                    //System.out.println(conn + "------readbuf:" + buffer + "-------handler:" + handler + "-------read: " + rs);
+                    context.runAsync(() -> {
+                        try {
+                            handler.completed(rs, attach);
+                        } catch (Throwable e) {
+                            handler.failed(e, attach);
+                        }
+                    });
                 } catch (Throwable t) {
-                    context.runAsync(() -> conn.faileRead(t));
+                    context.runAsync(() -> handler.failed(t, attach));
                 }
             }
 
-            private void writeOP(SelectionKey key, SocketChannel socket, NIOTCPAsyncConnection conn) {
+            private void writeOP(SelectionKey key, SocketChannel socket, AsyncNIOTCPConnection conn) {
+                final CompletionHandler handler = conn.removeWriteHandler();
+                final ByteBuffer oneBuffer = conn.removeWriteOneBuffer();
+                final ByteBuffer[] buffers = conn.removeWriteBuffers();
+                final Object attach = conn.removeWriteAttachment();
+                final int writeOffset = conn.removeWriteOffset();
+                final int writeLength = conn.removeWriteLength();
+                if (handler == null || (oneBuffer == null && buffers == null)) return;
+                //System.out.println(conn + "------buffers:" + Arrays.toString(buffers) + "---onebuf:" + oneBuffer + "-------handler:" + handler);
                 try {
                     int rs = 0;
-                    if (conn.writeOneBuffer == null) {
-                        final ByteBuffer[] buffers = conn.writeBuffers;
-                        int offset = conn.writeOffset;
-                        int length = conn.writeLength;
+                    if (oneBuffer == null) {
+                        int offset = writeOffset;
+                        int length = writeLength;
                         for (;;) {
                             long sr = socket.write(buffers, offset, length);
                             if (sr > 0) rs += sr;
@@ -492,15 +524,20 @@ public abstract class ProtocolServer {
                             if (over) break;
                         }
                     } else {
-                        final ByteBuffer buffer = conn.writeOneBuffer;
-                        while (buffer.hasRemaining()) rs += socket.write(buffer);
+                        while (oneBuffer.hasRemaining()) rs += socket.write(oneBuffer);
                     }
-                    key.interestOps(SelectionKey.OP_READ);
+                    key.interestOps(SelectionKey.OP_READ); //OP_CONNECT
                     final int rs0 = rs;
-                    //System.out.println(conn + "------buffers:" + conn.writeBuffers + "---onebuf:" + conn.writeOneBuffer + "-------handler:" + conn.writeHandler + "-------write: " + rs);
-                    context.runAsync(() -> conn.completeWrite(rs0));
+                    //System.out.println(conn + "------buffers:" + Arrays.toString(buffers) + "---onebuf:" + oneBuffer + "-------handler:" + handler + "-------write: " + rs);
+                    context.runAsync(() -> {
+                        try {
+                            handler.completed(rs0, attach);
+                        } catch (Throwable e) {
+                            handler.failed(e, attach);
+                        }
+                    });
                 } catch (Throwable t) {
-                    context.runAsync(() -> conn.faileWrite(t));
+                    context.runAsync(() -> handler.failed(t, attach));
                 }
             }
 
