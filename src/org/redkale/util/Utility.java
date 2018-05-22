@@ -138,59 +138,6 @@ public final class Utility {
     }
 
     /**
-     * 创建随机源
-     *
-     * @return SecureRandom
-     */
-    public static SecureRandom createRandom() {
-        SecureRandom random = new SecureRandom();
-        byte[] bs = new byte[16];
-        random.nextBytes(bs);
-        random.setSeed(bs);
-        return random;
-    }
-
-    /**
-     * 随机取array元素
-     *
-     * @param random SecureRandom
-     * @param array  数组
-     *
-     * @return 随机元素
-     */
-    public static int random(Random random, int[] array) {
-        int rs = random.nextInt();
-        return rs < 0 ? array[-rs % array.length] : array[rs % array.length];
-    }
-
-    /**
-     * 随机取array元素
-     *
-     * @param random SecureRandom
-     * @param array  数组
-     *
-     * @return 随机元素
-     */
-    public static long random(Random random, long[] array) {
-        int rs = random.nextInt();
-        return rs < 0 ? array[-rs % array.length] : array[rs % array.length];
-    }
-
-    /**
-     * 随机取array元素
-     *
-     * @param <T>    泛型
-     * @param random SecureRandom
-     * @param array  List
-     *
-     * @return 随机元素
-     */
-    public static <T> T random(Random random, List<T> array) {
-        int rs = random.nextInt();
-        return rs < 0 ? array.get(-rs % array.size()) : array.get(rs % array.size());
-    }
-
-    /**
      * 将多个key:value的字符串键值对组合成一个Map，items长度必须是偶数, 参数个数若是奇数的话，最后一个会被忽略
      * 类似 JDK9中的 Map.of 方法
      *
