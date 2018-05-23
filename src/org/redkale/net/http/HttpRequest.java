@@ -1494,10 +1494,13 @@ public class HttpRequest extends Request<HttpContext> {
         org.redkale.source.Flipper flipper = getJsonParameter(org.redkale.source.Flipper.class, name);
         if (flipper == null) {
             if (maxLimit < 1) maxLimit = org.redkale.source.Flipper.DEFAULT_LIMIT;
-            int limit = getRequstURIPath("limit:", maxLimit);
+            int limit = getRequstURIPath("limit:", 0);
             int offset = getRequstURIPath("offset:", 0);
             String sort = getRequstURIPath("sort:", "");
-            if (limit > 0) flipper = new org.redkale.source.Flipper(limit, offset, sort);
+            if (limit > 0) {
+                if (limit > maxLimit) limit = maxLimit;
+                flipper = new org.redkale.source.Flipper(limit, offset, sort);
+            }
         } else if (flipper.getLimit() < 1 || (maxLimit > 0 && flipper.getLimit() > maxLimit)) {
             flipper.setLimit(maxLimit);
         }
