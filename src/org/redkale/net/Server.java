@@ -211,6 +211,54 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         return this.context;
     }
 
+    public long getServerStartTime() {
+        return serverStartTime;
+    }
+
+    public Charset getCharset() {
+        return charset;
+    }
+
+    public int getBacklog() {
+        return backlog;
+    }
+
+    public int getBufferCapacity() {
+        return bufferCapacity;
+    }
+
+    public int getThreads() {
+        return threads;
+    }
+
+    public int getBufferPoolSize() {
+        return bufferPoolSize;
+    }
+
+    public int getResponsePoolSize() {
+        return responsePoolSize;
+    }
+
+    public int getMaxbody() {
+        return maxbody;
+    }
+
+    public int getAliveTimeoutSeconds() {
+        return aliveTimeoutSeconds;
+    }
+
+    public int getReadTimeoutSeconds() {
+        return readTimeoutSeconds;
+    }
+
+    public int getWriteTimeoutSeconds() {
+        return writeTimeoutSeconds;
+    }
+
+    public int getMaxconns() {
+        return maxconns;
+    }
+
     public void setThreads(int threads) {
         int oldthreads = this.threads;
         this.context.executor.setCorePoolSize(threads);
