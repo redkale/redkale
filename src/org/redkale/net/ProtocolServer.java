@@ -461,10 +461,10 @@ public abstract class ProtocolServer {
                     return;
                 }
                 if (conn == null) return;
-                if (key.isReadable()) {
-                    if (conn.readHandler != null) readOP(key, socket, conn);
-                } else if (key.isWritable()) {
+                if (key.isWritable()) {
                     if (conn.writeHandler != null) writeOP(key, socket, conn);
+                } else if (key.isReadable()) {
+                    if (conn.readHandler != null) readOP(key, socket, conn);
                 }
             }
 
@@ -496,10 +496,11 @@ public abstract class ProtocolServer {
             }
 
             private void writeOP(SelectionKey key, SocketChannel socket, AsyncNIOTCPConnection conn) {
-                final CompletionHandler handler = conn.removeWriteHandler();
+                final CompletionHandler handler = conn.writeHandler;
                 final ByteBuffer oneBuffer = conn.removeWriteOneBuffer();
                 final ByteBuffer[] buffers = conn.removeWriteBuffers();
                 final Object attach = conn.removeWriteAttachment();
+                final int writingCount = conn.removeWritingCount();
                 final int writeOffset = conn.removeWriteOffset();
                 final int writeLength = conn.removeWriteLength();
                 if (handler == null || (oneBuffer == null && buffers == null)) return;
@@ -509,25 +510,42 @@ public abstract class ProtocolServer {
                     if (oneBuffer == null) {
                         int offset = writeOffset;
                         int length = writeLength;
-                        for (;;) {
-                            long sr = socket.write(buffers, offset, length);
-                            if (sr > 0) rs += sr;
-                            boolean over = true;
-                            int end = offset + length;
-                            for (int i = offset; i < end; i++) {
-                                if (buffers[i].hasRemaining()) {
-                                    over = false;
-                                    length -= i - offset;
-                                    offset = i;
-                                }
+                        rs = (int) socket.write(buffers, offset, length);
+                        boolean over = true;
+                        int end = offset + length;
+                        for (int i = offset; i < end; i++) {
+                            if (buffers[i].hasRemaining()) {
+                                over = false;
+                                length -= i - offset;
+                                offset = i;
                             }
-                            if (over) break;
+                        }
+                        if (!over) {
+                            conn.writingCount += rs;
+                            conn.writeHandler = handler;
+                            conn.writeAttachment = attach;
+                            conn.writeBuffers = buffers;
+                            conn.writeOffset = offset;
+                            conn.writeLength = length;
+                            key.interestOps(SelectionKey.OP_READ + SelectionKey.OP_WRITE);
+                            key.selector().wakeup();
+                            return;
                         }
                     } else {
-                        while (oneBuffer.hasRemaining()) rs += socket.write(oneBuffer);
+                        rs = socket.write(oneBuffer);
+                        if (oneBuffer.hasRemaining()) {
+                            conn.writingCount += rs;
+                            conn.writeHandler = handler;
+                            conn.writeAttachment = attach;
+                            conn.writeOneBuffer = oneBuffer;
+                            key.interestOps(SelectionKey.OP_READ + SelectionKey.OP_WRITE);
+                            key.selector().wakeup();
+                            return;
+                        }
                     }
+                    conn.removeWriteHandler();
                     key.interestOps(SelectionKey.OP_READ); //OP_CONNECT
-                    final int rs0 = rs;
+                    final int rs0 = rs + writingCount;
                     //System.out.println(conn + "------buffers:" + Arrays.toString(buffers) + "---onebuf:" + oneBuffer + "-------handler:" + handler + "-------write: " + rs);
                     context.runAsync(() -> {
                         try {

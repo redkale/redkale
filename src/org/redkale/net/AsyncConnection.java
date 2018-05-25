@@ -247,6 +247,8 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
 
         ByteBuffer[] writeBuffers;
 
+        int writingCount;
+
         int writeOffset;
 
         int writeLength;
@@ -364,6 +366,12 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
             return buffers;
         }
 
+        int removeWritingCount() {
+            int rs = this.writingCount;
+            this.writingCount = 0;
+            return rs;
+        }
+
         int removeWriteOffset() {
             int rs = this.writeOffset;
             this.writeOffset = 0;
@@ -454,6 +462,7 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
                 this.writeBuffers = srcs;
                 this.writeOffset = offset;
                 this.writeLength = length;
+                this.writingCount = 0;
                 this.writeAttachment = attachment;
                 this.writeHandler = handler;
                 if (key == null) {
@@ -473,6 +482,7 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
             if (this.writeHandler != null) throw new RuntimeException("pending write");
             try {
                 this.writeOneBuffer = src;
+                this.writingCount = 0;
                 this.writeAttachment = attachment;
                 this.writeHandler = handler;
                 if (key == null) {
