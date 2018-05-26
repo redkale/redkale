@@ -65,10 +65,6 @@ public abstract class ProtocolServer {
 
     public abstract void accept() throws IOException;
 
-    public void setMaxconns(int maxconns) {
-        this.maxconns = maxconns;
-    }
-
     public abstract void close() throws IOException;
 
     public long getCreateCount() {
@@ -108,6 +104,7 @@ public abstract class ProtocolServer {
 
         public ProtocolBIOUDPServer(Context context) {
             this.context = context;
+            this.maxconns = context.getMaxconns();
         }
 
         @Override
@@ -115,6 +112,22 @@ public abstract class ProtocolServer {
             DatagramChannel ch = DatagramChannel.open();
             ch.configureBlocking(true);
             this.serverChannel = ch;
+            final Set<SocketOption<?>> options = this.serverChannel.supportedOptions();
+            if (options.contains(StandardSocketOptions.TCP_NODELAY)) {
+                this.serverChannel.setOption(StandardSocketOptions.TCP_NODELAY, true);
+            }
+            if (options.contains(StandardSocketOptions.SO_KEEPALIVE)) {
+                this.serverChannel.setOption(StandardSocketOptions.SO_KEEPALIVE, true);
+            }
+            if (options.contains(StandardSocketOptions.SO_REUSEADDR)) {
+                this.serverChannel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
+            }
+            if (options.contains(StandardSocketOptions.SO_RCVBUF)) {
+                this.serverChannel.setOption(StandardSocketOptions.SO_RCVBUF, 16 * 1024);
+            }
+            if (options.contains(StandardSocketOptions.SO_SNDBUF)) {
+                this.serverChannel.setOption(StandardSocketOptions.SO_SNDBUF, 16 * 1024);
+            }
         }
 
         @Override
@@ -195,12 +208,30 @@ public abstract class ProtocolServer {
 
         public ProtocolAIOTCPServer(Context context) {
             this.context = context;
+            this.maxconns = context.getMaxconns();
         }
 
         @Override
         public void open(AnyValue config) throws IOException {
             group = AsynchronousChannelGroup.withCachedThreadPool(context.executor, 1);
             this.serverChannel = AsynchronousServerSocketChannel.open(group);
+
+            final Set<SocketOption<?>> options = this.serverChannel.supportedOptions();
+            if (options.contains(StandardSocketOptions.TCP_NODELAY)) {
+                this.serverChannel.setOption(StandardSocketOptions.TCP_NODELAY, true);
+            }
+            if (options.contains(StandardSocketOptions.SO_KEEPALIVE)) {
+                this.serverChannel.setOption(StandardSocketOptions.SO_KEEPALIVE, true);
+            }
+            if (options.contains(StandardSocketOptions.SO_REUSEADDR)) {
+                this.serverChannel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
+            }
+            if (options.contains(StandardSocketOptions.SO_RCVBUF)) {
+                this.serverChannel.setOption(StandardSocketOptions.SO_RCVBUF, 16 * 1024);
+            }
+            if (options.contains(StandardSocketOptions.SO_SNDBUF)) {
+                this.serverChannel.setOption(StandardSocketOptions.SO_SNDBUF, 16 * 1024);
+            }
         }
 
         @Override
@@ -306,6 +337,7 @@ public abstract class ProtocolServer {
 
         public ProtocolNIOTCPServer(Context context) {
             this.context = context;
+            this.maxconns = context.getMaxconns();
         }
 
         @Override
@@ -316,6 +348,23 @@ public abstract class ProtocolServer {
             ServerSocket socket = serverChannel.socket();
             socket.setReceiveBufferSize(16 * 1024);
             socket.setReuseAddress(true);
+
+            final Set<SocketOption<?>> options = this.serverChannel.supportedOptions();
+            if (options.contains(StandardSocketOptions.TCP_NODELAY)) {
+                this.serverChannel.setOption(StandardSocketOptions.TCP_NODELAY, true);
+            }
+            if (options.contains(StandardSocketOptions.SO_KEEPALIVE)) {
+                this.serverChannel.setOption(StandardSocketOptions.SO_KEEPALIVE, true);
+            }
+            if (options.contains(StandardSocketOptions.SO_REUSEADDR)) {
+                this.serverChannel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
+            }
+            if (options.contains(StandardSocketOptions.SO_RCVBUF)) {
+                this.serverChannel.setOption(StandardSocketOptions.SO_RCVBUF, 16 * 1024);
+            }
+            if (options.contains(StandardSocketOptions.SO_SNDBUF)) {
+                this.serverChannel.setOption(StandardSocketOptions.SO_SNDBUF, 16 * 1024);
+            }
         }
 
         @Override

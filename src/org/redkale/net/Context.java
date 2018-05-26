@@ -55,6 +55,9 @@ public class Context {
     //字符集
     protected final Charset charset;
 
+    //最大连接数, 为0表示没限制
+    protected final int maxconns;
+
     //请求内容的大小上限, 默认64K
     protected final int maxbody;
 
@@ -81,13 +84,13 @@ public class Context {
 
     public Context(ContextConfig config) {
         this(config.serverStartTime, config.logger, config.executor, config.sslContext,
-            config.bufferCapacity, config.bufferPool, config.responsePool, config.maxbody,
+            config.bufferCapacity, config.bufferPool, config.responsePool, config.maxconns, config.maxbody,
             config.charset, config.address, config.resourceFactory, config.prepare,
             config.aliveTimeoutSeconds, config.readTimeoutSeconds, config.writeTimeoutSeconds);
     }
 
     public Context(long serverStartTime, Logger logger, ThreadPoolExecutor executor, SSLContext sslContext,
-        int bufferCapacity, ObjectPool<ByteBuffer> bufferPool, ObjectPool<Response> responsePool,
+        int bufferCapacity, ObjectPool<ByteBuffer> bufferPool, ObjectPool<Response> responsePool, final int maxconns,
         final int maxbody, Charset charset, InetSocketAddress address, ResourceFactory resourceFactory,
         final PrepareServlet prepare, final int aliveTimeoutSeconds, final int readTimeoutSeconds, final int writeTimeoutSeconds) {
         this.serverStartTime = serverStartTime;
@@ -97,6 +100,7 @@ public class Context {
         this.bufferCapacity = bufferCapacity;
         this.bufferPool = bufferPool;
         this.responsePool = responsePool;
+        this.maxconns = maxconns;
         this.maxbody = maxbody;
         this.charset = StandardCharsets.UTF_8.equals(charset) ? null : charset;
         this.address = address;
@@ -115,6 +119,10 @@ public class Context {
 
     public SSLContext getSSLContext() {
         return sslContext;
+    }
+
+    public int getMaxconns() {
+        return maxconns;
     }
 
     public int getMaxbody() {
@@ -227,6 +235,9 @@ public class Context {
 
         //请求内容的大小上限, 默认64K
         public int maxbody;
+
+        //最大连接数, 为0表示没限制
+        public int maxconns;
 
         //keep alive IO读取的超时时间
         public int aliveTimeoutSeconds;

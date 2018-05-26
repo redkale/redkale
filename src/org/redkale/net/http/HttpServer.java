@@ -443,6 +443,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
         contextConfig.bufferCapacity = rcapacity;
         contextConfig.bufferPool = bufferPool;
         contextConfig.responsePool = responsePool;
+        contextConfig.maxconns = this.maxconns;
         contextConfig.maxbody = this.maxbody;
         contextConfig.charset = this.charset;
         contextConfig.address = this.address;

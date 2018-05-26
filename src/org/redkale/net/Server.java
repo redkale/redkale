@@ -90,6 +90,9 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
     //Response池大小
     protected int responsePoolSize;
 
+    //最大连接数, 为0表示没限制
+    protected int maxconns;
+
     //请求包大小的上限，单位:字节
     protected int maxbody;
 
@@ -101,9 +104,6 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
 
     //IO写入 的超时秒数，小于1视为不设置
     protected int writeTimeoutSeconds;
-
-    //最大连接数
-    protected int maxconns;
 
     protected Server(long serverStartTime, String protocol, ResourceFactory resourceFactory, PrepareServlet<K, C, R, P, S> servlet) {
         this.serverStartTime = serverStartTime;
@@ -276,24 +276,7 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         this.prepare.init(this.context, config);
         this.serverChannel = ProtocolServer.create(this.protocol, context);
         this.serverChannel.open(config);
-        final Set<SocketOption<?>> options = this.serverChannel.supportedOptions();
-        if (options.contains(StandardSocketOptions.TCP_NODELAY)) {
-            this.serverChannel.setOption(StandardSocketOptions.TCP_NODELAY, true);
-        }
-        if (options.contains(StandardSocketOptions.SO_KEEPALIVE)) {
-            this.serverChannel.setOption(StandardSocketOptions.SO_KEEPALIVE, true);
-        }
-        if (options.contains(StandardSocketOptions.SO_REUSEADDR)) {
-            this.serverChannel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
-        }
-        if (options.contains(StandardSocketOptions.SO_RCVBUF)) {
-            this.serverChannel.setOption(StandardSocketOptions.SO_RCVBUF, 16 * 1024);
-        }
-        if (options.contains(StandardSocketOptions.SO_SNDBUF)) {
-            this.serverChannel.setOption(StandardSocketOptions.SO_SNDBUF, 16 * 1024);
-        }
         serverChannel.bind(address, backlog);
-        serverChannel.setMaxconns(this.maxconns);
         serverChannel.accept();
         final String threadName = "[" + Thread.currentThread().getName() + "] ";
         logger.info(threadName + this.getClass().getSimpleName() + ("TCP".equalsIgnoreCase(protocol) ? "" : ("." + protocol)) + " listen: " + address

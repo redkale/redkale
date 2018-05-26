@@ -116,6 +116,7 @@ public class SncpServer extends Server<DLong, SncpContext, SncpRequest, SncpResp
         contextConfig.bufferCapacity = rcapacity;
         contextConfig.bufferPool = bufferPool;
         contextConfig.responsePool = responsePool;
+        contextConfig.maxconns = this.maxconns;
         contextConfig.maxbody = this.maxbody;
         contextConfig.charset = this.charset;
         contextConfig.address = this.address;
