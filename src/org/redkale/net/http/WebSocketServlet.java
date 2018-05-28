@@ -242,14 +242,21 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
                                 if (single && !anyuser) {
                                     WebSocketServlet.this.node.existsWebSocket(userid).whenComplete((rs, nex) -> {
                                         if (rs) {
-                                            webSocket.onSingleRepeatConnect();
-                                            node.forceCloseWebSocket(userid).whenComplete((fr, fex) -> {
-                                                WebSocketServlet.this.node.localEngine.add(webSocket);
-                                                WebSocketRunner runner = new WebSocketRunner(context, webSocket, restMessageConsumer, response.removeChannel());
-                                                webSocket._runner = runner;
-                                                context.runAsync(runner);
-                                                response.finish(true);
-                                            });
+                                            CompletableFuture rcFuture = webSocket.onSingleRepeatConnect();
+                                            Runnable task = () -> {
+                                                node.forceCloseWebSocket(userid).whenComplete((fr, fex) -> {
+                                                    WebSocketServlet.this.node.localEngine.add(webSocket);
+                                                    WebSocketRunner runner = new WebSocketRunner(context, webSocket, restMessageConsumer, response.removeChannel());
+                                                    webSocket._runner = runner;
+                                                    context.runAsync(runner);
+                                                    response.finish(true);
+                                                });
+                                            };
+                                            if (rcFuture == null) {
+                                                task.run();
+                                            } else {
+                                                rcFuture.whenComplete((r, e) -> task.run());
+                                            }
                                         } else {
                                             WebSocketServlet.this.node.localEngine.add(webSocket);
                                             WebSocketRunner runner = new WebSocketRunner(context, webSocket, restMessageConsumer, response.removeChannel());
