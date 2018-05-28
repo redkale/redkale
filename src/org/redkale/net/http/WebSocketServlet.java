@@ -13,7 +13,7 @@ import java.nio.channels.CompletionHandler;
 import java.security.*;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.BiConsumer;
+import java.util.function.*;
 import java.util.logging.*;
 import javax.annotation.*;
 import org.redkale.convert.Convert;
@@ -242,20 +242,28 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
                                 if (single && !anyuser) {
                                     WebSocketServlet.this.node.existsWebSocket(userid).whenComplete((rs, nex) -> {
                                         if (rs) {
-                                            CompletableFuture rcFuture = webSocket.onSingleRepeatConnect();
-                                            Runnable task = () -> {
-                                                node.forceCloseWebSocket(userid).whenComplete((fr, fex) -> {
+                                            CompletableFuture<Boolean> rcFuture = webSocket.onSingleRepeatConnect();
+                                            Consumer<Boolean> task = (oldkilled) -> {
+                                                if (oldkilled) {
                                                     WebSocketServlet.this.node.localEngine.add(webSocket);
                                                     WebSocketRunner runner = new WebSocketRunner(context, webSocket, restMessageConsumer, response.removeChannel());
                                                     webSocket._runner = runner;
                                                     context.runAsync(runner);
                                                     response.finish(true);
-                                                });
+                                                } else { //关闭新连接
+                                                    response.finish(true);
+                                                }
                                             };
                                             if (rcFuture == null) {
-                                                task.run();
+                                                task.accept(false);
                                             } else {
-                                                rcFuture.whenComplete((r, e) -> task.run());
+                                                rcFuture.whenComplete((r, e) -> {
+                                                    if (e != null) {
+                                                        response.finish(true);
+                                                    } else {
+                                                        task.accept(r);
+                                                    }
+                                                });
                                             }
                                         } else {
                                             WebSocketServlet.this.node.localEngine.add(webSocket);

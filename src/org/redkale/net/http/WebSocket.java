@@ -754,12 +754,12 @@ public abstract class WebSocket<G extends Serializable, T> {
     }
 
     /**
-     * 当Single模式下用户重复登陆时回调函数，调用完之后关闭之前的WebSocket连接
+     * 当Single模式下用户重复登陆时回调函数，默认处理方式: 关闭旧连接
      *
-     * @return Future 可以为null
+     * @return Future 可以为null, 为null或者Future值为false表示关闭新连接， Future值为true表示关闭旧连接
      */
-    public CompletableFuture<Integer> onSingleRepeatConnect() {
-        return null;
+    public CompletableFuture<Boolean> onSingleRepeatConnect() {
+        return forceCloseWebSocket(getUserid()).thenApply((r) -> true);
     }
 
     /**
