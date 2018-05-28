@@ -60,7 +60,7 @@ public final class PrepareRunner implements Runnable {
                 new CompletionHandler<Integer, Void>() {
                 @Override
                 public void completed(Integer count, Void attachment1) {
-                    if (count < 1 && (!channel.isOpen() || buffer.remaining() == buffer.limit())) {
+                    if (count < 1) {
                         try {
                             response.request.offerReadBuffer(buffer);
                             response.finish(true);
