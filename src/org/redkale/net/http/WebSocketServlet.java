@@ -241,12 +241,22 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
                                 webSocket._userid = userid;
                                 if (single && !anyuser) {
                                     WebSocketServlet.this.node.existsWebSocket(userid).whenComplete((rs, nex) -> {
-                                        if (rs) webSocket.onSingleRepeatConnect();
-                                        WebSocketServlet.this.node.localEngine.add(webSocket);
-                                        WebSocketRunner runner = new WebSocketRunner(context, webSocket, restMessageConsumer, response.removeChannel());
-                                        webSocket._runner = runner;
-                                        context.runAsync(runner);
-                                        response.finish(true);
+                                        if (rs) {
+                                            webSocket.onSingleRepeatConnect();
+                                            webSocket.forceCloseWebSocket(userid).whenComplete((fr, fex) -> {
+                                                WebSocketServlet.this.node.localEngine.add(webSocket);
+                                                WebSocketRunner runner = new WebSocketRunner(context, webSocket, restMessageConsumer, response.removeChannel());
+                                                webSocket._runner = runner;
+                                                context.runAsync(runner);
+                                                response.finish(true);
+                                            });
+                                        } else {
+                                            WebSocketServlet.this.node.localEngine.add(webSocket);
+                                            WebSocketRunner runner = new WebSocketRunner(context, webSocket, restMessageConsumer, response.removeChannel());
+                                            webSocket._runner = runner;
+                                            context.runAsync(runner);
+                                            response.finish(true);
+                                        }
                                     });
                                 } else {
                                     WebSocketServlet.this.node.localEngine.add(webSocket);

@@ -754,11 +754,10 @@ public abstract class WebSocket<G extends Serializable, T> {
     }
 
     /**
-     * 当Single模式下用户重复登陆时回调函数， 默认处理逻辑：关闭之前的WebSocket连接
+     * 当Single模式下用户重复登陆时回调函数，调用完之后关闭之前的WebSocket连接
      *
      */
     public void onSingleRepeatConnect() {
-        this._engine.node.forceCloseWebSocket(getUserid());
     }
 
     /**
