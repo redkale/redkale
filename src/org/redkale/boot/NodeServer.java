@@ -95,6 +95,7 @@ public abstract class NodeServer {
         this.serverClassLoader = new RedkaleClassLoader(application.getServerClassLoader());
         Thread.currentThread().setContextClassLoader(this.serverClassLoader);
         this.serverThread = Thread.currentThread();
+        this.server.setServerClassLoader(serverClassLoader);
     }
 
     public static <T extends NodeServer> NodeServer create(Class<T> clazz, Application application, AnyValue serconf) {

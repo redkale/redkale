@@ -54,6 +54,9 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
     //服务的根Servlet
     protected final PrepareServlet<K, C, R, P, S> prepare;
 
+    //ClassLoader
+    protected RedkaleClassLoader serverClassLoader;
+
     //SSL
     protected SSLContext sslContext;
 
@@ -274,7 +277,7 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
     public void start() throws IOException {
         this.context = this.createContext();
         this.prepare.init(this.context, config);
-        this.serverChannel = ProtocolServer.create(this.protocol, context);
+        this.serverChannel = ProtocolServer.create(this.protocol, context, this.serverClassLoader, config == null ? null : config.getValue("netimpl"));
         this.serverChannel.open(config);
         serverChannel.bind(address, backlog);
         serverChannel.accept();
@@ -297,6 +300,14 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         this.prepare.destroy(this.context, config);
         long e = System.currentTimeMillis() - s;
         logger.info(this.getClass().getSimpleName() + " shutdown in " + e + " ms");
+    }
+
+    public RedkaleClassLoader getServerClassLoader() {
+        return serverClassLoader;
+    }
+
+    public void setServerClassLoader(RedkaleClassLoader serverClassLoader) {
+        this.serverClassLoader = serverClassLoader;
     }
 
     /**
