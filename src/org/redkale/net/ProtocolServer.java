@@ -52,6 +52,8 @@ public abstract class ProtocolServer {
     //在线数
     protected final AtomicLong livingCounter = new AtomicLong();
 
+    protected final Context context;
+
     //最大连接数，小于1表示无限制
     protected int maxconns;
 
@@ -66,6 +68,11 @@ public abstract class ProtocolServer {
     public abstract void accept() throws IOException;
 
     public abstract void close() throws IOException;
+
+    protected ProtocolServer(Context context) {
+        this.context = context;
+        this.maxconns = context.getMaxconns();
+    }
 
     public long getCreateCount() {
         return createCounter.longValue();
@@ -98,13 +105,10 @@ public abstract class ProtocolServer {
 
         private boolean running;
 
-        private final Context context;
-
         private DatagramChannel serverChannel;
 
         public ProtocolBIOUDPServer(Context context) {
-            this.context = context;
-            this.maxconns = context.getMaxconns();
+            super(context);
         }
 
         @Override
@@ -200,15 +204,12 @@ public abstract class ProtocolServer {
 
     static final class ProtocolAIOTCPServer extends ProtocolServer {
 
-        private final Context context;
-
         private AsynchronousChannelGroup group;
 
         private AsynchronousServerSocketChannel serverChannel;
 
         public ProtocolAIOTCPServer(Context context) {
-            this.context = context;
-            this.maxconns = context.getMaxconns();
+            super(context);
         }
 
         @Override
@@ -323,8 +324,6 @@ public abstract class ProtocolServer {
 
     static final class ProtocolNIOTCPServer extends ProtocolServer {
 
-        private final Context context;
-
         private Selector acceptSelector;
 
         private ServerSocketChannel serverChannel;
@@ -336,8 +335,7 @@ public abstract class ProtocolServer {
         private boolean running;
 
         public ProtocolNIOTCPServer(Context context) {
-            this.context = context;
-            this.maxconns = context.getMaxconns();
+            super(context);
         }
 
         @Override
