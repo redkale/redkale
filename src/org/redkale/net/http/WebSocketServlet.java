@@ -243,7 +243,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
                                     WebSocketServlet.this.node.existsWebSocket(userid).whenComplete((rs, nex) -> {
                                         if (rs) {
                                             webSocket.onSingleRepeatConnect();
-                                            webSocket.forceCloseWebSocket(userid).whenComplete((fr, fex) -> {
+                                            node.forceCloseWebSocket(userid).whenComplete((fr, fex) -> {
                                                 WebSocketServlet.this.node.localEngine.add(webSocket);
                                                 WebSocketRunner runner = new WebSocketRunner(context, webSocket, restMessageConsumer, response.removeChannel());
                                                 webSocket._runner = runner;
