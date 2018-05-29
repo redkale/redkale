@@ -100,7 +100,7 @@ public abstract class ProtocolServer {
             } else if ("bio".equalsIgnoreCase(netimpl)) {
                 return new UdpBioProtocolServer(context);
             }
-        } else {
+        } else if (netimpl == null || netimpl.isEmpty()) {
             throw new RuntimeException("ProtocolServer not support protocol " + protocol);
         }
         try {
