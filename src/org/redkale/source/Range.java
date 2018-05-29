@@ -86,6 +86,7 @@ public interface Range<E extends Comparable> extends java.io.Serializable, Predi
 
         @Override
         public boolean test(Byte t) {
+            if (max < min) return t >= min;
             return t >= min && t <= max;
         }
 
@@ -130,6 +131,7 @@ public interface Range<E extends Comparable> extends java.io.Serializable, Predi
 
         @Override
         public boolean test(Short t) {
+            if (max < min) return t >= min;
             return t >= min && t <= max;
         }
 
@@ -173,6 +175,7 @@ public interface Range<E extends Comparable> extends java.io.Serializable, Predi
 
         @Override
         public boolean test(Integer t) {
+            if (max < min) return t >= min;
             return t >= min && t <= max;
         }
 
@@ -226,6 +229,7 @@ public interface Range<E extends Comparable> extends java.io.Serializable, Predi
 
         @Override
         public boolean test(Long t) {
+            if (max < min) return t >= min;
             return t >= min && t <= max;
         }
 
@@ -269,6 +273,7 @@ public interface Range<E extends Comparable> extends java.io.Serializable, Predi
 
         @Override
         public boolean test(Float t) {
+            if (max < min) return t >= min;
             return t >= min && t <= max;
         }
 
@@ -312,6 +317,7 @@ public interface Range<E extends Comparable> extends java.io.Serializable, Predi
 
         @Override
         public boolean test(Double t) {
+            if (max < min) return t >= min;
             return t >= min && t <= max;
         }
 
