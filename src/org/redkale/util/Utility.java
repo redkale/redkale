@@ -1676,6 +1676,7 @@ public final class Utility {
 
     public static ByteArrayOutputStream remoteHttpContent(SSLContext ctx, String method, String url, int timeout, Map<String, String> headers, String body) throws IOException {
         HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();
+        boolean opening = true;
         try {
             conn.setConnectTimeout(timeout > 0 ? timeout : 3000);
             conn.setReadTimeout(timeout > 0 ? timeout : 3000);
@@ -1700,6 +1701,7 @@ public final class Utility {
             if (rs == 301 || rs == 302) {
                 String newurl = conn.getHeaderField("Location");
                 conn.disconnect();
+                opening = false;
                 return remoteHttpContent(ctx, method, newurl, timeout, headers, body);
             }
             InputStream in = (rs < 400 || rs == 404) && rs != 405 ? conn.getInputStream() : conn.getErrorStream();
@@ -1712,7 +1714,7 @@ public final class Utility {
             }
             return out;
         } finally {
-            conn.disconnect();
+            if (opening) conn.disconnect();
         }
     }
 
