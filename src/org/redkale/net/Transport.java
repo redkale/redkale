@@ -251,7 +251,11 @@ public final class Transport {
                 if (!queue.isEmpty()) {
                     AsyncConnection conn;
                     while ((conn = queue.poll()) != null) {
-                        if (conn.isOpen()) return CompletableFuture.completedFuture(conn);
+                        if (conn.isOpen()) {
+                            return CompletableFuture.completedFuture(conn);
+                        } else {
+                            conn.dispose();
+                        }
                     }
                 }
                 CompletableFuture future = new CompletableFuture();
@@ -342,6 +346,8 @@ public final class Transport {
             if (conn.isOpen()) {
                 TransportNode node = findTransportNode(conn.getRemoteAddress());
                 if (node == null || !node.conns.offer(conn)) conn.dispose();
+            } else {
+                conn.dispose();
             }
         } else {
             conn.dispose();
