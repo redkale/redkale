@@ -178,10 +178,7 @@ public abstract class Response<C extends Context, R extends Request<C>> {
         this.servlet = null;
         request.recycle();
         if (channel != null) {
-            try {
-                if (channel.isOpen()) channel.close();
-            } catch (Exception e) {
-            }
+            channel.dispose();
             channel = null;
         }
         this.inited = false;

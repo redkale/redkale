@@ -227,7 +227,11 @@ public final class Transport {
                 if (!queue.isEmpty()) {
                     AsyncConnection conn;
                     while ((conn = queue.poll()) != null) {
-                        if (conn.isOpen()) return CompletableFuture.completedFuture(conn);
+                        if (conn.isOpen()) {
+                            return CompletableFuture.completedFuture(conn);
+                        } else {
+                            conn.dispose();
+                        }
                     }
                 }
                 return AsyncConnection.createTCP(group, sslContext, addr, supportTcpNoDelay(), factory.readTimeoutSeconds, factory.writeTimeoutSeconds);
