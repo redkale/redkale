@@ -41,7 +41,7 @@ class WebSocketRunner implements Runnable {
 
     private final AtomicBoolean writing = new AtomicBoolean();
 
-    private final BlockingQueue<QueueEntry> queue = new ArrayBlockingQueue(1024);
+    private final BlockingQueue<QueueEntry> queue = new ArrayBlockingQueue(256);
 
     private final BiConsumer<WebSocket, Object> restMessageConsumer;  //主要供RestWebSocket使用
 
@@ -219,15 +219,16 @@ class WebSocketRunner implements Runnable {
         boolean debug = context.getLogger().isLoggable(Level.FINEST);
         //System.out.println("推送消息");        
         final CompletableFuture<Integer> futureResult = new CompletableFuture<>();
-        synchronized (writing) {
-            if (writing.getAndSet(true)) {
-                queue.add(new QueueEntry(futureResult, packet));
-                return futureResult;
-            }
-        }
-        ByteBuffer[] buffers = packet.sendBuffers != null ? packet.duplicateSendBuffers() : packet.encode(this.context.getBufferSupplier(), this.context.getBufferConsumer(), webSocket._engine.cryptor);
-        //if (debug) context.getLogger().log(Level.FINEST, "wsrunner.sending websocket message:  " + packet);
         try {
+            synchronized (writing) {
+                if (writing.getAndSet(true)) {
+                    queue.add(new QueueEntry(futureResult, packet));
+                    return futureResult;
+                }
+            }
+            ByteBuffer[] buffers = packet.sendBuffers != null ? packet.duplicateSendBuffers() : packet.encode(this.context.getBufferSupplier(), this.context.getBufferConsumer(), webSocket._engine.cryptor);
+            //if (debug) context.getLogger().log(Level.FINEST, "wsrunner.sending websocket message:  " + packet);
+
             this.lastSendTime = System.currentTimeMillis();
             channel.write(buffers, buffers, new CompletionHandler<Integer, ByteBuffer[]>() {
 
