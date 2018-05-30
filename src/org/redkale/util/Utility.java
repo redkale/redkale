@@ -1676,41 +1676,44 @@ public final class Utility {
 
     public static ByteArrayOutputStream remoteHttpContent(SSLContext ctx, String method, String url, int timeout, Map<String, String> headers, String body) throws IOException {
         HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();
-        conn.setConnectTimeout(timeout > 0 ? timeout : 3000);
-        conn.setReadTimeout(timeout > 0 ? timeout : 3000);
-        if (conn instanceof HttpsURLConnection) {
-            HttpsURLConnection httpsconn = ((HttpsURLConnection) conn);
-            httpsconn.setSSLSocketFactory((ctx == null ? DEFAULTSSL_CONTEXT : ctx).getSocketFactory());
-            httpsconn.setHostnameVerifier(defaultVerifier);
-        }
-        conn.setRequestMethod(method);
-        if (headers != null) {
-            for (Map.Entry<String, String> en : headers.entrySet()) { //不用forEach是为了兼容JDK 6
-                conn.setRequestProperty(en.getKey(), en.getValue());
+        try {
+            conn.setConnectTimeout(timeout > 0 ? timeout : 3000);
+            conn.setReadTimeout(timeout > 0 ? timeout : 3000);
+            if (conn instanceof HttpsURLConnection) {
+                HttpsURLConnection httpsconn = ((HttpsURLConnection) conn);
+                httpsconn.setSSLSocketFactory((ctx == null ? DEFAULTSSL_CONTEXT : ctx).getSocketFactory());
+                httpsconn.setHostnameVerifier(defaultVerifier);
             }
-        }
-        if (body != null) {
-            conn.setDoInput(true);
-            conn.setDoOutput(true);
-            conn.getOutputStream().write(body.getBytes(UTF_8));
-        }
-        conn.connect();
-        int rs = conn.getResponseCode();
-        if (rs == 301 || rs == 302) {
-            String newurl = conn.getHeaderField("Location");
+            conn.setRequestMethod(method);
+            if (headers != null) {
+                for (Map.Entry<String, String> en : headers.entrySet()) { //不用forEach是为了兼容JDK 6
+                    conn.setRequestProperty(en.getKey(), en.getValue());
+                }
+            }
+            if (body != null) {
+                conn.setDoInput(true);
+                conn.setDoOutput(true);
+                conn.getOutputStream().write(body.getBytes(UTF_8));
+            }
+            conn.connect();
+            int rs = conn.getResponseCode();
+            if (rs == 301 || rs == 302) {
+                String newurl = conn.getHeaderField("Location");
+                conn.disconnect();
+                return remoteHttpContent(ctx, method, newurl, timeout, headers, body);
+            }
+            InputStream in = (rs < 400 || rs == 404) && rs != 405 ? conn.getInputStream() : conn.getErrorStream();
+            if ("gzip".equalsIgnoreCase(conn.getContentEncoding())) in = new GZIPInputStream(in);
+            ByteArrayOutputStream out = new ByteArrayOutputStream(1024);
+            byte[] bytes = new byte[1024];
+            int pos;
+            while ((pos = in.read(bytes)) != -1) {
+                out.write(bytes, 0, pos);
+            }
+            return out;
+        } finally {
             conn.disconnect();
-            return remoteHttpContent(ctx, method, newurl, timeout, headers, body);
         }
-        InputStream in = (rs < 400 || rs == 404) && rs != 405 ? conn.getInputStream() : conn.getErrorStream();
-        if ("gzip".equalsIgnoreCase(conn.getContentEncoding())) in = new GZIPInputStream(in);
-        ByteArrayOutputStream out = new ByteArrayOutputStream(1024);
-        byte[] bytes = new byte[1024];
-        int pos;
-        while ((pos = in.read(bytes)) != -1) {
-            out.write(bytes, 0, pos);
-        }
-        conn.disconnect();
-        return out;
     }
 
     public static String read(InputStream in) throws IOException {
