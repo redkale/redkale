@@ -251,11 +251,15 @@ public abstract class Response<C extends Context, R extends Request<C>> {
             }
             this.recycleListener = null;
         }
-        if (request.keepAlive && channel != null && channel.isOpen()) {
-            AsyncConnection conn = removeChannel();
-            this.recycle();
-            this.prepare();
-            new PrepareRunner(context, conn, null, this).run();
+        if (request.keepAlive && channel != null) {
+            if (channel.isOpen()) {
+                AsyncConnection conn = removeChannel();
+                this.recycle();
+                this.prepare();
+                new PrepareRunner(context, conn, null, this).run();
+            } else {
+                channel.dispose();
+            }
         } else {
             this.context.responsePool.accept(this);
         }
