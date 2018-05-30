@@ -61,15 +61,9 @@ public final class PrepareRunner implements Runnable {
                 @Override
                 public void completed(Integer count, Void attachment1) {
                     if (count < 1) {
-                        try {
-                            response.request.offerReadBuffer(buffer);
-                            response.finish(true);
-                            channel.close();// response.init(channel); 在调用之前异常
-                        } catch (Exception e) {
-                            if (context.logger.isLoggable(Level.FINEST)) {
-                                context.logger.log(Level.FINEST, "PrepareRunner close channel erroneous on no read bytes", e);
-                            }
-                        }
+                        response.request.offerReadBuffer(buffer);
+                        response.finish(true);
+                        channel.dispose();// response.init(channel); 在调用之前异常
                         return;
                     }
 //                    {  //测试
@@ -92,10 +86,7 @@ public final class PrepareRunner implements Runnable {
                 public void failed(Throwable exc, Void attachment2) {
                     response.request.offerReadBuffer(buffer);
                     response.finish(true);
-                    try { // response.init(channel); 可能在调用之前异常
-                        channel.close();
-                    } catch (Exception e) {
-                    }
+                    channel.dispose(); // response.init(channel); 可能在调用之前异常
                     if (exc != null && context.logger.isLoggable(Level.FINEST)) {
                         context.logger.log(Level.FINEST, "Servlet Handler read channel erroneous, forece to close channel ", exc);
                     }
@@ -104,10 +95,7 @@ public final class PrepareRunner implements Runnable {
         } catch (Exception te) {
             response.request.offerReadBuffer(buffer);
             response.finish(true);
-            try { // response.init(channel); 可能在调用之前异常
-                channel.close();
-            } catch (Exception e) {
-            }
+            channel.dispose(); // response.init(channel); 可能在调用之前异常
             if (te != null && context.logger.isLoggable(Level.FINEST)) {
                 context.logger.log(Level.FINEST, "Servlet read channel erroneous, forece to close channel ", te);
             }
