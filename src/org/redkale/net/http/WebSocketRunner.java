@@ -290,18 +290,20 @@ class WebSocketRunner implements Runnable {
                 @Override
                 public void failed(Throwable exc, ByteBuffer[] attachments) {
                     writing.set(false);
+                    futureResult.complete(RETCODE_SENDEXCEPTION);
+                    closeRunner(RETCODE_SENDEXCEPTION, "websocket send message failed on CompletionHandler");
                     if (exc != null) {
                         context.getLogger().log(Level.FINE, "WebSocket sendMessage on CompletionHandler failed, force to close channel, live " + (System.currentTimeMillis() - webSocket.getCreatetime()) / 1000 + " seconds", exc);
                     }
-                    closeRunner(RETCODE_SENDEXCEPTION, "websocket send message failed on CompletionHandler");
 
                 }
             });
         } catch (Exception t) {
             writing.set(false);
-            context.getLogger().log(Level.FINE, "WebSocket sendMessage abort, force to close channel, live " + (System.currentTimeMillis() - webSocket.getCreatetime()) / 1000 + " seconds", t);
-            closeRunner(RETCODE_SENDEXCEPTION, "websocket send message failed on channel.write");
             futureResult.complete(RETCODE_SENDEXCEPTION);
+            closeRunner(RETCODE_SENDEXCEPTION, "websocket send message failed on channel.write");
+            context.getLogger().log(Level.FINE, "WebSocket sendMessage abort, force to close channel, live " + (System.currentTimeMillis() - webSocket.getCreatetime()) / 1000 + " seconds", t);
+
         }
         return futureResult;
     }
