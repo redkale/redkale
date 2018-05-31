@@ -14,7 +14,6 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 import javax.net.ssl.SSLContext;
-import static org.redkale.net.ProtocolServer.*;
 
 /**
  *
@@ -52,6 +51,14 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
     }
 
     public abstract boolean isTCP();
+
+    public abstract boolean shutdownInput();
+
+    public abstract boolean shutdownOutput();
+
+    public abstract <T> boolean setOption(SocketOption<T> name, T value);
+
+    public abstract Set<SocketOption<?>> supportedOptions();
 
     public abstract SocketAddress getRemoteAddress();
 
@@ -165,7 +172,7 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
      */
     public static CompletableFuture<AsyncConnection> createTCP(final AsynchronousChannelGroup group, final SocketAddress address,
         final int readTimeoutSeconds, final int writeTimeoutSeconds) {
-        return createTCP(group, null, address, supportTcpNoDelay(), readTimeoutSeconds, writeTimeoutSeconds);
+        return createTCP(group, null, address, readTimeoutSeconds, writeTimeoutSeconds);
     }
 
     /**
@@ -181,29 +188,12 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
      */
     public static CompletableFuture<AsyncConnection> createTCP(final AsynchronousChannelGroup group, final SSLContext sslContext,
         final SocketAddress address, final int readTimeoutSeconds, final int writeTimeoutSeconds) {
-        return createTCP(group, sslContext, address, false, readTimeoutSeconds, writeTimeoutSeconds);
-    }
-
-    /**
-     * 创建TCP协议客户端连接
-     *
-     * @param address             连接点子
-     * @param sslContext          SSLContext
-     * @param group               连接AsynchronousChannelGroup
-     * @param noDelay             TcpNoDelay
-     * @param readTimeoutSeconds  读取超时秒数
-     * @param writeTimeoutSeconds 写入超时秒数
-     *
-     * @return 连接CompletableFuture
-     */
-    public static CompletableFuture<AsyncConnection> createTCP(final AsynchronousChannelGroup group, final SSLContext sslContext,
-        final SocketAddress address, final boolean noDelay, final int readTimeoutSeconds, final int writeTimeoutSeconds) {
         final CompletableFuture<AsyncConnection> future = new CompletableFuture<>();
         try {
             final AsynchronousSocketChannel channel = AsynchronousSocketChannel.open(group);
             try {
-                if (noDelay) channel.setOption(StandardSocketOptions.TCP_NODELAY, true);
-                if (supportTcpKeepAlive()) channel.setOption(StandardSocketOptions.SO_KEEPALIVE, true);
+                channel.setOption(StandardSocketOptions.TCP_NODELAY, true);
+                channel.setOption(StandardSocketOptions.SO_KEEPALIVE, true);
                 channel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
             } catch (IOException e) {
             }

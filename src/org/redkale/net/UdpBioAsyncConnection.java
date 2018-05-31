@@ -6,9 +6,10 @@
 package org.redkale.net;
 
 import java.io.IOException;
-import java.net.SocketAddress;
+import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
+import java.util.Set;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -83,6 +84,31 @@ public class UdpBioAsyncConnection extends AsyncConnection {
         } catch (IOException e) {
             return null;
         }
+    }
+
+    @Override
+    public boolean shutdownInput() {
+        return false;
+    }
+
+    @Override
+    public boolean shutdownOutput() {
+        return false;
+    }
+
+    @Override
+    public <T> boolean setOption(SocketOption<T> name, T value) {
+        try {
+            this.channel.setOption(name, value);
+            return true;
+        } catch (IOException e) {
+            return false;
+        }
+    }
+
+    @Override
+    public Set<SocketOption<?>> supportedOptions() {
+        return this.channel.supportedOptions();
     }
 
     @Override

@@ -6,9 +6,10 @@
 package org.redkale.net;
 
 import java.io.IOException;
-import java.net.SocketAddress;
+import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
+import java.util.Set;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 import javax.net.ssl.SSLContext;
@@ -48,6 +49,41 @@ public class TcpAioAsyncConnection extends AsyncConnection {
         this.remoteAddress = addr;
         this.livingCounter = livingCounter;
         this.closedCounter = closedCounter;
+    }
+
+    @Override
+    public boolean shutdownInput() {
+        try {
+            this.channel.shutdownInput();
+            return true;
+        } catch (IOException e) {
+            return false;
+        }
+    }
+
+    @Override
+    public boolean shutdownOutput() {
+        try {
+            this.channel.shutdownOutput();
+            return true;
+        } catch (IOException e) {
+            return false;
+        }
+    }
+
+    @Override
+    public <T> boolean setOption(SocketOption<T> name, T value) {
+        try {
+            this.channel.setOption(name, value);
+            return true;
+        } catch (IOException e) {
+            return false;
+        }
+    }
+
+    @Override
+    public Set<SocketOption<?>> supportedOptions() {
+        return this.channel.supportedOptions();
     }
 
     @Override

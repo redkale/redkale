@@ -7,7 +7,6 @@ package org.redkale.net;
 
 import java.io.IOException;
 import java.net.*;
-import java.nio.channels.*;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import org.redkale.util.AnyValue;
@@ -21,24 +20,6 @@ import org.redkale.util.AnyValue;
  * @author zhangjx
  */
 public abstract class ProtocolServer {
-
-    protected static final boolean supportTcpNoDelay;
-
-    protected static final boolean supportTcpKeepAlive;
-
-    static {
-        boolean tcpNoDelay = false;
-        boolean keepAlive = false;
-        try {
-            AsynchronousSocketChannel channel = AsynchronousSocketChannel.open();
-            tcpNoDelay = channel.supportedOptions().contains(StandardSocketOptions.TCP_NODELAY);
-            keepAlive = channel.supportedOptions().contains(StandardSocketOptions.SO_KEEPALIVE);
-            channel.close();
-        } catch (Exception e) {
-        }
-        supportTcpNoDelay = tcpNoDelay;
-        supportTcpKeepAlive = keepAlive;
-    }
 
     //创建数
     protected final AtomicLong createCounter = new AtomicLong();
@@ -110,14 +91,6 @@ public abstract class ProtocolServer {
         } catch (Exception e) {
             throw new RuntimeException("ProtocolServer(netimple=" + netimpl + ") newinstance error", e);
         }
-    }
-
-    public static boolean supportTcpNoDelay() {
-        return supportTcpNoDelay;
-    }
-
-    public static boolean supportTcpKeepAlive() {
-        return supportTcpKeepAlive;
     }
 
 }

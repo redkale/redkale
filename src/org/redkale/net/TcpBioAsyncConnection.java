@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -20,6 +21,18 @@ import java.util.concurrent.atomic.AtomicLong;
  * @author zhangjx
  */
 public class TcpBioAsyncConnection extends AsyncConnection {
+
+    static final Set<SocketOption<?>> defaultOptions = defaultOptions();
+
+    private static Set<SocketOption<?>> defaultOptions() {
+        HashSet<SocketOption<?>> set = new HashSet<>(5);
+        set.add(StandardSocketOptions.SO_SNDBUF);
+        set.add(StandardSocketOptions.SO_RCVBUF);
+        set.add(StandardSocketOptions.SO_KEEPALIVE);
+        set.add(StandardSocketOptions.SO_REUSEADDR);
+        set.add(StandardSocketOptions.TCP_NODELAY);
+        return Collections.unmodifiableSet(set);
+    }
 
     private int readTimeoutSeconds;
 
@@ -95,6 +108,60 @@ public class TcpBioAsyncConnection extends AsyncConnection {
     @Override
     public void setWriteTimeoutSeconds(int writeTimeoutSeconds) {
         this.writeTimeoutSeconds = writeTimeoutSeconds;
+    }
+
+    @Override
+    public boolean shutdownInput() {
+        try {
+            this.socket.shutdownInput();
+            return true;
+        } catch (IOException e) {
+            return false;
+        }
+    }
+
+    @Override
+    public boolean shutdownOutput() {
+        try {
+            this.socket.shutdownOutput();
+            return true;
+        } catch (IOException e) {
+            return false;
+        }
+    }
+
+    @Override
+    public <T> boolean setOption(SocketOption<T> name, T value) {
+        try {
+            if (StandardSocketOptions.SO_REUSEADDR == name) {
+                this.socket.setReuseAddress((Boolean) value);
+                return true;
+            }
+            if (StandardSocketOptions.SO_KEEPALIVE == name) {
+                this.socket.setKeepAlive((Boolean) value);
+                return true;
+            }
+            if (StandardSocketOptions.TCP_NODELAY == name) {
+                this.socket.setTcpNoDelay((Boolean) value);
+                return true;
+            }
+            if (StandardSocketOptions.SO_RCVBUF == name) {
+                this.socket.setReceiveBufferSize((Integer) value);
+                return true;
+            }
+            if (StandardSocketOptions.SO_SNDBUF == name) {
+                this.socket.setSendBufferSize((Integer) value);
+                return true;
+            }
+        } catch (IOException e) {
+            return false;
+        }
+        return false;
+    }
+
+    @Override
+    public Set<SocketOption<?>> supportedOptions() {
+        return defaultOptions;
     }
 
     @Override

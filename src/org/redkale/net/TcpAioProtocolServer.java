@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.net.*;
 import java.nio.channels.*;
 import java.util.Set;
+import java.util.logging.Level;
 import org.redkale.util.AnyValue;
 
 /**
@@ -72,18 +73,6 @@ public class TcpAioProtocolServer extends ProtocolServer {
         final AsynchronousServerSocketChannel serchannel = this.serverChannel;
         serchannel.accept(null, new CompletionHandler<AsynchronousSocketChannel, Void>() {
 
-            private boolean supportInited;
-
-            private boolean supportTcpLay;
-
-            private boolean supportAlive;
-
-            private boolean supportReuse;
-
-            private boolean supportRcv;
-
-            private boolean supportSnd;
-
             @Override
             public void completed(final AsynchronousSocketChannel channel, Void attachment) {
                 serchannel.accept(null, this);
@@ -97,26 +86,13 @@ public class TcpAioProtocolServer extends ProtocolServer {
                 createCounter.incrementAndGet();
                 livingCounter.incrementAndGet();
                 try {
-                    if (!supportInited) {
-                        synchronized (this) {
-                            if (!supportInited) {
-                                supportInited = true;
-                                final Set<SocketOption<?>> options = channel.supportedOptions();
-                                supportTcpLay = options.contains(StandardSocketOptions.TCP_NODELAY);
-                                supportAlive = options.contains(StandardSocketOptions.SO_KEEPALIVE);
-                                supportReuse = options.contains(StandardSocketOptions.SO_REUSEADDR);
-                                supportRcv = options.contains(StandardSocketOptions.SO_RCVBUF);
-                                supportSnd = options.contains(StandardSocketOptions.SO_SNDBUF);
-                            }
-                        }
-                    }
-                    if (supportTcpLay) channel.setOption(StandardSocketOptions.TCP_NODELAY, true);
-                    if (supportAlive) channel.setOption(StandardSocketOptions.SO_KEEPALIVE, true);
-                    if (supportReuse) channel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
-                    if (supportRcv) channel.setOption(StandardSocketOptions.SO_RCVBUF, 16 * 1024);
-                    if (supportSnd) channel.setOption(StandardSocketOptions.SO_SNDBUF, 16 * 1024);
+                    channel.setOption(StandardSocketOptions.TCP_NODELAY, true);
+                    channel.setOption(StandardSocketOptions.SO_KEEPALIVE, true);
+                    channel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
+                    channel.setOption(StandardSocketOptions.SO_RCVBUF, 16 * 1024);
+                    channel.setOption(StandardSocketOptions.SO_SNDBUF, 16 * 1024);
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    context.logger.log(Level.INFO, channel + " setOption error", e);
                 }
                 AsyncConnection conn = new TcpAioAsyncConnection(channel, context.sslContext, null, context.readTimeoutSeconds, context.writeTimeoutSeconds, null, null);
                 conn.livingCounter = livingCounter;
