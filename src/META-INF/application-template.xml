@@ -116,12 +116,12 @@
         excludelibs: 排除lib.path与excludes中的正则表达式匹配的路径, 多个正则表达式用分号;隔开
         charset: 文本编码， 默认: UTF-8
         backlog:  默认10K
-        threads： 线程总数， 默认: CPU核数*8
+        threads： 线程数， 默认: CPU核数*32
         maxconns：最大连接数, 小于1表示无限制， 默认: 0
         maxbody: request.body最大值， 默认: 64K
         bufferCapacity: ByteBuffer的初始化大小， 默认: 32K;  (HTTP 2.0、WebSocket，必须要16k以上)
-        bufferPoolSize： ByteBuffer池的大小，默认: 线程总数*4
-        responsePoolSize： Response池的大小，默认: 线程总数*2
+        bufferPoolSize： ByteBuffer池的大小，默认: 线程数*4
+        responsePoolSize： Response池的大小，默认: 线程数*2
         aliveTimeoutSeconds: KeepAlive读操作超时秒数， 默认30， 0表示永久不超时; -1表示禁止KeepAlive
         readTimeoutSeconds: 读操作超时秒数， 默认0， 表示永久不超时
         writeTimeoutSeconds:  写操作超时秒数， 默认0， 表示永久不超时

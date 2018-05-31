@@ -361,6 +361,7 @@ public final class Application {
     }
 
     public void init() throws Exception {
+        System.setProperty("sun.nio.ch.internalThreadPoolSize", "" + Runtime.getRuntime().availableProcessors() * 4);
         System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", "" + Runtime.getRuntime().availableProcessors() * 4);
         System.setProperty("net.transport.poolmaxconns", "100");
         System.setProperty("net.transport.pinginterval", "30");
