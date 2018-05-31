@@ -290,7 +290,7 @@ class WebSocketRunner implements Runnable {
                             channel.write(buffers, buffers, this);
                         }
                     } catch (Exception e) {
-                        futureResult.complete(RETCODE_SENDEXCEPTION);
+                        future.complete(RETCODE_SENDEXCEPTION);
                         closeRunner(RETCODE_SENDEXCEPTION, "websocket send message failed on rewrite");
                         context.getLogger().log(Level.WARNING, "WebSocket sendMessage abort on rewrite, force to close channel, live " + (System.currentTimeMillis() - webSocket.getCreatetime()) / 1000 + " seconds", e);
                     }
@@ -299,7 +299,7 @@ class WebSocketRunner implements Runnable {
                 @Override
                 public void failed(Throwable exc, ByteBuffer[] attachments) {
                     writing.set(false);
-                    futureResult.complete(RETCODE_SENDEXCEPTION);
+                    future.complete(RETCODE_SENDEXCEPTION);
                     closeRunner(RETCODE_SENDEXCEPTION, "websocket send message failed on CompletionHandler");
                     if (exc != null) {
                         context.getLogger().log(Level.FINE, "WebSocket sendMessage on CompletionHandler failed, force to close channel, live " + (System.currentTimeMillis() - webSocket.getCreatetime()) / 1000 + " seconds", exc);
