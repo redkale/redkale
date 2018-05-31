@@ -1696,6 +1696,7 @@ public final class Utility {
                 conn.setDoOutput(true);
                 conn.getOutputStream().write(body.getBytes(UTF_8));
             }
+            conn.setUseCaches(false);
             conn.connect();
             int rs = conn.getResponseCode();
             if (rs == 301 || rs == 302) {
@@ -1712,6 +1713,7 @@ public final class Utility {
             while ((pos = in.read(bytes)) != -1) {
                 out.write(bytes, 0, pos);
             }
+            in.close();
             return out;
         } finally {
             if (opening) conn.disconnect();
