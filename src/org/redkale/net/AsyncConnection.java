@@ -204,6 +204,7 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
             try {
                 if (noDelay) channel.setOption(StandardSocketOptions.TCP_NODELAY, true);
                 if (supportTcpKeepAlive()) channel.setOption(StandardSocketOptions.SO_KEEPALIVE, true);
+                channel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
             } catch (IOException e) {
             }
             channel.connect(address, null, new CompletionHandler<Void, Void>() {

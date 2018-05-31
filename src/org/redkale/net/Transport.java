@@ -262,6 +262,7 @@ public final class Transport {
                 final AsynchronousSocketChannel channel = AsynchronousSocketChannel.open(group);
                 if (supportTcpNoDelay()) channel.setOption(StandardSocketOptions.TCP_NODELAY, true);
                 if (supportTcpKeepAlive()) channel.setOption(StandardSocketOptions.SO_KEEPALIVE, true);
+                channel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
                 channel.connect(one.address, one, new CompletionHandler<Void, TransportNode>() {
                     @Override
                     public void completed(Void result, TransportNode attachment) {
@@ -312,6 +313,8 @@ public final class Transport {
             if (future.isDone()) return future;
             final AsynchronousSocketChannel channel = AsynchronousSocketChannel.open(group);
             if (supportTcpNoDelay()) channel.setOption(StandardSocketOptions.TCP_NODELAY, true);
+            if (supportTcpKeepAlive()) channel.setOption(StandardSocketOptions.SO_KEEPALIVE, true);
+            channel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
             channel.connect(node.address, node, new CompletionHandler<Void, TransportNode>() {
                 @Override
                 public void completed(Void result, TransportNode attachment) {
