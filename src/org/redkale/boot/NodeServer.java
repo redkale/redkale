@@ -632,9 +632,12 @@ public abstract class NodeServer {
     public void shutdown() throws IOException {
         if (interceptor != null) interceptor.preShutdown(this);
         final StringBuilder sb = logger.isLoggable(Level.INFO) ? new StringBuilder() : null;
+        final boolean finest = logger.isLoggable(Level.FINEST);
         localServices.forEach(y -> {
             long s = System.currentTimeMillis();
+            if (finest) logger.finest(y + " is destroying");
             y.destroy(Sncp.getConf(y));
+            if (finest) logger.finest(y + " was destroyed");
             long e = System.currentTimeMillis() - s;
             if (e > 2 && sb != null) {
                 sb.append(Sncp.toSimpleString(y, maxNameLength, maxClassNameLength)).append(" destroy ").append(e).append("ms").append(LINE_SEPARATOR);
