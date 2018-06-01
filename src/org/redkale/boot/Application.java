@@ -606,15 +606,15 @@ public final class Application {
         buffer.flip();
         channel.write(buffer);
         buffer.clear();
-        channel.configureBlocking(false);
+        channel.configureBlocking(true);
         try {
             channel.read(buffer);
             buffer.flip();
             byte[] bytes = new byte[buffer.remaining()];
             buffer.get(bytes);
             channel.close();
-            logger.info(new String(bytes));
-            Thread.sleep(500);
+            logger.info("Send: " + command + ", Reply: " + new String(bytes));
+            Thread.sleep(1000);
         } catch (Exception e) {
             if (e instanceof PortUnreachableException) {
                 if ("APIDOC".equalsIgnoreCase(command)) {
