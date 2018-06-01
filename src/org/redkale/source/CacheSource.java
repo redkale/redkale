@@ -98,6 +98,10 @@ public interface CacheSource<V extends Object> {
 
     public List<String> queryKeys();
 
+    public List<String> queryKeysStartsWith(String startsWith);
+
+    public List<String> queryKeysEndsWith(String endsWith);
+
     public int getKeySize();
 
     public List<CacheEntry<Object>> queryList();
@@ -214,6 +218,10 @@ public interface CacheSource<V extends Object> {
     public CompletableFuture<Void> removeSetItemAsync(final String key, final V value);
 
     public CompletableFuture<List<String>> queryKeysAsync();
+
+    public CompletableFuture<List<String>> queryKeysStartsWithAsync(String startsWith);
+
+    public CompletableFuture<List<String>> queryKeysEndsWithAsync(String endsWith);
 
     public CompletableFuture<Integer> getKeySizeAsync();
 

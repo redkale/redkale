@@ -933,6 +933,22 @@ public class CacheMemorySource<V extends Object> extends AbstractService impleme
     }
 
     @Override
+    public List<String> queryKeysStartsWith(String startsWith) {
+        if (startsWith == null) return queryKeys();
+        List<String> rs = new ArrayList<>();
+        container.keySet().stream().filter(x -> x.startsWith(startsWith)).forEach(x -> rs.add(x));
+        return rs;
+    }
+
+    @Override
+    public List<String> queryKeysEndsWith(String endsWith) {
+        if (endsWith == null) return queryKeys();
+        List<String> rs = new ArrayList<>();
+        container.keySet().stream().filter(x -> x.endsWith(endsWith)).forEach(x -> rs.add(x));
+        return rs;
+    }
+
+    @Override
     public int getKeySize() {
         return container.size();
     }
@@ -950,6 +966,16 @@ public class CacheMemorySource<V extends Object> extends AbstractService impleme
     @Override
     public CompletableFuture<List<String>> queryKeysAsync() {
         return CompletableFuture.completedFuture(new ArrayList<>(container.keySet()));
+    }
+
+    @Override
+    public CompletableFuture<List<String>> queryKeysStartsWithAsync(String startsWith) {
+        return CompletableFuture.completedFuture(queryKeysStartsWith(startsWith));
+    }
+
+    @Override
+    public CompletableFuture<List<String>> queryKeysEndsWithAsync(String endsWith) {
+        return CompletableFuture.completedFuture(queryKeysEndsWith(endsWith));
     }
 
     @Override
