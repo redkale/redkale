@@ -60,11 +60,23 @@ public abstract class WebSocketNode {
     //当前节点的本地WebSocketEngine
     protected WebSocketEngine localEngine;
 
+    protected Semaphore semaphore;
+
     public void init(AnyValue conf) {
         if (sncpNodeAddresses != null) sncpNodeAddresses.initValueType(InetSocketAddress.class);
+        if (localEngine != null) {
+            int wsthreads = localEngine.wsthreads;
+            if (wsthreads == 0) wsthreads = Runtime.getRuntime().availableProcessors() * 8;
+            if (wsthreads > 0) this.semaphore = new Semaphore(wsthreads);
+        }
     }
 
     public void destroy(AnyValue conf) {
+    }
+
+    @Local
+    public final Semaphore getSemaphore() {
+        return semaphore;
     }
 
     @Local
@@ -136,7 +148,12 @@ public abstract class WebSocketNode {
      * @return 地址列表
      */
     public CompletableFuture<Collection<InetSocketAddress>> getRpcNodeAddresses(final Serializable userid) {
-        if (this.sncpNodeAddresses != null) return this.sncpNodeAddresses.getCollectionAsync(SOURCE_SNCP_USERID_PREFIX + userid);
+        if (this.sncpNodeAddresses != null) {
+            tryAcquireSemaphore();
+            CompletableFuture<Collection<InetSocketAddress>> result = this.sncpNodeAddresses.getCollectionAsync(SOURCE_SNCP_USERID_PREFIX + userid);
+            if (semaphore != null) result.whenComplete((r, e) -> releaseSemaphore());
+            return result;
+        }
         List<InetSocketAddress> rs = new ArrayList<>();
         rs.add(this.localSncpAddress);
         return CompletableFuture.completedFuture(rs);
@@ -177,7 +194,10 @@ public abstract class WebSocketNode {
         if (this.localEngine != null && this.sncpNodeAddresses == null) {
             return CompletableFuture.completedFuture(this.localEngine.existsLocalWebSocket(userid));
         }
-        return this.sncpNodeAddresses.existsAsync(SOURCE_SNCP_USERID_PREFIX + userid);
+        tryAcquireSemaphore();
+        CompletableFuture<Boolean> rs = this.sncpNodeAddresses.existsAsync(SOURCE_SNCP_USERID_PREFIX + userid);
+        if (semaphore != null) rs.whenComplete((r, e) -> releaseSemaphore());
+        return rs;
     }
 
     /**
@@ -190,7 +210,10 @@ public abstract class WebSocketNode {
         if (this.localEngine != null && this.sncpNodeAddresses == null) {
             return CompletableFuture.completedFuture(this.localEngine.getLocalUserSize());
         }
-        return this.sncpNodeAddresses.getLongAsync(SOURCE_SNCP_USERCOUNT_KEY, 0L).thenApply(v -> v.intValue());
+        tryAcquireSemaphore();
+        CompletableFuture<Integer> rs = this.sncpNodeAddresses.getLongAsync(SOURCE_SNCP_USERCOUNT_KEY, 0L).thenApply(v -> v.intValue());
+        if (semaphore != null) rs.whenComplete((r, e) -> releaseSemaphore());
+        return rs;
     }
 
     /**
@@ -210,7 +233,9 @@ public abstract class WebSocketNode {
             return localFuture;
         }
         //远程节点关闭
+        tryAcquireSemaphore();
         CompletableFuture<Collection<InetSocketAddress>> addrsFuture = sncpNodeAddresses.getCollectionAsync(SOURCE_SNCP_USERID_PREFIX + userid);
+        if (semaphore != null) addrsFuture.whenComplete((r, e) -> releaseSemaphore());
         CompletableFuture<Integer> remoteFuture = addrsFuture.thenCompose((Collection<InetSocketAddress> addrs) -> {
             if (logger.isLoggable(Level.FINEST)) logger.finest("websocket found userid:" + userid + " on " + addrs);
             if (addrs == null || addrs.isEmpty()) return CompletableFuture.completedFuture(0);
@@ -486,7 +511,9 @@ public abstract class WebSocketNode {
         }
         final Object remoteMessage = formatRemoteMessage(message);
         CompletableFuture<Integer> localFuture = this.localEngine == null ? null : this.localEngine.broadcastMessage(wsrange, message, last);
+        tryAcquireSemaphore();
         CompletableFuture<Collection<InetSocketAddress>> addrsFuture = sncpNodeAddresses.getCollectionAsync(SOURCE_SNCP_ADDRS_KEY);
+        if (semaphore != null) addrsFuture.whenComplete((r, e) -> releaseSemaphore());
         CompletableFuture<Integer> remoteFuture = addrsFuture.thenCompose((Collection<InetSocketAddress> addrs) -> {
             if (logger.isLoggable(Level.FINEST)) logger.finest("websocket broadcast message (" + remoteMessage + ") on " + addrs);
             if (addrs == null || addrs.isEmpty()) return CompletableFuture.completedFuture(0);
@@ -515,7 +542,9 @@ public abstract class WebSocketNode {
         }
         //远程节点发送消息
         final Object remoteMessage = formatRemoteMessage(message);
+        tryAcquireSemaphore();
         CompletableFuture<Collection<InetSocketAddress>> addrsFuture = sncpNodeAddresses.getCollectionAsync(SOURCE_SNCP_USERID_PREFIX + userid);
+        if (semaphore != null) addrsFuture.whenComplete((r, e) -> releaseSemaphore());
         CompletableFuture<Integer> remoteFuture = addrsFuture.thenCompose((Collection<InetSocketAddress> addrs) -> {
             if (addrs == null || addrs.isEmpty()) {
                 if (logger.isLoggable(Level.FINER)) logger.finer("websocket not found userid:" + userid + " on any node ");
@@ -540,5 +569,20 @@ public abstract class WebSocketNode {
         if (sendConvert instanceof TextConvert) ((TextConvert) sendConvert).convertTo(message);
         if (sendConvert instanceof BinaryConvert) ((BinaryConvert) sendConvert).convertTo(message);
         return JsonConvert.root().convertTo(message);
+    }
+
+    protected boolean tryAcquireSemaphore() {
+        if (this.semaphore == null) return true;
+        try {
+            System.out.println("---------this.semaphore.tryAcquire"  );
+            return this.semaphore.tryAcquire(6, TimeUnit.SECONDS);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    protected void releaseSemaphore() {
+        if (this.semaphore != null) this.semaphore.release();
+        System.out.println("---------this.semaphore.release： " + this.semaphore  );
     }
 }

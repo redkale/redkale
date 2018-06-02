@@ -47,7 +47,7 @@ public class WebSocketNodeService extends WebSocketNode implements Service {
             executor = ((WorkThread) thread).getExecutor();
         }
         if (executor == null) executor = ForkJoinPool.commonPool();
-        
+
         return CompletableFuture.supplyAsync(() -> {
             final List<String> rs = new ArrayList<>();
             this.localEngine.getLocalWebSockets(groupid).forEach(x -> rs.add(x.getRemoteAddr()));
@@ -77,9 +77,11 @@ public class WebSocketNodeService extends WebSocketNode implements Service {
      */
     @Override
     public CompletableFuture<Void> connect(Serializable userid, InetSocketAddress sncpAddr) {
+        tryAcquireSemaphore();
         CompletableFuture<Void> future = sncpNodeAddresses.appendSetItemAsync(SOURCE_SNCP_USERID_PREFIX + userid, sncpAddr);
         future = future.thenAccept((a) -> sncpNodeAddresses.incr(SOURCE_SNCP_USERCOUNT_KEY));
         future = future.thenAccept((a) -> sncpNodeAddresses.appendSetItemAsync(SOURCE_SNCP_ADDRS_KEY, sncpAddr));
+        if (semaphore != null) future.whenComplete((r, e) -> releaseSemaphore());
         if (logger.isLoggable(Level.FINEST)) logger.finest(WebSocketNodeService.class.getSimpleName() + ".event: " + userid + " connect from " + sncpAddr);
         return future;
     }
@@ -94,8 +96,10 @@ public class WebSocketNodeService extends WebSocketNode implements Service {
      */
     @Override
     public CompletableFuture<Void> disconnect(Serializable userid, InetSocketAddress sncpAddr) {
+        tryAcquireSemaphore();
         CompletableFuture<Void> future = sncpNodeAddresses.removeSetItemAsync(SOURCE_SNCP_USERID_PREFIX + userid, sncpAddr);
         future = future.thenAccept((a) -> sncpNodeAddresses.decr(SOURCE_SNCP_USERCOUNT_KEY));
+        if (semaphore != null) future.whenComplete((r, e) -> releaseSemaphore());
         if (logger.isLoggable(Level.FINEST)) logger.finest(WebSocketNodeService.class.getSimpleName() + ".event: " + userid + " disconnect from " + sncpAddr);
         return future;
     }
@@ -111,8 +115,10 @@ public class WebSocketNodeService extends WebSocketNode implements Service {
      */
     @Override
     public CompletableFuture<Void> changeUserid(Serializable olduserid, Serializable newuserid, InetSocketAddress sncpAddr) {
+        tryAcquireSemaphore();
         CompletableFuture<Void> future = sncpNodeAddresses.appendSetItemAsync(SOURCE_SNCP_USERID_PREFIX + newuserid, sncpAddr);
         future = future.thenAccept((a) -> sncpNodeAddresses.removeSetItemAsync(SOURCE_SNCP_USERID_PREFIX + olduserid, sncpAddr));
+        if (semaphore != null) future.whenComplete((r, e) -> releaseSemaphore());
         if (logger.isLoggable(Level.FINEST)) logger.finest(WebSocketNodeService.class.getSimpleName() + ".event: " + olduserid + " changeUserid to " + newuserid + " from " + sncpAddr);
         return future;
     }

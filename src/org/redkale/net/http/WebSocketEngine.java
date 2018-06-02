@@ -70,6 +70,9 @@ public class WebSocketEngine {
     @Comment("最大连接数, 为0表示无限制")
     protected int wsmaxconns;
 
+    @Comment("操作WebSocketNode对应CacheSource并发数, 为-1表示无限制，为0表示系统默认值(CPU*8)")
+    protected int wsthreads;
+
     @Comment("最大消息体长度, 小于1表示无限制")
     protected int wsmaxbody;
 
@@ -77,7 +80,7 @@ public class WebSocketEngine {
     protected Cryptor cryptor;
 
     protected WebSocketEngine(String engineid, boolean single, HttpContext context, int liveinterval,
-        int wsmaxconns, int wsmaxbody, Cryptor cryptor, WebSocketNode node, Convert sendConvert, Logger logger) {
+        int wsmaxconns, int wsthreads, int wsmaxbody, Cryptor cryptor, WebSocketNode node, Convert sendConvert, Logger logger) {
         this.engineid = engineid;
         this.single = single;
         this.context = context;
@@ -85,6 +88,7 @@ public class WebSocketEngine {
         this.node = node;
         this.liveinterval = liveinterval;
         this.wsmaxconns = wsmaxconns;
+        this.wsthreads = wsthreads;
         this.wsmaxbody = wsmaxbody;
         this.cryptor = cryptor;
         this.logger = logger;
@@ -97,6 +101,7 @@ public class WebSocketEngine {
         this.liveinterval = props == null ? (liveinterval < 0 ? DEFAILT_LIVEINTERVAL : liveinterval) : props.getIntValue(WEBPARAM__LIVEINTERVAL, (liveinterval < 0 ? DEFAILT_LIVEINTERVAL : liveinterval));
         if (liveinterval <= 0) return;
         if (props != null) this.wsmaxconns = props.getIntValue(WEBPARAM__WSMAXCONNS, this.wsmaxconns);
+        if (props != null) this.wsthreads = props.getIntValue(WEBPARAM__WSTHREADS, this.wsthreads);
         if (props != null) this.wsmaxbody = props.getIntValue(WEBPARAM__WSMAXBODY, this.wsmaxbody);
         if (scheduler != null) return;
         this.scheduler = new ScheduledThreadPoolExecutor(1, (Runnable r) -> {
@@ -139,7 +144,7 @@ public class WebSocketEngine {
     }
 
     @Comment("从WebSocketEngine删除指定WebSocket")
-    void remove(WebSocket socket) {
+    void removeThenClose(WebSocket socket) {
         Serializable userid = socket._userid;
         if (single) {
             currconns.decrementAndGet();

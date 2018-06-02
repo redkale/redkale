@@ -82,6 +82,13 @@ public @interface RestWebSocket {
     int wsmaxconns() default 0;
 
     /**
+     * 操作WebSocketNode对应CacheSource并发数, 为-1表示无限制，为0表示系统默认值(CPU*8)
+     *
+     * @return 最大连接数
+     */
+    int wsthreads() default 0;
+
+    /**
      * 最大消息体长度, 小于1表示无限制
      *
      * @return 最大消息体长度

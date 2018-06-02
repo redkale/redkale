@@ -50,6 +50,9 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
     @Comment("WebScoket服务器最大连接数，为0表示无限制")
     public static final String WEBPARAM__WSMAXCONNS = "wsmaxconns";
 
+    @Comment("WebScoket服务器操作WebSocketNode对应CacheSource并发数, 为-1表示无限制，为0表示系统默认值(CPU*8)")
+    public static final String WEBPARAM__WSTHREADS = "wsthreads";
+
     @Comment("最大消息体长度, 小于1表示无限制")
     public static final String WEBPARAM__WSMAXBODY = "wsmaxbody";
 
@@ -75,6 +78,9 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
 
     //同RestWebSocket.wsmaxconns
     protected int wsmaxconns = 0;
+
+    //同RestWebSocket.wsthreads
+    protected int wsthreads = 0;
 
     //同RestWebSocket.wsmaxbody
     protected int wsmaxbody = 32 * 1024;
@@ -147,7 +153,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
         }
         //存在WebSocketServlet，则此WebSocketNode必须是本地模式Service
         this.node.localEngine = new WebSocketEngine("WebSocketEngine-" + addr.getHostString() + ":" + addr.getPort() + "-[" + resourceName() + "]",
-            this.single, context, liveinterval, wsmaxconns, wsmaxbody, this.cryptor, this.node, this.sendConvert, logger);
+            this.single, context, liveinterval, wsmaxconns, wsthreads, wsmaxbody, this.cryptor, this.node, this.sendConvert, logger);
         this.node.init(conf);
         this.node.localEngine.init(conf);
 

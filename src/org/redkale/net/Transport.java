@@ -418,7 +418,7 @@ public final class Transport {
         public TransportNode(int poolmaxconns, InetSocketAddress address, long disabletime) {
             this.address = address;
             this.disabletime = disabletime;
-            this.conns = new ArrayBlockingQueue<>(poolmaxconns);
+            this.conns = new LinkedBlockingQueue<>(poolmaxconns);
         }
         
         public int getPoolmaxconns() {
