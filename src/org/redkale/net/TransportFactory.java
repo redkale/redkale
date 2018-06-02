@@ -65,7 +65,7 @@ public class TransportFactory {
     protected final List<WeakReference<Transport>> transportReferences = new CopyOnWriteArrayList<>();
 
     //连接池大小
-    protected int poolmaxconns = Integer.getInteger("net.transport.poolmaxconns", 100);
+    protected int poolmaxconns = Integer.getInteger("net.transport.poolmaxconns", Math.max(100, Runtime.getRuntime().availableProcessors() * 16)); //最少是wsthreads的两倍
 
     //检查不可用地址周期， 单位：秒
     protected int checkinterval = Integer.getInteger("net.transport.checkinterval", 30);
