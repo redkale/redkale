@@ -32,9 +32,6 @@ public abstract class WebSocketNode {
     @Comment("存储用户ID的key前缀")
     public static final String SOURCE_SNCP_USERID_PREFIX = "sncpws_uid:";
 
-    @Comment("存储用户数的key")
-    public static final String SOURCE_SNCP_USERCOUNT_KEY = "sncpws_usercount";
-
     @Comment("存储当前SNCP节点列表的key")
     public static final String SOURCE_SNCP_ADDRS_KEY = "sncpws_addrs";
 
@@ -211,7 +208,7 @@ public abstract class WebSocketNode {
             return CompletableFuture.completedFuture(this.localEngine.getLocalUserSize());
         }
         tryAcquireSemaphore();
-        CompletableFuture<Integer> rs = this.sncpNodeAddresses.getLongAsync(SOURCE_SNCP_USERCOUNT_KEY, 0L).thenApply(v -> v.intValue());
+        CompletableFuture<Integer> rs = this.sncpNodeAddresses.queryKeysStartsWithAsync(SOURCE_SNCP_USERID_PREFIX).thenApply(v -> v.size());
         if (semaphore != null) rs.whenComplete((r, e) -> releaseSemaphore());
         return rs;
     }
@@ -574,7 +571,7 @@ public abstract class WebSocketNode {
     protected boolean tryAcquireSemaphore() {
         if (this.semaphore == null) return true;
         try {
-            System.out.println("---------this.semaphore.tryAcquire"  );
+            System.out.println("---------this.semaphore.tryAcquire");
             return this.semaphore.tryAcquire(6, TimeUnit.SECONDS);
         } catch (Exception e) {
             return false;
@@ -583,6 +580,6 @@ public abstract class WebSocketNode {
 
     protected void releaseSemaphore() {
         if (this.semaphore != null) this.semaphore.release();
-        System.out.println("---------this.semaphore.release： " + this.semaphore  );
+        System.out.println("---------this.semaphore.release： " + this.semaphore);
     }
 }
