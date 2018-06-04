@@ -571,7 +571,6 @@ public abstract class WebSocketNode {
     protected boolean tryAcquireSemaphore() {
         if (this.semaphore == null) return true;
         try {
-            System.out.println("---------this.semaphore.tryAcquire");
             return this.semaphore.tryAcquire(6, TimeUnit.SECONDS);
         } catch (Exception e) {
             return false;
@@ -580,6 +579,5 @@ public abstract class WebSocketNode {
 
     protected void releaseSemaphore() {
         if (this.semaphore != null) this.semaphore.release();
-        System.out.println("---------this.semaphore.release： " + this.semaphore);
     }
 }
