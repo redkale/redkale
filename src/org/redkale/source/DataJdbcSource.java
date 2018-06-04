@@ -476,6 +476,26 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
             final Map<Class, String> joinTabalis = node == null ? null : node.getJoinTabalis();
             final CharSequence join = node == null ? null : node.createSQLJoin(this, false, joinTabalis, new HashSet<>(), info);
             final CharSequence where = node == null ? null : node.createSQLExpress(info, joinTabalis);
+            if ("mysql".equals(this.readPool.getDbtype()) || "postgresql".equals(this.readPool.getDbtype())) {
+                final String listsql = "SELECT " + info.getQueryColumns("a", selects) + " FROM " + info.getTable(node) + " a" + (join == null ? "" : join)
+                    + ((where == null || where.length() == 0) ? "" : (" WHERE " + where)) + createSQLOrderby(info, flipper) + (flipper == null || flipper.getLimit() < 1 ? "" : (" LIMIT " + flipper.getLimit() + " OFFSET " + flipper.getOffset()));
+                PreparedStatement ps = conn.prepareStatement(listsql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+                ResultSet set = ps.executeQuery();
+                while (set.next()) {
+                    list.add(infoGetValue(info, sels, set));
+                }
+                set.close();
+                ps.close();
+                long total = list.size();
+                final String countsql = "SELECT COUNT(*) FROM " + info.getTable(node) + " a" + (join == null ? "" : join)
+                    + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
+                ps = conn.prepareStatement(countsql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+                set = ps.executeQuery();
+                if (set.next()) total = set.getLong(1);
+                set.close();
+                ps.close();
+                return CompletableFuture.completedFuture(new Sheet<>(total, list));
+            }
             final String sql = "SELECT " + info.getQueryColumns("a", selects) + " FROM " + info.getTable(node) + " a" + (join == null ? "" : join)
                 + ((where == null || where.length() == 0) ? "" : (" WHERE " + where)) + info.createSQLOrderby(flipper);
             if (info.isLoggable(logger, Level.FINEST)) {
