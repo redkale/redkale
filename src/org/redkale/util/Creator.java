@@ -140,6 +140,7 @@ public interface Creator<T> {
             }
             final List<String> fieldnames = new ArrayList<>();
             new ClassReader(out.toByteArray()).accept(new SimpleClassVisitor(Opcodes.ASM6, fieldnames, constructorDesc), 0);
+            while (fieldnames.remove(" ")); //删掉空元素
             if (fieldnames.isEmpty()) return null;
             if (paramcount == fieldnames.size()) {
                 return getConstructorField(clazz, paramcount, fieldnames.toArray(new String[fieldnames.size()]));

@@ -401,6 +401,7 @@ public final class Rest {
             Set<String> paramnames = new HashSet<>();
             String methodesc = method.getName() + ":" + Type.getMethodDescriptor(method);
             List<String> names = asmParamMap.get(methodesc);
+            if (names != null) while (names.remove(" ")); //删掉空元素
             Parameter[] params = method.getParameters();
             final LinkedHashMap<String, Parameter> paramap = new LinkedHashMap(); //必须使用LinkedHashMap确保顺序
             for (int j = 0; j < params.length; j++) { //字段列表
@@ -891,6 +892,7 @@ public final class Rest {
             int maxLocals = 4;
 
             List<String> asmParamNames = asmParamMap == null ? null : asmParamMap.get(method.getName() + ":" + Type.getMethodDescriptor(method));
+            if (asmParamNames != null) while (asmParamNames.remove(" ")); //删掉空元素
             List<Object[]> paramlist = new ArrayList<>();
             //解析方法中的每个参数
             for (int i = 0; i < params.length; i++) {
@@ -1723,6 +1725,7 @@ public final class Rest {
         }
 
         cw.visitEnd();
+
         Class<?> newClazz = new RestClassLoader(loader).loadClass(newDynName.replace('/', '.'), cw.toByteArray());
         try {
             T obj = ((Class<T>) newClazz).getDeclaredConstructor().newInstance();
