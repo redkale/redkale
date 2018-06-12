@@ -13,7 +13,6 @@ import java.nio.channels.*;
 import java.util.*;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
 import java.util.logging.*;
 
@@ -38,10 +37,6 @@ class WebSocketRunner implements Runnable {
     private ByteBuffer readBuffer;
 
     volatile boolean closed = false;
-
-    private final AtomicBoolean writing = new AtomicBoolean();
-
-    private final BlockingQueue<QueueEntry> writeQueue = new ArrayBlockingQueue(512);
 
     private final BiConsumer<WebSocket, Object> restMessageConsumer;  //主要供RestWebSocket使用
 
@@ -228,12 +223,6 @@ class WebSocketRunner implements Runnable {
         //System.out.println("推送消息");        
         final CompletableFuture<Integer> futureResult = new CompletableFuture<>();
         try {
-            synchronized (writing) {
-                if (writing.getAndSet(true)) {
-                    writeQueue.add(new QueueEntry(futureResult, packet));
-                    return futureResult;
-                }
-            }
             ByteBuffer[] buffers = packet.sendBuffers != null ? packet.duplicateSendBuffers() : packet.encode(this.context.getBufferSupplier(), this.context.getBufferConsumer(), webSocket._engine.cryptor);
             //if (debug) context.getLogger().log(Level.FINEST, "wsrunner.sending websocket message:  " + packet);
 
@@ -277,18 +266,6 @@ class WebSocketRunner implements Runnable {
                                 }
                             }
                         }
-                        QueueEntry entry = null;
-                        synchronized (writing) {
-                            entry = writeQueue.poll();
-                            if (entry == null) writing.set(false);
-                        }
-                        if (entry != null) {
-                            future = entry.future;
-                            ByteBuffer[] buffers = entry.packet.sendBuffers != null ? entry.packet.duplicateSendBuffers() : entry.packet.encode(context.getBufferSupplier(), context.getBufferConsumer(), webSocket._engine.cryptor);
-                            lastSendTime = System.currentTimeMillis();
-                            //if (debug) context.getLogger().log(Level.FINEST, "wsrunner.sending websocket message:  " + entry.packet);
-                            channel.write(buffers, buffers, this);
-                        }
                     } catch (Exception e) {
                         future.complete(RETCODE_SENDEXCEPTION);
                         closeRunner(RETCODE_SENDEXCEPTION, "websocket send message failed on rewrite");
@@ -298,7 +275,6 @@ class WebSocketRunner implements Runnable {
 
                 @Override
                 public void failed(Throwable exc, ByteBuffer[] attachments) {
-                    writing.set(false);
                     future.complete(RETCODE_SENDEXCEPTION);
                     closeRunner(RETCODE_SENDEXCEPTION, "websocket send message failed on CompletionHandler");
                     if (exc != null) {
@@ -308,7 +284,6 @@ class WebSocketRunner implements Runnable {
                 }
             });
         } catch (Exception t) {
-            writing.set(false);
             futureResult.complete(RETCODE_SENDEXCEPTION);
             closeRunner(RETCODE_SENDEXCEPTION, "websocket send message failed on channel.write");
             context.getLogger().log(Level.FINE, "WebSocket sendMessage abort, force to close channel, live " + (System.currentTimeMillis() - webSocket.getCreatetime()) / 1000 + " seconds", t);
@@ -331,11 +306,6 @@ class WebSocketRunner implements Runnable {
             readBuffer = null;
             engine.removeThenClose(webSocket);
             webSocket.onClose(code, reason);
-            QueueEntry entry = writeQueue.poll();
-            while (entry != null) {
-                entry.future.complete(RETCODE_WSOCKET_CLOSED);
-                entry = writeQueue.poll();
-            }
         }
     }
 

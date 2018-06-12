@@ -5,6 +5,7 @@
  */
 package org.redkale.net;
 
+import java.io.IOException;
 import java.nio.*;
 import java.nio.channels.*;
 import java.util.concurrent.TimeUnit;
@@ -20,7 +21,7 @@ import org.redkale.util.*;
  * @author zhangjx
  */
 @SuppressWarnings("unchecked")
-public final class PrepareRunner implements Runnable {
+public class PrepareRunner implements Runnable {
 
     private final AsyncConnection channel;
 
@@ -105,4 +106,39 @@ public final class PrepareRunner implements Runnable {
         }
     }
 
+    protected void prepare(ByteBuffer buffer, Request request, Response response) throws IOException {
+        context.prepare.prepare(buffer, request, response);
+    }
+
+    protected void initResponse(Response response, AsyncConnection channel) {
+        response.init(channel);
+    }
+
+    protected Response pollResponse() {
+        return context.responsePool.get();
+    }
+
+    protected Request pollRequest(Response response) {
+        return response.request;
+    }
+
+    protected AsyncConnection removeChannel(Response response) {
+        return response.removeChannel();
+    }
+
+    protected ByteBuffer pollReadBuffer(Request request) {
+        return request.pollReadBuffer();
+    }
+
+    protected ByteBuffer pollReadBuffer(Response response) {
+        return response.request.pollReadBuffer();
+    }
+
+    protected void offerReadBuffer(Request request, ByteBuffer buffer) {
+        request.offerReadBuffer(buffer);
+    }
+
+    protected void offerReadBuffer(Response response, ByteBuffer buffer) {
+        response.request.offerReadBuffer(buffer);
+    }
 }

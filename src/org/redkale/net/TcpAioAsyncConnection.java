@@ -23,6 +23,8 @@ import javax.net.ssl.SSLContext;
  */
 public class TcpAioAsyncConnection extends AsyncConnection {
 
+    private final Semaphore semaphore = new Semaphore(1);
+
     private int readTimeoutSeconds;
 
     private int writeTimeoutSeconds;
@@ -30,6 +32,8 @@ public class TcpAioAsyncConnection extends AsyncConnection {
     private final AsynchronousSocketChannel channel;
 
     private final SocketAddress remoteAddress;
+
+    private BlockingQueue<WriteEntry> writeQueue;
 
     public TcpAioAsyncConnection(final AsynchronousSocketChannel ch, SSLContext sslContext,
         final SocketAddress addr0, final int readTimeoutSeconds, final int writeTimeoutSeconds,
@@ -102,33 +106,78 @@ public class TcpAioAsyncConnection extends AsyncConnection {
         channel.read(dst, timeout < 0 ? 0 : timeout, unit, attachment, handler);
     }
 
+    private <A> void nextWrite(A attachment) {
+        BlockingQueue<WriteEntry> queue = this.writeQueue;
+        WriteEntry entry = queue == null ? null : queue.poll();
+        if (entry != null) {
+            try {
+                if (entry.writeOneBuffer == null) {
+                    write(false, entry.writeBuffers, entry.writeOffset, entry.writeLength, entry.writeAttachment, entry.writeHandler);
+                } else {
+                    write(false, entry.writeOneBuffer, entry.writeAttachment, entry.writeHandler);
+                }
+            } catch (Exception e) {
+                entry.writeHandler.failed(e, entry.writeAttachment);
+            }
+        } else {
+            semaphore.release();
+        }
+    }
+
     @Override
     public <A> void write(ByteBuffer src, A attachment, CompletionHandler<Integer, ? super A> handler) {
+        write(true, src, attachment, handler);
+    }
+
+    private <A> void write(boolean acquire, ByteBuffer src, A attachment, CompletionHandler<Integer, ? super A> handler) {
+        if (acquire && !semaphore.tryAcquire()) {
+            if (this.writeQueue == null) {
+                synchronized (semaphore) {
+                    if (this.writeQueue == null) {
+                        this.writeQueue = new LinkedBlockingDeque<>();
+                    }
+                }
+            }
+            this.writeQueue.add(new WriteEntry(src, attachment, handler));
+            return;
+        }
+        WriteOneCompletionHandler newHandler = new WriteOneCompletionHandler(src, handler);
+        if (!channel.isOpen()) {
+            newHandler.failed(new ClosedChannelException(), attachment);
+            return;
+        }
         this.writetime = System.currentTimeMillis();
         if (writeTimeoutSeconds > 0) {
-            channel.write(src, writeTimeoutSeconds, TimeUnit.SECONDS, attachment, handler);
+            channel.write(src, writeTimeoutSeconds, TimeUnit.SECONDS, attachment, newHandler);
         } else {
-            channel.write(src, attachment, handler);
+            channel.write(src, attachment, newHandler);
         }
     }
 
     @Override
     public <A> void write(ByteBuffer[] srcs, int offset, int length, A attachment, final CompletionHandler<Integer, ? super A> handler) {
+        write(true, srcs, offset, length, attachment, handler);
+    }
+
+    private <A> void write(boolean acquire, ByteBuffer[] srcs, int offset, int length, A attachment, final CompletionHandler<Integer, ? super A> handler) {
+        if (acquire && !semaphore.tryAcquire()) {
+            if (this.writeQueue == null) {
+                synchronized (semaphore) {
+                    if (this.writeQueue == null) {
+                        this.writeQueue = new LinkedBlockingDeque<>();
+                    }
+                }
+            }
+            this.writeQueue.add(new WriteEntry(srcs, offset, length, attachment, handler));
+            return;
+        }
+        WriteMoreCompletionHandler newHandler = new WriteMoreCompletionHandler(srcs, offset, length, handler);
+        if (!channel.isOpen()) {
+            newHandler.failed(new ClosedChannelException(), attachment);
+            return;
+        }
         this.writetime = System.currentTimeMillis();
-        channel.write(srcs, offset, length, writeTimeoutSeconds > 0 ? writeTimeoutSeconds : 60, TimeUnit.SECONDS,
-            attachment, new CompletionHandler<Long, A>() {
-
-            @Override
-            public void completed(Long result, A attachment) {
-                handler.completed(result.intValue(), attachment);
-            }
-
-            @Override
-            public void failed(Throwable exc, A attachment) {
-                handler.failed(exc, attachment);
-            }
-
-        });
+        channel.write(srcs, offset, length, writeTimeoutSeconds > 0 ? writeTimeoutSeconds : 60, TimeUnit.SECONDS, attachment, newHandler);
     }
 
     @Override
@@ -179,6 +228,17 @@ public class TcpAioAsyncConnection extends AsyncConnection {
     public final void close() throws IOException {
         super.close();
         channel.close();
+        BlockingQueue<WriteEntry> queue = this.writeQueue;
+        if (queue == null) return;
+        WriteEntry entry;
+        Exception ex = null;
+        while ((entry = queue.poll()) != null) {
+            if (ex == null) ex = new ClosedChannelException();
+            try {
+                entry.writeHandler.failed(ex, entry.writeAttachment);
+            } catch (Exception e) {
+            }
+        }
     }
 
     @Override
@@ -191,4 +251,125 @@ public class TcpAioAsyncConnection extends AsyncConnection {
         return true;
     }
 
+    private class WriteMoreCompletionHandler<A> implements CompletionHandler<Long, A> {
+
+        private final CompletionHandler<Integer, A> writeHandler;
+
+        private final ByteBuffer[] writeBuffers;
+
+        private int writeOffset;
+
+        private int writeLength;
+
+        private int writeCount;
+
+        public WriteMoreCompletionHandler(ByteBuffer[] buffers, int offset, int length, CompletionHandler handler) {
+            this.writeBuffers = buffers;
+            this.writeOffset = offset;
+            this.writeLength = length;
+            this.writeHandler = handler;
+        }
+
+        @Override
+        public void completed(Long result, A attachment) {
+            if (result >= 0) {
+                writeCount += result;
+                try {
+                    int index = -1;
+                    for (int i = writeOffset; i < (writeOffset + writeLength); i++) {
+                        if (writeBuffers[i].hasRemaining()) {
+                            index = i;
+                            break;
+                        }
+                    }
+                    if (index >= 0) {
+                        writeOffset += index;
+                        writeLength -= index;
+                        channel.write(writeBuffers, writeOffset, writeLength, writeTimeoutSeconds > 0 ? writeTimeoutSeconds : 60, TimeUnit.SECONDS, attachment, this);
+                        return;
+                    }
+                } catch (Exception e) {
+                    failed(e, attachment);
+                    return;
+                }
+                nextWrite(attachment);
+                writeHandler.completed(writeCount, attachment);
+            } else {
+                nextWrite(attachment);
+                writeHandler.completed(result.intValue(), attachment);
+            }
+        }
+
+        @Override
+        public void failed(Throwable exc, A attachment) {
+            nextWrite(attachment);
+            writeHandler.failed(exc, attachment);
+        }
+
+    }
+
+    private class WriteOneCompletionHandler<A> implements CompletionHandler<Integer, A> {
+
+        private final CompletionHandler writeHandler;
+
+        private final ByteBuffer writeOneBuffer;
+
+        public WriteOneCompletionHandler(ByteBuffer buffer, CompletionHandler handler) {
+            this.writeOneBuffer = buffer;
+            this.writeHandler = handler;
+        }
+
+        @Override
+        public void completed(Integer result, A attachment) {
+            try {
+                if (writeOneBuffer.hasRemaining()) {
+                    channel.write(writeOneBuffer, attachment, this);
+                    return;
+                }
+            } catch (Exception e) {
+                failed(e, attachment);
+                return;
+            }
+            nextWrite(attachment);
+            writeHandler.completed(result, attachment);
+        }
+
+        @Override
+        public void failed(Throwable exc, A attachment) {
+            nextWrite(attachment);
+            writeHandler.failed(exc, attachment);
+        }
+
+    }
+
+    private static class WriteEntry {
+
+        ByteBuffer writeOneBuffer;
+
+        ByteBuffer[] writeBuffers;
+
+        int writingCount;
+
+        int writeOffset;
+
+        int writeLength;
+
+        Object writeAttachment;
+
+        CompletionHandler writeHandler;
+
+        public WriteEntry(ByteBuffer writeOneBuffer, Object writeAttachment, CompletionHandler writeHandler) {
+            this.writeOneBuffer = writeOneBuffer;
+            this.writeAttachment = writeAttachment;
+            this.writeHandler = writeHandler;
+        }
+
+        public WriteEntry(ByteBuffer[] writeBuffers, int writeOffset, int writeLength, Object writeAttachment, CompletionHandler writeHandler) {
+            this.writeBuffers = writeBuffers;
+            this.writeOffset = writeOffset;
+            this.writeLength = writeLength;
+            this.writeAttachment = writeAttachment;
+            this.writeHandler = writeHandler;
+        }
+    }
 }
