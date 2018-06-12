@@ -210,7 +210,7 @@ public abstract class PrepareServlet<K extends Serializable, C extends Context, 
     @SuppressWarnings("unchecked")
     public abstract void addServlet(S servlet, Object attachment, AnyValue conf, K... mappings);
 
-    public final void prepare(final ByteBuffer buffer, final R request, final P response) throws IOException {
+    public void prepare(final ByteBuffer buffer, final R request, final P response) throws IOException {
         executeCounter.incrementAndGet();
         final int rs = request.readHeader(buffer);
         if (rs < 0) {

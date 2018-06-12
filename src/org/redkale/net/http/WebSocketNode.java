@@ -221,7 +221,7 @@ public abstract class WebSocketNode {
      * @return int
      */
     @Local
-    public final CompletableFuture<Integer> forceCloseWebSocket(final Serializable userid) {
+    public CompletableFuture<Integer> forceCloseWebSocket(final Serializable userid) {
         CompletableFuture<Integer> localFuture = null;
         if (this.localEngine != null) localFuture = CompletableFuture.completedFuture(localEngine.forceCloseLocalWebSocket(userid));
         if (this.sncpNodeAddresses == null || this.remoteNode == null) {
@@ -380,7 +380,7 @@ public abstract class WebSocketNode {
      * @return 为0表示成功， 其他值表示部分发送异常
      */
     @Local
-    public final CompletableFuture<Integer> sendMessage(final Convert convert, final Object message0, final boolean last, final Serializable... userids) {
+    public CompletableFuture<Integer> sendMessage(final Convert convert, final Object message0, final boolean last, final Serializable... userids) {
         if (userids == null || userids.length < 1) return CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY);
         if (message0 instanceof CompletableFuture) return ((CompletableFuture) message0).thenApply(msg -> sendMessage(convert, msg, last, userids));
         final Object message = (convert == null || message0 instanceof WebSocketPacket) ? message0 : ((convert instanceof TextConvert) ? new WebSocketPacket(((TextConvert) convert).convertTo(message0), last) : new WebSocketPacket(((BinaryConvert) convert).convertTo(message0), last));
@@ -500,7 +500,7 @@ public abstract class WebSocketNode {
      * @return 为0表示成功， 其他值表示部分发送异常
      */
     @Local
-    public final CompletableFuture<Integer> broadcastMessage(final WebSocketRange wsrange, final Convert convert, final Object message0, final boolean last) {
+    public CompletableFuture<Integer> broadcastMessage(final WebSocketRange wsrange, final Convert convert, final Object message0, final boolean last) {
         if (message0 instanceof CompletableFuture) return ((CompletableFuture) message0).thenApply(msg -> broadcastMessage(wsrange, convert, msg, last));
         final Object message = (convert == null || message0 instanceof WebSocketPacket) ? message0 : ((convert instanceof TextConvert) ? new WebSocketPacket(((TextConvert) convert).convertTo(message0), last) : new WebSocketPacket(((BinaryConvert) convert).convertTo(message0), last));
         if (this.localEngine != null && this.sncpNodeAddresses == null) { //本地模式且没有分布式
@@ -525,7 +525,7 @@ public abstract class WebSocketNode {
         return localFuture == null ? remoteFuture : localFuture.thenCombine(remoteFuture, (a, b) -> a | b);
     }
 
-    private CompletableFuture<Integer> sendOneMessage(final Object message, final boolean last, final Serializable userid) {
+    protected CompletableFuture<Integer> sendOneMessage(final Object message, final boolean last, final Serializable userid) {
         if (message instanceof CompletableFuture) return ((CompletableFuture) message).thenApply(msg -> sendOneMessage(msg, last, userid));
         if (logger.isLoggable(Level.FINEST)) {
             logger.finest("websocket want send message {userid:" + userid + ", content:'" + (message instanceof WebSocketPacket ? ((WebSocketPacket) message).toSimpleString() : JsonConvert.root().convertTo(message)) + "'} from locale node to " + ((this.localEngine != null) ? "locale" : "remote") + " engine");
@@ -559,7 +559,7 @@ public abstract class WebSocketNode {
         return localFuture == null ? remoteFuture : localFuture.thenCombine(remoteFuture, (a, b) -> a | b);
     }
 
-    private Object formatRemoteMessage(Object message) {
+    protected Object formatRemoteMessage(Object message) {
         if (message instanceof WebSocketPacket) return message;
         if (message instanceof byte[]) return message;
         if (message instanceof CharSequence) return message;
