@@ -496,8 +496,7 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
         } else {
             throw new ConvertException("not support the type (" + type + ")");
         }
-        decoder = findDecoder(clazz);
-        if (decoder != null) return decoder;
+        //此处不能再findDecoder，否则type与class不一致, 如: RetResult 和 RetResult<Integer>
         return createDecoder(type, clazz);
     }
 
@@ -583,8 +582,7 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
         } else {
             throw new ConvertException("not support the type (" + type + ")");
         }
-        encoder = findEncoder(clazz);
-        if (encoder != null) return encoder;
+        //此处不能再findEncoder，否则type与class不一致, 如: RetResult 和 RetResult<Integer>
         return createEncoder(type, clazz);
     }
 
