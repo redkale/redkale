@@ -582,7 +582,7 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
         } else {
             throw new ConvertException("not support the type (" + type + ")");
         }
-        //此处不能再findEncoder，否则type与class不一致, 如: RetResult 和 RetResult<Integer>
+        //此处不能再findEncoder，否则type与class不一致, 如: RetResult 和 RetResult<Integer> 
         return createEncoder(type, clazz);
     }
 
