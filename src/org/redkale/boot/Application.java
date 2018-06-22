@@ -62,6 +62,11 @@ public final class Application {
     public static final String RESNAME_APP_HOME = "APP_HOME";
 
     /**
+     * 当前进程的配置目录，如果不是绝对路径则视为HOME目录下的相对路径 类型：String、File、Path
+     */
+    public static final String RESNAME_APP_CONF = "APP_CONF";
+
+    /**
      * application.xml 文件中resources节点的内容， 类型： AnyValue
      */
     public static final String RESNAME_APP_GRES = "APP_GRES";
@@ -137,6 +142,9 @@ public final class Application {
     //进程根目录
     private final File home;
 
+    //配置文件目录
+    private final File conf;
+
     //日志
     private final Logger logger;
 
@@ -170,6 +178,12 @@ public final class Application {
         try {
             this.resourceFactory.register(RESNAME_APP_HOME, root.getCanonicalPath());
             this.home = root.getCanonicalFile();
+            String confsubpath = System.getProperty(RESNAME_APP_CONF, "conf");
+            if (confsubpath.charAt(0) == '/' || confsubpath.indexOf(':') > 0) {
+                this.conf = new File(confsubpath).getCanonicalFile();
+            } else {
+                this.conf = new File(this.home, confsubpath).getCanonicalFile();
+            }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -194,7 +208,7 @@ public final class Application {
             System.setProperty(RESNAME_APP_NODE, node);
         }
         //以下是初始化日志配置
-        final File logconf = new File(root, "conf/logging.properties");
+        final File logconf = new File(conf, "logging.properties");
         if (logconf.isFile() && logconf.canRead()) {
             try {
                 final String rootpath = root.getCanonicalPath().replace('\\', '/');
@@ -352,6 +366,10 @@ public final class Application {
         return home;
     }
 
+    public File getConf() {
+        return conf;
+    }
+
     public long getStartTime() {
         return startTime;
     }
@@ -373,12 +391,13 @@ public final class Application {
         System.setProperty("convert.bson.writer.buffer.defsize", "4096");
         System.setProperty("convert.json.writer.buffer.defsize", "4096");
 
-        File persist = new File(this.home, "conf/persistence.xml");
+        File persist = new File(this.conf, "persistence.xml");
         final String homepath = this.home.getCanonicalPath();
+        final String confpath = this.conf.getCanonicalPath();
         if (persist.isFile()) System.setProperty(DataSources.DATASOURCE_CONFPATH, persist.getCanonicalPath());
-        logger.log(Level.INFO, "APP_JAVA = " + System.getProperty("java.version") + "\r\n" + RESNAME_APP_ADDR + " = " + this.localAddress.getHostAddress() + "\r\n" + RESNAME_APP_HOME + " = " + homepath);
+        logger.log(Level.INFO, "APP_JAVA = " + System.getProperty("java.version") + "\r\n" + RESNAME_APP_ADDR + " = " + this.localAddress.getHostAddress() + "\r\n" + RESNAME_APP_HOME + " = " + homepath + "\r\n" + RESNAME_APP_CONF + " = " + confpath);
         String lib = config.getValue("lib", "${APP_HOME}/libs/*").trim().replace("${APP_HOME}", homepath);
-        lib = lib.isEmpty() ? (homepath + "/conf") : (lib + ";" + homepath + "/conf");
+        lib = lib.isEmpty() ? confpath : (lib + ";" + confpath);
         Server.loadLib(classLoader, logger, lib);
 
         //------------------------------------------------------------------------
@@ -391,7 +410,7 @@ public final class Application {
                 if (dfloads != null) {
                     for (String dfload : dfloads.split(";")) {
                         if (dfload.trim().isEmpty()) continue;
-                        final File df = (dfload.indexOf('/') < 0) ? new File(home, "conf/" + dfload) : new File(dfload);
+                        final File df = (dfload.indexOf('/') < 0) ? new File(conf, "/" + dfload) : new File(dfload);
                         if (df.isFile()) {
                             Properties ps = new Properties();
                             InputStream in = new FileInputStream(df);
@@ -524,8 +543,8 @@ public final class Application {
 
     public void restoreConfig() throws IOException {
         synchronized (this) {
-            File confFile = new File(this.home, "conf/application.xml");
-            confFile.renameTo(new File(this.home, "conf/application_" + String.format("%1$tY%1$tm%1$td%1$tH%1$tM%1$tS", System.currentTimeMillis()) + ".xml"));
+            File confFile = new File(this.conf, "application.xml");
+            confFile.renameTo(new File(this.conf, "application_" + String.format("%1$tY%1$tm%1$td%1$tH%1$tM%1$tS", System.currentTimeMillis()) + ".xml"));
             final PrintStream ps = new PrintStream(new FileOutputStream(confFile));
             ps.append(config.toXML("application"));
             ps.close();
@@ -796,8 +815,15 @@ public final class Application {
     public static Application create(final boolean singleton) throws IOException {
         final String home = new File(System.getProperty(RESNAME_APP_HOME, "")).getCanonicalPath().replace('\\', '/');
         System.setProperty(RESNAME_APP_HOME, home);
-        File appfile = new File(home, "conf/application.xml");
-        return new Application(singleton, load(new FileInputStream(appfile)));
+        String confsubpath = System.getProperty(RESNAME_APP_CONF, "conf");
+        File appfile;
+        if (confsubpath.charAt(0) == '/' || confsubpath.indexOf(':') > 0) {
+            appfile = new File(confsubpath).getCanonicalFile();
+        } else {
+            appfile = new File(new File(home), confsubpath);
+        }
+        File appconf = new File(appfile, "application.xml");
+        return new Application(singleton, load(new FileInputStream(appconf)));
     }
 
     public static void main(String[] args) throws Exception {

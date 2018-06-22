@@ -192,7 +192,7 @@ public final class ApiDocsService {
         final FileOutputStream out = new FileOutputStream(new File(app.getHome(), "apidoc.json"));
         out.write(json.getBytes("UTF-8"));
         out.close();
-        File doctemplate = new File(app.getHome(), "conf/apidoc-template.html");
+        File doctemplate = new File(app.getConf(), "apidoc-template.html");
         InputStream in = null;
         if (doctemplate.isFile() && doctemplate.canRead()) {
             in = new FileInputStream(doctemplate);
