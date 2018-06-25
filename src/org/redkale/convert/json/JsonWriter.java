@@ -189,7 +189,7 @@ public class JsonWriter extends Writer {
 
     @Override
     public final void writeChar(char value) {
-        writeInt(value);
+        writeTo('\'', value, '\'');
     }
 
     @Override
