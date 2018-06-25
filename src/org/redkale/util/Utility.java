@@ -430,6 +430,23 @@ public final class Utility {
     }
 
     /**
+     * 将一个或多个char新元素添加到char数组结尾
+     *
+     * @param array 原数组
+     * @param objs  待追加数据
+     *
+     * @return 新数组
+     */
+    public static char[] append(final char[] array, final char... objs) {
+        if (array == null || array.length == 0) return objs;
+        if (objs == null || objs.length == 0) return array;
+        final char[] news = new char[array.length + objs.length];
+        System.arraycopy(array, 0, news, 0, array.length);
+        System.arraycopy(objs, 0, news, array.length, objs.length);
+        return news;
+    }
+
+    /**
      * 将一个或多个int新元素添加到int数组结尾
      *
      * @param array 原数组
@@ -566,6 +583,22 @@ public final class Utility {
         return false;
     }
 
+    /**
+     * 判断指定值是否包含指定的数组中，包含返回true
+     *
+     * @param values 集合
+     * @param value  单值
+     *
+     * @return boolean
+     */
+    public static boolean contains(char[] values, char value) {
+        if (values == null) return false;
+        for (char v : values) {
+            if (v == value) return true;
+        }
+        return false;
+    }
+    
     /**
      * 判断指定值是否包含指定的数组中，包含返回true
      *
