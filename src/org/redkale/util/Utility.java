@@ -375,6 +375,24 @@ public final class Utility {
     }
 
     /**
+     * 将char数组用分隔符拼接成字符串
+     *
+     * @param array     数组
+     * @param delimiter 分隔符
+     *
+     * @return String
+     */
+    public static String joining(final char[] array, final String delimiter) {
+        if (array == null || array.length == 0) return "";
+        StringBuilder sb = new StringBuilder();
+        for (char i : array) {
+            if (sb.length() > 0) sb.append(delimiter);
+            sb.append(i);
+        }
+        return sb.toString();
+    }
+    
+    /**
      * 将int数组用分隔符拼接成字符串
      *
      * @param array     数组
