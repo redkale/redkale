@@ -1824,7 +1824,7 @@ public final class Rest {
                 int pos = t.indexOf(defmodulename);
                 n = pos > 0 ? t.substring(0, pos) : t;
             }
-            this.name = n;
+            this.name = n.trim();
             this.mappingMethod = method;
             this.methods = mapping.methods();
             this.auth = mapping.auth();
