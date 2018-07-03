@@ -138,6 +138,9 @@ public final class EntityInfo<T> {
     //日志级别，从LogLevel获取
     private final int logLevel;
 
+    //日志控制
+    private final Map<Integer, String[]> excludeLogLevels;
+
     //Flipper.sort转换成以ORDER BY开头SQL的缓存
     private final Map<String, String> sortOrderbySqls = new ConcurrentHashMap<>();
 
@@ -210,6 +213,26 @@ public final class EntityInfo<T> {
 
         LogLevel ll = type.getAnnotation(LogLevel.class);
         this.logLevel = ll == null ? Integer.MIN_VALUE : Level.parse(ll.value()).intValue();
+        Map<Integer, HashSet<String>> logmap = new HashMap<>();
+        for (LogExcludeLevel lel : type.getAnnotationsByType(LogExcludeLevel.class)) {
+            for (String onelevel : lel.levels()) {
+                int level = Level.parse(onelevel).intValue();
+                HashSet<String> set = logmap.get(level);
+                if (set == null) {
+                    set = new HashSet<>();
+                    logmap.put(level, set);
+                }
+                for (String key : lel.keys()) {
+                    set.add(key);
+                }
+            }
+        }
+        if (logmap.isEmpty()) {
+            this.excludeLogLevels = null;
+        } else {
+            this.excludeLogLevels = new HashMap<>();
+            logmap.forEach((l, set) -> excludeLogLevels.put(l, set.toArray(new String[set.size()])));
+        }
         //---------------------------------------------
         Table t = type.getAnnotation(Table.class);
         if (type.getAnnotation(VirtualEntity.class) != null) {
@@ -872,6 +895,26 @@ public final class EntityInfo<T> {
      */
     public boolean isLoggable(Logger logger, Level l) {
         return logger.isLoggable(l) && l.intValue() >= this.logLevel;
+    }
+
+    /**
+     * 判断日志级别
+     *
+     * @param logger Logger
+     * @param l      Level
+     * @param str    String
+     *
+     * @return boolean
+     */
+    public boolean isLoggable(Logger logger, Level l, String str) {
+        boolean rs = logger.isLoggable(l) && l.intValue() >= this.logLevel;
+        if (this.excludeLogLevels == null || !rs || str == null) return rs;
+        String[] keys = this.excludeLogLevels.get(l.intValue());
+        if (keys == null) return rs;
+        for (String key : keys) {
+            if (str.contains(key)) return false;
+        }
+        return rs;
     }
 
     /**

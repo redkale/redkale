@@ -479,7 +479,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
             sql += FilterNode.formatToString(ids[i]);
         }
         sql += ")";
-        if (info.isLoggable(logger, Level.FINEST)) logger.finest(info.getType().getSimpleName() + " delete sql=" + sql);
+        if (info.isLoggable(logger, Level.FINEST, sql)) logger.finest(info.getType().getSimpleName() + " delete sql=" + sql);
         return deleteDB(info, null, sql);
     }
 
@@ -498,7 +498,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
         String sql = "DELETE " + ("mysql".equals(this.readPool.getDbtype()) ? "a" : "") + " FROM " + info.getTable(node) + " a" + (join1 == null ? "" : (", " + join1))
             + ((where == null || where.length() == 0) ? (join2 == null ? "" : (" WHERE " + join2))
             : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2)))) + info.createSQLOrderby(flipper);
-        if (info.isLoggable(logger, Level.FINEST)) logger.finest(info.getType().getSimpleName() + " delete sql="
+        if (info.isLoggable(logger, Level.FINEST, sql)) logger.finest(info.getType().getSimpleName() + " delete sql="
                 + (sql + ((flipper == null || flipper.getLimit() < 1) ? "" : (" LIMIT " + flipper.getLimit()))));
         return deleteDB(info, flipper, sql);
     }
@@ -1205,7 +1205,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
         }
         final String sql = "SELECT " + sb + " FROM " + info.getTable(node) + " a"
             + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
-        if (info.isLoggable(logger, Level.FINEST)) logger.finest(info.getType().getSimpleName() + " getnumbermap sql=" + sql);
+        if (info.isLoggable(logger, Level.FINEST, sql)) logger.finest(info.getType().getSimpleName() + " getnumbermap sql=" + sql);
         return getNumberMapDB(info, sql, columns);
     }
 
@@ -1292,7 +1292,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
         final CharSequence where = node == null ? null : node.createSQLExpress(info, joinTabalis);
         final String sql = "SELECT " + func.getColumn((column == null || column.isEmpty() ? "*" : info.getSQLColumn("a", column))) + " FROM " + info.getTable(node) + " a"
             + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
-        if (info.isLoggable(logger, Level.FINEST)) logger.finest(entityClass.getSimpleName() + " getnumberresult sql=" + sql);
+        if (info.isLoggable(logger, Level.FINEST, sql)) logger.finest(entityClass.getSimpleName() + " getnumberresult sql=" + sql);
         return getNumberResultDB(info, sql, defVal, column);
     }
 
@@ -1350,7 +1350,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
         final CharSequence where = node == null ? null : node.createSQLExpress(info, joinTabalis);
         final String sql = "SELECT a." + sqlkey + ", " + func.getColumn((funcColumn == null || funcColumn.isEmpty() ? "*" : info.getSQLColumn("a", funcColumn)))
             + " FROM " + info.getTable(node) + " a" + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where)) + " GROUP BY a." + sqlkey;
-        if (info.isLoggable(logger, Level.FINEST)) logger.finest(info.getType().getSimpleName() + " querycolumnmap sql=" + sql);
+        if (info.isLoggable(logger, Level.FINEST, sql)) logger.finest(info.getType().getSimpleName() + " querycolumnmap sql=" + sql);
         return queryColumnMapDB(info, sql, keyColumn);
     }
 
@@ -1399,7 +1399,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
 
     protected <T> CompletableFuture<T> findCompose(final EntityInfo<T> info, final SelectColumn selects, Serializable pk) {
         final String sql = "SELECT " + info.getQueryColumns(null, selects) + " FROM " + info.getTable(pk) + " WHERE " + info.getPrimarySQLColumn() + " = " + FilterNode.formatToString(pk);
-        if (info.isLoggable(logger, Level.FINEST)) logger.finest(info.getType().getSimpleName() + " find sql=" + sql);
+        if (info.isLoggable(logger, Level.FINEST, sql)) logger.finest(info.getType().getSimpleName() + " find sql=" + sql);
         return findDB(info, sql, true, selects);
     }
 
@@ -1467,7 +1467,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
         final CharSequence join = node == null ? null : node.createSQLJoin(this, false, joinTabalis, new HashSet<>(), info);
         final CharSequence where = node == null ? null : node.createSQLExpress(info, joinTabalis);
         final String sql = "SELECT " + info.getQueryColumns("a", selects) + " FROM " + info.getTable(node) + " a" + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
-        if (info.isLoggable(logger, Level.FINEST)) logger.finest(info.getType().getSimpleName() + " find sql=" + sql);
+        if (info.isLoggable(logger, Level.FINEST, sql)) logger.finest(info.getType().getSimpleName() + " find sql=" + sql);
         return findDB(info, sql, false, selects);
     }
 
@@ -1536,7 +1536,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
 
     protected <T> CompletableFuture<Serializable> findColumnCompose(final EntityInfo<T> info, String column, final Serializable defValue, final Serializable pk) {
         final String sql = "SELECT " + info.getSQLColumn(null, column) + " FROM " + info.getTable(pk) + " WHERE " + info.getPrimarySQLColumn() + " = " + FilterNode.formatToString(pk);
-        if (info.isLoggable(logger, Level.FINEST)) logger.finest(info.getType().getSimpleName() + " find sql=" + sql);
+        if (info.isLoggable(logger, Level.FINEST, sql)) logger.finest(info.getType().getSimpleName() + " find sql=" + sql);
         return findColumnDB(info, sql, true, column, defValue);
     }
 
@@ -1568,7 +1568,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
         final CharSequence join = node == null ? null : node.createSQLJoin(this, false, joinTabalis, new HashSet<>(), info);
         final CharSequence where = node == null ? null : node.createSQLExpress(info, joinTabalis);
         final String sql = "SELECT " + info.getSQLColumn("a", column) + " FROM " + info.getTable(node) + " a" + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
-        if (info.isLoggable(logger, Level.FINEST)) logger.finest(info.getType().getSimpleName() + " find sql=" + sql);
+        if (info.isLoggable(logger, Level.FINEST, sql)) logger.finest(info.getType().getSimpleName() + " find sql=" + sql);
         return findColumnDB(info, sql, false, column, defValue);
     }
 
@@ -1598,7 +1598,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
 
     protected <T> CompletableFuture<Boolean> existsCompose(final EntityInfo<T> info, Serializable pk) {
         final String sql = "SELECT COUNT(*) FROM " + info.getTable(pk) + " WHERE " + info.getPrimarySQLColumn() + " = " + FilterNode.formatToString(pk);
-        if (info.isLoggable(logger, Level.FINEST)) logger.finest(info.getType().getSimpleName() + " exists sql=" + sql);
+        if (info.isLoggable(logger, Level.FINEST, sql)) logger.finest(info.getType().getSimpleName() + " exists sql=" + sql);
         return existsDB(info, sql, true);
     }
 
@@ -1640,7 +1640,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
         final CharSequence join = node == null ? null : node.createSQLJoin(this, false, joinTabalis, new HashSet<>(), info);
         final CharSequence where = node == null ? null : node.createSQLExpress(info, joinTabalis);
         final String sql = "SELECT COUNT(" + info.getPrimarySQLColumn("a") + ") FROM " + info.getTable(node) + " a" + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
-        if (info.isLoggable(logger, Level.FINEST)) logger.finest(info.getType().getSimpleName() + " exists sql=" + sql);
+        if (info.isLoggable(logger, Level.FINEST, sql)) logger.finest(info.getType().getSimpleName() + " exists sql=" + sql);
         return existsDB(info, sql, false);
     }
 
@@ -2173,7 +2173,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
         final EntityCache<T> cache = info.getCache();
         if (readcache && cache != null && cache.isFullLoaded()) {
             if (node == null || node.isCacheUseable(this)) {
-                if (info.isLoggable(logger, Level.FINEST)) logger.finest(clazz.getSimpleName() + " cache query predicate = " + (node == null ? null : node.createPredicate(cache)));
+                if (info.isLoggable(logger, Level.FINEST, " cache query predicate = ")) logger.finest(clazz.getSimpleName() + " cache query predicate = " + (node == null ? null : node.createPredicate(cache)));
                 return CompletableFuture.completedFuture(cache.querySheet(needtotal, selects, flipper, node));
             }
         }

@@ -142,7 +142,8 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
                             sb.append(ch);
                         }
                     }
-                    logger.finest(info.getType().getSimpleName() + " insert sql=" + sb.toString().replaceAll("(\r|\n)", "\\n"));
+                    String debugsql = sb.toString();
+                    if (info.isLoggable(logger, Level.FINEST, debugsql)) logger.finest(info.getType().getSimpleName() + " insert sql=" + debugsql.replaceAll("(\r|\n)", "\\n"));
                 }
             } //打印结束
             return CompletableFuture.completedFuture(c);
@@ -190,7 +191,7 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
             conn.setReadOnly(false);
             conn.setAutoCommit(true);
             sql += ((flipper == null || flipper.getLimit() < 1) ? "" : (" LIMIT " + flipper.getLimit()));
-            if (info.isLoggable(logger, Level.FINEST)) logger.finest(info.getType().getSimpleName() + " delete sql=" + sql);
+            if (info.isLoggable(logger, Level.FINEST, sql)) logger.finest(info.getType().getSimpleName() + " delete sql=" + sql);
             final Statement stmt = conn.createStatement();
             int c = stmt.executeUpdate(sql);
             stmt.close();
@@ -251,7 +252,8 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
                             sb.append(ch);
                         }
                     }
-                    logger.finest(info.getType().getSimpleName() + " update sql=" + sb.toString().replaceAll("(\r|\n)", "\\n"));
+                    String debugsql = sb.toString();
+                    if (info.isLoggable(logger, Level.FINEST, debugsql)) logger.finest(info.getType().getSimpleName() + " update sql=" + debugsql.replaceAll("(\r|\n)", "\\n"));
                 } //打印结束
             }
             int[] pc = prestmt.executeBatch();
@@ -289,7 +291,7 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
                 prestmt.close();
                 return CompletableFuture.completedFuture(c);
             } else {
-                if (info.isLoggable(logger, Level.FINEST)) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
+                if (info.isLoggable(logger, Level.FINEST, sql)) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
                 final Statement stmt = conn.createStatement();
                 int c = stmt.executeUpdate(sql);
                 stmt.close();
@@ -453,7 +455,7 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
             boolean rs = set.next() ? (set.getInt(1) > 0) : false;
             set.close();
             ps.close();
-            if (info.isLoggable(logger, Level.FINEST)) logger.finest(info.getType().getSimpleName() + " exists (" + rs + ") sql=" + sql);
+            if (info.isLoggable(logger, Level.FINEST, sql)) logger.finest(info.getType().getSimpleName() + " exists (" + rs + ") sql=" + sql);
             return CompletableFuture.completedFuture(rs);
         } catch (SQLException e) {
             if (info.tableStrategy != null && info.isTableNotExist(e)) return CompletableFuture.completedFuture(false);
@@ -479,7 +481,7 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
             if ("mysql".equals(this.readPool.getDbtype()) || "postgresql".equals(this.readPool.getDbtype())) {
                 final String listsql = "SELECT " + info.getQueryColumns("a", selects) + " FROM " + info.getTable(node) + " a" + (join == null ? "" : join)
                     + ((where == null || where.length() == 0) ? "" : (" WHERE " + where)) + createSQLOrderby(info, flipper) + (flipper == null || flipper.getLimit() < 1 ? "" : (" LIMIT " + flipper.getLimit() + " OFFSET " + flipper.getOffset()));
-                if (info.isLoggable(logger, Level.FINEST)) {
+                if (info.isLoggable(logger, Level.FINEST, listsql)) {
                     logger.finest(info.getType().getSimpleName() + " query sql=" + listsql);
                 }
                 PreparedStatement ps = conn.prepareStatement(listsql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
@@ -501,7 +503,7 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
             }
             final String sql = "SELECT " + info.getQueryColumns("a", selects) + " FROM " + info.getTable(node) + " a" + (join == null ? "" : join)
                 + ((where == null || where.length() == 0) ? "" : (" WHERE " + where)) + info.createSQLOrderby(flipper);
-            if (info.isLoggable(logger, Level.FINEST)) {
+            if (info.isLoggable(logger, Level.FINEST, sql)) {
                 logger.finest(info.getType().getSimpleName() + " query sql=" + sql + (flipper == null || flipper.getLimit() < 1 ? "" : (" LIMIT " + flipper.getLimit() + " OFFSET " + flipper.getOffset())));
             }
             conn.setReadOnly(true);
