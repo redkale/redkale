@@ -859,7 +859,7 @@ public final class Rest {
             final RestConvert[] rcs = method.getAnnotationsByType(RestConvert.class);
             if (rcs != null && rcs.length > 0) restConverts.add(rcs);
 
-            mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC, entry.name.replace('.', '_').replace(':', '%'), "(" + reqDesc + respDesc + ")V", null, new String[]{"java/io/IOException"}));
+            mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC, entry.name.replace('/', '$').replace('.', '_'), "(" + reqDesc + respDesc + ")V", null, new String[]{"java/io/IOException"}));
             //mv.setDebug(true); 
             mv.debugLine();
 
