@@ -396,8 +396,11 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
             if (s.endsWith("*")) {
                 File root = new File(s.substring(0, s.length() - 1));
                 if (root.isDirectory()) {
-                    for (File f : root.listFiles()) {
-                        set.add(f.toURI().toURL());
+                    File[] lfs = root.listFiles();
+                    if (lfs != null) {
+                        for (File f : lfs) {
+                            set.add(f.toURI().toURL());
+                        }
                     }
                 }
             } else {

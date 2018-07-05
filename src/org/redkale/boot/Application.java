@@ -688,8 +688,11 @@ public final class Application {
     private void clearPersistData() {
         File cachedir = new File(home, "cache");
         if (!cachedir.isDirectory()) return;
-        for (File file : cachedir.listFiles()) {
-            if (file.getName().startsWith("persist-")) file.delete();
+        File[] lfs = cachedir.listFiles();
+        if (lfs != null) {
+            for (File file : lfs) {
+                if (file.getName().startsWith("persist-")) file.delete();
+            }
         }
     }
 

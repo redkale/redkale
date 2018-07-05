@@ -550,8 +550,11 @@ public final class ClassFilter<T> {
                 files.add(root);
             } else if (root.isDirectory()) {
                 if (exclude != null && exclude.equals(root)) return;
-                for (File f : root.listFiles()) {
-                    loadClassFiles(exclude, f, files);
+                File[] lfs = root.listFiles();
+                if (lfs != null) {
+                    for (File f : lfs) {
+                        loadClassFiles(exclude, f, files);
+                    }
                 }
             }
         }
