@@ -42,7 +42,14 @@ public final class MapDecoder<K, V> implements Decodeable<Reader, Map<K, V>> {
     public MapDecoder(final ConvertFactory factory, final Type type) {
         this.type = type;
         try {
-            if (type instanceof ParameterizedType) {
+            if (type == java.util.Properties.class) {
+                this.keyType = String.class;
+                this.valueType = String.class;
+                this.creator = factory.loadCreator(java.util.Properties.class);
+                factory.register(type, this);
+                this.keyDecoder = factory.loadDecoder(String.class);
+                this.valueDecoder = factory.loadDecoder(String.class);
+            } else if (type instanceof ParameterizedType) {
                 final ParameterizedType pt = (ParameterizedType) type;
                 this.keyType = pt.getActualTypeArguments()[0];
                 this.valueType = pt.getActualTypeArguments()[1];
