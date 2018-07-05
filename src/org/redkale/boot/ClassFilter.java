@@ -551,10 +551,9 @@ public final class ClassFilter<T> {
             } else if (root.isDirectory()) {
                 if (exclude != null && exclude.equals(root)) return;
                 File[] lfs = root.listFiles();
-                if (lfs != null) {
-                    for (File f : lfs) {
-                        loadClassFiles(exclude, f, files);
-                    }
+                if (lfs == null) throw new RuntimeException("File(" + root + ") cannot listFiles()");
+                for (File f : lfs) {
+                    loadClassFiles(exclude, f, files);
                 }
             }
         }

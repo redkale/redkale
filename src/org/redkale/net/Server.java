@@ -397,10 +397,9 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
                 File root = new File(s.substring(0, s.length() - 1));
                 if (root.isDirectory()) {
                     File[] lfs = root.listFiles();
-                    if (lfs != null) {
-                        for (File f : lfs) {
-                            set.add(f.toURI().toURL());
-                        }
+                    if (lfs == null) throw new RuntimeException("File(" + root + ") cannot listFiles()");
+                    for (File f : lfs) {
+                        set.add(f.toURI().toURL());
                     }
                 }
             } else {
