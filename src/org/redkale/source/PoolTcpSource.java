@@ -9,7 +9,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.sql.*;
-import java.util.Properties;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.logging.*;
 import org.redkale.net.AsyncConnection;
@@ -70,10 +70,10 @@ public abstract class PoolTcpSource extends PoolSource<AsyncConnection> {
 
     @Override
     public void change(Properties prop) {
-        String newurl = prop.getProperty(JDBC_URL);
-        String newuser = prop.getProperty(JDBC_USER, "");
-        String newpassword = prop.getProperty(JDBC_PWD, "");
-        if (this.url.equals(newurl) && this.username.equals(newuser) && this.password.equals(newpassword)) return;
+        String newurl = prop.getProperty(JDBC_URL, this.url);
+        String newuser = prop.getProperty(JDBC_USER, this.username);
+        String newpassword = prop.getProperty(JDBC_PWD, this.password);
+        if (Objects.equals(this.url, newurl) && Objects.equals(this.username, newuser) && Objects.equals(this.password, newpassword)) return;
         this.url = newurl;
         this.username = newuser;
         this.password = newpassword;

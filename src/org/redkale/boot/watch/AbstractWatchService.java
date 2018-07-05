@@ -6,6 +6,7 @@
 package org.redkale.boot.watch;
 
 import org.redkale.service.AbstractService;
+import org.redkale.util.Comment;
 import org.redkale.watch.WatchService;
 
 /**
@@ -14,4 +15,6 @@ import org.redkale.watch.WatchService;
  */
 public abstract class AbstractWatchService extends AbstractService implements WatchService {
 
+    @Comment("缺少参数")
+    public static final int RET_WATCH_PARAMS_ILLEGAL = 1600_0001;
 }

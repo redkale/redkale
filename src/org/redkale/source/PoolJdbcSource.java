@@ -5,12 +5,8 @@
  */
 package org.redkale.source;
 
-import java.io.*;
-import java.lang.ref.WeakReference;
 import java.lang.reflect.Method;
 import java.net.URL;
-import java.nio.file.*;
-import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
 import java.sql.*;
 import java.util.*;
 import java.util.concurrent.*;
@@ -26,8 +22,6 @@ import static org.redkale.source.DataSources.*;
  * @author zhangjx
  */
 public class PoolJdbcSource extends PoolSource<Connection> {
-
-    private static final Map<String, AbstractMap.SimpleEntry<WatchService, List<WeakReference<PoolJdbcSource>>>> maps = new HashMap<>();
 
     private final ConnectionPoolDataSource source;
 
@@ -68,12 +62,6 @@ public class PoolJdbcSource extends PoolSource<Connection> {
                 logger.log(Level.WARNING, "connectionErronOccurred  [" + event.getSQLException().getSQLState() + "]", event.getSQLException());
             }
         };
-
-        try {
-            this.watch();
-        } catch (Exception e) {
-            logger.log(Level.WARNING, DataSource.class.getSimpleName() + " watch " + persistxml + " error", e);
-        }
     }
 
     private static ConnectionPoolDataSource createDataSource(Properties property) {
@@ -152,74 +140,14 @@ public class PoolJdbcSource extends PoolSource<Connection> {
         return 0;
     }
 
-    private void watch() throws IOException {
-        if (persistxml == null || unitName == null) return;
-        final String file = persistxml.getFile();
-        final File f = new File(file);
-        if (!f.isFile() || !f.canRead()) return;
-        synchronized (maps) {
-            AbstractMap.SimpleEntry<WatchService, List<WeakReference<PoolJdbcSource>>> entry = maps.get(file);
-            if (entry != null) {
-                entry.getValue().add(new WeakReference<>(this));
-                return;
-            }
-            final WatchService watcher = f.toPath().getFileSystem().newWatchService();
-            final List<WeakReference<PoolJdbcSource>> list = new CopyOnWriteArrayList<>();
-            Thread watchThread = new Thread() {
-
-                @Override
-                public void run() {
-                    try {
-                        while (!this.isInterrupted()) {
-                            final WatchKey key = watcher.take();
-                            long d;   //防止文件正在更新过程中去读取
-                            for (;;) {
-                                d = f.lastModified();
-                                Thread.sleep(2000L);
-                                if (d == f.lastModified()) break;
-                            }
-                            final Map<String, Properties> m = loadPersistenceXml(new FileInputStream(file));
-                            key.pollEvents().stream().forEach((event) -> {
-                                if (event.kind() != ENTRY_MODIFY) return;
-                                if (!((Path) event.context()).toFile().getName().equals(f.getName())) return;
-                                for (WeakReference<PoolJdbcSource> ref : list) {
-                                    PoolJdbcSource pool = ref.get();
-                                    if (pool == null) continue;
-                                    try {
-                                        Properties property = m.get(unitName);
-                                        if (property == null) property = m.get(unitName + "." + pool.rwtype);
-                                        if (property != null) pool.change(property);
-                                    } catch (Exception ex) {
-                                        logger.log(Level.INFO, event.context() + " occur error", ex);
-                                    }
-                                }
-                            });
-                            key.reset();
-                        }
-                    } catch (Exception e) {
-                        logger.log(Level.WARNING, "DataSource watch " + file + " occur error", e);
-                    }
-                }
-            };
-            f.getParentFile().toPath().register(watcher, ENTRY_MODIFY);
-            watchThread.setName("DataSource-Watch-" + maps.size() + "-Thread");
-            watchThread.setDaemon(true);
-            watchThread.start();
-            logger.log(Level.INFO, watchThread.getName() + " start watching " + file);
-            //-----------------------------------------------------------            
-            list.add(new WeakReference<>(this));
-            maps.put(file, new AbstractMap.SimpleEntry<>(watcher, list));
-        }
-    }
-
     @Override
     public void change(Properties property) {
         Method seturlm;
         Class clazz = source.getClass();
-        String newurl = property.getProperty(JDBC_URL);
-        String newuser = property.getProperty(JDBC_USER);
-        String newpassword = property.getProperty(JDBC_PWD);
-        if (this.url.equals(newurl) && this.username.equals(newuser) && this.password.equals(newpassword)) return;
+        String newurl = property.getProperty(JDBC_URL, this.url);
+        String newuser = property.getProperty(JDBC_USER, this.username);
+        String newpassword = property.getProperty(JDBC_PWD, this.password);
+        if (Objects.equals(this.url, newurl) && Objects.equals(this.username, newuser) && Objects.equals(this.password, newpassword)) return;
         try {
             try {
                 seturlm = clazz.getMethod("setUrl", String.class);

@@ -362,6 +362,14 @@ public final class Application {
         return new ArrayList<>(servers);
     }
 
+    public List<DataSource> getDataSources() {
+        return new ArrayList<>(dataSources);
+    }
+
+    public List<CacheSource> getCacheSources() {
+        return new ArrayList<>(cacheSources);
+    }
+
     public File getHome() {
         return home;
     }
