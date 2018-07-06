@@ -133,6 +133,9 @@ public final class Rest {
         final JsonFactory childFactory = JsonFactory.create();
         List<Class> types = new ArrayList<>();
         for (RestConvert rc : converts) {
+            if (rc.type() == void.class || rc.type() == Void.class) {
+                return JsonFactory.create().skipAllIgnore(true).getConvert();
+            }
             if (types.contains(rc.type())) throw new RuntimeException("@RestConvert type(" + rc.type() + ") repeat");
             if (rc.skipIgnore()) {
                 childFactory.registerSkipIgnore(rc.type());
