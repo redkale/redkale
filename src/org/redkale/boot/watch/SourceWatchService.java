@@ -32,7 +32,7 @@ public class SourceWatchService extends AbstractWatchService {
     public static final int RET_SOURCE_METHOD_INVOKE_NOT_EXISTS = 1605_0003;
 
     @Resource
-    private Application application;
+    protected Application application;
 
     @RestMapping(name = "change", auth = false, comment = "动态更改DataSource的配置")
     public RetResult addNode(@RestParam(name = "name", comment = "DataSource的标识") final String name,

@@ -36,10 +36,10 @@ public class TransportWatchService extends AbstractWatchService {
     public static final int RET_TRANSPORT_ADDR_EXISTS = 1606_0003;
 
     @Resource
-    private Application application;
+    protected Application application;
 
     @Resource
-    private TransportFactory transportFactory;
+    protected TransportFactory transportFactory;
 
     @RestMapping(name = "listnodes", auth = false, comment = "获取所有Node节点")
     public List<TransportGroupInfo> listNodes() {

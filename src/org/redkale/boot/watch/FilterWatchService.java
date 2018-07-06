@@ -33,7 +33,7 @@ public class FilterWatchService extends AbstractWatchService {
     public static final int RET_FILTER_JAR_ILLEGAL = 1601_0005;
 
     @Resource
-    private Application application;
+    protected Application application;
 
     @RestMapping(name = "addfilter", auth = false, comment = "动态增加Filter")
     public RetResult addFilter(@RestUploadFile(maxLength = 10 * 1024 * 1024, fileNameReg = "\\.jar$") byte[] jar,

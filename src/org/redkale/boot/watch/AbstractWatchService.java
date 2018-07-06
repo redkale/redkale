@@ -17,4 +17,7 @@ public abstract class AbstractWatchService extends AbstractService implements Wa
 
     @Comment("缺少参数")
     public static final int RET_WATCH_PARAMS_ILLEGAL = 1600_0001;
+
+    @Comment("执行异常")
+    public static final int RET_WATCH_RUN_EXCEPTION = 1600_0002;
 }

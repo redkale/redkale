@@ -20,10 +20,10 @@ import org.redkale.net.http.*;
 public class ServletWatchService extends AbstractWatchService {
 
     @Resource
-    private Application application;
+    protected Application application;
 
     @Resource
-    private TransportFactory transportFactory;
+    protected TransportFactory transportFactory;
 //
 //    @RestMapping(name = "load", auth = false, comment = "动态增加Servlet")
 //    public RetResult loadServlet(String type, @RestUploadFile(maxLength = 10 * 1024 * 1024, fileNameReg = "\\.jar$") byte[] jar) {

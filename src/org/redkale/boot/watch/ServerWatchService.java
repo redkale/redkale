@@ -24,7 +24,7 @@ public class ServerWatchService extends AbstractWatchService {
     public static final int RET_SERVER_NOT_EXISTS = 1602_0001;
 
     @Resource
-    private Application application;
+    protected Application application;
 
     @RestMapping(name = "info", comment = "单个Server信息查询")
     public RetResult info(@RestParam(name = "#port:") int port) {
