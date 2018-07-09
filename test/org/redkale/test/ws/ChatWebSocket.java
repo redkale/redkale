@@ -10,6 +10,8 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import javax.annotation.Resource;
 import org.redkale.net.http.*;
+import org.redkale.service.RetResult;
+import org.redkale.test.rest.*;
 
 /**
  *
@@ -23,15 +25,27 @@ public class ChatWebSocket extends WebSocket<Integer, Object> {
     @Resource
     protected ChatService service;
 
+    @Resource
+    protected UserService userService;
+
+    protected UserInfo user;
+
     @Override
     protected CompletableFuture<String> onOpen(final HttpRequest request) {
-        //随机创建一个sessionid
-        return CompletableFuture.completedFuture(request.getSessionid(true));
+        LoginBean bean = request.getJsonParameter(LoginBean.class, "bean");
+        RetResult<UserInfo> ret = userService.login(bean);
+        if (ret.isSuccess()) { //登录成功
+            user = ret.getResult();
+            //随机创建一个sessionid
+            return CompletableFuture.completedFuture(request.getSessionid(true));
+        } else { //登录失败, 返回null
+            return send("{\"onLoginFailMessage\":" + ret + "}").thenApply(x -> null);
+        }
     }
 
     @Override
     protected CompletableFuture<Integer> createUserid() {
-        return CompletableFuture.completedFuture(service.createUserid());
+        return CompletableFuture.completedFuture(user.getUserid());
     }
 
     /**

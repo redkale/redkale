@@ -5,7 +5,7 @@
  */
 package org.redkale.test.rest;
 
-import org.redkale.service.Service;
+import org.redkale.service.*;
 
 /**
  * 简单的定义UserService接口
@@ -17,5 +17,9 @@ public class UserService implements Service {
     //根据登录态获取当前用户信息
     public UserInfo current(String sessionid) {
         return new UserInfo();
+    }
+
+    public RetResult<UserInfo> login(LoginBean bean) {
+        return new RetResult<>(new UserInfo());
     }
 }
