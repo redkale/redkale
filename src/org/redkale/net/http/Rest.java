@@ -27,7 +27,6 @@ import org.redkale.util.*;
 import org.redkale.source.Flipper;
 
 /**
- * 以find开头的方法且参数只有一个且参数类型为primitive class或String，则RestParam值默认为#
  * <p>
  * 详情见: https://redkale.org
  *
@@ -988,10 +987,6 @@ public final class Rest {
                         throw new RuntimeException("Parameter " + param.getName() + " not found name by @RestParam  in " + method);
                     }
                 }
-                if (annhead == null && anncookie == null && annaddr == null && annbody == null && annfile == null
-                    && (entry.name.startsWith("find") || entry.name.startsWith("delete")) && params.length == 1) {
-                    if (ptype.isPrimitive() || ptype == String.class) n = "#";
-                }
                 if (annhead == null && anncookie == null && annsid == null && annaddr == null && annbody == null && annfile == null
                     && !ptype.isPrimitive() && ptype != String.class && ptype != Flipper.class && !CompletionHandler.class.isAssignableFrom(ptype)
                     && !ptype.getName().startsWith("java") && n.charAt(0) != '#' && !"&".equals(n)) { //判断Json对象是否包含@RestUploadFile
@@ -1841,12 +1836,6 @@ public final class Rest {
                 if (rp != null && !rp.name().isEmpty() && rp.name().charAt(0) == '#') {
                     pound = true;
                     break;
-                }
-            }
-            if (!pound && params.length == 1) {
-                Class ptype = method.getParameterTypes()[0];
-                if (this.name.startsWith("find") || this.name.startsWith("delete")) {
-                    if (ptype.isPrimitive() || ptype == String.class) pound = true;
                 }
             }
             this.existsPound = pound;
