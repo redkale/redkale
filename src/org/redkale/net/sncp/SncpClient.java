@@ -330,8 +330,10 @@ public final class SncpClient {
                 attr.set(params[i - 1], bsonConvert.convertFrom(attr.type(), reader));
             }
             return bsonConvert.convertFrom(action.handlerFuncParamIndex >= 0 ? Object.class : action.resultTypes, reader);
+        } catch (RpcRemoteException re) {
+            throw re;
         } catch (InterruptedException | ExecutionException | TimeoutException e) {
-            logger.log(Level.SEVERE, actions[index].method + " sncp (params: " + jsonConvert.convertTo(params) + ") remote error", e);
+            //logger.log(Level.SEVERE, actions[index].method + " sncp (params: " + jsonConvert.convertTo(params) + ") remote error", e);
             throw new RpcRemoteException(actions[index].method + " sncp remote error", e);
         } finally {
             bsonConvert.offerBsonReader(reader);
