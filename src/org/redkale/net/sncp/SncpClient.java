@@ -332,7 +332,7 @@ public final class SncpClient {
             return bsonConvert.convertFrom(action.handlerFuncParamIndex >= 0 ? Object.class : action.resultTypes, reader);
         } catch (InterruptedException | ExecutionException | TimeoutException e) {
             logger.log(Level.SEVERE, actions[index].method + " sncp (params: " + jsonConvert.convertTo(params) + ") remote error", e);
-            throw new RuntimeException(actions[index].method + " sncp remote error", e);
+            throw new RpcRemoteException(actions[index].method + " sncp remote error", e);
         } finally {
             bsonConvert.offerBsonReader(reader);
         }
@@ -403,7 +403,7 @@ public final class SncpClient {
                         public void completed(Integer count, Void attachment2) {
                             try {
                                 if (count < 1 && buffer.remaining() == buffer.limit()) {   //没有数据可读
-                                    future.completeExceptionally(new RuntimeException(action.method + " sncp[" + conn.getRemoteAddress() + "] remote no response data"));
+                                    future.completeExceptionally(new RpcRemoteException(action.method + " sncp[" + conn.getRemoteAddress() + "] remote no response data"));
                                     transport.offerBuffer(buffer);
                                     transport.offerConnection(true, conn);
                                     return;
