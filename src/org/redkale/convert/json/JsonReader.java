@@ -335,8 +335,16 @@ public class JsonReader extends Reader {
                 if (firstchar > ' ') break;
             }
         }
+        boolean quote = false;
         if (firstchar == '"' || firstchar == '\'') {
+            quote = true;
             firstchar = text0[++currpos];
+            if (firstchar <= ' ') {
+                for (;;) {
+                    firstchar = text0[++currpos];
+                    if (firstchar > ' ') break;
+                }
+            }
             if (firstchar == '"' || firstchar == '\'') {
                 this.position = currpos;
                 return 0;
@@ -352,7 +360,8 @@ public class JsonReader extends Reader {
             if (currpos == eof) break;
             char ch = text0[++currpos];
             int val = digits[ch];
-            if (val == -3) break;
+            if (quote && val == -3) continue;
+            if (val <= -3) break;
             if (val == -1) throw new ConvertException("illegal escape(" + ch + ") (position = " + currpos + ") but '" + ch + "' in (" + new String(this.text) + ")");
             if (val != -2) value = value * 10 + val;
         }
@@ -377,8 +386,16 @@ public class JsonReader extends Reader {
                 if (firstchar > ' ') break;
             }
         }
+        boolean quote = false;
         if (firstchar == '"' || firstchar == '\'') {
+            quote = true;
             firstchar = text0[++currpos];
+            if (firstchar <= ' ') {
+                for (;;) {
+                    firstchar = text0[++currpos];
+                    if (firstchar > ' ') break;
+                }
+            }
             if (firstchar == '"' || firstchar == '\'') {
                 this.position = currpos;
                 return 0L;
@@ -394,7 +411,8 @@ public class JsonReader extends Reader {
             if (currpos == eof) break;
             char ch = text0[++currpos];
             int val = digits[ch];
-            if (val == -3) break;
+            if (quote && val == -3) continue;
+            if (val <= -3) break;
             if (val == -1) throw new ConvertException("illegal escape(" + ch + ") (position = " + currpos + ") but '" + ch + "' in (" + new String(this.text) + ")");
             if (val != -2) value = value * 10 + val;
         }
@@ -448,6 +466,7 @@ public class JsonReader extends Reader {
     @Override
     public final float readFloat() {
         String chars = readSmallString();
+        if (chars != null) chars = chars.trim();
         if (chars == null || chars.isEmpty()) return 0.f;
         return Float.parseFloat(chars);
     }
@@ -455,6 +474,7 @@ public class JsonReader extends Reader {
     @Override
     public final double readDouble() {
         String chars = readSmallString();
+        if (chars != null) chars = chars.trim();
         if (chars == null || chars.isEmpty()) return 0.0;
         return Double.parseDouble(chars);
     }
@@ -590,7 +610,8 @@ public class JsonReader extends Reader {
             digits[i] = i - 'A' + 10;
         }
         digits['"'] = digits['\''] = -2; //-2 跳过 
-        digits[','] = digits['}'] = digits[']'] = digits[' '] = digits['\t'] = digits['\r'] = digits['\n'] = digits[':'] = -3; //-3退出
+        digits[' '] = digits['\t'] = digits['\r'] = digits['\n'] = -3; //-3可能跳过
+        digits[','] = digits['}'] = digits[']'] = digits[':'] = -4; //-4退出
 
     }
 }

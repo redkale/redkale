@@ -272,8 +272,10 @@ public class JsonByteBufferReader extends JsonReader {
     @Override
     public final int readInt() {
         char firstchar = nextGoodChar();
+        boolean quote = false;
         if (firstchar == '"' || firstchar == '\'') {
-            firstchar = nextChar();
+            quote = true;
+            firstchar = nextGoodChar();
             if (firstchar == '"' || firstchar == '\'') return 0;
         }
         int value = 0;
@@ -288,6 +290,7 @@ public class JsonByteBufferReader extends JsonReader {
             if (ch >= '0' && ch <= '9') {
                 value = (value << 3) + (value << 1) + (ch - '0');
             } else if (ch == '"' || ch == '\'') {
+            } else if (quote && ch <= ' ') {
             } else if (ch == ',' || ch == '}' || ch == ']' || ch <= ' ' || ch == ':') {
                 backChar(ch);
                 break;
@@ -306,8 +309,10 @@ public class JsonByteBufferReader extends JsonReader {
     @Override
     public final long readLong() {
         char firstchar = nextGoodChar();
+        boolean quote = false;
         if (firstchar == '"' || firstchar == '\'') {
-            firstchar = nextChar();
+            quote = true;
+            firstchar = nextGoodChar();
             if (firstchar == '"' || firstchar == '\'') return 0L;
         }
         long value = 0;
@@ -322,6 +327,7 @@ public class JsonByteBufferReader extends JsonReader {
             if (ch >= '0' && ch <= '9') {
                 value = (value << 3) + (value << 1) + (ch - '0');
             } else if (ch == '"' || ch == '\'') {
+            } else if (quote && ch <= ' ') {
             } else if (ch == ',' || ch == '}' || ch == ']' || ch <= ' ' || ch == ':') {
                 backChar(ch);
                 break;
