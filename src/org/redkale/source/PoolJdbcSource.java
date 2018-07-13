@@ -23,15 +23,15 @@ import static org.redkale.source.DataSources.*;
  */
 public class PoolJdbcSource extends PoolSource<Connection> {
 
-    private final ConnectionPoolDataSource source;
+    protected final ConnectionPoolDataSource source;
 
-    private final ArrayBlockingQueue<PooledConnection> queue;
+    protected final ArrayBlockingQueue<PooledConnection> queue;
 
-    private final ConnectionEventListener listener;
+    protected final ConnectionEventListener listener;
 
-    private final String unitName;
+    protected final String unitName;
 
-    private final URL persistxml;
+    protected final URL persistxml;
 
     public PoolJdbcSource(String unitName, URL persistxml, String rwtype, ArrayBlockingQueue aqueue, Properties prop, Logger logger) {
         super(rwtype, prop, logger);
