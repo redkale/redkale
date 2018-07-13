@@ -147,10 +147,14 @@ public class TcpAioAsyncConnection extends AsyncConnection {
             return;
         }
         this.writetime = System.currentTimeMillis();
-        if (writeTimeoutSeconds > 0) {
-            channel.write(src, writeTimeoutSeconds, TimeUnit.SECONDS, attachment, newHandler);
-        } else {
-            channel.write(src, attachment, newHandler);
+        try {
+            if (writeTimeoutSeconds > 0) {
+                channel.write(src, writeTimeoutSeconds, TimeUnit.SECONDS, attachment, newHandler);
+            } else {
+                channel.write(src, attachment, newHandler);
+            }
+        } catch (Exception e) {
+            newHandler.failed(e, attachment);
         }
     }
 
@@ -177,7 +181,11 @@ public class TcpAioAsyncConnection extends AsyncConnection {
             return;
         }
         this.writetime = System.currentTimeMillis();
-        channel.write(srcs, offset, length, writeTimeoutSeconds > 0 ? writeTimeoutSeconds : 60, TimeUnit.SECONDS, attachment, newHandler);
+        try {
+            channel.write(srcs, offset, length, writeTimeoutSeconds > 0 ? writeTimeoutSeconds : 60, TimeUnit.SECONDS, attachment, newHandler);
+        } catch (Exception e) {
+            newHandler.failed(e, attachment);
+        }
     }
 
     @Override
