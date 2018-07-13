@@ -32,7 +32,7 @@ public abstract class PoolSource<DBChannel> {
     protected final AtomicLong saveCounter = new AtomicLong();
 
     protected final Semaphore semaphore;
-    
+
     protected final Logger logger;
 
     protected final String rwtype; // "" 或 "read"  或 "write"
@@ -72,7 +72,7 @@ public abstract class PoolSource<DBChannel> {
         this.connectTimeoutSeconds = Integer.decode(prop.getProperty(JDBC_CONNECTTIMEOUT_SECONDS, "3"));
         this.readTimeoutSeconds = Integer.decode(prop.getProperty(JDBC_READTIMEOUT_SECONDS, "3"));
         this.writeTimeoutSeconds = Integer.decode(prop.getProperty(JDBC_WRITETIMEOUT_SECONDS, "3"));
-        this.maxconns = Math.max(8, Integer.decode(prop.getProperty(JDBC_CONNECTIONSMAX, "" + Runtime.getRuntime().availableProcessors() * 16)));
+        this.maxconns = Math.max(8, Integer.decode(prop.getProperty(JDBC_CONNECTIONSMAX, "" + Runtime.getRuntime().availableProcessors() * 100)));
         this.semaphore = new Semaphore(this.maxconns);
         String dbtype0 = "";
         { //jdbc:mysql:// jdbc:microsoft:sqlserver:// 取://之前的到最后一个:之间的字符串
