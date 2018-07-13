@@ -80,8 +80,8 @@ public final class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
         return writerPool.get().tiny(tiny);
     }
 
-    public void offerJsonWriter(final JsonWriter out) {
-        if (out != null) writerPool.accept(out);
+    public void offerJsonWriter(final JsonWriter writer) {
+        if (writer != null) writerPool.accept(writer);
     }
 
     //------------------------------ convertFrom -----------------------------------------------------------
@@ -139,20 +139,21 @@ public final class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
     public String convertTo(final Type type, final Object value) {
         if (type == null) return null;
         if (value == null) return "null";
-        final JsonWriter out = writerPool.get().tiny(tiny);
-        factory.loadEncoder(type).convertTo(out, value);
-        String result = out.toString();
-        writerPool.accept(out);
+        final JsonWriter writer = writerPool.get().tiny(tiny);
+        writer.specify(type);
+        factory.loadEncoder(type).convertTo(writer, value);
+        String result = writer.toString();
+        writerPool.accept(writer);
         return result;
     }
 
     @Override
     public String convertMapTo(final Object... values) {
         if (values == null) return "null";
-        final JsonWriter out = writerPool.get().tiny(tiny);
-        ((AnyEncoder) factory.getAnyEncoder()).convertMapTo(out, values);
-        String result = out.toString();
-        writerPool.accept(out);
+        final JsonWriter writer = writerPool.get().tiny(tiny);
+        ((AnyEncoder) factory.getAnyEncoder()).convertMapTo(writer, values);
+        String result = writer.toString();
+        writerPool.accept(writer);
         return result;
     }
 
@@ -170,6 +171,7 @@ public final class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
             new JsonStreamWriter(tiny, out).writeNull();
         } else {
             final JsonWriter writer = writerPool.get().tiny(tiny);
+            writer.specify(type);
             factory.loadEncoder(type).convertTo(writer, value);
             byte[] bs = writer.toBytes();
             writerPool.accept(writer);
@@ -216,6 +218,7 @@ public final class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
         if (value == null) {
             out.writeNull();
         } else {
+            out.specify(type);
             factory.loadEncoder(type).convertTo(out, value);
         }
         return out.toBuffers();
@@ -246,6 +249,7 @@ public final class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
         if (value == null) {
             writer.writeNull();
         } else {
+            writer.specify(type);
             factory.loadEncoder(type).convertTo(writer, value);
         }
     }
@@ -265,14 +269,15 @@ public final class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
 
     public JsonWriter convertToWriter(final Type type, final Object value) {
         if (type == null) return null;
-        final JsonWriter out = writerPool.get().tiny(tiny);
-        factory.loadEncoder(type).convertTo(out, value);
-        return out;
+        final JsonWriter writer = writerPool.get().tiny(tiny);
+        writer.specify(type);
+        factory.loadEncoder(type).convertTo(writer, value);
+        return writer;
     }
 
     public JsonWriter convertMapToWriter(final Object... values) {
-        final JsonWriter out = writerPool.get().tiny(tiny);
-        ((AnyEncoder) factory.getAnyEncoder()).convertMapTo(out, values);
-        return out;
+        final JsonWriter writer = writerPool.get().tiny(tiny);
+        ((AnyEncoder) factory.getAnyEncoder()).convertMapTo(writer, values);
+        return writer;
     }
 }

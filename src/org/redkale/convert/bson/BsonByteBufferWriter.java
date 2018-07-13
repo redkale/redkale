@@ -132,6 +132,7 @@ public class BsonByteBufferWriter extends BsonWriter {
     @Override
     protected boolean recycle() {
         this.index = 0;
+        this.specify = null;
         this.buffers = null;
         return false;
     }

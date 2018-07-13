@@ -98,6 +98,7 @@ public class BsonWriter extends Writer {
 
     protected boolean recycle() {
         this.count = 0;
+        this.specify = null;
         if (this.content.length > defaultSize) {
             this.content = new byte[defaultSize];
         }

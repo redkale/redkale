@@ -5,6 +5,7 @@
  */
 package org.redkale.convert;
 
+import java.lang.reflect.*;
 import org.redkale.util.Attribute;
 
 /**
@@ -19,6 +20,33 @@ public abstract class Writer {
 
     //当前对象输出字段名之前是否需要分隔符， JSON字段间的分隔符为,逗号
     protected boolean comma;
+
+    //convertTo时是否以指定Type的ObjectEncoder进行处理
+    protected Type specify;
+
+    /**
+     * 设置specify
+     *
+     * @param value Type
+     */
+    public void specify(Type value) {
+        if (value instanceof GenericArrayType) {
+            this.specify = ((GenericArrayType) value).getGenericComponentType();
+        } else if (value instanceof Class && ((Class) value).isArray()) {
+            this.specify = ((Class) value).getComponentType();
+        } else {
+            this.specify = value;
+        }
+    }
+
+    /**
+     * 返回specify
+     *
+     * @return int
+     */
+    public Type specify() {
+        return this.specify;
+    }
 
     /**
      * 当tiny=true时， 字符串为空、boolean为false的字段值都会被跳过， 不会输出。

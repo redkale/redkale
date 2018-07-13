@@ -82,7 +82,7 @@ public final class ArrayEncoder<T> implements Encodeable<Writer, T[]> {
         boolean first = true;
         for (Object v : value) {
             if (!first) out.writeArrayMark();
-            ((v != null && v.getClass() == comp) ? encoder : anyEncoder).convertTo(out, v);
+            ((v != null && (v.getClass() == comp || out.specify() == comp)) ? encoder : anyEncoder).convertTo(out, v);
             if (first) first = false;
         }
         out.writeArrayE();
