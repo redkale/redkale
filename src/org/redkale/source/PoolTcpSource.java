@@ -11,6 +11,7 @@ import java.nio.channels.*;
 import java.sql.*;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.*;
 import org.redkale.net.AsyncConnection;
 import static org.redkale.source.DataSources.*;
@@ -38,7 +39,7 @@ public abstract class PoolTcpSource extends PoolSource<AsyncConnection> {
         this.bufferPool = bufferPool;
         this.executor = executor;
         try {
-            this.group = AsynchronousChannelGroup.withThreadPool(executor);
+            this.group = AsynchronousChannelGroup.withCachedThreadPool(executor, executor.getCorePoolSize());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -94,6 +95,8 @@ public abstract class PoolTcpSource extends PoolSource<AsyncConnection> {
         return pollAsync(0);
     }
 
+    private static final AtomicLong nowlong = new AtomicLong();
+
     protected CompletableFuture<AsyncConnection> pollAsync(final int count) {
         if (count >= 3) {
             logger.log(Level.WARNING, "create datasource connection error");
@@ -101,22 +104,27 @@ public abstract class PoolTcpSource extends PoolSource<AsyncConnection> {
             future.completeExceptionally(new SQLException("create datasource connection error"));
             return future;
         }
+
         AsyncConnection conn0 = connQueue.poll();
         if (conn0 != null && conn0.isOpen()) {
             cycleCounter.incrementAndGet();
             usingCounter.incrementAndGet();
             return CompletableFuture.completedFuture(conn0);
         }
-        if (usingCounter.get() >= maxconns && count < 2) {
+        //logqueue.add("-------semaphore: " + semaphore.availablePermits());
+        if (!semaphore.tryAcquire()) {
             return CompletableFuture.supplyAsync(() -> {
                 try {
                     return connQueue.poll(3, TimeUnit.SECONDS);
                 } catch (Exception t) {
+                    System.out.println("超时了");
+                    t.printStackTrace();
                     return null;
                 }
-            }, executor).thenCompose((conn2) -> {
+            }).thenCompose((conn2) -> {
                 if (conn2 != null && conn2.isOpen()) {
                     cycleCounter.incrementAndGet();
+                    usingCounter.incrementAndGet();
                     return CompletableFuture.completedFuture(conn2);
                 }
                 return pollAsync(count + 1);
@@ -124,9 +132,13 @@ public abstract class PoolTcpSource extends PoolSource<AsyncConnection> {
         }
 
         return AsyncConnection.createTCP(group, this.servaddr, this.readTimeoutSeconds, this.writeTimeoutSeconds).thenCompose(conn -> {
-            conn.beforeCloseListener((c) -> usingCounter.decrementAndGet());
+            conn.beforeCloseListener((c) -> {
+                semaphore.release();
+                usingCounter.decrementAndGet();
+            });
             CompletableFuture<AsyncConnection> future = new CompletableFuture();
             final ByteBuffer buffer = reqConnectBuffer(conn);
+
             if (buffer == null) {
                 final ByteBuffer rbuffer = bufferPool.get();
                 conn.read(rbuffer, null, new CompletionHandler<Integer, Void>() {
@@ -193,6 +205,8 @@ public abstract class PoolTcpSource extends PoolSource<AsyncConnection> {
             if (t == null) {
                 creatCounter.incrementAndGet();
                 usingCounter.incrementAndGet();
+            } else {
+                semaphore.release();
             }
         });
     }

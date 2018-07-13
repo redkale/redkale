@@ -7,7 +7,7 @@ package org.redkale.source;
 
 import java.net.InetSocketAddress;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Logger;
 import static org.redkale.source.DataSources.*;
@@ -31,6 +31,8 @@ public abstract class PoolSource<DBChannel> {
 
     protected final AtomicLong saveCounter = new AtomicLong();
 
+    protected final Semaphore semaphore;
+    
     protected final Logger logger;
 
     protected final String rwtype; // "" 或 "read"  或 "write"
@@ -71,6 +73,7 @@ public abstract class PoolSource<DBChannel> {
         this.readTimeoutSeconds = Integer.decode(prop.getProperty(JDBC_READTIMEOUT_SECONDS, "3"));
         this.writeTimeoutSeconds = Integer.decode(prop.getProperty(JDBC_WRITETIMEOUT_SECONDS, "3"));
         this.maxconns = Math.max(8, Integer.decode(prop.getProperty(JDBC_CONNECTIONSMAX, "" + Runtime.getRuntime().availableProcessors() * 16)));
+        this.semaphore = new Semaphore(this.maxconns);
         String dbtype0 = "";
         { //jdbc:mysql:// jdbc:microsoft:sqlserver:// 取://之前的到最后一个:之间的字符串
             int pos = this.url.indexOf("://");
