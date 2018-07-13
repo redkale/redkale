@@ -39,7 +39,7 @@ public abstract class PoolTcpSource extends PoolSource<AsyncConnection> {
         this.bufferPool = bufferPool;
         this.executor = executor;
         try {
-            this.group = AsynchronousChannelGroup.withCachedThreadPool(executor, executor.getCorePoolSize());
+            this.group = AsynchronousChannelGroup.withFixedThreadPool(executor.getCorePoolSize(), executor.getThreadFactory());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -121,7 +121,7 @@ public abstract class PoolTcpSource extends PoolSource<AsyncConnection> {
                     t.printStackTrace();
                     return null;
                 }
-            }).thenCompose((conn2) -> {
+            }, executor).thenCompose((conn2) -> {
                 if (conn2 != null && conn2.isOpen()) {
                     cycleCounter.incrementAndGet();
                     usingCounter.incrementAndGet();
