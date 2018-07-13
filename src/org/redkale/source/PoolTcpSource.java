@@ -11,7 +11,7 @@ import java.nio.channels.*;
 import java.sql.*;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.*;
 import java.util.logging.*;
 import org.redkale.net.AsyncConnection;
 import static org.redkale.source.DataSources.*;
@@ -39,7 +39,25 @@ public abstract class PoolTcpSource extends PoolSource<AsyncConnection> {
         this.bufferPool = bufferPool;
         this.executor = executor;
         try {
-            this.group = AsynchronousChannelGroup.withFixedThreadPool(executor.getCorePoolSize(), executor.getThreadFactory());
+            final String cname = this.getClass().getSimpleName() + "-" + rwtype;
+            final Thread.UncaughtExceptionHandler ueh = (t, e) -> {
+                logger.log(Level.SEVERE, cname + " error", e);
+            };
+            final AtomicInteger counter = new AtomicInteger();
+            ThreadFactory tf = (Runnable r) -> {
+                Thread t = new Thread(r);
+                t.setDaemon(true);
+                String s = "" + counter.incrementAndGet();
+                if (s.length() == 1) {
+                    s = "00" + s;
+                } else if (s.length() == 2) {
+                    s = "0" + s;
+                }
+                t.setName(cname + "-Thread-" + s);
+                t.setUncaughtExceptionHandler(ueh);
+                return t;
+            };
+            this.group = AsynchronousChannelGroup.withFixedThreadPool(executor.getCorePoolSize(), tf);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
