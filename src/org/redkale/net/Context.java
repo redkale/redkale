@@ -5,10 +5,8 @@
  */
 package org.redkale.net;
 
-import java.io.IOException;
 import java.net.*;
 import java.nio.*;
-import java.nio.channels.AsynchronousChannelGroup;
 import java.nio.charset.*;
 import java.util.concurrent.*;
 import java.util.function.*;
@@ -143,10 +141,6 @@ public class Context {
 
     public Future<?> submitAsync(Runnable r) {
         return executor.submit(r);
-    }
-
-    public AsynchronousChannelGroup createAsynchronousChannelGroup() throws IOException {
-        return AsynchronousChannelGroup.withThreadPool(executor);
     }
 
     public void runAsync(Runnable r) {
