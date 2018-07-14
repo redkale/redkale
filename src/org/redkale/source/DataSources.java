@@ -23,7 +23,7 @@ public final class DataSources {
 
     public static final String JDBC_CACHE_MODE = "javax.persistence.cachemode";
 
-    public static final String JDBC_CONNECTIONSMAX = "javax.persistence.connections.limit";
+    public static final String JDBC_CONNECTIONS_LIMIT = "javax.persistence.connections.limit";
 
     public static final String JDBC_CONNECTIONSCAPACITY = "javax.persistence.connections.bufcapacity";
 
