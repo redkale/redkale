@@ -102,7 +102,7 @@ public abstract class PoolTcpSource extends PoolSource<AsyncConnection> {
     }
 
     protected CompletableFuture<AsyncConnection> pollAsync(final int count) {
-        if (count >= 3) {
+        if (count >= 5) {
             logger.log(Level.WARNING, "create datasource connection error");
             CompletableFuture<AsyncConnection> future = new CompletableFuture<>();
             future.completeExceptionally(new SQLException("create datasource connection error"));
@@ -119,7 +119,7 @@ public abstract class PoolTcpSource extends PoolSource<AsyncConnection> {
         if (!semaphore.tryAcquire()) {
             return CompletableFuture.supplyAsync(() -> {
                 try {
-                    return connQueue.poll(3, TimeUnit.SECONDS);
+                    return connQueue.poll(1, TimeUnit.SECONDS);
                 } catch (Exception t) {
                     return null;
                 }
