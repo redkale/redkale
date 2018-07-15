@@ -85,4 +85,9 @@ public final class JsonFactory extends ConvertFactory<JsonReader, JsonWriter> {
     public boolean isReversible() {
         return false;
     }
+
+    @Override
+    public boolean isFieldSort() {
+        return true;
+    }
 }

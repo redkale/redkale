@@ -104,6 +104,7 @@ public final class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T
                     if (ref != null && ref.ignore()) continue;
                     Type t = TypeToken.createClassType(TypeToken.getGenericType(method.getGenericReturnType(), this.type), this.type);
                     EnMember member = new EnMember(createAttribute(factory, clazz, null, method, null), factory.loadEncoder(t));
+                    member.fieldSort = factory.isFieldSort();
                     if (ref != null) member.index = ref.getIndex();
                     list.add(member);
                 }

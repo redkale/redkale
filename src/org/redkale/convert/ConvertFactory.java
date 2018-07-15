@@ -139,6 +139,8 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
 
     public abstract boolean isReversible(); //是否可逆的
 
+    public abstract boolean isFieldSort(); //当ConvertColumn.index相同时是否按字段名称排序
+
     public abstract ConvertFactory createChild();
 
     public abstract ConvertFactory createChild(boolean tiny);

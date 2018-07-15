@@ -84,4 +84,9 @@ public final class BsonFactory extends ConvertFactory<BsonReader, BsonWriter> {
         return true;
     }
 
+    @Override
+    public boolean isFieldSort() {
+        return true;
+    }
+
 }

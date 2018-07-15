@@ -24,6 +24,8 @@ public final class DeMember<R extends Reader, T, F> implements Comparable<DeMemb
 
     protected int index;
 
+    protected boolean fieldSort;
+
     protected final Attribute<T, F> attribute;
 
     protected Decodeable<R, F> decoder;
@@ -78,7 +80,7 @@ public final class DeMember<R extends Reader, T, F> implements Comparable<DeMemb
     public final int compareTo(DeMember<R, T, F> o) {
         if (o == null) return -1;
         if (this.index != o.index) return (this.index == 0 ? Integer.MAX_VALUE : this.index) - (o.index == 0 ? Integer.MAX_VALUE : o.index);
-        return this.attribute.field().compareTo(o.attribute.field());
+        return fieldSort ? this.attribute.field().compareTo(o.attribute.field()) : 0;
     }
 
     @Override

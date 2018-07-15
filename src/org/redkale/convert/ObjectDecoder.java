@@ -97,6 +97,7 @@ public final class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T
                     if (ref != null && ref.ignore()) continue;
                     Type t = TypeToken.createClassType(TypeToken.getGenericType(field.getGenericType(), this.type), this.type);
                     DeMember member = new DeMember(ObjectEncoder.createAttribute(factory, clazz, field, null, null), factory.loadDecoder(t));
+                    member.fieldSort = factory.isFieldSort();
                     if (ref != null) member.index = ref.getIndex();
                     list.add(member);
                 }
