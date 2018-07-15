@@ -47,6 +47,8 @@ public final class DataSources {
 
     public static final String JDBC_PWD = "javax.persistence.jdbc.password";
 
+    public static final String JDBC_ENCODING = "javax.persistence.jdbc.encoding";
+
     public static final String JDBC_DRIVER = "javax.persistence.jdbc.driver";
 
     public static final String JDBC_SOURCE = "javax.persistence.jdbc.source";

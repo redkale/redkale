@@ -57,6 +57,8 @@ public abstract class PoolSource<DBChannel> {
 
     protected String database;
 
+    protected String encoding;
+
     protected Properties props;
 
     protected Properties attributes = new Properties();
@@ -69,6 +71,7 @@ public abstract class PoolSource<DBChannel> {
         this.url = prop.getProperty(JDBC_URL);
         this.username = prop.getProperty(JDBC_USER, "");
         this.password = prop.getProperty(JDBC_PWD, "");
+        this.encoding = prop.getProperty(JDBC_ENCODING, "");
         this.connectTimeoutSeconds = Integer.decode(prop.getProperty(JDBC_CONNECTTIMEOUT_SECONDS, "3"));
         this.readTimeoutSeconds = Integer.decode(prop.getProperty(JDBC_READTIMEOUT_SECONDS, "3"));
         this.writeTimeoutSeconds = Integer.decode(prop.getProperty(JDBC_WRITETIMEOUT_SECONDS, "3"));
@@ -111,6 +114,8 @@ public abstract class PoolSource<DBChannel> {
             if (!this.props.containsKey(JDBC_TABLENOTEXIST_SQLSTATES)) {
                 this.props.setProperty(JDBC_TABLENOTEXIST_SQLSTATES, "42P01;3F000");
             }
+        } else if ("mysql".equals(this.dbtype)) {
+            if (this.encoding.isEmpty()) this.encoding = attributes.getProperty("characterEncoding", "");
         }
     }
 
