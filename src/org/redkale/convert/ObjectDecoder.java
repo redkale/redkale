@@ -33,7 +33,7 @@ public final class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T
 
     protected DeMember<R, T, ?>[] creatorConstructorMembers = new DeMember[0];
 
-    protected DeMember<R, T, ?>[] members;
+    protected DeMember[] members;
 
     protected ConvertFactory factory;
 
@@ -97,7 +97,6 @@ public final class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T
                     if (ref != null && ref.ignore()) continue;
                     Type t = TypeToken.createClassType(TypeToken.getGenericType(field.getGenericType(), this.type), this.type);
                     DeMember member = new DeMember(ObjectEncoder.createAttribute(factory, clazz, field, null, null), factory.loadDecoder(t));
-                    member.fieldSort = factory.isFieldSort();
                     if (ref != null) member.index = ref.getIndex();
                     list.add(member);
                 }
@@ -157,7 +156,10 @@ public final class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T
                     }
                 }
                 this.members = list.toArray(new DeMember[list.size()]);
-                Arrays.sort(this.members);
+                Arrays.sort(this.members, (a, b) -> a.compareTo(factory.isFieldSort(), b));
+                for (int i = 0; i < this.members.length; i++) {
+                    this.members[i].position = (i + 1);
+                }
 
                 if (cps != null) {
                     final String[] fields = cps;

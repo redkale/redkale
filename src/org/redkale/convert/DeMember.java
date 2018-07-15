@@ -20,11 +20,11 @@ import org.redkale.util.Attribute;
  * @param <F> 字段的数据类型
  */
 @SuppressWarnings("unchecked")
-public final class DeMember<R extends Reader, T, F> implements Comparable<DeMember<R, T, F>> {
+public final class DeMember<R extends Reader, T, F> {
 
     protected int index;
 
-    protected boolean fieldSort;
+    protected int position; //从1开始
 
     protected final Attribute<T, F> attribute;
 
@@ -76,8 +76,11 @@ public final class DeMember<R extends Reader, T, F> implements Comparable<DeMemb
         return this.index;
     }
 
-    @Override
-    public final int compareTo(DeMember<R, T, F> o) {
+    public int getPosition() {
+        return this.position;
+    }
+
+    public int compareTo(boolean fieldSort, DeMember<R, T, F> o) {
         if (o == null) return -1;
         if (this.index != o.index) return (this.index == 0 ? Integer.MAX_VALUE : this.index) - (o.index == 0 ? Integer.MAX_VALUE : o.index);
         return fieldSort ? this.attribute.field().compareTo(o.attribute.field()) : 0;
@@ -88,7 +91,7 @@ public final class DeMember<R extends Reader, T, F> implements Comparable<DeMemb
         if (this == obj) return true;
         if (!(obj instanceof DeMember)) return false;
         DeMember other = (DeMember) obj;
-        return compareTo(other) == 0;
+        return compareTo(true, other) == 0;
     }
 
     @Override

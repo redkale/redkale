@@ -20,7 +20,7 @@ import org.redkale.util.Attribute;
  * @param <F> 字段的数据类型
  */
 @SuppressWarnings("unchecked")
-public final class EnMember<W extends Writer, T, F> implements Comparable<EnMember<W, T, F>> {
+public final class EnMember<W extends Writer, T, F> {
 
     final Attribute<T, F> attribute;
 
@@ -33,7 +33,7 @@ public final class EnMember<W extends Writer, T, F> implements Comparable<EnMemb
 
     protected int index;
 
-    protected boolean fieldSort;
+    protected int position; //从1开始
 
     public EnMember(Attribute<T, F> attribute, Encodeable<W, F> encoder) {
         this.attribute = attribute;
@@ -69,8 +69,11 @@ public final class EnMember<W extends Writer, T, F> implements Comparable<EnMemb
         return this.index;
     }
 
-    @Override
-    public final int compareTo(EnMember<W, T, F> o) {
+    public int getPosition() {
+        return this.position;
+    }
+
+    public int compareTo(boolean fieldSort, EnMember<W, T, F> o) {
         if (o == null) return -1;
         if (this.index != o.index) return (this.index == 0 ? Integer.MAX_VALUE : this.index) - (o.index == 0 ? Integer.MAX_VALUE : o.index);
         return fieldSort ? this.attribute.field().compareTo(o.attribute.field()) : 0;
@@ -81,7 +84,7 @@ public final class EnMember<W extends Writer, T, F> implements Comparable<EnMemb
         if (this == obj) return true;
         if (!(obj instanceof EnMember)) return false;
         EnMember other = (EnMember) obj;
-        return compareTo(other) == 0;
+        return compareTo(true, other) == 0;
     }
 
     @Override
