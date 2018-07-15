@@ -89,6 +89,7 @@ public abstract class PoolSource<DBChannel> {
                 pos = url0.indexOf(':');
                 if (pos > 0) dbtype0 = url0.substring(0, pos);
             }
+            if ("mysqlx".equalsIgnoreCase(dbtype0)) dbtype0 = "mysql"; //MySQL X DevAPI 
         }
         this.dbtype = dbtype0.toLowerCase();
         parseAddressAndDbnameAndAttrs();
