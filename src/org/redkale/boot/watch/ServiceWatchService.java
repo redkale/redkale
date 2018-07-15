@@ -29,9 +29,11 @@ public class ServiceWatchService extends AbstractWatchService {
     @Resource
     protected Application application;
 
-    @RestMapping(name = "findfield", auth = false, comment = "查询Service中指定字段的内容")
     @RestConvert(type = void.class)
-    public RetResult findfield(String name, String type, String field) {
+    @RestMapping(name = "findfield", auth = false, comment = "查询Service中指定字段的内容")
+    public RetResult findfield(@RestParam(name = "name", comment = "Service的资源名") String name,
+        @RestParam(name = "type", comment = "Service的类名") String type,
+        @RestParam(name = "field", comment = "字段名") String field) {
         if (name == null) name = "";
         if (type == null) type = "";
         if (field == null) field = "";
@@ -60,9 +62,13 @@ public class ServiceWatchService extends AbstractWatchService {
         }
     }
 
-    @RestMapping(name = "runmethod", auth = false, comment = "调用Service中指定方法")
     @RestConvert(type = void.class)
-    public RetResult runmethod(String name, String type, String method, List<String> params, List<String> paramtypes) {
+    @RestMapping(name = "runmethod", auth = false, comment = "调用Service中指定方法")
+    public RetResult runmethod(@RestParam(name = "name", comment = "Service的资源名") String name,
+        @RestParam(name = "type", comment = "Service的类名") String type,
+        @RestParam(name = "method", comment = "Service的方法名") String method,
+        @RestParam(name = "params", comment = "方法的参数值") List<String> params,
+        @RestParam(name = "paramtypes", comment = "方法的参数数据类型") List<String> paramtypes) {
         if (name == null) name = "";
         if (type == null) type = "";
         if (method == null) method = "";

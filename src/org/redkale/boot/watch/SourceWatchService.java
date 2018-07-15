@@ -68,8 +68,8 @@ public class SourceWatchService extends AbstractWatchService {
         writePoolMethod.setAccessible(true);
         try {
             PoolSource readPoolSource = (PoolSource) readPoolMethod.invoke(source);
-            readPoolSource.change(properties);
             PoolSource writePoolSource = (PoolSource) writePoolMethod.invoke(source);
+            readPoolSource.change(properties);
             writePoolSource.change(properties);
             return RetResult.success();
         } catch (Exception e) {
