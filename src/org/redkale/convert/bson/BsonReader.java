@@ -249,6 +249,35 @@ public class BsonReader extends Reader {
     }
 
     @Override
+    public final byte[] readByteArray() {
+        int len = readArrayB();
+        if (len == Reader.SIGN_NULL) return null;
+        if (len == Reader.SIGN_NOLENGTH) {
+            int size = 0;
+            byte[] data = new byte[8];
+            while (hasNext()) {
+                if (size >= data.length) {
+                    byte[] newdata = new byte[data.length + 4];
+                    System.arraycopy(data, 0, newdata, 0, size);
+                    data = newdata;
+                }
+                data[size++] = readByte();
+            }
+            readArrayE();
+            byte[] newdata = new byte[size];
+            System.arraycopy(data, 0, newdata, 0, size);
+            return newdata;
+        } else {
+            byte[] values = new byte[len];
+            for (int i = 0; i < values.length; i++) {
+                values[i] = readByte();
+            }
+            readArrayE();
+            return values;
+        }
+    }
+
+    @Override
     public char readChar() {
         return (char) ((0xff00 & (content[++this.position] << 8)) | (0xff & content[++this.position]));
     }

@@ -126,6 +126,22 @@ public class BsonWriter extends Writer {
     }
 
     @Override
+    public final void writeByteArray(byte[] values) {
+        if (values == null) {
+            writeNull();
+            return;
+        }
+        writeArrayB(values.length);
+        boolean flag = false;
+        for (byte v : values) {
+            if (flag) writeArrayMark();
+            writeByte(v);
+            flag = true;
+        }
+        writeArrayE();
+    }
+
+    @Override
     public final void writeChar(final char value) {
         writeTo((byte) ((value & 0xFF00) >> 8), (byte) (value & 0xFF));
     }

@@ -108,6 +108,13 @@ public abstract class Reader {
     public abstract byte readByte();
 
     /**
+     * 读取byte[]
+     *
+     * @return byte[]
+     */
+    public abstract byte[] readByteArray();
+
+    /**
      * 读取一个char值
      *
      * @return char值

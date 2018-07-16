@@ -183,6 +183,13 @@ public abstract class Writer {
     public abstract void writeByte(byte value);
 
     /**
+     * 写入byte[]
+     *
+     * @param values byte[]
+     */
+    public abstract void writeByteArray(byte[] values);
+
+    /**
      * 写入一个char值
      *
      * @param value char值
