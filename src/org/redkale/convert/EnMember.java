@@ -65,6 +65,10 @@ public final class EnMember<W extends Writer, T, F> {
         return attribute.field().equals(name);
     }
 
+    public Attribute<T, F> getAttribute() {
+        return attribute;
+    }
+
     public int getIndex() {
         return this.index;
     }

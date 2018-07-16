@@ -180,7 +180,8 @@ public class BsonWriter extends Writer {
     }
 
     @Override
-    public final void writeFieldName(Attribute attribute) {
+    public final void writeFieldName(EnMember member) {
+        Attribute attribute = member.getAttribute();
         writeByte(BsonReader.SIGN_HASNEXT);
         writeSmallString(attribute.field());
         byte typeval = 127;  //字段的类型值

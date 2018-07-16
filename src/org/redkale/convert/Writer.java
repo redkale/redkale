@@ -6,7 +6,6 @@
 package org.redkale.convert;
 
 import java.lang.reflect.*;
-import org.redkale.util.Attribute;
 
 /**
  * 序列化的数据输出流
@@ -112,7 +111,7 @@ public abstract class Writer {
                 if (!((Boolean) value)) return;
             }
         }
-        this.writeFieldName(member.attribute);
+        this.writeFieldName(member);
         member.encoder.convertTo(this, value);
         this.comma = true;
     }
@@ -165,9 +164,9 @@ public abstract class Writer {
     /**
      * 输出一个字段名
      *
-     * @param attribute 字段的Attribute对象
+     * @param member 字段的EnMember对象
      */
-    public abstract void writeFieldName(Attribute attribute);
+    public abstract void writeFieldName(EnMember member);
 
     /**
      * 写入一个boolean值

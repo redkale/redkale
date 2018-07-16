@@ -6,7 +6,7 @@
 package org.redkale.convert.json;
 
 import java.nio.ByteBuffer;
-import org.redkale.convert.Writer;
+import org.redkale.convert.*;
 import org.redkale.util.*;
 
 /**
@@ -157,9 +157,9 @@ public class JsonWriter extends Writer {
     }
 
     @Override
-    public final void writeFieldName(Attribute attribute) {
+    public final void writeFieldName(EnMember member) {
         if (this.comma) writeTo(',');
-        writeTo(true, attribute.field());
+        writeTo(true, member.getAttribute().field());
         writeTo(':');
     }
 
