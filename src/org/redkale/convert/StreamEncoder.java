@@ -87,4 +87,9 @@ public final class StreamEncoder<T> implements Encodeable<Writer, Stream<T>> {
     public Type getType() {
         return type;
     }
+
+    public Encodeable<Writer, Object> getEncoder() {
+        return encoder;
+    }
+    
 }

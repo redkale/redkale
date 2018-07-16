@@ -101,4 +101,12 @@ public final class ArrayDecoder<T> implements Decodeable<Reader, T[]> {
         return type;
     }
 
+    public Type getComponentType() {
+        return componentType;
+    }
+
+    public Decodeable<Reader, T> getDecoder() {
+        return decoder;
+    }
+
 }

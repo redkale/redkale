@@ -97,4 +97,13 @@ public final class ArrayEncoder<T> implements Encodeable<Writer, T[]> {
     public Type getType() {
         return type;
     }
+
+    public Type getComponentType() {
+        return componentType;
+    }
+
+    public Encodeable<Writer, Object> getEncoder() {
+        return encoder;
+    }
+    
 }

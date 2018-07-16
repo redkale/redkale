@@ -86,4 +86,13 @@ public final class MapEncoder<K, V> implements Encodeable<Writer, Map<K, V>> {
     public Type getType() {
         return type;
     }
+
+    public Encodeable<Writer, K> getKeyencoder() {
+        return keyencoder;
+    }
+
+    public Encodeable<Writer, V> getValencoder() {
+        return valencoder;
+    }
+    
 }

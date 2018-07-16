@@ -157,6 +157,10 @@ public final class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T
         return this.type;
     }
 
+    public EnMember[] getMembers() {
+        return Arrays.copyOf(members, members.length);
+    }
+
     @Override
     public String toString() {
         return "ObjectEncoder{" + "type=" + type + ", members=" + Arrays.toString(members) + '}';

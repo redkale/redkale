@@ -95,4 +95,12 @@ public final class CollectionDecoder<T> implements Decodeable<Reader, Collection
         return type;
     }
 
+    public Type getComponentType() {
+        return componentType;
+    }
+
+    public Decodeable<Reader, T> getDecoder() {
+        return decoder;
+    }
+
 }

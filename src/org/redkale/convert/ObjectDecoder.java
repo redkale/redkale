@@ -259,6 +259,10 @@ public final class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T
         return this.type;
     }
 
+    public DeMember[] getMembers() {
+        return Arrays.copyOf(members, members.length);
+    }
+
     @Override
     public String toString() {
         return "ObjectDecoder{" + "type=" + type + ", members=" + Arrays.toString(members) + '}';

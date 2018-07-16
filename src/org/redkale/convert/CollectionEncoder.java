@@ -86,4 +86,9 @@ public final class CollectionEncoder<T> implements Encodeable<Writer, Collection
     public Type getType() {
         return type;
     }
+
+    public Encodeable<Writer, Object> getEncoder() {
+        return encoder;
+    }
+
 }

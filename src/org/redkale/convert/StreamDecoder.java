@@ -91,4 +91,12 @@ public final class StreamDecoder<T> implements Decodeable<Reader, Stream<T>> {
         return type;
     }
 
+    public Type getComponentType() {
+        return componentType;
+    }
+
+    public Decodeable<Reader, T> getDecoder() {
+        return decoder;
+    }
+
 }

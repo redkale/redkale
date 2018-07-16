@@ -114,4 +114,20 @@ public final class MapDecoder<K, V> implements Decodeable<Reader, Map<K, V>> {
         return this.type;
     }
 
+    public Type getKeyType() {
+        return keyType;
+    }
+
+    public Type getValueType() {
+        return valueType;
+    }
+
+    public Decodeable<Reader, K> getKeyDecoder() {
+        return keyDecoder;
+    }
+
+    public Decodeable<Reader, V> getValueDecoder() {
+        return valueDecoder;
+    }
+
 }
