@@ -7,9 +7,7 @@ package org.redkale.convert;
 
 import org.redkale.util.Creator;
 import java.lang.reflect.*;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 import org.redkale.util.*;
 
 /**
@@ -86,7 +84,7 @@ public final class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T
                 this.creator = factory.loadCreator(clazz);
                 if (this.creator == null) throw new ConvertException("Cannot create a creator for " + clazz);
             }
-            final Set<DeMember> list = new HashSet();
+            final Set<DeMember> list = new LinkedHashSet();
             final String[] cps = ObjectEncoder.findConstructorProperties(this.creator);
             try {
                 ConvertColumnEntry ref;
