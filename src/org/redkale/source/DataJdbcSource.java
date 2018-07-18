@@ -63,7 +63,12 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
             conn.setAutoCommit(true);
             PreparedStatement prestmt = createInsertPreparedStatement(conn, sql, info, values);
             try {
-                prestmt.executeBatch();
+                int[] cs = prestmt.executeBatch();
+                int c1 = 0;
+                for (int cc : cs) {
+                    c1 += cc;
+                }
+                c = c1;
             } catch (SQLException se) {
                 if (info.tableStrategy == null || !info.isTableNotExist(se)) throw se;
                 synchronized (info.tables) {
