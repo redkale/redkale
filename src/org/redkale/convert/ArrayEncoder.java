@@ -62,7 +62,7 @@ public final class ArrayEncoder<T> implements Encodeable<Writer, T[]> {
             return;
         }
         if (value.length == 0) {
-            out.writeArrayB(0);
+            out.writeArrayB(0, encoder, value);
             out.writeArrayE();
             return;
         }
@@ -77,7 +77,7 @@ public final class ArrayEncoder<T> implements Encodeable<Writer, T[]> {
                 }
             }
         }
-        out.writeArrayB(value.length);
+        out.writeArrayB(value.length, encoder, value);
         final Type comp = this.componentType;
         boolean first = true;
         for (Object v : value) {
@@ -105,5 +105,5 @@ public final class ArrayEncoder<T> implements Encodeable<Writer, T[]> {
     public Encodeable<Writer, Object> getEncoder() {
         return encoder;
     }
-    
+
 }

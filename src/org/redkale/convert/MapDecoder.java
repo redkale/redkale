@@ -87,11 +87,17 @@ public final class MapDecoder<K, V> implements Decodeable<Reader, Map<K, V>> {
                 }
             }
         }
-        final int len = in.readMapB();
+        int len = in.readArrayB();
+        int contentLength = -1;
         if (len == Reader.SIGN_NULL) return null;
+        if (len == Reader.SIGN_NOLENBUTBYTES) {
+            contentLength = in.readMemberContentLength();
+            len = Reader.SIGN_NOLENGTH;
+        }
         final Map<K, V> result = this.creator.create();
         if (len == Reader.SIGN_NOLENGTH) {
-            while (in.hasNext()) {
+            int startPosition = in.position();
+            while (in.hasNext(startPosition, contentLength)) {
                 K key = keyDecoder.convertFrom(in);
                 in.readBlank();
                 V value = valueDecoder.convertFrom(in);

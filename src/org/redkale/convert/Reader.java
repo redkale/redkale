@@ -22,12 +22,43 @@ public abstract class Reader {
 
     public static final short SIGN_NOLENGTH = -2;
 
+    public static final short SIGN_NOLENBUTBYTES = -3;
+
     /**
-     * 是否还存在下个元素或字段
+     * 是否还存在下个元素或字段 <br>
+     * 注意: 主要用于Array、Collection、Stream或Map等集合对象
+     *
+     * @param startPosition 起始位置
+     * @param contentLength 内容大小， 不确定的传-1
      *
      * @return 是否还存在下个元素或字段
      */
-    public abstract boolean hasNext();
+    public abstract boolean hasNext(int startPosition, int contentLength);
+
+    /**
+     * 是否还存在下个元素或字段
+     *
+     *
+     * @return 是否还存在下个元素或字段
+     */
+    public boolean hasNext() {
+        return hasNext(-1, -1);
+    }
+
+    /**
+     * 获取当前位置
+     *
+     * @return 当前位置
+     */
+    public abstract int position();
+
+    /**
+     * 读取字段值内容的字节数 <br>
+     * 只有在readXXXB方法返回SIGN_NOLENBUTBYTES值才会调用此方法
+     *
+     * @return 内容大小， 不确定返回-1
+     */
+    public abstract int readMemberContentLength();
 
     /**
      * 跳过值(不包含值前面的字段)

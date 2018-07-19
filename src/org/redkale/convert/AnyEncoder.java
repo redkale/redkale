@@ -42,7 +42,7 @@ public final class AnyEncoder<T> implements Encodeable<Writer, T> {
             out.writeNull();
         } else {
             int count = values.length - values.length % 2;
-            out.writeMapB(count / 2);
+            out.writeMapB(count / 2, (Encodeable) this, (Encodeable) this, values);
             for (int i = 0; i < count; i += 2) {
                 if (i > 0) out.writeArrayMark();
                 this.convertTo(out, (T) values[i]);

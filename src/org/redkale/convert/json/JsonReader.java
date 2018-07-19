@@ -244,13 +244,26 @@ public class JsonReader extends Reader {
         throw new ConvertException("'" + new String(text) + "'expected a ':' but '" + ch + "'(position = " + position + ") in (" + new String(this.text) + ")");
     }
 
+    @Override
+    public int position() {
+        return this.position;
+    }
+
+    @Override
+    public int readMemberContentLength() {
+        return -1;
+    }
+
     /**
      * 判断对象是否存在下一个属性或者数组是否存在下一个元素
+     *
+     * @param startPosition 起始位置
+     * @param contentLength 内容大小， 不确定的传-1
      *
      * @return 是否存在
      */
     @Override
-    public boolean hasNext() {
+    public boolean hasNext(int startPosition, int contentLength) {
         char ch = this.text[++this.position];
         if (ch == ',') return true;
         if (ch == '}' || ch == ']') return false;
@@ -456,11 +469,17 @@ public class JsonReader extends Reader {
     @Override
     public final byte[] readByteArray() {
         int len = readArrayB();
+        int contentLength = -1;
         if (len == Reader.SIGN_NULL) return null;
+        if (len == Reader.SIGN_NOLENBUTBYTES) {
+            contentLength = readMemberContentLength();
+            len = Reader.SIGN_NOLENGTH;
+        }
         if (len == Reader.SIGN_NOLENGTH) {
             int size = 0;
             byte[] data = new byte[8];
-            while (hasNext()) {
+            int startPosition = position();
+            while (hasNext(startPosition, contentLength)) {
                 if (size >= data.length) {
                     byte[] newdata = new byte[data.length + 4];
                     System.arraycopy(data, 0, newdata, 0, size);

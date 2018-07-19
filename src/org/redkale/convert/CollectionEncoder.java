@@ -57,7 +57,7 @@ public final class CollectionEncoder<T> implements Encodeable<Writer, Collection
             return;
         }
         if (value.isEmpty()) {
-            out.writeArrayB(0);
+            out.writeArrayB(0, encoder, value);
             out.writeArrayE();
             return;
         }
@@ -72,7 +72,7 @@ public final class CollectionEncoder<T> implements Encodeable<Writer, Collection
                 }
             }
         }
-        out.writeArrayB(value.size());
+        out.writeArrayB(value.size(), encoder, value);
         boolean first = true;
         for (Object v : value) {
             if (!first) out.writeArrayMark();

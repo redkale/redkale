@@ -70,7 +70,7 @@ public final class MapEncoder<K, V> implements Encodeable<Writer, Map<K, V>> {
                 }
             }
         }
-        out.writeMapB(values.size());
+        out.writeMapB(values.size(), (Encodeable) keyencoder, (Encodeable) valencoder, value);
         boolean first = true;
         for (Map.Entry<K, V> en : values.entrySet()) {
             if (!first) out.writeArrayMark();
@@ -94,5 +94,5 @@ public final class MapEncoder<K, V> implements Encodeable<Writer, Map<K, V>> {
     public Encodeable<Writer, V> getValencoder() {
         return valencoder;
     }
-    
+
 }

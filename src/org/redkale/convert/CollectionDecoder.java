@@ -44,7 +44,7 @@ public final class CollectionDecoder<T> implements Decodeable<Reader, Collection
                 this.creator = factory.loadCreator((Class) pt.getRawType());
                 factory.register(type, this);
                 this.decoder = factory.loadDecoder(this.componentType);
-            } else if(factory.isReversible()){
+            } else if (factory.isReversible()) {
                 this.componentType = Object.class;
                 this.creator = factory.loadCreator(Object.class);
                 factory.register(type, this);
@@ -62,8 +62,13 @@ public final class CollectionDecoder<T> implements Decodeable<Reader, Collection
 
     @Override
     public Collection<T> convertFrom(Reader in) {
-        final int len = in.readArrayB();
+        int len = in.readArrayB();
+        int contentLength = -1;
         if (len == Reader.SIGN_NULL) return null;
+        if (len == Reader.SIGN_NOLENBUTBYTES) {
+            contentLength = in.readMemberContentLength();
+            len = Reader.SIGN_NOLENGTH;
+        }
         if (this.decoder == null) {
             if (!this.inited) {
                 synchronized (lock) {
@@ -78,7 +83,8 @@ public final class CollectionDecoder<T> implements Decodeable<Reader, Collection
         final Decodeable<Reader, T> localdecoder = this.decoder;
         final Collection<T> result = this.creator.create();
         if (len == Reader.SIGN_NOLENGTH) {
-            while (in.hasNext()) {
+            int startPosition = in.position();
+            while (in.hasNext(startPosition, contentLength)) {
                 result.add(localdecoder.convertFrom(in));
             }
         } else {

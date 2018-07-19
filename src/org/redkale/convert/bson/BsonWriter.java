@@ -131,7 +131,7 @@ public class BsonWriter extends Writer {
             writeNull();
             return;
         }
-        writeArrayB(values.length);
+        writeArrayB(values.length, null, values);
         boolean flag = false;
         for (byte v : values) {
             if (flag) writeArrayMark();
@@ -284,7 +284,7 @@ public class BsonWriter extends Writer {
     }
 
     @Override
-    public final void writeArrayB(int size) {
+    public final void writeArrayB(int size, Encodeable<Writer, Object> encoder, Object obj) {
         writeInt(size);
     }
 
@@ -297,8 +297,8 @@ public class BsonWriter extends Writer {
     }
 
     @Override
-    public void writeMapB(int size) {
-        writeArrayB(size);
+    public void writeMapB(int size, Encodeable<Writer, Object> keyEncoder, Encodeable<Writer, Object> valueEncoder, Object obj) {
+        writeArrayB(size, valueEncoder, obj);
     }
 
     @Override

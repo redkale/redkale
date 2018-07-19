@@ -30,7 +30,7 @@ public final class IntArraySimpledCoder<R extends Reader, W extends Writer> exte
             out.writeNull();
             return;
         }
-        out.writeArrayB(values.length);
+        out.writeArrayB(values.length, IntSimpledCoder.instance, values);
         boolean flag = false;
         for (int v : values) {
             if (flag) out.writeArrayMark();
@@ -43,11 +43,17 @@ public final class IntArraySimpledCoder<R extends Reader, W extends Writer> exte
     @Override
     public int[] convertFrom(R in) {
         int len = in.readArrayB();
+        int contentLength = -1;
         if (len == Reader.SIGN_NULL) return null;
+        if (len == Reader.SIGN_NOLENBUTBYTES) {
+            contentLength = in.readMemberContentLength();
+            len = Reader.SIGN_NOLENGTH;
+        }
         if (len == Reader.SIGN_NOLENGTH) {
             int size = 0;
             int[] data = new int[8];
-            while (in.hasNext()) {
+            int startPosition = in.position();
+            while (in.hasNext(startPosition, contentLength)) {
                 if (size >= data.length) {
                     int[] newdata = new int[data.length + 4];
                     System.arraycopy(data, 0, newdata, 0, size);

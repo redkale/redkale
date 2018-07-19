@@ -156,10 +156,13 @@ public class JsonByteBufferReader extends JsonReader {
     /**
      * 判断对象是否存在下一个属性或者数组是否存在下一个元素
      *
+     * @param startPosition 起始位置
+     * @param contentLength 内容大小， 不确定的传-1
+     *
      * @return 是否存在
      */
     @Override
-    public final boolean hasNext() {
+    public boolean hasNext(int startPosition, int contentLength) {
         char ch = nextGoodChar();
         if (ch == ',') return true;
         if (ch == '}' || ch == ']' || ch == 0) return false;

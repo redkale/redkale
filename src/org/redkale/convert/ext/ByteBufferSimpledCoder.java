@@ -30,7 +30,7 @@ public final class ByteBufferSimpledCoder<R extends Reader, W extends Writer> ex
             out.writeNull();
             return;
         }
-        out.writeArrayB(value.remaining());
+        out.writeArrayB(value.remaining(), ByteSimpledCoder.instance, value);
         boolean flag = false;
         for (byte v : value.array()) {
             if (flag) out.writeArrayMark();
@@ -43,11 +43,17 @@ public final class ByteBufferSimpledCoder<R extends Reader, W extends Writer> ex
     @Override
     public ByteBuffer convertFrom(R in) {
         int len = in.readArrayB();
+        int contentLength = -1;
         if (len == Reader.SIGN_NULL) return null;
+        if (len == Reader.SIGN_NOLENBUTBYTES) {
+            contentLength = in.readMemberContentLength();
+            len = Reader.SIGN_NOLENGTH;
+        }
         if (len == Reader.SIGN_NOLENGTH) {
             int size = 0;
             byte[] data = new byte[8];
-            while (in.hasNext()) {
+            int startPosition = in.position();
+            while (in.hasNext(startPosition, contentLength)) {
                 if (size >= data.length) {
                     byte[] newdata = new byte[data.length + 4];
                     System.arraycopy(data, 0, newdata, 0, size);

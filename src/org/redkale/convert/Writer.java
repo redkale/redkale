@@ -126,9 +126,11 @@ public abstract class Writer {
     /**
      * 输出一个数组前的操作
      *
-     * @param size 数组长度
+     * @param size    数组长度
+     * @param encoder Encodeable
+     * @param obj     对象
      */
-    public abstract void writeArrayB(int size);
+    public abstract void writeArrayB(int size, Encodeable<Writer, Object> encoder, Object obj);
 
     /**
      * 输出数组元素间的间隔符
@@ -145,9 +147,12 @@ public abstract class Writer {
     /**
      * 输出一个Map前的操作
      *
-     * @param size map大小
+     * @param size         map大小
+     * @param keyEncoder   Encodeable
+     * @param valueEncoder Encodeable
+     * @param obj          对象
      */
-    public abstract void writeMapB(int size);
+    public abstract void writeMapB(int size, Encodeable<Writer, Object> keyEncoder, Encodeable<Writer, Object> valueEncoder, Object obj);
 
     /**
      * 输出一个Map中key与value间的间隔符
