@@ -141,6 +141,8 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
 
     public abstract boolean isFieldSort(); //当ConvertColumn.index相同时是否按字段名称排序
 
+    public abstract SimpledCoder createEnumSimpledCoder(Class enumClass);
+
     public abstract ConvertFactory createChild();
 
     public abstract ConvertFactory createChild(boolean tiny);
@@ -519,7 +521,7 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
         Decodeable<R, E> decoder = null;
         ObjectDecoder od = null;
         if (clazz.isEnum()) {
-            decoder = new EnumSimpledCoder(clazz);
+            decoder = createEnumSimpledCoder(clazz);
         } else if (clazz.isArray()) {
             decoder = new ArrayDecoder(this, type);
         } else if (Collection.class.isAssignableFrom(clazz)) {
@@ -605,7 +607,7 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
         Encodeable<W, E> encoder = null;
         ObjectEncoder oe = null;
         if (clazz.isEnum()) {
-            encoder = new EnumSimpledCoder(clazz);
+            encoder = createEnumSimpledCoder(clazz);
         } else if (clazz.isArray()) {
             encoder = new ArrayEncoder(this, type);
         } else if (Collection.class.isAssignableFrom(clazz)) {

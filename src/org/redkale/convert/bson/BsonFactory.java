@@ -7,6 +7,7 @@ package org.redkale.convert.bson;
 
 import java.io.Serializable;
 import org.redkale.convert.*;
+import org.redkale.convert.ext.EnumSimpledCoder;
 import org.redkale.util.AnyValue;
 
 /**
@@ -48,6 +49,11 @@ public final class BsonFactory extends ConvertFactory<BsonReader, BsonWriter> {
     public BsonFactory skipAllIgnore(final boolean skipIgnore) {
         this.registerSkipAllIgnore(skipIgnore);
         return this;
+    }
+
+    @Override
+    public SimpledCoder createEnumSimpledCoder(Class enumClass) {
+        return new EnumSimpledCoder(enumClass);
     }
 
     public static BsonFactory root() {
