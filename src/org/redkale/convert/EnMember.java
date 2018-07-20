@@ -69,6 +69,18 @@ public final class EnMember<W extends Writer, T, F> {
         return attribute;
     }
 
+    public Encodeable<W, F> getEncoder() {
+        return encoder;
+    }
+
+    public boolean isStringType() {
+        return istring;
+    }
+
+    public boolean isBoolType() {
+        return isbool;
+    }
+
     public int getIndex() {
         return this.index;
     }
