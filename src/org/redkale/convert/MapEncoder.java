@@ -70,14 +70,15 @@ public final class MapEncoder<K, V> implements Encodeable<Writer, Map<K, V>> {
                 }
             }
         }
-        out.writeMapB(values.size(), (Encodeable) keyencoder, (Encodeable) valencoder, value);
-        boolean first = true;
-        for (Map.Entry<K, V> en : values.entrySet()) {
-            if (!first) out.writeArrayMark();
-            this.keyencoder.convertTo(out, en.getKey());
-            out.writeMapMark();
-            this.valencoder.convertTo(out, en.getValue());
-            if (first) first = false;
+        if (out.writeMapB(values.size(), (Encodeable) keyencoder, (Encodeable) valencoder, value) < 0) {
+            boolean first = true;
+            for (Map.Entry<K, V> en : values.entrySet()) {
+                if (!first) out.writeArrayMark();
+                this.keyencoder.convertTo(out, en.getKey());
+                out.writeMapMark();
+                this.valencoder.convertTo(out, en.getValue());
+                if (first) first = false;
+            }
         }
         out.writeMapE();
     }

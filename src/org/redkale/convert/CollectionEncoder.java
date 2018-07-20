@@ -72,12 +72,13 @@ public final class CollectionEncoder<T> implements Encodeable<Writer, Collection
                 }
             }
         }
-        out.writeArrayB(value.size(), encoder, value);
-        boolean first = true;
-        for (Object v : value) {
-            if (!first) out.writeArrayMark();
-            encoder.convertTo(out, v);
-            if (first) first = false;
+        if (out.writeArrayB(value.size(), encoder, value) < 0) {
+            boolean first = true;
+            for (Object v : value) {
+                if (!first) out.writeArrayMark();
+                encoder.convertTo(out, v);
+                if (first) first = false;
+            }
         }
         out.writeArrayE();
     }

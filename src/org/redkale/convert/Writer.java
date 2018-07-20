@@ -78,9 +78,12 @@ public abstract class Writer {
      * 注： 覆盖此方法必须要先调用父方法 super.writeObjectB(obj);
      *
      * @param obj 写入的对象
+     *
+     * @return 返回-1表示还没有写入对象内容，大于-1表示已写入对象内容，返回对象内容大小
      */
-    public void writeObjectB(Object obj) {
+    public int writeObjectB(Object obj) {
         this.comma = false;
+        return -1;
     }
 
     /**
@@ -129,8 +132,10 @@ public abstract class Writer {
      * @param size    数组长度
      * @param encoder Encodeable
      * @param obj     对象
+     *
+     * @return 返回-1表示还没有写入对象内容，大于-1表示已写入对象内容，返回对象内容大小
      */
-    public abstract void writeArrayB(int size, Encodeable<Writer, Object> encoder, Object obj);
+    public abstract int writeArrayB(int size, Encodeable<Writer, Object> encoder, Object obj);
 
     /**
      * 输出数组元素间的间隔符
@@ -151,8 +156,10 @@ public abstract class Writer {
      * @param keyEncoder   Encodeable
      * @param valueEncoder Encodeable
      * @param obj          对象
+     *
+     * @return 返回-1表示还没有写入对象内容，大于-1表示已写入对象内容，返回对象内容大小
      */
-    public abstract void writeMapB(int size, Encodeable<Writer, Object> keyEncoder, Encodeable<Writer, Object> valueEncoder, Object obj);
+    public abstract int writeMapB(int size, Encodeable<Writer, Object> keyEncoder, Encodeable<Writer, Object> valueEncoder, Object obj);
 
     /**
      * 输出一个Map中key与value间的间隔符

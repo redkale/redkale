@@ -77,13 +77,14 @@ public final class ArrayEncoder<T> implements Encodeable<Writer, T[]> {
                 }
             }
         }
-        out.writeArrayB(value.length, encoder, value);
-        final Type comp = this.componentType;
-        boolean first = true;
-        for (Object v : value) {
-            if (!first) out.writeArrayMark();
-            ((v != null && (v.getClass() == comp || out.specify() == comp)) ? encoder : anyEncoder).convertTo(out, v);
-            if (first) first = false;
+        if (out.writeArrayB(value.length, encoder, value) < 0) {
+            final Type comp = this.componentType;
+            boolean first = true;
+            for (Object v : value) {
+                if (!first) out.writeArrayMark();
+                ((v != null && (v.getClass() == comp || out.specify() == comp)) ? encoder : anyEncoder).convertTo(out, v);
+                if (first) first = false;
+            }
         }
         out.writeArrayE();
     }

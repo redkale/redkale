@@ -145,9 +145,10 @@ public final class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T
             factory.loadEncoder(clz).convertTo(out, value);
             return;
         }
-        out.writeObjectB(value);
-        for (EnMember member : members) {
-            out.writeObjectField(member, value);
+        if (out.writeObjectB(value) < 0) {
+            for (EnMember member : members) {
+                out.writeObjectField(member, value);
+            }
         }
         out.writeObjectE(value);
     }

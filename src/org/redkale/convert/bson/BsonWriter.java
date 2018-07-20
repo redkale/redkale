@@ -183,10 +183,11 @@ public class BsonWriter extends Writer {
     }
 
     @Override
-    public final void writeObjectB(Object obj) {
+    public final int writeObjectB(Object obj) {
         super.writeObjectB(obj);
         writeSmallString("");
         writeShort(BsonReader.SIGN_OBJECTB);
+        return -1;
     }
 
     @Override
@@ -284,8 +285,9 @@ public class BsonWriter extends Writer {
     }
 
     @Override
-    public final void writeArrayB(int size, Encodeable<Writer, Object> encoder, Object obj) {
+    public final int writeArrayB(int size, Encodeable<Writer, Object> encoder, Object obj) {
         writeInt(size);
+        return -1;
     }
 
     @Override
@@ -297,8 +299,9 @@ public class BsonWriter extends Writer {
     }
 
     @Override
-    public void writeMapB(int size, Encodeable<Writer, Object> keyEncoder, Encodeable<Writer, Object> valueEncoder, Object obj) {
+    public int writeMapB(int size, Encodeable<Writer, Object> keyEncoder, Encodeable<Writer, Object> valueEncoder, Object obj) {
         writeArrayB(size, valueEncoder, obj);
+        return -1;
     }
 
     @Override

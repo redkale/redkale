@@ -329,9 +329,10 @@ public class JsonWriter extends Writer {
     }
 
     @Override
-    public final void writeObjectB(Object obj) {
+    public final int writeObjectB(Object obj) {
         super.writeObjectB(obj);
         writeTo('{');
+        return -1;
     }
 
     @Override
@@ -345,8 +346,9 @@ public class JsonWriter extends Writer {
     }
 
     @Override
-    public final void writeArrayB(int size, Encodeable<Writer, Object> encoder, Object obj) {
+    public final int writeArrayB(int size, Encodeable<Writer, Object> encoder, Object obj) {
         writeTo('[');
+        return -1;
     }
 
     @Override
@@ -360,8 +362,9 @@ public class JsonWriter extends Writer {
     }
 
     @Override
-    public final void writeMapB(int size, Encodeable<Writer, Object> keyEncoder, Encodeable<Writer, Object> valueEncoder, Object obj) {
+    public final int writeMapB(int size, Encodeable<Writer, Object> keyEncoder, Encodeable<Writer, Object> valueEncoder, Object obj) {
         writeTo('{');
+        return -1;
     }
 
     @Override

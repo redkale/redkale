@@ -42,16 +42,17 @@ public final class AnyEncoder<T> implements Encodeable<Writer, T> {
             out.writeNull();
         } else {
             int count = values.length - values.length % 2;
-            out.writeMapB(count / 2, (Encodeable) this, (Encodeable) this, values);
-            for (int i = 0; i < count; i += 2) {
-                if (i > 0) out.writeArrayMark();
-                this.convertTo(out, (T) values[i]);
-                out.writeMapMark();
-                Object val = values[i + 1];
-                if (val instanceof CompletableFuture) {
-                    this.convertTo(out, (T) ((CompletableFuture) val).join());
-                } else {
-                    this.convertTo(out, (T) val);
+            if (out.writeMapB(count / 2, (Encodeable) this, (Encodeable) this, values) < 0) {
+                for (int i = 0; i < count; i += 2) {
+                    if (i > 0) out.writeArrayMark();
+                    this.convertTo(out, (T) values[i]);
+                    out.writeMapMark();
+                    Object val = values[i + 1];
+                    if (val instanceof CompletableFuture) {
+                        this.convertTo(out, (T) ((CompletableFuture) val).join());
+                    } else {
+                        this.convertTo(out, (T) val);
+                    }
                 }
             }
             out.writeMapE();

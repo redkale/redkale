@@ -73,12 +73,13 @@ public final class StreamEncoder<T> implements Encodeable<Writer, Stream<T>> {
                 }
             }
         }
-        out.writeArrayB(array.length, encoder, array);
-        boolean first = true;
-        for (Object v : array) {
-            if (!first) out.writeArrayMark();
-            encoder.convertTo(out, v);
-            if (first) first = false;
+        if (out.writeArrayB(array.length, encoder, array) < 0) {
+            boolean first = true;
+            for (Object v : array) {
+                if (!first) out.writeArrayMark();
+                encoder.convertTo(out, v);
+                if (first) first = false;
+            }
         }
         out.writeArrayE();
     }

@@ -29,12 +29,13 @@ public final class StringArraySimpledCoder<R extends Reader, W extends Writer> e
             out.writeNull();
             return;
         }
-        out.writeArrayB(values.length, StringSimpledCoder.instance, values);
-        boolean flag = false;
-        for (String v : values) {
-            if (flag) out.writeArrayMark();
-            out.writeString(v);
-            flag = true;
+        if (out.writeArrayB(values.length, StringSimpledCoder.instance, values) < 0) {
+            boolean flag = false;
+            for (String v : values) {
+                if (flag) out.writeArrayMark();
+                out.writeString(v);
+                flag = true;
+            }
         }
         out.writeArrayE();
     }

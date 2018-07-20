@@ -30,12 +30,13 @@ public final class DoubleArraySimpledCoder<R extends Reader, W extends Writer> e
             out.writeNull();
             return;
         }
-        out.writeArrayB(values.length, DoubleSimpledCoder.instance, values);
-        boolean flag = false;
-        for (double v : values) {
-            if (flag) out.writeArrayMark();
-            out.writeDouble(v);
-            flag = true;
+        if (out.writeArrayB(values.length, DoubleSimpledCoder.instance, values) < 0) {
+            boolean flag = false;
+            for (double v : values) {
+                if (flag) out.writeArrayMark();
+                out.writeDouble(v);
+                flag = true;
+            }
         }
         out.writeArrayE();
     }
