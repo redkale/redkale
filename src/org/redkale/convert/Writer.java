@@ -104,7 +104,7 @@ public abstract class Writer {
      * @param obj    写入的对象
      */
     @SuppressWarnings("unchecked")
-    public final void writeObjectField(final EnMember member, Object obj) {
+    public void writeObjectField(final EnMember member, Object obj) {
         Object value = member.attribute.get(obj);
         if (value == null) return;
         if (tiny()) {
