@@ -126,7 +126,7 @@ public class ServiceWatchService extends AbstractWatchService {
         Object dest = null;
         for (NodeServer ns : application.getNodeServers()) {
             ResourceFactory resFactory = ns.getResourceFactory();
-            List list = resFactory.query((n, s) -> name.equals(n) && s.getClass().getName().endsWith(type));
+            List list = resFactory.query((n, s) -> name.equals(n) && s != null && s.getClass().getName().endsWith(type));
             if (list == null || list.isEmpty()) continue;
             dest = list.get(0);
         }
