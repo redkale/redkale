@@ -45,4 +45,8 @@ public final class EnumSimpledCoder<R extends Reader, W extends Writer, E extend
         return (E) Enum.valueOf(type, value);
     }
 
+    @Override
+    public Class<E> getType() {
+        return type;
+    }
 }
