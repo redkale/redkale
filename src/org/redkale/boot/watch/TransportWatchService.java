@@ -135,4 +135,24 @@ public class TransportWatchService extends AbstractWatchService {
         }
         return RetResult.success();
     }
+
+    @RestMapping(name = "test1", auth = false, comment = "预留")
+    public RetResult test1() {
+        return RetResult.success();
+    }
+
+    @RestMapping(name = "test2", auth = false, comment = "预留")
+    public RetResult test2() {
+        return RetResult.success();
+    }
+
+    @RestMapping(name = "test3", auth = false, comment = "预留")
+    public RetResult test3() {
+        return RetResult.success();
+    }
+
+    @RestMapping(name = "test4", auth = false, comment = "预留")
+    public RetResult test4() {
+        return RetResult.success();
+    }
 }
