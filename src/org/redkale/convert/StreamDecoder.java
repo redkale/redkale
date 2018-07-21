@@ -58,6 +58,10 @@ public class StreamDecoder<T> implements Decodeable<Reader, Stream<T>> {
 
     @Override
     public Stream<T> convertFrom(Reader in) {
+        return convertFrom(in, null);
+    }
+
+    public Stream<T> convertFrom(Reader in, DeMember member) {
         int len = in.readArrayB();
         int contentLength = -1;
         if (len == Reader.SIGN_NULL) return null;
@@ -81,6 +85,7 @@ public class StreamDecoder<T> implements Decodeable<Reader, Stream<T>> {
         if (len == Reader.SIGN_NOLENGTH) {
             int startPosition = in.position();
             while (in.hasNext(startPosition, contentLength)) {
+                readMember(in, member);
                 result.add(localdecoder.convertFrom(in));
             }
         } else {
@@ -90,6 +95,9 @@ public class StreamDecoder<T> implements Decodeable<Reader, Stream<T>> {
         }
         in.readArrayE();
         return result.stream();
+    }
+
+    protected void readMember(Reader in, DeMember member) {
     }
 
     @Override

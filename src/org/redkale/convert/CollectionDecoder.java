@@ -62,6 +62,10 @@ public class CollectionDecoder<T> implements Decodeable<Reader, Collection<T>> {
 
     @Override
     public Collection<T> convertFrom(Reader in) {
+        return convertFrom(in, null);
+    }
+
+    public Collection<T> convertFrom(Reader in, DeMember member) {
         int len = in.readArrayB();
         int contentLength = -1;
         if (len == Reader.SIGN_NULL) return null;
@@ -85,6 +89,7 @@ public class CollectionDecoder<T> implements Decodeable<Reader, Collection<T>> {
         if (len == Reader.SIGN_NOLENGTH) {
             int startPosition = in.position();
             while (in.hasNext(startPosition, contentLength)) {
+                readMember(in, member);
                 result.add(localdecoder.convertFrom(in));
             }
         } else {
@@ -94,6 +99,9 @@ public class CollectionDecoder<T> implements Decodeable<Reader, Collection<T>> {
         }
         in.readArrayE();
         return result;
+    }
+
+    protected void readMember(Reader in, DeMember member) {
     }
 
     @Override

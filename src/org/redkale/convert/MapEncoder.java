@@ -53,6 +53,10 @@ public class MapEncoder<K, V> implements Encodeable<Writer, Map<K, V>> {
 
     @Override
     public void convertTo(Writer out, Map<K, V> value) {
+        convertTo(out, null, value);
+    }
+
+    public void convertTo(Writer out, EnMember member, Map<K, V> value) {
         final Map<K, V> values = value;
         if (values == null) {
             out.writeNull();
@@ -74,13 +78,21 @@ public class MapEncoder<K, V> implements Encodeable<Writer, Map<K, V>> {
             boolean first = true;
             for (Map.Entry<K, V> en : values.entrySet()) {
                 if (!first) out.writeArrayMark();
-                this.keyencoder.convertTo(out, en.getKey());
+                writeKey(out, member, en.getKey());
                 out.writeMapMark();
-                this.valencoder.convertTo(out, en.getValue());
+                writeValue(out, member, en.getValue());
                 if (first) first = false;
             }
         }
         out.writeMapE();
+    }
+
+    protected void writeKey(Writer out, EnMember member, K key) {
+        keyencoder.convertTo(out, key);
+    }
+
+    protected void writeValue(Writer out, EnMember member, V value) {
+        valencoder.convertTo(out, value);
     }
 
     @Override

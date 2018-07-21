@@ -76,6 +76,10 @@ public class MapDecoder<K, V> implements Decodeable<Reader, Map<K, V>> {
 
     @Override
     public Map<K, V> convertFrom(Reader in) {
+        return convertFrom(in, null);
+    }
+
+    public Map<K, V> convertFrom(Reader in, DeMember member) {
         if (this.keyDecoder == null || this.valueDecoder == null) {
             if (!this.inited) {
                 synchronized (lock) {
@@ -98,21 +102,31 @@ public class MapDecoder<K, V> implements Decodeable<Reader, Map<K, V>> {
         if (len == Reader.SIGN_NOLENGTH) {
             int startPosition = in.position();
             while (in.hasNext(startPosition, contentLength)) {
+                readKeyMember(in, member);
                 K key = keyDecoder.convertFrom(in);
                 in.readBlank();
+                readValueMember(in, member);
                 V value = valueDecoder.convertFrom(in);
                 result.put(key, value);
             }
         } else {
             for (int i = 0; i < len; i++) {
+                readKeyMember(in, member);
                 K key = keyDecoder.convertFrom(in);
                 in.readBlank();
+                readValueMember(in, member);
                 V value = valueDecoder.convertFrom(in);
                 result.put(key, value);
             }
         }
         in.readMapE();
         return result;
+    }
+
+    protected void readKeyMember(Reader in, DeMember member) {
+    }
+
+    protected void readValueMember(Reader in, DeMember member) {
     }
 
     @Override

@@ -52,6 +52,10 @@ public class StreamEncoder<T> implements Encodeable<Writer, Stream<T>> {
 
     @Override
     public void convertTo(Writer out, Stream<T> value) {
+        convertTo(out, null, value);
+    }
+
+    public void convertTo(Writer out, EnMember member, Stream<T> value) {
         if (value == null) {
             out.writeNull();
             return;
@@ -77,11 +81,15 @@ public class StreamEncoder<T> implements Encodeable<Writer, Stream<T>> {
             boolean first = true;
             for (Object v : array) {
                 if (!first) out.writeArrayMark();
-                encoder.convertTo(out, v);
+                writeValue(out, member, v);
                 if (first) first = false;
             }
         }
         out.writeArrayE();
+    }
+
+    protected void writeValue(Writer out, EnMember member, Object value) {
+        encoder.convertTo(out, value);
     }
 
     @Override

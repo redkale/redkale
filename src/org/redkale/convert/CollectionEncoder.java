@@ -52,6 +52,10 @@ public class CollectionEncoder<T> implements Encodeable<Writer, Collection<T>> {
 
     @Override
     public void convertTo(Writer out, Collection<T> value) {
+        convertTo(out, null, value);
+    }
+
+    public void convertTo(Writer out, EnMember member, Collection<T> value) {
         if (value == null) {
             out.writeNull();
             return;
@@ -76,11 +80,15 @@ public class CollectionEncoder<T> implements Encodeable<Writer, Collection<T>> {
             boolean first = true;
             for (Object v : value) {
                 if (!first) out.writeArrayMark();
-                encoder.convertTo(out, v);
+                writeValue(out, member, v);
                 if (first) first = false;
             }
         }
         out.writeArrayE();
+    }
+
+    protected void writeValue(Writer out, EnMember member, Object value) {
+        encoder.convertTo(out, value);
     }
 
     @Override

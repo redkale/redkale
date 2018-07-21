@@ -57,6 +57,10 @@ public class ArrayEncoder<T> implements Encodeable<Writer, T[]> {
 
     @Override
     public void convertTo(Writer out, T[] value) {
+        convertTo(out, null, value);
+    }
+
+    public void convertTo(Writer out, EnMember member, T[] value) {
         if (value == null) {
             out.writeNull();
             return;
@@ -82,11 +86,15 @@ public class ArrayEncoder<T> implements Encodeable<Writer, T[]> {
             boolean first = true;
             for (Object v : value) {
                 if (!first) out.writeArrayMark();
-                ((v != null && (v.getClass() == comp || out.specify() == comp)) ? encoder : anyEncoder).convertTo(out, v);
+                writeValue(out, member, ((v != null && (v.getClass() == comp || out.specify() == comp)) ? encoder : anyEncoder), v);
                 if (first) first = false;
             }
         }
         out.writeArrayE();
+    }
+
+    protected void writeValue(Writer out, EnMember member, Encodeable<Writer, Object> encoder, Object value) {
+        encoder.convertTo(out, value);
     }
 
     @Override
