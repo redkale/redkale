@@ -19,15 +19,15 @@ import java.util.Collection;
  * @param <T> 序列化的集合元素类型
  */
 @SuppressWarnings("unchecked")
-public final class CollectionEncoder<T> implements Encodeable<Writer, Collection<T>> {
+public class CollectionEncoder<T> implements Encodeable<Writer, Collection<T>> {
 
-    private final Type type;
+    protected final Type type;
 
-    private final Encodeable<Writer, Object> encoder;
+    protected final Encodeable<Writer, Object> encoder;
 
-    private boolean inited = false;
+    protected boolean inited = false;
 
-    private final Object lock = new Object();
+    protected final Object lock = new Object();
 
     public CollectionEncoder(final ConvertFactory factory, final Type type) {
         this.type = type;

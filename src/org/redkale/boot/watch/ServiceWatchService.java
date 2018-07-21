@@ -30,8 +30,43 @@ public class ServiceWatchService extends AbstractWatchService {
     protected Application application;
 
     @RestConvert(type = void.class)
-    @RestMapping(name = "findfield", auth = false, comment = "查询Service中指定字段的内容")
-    public RetResult findfield(@RestParam(name = "name", comment = "Service的资源名") String name,
+    @RestMapping(name = "setfield", auth = false, comment = "设置Service中指定字段的内容")
+    public RetResult setfield(@RestParam(name = "name", comment = "Service的资源名") String name,
+        @RestParam(name = "type", comment = "Service的类名") String type,
+        @RestParam(name = "field", comment = "字段名") String field,
+        @RestParam(name = "value", comment = "字段值") String value) {
+        if (name == null) name = "";
+        if (type == null) type = "";
+        if (field == null) field = "";
+        type = type.trim();
+        field = field.trim();
+        if (type.isEmpty()) return new RetResult(RET_WATCH_PARAMS_ILLEGAL, "not found param `type`");
+        if (field.isEmpty()) return new RetResult(RET_WATCH_PARAMS_ILLEGAL, "not found param `field`");
+        Object dest = findService(name, type);
+        Class clazz = dest.getClass();
+        Throwable t = null;
+        try {
+            Field fieldObj = null;
+            do {
+                try {
+                    fieldObj = clazz.getDeclaredField(field);
+                    break;
+                } catch (Exception e) {
+                    if (t == null) t = e;
+                }
+            } while ((clazz = clazz.getSuperclass()) != Object.class);
+            if (fieldObj == null) return new RetResult(RET_WATCH_RUN_EXCEPTION, "run exception (" + String.valueOf(t) + ")");
+            fieldObj.setAccessible(true);
+            fieldObj.set(dest, JsonConvert.root().convertFrom(fieldObj.getGenericType(), value));
+            return RetResult.success();
+        } catch (Throwable t2) {
+            return new RetResult(RET_WATCH_RUN_EXCEPTION, "run exception (" + t2.toString() + ")");
+        }
+    }
+
+    @RestConvert(type = void.class)
+    @RestMapping(name = "getfield", auth = false, comment = "查询Service中指定字段的内容")
+    public RetResult getfield(@RestParam(name = "name", comment = "Service的资源名") String name,
         @RestParam(name = "type", comment = "Service的类名") String type,
         @RestParam(name = "field", comment = "字段名") String field) {
         if (name == null) name = "";
@@ -133,16 +168,28 @@ public class ServiceWatchService extends AbstractWatchService {
         if (dest == null) return new RetResult(RET_SERVICE_DEST_NOT_EXISTS, "not found servie (name=" + name + ", type=" + type + ")");
         return dest;
     }
-//    
-//    @RestMapping(name = "load", auth = false, comment = "动态增加Service")
-//    public RetResult loadService(String type, @RestUploadFile(maxLength = 10 * 1024 * 1024, fileNameReg = "\\.jar$") byte[] jar) {
-//        //待开发
-//        return RetResult.success();
-//    }
-//
-//    @RestMapping(name = "stop", auth = false, comment = "动态停止Service")
-//    public RetResult stopService(String name, String type) {
-//        //待开发
-//        return RetResult.success();
-//    }
+
+    @RestMapping(name = "load", auth = false, comment = "动态增加Service")
+    public RetResult loadService(String type, @RestUploadFile(maxLength = 10 * 1024 * 1024, fileNameReg = "\\.jar$") byte[] jar) {
+        //待开发
+        return RetResult.success();
+    }
+
+    @RestMapping(name = "reload", auth = false, comment = "重新加载Service")
+    public RetResult reloadService(String name, String type) {
+        //待开发
+        return RetResult.success();
+    }
+
+    @RestMapping(name = "stop", auth = false, comment = "动态停止Service")
+    public RetResult stopService(String name, String type) {
+        //待开发
+        return RetResult.success();
+    }
+
+    @RestMapping(name = "find", auth = false, comment = "查找Service")
+    public RetResult find(String name, String type) {
+        //待开发
+        return RetResult.success();
+    }
 }

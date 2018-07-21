@@ -141,11 +141,53 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
 
     public abstract boolean isFieldSort(); //当ConvertColumn.index相同时是否按字段名称排序
 
-    public abstract SimpledCoder createEnumSimpledCoder(Class enumClass);
-
     public abstract ConvertFactory createChild();
 
     public abstract ConvertFactory createChild(boolean tiny);
+
+    protected SimpledCoder createEnumSimpledCoder(Class enumClass) {
+        return new EnumSimpledCoder(enumClass);
+    }
+
+    protected ObjectDecoder createObjectDecoder(Type type) {
+        return new ObjectDecoder(type);
+    }
+
+    protected ObjectEncoder createObjectEncoder(Type type) {
+        return new ObjectEncoder(type);
+    }
+
+    protected <E> Decodeable<R, E> createMapDecoder(Type type) {
+        return new MapDecoder(this, type);
+    }
+
+    protected <E> Encodeable<W, E> createMapEncoder(Type type) {
+        return new MapEncoder(this, type);
+    }
+
+    protected <E> Decodeable<R, E> createArrayDecoder(Type type) {
+        return new ArrayDecoder(this, type);
+    }
+
+    protected <E> Encodeable<W, E> createArrayEncoder(Type type) {
+        return new ArrayEncoder(this, type);
+    }
+
+    protected <E> Decodeable<R, E> createCollectionDecoder(Type type) {
+        return new CollectionDecoder(this, type);
+    }
+
+    protected <E> Encodeable<W, E> createCollectionEncoder(Type type) {
+        return new CollectionEncoder(this, type);
+    }
+
+    protected <E> Decodeable<R, E> createStreamDecoder(Type type) {
+        return new StreamDecoder(this, type);
+    }
+
+    protected <E> Encodeable<W, E> createStreamEncoder(Type type) {
+        return new StreamEncoder(this, type);
+    }
 
     public Convert getConvert() {
         return convert;
@@ -468,7 +510,7 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
     public final <E> Decodeable<R, E> loadDecoder(final Type type) {
         Decodeable<R, E> decoder = findDecoder(type);
         if (decoder != null) return decoder;
-        if (type instanceof GenericArrayType) return new ArrayDecoder(this, type);
+        if (type instanceof GenericArrayType) return createArrayDecoder(type);
         Class clazz;
         if (type instanceof ParameterizedType) {
             final ParameterizedType pts = (ParameterizedType) type;
@@ -523,17 +565,17 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
         if (clazz.isEnum()) {
             decoder = createEnumSimpledCoder(clazz);
         } else if (clazz.isArray()) {
-            decoder = new ArrayDecoder(this, type);
+            decoder = createArrayDecoder(type);
         } else if (Collection.class.isAssignableFrom(clazz)) {
-            decoder = new CollectionDecoder(this, type);
+            decoder = createCollectionDecoder(type);
         } else if (Stream.class.isAssignableFrom(clazz)) {
-            decoder = new StreamDecoder(this, type);
+            decoder = createStreamDecoder(type);
         } else if (Map.class.isAssignableFrom(clazz)) {
-            decoder = new MapDecoder(this, type);
+            decoder = createMapDecoder(type);
         } else if (Optional.class == clazz) {
             decoder = new OptionalCoder(this, type);
         } else if (clazz == Object.class) {
-            od = new ObjectDecoder(type);
+            od = createObjectDecoder(type);
             decoder = od;
         } else if (!clazz.getName().startsWith("java.")
             || java.net.HttpCookie.class == clazz
@@ -553,7 +595,7 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
                 }
             }
             if (simpleCoder == null) {
-                od = new ObjectDecoder(type);
+                od = createObjectDecoder(type);
                 decoder = od;
             } else {
                 decoder = simpleCoder;
@@ -568,7 +610,7 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
     public final <E> Encodeable<W, E> loadEncoder(final Type type) {
         Encodeable<W, E> encoder = findEncoder(type);
         if (encoder != null) return encoder;
-        if (type instanceof GenericArrayType) return new ArrayEncoder(this, type);
+        if (type instanceof GenericArrayType) return createArrayEncoder(type);
         Class clazz;
         if (type instanceof ParameterizedType) {
             final ParameterizedType pts = (ParameterizedType) type;
@@ -609,13 +651,13 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
         if (clazz.isEnum()) {
             encoder = createEnumSimpledCoder(clazz);
         } else if (clazz.isArray()) {
-            encoder = new ArrayEncoder(this, type);
+            encoder = createArrayEncoder(type);
         } else if (Collection.class.isAssignableFrom(clazz)) {
-            encoder = new CollectionEncoder(this, type);
+            encoder = createCollectionEncoder(type);
         } else if (Stream.class.isAssignableFrom(clazz)) {
-            encoder = new StreamEncoder(this, type);
+            encoder = createStreamEncoder(type);
         } else if (Map.class.isAssignableFrom(clazz)) {
-            encoder = new MapEncoder(this, type);
+            encoder = createMapEncoder(type);
         } else if (Optional.class == clazz) {
             encoder = new OptionalCoder(this, type);
         } else if (clazz == Object.class) {
@@ -636,7 +678,7 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
                 }
             }
             if (simpleCoder == null) {
-                oe = new ObjectEncoder(type);
+                oe = createObjectEncoder(type);
                 encoder = oe;
             } else {
                 encoder = simpleCoder;

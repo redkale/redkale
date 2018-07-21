@@ -22,7 +22,7 @@ import java.lang.reflect.Type;
  */
 public abstract class SimpledCoder<R extends Reader, W extends Writer, T> implements Decodeable<R, T>, Encodeable<W, T> {
 
-    private Type type;
+    protected Type type;
 
     @Override
     public abstract void convertTo(final W out, final T value);

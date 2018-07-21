@@ -20,19 +20,19 @@ import java.util.*;
  * @param <T> 反解析的数组元素类型
  */
 @SuppressWarnings("unchecked")
-public final class ArrayDecoder<T> implements Decodeable<Reader, T[]> {
+public class ArrayDecoder<T> implements Decodeable<Reader, T[]> {
 
-    private final Type type;
+    protected final Type type;
 
-    private final Type componentType;
+    protected final Type componentType;
 
-    private final Class componentClass;
+    protected final Class componentClass;
 
     protected final Decodeable<Reader, T> decoder;
 
-    private boolean inited = false;
+    protected boolean inited = false;
 
-    private final Object lock = new Object();
+    protected final Object lock = new Object();
 
     public ArrayDecoder(final ConvertFactory factory, final Type type) {
         this.type = type;

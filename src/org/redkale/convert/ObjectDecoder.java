@@ -21,7 +21,7 @@ import org.redkale.util.*;
  * @param <T> 反解析的数据类型
  */
 @SuppressWarnings("unchecked")
-public final class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
+public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
 
     protected final Type type;
 
@@ -35,9 +35,9 @@ public final class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T
 
     protected ConvertFactory factory;
 
-    private boolean inited = false;
+    protected boolean inited = false;
 
-    private final Object lock = new Object();
+    protected final Object lock = new Object();
 
     protected ObjectDecoder(Type type) {
         this.type = ((type instanceof Class) && ((Class) type).isInterface()) ? Object.class : type;
@@ -191,7 +191,7 @@ public final class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T
      * @return 反解析后的对象结果
      */
     @Override
-    public final T convertFrom(final R in) {
+    public T convertFrom(final R in) {
         final String clazz = in.readObjectB(typeClass);
         if (clazz == null) return null;
         if (!clazz.isEmpty()) return (T) factory.loadDecoder(factory.getEntityAlias(clazz)).convertFrom(in);
@@ -255,7 +255,7 @@ public final class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T
     }
 
     @Override
-    public final Type getType() {
+    public Type getType() {
         return this.type;
     }
 

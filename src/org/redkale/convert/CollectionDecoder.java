@@ -21,19 +21,19 @@ import java.util.Collection;
  * @param <T> 反解析的集合元素类型
  */
 @SuppressWarnings("unchecked")
-public final class CollectionDecoder<T> implements Decodeable<Reader, Collection<T>> {
+public class CollectionDecoder<T> implements Decodeable<Reader, Collection<T>> {
 
-    private final Type type;
+    protected final Type type;
 
-    private final Type componentType;
+    protected final Type componentType;
 
     protected Creator<Collection<T>> creator;
 
     protected final Decodeable<Reader, T> decoder;
 
-    private boolean inited = false;
+    protected boolean inited = false;
 
-    private final Object lock = new Object();
+    protected final Object lock = new Object();
 
     public CollectionDecoder(final ConvertFactory factory, final Type type) {
         this.type = type;

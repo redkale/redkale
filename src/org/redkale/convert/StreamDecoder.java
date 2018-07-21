@@ -22,19 +22,19 @@ import java.util.stream.Stream;
  * @param <T> 反解析的集合元素类型
  */
 @SuppressWarnings("unchecked")
-public final class StreamDecoder<T> implements Decodeable<Reader, Stream<T>> {
+public class StreamDecoder<T> implements Decodeable<Reader, Stream<T>> {
 
-    private final Type type;
+    protected final Type type;
 
-    private final Type componentType;
+    protected final Type componentType;
 
     protected Creator<Stream<T>> creator;
 
     protected final Decodeable<Reader, T> decoder;
 
-    private boolean inited = false;
+    protected boolean inited = false;
 
-    private final Object lock = new Object();
+    protected final Object lock = new Object();
 
     public StreamDecoder(final ConvertFactory factory, final Type type) {
         this.type = type;

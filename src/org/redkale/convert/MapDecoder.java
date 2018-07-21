@@ -21,13 +21,13 @@ import java.util.Map;
  * @param <V> Map value的数据类型
  */
 @SuppressWarnings("unchecked")
-public final class MapDecoder<K, V> implements Decodeable<Reader, Map<K, V>> {
+public class MapDecoder<K, V> implements Decodeable<Reader, Map<K, V>> {
 
-    private final Type type;
+    protected final Type type;
 
-    private final Type keyType;
+    protected final Type keyType;
 
-    private final Type valueType;
+    protected final Type valueType;
 
     protected Creator<Map<K, V>> creator;
 
@@ -35,9 +35,9 @@ public final class MapDecoder<K, V> implements Decodeable<Reader, Map<K, V>> {
 
     protected final Decodeable<Reader, V> valueDecoder;
 
-    private boolean inited = false;
+    protected boolean inited = false;
 
-    private final Object lock = new Object();
+    protected final Object lock = new Object();
 
     public MapDecoder(final ConvertFactory factory, final Type type) {
         this.type = type;

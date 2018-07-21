@@ -19,15 +19,15 @@ import java.util.stream.Stream;
  * @param <T> 序列化的集合元素类型
  */
 @SuppressWarnings("unchecked")
-public final class StreamEncoder<T> implements Encodeable<Writer, Stream<T>> {
+public class StreamEncoder<T> implements Encodeable<Writer, Stream<T>> {
 
-    private final Type type;
+    protected final Type type;
 
-    private final Encodeable<Writer, Object> encoder;
+    protected final Encodeable<Writer, Object> encoder;
 
-    private boolean inited = false;
+    protected boolean inited = false;
 
-    private final Object lock = new Object();
+    protected final Object lock = new Object();
 
     public StreamEncoder(final ConvertFactory factory, final Type type) {
         this.type = type;

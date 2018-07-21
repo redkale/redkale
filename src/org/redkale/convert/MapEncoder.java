@@ -20,17 +20,17 @@ import java.util.Map;
  * @param <V> Map value的数据类型
  */
 @SuppressWarnings("unchecked")
-public final class MapEncoder<K, V> implements Encodeable<Writer, Map<K, V>> {
+public class MapEncoder<K, V> implements Encodeable<Writer, Map<K, V>> {
 
-    private final Type type;
+    protected final Type type;
 
-    private final Encodeable<Writer, K> keyencoder;
+    protected final Encodeable<Writer, K> keyencoder;
 
-    private final Encodeable<Writer, V> valencoder;
+    protected final Encodeable<Writer, V> valencoder;
 
-    private boolean inited = false;
+    protected boolean inited = false;
 
-    private final Object lock = new Object();
+    protected final Object lock = new Object();
 
     public MapEncoder(final ConvertFactory factory, final Type type) {
         this.type = type;

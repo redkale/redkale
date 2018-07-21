@@ -19,19 +19,19 @@ import java.lang.reflect.*;
  * @param <T> 序列化的数组元素类型
  */
 @SuppressWarnings("unchecked")
-public final class ArrayEncoder<T> implements Encodeable<Writer, T[]> {
+public class ArrayEncoder<T> implements Encodeable<Writer, T[]> {
 
-    private final Type type;
+    protected final Type type;
 
-    private final Type componentType;
+    protected final Type componentType;
 
-    private final Encodeable anyEncoder;
+    protected final Encodeable anyEncoder;
 
-    private final Encodeable<Writer, Object> encoder;
+    protected final Encodeable<Writer, Object> encoder;
 
-    private boolean inited = false;
+    protected boolean inited = false;
 
-    private final Object lock = new Object();
+    protected final Object lock = new Object();
 
     public ArrayEncoder(final ConvertFactory factory, final Type type) {
         this.type = type;

@@ -20,7 +20,7 @@ import org.redkale.util.*;
  * @param <T> 序列化的数据类型
  */
 @SuppressWarnings("unchecked")
-public final class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
+public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
 
     static final Type[] TYPEZERO = new Type[0];
 
@@ -32,9 +32,9 @@ public final class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T
 
     protected ConvertFactory factory;
 
-    private boolean inited = false;
+    protected boolean inited = false;
 
-    private final Object lock = new Object();
+    protected final Object lock = new Object();
 
     protected ObjectEncoder(Type type) {
         this.type = type;
@@ -125,7 +125,7 @@ public final class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T
     }
 
     @Override
-    public final void convertTo(W out, T value) {
+    public void convertTo(W out, T value) {
         if (value == null) {
             out.writeObjectNull(null);
             return;
@@ -154,7 +154,7 @@ public final class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T
     }
 
     @Override
-    public final Type getType() {
+    public Type getType() {
         return this.type;
     }
 
