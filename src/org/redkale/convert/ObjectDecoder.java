@@ -221,16 +221,14 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
         }
         if (this.creatorConstructorMembers == null) {  //空构造函数
             final T result = this.creator.create();
-            boolean first = true;
             while (hasNext(in)) {
                 DeMember member = in.readFieldName(members);
                 in.readBlank();
                 if (member == null) {
                     in.skipValue(); //跳过不存在的属性的值
                 } else {
-                    readMemberValue(in, member, first, result);
+                    readMemberValue(in, member, result);
                 }
-                first = false;
             }
             in.readObjectE(typeClass);
             return result;
@@ -239,14 +237,13 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
             final Object[] constructorParams = new Object[fields.length];
             final Object[][] otherParams = new Object[this.members.length][2];
             int oc = 0;
-            boolean first = true;
             while (hasNext(in)) {
                 DeMember member = in.readFieldName(members);
                 in.readBlank();
                 if (member == null) {
                     in.skipValue(); //跳过不存在的属性的值
                 } else {
-                    Object val = readMemberValue(in, member, first);
+                    Object val = readMemberValue(in, member);
                     boolean flag = true;
                     for (int i = 0; i < fields.length; i++) {
                         if (member == fields[i]) {
@@ -257,7 +254,6 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
                     }
                     if (flag) otherParams[oc++] = new Object[]{member.attribute, val};
                 }
-                first = false;
             }
             in.readObjectE(typeClass);
             final T result = this.creator.create(constructorParams);
@@ -272,11 +268,11 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
         return in.hasNext();
     }
 
-    protected Object readMemberValue(R in, DeMember member, boolean first) {
+    protected Object readMemberValue(R in, DeMember member) {
         return member.read(in);
     }
 
-    protected void readMemberValue(R in, DeMember member, boolean first, T result) {
+    protected void readMemberValue(R in, DeMember member, T result) {
         member.read(in, result);
     }
 
