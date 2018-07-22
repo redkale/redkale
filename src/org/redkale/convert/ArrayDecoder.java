@@ -70,7 +70,7 @@ public class ArrayDecoder<T> implements Decodeable<Reader, T[]> {
         int contentLength = -1;
         if (len == Reader.SIGN_NULL) return null;
         if (len == Reader.SIGN_NOLENBUTBYTES) {
-            contentLength = in.readMemberContentLength();
+            contentLength = in.readMemberContentLength(member);
             len = Reader.SIGN_NOLENGTH;
         }
         if (this.decoder == null) {
@@ -86,15 +86,17 @@ public class ArrayDecoder<T> implements Decodeable<Reader, T[]> {
         }
         final Decodeable<Reader, T> localdecoder = this.decoder;
         final List<T> result = new ArrayList();
+        boolean first = true;
         if (len == Reader.SIGN_NOLENGTH) {
             int startPosition = in.position();
             while (in.hasNext(startPosition, contentLength)) {
-                readMember(in, member);
-                result.add(localdecoder.convertFrom(in));
+                result.add(readMemberValue(in, member, first));
+                first = false;
             }
         } else {
             for (int i = 0; i < len; i++) {
                 result.add(localdecoder.convertFrom(in));
+                first = false;
             }
         }
         in.readArrayE();
@@ -102,7 +104,8 @@ public class ArrayDecoder<T> implements Decodeable<Reader, T[]> {
         return result.toArray(rs);
     }
 
-    protected void readMember(Reader in, DeMember member) {
+    protected T readMemberValue(Reader in, DeMember member, boolean first) {
+        return this.decoder.convertFrom(in);
     }
 
     @Override

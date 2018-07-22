@@ -56,9 +56,11 @@ public abstract class Reader {
      * 读取字段值内容的字节数 <br>
      * 只有在readXXXB方法返回SIGN_NOLENBUTBYTES值才会调用此方法
      *
+     * @param member DeMember
+     *
      * @return 内容大小， 不确定返回-1
      */
-    public abstract int readMemberContentLength();
+    public abstract int readMemberContentLength(DeMember member);
 
     /**
      * 跳过值(不包含值前面的字段)

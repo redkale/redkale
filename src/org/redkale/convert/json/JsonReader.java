@@ -250,7 +250,7 @@ public class JsonReader extends Reader {
     }
 
     @Override
-    public int readMemberContentLength() {
+    public int readMemberContentLength(DeMember member) {
         return -1;
     }
 
@@ -472,7 +472,7 @@ public class JsonReader extends Reader {
         int contentLength = -1;
         if (len == Reader.SIGN_NULL) return null;
         if (len == Reader.SIGN_NOLENBUTBYTES) {
-            contentLength = readMemberContentLength();
+            contentLength = readMemberContentLength(null);
             len = Reader.SIGN_NOLENGTH;
         }
         if (len == Reader.SIGN_NOLENGTH) {

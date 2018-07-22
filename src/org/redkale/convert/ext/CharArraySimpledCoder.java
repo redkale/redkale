@@ -46,7 +46,7 @@ public final class CharArraySimpledCoder<R extends Reader, W extends Writer> ext
         int contentLength = -1;
         if (len == Reader.SIGN_NULL) return null;
         if (len == Reader.SIGN_NOLENBUTBYTES) {
-            contentLength = in.readMemberContentLength();
+            contentLength = in.readMemberContentLength(null);
             len = Reader.SIGN_NOLENGTH;
         }
         if (len == Reader.SIGN_NOLENGTH) {
