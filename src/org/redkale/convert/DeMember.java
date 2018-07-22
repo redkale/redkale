@@ -72,6 +72,10 @@ public final class DeMember<R extends Reader, T, F> {
         return this.attribute;
     }
 
+    public Decodeable<R, F> getDecoder() {
+        return decoder;
+    }
+
     public int getIndex() {
         return this.index;
     }

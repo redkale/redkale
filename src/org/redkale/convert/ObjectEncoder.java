@@ -109,8 +109,18 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
                 }
                 this.members = list.toArray(new EnMember[list.size()]);
                 Arrays.sort(this.members, (a, b) -> a.compareTo(factory.isFieldSort(), b));
+                Set<Integer> pos = new HashSet<>();
                 for (int i = 0; i < this.members.length; i++) {
-                    this.members[i].position = (i + 1);
+                    if (this.members[i].index > 0) pos.add(this.members[i].index);
+                }
+                int pidx = 0;
+                for (EnMember member : this.members) {
+                    if (member.index > 0) {
+                        member.position = member.index;
+                    } else {
+                        while (pos.contains(++pidx));
+                        member.position = pidx;
+                    }
                 }
 
             } catch (Exception ex) {

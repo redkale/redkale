@@ -155,8 +155,18 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
                 }
                 this.members = list.toArray(new DeMember[list.size()]);
                 Arrays.sort(this.members, (a, b) -> a.compareTo(factory.isFieldSort(), b));
+                Set<Integer> pos = new HashSet<>();
                 for (int i = 0; i < this.members.length; i++) {
-                    this.members[i].position = (i + 1);
+                    if (this.members[i].index > 0) pos.add(this.members[i].index);
+                }
+                int pidx = 0;
+                for (DeMember member : this.members) {
+                    if (member.index > 0) {
+                        member.position = member.index;
+                    } else {
+                        while (pos.contains(++pidx));
+                        member.position = pidx;
+                    }
                 }
 
                 if (cps != null) {
@@ -211,13 +221,13 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
         }
         if (this.creatorConstructorMembers == null) {  //空构造函数
             final T result = this.creator.create();
-            while (in.hasNext()) {
+            while (hasNext(in)) {
                 DeMember member = in.readFieldName(members);
                 in.readBlank();
                 if (member == null) {
                     in.skipValue(); //跳过不存在的属性的值
                 } else {
-                    member.read(in, result);
+                    readMemberValue(in, member, result);
                 }
             }
             in.readObjectE(typeClass);
@@ -227,13 +237,13 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
             final Object[] constructorParams = new Object[fields.length];
             final Object[][] otherParams = new Object[this.members.length][2];
             int oc = 0;
-            while (in.hasNext()) {
+            while (hasNext(in)) {
                 DeMember member = in.readFieldName(members);
                 in.readBlank();
                 if (member == null) {
                     in.skipValue(); //跳过不存在的属性的值
                 } else {
-                    Object val = member.read(in);
+                    Object val = readMemberValue(in, member);
                     boolean flag = true;
                     for (int i = 0; i < fields.length; i++) {
                         if (member == fields[i]) {
@@ -252,6 +262,18 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
             }
             return result;
         }
+    }
+
+    protected boolean hasNext(Reader in) {
+        return in.hasNext();
+    }
+
+    protected Object readMemberValue(Reader in, DeMember member) {
+        return member.read(in);
+    }
+
+    protected void readMemberValue(Reader in, DeMember member, T result) {
+        member.read(in, result);
     }
 
     @Override
