@@ -132,10 +132,12 @@ public class JsonByteBufferReader extends JsonReader {
     /**
      * 判断下一个非空白字符是否为[
      *
+     * @param member DeMember
+     *
      * @return SIGN_NOLENGTH 或 SIGN_NULL
      */
     @Override
-    public final int readArrayB() {
+    public final int readArrayB(DeMember member) {
         char ch = nextGoodChar();
         if (ch == '[' || ch == '{') return SIGN_NOLENGTH;
         if (ch == 'n' && nextChar() == 'u' && nextChar() == 'l' && nextChar() == 'l') return SIGN_NULL;

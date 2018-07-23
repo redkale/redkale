@@ -66,7 +66,7 @@ public class CollectionDecoder<T> implements Decodeable<Reader, Collection<T>> {
     }
 
     public Collection<T> convertFrom(Reader in, DeMember member) {
-        int len = in.readArrayB();
+        int len = in.readArrayB(member);
         int contentLength = -1;
         if (len == Reader.SIGN_NULL) return null;
         if (len == Reader.SIGN_NOLENBUTBYTES) {

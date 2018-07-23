@@ -54,7 +54,7 @@ public class BsonByteBufferReader extends BsonReader {
      * @return 数组长度或 SIGN_NULL
      */
     @Override
-    public final int readArrayB() {
+    public final int readArrayB(DeMember member) {
         short bt = readShort();
         if (bt == Reader.SIGN_NULL) return bt;
         short lt = readShort();

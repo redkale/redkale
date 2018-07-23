@@ -189,11 +189,13 @@ public class JsonReader extends Reader {
     /**
      * 判断下一个非空白字符是否为{
      *
+     * @param member DeMember
+     *
      * @return SIGN_NOLENGTH 或 SIGN_NULL
      */
     @Override
-    public final int readMapB() {
-        return readArrayB();
+    public final int readMapB(DeMember member) {
+        return readArrayB(member);
     }
 
     @Override
@@ -203,10 +205,12 @@ public class JsonReader extends Reader {
     /**
      * 判断下一个非空白字符是否为[
      *
+     * @param member DeMember
+     *
      * @return SIGN_NOLENGTH 或 SIGN_NULL
      */
     @Override
-    public int readArrayB() {
+    public int readArrayB(DeMember member) {
         char ch = this.text[++this.position];
         if (ch == '[') return SIGN_NOLENGTH;
         if (ch == '{') return SIGN_NOLENGTH;
@@ -468,7 +472,7 @@ public class JsonReader extends Reader {
 
     @Override
     public final byte[] readByteArray() {
-        int len = readArrayB();
+        int len = readArrayB(null);
         int contentLength = -1;
         if (len == Reader.SIGN_NULL) return null;
         if (len == Reader.SIGN_NOLENBUTBYTES) {

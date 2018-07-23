@@ -94,9 +94,11 @@ public abstract class Reader {
     /**
      * 读取数组的开头并返回数组的长度
      *
+     * @param member DeMember
+     *
      * @return 返回数组的长度
      */
-    public abstract int readArrayB();
+    public abstract int readArrayB(DeMember member);
 
     /**
      * 读取数组的尾端
@@ -107,9 +109,11 @@ public abstract class Reader {
     /**
      * 读取map的开头并返回map的size
      *
+     * @param member DeMember
+     *
      * @return 返回map的size
      */
-    public abstract int readMapB();
+    public abstract int readMapB(DeMember member);
 
     /**
      * 读取数组的尾端

@@ -5,9 +5,7 @@
  */
 package org.redkale.convert.ext;
 
-import org.redkale.convert.Reader;
-import org.redkale.convert.SimpledCoder;
-import org.redkale.convert.Writer;
+import org.redkale.convert.*;
 
 /**
  * String[] 的SimpledCoder实现
@@ -42,7 +40,11 @@ public final class StringArraySimpledCoder<R extends Reader, W extends Writer> e
 
     @Override
     public String[] convertFrom(R in) {
-        int len = in.readArrayB();
+        return convertFrom(in, null);
+    }
+
+    public String[] convertFrom(R in, DeMember member) {
+        int len = in.readArrayB(member);
         int contentLength = -1;
         if (len == Reader.SIGN_NULL) return null;
         if (len == Reader.SIGN_NOLENBUTBYTES) {

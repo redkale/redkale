@@ -42,7 +42,7 @@ public final class FloatArraySimpledCoder<R extends Reader, W extends Writer> ex
 
     @Override
     public float[] convertFrom(R in) {
-        int len = in.readArrayB();
+        int len = in.readArrayB(null);
         int contentLength = -1;
         if (len == Reader.SIGN_NULL) return null;
         if (len == Reader.SIGN_NOLENBUTBYTES) {
