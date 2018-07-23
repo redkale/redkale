@@ -44,7 +44,7 @@ public final class StringArraySimpledCoder<R extends Reader, W extends Writer> e
     }
 
     public String[] convertFrom(R in, DeMember member) {
-        int len = in.readArrayB(member);
+        int len = in.readArrayB(member, StringSimpledCoder.instance);
         int contentLength = -1;
         if (len == Reader.SIGN_NULL) return null;
         if (len == Reader.SIGN_NOLENBUTBYTES) {

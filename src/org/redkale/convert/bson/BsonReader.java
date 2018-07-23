@@ -171,8 +171,8 @@ public class BsonReader extends Reader {
     }
 
     @Override
-    public final int readMapB(DeMember member) {
-        return readArrayB(member);
+    public final int readMapB(DeMember member, Decodeable keydecoder) {
+        return readArrayB(member, keydecoder);
     }
 
     @Override
@@ -185,7 +185,7 @@ public class BsonReader extends Reader {
      * @return 数组长度或SIGN_NULL
      */
     @Override
-    public int readArrayB(DeMember member) {
+    public int readArrayB(DeMember member, Decodeable decoder) {
         short bt = readShort();
         if (bt == Reader.SIGN_NULL) return bt;
         return (bt & 0xffff) << 16 | ((content[++this.position] & 0xff) << 8) | (content[++this.position] & 0xff);
@@ -263,7 +263,7 @@ public class BsonReader extends Reader {
 
     @Override
     public final byte[] readByteArray() {
-        int len = readArrayB(null);
+        int len = readArrayB(null, null);
         int contentLength = -1;
         if (len == Reader.SIGN_NULL) return null;
         if (len == Reader.SIGN_NOLENBUTBYTES) {

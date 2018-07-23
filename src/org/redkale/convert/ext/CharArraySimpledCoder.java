@@ -42,7 +42,7 @@ public final class CharArraySimpledCoder<R extends Reader, W extends Writer> ext
 
     @Override
     public char[] convertFrom(R in) {
-        int len = in.readArrayB(null);
+        int len = in.readArrayB(null, CharSimpledCoder.instance);
         int contentLength = -1;
         if (len == Reader.SIGN_NULL) return null;
         if (len == Reader.SIGN_NOLENBUTBYTES) {

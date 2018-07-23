@@ -91,7 +91,7 @@ public class MapDecoder<K, V> implements Decodeable<Reader, Map<K, V>> {
                 }
             }
         }
-        int len = in.readMapB(member);
+        int len = in.readMapB(member, this.keyDecoder);
         int contentLength = -1;
         if (len == Reader.SIGN_NULL) return null;
         if (len == Reader.SIGN_NOLENBUTBYTES) {

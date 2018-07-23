@@ -43,7 +43,7 @@ public final class IntArraySimpledCoder<R extends Reader, W extends Writer> exte
 
     @Override
     public int[] convertFrom(R in) {
-        int len = in.readArrayB(null);
+        int len = in.readArrayB(null, IntSimpledCoder.instance);
         int contentLength = -1;
         if (len == Reader.SIGN_NULL) return null;
         if (len == Reader.SIGN_NOLENBUTBYTES) {

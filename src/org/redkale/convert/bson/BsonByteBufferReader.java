@@ -51,10 +51,12 @@ public class BsonByteBufferReader extends BsonReader {
     /**
      * 判断下一个非空白字节是否为[
      *
+     * @param member  DeMember
+     * @param decoder Decodeable
      * @return 数组长度或 SIGN_NULL
      */
     @Override
-    public final int readArrayB(DeMember member) {
+    public final int readArrayB(DeMember member, Decodeable decoder) {
         short bt = readShort();
         if (bt == Reader.SIGN_NULL) return bt;
         short lt = readShort();
