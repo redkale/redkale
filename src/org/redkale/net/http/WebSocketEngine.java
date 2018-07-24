@@ -144,12 +144,12 @@ public class WebSocketEngine {
     }
 
     @Comment("从WebSocketEngine删除指定WebSocket")
-    void removeThenClose(WebSocket socket) {
+    CompletableFuture<Void> removeThenClose(WebSocket socket) {
         Serializable userid = socket._userid;
         if (single) {
             currconns.decrementAndGet();
             websockets.remove(userid);
-            if (node != null) node.disconnect(userid);
+            if (node != null) return node.disconnect(userid);
         } else { //非线程安全， 在常规场景中无需锁
             List<WebSocket> list = websockets2.get(userid);
             if (list != null) {
@@ -157,10 +157,11 @@ public class WebSocketEngine {
                 list.remove(socket);
                 if (list.isEmpty()) {
                     websockets2.remove(userid);
-                    if (node != null) node.disconnect(userid);
+                    if (node != null) return node.disconnect(userid);
                 }
             }
         }
+        return null;
     }
 
     @Comment("更改WebSocket的userid")

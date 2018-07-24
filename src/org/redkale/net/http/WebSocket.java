@@ -802,7 +802,10 @@ public abstract class WebSocket<G extends Serializable, T> {
      * 显式地关闭WebSocket
      */
     public final void close() {
-        if (this._runner != null) this._runner.closeRunner(CLOSECODE_FORCED, "user close");
+        if (this._runner != null) {
+            CompletableFuture<Void> future = this._runner.closeRunner(CLOSECODE_FORCED, "user close");
+            if (future != null) future.join();
+        }
     }
 
     /**

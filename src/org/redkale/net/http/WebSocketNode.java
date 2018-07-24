@@ -80,7 +80,7 @@ public abstract class WebSocketNode {
     public final void postDestroy(AnyValue conf) {
         if (this.localEngine == null) return;
         //关掉所有本地本地WebSocket
-        this.localEngine.getLocalWebSockets().forEach(g -> disconnect(g.getUserid()).join());
+        this.localEngine.getLocalWebSockets().forEach(g -> g.close());
         if (sncpNodeAddresses != null && localSncpAddress != null) {
             sncpNodeAddresses.removeSetItem(SOURCE_SNCP_ADDRS_KEY, localSncpAddress);
         }

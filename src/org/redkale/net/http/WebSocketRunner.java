@@ -74,7 +74,7 @@ class WebSocketRunner implements Runnable {
                     @Override
                     public void completed(Integer count, Void attachment1) {
                         if (count < 1) {
-                            if (debug) context.getLogger().log(Level.FINEST, "WebSocketRunner(userid="+webSocket.getUserid()+") abort on read buffer count, force to close channel, live " + (System.currentTimeMillis() - webSocket.getCreatetime()) / 1000 + " seconds");
+                            if (debug) context.getLogger().log(Level.FINEST, "WebSocketRunner(userid=" + webSocket.getUserid() + ") abort on read buffer count, force to close channel, live " + (System.currentTimeMillis() - webSocket.getCreatetime()) / 1000 + " seconds");
                             closeRunner(0, "read buffer count is " + count);
                             return;
                         }
@@ -296,16 +296,17 @@ class WebSocketRunner implements Runnable {
         return closed;
     }
 
-    public void closeRunner(int code, String reason) {
-        if (closed) return;
+    public CompletableFuture<Void> closeRunner(int code, String reason) {
+        if (closed) return null;
         synchronized (this) {
-            if (closed) return;
+            if (closed) return null;
             closed = true;
             channel.dispose();
             context.offerBuffer(readBuffer);
             readBuffer = null;
-            engine.removeThenClose(webSocket);
+            CompletableFuture<Void> future = engine.removeThenClose(webSocket);
             webSocket.onClose(code, reason);
+            return future;
         }
     }
 
