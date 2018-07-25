@@ -78,20 +78,16 @@ public class MapEncoder<K, V> implements Encodeable<Writer, Map<K, V>> {
             boolean first = true;
             for (Map.Entry<K, V> en : values.entrySet()) {
                 if (!first) out.writeArrayMark();
-                writeKey(out, member, en.getKey());
-                out.writeMapMark();
-                writeValue(out, member, en.getValue());
+                writeMemberValue(out, member, en.getKey(), en.getValue(),first);
                 if (first) first = false;
             }
         }
         out.writeMapE();
     }
 
-    protected void writeKey(Writer out, EnMember member, K key) {
+    protected void writeMemberValue(Writer out, EnMember member, K key, V value,boolean first) {
         keyencoder.convertTo(out, key);
-    }
-
-    protected void writeValue(Writer out, EnMember member, V value) {
+        out.writeMapMark();
         valencoder.convertTo(out, value);
     }
 

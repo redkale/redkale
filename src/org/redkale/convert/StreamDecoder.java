@@ -82,11 +82,12 @@ public class StreamDecoder<T> implements Decodeable<Reader, Stream<T>> {
         }
         final Decodeable<Reader, T> localdecoder = this.decoder;
         final List<T> result = new ArrayList();
+        boolean first = true;
         if (len == Reader.SIGN_NOLENGTH) {
             int startPosition = in.position();
             while (in.hasNext(startPosition, contentLength)) {
-                readMember(in, member);
-                result.add(localdecoder.convertFrom(in));
+                result.add(readMemberValue(in, member, first));
+                first = false;
             }
         } else {
             for (int i = 0; i < len; i++) {
@@ -97,7 +98,8 @@ public class StreamDecoder<T> implements Decodeable<Reader, Stream<T>> {
         return result.stream();
     }
 
-    protected void readMember(Reader in, DeMember member) {
+    protected T readMemberValue(Reader in, DeMember member, boolean first) {
+        return this.decoder.convertFrom(in);
     }
 
     @Override

@@ -86,11 +86,12 @@ public class CollectionDecoder<T> implements Decodeable<Reader, Collection<T>> {
         }
         final Decodeable<Reader, T> localdecoder = this.decoder;
         final Collection<T> result = this.creator.create();
+        boolean first = true;
         if (len == Reader.SIGN_NOLENGTH) {
             int startPosition = in.position();
             while (in.hasNext(startPosition, contentLength)) {
-                readMember(in, member);
-                result.add(localdecoder.convertFrom(in));
+                result.add(readMemberValue(in, member, first));
+                first = false;
             }
         } else {
             for (int i = 0; i < len; i++) {
@@ -101,7 +102,8 @@ public class CollectionDecoder<T> implements Decodeable<Reader, Collection<T>> {
         return result;
     }
 
-    protected void readMember(Reader in, DeMember member) {
+    protected T readMemberValue(Reader in, DeMember member, boolean first) {
+        return this.decoder.convertFrom(in);
     }
 
     @Override

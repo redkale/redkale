@@ -96,7 +96,6 @@ public class ArrayDecoder<T> implements Decodeable<Reader, T[]> {
         } else {
             for (int i = 0; i < len; i++) {
                 result.add(localdecoder.convertFrom(in));
-                first = false;
             }
         }
         in.readArrayE();

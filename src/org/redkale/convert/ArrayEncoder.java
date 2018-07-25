@@ -86,14 +86,14 @@ public class ArrayEncoder<T> implements Encodeable<Writer, T[]> {
             boolean first = true;
             for (Object v : value) {
                 if (!first) out.writeArrayMark();
-                writeValue(out, member, ((v != null && (v.getClass() == comp || out.specify() == comp)) ? encoder : anyEncoder), v);
+                writeMemberValue(out, member, ((v != null && (v.getClass() == comp || out.specify() == comp)) ? encoder : anyEncoder), v, first);
                 if (first) first = false;
             }
         }
         out.writeArrayE();
     }
 
-    protected void writeValue(Writer out, EnMember member, Encodeable<Writer, Object> encoder, Object value) {
+    protected void writeMemberValue(Writer out, EnMember member, Encodeable<Writer, Object> encoder, Object value, boolean first) {
         encoder.convertTo(out, value);
     }
 

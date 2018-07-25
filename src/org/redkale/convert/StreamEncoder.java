@@ -81,14 +81,14 @@ public class StreamEncoder<T> implements Encodeable<Writer, Stream<T>> {
             boolean first = true;
             for (Object v : array) {
                 if (!first) out.writeArrayMark();
-                writeValue(out, member, v);
+                writeMemberValue(out, member, v, first);
                 if (first) first = false;
             }
         }
         out.writeArrayE();
     }
 
-    protected void writeValue(Writer out, EnMember member, Object value) {
+    protected void writeMemberValue(Writer out, EnMember member, Object value, boolean first) {
         encoder.convertTo(out, value);
     }
 
