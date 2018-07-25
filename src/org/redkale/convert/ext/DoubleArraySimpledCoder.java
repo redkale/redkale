@@ -47,14 +47,14 @@ public final class DoubleArraySimpledCoder<R extends Reader, W extends Writer> e
         int contentLength = -1;
         if (len == Reader.SIGN_NULL) return null;
         if (len == Reader.SIGN_NOLENBUTBYTES) {
-            contentLength = in.readMemberContentLength(null);
+            contentLength = in.readMemberContentLength(null, DoubleSimpledCoder.instance);
             len = Reader.SIGN_NOLENGTH;
         }
         if (len == Reader.SIGN_NOLENGTH) {
             int size = 0;
             double[] data = new double[8];
             int startPosition = in.position();
-            while (in.hasNext(startPosition, contentLength)) {
+            while (in.hasNext(null, startPosition, contentLength)) {
                 if (size >= data.length) {
                     double[] newdata = new double[data.length + 4];
                     System.arraycopy(data, 0, newdata, 0, size);

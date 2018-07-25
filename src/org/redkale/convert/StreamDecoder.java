@@ -66,7 +66,7 @@ public class StreamDecoder<T> implements Decodeable<Reader, Stream<T>> {
         int contentLength = -1;
         if (len == Reader.SIGN_NULL) return null;
         if (len == Reader.SIGN_NOLENBUTBYTES) {
-            contentLength = in.readMemberContentLength(member);
+            contentLength = in.readMemberContentLength(member, this.decoder);
             len = Reader.SIGN_NOLENGTH;
         }
         if (this.decoder == null) {
@@ -85,7 +85,7 @@ public class StreamDecoder<T> implements Decodeable<Reader, Stream<T>> {
         boolean first = true;
         if (len == Reader.SIGN_NOLENGTH) {
             int startPosition = in.position();
-            while (in.hasNext(startPosition, contentLength)) {
+            while (in.hasNext(member, startPosition, contentLength)) {
                 result.add(readMemberValue(in, member, first));
                 first = false;
             }

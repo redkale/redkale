@@ -256,7 +256,7 @@ public class JsonReader extends Reader {
     }
 
     @Override
-    public int readMemberContentLength(DeMember member) {
+    public int readMemberContentLength(DeMember member, Decodeable decoder) {
         return -1;
     }
 
@@ -269,7 +269,7 @@ public class JsonReader extends Reader {
      * @return 是否存在
      */
     @Override
-    public boolean hasNext(int startPosition, int contentLength) {
+    public boolean hasNext(DeMember member, int startPosition, int contentLength) {
         char ch = this.text[++this.position];
         if (ch == ',') return true;
         if (ch == '}' || ch == ']') return false;
@@ -478,14 +478,14 @@ public class JsonReader extends Reader {
         int contentLength = -1;
         if (len == Reader.SIGN_NULL) return null;
         if (len == Reader.SIGN_NOLENBUTBYTES) {
-            contentLength = readMemberContentLength(null);
+            contentLength = readMemberContentLength(null, null);
             len = Reader.SIGN_NOLENGTH;
         }
         if (len == Reader.SIGN_NOLENGTH) {
             int size = 0;
             byte[] data = new byte[8];
             int startPosition = position();
-            while (hasNext(startPosition, contentLength)) {
+            while (hasNext(null, startPosition, contentLength)) {
                 if (size >= data.length) {
                     byte[] newdata = new byte[data.length + 4];
                     System.arraycopy(data, 0, newdata, 0, size);

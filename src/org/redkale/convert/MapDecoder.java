@@ -95,14 +95,14 @@ public class MapDecoder<K, V> implements Decodeable<Reader, Map<K, V>> {
         int contentLength = -1;
         if (len == Reader.SIGN_NULL) return null;
         if (len == Reader.SIGN_NOLENBUTBYTES) {
-            contentLength = in.readMemberContentLength(member);
+            contentLength = in.readMemberContentLength(member, null);
             len = Reader.SIGN_NOLENGTH;
         }
         final Map<K, V> result = this.creator.create();
         boolean first = true;
         if (len == Reader.SIGN_NOLENGTH) {
             int startPosition = in.position();
-            while (in.hasNext(startPosition, contentLength)) {
+            while (in.hasNext(member, startPosition, contentLength)) {
                 Reader entryReader = getMapEntryReader(in, member, first);
                 K key = readKeyMember(entryReader, member, first);
                 entryReader.readBlank();
