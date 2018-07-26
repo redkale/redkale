@@ -89,8 +89,9 @@ public class ArrayDecoder<T> implements Decodeable<Reader, T[]> {
         boolean first = true;
         if (len == Reader.SIGN_NOLENGTH) {
             int startPosition = in.position();
-            while (in.hasNext(member, startPosition, contentLength)) {
-                result.add(readMemberValue(in, member, first));
+            while (in.hasNext(this, member, startPosition, contentLength)) {
+                Reader itemReader = getArrayItemReader(in, member, first);
+                result.add(readMemberValue(itemReader, member, first));
                 first = false;
             }
         } else {
@@ -101,6 +102,10 @@ public class ArrayDecoder<T> implements Decodeable<Reader, T[]> {
         in.readArrayE();
         T[] rs = (T[]) Array.newInstance((Class) this.componentClass, result.size());
         return result.toArray(rs);
+    }
+
+    protected Reader getArrayItemReader(Reader in, DeMember member, boolean first) {
+        return in;
     }
 
     protected T readMemberValue(Reader in, DeMember member, boolean first) {

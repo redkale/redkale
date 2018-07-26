@@ -159,6 +159,7 @@ public class JsonByteBufferReader extends JsonReader {
     /**
      * 判断对象是否存在下一个属性或者数组是否存在下一个元素
      *
+     * @param self          Decodeable
      * @param member        DeMember
      * @param startPosition 起始位置
      * @param contentLength 内容大小， 不确定的传-1
@@ -166,7 +167,7 @@ public class JsonByteBufferReader extends JsonReader {
      * @return 是否存在
      */
     @Override
-    public boolean hasNext(DeMember member, int startPosition, int contentLength) {
+    public boolean hasNext(Decodeable self, DeMember member, int startPosition, int contentLength) {
         char ch = nextGoodChar();
         if (ch == ',') return true;
         if (ch == '}' || ch == ']' || ch == 0) return false;

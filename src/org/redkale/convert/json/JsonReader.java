@@ -263,13 +263,15 @@ public class JsonReader extends Reader {
     /**
      * 判断对象是否存在下一个属性或者数组是否存在下一个元素
      *
+     * @param self          Decodeable
+     * @param member        DeMember
      * @param startPosition 起始位置
      * @param contentLength 内容大小， 不确定的传-1
      *
      * @return 是否存在
      */
     @Override
-    public boolean hasNext(DeMember member, int startPosition, int contentLength) {
+    public boolean hasNext(Decodeable self, DeMember member, int startPosition, int contentLength) {
         char ch = this.text[++this.position];
         if (ch == ',') return true;
         if (ch == '}' || ch == ']') return false;
@@ -485,7 +487,7 @@ public class JsonReader extends Reader {
             int size = 0;
             byte[] data = new byte[8];
             int startPosition = position();
-            while (hasNext(null, startPosition, contentLength)) {
+            while (hasNext(null, null, startPosition, contentLength)) {
                 if (size >= data.length) {
                     byte[] newdata = new byte[data.length + 4];
                     System.arraycopy(data, 0, newdata, 0, size);

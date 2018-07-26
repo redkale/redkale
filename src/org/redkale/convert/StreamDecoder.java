@@ -85,7 +85,7 @@ public class StreamDecoder<T> implements Decodeable<Reader, Stream<T>> {
         boolean first = true;
         if (len == Reader.SIGN_NOLENGTH) {
             int startPosition = in.position();
-            while (in.hasNext(member, startPosition, contentLength)) {
+            while (in.hasNext(this, member, startPosition, contentLength)) {
                 result.add(readMemberValue(in, member, first));
                 first = false;
             }

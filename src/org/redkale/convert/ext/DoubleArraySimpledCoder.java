@@ -54,7 +54,7 @@ public final class DoubleArraySimpledCoder<R extends Reader, W extends Writer> e
             int size = 0;
             double[] data = new double[8];
             int startPosition = in.position();
-            while (in.hasNext(null, startPosition, contentLength)) {
+            while (in.hasNext(this, null, startPosition, contentLength)) {
                 if (size >= data.length) {
                     double[] newdata = new double[data.length + 4];
                     System.arraycopy(data, 0, newdata, 0, size);

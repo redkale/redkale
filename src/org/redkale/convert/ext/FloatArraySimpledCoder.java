@@ -53,7 +53,7 @@ public final class FloatArraySimpledCoder<R extends Reader, W extends Writer> ex
             int size = 0;
             float[] data = new float[8];
             int startPosition = in.position();
-            while (in.hasNext(null, startPosition, contentLength)) {
+            while (in.hasNext(this, null, startPosition, contentLength)) {
                 if (size >= data.length) {
                     float[] newdata = new float[data.length + 4];
                     System.arraycopy(data, 0, newdata, 0, size);

@@ -54,7 +54,7 @@ public final class IntArraySimpledCoder<R extends Reader, W extends Writer> exte
             int size = 0;
             int[] data = new int[8];
             int startPosition = in.position();
-            while (in.hasNext(null, startPosition, contentLength)) {
+            while (in.hasNext(this, null, startPosition, contentLength)) {
                 if (size >= data.length) {
                     int[] newdata = new int[data.length + 4];
                     System.arraycopy(data, 0, newdata, 0, size);

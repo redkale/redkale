@@ -54,7 +54,7 @@ public final class LongArraySimpledCoder<R extends Reader, W extends Writer> ext
             int size = 0;
             long[] data = new long[8];
             int startPosition = in.position();
-            while (in.hasNext(null, startPosition, contentLength)) {
+            while (in.hasNext(this, null, startPosition, contentLength)) {
                 if (size >= data.length) {
                     long[] newdata = new long[data.length + 4];
                     System.arraycopy(data, 0, newdata, 0, size);

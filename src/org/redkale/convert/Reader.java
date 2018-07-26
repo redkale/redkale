@@ -22,19 +22,20 @@ public abstract class Reader {
 
     public static final short SIGN_NOLENGTH = -2;
 
-    public static final short SIGN_NOLENBUTBYTES = -3;
+    public static final short SIGN_NOLENBUTBYTES = -3; //目前只适合于protobuf的boolean[]...double[]类型
 
     /**
      * 是否还存在下个元素或字段 <br>
      * 注意: 主要用于Array、Collection、Stream或Map等集合对象
      *
+     * @param self          Decodeable
      * @param member        DeMember
      * @param startPosition 起始位置
      * @param contentLength 内容大小， 不确定的传-1
      *
      * @return 是否还存在下个元素或字段
      */
-    public abstract boolean hasNext(DeMember member, int startPosition, int contentLength);
+    public abstract boolean hasNext(Decodeable self, DeMember member, int startPosition, int contentLength);
 
     /**
      * 是否还存在下个元素或字段
@@ -43,7 +44,7 @@ public abstract class Reader {
      * @return 是否还存在下个元素或字段
      */
     public boolean hasNext() {
-        return hasNext(null, -1, -1);
+        return hasNext(null, null, -1, -1);
     }
 
     /**

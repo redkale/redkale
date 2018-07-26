@@ -53,7 +53,7 @@ public final class CharArraySimpledCoder<R extends Reader, W extends Writer> ext
             int size = 0;
             char[] data = new char[8];
             int startPosition = in.position();
-            while (in.hasNext(null, startPosition, contentLength)) {
+            while (in.hasNext(this, null, startPosition, contentLength)) {
                 if (size >= data.length) {
                     char[] newdata = new char[data.length + 4];
                     System.arraycopy(data, 0, newdata, 0, size);
