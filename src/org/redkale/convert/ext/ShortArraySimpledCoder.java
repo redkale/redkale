@@ -53,7 +53,7 @@ public final class ShortArraySimpledCoder<R extends Reader, W extends Writer> ex
             int size = 0;
             short[] data = new short[8];
             int startPosition = in.position();
-            while (in.hasNext(this, null, startPosition, contentLength)) {
+            while (in.hasNext(startPosition, contentLength)) {
                 if (size >= data.length) {
                     short[] newdata = new short[data.length + 4];
                     System.arraycopy(data, 0, newdata, 0, size);

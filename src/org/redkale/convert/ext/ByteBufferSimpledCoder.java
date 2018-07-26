@@ -54,7 +54,7 @@ public final class ByteBufferSimpledCoder<R extends Reader, W extends Writer> ex
             int size = 0;
             byte[] data = new byte[8];
             int startPosition = in.position();
-            while (in.hasNext(this, null, startPosition, contentLength)) {
+            while (in.hasNext(startPosition, contentLength)) {
                 if (size >= data.length) {
                     byte[] newdata = new byte[data.length + 4];
                     System.arraycopy(data, 0, newdata, 0, size);

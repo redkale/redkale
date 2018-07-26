@@ -28,14 +28,12 @@ public abstract class Reader {
      * 是否还存在下个元素或字段 <br>
      * 注意: 主要用于Array、Collection、Stream或Map等集合对象
      *
-     * @param self          Decodeable
-     * @param member        DeMember
      * @param startPosition 起始位置
      * @param contentLength 内容大小， 不确定的传-1
      *
      * @return 是否还存在下个元素或字段
      */
-    public abstract boolean hasNext(Decodeable self, DeMember member, int startPosition, int contentLength);
+    public abstract boolean hasNext(int startPosition, int contentLength);
 
     /**
      * 是否还存在下个元素或字段
@@ -44,7 +42,7 @@ public abstract class Reader {
      * @return 是否还存在下个元素或字段
      */
     public boolean hasNext() {
-        return hasNext(null, null, -1, -1);
+        return hasNext(-1, -1);
     }
 
     /**

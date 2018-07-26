@@ -85,8 +85,9 @@ public class StreamDecoder<T> implements Decodeable<Reader, Stream<T>> {
         boolean first = true;
         if (len == Reader.SIGN_NOLENGTH) {
             int startPosition = in.position();
-            while (in.hasNext(this, member, startPosition, contentLength)) {
-                result.add(readMemberValue(in, member, first));
+            while (hasNext(in, member, startPosition, contentLength, first)) {
+                Reader itemReader = getItemReader(in, member, first);
+                result.add(readMemberValue(itemReader, member, first));
                 first = false;
             }
         } else {
@@ -96,6 +97,14 @@ public class StreamDecoder<T> implements Decodeable<Reader, Stream<T>> {
         }
         in.readArrayE();
         return result.stream();
+    }
+
+    protected boolean hasNext(Reader in, DeMember member, int startPosition, int contentLength, boolean first) {
+        return in.hasNext(startPosition, contentLength);
+    }
+
+    protected Reader getItemReader(Reader in, DeMember member, boolean first) {
+        return in;
     }
 
     protected T readMemberValue(Reader in, DeMember member, boolean first) {

@@ -53,7 +53,7 @@ public final class BoolArraySimpledCoder<R extends Reader, W extends Writer> ext
             int size = 0;
             boolean[] data = new boolean[8];
             int startPosition = in.position();
-            while (in.hasNext(this, null, startPosition, contentLength)) {
+            while (in.hasNext(startPosition, contentLength)) {
                 if (size >= data.length) {
                     boolean[] newdata = new boolean[data.length + 4];
                     System.arraycopy(data, 0, newdata, 0, size);

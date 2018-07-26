@@ -55,7 +55,7 @@ public final class StringArraySimpledCoder<R extends Reader, W extends Writer> e
             int size = 0;
             String[] data = new String[8];
             int startPosition = in.position();
-            while (in.hasNext(this, member, startPosition, contentLength)) {
+            while (in.hasNext(startPosition, contentLength)) {
                 if (size >= data.length) {
                     String[] newdata = new String[data.length + 4];
                     System.arraycopy(data, 0, newdata, 0, size);

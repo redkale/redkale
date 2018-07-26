@@ -222,7 +222,7 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
         if (this.creatorConstructorMembers == null) {  //空构造函数
             final T result = this.creator.create();
             boolean first = true;
-            while (hasNext(in)) {
+            while (hasNext(in, first)) {
                 DeMember member = in.readFieldName(members);
                 in.readBlank();
                 if (member == null) {
@@ -230,8 +230,8 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
                 } else {
                     readMemberValue(in, member, result, first);
                 }
+                first = false;
             }
-            first = false;
             in.readObjectE(typeClass);
             return result;
         } else {  //带参数的构造函数
@@ -240,7 +240,7 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
             final Object[][] otherParams = new Object[this.members.length][2];
             int oc = 0;
             boolean first = true;
-            while (hasNext(in)) {
+            while (hasNext(in, first)) {
                 DeMember member = in.readFieldName(members);
                 in.readBlank();
                 if (member == null) {
@@ -269,7 +269,7 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
         }
     }
 
-    protected boolean hasNext(R in) {
+    protected boolean hasNext(R in, boolean first) {
         return in.hasNext();
     }
 

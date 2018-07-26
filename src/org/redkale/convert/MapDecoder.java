@@ -102,8 +102,8 @@ public class MapDecoder<K, V> implements Decodeable<Reader, Map<K, V>> {
         boolean first = true;
         if (len == Reader.SIGN_NOLENGTH) {
             int startPosition = in.position();
-            while (in.hasNext(this, member, startPosition, contentLength)) {
-                Reader entryReader = getMapEntryReader(in, member, first);
+            while (hasNext(in, member, startPosition, contentLength, first)) {
+                Reader entryReader = getEntryReader(in, member, first);
                 K key = readKeyMember(entryReader, member, first);
                 entryReader.readBlank();
                 V value = readValueMember(entryReader, member, first);
@@ -123,7 +123,11 @@ public class MapDecoder<K, V> implements Decodeable<Reader, Map<K, V>> {
         return result;
     }
 
-    protected Reader getMapEntryReader(Reader in, DeMember member, boolean first) {
+    protected boolean hasNext(Reader in, DeMember member, int startPosition, int contentLength, boolean first) {
+        return in.hasNext(startPosition, contentLength);
+    }
+
+    protected Reader getEntryReader(Reader in, DeMember member, boolean first) {
         return in;
     }
 
