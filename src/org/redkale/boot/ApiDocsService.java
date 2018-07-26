@@ -89,6 +89,8 @@ public final class ApiDocsService {
                         for (final Class rtype : action.results()) {
                             results.add(rtype.getName());
                             if (typesmap.containsKey(rtype.getName())) continue;
+                            if(rtype.getName().startsWith("java.")) continue;
+                            if(rtype.getName().startsWith("javax.")) continue;
                             final boolean filter = FilterBean.class.isAssignableFrom(rtype);
                             final Map<String, Map<String, Object>> typemap = new LinkedHashMap<>();
                             Class loop = rtype;
@@ -136,6 +138,8 @@ public final class ApiDocsService {
                             paramsList.add(parammap);
                             if (ptype.isPrimitive() || ptype == String.class) continue;
                             if (typesmap.containsKey(ptype.getName())) continue;
+                            if(ptype.getName().startsWith("java.")) continue;
+                            if(ptype.getName().startsWith("javax.")) continue;
 
                             final Map<String, Map<String, Object>> typemap = new LinkedHashMap<>();
                             Class loop = ptype;

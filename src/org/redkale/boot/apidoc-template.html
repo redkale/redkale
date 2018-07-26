@@ -41,7 +41,7 @@
                             html.push(' <tr>');
                             html.push('<td style="color:#ff00ff;">' + action.url + '</td>');
                             html.push('<td>' + action.comment + '</td>');
-                            html.push('<td class="s">模块ID: ' + servlet.moduleid + '<br/>操作ID: ' + action.actionid + '<br/>需鉴权: ' + (action.auth ? '<font style="font-weight:bold;color:green;">true</font>' : '<font color=red>false</font>') + '</td>');
+                            html.push('<td class="s" style="width:80px;">模块ID: ' + servlet.moduleid + '<br/>操作ID: ' + action.actionid + '<br/>需鉴权: ' + (action.auth ? '<font style="font-weight:bold;color:green;">true</font>' : '<font color=red>false</font>') + '</td>');
                             var paramshtml = [];
                             paramshtml.push('<table class="subtable">');
                             for (var p = 0; p < action.params.length; p++) {
