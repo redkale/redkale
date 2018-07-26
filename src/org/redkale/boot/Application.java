@@ -170,6 +170,7 @@ public final class Application {
     private Application(final boolean singletonrun, final AnyValue config) {
         this.singletonrun = singletonrun;
         this.config = config;
+        System.setProperty("redkale.version", Redkale.getDotedVersion());
 
         final File root = new File(System.getProperty(RESNAME_APP_HOME));
         this.resourceFactory.register(RESNAME_APP_TIME, long.class, this.startTime);
@@ -695,7 +696,6 @@ public final class Application {
 //            }
 //        }
 //    }
-
 //    private void signalHandle() {
 //        //http://www.comptechdoc.org/os/linux/programming/linux_pgsignals.html
 //        String[] sigs = new String[]{"HUP", "TERM", "INT", "QUIT", "KILL", "TSTP", "USR1", "USR2", "STOP"};
