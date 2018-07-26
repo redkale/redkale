@@ -91,6 +91,7 @@ public class CollectionDecoder<T> implements Decodeable<Reader, Collection<T>> {
             int startPosition = in.position();
             while (hasNext(in, member, startPosition, contentLength, first)) {
                 Reader itemReader = getItemReader(in, member, first);
+                if (itemReader == null) break;
                 result.add(readMemberValue(itemReader, member, first));
                 first = false;
             }

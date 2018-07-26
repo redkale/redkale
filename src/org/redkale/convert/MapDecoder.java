@@ -104,6 +104,7 @@ public class MapDecoder<K, V> implements Decodeable<Reader, Map<K, V>> {
             int startPosition = in.position();
             while (hasNext(in, member, startPosition, contentLength, first)) {
                 Reader entryReader = getEntryReader(in, member, first);
+                if (entryReader == null) break;
                 K key = readKeyMember(entryReader, member, first);
                 entryReader.readBlank();
                 V value = readValueMember(entryReader, member, first);
