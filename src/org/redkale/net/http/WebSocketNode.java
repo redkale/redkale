@@ -96,9 +96,9 @@ public abstract class WebSocketNode {
 
     protected abstract CompletableFuture<Void> disconnect(Serializable userid, InetSocketAddress addr);
 
-    protected abstract CompletableFuture<Void> changeUserid(Serializable fromuserid, Serializable touserid, InetSocketAddress addr);
+    protected abstract CompletableFuture<Void> changeUserid(Serializable fromuserid, Serializable touserid, @RpcTargetAddress InetSocketAddress addr);
 
-    protected abstract CompletableFuture<Integer> forceCloseWebSocket(Serializable userid, InetSocketAddress addr);
+    protected abstract CompletableFuture<Integer> forceCloseWebSocket(Serializable userid, @RpcTargetAddress InetSocketAddress addr);
 
     //--------------------------------------------------------------------------------
     final CompletableFuture<Void> connect(final Serializable userid) {
