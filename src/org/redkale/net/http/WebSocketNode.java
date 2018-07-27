@@ -92,11 +92,11 @@ public abstract class WebSocketNode {
 
     protected abstract CompletableFuture<Integer> broadcastMessage(@RpcTargetAddress InetSocketAddress targetAddress, WebSocketRange wsrange, Object message, boolean last);
 
-    protected abstract CompletableFuture<Void> connect(Serializable userid, @RpcTargetAddress InetSocketAddress sncpAddr);
+    protected abstract CompletableFuture<Void> connect(Serializable userid, InetSocketAddress sncpAddr);
 
-    protected abstract CompletableFuture<Void> disconnect(Serializable userid, @RpcTargetAddress InetSocketAddress sncpAddr);
+    protected abstract CompletableFuture<Void> disconnect(Serializable userid, InetSocketAddress sncpAddr);
 
-    protected abstract CompletableFuture<Void> changeUserid(Serializable fromuserid, Serializable touserid, @RpcTargetAddress InetSocketAddress sncpAddr);
+    protected abstract CompletableFuture<Void> changeUserid(Serializable fromuserid, Serializable touserid, InetSocketAddress sncpAddr);
 
     protected abstract CompletableFuture<Integer> forceCloseWebSocket(Serializable userid, @RpcTargetAddress InetSocketAddress targetAddress);
 
