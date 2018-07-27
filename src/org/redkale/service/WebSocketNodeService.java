@@ -112,7 +112,7 @@ public class WebSocketNodeService extends WebSocketNode implements Service {
      * @return 无返回值
      */
     @Override
-    public CompletableFuture<Void> changeUserid(Serializable olduserid, Serializable newuserid, InetSocketAddress sncpAddr) {
+    public CompletableFuture<Void> changeUserid(Serializable olduserid, Serializable newuserid, @RpcTargetAddress InetSocketAddress sncpAddr) {
         tryAcquireSemaphore();
         CompletableFuture<Void> future = sncpNodeAddresses.appendSetItemAsync(SOURCE_SNCP_USERID_PREFIX + newuserid, sncpAddr);
         future = future.thenAccept((a) -> sncpNodeAddresses.removeSetItemAsync(SOURCE_SNCP_USERID_PREFIX + olduserid, sncpAddr));
@@ -130,7 +130,7 @@ public class WebSocketNodeService extends WebSocketNode implements Service {
      * @return 无返回值
      */
     @Override
-    public CompletableFuture<Integer> forceCloseWebSocket(Serializable userid, InetSocketAddress sncpAddr) {
+    public CompletableFuture<Integer> forceCloseWebSocket(Serializable userid, @RpcTargetAddress InetSocketAddress sncpAddr) {
         //不能从sncpNodeAddresses中移除，因为engine.forceCloseWebSocket 会调用到disconnect
         if (logger.isLoggable(Level.FINEST)) logger.finest(WebSocketNodeService.class.getSimpleName() + ".event: " + userid + " forceCloseWebSocket from " + sncpAddr);
         if (localEngine == null) return CompletableFuture.completedFuture(0);
