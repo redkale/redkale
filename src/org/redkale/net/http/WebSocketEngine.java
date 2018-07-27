@@ -243,7 +243,7 @@ public class WebSocketEngine {
                     }
                 }
             }
-            if (future != null) future = future.whenComplete((rs, ex) -> context.offerBuffer(packet.sendBuffers));
+            if (future != null) future.whenComplete((rs, ex) -> context.offerBuffer(packet.sendBuffers));
             return future == null ? CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY) : future;
         } else {
             CompletableFuture<Integer> future = null;
@@ -302,7 +302,7 @@ public class WebSocketEngine {
                     }
                 }
             }
-            if (future != null) future = future.whenComplete((rs, ex) -> context.offerBuffer(packet.sendBuffers));
+            if (future != null) future.whenComplete((rs, ex) -> context.offerBuffer(packet.sendBuffers));
             return future == null ? CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY) : future;
         } else {
             CompletableFuture<Integer> future = null;
