@@ -244,7 +244,7 @@ public abstract class WebSocketNode {
             }
             return future == null ? CompletableFuture.completedFuture(0) : future;
         });
-        return localFuture.thenCombine(remoteFuture, (a, b) -> a + b);
+        return localFuture == null ? remoteFuture : localFuture.thenCombine(remoteFuture, (a, b) -> a + b);
     }
 
     //--------------------------------------------------------------------------------
