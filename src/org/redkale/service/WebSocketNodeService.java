@@ -56,13 +56,13 @@ public class WebSocketNodeService extends WebSocketNode implements Service {
     }
 
     @Override
-    public CompletableFuture<Integer> sendMessage(@RpcTargetAddress InetSocketAddress addr, Object message, boolean last, Serializable userid) {
+    public CompletableFuture<Integer> sendMessage(@RpcTargetAddress InetSocketAddress targetAddress, Object message, boolean last, Serializable userid) {
         if (this.localEngine == null) return CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY);
         return this.localEngine.sendMessage(message, last, userid);
     }
 
     @Override
-    public CompletableFuture<Integer> broadcastMessage(@RpcTargetAddress InetSocketAddress addr, final WebSocketRange wsrange, Object message, boolean last) {
+    public CompletableFuture<Integer> broadcastMessage(@RpcTargetAddress InetSocketAddress targetAddress, final WebSocketRange wsrange, Object message, boolean last) {
         if (this.localEngine == null) return CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY);
         return this.localEngine.broadcastMessage(wsrange, message, last);
     }
@@ -125,14 +125,14 @@ public class WebSocketNodeService extends WebSocketNode implements Service {
      * 强制关闭用户的WebSocket
      *
      * @param userid   Serializable
-     * @param sncpAddr InetSocketAddress
+     * @param targetAddress InetSocketAddress
      *
      * @return 无返回值
      */
     @Override
-    public CompletableFuture<Integer> forceCloseWebSocket(Serializable userid, @RpcTargetAddress InetSocketAddress sncpAddr) {
+    public CompletableFuture<Integer> forceCloseWebSocket(Serializable userid, @RpcTargetAddress InetSocketAddress targetAddress) {
         //不能从sncpNodeAddresses中移除，因为engine.forceCloseWebSocket 会调用到disconnect
-        if (logger.isLoggable(Level.FINEST)) logger.finest(WebSocketNodeService.class.getSimpleName() + ".event: " + userid + " forceCloseWebSocket from " + sncpAddr);
+        if (logger.isLoggable(Level.FINEST)) logger.finest(WebSocketNodeService.class.getSimpleName() + ".event: " + userid + " forceCloseWebSocket from " + targetAddress);
         if (localEngine == null) return CompletableFuture.completedFuture(0);
         return CompletableFuture.completedFuture(localEngine.forceCloseLocalWebSocket(userid));
     }
