@@ -76,7 +76,7 @@ public class WebSocketNodeService extends WebSocketNode implements Service {
      * @return 无返回值
      */
     @Override
-    public CompletableFuture<Void> connect(Serializable userid, InetSocketAddress sncpAddr) {
+    public CompletableFuture<Void> connect(Serializable userid, @RpcTargetAddress InetSocketAddress sncpAddr) {
         tryAcquireSemaphore();
         CompletableFuture<Void> future = sncpNodeAddresses.appendSetItemAsync(SOURCE_SNCP_USERID_PREFIX + userid, sncpAddr);
         future = future.thenAccept((a) -> sncpNodeAddresses.appendSetItemAsync(SOURCE_SNCP_ADDRS_KEY, sncpAddr));
@@ -94,7 +94,7 @@ public class WebSocketNodeService extends WebSocketNode implements Service {
      * @return 无返回值
      */
     @Override
-    public CompletableFuture<Void> disconnect(Serializable userid, InetSocketAddress sncpAddr) {
+    public CompletableFuture<Void> disconnect(Serializable userid, @RpcTargetAddress InetSocketAddress sncpAddr) {
         tryAcquireSemaphore();
         CompletableFuture<Void> future = sncpNodeAddresses.removeSetItemAsync(SOURCE_SNCP_USERID_PREFIX + userid, sncpAddr);
         if (semaphore != null) future.whenComplete((r, e) -> releaseSemaphore());

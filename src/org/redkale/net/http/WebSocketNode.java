@@ -92,9 +92,9 @@ public abstract class WebSocketNode {
 
     protected abstract CompletableFuture<Integer> broadcastMessage(@RpcTargetAddress InetSocketAddress targetAddress, WebSocketRange wsrange, Object message, boolean last);
 
-    protected abstract CompletableFuture<Void> connect(Serializable userid, InetSocketAddress addr);
+    protected abstract CompletableFuture<Void> connect(Serializable userid, @RpcTargetAddress InetSocketAddress addr);
 
-    protected abstract CompletableFuture<Void> disconnect(Serializable userid, InetSocketAddress addr);
+    protected abstract CompletableFuture<Void> disconnect(Serializable userid, @RpcTargetAddress InetSocketAddress addr);
 
     protected abstract CompletableFuture<Void> changeUserid(Serializable fromuserid, Serializable touserid, @RpcTargetAddress InetSocketAddress addr);
 
