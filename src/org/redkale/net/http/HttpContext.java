@@ -26,13 +26,21 @@ import org.redkale.util.*;
  */
 public class HttpContext extends Context {
 
+    //是否开启pipeline 
+    protected final boolean pipeline;
+
     protected final SecureRandom random = new SecureRandom();
 
     protected final ConcurrentHashMap<Class, Creator> asyncHandlerCreators = new ConcurrentHashMap<>();
 
     public HttpContext(HttpContextConfig config) {
         super(config);
+        this.pipeline = config.pipeline;
         random.setSeed(Math.abs(System.nanoTime()));
+    }
+
+    public final boolean isPipeline() {
+        return pipeline;
     }
 
     protected String createSessionid() {
@@ -179,5 +187,7 @@ public class HttpContext extends Context {
 
     public static class HttpContextConfig extends ContextConfig {
 
+        //是否开启pipeline 
+        public boolean pipeline;
     }
 }
