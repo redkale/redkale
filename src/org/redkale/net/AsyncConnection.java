@@ -11,7 +11,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.*;
 import java.util.function.Consumer;
 import javax.net.ssl.SSLContext;
 
@@ -43,7 +43,7 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
     protected Consumer<AsyncConnection> beforeCloseListener;
 
     //关联的事件数， 小于1表示没有事件
-    protected final AtomicLong eventing = new AtomicLong();
+    protected final AtomicInteger eventing = new AtomicInteger();
 
     public final long getLastReadTime() {
         return readtime;
@@ -53,11 +53,11 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
         return writetime;
     }
 
-    public final long increEventing() {
+    public final int increEventing() {
         return eventing.incrementAndGet();
     }
 
-    public final long decreEventing() {
+    public final int decreEventing() {
         return eventing.decrementAndGet();
     }
 
