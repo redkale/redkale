@@ -42,12 +42,23 @@ public abstract class AsyncConnection implements AsynchronousByteChannel, AutoCl
 
     protected Consumer<AsyncConnection> beforeCloseListener;
 
+    //关联的事件数， 小于1表示没有事件
+    protected final AtomicLong eventing = new AtomicLong();
+
     public final long getLastReadTime() {
         return readtime;
     }
 
     public final long getLastWriteTime() {
         return writetime;
+    }
+
+    public final long increEventing() {
+        return eventing.incrementAndGet();
+    }
+
+    public final long decreEventing() {
+        return eventing.decrementAndGet();
     }
 
     public abstract boolean isTCP();
