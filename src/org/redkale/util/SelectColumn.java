@@ -70,6 +70,7 @@ public class SelectColumn implements Predicate<String> {
     }
 
     /**
+     * @deprecated
      * class中的字段名
      *
      * @param columns 包含的字段名集合
@@ -81,6 +82,18 @@ public class SelectColumn implements Predicate<String> {
     }
 
     /**
+     * class中的字段名
+     *
+     * @param columns 包含的字段名集合
+     *
+     * @return SelectColumn
+     */
+    public static SelectColumn includes(String... columns) {
+        return new SelectColumn(columns, false);
+    }
+
+    /**
+     * @deprecated
      * class中的字段名
      *
      * @param cols    包含的字段名集合
@@ -95,6 +108,20 @@ public class SelectColumn implements Predicate<String> {
     /**
      * class中的字段名
      *
+     * @param cols    包含的字段名集合
+     * @param columns 包含的字段名集合
+     *
+     * @return SelectColumn
+     */
+    public static SelectColumn includes(String[] cols, String... columns) {
+        return new SelectColumn(Utility.append(cols, columns), false);
+    }
+
+    /**
+     * @deprecated
+     *
+     * class中的字段名
+     *
      * @param columns 排除的字段名集合
      *
      * @return SelectColumn
@@ -106,12 +133,37 @@ public class SelectColumn implements Predicate<String> {
     /**
      * class中的字段名
      *
+     * @param columns 排除的字段名集合
+     *
+     * @return SelectColumn
+     */
+    public static SelectColumn excludes(String... columns) {
+        return new SelectColumn(columns, true);
+    }
+
+    /**
+     * @deprecated
+     * class中的字段名
+     *
      * @param cols    排除的字段名集合
      * @param columns 排除的字段名集合
      *
      * @return SelectColumn
      */
     public static SelectColumn createExcludes(String[] cols, String... columns) {
+        return new SelectColumn(Utility.append(cols, columns), true);
+    }
+
+    /**
+     *
+     * class中的字段名
+     *
+     * @param cols    排除的字段名集合
+     * @param columns 排除的字段名集合
+     *
+     * @return SelectColumn
+     */
+    public static SelectColumn excludes(String[] cols, String... columns) {
         return new SelectColumn(Utility.append(cols, columns), true);
     }
 

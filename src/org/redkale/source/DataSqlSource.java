@@ -890,22 +890,22 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
 
     @Override
     public <T> int updateColumn(final T bean, final String... columns) {
-        return updateColumn(bean, SelectColumn.createIncludes(columns));
+        return updateColumn(bean, SelectColumn.includes(columns));
     }
 
     @Override
     public <T> CompletableFuture<Integer> updateColumnAsync(final T bean, final String... columns) {
-        return updateColumnAsync(bean, SelectColumn.createIncludes(columns));
+        return updateColumnAsync(bean, SelectColumn.includes(columns));
     }
 
     @Override
     public <T> int updateColumn(final T bean, final FilterNode node, final String... columns) {
-        return updateColumn(bean, node, SelectColumn.createIncludes(columns));
+        return updateColumn(bean, node, SelectColumn.includes(columns));
     }
 
     @Override
     public <T> CompletableFuture<Integer> updateColumnAsync(final T bean, final FilterNode node, final String... columns) {
-        return updateColumnAsync(bean, node, SelectColumn.createIncludes(columns));
+        return updateColumnAsync(bean, node, SelectColumn.includes(columns));
     }
 
     @Override
@@ -1717,7 +1717,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
 
     @Override
     public <T, V extends Serializable> List<V> queryColumnList(final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterNode node) {
-        final List<T> list = queryList(clazz, SelectColumn.createIncludes(selectedColumn), flipper, node);
+        final List<T> list = queryList(clazz, SelectColumn.includes(selectedColumn), flipper, node);
         final List<V> rs = new ArrayList<>();
         if (list.isEmpty()) return rs;
         final EntityInfo<T> info = loadEntityInfo(clazz);
@@ -1730,7 +1730,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
 
     @Override
     public <T, V extends Serializable> CompletableFuture<List<V>> queryColumnListAsync(final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterNode node) {
-        return queryListAsync(clazz, SelectColumn.createIncludes(selectedColumn), flipper, node).thenApply((List<T> list) -> {
+        return queryListAsync(clazz, SelectColumn.includes(selectedColumn), flipper, node).thenApply((List<T> list) -> {
             final List<V> rs = new ArrayList<>();
             if (list.isEmpty()) return rs;
             final EntityInfo<T> info = loadEntityInfo(clazz);
@@ -1766,7 +1766,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
 
     @Override
     public <T, V extends Serializable> Sheet<V> queryColumnSheet(final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterNode node) {
-        Sheet<T> sheet = querySheet(clazz, SelectColumn.createIncludes(selectedColumn), flipper, node);
+        Sheet<T> sheet = querySheet(clazz, SelectColumn.includes(selectedColumn), flipper, node);
         final Sheet<V> rs = new Sheet<>();
         if (sheet.isEmpty()) return rs;
         rs.setTotal(sheet.getTotal());
@@ -1782,7 +1782,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
 
     @Override
     public <T, V extends Serializable> CompletableFuture<Sheet<V>> queryColumnSheetAsync(final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterNode node) {
-        return querySheetAsync(clazz, SelectColumn.createIncludes(selectedColumn), flipper, node).thenApply((Sheet<T> sheet) -> {
+        return querySheetAsync(clazz, SelectColumn.includes(selectedColumn), flipper, node).thenApply((Sheet<T> sheet) -> {
             final Sheet<V> rs = new Sheet<>();
             if (sheet.isEmpty()) return rs;
             rs.setTotal(sheet.getTotal());
