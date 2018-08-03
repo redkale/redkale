@@ -241,7 +241,21 @@ public class LogFileHandler extends Handler {
         }
         String limitstr = manager.getProperty(cname + ".limit");
         try {
-            if (limitstr != null) this.limit = Math.abs(Integer.decode(limitstr));
+            if (limitstr != null) {
+                limitstr = limitstr.toUpperCase();
+                boolean g = limitstr.indexOf('G') > 0;
+                boolean m = limitstr.indexOf('M') > 0;
+                boolean k = limitstr.indexOf('K') > 0;
+                int ls = Math.abs(Integer.decode(limitstr.replace("G", "").replace("M", "").replace("K", "").replace("B", "")));
+                if (g) {
+                    ls *= 1024 * 1024 * 1024;
+                } else if (m) {
+                    ls *= 1024 * 1024;
+                } else if (k) {
+                    ls *= 1024;
+                }
+                this.limit = ls;
+            }
         } catch (Exception e) {
         }
         String countstr = manager.getProperty(cname + ".count");
