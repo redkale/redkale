@@ -30,6 +30,8 @@ public abstract class Response<C extends Context, R extends Request<C>> {
 
     protected AsyncConnection channel;
 
+    protected ByteBuffer moredata; //pipeline模式
+
     protected ByteBuffer writeHeadBuffer;
 
     protected ByteBuffer writeBodyBuffer;
@@ -167,6 +169,12 @@ public abstract class Response<C extends Context, R extends Request<C>> {
         return ch;
     }
 
+    protected ByteBuffer removeMoredata() {
+        ByteBuffer rs = this.moredata;
+        this.moredata = null;
+        return rs;
+    }
+
     protected void prepare() {
         inited = true;
     }
@@ -176,6 +184,7 @@ public abstract class Response<C extends Context, R extends Request<C>> {
         this.output = null;
         this.filter = null;
         this.servlet = null;
+        this.moredata = null;
         request.recycle();
         if (channel != null) {
             channel.dispose();

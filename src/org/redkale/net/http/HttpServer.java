@@ -320,9 +320,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
         String jsonContentType = null;
         HttpCookie defaultCookie = null;
         String remoteAddrHeader = null;
-        boolean pipeline = false;
         if (config != null) {
-            pipeline = config.getBoolValue("pipeline", false);
             AnyValue reqs = config == null ? null : config.getAnyValue("request");
             if (reqs != null) {
                 AnyValue raddr = reqs.getAnyValue("remoteaddr");
@@ -442,7 +440,6 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
         contextConfig.logger = this.logger;
         contextConfig.executor = this.executor;
         contextConfig.sslContext = this.sslContext;
-        contextConfig.pipeline = pipeline;
         contextConfig.bufferCapacity = rcapacity;
         contextConfig.bufferPool = bufferPool;
         contextConfig.responsePool = responsePool;

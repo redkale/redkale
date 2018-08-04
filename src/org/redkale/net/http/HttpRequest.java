@@ -166,9 +166,9 @@ public class HttpRequest extends Request<HttpContext> {
             }
         }
         array.clear();
-        if (!context.isPipeline()) {
-            if (buffer.hasRemaining()) array.write(buffer, buffer.remaining());
-        }
+
+        if (buffer.hasRemaining()) array.write(buffer, buffer.remaining());
+
         if (this.contentType != null && this.contentType.contains("boundary=")) {
             this.boundary = true;
         }
