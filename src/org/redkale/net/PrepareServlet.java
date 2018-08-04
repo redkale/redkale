@@ -218,7 +218,11 @@ public abstract class PrepareServlet<K extends Serializable, C extends Context, 
             if (rs != Integer.MIN_VALUE) illRequestCounter.incrementAndGet();
             response.finish(true);
         } else if (rs == 0) {
-            request.offerReadBuffer(buffer);
+            if (buffer.hasRemaining()) {
+                request.setMoredata(buffer);
+            } else {
+                request.offerReadBuffer(buffer);
+            }
             request.prepare();
             response.filter = this.headFilter;
             response.servlet = this;
@@ -236,7 +240,11 @@ public abstract class PrepareServlet<K extends Serializable, C extends Context, 
                         buffer.clear();
                         request.channel.read(buffer, buffer, this);
                     } else {
-                        request.offerReadBuffer(buffer);
+                        if (buffer.hasRemaining()) {
+                            request.setMoredata(buffer);
+                        } else {
+                            request.offerReadBuffer(buffer);
+                        }
                         request.prepare();
                         try {
                             response.filter = PrepareServlet.this.headFilter;

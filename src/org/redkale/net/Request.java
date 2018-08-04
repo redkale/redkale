@@ -31,6 +31,10 @@ public abstract class Request<C extends Context> {
 
     protected boolean keepAlive;
 
+    protected boolean more; //pipeline模式
+
+    protected ByteBuffer moredata; //pipeline模式
+
     protected AsyncConnection channel;
 
     protected ByteBuffer readBuffer;
@@ -48,6 +52,16 @@ public abstract class Request<C extends Context> {
         this.readBuffer = context.pollBuffer();
         this.bsonConvert = context.getBsonConvert();
         this.jsonConvert = context.getJsonConvert();
+    }
+
+    protected void setMoredata(ByteBuffer buffer) {
+        this.moredata = buffer;
+    }
+
+    protected ByteBuffer removeMoredata() {
+        ByteBuffer rs = this.moredata;
+        this.moredata = null;
+        return rs;
     }
 
     protected ByteBuffer pollReadBuffer() {
@@ -90,6 +104,8 @@ public abstract class Request<C extends Context> {
     protected void recycle() {
         createtime = 0;
         keepAlive = false;
+        more = false;
+        moredata = null;
         attributes.clear();
         channel = null; // close it by response
     }
