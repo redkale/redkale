@@ -391,7 +391,7 @@ public final class Utility {
         }
         return sb.toString();
     }
-    
+
     /**
      * 将int数组用分隔符拼接成字符串
      *
@@ -616,7 +616,7 @@ public final class Utility {
         }
         return false;
     }
-    
+
     /**
      * 判断指定值是否包含指定的数组中，包含返回true
      *
@@ -1742,10 +1742,10 @@ public final class Utility {
                     conn.setRequestProperty(en.getKey(), en.getValue());
                 }
             }
-            if (body != null) {
+            {
                 conn.setDoInput(true);
                 conn.setDoOutput(true);
-                conn.getOutputStream().write(body.getBytes(UTF_8));
+                conn.getOutputStream().write(body == null ? new byte[0] : body.getBytes(UTF_8));
             }
             conn.connect();
             int rs = conn.getResponseCode();
