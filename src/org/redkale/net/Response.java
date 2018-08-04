@@ -251,6 +251,7 @@ public abstract class Response<C extends Context, R extends Request<C>> {
             }
             this.recycleListener = null;
         }
+        if (request.more) removeChannel();
         if (request.keepAlive && !request.more && channel != null) {
             if (channel.isOpen()) {
                 AsyncConnection conn = removeChannel();
@@ -280,35 +281,43 @@ public abstract class Response<C extends Context, R extends Request<C>> {
     public void finish(ByteBuffer buffer) {
         if (!this.inited) return; //避免重复关闭
         ByteBuffer data = this.request.removeMoredata();
-        this.request.more = data != null && this.request.keepAlive;
-        this.channel.write(buffer, buffer, finishHandler);
-        if (this.request.more) new PrepareRunner(this.context, this.channel, data, null).run();
+        final AsyncConnection conn = this.channel;
+        final boolean more = data != null && this.request.keepAlive;
+        this.request.more = more;
+        conn.write(buffer, buffer, finishHandler);
+        if (more) new PrepareRunner(this.context, conn, data, null).run();
     }
 
     public void finish(boolean kill, ByteBuffer buffer) {
         if (!this.inited) return; //避免重复关闭
         if (kill) refuseAlive();
         ByteBuffer data = this.request.removeMoredata();
-        this.request.more = data != null && this.request.keepAlive;
-        this.channel.write(buffer, buffer, finishHandler);
-        if (this.request.more) new PrepareRunner(this.context, this.channel, data, null).run();
+        final AsyncConnection conn = this.channel;
+        final boolean more = data != null && this.request.keepAlive;
+        this.request.more = more;
+        conn.write(buffer, buffer, finishHandler);
+        if (more) new PrepareRunner(this.context, conn, data, null).run();
     }
 
     public void finish(ByteBuffer... buffers) {
         if (!this.inited) return; //避免重复关闭
+        final AsyncConnection conn = this.channel;
         ByteBuffer data = this.request.removeMoredata();
-        this.request.more = data != null && this.request.keepAlive;
-        this.channel.write(buffers, buffers, finishHandler2);
-        if (this.request.more) new PrepareRunner(this.context, this.channel, data, null).run();
+        final boolean more = data != null && this.request.keepAlive;
+        this.request.more = more;
+        conn.write(buffers, buffers, finishHandler2);
+        if (more) new PrepareRunner(this.context, conn, data, null).run();
     }
 
     public void finish(boolean kill, ByteBuffer... buffers) {
         if (!this.inited) return; //避免重复关闭
         if (kill) refuseAlive();
+        final AsyncConnection conn = this.channel;
         ByteBuffer data = this.request.removeMoredata();
-        this.request.more = data != null && this.request.keepAlive;
-        this.channel.write(buffers, buffers, finishHandler2);
-        if (this.request.more) new PrepareRunner(this.context, this.channel, data, null).run();
+        final boolean more = data != null && this.request.keepAlive;
+        this.request.more = more;
+        conn.write(buffers, buffers, finishHandler2);
+        if (more) new PrepareRunner(this.context, conn, data, null).run();
     }
 
     protected <A> void send(final ByteBuffer buffer, final A attachment, final CompletionHandler<Integer, A> handler) {
