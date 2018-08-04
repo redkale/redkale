@@ -165,19 +165,18 @@ public class HttpRequest extends Request<HttpContext> {
                     header.addValue(name, value);
             }
         }
-        array.clear();
-
-        if (buffer.hasRemaining()) array.write(buffer, buffer.remaining());
-
-        if (this.contentType != null && this.contentType.contains("boundary=")) {
-            this.boundary = true;
-        }
+        if (this.contentType != null && this.contentType.contains("boundary=")) this.boundary = true;
         if (this.boundary) this.keepAlive = false; //文件上传必须设置keepAlive为false，因为文件过大时用户不一定会skip掉多余的数据
+
+        array.clear();
         if (this.contentLength > 0 && (this.contentType == null || !this.boundary)) {
             if (this.contentLength > context.getMaxbody()) return -1;
+            array.write(buffer, Math.min((int) this.contentLength, buffer.remaining()));
             int lr = (int) this.contentLength - array.size();
             return lr > 0 ? lr : 0;
         }
+        if (buffer.hasRemaining() && (this.boundary || !this.keepAlive)) array.write(buffer, buffer.remaining()); //文件上传、HTTP1.0或Connection:close
+        //暂不考虑是keep-alive且存在body却没有指定Content-Length的情况
         return 0;
     }
 
