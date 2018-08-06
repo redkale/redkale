@@ -32,7 +32,8 @@ public class TcpAioProtocolServer extends ProtocolServer {
 
     @Override
     public void open(AnyValue config) throws IOException {
-        group = AsynchronousChannelGroup.withThreadPool(context.executor);
+        //group = AsynchronousChannelGroup.withThreadPool(context.executor);
+        group = AsynchronousChannelGroup.withFixedThreadPool(context.executor.getCorePoolSize(), context.executor.getThreadFactory()); 
         this.serverChannel = AsynchronousServerSocketChannel.open(group);
 
         final Set<SocketOption<?>> options = this.serverChannel.supportedOptions();
