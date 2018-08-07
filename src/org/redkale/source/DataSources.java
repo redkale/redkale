@@ -72,7 +72,7 @@ public final class DataSources {
 
     public static DataSource createDataSource(final String unitName, URL persistxml) throws IOException {
         if (persistxml == null) persistxml = DataSources.class.getResource("/persistence.xml");
-        InputStream in = persistxml.openStream();
+        InputStream in = persistxml == null ? null : persistxml.openStream();
         if (in == null) return null;
         Map<String, Properties> map = loadPersistenceXml(in);
         Properties readprop = null;
