@@ -171,7 +171,7 @@ public final class Application {
         this.singletonrun = singletonrun;
         this.config = config;
         System.setProperty("redkale.version", Redkale.getDotedVersion());
-        System.setProperty("sun.nio.ch.maxCompletionHandlersOnStack", String.valueOf(Math.max(32, Runtime.getRuntime().availableProcessors() * 8)));
+        System.setProperty("sun.nio.ch.maxCompletionHandlersOnStack", String.valueOf(Math.max(256, Runtime.getRuntime().availableProcessors() * 8)));
 
         final File root = new File(System.getProperty(RESNAME_APP_HOME));
         this.resourceFactory.register(RESNAME_APP_TIME, long.class, this.startTime);
