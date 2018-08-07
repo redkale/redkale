@@ -53,6 +53,7 @@ public final class SncpRequest extends Request<SncpContext> {
     @Override
     protected int readHeader(ByteBuffer buffer) {
         if (buffer.remaining() < HEADER_SIZE) {
+            if (buffer.hasRemaining()) buffer.get(new byte[buffer.remaining()]);
             this.ping = true;
             return 0;
         }
