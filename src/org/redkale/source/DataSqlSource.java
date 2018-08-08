@@ -67,6 +67,8 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
 
     @SuppressWarnings({"OverridableMethodCallInConstructor", "LeakingThisInConstructor"})
     public DataSqlSource(String unitName, URL persistxml, Properties readprop, Properties writeprop) {
+        if (readprop == null) readprop = new Properties();
+        if (writeprop == null) writeprop = readprop;
         final AtomicInteger counter = new AtomicInteger();
         this.threads = Integer.decode(readprop.getProperty(JDBC_CONNECTIONS_LIMIT, "" + Runtime.getRuntime().availableProcessors() * 16));
         int maxconns = Math.max(8, Integer.decode(readprop.getProperty(JDBC_CONNECTIONS_LIMIT, "" + Math.min(1000, Runtime.getRuntime().availableProcessors() * 200))));
@@ -205,8 +207,8 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
     @Local
     @Override
     public void close() throws Exception {
-        readPool.close();
-        writePool.close();
+        if (readPool != null) readPool.close();
+        if (writePool != null) writePool.close();
     }
 
     @Local
@@ -226,7 +228,11 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
     }
 
     protected <T> EntityInfo<T> loadEntityInfo(Class<T> clazz) {
-        return EntityInfo.load(clazz, this.cacheForbidden, this.readPool.props, this, fullloader);
+        return EntityInfo.load(clazz, this.cacheForbidden, this.readPool == null ? null : this.readPool.props, this, fullloader);
+    }
+
+    protected boolean isOnlyCache(EntityInfo info) {
+        return info.isVirtualEntity();
     }
 
     /**
@@ -282,7 +288,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
                 info.createPrimaryValue(value);
             }
         }
-        if (info.isVirtualEntity()) return insertCache(info, values);
+        if (isOnlyCache(info)) return insertCache(info, values);
         return insertDB(info, values).whenComplete((rs, t) -> {
             if (t != null) {
                 futureCompleteConsumer.accept(rs, t);
@@ -303,7 +309,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
                 info.createPrimaryValue(value);
             }
         }
-        if (info.isVirtualEntity()) {
+        if (isOnlyCache(info)) {
             return CompletableFuture.supplyAsync(() -> insertCache(info, values), getExecutor());
         }
         if (isAsync()) return insertDB(info, values).whenComplete((rs, t) -> {
@@ -390,7 +396,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
     public <T> int delete(Class<T> clazz, Serializable... ids) {
         if (ids.length == 0) return -1;
         final EntityInfo<T> info = loadEntityInfo(clazz);
-        if (info.isVirtualEntity()) return deleteCache(info, -1, ids);
+        if (isOnlyCache(info)) return deleteCache(info, -1, ids);
         return deleteCompose(info, ids).whenComplete((rs, t) -> {
             if (t != null) {
                 futureCompleteConsumer.accept(rs, t);
@@ -404,7 +410,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
     public <T> CompletableFuture<Integer> deleteAsync(final Class<T> clazz, final Serializable... ids) {
         if (ids.length == 0) return CompletableFuture.completedFuture(-1);
         final EntityInfo<T> info = loadEntityInfo(clazz);
-        if (info.isVirtualEntity()) {
+        if (isOnlyCache(info)) {
             return CompletableFuture.supplyAsync(() -> deleteCache(info, -1, ids), getExecutor());
         }
         if (isAsync()) return deleteCompose(info, ids).whenComplete((rs, t) -> {
@@ -436,7 +442,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
     @Override
     public <T> int delete(Class<T> clazz, final Flipper flipper, FilterNode node) {
         final EntityInfo<T> info = loadEntityInfo(clazz);
-        if (info.isVirtualEntity()) return deleteCache(info, -1, flipper, node);
+        if (isOnlyCache(info)) return deleteCache(info, -1, flipper, node);
         return DataSqlSource.this.deleteCompose(info, flipper, node).whenComplete((rs, t) -> {
             if (t != null) {
                 futureCompleteConsumer.accept(rs, t);
@@ -449,7 +455,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
     @Override
     public <T> CompletableFuture<Integer> deleteAsync(final Class<T> clazz, final Flipper flipper, FilterNode node) {
         final EntityInfo<T> info = loadEntityInfo(clazz);
-        if (info.isVirtualEntity()) {
+        if (isOnlyCache(info)) {
             return CompletableFuture.supplyAsync(() -> deleteCache(info, -1, flipper, node), getExecutor());
         }
         if (isAsync()) return DataSqlSource.this.deleteCompose(info, flipper, node).whenComplete((rs, t) -> {
@@ -561,7 +567,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
         checkEntity("update", false, values);
         final Class<T> clazz = (Class<T>) values[0].getClass();
         final EntityInfo<T> info = loadEntityInfo(clazz);
-        if (info.isVirtualEntity()) return updateCache(info, -1, values);
+        if (isOnlyCache(info)) return updateCache(info, -1, values);
         return updateDB(info, values).whenComplete((rs, t) -> {
             if (t != null) {
                 futureCompleteConsumer.accept(rs, t);
@@ -578,7 +584,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
         if (future != null) return future;
         final Class<T> clazz = (Class<T>) values[0].getClass();
         final EntityInfo<T> info = loadEntityInfo(clazz);
-        if (info.isVirtualEntity()) return CompletableFuture.supplyAsync(() -> updateCache(info, -1, values), getExecutor());
+        if (isOnlyCache(info)) return CompletableFuture.supplyAsync(() -> updateCache(info, -1, values), getExecutor());
         if (isAsync()) return updateDB(info, values).whenComplete((rs, t) -> {
                 if (t != null) {
                     futureCompleteConsumer.accept(rs, t);
@@ -609,7 +615,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
     @Override
     public <T> int updateColumn(Class<T> clazz, Serializable id, String column, Serializable value) {
         final EntityInfo<T> info = loadEntityInfo(clazz);
-        if (info.isVirtualEntity()) return updateCache(info, -1, id, column, value);
+        if (isOnlyCache(info)) return updateCache(info, -1, id, column, value);
         return updateColumnCompose(info, id, column, value).whenComplete((rs, t) -> {
             if (t != null) {
                 futureCompleteConsumer.accept(rs, t);
@@ -622,7 +628,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
     @Override
     public <T> CompletableFuture<Integer> updateColumnAsync(final Class<T> clazz, final Serializable id, final String column, final Serializable value) {
         final EntityInfo<T> info = loadEntityInfo(clazz);
-        if (info.isVirtualEntity()) {
+        if (isOnlyCache(info)) {
             return CompletableFuture.supplyAsync(() -> updateCache(info, -1, id, column, value), getExecutor());
         }
         if (isAsync()) return updateColumnCompose(info, id, column, value).whenComplete((rs, t) -> {
@@ -666,7 +672,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
     @Override
     public <T> int updateColumn(Class<T> clazz, String column, Serializable value, FilterNode node) {
         final EntityInfo<T> info = loadEntityInfo(clazz);
-        if (info.isVirtualEntity()) return updateCache(info, -1, column, value, node);
+        if (isOnlyCache(info)) return updateCache(info, -1, column, value, node);
         return DataSqlSource.this.updateColumnCompose(info, column, value, node).whenComplete((rs, t) -> {
             if (t != null) {
                 futureCompleteConsumer.accept(rs, t);
@@ -679,7 +685,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
     @Override
     public <T> CompletableFuture<Integer> updateColumnAsync(final Class<T> clazz, final String column, final Serializable value, final FilterNode node) {
         final EntityInfo<T> info = loadEntityInfo(clazz);
-        if (info.isVirtualEntity()) {
+        if (isOnlyCache(info)) {
             return CompletableFuture.supplyAsync(() -> updateCache(info, -1, column, value, node), getExecutor());
         }
         if (isAsync()) return DataSqlSource.this.updateColumnCompose(info, column, value, node).whenComplete((rs, t) -> {
@@ -740,7 +746,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
     public <T> int updateColumn(final Class<T> clazz, final Serializable id, final ColumnValue... values) {
         if (values == null || values.length < 1) return -1;
         final EntityInfo<T> info = loadEntityInfo(clazz);
-        if (info.isVirtualEntity()) return updateCache(info, -1, id, values);
+        if (isOnlyCache(info)) return updateCache(info, -1, id, values);
         return DataSqlSource.this.updateColumnCompose(info, id, values).whenComplete((rs, t) -> {
             if (t != null) {
                 futureCompleteConsumer.accept(rs, t);
@@ -754,7 +760,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
     public <T> CompletableFuture<Integer> updateColumnAsync(final Class<T> clazz, final Serializable id, final ColumnValue... values) {
         if (values == null || values.length < 1) return CompletableFuture.completedFuture(-1);
         final EntityInfo<T> info = loadEntityInfo(clazz);
-        if (info.isVirtualEntity()) {
+        if (isOnlyCache(info)) {
             return CompletableFuture.supplyAsync(() -> updateCache(info, -1, id, values), getExecutor());
         }
         if (isAsync()) return DataSqlSource.this.updateColumnCompose(info, id, values).whenComplete((rs, t) -> {
@@ -819,7 +825,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
     public <T> int updateColumn(final Class<T> clazz, final FilterNode node, final Flipper flipper, final ColumnValue... values) {
         if (values == null || values.length < 1) return -1;
         final EntityInfo<T> info = loadEntityInfo(clazz);
-        if (info.isVirtualEntity()) return updateCache(info, -1, node, flipper, values);
+        if (isOnlyCache(info)) return updateCache(info, -1, node, flipper, values);
         return DataSqlSource.this.updateColumnCompose(info, node, flipper, values).whenComplete((rs, t) -> {
             if (t != null) {
                 futureCompleteConsumer.accept(rs, t);
@@ -833,7 +839,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
     public <T> CompletableFuture<Integer> updateColumnAsync(final Class<T> clazz, final FilterNode node, final Flipper flipper, final ColumnValue... values) {
         if (values == null || values.length < 1) return CompletableFuture.completedFuture(-1);
         final EntityInfo<T> info = loadEntityInfo(clazz);
-        if (info.isVirtualEntity()) {
+        if (isOnlyCache(info)) {
             return CompletableFuture.supplyAsync(() -> updateCache(info, -1, node, flipper, values), getExecutor());
         }
         if (isAsync()) return DataSqlSource.this.updateColumnCompose(info, node, flipper, values).whenComplete((rs, t) -> {
@@ -913,7 +919,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
         if (bean == null || selects == null) return -1;
         Class<T> clazz = (Class) bean.getClass();
         final EntityInfo<T> info = loadEntityInfo(clazz);
-        if (info.isVirtualEntity()) return updateCache(info, -1, false, bean, null, selects);
+        if (isOnlyCache(info)) return updateCache(info, -1, false, bean, null, selects);
         return DataSqlSource.this.updateColumnCompose(info, false, bean, null, selects).whenComplete((rs, t) -> {
             if (t != null) {
                 futureCompleteConsumer.accept(rs, t);
@@ -928,7 +934,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
         if (bean == null || selects == null) return CompletableFuture.completedFuture(-1);
         Class<T> clazz = (Class) bean.getClass();
         final EntityInfo<T> info = loadEntityInfo(clazz);
-        if (info.isVirtualEntity()) {
+        if (isOnlyCache(info)) {
             return CompletableFuture.supplyAsync(() -> updateCache(info, -1, false, bean, null, selects), getExecutor());
         }
         if (isAsync()) return DataSqlSource.this.updateColumnCompose(info, false, bean, null, selects).whenComplete((rs, t) -> {
@@ -952,7 +958,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
         if (bean == null || node == null || selects == null) return -1;
         Class<T> clazz = (Class) bean.getClass();
         final EntityInfo<T> info = loadEntityInfo(clazz);
-        if (info.isVirtualEntity()) return updateCache(info, -1, true, bean, node, selects);
+        if (isOnlyCache(info)) return updateCache(info, -1, true, bean, node, selects);
         return DataSqlSource.this.updateColumnCompose(info, true, bean, node, selects).whenComplete((rs, t) -> {
             if (t != null) {
                 futureCompleteConsumer.accept(rs, t);
@@ -967,7 +973,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
         if (bean == null || node == null || selects == null) return CompletableFuture.completedFuture(-1);
         Class<T> clazz = (Class) bean.getClass();
         final EntityInfo<T> info = loadEntityInfo(clazz);
-        if (info.isVirtualEntity()) {
+        if (isOnlyCache(info)) {
             return CompletableFuture.supplyAsync(() -> updateCache(info, -1, true, bean, node, selects), getExecutor());
         }
         if (isAsync()) return DataSqlSource.this.updateColumnCompose(info, true, bean, node, selects).whenComplete((rs, t) -> {
@@ -1158,7 +1164,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
     public <N extends Number> Map<String, N> getNumberMap(final Class entityClass, final FilterNode node, final FilterFuncColumn... columns) {
         final EntityInfo info = loadEntityInfo(entityClass);
         final EntityCache cache = info.getCache();
-        if (cache != null && (info.isVirtualEntity() || cache.isFullLoaded())) {
+        if (cache != null && (isOnlyCache(info) || cache.isFullLoaded())) {
             final Map map = new HashMap<>();
             if (node == null || node.isCacheUseable(this)) {
                 for (FilterFuncColumn ffc : columns) {
@@ -1176,7 +1182,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
     public <N extends Number> CompletableFuture<Map<String, N>> getNumberMapAsync(final Class entityClass, final FilterNode node, final FilterFuncColumn... columns) {
         final EntityInfo info = loadEntityInfo(entityClass);
         final EntityCache cache = info.getCache();
-        if (cache != null && (info.isVirtualEntity() || cache.isFullLoaded())) {
+        if (cache != null && (isOnlyCache(info) || cache.isFullLoaded())) {
             final Map map = new HashMap<>();
             if (node == null || node.isCacheUseable(this)) {
                 for (FilterFuncColumn ffc : columns) {
@@ -1264,7 +1270,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
     public Number getNumberResult(final Class entityClass, final FilterFunc func, final Number defVal, final String column, final FilterNode node) {
         final EntityInfo info = loadEntityInfo(entityClass);
         final EntityCache cache = info.getCache();
-        if (cache != null && (info.isVirtualEntity() || cache.isFullLoaded())) {
+        if (cache != null && (isOnlyCache(info) || cache.isFullLoaded())) {
             if (node == null || node.isCacheUseable(this)) {
                 return cache.getNumberResult(func, defVal, column, node);
             }
@@ -1276,7 +1282,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
     public CompletableFuture<Number> getNumberResultAsync(final Class entityClass, final FilterFunc func, final Number defVal, final String column, final FilterNode node) {
         final EntityInfo info = loadEntityInfo(entityClass);
         final EntityCache cache = info.getCache();
-        if (cache != null && (info.isVirtualEntity() || cache.isFullLoaded())) {
+        if (cache != null && (isOnlyCache(info) || cache.isFullLoaded())) {
             if (node == null || node.isCacheUseable(this)) {
                 return CompletableFuture.completedFuture(cache.getNumberResult(func, defVal, column, node));
             }
@@ -1321,7 +1327,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
     public <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMap(final Class<T> entityClass, final String keyColumn, final FilterFunc func, final String funcColumn, FilterNode node) {
         final EntityInfo info = loadEntityInfo(entityClass);
         final EntityCache cache = info.getCache();
-        if (cache != null && (info.isVirtualEntity() || cache.isFullLoaded())) {
+        if (cache != null && (isOnlyCache(info) || cache.isFullLoaded())) {
             if (node == null || node.isCacheUseable(this)) {
                 return cache.queryColumnMap(keyColumn, func, funcColumn, node);
             }
@@ -1333,7 +1339,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
     public <T, K extends Serializable, N extends Number> CompletableFuture<Map<K, N>> queryColumnMapAsync(final Class<T> entityClass, final String keyColumn, final FilterFunc func, final String funcColumn, FilterNode node) {
         final EntityInfo info = loadEntityInfo(entityClass);
         final EntityCache cache = info.getCache();
-        if (cache != null && (info.isVirtualEntity() || cache.isFullLoaded())) {
+        if (cache != null && (isOnlyCache(info) || cache.isFullLoaded())) {
             if (node == null || node.isCacheUseable(this)) {
                 return CompletableFuture.completedFuture(cache.queryColumnMap(keyColumn, func, funcColumn, node));
             }

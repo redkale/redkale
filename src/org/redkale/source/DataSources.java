@@ -56,11 +56,11 @@ public final class DataSources {
     private DataSources() {
     }
 
-    public static DataSource createDataSource(final String unitName, Properties prop) throws IOException {
+    public static DataSource createDataSource2(final String unitName, Properties prop) throws IOException {
         return new DataJdbcSource(unitName, null, prop, prop);
     }
 
-    public static DataSource createDataSource(final String unitName, Properties readprop, Properties writeprop) throws IOException {
+    public static DataSource createDataSource2(final String unitName, Properties readprop, Properties writeprop) throws IOException {
         return new DataJdbcSource(unitName, null, readprop, writeprop);
     }
 
@@ -103,6 +103,8 @@ public final class DataSources {
         }
         if (readprop == null) throw new IOException("Cannot find (resource.name = '" + unitName + "') DataSource");
         if (writeprop == null) writeprop = readprop;
+        if (readprop.getProperty(JDBC_URL, "").startsWith("memory:source")) return new DataMemorySource(unitName, persistxml, readprop, writeprop);
+
         String impl = readprop.getProperty(JDBC_DATASOURCE_CLASS, DataJdbcSource.class.getName());
         if (DataJdbcSource.class.getName().equals(impl)) {
             try {

@@ -235,11 +235,12 @@ public final class EntityInfo<T> {
         }
         //---------------------------------------------
         Table t = type.getAnnotation(Table.class);
-        if (type.getAnnotation(VirtualEntity.class) != null) {
+        if (type.getAnnotation(VirtualEntity.class) != null || "memory".equalsIgnoreCase(source.getType())) {
             this.table = null;
             BiFunction<DataSource, Class, List> loader = null;
             try {
-                loader = type.getAnnotation(VirtualEntity.class).loader().getDeclaredConstructor().newInstance();
+                VirtualEntity ve = type.getAnnotation(VirtualEntity.class);
+                if (ve != null) loader = ve.loader().getDeclaredConstructor().newInstance();
             } catch (Exception e) {
                 logger.log(Level.SEVERE, type + " init @VirtualEntity.loader error", e);
             }
