@@ -33,8 +33,8 @@ public class PoolJdbcSource extends PoolSource<Connection> {
 
     protected final URL persistxml;
 
-    public PoolJdbcSource(String unitName, URL persistxml, String rwtype, ArrayBlockingQueue aqueue, Properties prop, Logger logger) {
-        super(rwtype, prop, logger);
+    public PoolJdbcSource(String unitName, URL persistxml, String rwtype, ArrayBlockingQueue aqueue, Semaphore semaphore, Properties prop, Logger logger) {
+        super(rwtype, semaphore, prop, logger);
         this.unitName = unitName;
         this.persistxml = persistxml;
         this.source = createDataSource(prop);

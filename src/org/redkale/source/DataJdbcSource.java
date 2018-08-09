@@ -45,8 +45,8 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
     }
 
     @Override
-    protected PoolSource<Connection> createPoolSource(DataSource source, String rwtype, ArrayBlockingQueue queue, Properties prop) {
-        return new PoolJdbcSource(this.name, this.persistxml, rwtype, queue, prop, this.logger);
+    protected PoolSource<Connection> createPoolSource(DataSource source, String rwtype, ArrayBlockingQueue queue, Semaphore semaphore, Properties prop) {
+        return new PoolJdbcSource(this.name, this.persistxml, rwtype, queue, semaphore, prop, this.logger);
     }
 
     @Override

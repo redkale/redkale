@@ -40,8 +40,8 @@ public abstract class PoolTcpSource extends PoolSource<AsyncConnection> {
 
     protected final ArrayBlockingQueue<AsyncConnection> connQueue;
 
-    public PoolTcpSource(String rwtype, ArrayBlockingQueue queue, Properties prop, Logger logger, ObjectPool<ByteBuffer> bufferPool, ThreadPoolExecutor executor) {
-        super(rwtype, prop, logger);
+    public PoolTcpSource(String rwtype, ArrayBlockingQueue queue, Semaphore semaphore, Properties prop, Logger logger, ObjectPool<ByteBuffer> bufferPool, ThreadPoolExecutor executor) {
+        super(rwtype, semaphore, prop, logger);
         this.bufferPool = bufferPool;
         this.executor = executor;
         try {
@@ -55,7 +55,7 @@ public abstract class PoolTcpSource extends PoolSource<AsyncConnection> {
     @Override
     public void offerConnection(final AsyncConnection conn) {
         if (conn == null) return;
-        if (connQueue.offer(conn)) {
+        if (conn.isOpen() && connQueue.offer(conn)) {
             saveCounter.incrementAndGet();
             usingCounter.decrementAndGet();
         } else {
@@ -136,6 +136,7 @@ public abstract class PoolTcpSource extends PoolSource<AsyncConnection> {
         return AsyncConnection.createTCP(group, this.servaddr, this.readTimeoutSeconds, this.writeTimeoutSeconds).thenCompose(conn -> {
             conn.beforeCloseListener((c) -> {
                 semaphore.release();
+                closeCounter.incrementAndGet();
                 usingCounter.decrementAndGet();
             });
             CompletableFuture<AsyncConnection> future = new CompletableFuture();

@@ -23,6 +23,8 @@ import static org.redkale.source.DataSources.*;
  */
 public abstract class PoolSource<DBChannel> {
 
+    protected final AtomicLong closeCounter = new AtomicLong();
+
     protected final AtomicLong usingCounter = new AtomicLong();
 
     protected final AtomicLong creatCounter = new AtomicLong();
@@ -64,7 +66,7 @@ public abstract class PoolSource<DBChannel> {
     protected Properties attributes = new Properties();
 
     @SuppressWarnings("OverridableMethodCallInConstructor")
-    public PoolSource(String rwtype, Properties prop, Logger logger) {
+    public PoolSource(String rwtype, Semaphore semaphore, Properties prop, Logger logger) {
         this.logger = logger;
         this.rwtype = rwtype;
         this.props = prop;
@@ -76,7 +78,7 @@ public abstract class PoolSource<DBChannel> {
         this.readTimeoutSeconds = Integer.decode(prop.getProperty(JDBC_READTIMEOUT_SECONDS, "3"));
         this.writeTimeoutSeconds = Integer.decode(prop.getProperty(JDBC_WRITETIMEOUT_SECONDS, "3"));
         this.maxconns = Math.max(8, Integer.decode(prop.getProperty(JDBC_CONNECTIONS_LIMIT, "" + Runtime.getRuntime().availableProcessors() * 100)));
-        this.semaphore = new Semaphore(this.maxconns);
+        this.semaphore = semaphore == null ? new Semaphore(this.maxconns) : semaphore;
         String dbtype0 = "";
         { //jdbc:mysql:// jdbc:microsoft:sqlserver:// 取://之前的到最后一个:之间的字符串
             int pos = this.url.indexOf("://");
@@ -159,6 +161,10 @@ public abstract class PoolSource<DBChannel> {
 
     public final String getDbtype() {
         return dbtype;
+    }
+
+    public final long getCloseCount() {
+        return closeCounter.longValue();
     }
 
     public final long getUsingCount() {

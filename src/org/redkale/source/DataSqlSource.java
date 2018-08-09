@@ -104,8 +104,9 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
         this.persistxml = persistxml;
         this.cacheForbidden = "NONE".equalsIgnoreCase(readprop.getProperty(JDBC_CACHE_MODE));
         ArrayBlockingQueue<DBChannel> queue = maxconns > 0 ? new ArrayBlockingQueue(maxconns) : null;
-        this.readPool = createPoolSource(this, "read", queue, readprop);
-        this.writePool = createPoolSource(this, "write", queue, writeprop);
+        Semaphore semaphore = maxconns > 0 ? new Semaphore(maxconns) : null;
+        this.readPool = createPoolSource(this, "read", queue, semaphore, readprop);
+        this.writePool = createPoolSource(this, "write", queue, semaphore, writeprop);
     }
 
     @Local
@@ -124,7 +125,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
     protected abstract String prepareParamSign(int index);
 
     //创建连接池
-    protected abstract PoolSource<DBChannel> createPoolSource(DataSource source, String rwtype, ArrayBlockingQueue queue, Properties prop);
+    protected abstract PoolSource<DBChannel> createPoolSource(DataSource source, String rwtype, ArrayBlockingQueue queue, Semaphore semaphore, Properties prop);
 
     //插入纪录
     protected abstract <T> CompletableFuture<Integer> insertDB(final EntityInfo<T> info, T... values);
