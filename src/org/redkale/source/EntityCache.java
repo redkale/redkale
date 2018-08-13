@@ -99,7 +99,10 @@ public final class EntityCache<T> {
     }
 
     public void fullLoad() {
-        if (info.fullloader == null) return;
+        if (info.fullloader == null) {
+            this.fullloaded = true;
+            return;
+        }
         this.fullloaded = false;
         ConcurrentHashMap newmap = new ConcurrentHashMap();
         List<T> all = info.fullloader.apply(info.source, type);
