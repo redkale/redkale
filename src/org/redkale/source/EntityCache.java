@@ -100,6 +100,8 @@ public final class EntityCache<T> {
 
     public void fullLoad() {
         if (info.fullloader == null) {
+            this.list = new ConcurrentLinkedQueue();
+            this.map = new ConcurrentHashMap();
             this.fullloaded = true;
             return;
         }
