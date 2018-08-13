@@ -442,11 +442,12 @@ public final class EntityCache<T> {
     public int insert(T value) {
         if (value == null) return 0;
         final T rs = newReproduce.apply(this.creator.create(), value);  //确保同一主键值的map与list中的对象必须共用。
-        T old = this.map.put(this.primary.get(rs), rs);
+        T old = this.map.putIfAbsent(this.primary.get(rs), rs);
         if (old == null) {
             this.list.add(rs);
             return 1;
         } else {
+            update(value);
             logger.log(Level.WARNING, this.type + " cache repeat insert data: " + value);
             return 0;
         }
