@@ -126,7 +126,14 @@ public class JsonByteBufferReader extends JsonReader {
         if (ch == '{') return "";
         if (ch == 'n' && nextChar() == 'u' && nextChar() == 'l' && nextChar() == 'l') return null;
         if (ch == 'N' && nextChar() == 'U' && nextChar() == 'L' && nextChar() == 'L') return null;
-        throw new ConvertException("a json object text must begin with '{' (position = " + position + ") but '" + ch + "'");
+        StringBuilder sb = new StringBuilder();
+        sb.append(ch);
+        char one;
+        try {
+            while ((one = nextChar()) != 0) sb.append(one);
+        } catch (Exception e) {
+        }
+        throw new ConvertException("a json object text must begin with '{' (position = " + position + ") but '" + ch + "' in (" + sb + ")");
     }
 
     /**
@@ -143,7 +150,14 @@ public class JsonByteBufferReader extends JsonReader {
         if (ch == '[' || ch == '{') return SIGN_NOLENGTH;
         if (ch == 'n' && nextChar() == 'u' && nextChar() == 'l' && nextChar() == 'l') return SIGN_NULL;
         if (ch == 'N' && nextChar() == 'U' && nextChar() == 'L' && nextChar() == 'L') return SIGN_NULL;
-        throw new ConvertException("a json array text must begin with '[' (position = " + position + ") but '" + ch + "'");
+        StringBuilder sb = new StringBuilder();
+        sb.append(ch);
+        char one;
+        try {
+            while ((one = nextChar()) != 0) sb.append(one);
+        } catch (Exception e) {
+        }
+        throw new ConvertException("a json array text must begin with '[' (position = " + position + ") but '" + ch + "' in (" + sb + ")");
     }
 
     /**
@@ -153,7 +167,14 @@ public class JsonByteBufferReader extends JsonReader {
     public final void readBlank() {
         char ch = nextGoodChar();
         if (ch == ':') return;
-        throw new ConvertException("expected a ':' but '" + ch + "'(position = " + position + ")");
+        StringBuilder sb = new StringBuilder();
+        sb.append(ch);
+        char one;
+        try {
+            while ((one = nextChar()) != 0) sb.append(one);
+        } catch (Exception e) {
+        }
+        throw new ConvertException("expected a ':' but '" + ch + "'(position = " + position + ") in (" + sb + ")");
     }
 
     /**
