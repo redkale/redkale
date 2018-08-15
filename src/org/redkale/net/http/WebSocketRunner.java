@@ -75,7 +75,7 @@ class WebSocketRunner implements Runnable {
                     public void completed(Integer count, Void attachment1) {
                         if (count < 1) {
                             if (debug) context.getLogger().log(Level.FINEST, "WebSocketRunner(userid=" + webSocket.getUserid() + ") abort on read buffer count, force to close channel, live " + (System.currentTimeMillis() - webSocket.getCreatetime()) / 1000 + " seconds");
-                            closeRunner(0, "read buffer count is " + count);
+                            closeRunner(CLOSECODE_ILLPACKET, "read buffer count is " + count);
                             return;
                         }
                         try {
@@ -182,17 +182,17 @@ class WebSocketRunner implements Runnable {
                                     }
                                 } else if (packet.type == FrameType.CLOSE) {
                                     if (debug) context.getLogger().log(Level.FINEST, "WebSocketRunner onMessage by CLOSE FrameType : " + packet);
-                                    closeRunner(0, "received CLOSE frame-type message");
+                                    closeRunner(CLOSECODE_CLIENTCLOSE, "received CLOSE frame-type message");
                                     return;
                                 } else {
                                     context.getLogger().log(Level.WARNING, "WebSocketRunner onMessage by unknown FrameType : " + packet);
-                                    closeRunner(0, "received unknown frame-type message");
+                                    closeRunner(CLOSECODE_ILLPACKET, "received unknown frame-type message");
                                     return;
                                 }
                             }
                         } catch (Exception e) {
                             context.getLogger().log(Level.WARNING, "WebSocketRunner(userid=" + webSocket.getUserid() + ") onMessage by received error", e);
-                            closeRunner(0, "websocket-received error");
+                            closeRunner(CLOSECODE_WSEXCEPTION, "websocket-received error");
                         }
                     }
 
@@ -200,9 +200,9 @@ class WebSocketRunner implements Runnable {
                     public void failed(Throwable exc, Void attachment2) {
                         if (exc != null) {
                             if (debug) context.getLogger().log(Level.FINEST, "WebSocketRunner read WebSocketPacket failed, force to close channel, live " + (System.currentTimeMillis() - webSocket.getCreatetime()) / 1000 + " seconds", exc);
-                            closeRunner(0, "read websocket-packet failed");
+                            closeRunner(CLOSECODE_WSEXCEPTION, "read websocket-packet failed");
                         } else {
-                            closeRunner(RETCODE_ILLEGALBUFFER, "decode websocket-packet error");
+                            closeRunner(CLOSECODE_WSEXCEPTION, "decode websocket-packet error");
                         }
                     }
                 });
@@ -212,7 +212,7 @@ class WebSocketRunner implements Runnable {
             }
         } catch (Throwable e) {
             if (debug) context.getLogger().log(Level.FINEST, "WebSocketRunner abort on read bytes from channel, force to close channel, live " + (System.currentTimeMillis() - webSocket.getCreatetime()) / 1000 + " seconds", e);
-            closeRunner(0, "read bytes from channel error");
+            closeRunner(CLOSECODE_WSEXCEPTION, "read bytes from channel error");
         }
     }
 

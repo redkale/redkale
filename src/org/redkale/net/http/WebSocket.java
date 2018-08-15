@@ -37,9 +37,20 @@ import org.redkale.util.Comment;
  */
 public abstract class WebSocket<G extends Serializable, T> {
 
-    @Comment("强制关闭结果码")
-    public static final int CLOSECODE_FORCED = 1;
+    //--------------------------- CLOSECODE -------------------------------
+    @Comment("服务器主动关闭")
+    public static final int CLOSECODE_SERVERCLOSE = 1001;
 
+    @Comment("客户端主动关闭")
+    public static final int CLOSECODE_CLIENTCLOSE = 1002;
+
+    @Comment("异常关闭")
+    public static final int CLOSECODE_WSEXCEPTION = 1003;
+
+    @Comment("异常数据强制关闭")
+    public static final int CLOSECODE_ILLPACKET = 1004;
+
+    //---------------------------- RETCODE --------------------------------
     @Comment("消息不合法")
     public static final int RETCODE_SEND_ILLPACKET = 1 << 1; //2
 
@@ -803,7 +814,7 @@ public abstract class WebSocket<G extends Serializable, T> {
      */
     public final void close() {
         if (this._runner != null) {
-            CompletableFuture<Void> future = this._runner.closeRunner(CLOSECODE_FORCED, "user close");
+            CompletableFuture<Void> future = this._runner.closeRunner(CLOSECODE_SERVERCLOSE, "user close");
             if (future != null) future.join();
         }
     }
