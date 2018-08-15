@@ -39,16 +39,16 @@ public abstract class WebSocket<G extends Serializable, T> {
 
     //--------------------------- CLOSECODE -------------------------------
     @Comment("服务器主动关闭")
-    public static final int CLOSECODE_SERVERCLOSE = 1001;
+    public static final int CLOSECODE_SERVERCLOSE = 3001;
 
     @Comment("客户端主动关闭")
-    public static final int CLOSECODE_CLIENTCLOSE = 1002;
+    public static final int CLOSECODE_CLIENTCLOSE = 3002;
 
     @Comment("异常关闭")
-    public static final int CLOSECODE_WSEXCEPTION = 1003;
+    public static final int CLOSECODE_WSEXCEPTION = 3003;
 
     @Comment("异常数据强制关闭")
-    public static final int CLOSECODE_ILLPACKET = 1004;
+    public static final int CLOSECODE_ILLPACKET = 3004;
 
     //---------------------------- RETCODE --------------------------------
     @Comment("消息不合法")
