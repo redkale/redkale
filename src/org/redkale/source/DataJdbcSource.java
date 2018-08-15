@@ -11,7 +11,7 @@ import java.sql.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
-import java.util.function.Consumer;
+import java.util.function.*;
 import java.util.logging.Level;
 import org.redkale.service.Local;
 import org.redkale.util.*;
@@ -589,12 +589,15 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
      * 直接本地执行SQL语句进行查询，远程模式不可用   <br>
      * 通常用于复杂的关联查询   <br>
      *
-     * @param sql      SQL语句
-     * @param consumer 回调函数
+     * @param <V>     泛型
+     * @param sql     SQL语句
+     * @param handler 回调函数
+     *
+     * @return 结果
      */
     @Local
     @Override
-    public void directQuery(String sql, Consumer<ResultSet> consumer) {
+    public <V> V directQuery(String sql, Function<ResultSet, V> handler) {
         final Connection conn = readPool.poll();
         try {
             if (logger.isLoggable(Level.FINEST)) logger.finest("direct query sql=" + sql);
@@ -602,9 +605,10 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
             final Statement statement = conn.createStatement();
             //final PreparedStatement statement = conn.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
             final ResultSet set = statement.executeQuery(sql);// ps.executeQuery();
-            consumer.accept(set);
+            V rs = handler.apply(set);
             set.close();
             statement.close();
+            return rs;
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         } finally {

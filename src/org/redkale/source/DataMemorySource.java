@@ -10,7 +10,7 @@ import java.net.URL;
 import java.sql.ResultSet;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.function.Consumer;
+import java.util.function.*;
 import org.redkale.service.Local;
 import org.redkale.util.*;
 
@@ -64,7 +64,7 @@ public class DataMemorySource extends DataSqlSource<Void> {
 
     @Local
     @Override
-    public void directQuery(String sql, Consumer<ResultSet> consumer) {
+    public <V> V directQuery(String sql, Function<ResultSet, V> handler) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 

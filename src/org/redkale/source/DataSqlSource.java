@@ -116,7 +116,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
     public abstract int[] directExecute(String... sqls);
 
     @Local
-    public abstract void directQuery(String sql, Consumer<ResultSet> consumer);
+    public abstract <V> V directQuery(String sql, Function<ResultSet, V> handler);
 
     //是否异步， 为true则只能调用pollAsync方法，为false则只能调用poll方法
     protected abstract boolean isAsync();
