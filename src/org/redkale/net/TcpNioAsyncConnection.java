@@ -22,17 +22,17 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class TcpNioAsyncConnection extends AsyncConnection {
 
-    private int readTimeoutSeconds;
+    protected int readTimeoutSeconds;
 
-    private int writeTimeoutSeconds;
+    protected int writeTimeoutSeconds;
 
-    private final Selector selector;
+    protected final Selector selector;
 
-    private SelectionKey key;
+    protected SelectionKey key;
 
-    private final SocketChannel channel;
+    protected final SocketChannel channel;
 
-    private final SocketAddress remoteAddress;
+    protected final SocketAddress remoteAddress;
 
     ByteBuffer readBuffer;
 
@@ -362,4 +362,5 @@ public class TcpNioAsyncConnection extends AsyncConnection {
     public final boolean isTCP() {
         return true;
     }
+
 }
