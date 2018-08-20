@@ -171,7 +171,6 @@ public final class Application {
         this.singletonrun = singletonrun;
         this.config = config;
         System.setProperty("redkale.version", Redkale.getDotedVersion());
-        System.setProperty("sun.nio.ch.maxCompletionHandlersOnStack", String.valueOf(Math.max(256, Runtime.getRuntime().availableProcessors() * 8)));
 
         final File root = new File(System.getProperty(RESNAME_APP_HOME));
         this.resourceFactory.register(RESNAME_APP_TIME, long.class, this.startTime);
@@ -389,7 +388,6 @@ public final class Application {
     }
 
     public void init() throws Exception {
-        System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", "" + Runtime.getRuntime().availableProcessors() * 4);
         System.setProperty("net.transport.poolmaxconns", "100");
         System.setProperty("net.transport.pinginterval", "30");
         System.setProperty("net.transport.checkinterval", "30");
