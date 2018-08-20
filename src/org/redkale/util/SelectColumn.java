@@ -77,6 +77,7 @@ public class SelectColumn implements Predicate<String> {
      *
      * @return SelectColumn
      */
+    @Deprecated
     public static SelectColumn createIncludes(String... columns) {
         return new SelectColumn(columns, false);
     }
@@ -101,6 +102,7 @@ public class SelectColumn implements Predicate<String> {
      *
      * @return SelectColumn
      */
+    @Deprecated
     public static SelectColumn createIncludes(String[] cols, String... columns) {
         return new SelectColumn(Utility.append(cols, columns), false);
     }
@@ -126,6 +128,7 @@ public class SelectColumn implements Predicate<String> {
      *
      * @return SelectColumn
      */
+    @Deprecated
     public static SelectColumn createExcludes(String... columns) {
         return new SelectColumn(columns, true);
     }
@@ -150,6 +153,7 @@ public class SelectColumn implements Predicate<String> {
      *
      * @return SelectColumn
      */
+    @Deprecated
     public static SelectColumn createExcludes(String[] cols, String... columns) {
         return new SelectColumn(Utility.append(cols, columns), true);
     }
