@@ -165,7 +165,7 @@ public final class ClassFilter<T> {
                 }
             }
         }
-        if (cf == null || clazzname.startsWith("sun.")) return;
+        if (cf == null || clazzname.startsWith("sun.") || clazzname.contains("module-info")) return;
         try {
             Class clazz = classLoader.loadClass(clazzname);
             if (!cf.accept(property, clazz, autoscan)) return;
