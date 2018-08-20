@@ -750,13 +750,12 @@ public final class Rest {
             if (ignore) continue;
 
             Class[] extypes = method.getExceptionTypes();
-            if (extypes.length > 1) {
-                if (mappings != null && mappings.length > 0) throw new RuntimeException("@" + RestMapping.class.getSimpleName() + " only for method with throws IOException");
-                continue;
-            }
-            if (extypes.length == 1 && extypes[0] != IOException.class) {
-                if (mappings != null && mappings.length > 0) throw new RuntimeException("@" + RestMapping.class.getSimpleName() + " only for method with throws IOException");
-                continue;
+            if (extypes.length > 0) {
+                for (Class exp : extypes) {
+                    if (!RuntimeException.class.isAssignableFrom(exp) && !IOException.class.isAssignableFrom(exp)) {
+                        throw new RuntimeException("@" + RestMapping.class.getSimpleName() + " only for method(" + method + ") with throws IOException");
+                    }
+                }
             }
             paramtypes.add(TypeToken.getGenericType(method.getGenericParameterTypes(), serviceType));
             if (mappings.length == 0) { //没有Mapping，设置一个默认值
