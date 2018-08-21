@@ -123,6 +123,7 @@ public abstract class PoolSource<DBChannel> {
     }
 
     protected void parseAddressAndDbnameAndAttrs() {
+        if (this.url.startsWith("jdbc:h2:")) return;
         String url0 = this.url.substring(this.url.indexOf("://") + 3);
         int pos = url0.indexOf('?'); //127.0.0.1:5432/db?charset=utr8&xxx=yy
         if (pos > 0) {

@@ -7,7 +7,7 @@ package org.redkale.boot;
 
 import java.io.*;
 import java.lang.annotation.*;
-import java.lang.reflect.*;
+import java.lang.reflect.Modifier;
 import java.net.*;
 import java.util.*;
 import java.util.concurrent.*;
@@ -30,7 +30,7 @@ public final class ClassFilter<T> {
 
     private static final Logger logger = Logger.getLogger(ClassFilter.class.getName()); //日志对象
 
-    private static final boolean finer = logger.isLoggable(Level.FINER); //日志级别
+    private static final boolean finest = logger.isLoggable(Level.FINEST); //日志级别
 
     private final Set<FilterEntry<T>> entrys = new HashSet<>(); //符合条件的结果
 
@@ -189,9 +189,10 @@ public final class ClassFilter<T> {
                 entrys.add(new FilterEntry(clazz, autoscan, false, property));
             }
         } catch (Throwable cfe) {
-            if (finer && !clazzname.startsWith("sun.") && !clazzname.startsWith("javax.")
-                && !clazzname.startsWith("com.sun.") && !clazzname.startsWith("jdk.")) {
-                logger.log(Level.FINEST, ClassFilter.class.getSimpleName() + " filter error", cfe);
+            if (finest && !clazzname.startsWith("sun.") && !clazzname.startsWith("javax.")
+                && !clazzname.startsWith("com.sun.") && !clazzname.startsWith("jdk.") && !clazzname.startsWith("META-INF")
+                && (!(cfe instanceof NoClassDefFoundError) || ((NoClassDefFoundError) cfe).getMessage().startsWith("java.lang.NoClassDefFoundError: java"))) {
+                logger.log(Level.FINEST, ClassFilter.class.getSimpleName() + " filter error for class: " + clazzname, cfe);
             }
         }
     }
@@ -347,6 +348,7 @@ public final class ClassFilter<T> {
 
     public void setPrivilegeExcludes(Set<String> privilegeExcludes) {
         this.privilegeExcludes = privilegeExcludes == null || privilegeExcludes.isEmpty() ? null : privilegeExcludes;
+
     }
 
     /**

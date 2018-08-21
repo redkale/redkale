@@ -86,6 +86,8 @@ public class PoolJdbcSource extends PoolSource<Connection> {
                 source0 = "org.postgresql.Driver";
             } else if (url.startsWith("jdbc:microsoft:sqlserver:")) {
                 source0 = "com.microsoft.sqlserver.jdbc.SQLServerDriver";
+            } else if (url.startsWith("jdbc:h2")) {
+                source0 = "org.h2.Driver";
             }
         }
         if (source0 != null && source0.contains("Driver")) {  //为了兼容JPA的配置文件
@@ -110,6 +112,9 @@ public class PoolJdbcSource extends PoolSource<Connection> {
                     break;
                 case "com.microsoft.sqlserver.jdbc.SQLServerDriver":
                     source = "com.microsoft.sqlserver.jdbc.SQLServerConnectionPoolDataSource";
+                    break;
+                case "org.h2.Driver":
+                    source = "org.h2.jdbcx.JdbcDataSource";
                     break;
             }
         }
