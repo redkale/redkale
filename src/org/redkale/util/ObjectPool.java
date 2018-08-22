@@ -53,6 +53,14 @@ public final class ObjectPool<T> implements Supplier<T>, Consumer<T> {
         this(null, null, max, creator, prepare, recycler);
     }
 
+    public ObjectPool(int max, Supplier<T> creator, Consumer<T> prepare, Predicate<T> recycler) {
+        this(null, null, max, creator, prepare, recycler);
+    }
+
+    public ObjectPool(AtomicLong creatCounter, AtomicLong cycleCounter, int max, Supplier<T> creator, Consumer<T> prepare, Predicate<T> recycler) {
+        this(creatCounter, cycleCounter, max, c -> creator.get(), prepare, recycler);
+    }
+
     public ObjectPool(AtomicLong creatCounter, AtomicLong cycleCounter, int max, Creator<T> creator, Consumer<T> prepare, Predicate<T> recycler) {
         this.creatCounter = creatCounter;
         this.cycleCounter = cycleCounter;
