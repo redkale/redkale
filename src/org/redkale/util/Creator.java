@@ -77,6 +77,7 @@ public interface Creator<T> {
         static final Map<Class, Creator> creatorCacheMap = new HashMap<>();
 
         static {
+            creatorCacheMap.put(Object.class, (params) -> new Object());
             creatorCacheMap.put(ArrayList.class, (params) -> new ArrayList<>());
             creatorCacheMap.put(HashMap.class, (params) -> new HashMap<>());
             creatorCacheMap.put(HashSet.class, (params) -> new HashSet<>());
@@ -212,13 +213,13 @@ public interface Creator<T> {
      */
     @SuppressWarnings("unchecked")
     public static <T> Creator<T> create(Class<T> clazz) {
-        if (clazz.isAssignableFrom(ArrayList.class)) {
+        if (Collection.class.isAssignableFrom(clazz) && (clazz.isAssignableFrom(ArrayList.class) || clazz.getName().startsWith("java.util.Collections") || clazz.getName().startsWith("java.util.ImmutableCollections") || clazz.getName().startsWith("java.util.Arrays"))) {
             clazz = (Class<T>) ArrayList.class;
-        } else if (clazz.isAssignableFrom(HashMap.class)) {
+        } else if (Map.class.isAssignableFrom(clazz) && (clazz.isAssignableFrom(HashMap.class) || clazz.getName().startsWith("java.util.Collections") || clazz.getName().startsWith("java.util.ImmutableCollections"))) {
             clazz = (Class<T>) HashMap.class;
-        } else if (clazz.isAssignableFrom(HashSet.class)) {
+        } else if (Set.class.isAssignableFrom(clazz) && (clazz.isAssignableFrom(HashSet.class) || clazz.getName().startsWith("java.util.Collections") || clazz.getName().startsWith("java.util.ImmutableCollections"))) {
             clazz = (Class<T>) HashSet.class;
-        } else if (clazz.isAssignableFrom(ConcurrentHashMap.class)) {
+        } else if (Map.class.isAssignableFrom(clazz) && clazz.isAssignableFrom(ConcurrentHashMap.class)) {
             clazz = (Class<T>) ConcurrentHashMap.class;
         }
         Creator creator = CreatorInner.creatorCacheMap.get(clazz);

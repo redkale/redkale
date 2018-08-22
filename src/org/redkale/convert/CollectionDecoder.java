@@ -46,7 +46,7 @@ public class CollectionDecoder<T> implements Decodeable<Reader, Collection<T>> {
                 this.decoder = factory.loadDecoder(this.componentType);
             } else if (factory.isReversible()) {
                 this.componentType = Object.class;
-                this.creator = factory.loadCreator(Object.class);
+                this.creator = factory.loadCreator(type instanceof Class ? (Class) type : Collection.class);
                 factory.register(type, this);
                 this.decoder = factory.loadDecoder(this.componentType);
             } else {
@@ -111,7 +111,7 @@ public class CollectionDecoder<T> implements Decodeable<Reader, Collection<T>> {
     protected Reader getItemReader(Reader in, DeMember member, boolean first) {
         return in;
     }
-    
+
     protected T readMemberValue(Reader in, DeMember member, boolean first) {
         return this.decoder.convertFrom(in);
     }
