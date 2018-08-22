@@ -556,7 +556,7 @@ public final class Utility {
      * @return 新数组
      */
     public static <T> T[] remove(final T[] array, final T item) {
-        return remove(array, (i) -> item.equals(item));
+        return remove(array, (i) -> Objects.equals(i, item));
     }
 
     /**
@@ -677,8 +677,7 @@ public final class Utility {
     public static <T> boolean contains(T[] values, T value) {
         if (values == null) return false;
         for (T v : values) {
-            if (v == null && value == null) return true;
-            if (v != null && v.equals(value)) return true;
+            if (Objects.equals(v, value)) return true;
         }
         return false;
     }
