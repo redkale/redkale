@@ -146,7 +146,7 @@ public final class Utility {
      * @return Map
      */
     public static Map<String, String> ofMap(String... items) {
-        HashMap<String, String> map = new LinkedHashMap<>();
+        HashMap<String, String> map = new LinkedHashMap<>(Math.max(1, items.length / 2));
         int len = items.length / 2;
         for (int i = 0; i < len; i++) {
             map.put(items[i * 2], items[i * 2 + 1]);
@@ -165,7 +165,7 @@ public final class Utility {
      * @return Map
      */
     public static <K, V> Map<K, V> ofMap(Object... items) {
-        HashMap<K, V> map = new LinkedHashMap<>();
+        HashMap<K, V> map = new LinkedHashMap<>(Math.max(1, items.length / 2));
         int len = items.length / 2;
         for (int i = 0; i < len; i++) {
             map.put((K) items[i * 2], (V) items[i * 2 + 1]);
@@ -203,7 +203,7 @@ public final class Utility {
      * @return Set
      */
     public static <T> Set<T> ofSet(T... items) {
-        Set<T> set = new LinkedHashSet<>();
+        Set<T> set = new LinkedHashSet<>(items.length);
         for (T item : items) set.add(item);
         return set;
     }
@@ -217,7 +217,7 @@ public final class Utility {
      * @return List
      */
     public static <T> List<T> ofList(T... items) {
-        List<T> list = new ArrayList<>();
+        List<T> list = new ArrayList<>(items.length);
         for (T item : items) list.add(item);
         return list;
     }
