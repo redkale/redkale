@@ -402,7 +402,15 @@ public final class Application {
         final String homepath = this.home.getCanonicalPath();
         final String confpath = this.conf.getCanonicalPath();
         if (persist.isFile()) System.setProperty(DataSources.DATASOURCE_CONFPATH, persist.getCanonicalPath());
-        logger.log(Level.INFO, "APP_JAVA = " + System.getProperty("java.version") + "\r\n" + RESNAME_APP_ADDR + " = " + this.localAddress.getHostAddress() + "\r\n" + RESNAME_APP_HOME + " = " + homepath + "\r\n" + RESNAME_APP_CONF + " = " + confpath);
+        String pidstr = "";
+        try { //JDK 9+
+            Class phclass = Class.forName("java.lang.ProcessHandle");
+            Object phobj = phclass.getMethod("current").invoke(null);
+            Object pid = phclass.getMethod("pid").invoke(phobj);
+            pidstr = "APP_PID  = " + pid + "\r\n";
+        } catch (Throwable t) {
+        }
+        logger.log(Level.INFO, pidstr + "APP_JAVA = " + System.getProperty("java.version") + "\r\n" + RESNAME_APP_ADDR + " = " + this.localAddress.getHostAddress() + "\r\n" + RESNAME_APP_HOME + " = " + homepath + "\r\n" + RESNAME_APP_CONF + " = " + confpath);
         String lib = config.getValue("lib", "${APP_HOME}/libs/*").trim().replace("${APP_HOME}", homepath);
         lib = lib.isEmpty() ? confpath : (lib + ";" + confpath);
         Server.loadLib(classLoader, logger, lib);
