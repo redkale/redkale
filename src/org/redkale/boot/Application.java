@@ -423,7 +423,7 @@ public final class Application {
                             InputStream in = new FileInputStream(df);
                             ps.load(in);
                             in.close();
-                            ps.forEach((x, y) -> resourceFactory.register("property." + x, y));
+                            ps.forEach((x, y) -> resourceFactory.register("property." + x, y.toString().replace("${APP_HOME}", homepath)));
                         }
                     }
                 }
@@ -431,6 +431,7 @@ public final class Application {
                     String name = prop.getValue("name");
                     String value = prop.getValue("value");
                     if (name == null || value == null) continue;
+                    value = value.replace("${APP_HOME}", homepath);
                     if (name.startsWith("system.property.")) {
                         System.setProperty(name.substring("system.property.".length()), value);
                     } else if (name.startsWith("mimetype.property.")) {
