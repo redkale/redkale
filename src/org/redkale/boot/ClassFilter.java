@@ -136,10 +136,11 @@ public final class ClassFilter<T> {
      *
      * @param property  AnyValue
      * @param clazzname String
+     * @param url       URL
      */
     @SuppressWarnings("unchecked")
-    public final void filter(AnyValue property, String clazzname) {
-        filter(property, clazzname, true);
+    public final void filter(AnyValue property, String clazzname, URL url) {
+        filter(property, clazzname, true, url);
     }
 
     /**
@@ -150,6 +151,18 @@ public final class ClassFilter<T> {
      * @param autoscan  为true表示自动扫描的， false表示显著调用filter， AutoLoad的注解将被忽略
      */
     public final void filter(AnyValue property, String clazzname, boolean autoscan) {
+        filter(property, clazzname, autoscan, null);
+    }
+
+    /**
+     * 过滤指定的class
+     *
+     * @param property  application.xml中对应class节点下的property属性项
+     * @param clazzname class名称
+     * @param autoscan  为true表示自动扫描的， false表示显著调用filter， AutoLoad的注解将被忽略
+     * @param url       URL
+     */
+    public final void filter(AnyValue property, String clazzname, boolean autoscan, URL url) {
         boolean r = accept0(property, clazzname);
         ClassFilter cf = r ? this : null;
         if (r && ands != null) {
@@ -192,7 +205,7 @@ public final class ClassFilter<T> {
             if (finest && !clazzname.startsWith("sun.") && !clazzname.startsWith("javax.")
                 && !clazzname.startsWith("com.sun.") && !clazzname.startsWith("jdk.") && !clazzname.startsWith("META-INF")
                 && (!(cfe instanceof NoClassDefFoundError) || ((NoClassDefFoundError) cfe).getMessage().startsWith("java.lang.NoClassDefFoundError: java"))) {
-                logger.log(Level.FINEST, ClassFilter.class.getSimpleName() + " filter error for class: " + clazzname, cfe);
+                logger.log(Level.FINEST, ClassFilter.class.getSimpleName() + " filter error for class: " + clazzname + (url == null ? "" : (" in " + url)), cfe);
             }
         }
     }
@@ -504,7 +517,7 @@ public final class ClassFilter<T> {
                                 classes.add(classname);
                                 if (debug) debugstr.append(classname).append("\r\n");
                                 for (final ClassFilter filter : filters) {
-                                    if (filter != null) filter.filter(null, classname);
+                                    if (filter != null) filter.filter(null, classname, url);
                                 }
                             }
                         }
@@ -513,7 +526,7 @@ public final class ClassFilter<T> {
                 } else {
                     for (String classname : classes) {
                         for (final ClassFilter filter : filters) {
-                            if (filter != null) filter.filter(null, classname);
+                            if (filter != null) filter.filter(null, classname, url);
                         }
                     }
                 }
@@ -532,14 +545,14 @@ public final class ClassFilter<T> {
                         classes.add(classname);
                         if (debug) debugstr.append(classname).append("\r\n");
                         for (final ClassFilter filter : filters) {
-                            if (filter != null) filter.filter(null, classname);
+                            if (filter != null) filter.filter(null, classname, url);
                         }
                     }
                     cache.put(url, classes);
                 } else {
                     for (String classname : classes) {
                         for (final ClassFilter filter : filters) {
-                            if (filter != null) filter.filter(null, classname);
+                            if (filter != null) filter.filter(null, classname, url);
                         }
                     }
                 }
