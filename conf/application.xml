@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<application port="5050">     
+<application port="2001">     
     
     <!--  详细配置说明见： http://redkale.org/redkale.html#redkale_confxml  -->
     
@@ -8,7 +8,7 @@
 
     </resources> 
         
-    <server protocol="HTTP" host="0.0.0.0" port="6060" root="root">      
+    <server protocol="HTTP" port="6001">      
               
         <request>
             <remoteaddr value="request.headers.X-RemoteAddress"/>
