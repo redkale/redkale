@@ -125,7 +125,7 @@
         aliveTimeoutSeconds: KeepAlive读操作超时秒数， 默认30， 0表示永久不超时; -1表示禁止KeepAlive
         readTimeoutSeconds: 读操作超时秒数， 默认0， 表示永久不超时
         writeTimeoutSeconds:  写操作超时秒数， 默认0， 表示永久不超时
-        netimpl: ProtocolServer的实现类。TCP情况下值也可以是aio或nio，默认值为aio；UDP情况下值也可以是bio，默认值为bio；
+        netimpl: ProtocolServer的实现类。TCP情况下值可以是aio或nio，默认值为aio；UDP情况下值可以是bio，默认值为bio；
         interceptor: 启动/关闭NodeServer时被调用的拦截器实现类，必须是org.redkale.boot.NodeInterceptor的子类，默认为null
     -->
     <server protocol="HTTP" host="127.0.0.1" port="6060" root="root" lib=""> 
