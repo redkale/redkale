@@ -8,6 +8,7 @@ package org.redkale.test.source;
 import java.io.Serializable;
 import javax.persistence.*;
 import org.redkale.source.*;
+import org.redkale.util.Utility;
 
 /**
  *
@@ -17,8 +18,8 @@ import org.redkale.source.*;
 public class LoginRecord extends BaseEntity {
 
     @Id
-    @Column(comment = "主键ID; 值=create36time(9位)+UUID(32位)")
-    private String loginid = ""; //主键ID; 值=create36time(9位)+UUID(32位)
+    @Column(comment = "主键ID; 值=create36time(9位)+'-'+UUID(32位)")
+    private String loginid = ""; //主键ID; 值=create36time(9位)+'-'+UUID(32位)
 
     @Column(updatable = false, comment = "C端用户ID")
     private long userid; //C端用户ID
@@ -107,18 +108,30 @@ public class LoginRecord extends BaseEntity {
         return this.createtime;
     }
 
+    private static DataSource source;
+
+    //创建对象
+    public static void main(String[] args) throws Throwable {
+        LoginRecord record = new LoginRecord();
+        long now = System.currentTimeMillis();
+        record.setCreatetime(now); //设置创建时间
+        record.setLoginid(Utility.format36time(now) + "-" + Utility.uuid());  //主键的生成规则
+        //....  填充其他字段
+        source.insert(record);
+    }
+
     public static class TableStrategy implements DistributeTableStrategy<LoginRecord> {
 
-        private static final String dayformat = "%1$tY%1$tm%1$td";
+        private static final String dayformat = "%1$tY%1$tm%1$td"; //一天一个表
 
-        private static final String yearformat = "%1$tY";
+        private static final String yearformat = "%1$tY";  //一年一个库
 
         //过滤查询时调用本方法
         @Override
         public String getTable(String table, FilterNode node) {
-            Serializable day = node.findValue("#day");
+            Serializable day = node.findValue("#day");  //LoginRecord没有day字段，所以前面要加#，表示虚拟字段, 值为yyyyMMdd格式
             if (day != null) getTable(table, (Integer) day, 0L); //存在#day参数则直接使用day值
-            Serializable time = node.findValue("#createtime");  //存在createtime则使用最小时间，且createtime的范围必须在一天内，因为本表以天为单位建表
+            Serializable time = node.findValue("createtime");  //存在createtime则使用最小时间，且createtime的范围必须在一天内，因为本表以天为单位建表
             return getTable(table, 0, (time == null ? 0L : (time instanceof Range ? ((Range.LongRange) time).getMin() : (Long) time)));
         }
 
@@ -135,9 +148,9 @@ public class LoginRecord extends BaseEntity {
             return getTable(table, 0, Long.parseLong(id.substring(0, 9), 36));
         }
 
-        private String getTable(String table, int day, long createtime) {
+        private String getTable(String table, int day, long createtime) { //day为0或yyyyMMdd格式数据
             int pos = table.indexOf('.');
-            String year = (day > 0 ? "" + day / 10000 : String.format(yearformat, createtime)); //没有day取createtime
+            String year = day > 0 ? String.valueOf(day / 10000) : String.format(yearformat, createtime); //没有day取createtime
             return "platf_login_" + year + "." + table.substring(pos + 1) + "_" + (day > 0 ? day : String.format(dayformat, createtime));
         }
     }
