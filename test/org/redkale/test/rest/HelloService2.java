@@ -20,7 +20,7 @@ import org.redkale.util.Sheet;
  *
  */
 @RestService(name = "hello", moduleid = 0, automapping = true, repair = true, ignore = false, comment = "Hello服务模块")
-public class HelloService2 implements Service { 
+public class HelloService2 implements Service {
 
     @Resource
     private DataSource source;
@@ -47,7 +47,8 @@ public class HelloService2 implements Service {
         source.update(entity);
     }
 
-    //查询列表
+    //查询列表    
+    @RestConvertCoder(type = HelloEntity.class, field = "createtime", coder = CreateTimeSimpleCoder.class)
     @RestMapping(name = "query", auth = false, comment = "查询Hello对象列表")
     public Sheet<HelloEntity> queryHello(@RestParam(name = "bean", comment = "过滤条件") HelloBean bean, Flipper flipper) { //通过 /hello/query/offset:0/limit:20?bean={...} 查询列表
         return source.querySheet(HelloEntity.class, flipper, bean);
