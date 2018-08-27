@@ -367,7 +367,7 @@ public final class SncpClient {
                 return future;
             }
             final AsyncConnection conn = conn0;
-            final ByteBuffer[] sendBuffers = writer.toBuffers(transport.getBufferSupplier());
+            final ByteBuffer[] sendBuffers = writer.toBuffers();
             fillHeader(sendBuffers[0], seqid, actionid, reqBodyLength);
 
             final ByteBuffer buffer = transport.pollBuffer();

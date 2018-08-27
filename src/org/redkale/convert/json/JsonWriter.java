@@ -6,7 +6,6 @@
 package org.redkale.convert.json;
 
 import java.nio.ByteBuffer;
-import java.util.function.Supplier;
 import org.redkale.convert.*;
 import org.redkale.util.*;
 
@@ -107,9 +106,8 @@ public class JsonWriter extends Writer {
         return true;
     }
 
-    public ByteBuffer[] toBuffers(Supplier<ByteBuffer> supplier) {
-        if (supplier == null) return new ByteBuffer[]{ByteBuffer.wrap(Utility.encodeUTF8(content, 0, count))};
-        return ByteBufferWriter.create(supplier).put(Utility.encodeUTF8(content, 0, count)).toBuffers();
+    public ByteBuffer[] toBuffers() {
+        return new ByteBuffer[]{ByteBuffer.wrap(Utility.encodeUTF8(content, 0, count))};
     }
 
     public byte[] toBytes() {
