@@ -10,6 +10,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.CompletionHandler;
 import java.util.function.*;
 import java.util.logging.Level;
+import org.redkale.util.ByteBufferWriter;
 
 /**
  * 协议响应对象
@@ -274,7 +275,7 @@ public abstract class Response<C extends Context, R extends Request<C>> {
             buffer.flip();
             this.finish(buffer);
         } else {
-            this.finish(ByteBuffer.wrap(bs));
+            this.finish(ByteBufferWriter.toBuffers(this.context.getBufferSupplier(), bs));
         }
     }
 

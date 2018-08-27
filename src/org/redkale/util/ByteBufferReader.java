@@ -63,6 +63,22 @@ public class ByteBufferReader {
         return new ByteBufferReader(buffers);
     }
 
+    public static byte[] toBytes(ByteBuffer[] buffers) {
+        if (buffers == null) return null;
+        int size = 0;
+        for (ByteBuffer buffer : buffers) {
+            size += buffer.remaining();
+        }
+        byte[] bs = new byte[size];
+        int index = 0;
+        for (ByteBuffer buffer : buffers) {
+            int remain = buffer.remaining();
+            buffer.get(bs, index, remain);
+            index += remain;
+        }
+        return bs;
+    }
+
     public boolean hasRemaining() {
         return this.currBuffer.hasRemaining();
     }

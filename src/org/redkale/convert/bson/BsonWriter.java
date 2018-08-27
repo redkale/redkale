@@ -39,6 +39,7 @@ public class BsonWriter extends Writer {
     }
 
     public ByteBuffer[] toBuffers(final Supplier<ByteBuffer> supplier) {
+        if (supplier == null) return new ByteBuffer[]{ByteBuffer.wrap(content, 0, count)};
         return ByteBufferWriter.create(supplier).put(content, 0, count).toBuffers();
     }
 

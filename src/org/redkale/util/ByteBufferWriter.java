@@ -34,6 +34,14 @@ public class ByteBufferWriter {
         return new ByteBufferWriter(supplier);
     }
 
+    public static ByteBuffer[] toBuffers(Supplier<ByteBuffer> supplier, byte[] content) {
+        return new ByteBufferWriter(supplier).put(content, 0, content.length).toBuffers();
+    }
+
+    public static ByteBuffer[] toBuffers(Supplier<ByteBuffer> supplier, byte[] content, int offset, int length) {
+        return new ByteBufferWriter(supplier).put(content, offset, length).toBuffers();
+    }
+
     private ByteBuffer getLastBuffer(int size) {
         if (this.buffers == null) {
             ByteBuffer buf = supplier.get();
@@ -173,19 +181,4 @@ public class ByteBufferWriter {
         return this;
     }
 
-    public static byte[] toBytes(ByteBuffer[] buffers) {
-        if (buffers == null) return null;
-        int size = 0;
-        for (ByteBuffer buffer : buffers) {
-            size += buffer.remaining();
-        }
-        byte[] bs = new byte[size];
-        int index = 0;
-        for (ByteBuffer buffer : buffers) {
-            int remain = buffer.remaining();
-            buffer.get(bs, index, remain);
-            index += remain;
-        }
-        return bs;
-    }
 }

@@ -636,7 +636,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
                 super.finish(false, headbuf);
             } else {
                 headbuf.flip();
-                super.finish(false, new ByteBuffer[]{headbuf, ByteBuffer.wrap(content)});
+                super.finish(false, Utility.append(new ByteBuffer[]{headbuf}, ByteBufferWriter.toBuffers(context.getBufferSupplier(), content)));
             }
         } else {
             if (this.context.getBufferCapacity() >= content.length) {
@@ -645,7 +645,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
                 buffer.flip();
                 this.finish(false, buffer);
             } else {
-                this.finish(false, ByteBuffer.wrap(content));
+                this.finish(false, ByteBufferWriter.toBuffers(context.getBufferSupplier(), content));
             }
         }
 
