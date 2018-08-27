@@ -614,15 +614,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      */
     @Override
     public void finish(final byte[] bs) {
-        if (isClosed()) return; //避免重复关闭
-        if (this.context.getBufferCapacity() >= bs.length) {
-            ByteBuffer buffer = getBodyBufferSupplier().get();
-            buffer.put(bs);
-            buffer.flip();
-            this.finish(false, buffer);
-        } else {
-            this.finish(false, ByteBuffer.wrap(bs));
-        }
+        this.finish(this.contentType, bs);
     }
 
     /**
@@ -633,15 +625,30 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      */
     public void finish(final String contentType, final byte[] bs) {
         if (isClosed()) return; //避免重复关闭
-        this.contentType = contentType;
-        if (this.context.getBufferCapacity() >= bs.length) {
-            ByteBuffer buffer = getBodyBufferSupplier().get();
-            buffer.put(bs);
-            buffer.flip();
-            this.finish(false, buffer);
+        final byte[] content = bs == null ? new byte[0] : bs;
+        if (!this.headsended) {
+            this.contentType = contentType;
+            this.contentLength = content.length;
+            ByteBuffer headbuf = createHeader();
+            if (headbuf.remaining() >= content.length) {
+                headbuf.put(content);
+                headbuf.flip();
+                super.finish(false, headbuf);
+            } else {
+                headbuf.flip();
+                super.finish(false, new ByteBuffer[]{headbuf, ByteBuffer.wrap(content)});
+            }
         } else {
-            this.finish(false, ByteBuffer.wrap(bs));
+            if (this.context.getBufferCapacity() >= content.length) {
+                ByteBuffer buffer = getBodyBufferSupplier().get();
+                buffer.put(content);
+                buffer.flip();
+                this.finish(false, buffer);
+            } else {
+                this.finish(false, ByteBuffer.wrap(content));
+            }
         }
+
     }
 
     /**
