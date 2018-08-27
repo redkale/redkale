@@ -45,6 +45,8 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
 
     private final ConcurrentHashMap<String, Class> entitys = new ConcurrentHashMap();
 
+    private final ConcurrentHashMap<Type, Map<String, SimpledCoder<R, W, ?>>> fieldCoders = new ConcurrentHashMap();
+
     private final ConcurrentHashMap<Type, Decodeable<R, ?>> decoders = new ConcurrentHashMap();
 
     private final ConcurrentHashMap<Type, Encodeable<W, ?>> encoders = new ConcurrentHashMap();
@@ -493,6 +495,29 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
 
     public final <E> void register(final Type clazz, final Encodeable<W, E> encoder) {
         encoders.put(clazz, encoder);
+    }
+
+    //coder = null表示删除该字段的指定SimpledCoder
+    public final <E> void register(final Class clazz, final String field, final SimpledCoder<R, W, E> coder) {
+        if (field == null || clazz == null) return;
+        try {
+            clazz.getDeclaredField(field);
+        } catch (Exception e) {
+            throw new RuntimeException(clazz + " not found field(" + field + ")");
+        }
+        if (coder == null) {
+            Map map = this.fieldCoders.get(clazz);
+            if (map != null) map.remove(field);
+        } else {
+            this.fieldCoders.computeIfAbsent(clazz, c -> new ConcurrentHashMap<>()).put(field, coder);
+        }
+    }
+
+    public final <E> SimpledCoder<R, W, E> findFieldCoder(final Type clazz, final String field) {
+        if (field == null) return null;
+        Map<String, SimpledCoder<R, W, ?>> map = this.fieldCoders.get(clazz);
+        if (map == null) return parent == null ? null : parent.findFieldCoder(clazz, field);
+        return (SimpledCoder) map.get(field);
     }
 
     public final <E> Decodeable<R, E> findDecoder(final Type type) {

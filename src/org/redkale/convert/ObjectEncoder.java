@@ -77,8 +77,12 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
                     if (factory.isConvertDisabled(field)) continue;
                     ref = factory.findRef(field);
                     if (ref != null && ref.ignore()) continue;
-                    Type t = TypeToken.createClassType(TypeToken.getGenericType(field.getGenericType(), this.type), this.type);
-                    EnMember member = new EnMember(createAttribute(factory, clazz, field, null, null), factory.loadEncoder(t));
+                    Encodeable<W, ?> fieldCoder = factory.findFieldCoder(clazz, field.getName());
+                    if (fieldCoder == null) {
+                        Type t = TypeToken.createClassType(TypeToken.getGenericType(field.getGenericType(), this.type), this.type);
+                        fieldCoder = factory.loadEncoder(t);
+                    }
+                    EnMember member = new EnMember(createAttribute(factory, clazz, field, null, null), fieldCoder);
                     if (ref != null) member.index = ref.getIndex();
                     list.add(member);
                 }
@@ -102,8 +106,12 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
                     }
                     ref = factory.findRef(method);
                     if (ref != null && ref.ignore()) continue;
-                    Type t = TypeToken.createClassType(TypeToken.getGenericType(method.getGenericReturnType(), this.type), this.type);
-                    EnMember member = new EnMember(createAttribute(factory, clazz, null, method, null), factory.loadEncoder(t));
+                    Encodeable<W, ?> fieldCoder = factory.findFieldCoder(clazz, ConvertFactory.readGetSetFieldName(method));
+                    if (fieldCoder == null) {
+                        Type t = TypeToken.createClassType(TypeToken.getGenericType(method.getGenericReturnType(), this.type), this.type);
+                        fieldCoder = factory.loadEncoder(t);
+                    }
+                    EnMember member = new EnMember(createAttribute(factory, clazz, null, method, null), fieldCoder);
                     if (ref != null) member.index = ref.getIndex();
                     list.add(member);
                 }

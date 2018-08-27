@@ -127,25 +127,37 @@ public final class Rest {
         }
     }
 
-    static JsonConvert createJsonConvert(RestConvert[] converts) {
-        if (converts == null || converts.length < 1) return JsonConvert.root();
+    static JsonConvert createJsonConvert(RestConvert[] converts, RestConvertCoder[] coders) {
+        if ((converts == null || converts.length < 1) && (coders == null || coders.length < 1)) return JsonConvert.root();
         final JsonFactory childFactory = JsonFactory.create();
         List<Class> types = new ArrayList<>();
-        for (RestConvert rc : converts) {
-            if (rc.type() == void.class || rc.type() == Void.class) {
-                return JsonFactory.create().skipAllIgnore(true).getConvert();
+        Set<Class> reloadTypes = new HashSet<>();
+        if (coders != null) {
+            for (RestConvertCoder rcc : coders) {
+                reloadTypes.add(rcc.type());
+                childFactory.register(rcc.type(), rcc.field(), Creator.create(rcc.coder()).create());
             }
-            if (types.contains(rc.type())) throw new RuntimeException("@RestConvert type(" + rc.type() + ") repeat");
-            if (rc.skipIgnore()) {
-                childFactory.registerSkipIgnore(rc.type());
-                childFactory.reloadCoder(rc.type());
-            } else {
-                childFactory.register(rc.type(), false, rc.convertColumns());
-                childFactory.register(rc.type(), true, rc.ignoreColumns());
-                childFactory.reloadCoder(rc.type());
+        }
+        if (converts != null) {
+            for (RestConvert rc : converts) {
+                if (rc.type() == void.class || rc.type() == Void.class) {
+                    return JsonFactory.create().skipAllIgnore(true).getConvert();
+                }
+                if (types.contains(rc.type())) throw new RuntimeException("@RestConvert type(" + rc.type() + ") repeat");
+                if (rc.skipIgnore()) {
+                    childFactory.registerSkipIgnore(rc.type());
+                    childFactory.reloadCoder(rc.type());
+                } else {
+                    childFactory.register(rc.type(), false, rc.convertColumns());
+                    childFactory.register(rc.type(), true, rc.ignoreColumns());
+                    childFactory.reloadCoder(rc.type());
+                }
+                types.add(rc.type());
+                childFactory.tiny(rc.tiny());
             }
-            types.add(rc.type());
-            childFactory.tiny(rc.tiny());
+        }
+        for (Class type : reloadTypes) {
+            childFactory.reloadCoder(type);
         }
         return childFactory.getConvert();
     }
@@ -848,7 +860,7 @@ public final class Rest {
         final Map<String, List<String>> asmParamMap = MethodParamClassVisitor.getMethodParamNames(new HashMap<>(), serviceType);
         final Map<String, java.lang.reflect.Type> bodyTypes = new HashMap<>();
 
-        final List<RestConvert[]> restConverts = new ArrayList<>();
+        final List<Object[]> restConverts = new ArrayList<>();
         for (final MappingEntry entry : entrys) {
             RestUploadFile mupload = null;
             Class muploadType = null;
@@ -858,7 +870,10 @@ public final class Rest {
             final Parameter[] params = method.getParameters();
 
             final RestConvert[] rcs = method.getAnnotationsByType(RestConvert.class);
-            if (rcs != null && rcs.length > 0) restConverts.add(rcs);
+            final RestConvertCoder[] rcc = method.getAnnotationsByType(RestConvertCoder.class);
+            if ((rcs != null && rcs.length > 0) || (rcc != null && rcc.length > 0)) {
+                restConverts.add(new Object[]{rcs, rcc});
+            }
 
             mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC, entry.name.replace('/', '$').replace('.', '_'), "(" + reqDesc + respDesc + ")V", null, new String[]{"java/io/IOException"}));
             //mv.setDebug(true); 
@@ -1739,7 +1754,9 @@ public final class Rest {
             for (int i = 0; i < restConverts.size(); i++) {
                 Field genField = newClazz.getDeclaredField(REST_JSONCONVERT_FIELD_PREFIX + (i + 1));
                 genField.setAccessible(true);
-                genField.set(obj, createJsonConvert(restConverts.get(i)));
+                Object[] rc = restConverts.get(i);
+
+                genField.set(obj, createJsonConvert((RestConvert[]) rc[0], (RestConvertCoder[]) rc[1]));
             }
             Field typesfield = newClazz.getDeclaredField(REST_PARAMTYPES_FIELD_NAME);
             typesfield.setAccessible(true);

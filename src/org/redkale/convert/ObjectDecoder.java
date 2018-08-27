@@ -93,8 +93,12 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
                     if (factory.isConvertDisabled(field)) continue;
                     ref = factory.findRef(field);
                     if (ref != null && ref.ignore()) continue;
-                    Type t = TypeToken.createClassType(TypeToken.getGenericType(field.getGenericType(), this.type), this.type);
-                    DeMember member = new DeMember(ObjectEncoder.createAttribute(factory, clazz, field, null, null), factory.loadDecoder(t));
+                    Decodeable<R, ?> fieldCoder = factory.findFieldCoder(clazz, field.getName());
+                    if (fieldCoder == null) {
+                        Type t = TypeToken.createClassType(TypeToken.getGenericType(field.getGenericType(), this.type), this.type);
+                        fieldCoder = factory.loadDecoder(t);
+                    }
+                    DeMember member = new DeMember(ObjectEncoder.createAttribute(factory, clazz, field, null, null), fieldCoder);
                     if (ref != null) member.index = ref.getIndex();
                     list.add(member);
                 }
@@ -118,8 +122,13 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
                     }
                     ref = factory.findRef(method);
                     if (ref != null && ref.ignore()) continue;
-                    Type t = TypeToken.createClassType(TypeToken.getGenericType(method.getGenericParameterTypes()[0], this.type), this.type);
-                    DeMember member = new DeMember(ObjectEncoder.createAttribute(factory, clazz, null, null, method), factory.loadDecoder(t));
+
+                    Decodeable<R, ?> fieldCoder = factory.findFieldCoder(clazz, ConvertFactory.readGetSetFieldName(method));
+                    if (fieldCoder == null) {
+                        Type t = TypeToken.createClassType(TypeToken.getGenericType(method.getGenericParameterTypes()[0], this.type), this.type);
+                        fieldCoder = factory.loadDecoder(t);
+                    }
+                    DeMember member = new DeMember(ObjectEncoder.createAttribute(factory, clazz, null, null, method), fieldCoder);
                     if (ref != null) member.index = ref.getIndex();
                     list.add(member);
                 }
