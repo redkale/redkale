@@ -23,51 +23,30 @@
         </section>
 
         <section class="main-content">
-            <h3>Redkale 入门教程 01 -- Hello Word！</h3>
+            <h3>Redkale 入门教程 01 -- Hello Word！(IntelliJ IDEA Maven版)</h3>
 
             <p>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="index.html" target="_blank">Redkale</a> 可以说是Java界最精简的框架，不到1M的jar包可以替代Tomcat、Spring/Spring Boot、Hibernate/MyBatis、JackJson/fastjson、Netty的集合，四两拨千斤。低调开源一年多，经过两次大的改善后终于达到让自己满意的地步。Redkale不仅仅提供简易的API，还附有很多不同于传统思维的设计思路。由于时间有限，一年多也没写入门教程，现在开始抽点时间写一些教程，希望能给想学Redkale的同学一点帮助。 废话不多说，下面进入正题。<br/>
             </p>
 
-            <p>下载Redkale</p>
-            <p>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;源码可以从 <a href="https://github.com/redkale" target="_blank" >https://github.com/redkale</a> 和 <a href="http://git.oschina.net/redkale/redkale" target="_blank" >http://git.oschina.net/redkale/redkale</a> 下载 。<br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;jar包可以从 <a href="http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.redkale%22%20AND%20a%3A%22redkale%22" target="_blank" >http://search.maven.org</a> 和 <a href="https://repo1.maven.org/maven2/org/redkale/redkale/" target="_blank" >https://repo1.maven.org/maven2/org/redkale/redkale/</a> 下载最新版本的包。<br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;当前最新版为 1.8， 下载 redkale-1.8.0.tar.gz 放在本地。<br/>
-            </p>
-
             <p>创建工程</p>
             <p>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;本人使用NetBeans很多年了，所以本教程以NetBeans来创建工程， 使用Eclipse的同学请自行参考。 
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;首先创建一个Maven项目。
             </p>
-             <p>
-                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;IntelliJ IDEA 使用者见 <a href="course01_helloidea.html">Redkale 入门教程 01 -- Hello Word！(IntelliJ IDEA Maven版)</a>。
-                
-            </p>
+            <p style="text-align: center;"><img src="images/hello_21.png" alt=""/><img src="images/hello_22.png" alt=""/></p>
+            <p style="text-align: center;"><img src="images/hello_23.png" alt=""/><img src="images/hello_24.png" alt=""/></p>
             <p>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;首先创建一个"<b>Java应用程序</b>"项目, 注意： 不管是否Web项目，都不要创建Web应用程序。
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;创建完项目后会自动打开pom.xml文件， 按下Alt+Insert组合键添加redkale依赖。
             </p>
-            <p style="text-align: center;"><img src="images/hello_01.png" alt=""/><img src="images/hello_02.png" alt=""/></p>
+            <p style="text-align: center;"><img src="images/hello_25.png" alt=""/><img src="images/hello_26.png" alt=""/></p>            
             <p>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;创建完空项目后，将 redkale-1.8.0.tar.gz 解压覆盖到项目的目录下。
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;然后将redkale下的bin和conf文件夹（可以通过github或者maven里<a href="https://repo1.maven.org/maven2/org/redkale/redkale/1.9.5/redkale-1.9.5.tar.gz" target="_blank">redkale-1.9.5.tar.gz</a>解压得到）复制到工程的目录下。
             </p>
-            <p style="text-align: center;"><img src="images/hello_03.png" alt=""/><img src="images/hello_04.png" alt=""/></p>
-            <p>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;点击项目右键进入“属性”-> “库”中，点击 “添加JAR/文件夹”找到项目lib目录下的redkale-1.8.0.jar 并导入。
-            </p>
-            <p style="text-align: center;"><img src="images/hello_05.png" alt=""/><img src="images/hello_06.png" alt=""/></p>            
-            <p>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;点击“源”，在下面测试包中导入项目目录下的conf目录，这样方便编辑conf下的配置文件(在上面src中导入会打包进jar中)。
-            </p>
-            <p style="text-align: center;"><img src="images/hello_07.png" alt=""/></p>         
-            <p>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;点击“运行”，在主类中输入 "<b>org.redkale.boot.Application</b>"，然后点击“确定”。
-            </p>
-            <p style="text-align: center;"><img src="images/hello_08.png" alt=""/></p>   
+            <p style="text-align: center;"><img src="images/hello_27.png" alt=""/></p>         
             <p>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;编写HelloService类。
             </p>
-            <div class="highlight"><pre><span></span><span class="kn">package</span> <span class="n">com.redkale.demo</span><span class="o">;</span>
+            <div class="highlight"><pre><span></span><span class="kn">package</span> <span class="n">com.redkale.examples.hello</span><span class="o">;</span>
 
 <span class="kn">import</span> <span class="n">org.redkale.net.http.*</span><span class="o">;</span>
 <span class="kn">import</span> <span class="n">org.redkale.service.Service</span><span class="o">;</span>
@@ -84,23 +63,28 @@
     <span class="o">}</span>
 <span class="o">}</span>
                 </pre></div>
-
+            <p style="text-align: center;"><img src="images/hello_28.png" alt=""/></p>   
+            
             <p>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;此类提供两个方法：say 和 hi。编写完后按"<b>F6</b>" 直接运行。
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;然后开始调试运行。
             </p>
-            <p style="text-align: center;"><img src="images/hello_09.png" alt=""/></p>
+            <p style="text-align: center;"><img src="images/hello_29.png" alt=""/></p>
+            <p style="text-align: center;"><img src="images/hello_30.png" alt=""/></p>
+            <p style="text-align: center;"><img src="images/hello_31.png" alt=""/></p>
+            <p style="text-align: center;"><img src="images/hello_32.png" alt=""/></p>
+            <p style="text-align: center;"><img src="images/hello_33.png" alt=""/></p>
             <p>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在浏览器输入: http://127.0.0.1:6060/pipes/hello/say 可以看到结果： 
             </p>
-            <p style="text-align: center;"><img src="images/hello_10.png" alt=""/></p>
+            <p style="text-align: center;"><img src="images/hello_34.png" alt=""/></p>
             <p>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在浏览器输入: http://127.0.0.1:6060/pipes/hello/hi?name=Redkale 可以看到结果： 
             </p>
-            <p style="text-align: center;"><img src="images/hello_11.png" alt=""/></p>
+            <p style="text-align: center;"><img src="images/hello_35.png" alt=""/></p>
             <p>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;访问地址的端口6060和前缀pipes是通过conf/application.xml文件进行配置： 
             </p>
-            <div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">application</span> <span class="na">port</span><span class="o">=</span><span class="s">"5050"</span><span class="p">&gt;</span>     
+            <div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">application</span> <span class="na">port</span><span class="o">=</span><span class="s">"2121"</span><span class="p">&gt;</span>     
     
     <span class="c">&lt;!--  详细配置说明见： http://redkale.org/redkale.html#redkale_confxml  --&gt;</span>
     
@@ -130,7 +114,7 @@
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;至此，一个简单的Hello服务就开发和调试完成了。可以看出，代码简单很多，不需要太多配置、maven和其他依赖包。<br>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;可能有人会疑惑: HelloServie为什么能分配到hello前缀？ sayHello为什么会映射到/pipes/hello/say 请求？ Redkale为了减少Annotation配置采取了一些默认值的策略， 在Redkale里， 一个Service视为一个模块或服务，所以需要有模块(服务)名的概念，用于服务管理和鉴权，通常需要通过@RestServie.name来指定模块名，没有指定则默认将Service类名的Service字样之前的字符串视为模块名，如HelloService和HelloServiceImpl都会采用hello作为模块名。方法名的默认值策略也是类似，将模块名字样之前的字符串作为方法名，如sayHello和sayHelloMe 都会用say作为默认值。参数名如果没有指定@RestParam.name会自动采用代码的变量名。 完全标记Rest注解的HelloService源码如下：
             </p>
-            <div class="highlight"><pre><span></span><span class="kn">package</span> <span class="n">com.redkale.demo</span><span class="o">;</span>
+            <div class="highlight"><pre><span></span><span class="kn">package</span> <span class="n">com.redkale.examples.hello</span><span class="o">;</span>
 
 <span class="kn">import</span> <span class="n">org.redkale.net.http.*</span><span class="o">;</span>
 <span class="kn">import</span> <span class="n">org.redkale.service.Service</span><span class="o">;</span>
@@ -152,10 +136,13 @@
                 </pre></div>
             <br/>
             <p>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这段代码与上面那段是等价的。部署也很简单， 将项目目录中dist目录下的redkale-demo.jar复制到lib下，运行bin/start.bat 即可启动HTTP服务。 
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这段代码与上面那段是等价的。部署也很简单， 将项目编译后的jar和redkale-1.9.5.jar复制到lib下(也可通过修改pom.xml让maven来处理)，运行bin/start.bat 即可启动HTTP服务。 
             </p>
+             <p>
+                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;本工程源码可以在 <a href="https://github.com/redkale/redkale-examples/tree/master/redkale-helloword" target="_blank">https://github.com/redkale/redkale-examples/tree/master/redkale-helloword</a> 下载。 
+            </p>            
             <p>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;转载请注明出处：<a href="https://redkale.org/course01_hello.html" target="_blank">https://redkale.org/course01_hello.html</a>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;转载请注明出处：<a href="https://redkale.org/course01_helloidea.html" target="_blank">https://redkale.org/course01_helloidea.html</a>
             </p>
 
             <footer class="site-footer">
