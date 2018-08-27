@@ -35,8 +35,12 @@ public class BsonByteBufferWriter extends BsonWriter {
         this.supplier = supplier;
     }
 
-    @Override
     public ByteBuffer[] toBuffers() {
+        return toBuffers(supplier);
+    }
+
+    @Override
+    public ByteBuffer[] toBuffers(Supplier<ByteBuffer> supplier) {
         if (buffers == null) return new ByteBuffer[0];
         for (int i = index; i < this.buffers.length; i++) {
             ByteBuffer buf = this.buffers[i];

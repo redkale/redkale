@@ -65,7 +65,7 @@ public final class SncpResponse extends Response<SncpContext, SncpRequest> {
             return;
         }
         final int respBodyLength = out.count(); //body总长度
-        final ByteBuffer[] buffers = out.toBuffers();
+        final ByteBuffer[] buffers = out.toBuffers(context.getBufferSupplier());
         fillHeader(buffers[0], respBodyLength - HEADER_SIZE, retcode);
         finish(buffers);
     }
