@@ -705,6 +705,9 @@ public final class Rest {
 
         HttpUserType hut = baseServletType.getAnnotation(HttpUserType.class);
         final Class userType = (userType0 == null || userType0 == Object.class) ? (hut == null ? null : hut.value()) : userType0;
+        if (userType != null && (userType.isPrimitive() || userType.getName().startsWith("java.") || userType.getName().startsWith("javax."))) {
+            throw new RuntimeException(HttpUserType.class.getSimpleName() + " must be a JavaBean but found " + userType);
+        }
 
         final String supDynName = baseServletType.getName().replace('.', '/');
         final RestService controller = serviceType.getAnnotation(RestService.class);
