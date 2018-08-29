@@ -86,7 +86,7 @@ public class FilterJoinNode extends FilterNode {
     protected FilterNode any(final FilterNode node0, boolean signor) {
         Objects.requireNonNull(node0);
         if (!(node0 instanceof FilterJoinNode)) {
-            throw new IllegalArgumentException(this + (signor ? " or " : " and ") + " a node but " + String.valueOf(node0) + "is not a " + FilterJoinNode.class.getSimpleName());
+            throw new IllegalArgumentException(this + (signor ? " or " : " and ") + " a node but " + String.valueOf(node0) + " is not a " + FilterJoinNode.class.getSimpleName());
         }
         final FilterJoinNode node = (FilterJoinNode) node0;
         if (this.nodes == null) {
@@ -99,7 +99,7 @@ public class FilterJoinNode extends FilterNode {
             if (this.column == null) this.or = signor;
             return this;
         }
-        this.nodes = new FilterNode[]{new FilterJoinNode(node), node};
+        this.nodes = new FilterNode[]{new FilterJoinNode(this), node};
         this.column = null;
         this.express = null;
         this.itemand = true;
