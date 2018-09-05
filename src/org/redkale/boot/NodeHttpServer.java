@@ -217,6 +217,7 @@ public class NodeHttpServer extends NodeServer {
         if (!rest) return;
         if (restConf == null) return; //不存在REST服务
 
+        final long starts = System.currentTimeMillis();
         String prefix0 = restConf.getValue("path", "");
         if (!prefix0.isEmpty() && prefix0.charAt(prefix0.length() - 1) == '/') prefix0 = prefix0.substring(0, prefix0.length() - 1);
         if (!prefix0.isEmpty() && prefix0.charAt(0) != '/') prefix0 = '/' + prefix0;
@@ -340,6 +341,7 @@ public class NodeHttpServer extends NodeServer {
                 }
                 sb.append("  mapping to  ").append(Arrays.toString(as.getValue())).append(LINE_SEPARATOR);
             }
+            sb.append(threadName).append(" All RestServlets load cost " + (System.currentTimeMillis() - starts) + " ms" + LINE_SEPARATOR);
         }
     }
 }

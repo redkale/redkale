@@ -370,6 +370,7 @@ public abstract class NodeServer {
     @SuppressWarnings("unchecked")
     protected void loadService(ClassFilter<? extends Service> serviceFilter, ClassFilter otherFilter) throws Exception {
         if (serviceFilter == null) return;
+        final long starts = System.currentTimeMillis();
         final String threadName = "[" + Thread.currentThread().getName() + "] ";
         final Set<FilterEntry<? extends Service>> entrys = (Set) serviceFilter.getAllFilterEntrys();
         ResourceFactory regFactory = isSNCP() ? application.getResourceFactory() : resourceFactory;
@@ -476,24 +477,19 @@ public abstract class NodeServer {
         localServices.addAll(swlist);
         //this.loadPersistData();
         final List<String> slist = sb == null ? null : new CopyOnWriteArrayList<>();
-        CountDownLatch clds = new CountDownLatch(localServices.size());
         localServices.stream().forEach(y -> {
-            try {
-                long s = System.currentTimeMillis();
-                y.init(Sncp.getConf(y));
-                long e = System.currentTimeMillis() - s;
-                String serstr = Sncp.toSimpleString(y, maxNameLength, maxClassNameLength);
-                if (slist != null) slist.add(new StringBuilder().append(threadName).append(serstr).append(" load and init in ").append(e).append(" ms").append(LINE_SEPARATOR).toString());
-            } finally {
-                clds.countDown();
-            }
+            long s = System.currentTimeMillis();
+            y.init(Sncp.getConf(y));
+            long e = System.currentTimeMillis() - s;
+            String serstr = Sncp.toSimpleString(y, maxNameLength, maxClassNameLength);
+            if (slist != null) slist.add(new StringBuilder().append(threadName).append(serstr).append(" load and init in ").append(e).append(" ms").append(LINE_SEPARATOR).toString());
         });
-        clds.await();
         if (slist != null && sb != null) {
             List<String> wlist = new ArrayList<>(slist); //直接使用CopyOnWriteArrayList偶尔会出现莫名的异常(CopyOnWriteArrayList源码1185行)
             for (String s : wlist) {
                 sb.append(s);
             }
+            sb.append(threadName).append(" All Services load cost " + (System.currentTimeMillis() - starts) + " ms" + LINE_SEPARATOR);
         }
         if (sb != null && sb.length() > 0) logger.log(Level.INFO, sb.toString());
     }
