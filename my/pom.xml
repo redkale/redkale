@@ -63,6 +63,7 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.5.1</version>                                
                 <configuration>
+					<compilerArgument>-parameters</compilerArgument>
                     <encoding>UTF-8</encoding>
                     <compilerArguments>
                         <verbose />
