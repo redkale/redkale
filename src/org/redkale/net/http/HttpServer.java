@@ -256,17 +256,19 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
         final boolean sncp = Sncp.isSncpDyn(service);
         final String resname = name == null ? (sncp ? Sncp.getResourceName(service) : "") : name;
         final Class<S> serviceType = Sncp.getServiceType(service);
-        for (final HttpServlet item : ((HttpPrepareServlet) this.prepare).getServlets()) {
-            if (!(item instanceof HttpServlet)) continue;
-            if (item.getClass().getAnnotation(Rest.RestDyn.class) == null) continue;
-            try {
-                Field field = item.getClass().getDeclaredField(Rest.REST_SERVICE_FIELD_NAME);
-                if (serviceType.equals(field.getType())) {
-                    servlet = (T) item;
-                    break;
+        if (name != null) {
+            for (final HttpServlet item : ((HttpPrepareServlet) this.prepare).getServlets()) {
+                if (!(item instanceof HttpServlet)) continue;
+                if (item.getClass().getAnnotation(Rest.RestDyn.class) == null) continue;
+                try {
+                    Field field = item.getClass().getDeclaredField(Rest.REST_SERVICE_FIELD_NAME);
+                    if (serviceType.equals(field.getType())) {
+                        servlet = (T) item;
+                        break;
+                    }
+                } catch (NoSuchFieldException | SecurityException e) {
+                    logger.log(Level.SEVERE, "serviceType = " + serviceType + ", servletClass = " + item.getClass(), e);
                 }
-            } catch (NoSuchFieldException | SecurityException e) {
-                logger.log(Level.SEVERE, "serviceType = " + serviceType + ", servletClass = " + item.getClass(), e);
             }
         }
         final boolean first = servlet == null;

@@ -39,6 +39,8 @@ public final class Rest {
 
     static final String REST_SERVICE_FIELD_NAME = "_redkale_service";
 
+    static final String REST_TOSTRINGOBJ_FIELD_NAME = "_redkale_tostringsupplier";
+
     static final String REST_JSONCONVERT_FIELD_PREFIX = "_redkale_jsonconvert_";
 
     static final String REST_SERVICEMAP_FIELD_NAME = "_redkale_servicemap"; //如果只有name=""的Service资源，则实例中_servicemap必须为null
@@ -251,7 +253,19 @@ public final class Rest {
         final String resourceGenericDescriptor = sb1.length() == sb2.length() ? null : sb2.toString();
 
         //----------------------------------------------------------------------------------------        
-        final Map<String, List<String>> asmParamMap = MethodParamClassVisitor.getMethodParamNames(new HashMap<>(), webSocketType);
+        boolean namePresent = false;
+        try {
+            Method m0 = null;
+            for (Method method : webSocketType.getMethods()) {
+                if (method.getParameterCount() > 0) {
+                    m0 = method;
+                    break;
+                }
+            }
+            namePresent = m0 == null ? true : m0.getParameters()[0].isNamePresent();
+        } catch (Exception e) {
+        }
+        final Map<String, List<String>> asmParamMap = namePresent ? null : MethodParamClassVisitor.getMethodParamNames(new HashMap<>(), webSocketType);
         final Set<String> messageNames = new HashSet<>();
         final List<Method> messageMethods = new ArrayList<>();
         for (Method method : webSocketType.getMethods()) {
@@ -849,6 +863,10 @@ public final class Rest {
             fv = cw.visitField(ACC_PRIVATE, REST_PARAMTYPES_FIELD_NAME, "[[Ljava/lang/reflect/Type;", null, null);
             fv.visitEnd();
         }
+        { //_redkale_tostringsupplier字段 Supplier<String>
+            fv = cw.visitField(ACC_PRIVATE, REST_TOSTRINGOBJ_FIELD_NAME, "Ljava/util/function/Supplier;", "Ljava/util/function/Supplier<Ljava/lang/String;>;", null);
+            fv.visitEnd();
+        }
         { //构造函数
             mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null));
             //mv.setDebug(true);
@@ -860,7 +878,19 @@ public final class Rest {
         }
 
         //将每个Service可转换的方法生成HttpServlet对应的HttpMapping方法
-        final Map<String, List<String>> asmParamMap = MethodParamClassVisitor.getMethodParamNames(new HashMap<>(), serviceType);
+        boolean namePresent = false;
+        try {
+            Method m0 = null;
+            for (final MappingEntry entry : entrys) {
+                if (entry.mappingMethod.getParameterCount() > 0) {
+                    m0 = entry.mappingMethod;
+                    break;
+                }
+            }
+            namePresent = m0 == null ? true : m0.getParameters()[0].isNamePresent();
+        } catch (Exception e) {
+        }
+        final Map<String, List<String>> asmParamMap = namePresent ? null : MethodParamClassVisitor.getMethodParamNames(new HashMap<>(), serviceType);
         final Map<String, java.lang.reflect.Type> bodyTypes = new HashMap<>();
 
         final List<Object[]> restConverts = new ArrayList<>();
@@ -1729,11 +1759,14 @@ public final class Rest {
             fv.visitEnd();
         }
 
-        //classMap.put("mappings", mappingMaps); //不显示太多信息
-        { //toString函数
+        //classMap.put("mappings", mappingMaps); //不显示太多信息   
+        { //toString函数   
             mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC, "toString", "()Ljava/lang/String;", null, null));
             //mv.setDebug(true);
-            mv.visitLdcInsn(JsonConvert.root().convertTo(classMap));
+            mv.visitVarInsn(ALOAD, 0);
+            mv.visitFieldInsn(GETFIELD, newDynName, REST_TOSTRINGOBJ_FIELD_NAME, "Ljava/util/function/Supplier;");
+            mv.visitMethodInsn(INVOKEINTERFACE, "java/util/function/Supplier", "get", "()Ljava/lang/Object;", true);
+            mv.visitTypeInsn(CHECKCAST, "java/lang/String");
             mv.visitInsn(ARETURN);
             mv.visitMaxs(1, 1);
             mv.visitEnd();
@@ -1766,6 +1799,11 @@ public final class Rest {
             java.lang.reflect.Type[][] paramtypeArray = new java.lang.reflect.Type[paramtypes.size()][];
             paramtypeArray = paramtypes.toArray(paramtypeArray);
             typesfield.set(obj, paramtypeArray);
+
+            Field tostringfield = newClazz.getDeclaredField(REST_TOSTRINGOBJ_FIELD_NAME);
+            tostringfield.setAccessible(true);
+            java.util.function.Supplier<String> sSupplier = () -> JsonConvert.root().convertTo(classMap);
+            tostringfield.set(obj, sSupplier);
 
             return obj;
         } catch (Exception e) {
