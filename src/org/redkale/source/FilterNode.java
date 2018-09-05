@@ -95,7 +95,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
     }
 
     public Serializable findValue(final String col) {
-        if (this.column.equals(col)) return this.value;
+        if (this.column != null && this.column.equals(col)) return this.value;
         if (this.nodes == null) return null;
         for (FilterNode n : this.nodes) {
             if (n == null) continue;
