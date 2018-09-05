@@ -84,6 +84,7 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
 
     @SuppressWarnings("unchecked")
     void preInit(HttpContext context, AnyValue config) {
+        if (this.mappings != null) return; //无需重复preInit
         String path = _prefix == null ? "" : _prefix;
         WebServlet ws = this.getClass().getAnnotation(WebServlet.class);
         if (ws != null && !ws.repair()) path = "";

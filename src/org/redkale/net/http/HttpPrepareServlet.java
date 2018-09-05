@@ -126,7 +126,8 @@ public class HttpPrepareServlet extends PrepareServlet<String, HttpContext, Http
         List<HttpServlet> list = removeHttpServlet(predicateEntry, predicateFilter);
         return list == null || list.isEmpty() ? null : list.get(0);
     }
-@SuppressWarnings("unchecked")
+
+    @SuppressWarnings("unchecked")
     public <T extends WebSocket> HttpServlet removeHttpServlet(Class<T> websocketOrServletType) {
         Predicate<MappingEntry> predicateEntry = (t) -> {
             Class type = t.servlet.getClass();
@@ -379,6 +380,7 @@ public class HttpPrepareServlet extends PrepareServlet<String, HttpContext, Http
             servlet._prefix = prefix.toString();
             putServlet(servlet);
         }
+        servlet.preInit(null, conf);
     }
 
     /**
