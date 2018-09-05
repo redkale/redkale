@@ -9,6 +9,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
 import java.net.*;
 import java.util.*;
+import java.util.concurrent.CountDownLatch;
 import java.util.logging.Level;
 import javax.annotation.*;
 import static org.redkale.boot.Application.RESNAME_SNCP_ADDR;
@@ -244,35 +245,45 @@ public class NodeHttpServer extends NodeServer {
 
             final ClassFilter restFilter = ClassFilter.create(null, restConf.getValue("includes", ""), restConf.getValue("excludes", ""), includeValues, excludeValues);
             final boolean finest = logger.isLoggable(Level.FINEST);
-            super.interceptorServices.forEach((service) -> {
-                final Class stype = Sncp.getServiceType(service);
-                final String name = Sncp.getResourceName(service);
-                RestService rs = (RestService) stype.getAnnotation(RestService.class);
-                if (rs == null || rs.ignore()) return;
+            final CountDownLatch scdl = new CountDownLatch(super.interceptorServices.size());
+            super.interceptorServices.stream().parallel().forEach((service) -> {
+                try {
+                    final Class stype = Sncp.getServiceType(service);
+                    final String name = Sncp.getResourceName(service);
+                    RestService rs = (RestService) stype.getAnnotation(RestService.class);
+                    if (rs == null || rs.ignore()) return;
 
-                final String stypename = stype.getName();
-                if (!autoload && !includeValues.contains(stypename)) return;
-                if (!restFilter.accept(stypename)) return;
-                if (restedObjects.contains(service)) {
-                    logger.log(Level.WARNING, stype.getName() + " repeat create rest servlet, so ignore");
-                    return;
-                }
-                restedObjects.add(service); //避免重复创建Rest对象
-                HttpServlet servlet = httpServer.addRestServlet(serverClassLoader, service, userType, baseServletType, prefix);
-                if (servlet == null) return; //没有HttpMapping方法的HttpServlet调用Rest.createRestServlet就会返回null 
-                String prefix2 = prefix;
-                WebServlet ws = servlet.getClass().getAnnotation(WebServlet.class);
-                if (ws != null && !ws.repair()) prefix2 = "";
-                resourceFactory.inject(servlet, NodeHttpServer.this);
-                //if (finest) logger.finest(threadName + " Create RestServlet(resource.name='" + name + "') = " + servlet);
-                if (ss != null) {
-                    String[] mappings = servlet.getClass().getAnnotation(WebServlet.class).value();
-                    for (int i = 0; i < mappings.length; i++) {
-                        mappings[i] = prefix2 + mappings[i];
+                    final String stypename = stype.getName();
+                    if (!autoload && !includeValues.contains(stypename)) return;
+                    if (!restFilter.accept(stypename)) return;
+                    synchronized (restedObjects) {
+                        if (restedObjects.contains(service)) {
+                            logger.log(Level.WARNING, stype.getName() + " repeat create rest servlet, so ignore");
+                            return;
+                        }
+                        restedObjects.add(service); //避免重复创建Rest对象
                     }
-                    ss.add(new AbstractMap.SimpleEntry<>(servlet.getClass().getName() + "(rest.name='" + name + "')", mappings));
+                    HttpServlet servlet = httpServer.addRestServlet(serverClassLoader, service, userType, baseServletType, prefix);
+                    if (servlet == null) return; //没有HttpMapping方法的HttpServlet调用Rest.createRestServlet就会返回null 
+                    String prefix2 = prefix;
+                    WebServlet ws = servlet.getClass().getAnnotation(WebServlet.class);
+                    if (ws != null && !ws.repair()) prefix2 = "";
+                    resourceFactory.inject(servlet, NodeHttpServer.this);
+                    //if (finest) logger.finest(threadName + " Create RestServlet(resource.name='" + name + "') = " + servlet);
+                    if (ss != null) {
+                        String[] mappings = servlet.getClass().getAnnotation(WebServlet.class).value();
+                        for (int i = 0; i < mappings.length; i++) {
+                            mappings[i] = prefix2 + mappings[i];
+                        }
+                        synchronized (ss) {
+                            ss.add(new AbstractMap.SimpleEntry<>(servlet.getClass().getName() + "(rest.name='" + name + "')", mappings));
+                        }
+                    }
+                } finally {
+                    scdl.countDown();
                 }
             });
+            scdl.await();
         }
         if (webSocketFilter != null) {  //加载RestWebSocket
             final Set<String> includeValues = new HashSet<>();
