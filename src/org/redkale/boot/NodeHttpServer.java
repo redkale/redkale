@@ -264,13 +264,13 @@ public class NodeHttpServer extends NodeServer {
                 WebServlet ws = servlet.getClass().getAnnotation(WebServlet.class);
                 if (ws != null && !ws.repair()) prefix2 = "";
                 resourceFactory.inject(servlet, NodeHttpServer.this);
-                if (finest) logger.finest(threadName + " Create RestServlet(resource.name='" + name + "') = " + servlet);
+                //if (finest) logger.finest(threadName + " Create RestServlet(resource.name='" + name + "') = " + servlet);
                 if (ss != null) {
                     String[] mappings = servlet.getClass().getAnnotation(WebServlet.class).value();
                     for (int i = 0; i < mappings.length; i++) {
                         mappings[i] = prefix2 + mappings[i];
                     }
-                    ss.add(new AbstractMap.SimpleEntry<>(servlet.getClass().getName(), mappings));
+                    ss.add(new AbstractMap.SimpleEntry<>(servlet.getClass().getName() + "(rest.name='" + name + "')", mappings));
                 }
             });
         }
@@ -341,7 +341,7 @@ public class NodeHttpServer extends NodeServer {
                 }
                 sb.append("  mapping to  ").append(Arrays.toString(as.getValue())).append(LINE_SEPARATOR);
             }
-            sb.append(threadName).append(" All RestServlets load cost " + (System.currentTimeMillis() - starts) + " ms" + LINE_SEPARATOR);
+            sb.append(threadName).append(" All HttpServlets load cost " + (System.currentTimeMillis() - starts) + " ms" + LINE_SEPARATOR);
         }
     }
 }
