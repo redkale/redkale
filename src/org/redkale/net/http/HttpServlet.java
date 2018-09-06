@@ -212,6 +212,7 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
             this(moduleid, actionid, name, methods, method, auth(method), cacheseconds(method), servlet);
         }
 
+        //供Rest类使用，参数不能随便更改
         public InnerActionEntry(int moduleid, int actionid, String name, String[] methods, Method method, boolean auth, int cacheseconds, HttpServlet servlet) {
             this.moduleid = moduleid;
             this.actionid = actionid;
