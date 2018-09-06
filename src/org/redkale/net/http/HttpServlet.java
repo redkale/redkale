@@ -34,13 +34,15 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
 
     String _prefix = ""; //当前HttpServlet的path前缀
 
-    private Map.Entry<String, Entry>[] mappings;
+    HashMap<String, InnerActionEntry> _tmpentrys;  //Rest生成时赋值, 字段名Rest有用到
+
+    private Map.Entry<String, InnerActionEntry>[] mappings; //字段名Rest有用到
 
     //这里不能直接使用HttpServlet，会造成死循环初始化HttpServlet
     private final Servlet<HttpContext, HttpRequest, HttpResponse> authSuccessServlet = new Servlet<HttpContext, HttpRequest, HttpResponse>() {
         @Override
         public void execute(HttpRequest request, HttpResponse response) throws IOException {
-            Entry entry = (Entry) request.attachment;
+            InnerActionEntry entry = (InnerActionEntry) request.attachment;
             if (entry.cacheseconds > 0) {//有缓存设置
                 CacheEntry ce = entry.cache.get(request.getRequestURI());
                 if (ce != null && ce.time + entry.cacheseconds > System.currentTimeMillis()) { //缓存有效
@@ -59,9 +61,9 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
     private final Servlet<HttpContext, HttpRequest, HttpResponse> preSuccessServlet = new Servlet<HttpContext, HttpRequest, HttpResponse>() {
         @Override
         public void execute(HttpRequest request, HttpResponse response) throws IOException {
-            for (Map.Entry<String, Entry> en : mappings) {
+            for (Map.Entry<String, InnerActionEntry> en : mappings) {
                 if (request.getRequestURI().startsWith(en.getKey())) {
-                    Entry entry = en.getValue();
+                    InnerActionEntry entry = en.getValue();
                     if (!entry.checkMethod(request.getMethod())) {
                         response.finishJson(new RetResult(RET_METHOD_ERROR, "Method(" + request.getMethod() + ") Error"));
                         return;
@@ -69,11 +71,11 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
                     request.attachment = entry;
                     request.moduleid = entry.moduleid;
                     request.actionid = entry.actionid;
-                    if (entry.ignore) {
-                        authSuccessServlet.execute(request, response);
-                    } else {
+                    if (entry.auth) {
                         response.thenEvent(authSuccessServlet);
                         authenticate(request, response);
+                    } else {
+                        authSuccessServlet.execute(request, response);
                     }
                     return;
                 }
@@ -88,10 +90,10 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
         String path = _prefix == null ? "" : _prefix;
         WebServlet ws = this.getClass().getAnnotation(WebServlet.class);
         if (ws != null && !ws.repair()) path = "";
-        HashMap<String, Entry> map = load();
+        HashMap<String, InnerActionEntry> map = this._tmpentrys != null ? this._tmpentrys : loadActionEntry();
         this.mappings = new Map.Entry[map.size()];
         int i = -1;
-        for (Map.Entry<String, Entry> en : map.entrySet()) {
+        for (Map.Entry<String, InnerActionEntry> en : map.entrySet()) {
             mappings[++i] = new AbstractMap.SimpleEntry<>(path + en.getKey(), en.getValue());
         }
         //必须要倒排序, /query /query1 /query12  确保含子集的优先匹配 /query12  /query1  /query
@@ -164,10 +166,10 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
         preExecute(request, response);
     }
 
-    private HashMap<String, Entry> load() {
+    private HashMap<String, InnerActionEntry> loadActionEntry() {
         WebServlet module = this.getClass().getAnnotation(WebServlet.class);
         final int serviceid = module == null ? 0 : module.moduleid();
-        final HashMap<String, Entry> map = new HashMap<>();
+        final HashMap<String, InnerActionEntry> map = new HashMap<>();
         HashMap<String, Class> nameset = new HashMap<>();
         final Class selfClz = this.getClass();
         Class clz = this.getClass();
@@ -198,13 +200,81 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
                     throw new RuntimeException(this.getClass().getSimpleName() + " have two same " + HttpMapping.class.getSimpleName() + "(" + name + ")");
                 }
                 nameset.put(name, clz);
-                map.put(name, new Entry(serviceid, actionid, name, methods, method, createHttpServlet(method)));
+                map.put(name, new InnerActionEntry(serviceid, actionid, name, methods, method, createActionServlet(method)));
             }
         } while ((clz = clz.getSuperclass()) != HttpServlet.class);
         return map;
     }
 
-    private HttpServlet createHttpServlet(final Method method) {
+    protected static final class InnerActionEntry {
+
+        InnerActionEntry(int moduleid, int actionid, String name, String[] methods, Method method, HttpServlet servlet) {
+            this(moduleid, actionid, name, methods, method, auth(method), cacheseconds(method), servlet);
+        }
+
+        public InnerActionEntry(int moduleid, int actionid, String name, String[] methods, Method method, boolean auth, int cacheseconds, HttpServlet servlet) {
+            this.moduleid = moduleid;
+            this.actionid = actionid;
+            this.name = name;
+            this.methods = methods;
+            this.method = method;  //rest构建会为null
+            this.servlet = servlet;
+            this.auth = auth;
+            this.cacheseconds = cacheseconds;
+            this.cache = cacheseconds > 0 ? new ConcurrentHashMap<>() : null;
+            this.cacheHandler = cacheseconds > 0 ? (HttpResponse response, ByteBuffer[] buffers) -> {
+                int status = response.getStatus();
+                if (status != 200) return null;
+                CacheEntry ce = new CacheEntry(response.getStatus(), response.getContentType(), buffers);
+                cache.put(response.getRequest().getRequestURI(), ce);
+                return ce.getBuffers();
+            } : null;
+        }
+
+        private static boolean auth(Method method) {
+            HttpMapping mapping = method.getAnnotation(HttpMapping.class);
+            return mapping == null || mapping.auth();
+        }
+
+        private static int cacheseconds(Method method) {
+            HttpMapping mapping = method.getAnnotation(HttpMapping.class);
+            return mapping == null ? 0 : mapping.cacheseconds();
+        }
+
+        boolean isNeedCheck() {
+            return this.moduleid != 0 || this.actionid != 0;
+        }
+
+        boolean checkMethod(final String reqMethod) {
+            if (methods.length == 0) return true;
+            for (String m : methods) {
+                if (reqMethod.equalsIgnoreCase(m)) return true;
+            }
+            return false;
+        }
+
+        final BiFunction<HttpResponse, ByteBuffer[], ByteBuffer[]> cacheHandler;
+
+        final ConcurrentHashMap<String, CacheEntry> cache;
+
+        final int cacheseconds;
+
+        final boolean auth;
+
+        final int moduleid;
+
+        final int actionid;
+
+        final String name;
+
+        final String[] methods;
+
+        final Method method;
+
+        final HttpServlet servlet;
+    }
+
+    private HttpServlet createActionServlet(final Method method) {
         //------------------------------------------------------------------------------
         final String supDynName = HttpServlet.class.getName().replace('.', '/');
         final String interName = this.getClass().getName().replace('.', '/');
@@ -281,61 +351,6 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
-    }
-
-    private static final class Entry {
-
-        public Entry(int moduleid, int actionid, String name, String[] methods, Method method, HttpServlet servlet) {
-            this.moduleid = moduleid;
-            this.actionid = actionid;
-            this.name = name;
-            this.methods = methods;
-            this.method = method;
-            this.servlet = servlet;
-            HttpMapping mapping = method.getAnnotation(HttpMapping.class);
-            this.ignore = mapping == null || !mapping.auth();
-            this.cacheseconds = mapping == null ? 0 : mapping.cacheseconds();
-            this.cache = cacheseconds > 0 ? new ConcurrentHashMap<>() : null;
-            this.cacheHandler = cacheseconds > 0 ? (HttpResponse response, ByteBuffer[] buffers) -> {
-                int status = response.getStatus();
-                if (status != 200) return null;
-                CacheEntry ce = new CacheEntry(response.getStatus(), response.getContentType(), buffers);
-                cache.put(response.getRequest().getRequestURI(), ce);
-                return ce.getBuffers();
-            } : null;
-        }
-
-        public boolean isNeedCheck() {
-            return this.moduleid != 0 || this.actionid != 0;
-        }
-
-        public boolean checkMethod(final String reqMethod) {
-            if (methods.length == 0) return true;
-            for (String m : methods) {
-                if (reqMethod.equalsIgnoreCase(m)) return true;
-            }
-            return false;
-        }
-
-        public final BiFunction<HttpResponse, ByteBuffer[], ByteBuffer[]> cacheHandler;
-
-        public final ConcurrentHashMap<String, CacheEntry> cache;
-
-        public final int cacheseconds;
-
-        public final boolean ignore;
-
-        public final int moduleid;
-
-        public final int actionid;
-
-        public final String name;
-
-        public final String[] methods;
-
-        public final Method method;
-
-        public final HttpServlet servlet;
     }
 
     private static final class CacheEntry {
