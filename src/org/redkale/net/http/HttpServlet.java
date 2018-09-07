@@ -34,8 +34,6 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
 
     String _prefix = ""; //当前HttpServlet的path前缀
 
-    HashMap<String, InnerActionEntry> _tmpentrys;  //Rest生成时赋值, 字段名Rest有用到
-
     private Map.Entry<String, InnerActionEntry>[] mappings; //字段名Rest有用到
 
     //这里不能直接使用HttpServlet，会造成死循环初始化HttpServlet
@@ -90,7 +88,7 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
         String path = _prefix == null ? "" : _prefix;
         WebServlet ws = this.getClass().getAnnotation(WebServlet.class);
         if (ws != null && !ws.repair()) path = "";
-        HashMap<String, InnerActionEntry> map = this._tmpentrys != null ? this._tmpentrys : loadActionEntry();
+        HashMap<String, InnerActionEntry> map = loadActionEntry();
         this.mappings = new Map.Entry[map.size()];
         int i = -1;
         for (Map.Entry<String, InnerActionEntry> en : map.entrySet()) {
