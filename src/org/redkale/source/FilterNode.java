@@ -25,6 +25,8 @@ import org.redkale.util.*;
  */
 public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则DataSource很多重载接口会出现冲突
 
+    protected boolean readOnly;
+
     protected String column;
 
     protected FilterExpress express;
@@ -78,6 +80,16 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
         this.express = exp == null ? EQUAL : exp;
         this.itemand = itemand;
         this.value = val;
+    }
+
+    public FilterNode asReadOnly() {
+        this.readOnly = true;
+        return this;
+    }
+
+    public FilterNode readOnly(boolean readOnly) {
+        this.readOnly = readOnly;
+        return this;
     }
 
     public long findLongValue(final String col, long defValue) {
@@ -138,6 +150,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
     }
 
     protected FilterNode any(FilterNode node, boolean signor) {
+        if (this.readOnly) throw new RuntimeException("FilterNode(" + this + ") is ReadOnly");
         Objects.requireNonNull(node);
         if (this.column == null) {
             this.column = node.column;
@@ -1859,6 +1872,14 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
 
     public final void setValue(Serializable value) {
         this.value = value;
+    }
+
+    public boolean isReadOnly() {
+        return readOnly;
+    }
+
+    public void setReadOnly(boolean readOnly) {
+        this.readOnly = readOnly;
     }
 
     public final boolean isOr() {
