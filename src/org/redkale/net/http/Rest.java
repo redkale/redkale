@@ -702,7 +702,8 @@ public final class Rest {
         final String retDesc = Type.getDescriptor(RetResult.class);
         final String futureDesc = Type.getDescriptor(CompletableFuture.class);
         final String flipperDesc = Type.getDescriptor(Flipper.class);
-        final String httprsDesc = Type.getDescriptor(HttpResult.class);
+        final String httpServletName = HttpServlet.class.getName().replace('.', '/');
+        final String innerEntryName = HttpServlet.InnerActionEntry.class.getName().replace('.', '/');
         final String attrDesc = Type.getDescriptor(org.redkale.util.Attribute.class);
         final String multiContextDesc = Type.getDescriptor(MultiContext.class);
         final String multiContextName = MultiContext.class.getName().replace('.', '/');
@@ -802,9 +803,10 @@ public final class Rest {
         }
         if (entrys.isEmpty()) return null; //没有可HttpMapping的方法
 
+        RestClassLoader newLoader = new RestClassLoader(loader);
+        final int moduleid = controller == null ? 0 : controller.moduleid();
         { //注入 @WebServlet 注解
             String urlpath = "";
-            int moduleid = controller == null ? 0 : controller.moduleid();
             boolean repair = controller == null ? true : controller.repair();
             String comment = controller == null ? "" : controller.comment();
             av0 = cw.visitAnnotation(webServletDesc, true);
@@ -840,7 +842,13 @@ public final class Rest {
             classMap.put("repair", repair);
             //classMap.put("comment", comment); //不显示太多信息
         }
+        { //内部类
+            cw.visitInnerClass(innerEntryName, httpServletName, HttpServlet.InnerActionEntry.class.getSimpleName(), ACC_PROTECTED + ACC_FINAL + ACC_STATIC);
 
+            for (final MappingEntry entry : entrys) {
+                cw.visitInnerClass(newDynName + "$" + entry.newActionClassName, newDynName, entry.newActionClassName, ACC_PRIVATE + ACC_STATIC);
+            }
+        }
         {  //注入 @Resource  private XXXService _service;
             fv = cw.visitField(ACC_PRIVATE, REST_SERVICE_FIELD_NAME, serviceDesc, null, null);
             av0 = fv.visitAnnotation(resDesc, true);
@@ -908,7 +916,7 @@ public final class Rest {
                 restConverts.add(new Object[]{rcs, rcc});
             }
 
-            mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC, entry.name.replace('/', '$').replace('.', '_'), "(" + reqDesc + respDesc + ")V", null, new String[]{"java/io/IOException"}));
+            mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC, entry.newMethodName, "(" + reqDesc + respDesc + ")V", null, new String[]{"java/io/IOException"}));
             //mv.setDebug(true); 
             mv.debugLine();
 
@@ -1089,6 +1097,7 @@ public final class Rest {
                 mappingMap.put("comment", entry.comment);
                 mappingMap.put("methods", entry.methods);
                 mappingMap.put("result", grt == returnType ? returnType.getName() : String.valueOf(grt));
+                entry.mappingurl = url;
             }
 
             { // 设置 Annotation
@@ -1742,7 +1751,98 @@ public final class Rest {
             mv.visitMaxs(maxStack, maxLocals);
             mappingMap.put("params", paramMaps);
             mappingMaps.add(mappingMap);
+
+            { //_Dync_XXX__HttpServlet.class
+                ClassWriter cw2 = new ClassWriter(COMPUTE_FRAMES);
+                cw2.visit(V1_8, ACC_SUPER, newDynName + "$" + entry.newActionClassName, null, httpServletName, null);
+
+                cw2.visitInnerClass(newDynName + "$" + entry.newActionClassName, newDynName, entry.newActionClassName, ACC_PRIVATE + ACC_STATIC);
+                {
+                    fv = cw2.visitField(0, "servlet", "L" + newDynName + ";", null, null);
+                    fv.visitEnd();
+                }
+                {
+                    mv = new MethodDebugVisitor(cw2.visitMethod(0, "<init>", "(L" + newDynName + ";)V", null, null));
+                    mv.visitVarInsn(ALOAD, 0);
+                    mv.visitMethodInsn(INVOKESPECIAL, httpServletName, "<init>", "()V", false);
+                    mv.visitVarInsn(ALOAD, 0);
+                    mv.visitVarInsn(ALOAD, 1);
+                    mv.visitFieldInsn(PUTFIELD, newDynName + "$" + entry.newActionClassName, "servlet", "L" + newDynName + ";");
+                    mv.visitInsn(RETURN);
+                    mv.visitMaxs(2, 2);
+                    mv.visitEnd();
+                }
+                if (false) {
+                    mv = new MethodDebugVisitor(cw2.visitMethod(ACC_SYNTHETIC, "<init>", "(L" + newDynName + ";L" + newDynName + "$" + entry.newActionClassName + ";)V", null, null));
+                    mv.visitVarInsn(ALOAD, 0);
+                    mv.visitVarInsn(ALOAD, 1);
+                    mv.visitMethodInsn(INVOKESPECIAL, newDynName + "$" + entry.newActionClassName, "<init>", "L" + newDynName + ";", false);
+                    mv.visitInsn(RETURN);
+                    mv.visitMaxs(2, 3);
+                    mv.visitEnd();
+                }
+                {
+                    mv = new MethodDebugVisitor(cw2.visitMethod(ACC_PUBLIC, "execute", "(" + reqDesc + respDesc + ")V", null, new String[]{"java/io/IOException"}));
+                    mv.visitVarInsn(ALOAD, 0);
+                    mv.visitFieldInsn(GETFIELD, newDynName + "$" + entry.newActionClassName, "servlet", "L" + newDynName + ";");
+                    mv.visitVarInsn(ALOAD, 1);
+                    mv.visitVarInsn(ALOAD, 2);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, newDynName, entry.newMethodName, "(" + reqDesc + respDesc + ")V", false);
+                    mv.visitInsn(RETURN);
+                    mv.visitMaxs(3, 3);
+                    mv.visitEnd();
+                }
+                cw2.visitEnd();
+                newLoader.addClass((newDynName + "$" + entry.newActionClassName).replace('/', '.'), cw2.toByteArray());
+            }
         } // end  for each 
+
+//        HashMap<String, InnerActionEntry> _createRestInnerActionEntry() {
+//              HashMap<String, InnerActionEntry> map = new HashMap<>();
+//              map.put("asyncfind3", new InnerActionEntry(100000,200000,"asyncfind3", new String[]{},null,false,0, new _Dync_asyncfind3_HttpServlet()));
+//              map.put("asyncfind3", new InnerActionEntry(1,2,"asyncfind2", new String[]{"GET", "POST"},null,true,0, new _Dync_asyncfind2_HttpServlet()));
+//              return map;
+//          }
+        { //_createRestInnerActionEntry 方法
+            mv = new MethodDebugVisitor(cw.visitMethod(0, "_createRestInnerActionEntry", "()Ljava/util/HashMap;", "()Ljava/util/HashMap<Ljava/lang/String;L" + innerEntryName + ";>;", null));
+            //mv.setDebug(true);
+            mv.visitTypeInsn(NEW, "java/util/HashMap");
+            mv.visitInsn(DUP);
+            mv.visitMethodInsn(INVOKESPECIAL, "java/util/HashMap", "<init>", "()V", false);
+            mv.visitVarInsn(ASTORE, 1);
+
+            for (final MappingEntry entry : entrys) {
+                mv.visitVarInsn(ALOAD, 1);
+                mv.visitLdcInsn(entry.mappingurl);  //name
+                mv.visitTypeInsn(NEW, innerEntryName); //new InnerActionEntry
+                mv.visitInsn(DUP);
+                pushInt(mv, moduleid); //moduleid
+                pushInt(mv, entry.actionid); //actionid
+                mv.visitLdcInsn(entry.mappingurl); //name
+                pushInt(mv, entry.methods.length);  //methods
+                mv.visitTypeInsn(ANEWARRAY, "java/lang/String");
+                for (int i = 0; i < entry.methods.length; i++) {
+                    mv.visitInsn(DUP);
+                    pushInt(mv, i);
+                    mv.visitLdcInsn(entry.methods[i]);
+                    mv.visitInsn(AASTORE);
+                }
+                mv.visitInsn(ACONST_NULL); //method
+                mv.visitInsn(entry.auth ? ICONST_1 : ICONST_0); //auth
+                pushInt(mv, entry.cacheseconds); //cacheseconds
+                mv.visitTypeInsn(NEW, newDynName + "$" + entry.newActionClassName);
+                mv.visitInsn(DUP);
+                mv.visitVarInsn(ALOAD, 0);
+                mv.visitMethodInsn(INVOKESPECIAL, newDynName + "$" + entry.newActionClassName, "<init>", "(L" + newDynName + ";)V", false);
+                mv.visitMethodInsn(INVOKESPECIAL, innerEntryName, "<init>", "(IILjava/lang/String;[Ljava/lang/String;Ljava/lang/reflect/Method;ZILorg/redkale/net/http/HttpServlet;)V", false);
+                mv.visitMethodInsn(INVOKEVIRTUAL, "java/util/HashMap", "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;", false);
+                mv.visitInsn(POP);
+            }
+            mv.visitVarInsn(ALOAD, 1);
+            mv.visitInsn(ARETURN);
+            mv.visitMaxs(2, 2);
+            mv.visitEnd();
+        }
 
         for (Map.Entry<String, java.lang.reflect.Type> en : bodyTypes.entrySet()) {
             fv = cw.visitField(ACC_PRIVATE, en.getKey(), "Ljava/lang/reflect/Type;", null, null);
@@ -1773,9 +1873,10 @@ public final class Rest {
         }
 
         cw.visitEnd();
-
-        Class<?> newClazz = new RestClassLoader(loader).loadClass(newDynName.replace('/', '.'), cw.toByteArray());
+        newLoader.addClass(newDynName.replace('/', '.'), cw.toByteArray());
         try {
+            Class<?> newClazz = newLoader.findClass(newDynName.replace('/', '.'));
+
             T obj = ((Class<T>) newClazz).getDeclaredConstructor().newInstance();
             for (Map.Entry<String, org.redkale.util.Attribute> en : restAttributes.entrySet()) {
                 Field attrField = newClazz.getDeclaredField(en.getKey());
@@ -1805,8 +1906,13 @@ public final class Rest {
             java.util.function.Supplier<String> sSupplier = () -> JsonConvert.root().convertTo(classMap);
             tostringfield.set(obj, sSupplier);
 
+            Method restactMethod = newClazz.getDeclaredMethod("_createRestInnerActionEntry");
+            restactMethod.setAccessible(true);
+            Field tmpentrysfield = HttpServlet.class.getDeclaredField("_tmpentrys");
+            tmpentrysfield.setAccessible(true);
+            tmpentrysfield.set(obj, restactMethod.invoke(obj));
             return obj;
-        } catch (Exception e) {
+        } catch (Throwable e) {
             throw new RuntimeException(e);
         }
     }
@@ -1848,12 +1954,25 @@ public final class Rest {
 
     private static class RestClassLoader extends ClassLoader {
 
+        private Map<String, byte[]> classes = new HashMap<>();
+
         public RestClassLoader(ClassLoader parent) {
             super(parent);
         }
 
+        @Override
+        protected Class<?> findClass(String name) throws ClassNotFoundException {
+            byte[] classData = classes.get(name);
+            if (classData == null) return super.findClass(name);
+            return super.defineClass(name, classData, 0, classData.length);
+        }
+
         public final Class<?> loadClass(String name, byte[] b) {
             return defineClass(name, b, 0, b.length);
+        }
+
+        public final void addClass(String name, byte[] b) {
+            classes.put(name, b);
         }
     }
 
@@ -1896,6 +2015,8 @@ public final class Rest {
                 }
             }
             this.existsPound = pound;
+            this.newMethodName = this.name.replace('/', '$').replace('.', '_');
+            this.newActionClassName = "_Dyn_" + this.newMethodName + "_ActionHttpServlet";
         }
 
         public final int methodidx; // _paramtypes 的下标，从0开始
@@ -1903,6 +2024,10 @@ public final class Rest {
         public final Method mappingMethod;
 
         public final boolean ignore;
+
+        public final String newMethodName;
+
+        public final String newActionClassName;
 
         public final String name;
 
@@ -1917,6 +2042,8 @@ public final class Rest {
         public final int cacheseconds;
 
         public final boolean existsPound;  //是否包含#的参数
+
+        String mappingurl; //在生成方法时赋值， 供_createRestInnerActionEntry使用
 
         @RestMapping()
         void mapping() { //用于获取Mapping 默认值

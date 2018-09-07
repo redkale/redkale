@@ -380,7 +380,6 @@ public class HttpPrepareServlet extends PrepareServlet<String, HttpContext, Http
             servlet._prefix = prefix.toString();
             putServlet(servlet);
         }
-        if (!(servlet instanceof WebSocketServlet)) servlet.preInit(null, conf); //WebSocketServlet初始化必须要有context
     }
 
     /**
