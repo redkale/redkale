@@ -20,12 +20,15 @@
                                      org.mariadb.jdbc.Driver  ——————  org.mariadb.jdbc.MySQLDataSource
                                        org.postgresql.Driver  ——————  org.postgresql.ds.PGConnectionPoolDataSource
                                        com.mysql.jdbc.Driver  ——————  com.mysql.jdbc.jdbc2.optional.MysqlConnectionPoolDataSource
+                                    com.mysql.cj.jdbc.Driver  ——————  com.mysql.cj.jdbc.MysqlConnectionPoolDataSource
                              oracle.jdbc.driver.OracleDriver  ——————  oracle.jdbc.pool.OracleConnectionPoolDataSource
                 com.microsoft.sqlserver.jdbc.SQLServerDriver  ——————  com.microsoft.sqlserver.jdbc.SQLServerConnectionPoolDataSource
+                                               org.h2.Driver  ——————  org.h2.jdbcx.JdbcDataSource
                 因此 com.mysql.jdbc.Driver 会被自动转换成 com.mysql.jdbc.jdbc2.optional.MysqlConnectionPoolDataSource
                 并且如果JDBC驱动是以上几个版本，javax.persistence.jdbc.driver属性都可以省略，Redkale会根据javax.persistence.jdbc.url的值来识别驱动
-            -->
             <property name="javax.persistence.jdbc.driver" value="com.mysql.jdbc.Driver"/>
+            <property name="javax.persistence.jdbc.source" value="com.mysql.jdbc.jdbc2.optional.MysqlConnectionPoolDataSource"/>
+            -->
             <property name="javax.persistence.jdbc.user" value="root"/>
             <property name="javax.persistence.jdbc.password" value="123456"/>
             
@@ -47,7 +50,6 @@
         <properties>
             <!-- jdbc:mysql://127.0.0.1:3306/dbim?autoReconnect=true&amp;autoReconnectForPools=true&amp;characterEncoding=utf8 -->
             <property name="javax.persistence.jdbc.url" value="jdbc:mysql://127.0.0.1:3306/dbim?characterEncoding=utf8"/>
-            <property name="javax.persistence.jdbc.driver" value="com.mysql.jdbc.Driver"/>
             <property name="javax.persistence.jdbc.user" value="root"/>
             <property name="javax.persistence.jdbc.password" value="123456"/>
         </properties>
