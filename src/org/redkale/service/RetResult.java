@@ -129,7 +129,7 @@ public class RetResult<T> {
      */
     public RetResult<T> attach(String key, Object value) {
         if (this.attach == null) this.attach = new HashMap<>();
-        boolean canstr = value != null && (value instanceof CharSequence || value.getClass().isPrimitive());
+        boolean canstr = value != null && (value instanceof CharSequence || value instanceof Number || value.getClass().isPrimitive());
         this.attach.put(key, value == null ? null : (canstr ? String.valueOf(value) : JsonConvert.root().convertTo(value)));
         return this;
     }
