@@ -538,7 +538,7 @@ public final class ResourceFactory {
         if (pos < 0) return name;
         String prefix = name.substring(0, pos);
         String subname = name.substring(pos + "{system.property.".length());
-        pos = subname.indexOf('}');
+        pos = subname.lastIndexOf('}');
         if (pos < 0) return name;
         String postfix = subname.substring(pos + 1);
         String property = subname.substring(0, pos);
