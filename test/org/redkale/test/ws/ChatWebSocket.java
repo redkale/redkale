@@ -5,7 +5,6 @@
  */
 package org.redkale.test.ws;
 
-import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import javax.annotation.Resource;
@@ -72,7 +71,7 @@ public class ChatWebSocket extends WebSocket<Integer, Object> {
         message.fromuserid = getUserid();
         message.fromusername = "用户" + getUserid();
         System.out.println("获取消息: message: " + message + ", map: " + extmap);
-        super.broadcastMessage(message);
+        service.chatMessage(message);
     }
 
     /**
@@ -90,16 +89,6 @@ public class ChatWebSocket extends WebSocket<Integer, Object> {
     @RestOnMessage(name = "joinroom")
     public void onJoinRoom(int roomid) {
         service.joinRoom(getUserid(), roomid);
-        System.out.println("加入房间: roomid: " + roomid);
-    }
-
-    public static void main(String[] args) throws Throwable {
-
-        Method method = Arrays.asList(Rest.class.getDeclaredMethods())
-            .stream().filter(m -> "createRestWebSocketServlet".equals(m.getName()))
-            .findFirst().get();
-        method.setAccessible(true);
-        System.out.println(method.invoke(null, Thread.currentThread().getContextClassLoader(), ChatWebSocket.class));
     }
 
 }
