@@ -434,6 +434,21 @@ public final class ResourceFactory {
         return map == null ? ((recursive && parent != null) ? parent.contains(recursive, name, clazz) : false) : map.containsKey(name);
     }
 
+    /**
+     * 查找指定资源名和资源类型的资源对象所在的ResourceFactory， 没有则返回null
+     *
+     * @param name  资源名
+     * @param clazz 资源类型
+     *
+     * @return ResourceFactory
+     */
+    public ResourceFactory findResourceFactory(String name, Type clazz) {
+        Map<String, ResourceEntry> map = this.store.get(clazz);
+        if (map != null && map.containsKey(name)) return this;
+        if (parent != null) return parent.findResourceFactory(name, clazz);
+        return null;
+    }
+
     public <A> A find(Class<? extends A> clazz) {
         return find("", clazz);
     }
