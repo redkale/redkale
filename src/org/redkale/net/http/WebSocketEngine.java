@@ -325,6 +325,54 @@ public class WebSocketEngine {
         }
     }
 
+    @Comment("给指定WebSocket连接用户发起操作指令")
+    public CompletableFuture<Integer> broadcastAction(final WebSocketAction action) {
+        CompletableFuture<Integer> future = null;
+        if (single) {
+            for (WebSocket websocket : websockets.values()) {
+                future = future == null ? websocket.action(action) : future.thenCombine(websocket.action(action), (a, b) -> a | (Integer) b);
+            }
+        } else {
+            for (List<WebSocket> list : websockets2.values()) {
+                for (WebSocket websocket : list) {
+                    future = future == null ? websocket.action(action) : future.thenCombine(websocket.action(action), (a, b) -> a | (Integer) b);
+                }
+            }
+        }
+        return future == null ? CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY) : future;
+    }
+
+    @Comment("给指定用户组发送操作")
+    public CompletableFuture<Integer> sendAction(final WebSocketAction action, final Stream<? extends Serializable> userids) {
+        Object[] array = userids.toArray();
+        Serializable[] ss = new Serializable[array.length];
+        for (int i = 0; i < array.length; i++) {
+            ss[i] = (Serializable) array[i];
+        }
+        return sendAction(action, ss);
+    }
+
+    @Comment("给指定用户组发送操作")
+    public CompletableFuture<Integer> sendAction(final WebSocketAction action, final Serializable... userids) {
+        CompletableFuture<Integer> future = null;
+        if (single) {
+            for (Serializable userid : userids) {
+                WebSocket websocket = websockets.get(userid);
+                if (websocket == null) continue;
+                future = future == null ? websocket.action(action) : future.thenCombine(websocket.action(action), (a, b) -> a | (Integer) b);
+            }
+        } else {
+            for (Serializable userid : userids) {
+                List<WebSocket> list = websockets2.get(userid);
+                if (list == null) continue;
+                for (WebSocket websocket : list) {
+                    future = future == null ? websocket.action(action) : future.thenCombine(websocket.action(action), (a, b) -> a | (Integer) b);
+                }
+            }
+        }
+        return future == null ? CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY) : future;
+    }
+
     @Comment("获取最大连接数")
     public int getLocalWsmaxconns() {
         return this.wsmaxconns;

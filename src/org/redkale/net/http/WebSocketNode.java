@@ -92,6 +92,10 @@ public abstract class WebSocketNode {
 
     protected abstract CompletableFuture<Integer> broadcastMessage(@RpcTargetAddress InetSocketAddress targetAddress, WebSocketRange wsrange, Object message, boolean last);
 
+    protected abstract CompletableFuture<Integer> sendAction(@RpcTargetAddress InetSocketAddress targetAddress, WebSocketAction action, Serializable userid);
+
+    protected abstract CompletableFuture<Integer> broadcastAction(@RpcTargetAddress InetSocketAddress targetAddress, WebSocketAction action);
+
     protected abstract CompletableFuture<Void> connect(Serializable userid, InetSocketAddress sncpAddr);
 
     protected abstract CompletableFuture<Void> disconnect(Serializable userid, InetSocketAddress sncpAddr);
@@ -553,6 +557,90 @@ public abstract class WebSocketNode {
                 if (addr == null || addr.equals(localSncpAddress)) continue;
                 future = future == null ? remoteNode.sendMessage(addr, remoteMessage, last, userid)
                     : future.thenCombine(remoteNode.sendMessage(addr, remoteMessage, last, userid), (a, b) -> a | b);
+            }
+            return future == null ? CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY) : future;
+        });
+        return localFuture == null ? remoteFuture : localFuture.thenCombine(remoteFuture, (a, b) -> a | b);
+    }
+
+    /**
+     * 广播操作， 给所有人发操作
+     *
+     * @param action 操作参数
+     *
+     * @return 为0表示成功， 其他值表示部分发送异常
+     */
+    @Local
+    public CompletableFuture<Integer> broadcastAction(final WebSocketAction action) {
+        if (this.localEngine != null && this.sncpNodeAddresses == null) { //本地模式且没有分布式
+            return this.localEngine.broadcastAction(action);
+        }
+        CompletableFuture<Integer> localFuture = this.localEngine == null ? null : this.localEngine.broadcastAction(action);
+        tryAcquireSemaphore();
+        CompletableFuture<Collection<InetSocketAddress>> addrsFuture = sncpNodeAddresses.getCollectionAsync(SOURCE_SNCP_ADDRS_KEY);
+        if (semaphore != null) addrsFuture.whenComplete((r, e) -> releaseSemaphore());
+        CompletableFuture<Integer> remoteFuture = addrsFuture.thenCompose((Collection<InetSocketAddress> addrs) -> {
+            if (logger.isLoggable(Level.FINEST)) logger.finest("websocket broadcast action (" + action + ") on " + addrs);
+            if (addrs == null || addrs.isEmpty()) return CompletableFuture.completedFuture(0);
+            CompletableFuture<Integer> future = null;
+            for (InetSocketAddress addr : addrs) {
+                if (addr == null || addr.equals(localSncpAddress)) continue;
+                future = future == null ? remoteNode.broadcastAction(addr, action)
+                    : future.thenCombine(remoteNode.broadcastAction(addr, action), (a, b) -> a | b);
+            }
+            return future == null ? CompletableFuture.completedFuture(0) : future;
+        });
+        return localFuture == null ? remoteFuture : localFuture.thenCombine(remoteFuture, (a, b) -> a | b);
+    }
+
+    /**
+     * 向指定用户发送操作，先发送本地连接，再发送远程连接  <br>
+     * 如果当前WebSocketNode是远程模式，此方法只发送远程连接
+     *
+     * @param action 操作参数
+     * @param userids Serializable[]
+     *
+     * @return 为0表示成功， 其他值表示部分发送异常
+     */
+    @Local
+    public CompletableFuture<Integer> sendAction(final WebSocketAction action, final Serializable... userids) {
+        if (userids == null || userids.length < 1) return CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY);
+        if (this.localEngine != null && this.sncpNodeAddresses == null) { //本地模式且没有分布式
+            return this.localEngine.sendAction(action, userids);
+        }
+        CompletableFuture<Integer> future = null;
+        for (Serializable userid : userids) {
+            future = future == null ? sendOneAction(action, userid) : future.thenCombine(sendOneAction(action, userid), (a, b) -> a | b);
+        }
+        return future == null ? CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY) : future;
+    }
+
+    protected CompletableFuture<Integer> sendOneAction(final WebSocketAction action, final Serializable userid) {
+        if (logger.isLoggable(Level.FINEST)) {
+            logger.finest("websocket want send action {userid:" + userid + ", action:" + action + "} from locale node to " + ((this.localEngine != null) ? "locale" : "remote") + " engine");
+        }
+        CompletableFuture<Integer> localFuture = null;
+        if (this.localEngine != null) localFuture = localEngine.sendAction(action, userid);
+        if (this.sncpNodeAddresses == null || this.remoteNode == null) {
+            if (logger.isLoggable(Level.FINEST)) logger.finest("websocket remote node is null");
+            //没有CacheSource就不会有分布式节点
+            return localFuture == null ? CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY) : localFuture;
+        }
+        //远程节点发送操作
+        tryAcquireSemaphore();
+        CompletableFuture<Collection<InetSocketAddress>> addrsFuture = sncpNodeAddresses.getCollectionAsync(SOURCE_SNCP_USERID_PREFIX + userid);
+        if (semaphore != null) addrsFuture.whenComplete((r, e) -> releaseSemaphore());
+        CompletableFuture<Integer> remoteFuture = addrsFuture.thenCompose((Collection<InetSocketAddress> addrs) -> {
+            if (addrs == null || addrs.isEmpty()) {
+                if (logger.isLoggable(Level.FINER)) logger.finer("websocket not found userid:" + userid + " on any node ");
+                return CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY);
+            }
+            if (logger.isLoggable(Level.FINEST)) logger.finest("websocket(localaddr=" + localSncpAddress + ") found userid:" + userid + " on " + addrs);
+            CompletableFuture<Integer> future = null;
+            for (InetSocketAddress addr : addrs) {
+                if (addr == null || addr.equals(localSncpAddress)) continue;
+                future = future == null ? remoteNode.sendAction(addr, action, userid)
+                    : future.thenCombine(remoteNode.sendAction(addr, action, userid), (a, b) -> a | b);
             }
             return future == null ? CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY) : future;
         });

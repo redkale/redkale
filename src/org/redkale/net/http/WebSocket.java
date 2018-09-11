@@ -476,6 +476,35 @@ public abstract class WebSocket<G extends Serializable, T> {
     }
 
     /**
+     * 给指定userid的WebSocket节点发送操作
+     *
+     * @param action  操作参数
+     * @param userids Serializable[]
+     *
+     * @return 为0表示成功， 其他值表示异常
+     */
+    public final CompletableFuture<Integer> sendAction(final WebSocketAction action, Serializable... userids) {
+        if (_engine.node == null) return CompletableFuture.completedFuture(RETCODE_NODESERVICE_NULL);
+        CompletableFuture<Integer> rs = _engine.node.sendAction(action, userids);
+        if (_engine.logger.isLoggable(Level.FINEST)) _engine.logger.finest("userids:" + Arrays.toString(userids) + " send websocket action(" + action + ")");
+        return rs;
+    }
+
+    /**
+     * 广播操作， 给所有人发操作指令
+     *
+     * @param action 操作参数
+     *
+     * @return 为0表示成功， 其他值表示部分发送异常
+     */
+    public final CompletableFuture<Integer> broadcastAction(final WebSocketAction action) {
+        if (_engine.node == null) return CompletableFuture.completedFuture(RETCODE_NODESERVICE_NULL);
+        CompletableFuture<Integer> rs = _engine.node.broadcastAction(action);
+        if (_engine.logger.isLoggable(Level.FINEST)) _engine.logger.finest("broadcast send websocket action(" + action + ")");
+        return rs;
+    }
+
+    /**
      * 获取用户在线的SNCP节点地址列表，不是分布式则返回元素数量为1，且元素值为null的列表<br>
      * InetSocketAddress 为 SNCP节点地址
      *
@@ -681,6 +710,18 @@ public abstract class WebSocket<G extends Serializable, T> {
      */
     protected boolean predicate(WebSocketRange wsrange) {
         return true;
+    }
+
+    /**
+     * WebSocket.broadcastAction时的操作
+     *
+     * @param action 操作参数
+     *
+     * @return CompletableFuture
+     *
+     */
+    protected CompletableFuture<Integer> action(WebSocketAction action) {
+        return CompletableFuture.completedFuture(0);
     }
 
     /**

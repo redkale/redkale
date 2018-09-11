@@ -67,6 +67,18 @@ public class WebSocketNodeService extends WebSocketNode implements Service {
         return this.localEngine.broadcastMessage(wsrange, message, last);
     }
 
+    @Override
+    public CompletableFuture<Integer> sendAction(@RpcTargetAddress InetSocketAddress targetAddress, final WebSocketAction action, Serializable userid) {
+        if (this.localEngine == null) return CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY);
+        return this.localEngine.sendAction(action, userid);
+    }
+
+    @Override
+    public CompletableFuture<Integer> broadcastAction(@RpcTargetAddress InetSocketAddress targetAddress, final WebSocketAction action) {
+        if (this.localEngine == null) return CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY);
+        return this.localEngine.broadcastAction(action);
+    }
+
     /**
      * 当用户连接到节点，需要更新到CacheSource
      *
