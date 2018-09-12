@@ -27,9 +27,9 @@ import org.redkale.util.*;
  *
  * @author zhangjx
  */
-@SuppressWarnings("unchecked")
 @Local
 @AutoLoad(false)
+@SuppressWarnings("unchecked")
 @ResourceType(CacheSource.class)
 public class CacheMemorySource<V extends Object> extends AbstractService implements CacheSource<V>, Service, AutoCloseable, Resourcable {
 
@@ -341,6 +341,11 @@ public class CacheMemorySource<V extends Object> extends AbstractService impleme
     }
 
     @Override
+    public <T> T get(final String key, final Type type) {
+        return (T) get(key);
+    }
+
+    @Override
     public String getString(String key) {
         if (key == null) return null;
         CacheEntry entry = container.get(key);
@@ -359,6 +364,11 @@ public class CacheMemorySource<V extends Object> extends AbstractService impleme
     @Override
     public CompletableFuture<V> getAsync(final String key) {
         return CompletableFuture.supplyAsync(() -> get(key), getExecutor());
+    }
+
+    @Override
+    public <T> CompletableFuture<T> getAsync(final String key, final Type type) {
+        return CompletableFuture.supplyAsync(() -> (T) get(key), getExecutor());
     }
 
     @Override
@@ -383,6 +393,11 @@ public class CacheMemorySource<V extends Object> extends AbstractService impleme
         if (entry.isListCacheType()) return (V) (entry.listValue == null ? null : new ArrayList(entry.listValue));
         if (entry.isSetCacheType()) return (V) (entry.csetValue == null ? null : new HashSet(entry.csetValue));
         return (V) entry.objectValue;
+    }
+
+    @Override
+    public <T> T getAndRefresh(final String key, final int expireSeconds, final Type type) {
+        return (T) getAndRefresh(key, expireSeconds);
     }
 
     @Override
@@ -413,6 +428,11 @@ public class CacheMemorySource<V extends Object> extends AbstractService impleme
     @RpcMultiRun
     public CompletableFuture<V> getAndRefreshAsync(final String key, final int expireSeconds) {
         return CompletableFuture.supplyAsync(() -> getAndRefresh(key, expireSeconds), getExecutor());
+    }
+
+    @Override
+    public <T> CompletableFuture<T> getAndRefreshAsync(final String key, final int expireSeconds, final Type type) {
+        return CompletableFuture.supplyAsync(() -> getAndRefresh(key, expireSeconds, type), getExecutor());
     }
 
     @Override
@@ -463,6 +483,11 @@ public class CacheMemorySource<V extends Object> extends AbstractService impleme
     }
 
     @Override
+    public <T> void set(String key, Type type, T value) {
+        set(CacheEntryType.OBJECT, key, value);
+    }
+
+    @Override
     @RpcMultiRun
     public void setString(String key, String value) {
         set(CacheEntryType.STRING, key, value);
@@ -478,6 +503,11 @@ public class CacheMemorySource<V extends Object> extends AbstractService impleme
     @RpcMultiRun
     public CompletableFuture<Void> setAsync(String key, V value) {
         return CompletableFuture.runAsync(() -> set(key, value), getExecutor()).whenComplete(futureCompleteConsumer);
+    }
+
+    @Override
+    public <T> CompletableFuture<Void> setAsync(String key, Type type, T value) {
+        return CompletableFuture.runAsync(() -> set(key, type, value), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
@@ -512,6 +542,11 @@ public class CacheMemorySource<V extends Object> extends AbstractService impleme
     }
 
     @Override
+    public <T> void set(final int expireSeconds, String key, Type type, T value) {
+        set(CacheEntryType.OBJECT, expireSeconds, key, value);
+    }
+
+    @Override
     @RpcMultiRun
     public void setString(int expireSeconds, String key, String value) {
         set(CacheEntryType.STRING, expireSeconds, key, value);
@@ -527,6 +562,11 @@ public class CacheMemorySource<V extends Object> extends AbstractService impleme
     @RpcMultiRun
     public CompletableFuture<Void> setAsync(int expireSeconds, String key, V value) {
         return CompletableFuture.runAsync(() -> set(expireSeconds, key, value), getExecutor()).whenComplete(futureCompleteConsumer);
+    }
+
+    @Override
+    public <T> CompletableFuture<Void> setAsync(int expireSeconds, String key, Type type, T value) {
+        return CompletableFuture.runAsync(() -> set(expireSeconds, key, type, value), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
@@ -633,6 +673,11 @@ public class CacheMemorySource<V extends Object> extends AbstractService impleme
     }
 
     @Override
+    public <T> Collection<T> getCollection(final String key, final Type componentType) {
+        return (Collection<T>) get(key);
+    }
+
+    @Override
     public Collection<String> getStringCollection(final String key) {
         return (Collection<String>) get(key);
     }
@@ -645,6 +690,11 @@ public class CacheMemorySource<V extends Object> extends AbstractService impleme
     @Override
     public CompletableFuture<Collection<V>> getCollectionAsync(final String key) {
         return CompletableFuture.supplyAsync(() -> getCollection(key), getExecutor());
+    }
+
+    @Override
+    public CompletableFuture<Collection<V>> getCollectionAsync(final String key, final Type componentType) {
+        return CompletableFuture.supplyAsync(() -> getCollection(key, componentType), getExecutor());
     }
 
     @Override
@@ -675,6 +725,11 @@ public class CacheMemorySource<V extends Object> extends AbstractService impleme
     }
 
     @Override
+    public <T> Collection<T> getCollectionAndRefresh(final String key, final int expireSeconds, final Type componentType) {
+        return (Collection<T>) getAndRefresh(key, expireSeconds, componentType);
+    }
+
+    @Override
     @RpcMultiRun
     public Collection<String> getStringCollectionAndRefresh(final String key, final int expireSeconds) {
         return (Collection<String>) getAndRefresh(key, expireSeconds);
@@ -687,8 +742,19 @@ public class CacheMemorySource<V extends Object> extends AbstractService impleme
     }
 
     @Override
+    public <T> boolean existsSetItem(final String key, final Type type, final T value) {
+        Collection list = getCollection(key);
+        return list != null && list.contains(value);
+    }
+
+    @Override
     public CompletableFuture<Boolean> existsSetItemAsync(final String key, final V value) {
         return CompletableFuture.supplyAsync(() -> existsSetItem(key, value), getExecutor());
+    }
+
+    @Override
+    public <T> CompletableFuture<Boolean> existsSetItemAsync(final String key, final Type type, final T value) {
+        return CompletableFuture.supplyAsync(() -> existsSetItem(key, type, value), getExecutor());
     }
 
     @Override
@@ -726,6 +792,11 @@ public class CacheMemorySource<V extends Object> extends AbstractService impleme
     }
 
     @Override
+    public <T> CompletableFuture<Collection<T>> getCollectionAndRefreshAsync(final String key, final int expireSeconds, final Type componentType) {
+        return CompletableFuture.supplyAsync(() -> getCollectionAndRefresh(key, expireSeconds, componentType), getExecutor());
+    }
+
+    @Override
     @RpcMultiRun
     public CompletableFuture<Collection<String>> getStringCollectionAndRefreshAsync(final String key, final int expireSeconds) {
         return CompletableFuture.supplyAsync(() -> getStringCollectionAndRefresh(key, expireSeconds), getExecutor());
@@ -758,6 +829,11 @@ public class CacheMemorySource<V extends Object> extends AbstractService impleme
     }
 
     @Override
+    public <T> void appendListItem(String key, Type componentType, T value) {
+        appendListItem(CacheEntryType.OBJECT_LIST, key, value);
+    }
+
+    @Override
     @RpcMultiRun
     public void appendStringListItem(String key, String value) {
         appendListItem(CacheEntryType.STRING_LIST, key, value);
@@ -776,6 +852,11 @@ public class CacheMemorySource<V extends Object> extends AbstractService impleme
     }
 
     @Override
+    public <T> CompletableFuture<Void> appendListItemAsync(final String key, final Type componentType, final T value) {
+        return CompletableFuture.runAsync(() -> appendListItem(key, componentType, value), getExecutor()).whenComplete(futureCompleteConsumer);
+    }
+
+    @Override
     @RpcMultiRun
     public CompletableFuture<Void> appendStringListItemAsync(final String key, final String value) {
         return CompletableFuture.runAsync(() -> appendStringListItem(key, value), getExecutor()).whenComplete(futureCompleteConsumer);
@@ -790,6 +871,14 @@ public class CacheMemorySource<V extends Object> extends AbstractService impleme
     @Override
     @RpcMultiRun
     public void removeListItem(String key, V value) {
+        if (key == null) return;
+        CacheEntry entry = container.get(key);
+        if (entry == null || entry.listValue == null) return;
+        entry.listValue.remove(value);
+    }
+
+    @Override
+    public <T> void removeListItem(String key, final Type componentType, T value) {
         if (key == null) return;
         CacheEntry entry = container.get(key);
         if (entry == null || entry.listValue == null) return;
@@ -818,6 +907,11 @@ public class CacheMemorySource<V extends Object> extends AbstractService impleme
     @RpcMultiRun
     public CompletableFuture<Void> removeListItemAsync(final String key, final V value) {
         return CompletableFuture.runAsync(() -> removeListItem(key, value), getExecutor()).whenComplete(futureCompleteConsumer);
+    }
+
+    @Override
+    public <T> CompletableFuture<Void> removeListItemAsync(final String key, final Type componentType, T value) {
+        return CompletableFuture.runAsync(() -> removeListItem(key, componentType, value), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
@@ -853,6 +947,11 @@ public class CacheMemorySource<V extends Object> extends AbstractService impleme
     }
 
     @Override
+    public <T> void appendSetItem(String key, final Type componentType, T value) {
+        appendSetItem(CacheEntryType.OBJECT_SET, key, value);
+    }
+
+    @Override
     @RpcMultiRun
     public void appendStringSetItem(String key, String value) {
         appendSetItem(CacheEntryType.OBJECT_SET, key, value);
@@ -871,6 +970,11 @@ public class CacheMemorySource<V extends Object> extends AbstractService impleme
     }
 
     @Override
+    public <T> CompletableFuture<Void> appendSetItemAsync(final String key, final Type componentType, T value) {
+        return CompletableFuture.runAsync(() -> appendSetItem(key, componentType, value), getExecutor()).whenComplete(futureCompleteConsumer);
+    }
+
+    @Override
     @RpcMultiRun
     public CompletableFuture<Void> appendStringSetItemAsync(final String key, final String value) {
         return CompletableFuture.runAsync(() -> appendStringSetItem(key, value), getExecutor()).whenComplete(futureCompleteConsumer);
@@ -885,6 +989,14 @@ public class CacheMemorySource<V extends Object> extends AbstractService impleme
     @Override
     @RpcMultiRun
     public void removeSetItem(String key, V value) {
+        if (key == null) return;
+        CacheEntry entry = container.get(key);
+        if (entry == null || entry.csetValue == null) return;
+        entry.csetValue.remove(value);
+    }
+
+    @Override
+    public <T> void removeSetItem(String key, Type type, T value) {
         if (key == null) return;
         CacheEntry entry = container.get(key);
         if (entry == null || entry.csetValue == null) return;
@@ -913,6 +1025,11 @@ public class CacheMemorySource<V extends Object> extends AbstractService impleme
     @RpcMultiRun
     public CompletableFuture<Void> removeSetItemAsync(final String key, final V value) {
         return CompletableFuture.runAsync(() -> removeSetItem(key, value), getExecutor()).whenComplete(futureCompleteConsumer);
+    }
+
+    @Override
+    public <T> CompletableFuture<Void> removeSetItemAsync(final String key, final Type componentType, final T value) {
+        return CompletableFuture.runAsync(() -> removeSetItem(key, componentType, value), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override

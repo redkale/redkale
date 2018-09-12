@@ -42,6 +42,8 @@ public interface CacheSource<V extends Object> {
 
     public V get(final String key);
 
+    public <T> T get(final String key, final Type type);
+
     default V getIfAbsent(final String key, Function<String, ? extends V> mappingFunction) {
         V rs = get(key);
         if (rs == null) {
@@ -52,6 +54,8 @@ public interface CacheSource<V extends Object> {
     }
 
     public V getAndRefresh(final String key, final int expireSeconds);
+
+    public <T> T getAndRefresh(final String key, final int expireSeconds, final Type type);
 
     default V getAndRefreshIfAbsent(final String key, final int expireSeconds, Function<String, ? extends V> mappingFunction) {
         V rs = getAndRefresh(key, expireSeconds);
@@ -66,7 +70,11 @@ public interface CacheSource<V extends Object> {
 
     public void set(final String key, final V value);
 
+    public <T> void set(final String key, final Type type, final T value);
+
     public void set(final int expireSeconds, final String key, final V value);
+
+    public <T> void set(final int expireSeconds, final String key, final Type type, final T value);
 
     public void setExpireSeconds(final String key, final int expireSeconds);
 
@@ -82,9 +90,13 @@ public interface CacheSource<V extends Object> {
 
     public Collection<V> getCollection(final String key);
 
+    public <T> Collection<T> getCollection(final String key, final Type componentType);
+
     public int getCollectionSize(final String key);
 
     public Collection<V> getCollectionAndRefresh(final String key, final int expireSeconds);
+
+    public <T> Collection<T> getCollectionAndRefresh(final String key, final int expireSeconds, final Type componentType);
 
     public void appendListItem(final String key, final V value);
 
@@ -95,6 +107,16 @@ public interface CacheSource<V extends Object> {
     public void appendSetItem(final String key, final V value);
 
     public void removeSetItem(final String key, final V value);
+
+    public <T> void appendListItem(final String key, final Type componentType, final T value);
+
+    public <T> void removeListItem(final String key, final Type componentType, final T value);
+
+    public <T> boolean existsSetItem(final String key, final Type componentType, final T value);
+
+    public <T> void appendSetItem(final String key, final Type componentType, final T value);
+
+    public <T> void removeSetItem(final String key, final Type componentType, final T value);
 
     public List<String> queryKeys();
 
@@ -153,6 +175,8 @@ public interface CacheSource<V extends Object> {
     //---------------------- CompletableFuture 异步版 ---------------------------------
     public CompletableFuture<Boolean> existsAsync(final String key);
 
+    public <T> CompletableFuture<T> getAsync(final String key, final Type type);
+
     public CompletableFuture<V> getAsync(final String key);
 
     default CompletableFuture<V> getIfAbsentAsync(final String key, Function<String, ? extends V> mappingFunction) {
@@ -169,6 +193,8 @@ public interface CacheSource<V extends Object> {
     }
 
     public CompletableFuture<V> getAndRefreshAsync(final String key, final int expireSeconds);
+
+    public <T> CompletableFuture<T> getAndRefreshAsync(final String key, final int expireSeconds, final Type type);
 
     default CompletableFuture<V> getAndRefreshIfAbsentAsync(final String key, final int expireSeconds, Function<String, ? extends V> mappingFunction) {
         return getAndRefreshAsync(key, expireSeconds).thenCompose((V rs) -> {
@@ -187,7 +213,11 @@ public interface CacheSource<V extends Object> {
 
     public CompletableFuture<Void> setAsync(final String key, final V value);
 
+    public <T> CompletableFuture<Void> setAsync(final String key, final Type type, final T value);
+
     public CompletableFuture<Void> setAsync(final int expireSeconds, final String key, final V value);
+
+    public <T> CompletableFuture<Void> setAsync(final int expireSeconds, final String key, final Type type, final T value);
 
     public CompletableFuture<Void> setExpireSecondsAsync(final String key, final int expireSeconds);
 
@@ -203,9 +233,13 @@ public interface CacheSource<V extends Object> {
 
     public CompletableFuture<Collection<V>> getCollectionAsync(final String key);
 
+    public <T> CompletableFuture<Collection<T>> getCollectionAsync(final String key, final Type componentType);
+
     public CompletableFuture<Integer> getCollectionSizeAsync(final String key);
 
     public CompletableFuture<Collection<V>> getCollectionAndRefreshAsync(final String key, final int expireSeconds);
+
+    public <T> CompletableFuture<Collection<T>> getCollectionAndRefreshAsync(final String key, final int expireSeconds, final Type componentType);
 
     public CompletableFuture<Void> appendListItemAsync(final String key, final V value);
 
@@ -216,6 +250,16 @@ public interface CacheSource<V extends Object> {
     public CompletableFuture<Void> appendSetItemAsync(final String key, final V value);
 
     public CompletableFuture<Void> removeSetItemAsync(final String key, final V value);
+
+    public <T> CompletableFuture<Void> appendListItemAsync(final String key, final Type componentType, final T value);
+
+    public <T> CompletableFuture<Void> removeListItemAsync(final String key, final Type componentType, final T value);
+
+    public <T> CompletableFuture<Boolean> existsSetItemAsync(final String key, final Type componentType, final T value);
+
+    public <T> CompletableFuture<Void> appendSetItemAsync(final String key, final Type componentType, final T value);
+
+    public <T> CompletableFuture<Void> removeSetItemAsync(final String key, final Type componentType, final T value);
 
     public CompletableFuture<List<String>> queryKeysAsync();
 
