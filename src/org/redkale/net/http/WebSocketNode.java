@@ -60,7 +60,9 @@ public abstract class WebSocketNode {
     protected Semaphore semaphore;
 
     public void init(AnyValue conf) {
-        //if (sncpNodeAddresses != null) sncpNodeAddresses.initValueType(InetSocketAddress.class);
+        if (sncpNodeAddresses != null && "memory".equals(sncpNodeAddresses.getType())) {
+            sncpNodeAddresses.initValueType(InetSocketAddress.class);
+        }
         if (localEngine != null) {
             int wsthreads = localEngine.wsthreads;
             if (wsthreads == 0) wsthreads = Runtime.getRuntime().availableProcessors() * 8;
