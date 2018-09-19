@@ -1082,6 +1082,64 @@ public final class Utility {
     }
 
     /**
+     * SHA-256
+     *
+     * @param bs 待hash数据
+     *
+     * @return hash值
+     */
+    public static String sha256Hex(byte[] bs) {
+        return binToHexString(sha256Bytes(bs));
+    }
+
+    /**
+     * SHA-256
+     *
+     * @param bs 待hash数据
+     *
+     * @return hash值
+     */
+    public static byte[] sha256Bytes(byte[] bs) {
+        if (bs == null) return null;
+        MessageDigest digester;
+        try {
+            digester = MessageDigest.getInstance("SHA-256");
+        } catch (NoSuchAlgorithmException ex) {
+            throw new RuntimeException(ex);
+        }
+        return digester.digest(bs);
+    }
+
+    /**
+     * SHA-256
+     *
+     * @param str 待hash数据
+     *
+     * @return hash值
+     */
+    public static String sha256Hex(String str) {
+        return binToHexString(sha256Bytes(str));
+    }
+
+    /**
+     * SHA-256
+     *
+     * @param str 待hash数据
+     *
+     * @return hash值
+     */
+    public static byte[] sha256Bytes(String str) {
+        if (str == null) return null;
+        MessageDigest digester;
+        try {
+            digester = MessageDigest.getInstance("SHA-256");
+        } catch (NoSuchAlgorithmException ex) {
+            throw new RuntimeException(ex);
+        }
+        return digester.digest(str.getBytes());
+    }
+
+    /**
      * 将字节数组转换为16进制字符串
      *
      * @param bytes 字节数组
