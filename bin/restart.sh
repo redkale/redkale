@@ -14,7 +14,7 @@ fi
 
 cd "$APP_HOME"
 
-./bin/shutdown.sh
+"$APP_HOME"/bin/shutdown.sh
 
-./bin/start.sh
+"$APP_HOME"/bin/start.sh
 
