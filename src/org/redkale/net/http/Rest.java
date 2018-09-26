@@ -428,7 +428,7 @@ public final class Rest {
             cw2.visitInnerClass(newDynMessageFullName + endfix, newDynName, newDynMessageSimpleName + endfix, ACC_PUBLIC + ACC_STATIC);
             Set<String> paramnames = new HashSet<>();
             String methodesc = method.getName() + ":" + Type.getMethodDescriptor(method);
-            List<String> names = asmParamMap.get(methodesc);
+            List<String> names = asmParamMap == null ? null : asmParamMap.get(methodesc);
             if (names != null) while (names.remove(" ")); //删掉空元素
             Parameter[] params = method.getParameters();
             final LinkedHashMap<String, Parameter> paramap = new LinkedHashMap(); //必须使用LinkedHashMap确保顺序
