@@ -894,9 +894,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
             buffer.put(("HTTP/1.1 " + this.status + " " + httpCodes.get(this.status) + "\r\n").getBytes());
         }
         if (this.contentLength >= 0) buffer.put(("Content-Length: " + this.contentLength + "\r\n").getBytes());
-        buffer.put(serverNameBytes);
-        if (dateSupplier != null) buffer.put(dateSupplier.get());
-        if (!request.isWebSocket()) {
+        if (!this.request.isWebSocket()) {
             if (this.contentType == this.jsonContentType) {
                 buffer.put(this.jsonContentTypeBytes);
             } else if (this.contentType == null || this.contentType == this.plainContentType) {
@@ -904,6 +902,11 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
             } else {
                 buffer.put(("Content-Type: " + (this.contentType == null ? this.plainContentType : this.contentType) + "\r\n").getBytes());
             }
+        }
+        buffer.put(serverNameBytes);
+        if (dateSupplier != null) buffer.put(dateSupplier.get());
+
+        if (this.header.getValue("Connection") == null) {
             buffer.put(this.request.isKeepAlive() ? connectAliveBytes : connectCloseBytes);
         }
 
