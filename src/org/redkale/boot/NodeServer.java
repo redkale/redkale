@@ -489,7 +489,7 @@ public abstract class NodeServer {
             for (String s : wlist) {
                 sb.append(s);
             }
-            sb.append(threadName).append(" All Services load cost " + (System.currentTimeMillis() - starts) + " ms" + LINE_SEPARATOR);
+            sb.append(threadName).append("All Services load cost " + (System.currentTimeMillis() - starts) + " ms" + LINE_SEPARATOR);
         }
         if (sb != null && sb.length() > 0) logger.log(Level.INFO, sb.toString());
     }
