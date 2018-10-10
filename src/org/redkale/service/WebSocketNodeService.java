@@ -134,6 +134,21 @@ public class WebSocketNodeService extends WebSocketNode implements Service {
     }
 
     /**
+     * 判断用户是否有WebSocket
+     *
+     * @param userid        Serializable
+     * @param targetAddress InetSocketAddress
+     *
+     * @return 无返回值
+     */
+    @Override
+    public CompletableFuture<Boolean> existsWebSocket(Serializable userid, @RpcTargetAddress InetSocketAddress targetAddress) {
+        if (logger.isLoggable(Level.FINEST)) logger.finest(WebSocketNodeService.class.getSimpleName() + ".event: " + userid + " existsWebSocket from " + targetAddress);
+        if (localEngine == null) return CompletableFuture.completedFuture(false);
+        return CompletableFuture.completedFuture(localEngine.existsLocalWebSocket(userid));
+    }
+
+    /**
      * 强制关闭用户的WebSocket
      *
      * @param userid        Serializable
