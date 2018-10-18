@@ -83,6 +83,18 @@ public class FilterJoinNode extends FilterNode {
     }
 
     @Override
+    public FilterJoinNode copy() {
+        FilterJoinNode node = (FilterJoinNode) copy(new FilterJoinNode());
+        node.joinClass = this.joinClass;
+        node.joinEntity = this.joinEntity;
+        if (this.joinColumns != null) {
+            node.joinColumns = new String[this.joinColumns.length];
+            System.arraycopy(this.joinColumns, 0, node.joinColumns, 0, this.joinColumns.length);
+        }
+        return node;
+    }
+
+    @Override
     protected FilterNode any(final FilterNode node0, boolean signor) {
         Objects.requireNonNull(node0);
         if (!(node0 instanceof FilterJoinNode)) {

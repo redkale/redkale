@@ -82,6 +82,26 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
         this.value = val;
     }
 
+    public FilterNode copy() {
+        return copy(new FilterNode());
+    }
+
+    protected FilterNode copy(FilterNode node) {
+        node.readOnly = this.readOnly;
+        node.column = this.column;
+        node.express = this.express;
+        node.value = this.value;
+        node.itemand = this.itemand;
+        node.or = this.or;
+        if (this.nodes != null) {
+            node.nodes = new FilterNode[this.nodes.length];
+            for (int i = 0; i < node.nodes.length; i++) {
+                node.nodes[i] = this.nodes[i] == null ? null : this.nodes[i].copy();
+            }
+        }
+        return node;
+    }
+
     public FilterNode asReadOnly() {
         this.readOnly = true;
         return this;
