@@ -36,6 +36,9 @@ public final class BsonFactory extends ConvertFactory<BsonReader, BsonWriter> {
     static final Decodeable collectionStringDecoder = instance.loadDecoder(new TypeToken<Collection<String>>() {
     }.getType());
 
+    static final Decodeable collectionObjectDecoder = instance.loadDecoder(new TypeToken<Collection<Object>>() {
+    }.getType());
+
     static final Decodeable mapStringIntegerDecoder = instance.loadDecoder(new TypeToken<Map<String, Integer>>() {
     }.getType());
 
@@ -43,6 +46,9 @@ public final class BsonFactory extends ConvertFactory<BsonReader, BsonWriter> {
     }.getType());
 
     static final Decodeable mapStringStringDecoder = instance.loadDecoder(new TypeToken<Map<String, String>>() {
+    }.getType());
+
+    static final Decodeable mapStringObjectDecoder = instance.loadDecoder(new TypeToken<Map<String, Object>>() {
     }.getType());
 
     static {

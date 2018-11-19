@@ -61,7 +61,10 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
     public void init(final ConvertFactory factory) {
         this.factory = factory;
         try {
-            if (type == Object.class) return;
+            if (type == Object.class) {
+                this.creatorConstructorMembers = null;
+                return;
+            }
 
             Class clazz = null;
             if (type instanceof ParameterizedType) {
@@ -229,7 +232,7 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
             }
         }
         if (this.creatorConstructorMembers == null) {  //空构造函数
-            final T result = this.creator.create();
+            final T result = this.creator == null ? null : this.creator.create();
             boolean first = true;
             while (hasNext(in, first)) {
                 DeMember member = in.readFieldName(members);
@@ -270,6 +273,7 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
                 first = false;
             }
             in.readObjectE(typeClass);
+            if (this.creator == null) return null;
             final T result = this.creator.create(constructorParams);
             for (int i = 0; i < oc; i++) {
                 ((Attribute) otherParams[i][0]).set(result, otherParams[i][1]);

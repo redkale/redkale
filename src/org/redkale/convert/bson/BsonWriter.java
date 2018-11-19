@@ -248,6 +248,8 @@ public class BsonWriter extends Writer {
                 typeval = 26;
             } else if (comType == String.class) {
                 typeval = 29;
+            } else if (!comType.toString().startsWith("java.lang")) {
+                typeval = 30;
             }
         }
         if (typeval == 127 && member.getEncoder() instanceof MapEncoder) {
@@ -259,6 +261,8 @@ public class BsonWriter extends Writer {
                 typeval = 46;
             } else if (keyType == String.class && valType == String.class) {
                 typeval = 49;
+            } else if (keyType == String.class && !valType.toString().startsWith("java.lang")) {
+                typeval = 50;
             }
         }
         writeByte(typeval);

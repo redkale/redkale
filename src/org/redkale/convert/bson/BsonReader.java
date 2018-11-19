@@ -120,6 +120,9 @@ public class BsonReader extends Reader {
             case 29:
                 BsonFactory.collectionStringDecoder.convertFrom(this);
                 break;
+            case 30:
+                BsonFactory.collectionObjectDecoder.convertFrom(this);
+                break;
             case 45:
                 BsonFactory.mapStringIntegerDecoder.convertFrom(this);
                 break;
@@ -128,6 +131,9 @@ public class BsonReader extends Reader {
                 break;
             case 49:
                 BsonFactory.mapStringStringDecoder.convertFrom(this);
+                break;
+            case 50:
+                BsonFactory.mapStringObjectDecoder.convertFrom(this);
                 break;
             case 101:
                 BoolArraySimpledCoder.instance.convertFrom(this);
