@@ -111,6 +111,24 @@ public class BsonReader extends Reader {
                 break;
             case 9: readString();
                 break;
+            case 25:
+                BsonFactory.collectionIntegerDecoder.convertFrom(this);
+                break;
+            case 26:
+                BsonFactory.collectionLongDecoder.convertFrom(this);
+                break;
+            case 29:
+                BsonFactory.collectionStringDecoder.convertFrom(this);
+                break;
+            case 45:
+                BsonFactory.mapStringIntegerDecoder.convertFrom(this);
+                break;
+            case 46:
+                BsonFactory.mapStringLongDecoder.convertFrom(this);
+                break;
+            case 49:
+                BsonFactory.mapStringStringDecoder.convertFrom(this);
+                break;
             case 101:
                 BoolArraySimpledCoder.instance.convertFrom(this);
                 break;

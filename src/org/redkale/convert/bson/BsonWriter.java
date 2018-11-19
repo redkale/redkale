@@ -240,6 +240,27 @@ public class BsonWriter extends Writer {
         } else if (type == String[].class) {
             typeval = 109;
         }
+        if (typeval == 127 && member.getEncoder() instanceof CollectionEncoder) {
+            java.lang.reflect.Type comType = ((CollectionEncoder) member.getEncoder()).getEncoder().getType();
+            if (comType == Integer.class) {
+                typeval = 25;
+            } else if (comType == Long.class) {
+                typeval = 26;
+            } else if (comType == String.class) {
+                typeval = 29;
+            }
+        }
+        if (typeval == 127 && member.getEncoder() instanceof MapEncoder) {
+            java.lang.reflect.Type keyType = ((MapEncoder) member.getEncoder()).getKeyencoder().getType();
+            java.lang.reflect.Type valType = ((MapEncoder) member.getEncoder()).getValencoder().getType();
+            if (keyType == String.class && valType == Integer.class) {
+                typeval = 45;
+            } else if (keyType == String.class && valType == Long.class) {
+                typeval = 46;
+            } else if (keyType == String.class && valType == String.class) {
+                typeval = 49;
+            }
+        }
         writeByte(typeval);
     }
 

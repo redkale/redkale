@@ -6,8 +6,9 @@
 package org.redkale.convert.bson;
 
 import java.io.Serializable;
+import java.util.*;
 import org.redkale.convert.*;
-import org.redkale.util.AnyValue;
+import org.redkale.util.*;
 
 /**
  * BSON的ConvertFactory
@@ -25,6 +26,24 @@ public final class BsonFactory extends ConvertFactory<BsonReader, BsonWriter> {
     static final Decodeable objectDecoder = instance.loadDecoder(Object.class);
 
     static final Encodeable objectEncoder = instance.loadEncoder(Object.class);
+
+    static final Decodeable collectionIntegerDecoder = instance.loadDecoder(new TypeToken<Collection<Integer>>() {
+    }.getType());
+
+    static final Decodeable collectionLongDecoder = instance.loadDecoder(new TypeToken<Collection<Long>>() {
+    }.getType());
+
+    static final Decodeable collectionStringDecoder = instance.loadDecoder(new TypeToken<Collection<String>>() {
+    }.getType());
+
+    static final Decodeable mapStringIntegerDecoder = instance.loadDecoder(new TypeToken<Map<String, Integer>>() {
+    }.getType());
+
+    static final Decodeable mapStringLongDecoder = instance.loadDecoder(new TypeToken<Map<String, Long>>() {
+    }.getType());
+
+    static final Decodeable mapStringStringDecoder = instance.loadDecoder(new TypeToken<Map<String, String>>() {
+    }.getType());
 
     static {
         instance.register(Serializable.class, objectDecoder);
