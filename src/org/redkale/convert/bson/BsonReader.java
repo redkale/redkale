@@ -111,17 +111,50 @@ public class BsonReader extends Reader {
                 break;
             case 9: readString();
                 break;
+            case 20:
+                BsonFactory.collectionObjectDecoder.convertFrom(this);
+                break;
+            case 21:
+                BsonFactory.collectionBooleanDecoder.convertFrom(this);
+                break;
+            case 22:
+                BsonFactory.collectionByteDecoder.convertFrom(this);
+                break;
+            case 23:
+                BsonFactory.collectionShortDecoder.convertFrom(this);
+                break;
+            case 24:
+                BsonFactory.collectionCharacterDecoder.convertFrom(this);
+                break;
             case 25:
                 BsonFactory.collectionIntegerDecoder.convertFrom(this);
                 break;
             case 26:
                 BsonFactory.collectionLongDecoder.convertFrom(this);
                 break;
+            case 27:
+                BsonFactory.collectionFloatDecoder.convertFrom(this);
+                break;
+            case 28:
+                BsonFactory.collectionDoubleDecoder.convertFrom(this);
+                break;
             case 29:
                 BsonFactory.collectionStringDecoder.convertFrom(this);
                 break;
-            case 30:
-                BsonFactory.collectionObjectDecoder.convertFrom(this);
+            case 40:
+                BsonFactory.mapStringObjectDecoder.convertFrom(this);
+                break;
+            case 41:
+                BsonFactory.mapStringBooleanDecoder.convertFrom(this);
+                break;
+            case 42:
+                BsonFactory.mapStringByteDecoder.convertFrom(this);
+                break;
+            case 43:
+                BsonFactory.mapStringShortDecoder.convertFrom(this);
+                break;
+            case 44:
+                BsonFactory.mapStringCharacterDecoder.convertFrom(this);
                 break;
             case 45:
                 BsonFactory.mapStringIntegerDecoder.convertFrom(this);
@@ -129,11 +162,14 @@ public class BsonReader extends Reader {
             case 46:
                 BsonFactory.mapStringLongDecoder.convertFrom(this);
                 break;
+            case 47:
+                BsonFactory.mapStringFloatDecoder.convertFrom(this);
+                break;
+            case 48:
+                BsonFactory.mapStringDoubleDecoder.convertFrom(this);
+                break;
             case 49:
                 BsonFactory.mapStringStringDecoder.convertFrom(this);
-                break;
-            case 50:
-                BsonFactory.mapStringObjectDecoder.convertFrom(this);
                 break;
             case 101:
                 BoolArraySimpledCoder.instance.convertFrom(this);

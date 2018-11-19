@@ -242,27 +242,54 @@ public class BsonWriter extends Writer {
         }
         if (typeval == 127 && member.getEncoder() instanceof CollectionEncoder) {
             java.lang.reflect.Type comType = ((CollectionEncoder) member.getEncoder()).getEncoder().getType();
-            if (comType == Integer.class) {
+            if (comType == Boolean.class) {
+                typeval = 21;
+            } else if (comType == Byte.class) {
+                typeval = 22;
+            } else if (comType == Short.class) {
+                typeval = 23;
+            } else if (comType == Character.class) {
+                typeval = 24;
+            } else if (comType == Integer.class) {
                 typeval = 25;
             } else if (comType == Long.class) {
                 typeval = 26;
+            } else if (comType == Float.class) {
+                typeval = 27;
+            } else if (comType == Double.class) {
+                typeval = 28;
             } else if (comType == String.class) {
                 typeval = 29;
-            } else if (!comType.toString().startsWith("java.lang")) {
-                typeval = 30;
+            } else {
+                typeval = 20;
             }
+        }
+        if (typeval == 127 && member.getEncoder() instanceof ArrayEncoder) {
+            typeval = 20;
         }
         if (typeval == 127 && member.getEncoder() instanceof MapEncoder) {
             java.lang.reflect.Type keyType = ((MapEncoder) member.getEncoder()).getKeyencoder().getType();
             java.lang.reflect.Type valType = ((MapEncoder) member.getEncoder()).getValencoder().getType();
-            if (keyType == String.class && valType == Integer.class) {
+            if (keyType == String.class && valType == Boolean.class) {
+                typeval = 41;
+            } else if (keyType == String.class && valType == Byte.class) {
+                typeval = 42;
+            } else if (keyType == String.class && valType == Short.class) {
+                typeval = 43;
+            } else if (keyType == String.class && valType == Character.class) {
+                typeval = 44;
+            } else if (keyType == String.class && valType == Integer.class) {
                 typeval = 45;
             } else if (keyType == String.class && valType == Long.class) {
                 typeval = 46;
+            } else if (keyType == String.class && valType == Float.class) {
+                typeval = 47;
+            } else if (keyType == String.class && valType == Double.class) {
+                typeval = 48;
             } else if (keyType == String.class && valType == String.class) {
                 typeval = 49;
-            } else if (keyType == String.class && !valType.toString().startsWith("java.lang")) {
-                typeval = 50;
+            } else if (keyType == String.class) {
+                typeval = 40;
             }
         }
         writeByte(typeval);

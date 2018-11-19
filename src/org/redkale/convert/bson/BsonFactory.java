@@ -27,10 +27,28 @@ public final class BsonFactory extends ConvertFactory<BsonReader, BsonWriter> {
 
     static final Encodeable objectEncoder = instance.loadEncoder(Object.class);
 
+    static final Decodeable collectionBooleanDecoder = instance.loadDecoder(new TypeToken<Collection<Boolean>>() {
+    }.getType());
+
+    static final Decodeable collectionByteDecoder = instance.loadDecoder(new TypeToken<Collection<Byte>>() {
+    }.getType());
+
+    static final Decodeable collectionShortDecoder = instance.loadDecoder(new TypeToken<Collection<Short>>() {
+    }.getType());
+
+    static final Decodeable collectionCharacterDecoder = instance.loadDecoder(new TypeToken<Collection<Character>>() {
+    }.getType());
+
     static final Decodeable collectionIntegerDecoder = instance.loadDecoder(new TypeToken<Collection<Integer>>() {
     }.getType());
 
     static final Decodeable collectionLongDecoder = instance.loadDecoder(new TypeToken<Collection<Long>>() {
+    }.getType());
+
+    static final Decodeable collectionFloatDecoder = instance.loadDecoder(new TypeToken<Collection<Float>>() {
+    }.getType());
+
+    static final Decodeable collectionDoubleDecoder = instance.loadDecoder(new TypeToken<Collection<Double>>() {
     }.getType());
 
     static final Decodeable collectionStringDecoder = instance.loadDecoder(new TypeToken<Collection<String>>() {
@@ -39,10 +57,28 @@ public final class BsonFactory extends ConvertFactory<BsonReader, BsonWriter> {
     static final Decodeable collectionObjectDecoder = instance.loadDecoder(new TypeToken<Collection<Object>>() {
     }.getType());
 
+    static final Decodeable mapStringBooleanDecoder = instance.loadDecoder(new TypeToken<Map<String, Boolean>>() {
+    }.getType());
+
+    static final Decodeable mapStringByteDecoder = instance.loadDecoder(new TypeToken<Map<String, Byte>>() {
+    }.getType());
+
+    static final Decodeable mapStringShortDecoder = instance.loadDecoder(new TypeToken<Map<String, Short>>() {
+    }.getType());
+
+    static final Decodeable mapStringCharacterDecoder = instance.loadDecoder(new TypeToken<Map<String, Character>>() {
+    }.getType());
+
     static final Decodeable mapStringIntegerDecoder = instance.loadDecoder(new TypeToken<Map<String, Integer>>() {
     }.getType());
 
     static final Decodeable mapStringLongDecoder = instance.loadDecoder(new TypeToken<Map<String, Long>>() {
+    }.getType());
+
+    static final Decodeable mapStringFloatDecoder = instance.loadDecoder(new TypeToken<Map<String, Float>>() {
+    }.getType());
+
+    static final Decodeable mapStringDoubleDecoder = instance.loadDecoder(new TypeToken<Map<String, Double>>() {
     }.getType());
 
     static final Decodeable mapStringStringDecoder = instance.loadDecoder(new TypeToken<Map<String, String>>() {
