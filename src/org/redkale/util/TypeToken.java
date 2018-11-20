@@ -56,6 +56,15 @@ public abstract class TypeToken<T> {
         return true;
     }
 
+    public final static Class typeToClass(final Type type) {
+        if (type instanceof Class) return (Class) type;
+        if (type instanceof WildcardType) return null;
+        if (type instanceof TypeVariable) return null;
+        if (type instanceof GenericArrayType) return Array.newInstance(typeToClass(((GenericArrayType) type).getGenericComponentType()), 0).getClass();
+        if (!(type instanceof ParameterizedType)) return null; //只能是null了
+        return typeToClass(((ParameterizedType) type).getOwnerType());
+    }
+
     public static Type[] getGenericType(final Type[] types, final Type declaringClass) {
         Type[] newTypes = new Type[types.length];
         for (int i = 0; i < newTypes.length; i++) {

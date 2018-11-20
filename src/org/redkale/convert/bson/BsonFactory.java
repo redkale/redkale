@@ -7,7 +7,9 @@ package org.redkale.convert.bson;
 
 import java.io.Serializable;
 import java.util.*;
+import java.util.stream.Stream;
 import org.redkale.convert.*;
+import org.redkale.convert.ext.*;
 import org.redkale.util.*;
 
 /**
@@ -150,4 +152,97 @@ public final class BsonFactory extends ConvertFactory<BsonReader, BsonWriter> {
         return true;
     }
 
+    protected static byte typeEnum(final Class type) {
+        Objects.requireNonNull(type);
+        byte typeval = 127;  //字段的类型值
+        if (type == boolean.class || type == Boolean.class) {
+            typeval = 11;
+        } else if (type == byte.class || type == Byte.class) {
+            typeval = 12;
+        } else if (type == short.class || type == Short.class) {
+            typeval = 13;
+        } else if (type == char.class || type == Character.class) {
+            typeval = 14;
+        } else if (type == int.class || type == Integer.class) {
+            typeval = 15;
+        } else if (type == long.class || type == Long.class) {
+            typeval = 16;
+        } else if (type == float.class || type == Float.class) {
+            typeval = 17;
+        } else if (type == double.class || type == Double.class) {
+            typeval = 18;
+        } else if (type == String.class) {
+            typeval = 19;
+        } else if (type == boolean[].class || type == Boolean[].class) {
+            typeval = 21;
+        } else if (type == byte[].class || type == Byte[].class) {
+            typeval = 22;
+        } else if (type == short[].class || type == Short[].class) {
+            typeval = 23;
+        } else if (type == char[].class || type == Character[].class) {
+            typeval = 24;
+        } else if (type == int[].class || type == Integer[].class) {
+            typeval = 25;
+        } else if (type == long[].class || type == Long[].class) {
+            typeval = 26;
+        } else if (type == float[].class || type == Float[].class) {
+            typeval = 27;
+        } else if (type == double[].class || type == Double[].class) {
+            typeval = 28;
+        } else if (type == String[].class) {
+            typeval = 29;
+        } else if (type.isArray()) {
+            typeval = 81;
+        } else if (Collection.class.isAssignableFrom(type)) {
+            typeval = 82;
+        } else if (Stream.class.isAssignableFrom(type)) {
+            typeval = 83;
+        } else if (Map.class.isAssignableFrom(type)) {
+            typeval = 84;
+        }
+        return typeval;
+    }
+
+    protected static Decodeable typeEnum(final byte typeval) {
+        switch (typeval) {
+            case 11:
+                return BoolSimpledCoder.instance;
+            case 12:
+                return ByteSimpledCoder.instance;
+            case 13:
+                return ShortSimpledCoder.instance;
+            case 14:
+                return CharSimpledCoder.instance;
+            case 15:
+                return IntSimpledCoder.instance;
+            case 16:
+                return LongSimpledCoder.instance;
+            case 17:
+                return FloatSimpledCoder.instance;
+            case 18:
+                return DoubleSimpledCoder.instance;
+            case 19:
+                return StringSimpledCoder.instance;
+            case 21:
+                return BoolArraySimpledCoder.instance;
+            case 22:
+                return ByteArraySimpledCoder.instance;
+            case 23:
+                return ShortArraySimpledCoder.instance;
+            case 24:
+                return CharArraySimpledCoder.instance;
+            case 25:
+                return IntArraySimpledCoder.instance;
+            case 26:
+                return LongArraySimpledCoder.instance;
+            case 27:
+                return FloatArraySimpledCoder.instance;
+            case 28:
+                return DoubleArraySimpledCoder.instance;
+            case 29:
+                return StringArraySimpledCoder.instance;
+            default:
+                return BsonFactory.objectDecoder;
+        }
+    }
 }
