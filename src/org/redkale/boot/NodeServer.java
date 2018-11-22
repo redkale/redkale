@@ -244,6 +244,7 @@ public abstract class NodeServer {
                         try {
                             client = Sncp.getSncpClient(srcService);
                         } catch (RuntimeException re) {
+                            logger.log(Level.FINE, "maybe new Service by hand", re);
                         }
                         final InetSocketAddress sncpAddr = client == null ? null : client.getClientAddress();
                         final Set<String> groups = new HashSet<>();
@@ -263,6 +264,7 @@ public abstract class NodeServer {
                 try {  //Service成员变量是一个直接new XXXService的字段， 递归ResourceFactory.inject时会导致找不到SncpClient
                     client = Sncp.getSncpClient((Service) src);
                 } catch (RuntimeException re) {
+                    logger.log(Level.FINE, "maybe new Service by hand", re);
                 }
                 final InetSocketAddress sncpAddr = client == null ? null : client.getClientAddress();
                 if ((src instanceof DataSource) && sncpAddr != null && resourceFactory.find(resourceName, DataCacheListener.class) == null) { //只有DataSourceService 才能赋值 DataCacheListener   
