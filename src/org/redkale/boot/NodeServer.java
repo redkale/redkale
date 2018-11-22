@@ -240,12 +240,7 @@ public abstract class NodeServer {
                     }
                     if (DataSource.class.isAssignableFrom(sourceType) && can) { // 必须有空构造函数
                         final Service srcService = (Service) src;
-                        SncpClient client = null;
-                        try {
-                            client = Sncp.getSncpClient(srcService);
-                        } catch (RuntimeException re) {
-                            logger.log(Level.FINE, "maybe new Service by hand", re);
-                        }
+                        SncpClient client = Sncp.getSncpClient(srcService);
                         final InetSocketAddress sncpAddr = client == null ? null : client.getClientAddress();
                         final Set<String> groups = new HashSet<>();
                         if (client != null && client.getSameGroup() != null) groups.add(client.getSameGroup());
@@ -260,12 +255,7 @@ public abstract class NodeServer {
                 application.dataSources.add(source);
                 appResFactory.register(resourceName, DataSource.class, source);
 
-                SncpClient client = null;
-                try {  //Service成员变量是一个直接new XXXService的字段， 递归ResourceFactory.inject时会导致找不到SncpClient
-                    client = Sncp.getSncpClient((Service) src);
-                } catch (RuntimeException re) {
-                    logger.log(Level.FINE, "maybe new Service by hand", re);
-                }
+                SncpClient client = Sncp.getSncpClient((Service) src);
                 final InetSocketAddress sncpAddr = client == null ? null : client.getClientAddress();
                 if ((src instanceof DataSource) && sncpAddr != null && resourceFactory.find(resourceName, DataCacheListener.class) == null) { //只有DataSourceService 才能赋值 DataCacheListener   
                     final NodeSncpServer sncpServer = application.findNodeSncpServer(sncpAddr);
