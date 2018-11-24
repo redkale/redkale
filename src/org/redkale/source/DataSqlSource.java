@@ -785,6 +785,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
         List<byte[]> blobs = null;
         int index = 0;
         for (ColumnValue col : values) {
+            if (col == null) continue;
             Attribute<T, Serializable> attr = info.getUpdateAttribute(col.getColumn());
             if (attr == null) throw new RuntimeException(info.getType() + " cannot found column " + col.getColumn());
             if (setsql.length() > 0) setsql.append(", ");
@@ -797,6 +798,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
                 setsql.append(c).append(" = ").append(info.formatSQLValue(c, col));
             }
         }
+        if (setsql.length() < 1) return CompletableFuture.completedFuture(0);
         String sql = "UPDATE " + info.getTable(id) + " SET " + setsql + " WHERE " + info.getPrimarySQLColumn() + " = " + FilterNode.formatToString(id);
         if (blobs == null) return updateDB(info, null, sql, false);
         return updateDB(info, null, sql, true, blobs.toArray());
@@ -865,6 +867,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
         int index = 0;
         String alias = "postgresql".equals(writePool.dbtype) ? null : "a"; //postgresql的BUG， UPDATE的SET中不能含别名
         for (ColumnValue col : values) {
+            if (col == null) continue;
             Attribute<T, Serializable> attr = info.getUpdateAttribute(col.getColumn());
             if (attr == null) continue;
             if (setsql.length() > 0) setsql.append(", ");
@@ -877,6 +880,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
                 setsql.append(c).append(" = ").append(info.formatSQLValue(c, col));
             }
         }
+        if (setsql.length() < 1) return CompletableFuture.completedFuture(0);
         Map<Class, String> joinTabalis = node.getJoinTabalis();
         CharSequence join = node.createSQLJoin(this, true, joinTabalis, new HashSet<>(), info);
         CharSequence where = node.createSQLExpress(info, joinTabalis);
@@ -1060,6 +1064,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
         final List<Attribute<T, Serializable>> attrs = new ArrayList<>();
         final List<ColumnValue> cols = new ArrayList<>();
         for (ColumnValue col : values) {
+            if (col == null) continue;
             Attribute<T, Serializable> attr = info.getUpdateAttribute(col.getColumn());
             if (attr == null) continue;
             attrs.add(attr);
@@ -1076,6 +1081,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
         final List<Attribute<T, Serializable>> attrs = new ArrayList<>();
         final List<ColumnValue> cols = new ArrayList<>();
         for (ColumnValue col : values) {
+            if (col == null) continue;
             Attribute<T, Serializable> attr = info.getUpdateAttribute(col.getColumn());
             if (attr == null) continue;
             attrs.add(attr);
