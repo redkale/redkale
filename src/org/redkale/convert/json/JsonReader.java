@@ -333,7 +333,7 @@ public class JsonReader extends Reader {
             }
             this.position = currpos - 1;
             if (len == 4 && text0[start] == 'n' && text0[start + 1] == 'u' && text0[start + 2] == 'l' && text0[start + 3] == 'l') return null;
-            return new String(text0, start, len);
+            return new String(text0, start, len == eof ? (len + 1) : len);
         }
     }
 
