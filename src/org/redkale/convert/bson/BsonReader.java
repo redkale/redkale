@@ -93,113 +93,27 @@ public class BsonReader extends Reader {
         final byte val = this.typeval;
         this.typeval = 0;
         switch (val) {
-            case 1: readBoolean();
+            case 11: readBoolean();
                 break;
-            case 2: readByte();
+            case 12: readByte();
                 break;
-            case 3: readShort();
+            case 13: readShort();
                 break;
-            case 4: readChar();
+            case 14: readChar();
                 break;
-            case 5: readInt();
+            case 15: readInt();
                 break;
-            case 6: readLong();
+            case 16: readLong();
                 break;
-            case 7: readFloat();
+            case 17: readFloat();
                 break;
-            case 8: readDouble();
+            case 18: readDouble();
                 break;
-            case 9: readString();
+            case 19: readString();
                 break;
-            case 20:
-                BsonFactory.collectionObjectDecoder.convertFrom(this);
-                break;
-            case 21:
-                BsonFactory.collectionBooleanDecoder.convertFrom(this);
-                break;
-            case 22:
-                BsonFactory.collectionByteDecoder.convertFrom(this);
-                break;
-            case 23:
-                BsonFactory.collectionShortDecoder.convertFrom(this);
-                break;
-            case 24:
-                BsonFactory.collectionCharacterDecoder.convertFrom(this);
-                break;
-            case 25:
-                BsonFactory.collectionIntegerDecoder.convertFrom(this);
-                break;
-            case 26:
-                BsonFactory.collectionLongDecoder.convertFrom(this);
-                break;
-            case 27:
-                BsonFactory.collectionFloatDecoder.convertFrom(this);
-                break;
-            case 28:
-                BsonFactory.collectionDoubleDecoder.convertFrom(this);
-                break;
-            case 29:
-                BsonFactory.collectionStringDecoder.convertFrom(this);
-                break;
-            case 40:
-                BsonFactory.mapStringObjectDecoder.convertFrom(this);
-                break;
-            case 41:
-                BsonFactory.mapStringBooleanDecoder.convertFrom(this);
-                break;
-            case 42:
-                BsonFactory.mapStringByteDecoder.convertFrom(this);
-                break;
-            case 43:
-                BsonFactory.mapStringShortDecoder.convertFrom(this);
-                break;
-            case 44:
-                BsonFactory.mapStringCharacterDecoder.convertFrom(this);
-                break;
-            case 45:
-                BsonFactory.mapStringIntegerDecoder.convertFrom(this);
-                break;
-            case 46:
-                BsonFactory.mapStringLongDecoder.convertFrom(this);
-                break;
-            case 47:
-                BsonFactory.mapStringFloatDecoder.convertFrom(this);
-                break;
-            case 48:
-                BsonFactory.mapStringDoubleDecoder.convertFrom(this);
-                break;
-            case 49:
-                BsonFactory.mapStringStringDecoder.convertFrom(this);
-                break;
-            case 101:
-                BoolArraySimpledCoder.instance.convertFrom(this);
-                break;
-            case 102:
-                ByteArraySimpledCoder.instance.convertFrom(this);
-                break;
-            case 103:
-                ShortArraySimpledCoder.instance.convertFrom(this);
-                break;
-            case 104:
-                CharArraySimpledCoder.instance.convertFrom(this);
-                break;
-            case 105:
-                IntArraySimpledCoder.instance.convertFrom(this);
-                break;
-            case 106:
-                LongArraySimpledCoder.instance.convertFrom(this);
-                break;
-            case 107:
-                FloatArraySimpledCoder.instance.convertFrom(this);
-                break;
-            case 108:
-                DoubleArraySimpledCoder.instance.convertFrom(this);
-                break;
-            case 109:
-                StringArraySimpledCoder.instance.convertFrom(this);
-                break;
-            case 127:
-                BsonFactory.objectDecoder.convertFrom(this);
+            default:
+                Decodeable decoder = BsonFactory.typeEnum(val);
+                if (decoder != null) decoder.convertFrom(this);
                 break;
         }
     }
@@ -234,7 +148,14 @@ public class BsonReader extends Reader {
     public int readMapB(DeMember member, byte[] typevals, Decodeable keyDecoder, Decodeable valueDecoder) {
         short bt = readShort();
         if (bt == Reader.SIGN_NULL) return bt;
-        return (bt & 0xffff) << 16 | ((content[++this.position] & 0xff) << 8) | (content[++this.position] & 0xff);
+        int rs = (bt & 0xffff) << 16 | ((content[++this.position] & 0xff) << 8) | (content[++this.position] & 0xff);
+        byte kt = readByte();
+        byte vt = readByte();
+        if (typevals != null) {
+            typevals[0] = kt;
+            typevals[1] = vt;
+        }
+        return rs;
     }
 
     @Override
@@ -251,7 +172,10 @@ public class BsonReader extends Reader {
         short bt = readShort();
         if (bt == Reader.SIGN_NULL) return bt;
         int rs = (bt & 0xffff) << 16 | ((content[++this.position] & 0xff) << 8) | (content[++this.position] & 0xff);
-        if (componentDecoder == null || componentDecoder == ByteSimpledCoder.instance) return rs; //byte[]
+        if (componentDecoder != null && componentDecoder != ByteSimpledCoder.instance) {
+            byte comval = readByte();
+            if (typevals != null) typevals[0] = comval;
+        }
         return rs;
     }
 

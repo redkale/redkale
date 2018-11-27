@@ -8,6 +8,7 @@ package org.redkale.convert.bson;
 import java.nio.*;
 import org.redkale.convert.*;
 import static org.redkale.convert.Reader.SIGN_NULL;
+import org.redkale.convert.ext.ByteSimpledCoder;
 import org.redkale.util.*;
 
 /**
@@ -53,6 +54,12 @@ public class BsonByteBufferReader extends BsonReader {
         short bt = readShort();
         if (bt == Reader.SIGN_NULL) return bt;
         short lt = readShort();
+        byte kt = readByte();
+        byte vt = readByte();
+        if (typevals != null) {
+            typevals[0] = kt;
+            typevals[1] = vt;
+        }
         return (bt & 0xffff) << 16 | (lt & 0xffff);
     }
 
@@ -70,6 +77,10 @@ public class BsonByteBufferReader extends BsonReader {
         short bt = readShort();
         if (bt == Reader.SIGN_NULL) return bt;
         short lt = readShort();
+        if (componentDecoder != null && componentDecoder != ByteSimpledCoder.instance) {
+            byte comval = readByte();
+            if (typevals != null) typevals[0] = comval;
+        }
         return (bt & 0xffff) << 16 | (lt & 0xffff);
     }
 //------------------------------------------------------------

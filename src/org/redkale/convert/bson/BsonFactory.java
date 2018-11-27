@@ -6,6 +6,7 @@
 package org.redkale.convert.bson;
 
 import java.io.Serializable;
+import java.lang.reflect.Type;
 import java.util.*;
 import java.util.stream.Stream;
 import org.redkale.convert.*;
@@ -29,65 +30,15 @@ public final class BsonFactory extends ConvertFactory<BsonReader, BsonWriter> {
 
     static final Encodeable objectEncoder = instance.loadEncoder(Object.class);
 
-    static final Decodeable collectionBooleanDecoder = instance.loadDecoder(new TypeToken<Collection<Boolean>>() {
+    static final Decodeable skipArrayDecoder = new SkipArrayDecoder(instance, Object[].class);
+
+    static final Decodeable skipCollectionDecoder = new SkipCollectionDecoder(instance, new TypeToken<Collection<Object>>() {
     }.getType());
 
-    static final Decodeable collectionByteDecoder = instance.loadDecoder(new TypeToken<Collection<Byte>>() {
+    static final Decodeable skipStreamDecoder = new SkipStreamDecoder(instance, new TypeToken<Stream<Object>>() {
     }.getType());
 
-    static final Decodeable collectionShortDecoder = instance.loadDecoder(new TypeToken<Collection<Short>>() {
-    }.getType());
-
-    static final Decodeable collectionCharacterDecoder = instance.loadDecoder(new TypeToken<Collection<Character>>() {
-    }.getType());
-
-    static final Decodeable collectionIntegerDecoder = instance.loadDecoder(new TypeToken<Collection<Integer>>() {
-    }.getType());
-
-    static final Decodeable collectionLongDecoder = instance.loadDecoder(new TypeToken<Collection<Long>>() {
-    }.getType());
-
-    static final Decodeable collectionFloatDecoder = instance.loadDecoder(new TypeToken<Collection<Float>>() {
-    }.getType());
-
-    static final Decodeable collectionDoubleDecoder = instance.loadDecoder(new TypeToken<Collection<Double>>() {
-    }.getType());
-
-    static final Decodeable collectionStringDecoder = instance.loadDecoder(new TypeToken<Collection<String>>() {
-    }.getType());
-
-    static final Decodeable collectionObjectDecoder = instance.loadDecoder(new TypeToken<Collection<Object>>() {
-    }.getType());
-
-    static final Decodeable mapStringBooleanDecoder = instance.loadDecoder(new TypeToken<Map<String, Boolean>>() {
-    }.getType());
-
-    static final Decodeable mapStringByteDecoder = instance.loadDecoder(new TypeToken<Map<String, Byte>>() {
-    }.getType());
-
-    static final Decodeable mapStringShortDecoder = instance.loadDecoder(new TypeToken<Map<String, Short>>() {
-    }.getType());
-
-    static final Decodeable mapStringCharacterDecoder = instance.loadDecoder(new TypeToken<Map<String, Character>>() {
-    }.getType());
-
-    static final Decodeable mapStringIntegerDecoder = instance.loadDecoder(new TypeToken<Map<String, Integer>>() {
-    }.getType());
-
-    static final Decodeable mapStringLongDecoder = instance.loadDecoder(new TypeToken<Map<String, Long>>() {
-    }.getType());
-
-    static final Decodeable mapStringFloatDecoder = instance.loadDecoder(new TypeToken<Map<String, Float>>() {
-    }.getType());
-
-    static final Decodeable mapStringDoubleDecoder = instance.loadDecoder(new TypeToken<Map<String, Double>>() {
-    }.getType());
-
-    static final Decodeable mapStringStringDecoder = instance.loadDecoder(new TypeToken<Map<String, String>>() {
-    }.getType());
-
-    static final Decodeable mapStringObjectDecoder = instance.loadDecoder(new TypeToken<Map<String, Object>>() {
-    }.getType());
+    static final Decodeable skipMapDecoder = new SkipMapDecoder(instance, Map.class);
 
     static {
         instance.register(Serializable.class, objectDecoder);
@@ -150,6 +101,10 @@ public final class BsonFactory extends ConvertFactory<BsonReader, BsonWriter> {
     @Override
     public boolean isFieldSort() {
         return true;
+    }
+
+    protected static byte typeEnum(final Type type) {
+        return typeEnum(TypeToken.typeToClass(type));
     }
 
     protected static byte typeEnum(final Class type) {
@@ -241,8 +196,17 @@ public final class BsonFactory extends ConvertFactory<BsonReader, BsonWriter> {
                 return DoubleArraySimpledCoder.instance;
             case 29:
                 return StringArraySimpledCoder.instance;
-            default:
+            case 81:
+                return skipArrayDecoder;
+            case 82:
+                return skipCollectionDecoder;
+            case 83:
+                return skipStreamDecoder;
+            case 84:
+                return skipMapDecoder;
+            case 127:
                 return BsonFactory.objectDecoder;
         }
+        return null;
     }
 }

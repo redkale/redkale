@@ -7,6 +7,7 @@ package org.redkale.convert.bson;
 
 import java.nio.ByteBuffer;
 import org.redkale.convert.*;
+import org.redkale.convert.ext.ByteSimpledCoder;
 import org.redkale.util.*;
 
 /**
@@ -201,98 +202,7 @@ public class BsonWriter extends Writer {
         Attribute attribute = member.getAttribute();
         writeByte(BsonReader.SIGN_HASNEXT);
         writeSmallString(attribute.field());
-        byte typeval = 127;  //字段的类型值
-        final Class type = attribute.type();
-        if (type == boolean.class || type == Boolean.class) {
-            typeval = 1;
-        } else if (type == byte.class || type == Byte.class) {
-            typeval = 2;
-        } else if (type == short.class || type == Short.class) {
-            typeval = 3;
-        } else if (type == char.class || type == Character.class) {
-            typeval = 4;
-        } else if (type == int.class || type == Integer.class) {
-            typeval = 5;
-        } else if (type == long.class || type == Long.class) {
-            typeval = 6;
-        } else if (type == float.class || type == Float.class) {
-            typeval = 7;
-        } else if (type == double.class || type == Double.class) {
-            typeval = 8;
-        } else if (type == String.class) {
-            typeval = 9;
-        } else if (type == boolean[].class || type == Boolean[].class) {
-            typeval = 101;
-        } else if (type == byte[].class || type == Byte[].class) {
-            typeval = 102;
-        } else if (type == short[].class || type == Short[].class) {
-            typeval = 103;
-        } else if (type == char[].class || type == Character[].class) {
-            typeval = 104;
-        } else if (type == int[].class || type == Integer[].class) {
-            typeval = 105;
-        } else if (type == long[].class || type == Long[].class) {
-            typeval = 106;
-        } else if (type == float[].class || type == Float[].class) {
-            typeval = 107;
-        } else if (type == double[].class || type == Double[].class) {
-            typeval = 108;
-        } else if (type == String[].class) {
-            typeval = 109;
-        }
-        if (typeval == 127 && member.getEncoder() instanceof CollectionEncoder) {
-            java.lang.reflect.Type comType = ((CollectionEncoder) member.getEncoder()).getComponentEncoder().getType();
-            if (comType == Boolean.class) {
-                typeval = 21;
-            } else if (comType == Byte.class) {
-                typeval = 22;
-            } else if (comType == Short.class) {
-                typeval = 23;
-            } else if (comType == Character.class) {
-                typeval = 24;
-            } else if (comType == Integer.class) {
-                typeval = 25;
-            } else if (comType == Long.class) {
-                typeval = 26;
-            } else if (comType == Float.class) {
-                typeval = 27;
-            } else if (comType == Double.class) {
-                typeval = 28;
-            } else if (comType == String.class) {
-                typeval = 29;
-            } else {
-                typeval = 20;
-            }
-        }
-        if (typeval == 127 && member.getEncoder() instanceof ArrayEncoder) {
-            typeval = 20;
-        }
-        if (typeval == 127 && member.getEncoder() instanceof MapEncoder) {
-            java.lang.reflect.Type keyType = ((MapEncoder) member.getEncoder()).getKeyEncoder().getType();
-            java.lang.reflect.Type valType = ((MapEncoder) member.getEncoder()).getValueEncoder().getType();
-            if (keyType == String.class && valType == Boolean.class) {
-                typeval = 41;
-            } else if (keyType == String.class && valType == Byte.class) {
-                typeval = 42;
-            } else if (keyType == String.class && valType == Short.class) {
-                typeval = 43;
-            } else if (keyType == String.class && valType == Character.class) {
-                typeval = 44;
-            } else if (keyType == String.class && valType == Integer.class) {
-                typeval = 45;
-            } else if (keyType == String.class && valType == Long.class) {
-                typeval = 46;
-            } else if (keyType == String.class && valType == Float.class) {
-                typeval = 47;
-            } else if (keyType == String.class && valType == Double.class) {
-                typeval = 48;
-            } else if (keyType == String.class && valType == String.class) {
-                typeval = 49;
-            } else if (keyType == String.class) {
-                typeval = 40;
-            }
-        }
-        writeByte(typeval);
+        writeByte(BsonFactory.typeEnum(attribute.type()));
     }
 
     /**
@@ -339,6 +249,9 @@ public class BsonWriter extends Writer {
     @Override
     public final int writeArrayB(int size, Encodeable<Writer, Object> componentEncoder, Object obj) {
         writeInt(size);
+        if (componentEncoder != null && componentEncoder != ByteSimpledCoder.instance) {
+            writeByte(BsonFactory.typeEnum(componentEncoder.getType()));
+        }
         return -1;
     }
 
@@ -353,6 +266,8 @@ public class BsonWriter extends Writer {
     @Override
     public int writeMapB(int size, Encodeable<Writer, Object> keyEncoder, Encodeable<Writer, Object> valueEncoder, Object obj) {
         writeInt(size);
+        writeByte(BsonFactory.typeEnum(keyEncoder.getType()));
+        writeByte(BsonFactory.typeEnum(valueEncoder.getType()));
         return -1;
     }
 

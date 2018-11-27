@@ -11,6 +11,7 @@ import java.util.*;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.concurrent.*;
 import java.util.logging.*;
+import java.util.stream.Stream;
 import org.redkale.asm.*;
 import org.redkale.asm.Type;
 import static org.redkale.asm.Opcodes.*;
@@ -81,6 +82,7 @@ public interface Creator<T> {
             creatorCacheMap.put(ArrayList.class, (params) -> new ArrayList<>());
             creatorCacheMap.put(HashMap.class, (params) -> new HashMap<>());
             creatorCacheMap.put(HashSet.class, (params) -> new HashSet<>());
+            creatorCacheMap.put(Stream.class, (params) -> new ArrayList<>().stream());
             creatorCacheMap.put(ConcurrentHashMap.class, (params) -> new ConcurrentHashMap<>());
             creatorCacheMap.put(CompletableFuture.class, (params) -> new CompletableFuture<>());
         }
