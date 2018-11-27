@@ -130,12 +130,12 @@ public abstract class Writer {
      * 输出一个数组前的操作
      *
      * @param size    数组长度
-     * @param encoder Encodeable
+     * @param componentEncoder Encodeable
      * @param obj     对象
      *
      * @return 返回-1表示还没有写入对象内容，大于-1表示已写入对象内容，返回对象内容大小
      */
-    public abstract int writeArrayB(int size, Encodeable<Writer, Object> encoder, Object obj);
+    public abstract int writeArrayB(int size, Encodeable<Writer, Object> componentEncoder, Object obj);
 
     /**
      * 输出数组元素间的间隔符

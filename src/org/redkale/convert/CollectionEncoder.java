@@ -23,7 +23,7 @@ public class CollectionEncoder<T> implements Encodeable<Writer, Collection<T>> {
 
     protected final Type type;
 
-    protected final Encodeable<Writer, Object> encoder;
+    protected final Encodeable<Writer, Object> componentEncoder;
 
     protected boolean inited = false;
 
@@ -35,12 +35,12 @@ public class CollectionEncoder<T> implements Encodeable<Writer, Collection<T>> {
             if (type instanceof ParameterizedType) {
                 Type t = ((ParameterizedType) type).getActualTypeArguments()[0];
                 if (t instanceof TypeVariable) {
-                    this.encoder = factory.getAnyEncoder();
+                    this.componentEncoder = factory.getAnyEncoder();
                 } else {
-                    this.encoder = factory.loadEncoder(t);
+                    this.componentEncoder = factory.loadEncoder(t);
                 }
             } else {
-                this.encoder = factory.getAnyEncoder();
+                this.componentEncoder = factory.getAnyEncoder();
             }
         } finally {
             inited = true;
@@ -61,11 +61,11 @@ public class CollectionEncoder<T> implements Encodeable<Writer, Collection<T>> {
             return;
         }
         if (value.isEmpty()) {
-            out.writeArrayB(0, encoder, value);
+            out.writeArrayB(0, componentEncoder, value);
             out.writeArrayE();
             return;
         }
-        if (this.encoder == null) {
+        if (this.componentEncoder == null) {
             if (!this.inited) {
                 synchronized (lock) {
                     try {
@@ -76,7 +76,7 @@ public class CollectionEncoder<T> implements Encodeable<Writer, Collection<T>> {
                 }
             }
         }
-        if (out.writeArrayB(value.size(), encoder, value) < 0) {
+        if (out.writeArrayB(value.size(), componentEncoder, value) < 0) {
             boolean first = true;
             for (Object v : value) {
                 if (!first) out.writeArrayMark();
@@ -88,7 +88,7 @@ public class CollectionEncoder<T> implements Encodeable<Writer, Collection<T>> {
     }
 
     protected void writeValue(Writer out, EnMember member, Object value) {
-        encoder.convertTo(out, value);
+        componentEncoder.convertTo(out, value);
     }
 
     @Override
@@ -96,8 +96,11 @@ public class CollectionEncoder<T> implements Encodeable<Writer, Collection<T>> {
         return type;
     }
 
-    public Encodeable<Writer, Object> getEncoder() {
-        return encoder;
+    public Encodeable<Writer, Object> getComponentEncoder() {
+        return componentEncoder;
     }
 
+    public Type getComponentType() {
+        return componentEncoder == null ? null : componentEncoder.getType();
+    }
 }

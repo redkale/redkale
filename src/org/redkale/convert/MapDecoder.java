@@ -91,7 +91,8 @@ public class MapDecoder<K, V> implements Decodeable<Reader, Map<K, V>> {
                 }
             }
         }
-        int len = in.readMapB(member, this.keyDecoder);
+        byte[] typevals = new byte[2];
+        int len = in.readMapB(member, typevals, this.keyDecoder, this.valueDecoder);
         int contentLength = -1;
         if (len == Reader.SIGN_NULL) return null;
         if (len == Reader.SIGN_NOLENBUTBYTES) {
@@ -100,22 +101,24 @@ public class MapDecoder<K, V> implements Decodeable<Reader, Map<K, V>> {
         }
         final Map<K, V> result = this.creator.create();
         boolean first = true;
+        Decodeable<Reader, K> kdecoder = getKeyDecoder(this.keyDecoder, typevals);
+        Decodeable<Reader, V> vdecoder = getValueDecoder(this.valueDecoder, typevals);
         if (len == Reader.SIGN_NOLENGTH) {
             int startPosition = in.position();
             while (hasNext(in, member, startPosition, contentLength, first)) {
                 Reader entryReader = getEntryReader(in, member, first);
                 if (entryReader == null) break;
-                K key = readKeyMember(entryReader, member, first);
+                K key = readKeyMember(entryReader, member, kdecoder, first);
                 entryReader.readBlank();
-                V value = readValueMember(entryReader, member, first);
+                V value = readValueMember(entryReader, member, vdecoder, first);
                 result.put(key, value);
                 first = false;
             }
         } else {
             for (int i = 0; i < len; i++) {
-                K key = readKeyMember(in, member, first);
+                K key = readKeyMember(in, member, kdecoder, first);
                 in.readBlank();
-                V value = readValueMember(in, member, first);
+                V value = readValueMember(in, member, vdecoder, first);
                 result.put(key, value);
                 first = false;
             }
@@ -128,16 +131,24 @@ public class MapDecoder<K, V> implements Decodeable<Reader, Map<K, V>> {
         return in.hasNext(startPosition, contentLength);
     }
 
+    protected Decodeable<Reader, K> getKeyDecoder(Decodeable<Reader, K> decoder, byte[] typevals) {
+        return decoder;
+    }
+
+    protected Decodeable<Reader, V> getValueDecoder(Decodeable<Reader, V> decoder, byte[] typevals) {
+        return decoder;
+    }
+
     protected Reader getEntryReader(Reader in, DeMember member, boolean first) {
         return in;
     }
 
-    protected K readKeyMember(Reader in, DeMember member, boolean first) {
-        return keyDecoder.convertFrom(in);
+    protected K readKeyMember(Reader in, DeMember member, Decodeable<Reader, K> decoder, boolean first) {
+        return decoder.convertFrom(in);
     }
 
-    protected V readValueMember(Reader in, DeMember member, boolean first) {
-        return valueDecoder.convertFrom(in);
+    protected V readValueMember(Reader in, DeMember member, Decodeable<Reader, V> decoder, boolean first) {
+        return decoder.convertFrom(in);
     }
 
     @Override

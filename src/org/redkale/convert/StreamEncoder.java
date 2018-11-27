@@ -23,7 +23,7 @@ public class StreamEncoder<T> implements Encodeable<Writer, Stream<T>> {
 
     protected final Type type;
 
-    protected final Encodeable<Writer, Object> encoder;
+    protected final Encodeable<Writer, Object> componentEncoder;
 
     protected boolean inited = false;
 
@@ -35,12 +35,12 @@ public class StreamEncoder<T> implements Encodeable<Writer, Stream<T>> {
             if (type instanceof ParameterizedType) {
                 Type t = ((ParameterizedType) type).getActualTypeArguments()[0];
                 if (t instanceof TypeVariable) {
-                    this.encoder = factory.getAnyEncoder();
+                    this.componentEncoder = factory.getAnyEncoder();
                 } else {
-                    this.encoder = factory.loadEncoder(t);
+                    this.componentEncoder = factory.loadEncoder(t);
                 }
             } else {
-                this.encoder = factory.getAnyEncoder();
+                this.componentEncoder = factory.getAnyEncoder();
             }
         } finally {
             inited = true;
@@ -62,11 +62,11 @@ public class StreamEncoder<T> implements Encodeable<Writer, Stream<T>> {
         }
         Object[] array = value.toArray();
         if (array.length == 0) {
-            out.writeArrayB(0, encoder, array);
+            out.writeArrayB(0, componentEncoder, array);
             out.writeArrayE();
             return;
         }
-        if (this.encoder == null) {
+        if (this.componentEncoder == null) {
             if (!this.inited) {
                 synchronized (lock) {
                     try {
@@ -77,7 +77,7 @@ public class StreamEncoder<T> implements Encodeable<Writer, Stream<T>> {
                 }
             }
         }
-        if (out.writeArrayB(array.length, encoder, array) < 0) {
+        if (out.writeArrayB(array.length, componentEncoder, array) < 0) {
             boolean first = true;
             for (Object v : array) {
                 if (!first) out.writeArrayMark();
@@ -89,7 +89,7 @@ public class StreamEncoder<T> implements Encodeable<Writer, Stream<T>> {
     }
 
     protected void writeMemberValue(Writer out, EnMember member, Object value, boolean first) {
-        encoder.convertTo(out, value);
+        componentEncoder.convertTo(out, value);
     }
 
     @Override
@@ -97,8 +97,11 @@ public class StreamEncoder<T> implements Encodeable<Writer, Stream<T>> {
         return type;
     }
 
-    public Encodeable<Writer, Object> getEncoder() {
-        return encoder;
+    public Encodeable<Writer, Object> getComponentEncoder() {
+        return componentEncoder;
     }
 
+    public Type getComponentType() {
+        return componentEncoder == null ? null : componentEncoder.getType();
+    }
 }

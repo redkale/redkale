@@ -346,7 +346,7 @@ public class JsonWriter extends Writer {
     }
 
     @Override
-    public final int writeArrayB(int size, Encodeable<Writer, Object> encoder, Object obj) {
+    public final int writeArrayB(int size, Encodeable<Writer, Object> componentEncoder, Object obj) {
         writeTo('[');
         return -1;
     }

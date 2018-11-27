@@ -95,12 +95,13 @@ public abstract class Reader {
     /**
      * 读取数组的开头并返回数组的长度
      *
-     * @param member  DeMember
-     * @param decoder Decodeable
+     * @param member           DeMember
+     * @param typevals         byte[]
+     * @param componentDecoder Decodeable
      *
      * @return 返回数组的长度
      */
-    public abstract int readArrayB(DeMember member, Decodeable decoder);
+    public abstract int readArrayB(DeMember member, byte[] typevals, Decodeable componentDecoder);
 
     /**
      * 读取数组的尾端
@@ -111,12 +112,14 @@ public abstract class Reader {
     /**
      * 读取map的开头并返回map的size
      *
-     * @param member     DeMember
-     * @param keydecoder Decodeable
+     * @param member       DeMember
+     * @param typevals     byte[]
+     * @param keyDecoder   Decodeable
+     * @param valueDecoder Decodeable
      *
      * @return 返回map的size
      */
-    public abstract int readMapB(DeMember member, Decodeable keydecoder);
+    public abstract int readMapB(DeMember member, byte[] typevals, Decodeable keyDecoder, Decodeable valueDecoder);
 
     /**
      * 读取数组的尾端

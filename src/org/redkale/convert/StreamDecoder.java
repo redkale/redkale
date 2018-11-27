@@ -30,7 +30,7 @@ public class StreamDecoder<T> implements Decodeable<Reader, Stream<T>> {
 
     protected Creator<Stream<T>> creator;
 
-    protected final Decodeable<Reader, T> decoder;
+    protected final Decodeable<Reader, T> componentDecoder;
 
     protected boolean inited = false;
 
@@ -44,7 +44,7 @@ public class StreamDecoder<T> implements Decodeable<Reader, Stream<T>> {
                 this.componentType = pt.getActualTypeArguments()[0];
                 this.creator = factory.loadCreator((Class) pt.getRawType());
                 factory.register(type, this);
-                this.decoder = factory.loadDecoder(this.componentType);
+                this.componentDecoder = factory.loadDecoder(this.componentType);
             } else {
                 throw new ConvertException("StreamDecoder not support the type (" + type + ")");
             }
@@ -62,14 +62,15 @@ public class StreamDecoder<T> implements Decodeable<Reader, Stream<T>> {
     }
 
     public Stream<T> convertFrom(Reader in, DeMember member) {
-        int len = in.readArrayB(member, this.decoder);
+        byte[] typevals = new byte[1];
+        int len = in.readArrayB(member, typevals, this.componentDecoder);
         int contentLength = -1;
         if (len == Reader.SIGN_NULL) return null;
         if (len == Reader.SIGN_NOLENBUTBYTES) {
-            contentLength = in.readMemberContentLength(member, this.decoder);
+            contentLength = in.readMemberContentLength(member, this.componentDecoder);
             len = Reader.SIGN_NOLENGTH;
         }
-        if (this.decoder == null) {
+        if (this.componentDecoder == null) {
             if (!this.inited) {
                 synchronized (lock) {
                     try {
@@ -80,7 +81,7 @@ public class StreamDecoder<T> implements Decodeable<Reader, Stream<T>> {
                 }
             }
         }
-        final Decodeable<Reader, T> localdecoder = this.decoder;
+        final Decodeable<Reader, T> localdecoder = getComponentDecoder(this.componentDecoder, typevals);
         final List<T> result = new ArrayList();
         boolean first = true;
         if (len == Reader.SIGN_NOLENGTH) {
@@ -88,7 +89,7 @@ public class StreamDecoder<T> implements Decodeable<Reader, Stream<T>> {
             while (hasNext(in, member, startPosition, contentLength, first)) {
                 Reader itemReader = getItemReader(in, member, first);
                 if (itemReader == null) break;
-                result.add(readMemberValue(itemReader, member, first));
+                result.add(readMemberValue(itemReader, member, localdecoder, first));
                 first = false;
             }
         } else {
@@ -104,12 +105,16 @@ public class StreamDecoder<T> implements Decodeable<Reader, Stream<T>> {
         return in.hasNext(startPosition, contentLength);
     }
 
+    protected Decodeable<Reader, T> getComponentDecoder(Decodeable<Reader, T> decoder, byte[] typevals) {
+        return decoder;
+    }
+
     protected Reader getItemReader(Reader in, DeMember member, boolean first) {
         return in;
     }
 
-    protected T readMemberValue(Reader in, DeMember member, boolean first) {
-        return this.decoder.convertFrom(in);
+    protected T readMemberValue(Reader in, DeMember member, Decodeable<Reader, T> decoder, boolean first) {
+        return decoder.convertFrom(in);
     }
 
     @Override
@@ -121,8 +126,8 @@ public class StreamDecoder<T> implements Decodeable<Reader, Stream<T>> {
         return componentType;
     }
 
-    public Decodeable<Reader, T> getDecoder() {
-        return decoder;
+    public Decodeable<Reader, T> getComponentDecoder() {
+        return componentDecoder;
     }
 
 }

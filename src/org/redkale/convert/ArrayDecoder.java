@@ -28,7 +28,7 @@ public class ArrayDecoder<T> implements Decodeable<Reader, T[]> {
 
     protected final Class componentClass;
 
-    protected final Decodeable<Reader, T> decoder;
+    protected final Decodeable<Reader, T> componentDecoder;
 
     protected boolean inited = false;
 
@@ -51,7 +51,7 @@ public class ArrayDecoder<T> implements Decodeable<Reader, T[]> {
                 this.componentClass = (Class) this.componentType;
             }
             factory.register(type, this);
-            this.decoder = factory.loadDecoder(this.componentType);
+            this.componentDecoder = factory.loadDecoder(this.componentType);
         } finally {
             inited = true;
             synchronized (lock) {
@@ -66,14 +66,15 @@ public class ArrayDecoder<T> implements Decodeable<Reader, T[]> {
     }
 
     public T[] convertFrom(Reader in, DeMember member) {
-        int len = in.readArrayB(member, decoder);
+        byte[] typevals = new byte[1];
+        int len = in.readArrayB(member, typevals, componentDecoder);
         int contentLength = -1;
         if (len == Reader.SIGN_NULL) return null;
         if (len == Reader.SIGN_NOLENBUTBYTES) {
-            contentLength = in.readMemberContentLength(member, decoder);
+            contentLength = in.readMemberContentLength(member, componentDecoder);
             len = Reader.SIGN_NOLENGTH;
         }
-        if (this.decoder == null) {
+        if (this.componentDecoder == null) {
             if (!this.inited) {
                 synchronized (lock) {
                     try {
@@ -84,7 +85,7 @@ public class ArrayDecoder<T> implements Decodeable<Reader, T[]> {
                 }
             }
         }
-        final Decodeable<Reader, T> localdecoder = this.decoder;
+        final Decodeable<Reader, T> localdecoder = getComponentDecoder(this.componentDecoder, typevals);
         final List<T> result = new ArrayList();
         boolean first = true;
         if (len == Reader.SIGN_NOLENGTH) {
@@ -92,7 +93,7 @@ public class ArrayDecoder<T> implements Decodeable<Reader, T[]> {
             while (hasNext(in, member, startPosition, contentLength, first)) {
                 Reader itemReader = getItemReader(in, member, first);
                 if (itemReader == null) break;
-                result.add(readMemberValue(itemReader, member, first));
+                result.add(readMemberValue(itemReader, member, localdecoder, first));
                 first = false;
             }
         } else {
@@ -109,17 +110,21 @@ public class ArrayDecoder<T> implements Decodeable<Reader, T[]> {
         return in.hasNext(startPosition, contentLength);
     }
 
+    protected Decodeable<Reader, T> getComponentDecoder(Decodeable<Reader, T> decoder, byte[] typevals) {
+        return decoder;
+    }
+
     protected Reader getItemReader(Reader in, DeMember member, boolean first) {
         return in;
     }
 
-    protected T readMemberValue(Reader in, DeMember member, boolean first) {
-        return this.decoder.convertFrom(in);
+    protected T readMemberValue(Reader in, DeMember member, Decodeable<Reader, T> decoder, boolean first) {
+        return decoder.convertFrom(in);
     }
 
     @Override
     public String toString() {
-        return this.getClass().getSimpleName() + "{componentType:" + this.componentType + ", decoder:" + this.decoder + "}";
+        return this.getClass().getSimpleName() + "{componentType:" + this.componentType + ", decoder:" + this.componentDecoder + "}";
     }
 
     @Override
@@ -131,8 +136,8 @@ public class ArrayDecoder<T> implements Decodeable<Reader, T[]> {
         return componentType;
     }
 
-    public Decodeable<Reader, T> getDecoder() {
-        return decoder;
+    public Decodeable<Reader, T> getComponentDecoder() {
+        return componentDecoder;
     }
 
 }

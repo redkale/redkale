@@ -241,7 +241,7 @@ public class BsonWriter extends Writer {
             typeval = 109;
         }
         if (typeval == 127 && member.getEncoder() instanceof CollectionEncoder) {
-            java.lang.reflect.Type comType = ((CollectionEncoder) member.getEncoder()).getEncoder().getType();
+            java.lang.reflect.Type comType = ((CollectionEncoder) member.getEncoder()).getComponentEncoder().getType();
             if (comType == Boolean.class) {
                 typeval = 21;
             } else if (comType == Byte.class) {
@@ -268,8 +268,8 @@ public class BsonWriter extends Writer {
             typeval = 20;
         }
         if (typeval == 127 && member.getEncoder() instanceof MapEncoder) {
-            java.lang.reflect.Type keyType = ((MapEncoder) member.getEncoder()).getKeyencoder().getType();
-            java.lang.reflect.Type valType = ((MapEncoder) member.getEncoder()).getValencoder().getType();
+            java.lang.reflect.Type keyType = ((MapEncoder) member.getEncoder()).getKeyEncoder().getType();
+            java.lang.reflect.Type valType = ((MapEncoder) member.getEncoder()).getValueEncoder().getType();
             if (keyType == String.class && valType == Boolean.class) {
                 typeval = 41;
             } else if (keyType == String.class && valType == Byte.class) {
@@ -337,7 +337,7 @@ public class BsonWriter extends Writer {
     }
 
     @Override
-    public final int writeArrayB(int size, Encodeable<Writer, Object> encoder, Object obj) {
+    public final int writeArrayB(int size, Encodeable<Writer, Object> componentEncoder, Object obj) {
         writeInt(size);
         return -1;
     }
@@ -352,7 +352,7 @@ public class BsonWriter extends Writer {
 
     @Override
     public int writeMapB(int size, Encodeable<Writer, Object> keyEncoder, Encodeable<Writer, Object> valueEncoder, Object obj) {
-        writeArrayB(size, valueEncoder, obj);
+        writeInt(size);
         return -1;
     }
 

@@ -48,15 +48,25 @@ public class BsonByteBufferReader extends BsonReader {
         return mask == null ? currentBuffer.get(currentBuffer.position()) : mask.unmask(currentBuffer.get(currentBuffer.position()));
     }
 
+    @Override
+    public int readMapB(DeMember member, byte[] typevals, Decodeable keyDecoder, Decodeable valueDecoder) {
+        short bt = readShort();
+        if (bt == Reader.SIGN_NULL) return bt;
+        short lt = readShort();
+        return (bt & 0xffff) << 16 | (lt & 0xffff);
+    }
+
     /**
      * 判断下一个非空白字节是否为[
      *
-     * @param member  DeMember
-     * @param decoder Decodeable
+     * @param member           DeMember
+     * @param typevals         byte[]
+     * @param componentDecoder Decodeable
+     *
      * @return 数组长度或 SIGN_NULL
      */
     @Override
-    public final int readArrayB(DeMember member, Decodeable decoder) {
+    public final int readArrayB(DeMember member, byte[] typevals, Decodeable componentDecoder) {
         short bt = readShort();
         if (bt == Reader.SIGN_NULL) return bt;
         short lt = readShort();

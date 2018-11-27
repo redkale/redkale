@@ -24,9 +24,9 @@ public class MapEncoder<K, V> implements Encodeable<Writer, Map<K, V>> {
 
     protected final Type type;
 
-    protected final Encodeable<Writer, K> keyencoder;
+    protected final Encodeable<Writer, K> keyEncoder;
 
-    protected final Encodeable<Writer, V> valencoder;
+    protected final Encodeable<Writer, V> valueEncoder;
 
     protected boolean inited = false;
 
@@ -37,11 +37,11 @@ public class MapEncoder<K, V> implements Encodeable<Writer, Map<K, V>> {
         try {
             if (type instanceof ParameterizedType) {
                 final Type[] pt = ((ParameterizedType) type).getActualTypeArguments();
-                this.keyencoder = factory.loadEncoder(pt[0]);
-                this.valencoder = factory.loadEncoder(pt[1]);
+                this.keyEncoder = factory.loadEncoder(pt[0]);
+                this.valueEncoder = factory.loadEncoder(pt[1]);
             } else {
-                this.keyencoder = factory.getAnyEncoder();
-                this.valencoder = factory.getAnyEncoder();
+                this.keyEncoder = factory.getAnyEncoder();
+                this.valueEncoder = factory.getAnyEncoder();
             }
         } finally {
             inited = true;
@@ -63,7 +63,7 @@ public class MapEncoder<K, V> implements Encodeable<Writer, Map<K, V>> {
             return;
         }
 
-        if (this.keyencoder == null || this.valencoder == null) {
+        if (this.keyEncoder == null || this.valueEncoder == null) {
             if (!this.inited) {
                 synchronized (lock) {
                     try {
@@ -74,21 +74,21 @@ public class MapEncoder<K, V> implements Encodeable<Writer, Map<K, V>> {
                 }
             }
         }
-        if (out.writeMapB(values.size(), (Encodeable) keyencoder, (Encodeable) valencoder, value) < 0) {
+        if (out.writeMapB(values.size(), (Encodeable) keyEncoder, (Encodeable) valueEncoder, value) < 0) {
             boolean first = true;
             for (Map.Entry<K, V> en : values.entrySet()) {
                 if (!first) out.writeArrayMark();
-                writeMemberValue(out, member, en.getKey(), en.getValue(),first);
+                writeMemberValue(out, member, en.getKey(), en.getValue(), first);
                 if (first) first = false;
             }
         }
         out.writeMapE();
     }
 
-    protected void writeMemberValue(Writer out, EnMember member, K key, V value,boolean first) {
-        keyencoder.convertTo(out, key);
+    protected void writeMemberValue(Writer out, EnMember member, K key, V value, boolean first) {
+        keyEncoder.convertTo(out, key);
         out.writeMapMark();
-        valencoder.convertTo(out, value);
+        valueEncoder.convertTo(out, value);
     }
 
     @Override
@@ -96,12 +96,20 @@ public class MapEncoder<K, V> implements Encodeable<Writer, Map<K, V>> {
         return type;
     }
 
-    public Encodeable<Writer, K> getKeyencoder() {
-        return keyencoder;
+    public Type getKeyType() {
+        return keyEncoder == null ? null : keyEncoder.getType();
     }
 
-    public Encodeable<Writer, V> getValencoder() {
-        return valencoder;
+    public Type getValueType() {
+        return valueEncoder == null ? null : valueEncoder.getType();
+    }
+
+    public Encodeable<Writer, K> getKeyEncoder() {
+        return keyEncoder;
+    }
+
+    public Encodeable<Writer, V> getValueEncoder() {
+        return valueEncoder;
     }
 
 }

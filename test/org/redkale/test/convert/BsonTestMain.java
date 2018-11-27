@@ -21,13 +21,14 @@ import org.redkale.util.*;
  */
 public class BsonTestMain {
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) throws Throwable {
         Serializable[] sers = new Serializable[]{"aaa", 4};
         final BsonConvert convert = BsonFactory.root().getConvert();
         byte[] bytes = convert.convertTo(sers);
         Utility.println("---", bytes);
         Serializable[] a = convert.convertFrom(Serializable[].class, bytes);
         System.out.println(Arrays.toString(a));
+        Two.main(args); 
         main2(args);
         main3(args);
         main4(args);

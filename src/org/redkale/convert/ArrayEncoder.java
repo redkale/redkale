@@ -27,7 +27,7 @@ public class ArrayEncoder<T> implements Encodeable<Writer, T[]> {
 
     protected final Encodeable anyEncoder;
 
-    protected final Encodeable<Writer, Object> encoder;
+    protected final Encodeable<Writer, Object> componentEncoder;
 
     protected boolean inited = false;
 
@@ -45,7 +45,7 @@ public class ArrayEncoder<T> implements Encodeable<Writer, T[]> {
                 throw new ConvertException("(" + type + ") is not a array type");
             }
             factory.register(type, this);
-            this.encoder = factory.loadEncoder(this.componentType);
+            this.componentEncoder = factory.loadEncoder(this.componentType);
             this.anyEncoder = factory.getAnyEncoder();
         } finally {
             inited = true;
@@ -66,11 +66,11 @@ public class ArrayEncoder<T> implements Encodeable<Writer, T[]> {
             return;
         }
         if (value.length == 0) {
-            out.writeArrayB(0, encoder, value);
+            out.writeArrayB(0, componentEncoder, value);
             out.writeArrayE();
             return;
         }
-        if (this.encoder == null) {
+        if (this.componentEncoder == null) {
             if (!this.inited) {
                 synchronized (lock) {
                     try {
@@ -81,12 +81,12 @@ public class ArrayEncoder<T> implements Encodeable<Writer, T[]> {
                 }
             }
         }
-        if (out.writeArrayB(value.length, encoder, value) < 0) {
+        if (out.writeArrayB(value.length, componentEncoder, value) < 0) {
             final Type comp = this.componentType;
             boolean first = true;
             for (Object v : value) {
                 if (!first) out.writeArrayMark();
-                writeMemberValue(out, member, ((v != null && (v.getClass() == comp || out.specify() == comp)) ? encoder : anyEncoder), v, first);
+                writeMemberValue(out, member, ((v != null && (v.getClass() == comp || out.specify() == comp)) ? componentEncoder : anyEncoder), v, first);
                 if (first) first = false;
             }
         }
@@ -99,7 +99,7 @@ public class ArrayEncoder<T> implements Encodeable<Writer, T[]> {
 
     @Override
     public String toString() {
-        return this.getClass().getSimpleName() + "{componentType:" + this.componentType + ", encoder:" + this.encoder + "}";
+        return this.getClass().getSimpleName() + "{componentType:" + this.componentType + ", encoder:" + this.componentEncoder + "}";
     }
 
     @Override
@@ -111,8 +111,8 @@ public class ArrayEncoder<T> implements Encodeable<Writer, T[]> {
         return componentType;
     }
 
-    public Encodeable<Writer, Object> getEncoder() {
-        return encoder;
+    public Encodeable<Writer, Object> getComponentEncoder() {
+        return componentEncoder;
     }
 
 }
