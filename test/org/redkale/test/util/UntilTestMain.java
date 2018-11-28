@@ -99,5 +99,6 @@ public class UntilTestMain {
         e = System.nanoTime() - s;
         System.out.println("动态Attribute耗时: " + e);
         System.out.println();
+        System.out.println("TestBean.map: " + Attribute.create(TestBean.class.getDeclaredField("map")).genericType());
     }
 }

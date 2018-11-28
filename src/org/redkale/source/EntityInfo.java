@@ -14,6 +14,7 @@ import java.util.concurrent.atomic.*;
 import java.util.function.*;
 import java.util.logging.*;
 import javax.persistence.*;
+import org.redkale.convert.json.*;
 import org.redkale.util.*;
 
 /**
@@ -28,6 +29,8 @@ import org.redkale.util.*;
 @SuppressWarnings("unchecked")
 public final class EntityInfo<T> {
 
+    private static final JsonConvert DEFAULT_JSON_CONVERT = JsonFactory.create().skipAllIgnore(true).getConvert();
+
     //全局静态资源
     private static final ConcurrentHashMap<Class, EntityInfo> entityInfos = new ConcurrentHashMap<>();
 
@@ -39,6 +42,9 @@ public final class EntityInfo<T> {
 
     //类对应的数据表名, 如果是VirtualEntity 类， 则该字段为null
     final String table;
+
+    //JsonConvert
+    final JsonConvert jsonConvert;
 
     //Entity构建器
     private final Creator<T> creator;
@@ -330,6 +336,25 @@ public final class EntityInfo<T> {
             }
         } while ((cltmp = cltmp.getSuperclass()) != Object.class);
         if (idAttr0 == null) throw new RuntimeException(type.getName() + " have no primary column by @javax.persistence.Id");
+        cltmp = type;
+        JsonConvert convert = DEFAULT_JSON_CONVERT;
+        do {
+            for (Method method : cltmp.getDeclaredMethods()) {
+                if (method.getAnnotation(SourceConvert.class) == null) continue;
+                if (!Modifier.isStatic(method.getModifiers())) throw new RuntimeException("@SourceConvert method(" + method + ") must be static");
+                if (method.getReturnType() != JsonConvert.class) throw new RuntimeException("@SourceConvert method(" + method + ") must be return JsonConvert.class");
+                if (method.getParameterCount() > 0) throw new RuntimeException("@SourceConvert method(" + method + ") must be 0 parameter");
+                try {
+                    method.setAccessible(true);
+                    convert = (JsonConvert) method.invoke(null);
+                } catch (Exception e) {
+                    throw new RuntimeException(method + " invoke error", e);
+                }
+                if (convert != null) break;
+            }
+        } while ((cltmp = cltmp.getSuperclass()) != Object.class);
+        this.jsonConvert = convert == null ? DEFAULT_JSON_CONVERT : convert;
+
         this.primary = idAttr0;
         this.aliasmap = aliasmap0;
         this.attributes = attributeMap.values().toArray(new Attribute[attributeMap.size()]);
@@ -929,6 +954,9 @@ public final class EntityInfo<T> {
         if (value == null) return null;
         if (value instanceof CharSequence) {
             return new StringBuilder().append('\'').append(value.toString().replace("'", "\\'")).append('\'').toString();
+        } else if (!(value instanceof Number) && !(value instanceof java.util.Date)
+            && !value.getClass().getName().startsWith("java.sql.") && !value.getClass().getName().startsWith("java.time.")) {
+            return new StringBuilder().append('\'').append(jsonConvert.convertTo(value).replace("'", "\\'")).append('\'').toString();
         }
         return String.valueOf(value);
     }
@@ -1026,6 +1054,8 @@ public final class EntityInfo<T> {
                 } else {
                     o = new AtomicLong();
                 }
+            } else if (o != null && !t.isAssignableFrom(o.getClass()) && o instanceof CharSequence) {
+                o = ((CharSequence) o).length() == 0 ? null : jsonConvert.convertFrom(attr.genericType(), o.toString());
             }
         }
         return o;
