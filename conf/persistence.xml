@@ -24,7 +24,7 @@
     <persistence-unit name="user.write" transaction-type="RESOURCE_LOCAL">
         <shared-cache-mode>ALL</shared-cache-mode>
         <properties>
-            <property name="javax.persistence.jdbc.url" value="jdbc:mysql://localhost:3306/user?autoReconnect=true&amp;characterEncoding=utf8"/>
+            <property name="javax.persistence.jdbc.url" value="jdbc:mysql://localhost:3306/center?characterEncoding=utf8&useSSL=false&serverTimezone=UTC&rewriteBatchedStatements=true"/>
             <property name="javax.persistence.jdbc.user" value="root"/>
             <property name="javax.persistence.jdbc.password" value="1234"/>
         </properties>
